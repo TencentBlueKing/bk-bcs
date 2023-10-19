@@ -100,6 +100,8 @@ const (
 
 	// DefaultImageName default image name
 	DefaultImageName = "Tencent Linux Release 2.2 (Final)"
+	// DefaultECKImageName default ECK image name
+	DefaultECKImageName = "CentOS-7.6-BITS64"
 
 	// DockerContainerRuntime runtime
 	DockerContainerRuntime = "docker"
@@ -125,6 +127,18 @@ const (
 	ClusterManageTypeManaged = "MANAGED_CLUSTER"
 	// ClusterManageTypeIndependent BCS manage cluster
 	ClusterManageTypeIndependent = "INDEPENDENT_CLUSTER"
+
+	// CloudClusterTypeKey cloud cluster type
+	CloudClusterTypeKey = "CloudClusterType"
+	// CloudClusterTypeEdge cloud cluster type for ECK EDGE
+	CloudClusterTypeEdge = "K8SEXTENSION_EDGE"
+	// CloudClusterTypeNative cloud cluster type for ECK native
+	CloudClusterTypeNative = "K8SEXTENSION_NATIVE"
+
+	// NodeRoleMaster node role master
+	NodeRoleMaster = "MASTER_ETCD"
+	// NodeRoleWorker node role worker
+	NodeRoleWorker = "WORKER"
 
 	// TkeCidrStatusAvailable available tke cidr status
 	TkeCidrStatusAvailable = "available"

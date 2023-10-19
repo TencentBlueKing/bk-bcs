@@ -87,4 +87,6 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.UpdateCloudAccount": cloudaccount.CanManageCloudAccountOperation,
 	"ClusterManager.DeleteCloudAccount": cloudaccount.CanManageCloudAccountOperation,
 	"ClusterManager.ListCloudAccount":   cloudaccount.CanUseCloudAccountOperation,
+	// vpc
+	"ClusterManager.ListCloudVPCV2": "",
 }

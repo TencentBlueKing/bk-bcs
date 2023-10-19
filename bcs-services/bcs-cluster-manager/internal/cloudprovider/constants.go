@@ -112,6 +112,11 @@ var (
 	// DeleteModeKey xxx
 	DeleteModeKey ParamKey = "deleteMode"
 
+	// SuccessNodeGroupIDsKey xxx
+	SuccessNodeGroupIDsKey ParamKey = "successNodeGroupIDs"
+	// FailedNodeGroupIDsKey xxx
+	FailedNodeGroupIDsKey ParamKey = "failedNodeGroupIDs"
+
 	// JobTypeKey xxx
 	JobTypeKey ParamKey = "jobType"
 	// BkSopsTaskUrlKey inject bksops task url

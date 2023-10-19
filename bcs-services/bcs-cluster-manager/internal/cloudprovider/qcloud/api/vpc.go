@@ -139,6 +139,12 @@ func (c *VPCClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 	return subnets, nil
 }
 
+// ListVPCs list vpc
+func (c *VPCClient) ListVPCs(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.CloudVPC, error) {
+	blog.Infof("ListSubnets input: vpcID/%s", vpcID)
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // ListSubnets list vpc subnets
 func (c *VPCClient) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
 	blog.Infof("ListSubnets input: vpcID/%s", vpcID)

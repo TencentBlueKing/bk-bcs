@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -226,6 +227,45 @@ func GetClusterDependBasicInfo(clusterID string, cloudID string, nodeGroupID str
 	}
 
 	return &CloudDependBasicInfo{cluster, cloud, nodeGroup, cmOption}, nil
+}
+
+// ParseNodeIpOrIdFromCommonMap parse nodeIDs or nodeIPs by chart
+func ParseNodeIpOrIdFromCommonMap(taskCommonMap map[string]string, key string, chart string) []string {
+	val, ok := taskCommonMap[key]
+	if !ok || val == "" {
+		return nil
+	}
+
+	return strings.Split(val, chart)
+}
+
+// UpdateNodeStatus update node status; isInstanceIP true, instance is InstanceIP; isInstanceIP true,
+// instance is InstanceID
+func UpdateNodeStatus(isInstanceIP bool, instance, status string) error {
+	var (
+		node *proto.Node
+		err  error
+	)
+	if isInstanceIP {
+		node, err = GetStorageModel().GetNodeByIP(context.Background(), instance)
+	} else {
+		node, err = GetStorageModel().GetNode(context.Background(), instance)
+	}
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return err
+	}
+
+	if errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return nil
+	}
+
+	node.Status = status
+	err = GetStorageModel().UpdateNode(context.Background(), node)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // UpdateClusterStatus set cluster status

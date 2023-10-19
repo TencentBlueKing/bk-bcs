@@ -120,6 +120,23 @@ func (cm *ClusterManager) GetVPCCidr(ctx context.Context,
 	return nil
 }
 
+// ListCloudVPCV2 implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudVPCV2(ctx context.Context,
+	req *cmproto.ListCloudVPCV2Request, resp *cmproto.ListCloudVPCV2Response) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := cloudvpc.NewListVPCV2Action(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudVPCV2", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudVPCV2, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCloudVPCV2, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListCloudSubnets implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListCloudSubnets(ctx context.Context,
 	req *cmproto.ListCloudSubnetsRequest, resp *cmproto.ListCloudSubnetsResponse) error {

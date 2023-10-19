@@ -2873,27 +2873,7 @@ func (m *Account) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetSecretKey()) > 64 {
-		err := AccountValidationError{
-			field:  "SecretKey",
-			reason: "value length must be at most 64 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !_Account_SecretKey_Pattern.MatchString(m.GetSecretKey()) {
-		err := AccountValidationError{
-			field:  "SecretKey",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for SecretKey
 
 	// no validation rules for SubscriptionID
 
@@ -2983,8 +2963,6 @@ var _ interface {
 } = AccountValidationError{}
 
 var _Account_SecretID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _Account_SecretKey_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CloudAccount with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -7445,38 +7423,7 @@ func (m *NodeGroup) validate(all bool) error {
 
 	// no validation rules for Name
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
-		err := NodeGroupValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
-		err := NodeGroupValidationError{
-			field:  "ClusterID",
-			reason: "value does not have prefix \"BCS-\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !_NodeGroup_ClusterID_Pattern.MatchString(m.GetClusterID()) {
-		err := NodeGroupValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ClusterID
 
 	// no validation rules for Region
 
@@ -7558,29 +7505,9 @@ func (m *NodeGroup) validate(all bool) error {
 
 	// no validation rules for Provider
 
-	if _, ok := _NodeGroup_Status_InLookup[m.GetStatus()]; !ok {
-		err := NodeGroupValidationError{
-			field:  "Status",
-			reason: "value must be in list [CREATING RUNNING DELETING UPDATING DELETED]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Status
 
 	// no validation rules for ConsumerID
-
-	if m.GetNodeTemplate() == nil {
-		err := NodeGroupValidationError{
-			field:  "NodeTemplate",
-			reason: "value is required",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
 
 	if all {
 		switch v := interface{}(m.GetNodeTemplate()).(type) {
@@ -7722,16 +7649,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = NodeGroupValidationError{}
-
-var _NodeGroup_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _NodeGroup_Status_InLookup = map[string]struct{}{
-	"CREATING": {},
-	"RUNNING":  {},
-	"DELETING": {},
-	"UPDATING": {},
-	"DELETED":  {},
-}
 
 // Validate checks the field values on CloudArea with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
@@ -8392,16 +8309,7 @@ func (m *InstanceTemplateConfig) validate(all bool) error {
 
 	// no validation rules for InstanceType
 
-	if _, ok := _InstanceTemplateConfig_InstanceChargeType_InLookup[m.GetInstanceChargeType()]; !ok {
-		err := InstanceTemplateConfigValidationError{
-			field:  "InstanceChargeType",
-			reason: "value must be in list [PREPAID POSTPAID_BY_HOUR SPOTPAID]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for InstanceChargeType
 
 	if all {
 		switch v := interface{}(m.GetSystemDisk()).(type) {
@@ -8495,6 +8403,10 @@ func (m *InstanceTemplateConfig) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for NodeRole
+
+	// no validation rules for InitLoginUsername
+
 	// no validation rules for InitLoginPassword
 
 	// no validation rules for IsSecurityService
@@ -8580,12 +8492,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = InstanceTemplateConfigValidationError{}
-
-var _InstanceTemplateConfig_InstanceChargeType_InLookup = map[string]struct{}{
-	"PREPAID":          {},
-	"POSTPAID_BY_HOUR": {},
-	"SPOTPAID":         {},
-}
 
 // Validate checks the field values on LaunchConfiguration with the rules
 // defined in the proto definition for this message. If any rules are
@@ -10664,40 +10570,13 @@ func (m *CreateClusterReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if _, ok := _CreateClusterReq_Environment_InLookup[m.GetEnvironment()]; !ok {
-		err := CreateClusterReqValidationError{
-			field:  "Environment",
-			reason: "value must be in list [stag debug prod]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Environment
 
-	if _, ok := _CreateClusterReq_EngineType_InLookup[m.GetEngineType()]; !ok {
-		err := CreateClusterReqValidationError{
-			field:  "EngineType",
-			reason: "value must be in list [k8s mesos]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for EngineType
 
 	// no validation rules for IsExclusive
 
-	if _, ok := _CreateClusterReq_ClusterType_InLookup[m.GetClusterType()]; !ok {
-		err := CreateClusterReqValidationError{
-			field:  "ClusterType",
-			reason: "value must be in list [federation single]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ClusterType
 
 	// no validation rules for FederationClusterID
 
@@ -10821,19 +10700,33 @@ func (m *CreateClusterReq) validate(all bool) error {
 
 	// no validation rules for ManageType
 
-	if m.GetNetworkSettings() == nil {
-		err := CreateClusterReqValidationError{
-			field:  "NetworkSettings",
-			reason: "value is required",
+	if all {
+		switch v := interface{}(m.GetNetworkSettings()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateClusterReqValidationError{
+					field:  "NetworkSettings",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateClusterReqValidationError{
+					field:  "NetworkSettings",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
 		}
-		if !all {
-			return err
+	} else if v, ok := interface{}(m.GetNetworkSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateClusterReqValidationError{
+				field:  "NetworkSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
 		}
-		errors = append(errors, err)
-	}
-
-	if a := m.GetNetworkSettings(); a != nil {
-
 	}
 
 	if m.GetClusterBasicSettings() == nil {
@@ -10967,6 +10860,40 @@ func (m *CreateClusterReq) validate(all bool) error {
 
 	// no validation rules for CloudAccountID
 
+	for idx, item := range m.GetNodeGroups() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CreateClusterReqValidationError{
+						field:  fmt.Sprintf("NodeGroups[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CreateClusterReqValidationError{
+						field:  fmt.Sprintf("NodeGroups[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateClusterReqValidationError{
+					field:  fmt.Sprintf("NodeGroups[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	if len(errors) > 0 {
 		return CreateClusterReqMultiError(errors)
 	}
@@ -11050,22 +10977,6 @@ var _CreateClusterReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 var _CreateClusterReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _CreateClusterReq_BusinessID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CreateClusterReq_Environment_InLookup = map[string]struct{}{
-	"stag":  {},
-	"debug": {},
-	"prod":  {},
-}
-
-var _CreateClusterReq_EngineType_InLookup = map[string]struct{}{
-	"k8s":   {},
-	"mesos": {},
-}
-
-var _CreateClusterReq_ClusterType_InLookup = map[string]struct{}{
-	"federation": {},
-	"single":     {},
-}
 
 // Validate checks the field values on CreateClusterResp with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -36696,6 +36607,276 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = OsImageValidationError{}
+
+// Validate checks the field values on ListCloudVPCV2Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudVPCV2Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudVPCV2Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudVPCV2RequestMultiError, or nil if none found.
+func (m *ListCloudVPCV2Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudVPCV2Request) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetCloudID()) < 2 {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at least 2 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Region
+
+	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "AccountID",
+			reason: "value length must be at least 2 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for VpcID
+
+	if len(errors) > 0 {
+		return ListCloudVPCV2RequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudVPCV2RequestMultiError is an error wrapping multiple validation
+// errors returned by ListCloudVPCV2Request.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudVPCV2RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudVPCV2RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudVPCV2RequestMultiError) AllErrors() []error { return m }
+
+// ListCloudVPCV2RequestValidationError is the validation error returned by
+// ListCloudVPCV2Request.Validate if the designated constraints aren't met.
+type ListCloudVPCV2RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVPCV2RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVPCV2RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVPCV2RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVPCV2RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVPCV2RequestValidationError) ErrorName() string {
+	return "ListCloudVPCV2RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVPCV2RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVPCV2Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVPCV2RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVPCV2RequestValidationError{}
+
+// Validate checks the field values on ListCloudVPCV2Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudVPCV2Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudVPCV2Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudVPCV2ResponseMultiError, or nil if none found.
+func (m *ListCloudVPCV2Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudVPCV2Response) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListCloudVPCV2ResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListCloudVPCV2ResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudVPCV2ResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListCloudVPCV2ResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudVPCV2ResponseMultiError is an error wrapping multiple validation
+// errors returned by ListCloudVPCV2Response.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudVPCV2ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudVPCV2ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudVPCV2ResponseMultiError) AllErrors() []error { return m }
+
+// ListCloudVPCV2ResponseValidationError is the validation error returned by
+// ListCloudVPCV2Response.Validate if the designated constraints aren't met.
+type ListCloudVPCV2ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVPCV2ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVPCV2ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVPCV2ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVPCV2ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVPCV2ResponseValidationError) ErrorName() string {
+	return "ListCloudVPCV2ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVPCV2ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVPCV2Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVPCV2ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVPCV2ResponseValidationError{}
 
 // Validate checks the field values on ListCloudSubnetsRequest with the rules
 // defined in the proto definition for this message. If any rules are

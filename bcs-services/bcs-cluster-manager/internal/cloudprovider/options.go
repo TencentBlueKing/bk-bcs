@@ -147,6 +147,7 @@ type CreateClusterOption struct {
 	Reinstall    bool
 	InitPassword string
 	Operator     string
+	NodeGroupIDs []string
 	// cloud is used for cloudprovider template
 	Cloud *proto.Cloud
 }

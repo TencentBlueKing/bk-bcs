@@ -38,6 +38,36 @@ func init() {
 type CloudValidate struct {
 }
 
+// CreateClusterValidate create cluster validate
+func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
+	// kubernetes version
+	if len(req.ClusterBasicSettings.Version) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate lost kubernetes version in request", cloudName)
+	}
+
+	// check masterIP
+	if len(req.Master) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate lost kubernetes cluster masterIP", cloudName)
+	}
+
+	// default not handle systemReinstall
+	req.SystemReinstall = true
+
+	// auto generate master nodes
+	if req.AutoGenerateMasterNodes && len(req.Instances) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate invalid instanceTemplate config "+
+			"when AutoGenerateMasterNodes=true", cloudName)
+	}
+
+	// use existed instances
+	if !req.AutoGenerateMasterNodes && len(req.Master) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate invalid master config "+
+			"when AutoGenerateMasterNodes=false", cloudName)
+	}
+
+	return nil
+}
+
 // ImportClusterValidate check importCluster operation
 func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *cloudprovider.CommonOption) error {
 	// call blueking interface to create cluster
@@ -96,6 +126,11 @@ func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegio
 	account *proto.Account) error {
 	// blueking cloud not cloud Account
 	return nil
+}
+
+// ListCloudVPCV2Validate xxx
+func (c *CloudValidate) ListCloudVPCV2Validate(req *proto.ListCloudVPCV2Request, account *proto.Account) error {
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // ListCloudSubnetsValidate xxx

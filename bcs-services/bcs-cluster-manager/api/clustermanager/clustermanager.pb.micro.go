@@ -634,6 +634,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.ListCloudVPCV2",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/vpcs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ListCloudSubnets",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/subnets"},
 			Method:  []string{"GET"},
@@ -700,7 +706,7 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 // Client API for ClusterManager service
 
 type ClusterManagerService interface {
-	// * cluster management
+	//* cluster management
 	CreateCluster(ctx context.Context, in *CreateClusterReq, opts ...client.CallOption) (*CreateClusterResp, error)
 	RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, opts ...client.CallOption) (*RetryCreateClusterResp, error)
 	CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, opts ...client.CallOption) (*KubeConfigResp, error)
@@ -715,7 +721,7 @@ type ClusterManagerService interface {
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
 	ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, opts ...client.CallOption) (*ListProjectClusterResp, error)
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
-	// * node management
+	//* node management
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
 	UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error)
 	CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...client.CallOption) (*CheckNodesResponse, error)
@@ -724,47 +730,47 @@ type ClusterManagerService interface {
 	DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error)
 	UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...client.CallOption) (*UpdateNodeLabelsResponse, error)
 	UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...client.CallOption) (*UpdateNodeTaintsResponse, error)
-	// * cluster credential management
+	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
 	DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, opts ...client.CallOption) (*DeleteClusterCredentialResp, error)
 	ListClusterCredential(ctx context.Context, in *ListClusterCredentialReq, opts ...client.CallOption) (*ListClusterCredentialResp, error)
-	// * federation cluster management
+	//* federation cluster management
 	InitFederationCluster(ctx context.Context, in *InitFederationClusterReq, opts ...client.CallOption) (*InitFederationClusterResp, error)
 	AddFederatedCluster(ctx context.Context, in *AddFederatedClusterReq, opts ...client.CallOption) (*AddFederatedClusterResp, error)
-	// * namespace management *
+	//* namespace management *
 	CreateNamespace(ctx context.Context, in *CreateNamespaceReq, opts ...client.CallOption) (*CreateNamespaceResp, error)
 	UpdateNamespace(ctx context.Context, in *UpdateNamespaceReq, opts ...client.CallOption) (*UpdateNamespaceResp, error)
 	DeleteNamespace(ctx context.Context, in *DeleteNamespaceReq, opts ...client.CallOption) (*DeleteNamespaceResp, error)
 	GetNamespace(ctx context.Context, in *GetNamespaceReq, opts ...client.CallOption) (*GetNamespaceResp, error)
 	ListNamespace(ctx context.Context, in *ListNamespaceReq, opts ...client.CallOption) (*ListNamespaceResp, error)
-	// * NamespaceQuota management *
+	//* NamespaceQuota management *
 	CreateNamespaceQuota(ctx context.Context, in *CreateNamespaceQuotaReq, opts ...client.CallOption) (*CreateNamespaceQuotaResp, error)
 	UpdateNamespaceQuota(ctx context.Context, in *UpdateNamespaceQuotaReq, opts ...client.CallOption) (*UpdateNamespaceQuotaResp, error)
 	DeleteNamespaceQuota(ctx context.Context, in *DeleteNamespaceQuotaReq, opts ...client.CallOption) (*DeleteNamespaceQuotaResp, error)
 	GetNamespaceQuota(ctx context.Context, in *GetNamespaceQuotaReq, opts ...client.CallOption) (*GetNamespaceQuotaResp, error)
 	ListNamespaceQuota(ctx context.Context, in *ListNamespaceQuotaReq, opts ...client.CallOption) (*ListNamespaceQuotaResp, error)
 	CreateNamespaceWithQuota(ctx context.Context, in *CreateNamespaceWithQuotaReq, opts ...client.CallOption) (*CreateNamespaceWithQuotaResp, error)
-	// * project information management *
+	//* project information management *
 	CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...client.CallOption) (*CreateProjectResponse, error)
 	UpdateProject(ctx context.Context, in *UpdateProjectRequest, opts ...client.CallOption) (*UpdateProjectResponse, error)
 	DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...client.CallOption) (*DeleteProjectResponse, error)
 	GetProject(ctx context.Context, in *GetProjectRequest, opts ...client.CallOption) (*GetProjectResponse, error)
 	ListProject(ctx context.Context, in *ListProjectRequest, opts ...client.CallOption) (*ListProjectResponse, error)
-	// * Cloud information management *
+	//* Cloud information management *
 	CreateCloud(ctx context.Context, in *CreateCloudRequest, opts ...client.CallOption) (*CreateCloudResponse, error)
 	UpdateCloud(ctx context.Context, in *UpdateCloudRequest, opts ...client.CallOption) (*UpdateCloudResponse, error)
 	DeleteCloud(ctx context.Context, in *DeleteCloudRequest, opts ...client.CallOption) (*DeleteCloudResponse, error)
 	GetCloud(ctx context.Context, in *GetCloudRequest, opts ...client.CallOption) (*GetCloudResponse, error)
 	ListCloud(ctx context.Context, in *ListCloudRequest, opts ...client.CallOption) (*ListCloudResponse, error)
-	// * Cloud VPC information management *
+	//* Cloud VPC information management *
 	CreateCloudVPC(ctx context.Context, in *CreateCloudVPCRequest, opts ...client.CallOption) (*CreateCloudVPCResponse, error)
 	UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, opts ...client.CallOption) (*UpdateCloudVPCResponse, error)
 	DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, opts ...client.CallOption) (*DeleteCloudVPCResponse, error)
 	ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, opts ...client.CallOption) (*ListCloudVPCResponse, error)
 	ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, opts ...client.CallOption) (*ListCloudRegionsResponse, error)
 	GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, opts ...client.CallOption) (*GetVPCCidrResponse, error)
-	// * NodeGroup information management *
+	//* NodeGroup information management *
 	CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, opts ...client.CallOption) (*CreateNodeGroupResponse, error)
 	UpdateNodeGroup(ctx context.Context, in *UpdateNodeGroupRequest, opts ...client.CallOption) (*UpdateNodeGroupResponse, error)
 	DeleteNodeGroup(ctx context.Context, in *DeleteNodeGroupRequest, opts ...client.CallOption) (*DeleteNodeGroupResponse, error)
@@ -779,14 +785,14 @@ type ClusterManagerService interface {
 	UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...client.CallOption) (*UpdateGroupDesiredSizeResponse, error)
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*DisableNodeGroupAutoScaleResponse, error)
-	// * Task information management *
+	//* Task information management *
 	CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error)
 	RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...client.CallOption) (*RetryTaskResponse, error)
 	UpdateTask(ctx context.Context, in *UpdateTaskRequest, opts ...client.CallOption) (*UpdateTaskResponse, error)
 	DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...client.CallOption) (*DeleteTaskResponse, error)
 	GetTask(ctx context.Context, in *GetTaskRequest, opts ...client.CallOption) (*GetTaskResponse, error)
 	ListTask(ctx context.Context, in *ListTaskRequest, opts ...client.CallOption) (*ListTaskResponse, error)
-	// * ClusterAutoScalingOption information management *
+	//* ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, opts ...client.CallOption) (*CreateAutoScalingOptionResponse, error)
 	UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, opts ...client.CallOption) (*UpdateAutoScalingOptionResponse, error)
 	DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, opts ...client.CallOption) (*DeleteAutoScalingOptionResponse, error)
@@ -803,6 +809,7 @@ type ClusterManagerService interface {
 	GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, opts ...client.CallOption) (*GetCloudRegionsResponse, error)
 	GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error)
 	ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, opts ...client.CallOption) (*ListCloudRegionClusterResponse, error)
+	ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, opts ...client.CallOption) (*ListCloudVPCV2Response, error)
 	ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...client.CallOption) (*ListCloudSubnetsResponse, error)
 	ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...client.CallOption) (*ListCloudSecurityGroupsResponse, error)
 	ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...client.CallOption) (*ListCloudInstanceTypeResponse, error)
@@ -1724,6 +1731,16 @@ func (c *clusterManagerService) ListCloudRegionCluster(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *clusterManagerService) ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, opts ...client.CallOption) (*ListCloudVPCV2Response, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudVPCV2", in)
+	out := new(ListCloudVPCV2Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...client.CallOption) (*ListCloudSubnetsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudSubnets", in)
 	out := new(ListCloudSubnetsResponse)
@@ -1827,7 +1844,7 @@ func (c *clusterManagerService) ListCCTopology(ctx context.Context, in *ListCCTo
 // Server API for ClusterManager service
 
 type ClusterManagerHandler interface {
-	// * cluster management
+	//* cluster management
 	CreateCluster(context.Context, *CreateClusterReq, *CreateClusterResp) error
 	RetryCreateClusterTask(context.Context, *RetryCreateClusterReq, *RetryCreateClusterResp) error
 	CheckCloudKubeConfig(context.Context, *KubeConfigReq, *KubeConfigResp) error
@@ -1842,7 +1859,7 @@ type ClusterManagerHandler interface {
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
 	ListProjectCluster(context.Context, *ListProjectClusterReq, *ListProjectClusterResp) error
 	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
-	// * node management
+	//* node management
 	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
 	UpdateNode(context.Context, *UpdateNodeRequest, *UpdateNodeResponse) error
 	CheckNodeInCluster(context.Context, *CheckNodesRequest, *CheckNodesResponse) error
@@ -1851,47 +1868,47 @@ type ClusterManagerHandler interface {
 	DrainNode(context.Context, *DrainNodeRequest, *DrainNodeResponse) error
 	UpdateNodeLabels(context.Context, *UpdateNodeLabelsRequest, *UpdateNodeLabelsResponse) error
 	UpdateNodeTaints(context.Context, *UpdateNodeTaintsRequest, *UpdateNodeTaintsResponse) error
-	// * cluster credential management
+	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
 	DeleteClusterCredential(context.Context, *DeleteClusterCredentialReq, *DeleteClusterCredentialResp) error
 	ListClusterCredential(context.Context, *ListClusterCredentialReq, *ListClusterCredentialResp) error
-	// * federation cluster management
+	//* federation cluster management
 	InitFederationCluster(context.Context, *InitFederationClusterReq, *InitFederationClusterResp) error
 	AddFederatedCluster(context.Context, *AddFederatedClusterReq, *AddFederatedClusterResp) error
-	// * namespace management *
+	//* namespace management *
 	CreateNamespace(context.Context, *CreateNamespaceReq, *CreateNamespaceResp) error
 	UpdateNamespace(context.Context, *UpdateNamespaceReq, *UpdateNamespaceResp) error
 	DeleteNamespace(context.Context, *DeleteNamespaceReq, *DeleteNamespaceResp) error
 	GetNamespace(context.Context, *GetNamespaceReq, *GetNamespaceResp) error
 	ListNamespace(context.Context, *ListNamespaceReq, *ListNamespaceResp) error
-	// * NamespaceQuota management *
+	//* NamespaceQuota management *
 	CreateNamespaceQuota(context.Context, *CreateNamespaceQuotaReq, *CreateNamespaceQuotaResp) error
 	UpdateNamespaceQuota(context.Context, *UpdateNamespaceQuotaReq, *UpdateNamespaceQuotaResp) error
 	DeleteNamespaceQuota(context.Context, *DeleteNamespaceQuotaReq, *DeleteNamespaceQuotaResp) error
 	GetNamespaceQuota(context.Context, *GetNamespaceQuotaReq, *GetNamespaceQuotaResp) error
 	ListNamespaceQuota(context.Context, *ListNamespaceQuotaReq, *ListNamespaceQuotaResp) error
 	CreateNamespaceWithQuota(context.Context, *CreateNamespaceWithQuotaReq, *CreateNamespaceWithQuotaResp) error
-	// * project information management *
+	//* project information management *
 	CreateProject(context.Context, *CreateProjectRequest, *CreateProjectResponse) error
 	UpdateProject(context.Context, *UpdateProjectRequest, *UpdateProjectResponse) error
 	DeleteProject(context.Context, *DeleteProjectRequest, *DeleteProjectResponse) error
 	GetProject(context.Context, *GetProjectRequest, *GetProjectResponse) error
 	ListProject(context.Context, *ListProjectRequest, *ListProjectResponse) error
-	// * Cloud information management *
+	//* Cloud information management *
 	CreateCloud(context.Context, *CreateCloudRequest, *CreateCloudResponse) error
 	UpdateCloud(context.Context, *UpdateCloudRequest, *UpdateCloudResponse) error
 	DeleteCloud(context.Context, *DeleteCloudRequest, *DeleteCloudResponse) error
 	GetCloud(context.Context, *GetCloudRequest, *GetCloudResponse) error
 	ListCloud(context.Context, *ListCloudRequest, *ListCloudResponse) error
-	// * Cloud VPC information management *
+	//* Cloud VPC information management *
 	CreateCloudVPC(context.Context, *CreateCloudVPCRequest, *CreateCloudVPCResponse) error
 	UpdateCloudVPC(context.Context, *UpdateCloudVPCRequest, *UpdateCloudVPCResponse) error
 	DeleteCloudVPC(context.Context, *DeleteCloudVPCRequest, *DeleteCloudVPCResponse) error
 	ListCloudVPC(context.Context, *ListCloudVPCRequest, *ListCloudVPCResponse) error
 	ListCloudRegions(context.Context, *ListCloudRegionsRequest, *ListCloudRegionsResponse) error
 	GetVPCCidr(context.Context, *GetVPCCidrRequest, *GetVPCCidrResponse) error
-	// * NodeGroup information management *
+	//* NodeGroup information management *
 	CreateNodeGroup(context.Context, *CreateNodeGroupRequest, *CreateNodeGroupResponse) error
 	UpdateNodeGroup(context.Context, *UpdateNodeGroupRequest, *UpdateNodeGroupResponse) error
 	DeleteNodeGroup(context.Context, *DeleteNodeGroupRequest, *DeleteNodeGroupResponse) error
@@ -1906,14 +1923,14 @@ type ClusterManagerHandler interface {
 	UpdateGroupDesiredSize(context.Context, *UpdateGroupDesiredSizeRequest, *UpdateGroupDesiredSizeResponse) error
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest, *EnableNodeGroupAutoScaleResponse) error
 	DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest, *DisableNodeGroupAutoScaleResponse) error
-	// * Task information management *
+	//* Task information management *
 	CreateTask(context.Context, *CreateTaskRequest, *CreateTaskResponse) error
 	RetryTask(context.Context, *RetryTaskRequest, *RetryTaskResponse) error
 	UpdateTask(context.Context, *UpdateTaskRequest, *UpdateTaskResponse) error
 	DeleteTask(context.Context, *DeleteTaskRequest, *DeleteTaskResponse) error
 	GetTask(context.Context, *GetTaskRequest, *GetTaskResponse) error
 	ListTask(context.Context, *ListTaskRequest, *ListTaskResponse) error
-	// * ClusterAutoScalingOption information management *
+	//* ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(context.Context, *CreateAutoScalingOptionRequest, *CreateAutoScalingOptionResponse) error
 	UpdateAutoScalingOption(context.Context, *UpdateAutoScalingOptionRequest, *UpdateAutoScalingOptionResponse) error
 	DeleteAutoScalingOption(context.Context, *DeleteAutoScalingOptionRequest, *DeleteAutoScalingOptionResponse) error
@@ -1930,6 +1947,7 @@ type ClusterManagerHandler interface {
 	GetCloudRegions(context.Context, *GetCloudRegionsRequest, *GetCloudRegionsResponse) error
 	GetCloudRegionZones(context.Context, *GetCloudRegionZonesRequest, *GetCloudRegionZonesResponse) error
 	ListCloudRegionCluster(context.Context, *ListCloudRegionClusterRequest, *ListCloudRegionClusterResponse) error
+	ListCloudVPCV2(context.Context, *ListCloudVPCV2Request, *ListCloudVPCV2Response) error
 	ListCloudSubnets(context.Context, *ListCloudSubnetsRequest, *ListCloudSubnetsResponse) error
 	ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest, *ListCloudSecurityGroupsResponse) error
 	ListCloudInstanceTypes(context.Context, *ListCloudInstanceTypeRequest, *ListCloudInstanceTypeResponse) error
@@ -2040,6 +2058,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, out *GetCloudRegionsResponse) error
 		GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error
 		ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error
+		ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, out *ListCloudVPCV2Response) error
 		ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, out *ListCloudSubnetsResponse) error
 		ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, out *ListCloudSecurityGroupsResponse) error
 		ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error
@@ -2647,6 +2666,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudVPCV2",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/vpcs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListCloudSubnets",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/subnets"},
 		Method:  []string{"GET"},
@@ -3068,6 +3093,10 @@ func (h *clusterManagerHandler) GetCloudRegionZones(ctx context.Context, in *Get
 
 func (h *clusterManagerHandler) ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error {
 	return h.ClusterManagerHandler.ListCloudRegionCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, out *ListCloudVPCV2Response) error {
+	return h.ClusterManagerHandler.ListCloudVPCV2(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, out *ListCloudSubnetsResponse) error {

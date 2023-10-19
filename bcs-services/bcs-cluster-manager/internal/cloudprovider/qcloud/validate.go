@@ -14,8 +14,10 @@
 package qcloud
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"strconv"
 	"sync"
 
@@ -38,6 +40,74 @@ func init() {
 
 // CloudValidate qcloud validate management implementation
 type CloudValidate struct {
+}
+
+// CreateClusterValidate create cluster validate
+func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
+	// kubernetes version
+	if len(req.ClusterBasicSettings.Version) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate lost kubernetes version in request", cloudName)
+	}
+
+	// check masterIP
+	if len(req.Master) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate lost kubernetes cluster masterIP", cloudName)
+	}
+
+	// default not handle systemReinstall
+	req.SystemReinstall = true
+
+	// auto generate master nodes
+	if req.AutoGenerateMasterNodes && len(req.Instances) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate invalid instanceTemplate config "+
+			"when AutoGenerateMasterNodes=true", cloudName)
+	}
+
+	// use existed instances
+	if !req.AutoGenerateMasterNodes && len(req.Master) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate invalid master config "+
+			"when AutoGenerateMasterNodes=false", cloudName)
+	}
+
+	// check cidr
+	if len(req.NetworkSettings.ClusterIPv4CIDR) > 0 {
+		cidr, err := cloudprovider.GetStorageModel().GetTkeCidr(
+			context.Background(), req.VpcID, req.NetworkSettings.ClusterIPv4CIDR)
+		if err != nil {
+			blog.Errorf("get cluster cidr[%s:%s] info failed: %v",
+				req.VpcID, req.NetworkSettings.ClusterIPv4CIDR, err)
+			return err
+		}
+		if cidr.Status == common.TkeCidrStatusUsed || cidr.Cluster != "" {
+			errMsg := fmt.Errorf("create cluster cidr[%s:%s] already used by cluster(%s)",
+				req.VpcID, req.NetworkSettings.ClusterIPv4CIDR, cidr.Cluster)
+			return errMsg
+		}
+	}
+	// check vpc-cni
+	if req.NetworkSettings.EnableVPCCni {
+		if req.NetworkSettings.SubnetSource == nil {
+			return fmt.Errorf("networkSetting.SubnetSource cannot be empty when enable vpc-cni")
+		}
+		subnetIDs := make([]string, 0)
+		switch {
+		case req.NetworkSettings.SubnetSource.Existed != nil:
+			if len(req.NetworkSettings.SubnetSource.Existed.Ids) == 0 {
+				return fmt.Errorf("existed subet ids cannot be empty")
+			}
+			subnetIDs = req.NetworkSettings.SubnetSource.Existed.Ids
+		case req.NetworkSettings.SubnetSource.New != nil:
+			// apply vpc cidr subnet by mask and zone
+			return fmt.Errorf("current not support apply vpc subnet cidr when vpc-cni mode")
+		}
+		req.NetworkSettings.EniSubnetIDs = subnetIDs
+
+		if req.NetworkSettings.IsStaticIpMode && req.NetworkSettings.ClaimExpiredSeconds <= 0 {
+			req.NetworkSettings.ClaimExpiredSeconds = 300
+		}
+	}
+
+	return nil
 }
 
 // ImportClusterValidate check importCluster operation
@@ -151,6 +221,11 @@ func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegio
 	}
 
 	return nil
+}
+
+// ListCloudVPCV2Validate xxx
+func (c *CloudValidate) ListCloudVPCV2Validate(req *proto.ListCloudVPCV2Request, account *proto.Account) error {
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // ListCloudSubnetsValidate xxx

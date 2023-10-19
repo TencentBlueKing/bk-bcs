@@ -939,6 +939,15 @@ service ClusterManager {
       summary : "查询cloud地域集群列表"
     };
   }
+  rpc ListCloudVPCV2(ListCloudVPCV2Request) returns (ListCloudVPCV2Response) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/vpcs"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取vpc列表"
+      summary : "获取vpc列表"
+    };
+  }
   rpc ListCloudSubnets(ListCloudSubnetsRequest) returns (ListCloudSubnetsResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/clouds/{cloudID}/subnets"
@@ -1658,7 +1667,7 @@ message Account {
   string secretKey = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "secretKey",
     description: "腾讯云账号secretKey"
-  }, (validate.rules).string = {max_len : 64, pattern : "^[0-9a-zA-Z-]+$"}];
+  }];
   string subscriptionID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "subscriptionID",
     description: "Azure 订阅ID"
@@ -2535,9 +2544,7 @@ message NodeGroup {
   string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "clusterID", 
     description: "节点组所关联的集群，该ID为BCS集群ID"
-  },
-  (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
-  ];
+  }];
   string region = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "region", 
     description: "节点组所关联区域信息"
@@ -2582,7 +2589,7 @@ message NodeGroup {
   string status = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "status", 
     description: "节点组状态，可能状态CREATING，RUNNING，DELETING，UPDATING，DELETED"
-  }, (validate.rules).string = {in: ["CREATING", "RUNNING", "DELETING", "UPDATING", "DELETED"]}];
+  }];
   string consumerID = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "consumerID",
     description: "consumerID对接resourceManager模块申请资源使用"
@@ -2590,8 +2597,7 @@ message NodeGroup {
   NodeTemplate nodeTemplate = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "nodeTemplate", 
     description: "节点组实例设置"
-  }, (validate.rules).message.required = true
-  ];
+  }];
   string cloudNodeGroupID = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudNodeGroupID",
     description: "NodeGroup 在各个云上的 ID"
@@ -2795,8 +2801,7 @@ message InstanceTemplateConfig {
     title: "instanceChargeType",
     description: "机型计费模型，POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。"
         "如不设置，BCS暂时默认提供包年包月的类型"
-  },(validate.rules).string = {in: ["PREPAID", "POSTPAID_BY_HOUR", "SPOTPAID"]}
-  ];
+  }];
   DataDisk systemDisk = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "systemDisk",
     description: "系统盘信息，BCS默认设置为高性能云盘，大小为50G"
@@ -2809,19 +2814,27 @@ message InstanceTemplateConfig {
     title: "imageInfo",
     description: "新实例启动时的配置镜像信息"
   }];
-  string initLoginPassword = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string nodeRole = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeRole",
+    description: "新实例节点角色，取值:MASTER_ETCD, WORKER"
+  }];
+  string initLoginUsername = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "initLoginUsername",
+    description: "新实例登录用户名"
+  }];
+  string initLoginPassword = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "initLoginPassword",
     description: "新实例初始设置password,如果不设置系统自动生成"
   }];
-  repeated string securityGroupIDs = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated string securityGroupIDs = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "securityGroupIDs",
     description: "新实例安全组关联的ID列表，如果不填写，使用系统默认的安全组信息"
   }];
-  bool isSecurityService = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  bool isSecurityService = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isSecurityService",
     description: "新实例启动时的是否开启云安全, 选填 qcloud默认开启"
   }];
-  bool isMonitorService = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  bool isMonitorService = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isMonitorService",
     description: "新实例启动时的是否开启云监控, 选填 默认开启"
   }];
@@ -3579,14 +3592,12 @@ message CreateClusterReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "environment",
       description : "集群环境, 例如[prod, debug, stag]"
-    },
-    (validate.rules).string = {in: ["stag", "debug", "prod"]}
-  ];
+    }];
   string engineType = 9 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "engineType",
       description : "引擎类型，默认k8s"
-    },(validate.rules).string = {in: ["k8s", "mesos"]}];
+    }];
   bool isExclusive = 10[ 
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "isExclusive",
@@ -3597,7 +3608,7 @@ message CreateClusterReq {
       title : "clusterType",
       description : "集群类型, 例如[federation, single], "
                   "federation表示为联邦集群，single表示独立集群，默认为single"
-  },(validate.rules).string = { in: ["federation", "single"]}];
+  }];
   string federationClusterID = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "federationClusterID", 
     description: "如果该集群为联邦集群的一部分，用该ID记录联邦Host信息"
@@ -3648,8 +3659,7 @@ message CreateClusterReq {
   NetworkSetting networkSettings = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "networkSettings", 
     description: "集群网络基础设置，需要调用方设置"
-  }, (validate.rules).any.required = true
-  ];
+  }];
   ClusterBasicSetting clusterBasicSettings = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "clusterBasicSettings", 
     description: "集群基础信息设置，例如使用版本，关联的vpc等，调用方需要设置"
@@ -3714,6 +3724,10 @@ message CreateClusterReq {
   string cloudAccountID = 39[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudAccountID",
     description: "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证"
+  }];
+  repeated NodeGroup nodeGroups = 40[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeGroups",
+    description: "创建集群时的节点池信息"
   }];
 }
 
@@ -9230,6 +9244,59 @@ message OsImage {
   string provider = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "provider",
     description : "镜像提供方，可选值: PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像)"
+  }];
+}
+
+message ListCloudVPCV2Request {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudVPCV2Request"
+      description : "查询云vpc列表"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  },(validate.rules).string = {min_len : 2}];
+  string vpcID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcID", 
+    description: "查询指定的vpc信息"
+  }];
+}
+
+message ListCloudVPCV2Response {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudVPCV2Response"
+      description : "查询VPC列表返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", 
+    description : "返回结果"
+  }];
+  repeated CloudVPC data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data", 
+    description : "获取到的vpc列表信息"
   }];
 }
 

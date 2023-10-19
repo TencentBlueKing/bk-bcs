@@ -415,7 +415,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	}
 
 	// delete cluster relative resource directly when IsForced is true
-	if req.IsForced {
+	if req.IsForced || da.cloud.CloudProvider == "eopCloud" {
 		// delete relative cloud infrastructure entity & local information
 		if err = da.deleteRelativeResource(); err != nil {
 			blog.Infof("force delete Cluster %s relative resource err, %s", req.ClusterID, err.Error())

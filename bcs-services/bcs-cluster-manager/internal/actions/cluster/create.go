@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -31,7 +32,6 @@ import (
 
 const (
 	createClusterIDLockKey = "/bcs-services/bcs-cluster-manager/createClusterID"
-	defaultClaimTime       = 300
 )
 
 // CreateAction action for create cluster
@@ -120,12 +120,41 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		CreateTime:              createTime,
 		UpdateTime:              createTime,
 	}
-
-	// default value setting
-	err := ca.defaultSetting(cls, cloud)
+	// set cloud default values
+	cloudInfoMgr, err := cloudprovider.GetCloudInfoMgr(cloud.CloudProvider)
 	if err != nil {
+		blog.Errorf("get cloudprovider %s CloudInfoMgr Cluster %s failed, %s",
+			cloud.CloudProvider, ca.req.ClusterID, err.Error())
 		return nil, err
 	}
+	err = cloudInfoMgr.InitCloudClusterDefaultInfo(cls, &cloudprovider.InitClusterConfigOption{
+		Cloud: cloud,
+		ClusterVersion: func() string {
+			if ca.req.ClusterBasicSettings != nil {
+				return ca.req.ClusterBasicSettings.Version
+			}
+			return ""
+		}(),
+	})
+	if err != nil {
+		blog.Errorf("Create Cloud[%s] Cluster set defaultInfo failed: %v", ca.cloud.CloudProvider, err)
+		return cls, err
+	}
+
+	// setting master node for storage
+	cls.Master = make(map[string]*cmproto.Node)
+	for _, masterIP := range ca.req.Master {
+		node, err := ca.transNodeIPToCloudNode(masterIP)
+		if err != nil {
+			errMsg := fmt.Errorf("createCluster transNodeIPToCloudNode[%s] failed: %v", masterIP, err)
+			blog.Errorf(errMsg.Error())
+			return cls, errMsg
+		}
+		node.Status = common.StatusRunning
+		cls.Master[masterIP] = node
+	}
+	// cluster status
+	cls.Status = common.StatusInitialization
 
 	return cls, err
 }
@@ -238,64 +267,27 @@ func (ca *CreateAction) validate() error {
 	if err := ca.req.Validate(); err != nil {
 		return err
 	}
-	// kubernetes version
-	if len(ca.req.ClusterBasicSettings.Version) == 0 {
-		return fmt.Errorf("lost kubernetes version in request")
+	// cloud validate
+	cloudValidate, err := cloudprovider.GetCloudValidateMgr(ca.cloud.CloudProvider)
+	if err != nil {
+		return err
 	}
 
-	// check masterIP
-	if len(ca.req.Master) == 0 {
-		return fmt.Errorf("lost kubernetes cluster masterIP")
+	// first, get cloud credentialInfo from project; second, get from cloud provider when failed to obtain
+	cOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ca.cloud,
+		AccountID: ca.req.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("Get Credential failed from Cloud %s: %s",
+			ca.cloud.CloudID, err.Error())
+		return err
 	}
+	cOption.Region = ca.req.Region
 
-	// default not handle systemReinstall
-	ca.req.SystemReinstall = true
-
-	// auto generate master nodes
-	if ca.req.AutoGenerateMasterNodes && len(ca.req.Instances) == 0 {
-		return fmt.Errorf("invalid instanceTemplate config when AutoGenerateMasterNodes=true")
-	}
-
-	// use existed instances
-	if !ca.req.AutoGenerateMasterNodes && len(ca.req.Master) == 0 {
-		return fmt.Errorf("invalid master config when AutoGenerateMasterNodes=false")
-	}
-
-	// check cidr
-	if len(ca.req.NetworkSettings.ClusterIPv4CIDR) > 0 {
-		cidr, err := ca.model.GetTkeCidr(ca.ctx, ca.req.VpcID, ca.req.NetworkSettings.ClusterIPv4CIDR)
-		if err != nil {
-			blog.Errorf("get cluster cidr[%s:%s] info failed: %v",
-				ca.req.VpcID, ca.req.NetworkSettings.ClusterIPv4CIDR, err)
-			return err
-		}
-		if cidr.Status == common.TkeCidrStatusUsed || cidr.Cluster != "" {
-			errMsg := fmt.Errorf("create cluster cidr[%s:%s] already used by cluster(%s)",
-				ca.req.VpcID, ca.req.NetworkSettings.ClusterIPv4CIDR, cidr.Cluster)
-			return errMsg
-		}
-	}
-	// check vpc-cni
-	if ca.req.NetworkSettings.EnableVPCCni {
-		if ca.req.NetworkSettings.SubnetSource == nil {
-			return fmt.Errorf("networkSetting.SubnetSource cannot be empty when enable vpc-cni")
-		}
-		subnetIDs := make([]string, 0)
-		switch {
-		case ca.req.NetworkSettings.SubnetSource.Existed != nil:
-			if len(ca.req.NetworkSettings.SubnetSource.Existed.Ids) == 0 {
-				return fmt.Errorf("existed subet ids cannot be empty")
-			}
-			subnetIDs = ca.req.NetworkSettings.SubnetSource.Existed.Ids
-		case ca.req.NetworkSettings.SubnetSource.New != nil:
-			// apply vpc cidr subnet by mask and zone
-			return fmt.Errorf("current not support apply vpc subnet cidr when vpc-cni mode")
-		}
-		ca.req.NetworkSettings.EniSubnetIDs = subnetIDs
-
-		if ca.req.NetworkSettings.IsStaticIpMode && ca.req.NetworkSettings.ClaimExpiredSeconds <= 0 {
-			ca.req.NetworkSettings.ClaimExpiredSeconds = defaultClaimTime
-		}
+	err = cloudValidate.CreateClusterValidate(ca.req, cOption)
+	if err != nil {
+		return err
 	}
 
 	// masterIP check
@@ -444,11 +436,9 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 		return
 	}
 
-	// apply cluster CIDR Info
-	err = ca.applyClusterCIDR(cls)
+	err = ca.createNodegroup(cls)
 	if err != nil {
-		ca.resp.Data = cls
-		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		blog.Errorf("createNodegroup failed: %v", err)
 		return
 	}
 
@@ -478,6 +468,42 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 	ca.resp.Task = ca.task
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
+}
+
+func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
+	timeStr := time.Now().Format(time.RFC3339)
+	if ca.req.NodeGroups != nil {
+		for _, ng := range ca.req.NodeGroups {
+			ng.NodeGroupID = fmt.Sprintf("BCS-ng-%s", utils.RandomString(8))
+			ng.Region = cls.Region
+			ng.ClusterID = cls.ClusterID
+			ng.ProjectID = cls.ProjectID
+			ng.Provider = cls.Provider
+			ng.Status = common.StatusCreateNodeGroupCreating
+			ng.CreateTime = timeStr
+			ng.UpdateTime = timeStr
+
+			if ng.LaunchTemplate == nil {
+				return fmt.Errorf("createNodegroup[%s] empty LaunchTemplate", ng.Name)
+			}
+
+			err := ca.model.CreateNodeGroup(context.Background(), ng)
+			if err != nil {
+				blog.Errorf("save NodeGroup %s information to store failed, %s", ng.NodeGroupID, err.Error())
+				if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
+					ca.resp.Data = cls
+					ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
+					return err
+				}
+				//other db operation error
+				ca.resp.Data = cls
+				ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Cluster) error {
@@ -522,11 +548,19 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 	}
 	coption.Region = ca.req.Region
 
+	var nodeGroupIDs []string
+	if ca.req.NodeGroups != nil {
+		for _, ng := range ca.req.NodeGroups {
+			nodeGroupIDs = append(nodeGroupIDs, ng.NodeGroupID)
+		}
+	}
+
 	// create cluster task by task manager
 	task, err := provider.CreateCluster(cls, &cloudprovider.CreateClusterOption{
 		CommonOption: *coption,
 		Reinstall:    ca.req.SystemReinstall,
 		InitPassword: ca.req.InitLoginPassword,
+		NodeGroupIDs: nodeGroupIDs,
 		Operator:     ca.req.Creator,
 		Cloud:        ca.cloud,
 	})

@@ -228,6 +228,8 @@ type NodeManager interface {
 
 // CloudValidateManager validate interface for check cloud resourceInfo
 type CloudValidateManager interface {
+	// CreateClusterValidate import cluster validate
+	CreateClusterValidate(req *proto.CreateClusterReq, opt *CommonOption) error
 	// ImportClusterValidate import cluster validate
 	ImportClusterValidate(req *proto.ImportClusterReq, opt *CommonOption) error
 	// ImportCloudAccountValidate import cloud account validate
@@ -236,6 +238,8 @@ type CloudValidateManager interface {
 	GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error
 	// ListCloudRegionClusterValidate get cloud region zones validate
 	ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error
+	// ListCloudVPCV2Validate list cloud vpc validate
+	ListCloudVPCV2Validate(req *proto.ListCloudVPCV2Request, account *proto.Account) error
 	// ListCloudSubnetsValidate list subnets validate
 	ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error
 	// ListSecurityGroupsValidate list SecurityGroups validate
@@ -313,6 +317,8 @@ type NodeGroupManager interface {
 
 // VPCManager cloud interface for vpc management
 type VPCManager interface {
+	// ListVPCs list vpc
+	ListVPCs(vpcID string, opt *CommonOption) ([]*proto.CloudVPC, error)
 	// ListSubnets list vpc's subnets
 	ListSubnets(vpcID string, opt *CommonOption) ([]*proto.Subnet, error)
 	// ListSecurityGroups list security groups
