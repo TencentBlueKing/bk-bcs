@@ -58,9 +58,9 @@ install_localpv() {
   kubectl get ns "$namespace" || kubectl create ns $namespace
 
   if [[ -n ${BCS_OFFLINE:-} ]]; then
-    chart_path="$(find "${ROOT_DIR}/version-${VERSION}/charts/" -iname "provisioner-*.tgz" -type f | head -1)"
+    chart_path="$(find "${ROOT_DIR}/version-${K8S_VER}/charts/" -iname "provisioner-*.tgz" -type f | head -1)"
     if [[ -z $chart_path ]]; then
-      utils::log "FATAL" "can't find provisioner chart in ${ROOT_DIR}/version-${VERSION}/charts/"
+      utils::log "FATAL" "can't find provisioner chart in ${ROOT_DIR}/version-${K8S_VER}/charts/"
     fi
   else
     [[ -n ${BKREPO_URL:-} ]] || utils::log "FAIL" "missing bkrepo url ${BKREPO_URL}"
@@ -72,8 +72,8 @@ install_localpv() {
   fi
 
   local image
-  if [[ -n ${BK_PUBLIC_REPO:-} ]];then
-	image="${BK_PUBLIC_REPO}/k8s.gcr.io/sig-storage/local-volume-provisioner:${VERSION}"
+  if [[ -n ${BK_PUBLIC_REPO:-} ]]; then
+    image="${BK_PUBLIC_REPO}/k8s.gcr.io/sig-storage/local-volume-provisioner:${VERSION}"
   else
     image="registry.k8s.io/sig-storage/local-volume-provisioner:${VERSION}"
   fi
