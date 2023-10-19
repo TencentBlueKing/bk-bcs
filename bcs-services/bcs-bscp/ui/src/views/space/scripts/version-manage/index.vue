@@ -115,7 +115,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { InfoBox } from 'bkui-vue';
+import { InfoBox, Message } from 'bkui-vue';
 import { Search, AngleDoubleRightLine } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../store/global';
@@ -177,7 +177,7 @@ onMounted(async () => {
     unPublishVersion.value = await getScriptVersionDetail(
       spaceId.value,
       scriptId.value,
-      scriptDetail.value.not_release_id,
+      scriptDetail.value.not_release_id
     );
   }
   initLoading.value = false;
@@ -296,6 +296,10 @@ const handleDelClick = (version: IScriptVersionListItem) => {
       }
       unPublishVersion.value = null;
       getVersionList();
+      Message({
+        theme: 'success',
+        message: '删除版本成功',
+      });
     },
   } as any);
 };
@@ -318,7 +322,7 @@ const handleSelectVersion = (version: IScriptVersion) => {
 // 新建、编辑脚本后回调
 const handleVersionEditSubmitted = async (
   data: { id: number; name: string; memo: string; content: string },
-  type: string,
+  type: string
 ) => {
   versionEditData.value.form = { ...data };
   refreshList();
@@ -329,7 +333,7 @@ const handleVersionEditSubmitted = async (
     unPublishVersion.value = await getScriptVersionDetail(
       spaceId.value,
       scriptId.value,
-      scriptDetail.value.not_release_id,
+      scriptDetail.value.not_release_id
     );
     createBtnDisabled.value = false;
     handleEditVersionClick()
