@@ -29,6 +29,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -39,30 +40,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
-const (
-	// KubeAPIServer cluster apiserver key
-	KubeAPIServer = "KubeAPIServer"
-	// KubeController cluster controller key
-	KubeController = "KubeController"
-	// KubeScheduler cluster scheduler key
-	KubeScheduler = "KubeScheduler"
-	// Etcd cluster etcd key
-	Etcd = "Etcd"
-	// Kubelet cluster kubelet key
-	Kubelet = "kubelet"
-)
-
 // as far as possible to keep every operation unit simple
-
-// stringToInt string to int
-func stringToInt(str string) (int, error) {
-	num, err := strconv.Atoi(str)
-	if err != nil {
-		return 0, err
-	}
-
-	return num, nil
-}
 
 // generateClusterCIDRInfo cidr info
 func generateClusterCIDRInfo(cluster *proto.Cluster) *api.ClusterCIDRSettings {
@@ -164,22 +142,22 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 
 	// extraArgs
 	if len(cluster.ClusterAdvanceSettings.ExtraArgs) > 0 {
-		if apiserver, ok := cluster.ClusterAdvanceSettings.ExtraArgs[KubeAPIServer]; ok {
+		if apiserver, ok := cluster.ClusterAdvanceSettings.ExtraArgs[icommon.KubeAPIServer]; ok {
 			paras := strings.Split(apiserver, ";")
 			advancedInfo.ExtraArgs.KubeAPIServer = common.StringPtrs(paras)
 		}
 
-		if controller, ok := cluster.ClusterAdvanceSettings.ExtraArgs[KubeController]; ok {
+		if controller, ok := cluster.ClusterAdvanceSettings.ExtraArgs[icommon.KubeController]; ok {
 			paras := strings.Split(controller, ";")
 			advancedInfo.ExtraArgs.KubeControllerManager = common.StringPtrs(paras)
 		}
 
-		if scheduler, ok := cluster.ClusterAdvanceSettings.ExtraArgs[KubeScheduler]; ok {
+		if scheduler, ok := cluster.ClusterAdvanceSettings.ExtraArgs[icommon.KubeScheduler]; ok {
 			paras := strings.Split(scheduler, ";")
 			advancedInfo.ExtraArgs.KubeScheduler = common.StringPtrs(paras)
 		}
 
-		if etcd, ok := cluster.ClusterAdvanceSettings.ExtraArgs[Etcd]; ok {
+		if etcd, ok := cluster.ClusterAdvanceSettings.ExtraArgs[icommon.Etcd]; ok {
 			paras := strings.Split(etcd, ";")
 			advancedInfo.ExtraArgs.Etcd = common.StringPtrs(paras)
 		}
@@ -188,31 +166,14 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 	return advancedInfo
 }
 
-// clusterCommonLabels cluster common labels
-func clusterCommonLabels(cluster *proto.Cluster) map[string]string {
-	labels := make(map[string]string)
-	if len(cluster.Region) > 0 {
-		regions := strings.Split(cluster.Region, "-")
-		if len(regions) >= 1 {
-			labels[utils.RegionLabelKey] = regions[1]
-		}
-	}
-
-	return labels
-}
-
-// NodeAdvancedOptions node advanced options
-type NodeAdvancedOptions struct {
-	NodeScheduler bool
-}
-
 // generateInstanceAdvanceInfo instance advanced info
-func generateInstanceAdvanceInfo(cluster *proto.Cluster, options *NodeAdvancedOptions) *api.InstanceAdvancedSettings {
+func generateInstanceAdvanceInfo(cluster *proto.Cluster,
+	options *business.NodeAdvancedOptions) *api.InstanceAdvancedSettings {
 	if cluster.NodeSettings.MountTarget == "" {
-		cluster.NodeSettings.MountTarget = MountTarget
+		cluster.NodeSettings.MountTarget = icommon.MountTarget
 	}
 	if cluster.NodeSettings.DockerGraphPath == "" {
-		cluster.NodeSettings.DockerGraphPath = DockerGraphPath
+		cluster.NodeSettings.DockerGraphPath = icommon.DockerGraphPath
 	}
 
 	// advanced instance setting
@@ -229,8 +190,8 @@ func generateInstanceAdvanceInfo(cluster *proto.Cluster, options *NodeAdvancedOp
 	}
 
 	// node common labels
-	if len(clusterCommonLabels(cluster)) > 0 {
-		for key, value := range clusterCommonLabels(cluster) {
+	if len(business.ClusterCommonLabels(cluster)) > 0 {
+		for key, value := range business.ClusterCommonLabels(cluster) {
 			advanceInfo.Labels = append(advanceInfo.Labels, &api.KeyValue{
 				Name:  key,
 				Value: value,
@@ -252,7 +213,7 @@ func generateInstanceAdvanceInfo(cluster *proto.Cluster, options *NodeAdvancedOp
 	if len(cluster.NodeSettings.ExtraArgs) > 0 {
 		advanceInfo.ExtraArgs = &api.InstanceExtraArgs{}
 
-		if kubelet, ok := cluster.NodeSettings.ExtraArgs[Kubelet]; ok {
+		if kubelet, ok := cluster.NodeSettings.ExtraArgs[icommon.Kubelet]; ok {
 			paras := strings.Split(kubelet, ";")
 			advanceInfo.ExtraArgs.Kubelet = paras
 		}
@@ -267,7 +228,7 @@ func handleClusterMasterNodes(ctx context.Context, req *api.CreateClusterRequest
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	// filter nodes data disks
-	filterDisk, err := FilterNodesByDataDisk(instanceIDs, info.CmOption)
+	filterDisk, err := business.FilterNodesByDataDisk(instanceIDs, info.CmOption)
 	if err != nil {
 		blog.Errorf("createClusterReq[%s] FilterNodesByDataDisk[%s] failed: %+v",
 			taskID, info.Cluster.ClusterID, err)
@@ -328,7 +289,7 @@ func handleClusterWorkerNodes(ctx context.Context, req *api.CreateClusterRequest
 	}
 
 	// filter nodes data disks
-	filterDisk, err := FilterNodesByDataDisk(instanceIDs, info.CmOption)
+	filterDisk, err := business.FilterNodesByDataDisk(instanceIDs, info.CmOption)
 	if err != nil {
 		blog.Errorf("handleClusterWorkerNodes[%s] FilterNodesByDataDisk[%s] failed: %+v",
 			taskID, info.Cluster.ClusterID, err)
@@ -362,23 +323,23 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 		ExistedInstancesPara: &api.ExistedInstancesPara{
 			InstanceIDs:   nodeIDs,
 			LoginSettings: &api.LoginSettings{Password: passwd},
-			InstanceAdvancedSettings: GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
+			InstanceAdvancedSettings: business.GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
 				Cluster:  info.Cluster,
 				IPList:   strings.Join(nodeIPs, ","),
 				Operator: operator,
 				Render:   true,
-			}, &NodeAdvancedOptions{NodeScheduler: true}),
+			}, &business.NodeAdvancedOptions{NodeScheduler: true}),
 		},
 	}
 
 	// instance advanced setting
-	existedInstance.InstanceAdvancedSettingsOverride = GenerateClsAdvancedInsSettingFromNT(info,
+	existedInstance.InstanceAdvancedSettingsOverride = business.GenerateClsAdvancedInsSettingFromNT(info,
 		template.RenderVars{
 			Cluster:  info.Cluster,
 			IPList:   strings.Join(nodeIPs, ","),
 			Operator: operator,
 			Render:   true,
-		}, &NodeAdvancedOptions{NodeScheduler: true})
+		}, &business.NodeAdvancedOptions{NodeScheduler: true})
 
 	if manyDisk {
 		existedInstance.InstanceAdvancedSettingsOverride.DataDisks = []api.DataDetailDisk{api.DefaultDataDisk}
@@ -395,7 +356,7 @@ func disksToCVMDisks(disks []*proto.DataDisk) []*cvm.DataDisk {
 
 	cvmDisks := make([]*cvm.DataDisk, 0)
 	for i := range disks {
-		size, _ := stringToInt(disks[i].DiskSize)
+		size, _ := utils.StringToInt(disks[i].DiskSize)
 		cvmDisks = append(cvmDisks, &cvm.DataDisk{
 			DiskSize: common.Int64Ptr(int64(size)),
 			DiskType: common.StringPtr(disks[i].DiskType),
@@ -413,7 +374,7 @@ func generateRunInstance(cluster *proto.Cluster, role, passwd string) *api.RunIn
 
 	// create instance template
 	for i := range cluster.Template {
-		systemDiskSize, _ := stringToInt(cluster.Template[i].SystemDisk.DiskSize)
+		systemDiskSize, _ := utils.StringToInt(cluster.Template[i].SystemDisk.DiskSize)
 		req := &cvm.RunInstancesRequest{
 			Placement: &cvm.Placement{
 				Zone: common.StringPtr(cluster.Template[i].Zone),
@@ -591,12 +552,12 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		ClusterCIDR:     generateClusterCIDRInfo(info.Cluster),
 		ClusterBasic:    generateClusterBasicInfo(info.Cluster, imageID, operator),
 		ClusterAdvanced: generateClusterAdvancedInfo(info.Cluster),
-		InstanceAdvanced: GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
+		InstanceAdvanced: business.GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
 			Cluster:  info.Cluster,
 			IPList:   strings.Join(nodeIPs, ","),
 			Operator: operator,
 			Render:   true,
-		}, &NodeAdvancedOptions{NodeScheduler: true}),
+		}, &business.NodeAdvancedOptions{NodeScheduler: true}),
 		ExistedInstancesForNode: nil,
 		RunInstancesForNode:     nil,
 	}
@@ -1029,7 +990,7 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
 	// check cluster nodes status
-	addSuccessNodes, addFailureNodes, err := CheckClusterInstanceStatus(ctx, dependInfo, nodeIDs)
+	addSuccessNodes, addFailureNodes, err := business.CheckClusterInstanceStatus(ctx, dependInfo, nodeIDs)
 	if err != nil {
 		blog.Errorf("CheckCreateClusterNodeStatusTask[%s] CheckClusterInstanceStatus failed, %s",
 			taskID, err.Error())
@@ -1180,18 +1141,26 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
-	vpcManager := &api.VPCManager{}
-	subnets, err := vpcManager.ListSubnets(info.Cluster.VpcID, info.CmOption)
+	vpcClient, err := api.NewVPCClient(info.CmOption)
+	if err != nil {
+		blog.Errorf("getRandomSubnetByVpcID[%s] newVpcClient failed: %v", taskID, err)
+		return "", err
+	}
+
+	// filter vpc subnets
+	filter := make([]*api.Filter, 0)
+	filter = append(filter, &api.Filter{Name: "vpc-id", Values: []string{info.Cluster.VpcID}})
+	subnets, err := vpcClient.DescribeSubnets(nil, filter)
 	if err != nil {
 		blog.Errorf("getRandomSubnetByVpcID[%s] failed: %v", taskID, err)
 		return "", err
 	}
 
 	// pick available subnet
-	availableSubnet := make([]*proto.Subnet, 0)
+	availableSubnet := make([]*api.Subnet, 0)
 	for i := range subnets {
-		match := utils.MatchSubnet(subnets[i].SubnetName, info.Cluster.Region)
-		if match && subnets[i].AvailableIPAddressCount > 0 {
+		match := utils.MatchSubnet(*subnets[i].SubnetName, info.Cluster.Region)
+		if match && *subnets[i].AvailableIPAddressCount > 0 {
 			availableSubnet = append(availableSubnet, subnets[i])
 		}
 	}
@@ -1199,8 +1168,8 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 		return "", fmt.Errorf("region[%s] vpc[%s]无可用匹配子网", info.Cluster.Region, info.Cluster.VpcID)
 	}
 
-	rand.Seed(time.Now().Unix())                                          // nolint
-	return availableSubnet[rand.Intn(len(availableSubnet))].SubnetID, nil // nolint
+	rand.Seed(time.Now().Unix())                                           // nolint
+	return *availableSubnet[rand.Intn(len(availableSubnet))].SubnetID, nil // nolint
 }
 
 // openClusterAdminKubeConfig open account cluster admin perm

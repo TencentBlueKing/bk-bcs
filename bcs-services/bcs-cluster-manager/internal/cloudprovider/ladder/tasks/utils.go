@@ -16,13 +16,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	qapi "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
@@ -165,10 +164,10 @@ type RecordInstanceToDBOption struct {
 // 录入机器
 func recordClusterCVMInfoToDB(
 	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, opt *RecordInstanceToDBOption) error {
+
 	var (
-		cvmCli = qapi.NodeManager{}
-		nodes  = make([]*proto.Node, 0)
-		err    error
+		nodes = make([]*proto.Node, 0)
+		err   error
 	)
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -184,7 +183,7 @@ func recordClusterCVMInfoToDB(
 	}
 
 	err = retry.Do(func() error {
-		nodes, err = cvmCli.ListNodesByInstanceID(opt.InstanceIDs, &cloudprovider.ListNodesOption{
+		nodes, err = business.ListNodesByInstanceID(opt.InstanceIDs, &cloudprovider.ListNodesOption{
 			Common:       info.CmOption,
 			ClusterVPCID: info.Cluster.VpcID,
 		})
@@ -278,7 +277,7 @@ func returnDevicesToRMAndCleanNodes(ctx context.Context, info *cloudprovider.Clo
 
 	// delete cluster instances
 	if delInstance {
-		successIDs, err := tasks.DeleteClusterInstance(ctx, info, instanceIDs)
+		successIDs, err := business.DeleteClusterInstance(ctx, info, instanceIDs, true)
 		if err != nil {
 			blog.Errorf("returnDevicesToRMAndCleanNodes[%s] DeleteClusterInstance failed: %v", taskID, err)
 		} else {

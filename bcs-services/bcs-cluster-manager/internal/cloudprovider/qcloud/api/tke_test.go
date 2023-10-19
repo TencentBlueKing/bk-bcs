@@ -700,7 +700,7 @@ func TestClient_DescribeOSImages(t *testing.T) {
 	}
 
 	for _, image := range images {
-		fmt.Printf("%+v %+v %+v %+v\n", image.OsName, image.Status, image.ImageID, image.Arch)
+		fmt.Printf("%+v %+v %+v %+v\n", image.OsName, image.Status, image.ImageId, image.Arch)
 	}
 
 	t.Log(len(images))

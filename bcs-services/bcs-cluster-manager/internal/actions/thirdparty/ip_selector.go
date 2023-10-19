@@ -493,9 +493,12 @@ func (gt *GetTopologyHostIdsNodesAction) listBizTopologyHostIdsNodes() error {
 	}
 
 	data := make([]*cmproto.HostIDsNodeData, 0)
-	endIndex := gt.req.Start + gt.req.PageSize
+
+	var endIndex uint64
 	if gt.req.PageSize <= 0 {
 		endIndex = uint64(len(topoNodes))
+	} else {
+		endIndex = gt.req.Start + uint64(gt.req.PageSize)
 	}
 
 	for index, host := range topoNodes {

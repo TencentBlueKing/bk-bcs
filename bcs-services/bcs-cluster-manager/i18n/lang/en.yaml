@@ -129,3 +129,22 @@ Region: "Cluster region information"
 ClusterVPC: "Cluster vpc information"
 BusinessID: "Business ID to which the cluster belongs"
 NodeOperator: "Cluster node operator"
+
+# kubelet参数
+cpu-manager-policy: "The CPU manager policy to use. Possible values: none, static."
+eviction-hard: "A set of eviction thresholds (e.g. memory.available<1Gi) that if met would trigger a pod eviction. 
+On a Linux node, the default value also includes nodefs.inodesFree<5%."
+eviction-max-pod-grace-period: "Maximum allowed grace period (in seconds) to use when terminating pods in response 
+to a soft eviction threshold being met. If negative, defer to pod specified value."
+eviction-soft: "A set of eviction thresholds (e.g. memory.available<1.5Gi) that if met over 
+a corresponding grace period would trigger a pod eviction."
+eviction-soft-grace-period: "A set of eviction grace periods (e.g. memory.available=1m30s) that correspond to how long 
+a soft eviction threshold must hold before triggering a pod eviction."
+feature-gates: "A set of key=value pairs that describe feature gates for alpha/experimental features."
+kube-api-burst: "Burst to use while talking with kubernetes API server. The number must be >= 0. 
+If 0 will use default burst (100)."
+kube-api-qps: "QPS to use while talking with kubernetes API server. The number must be >= 0. If 0 will use default QPS 
+(50). Doesn't cover events and node heartbeat apis which rate limiting is controlled by a different set of flags."
+max-pods: "Number of Pods that can run on this kubelet. "
+root-dir: "Directory path for managing kubelet files (volume mounts, etc)."
+v: "Number for the log level verbosity"

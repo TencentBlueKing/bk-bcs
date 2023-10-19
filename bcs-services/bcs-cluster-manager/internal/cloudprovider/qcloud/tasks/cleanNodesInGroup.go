@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -194,7 +195,7 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 	defer cancel()
 
 	err = loop.LoopDoFunc(timeContext, func() error {
-		exist, notExist, err := FilterClusterInstanceFromNodesIDs(timeContext, dependInfo, nodeIDs) // nolint
+		exist, notExist, err := business.FilterClusterInstanceFromNodesIDs(timeContext, dependInfo, nodeIDs) // nolint
 		if err != nil {
 			blog.Errorf("CheckClusterCleanNodsTask[%s] FilterClusterInstanceFromNodesIDs failed: %v",
 				taskID, err)
