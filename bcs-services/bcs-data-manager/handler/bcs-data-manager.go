@@ -430,3 +430,34 @@ func (e *BcsDataManager) GetPowerTrading(ctx context.Context, req *bcsdatamanage
 	prom.ReportAPIRequestMetric("GetPowerTrading", "grpc", prom.StatusOK, start)
 	return nil
 }
+
+// GetCloudNativeWorkloadList get cloud native workloads list
+// currentPage: min 1
+// pageSize: max 10000
+func (e *BcsDataManager) GetCloudNativeWorkloadList(ctx context.Context,
+	req *bcsdatamanager.GetCloudNativeWorkloadListRequest, rsp *bcsdatamanager.GetCloudNativeWorkloadListResponse) error {
+	blog.Infof("Received GetCloudNativeWorkload.Call request. PageSize: %d, CurrentPage: %d", req.GetPageSize(), req.GetCurrentPage())
+
+	start := time.Now()
+	result, err := e.model.GetCloudNativeWorkloadList(ctx, req)
+	if err != nil {
+		rsp.Msg = fmt.Sprintf("Get cloud native workloads error, err: %s", err.Error())
+		rsp.Code = 500
+		blog.Errorf(rsp.Msg)
+		prom.ReportAPIRequestMetric("GetCloudNativeWorkloadList", "grpc", prom.StatusErr, start)
+		return nil
+	}
+
+	rsp.Code = bcsCommon.BcsSuccess
+	rsp.Msg = bcsCommon.BcsSuccessStr
+	rsp.Data = result
+
+	//appid和data和platform在函数内部填充
+	rsp.Data.Status = rsp.Code
+	rsp.Data.Message = rsp.Msg
+	rsp.Data.PageSize = req.GetPageSize()
+	rsp.Data.CurrentPage = req.GetCurrentPage()
+	rsp.Data.Timestamp = time.Now().Format("2006-01-02 15:04:05")
+
+	return nil
+}

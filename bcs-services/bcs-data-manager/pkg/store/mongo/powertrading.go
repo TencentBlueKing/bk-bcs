@@ -43,7 +43,7 @@ func NewModelPowerTrading(db drivers.DB, bkbaseConf *types.BkbaseConfig) *ModelP
 	for _, item := range bkbaseConf.PowerTrading {
 		p := Public{
 			TableName: item.Table,
-			Indexes:   modelNamespaceIndexes,
+			Indexes:   make([]drivers.Index, 0),
 			DB:        db,
 		}
 		blog.Infof("add index/table %s/%s to tables", item.Index, item.Table)

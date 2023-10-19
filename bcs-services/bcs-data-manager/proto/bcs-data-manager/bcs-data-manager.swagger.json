@@ -866,6 +866,40 @@
         ]
       }
     },
+    "/datamanager/v2/cloudnativeworkload": {
+      "post": {
+        "summary": "查询云原生Workload可调度",
+        "description": "查询云原生Workload可调度",
+        "operationId": "DataManager_GetCloudNativeWorkloadList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetCloudNativeWorkloadListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetCloudNativeWorkloadListRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
     "/datamanager/v2/powertrading": {
       "post": {
         "summary": "查询算力运营数据",
@@ -1188,6 +1222,46 @@
         "message",
         "data"
       ]
+    },
+    "datamanagerGetCloudNativeWorkloadListRequest": {
+      "type": "object",
+      "properties": {
+        "pageSize": {
+          "type": "integer",
+          "format": "int64",
+          "description": "每页条数",
+          "title": "pageSize"
+        },
+        "currentPage": {
+          "type": "integer",
+          "format": "int64",
+          "description": "当前页码",
+          "title": "currentPage"
+        }
+      },
+      "description": "查询云原生Workload可调度请求",
+      "title": "GetCloudNativeWorkloadRequest"
+    },
+    "datamanagerGetCloudNativeWorkloadListResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "data": {
+          "$ref": "#/definitions/datamanagerTEGMessage",
+          "description": "返回错误信息",
+          "title": "data"
+        },
+        "msg": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "msg"
+        }
+      }
     },
     "datamanagerGetClusterInfoResponse": {
       "type": "object",
@@ -2046,6 +2120,135 @@
           "type": "string",
           "description": "内存请求",
           "title": "MemoryRequest"
+        }
+      }
+    },
+    "datamanagerTEGMessage": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Status code",
+          "title": "status"
+        },
+        "message": {
+          "type": "string",
+          "description": "Message text",
+          "title": "message"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Total number of items",
+          "title": "total"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Number of items per page",
+          "title": "pageSize"
+        },
+        "currentPage": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Current page number",
+          "title": "currentPage"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Time of data retrieval",
+          "title": "timestamp"
+        },
+        "platform": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Platform identifier",
+          "title": "platform"
+        },
+        "appid": {
+          "type": "string",
+          "description": "Application identifier",
+          "title": "appid"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerTEGWorkload"
+          },
+          "description": "Workload data",
+          "title": "data"
+        }
+      }
+    },
+    "datamanagerTEGWorkload": {
+      "type": "object",
+      "properties": {
+        "clusterId": {
+          "type": "string",
+          "description": "Cluster identifier",
+          "title": "clusterId"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace",
+          "title": "namespace"
+        },
+        "workload_kind": {
+          "type": "string",
+          "description": "Workload kind",
+          "title": "workload_kind"
+        },
+        "workload_name": {
+          "type": "string",
+          "description": "Workload name",
+          "title": "workload_name"
+        },
+        "maintainer": {
+          "type": "string",
+          "description": "Maintainer",
+          "title": "maintainer"
+        },
+        "bakMaintainer": {
+          "type": "string",
+          "description": "Backup maintainer",
+          "title": "bakMaintainer"
+        },
+        "businessSetId": {
+          "type": "string",
+          "format": "int64",
+          "description": "Business set identifier",
+          "title": "businessSetId"
+        },
+        "businessId": {
+          "type": "string",
+          "format": "int64",
+          "description": "Business identifier",
+          "title": "businessId"
+        },
+        "businessModuleId": {
+          "type": "string",
+          "format": "int64",
+          "description": "Business module identifier",
+          "title": "businessModuleId"
+        },
+        "schedulerStatus": {
+          "type": "string",
+          "format": "int64",
+          "description": "Scheduler status",
+          "title": "schedulerStatus"
+        },
+        "serviceStatus": {
+          "type": "string",
+          "format": "int64",
+          "description": "Service status",
+          "title": "serviceStatus"
+        },
+        "hpaStatus": {
+          "type": "string",
+          "format": "int64",
+          "description": "HPA status",
+          "title": "hpaStatus"
         }
       }
     },

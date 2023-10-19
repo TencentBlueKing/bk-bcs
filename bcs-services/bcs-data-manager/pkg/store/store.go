@@ -58,4 +58,6 @@ type Server interface {
 		bucket string) ([]*types.PodAutoscalerData, error)
 	GetPowerTradingInfo(ctx context.Context,
 		req *datamanager.GetPowerTradingDataRequest) ([]*any.Any, int64, error)
+	GetCloudNativeWorkloadList(ctx context.Context,
+		req *datamanager.GetCloudNativeWorkloadListRequest) (*datamanager.TEGMessage, error)
 }

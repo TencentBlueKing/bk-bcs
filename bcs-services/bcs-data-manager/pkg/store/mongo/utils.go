@@ -55,6 +55,10 @@ const (
 
 	// DtEventTimeKey key for bkbase data dtEventTime
 	DtEventTimeKey = "dtEventTime"
+	// AscendingKey key for mongoDB ascending
+	AscendingKey = 1
+	// DescendingKey key for mongoDB descending
+	DescendingKey = -1
 )
 
 const (

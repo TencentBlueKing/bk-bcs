@@ -128,6 +128,16 @@ service DataManager {
       summary : "查询算力运营数据"
     };
   }
+  rpc GetCloudNativeWorkloadList(GetCloudNativeWorkloadListRequest) returns (GetCloudNativeWorkloadListResponse){
+    option (google.api.http) = {
+      post: "/datamanager/v2/cloudnativeworkload"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "查询云原生Workload可调度"
+      summary: "查询云原生Workload可调度"
+    };
+  }
 }
 
 
@@ -1775,4 +1785,136 @@ message GetPowerTradingDataResponse {
     title : "data",
     description : "运营数据列表信息"
   }];
+}
+
+message TEGWorkload {
+  string clusterId = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "Cluster identifier"
+  }];
+  string namespace = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "namespace",
+      description: "Namespace"
+    }];
+  string workload_kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "workload_kind",
+      description: "Workload kind"
+    }];
+  string workload_name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "workload_name",
+      description: "Workload name"
+    }];
+  string maintainer = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "maintainer",
+      description: "Maintainer"
+    }];
+  string bakMaintainer = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "bakMaintainer",
+      description: "Backup maintainer"
+    }];
+  int64 businessSetId = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "businessSetId",
+      description: "Business set identifier"
+    }];
+  int64 businessId = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "businessId",
+      description: "Business identifier"
+    }];
+  int64 businessModuleId = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "businessModuleId",
+      description: "Business module identifier"
+    }];
+  int64 schedulerStatus = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "schedulerStatus",
+      description: "Scheduler status"
+    }];
+  int64 serviceStatus = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "serviceStatus",
+      description: "Service status"
+    }];
+    int64 hpaStatus = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "hpaStatus",
+      description: "HPA status"
+    }];
+}
+
+message TEGMessage {
+  uint32 status = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status",
+    description: "Status code"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description: "Message text"
+  }];
+  uint32 total = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "total",
+    description: "Total number of items"
+  }];
+  uint32 pageSize = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "pageSize",
+    description: "Number of items per page"
+  }];
+  uint32 currentPage = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "currentPage",
+    description: "Current page number"
+  }];
+  string timestamp = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "timestamp",
+    description: "Time of data retrieval"
+  }];
+  uint32 platform = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "platform",
+    description: "Platform identifier"
+  }];
+  string appid = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "appid",
+    description: "Application identifier"
+  }];
+  repeated TEGWorkload data = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "Workload data"
+  }];
+}
+
+
+message GetCloudNativeWorkloadListRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title: "GetCloudNativeWorkloadRequest"
+      description: "查询云原生Workload可调度请求"
+      required: []
+    }
+  };
+  uint32 pageSize = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "pageSize",
+      description: "每页条数"
+    }
+  ];
+  uint32 currentPage =2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "currentPage",
+      description: "当前页码"
+    }
+  ];
+}
+
+
+message GetCloudNativeWorkloadListResponse {
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
+    title : "code", 
+    description : "返回错误码"
+  }];
+  TEGMessage data = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "返回错误信息"
+    }
+  ];
+  string msg = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "msg",
+      description : "返回错误信息"
+    }];
 }

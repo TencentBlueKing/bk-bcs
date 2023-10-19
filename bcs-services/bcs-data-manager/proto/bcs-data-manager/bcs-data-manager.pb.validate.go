@@ -6665,3 +6665,518 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetPowerTradingDataResponseValidationError{}
+
+// Validate checks the field values on TEGWorkload with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TEGWorkload) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TEGWorkload with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TEGWorkloadMultiError, or
+// nil if none found.
+func (m *TEGWorkload) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TEGWorkload) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterId
+
+	// no validation rules for Namespace
+
+	// no validation rules for WorkloadKind
+
+	// no validation rules for WorkloadName
+
+	// no validation rules for Maintainer
+
+	// no validation rules for BakMaintainer
+
+	// no validation rules for BusinessSetId
+
+	// no validation rules for BusinessId
+
+	// no validation rules for BusinessModuleId
+
+	// no validation rules for SchedulerStatus
+
+	// no validation rules for ServiceStatus
+
+	// no validation rules for HpaStatus
+
+	if len(errors) > 0 {
+		return TEGWorkloadMultiError(errors)
+	}
+	return nil
+}
+
+// TEGWorkloadMultiError is an error wrapping multiple validation errors
+// returned by TEGWorkload.ValidateAll() if the designated constraints aren't met.
+type TEGWorkloadMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TEGWorkloadMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TEGWorkloadMultiError) AllErrors() []error { return m }
+
+// TEGWorkloadValidationError is the validation error returned by
+// TEGWorkload.Validate if the designated constraints aren't met.
+type TEGWorkloadValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TEGWorkloadValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TEGWorkloadValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TEGWorkloadValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TEGWorkloadValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TEGWorkloadValidationError) ErrorName() string { return "TEGWorkloadValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TEGWorkloadValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTEGWorkload.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TEGWorkloadValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TEGWorkloadValidationError{}
+
+// Validate checks the field values on TEGMessage with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TEGMessage) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TEGMessage with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TEGMessageMultiError, or
+// nil if none found.
+func (m *TEGMessage) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TEGMessage) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Status
+
+	// no validation rules for Message
+
+	// no validation rules for Total
+
+	// no validation rules for PageSize
+
+	// no validation rules for CurrentPage
+
+	// no validation rules for Timestamp
+
+	// no validation rules for Platform
+
+	// no validation rules for Appid
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, TEGMessageValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, TEGMessageValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return TEGMessageValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return TEGMessageMultiError(errors)
+	}
+	return nil
+}
+
+// TEGMessageMultiError is an error wrapping multiple validation errors
+// returned by TEGMessage.ValidateAll() if the designated constraints aren't met.
+type TEGMessageMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TEGMessageMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TEGMessageMultiError) AllErrors() []error { return m }
+
+// TEGMessageValidationError is the validation error returned by
+// TEGMessage.Validate if the designated constraints aren't met.
+type TEGMessageValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TEGMessageValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TEGMessageValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TEGMessageValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TEGMessageValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TEGMessageValidationError) ErrorName() string { return "TEGMessageValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TEGMessageValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTEGMessage.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TEGMessageValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TEGMessageValidationError{}
+
+// Validate checks the field values on GetCloudNativeWorkloadListRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetCloudNativeWorkloadListRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetCloudNativeWorkloadListRequest
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetCloudNativeWorkloadListRequestMultiError, or nil if none found.
+func (m *GetCloudNativeWorkloadListRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetCloudNativeWorkloadListRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for PageSize
+
+	// no validation rules for CurrentPage
+
+	if len(errors) > 0 {
+		return GetCloudNativeWorkloadListRequestMultiError(errors)
+	}
+	return nil
+}
+
+// GetCloudNativeWorkloadListRequestMultiError is an error wrapping multiple
+// validation errors returned by
+// GetCloudNativeWorkloadListRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetCloudNativeWorkloadListRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetCloudNativeWorkloadListRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetCloudNativeWorkloadListRequestMultiError) AllErrors() []error { return m }
+
+// GetCloudNativeWorkloadListRequestValidationError is the validation error
+// returned by GetCloudNativeWorkloadListRequest.Validate if the designated
+// constraints aren't met.
+type GetCloudNativeWorkloadListRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetCloudNativeWorkloadListRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetCloudNativeWorkloadListRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetCloudNativeWorkloadListRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetCloudNativeWorkloadListRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetCloudNativeWorkloadListRequestValidationError) ErrorName() string {
+	return "GetCloudNativeWorkloadListRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetCloudNativeWorkloadListRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetCloudNativeWorkloadListRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetCloudNativeWorkloadListRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetCloudNativeWorkloadListRequestValidationError{}
+
+// Validate checks the field values on GetCloudNativeWorkloadListResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetCloudNativeWorkloadListResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetCloudNativeWorkloadListResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetCloudNativeWorkloadListResponseMultiError, or nil if none found.
+func (m *GetCloudNativeWorkloadListResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetCloudNativeWorkloadListResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetCloudNativeWorkloadListResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetCloudNativeWorkloadListResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetCloudNativeWorkloadListResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Msg
+
+	if len(errors) > 0 {
+		return GetCloudNativeWorkloadListResponseMultiError(errors)
+	}
+	return nil
+}
+
+// GetCloudNativeWorkloadListResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// GetCloudNativeWorkloadListResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetCloudNativeWorkloadListResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetCloudNativeWorkloadListResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetCloudNativeWorkloadListResponseMultiError) AllErrors() []error { return m }
+
+// GetCloudNativeWorkloadListResponseValidationError is the validation error
+// returned by GetCloudNativeWorkloadListResponse.Validate if the designated
+// constraints aren't met.
+type GetCloudNativeWorkloadListResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetCloudNativeWorkloadListResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetCloudNativeWorkloadListResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetCloudNativeWorkloadListResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetCloudNativeWorkloadListResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetCloudNativeWorkloadListResponseValidationError) ErrorName() string {
+	return "GetCloudNativeWorkloadListResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetCloudNativeWorkloadListResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetCloudNativeWorkloadListResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetCloudNativeWorkloadListResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetCloudNativeWorkloadListResponseValidationError{}
