@@ -671,7 +671,8 @@ toleration:
             title: {{ i18n "键" .lang }}
             type: string
             ui:rules:
-              - required
+              - validator: "{{`{{`}} $widgetNode.getSibling('op').value === 'Exists' || $self.value !== '' {{`}}`}}"
+                message: {{ i18n "键不能为空" .lang }}
               - maxLength128
           op:
             title: {{ i18n "运算符" .lang }}
@@ -703,6 +704,9 @@ toleration:
           effect:
             title: {{ i18n "影响" .lang }}
             type: string
+            default: NoSchedule
+            ui:rules:
+              - required
             ui:component:
               name: select
               props:

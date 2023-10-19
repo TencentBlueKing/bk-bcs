@@ -149,16 +149,62 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects": {
+      "post": {
+        "summary": "Get multi cluster custom resources",
+        "description": "获取多集群自定义资源列表",
+        "operationId": "MultiCluster_FetchMultiClusterCustomResource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "crd",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesFetchMultiClusterCustomResourceReq"
+            }
+          }
+        ],
+        "tags": [
+          "MultiCluster"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{kind}": {
       "post": {
         "summary": "Get multi cluster resources",
-        "description": "获取多集群资源列表",
+        "description": "获取多集群原生资源列表",
         "operationId": "MultiCluster_FetchMultiClusterResource",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonListResp"
+              "$ref": "#/definitions/clusterresourcesCommonResp"
             }
           },
           "default": {
@@ -180,6 +226,54 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesFetchMultiClusterResourceReq"
+            }
+          }
+        ],
+        "tags": [
+          "MultiCluster"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources_count": {
+      "post": {
+        "summary": "Get multi cluster resources count",
+        "description": "获取集群资源数量",
+        "operationId": "MultiCluster_MultiClusterResourceCount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesMultiClusterResourceCountReq"
+            }
           }
         ],
         "tags": [
@@ -8105,7 +8199,8 @@
       "type": "object",
       "properties": {
         "clusterID": {
-          "type": "string"
+          "type": "string",
+          "title": "集群 ID"
         },
         "namespaces": {
           "type": "array",
@@ -8239,6 +8334,100 @@
       "description": "Echo API 响应",
       "title": "EchoResp"
     },
+    "clusterresourcesFetchMultiClusterCustomResourceReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
+        },
+        "crd": {
+          "type": "string",
+          "title": "crd"
+        },
+        "creator": {
+          "type": "string",
+          "title": "creator"
+        },
+        "labelSelector": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesLabelSelector"
+          },
+          "title": "标签选择器"
+        },
+        "name": {
+          "type": "string",
+          "title": "name"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int64",
+          "title": "limit"
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int64",
+          "title": "offset"
+        }
+      },
+      "description": "获取多集群自定义资源请求体",
+      "title": "FetchMultiClusterCustomResourceReq"
+    },
+    "clusterresourcesFetchMultiClusterResourceReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
+        },
+        "kind": {
+          "type": "string",
+          "title": "资源类型"
+        },
+        "creator": {
+          "type": "string",
+          "title": "creator"
+        },
+        "labelSelector": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesLabelSelector"
+          },
+          "title": "标签选择器"
+        },
+        "name": {
+          "type": "string",
+          "title": "name"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int64",
+          "title": "limit"
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int64",
+          "title": "offset"
+        }
+      },
+      "description": "获取多集群资源请求体",
+      "title": "FetchMultiClusterResourceReq"
+    },
     "clusterresourcesFormRenderPreviewReq": {
       "type": "object",
       "properties": {
@@ -8302,6 +8491,59 @@
       },
       "description": "主动使集群 Discovery 缓存失效",
       "title": "InvalidateDiscoveryCacheReq"
+    },
+    "clusterresourcesLabelSelector": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "title": "key"
+        },
+        "op": {
+          "type": "string",
+          "title": "op"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "values"
+        }
+      }
+    },
+    "clusterresourcesMultiClusterResourceCountReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
+        },
+        "creator": {
+          "type": "string",
+          "title": "creator"
+        },
+        "labelSelector": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesLabelSelector"
+          },
+          "title": "标签选择器"
+        },
+        "name": {
+          "type": "string",
+          "title": "name"
+        }
+      },
+      "description": "获取多集群资源数量请求体",
+      "title": "MultiClusterResourceCountReq"
     },
     "clusterresourcesPingResp": {
       "type": "object",
