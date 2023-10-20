@@ -7,6 +7,8 @@ bcs-ops:
       containerd: "1.6.21"
       runc: "1.1.8"
       docker: "19.03.9"
+      jq: "1.6"
+      yq: "4.30.6"
 
     images:
       - hub.bktencent.com/registry.k8s.io/kube-apiserver:v1.20.15
@@ -44,6 +46,8 @@ bcs-ops:
       containerd: "1.6.21"
       runc: "1.1.8"
       docker: "19.03.9"
+      jq: "1.6"
+      yq: "4.30.6"
 
     images:
       - hub.bktencent.com/registry.k8s.io/kube-apiserver:v1.23.17
@@ -79,6 +83,8 @@ bcs-ops:
       crictl: "1.26.0"
       containerd: "1.6.21"
       runc: "1.1.8"
+      jq: "1.6"
+      yq: "4.30.6"
 
     images:
       - hub.bktencent.com/registry.k8s.io/kube-apiserver:v1.24.15
