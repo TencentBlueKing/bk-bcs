@@ -23,6 +23,7 @@ func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 	rawCreateTime, _ := mapx.GetItems(manifest, "metadata.creationTimestamp")
 	createTime, _ := timex.NormalizeDatetime(rawCreateTime.(string))
 	ret := map[string]interface{}{
+		"namespace":  mapx.GetStr(manifest, []string{"metadata", "namespace"}),
 		"age":        timex.CalcAge(rawCreateTime.(string)),
 		"createTime": createTime,
 		"editMode": mapx.Get(
@@ -36,8 +37,8 @@ func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 
 // GetFormatFunc 获取资源对应 FormatFunc
 func GetFormatFunc(kind string, apiVersion string) func(manifest map[string]interface{}) map[string]interface{} {
-	// 自定义Ingress
-	if kind == resCsts.Ing && apiVersion == resCsts.CustomApiVersion {
+	// 自定义Ingress，按照通用资源格式化
+	if kind == resCsts.Ing && apiVersion == resCsts.BCSNetworkApiVersion {
 		kind = ""
 	}
 	formatFunc, ok := Kind2FormatFuncMap[kind]

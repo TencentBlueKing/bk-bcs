@@ -14,13 +14,16 @@ package client
 
 import (
 	"context"
+	"sync"
 
+	"golang.org/x/sync/errgroup"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
@@ -156,6 +159,36 @@ func GetCRDInfo(ctx context.Context, clusterID, crdName string) (map[string]inte
 	}
 
 	return formatter.FormatCRD(manifest), nil
+}
+
+// GetClustersCRDInfo 获取多集群 CRD 基础信息
+func GetClustersCRDInfo(ctx context.Context, clusterIDs []string, crdName string) (map[string]interface{}, error) {
+	errGroup := errgroup.Group{}
+	mux := sync.Mutex{}
+	var result map[string]interface{}
+	for _, v := range clusterIDs {
+		clusterID := v
+		errGroup.Go(func() error {
+			cluterInfo, err := cluster.GetClusterInfo(ctx, clusterID)
+			if err != nil {
+				return err
+			}
+			ctx = context.WithValue(ctx, ctxkey.ClusterKey, cluterInfo)
+			manifest, err := NewCRDCliByClusterID(ctx, clusterID).Get(ctx, crdName, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			mux.Lock()
+			defer mux.Unlock()
+			result = manifest
+			return nil
+		})
+	}
+	if err := errGroup.Wait(); err != nil && result == nil {
+		return nil, err
+	}
+
+	return formatter.FormatCRD(result), nil
 }
 
 // GetCObjManifest 获取自定义资源信息

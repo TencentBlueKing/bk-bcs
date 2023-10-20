@@ -127,8 +127,8 @@ const (
 )
 
 const (
-	// CustomApiVersion 自定义apiVersion
-	CustomApiVersion = "networkextension.bkbcs.tencent.com/v1"
+	// BCSNetworkApiVersion BCS Network CRD apiVersion
+	BCSNetworkApiVersion = "networkextension.bkbcs.tencent.com/v1"
 )
 
 // RemoveResVersionKinds 更新时强制移除 resourceVersion 的资源类型
