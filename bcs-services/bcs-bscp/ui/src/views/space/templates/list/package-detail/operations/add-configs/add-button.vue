@@ -14,8 +14,7 @@
           添加已有配置项
         </div>
         <div class="operation-item" @click="handleOpenSlider('isCreateOpen')">新建配置项</div>
-        <!-- 接口未提供，暂时隐藏 -->
-        <!-- <div class="operation-item" @click="handleOpenSlider('isImportOpen')">导入配置项</div> -->
+        <div class="operation-item" @click="handleOpenSlider('isImportOpen')">导入配置项</div>
       </div>
     </template>
   </bk-popover>

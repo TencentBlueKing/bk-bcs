@@ -1,10 +1,5 @@
 <template>
-  <bk-sideslider
-    title="导入配置项"
-    :width="960"
-    :is-show="isShow"
-    :before-close="handleBeforeClose"
-    @closed="close">
+  <bk-sideslider title="导入配置项" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="slider-content-container">
       <bk-form form-type="vertical">
         <bk-form-item label="上传配置包" required property="package">
@@ -16,10 +11,12 @@
             :size="100"
             :multiple="false"
             :files="fileList"
-            :custom-request="handleFileUpload">
+            :custom-request="handleFileUpload"
+          >
           </bk-upload>
         </bk-form-item>
       </bk-form>
+      <config-table v-model:table-data="existConfigList" head-text="新建配置项"></config-table>
     </div>
     <div class="action-btns">
       <bk-button theme="primary" :loading="pending" :disabled="fileList.length === 0">去导入</bk-button>
@@ -30,10 +27,11 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
-
+import { IConfigImport } from '../../../../../../../../../types/config';
+import configTable from './config-table.vue';
 const props = defineProps<{
-    show: boolean;
-  }>();
+  show: boolean;
+}>();
 
 const emits = defineEmits(['update:show']);
 
@@ -41,11 +39,17 @@ const isShow = ref(false);
 const fileList = ref<File[]>([]);
 const isFormChange = ref(false);
 const pending = ref(false);
-
-watch(() => props.show, (val) => {
-  isShow.value = val;
-  isFormChange.value = false;
-});
+const existConfigList = ref<IConfigImport[]>([
+  { name: 'aaa', path: '/data', file_type: '二进制', memo: '', privilege: '', user: '', user_group: '' },
+  { name: 'bbb', path: '/data', file_type: '文本', memo: '', privilege: '', user: '', user_group: '' },
+]);
+watch(
+  () => props.show,
+  (val) => {
+    isShow.value = val;
+    isFormChange.value = false;
+  }
+);
 
 const handleFileUpload = () => {};
 
@@ -60,19 +64,18 @@ const handleBeforeClose = async () => {
 const close = () => {
   emits('update:show', false);
 };
-
 </script>
 <style lang="scss" scoped>
-  .slider-content-container {
-    padding: 20px 40px;
-    height: calc(100vh - 101px);
+.slider-content-container {
+  padding: 20px 40px;
+  height: calc(100vh - 101px);
+}
+.action-btns {
+  border-top: 1px solid #dcdee5;
+  padding: 8px 24px;
+  .bk-button {
+    margin-right: 8px;
+    min-width: 88px;
   }
-  .action-btns {
-    border-top: 1px solid #dcdee5;
-    padding: 8px 24px;
-    .bk-button {
-      margin-right: 8px;
-      min-width: 88px;
-    }
-  }
+}
 </style>

@@ -174,3 +174,14 @@ export interface IConfigDiffSelected {
     user_group: string;
   }
 }
+
+// 导入配置项
+export interface IConfigImport {
+  name: string;
+  path: string;
+  file_type: string;
+  memo: string;
+  privilege: string;
+  user: string;
+  user_group: string;
+}
