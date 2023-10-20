@@ -12,6 +12,11 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker.js?work
 import { IVariableEditParams } from '../../../types/variable';
 import useEditorVariableReplace from '../../utils/hooks/use-editor-variable-replace';
 
+interface errorLineItem {
+  lineNumber: number;
+  errorInfo: string;
+}
+
 self.MonacoEnvironment = {
   getWorker(_, label) {
     if (label === 'json') {
@@ -37,16 +42,17 @@ const props = withDefaults(
     variables?: IVariableEditParams[];
     editable?: boolean;
     language?: string;
+    errorLine?: errorLineItem[];
   }>(),
   {
     variables: () => [],
     editable: true,
     lfEol: true,
     language: '',
-  },
+  }
 );
 
-const emit = defineEmits(['update:modelValue', 'change']);
+const emit = defineEmits(['update:modelValue', 'change', 'enter']);
 
 const codeEditorRef = ref();
 let editor: monaco.editor.IStandaloneCodeEditor;
@@ -59,21 +65,21 @@ watch(
     if (val !== localVal.value) {
       editor.setValue(val);
     }
-  },
+  }
 );
 
 watch(
   () => props.language,
   (val) => {
     monaco.editor.setModelLanguage(editor.getModel() as monaco.editor.ITextModel, val);
-  },
+  }
 );
 
 watch(
   () => props.editable,
   (val) => {
     editor.updateOptions({ readOnly: !val });
-  },
+  }
 );
 
 watch(
@@ -82,7 +88,14 @@ watch(
     if (Array.isArray(val) && val.length > 0) {
       editorHoverProvider = useEditorVariableReplace(editor, val);
     }
-  },
+  }
+);
+
+watch(
+  () => props.errorLine,
+  () => {
+    setErrorLine();
+  }
 );
 
 onMounted(() => {
@@ -107,7 +120,30 @@ onMounted(() => {
     emit('update:modelValue', localVal.value);
     emit('change', localVal.value);
   });
+  // 监听第一次回车事件
+  const listener = editor.onKeyDown((event) => {
+    if (event.keyCode === monaco.KeyCode.Enter) {
+      emit('enter');
+      // 取消监听键盘事件
+      listener.dispose();
+    }
+  });
 });
+
+// 添加错误行
+const setErrorLine = () => {
+  // 创建错误标记列表
+  const markers = props.errorLine!.map(({ lineNumber, errorInfo }) => ({
+    startLineNumber: lineNumber,
+    endLineNumber: lineNumber,
+    startColumn: 1,
+    endColumn: 200,
+    message: errorInfo,
+    severity: monaco.MarkerSeverity.Error,
+  }));
+  // 设置编辑器模型的标记
+  monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
+};
 
 // @bug vue3的Teleport组件销毁时，子组件的onBeforeUnmount不会被执行，会出现内存泄漏，目前尚未被修复 https://github.com/vuejs/core/issues/6347
 // onBeforeUnmount(() => {
