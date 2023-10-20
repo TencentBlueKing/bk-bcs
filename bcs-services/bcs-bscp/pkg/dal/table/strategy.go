@@ -31,6 +31,34 @@ const (
 	maxNamespaceStrategiesLimitForApp = 200
 )
 
+const (
+	// PublishByGroups means that publish given groups.
+	PublishByGroups GrayPublishMode = "publish_by_groups"
+
+	// PublishByLabels means that publish by given labels.
+	PublishByLabels GrayPublishMode = "publish_by_labels"
+)
+
+// GrayPublishMode defines gray publish mode.
+type GrayPublishMode string
+
+// String returns gray publish mode string.
+func (s GrayPublishMode) String() string {
+	return string(s)
+}
+
+// Validate gray publish mode type.
+func (s GrayPublishMode) Validate() error {
+	switch s {
+	case PublishByGroups:
+	case PublishByLabels:
+	default:
+		return fmt.Errorf("unsupported publish mode: %s", s)
+	}
+
+	return nil
+}
+
 // ValidateAppStrategyNumber verify whether the current number of app strategies have reached the maximum.
 func ValidateAppStrategyNumber(count uint32, mode AppMode) error {
 	switch mode {
