@@ -35,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/repository"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
@@ -146,6 +147,14 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		APIError(c, i18n.GetMessage(c, err.Error()))
 		return
 	}
+
+	// 创建.bash_history文件
+	go func(podCtx *types.PodContext) {
+		errCreate := CreateBashHistory(podCtx)
+		if errCreate != nil {
+			logger.Warnf("create bash history fail: %s", errCreate.Error())
+		}
+	}(podCtx)
 
 	podCtx.ProjectId = authCtx.ProjectId
 	podCtx.Username = authCtx.Username
@@ -609,4 +618,60 @@ func APIError(c *gin.Context, msg string) { // nolint
 	}
 
 	c.AbortWithStatusJSON(http.StatusBadRequest, data)
+}
+
+// getBashHistory将文件放在本地 historyLocalDir
+func getBashHistory(podName string) ([]byte, error) {
+	filename := podName + podmanager.HistoryFileName
+
+	// 使用cos存储的文件
+	storage, err := repository.NewProvider(config.G.Repository.StorageType)
+	if err != nil {
+		return nil, err
+	}
+
+	// 10 分钟下载时间
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
+	defer cancel()
+
+	// 下载cos文件
+	fileInput, err := storage.DownloadFile(ctx, podmanager.HistoryRepoDir+filename)
+	if err != nil {
+		return nil, err
+	}
+
+	// 读取.bash_history内容byte格式
+	output, err := io.ReadAll(fileInput)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// CreateBashHistory 创建.bash_history文件
+func CreateBashHistory(podCtx *types.PodContext) error {
+	// 往容器写文件
+	pe, err := podCtx.NewPodExec()
+	if err != nil {
+		return err
+	}
+	pe.Command = []string{"cp", "/dev/stdin", "/root/.bash_history"}
+	stdin := &bytes.Buffer{}
+	pe.Stderr = &bytes.Buffer{}
+	// 读取保存的.bash_history文件
+	historyFileByte, err := getBashHistory(podCtx.PodName)
+	if err != nil {
+		return err
+	}
+	_, err = stdin.Write(historyFileByte)
+	if err != nil {
+		return err
+	}
+	pe.Stdin = stdin
+	err = pe.Exec()
+	if err != nil {
+		return err
+	}
+	return nil
 }
