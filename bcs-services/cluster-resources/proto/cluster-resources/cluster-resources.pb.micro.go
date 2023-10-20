@@ -6,7 +6,6 @@ package clusterresources
 import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
-	_ "github.com/golang/protobuf/ptypes/any"
 	_ "github.com/golang/protobuf/ptypes/struct"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -4683,4 +4682,134 @@ func (h *viewConfigHandler) RenameViewConfig(ctx context.Context, in *RenameView
 
 func (h *viewConfigHandler) DeleteViewConfig(ctx context.Context, in *DeleteViewConfigReq, out *CommonResp) error {
 	return h.ViewConfigHandler.DeleteViewConfig(ctx, in, out)
+}
+
+// Api Endpoints for MultiCluster service
+
+func NewMultiClusterEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "MultiCluster.FetchMultiClusterResource",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{kind}"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "MultiCluster.FetchMultiClusterCustomResource",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "MultiCluster.MultiClusterResourceCount",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources_count"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for MultiCluster service
+
+type MultiClusterService interface {
+	FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, opts ...client.CallOption) (*CommonResp, error)
+	FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, opts ...client.CallOption) (*CommonResp, error)
+	MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, opts ...client.CallOption) (*CommonResp, error)
+}
+
+type multiClusterService struct {
+	c    client.Client
+	name string
+}
+
+func NewMultiClusterService(name string, c client.Client) MultiClusterService {
+	return &multiClusterService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *multiClusterService) FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "MultiCluster.FetchMultiClusterResource", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *multiClusterService) FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "MultiCluster.FetchMultiClusterCustomResource", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *multiClusterService) MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "MultiCluster.MultiClusterResourceCount", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for MultiCluster service
+
+type MultiClusterHandler interface {
+	FetchMultiClusterResource(context.Context, *FetchMultiClusterResourceReq, *CommonResp) error
+	FetchMultiClusterCustomResource(context.Context, *FetchMultiClusterCustomResourceReq, *CommonResp) error
+	MultiClusterResourceCount(context.Context, *MultiClusterResourceCountReq, *CommonResp) error
+}
+
+func RegisterMultiClusterHandler(s server.Server, hdlr MultiClusterHandler, opts ...server.HandlerOption) error {
+	type multiCluster interface {
+		FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, out *CommonResp) error
+		FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, out *CommonResp) error
+		MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, out *CommonResp) error
+	}
+	type MultiCluster struct {
+		multiCluster
+	}
+	h := &multiClusterHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MultiCluster.FetchMultiClusterResource",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{kind}"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MultiCluster.FetchMultiClusterCustomResource",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MultiCluster.MultiClusterResourceCount",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources_count"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&MultiCluster{h}, opts...))
+}
+
+type multiClusterHandler struct {
+	MultiClusterHandler
+}
+
+func (h *multiClusterHandler) FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, out *CommonResp) error {
+	return h.MultiClusterHandler.FetchMultiClusterResource(ctx, in, out)
+}
+
+func (h *multiClusterHandler) FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, out *CommonResp) error {
+	return h.MultiClusterHandler.FetchMultiClusterCustomResource(ctx, in, out)
+}
+
+func (h *multiClusterHandler) MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, out *CommonResp) error {
+	return h.MultiClusterHandler.MultiClusterResourceCount(ctx, in, out)
 }

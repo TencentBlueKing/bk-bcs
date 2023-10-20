@@ -35,7 +35,7 @@ for file in "${source_files[@]}"; do
   safe_source "$file"
 done
 
-"${ROOT_DIR}"/k8s/operate_completion kubeadm kubectl helm ctr
+"${ROOT_DIR}"/k8s/operate_completion kubeadm kubectl helm ctr yq
 
 if [[ -n "${BKREPO_URL:-}" ]]; then
   if command -v helm &>/dev/null; then

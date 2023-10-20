@@ -149,6 +149,44 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{kind}": {
+      "post": {
+        "summary": "Get multi cluster resources",
+        "description": "获取多集群资源列表",
+        "operationId": "MultiCluster_FetchMultiClusterResource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MultiCluster"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/view_configs": {
       "get": {
         "summary": "Get view configs",
@@ -8062,6 +8100,20 @@
       },
       "description": "更新单个自定义资源请求体",
       "title": "CObjUpdateReq"
+    },
+    "clusterresourcesClusterNamespaces": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string"
+        },
+        "namespaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     },
     "clusterresourcesCommonListResp": {
       "type": "object",

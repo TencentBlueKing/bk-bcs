@@ -5673,3 +5673,161 @@ var ViewConfig_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "cluster-resources.proto",
 }
+
+// MultiClusterClient is the client API for MultiCluster service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type MultiClusterClient interface {
+	FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, opts ...grpc.CallOption) (*CommonResp, error)
+	FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, opts ...grpc.CallOption) (*CommonResp, error)
+	MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, opts ...grpc.CallOption) (*CommonResp, error)
+}
+
+type multiClusterClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewMultiClusterClient(cc grpc.ClientConnInterface) MultiClusterClient {
+	return &multiClusterClient{cc}
+}
+
+func (c *multiClusterClient) FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.MultiCluster/FetchMultiClusterResource", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *multiClusterClient) FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.MultiCluster/FetchMultiClusterCustomResource", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *multiClusterClient) MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.MultiCluster/MultiClusterResourceCount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// MultiClusterServer is the server API for MultiCluster service.
+// All implementations must embed UnimplementedMultiClusterServer
+// for forward compatibility
+type MultiClusterServer interface {
+	FetchMultiClusterResource(context.Context, *FetchMultiClusterResourceReq) (*CommonResp, error)
+	FetchMultiClusterCustomResource(context.Context, *FetchMultiClusterCustomResourceReq) (*CommonResp, error)
+	MultiClusterResourceCount(context.Context, *MultiClusterResourceCountReq) (*CommonResp, error)
+	mustEmbedUnimplementedMultiClusterServer()
+}
+
+// UnimplementedMultiClusterServer must be embedded to have forward compatible implementations.
+type UnimplementedMultiClusterServer struct {
+}
+
+func (UnimplementedMultiClusterServer) FetchMultiClusterResource(context.Context, *FetchMultiClusterResourceReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FetchMultiClusterResource not implemented")
+}
+func (UnimplementedMultiClusterServer) FetchMultiClusterCustomResource(context.Context, *FetchMultiClusterCustomResourceReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FetchMultiClusterCustomResource not implemented")
+}
+func (UnimplementedMultiClusterServer) MultiClusterResourceCount(context.Context, *MultiClusterResourceCountReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiClusterResourceCount not implemented")
+}
+func (UnimplementedMultiClusterServer) mustEmbedUnimplementedMultiClusterServer() {}
+
+// UnsafeMultiClusterServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to MultiClusterServer will
+// result in compilation errors.
+type UnsafeMultiClusterServer interface {
+	mustEmbedUnimplementedMultiClusterServer()
+}
+
+func RegisterMultiClusterServer(s grpc.ServiceRegistrar, srv MultiClusterServer) {
+	s.RegisterService(&MultiCluster_ServiceDesc, srv)
+}
+
+func _MultiCluster_FetchMultiClusterResource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FetchMultiClusterResourceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MultiClusterServer).FetchMultiClusterResource(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.MultiCluster/FetchMultiClusterResource",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MultiClusterServer).FetchMultiClusterResource(ctx, req.(*FetchMultiClusterResourceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MultiCluster_FetchMultiClusterCustomResource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FetchMultiClusterCustomResourceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MultiClusterServer).FetchMultiClusterCustomResource(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.MultiCluster/FetchMultiClusterCustomResource",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MultiClusterServer).FetchMultiClusterCustomResource(ctx, req.(*FetchMultiClusterCustomResourceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MultiCluster_MultiClusterResourceCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultiClusterResourceCountReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MultiClusterServer).MultiClusterResourceCount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.MultiCluster/MultiClusterResourceCount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MultiClusterServer).MultiClusterResourceCount(ctx, req.(*MultiClusterResourceCountReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// MultiCluster_ServiceDesc is the grpc.ServiceDesc for MultiCluster service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var MultiCluster_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "clusterresources.MultiCluster",
+	HandlerType: (*MultiClusterServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "FetchMultiClusterResource",
+			Handler:    _MultiCluster_FetchMultiClusterResource_Handler,
+		},
+		{
+			MethodName: "FetchMultiClusterCustomResource",
+			Handler:    _MultiCluster_FetchMultiClusterCustomResource_Handler,
+		},
+		{
+			MethodName: "MultiClusterResourceCount",
+			Handler:    _MultiCluster_MultiClusterResourceCount_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "cluster-resources.proto",
+}

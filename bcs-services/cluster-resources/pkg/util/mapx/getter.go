@@ -37,13 +37,13 @@ func getItems(obj map[string]interface{}, paths []string) (interface{}, error) {
 	if len(paths) == 0 {
 		return nil, errorx.New(errcode.General, "paths is empty list")
 	}
-	ret, exists := obj[paths[0]]
+	ret, exists := obj[RecoverPath(paths[0])]
 	if !exists {
 		return nil, errorx.New(errcode.General, "key %s not exist", paths[0])
 	}
 	if len(paths) == 1 {
 		return ret, nil
-	} else if subMap, ok := obj[paths[0]].(map[string]interface{}); ok {
+	} else if subMap, ok := obj[RecoverPath(paths[0])].(map[string]interface{}); ok {
 		return getItems(subMap, paths[1:])
 	}
 	return nil, errorx.New(errcode.General, "key %s, val not map[string]interface{} type", paths[0])
@@ -65,7 +65,11 @@ func GetBool(obj map[string]interface{}, paths interface{}) bool {
 
 // GetInt64 获取 int64 类型快捷方法，默认值为 int64(0)
 func GetInt64(obj map[string]interface{}, paths interface{}) int64 {
-	return Get(obj, paths, int64(0)).(int64)
+	i, ok := Get(obj, paths, int64(0)).(int64)
+	if ok {
+		return i
+	}
+	return int64(Get(obj, paths, float64(0)).(float64))
 }
 
 // GetStr 获取 string 类型快捷方法，默认值为 ""
@@ -81,4 +85,14 @@ func GetList(obj map[string]interface{}, paths interface{}) []interface{} {
 // GetMap 获取 map[string]interface{} 类型快捷方法，默认值为 map[string]interface{}
 func GetMap(obj map[string]interface{}, paths interface{}) map[string]interface{} {
 	return Get(obj, paths, map[string]interface{}{}).(map[string]interface{})
+}
+
+// ConvertPath 将路径中的 "." 转换为 "．"，避免在 json 中被解析为 map
+func ConvertPath(path string) string {
+	return strings.ReplaceAll(path, ".", "．")
+}
+
+// RecoverPath 将路径中的 "．" 转换为 "."
+func RecoverPath(path string) string {
+	return strings.ReplaceAll(path, "．", ".")
 }

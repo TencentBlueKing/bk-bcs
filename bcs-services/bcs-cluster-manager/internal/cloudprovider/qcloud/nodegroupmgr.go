@@ -29,7 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	intercommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -528,7 +528,7 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 	if len(insIDs) == 0 {
 		return nil, nil
 	}
-	nm := api.NodeManager{}
+	nm := NodeManager{}
 	nodes, err := nm.ListNodesByInstanceID(insIDs, &cloudprovider.ListNodesOption{
 		Common:       opt,
 		ClusterVPCID: group.AutoScaling.VpcID,
@@ -833,7 +833,7 @@ func createExternalNodePool(group *proto.NodeGroup, opt *cloudprovider.CreateNod
 				}
 				return api.MapToTaints(group.NodeTemplate.Taints)
 			}(),
-			InstanceAdvancedSettings: tasks.GenerateClsAdvancedInsSettingFromNT(&cloudprovider.CloudDependBasicInfo{
+			InstanceAdvancedSettings: business.GenerateClsAdvancedInsSettingFromNT(&cloudprovider.CloudDependBasicInfo{
 				Cluster:      opt.Cluster,
 				NodeTemplate: group.NodeTemplate,
 			}, template.RenderVars{Render: false}, nil),
@@ -896,7 +896,7 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup) (string, erro
 		return "", errMsg
 	}
 
-	script, err := tasks.GetClusterExternalNodeScript(context.Background(), dependInfo)
+	script, err := business.GetClusterExternalNodeScript(context.Background(), dependInfo)
 	if err != nil {
 		blog.Errorf("GetExternalNodeScript[%s] GetClusterExternalNodeScript failed: %v", group.NodeGroupID, err)
 		return "", err

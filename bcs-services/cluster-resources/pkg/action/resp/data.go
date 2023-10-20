@@ -39,7 +39,8 @@ func BuildListAPIRespData(
 	}
 
 	respDataBuilder, err := NewRespDataBuilder(
-		ctx, DataBuilderParams{ret.UnstructuredContent(), params.ResKind, params.Format, params.Scene},
+		ctx, DataBuilderParams{ret.UnstructuredContent(), params.ClusterID, params.ResKind, params.Format,
+			params.Scene},
 	)
 	if err != nil {
 		return nil, err

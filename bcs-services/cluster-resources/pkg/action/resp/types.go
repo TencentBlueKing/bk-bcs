@@ -42,8 +42,9 @@ type DataBuilder interface {
 
 // DataBuilderParams 初始化 DataBuilder 参数
 type DataBuilderParams struct {
-	Manifest map[string]interface{}
-	Kind     string
-	Format   string
-	Scene    string
+	Manifest  map[string]interface{}
+	ClusterID string
+	Kind      string
+	Format    string
+	Scene     string
 }

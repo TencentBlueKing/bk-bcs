@@ -200,7 +200,7 @@ func getClusterMasterNodes(opt *cloudprovider.SyncClusterCloudInfoOption,
 }
 
 func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption) ([]*cmproto.Node, error) {
-	nodeMgr := api.NodeManager{}
+	nodeMgr := NodeManager{}
 	nodes, err := nodeMgr.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
 		Common:       opt.Common,
 		ClusterVPCID: opt.ClusterVPCID,

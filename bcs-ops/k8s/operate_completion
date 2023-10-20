@@ -22,7 +22,7 @@ ROOT_DIR="${SELF_DIR}/.."
 
 RC_FILE="/etc/bash_completion.d/bcs.bash"
 
-PROJECTS=(kubeadm kubectl helm ctr)
+PROJECTS=(kubeadm kubectl helm ctr yq)
 readonly SELF_DIR ROOT_DIR RC_FILE PROJECTS
 
 usage_and_exit() {
@@ -97,6 +97,18 @@ completion_helm() {
 # helm 命令补全
 source <(helm completion bash)
 # bcs config end for helm
+EOF
+}
+
+completion_yq() {
+  check_completion
+    sed -ri \
+    '/bcs config begin for yq/,/bcs config end for yq/d' ${RC_FILE}
+  cat >>"$RC_FILE" <<'EOF'
+# bcs config begin for yq
+# yq 命令补全
+source <(yq shell-completion bash)
+# bcs config end for yq
 EOF
 }
 

@@ -21,4 +21,5 @@ import (
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/ladder"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public"
 )

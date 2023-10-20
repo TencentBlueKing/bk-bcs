@@ -18,15 +18,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	gameAppsv1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned"
 	gameScheme "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/scheme"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
+	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,6 +44,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
@@ -284,6 +288,36 @@ func GetCRDInfo(ctx context.Context, clusterID, crdName string) (map[string]inte
 	}
 
 	return formatter.FormatCRD(manifest), nil
+}
+
+// GetClustersCRDInfo 获取多集群 CRD 基础信息
+func GetClustersCRDInfo(ctx context.Context, clusterIDs []string, crdName string) (map[string]interface{}, error) {
+	errGroup := errgroup.Group{}
+	mux := sync.Mutex{}
+	var result map[string]interface{}
+	for _, v := range clusterIDs {
+		clusterID := v
+		errGroup.Go(func() error {
+			cluterInfo, err := cluster.GetClusterInfo(ctx, clusterID)
+			if err != nil {
+				return err
+			}
+			ctx = context.WithValue(ctx, ctxkey.ClusterKey, cluterInfo)
+			manifest, err := NewCRDCliByClusterID(ctx, clusterID).Get(ctx, crdName, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			mux.Lock()
+			defer mux.Unlock()
+			result = manifest
+			return nil
+		})
+	}
+	if err := errGroup.Wait(); err != nil && result == nil {
+		return nil, err
+	}
+
+	return formatter.FormatCRD(result), nil
 }
 
 // GetCObjManifest 获取自定义资源信息

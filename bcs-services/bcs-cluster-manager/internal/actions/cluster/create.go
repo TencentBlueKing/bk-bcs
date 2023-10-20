@@ -148,6 +148,8 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		CreateTime:              createTime,
 		UpdateTime:              createTime,
 		Status:                  common.StatusInitialization,
+		Area:                    ca.req.Area,
+		Module:                  ca.req.Module,
 	}
 
 	// set cloud default values
