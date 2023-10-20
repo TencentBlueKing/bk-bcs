@@ -104,7 +104,7 @@ _offline_k8s() {
 }
 
 main() {
-  local source_file
+  local source_files
   source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
   for file in "${source_files[@]}"; do
     safe_source "$file"
