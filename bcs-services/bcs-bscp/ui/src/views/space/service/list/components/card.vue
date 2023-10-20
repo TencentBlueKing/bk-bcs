@@ -149,7 +149,7 @@ const handleDeleteService = async () => {
 .service-card {
   position: relative;
   width: 304px;
-  height: 165px;
+  height: 143px;
   padding: 0px 8px 16px 8px;
   &.no-view-perm {
     cursor: pointer;
@@ -224,7 +224,7 @@ const handleDeleteService = async () => {
   }
   .service-config {
     padding: 0 16px;
-    height: 55px;
+    height: 33px;
     font-size: 12px;
     color: #979ba5;
     line-height: 20px;
