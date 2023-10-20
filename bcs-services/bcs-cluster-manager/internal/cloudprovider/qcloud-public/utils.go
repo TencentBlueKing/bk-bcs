@@ -42,9 +42,9 @@ const (
 	// tkeCleanNodeTaskTemplate bk-sops add task template
 	tkeCleanNodeTaskTemplate = "tke-remove node: %s"
 	// tkeAddExternalNodeTaskTemplate bk-sops add task template
-	tkeAddExternalNodeTaskTemplate = "tke-add external node: %s"
+	tkeAddExternalNodeTaskTemplate = "tke-add external node: %s" // nolint
 	// tkeCleanExternalNodeTaskTemplate bk-sops add task template
-	tkeCleanExternalNodeTaskTemplate = "tke-remove external node: %s"
+	tkeCleanExternalNodeTaskTemplate = "tke-remove external node: %s" // nolint
 	// importClusterTaskTemplate bk-sops add task template
 	importClusterTaskTemplate = "tke-import cluster: %s"
 	// createNodeGroupTaskTemplate bk-sops add task template

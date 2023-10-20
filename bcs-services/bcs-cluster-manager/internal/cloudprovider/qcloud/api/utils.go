@@ -26,8 +26,6 @@ import (
 
 const (
 	limit = 100
-
-	maxFilterValues = 5
 )
 
 // FilterKey tke interface filterKey
