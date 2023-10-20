@@ -62,13 +62,13 @@ func (q *wsQuery) GetTerminalSize() *types.TerminalSize {
 func (s *service) BCSWebSocketHandler(c *gin.Context) { // nolint
 	// 还未建立 WebSocket 连接, 使用 Json 返回
 	if !websocket.IsWebSocketUpgrade(c.Request) {
-		rest.AbortWithBadRequestError(c, "invalid websocket connection", "")
+		rest.AbortWithBadRequestError(c, "invalid websocket connection")
 		return
 	}
 
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		rest.AbortWithBadRequestError(c, errors.Wrap(err, "upgrade websocket connection").Error(), "")
+		rest.AbortWithBadRequestError(c, errors.Wrap(err, "upgrade websocket connection").Error())
 		return
 	}
 	defer ws.Close() // nolint

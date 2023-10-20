@@ -19,6 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
 
 // Result 返回的标准结构
@@ -30,13 +31,15 @@ type Result struct {
 }
 
 // AbortWithBadRequestError 错误返回，兼容国际化
-func AbortWithBadRequestError(c *gin.Context, err string, requestId string) {
+func AbortWithBadRequestError(c *gin.Context, err string) {
+	requestId := route.MustGetAuthContext(c).RequestId
 	result := Result{Code: types.ApiErrorCode, Message: err, RequestId: requestId}
 	c.AbortWithStatusJSON(http.StatusBadRequest, result)
 }
 
 // AbortWithRequestSuccess 正常返回
-func AbortWithRequestSuccess(c *gin.Context, message, requestId string, data interface{}) {
+func AbortWithRequestSuccess(c *gin.Context, message string, data interface{}) {
+	requestId := route.MustGetAuthContext(c).RequestId
 	result := Result{Code: types.NoError, Message: message, RequestId: requestId, Data: data}
-	c.AbortWithStatusJSON(http.StatusBadRequest, result)
+	c.AbortWithStatusJSON(http.StatusOK, result)
 }
