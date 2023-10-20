@@ -204,8 +204,17 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	// create watcher manager.
 	glog.Info("creating watcher manager now...")
-	watcherMgr, err := k8s.NewWatcherManager(clusterID, &config.WatchResource, filterConfig, writer, &config.K8s,
-		storageService, netservice, stopChan)
+	watcherMgr, err := k8s.NewWatcherManager(
+		&k8s.WatcherManagerOptions{
+			ClusterID:      clusterID,
+			WatchResource:  &config.WatchResource,
+			FilterConfig:   filterConfig,
+			Writer:         writer,
+			K8sConfig:      &config.K8s,
+			StorageService: storageService,
+			Netservice:     netservice,
+			StopChan:       stopChan,
+		})
 	if err != nil {
 		panic(err)
 	}
