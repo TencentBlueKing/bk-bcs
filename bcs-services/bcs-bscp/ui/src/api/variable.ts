@@ -61,7 +61,7 @@ export const updateUnReleasedAppVariables = (biz_id: string, app_id: number, var
 export const getReleasedAppVariables = (biz_id: string, app_id: number, release_id: number) => http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/template_variables`, { params: {  } }).then(res => res.data);
 
 /**
- * 查询未命名版本服务中变量被配置项引用详情
+ * 查询未命名版本服务中变量被配置文件引用详情
  * @param biz_id 业务ID
  * @param app_id 应用ID
  * @returns
@@ -69,7 +69,7 @@ export const getReleasedAppVariables = (biz_id: string, app_id: number, release_
 export const getUnReleasedAppVariablesCitedDetail = (biz_id: string, app_id: number) => http.get(`/config/biz/${biz_id}/apps/${app_id}/template_variables_references`).then(res => res.data);
 
 /**
- * 查询服务某个版本的变量被配置项引用详情
+ * 查询服务某个版本的变量被配置文件引用详情
  * @param biz_id 业务ID
  * @param app_id 应用ID
  * @param release_id 服务版本ID

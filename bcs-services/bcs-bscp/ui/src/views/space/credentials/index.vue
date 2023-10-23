@@ -130,7 +130,7 @@
               </template>
               <template v-if="row.spec">
                 <bk-button text theme="primary" @click="handleOpenAssociate(row)">
-                  <span :class="{ redPoint: newCredentials[0] === row.id }">关联配置项</span>
+                  <span :class="{ redPoint: newCredentials[0] === row.id }">关联配置文件</span>
                 </bk-button>
                 <bk-button
                   v-cursor="{ active: !hasManagePerm }"
@@ -431,7 +431,6 @@ const handelToggleEnable = async (credential: ICredentialItem) => {
     InfoBox({
       title: '确定禁用此密钥',
       subTitle: '禁用密钥后，使用此密钥的应用将无法正常使用 SDK/API 拉取配置',
-      infoType: 'warning',
       confirmText: '禁用',
       onConfirm: async () => {
         const params = {
@@ -459,24 +458,24 @@ const handelToggleEnable = async (credential: ICredentialItem) => {
   }
 };
 
-// 打开关联配置项侧滑
+// 打开关联配置文件侧滑
 const handleOpenAssociate = (credential: ICredentialItem) => {
   isAssociateSliderShow.value = true;
   currentCredential.value = credential.id;
 };
 
-// 关闭关联配置项侧滑
+// 关闭关联配置文件侧滑
 const handleAssociateSliderClose = () => {
   isAssociateSliderShow.value = false;
   currentCredential.value = 0;
 };
 
-// 删除配置项二次确认
+// 删除配置文件二次确认
 const handleDeleteConfirm = async (credential: ICredentialItem) => {
   isShowDeleteDialog.value = true;
   deleteCredentialInfo.value = credential;
 };
-// 删除配置项
+// 删除配置文件
 const handleDelete = async () => {
   if (!checkPermBeforeOperate()) {
     return;
@@ -488,7 +487,7 @@ const handleDelete = async () => {
   isShowDeleteDialog.value = false;
   loadCredentialList();
 };
-// 删除配置项提示文字
+// 删除配置文件提示文字
 const deleteTooltip = (isShowTooltip: boolean) => {
   if (isShowTooltip) {
     return {

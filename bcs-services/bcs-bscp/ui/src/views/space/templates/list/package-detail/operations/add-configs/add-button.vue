@@ -7,15 +7,15 @@
     width="122"
     :arrow="false"
   >
-    <bk-button theme="primary" class="create-config-btn"> <Plus class="button-icon" />添加配置项 </bk-button>
+    <bk-button theme="primary" class="create-config-btn"> <Plus class="button-icon" />添加配置文件 </bk-button>
     <template #content>
       <div class="add-config-operations">
         <div v-if="props.showAddExistingConfigOption" class="operation-item" @click="handleOpenSlider('isAddOpen')">
-          添加已有配置项
+          添加已有配置文件
         </div>
-        <div class="operation-item" @click="handleOpenSlider('isCreateOpen')">新建配置项</div>
+        <div class="operation-item" @click="handleOpenSlider('isCreateOpen')">新建配置文件</div>
         <!-- 接口未提供，暂时隐藏 -->
-        <!-- <div class="operation-item" @click="handleOpenSlider('isImportOpen')">导入配置项</div> -->
+        <!-- <div class="operation-item" @click="handleOpenSlider('isImportOpen')">导入配置文件</div> -->
       </div>
     </template>
   </bk-popover>

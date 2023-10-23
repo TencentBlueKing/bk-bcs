@@ -114,7 +114,7 @@ export const getScriptCiteList = (biz_id: string, hook_id: number, params: IScri
  */
 export const getScriptVersionCiteList = (biz_id: string, hook_id: number, version_id: number, params: IScriptCiteQuery) => http.get(`/config/biz/${biz_id}/hooks/${hook_id}/hook_revisions/${version_id}/references`, { params }).then(res => res.data);
 
-// // 获取配置项版本下的初始化脚本配置
+// // 获取配置文件版本下的初始化脚本配置
 // export const getConfigScript = (biz_id: string, app_id: number, release_id: number) => {
 //   return http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/hooks`)
 // }

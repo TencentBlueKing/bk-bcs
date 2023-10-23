@@ -12,7 +12,7 @@
     @closed="close"
   >
     <div class="selected-mark">
-      已选 <span class="num">{{ props.value.length }}</span> 个配置项
+      已选 <span class="num">{{ props.value.length }}</span> 个配置文件
     </div>
     <p class="tips">以下服务配置的未命名版本中引用此套餐的内容也将更新</p>
     <bk-loading style="min-height: 100px" :loading="loading">
@@ -64,7 +64,7 @@ watch(
   () => props.show,
   () => {
     getCitedData();
-  },
+  }
 );
 
 const getCitedData = async () => {
@@ -77,25 +77,25 @@ const getCitedData = async () => {
     spaceId.value,
     currentTemplateSpace.value,
     [props.currentPkg],
-    params,
+    params
   );
   citedList.value = res.details;
   loading.value = false;
 };
 
 const handleConfirm = async () => {
-  const pkg = packageList.value.find(item => item.id === currentPkg.value);
+  const pkg = packageList.value.find((item) => item.id === currentPkg.value);
   if (!pkg) return;
 
   try {
     pending.value = true;
-    const ids = props.value.map(item => item.id);
+    const ids = props.value.map((item) => item.id);
     await moveOutTemplateFromPackage(spaceId.value, currentTemplateSpace.value, ids, [currentPkg.value as number]);
     emits('movedOut');
     close();
     Message({
       theme: 'success',
-      message: '配置项移出套餐成功',
+      message: '配置文件移出套餐成功',
     });
   } catch (e) {
     console.log(e);

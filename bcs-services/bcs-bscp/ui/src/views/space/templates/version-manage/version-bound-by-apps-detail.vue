@@ -13,8 +13,8 @@
         @page-limit-change="handlePageLimitChange"
         @page-value-change="getList"
       >
-        <bk-table-column label="配置项版本">{{ props.config.name }}</bk-table-column>
-        <bk-table-column label="引用此配置项的服务">
+        <bk-table-column label="配置文件版本">{{ props.config.name }}</bk-table-column>
+        <bk-table-column label="引用此配置文件的服务">
           <template #default="{ row }">
             <bk-link v-if="row.app_id" class="link-btn" theme="primary" target="_blank" :href="getHref(row.app_id)">
               {{ row.app_name }}

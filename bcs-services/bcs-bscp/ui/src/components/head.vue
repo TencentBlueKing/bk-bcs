@@ -110,7 +110,7 @@ const md = new MarkdownIt({
   typographer: true,
 });
 const navList = [
-  { id: 'service-mine', module: 'service', name: '服务管理' },
+  { id: 'service-all', module: 'service', name: '服务管理' },
   { id: 'groups-management', module: 'groups', name: '分组管理' },
   { id: 'variables-management', module: 'variables', name: '变量管理' },
   { id: 'templates-list', module: 'templates', name: '配置模板' },
@@ -121,7 +121,7 @@ const navList = [
 const optionList = ref<ISpaceDetail[]>([]);
 
 const crtSpaceText = computed(() => {
-  const space = spaceList.value.find(item => item.space_id === spaceId.value);
+  const space = spaceList.value.find((item) => item.space_id === spaceId.value);
   if (space) {
     return `${space.space_name}(${spaceId.value})`;
   }
@@ -135,7 +135,7 @@ watch(
   },
   {
     immediate: true,
-  },
+  }
 );
 
 const handleSpaceSearch = (searchStr: string) => {
@@ -174,7 +174,7 @@ const handleSelectSpace = (id: string) => {
       state.currentTemplateSpace = 0;
       state.currentPkg = '';
     });
-    const nav = navList.find(item => item.module === route.meta.navModule);
+    const nav = navList.find((item) => item.module === route.meta.navModule);
     if (nav) {
       router.push({ name: nav.id, params: { spaceId: id } });
     } else {

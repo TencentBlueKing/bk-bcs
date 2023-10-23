@@ -17,7 +17,7 @@
       </div>
     </template>
     <div v-if="isMultiple" class="selected-mark">
-      已选 <span class="num">{{ props.value.length }}</span> 个配置项
+      已选 <span class="num">{{ props.value.length }}</span> 个配置文件
     </div>
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
       <bk-form-item :label="isMultiple ? '添加至模板套餐' : '模板套餐'" property="pkgs" required>
@@ -26,7 +26,7 @@
         </bk-select>
       </bk-form-item>
     </bk-form>
-    <p class="tips">以下服务配置的未命名版本中将添加已选配置项的 <span class="notice">latest 版本</span></p>
+    <p class="tips">以下服务配置的未命名版本中将添加已选配置文件的 <span class="notice">latest 版本</span></p>
     <bk-loading style="min-height: 100px" :loading="loading">
       <bk-table :data="citedList" :max-height="maxTableHeight">
         <bk-table-column label="目标模板套餐" prop="template_set_name"></bk-table-column>
@@ -68,7 +68,7 @@ const loading = ref(false);
 const citedList = ref<IPackagesCitedByApps[]>([]);
 const pending = ref(false);
 
-const allPackages = computed(() => packageList.value.filter(pkg => pkg.id !== currentPkg.value));
+const allPackages = computed(() => packageList.value.filter((pkg) => pkg.id !== currentPkg.value));
 
 const isMultiple = computed(() => props.value.length > 1);
 
@@ -85,7 +85,7 @@ watch(
       citedList.value = [];
       pending.value = false;
     }
-  },
+  }
 );
 
 const getCitedData = async () => {
@@ -98,7 +98,7 @@ const getCitedData = async () => {
     spaceId.value,
     currentTemplateSpace.value,
     selectedPkgs.value,
-    params,
+    params
   );
   citedList.value = res.details;
   loading.value = false;
@@ -118,13 +118,13 @@ const handleConfirm = async () => {
 
   try {
     pending.value = true;
-    const templateIds = props.value.map(item => item.id);
+    const templateIds = props.value.map((item) => item.id);
     await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, templateIds, selectedPkgs.value);
     emits('added');
     close();
     Message({
       theme: 'success',
-      message: '添加配置项成功',
+      message: '添加配置文件成功',
     });
   } catch (e) {
     console.log(e);

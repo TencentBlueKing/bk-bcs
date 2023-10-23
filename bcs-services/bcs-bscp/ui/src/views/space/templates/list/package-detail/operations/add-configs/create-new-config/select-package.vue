@@ -77,9 +77,11 @@ const formRef = ref();
 const loading = ref(false);
 const citedList = ref<IPackagesCitedByApps[]>([]);
 
-const tips = computed(() => (selectedPkgs.value.includes(0)
-  ? '若未指定套餐，此配置项模板将无法被服务引用。后续请使用「添加至」或「添加已有配置项」功能添加至指定套餐'
-  : '以下服务配置的未命名版本引用目标套餐的内容也将更新'));
+const tips = computed(() =>
+  selectedPkgs.value.includes(0)
+    ? '若未指定套餐，此配置文件模板将无法被服务引用。后续请使用「添加至」或「添加已有配置文件」功能添加至指定套餐'
+    : '以下服务配置的未命名版本引用目标套餐的内容也将更新'
+);
 
 const maxTableHeight = computed(() => {
   const windowHeight = window.innerHeight;
@@ -98,7 +100,7 @@ watch(
         getCitedData();
       }
     }
-  },
+  }
 );
 
 const allOptions = computed(() => {
@@ -121,7 +123,7 @@ const getCitedData = async () => {
     spaceId.value,
     currentTemplateSpace.value,
     selectedPkgs.value,
-    params,
+    params
   );
   citedList.value = res.details;
   loading.value = false;
@@ -135,7 +137,7 @@ const handleSelectPkg = (val: number[]) => {
   }
 
   if (unSpecifiedSelected.value) {
-    selectedPkgs.value = val.filter(id => id !== 0);
+    selectedPkgs.value = val.filter((id) => id !== 0);
   } else {
     selectedPkgs.value = val.slice();
   }

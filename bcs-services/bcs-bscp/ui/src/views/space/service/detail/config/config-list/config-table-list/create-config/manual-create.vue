@@ -94,7 +94,7 @@ const handleSubmit = async () => {
     close();
     Message({
       theme: 'success',
-      message: '新建配置项成功',
+      message: '新建配置文件成功',
     });
   } catch (e) {
     console.log(e);

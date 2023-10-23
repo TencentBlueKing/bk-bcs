@@ -1,6 +1,6 @@
 <template>
   <bk-sideslider
-    title="关联配置项"
+    title="关联配置文件"
     width="400"
     :is-show="props.show"
     :before-close="handleBeforeClose"
@@ -74,7 +74,7 @@ watch(
         alter_scope: [],
       };
     }
-  },
+  }
 );
 
 const loadRules = async () => {

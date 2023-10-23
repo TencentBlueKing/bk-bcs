@@ -6,7 +6,7 @@
       <div class="service-config">
         <div class="config-info">
           <span class="bk-bscp-icon icon-configuration-line"></span>
-          {{ props.service.config?.count }}个配置项
+          {{ props.service.config?.count }}个配置文件
         </div>
         <div class="time-info">
           <span class="bk-bscp-icon icon-time-2"></span>

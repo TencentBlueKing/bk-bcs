@@ -103,7 +103,7 @@ watch(
       formData.value.name = '';
       formData.value.memo = '';
     }
-  },
+  }
 );
 
 const handleCreateConfirm = async () => {
@@ -114,10 +114,10 @@ const handleCreateConfirm = async () => {
     InfoBox({
       type: 'success',
       title: '服务新建成功',
-      subTitle: '接下来你可以在服务下新增并使用配置项',
+      subTitle: '接下来你可以在服务下新增并使用配置文件',
       headerAlign: 'center',
       footerAlign: 'center',
-      confirmText: '新增配置项',
+      confirmText: '新增配置文件',
       cancelText: '稍后再说',
       onConfirm() {
         router.push({
