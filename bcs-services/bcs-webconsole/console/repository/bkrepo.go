@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"os"
 
-	"k8s.io/klog/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
@@ -53,7 +53,7 @@ func (b *bkrepoStorage) UploadFile(ctx context.Context, localFile, filePath stri
 	}
 	if resp.StatusCode != 200 {
 		body, _ := io.ReadAll(resp.Body)
-		klog.Errorf("Upload file failed, resp: %s\n", string(body))
+		blog.Errorf("Upload file failed, resp: %s\n", string(body))
 		return fmt.Errorf("upload file failed, Err code: %v", resp.StatusCode)
 	}
 	return nil
@@ -175,7 +175,7 @@ func (b *bkrepoStorage) DownloadFile(ctx context.Context, filePath string) (io.R
 
 	if resp.StatusCode != 200 {
 		body, _ := io.ReadAll(resp.Body)
-		klog.Errorf("Download file failed, resp: %s\n", string(body))
+		blog.Errorf("Download file failed, resp: %s\n", string(body))
 		resp.Body.Close()
 		return nil, fmt.Errorf("download file failed, Err code: %v", resp.StatusCode)
 	}
