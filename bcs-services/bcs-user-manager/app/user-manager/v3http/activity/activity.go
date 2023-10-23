@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/emicklei/go-restful"
 	"github.com/gorilla/schema"
 
@@ -167,4 +168,38 @@ func PushActivities(request *restful.Request, response *restful.Response) {
 		return
 	}
 	utils.ResponseOK(response, nil)
+}
+
+var (
+	resourceTypes = []string{
+		"project",
+		"cluster",
+		"node",
+		"node_group",
+		"cloud_account",
+		"namespace",
+		"templateset",
+		"variable",
+		"k8s_resource",
+		"helm",
+		"addons",
+		"chart",
+		"web_console",
+		"log_rule",
+	}
+)
+
+// ResourceTypeResponse resource type response
+type ResourceTypeResponse struct {
+	ResourceType string `json:"resource_type"`
+	Name         string `json:"name"`
+}
+
+// ResourceTypes resource types
+func ResourceTypes(request *restful.Request, response *restful.Response) {
+	items := make([]ResourceTypeResponse, 0)
+	for _, v := range resourceTypes {
+		items = append(items, ResourceTypeResponse{ResourceType: v, Name: i18n.T(request.Request.Context(), v)})
+	}
+	utils.ResponseOK(response, items)
 }
