@@ -125,6 +125,16 @@
             </bcs-option>
           </bcs-select>
         </BkFormItem>
+        <BkFormItem
+          :label="$t('cluster.create.label.network.text')"
+          property="isExtranet"
+          error-display-type="normal"
+          required>
+          <bcs-select :clearable="false" class="w640" v-model="importClusterInfo.isExtranet">
+            <bcs-option id="false" :name="$t('cluster.create.label.network.intranet')"></bcs-option>
+            <bcs-option id="true" :name="$t('cluster.create.label.network.extranet')"></bcs-option>
+          </bcs-select>
+        </BkFormItem>
       </template>
       <BkFormItem
         :label="$t('cluster.create.label.kubeConfig')"
@@ -150,23 +160,22 @@
           v-model="importClusterInfo.yaml"
         ></CodeEditor>
       </BkFormItem>
-      <BkFormItem class="mt16" v-if="importClusterInfo.importType === 'kubeconfig'">
+      <BkFormItem class="mt32">
         <bk-button
           theme="primary"
+          class="mr-[5px]"
           :loading="testLoading"
           @click="handleTest">{{$t('cluster.create.button.textKubeConfig')}}</bk-button>
-      </BkFormItem>
-      <BkFormItem class="mt32">
         <span
           v-bk-tooltips="{
             content: $t('cluster.create.validate.emptyKubeConfig'),
-            disabled: isTestSuccess || importClusterInfo.importType === 'provider'
+            disabled: isTestSuccess
           }">
           <bk-button
             class="btn"
             theme="primary"
             :loading="loading"
-            :disabled="!isTestSuccess && importClusterInfo.importType === 'kubeconfig'"
+            :disabled="!isTestSuccess"
             @click="handleImport"
           >{{$t('generic.button.import')}}</bk-button>
         </span>
@@ -183,6 +192,7 @@ import BkForm from 'bk-magic-vue/lib/form';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
 import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 
+import { cloudConnect } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import useFormLabel from '@/composables/use-form-label';
@@ -214,6 +224,7 @@ export default defineComponent({
       region: '',
       accountID: '',
       cloudID: '',
+      isExtranet: 'false',
     });
     const isTestSuccess = ref(false);
     const testLoading = ref(false);
@@ -361,12 +372,19 @@ export default defineComponent({
       importClusterInfo.value.cloudID = '';
       handleGetClusterList();
     });
-    watch(() => importClusterInfo.value.yaml, () => {
-      isTestSuccess.value = false;
-    });
+    watch(
+      [
+        () => importClusterInfo.value.yaml,
+        () => importClusterInfo.value.isExtranet,
+        () => importClusterInfo.value.cloudID,
+      ],
+      () => {
+        isTestSuccess.value = false;
+      },
+    );
 
     // 可用性测试
-    const handleTest = async () => {
+    const testKubeConfig = async () => {
       testLoading.value = true;
       const result = await $store.dispatch('clustermanager/kubeConfig', {
         kubeConfig: importClusterInfo.value.yaml,
@@ -379,6 +397,32 @@ export default defineComponent({
         });
       }
       testLoading.value = false;
+    };
+    const testCloudKubeConfig = async () => {
+      if (!importClusterInfo.value.cloudID || !importClusterInfo.value.provider) return;
+      testLoading.value = true;
+      const { result } = await cloudConnect({
+        $cloudId: importClusterInfo.value.provider,
+        $clusterID: importClusterInfo.value.cloudID,
+        isExtranet: importClusterInfo.value.isExtranet,
+        accountID: importClusterInfo.value.accountID,
+        region: importClusterInfo.value.region,
+      }, { needRes: true }).catch(() => false);
+      if (result) {
+        isTestSuccess.value = true;
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('generic.msg.success.test'),
+        });
+      }
+      testLoading.value = false;
+    };
+    const handleTest = async () => {
+      if (importClusterInfo.value.importType === 'kubeconfig') {
+        testKubeConfig();
+      } else {
+        testCloudKubeConfig();
+      }
     };
     // 集群导入
     const handleImport = async () => {

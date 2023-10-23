@@ -682,6 +682,10 @@ cluster:
       importType: 导入方式
       cloudToken: 云凭证
       kubeConfig: 集群kubeconfig
+      network:
+        text: 集群访问网络
+        intranet: 内网访问
+        extranet: 外网访问
     msg:
       managedClusterInfo: 创建托管集群必须添加至少一个节点，以运行必要的服务
       independentClusterInfo:
