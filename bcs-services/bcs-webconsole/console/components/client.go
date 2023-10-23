@@ -26,11 +26,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/dustin/go-humanize"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 )
@@ -172,13 +172,13 @@ func restyResponseToCurl(resp *resty.Response) string {
 }
 
 func restyErrHook(r *resty.Request, err error) {
-	klog.Infof("[%s] REQ: %s", RequestIDValue(r.RawRequest.Context()), restyReqToCurl(r))
-	klog.Infof("[%s] RESP: [err] %s", RequestIDValue(r.RawRequest.Context()), err)
+	blog.Infof("[%s] REQ: %s", RequestIDValue(r.RawRequest.Context()), restyReqToCurl(r))
+	blog.Infof("[%s] RESP: [err] %s", RequestIDValue(r.RawRequest.Context()), err)
 }
 
 func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
-	klog.Infof("[%s] REQ: %s", RequestIDValue(r.Request.Context()), restyReqToCurl(r.Request))
-	klog.Infof("[%s] RESP: %s", RequestIDValue(r.Request.Context()), restyResponseToCurl(r))
+	blog.Infof("[%s] REQ: %s", RequestIDValue(r.Request.Context()), restyReqToCurl(r.Request))
+	blog.Infof("[%s] RESP: %s", RequestIDValue(r.Request.Context()), restyResponseToCurl(r))
 	return nil
 }
 

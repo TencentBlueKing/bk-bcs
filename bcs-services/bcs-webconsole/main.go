@@ -21,7 +21,6 @@ import (
 	"time"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -42,7 +41,7 @@ func main() {
 	// 初始化 Tracer
 	shutdown, err := tracing.InitTracing(config.G.Tracing)
 	if err != nil {
-		klog.Info(err.Error())
+		logger.Info(err.Error())
 	}
 	if shutdown != nil {
 		defer func() {
@@ -50,7 +49,7 @@ func main() {
 			defer cancel()
 
 			if err := shutdown(timeoutCtx); err != nil {
-				klog.Infof("failed to shutdown TracerProvider: %s", err.Error())
+				logger.Infof("failed to shutdown TracerProvider: %s", err.Error())
 			}
 		}()
 	}

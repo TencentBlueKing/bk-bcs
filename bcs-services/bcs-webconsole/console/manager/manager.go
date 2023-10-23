@@ -25,7 +25,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pborman/ansi"
 	"github.com/pkg/errors"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
@@ -71,7 +70,7 @@ func NewConsoleManager(ctx context.Context, podCtx *types.PodContext,
 	// 初始化 terminal record
 	recorder, err := record.NewReplayRecord(ctx, mgr.podCtx, terminalSize)
 	if err != nil {
-		klog.Errorf("init ReplayRecord failed, err %s", err)
+		logger.Errorf("init ReplayRecord failed, err %s", err)
 		return nil, err
 	}
 	mgr.recorder = recorder
@@ -102,7 +101,7 @@ func (c *ConsoleManager) HandleInputMsg(msg []byte) ([]byte, error) {
 	// key 性能统计
 	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
 		c.keyWaitingTime = now
-		klog.InfoS("tracing key input", "key", msg)
+		logger.Info("tracing key input", "key", msg)
 	}
 
 	// 命令行解析与审计
@@ -132,7 +131,7 @@ func (c *ConsoleManager) HandlePostOutputMsg(msg []byte) {
 
 	// key 性能统计
 	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
-		klog.InfoS("tracing key output", "key", msg, "waiting", time.Since(c.keyWaitingTime))
+		logger.Info("tracing key output", "key", msg, "waiting", time.Since(c.keyWaitingTime))
 	}
 }
 
