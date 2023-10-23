@@ -16,6 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -78,6 +79,7 @@ func (la *ListAction) listCloudModuleFlag() error {
 	cloudModuleFlags = append(cloudModuleFlags, flags...)
 
 	for i := range cloudModuleFlags {
+		cloudModuleFlags[i].FlagDesc = i18n.T(la.ctx, cloudModuleFlags[i].FlagName)
 		la.moduleFlagListList = append(la.moduleFlagListList, &cloudModuleFlags[i])
 	}
 

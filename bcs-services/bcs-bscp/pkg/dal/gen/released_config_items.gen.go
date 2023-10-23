@@ -34,6 +34,8 @@ func newReleasedConfigItem(db *gorm.DB, opts ...gen.DOOption) releasedConfigItem
 	_releasedConfigItem.ContentID = field.NewUint32(tableName, "content_id")
 	_releasedConfigItem.Signature = field.NewString(tableName, "signature")
 	_releasedConfigItem.ByteSize = field.NewUint64(tableName, "byte_size")
+	_releasedConfigItem.OriginSignature = field.NewString(tableName, "origin_signature")
+	_releasedConfigItem.OriginByteSize = field.NewUint64(tableName, "origin_byte_size")
 	_releasedConfigItem.Memo = field.NewString(tableName, "memo")
 	_releasedConfigItem.Name = field.NewString(tableName, "name")
 	_releasedConfigItem.Path = field.NewString(tableName, "path")
@@ -45,9 +47,7 @@ func newReleasedConfigItem(db *gorm.DB, opts ...gen.DOOption) releasedConfigItem
 	_releasedConfigItem.BizID = field.NewUint32(tableName, "biz_id")
 	_releasedConfigItem.AppID = field.NewUint32(tableName, "app_id")
 	_releasedConfigItem.Creator = field.NewString(tableName, "creator")
-	_releasedConfigItem.Reviser = field.NewString(tableName, "reviser")
 	_releasedConfigItem.CreatedAt = field.NewTime(tableName, "created_at")
-	_releasedConfigItem.UpdatedAt = field.NewTime(tableName, "updated_at")
 
 	_releasedConfigItem.fillFieldMap()
 
@@ -57,28 +57,28 @@ func newReleasedConfigItem(db *gorm.DB, opts ...gen.DOOption) releasedConfigItem
 type releasedConfigItem struct {
 	releasedConfigItemDo releasedConfigItemDo
 
-	ALL          field.Asterisk
-	ID           field.Uint32
-	ReleaseID    field.Uint32
-	CommitID     field.Uint32
-	ConfigItemID field.Uint32
-	ContentID    field.Uint32
-	Signature    field.String
-	ByteSize     field.Uint64
-	Memo         field.String
-	Name         field.String
-	Path         field.String
-	FileType     field.String
-	FileMode     field.String
-	User         field.String
-	UserGroup    field.String
-	Privilege    field.String
-	BizID        field.Uint32
-	AppID        field.Uint32
-	Creator      field.String
-	Reviser      field.String
-	CreatedAt    field.Time
-	UpdatedAt    field.Time
+	ALL             field.Asterisk
+	ID              field.Uint32
+	ReleaseID       field.Uint32
+	CommitID        field.Uint32
+	ConfigItemID    field.Uint32
+	ContentID       field.Uint32
+	Signature       field.String
+	ByteSize        field.Uint64
+	OriginSignature field.String
+	OriginByteSize  field.Uint64
+	Memo            field.String
+	Name            field.String
+	Path            field.String
+	FileType        field.String
+	FileMode        field.String
+	User            field.String
+	UserGroup       field.String
+	Privilege       field.String
+	BizID           field.Uint32
+	AppID           field.Uint32
+	Creator         field.String
+	CreatedAt       field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -102,6 +102,8 @@ func (r *releasedConfigItem) updateTableName(table string) *releasedConfigItem {
 	r.ContentID = field.NewUint32(table, "content_id")
 	r.Signature = field.NewString(table, "signature")
 	r.ByteSize = field.NewUint64(table, "byte_size")
+	r.OriginSignature = field.NewString(table, "origin_signature")
+	r.OriginByteSize = field.NewUint64(table, "origin_byte_size")
 	r.Memo = field.NewString(table, "memo")
 	r.Name = field.NewString(table, "name")
 	r.Path = field.NewString(table, "path")
@@ -113,9 +115,7 @@ func (r *releasedConfigItem) updateTableName(table string) *releasedConfigItem {
 	r.BizID = field.NewUint32(table, "biz_id")
 	r.AppID = field.NewUint32(table, "app_id")
 	r.Creator = field.NewString(table, "creator")
-	r.Reviser = field.NewString(table, "reviser")
 	r.CreatedAt = field.NewTime(table, "created_at")
-	r.UpdatedAt = field.NewTime(table, "updated_at")
 
 	r.fillFieldMap()
 
@@ -152,6 +152,8 @@ func (r *releasedConfigItem) fillFieldMap() {
 	r.fieldMap["content_id"] = r.ContentID
 	r.fieldMap["signature"] = r.Signature
 	r.fieldMap["byte_size"] = r.ByteSize
+	r.fieldMap["origin_signature"] = r.OriginSignature
+	r.fieldMap["origin_byte_size"] = r.OriginByteSize
 	r.fieldMap["memo"] = r.Memo
 	r.fieldMap["name"] = r.Name
 	r.fieldMap["path"] = r.Path
@@ -163,9 +165,7 @@ func (r *releasedConfigItem) fillFieldMap() {
 	r.fieldMap["biz_id"] = r.BizID
 	r.fieldMap["app_id"] = r.AppID
 	r.fieldMap["creator"] = r.Creator
-	r.fieldMap["reviser"] = r.Reviser
 	r.fieldMap["created_at"] = r.CreatedAt
-	r.fieldMap["updated_at"] = r.UpdatedAt
 }
 
 func (r releasedConfigItem) clone(db *gorm.DB) releasedConfigItem {

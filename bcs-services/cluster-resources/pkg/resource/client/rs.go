@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -26,6 +25,7 @@ import (
 	"k8s.io/kubectl/pkg/polymorphichelpers"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
@@ -107,7 +107,7 @@ func (c *RSClient) GetResHistoryRevision(ctx context.Context, kind, namespace, n
 		var unstructuredObj map[string]interface{}
 		unstructuredObj, err = runtime.DefaultUnstructuredConverter.ToUnstructured(s[v])
 		if err != nil {
-			blog.Errorf("convert to unstructured failed, err %s", err.Error())
+			log.Error(ctx, "convert to unstructured failed, err %s", err.Error())
 			continue
 		}
 		ret := formatter.FormatWorkloadRes(unstructuredObj)

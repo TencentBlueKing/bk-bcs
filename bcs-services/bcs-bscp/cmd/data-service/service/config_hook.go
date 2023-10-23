@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -35,6 +36,7 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		BizID: req.BizId,
 		// ReleasedID 0 for editing release
 		ReleaseID: 0,
+		HookID:    req.PreHookId,
 		HookType:  table.PreHook,
 	}
 	postHook := &table.ReleasedHook{
@@ -42,6 +44,7 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		BizID: req.BizId,
 		// ReleasedID 0 for editing release
 		ReleaseID: 0,
+		HookID:    req.PostHookId,
 		HookType:  table.PostHook,
 	}
 
@@ -72,7 +75,7 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 	if req.PostHookId > 0 {
 		hook, err := s.getReleasedHook(kt, postHook)
 		if err != nil {
-			logs.Errorf("get pre-hook failed, err: %v, rid: %s", err, kt.Rid)
+			logs.Errorf("get post-hook failed, err: %v, rid: %s", err, kt.Rid)
 			if rErr := tx.Rollback(); rErr != nil {
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
@@ -111,7 +114,7 @@ func (s *Service) getReleasedHook(kt *kit.Kit, rh *table.ReleasedHook) (*table.R
 
 	h, err := s.dao.Hook().GetByID(kt, rh.BizID, rh.HookID)
 	if err != nil {
-		logs.Errorf("get pre-hook failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("get %s failed, err: %v, rid: %s", rh.HookType.String(), err, kt.Rid)
 		return nil, err
 	}
 
@@ -122,17 +125,21 @@ func (s *Service) getReleasedHook(kt *kit.Kit, rh *table.ReleasedHook) (*table.R
 	}
 	hr, err := s.dao.HookRevision().GetByPubState(kt, opt)
 	if err != nil {
-		logs.Errorf("no released releases of the pre-hook, err: %v, rid: %s", err, kt.Rid)
-		return nil, errors.New("no released releases of the pre-hook")
+		logs.Errorf("no released releases of the %s, err: %v, rid: %s", rh.HookType.String(), err, kt.Rid)
+		return nil, fmt.Errorf("no released releases of the %s", rh.HookType.String())
 	}
 
-	rh.HookID = h.ID
-	rh.HookName = h.Spec.Name
-	rh.HookRevisionID = hr.ID
-	rh.HookRevisionName = hr.Spec.Name
-	rh.Content = hr.Spec.Content
-	rh.ScriptType = h.Spec.Type
-	rh.Reviser = kt.User
-
-	return rh, nil
+	return &table.ReleasedHook{
+		BizID:            rh.BizID,
+		AppID:            rh.AppID,
+		ReleaseID:        0,
+		HookID:           h.ID,
+		HookName:         h.Spec.Name,
+		HookRevisionID:   hr.ID,
+		HookRevisionName: hr.Spec.Name,
+		Content:          hr.Spec.Content,
+		ScriptType:       h.Spec.Type,
+		HookType:         rh.HookType,
+		Reviser:          kt.User,
+	}, nil
 }

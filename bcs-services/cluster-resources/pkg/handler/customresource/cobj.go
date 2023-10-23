@@ -215,3 +215,79 @@ func validateNSParam(ctx context.Context, crdInfo map[string]interface{}, namesp
 	}
 	return nil
 }
+
+// GetCObjHistoryRevision 获取自定义资源 history revision
+func (h *Handler) GetCObjHistoryRevision(ctx context.Context, req *clusterRes.CObjHistoryReq,
+	resp *clusterRes.CommonListResp) error {
+
+	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
+	if err != nil {
+		return err
+	}
+	if err = validateNSParam(ctx, crdInfo, req.Namespace); err != nil {
+		return err
+	}
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+		return err
+	}
+	kind := crdInfo["kind"].(string)
+
+	ret, err := cli.NewCRDCliByClusterID(ctx, req.ClusterID).HistoryRevision(ctx, kind,
+		req.Namespace, req.CobjName)
+	if err != nil {
+		return err
+	}
+
+	resp.Data, err = pbstruct.MapSlice2ListValue(ret)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// RestartCObj 重新调度单个自定义资源
+func (h *Handler) RestartCObj(ctx context.Context, req *clusterRes.CObjRestartReq, resp *clusterRes.CommonResp) error {
+	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
+	if err != nil {
+		return err
+	}
+	if err = validateNSParam(ctx, crdInfo, req.Namespace); err != nil {
+		return err
+	}
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+		return err
+	}
+	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
+
+	currentManifest, err := respUtil.BuildRetrieveAPIRespData(ctx, respUtil.GetParams{
+		ClusterID: req.ClusterID, ResKind: kind, Namespace: req.Namespace, Name: req.CobjName,
+	}, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	revision := mapx.GetInt64(currentManifest, "manifest.metadata.generation")
+	// 标记 revision 用来标识应用是否在重启状态
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, apiVersion, kind).Restart(
+		ctx, req.Namespace, req.CobjName, revision+1, metav1.PatchOptions{FieldManager: "kubectl-rollout"},
+	)
+	return err
+}
+
+// RolloutCObj 回滚自定义资源
+func (h *Handler) RolloutCObj(ctx context.Context, req *clusterRes.CObjRolloutReq, _ *clusterRes.CommonResp) error {
+	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
+	if err != nil {
+		return err
+	}
+	if err = validateNSParam(ctx, crdInfo, req.Namespace); err != nil {
+		return err
+	}
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+		return err
+	}
+	kind := crdInfo["kind"].(string)
+
+	return cli.NewCRDCliByClusterID(ctx, req.ClusterID).RolloutRevision(ctx, req.Namespace,
+		req.CobjName, kind, req.Revision)
+}

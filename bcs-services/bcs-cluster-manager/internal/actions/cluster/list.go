@@ -730,6 +730,7 @@ func (la *ListNodesInClusterAction) handleNodes() {
 	}
 	// 获取语言
 	lang := i18n.LanguageFromCtx(la.ctx)
+
 	// get node zoneName
 	for i := range la.nodes {
 		node, ok := instanceMap[la.nodes[i].InnerIP]

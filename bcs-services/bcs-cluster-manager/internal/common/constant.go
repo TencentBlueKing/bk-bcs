@@ -106,6 +106,11 @@ const (
 	RootDirValue = "/data/bcs/service/kubelet"
 )
 
+var (
+	// Unschedulable set node unSchedulable
+	Unschedulable int64 = 1
+)
+
 // DefaultClusterConfig cluster default service config
 var DefaultClusterConfig = map[string]string{
 	Etcd: "node-data-dir=/data/bcs/lib/etcd;",
@@ -409,6 +414,10 @@ const (
 	True = "true"
 	// False xxx
 	False = "false"
+	// Limit xxx
+	Limit = 100
+	// MaxFilterValues xxx
+	MaxFilterValues = 5
 )
 
 const (

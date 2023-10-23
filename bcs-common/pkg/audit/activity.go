@@ -42,6 +42,8 @@ const (
 	// ActivityStatusPending means the activity is pending
 	ActivityStatusPending ActivityStatus = "pending"
 
+	// ActivityTypeView means the activity type is view
+	ActivityTypeView ActivityType = "view"
 	// ActivityTypeCreate means the activity type is create
 	ActivityTypeCreate ActivityType = "create"
 	// ActivityTypeUpdate means the activity type is update

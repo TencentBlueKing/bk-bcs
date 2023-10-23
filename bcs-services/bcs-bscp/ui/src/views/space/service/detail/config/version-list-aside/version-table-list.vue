@@ -16,8 +16,8 @@
         placeholder="版本名称/版本说明/修改人"
         :clearable="true"
         @change="handleSearchInputChange"
-        @enter="refreshVersionList()"
-        @clear="refreshVersionList()"
+        @enter="handleSearch"
+        @clear="handleClearSearchStr"
       >
         <template #suffix>
           <Search class="search-input-icon" />
@@ -85,6 +85,9 @@
             <!-- <bk-button text theme="primary" @click.stop="handleDeprecate(row.id)">废弃</bk-button> -->
           </template>
         </bk-table-column>
+        <template #empty>
+          <tableEmpty :is-search-empty="isSearchEmpty" @clear="handleClearSearchStr"></tableEmpty>
+        </template>
       </bk-table>
     </bk-loading>
     <VersionDiff v-model:show="showDiffPanel" :current-version="diffVersion" />
@@ -101,6 +104,7 @@ import { datetimeFormat } from '../../../../../../utils/index';
 import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config';
 import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../../types/config';
 import VersionDiff from '../../config/components/version-diff/index.vue';
+import tableEmpty from '../../../../../../components/table/table-empty.vue';
 
 const configStore = useConfigStore();
 const { versionData } = storeToRefs(configStore);
@@ -123,6 +127,7 @@ const pagination = ref({
   count: 0,
   limit: 10,
 });
+const isSearchEmpty = ref(false);
 
 // 可用版本非搜索查看视图
 const isAvaliableView = computed(() => currentTab.value === 'avaliable' && searchStr.value === '');
@@ -163,7 +168,8 @@ const getRowCls = (data: IConfigVersion) => {
   return '';
 };
 
-const getGroupNames = (data: IConfigVersion) => (data.status?.released_groups.length ? data.status.released_groups.map(item => item.name).join('; ') : '--');
+const getGroupNames = (data: IConfigVersion) =>
+  data.status?.released_groups.length ? data.status.released_groups.map((item) => item.name).join('; ') : '--';
 
 const handleTabChange = (tab: string) => {
   currentTab.value = tab;
@@ -210,6 +216,17 @@ const handlePageLimitChange = (limit: number) => {
 const refreshVersionList = (current = 1) => {
   pagination.value.current = current;
   getVersionList();
+};
+
+const handleSearch = () => {
+  isSearchEmpty.value = true;
+  refreshVersionList();
+};
+
+const handleClearSearchStr = () => {
+  searchStr.value = '';
+  isSearchEmpty.value = false;
+  refreshVersionList();
 };
 </script>
 <style lang="scss" scoped>

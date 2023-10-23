@@ -46,7 +46,7 @@
           :remote-pagination="true"
           :pagination="pagination"
           @page-limit-change="handlePageLimitChange"
-          @page-value-change="refreshList"
+          @page-value-change="handlePageCurrentChange"
         >
           <bk-table-column label="脚本名称">
             <template #default="{ row }">
@@ -141,7 +141,7 @@ watch(
   () => {
     refreshList();
     getTags();
-  },
+  }
 );
 
 onMounted(() => {
@@ -156,14 +156,10 @@ const getScripts = async () => {
     start: (pagination.value.current - 1) * pagination.value.limit,
     limit: pagination.value.limit,
   };
-  if (showAllTag.value) {
-    params.all = true;
+  if (selectedTag.value === '' && !showAllTag.value) {
+    params.not_tag = true;
   } else {
-    if (selectedTag.value === '') {
-      params.not_tag = true;
-    } else {
-      params.tag = selectedTag.value;
-    }
+    params.tag = selectedTag.value;
   }
   if (searchStr.value) {
     params.name = searchStr.value;
@@ -244,6 +240,13 @@ const refreshList = () => {
 const handlePageLimitChange = (val: number) => {
   pagination.value.limit = val;
   refreshList();
+};
+
+const handlePageCurrentChange = (val: number) => {
+  console.log('val', val);
+
+  pagination.value.current = val;
+  getScripts();
 };
 
 const clearSearchStr = () => {
@@ -330,6 +333,7 @@ const clearSearchStr = () => {
   width: calc(100% - 280px);
   height: 100%;
   background: #ffffff;
+  overflow: auto;
 }
 .operate-area {
   display: flex;

@@ -25,6 +25,7 @@ import (
 	"os"
 	"regexp"
 	"runtime/debug"
+	"strconv"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -436,6 +437,16 @@ func Partition(s string, sep string) (string, string) {
 		return parts[0], ""
 	}
 	return parts[0], parts[1]
+}
+
+// StringToInt string to int
+func StringToInt(str string) (int, error) {
+	num, err := strconv.Atoi(str)
+	if err != nil {
+		return 0, err
+	}
+
+	return num, nil
 }
 
 // TaintToK8sTaint convert taint to k8s taint

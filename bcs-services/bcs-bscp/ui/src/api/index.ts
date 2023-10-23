@@ -91,6 +91,5 @@ export const permissionCheck = (params: { resources: IPermissionQueryResourceIte
  * @returns
  */
 export const loginOut = () => http.get('/logout').then((resp) => {
-  console.log(resp.data);
-  window.location.href = resp.data.login_plain_url + window.location.href;
+  window.location.href = resp.data.login_url + window.location.href;
 });

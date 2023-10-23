@@ -1137,3 +1137,13 @@ func GetTaintsByNg(group *proto.NodeGroup) []*proto.Taint {
 
 	return group.GetNodeTemplate().GetTaints()
 }
+
+// GetTransModuleInfo get trans moduleID
+func GetTransModuleInfo(asOption *proto.ClusterAutoScalingOption, group *proto.NodeGroup) string {
+	if group != nil && group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
+		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
+		return group.NodeTemplate.Module.ScaleOutModuleID
+	}
+
+	return asOption.GetModule().GetScaleOutModuleID()
+}

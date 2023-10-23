@@ -535,6 +535,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_variables"
         };
     }
+    rpc ImportTemplateVariables(ImportTemplateVariablesReq) returns (ImportTemplateVariablesResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_variables/import"
+            body : "*"
+        };
+    }
 
     rpc ExtractAppTmplVariables(ExtractAppTmplVariablesReq) returns (ExtractAppTmplVariablesResp) {
         option (google.api.http) = {
@@ -694,7 +700,8 @@ message UpdateCredentialsReq {
     uint32 id     = 1;
     uint32 biz_id = 2;
     bool   enable = 3;
-    string memo   = 4;
+    string name   = 4;
+    string memo   = 5;
 }
 
 message UpdateCredentialsResp {}
@@ -713,8 +720,9 @@ message ListCredentialsResp {
 
 message CreateCredentialReq {
     string          memo   = 1;
-    uint32          biz_id = 2;
-    repeated string scope  = 3;
+    string          name   = 2;
+    uint32          biz_id = 3;
+    repeated string scope  = 4;
 }
 
 message CreateCredentialResp {
@@ -1810,6 +1818,16 @@ message ListTemplateVariablesResp {
     repeated pbtv.TemplateVariable details = 2;
 }
 
+message ImportTemplateVariablesReq {
+    uint32 biz_id    = 1;
+    string separator = 2;
+    string variables = 3;
+}
+
+message ImportTemplateVariablesResp {
+    uint32 variable_count = 1;
+}
+
 message ExtractAppTmplVariablesReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
@@ -1963,23 +1981,27 @@ message GetGroupByNameReq {
 }
 
 message PublishReq {
-    uint32          biz_id     = 1;
-    uint32          app_id     = 2;
-    uint32          release_id = 3;
-    string          memo       = 4;
-    bool            all        = 5;
-    bool            default    = 6;
-    repeated uint32 groups     = 7;
+    uint32                             biz_id            = 1;
+    uint32                             app_id            = 2;
+    uint32                             release_id        = 3;
+    string                             memo              = 4;
+    bool                               all               = 5;
+    string                             gray_publish_mode = 6;
+    bool                               default           = 7;
+    repeated uint32                    groups            = 8;
+    repeated google.protobuf.Struct    labels            = 9;
 }
 
 message GenerateReleaseAndPublishReq {
-    uint32                             biz_id       = 1;
-    uint32                             app_id       = 2;
-    string                             release_name = 3;
-    string                             release_memo = 4;
-    bool                               all          = 5;
-    repeated string                    groups       = 6;
-    repeated pbtv.TemplateVariableSpec variables    = 7;
+    uint32                             biz_id            = 1;
+    uint32                             app_id            = 2;
+    string                             release_name      = 3;
+    string                             release_memo      = 4;
+    repeated pbtv.TemplateVariableSpec variables         = 5;
+    bool                               all               = 6;
+    string                             gray_publish_mode = 7;
+    repeated string                    groups            = 8;
+    repeated google.protobuf.Struct    labels            = 9;
 }
 
 message GenerateReleaseAndPublishResp {

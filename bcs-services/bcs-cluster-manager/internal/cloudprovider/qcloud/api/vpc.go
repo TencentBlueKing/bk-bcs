@@ -14,30 +14,20 @@ package api
 
 import (
 	"fmt"
+	"net"
 	"strconv"
-	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
-var vpcMgr sync.Once
-
-func init() {
-	vpcMgr.Do(func() {
-		// init VPC manager
-		cloudprovider.InitVPCManager("qcloud", &VPCManager{})
-	})
-}
-
-// newVPCClient init VPC client
-func newVPCClient(opt *cloudprovider.CommonOption) (*vpcClient, error) {
+// NewVPCClient init VPC client
+func NewVPCClient(opt *cloudprovider.CommonOption) (*VpcClient, error) {
 	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
@@ -55,15 +45,16 @@ func newVPCClient(opt *cloudprovider.CommonOption) (*vpcClient, error) {
 		return nil, cloudprovider.ErrCloudInitFailed
 	}
 
-	return &vpcClient{client: cli}, nil
+	return &VpcClient{client: cli}, nil
 }
 
-type vpcClient struct {
+// VpcClient xxx
+type VpcClient struct {
 	client *vpc.Client
 }
 
-// describeSecurityGroups describe security groups (https://cloud.tencent.com/document/api/215/15808)
-func (v *vpcClient) describeSecurityGroups(securityGroupIds []string, filters []*Filter) (
+// DescribeSecurityGroups describe security groups (https://cloud.tencent.com/document/api/215/15808)
+func (v *VpcClient) DescribeSecurityGroups(securityGroupIds []string, filters []*Filter) (
 	[]*SecurityGroup, error) {
 	blog.Infof("DescribeSecurityGroups input: %s, %s", utils.ToJSONString(securityGroupIds),
 		utils.ToJSONString(filters))
@@ -103,14 +94,60 @@ func (v *vpcClient) describeSecurityGroups(securityGroupIds []string, filters []
 	return sg, nil
 }
 
-// describeSubnets describe subnets (https://cloud.tencent.com/document/api/215/15784)
-func (v *vpcClient) describeSubnets(subnetIds []string, filters []*Filter) (
+// DescribeVpcs describe vpcs (https://cloud.tencent.com/document/api/215/15778)
+// 参数不支持同时指定VpcIds和Filters，仅需要指定其中1个参数即可
+func (v *VpcClient) DescribeVpcs(vpcIds []string, filters []*Filter) (
+	[]*vpc.Vpc, error) {
+	blog.Infof("DescribeVpcs input: %s, %s", utils.ToJSONString(vpcIds),
+		utils.ToJSONString(filters))
+
+	req := vpc.NewDescribeVpcsRequest()
+	req.VpcIds = common.StringPtrs(vpcIds)
+	req.Limit = common.StringPtr(strconv.Itoa(limit))
+
+	req.Filters = make([]*vpc.Filter, 0)
+	for _, v := range filters {
+		req.Filters = append(req.Filters, &vpc.Filter{
+			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+	}
+
+	var (
+		got, total = 0, 0
+		first      = true
+		vpcs       = make([]*vpc.Vpc, 0)
+	)
+	for got < total || first {
+		first = false
+		req.Offset = common.StringPtr(strconv.Itoa(got))
+		resp, err := v.client.DescribeVpcs(req)
+		if err != nil {
+			blog.Errorf("DescribeVpcs failed, err: %s", err.Error())
+			return nil, err
+		}
+		if resp == nil || resp.Response == nil {
+			blog.Errorf("DescribeVpcs resp is nil")
+			return nil, fmt.Errorf("DescribeVpcs resp is nil")
+		}
+		blog.Infof("DescribeVpcs success, requestID: %s", resp.Response.RequestId)
+
+		vpcs = append(vpcs, resp.Response.VpcSet...)
+
+		got += len(resp.Response.VpcSet)
+		total = int(*resp.Response.TotalCount)
+	}
+	return vpcs, nil
+}
+
+// DescribeSubnets describe subnets (https://cloud.tencent.com/document/api/215/15784)
+func (v *VpcClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 	[]*Subnet, error) {
 	blog.Infof("DescribeSubnets input: %s, %s", utils.ToJSONString(subnetIds),
 		utils.ToJSONString(filters))
+
 	req := vpc.NewDescribeSubnetsRequest()
 	req.SubnetIds = common.StringPtrs(subnetIds)
 	req.Limit = common.StringPtr(strconv.Itoa(limit))
+
 	req.Filters = make([]*vpc.Filter, 0)
 	for _, v := range filters {
 		req.Filters = append(req.Filters, &vpc.Filter{
@@ -139,8 +176,8 @@ func (v *vpcClient) describeSubnets(subnetIds []string, filters []*Filter) (
 	return subnets, nil
 }
 
-// describeBandwidthPackages describe 带宽包资源 (https://cloud.tencent.com/document/product/215/19209)
-func (v *vpcClient) describeBandwidthPackages(bwpIds []string, filters []*Filter) (
+// DescribeBandwidthPackages describe 带宽包资源 (https://cloud.tencent.com/document/product/215/19209)
+func (v *VpcClient) DescribeBandwidthPackages(bwpIds []string, filters []*Filter) (
 	[]*vpc.BandwidthPackage, error) {
 	blog.Infof("DescribeBandwidthPackages input: %s, %s", utils.ToJSONString(bwpIds),
 		utils.ToJSONString(filters))
@@ -185,8 +222,115 @@ func (v *vpcClient) describeBandwidthPackages(bwpIds []string, filters []*Filter
 	return bwps, nil
 }
 
-// describeNetworkAccountTypeRequest 查询用户网络类型
-func (v *vpcClient) describeNetworkAccountTypeRequest() (string, error) {
+// DescribeAssistantCidr describe assistant cidr (https://cloud.tencent.com/document/product/215/43274)
+// 参数不支持同时指定VpcIds和Filters，仅需要指定其中1个参数即可。返回符合条件的Cidr数组
+func (v *VpcClient) DescribeAssistantCidr(vpcIds []string, filters []*Filter) (
+	[]*vpc.AssistantCidr, error) {
+	blog.Infof("DescribeAssistantCidr input: %s, %s", utils.ToJSONString(vpcIds),
+		utils.ToJSONString(filters))
+
+	req := vpc.NewDescribeAssistantCidrRequest()
+	req.VpcIds = common.StringPtrs(vpcIds)
+	req.Limit = common.Uint64Ptr(limit)
+
+	req.Filters = make([]*vpc.Filter, 0)
+	for _, v := range filters {
+		req.Filters = append(req.Filters, &vpc.Filter{
+			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+	}
+
+	var (
+		got, total uint64 = 0, 0
+		first             = true
+		cidrs             = make([]*vpc.AssistantCidr, 0)
+	)
+	for got < total || first {
+		first = false
+		req.Offset = common.Uint64Ptr(got)
+		resp, err := v.client.DescribeAssistantCidr(req)
+		if err != nil {
+			blog.Errorf("DescribeAssistantCidr failed, err: %s", err.Error())
+			return nil, err
+		}
+		if resp == nil || resp.Response == nil {
+			blog.Errorf("DescribeAssistantCidr resp is nil")
+			return nil, fmt.Errorf("DescribeAssistantCidr resp is nil")
+		}
+		blog.Infof("DescribeAssistantCidr success, requestID: %s", resp.Response.RequestId)
+
+		cidrs = append(cidrs, resp.Response.AssistantCidrSet...)
+
+		got += uint64(len(resp.Response.AssistantCidrSet))
+		total = *resp.Response.TotalCount
+	}
+
+	return cidrs, nil
+}
+
+// CheckAssistantCidr 检测cidr冲突 (https://cloud.tencent.com/document/product/215/43277)
+func (v *VpcClient) CheckAssistantCidr(vpcId string, news []string, olds []string) (
+	[]*vpc.ConflictSource, error) {
+	blog.Infof("CheckAssistantCidr input: %s, %s, %s", vpcId, utils.ToJSONString(news),
+		utils.ToJSONString(olds))
+
+	req := vpc.NewCheckAssistantCidrRequest()
+	req.VpcId = common.StringPtr(vpcId)
+	req.NewCidrBlocks = common.StringPtrs(news)
+	// req.OldCidrBlocks = common.StringPtrs(olds)
+
+	resp, err := v.client.CheckAssistantCidr(req)
+	if err != nil {
+		blog.Errorf("CheckAssistantCidr failed, err: %s", err.Error())
+		return nil, err
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("CheckAssistantCidr resp is nil")
+		return nil, fmt.Errorf("CheckAssistantCidr resp is nil")
+	}
+	blog.Infof("CheckAssistantCidr success, requestID: %s", *resp.Response.RequestId)
+
+	fmt.Printf("CheckAssistantCidr success, requestID: %s\n", *resp.Response.RequestId)
+	fmt.Printf("%+v\n", resp.Response.ConflictSourceSet)
+	return resp.Response.ConflictSourceSet, nil
+}
+
+// CreateSubnet create subnet in vpc
+func (v *VpcClient) CreateSubnet(vpcId, subnetName, zone string, subnet *net.IPNet) (*vpc.Subnet, error) {
+	request := vpc.NewCreateSubnetRequest()
+	request.VpcId = common.StringPtr(vpcId)
+	request.SubnetName = common.StringPtr(subnetName)
+	request.Zone = common.StringPtr(zone)
+	request.CidrBlock = common.StringPtr(subnet.String())
+
+	resp, err := v.client.CreateSubnet(request)
+	if err != nil {
+		blog.Errorf("CreateSubnet failed, err: %s", err.Error())
+		return nil, err
+	}
+
+	if resp == nil || resp.Response == nil {
+		return nil, fmt.Errorf("CreateSubnet resp is nil")
+	}
+
+	return resp.Response.Subnet, nil
+}
+
+// DeleteSubnet delete subnet in vpc
+func (v *VpcClient) DeleteSubnet(subnetId string) error {
+	request := vpc.NewDeleteSubnetRequest()
+	request.SubnetId = common.StringPtr(subnetId)
+
+	_, err := v.client.DeleteSubnet(request)
+	if err != nil {
+		blog.Errorf("DeleteSubnet failed, err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// DescribeNetworkAccountTypeRequest 查询用户网络类型
+func (v *VpcClient) DescribeNetworkAccountTypeRequest() (string, error) {
 	req := vpc.NewDescribeNetworkAccountTypeRequest()
 
 	resp, err := v.client.DescribeNetworkAccountType(req)
@@ -196,113 +340,4 @@ func (v *vpcClient) describeNetworkAccountTypeRequest() (string, error) {
 	}
 
 	return *resp.Response.NetworkAccountType, nil
-}
-
-// VPCManager is the manager for VPC
-type VPCManager struct{}
-
-// ListSubnets list vpc subnets
-func (c *VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
-	blog.Infof("ListSubnets input: vpcID/%s", vpcID)
-	vpcCli, err := newVPCClient(opt)
-	if err != nil {
-		blog.Errorf("create VPC client when failed: %v", err)
-		return nil, err
-	}
-
-	filter := make([]*Filter, 0)
-	filter = append(filter, &Filter{Name: "vpc-id", Values: []string{vpcID}})
-	subnets, err := vpcCli.describeSubnets(nil, filter)
-	if err != nil {
-		return nil, err
-	}
-	result := make([]*proto.Subnet, 0)
-	for _, v := range subnets {
-		result = append(result, &proto.Subnet{
-			VpcID:                   *v.VpcID,
-			SubnetID:                *v.SubnetID,
-			SubnetName:              *v.SubnetName,
-			CidrRange:               *v.CidrBlock,
-			Ipv6CidrRange:           *v.Ipv6CidrBlock,
-			Zone:                    *v.Zone,
-			AvailableIPAddressCount: *v.AvailableIPAddressCount,
-		})
-	}
-	return result, nil
-}
-
-// ListSecurityGroups list security groups
-func (c *VPCManager) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*proto.SecurityGroup, error) {
-	vpcCli, err := newVPCClient(opt)
-	if err != nil {
-		blog.Errorf("create VPC client when failed: %v", err)
-		return nil, err
-	}
-
-	sgs, err := vpcCli.describeSecurityGroups(nil, nil)
-	if err != nil {
-		blog.Errorf("ListSecurityGroups DescribeSecurityGroups failed: %v", err)
-		return nil, err
-	}
-
-	result := make([]*proto.SecurityGroup, 0)
-	for _, v := range sgs {
-		result = append(result, &proto.SecurityGroup{
-			SecurityGroupID:   v.ID,
-			SecurityGroupName: v.Name,
-			Description:       v.Desc,
-		})
-	}
-
-	return result, nil
-}
-
-// GetCloudNetworkAccountType 查询用户网络类型
-func (c *VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
-	vpcCli, err := newVPCClient(opt)
-	if err != nil {
-		blog.Errorf("create VPC client failed: %v", err)
-		return nil, err
-	}
-
-	accountType, err := vpcCli.describeNetworkAccountTypeRequest()
-	if err != nil {
-		blog.Errorf("DescribeNetworkAccountType failed: %v", err)
-		return nil, err
-	}
-
-	return &proto.CloudAccountType{Type: accountType}, nil
-}
-
-// ListBandwidthPacks packs
-func (c *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*proto.BandwidthPackageInfo, error) {
-	vpcCli, err := newVPCClient(opt)
-	if err != nil {
-		blog.Errorf("create VPC client failed: %v", err)
-		return nil, err
-	}
-
-	bwps, err := vpcCli.describeBandwidthPackages(nil, nil)
-	if err != nil {
-		blog.Errorf("ListBandwidthPacks describeBandwidthPackages failed: %v", err)
-		return nil, err
-	}
-
-	result := make([]*proto.BandwidthPackageInfo, 0)
-	for _, v := range bwps {
-		result = append(result, &proto.BandwidthPackageInfo{
-			Id:          *v.BandwidthPackageId,
-			Name:        *v.BandwidthPackageName,
-			NetworkType: *v.NetworkType,
-			Status:      *v.Status,
-			Bandwidth: func() int32 {
-				if v != nil && v.Bandwidth != nil {
-					return int32(*v.Bandwidth)
-				}
-				return 0
-			}(),
-		})
-	}
-
-	return result, nil
 }

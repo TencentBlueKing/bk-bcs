@@ -25,6 +25,8 @@ type GroupAppBind interface {
 	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items []*table.GroupAppBind) error
 	// BatchDeleteByGroupIDWithTx batch delete group app by group id with transaction.
 	BatchDeleteByGroupIDWithTx(kit *kit.Kit, tx *gen.QueryTx, groupID, bizID uint32) error
+	// BatchDeleteByAppIDWithTx batch delete group app by app id with transaction.
+	BatchDeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID, bizID uint32) error
 	// BatchListByGroupIDs batch list group app by group ids.
 	BatchListByGroupIDs(kit *kit.Kit, bizID uint32, groupIDs []uint32) ([]*table.GroupAppBind, error)
 	// Get get GroupAppBind by group id and app id.
@@ -81,6 +83,23 @@ func (dao *groupAppDao) BatchDeleteByGroupIDWithTx(kit *kit.Kit, tx *gen.QueryTx
 	}
 
 	return nil
+}
+
+// BatchDeleteByAppIDWithTx batch delete group app by app id with transaction.
+func (dao *groupAppDao) BatchDeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID, bizID uint32) error {
+
+	if appID == 0 {
+		return errf.New(errf.InvalidParameter, "app id is 0")
+	}
+
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "biz id is 0")
+	}
+
+	m := tx.GroupAppBind
+	_, err := m.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Delete()
+
+	return err
 }
 
 // BatchListByGroupIDs batch list group app by group ids.

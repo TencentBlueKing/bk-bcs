@@ -104,25 +104,27 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (*type
 	}
 
 	m := dao.genQ.Release
-	query := m.WithContext(kit.Ctx).Where(
-		m.BizID.Eq(opts.BizID), m.AppID.Eq(opts.AppID), m.Deprecated.Is(opts.Deprecated))
-	if opts.SearchKey != "" {
+	q := m.WithContext(kit.Ctx)
+	if opts.SearchKey == "" {
+		q = q.Where(m.BizID.Eq(opts.BizID), m.AppID.Eq(opts.AppID), m.Deprecated.Is(opts.Deprecated))
+	} else {
 		searchKey := "%" + opts.SearchKey + "%"
-		query = query.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Creator.Like(searchKey))
+		q = q.Where(m.BizID.Eq(opts.BizID), m.AppID.Eq(opts.AppID), m.Deprecated.Is(opts.Deprecated)).Where(
+			q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Creator.Like(searchKey)))
 	}
-	query = query.Order(m.ID.Desc())
+	q = q.Order(m.ID.Desc())
 
 	var list []*table.Release
 	var count int64
 	var err error
 	if opts.Page.Start == 0 && opts.Page.Limit == 0 {
-		list, err = query.Find()
+		list, err = q.Find()
 		if err != nil {
 			return nil, err
 		}
 		count = int64(len(list))
 	} else {
-		list, count, err = query.FindByPage(opts.Page.Offset(), opts.Page.LimitInt())
+		list, count, err = q.FindByPage(opts.Page.Offset(), opts.Page.LimitInt())
 		if err != nil {
 			return nil, err
 		}

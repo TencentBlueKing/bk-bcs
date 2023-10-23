@@ -37,6 +37,7 @@
               <bk-input
                 v-else-if="col.prop === 'default_val'"
                 v-model="variable.default_val"
+                @blur="handleValueChange(variable.type, variable.default_val)"
                 @change="deleteCellError(variable.name, col.prop)"
               />
               <bk-input v-else-if="col.prop === 'memo'" v-model="variable.memo" @change="change" />
@@ -65,6 +66,7 @@
 <script lang="ts" setup>
 import { ref, reactive, computed, watch } from 'vue';
 import cloneDeep from 'lodash';
+import { Message } from 'bkui-vue';
 import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
 
 interface IErrorDetail {
@@ -83,7 +85,7 @@ const props = withDefaults(
     citedList: () => [],
     editable: true,
     showCited: false,
-  },
+  }
 );
 
 const emits = defineEmits(['change']);
@@ -109,7 +111,7 @@ watch(
   (val) => {
     variables = cloneDeep(val).value();
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 const isCellEditable = (prop: string) => props.editable && ['type', 'default_val', 'memo'].includes(prop);
@@ -124,8 +126,8 @@ const getCellVal = (variable: IVariableEditParams, prop: string) => {
 };
 
 const getCitedTpls = (name: string) => {
-  const detail = props.citedList.find(item => item.variable_name === name);
-  return detail?.references.map(item => item.name).join(',');
+  const detail = props.citedList.find((item) => item.variable_name === name);
+  return detail?.references.map((item) => item.name).join(',');
 };
 
 const deleteCellError = (name: string, key: string) => {
@@ -134,7 +136,7 @@ const deleteCellError = (name: string, key: string) => {
     if (errorDetails.value[name].length === 0) {
       delete errorDetails.value[name];
     } else {
-      errorDetails.value[name] = errorDetails.value[name].filter(item => item !== key);
+      errorDetails.value[name] = errorDetails.value[name].filter((item) => item !== key);
     }
   }
 };
@@ -158,6 +160,15 @@ const validate = () => {
 
 const change = () => {
   emits('change', variables);
+};
+
+const handleValueChange = (type: string, value: string) => {
+  if (type === 'number' && !/^\d+$/.test(value)) {
+    Message({
+      theme: 'error',
+      message: `${value}不是数字类型`,
+    });
+  }
 };
 
 defineExpose({

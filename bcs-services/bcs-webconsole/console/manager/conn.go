@@ -175,8 +175,7 @@ func (r *RemoteStreamConn) Write(p []byte) (int, error) {
 		return 0, nil
 	}
 
-	output := []byte(base64.StdEncoding.EncodeToString(outputMsg))
-	r.outputMsgChan <- output
+	r.outputMsgChan <- outputMsg
 	return len(p), nil
 }
 
@@ -221,16 +220,18 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 			}
 			// 收到首个字节才发送 hello 信息
 			if notSendMsg && !r.hideBanner {
-				if err := r.bindMgr.HandleBannerMsg([]byte(guideMessages)); err != nil {
-					return err
-				}
+				r.bindMgr.HandlePostOutputMsg([]byte(guideMessages))
+
 				if err := PreparedGuideMessage(r.ctx, r.wsConn, guideMessages); err != nil {
 					return err
 				}
 				notSendMsg = false
 			}
 
-			if err := r.wsConn.WriteMessage(websocket.TextMessage, output); err != nil {
+			r.bindMgr.HandlePostOutputMsg(output)
+
+			outputMsg := []byte(base64.StdEncoding.EncodeToString(output))
+			if err := r.wsConn.WriteMessage(websocket.TextMessage, outputMsg); err != nil {
 				return err
 			}
 		case <-pingInterval.C: // 定时主动发送 ping

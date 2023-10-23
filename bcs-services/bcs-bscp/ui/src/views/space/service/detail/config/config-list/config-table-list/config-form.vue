@@ -17,7 +17,7 @@
       />
     </bk-form-item>
     <bk-form-item label="配置项描述" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change" :resize="false"/>
+      <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change" :resize="false" />
     </bk-form-item>
     <bk-form-item label="配置项格式">
       <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">
@@ -154,7 +154,7 @@ const props = withDefaults(
   }>(),
   {
     editable: true,
-  },
+  }
 );
 
 const emits = defineEmits(['change', 'update:fileUploading']);
@@ -194,6 +194,11 @@ const rules = {
       validator: (value: string) => value.length <= 256,
       message: '最大长度256个字符',
     },
+    {
+      validator: (value: string) => /^\/([a-zA-Z0-9\/\-\.]+\/)*[a-zA-Z0-9\/\-\.]+$/.test(value),
+      message: '无效的路径,路径不符合Unix文件路径格式规范',
+      trigger: 'blur',
+    },
   ],
 };
 
@@ -204,7 +209,7 @@ const fileList = computed(() => (fileContent.value ? [transFileToObject(fileCont
 const privilegeGroupsValue = computed(() => {
   const data: { [index: string]: number[] } = { 0: [], 1: [], 2: [] };
   if (typeof localVal.value.privilege === 'string' && localVal.value.privilege.length > 0) {
-    const valArr = localVal.value.privilege.split('').map(i => parseInt(i, 10));
+    const valArr = localVal.value.privilege.split('').map((i) => parseInt(i, 10));
     valArr.forEach((item, index) => {
       data[index as keyof typeof data] = PRIVILEGE_VALUE_MAP[item as keyof typeof PRIVILEGE_VALUE_MAP];
     });
@@ -217,7 +222,7 @@ watch(
   (val) => {
     privilegeInputVal.value = val as string;
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 watch(
@@ -229,7 +234,7 @@ watch(
       stringContent.value = props.content as string;
     }
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入

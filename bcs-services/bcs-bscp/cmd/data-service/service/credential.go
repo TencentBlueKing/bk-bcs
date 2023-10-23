@@ -15,7 +15,10 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
+
+	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -29,6 +32,10 @@ import (
 // CreateCredential Create Credential
 func (s *Service) CreateCredential(ctx context.Context, req *pbds.CreateCredentialReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+
+	if _, err := s.dao.Credential().GetByName(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
+		return nil, fmt.Errorf("credential name %s already exists", req.Spec.Name)
+	}
 
 	credential := &table.Credential{
 		Spec:       req.Spec.CredentialSpec(),
@@ -77,24 +84,27 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbds.ListCredentialR
 func (s *Service) DeleteCredential(ctx context.Context, req *pbds.DeleteCredentialReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	credential := &table.Credential{
-		ID:         req.Id,
-		Attachment: req.Attachment.CredentialAttachment(),
-	}
+	tx := s.dao.GenQuery().Begin()
 
 	// 查看credential_scopes表中的数据
-	_, count, err := s.dao.CredentialScope().Get(kt, req.Id, req.Attachment.BizId)
-	if err != nil {
-		logs.Errorf("get credential scope failed, err: %v, rid: %s", err, kt.Rid)
+	if err := s.dao.CredentialScope().DeleteByCredentialIDWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
+		logs.Errorf("delete credential scope by credential id failed, err: %v, rid: %s", err, kt.Rid)
+		if e := tx.Rollback(); e != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", e, kt.Rid)
+		}
 		return nil, err
 	}
 
-	if count != 0 {
-		return nil, errors.New("delete Credential failed, credential scope have data")
+	if err := s.dao.Credential().DeleteWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
+		logs.Errorf("delete credential failed, err: %v, rid: %s", err, kt.Rid)
+		if e := tx.Rollback(); e != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", e, kt.Rid)
+		}
+		return nil, err
 	}
 
-	if err := s.dao.Credential().Delete(kt, credential); err != nil {
-		logs.Errorf("delete credential failed, err: %v, rid: %s", err, kt.Rid)
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("transaction commit failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -105,6 +115,15 @@ func (s *Service) DeleteCredential(ctx context.Context, req *pbds.DeleteCredenti
 func (s *Service) UpdateCredential(ctx context.Context, req *pbds.UpdateCredentialReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	old, err := s.dao.Credential().GetByName(kt, req.Attachment.BizId, req.Spec.Name)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("get credential failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	if !errors.Is(gorm.ErrRecordNotFound, err) && old.ID != req.Id {
+		return nil, fmt.Errorf("credential name %s already exists", req.Spec.Name)
+	}
+
 	credential := &table.Credential{
 		ID:         req.Id,
 		Spec:       req.Spec.CredentialSpec(),
@@ -113,9 +132,9 @@ func (s *Service) UpdateCredential(ctx context.Context, req *pbds.UpdateCredenti
 			Reviser: kt.User,
 		},
 	}
-	if err := s.dao.Credential().Update(kt, credential); err != nil {
-		logs.Errorf("update credential failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := s.dao.Credential().Update(kt, credential); e != nil {
+		logs.Errorf("update credential failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	return new(pbbase.EmptyResp), nil

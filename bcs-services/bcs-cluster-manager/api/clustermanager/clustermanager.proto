@@ -1408,15 +1408,15 @@ message Cluster {
   }];
   string moduleID = 32[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "moduleID",
-    description: "集群模块ID(CA添加节点时模块转移)"
+    description: "集群模块ID(CA添加节点时模块转移 废弃)"
   }];
   string extraClusterID = 33[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "extraClusterID",
-    description: "导入集群的额外集群ID标识信息,默认时空值"
+    description: "导入集群的额外集群ID标识信息,默认时空值(废弃)"
   }];
   bool isCommonCluster = 34[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isCommonCluster",
-    description: "是否为公共集群,默认false"
+    description: "是否为公共集群,默认false(废弃)"
   }];
   string description = 35[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "description",
@@ -1441,6 +1441,14 @@ message Cluster {
   string cloudAccountID = 40[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudAccountID",
     description: "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证"
+  }];
+  CloudArea area = 41 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "area",
+    description: "集群维度的云区域信息(用户不指定, 则使用默认云区域)"
+  }];
+  ModuleInfo module = 42 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "module",
+    description: "集群维度节点上下架时当前集群业务下转移模块信息"
   }];
 }
 
@@ -3295,7 +3303,7 @@ message InstanceTemplateConfig {
   }];
   repeated DataDisk dataDisks = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "dataDisks",
-    description: "数据盘信息，无默认设置则不购买"
+    description: "数据盘信息，无默认设置则不购买(已废弃掉，统一通过 CloudDataDisk字段兼容)"
   }];
   ImageInfo imageInfo = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "imageInfo",
@@ -3316,6 +3324,18 @@ message InstanceTemplateConfig {
   bool isMonitorService = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isMonitorService",
     description: "新实例启动时的是否开启云监控, 选填 默认开启"
+  }];
+  repeated CloudDataDisk cloudDataDisks = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cloudDataDisks",
+    description: "节点数据盘信息(包含磁盘挂载信息以及格式化信息，用户若不需要可自行处理格式化挂载)，无默认设置则不购买"
+  }];
+  string initLoginUsername = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "initLoginUsername",
+    description: "新实例初始设置username"
+  }];
+  KeyInfo keyPair = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "keyPair",
+    description: "节点私钥信息, 与密码2选一，2者均设置优先密钥"
   }];
 }
 
@@ -4655,15 +4675,15 @@ message CreateClusterReq {
   }];
   string moduleID = 33[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "moduleID",
-    description: "集群模块ID(CA添加节点时模块转移)"
+    description: "集群模块ID(CA添加节点时模块转移)(废弃)"
   }];
   string extraClusterID = 34[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "extraClusterID",
-    description: "导入集群的额外集群ID标识信息,默认时空值"
+    description: "导入集群的额外集群ID标识信息,默认时空值(废弃)"
   }];
   bool isCommonCluster = 35[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isCommonCluster",
-    description: "是否为公共集群,默认false"
+    description: "是否为公共集群,默认false(废弃)"
   }];
   string description = 36[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "description",
@@ -4684,6 +4704,14 @@ message CreateClusterReq {
   string nodeTemplateID = 40[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "nodeTemplateID",
     description: "创建集群上架节点时的节点模板"
+  }];
+  CloudArea area = 41 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "area",
+    description: "集群维度的云区域信息(用户不指定, 则使用默认云区域)"
+  }];
+  ModuleInfo module = 42 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "module",
+    description: "集群维度节点上下架时当前集群业务下转移模块信息"
   }];
 }
 
@@ -12082,7 +12110,7 @@ message GetTopologyHostIdsNodesRequest {
     title: "start",
     description: "数据起始位置，不传默认为0"
   }];
-  uint64 pageSize = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  int32 pageSize = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "pageSize",
     description: "拉取数据数量，不传默认拉取所有"
   }];
@@ -12113,7 +12141,7 @@ message GetTopologyHostIdsNodesResponse {
 
 message GetTopologyHostIdsNodesData {
   uint64 start = 1;
-  uint64 pageSize = 2;
+  int32 pageSize = 2;
   uint64 total = 3;
   repeated HostIDsNodeData data = 4;
 }

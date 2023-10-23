@@ -31,35 +31,39 @@
     </div>
   </section>
   <bk-dialog
-      ext-cls="delete-service-dialog"
-      v-model:is-show="isShowDeleteDialog"
-      :theme="'primary'"
-      :dialog-type="'operation'"
-      header-align="center"
-      footer-align="center"
-      @value-change="dialogInputStr = ''"
-    >
-      <div class="dialog-content">
-        <div class="dialog-title">确认删除此服务？</div>
-        <div>删除的服务<span>无法找回</span>,请谨慎操作！</div>
-        <div class="dialog-input">
-          <div class="dialog-info">
-            请输入服务名<span>{{ service.spec.name }}</span>已确认删除
-          </div>
-          <bk-input v-model="dialogInputStr"/>
+    ext-cls="delete-service-dialog"
+    v-model:is-show="isShowDeleteDialog"
+    :theme="'primary'"
+    :dialog-type="'operation'"
+    header-align="center"
+    footer-align="center"
+    @value-change="dialogInputStr = ''"
+    :draggable="false"
+  >
+    <div class="dialog-content">
+      <div class="dialog-title">确认删除此服务？</div>
+      <div>删除的服务<span>无法找回</span>,请谨慎操作！</div>
+      <div class="dialog-input">
+        <div class="dialog-info">
+          请输入服务名<span>{{ service.spec.name }}</span
+          >以确认删除
         </div>
+        <bk-input v-model="dialogInputStr" />
       </div>
-      <template #footer>
-        <div class="dialog-footer">
-          <bk-button
-            theme="danger"
-            style="margin-right: 20px;"
-            :disabled="dialogInputStr !== service.spec.name"
-            @click="handleDeleteService">删除</bk-button>
-          <bk-button @click="isShowDeleteDialog = false">取消</bk-button>
-        </div>
-      </template>
-    </bk-dialog>
+    </div>
+    <template #footer>
+      <div class="dialog-footer">
+        <bk-button
+          theme="danger"
+          style="margin-right: 20px"
+          :disabled="dialogInputStr !== service.spec.name"
+          @click="handleDeleteService"
+          >删除</bk-button
+        >
+        <bk-button @click="isShowDeleteDialog = false">取消</bk-button>
+      </div>
+    </template>
+  </bk-dialog>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
@@ -145,7 +149,7 @@ const handleDeleteService = async () => {
 .service-card {
   position: relative;
   width: 304px;
-  height: 165px;
+  height: 143px;
   padding: 0px 8px 16px 8px;
   &.no-view-perm {
     cursor: pointer;
@@ -220,7 +224,7 @@ const handleDeleteService = async () => {
   }
   .service-config {
     padding: 0 16px;
-    height: 55px;
+    height: 33px;
     font-size: 12px;
     color: #979ba5;
     line-height: 20px;
@@ -282,7 +286,7 @@ const handleDeleteService = async () => {
     margin-top: 10px;
     text-align: start;
     padding: 20px;
-    background-color: #F4F7FA;
+    background-color: #f4f7fa;
     .dialog-info {
       margin-bottom: 5px;
       span {

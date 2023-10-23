@@ -1,6 +1,6 @@
 import http from '../request';
 import { ICommonQuery } from '../../types/index';
-import { IVariableEditParams } from '../../types/variable';
+import { IVariableEditParams, IVariableImportParams } from '../../types/variable';
 
 /**
  * 查询变量列表
@@ -76,5 +76,15 @@ export const getUnReleasedAppVariablesCitedDetail = (biz_id: string, app_id: num
  * @returns
  */
 export const getReleasedAppVariablesCitedDetail = (biz_id: string, app_id: number, release_id: number) => http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/template_variables_references`).then(res => res.data);
+
+/**
+ * 批量导入变量
+ * @param biz_id 业务ID
+ * @param app_id 应用ID
+ * @param release_id 服务版本ID
+ * @returns
+ */
+export const batchImportTemplateVariables = (biz_id: string, params: IVariableImportParams) => http.post(`config/biz/${biz_id}/template_variables/import`, params);
 // @todo 待接口支持
+
 

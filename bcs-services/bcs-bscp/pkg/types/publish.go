@@ -32,7 +32,7 @@ type PublishOption struct {
 }
 
 // Validate options is valid or not.
-func (ps PublishOption) Validate() error {
+func (ps *PublishOption) Validate() error {
 	if ps.BizID <= 0 {
 		return errf.New(errf.InvalidParameter, "biz_id is invalid")
 	}

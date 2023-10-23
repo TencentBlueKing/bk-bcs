@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 )
 
 // RemoveNodesFromClusterTask remove node from cluster
@@ -70,7 +71,7 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	deleteResult, err := RemoveNodesFromCluster(ctx, dependInfo, idList)
+	deleteResult, err := business.RemoveNodesFromCluster(ctx, dependInfo, idList, false)
 	if err != nil {
 		blog.Errorf("RemoveNodesFromClusterTask[%s] RemoveNodesFromCluster failed: %v",
 			taskID, err)

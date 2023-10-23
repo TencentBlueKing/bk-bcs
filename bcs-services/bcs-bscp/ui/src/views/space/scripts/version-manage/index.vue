@@ -115,7 +115,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { InfoBox } from 'bkui-vue';
+import { InfoBox, Message } from 'bkui-vue';
 import { Search, AngleDoubleRightLine } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../store/global';
@@ -296,6 +296,10 @@ const handleDelClick = (version: IScriptVersionListItem) => {
       }
       unPublishVersion.value = null;
       getVersionList();
+      Message({
+        theme: 'success',
+        message: '删除版本成功',
+      });
     },
   } as any);
 };
@@ -332,6 +336,7 @@ const handleVersionEditSubmitted = async (
       scriptDetail.value.not_release_id
     );
     createBtnDisabled.value = false;
+    handleEditVersionClick()
   } else {
     // 如果是编辑旧版本，则直接修改版本数据
     const { memo, content } = data;

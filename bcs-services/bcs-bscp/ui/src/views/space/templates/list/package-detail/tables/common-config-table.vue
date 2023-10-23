@@ -20,7 +20,7 @@
     </div>
     <bk-loading style="min-height: 200px" :loading="listLoading">
       <bk-table :border="['outer']" :data="list" @selection-change="handleSelectionChange">
-        <bk-table-column type="selection" :min-width="40" :width="40"></bk-table-column>
+        <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
         <bk-table-column label="配置项名称">
           <template #default="{ row }">
             <div v-if="row.spec" v-overflow-title class="config-name" @click="goToVersionManage(row.id)">
@@ -191,7 +191,7 @@ watch(
   () => {
     searchStr.value = '';
     loadConfigList();
-  },
+  }
 );
 
 onMounted(() => {
@@ -212,7 +212,7 @@ const loadConfigList = async () => {
   list.value = res.details;
   pagination.value.count = res.count;
   listLoading.value = false;
-  const ids = list.value.map(item => item.id);
+  const ids = list.value.map((item) => item.id);
   citeByPkgsList.value = [];
   boundByAppsCountList.value = [];
   if (ids.length > 0) {
@@ -273,13 +273,13 @@ const handleSelectionChange = ({
   if (isAll) {
     if (checked) {
       list.value.forEach((config) => {
-        if (!configs.find(item => item.id === config.id)) {
+        if (!configs.find((item) => item.id === config.id)) {
           configs.push(config);
         }
       });
     } else {
       list.value.forEach((config) => {
-        const index = configs.findIndex(item => item.id === config.id);
+        const index = configs.findIndex((item) => item.id === config.id);
         if (index > -1) {
           configs.splice(index, 1);
         }
@@ -287,11 +287,11 @@ const handleSelectionChange = ({
     }
   } else {
     if (checked) {
-      if (!configs.find(item => item.id === row.id)) {
+      if (!configs.find((item) => item.id === row.id)) {
         configs.push(row);
       }
     } else {
-      const index = configs.findIndex(item => item.id === row.id);
+      const index = configs.findIndex((item) => item.id === row.id);
       if (index > -1) {
         configs.splice(index, 1);
       }
@@ -429,5 +429,10 @@ const clearSearchStr = () => {
       }
     }
   }
+}
+.bk-table .bk-table-body table td .cell.selection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

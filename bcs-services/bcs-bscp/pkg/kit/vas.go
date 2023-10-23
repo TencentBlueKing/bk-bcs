@@ -15,6 +15,7 @@ package kit
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"google.golang.org/grpc/metadata"
@@ -28,6 +29,7 @@ func NewVas() *Vas {
 	return &Vas{
 		Rid: uuid.UUID(),
 		Ctx: context.TODO(),
+		Wg:  sync.WaitGroup{},
 	}
 }
 
@@ -54,6 +56,7 @@ func OutgoingVas(pairs ...map[string]string) *Vas {
 	return &Vas{
 		Rid: rid,
 		Ctx: ctx,
+		Wg:  sync.WaitGroup{},
 	}
 }
 
@@ -65,10 +68,12 @@ type Vas struct {
 	Rid string
 	// Ctx is request context.
 	Ctx context.Context
+	// Wg is wait group.
+	Wg sync.WaitGroup
 }
 
 // Validate the vas is valid or not.
-func (v Vas) Validate() error {
+func (v *Vas) Validate() error {
 	if v.Ctx == nil {
 		return errors.New("vas context is nil")
 	}
@@ -87,6 +92,7 @@ func (v *Vas) WithTimeout(timeout time.Duration) (*Vas, context.CancelFunc) {
 	child := &Vas{
 		Rid: v.Rid,
 		Ctx: ctx,
+		Wg:  sync.WaitGroup{},
 	}
 
 	return child, cancel

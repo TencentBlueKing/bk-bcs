@@ -4,7 +4,10 @@
       可为配置文件内的变量预先定义默认值。默认变量值只在变量首次使用时生效，之后更新配置文件，变量值将使用上一次生成版本是的变量值填充。
     </bk-alert>
     <div class="operation-area">
-      <bk-button theme="primary" @click="isCreateSliderShow = true"><Plus class="button-icon" />新增变量</bk-button>
+      <div class="button">
+        <bk-button theme="primary" @click="isCreateSliderShow = true"><Plus class="button-icon" />新增变量</bk-button>
+        <bk-button theme="primary" @click="isImportVariableShow = true">导入变量</bk-button>
+      </div>
       <SearchInput v-model="searchStr" placeholder="请输入变量名称" :width="320" @search="refreshList()" />
     </div>
     <div class="variable-table">
@@ -48,6 +51,7 @@
       :data="editSliderData.data"
       @edited="refreshList"
     />
+    <VariableImport v-model:show="isImportVariableShow" @edited="refreshList" />
   </section>
 </template>
 <script lang="ts" setup>
@@ -61,6 +65,7 @@ import { IVariableEditParams, IVariableItem } from '../../../../types/variable';
 import { getVariableList, deleteVariable } from '../../../api/variable';
 import VariableCreate from './variable-create.vue';
 import VariableEdit from './variable-edit.vue';
+import VariableImport from './variable-import.vue';
 import SearchInput from '../../../components/search-input.vue';
 import TableEmpty from '../../../components/table/table-empty.vue';
 
@@ -75,6 +80,7 @@ const pagination = ref<IPagination>({
   limit: 10,
 });
 const isCreateSliderShow = ref(false);
+const isImportVariableShow = ref(false);
 const editSliderData = ref<{ open: boolean; id: number; data: IVariableEditParams }>({
   open: false,
   id: 0,
@@ -90,7 +96,7 @@ watch(
   () => spaceId.value,
   () => {
     refreshList();
-  },
+  }
 );
 
 onMounted(() => {
@@ -163,8 +169,14 @@ const clearSearchStr = () => {
   justify-content: space-between;
   margin-top: 24px;
   padding: 0 24px;
-  .button-icon {
-    font-size: 18px;
+  .button {
+    width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .button-icon {
+      font-size: 18px;
+    }
   }
   .search-input {
     width: 320px;

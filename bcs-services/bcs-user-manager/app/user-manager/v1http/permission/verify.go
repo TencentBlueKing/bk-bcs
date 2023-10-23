@@ -627,53 +627,6 @@ func transToAPIServerURL(url string) string {
 	return ""
 }
 
-// buildK8sOperationLog
-func buildK8sOperationLog(user string, resource ClusterResource, info *parser.RequestInfo, allow bool) error {
-	const (
-		MessageTemplate = "user[%s] perm[%t] verb[%s] APIPrefix[%s] GVK[%s-%s-%s] namespace[%s] resource[%s] subresource[%s]"
-	)
-
-	log := &models.BcsOperationLog{
-		ClusterType: resource.ClusterType.String(),
-		ClusterID:   resource.ClusterID,
-		Path:        resource.URL,
-		Message: fmt.Sprintf(MessageTemplate, user, allow, info.Verb, info.APIPrefix, info.APIGroup, info.APIVersion,
-			info.Resource, info.Namespace, info.Resource, info.Subresource),
-		OpUser:    user,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	err := sqlstore.CreateOperationLog(log)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// buildAdminOperationLog
-func buildAdminOperationLog(user string, req VerifyPermissionReq) error {
-	const (
-		MessageTemplate = "管理员用户[%s]操作[%s]资源类型[%s]资源[%s]allow[%v]"
-	)
-
-	log := &models.BcsOperationLog{
-		ClusterType: req.ResourceType.String(),
-		ClusterID:   req.Resource,
-		Path:        req.RequestURL,
-		Message:     fmt.Sprintf(MessageTemplate, user, req.Action, req.ResourceType, req.Resource, true),
-		OpUser:      user,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	err := sqlstore.CreateOperationLog(log)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func addAudit(pCtx context.Context, user, projectID, method, actionID string, res ClusterResource) {
 	requestID := utils.GetRequestIDFromContext(pCtx)
 	ctx := context.WithValue(context.Background(), utils.ContextValueKeyRequestID, requestID)
@@ -728,7 +681,7 @@ func addAudit(pCtx context.Context, user, projectID, method, actionID string, re
 	}
 
 	// audit
-	component.GetAuditClient().R().DisableActivity().
+	_ = component.GetAuditClient().R().DisableActivity().
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 
 	// activity

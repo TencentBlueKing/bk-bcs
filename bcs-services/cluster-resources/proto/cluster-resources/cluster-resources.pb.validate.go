@@ -4013,6 +4013,527 @@ var _CObjGetReq_Format_InLookup = map[string]struct{}{
 	"formData": {},
 }
 
+// Validate checks the field values on CObjHistoryReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjHistoryReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjHistoryReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjHistoryReqMultiError,
+// or nil if none found.
+func (m *CObjHistoryReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjHistoryReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjHistoryReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjHistoryReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjHistoryReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjHistoryReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCobjName()) > 256 {
+		err := CObjHistoryReqValidationError{
+			field:  "CobjName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjHistoryReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjHistoryReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjHistoryReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjHistoryReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CObjHistoryReqMultiError is an error wrapping multiple validation errors
+// returned by CObjHistoryReq.ValidateAll() if the designated constraints
+// aren't met.
+type CObjHistoryReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjHistoryReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjHistoryReqMultiError) AllErrors() []error { return m }
+
+// CObjHistoryReqValidationError is the validation error returned by
+// CObjHistoryReq.Validate if the designated constraints aren't met.
+type CObjHistoryReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjHistoryReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjHistoryReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjHistoryReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjHistoryReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjHistoryReqValidationError) ErrorName() string { return "CObjHistoryReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjHistoryReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjHistoryReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjHistoryReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjHistoryReqValidationError{}
+
+var _CObjHistoryReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjHistoryReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+// Validate checks the field values on CObjRestartReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjRestartReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjRestartReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjRestartReqMultiError,
+// or nil if none found.
+func (m *CObjRestartReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjRestartReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjRestartReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjRestartReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjRestartReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjRestartReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCobjName()) > 256 {
+		err := CObjRestartReqValidationError{
+			field:  "CobjName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjRestartReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjRestartReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjRestartReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjRestartReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CObjRestartReqMultiError is an error wrapping multiple validation errors
+// returned by CObjRestartReq.ValidateAll() if the designated constraints
+// aren't met.
+type CObjRestartReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjRestartReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjRestartReqMultiError) AllErrors() []error { return m }
+
+// CObjRestartReqValidationError is the validation error returned by
+// CObjRestartReq.Validate if the designated constraints aren't met.
+type CObjRestartReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjRestartReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjRestartReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjRestartReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjRestartReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjRestartReqValidationError) ErrorName() string { return "CObjRestartReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjRestartReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjRestartReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjRestartReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjRestartReqValidationError{}
+
+var _CObjRestartReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjRestartReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+// Validate checks the field values on CObjRolloutReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjRolloutReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjRolloutReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjRolloutReqMultiError,
+// or nil if none found.
+func (m *CObjRolloutReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjRolloutReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjRolloutReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjRolloutReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjRolloutReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjRolloutReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCobjName()) > 256 {
+		err := CObjRolloutReqValidationError{
+			field:  "CobjName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjRolloutReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjRolloutReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjRolloutReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetRevision() < 0 {
+		err := CObjRolloutReqValidationError{
+			field:  "Revision",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjRolloutReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CObjRolloutReqMultiError is an error wrapping multiple validation errors
+// returned by CObjRolloutReq.ValidateAll() if the designated constraints
+// aren't met.
+type CObjRolloutReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjRolloutReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjRolloutReqMultiError) AllErrors() []error { return m }
+
+// CObjRolloutReqValidationError is the validation error returned by
+// CObjRolloutReq.Validate if the designated constraints aren't met.
+type CObjRolloutReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjRolloutReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjRolloutReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjRolloutReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjRolloutReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjRolloutReqValidationError) ErrorName() string { return "CObjRolloutReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjRolloutReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjRolloutReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjRolloutReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjRolloutReqValidationError{}
+
+var _CObjRolloutReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjRolloutReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
 // Validate checks the field values on CObjCreateReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -7399,3 +7920,905 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DeleteViewConfigReqValidationError{}
+
+// Validate checks the field values on ClusterNamespaces with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ClusterNamespaces) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ClusterNamespaces with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ClusterNamespacesMultiError, or nil if none found.
+func (m *ClusterNamespaces) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ClusterNamespaces) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ClusterNamespacesValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ClusterNamespacesMultiError(errors)
+	}
+
+	return nil
+}
+
+// ClusterNamespacesMultiError is an error wrapping multiple validation errors
+// returned by ClusterNamespaces.ValidateAll() if the designated constraints
+// aren't met.
+type ClusterNamespacesMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ClusterNamespacesMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ClusterNamespacesMultiError) AllErrors() []error { return m }
+
+// ClusterNamespacesValidationError is the validation error returned by
+// ClusterNamespaces.Validate if the designated constraints aren't met.
+type ClusterNamespacesValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterNamespacesValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterNamespacesValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterNamespacesValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterNamespacesValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterNamespacesValidationError) ErrorName() string {
+	return "ClusterNamespacesValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ClusterNamespacesValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterNamespaces.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterNamespacesValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterNamespacesValidationError{}
+
+// Validate checks the field values on LabelSelector with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *LabelSelector) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on LabelSelector with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in LabelSelectorMultiError, or
+// nil if none found.
+func (m *LabelSelector) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *LabelSelector) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetKey()); l < 1 || l > 64 {
+		err := LabelSelectorValidationError{
+			field:  "Key",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _LabelSelector_Op_InLookup[m.GetOp()]; !ok {
+		err := LabelSelectorValidationError{
+			field:  "Op",
+			reason: "value must be in list [= In NotIn Exists DoesNotExist]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return LabelSelectorMultiError(errors)
+	}
+
+	return nil
+}
+
+// LabelSelectorMultiError is an error wrapping multiple validation errors
+// returned by LabelSelector.ValidateAll() if the designated constraints
+// aren't met.
+type LabelSelectorMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m LabelSelectorMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m LabelSelectorMultiError) AllErrors() []error { return m }
+
+// LabelSelectorValidationError is the validation error returned by
+// LabelSelector.Validate if the designated constraints aren't met.
+type LabelSelectorValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e LabelSelectorValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e LabelSelectorValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e LabelSelectorValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e LabelSelectorValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e LabelSelectorValidationError) ErrorName() string { return "LabelSelectorValidationError" }
+
+// Error satisfies the builtin error interface
+func (e LabelSelectorValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sLabelSelector.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = LabelSelectorValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = LabelSelectorValidationError{}
+
+var _LabelSelector_Op_InLookup = map[string]struct{}{
+	"=":            {},
+	"In":           {},
+	"NotIn":        {},
+	"Exists":       {},
+	"DoesNotExist": {},
+}
+
+// Validate checks the field values on FetchMultiClusterResourceReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *FetchMultiClusterResourceReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FetchMultiClusterResourceReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// FetchMultiClusterResourceReqMultiError, or nil if none found.
+func (m *FetchMultiClusterResourceReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FetchMultiClusterResourceReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := FetchMultiClusterResourceReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(m.GetClusterNamespaces()) < 1 {
+		err := FetchMultiClusterResourceReqValidationError{
+			field:  "ClusterNamespaces",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetClusterNamespaces() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FetchMultiClusterResourceReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FetchMultiClusterResourceReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FetchMultiClusterResourceReqValidationError{
+					field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) < 1 {
+		err := FetchMultiClusterResourceReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Creator
+
+	for idx, item := range m.GetLabelSelector() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FetchMultiClusterResourceReqValidationError{
+						field:  fmt.Sprintf("LabelSelector[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FetchMultiClusterResourceReqValidationError{
+						field:  fmt.Sprintf("LabelSelector[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FetchMultiClusterResourceReqValidationError{
+					field:  fmt.Sprintf("LabelSelector[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Name
+
+	if val := m.GetLimit(); val < 1 || val > 1000 {
+		err := FetchMultiClusterResourceReqValidationError{
+			field:  "Limit",
+			reason: "value must be inside range [1, 1000]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetOffset() < 0 {
+		err := FetchMultiClusterResourceReqValidationError{
+			field:  "Offset",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return FetchMultiClusterResourceReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// FetchMultiClusterResourceReqMultiError is an error wrapping multiple
+// validation errors returned by FetchMultiClusterResourceReq.ValidateAll() if
+// the designated constraints aren't met.
+type FetchMultiClusterResourceReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FetchMultiClusterResourceReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FetchMultiClusterResourceReqMultiError) AllErrors() []error { return m }
+
+// FetchMultiClusterResourceReqValidationError is the validation error returned
+// by FetchMultiClusterResourceReq.Validate if the designated constraints
+// aren't met.
+type FetchMultiClusterResourceReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FetchMultiClusterResourceReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FetchMultiClusterResourceReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FetchMultiClusterResourceReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FetchMultiClusterResourceReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FetchMultiClusterResourceReqValidationError) ErrorName() string {
+	return "FetchMultiClusterResourceReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e FetchMultiClusterResourceReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFetchMultiClusterResourceReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FetchMultiClusterResourceReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FetchMultiClusterResourceReqValidationError{}
+
+// Validate checks the field values on FetchMultiClusterCustomResourceReq with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *FetchMultiClusterCustomResourceReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FetchMultiClusterCustomResourceReq
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// FetchMultiClusterCustomResourceReqMultiError, or nil if none found.
+func (m *FetchMultiClusterCustomResourceReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FetchMultiClusterCustomResourceReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := FetchMultiClusterCustomResourceReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(m.GetClusterNamespaces()) < 1 {
+		err := FetchMultiClusterCustomResourceReqValidationError{
+			field:  "ClusterNamespaces",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetClusterNamespaces() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FetchMultiClusterCustomResourceReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FetchMultiClusterCustomResourceReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FetchMultiClusterCustomResourceReqValidationError{
+					field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if utf8.RuneCountInString(m.GetCrd()) < 1 {
+		err := FetchMultiClusterCustomResourceReqValidationError{
+			field:  "Crd",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Creator
+
+	for idx, item := range m.GetLabelSelector() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FetchMultiClusterCustomResourceReqValidationError{
+						field:  fmt.Sprintf("LabelSelector[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FetchMultiClusterCustomResourceReqValidationError{
+						field:  fmt.Sprintf("LabelSelector[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FetchMultiClusterCustomResourceReqValidationError{
+					field:  fmt.Sprintf("LabelSelector[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Name
+
+	if val := m.GetLimit(); val < 1 || val > 1000 {
+		err := FetchMultiClusterCustomResourceReqValidationError{
+			field:  "Limit",
+			reason: "value must be inside range [1, 1000]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetOffset() < 0 {
+		err := FetchMultiClusterCustomResourceReqValidationError{
+			field:  "Offset",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return FetchMultiClusterCustomResourceReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// FetchMultiClusterCustomResourceReqMultiError is an error wrapping multiple
+// validation errors returned by
+// FetchMultiClusterCustomResourceReq.ValidateAll() if the designated
+// constraints aren't met.
+type FetchMultiClusterCustomResourceReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FetchMultiClusterCustomResourceReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FetchMultiClusterCustomResourceReqMultiError) AllErrors() []error { return m }
+
+// FetchMultiClusterCustomResourceReqValidationError is the validation error
+// returned by FetchMultiClusterCustomResourceReq.Validate if the designated
+// constraints aren't met.
+type FetchMultiClusterCustomResourceReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FetchMultiClusterCustomResourceReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FetchMultiClusterCustomResourceReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FetchMultiClusterCustomResourceReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FetchMultiClusterCustomResourceReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FetchMultiClusterCustomResourceReqValidationError) ErrorName() string {
+	return "FetchMultiClusterCustomResourceReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e FetchMultiClusterCustomResourceReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFetchMultiClusterCustomResourceReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FetchMultiClusterCustomResourceReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FetchMultiClusterCustomResourceReqValidationError{}
+
+// Validate checks the field values on MultiClusterResourceCountReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *MultiClusterResourceCountReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on MultiClusterResourceCountReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// MultiClusterResourceCountReqMultiError, or nil if none found.
+func (m *MultiClusterResourceCountReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *MultiClusterResourceCountReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := MultiClusterResourceCountReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(m.GetClusterNamespaces()) < 1 {
+		err := MultiClusterResourceCountReqValidationError{
+			field:  "ClusterNamespaces",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetClusterNamespaces() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, MultiClusterResourceCountReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, MultiClusterResourceCountReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return MultiClusterResourceCountReqValidationError{
+					field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Creator
+
+	for idx, item := range m.GetLabelSelector() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, MultiClusterResourceCountReqValidationError{
+						field:  fmt.Sprintf("LabelSelector[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, MultiClusterResourceCountReqValidationError{
+						field:  fmt.Sprintf("LabelSelector[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return MultiClusterResourceCountReqValidationError{
+					field:  fmt.Sprintf("LabelSelector[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Name
+
+	if len(errors) > 0 {
+		return MultiClusterResourceCountReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// MultiClusterResourceCountReqMultiError is an error wrapping multiple
+// validation errors returned by MultiClusterResourceCountReq.ValidateAll() if
+// the designated constraints aren't met.
+type MultiClusterResourceCountReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m MultiClusterResourceCountReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m MultiClusterResourceCountReqMultiError) AllErrors() []error { return m }
+
+// MultiClusterResourceCountReqValidationError is the validation error returned
+// by MultiClusterResourceCountReq.Validate if the designated constraints
+// aren't met.
+type MultiClusterResourceCountReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiClusterResourceCountReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiClusterResourceCountReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiClusterResourceCountReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiClusterResourceCountReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiClusterResourceCountReqValidationError) ErrorName() string {
+	return "MultiClusterResourceCountReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiClusterResourceCountReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiClusterResourceCountReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiClusterResourceCountReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiClusterResourceCountReqValidationError{}

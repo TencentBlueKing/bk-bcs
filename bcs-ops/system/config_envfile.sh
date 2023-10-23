@@ -104,6 +104,8 @@ init_env() {
   # mirror
   ## yum_mirror
   MIRROR_URL=${MIRROR_URL:-"https://mirrors.tencent.com"}
+  ## repo_url
+  REPO_URL=${REPO_URL:-"https://bkopen-1252002024.file.myqcloud.com/ce7/tools"}
   ##
   MIRROR_IP=${MIRROR_IP:-}
   ## image_registry
@@ -277,6 +279,7 @@ CSI_EOF
 
 ## yum_mirror
 MIRROR_URL="${MIRROR_URL}"
+REPO_URL="${REPO_URL}"
 MIRROR_IP="${MIRROR_IP}"
 ## image_registry
 ### docker.io

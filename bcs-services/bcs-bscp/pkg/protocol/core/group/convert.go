@@ -160,3 +160,18 @@ func UnmarshalSelector(pb *pbstruct.Struct) (*selector.Selector, error) {
 
 	return s, nil
 }
+
+// UnmarshalElement unmarshal pb struct to element.
+func UnmarshalElement(pb *pbstruct.Struct) (*selector.Element, error) {
+	json, err := pb.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	s := new(selector.Element)
+	if err = s.UnmarshalJSON(json); err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}

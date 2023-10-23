@@ -438,7 +438,7 @@
           error-display-type="normal"
           required>
           <bcs-table
-            :data="subnetsList"
+            :data="filterSubnetsList"
             :row-class-name="subnetsRowClass"
             v-bkloading="{ isLoading: subnetsLoading }"
             @row-click="handleCheckSubnets">
@@ -452,7 +452,7 @@
               </template>
             </bcs-table-column>
             <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.subnetName')" prop="subnetName"></bcs-table-column>
-            <bcs-table-column :label="$t('cluster.ca.nodePool.create.az.title')" prop="zone" show-overflow-tooltip></bcs-table-column>
+            <bcs-table-column :label="$t('cluster.ca.nodePool.create.az.title')" prop="zoneName" show-overflow-tooltip></bcs-table-column>
             <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.remainIp')" prop="availableIPAddressCount" align="right"></bcs-table-column>
             <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.unUsedReason.text')" show-overflow-tooltip>
               <template #default="{ row }">
@@ -940,7 +940,16 @@ export default defineComponent({
 
     // VPC子网
     const subnetsLoading = ref(false);
-    const subnetsList = ref([]);
+    const subnetsList = ref<Array<{
+      zone: string
+      zoneName: string
+      subnetID: string
+    }>>([]);
+    const filterSubnetsList = computed(() => {
+      const { zones } = nodePoolConfig.value.autoScaling;
+      if (!zones.length) return subnetsList.value;
+      return subnetsList.value.filter(item => zones.includes(item.zone));
+    });
     const subnetsRowClass = ({ row }) => {
       if (curInstanceItem.value.zones?.includes(row.zone)) {
         return 'table-row-enable';
@@ -1115,7 +1124,7 @@ export default defineComponent({
       osImageLoading,
       osImageList,
       showDataDisks,
-      subnetsList,
+      filterSubnetsList,
       subnetsRowClass,
       subnetsLoading,
       handleCheckSubnets,

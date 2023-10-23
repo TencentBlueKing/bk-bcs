@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/klog/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/repository"
@@ -73,6 +73,10 @@ func newUploader() (*Uploader, error) {
 		u.storage = storage
 	}
 
+	if err := ensureDirExist(config.G.Audit.DataDir); err != nil {
+		return nil, err
+	}
+
 	return u, nil
 }
 
@@ -85,8 +89,8 @@ func (u *Uploader) setState(filePath string, s state) {
 
 // IntervalUpload 定时上传
 func (u *Uploader) IntervalUpload(ctx context.Context) error {
-	if u.storage == nil {
-		klog.Info("storage type not set, just ignore")
+	if !config.G.Audit.Enabled || u.storage == nil {
+		blog.Info("audit not enabled or storage type not set, uploader just ignore")
 		return nil
 	}
 
@@ -99,21 +103,21 @@ func (u *Uploader) IntervalUpload(ctx context.Context) error {
 			// 获取退出信号, 全部上传
 			result, err := u.batchUpload(true)
 			if err != nil {
-				klog.Errorf("interval remain upload failed, err: %s", err)
+				blog.Errorf("interval remain upload failed, err: %s", err)
 				return err
 			}
 
-			klog.Infof("interval remain upload done, result: %s", result)
+			blog.Infof("interval remain upload done, result: %s", result)
 			return nil
 
 		case <-timer.C:
 			result, err := u.batchUpload(false)
 			if err != nil {
-				klog.Errorf("interval upload failed, err: %s", err)
+				blog.Errorf("interval upload failed, err: %s", err)
 				continue
 			}
 
-			klog.Infof("interval upload done, result: %s", result)
+			blog.Infof("interval upload done, result: %s", result)
 		}
 	}
 }
@@ -150,6 +154,11 @@ func (u *Uploader) batchUpload(ignoreState bool) (*batchUploadResult, error) {
 	result := &batchUploadResult{}
 
 	err := filepath.Walk(u.dataDir, func(path string, info fs.FileInfo, err error) error {
+		// 目录/文件不存在等
+		if err != nil {
+			return err
+		}
+
 		filePath := path[len(u.dataDir):]
 
 		if info.IsDir() {
@@ -178,7 +187,7 @@ func (u *Uploader) batchUpload(ignoreState bool) (*batchUploadResult, error) {
 
 		ok, e := u.storage.IsExist(ctx, filePath)
 		if e != nil {
-			klog.Errorf("check file exist err: %s", e)
+			blog.Errorf("check file exist err: %s", e)
 			result.failed = append(result.failed, cast.filePath)
 			return nil
 		}
@@ -192,7 +201,7 @@ func (u *Uploader) batchUpload(ignoreState bool) (*batchUploadResult, error) {
 
 		if err := u.upload(cast); err != nil {
 			result.failed = append(result.failed, cast.filePath)
-			klog.Errorf("upload file err: %s", err)
+			blog.Errorf("upload file err: %s", err)
 			return nil
 		}
 
@@ -212,7 +221,7 @@ func (u *Uploader) upload(cast *castFile) error {
 
 	u.setState(cast.filePath, uploadingState)
 	if err := u.storage.UploadFile(ctx, cast.absPath, cast.filePath); err != nil {
-		klog.Errorf("upload file %s failed, err: %s", cast.filePath, err)
+		blog.Errorf("upload file %s failed, err: %s", cast.filePath, err)
 		return err
 	}
 
@@ -220,7 +229,7 @@ func (u *Uploader) upload(cast *castFile) error {
 	// 清理文件
 	cast.clean()
 
-	klog.Infof("upload file %s success", cast.filePath)
+	blog.Infof("upload file %s success", cast.filePath)
 
 	return nil
 }

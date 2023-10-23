@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/klog/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/asciinema"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -54,7 +54,7 @@ func (c *castFile) clean() {
 	}
 
 	if err := os.Remove(c.absPath); err != nil {
-		klog.Error("remove file %s, err: %s", c.absPath, err)
+		blog.Error("remove file %s, err: %s", c.absPath, err)
 	}
 }
 
@@ -173,6 +173,10 @@ func (r *ReplyRecorder) Flush() {
 
 // End 正常退出: 关闭缓存和文件
 func (r *ReplyRecorder) End() {
+	if r == nil {
+		return
+	}
+
 	r.once.Do(func() {
 		// 关闭前将剩余缓冲区数据写入
 		r.Writer.WriteBuff.Flush() // nolint
@@ -180,7 +184,7 @@ func (r *ReplyRecorder) End() {
 		r.uploader.setState(r.cast.filePath, terminationState)
 
 		r.Writer = nil
-		klog.Infof("set file %s state to termination", r.cast.filePath)
+		blog.Infof("set file %s state to termination", r.cast.filePath)
 	})
 }
 
@@ -196,7 +200,7 @@ func RecordOutputEvent(r *ReplyRecorder, p []byte) { // nolint
 	}
 
 	if err := r.Writer.WriteRow(p, asciinema.OutputEvent); err != nil {
-		klog.Errorf("session %s write replay row failed: %s", r.SessionID, err)
+		blog.Errorf("session %s write replay row failed: %s", r.SessionID, err)
 
 		r.End()
 	}
@@ -214,7 +218,7 @@ func RecordResizeEvent(r *ReplyRecorder, p []byte) { // nolint
 	}
 
 	if err := r.Writer.WriteRow(p, asciinema.ResizeEvent); err != nil {
-		klog.Errorf("Session %s write replay row failed: %s", r.SessionID, err)
+		blog.Errorf("Session %s write replay row failed: %s", r.SessionID, err)
 
 		r.End()
 	}

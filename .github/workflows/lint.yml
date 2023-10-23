@@ -59,7 +59,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
-          args: --timeout=30m --issues-exit-code=0 --skip-dirs=test --skip-dirs=pkg/logs/glog
+          args: --timeout=30m --skip-dirs=test --skip-dirs=pkg/logs/glog --out-format=colored-line-number
           working-directory: bcs-services/bcs-bscp
   bcs-cluster-manager:
     name: bcs-cluster-manager
@@ -79,7 +79,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
-          args: --timeout=30m --issues-exit-code=0
+          args: --timeout=30m
           working-directory: bcs-services/bcs-cluster-manager
   bcs-helm-manager:
     name: bcs-helm-manager
@@ -99,7 +99,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
-          args: --timeout=30m --issues-exit-code=0
+          args: --timeout=30m
           working-directory: bcs-services/bcs-helm-manager
   bcs-project-manager:
     name: bcs-project-manager
@@ -119,7 +119,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
-          args: --timeout=30m --issues-exit-code=0
+          args: --timeout=30m --out-format=colored-line-number
           working-directory: bcs-services/bcs-project-manager
   bcs-user-manager:
     name: bcs-user-manager
@@ -139,7 +139,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
-          args: --timeout=30m --issues-exit-code=0
+          args: --timeout=30m
           working-directory: bcs-services/bcs-user-manager
   bcs-cluster-resources:
     name: bcs-cluster-resources
@@ -159,5 +159,5 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
-          args: --timeout=30m --issues-exit-code=0
+          args: --timeout=30m
           working-directory: bcs-services/cluster-resources

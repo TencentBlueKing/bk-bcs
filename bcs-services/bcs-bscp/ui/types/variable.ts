@@ -36,3 +36,9 @@ export interface IVariableCitedByConfigDetailItem {
     path: string;
   }[]
 }
+
+// 批量导入参数
+export interface IVariableImportParams {
+  separator: string;
+  variables: string;
+}

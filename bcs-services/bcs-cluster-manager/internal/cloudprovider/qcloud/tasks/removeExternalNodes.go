@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 )
 
 // ReturnIDCNodeToResourcePoolTask clean IDCNodes in group task for background running
@@ -127,7 +128,7 @@ func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = RemoveExternalNodesFromCluster(ctx, dependInfo, ipList)
+	err = business.RemoveExternalNodesFromCluster(ctx, dependInfo, ipList)
 	if err != nil {
 		blog.Errorf("RemoveExternalNodesFromClusterTask[%s] RemoveExternalNodesFromCluster failed: %v",
 			taskID, err)
@@ -138,7 +139,7 @@ func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
 	blog.Infof("RemoveExternalNodesFromClusterTask[%s] removeNodes[%v]", taskID, ipList)
 
 	// get add external nodes script from cluster
-	script, err := GetClusterExternalNodeScript(ctx, dependInfo)
+	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo)
 	if err != nil {
 		blog.Errorf("RemoveExternalNodesFromClusterTask[%s]: GetClusterExternalNodeScript for cluster[%s] failed, %s",
 			taskID, clusterID, err.Error())

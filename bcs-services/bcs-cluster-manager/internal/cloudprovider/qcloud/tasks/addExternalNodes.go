@@ -25,7 +25,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	qapi "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
@@ -223,9 +223,8 @@ type RecordInstanceToDBOption struct {
 func recordClusterExternalNodeToDB(
 	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, opt *RecordInstanceToDBOption) error {
 	var (
-		cvmCli = qapi.NodeManager{}
-		nodes  = make([]*proto.Node, 0)
-		err    error
+		nodes = make([]*proto.Node, 0)
+		err   error
 	)
 
 	// deviceID Map To InstanceIP
@@ -238,7 +237,7 @@ func recordClusterExternalNodeToDB(
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	err = retry.Do(func() error {
-		nodes, err = cvmCli.ListExternalNodesByIP(opt.InstanceIPs, &cloudprovider.ListNodesOption{
+		nodes, err = business.ListExternalNodesByIP(opt.InstanceIPs, &cloudprovider.ListNodesOption{
 			Common: info.CmOption,
 		})
 		if err != nil {
@@ -342,7 +341,7 @@ func GetExternalNodeScriptTask(taskID string, stepName string) error { // nolint
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	clusterExternalNodes, err := FilterClusterExternalNodesByIPs(ctx, dependInfo, ipList)
+	clusterExternalNodes, err := business.FilterClusterExternalNodesByIPs(ctx, dependInfo, ipList)
 	if err != nil {
 		blog.Errorf("GetExternalNodeScriptTask[%s]: FilterClusterExternalInstanceFromNodesIPs for cluster[%s] failed, %s",
 			taskID, clusterID, err.Error())
@@ -362,7 +361,7 @@ func GetExternalNodeScriptTask(taskID string, stepName string) error { // nolint
 	}
 
 	// get add external nodes script from cluster
-	script, err := GetClusterExternalNodeScript(ctx, dependInfo)
+	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo)
 	if err != nil {
 		blog.Errorf("GetExternalNodeScriptTask[%s]: GetClusterExternalNodeScript for cluster[%s] failed, %s",
 			taskID, clusterID, err.Error())

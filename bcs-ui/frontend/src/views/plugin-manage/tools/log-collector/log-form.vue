@@ -15,8 +15,10 @@
             <template #left>
               <span class="font-bold">{{ $t('logCollector.title.selectRange.text') }}</span>
               <span class="ml-[12px] flex-1 bcs-ellipsis">
-                <i class="bk-icon icon-info-circle text-[#979BA5] text-[14px]"></i>
-                <span class="ml-[4px]">{{ $t('logCollector.title.selectRange.desc') }}</span>
+                <i
+                  class="bk-icon icon-info-circle text-[#979BA5] text-[14px]"
+                  v-bk-tooltips="$t('logCollector.title.selectRange.desc')">
+                </i>
               </span>
             </template>
           </Row>

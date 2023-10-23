@@ -21,6 +21,9 @@
             </bk-link>
           </template>
         </bk-table-column>
+        <template #empty>
+          <table-empty :is-search-empty="isSearchEmpty" @clear="handleClearSearchStr"></table-empty>
+        </template>
       </bk-table>
     </div>
     <div class="action-btn">
@@ -35,6 +38,7 @@ import { getUnNamedVersionAppsBoundByTemplateVersion } from '../../../../api/tem
 import { ICommonQuery } from '../../../../../types/index';
 import { IAppBoundByTemplateDetailItem } from '../../../../../types/template';
 import SearchInput from '../../../../components/search-input.vue';
+import tableEmpty from '../../../../components/table/table-empty.vue';
 
 const router = useRouter();
 
@@ -56,6 +60,7 @@ const pagination = ref({
   limit: 10,
   count: 0,
 });
+const isSearchEmpty = ref(false);
 
 watch(
   () => props.show,
@@ -65,7 +70,7 @@ watch(
       searchStr.value = '';
       getList();
     }
-  },
+  }
 );
 
 const getList = async () => {
@@ -83,7 +88,7 @@ const getList = async () => {
     props.currentTemplateSpace,
     props.config.id,
     props.config.versionId,
-    params,
+    params
   );
   appList.value = res.details;
   pagination.value.count = res.count;
@@ -96,6 +101,7 @@ const getHref = (id: number) => {
 };
 
 const handleSearch = (val: string) => {
+  isSearchEmpty.value = true;
   searchStr.value = val;
   pagination.value.current = 1;
   getList();
@@ -109,6 +115,12 @@ const handlePageLimitChange = (val: number) => {
 
 const close = () => {
   emits('update:show', false);
+};
+
+const handleClearSearchStr = () => {
+  searchStr.value = '';
+  isSearchEmpty.value = false;
+  getList();
 };
 </script>
 <style lang="scss" scoped>

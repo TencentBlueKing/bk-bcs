@@ -58,6 +58,8 @@
   en: "failed to load template: %v"
 - msgID: 值不能为空
   en: "value required"
+- msgID: 键不能为空
+  en: "key required"
 - msgID: "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"
   en: "only lowercase letters, numbers and '-' are supported and must start and end with an alphanumeric"
 - msgID: 仅可包含数字字符与小数点

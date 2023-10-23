@@ -128,3 +128,18 @@ Region: "集群地域信息"
 ClusterVPC: "集群vpc信息"
 BusinessID: "集群所属业务ID"
 NodeOperator: "集群上下架节点操作人"
+
+# kubelet参数
+cpu-manager-policy: "要使用的 CPU 管理器策略"
+eviction-hard: "强制驱逐设置，也具有一系列的阈值，比如memory.available<1Gi，即当节点可用内存低于1Gi时，会立即触发一次pod eviction"
+eviction-max-pod-grace-period: "最大驱逐pod宽限期，停止信号与kill之间的时间差"
+eviction-soft: "软驱逐阈值设置，具有一系列阈值，比如memory.available<1.5Gi时，它不会立即执行pod eviction，而会等待
+eviction-soft-grace-period时间，假如该时间过后，依然还是达到了eviction-soft，则触发一次pod eviction"
+eviction-soft-grace-period: "设置一组软驱逐宽限期（例如，memory.available=1m30s），对应于触发软性 Pod 
+驱逐操作之前软性驱逐阈值所需持续的时间长短"
+feature-gates: "用于alpha特性的特性开关组"
+kube-api-burst: "每秒发送到 apiserver 的突发请求数量上限, 限制最大值为100"
+kube-api-qps: "与 apiserver 通信的每秒查询个数（QPS）, 限制最大值为100"
+max-pods: "此 kubelet 能运行的 Pod 最大数量"
+root-dir: "设置用于管理 kubelet 文件的根目录"
+v: "设置 kubelet 日志级别详细程度的数值"
