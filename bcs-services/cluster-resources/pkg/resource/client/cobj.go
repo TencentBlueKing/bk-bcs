@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -16,13 +14,16 @@ package client
 
 import (
 	"context"
+	"sync"
 
+	"golang.org/x/sync/errgroup"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
@@ -158,6 +159,36 @@ func GetCRDInfo(ctx context.Context, clusterID, crdName string) (map[string]inte
 	}
 
 	return formatter.FormatCRD(manifest), nil
+}
+
+// GetClustersCRDInfo 获取多集群 CRD 基础信息
+func GetClustersCRDInfo(ctx context.Context, clusterIDs []string, crdName string) (map[string]interface{}, error) {
+	errGroup := errgroup.Group{}
+	mux := sync.Mutex{}
+	var result map[string]interface{}
+	for _, v := range clusterIDs {
+		clusterID := v
+		errGroup.Go(func() error {
+			cluterInfo, err := cluster.GetClusterInfo(ctx, clusterID)
+			if err != nil {
+				return err
+			}
+			ctx = context.WithValue(ctx, ctxkey.ClusterKey, cluterInfo)
+			manifest, err := NewCRDCliByClusterID(ctx, clusterID).Get(ctx, crdName, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			mux.Lock()
+			defer mux.Unlock()
+			result = manifest
+			return nil
+		})
+	}
+	if err := errGroup.Wait(); err != nil && result == nil {
+		return nil, err
+	}
+
+	return formatter.FormatCRD(result), nil
 }
 
 // GetCObjManifest 获取自定义资源信息

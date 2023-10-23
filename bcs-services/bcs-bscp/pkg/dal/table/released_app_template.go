@@ -44,6 +44,7 @@ func (r *ReleasedAppTemplate) ResType() string {
 	return "released_app_template"
 }
 
+// RatiList is released app templates
 type RatiList []*ReleasedAppTemplate
 
 // AppID AuditRes interface

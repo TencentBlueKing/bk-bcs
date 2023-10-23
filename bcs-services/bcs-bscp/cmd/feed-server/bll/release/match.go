@@ -89,7 +89,7 @@ type matchedMeta struct {
 
 // matchOneStrategyWithLabels match at most only one strategy with app instance labels.
 func (rs *ReleasedService) matchReleasedGroupWithLabels(
-	kt *kit.Kit,
+	_ *kit.Kit,
 	groups []*ptypes.ReleasedGroupCache,
 	meta *types.AppInstanceMeta) (*matchedMeta, error) {
 	// 1. sort released groups by update time

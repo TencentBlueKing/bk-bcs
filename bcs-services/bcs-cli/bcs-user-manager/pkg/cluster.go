@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package pkg
@@ -18,18 +17,17 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pkg/errors"
-
 	userManagerModels "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
+	"github.com/pkg/errors"
 )
 
 const (
-	createClusterUrl       = "/v1/clusters"
+	createClusterUrl       = "/v1/clusters"                    // nolint
 	createRegisterTokenUrl = "/v1/clusters/%s/register_tokens" // nolint
-	getRegisterTokenUrl    = "/v1/clusters/%s/register_tokens"
-	updateCredentialsUrl   = "/v1/clusters/%s/credentials"
-	getCredentialsUrl      = "/v1/clusters/%s/credentials"
-	listCredentialsUrl     = "/v1/clusters/credentials"
+	getRegisterTokenUrl    = "/v1/clusters/%s/register_tokens" // nolint
+	updateCredentialsUrl   = "/v1/clusters/%s/credentials"     // nolint
+	getCredentialsUrl      = "/v1/clusters/%s/credentials"     // nolint
+	listCredentialsUrl     = "/v1/clusters/credentials"        // nolint
 )
 
 // CreateClusterForm request form for create cluster

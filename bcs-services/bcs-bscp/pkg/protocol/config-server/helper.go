@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbcs provides config server core protocol struct and convert functions.
 package pbcs
 
 import (

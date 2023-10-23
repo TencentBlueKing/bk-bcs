@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbcommit provides commit core protocol struct and convert functions.
 package pbcommit
 
 import (
@@ -32,7 +33,7 @@ func (m *CommitSpec) CommitSpec() *table.CommitSpec {
 }
 
 // PbCommitSpec convert table CommitSpec to pb CommitSpec
-func PbCommitSpec(spec *table.CommitSpec) *CommitSpec {
+func PbCommitSpec(spec *table.CommitSpec) *CommitSpec { //nolint:revive
 	if spec == nil {
 		return nil
 	}
@@ -84,7 +85,7 @@ func (m *CommitAttachment) CommitAttachment() *table.CommitAttachment {
 }
 
 // PbCommitAttachment convert table CommitAttachment to pb CommitAttachment
-func PbCommitAttachment(at *table.CommitAttachment) *CommitAttachment {
+func PbCommitAttachment(at *table.CommitAttachment) *CommitAttachment { //nolint:revive
 	if at == nil {
 		return nil
 	}

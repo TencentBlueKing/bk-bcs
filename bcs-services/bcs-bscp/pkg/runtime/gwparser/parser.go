@@ -10,11 +10,12 @@
  * limitations under the License.
  */
 
+// Package gwparser NOTES
 package gwparser
 
 import (
 	"context"
-	"crypto/md5" // nolint
+	"crypto/md5" //nolint
 	"crypto/rsa"
 	"fmt"
 	"net/http"
@@ -94,7 +95,7 @@ func NewJWTParser(pubKey string) (Parser, error) {
 
 // Fingerprint golang 指纹实现 https://github.com/golang/go/issues/12292
 func (p *jwtParser) Fingerprint() string {
-	hash := md5.Sum([]byte(strings.TrimSpace(p.publicKey))) // nolint
+	hash := md5.Sum([]byte(strings.TrimSpace(p.publicKey))) //nolint
 	out := ""
 	for i := 0; i < 16; i++ {
 		if i > 0 {

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbrg provides released group core protocol struct and convert functions.
 package pbrg
 
 import (

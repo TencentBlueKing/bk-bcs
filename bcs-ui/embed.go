@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package bcsui xxx
 package bcsui
 
 import (
@@ -187,7 +188,7 @@ func (e *EmbedWeb) IndexHandler() http.Handler {
 			data["BCS_API_HOST"] = config.G.Web.Host
 		}
 
-		e.tpl.ExecuteTemplate(w, "index.html", data)
+		_ = e.tpl.ExecuteTemplate(w, "index.html", data)
 	}
 
 	return http.HandlerFunc(fn)
@@ -284,7 +285,7 @@ func (e *EmbedWeb) Render403Handler() http.Handler {
 			"STATIC_URL": path.Join(config.G.Web.RoutePrefix, defaultStaticURL),
 		}
 
-		e.tpl.ExecuteTemplate(w, "403.html", tplData)
+		_ = e.tpl.ExecuteTemplate(w, "403.html", tplData)
 	}
 
 	return http.HandlerFunc(fn)

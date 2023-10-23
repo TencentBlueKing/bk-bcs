@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package project
@@ -26,6 +25,7 @@ const (
 )
 
 // ProjectResourcePath build IAMPath for project resource
+// nolint
 type ProjectResourcePath struct{}
 
 // BuildIAMPath build IAMPath, related resource project
@@ -34,6 +34,7 @@ func (rp ProjectResourcePath) BuildIAMPath() string {
 }
 
 // ProjectResourceNode build project resourceNode
+// nolint
 type ProjectResourceNode struct {
 	IsCreateProject bool
 

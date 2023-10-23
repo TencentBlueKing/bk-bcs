@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -17,7 +15,6 @@ package config
 
 import (
 	"crypto/rsa"
-	"io/ioutil"
 	"net"
 	"os"
 
@@ -39,7 +36,7 @@ var G = &GlobalConf{}
 
 // LoadConf 加载配置信息
 func LoadConf(filePath string) (*ClusterResourcesConf, error) {
-	yamlFile, err := ioutil.ReadFile(filePath)
+	yamlFile, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +166,7 @@ func (c *ClusterResourcesConf) initJWTPubKey() error {
 	if c.Global.Auth.JWTPubKey == "" {
 		return nil
 	}
-	content, err := ioutil.ReadFile(c.Global.Auth.JWTPubKey)
+	content, err := os.ReadFile(c.Global.Auth.JWTPubKey)
 	if err != nil {
 		return err
 	}
@@ -253,8 +250,7 @@ type ClientConf struct {
 
 // SwaggerConf Swagger 配置
 type SwaggerConf struct {
-	Enabled bool   `yaml:"enabled" usage:"是否启用 swagger 服务"`
-	Dir     string `yaml:"dir" usage:"swagger.json 存放目录"`
+	Enabled bool `yaml:"enabled" usage:"是否启用 swagger 服务"`
 }
 
 // LogConf 日志配置
@@ -302,6 +298,7 @@ type GlobalConf struct {
 	BCSAPIGW      BCSAPIGatewayConf `yaml:"bcsApiGW"` // nolint:tagliatelle
 	IAM           IAMConf           `yaml:"iam"`
 	SharedCluster SharedClusterConf `yaml:"sharedCluster"`
+	MultiCluster  MultiClusterConf  `yaml:"multiCluster"`
 }
 
 // AuthConf 认证相关配置
@@ -342,4 +339,9 @@ type IAMConf struct {
 type SharedClusterConf struct {
 	EnabledCObjKinds []string `yaml:"enabledCObjKinds" usage:"共享集群中支持的自定义对象 Kind"`
 	EnabledCRDs      []string `yaml:"enabledCRDs" usage:"共享集群中支持的 CRD"` // nolint:tagliatelle
+}
+
+// MultiClusterConf 多集群相关配置
+type MultiClusterConf struct {
+	EnabledQueryFromStorageKinds []string `yaml:"enabledQueryFromStorageKinds" usage:"支持从 storage 中查询的资源 Kind"`
 }

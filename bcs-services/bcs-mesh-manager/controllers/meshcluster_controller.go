@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package controllers
@@ -17,15 +16,15 @@ import (
 	"context"
 	"time"
 
-	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
-
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
 )
 
 // MeshClusterReconciler reconciles a MeshCluster object
@@ -41,7 +40,7 @@ type MeshClusterReconciler struct {
 }
 
 func (r *MeshClusterReconciler) getMeshClusterManager(mCluster *meshv1.MeshCluster) (*MeshClusterManager, error) {
-	meshCluster, _ := r.MeshClusters[mCluster.GetUUID()]
+	meshCluster := r.MeshClusters[mCluster.GetUUID()]
 	if meshCluster != nil {
 		meshCluster.meshCluster = mCluster.DeepCopy()
 		return meshCluster, nil
@@ -104,7 +103,7 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	// append finalizer
 	if !containsString(MeshCluster.ObjectMeta.Finalizers, finalizer) {
 		MeshCluster.ObjectMeta.Finalizers = append(MeshCluster.ObjectMeta.Finalizers, finalizer)
-		r.Update(context.Background(), MeshCluster)
+		_ = r.Update(context.Background(), MeshCluster)
 	}
 
 	// if mesh installed

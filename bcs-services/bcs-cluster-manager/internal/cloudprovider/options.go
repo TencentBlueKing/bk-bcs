@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cloudprovider
@@ -22,23 +21,23 @@ import (
 
 // task err
 var (
-	//ErrCloudCredentialLost credential lost in option
+	// ErrCloudCredentialLost credential lost in option
 	ErrCloudCredentialLost = errors.New("credential info lost")
-	//ErrCloudRegionLost region information lost in option
+	// ErrCloudRegionLost region information lost in option
 	ErrCloudRegionLost = errors.New("region info lost")
-	//ErrCloudLostResponse lost response information in cloud response
+	// ErrCloudLostResponse lost response information in cloud response
 	ErrCloudLostResponse = errors.New("lost response information")
-	//ErrCloudNoHost no specified instance
+	// ErrCloudNoHost no specified instance
 	ErrCloudNoHost = errors.New("no such host in region")
-	//ErrCloudNoProvider no specified cloud provider
+	// ErrCloudNoProvider no specified cloud provider
 	ErrCloudNoProvider = errors.New("no such cloudprovider")
-	//ErrCloudNotImplemented no implementation
+	// ErrCloudNotImplemented no implementation
 	ErrCloudNotImplemented = errors.New("not implemented")
 	// ErrCloudInitFailed init failed
 	ErrCloudInitFailed = errors.New("failed to init cloud client")
 	// ErrServerIsNil server nil
 	ErrServerIsNil = errors.New("server is nil")
-	//ErrCloudNodeVPCDiffWithClusterResponse for node VPC different cluster VPC
+	// ErrCloudNodeVPCDiffWithClusterResponse for node VPC different cluster VPC
 	ErrCloudNodeVPCDiffWithClusterResponse = "node[%s] VPC is different from cluster VPC"
 )
 
@@ -85,7 +84,7 @@ const (
 
 // CommonOption for all option
 type CommonOption struct {
-	//request ID for tracing
+	// request ID for tracing
 	RequestID string
 
 	// Account fit all cloud AKSK

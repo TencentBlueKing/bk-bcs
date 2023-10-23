@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1
@@ -18,9 +17,10 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	metricTypes "github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
-	metricTypes "github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 )
 
 // Metric xxx
@@ -52,7 +52,7 @@ const (
 
 var (
 	// MetricNotFound xxx
-	MetricNotFound = fmt.Errorf("metric no found")
+	MetricNotFound = fmt.Errorf("metric no found") // nolint
 )
 
 type bcsMetric struct {

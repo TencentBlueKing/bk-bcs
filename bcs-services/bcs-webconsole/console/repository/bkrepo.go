@@ -59,6 +59,33 @@ func (b *bkrepoStorage) UploadFile(ctx context.Context, localFile, filePath stri
 	return nil
 }
 
+// IsExist 是否存在
+func (b *bkrepoStorage) IsExist(ctx context.Context, filePath string) (bool, error) {
+	rawURL := fmt.Sprintf("%s/generic/%s/%s%s", config.G.Repository.Bkrepo.Endpoint,
+		config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo, filePath)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, rawURL, nil)
+	if err != nil {
+		return false, err
+	}
+
+	resp, err := b.client.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNotFound {
+		return false, fmt.Errorf("response status code: %d", resp.StatusCode)
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // ListFile list of files under a bkRepo folder
 func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]string, error) {
 	// 节点详情 https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/node/node.md
@@ -158,7 +185,7 @@ func (b *bkrepoStorage) DownloadFile(ctx context.Context, filePath string) (io.R
 
 func newBkRepoStorage() (Provider, error) {
 	transport := &bkrepoAuthTransport{
-		Username:  config.G.Repository.Bkrepo.UserName,
+		Username:  config.G.Repository.Bkrepo.Username,
 		Password:  config.G.Repository.Bkrepo.Password,
 		Transport: http.DefaultTransport,
 	}

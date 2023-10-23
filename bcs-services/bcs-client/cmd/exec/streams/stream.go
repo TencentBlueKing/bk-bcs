@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package streams
@@ -35,7 +34,7 @@ func (s *commonStream) IsTerminal() bool {
 // RestoreTerminal restores normal mode to the terminal
 func (s *commonStream) RestoreTerminal() {
 	if s.state != nil {
-		term.RestoreTerminal(s.fd, s.state)
+		_ = term.RestoreTerminal(s.fd, s.state)
 	}
 }
 

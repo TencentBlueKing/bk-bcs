@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bkiam
@@ -21,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 )
@@ -71,9 +71,9 @@ type Client struct {
 
 	systemID     string
 	scopeID      string
-	actionID     string
-	resourceType string
-	resourceID   string
+	actionID     string // nolint
+	resourceType string // nolint
+	resourceID   string // nolint
 
 	client *httpclient.HttpClient
 }

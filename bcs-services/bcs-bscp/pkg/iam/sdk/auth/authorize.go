@@ -108,7 +108,7 @@ func (a *Authorize) authorizeBatch(ctx context.Context, opts *client.AuthBatchOp
 			if exact {
 				authorized, err = a.calculatePolicy(ctx, resources, policy)
 			} else {
-				authorized, err = a.calculateAnyPolicy(ctx, resources, policy)
+				authorized = a.calculateAnyPolicy(ctx, resources, policy)
 			}
 			if err != nil {
 				hitError = err
@@ -237,6 +237,7 @@ func (a *Authorize) ListAuthorizedInstances(ctx context.Context, opts *client.Au
 	return a.countPolicy(ctx, policy, resourceType)
 }
 
+// GrantResourceCreatorAction grant resource creator all the actions of the resource.
 func (a *Authorize) GrantResourceCreatorAction(ctx context.Context,
 	opts *client.GrantResourceCreatorActionOption) error {
 

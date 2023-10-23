@@ -8,23 +8,23 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package create xxx
 package create
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-
 	"github.com/urfave/cli"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 )
 
 // NewCreateCommand sub command create registration
 func NewCreateCommand() cli.Command {
 	return cli.Command{
-		Name:  "create",
-		Usage: "create new application/process/service/secret/configmap/deployment/user/meshcluster/logcollectiontask/datacleanstrategy/dataid",
+		Name: "create",
+		Usage: "create new application/process/service/secret/configmap/deployment/user/" +
+			"meshcluster/logcollectiontask/datacleanstrategy/dataid",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "from-file, f",
@@ -35,8 +35,9 @@ func NewCreateCommand() cli.Command {
 				Usage: "Cluster ID",
 			},
 			cli.StringFlag{
-				Name:  "type, t",
-				Usage: "Create type, value can be app/service/secret/configmap/deployment/user/daemonset/logcollectiontask/datacleanstrategy/dataid",
+				Name: "type, t",
+				Usage: "Create type, value can be app/service/secret/configmap/deployment/user/" +
+					"daemonset/logcollectiontask/datacleanstrategy/dataid",
 			},
 			cli.StringFlag{
 				Name:  "usertype",

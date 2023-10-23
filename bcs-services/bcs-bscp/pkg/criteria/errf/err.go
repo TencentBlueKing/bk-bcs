@@ -23,13 +23,13 @@ var (
 	// ErrCPSNotFound is error when the current published strategies not found in db.
 	ErrCPSNotFound = errors.New("current published strategies not found")
 
-	// ErrPermissionDenied
+	// ErrPermissionDenied is error when the user has no permission to do this operation.
 	ErrPermissionDenied = errors.New("no permission")
 
 	// ErrCredentialInvalid is error when the credential not found in db.
 	ErrCredentialInvalid = errors.New("invalid credential")
 
-	// ErrAppInstanceNotMatchedRelease
+	// ErrAppInstanceNotMatchedRelease is error when the app instance can not match any release.
 	ErrAppInstanceNotMatchedRelease = errors.New("this app instance can not match any release")
 
 	// ErrFileContentNotFound is error when the file content not found in file provider.

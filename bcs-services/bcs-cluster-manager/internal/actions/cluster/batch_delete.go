@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package cluster xxx
 package cluster
 
 import (
@@ -80,10 +81,12 @@ func (ba *BatchDeleteClusterNodesAction) validate() error {
 		return err
 	}
 
+	// chekc node ip list
 	if ba.req.NodeIPs == "" && ba.req.VirtualNodeIDs == "" {
 		return fmt.Errorf("BatchDeleteClusterNodesAction paras empty")
 	}
 
+	// check node ip list
 	if len(strings.Split(ba.req.NodeIPs, ",")) == 0 && len(strings.Split(ba.req.VirtualNodeIDs, ",")) == 0 {
 		return fmt.Errorf("BatchDeleteClusterNodesAction paras empty")
 	}
@@ -141,6 +144,7 @@ func (ba *BatchDeleteClusterNodesAction) getClusterAndNodes() error {
 
 	blog.Infof("BatchDeleteClusterNodesAction[%s] getClusterAndNodes inDbNodes[%+v] notInDbNodes[%+v]",
 		ba.req.ClusterID, inDbNodes, notInDbNodes)
+	// handle notInDbNodes
 	for i := range notInDbNodes {
 		ba.nodes = append(ba.nodes, &cmproto.Node{
 			InnerIP:   notInDbNodes[i],
@@ -151,6 +155,7 @@ func (ba *BatchDeleteClusterNodesAction) getClusterAndNodes() error {
 	return nil
 }
 
+// getClusterVirtualNodes get cluster virtual nodes
 func (ba *BatchDeleteClusterNodesAction) getClusterVirtualNodes() error {
 	if ba.req.VirtualNodeIDs == "" {
 		return nil
@@ -188,7 +193,8 @@ func (ba *BatchDeleteClusterNodesAction) getClusterVirtualNodes() error {
 	return nil
 }
 
-func (ba *BatchDeleteClusterNodesAction) sortNeedToDeleteNodes() error {
+// sortNodesAndHandleTask sort nodes and handle task
+func (ba *BatchDeleteClusterNodesAction) sortNeedToDeleteNodes() error { // nolint
 	err := ba.getClusterAndNodes()
 	if err != nil {
 		return err
@@ -198,6 +204,7 @@ func (ba *BatchDeleteClusterNodesAction) sortNeedToDeleteNodes() error {
 		return err
 	}
 
+	// init map
 	var (
 		normalNodes    = make([]nodeData, 0)
 		externalNodes  = make(map[string][]nodeData, 0)
@@ -213,15 +220,16 @@ func (ba *BatchDeleteClusterNodesAction) sortNeedToDeleteNodes() error {
 			continue
 		}
 
-		group, err := ba.model.GetNodeGroup(context.Background(), ba.nodes[i].GetNodeGroupID())
-		if err != nil {
-			blog.Errorf("BatchDeleteClusterNodesAction sortNodesAndHandleTask failed: %v", err)
+		// get node group
+		group, nodeErr := ba.model.GetNodeGroup(context.Background(), ba.nodes[i].GetNodeGroupID())
+		if nodeErr != nil {
+			blog.Errorf("BatchDeleteClusterNodesAction sortNodesAndHandleTask failed: %v", nodeErr)
 			continue
 		}
 
 		// 手动上下架第三方节点
 		if group.GetNodeGroupType() == common.External.String() && group.GetAutoScaling().GetMaxSize() == 0 {
-			nodes, _ := externalNodes[group.GetNodeGroupID()]
+			nodes := externalNodes[group.GetNodeGroupID()]
 			if nodes == nil {
 				externalNodes[group.GetNodeGroupID()] = make([]nodeData, 0)
 			}
@@ -234,6 +242,7 @@ func (ba *BatchDeleteClusterNodesAction) sortNeedToDeleteNodes() error {
 			continue
 		}
 
+		// init nodeGroupNodes
 		if nodeGroupNodes[group.GetNodeGroupID()] == nil {
 			nodeGroupNodes[group.GetNodeGroupID()] = make([]nodeData, 0)
 		}
@@ -252,29 +261,32 @@ func (ba *BatchDeleteClusterNodesAction) sortNeedToDeleteNodes() error {
 			ba.virtualNodes[i].ClusterID, ba.virtualNodes[i].NodeGroupID)
 
 		if ba.virtualNodes[i].NodeGroupID == "" {
-			err = ba.model.DeleteClusterNode(ba.ctx, ba.req.ClusterID, ba.virtualNodes[i].NodeID)
+			_ = ba.model.DeleteClusterNode(ba.ctx, ba.req.ClusterID, ba.virtualNodes[i].NodeID)
 			blog.Infof("BatchDeleteClusterNodesAction virtualNodes[%s:%s:%s] nodeGroup empty",
 				ba.virtualNodes[i].NodeID, ba.virtualNodes[i].ClusterID, ba.virtualNodes[i].NodeGroupID)
 			continue
 		}
 
+		// check virtual node status
 		if ba.virtualNodes[i].Status == common.StatusInitialization ||
 			ba.virtualNodes[i].Status == common.StatusResourceApplying {
 			blog.Infof("BatchDeleteClusterNodesAction virtualNodes[%s:%s:%s] status[%s], not allow delete",
-				ba.virtualNodes[i].NodeID, ba.virtualNodes[i].ClusterID, ba.virtualNodes[i].NodeGroupID, ba.virtualNodes[i].Status)
+				ba.virtualNodes[i].NodeID, ba.virtualNodes[i].ClusterID, ba.virtualNodes[i].NodeGroupID,
+				ba.virtualNodes[i].Status)
 			continue
 		}
 
 		if virtualNodes[ba.virtualNodes[i].GetNodeGroupID()] == nil {
 			virtualNodes[ba.virtualNodes[i].GetNodeGroupID()] = make([]nodeData, 0)
 		}
-		virtualNodes[ba.virtualNodes[i].GetNodeGroupID()] = append(virtualNodes[ba.virtualNodes[i].GetNodeGroupID()], nodeData{
-			clusterID:   ba.virtualNodes[i].ClusterID,
-			innerIp:     ba.virtualNodes[i].InnerIP,
-			nodeId:      ba.virtualNodes[i].NodeID,
-			nodeGroupID: ba.virtualNodes[i].GetNodeGroupID(),
-			isExternal:  false,
-		})
+		virtualNodes[ba.virtualNodes[i].GetNodeGroupID()] = append(virtualNodes[ba.virtualNodes[i].GetNodeGroupID()],
+			nodeData{
+				clusterID:   ba.virtualNodes[i].ClusterID,
+				innerIp:     ba.virtualNodes[i].InnerIP,
+				nodeId:      ba.virtualNodes[i].NodeID,
+				nodeGroupID: ba.virtualNodes[i].GetNodeGroupID(),
+				isExternal:  false,
+			})
 	}
 
 	blog.Infof("BatchDeleteClusterNodesAction sortNodesAndHandleTask normal[%+v] external[%+v] "+
@@ -288,6 +300,7 @@ func (ba *BatchDeleteClusterNodesAction) sortNeedToDeleteNodes() error {
 	return nil
 }
 
+// getNodeDataIPList get node data ip list
 func getNodeDataIPList(nodes []nodeData) []string {
 	ipList := make([]string, 0)
 	for i := range nodes {
@@ -297,6 +310,7 @@ func getNodeDataIPList(nodes []nodeData) []string {
 	return ipList
 }
 
+// handleGroupNodes handle group nodes
 func (ba *BatchDeleteClusterNodesAction) handleGroupNodes(ipList []string, groupID string) {
 	var (
 		cleanNodesRequest = &cmproto.CleanNodesInGroupRequest{
@@ -328,9 +342,9 @@ func (ba *BatchDeleteClusterNodesAction) handleGroupNodes(ipList []string, group
 		Message:     cleanNodesResp.GetMessage(),
 		TaskID:      cleanNodesResp.Data.GetTaskID(),
 	})
-	return
 }
 
+// handleManualNodes handle manual nodes
 func (ba *BatchDeleteClusterNodesAction) handleManualNodes(ipList []string, groupID string, external bool) {
 	var (
 		deleteNodesRequest = &cmproto.DeleteNodesRequest{
@@ -344,6 +358,7 @@ func (ba *BatchDeleteClusterNodesAction) handleManualNodes(ipList []string, grou
 		deleteNodesResp = &cmproto.DeleteNodesResponse{}
 	)
 
+	// delete nodes
 	NewDeleteNodesAction(ba.model).Handle(ba.ctx, deleteNodesRequest, deleteNodesResp)
 	if deleteNodesResp.Code != 0 || !deleteNodesResp.Result {
 		ba.resp.Data = append(ba.resp.Data, &cmproto.BatchNodesStatus{
@@ -364,9 +379,9 @@ func (ba *BatchDeleteClusterNodesAction) handleManualNodes(ipList []string, grou
 		Message:     deleteNodesResp.GetMessage(),
 		TaskID:      deleteNodesResp.Data.GetTaskID(),
 	})
-	return
 }
 
+// handleVirtualNodes handle virtual nodes
 func (ba *BatchDeleteClusterNodesAction) handleVirtualNodes() {
 	if len(ba.virtualNodesMap) == 0 {
 		return
@@ -386,12 +401,14 @@ func (ba *BatchDeleteClusterNodesAction) handleVirtualNodes() {
 		for i := range groupNodes {
 			err = ba.model.DeleteClusterNode(ba.ctx, ba.req.ClusterID, groupNodes[i].nodeId)
 			if err != nil {
-				blog.Errorf("handleVirtualNodes[%s] DeleteClusterNode[%s] failed: %v", groupID, groupNodes[i].nodeId)
+				blog.Errorf("handleVirtualNodes[%s] DeleteClusterNode[%s] failed: %v", groupID, groupNodes[i].nodeId,
+					err)
 			}
 		}
 	}
 }
 
+// handleNormalNodes handle normal nodes
 func (ba *BatchDeleteClusterNodesAction) handleNormalNodes() {
 	if len(ba.normalNodes) == 0 {
 		return
@@ -405,6 +422,7 @@ func (ba *BatchDeleteClusterNodesAction) handleNormalNodes() {
 	ba.handleManualNodes(ipList, "", false)
 }
 
+// handleExternalNodes handle external nodes
 func (ba *BatchDeleteClusterNodesAction) handleExternalNodes() {
 	if len(ba.externalNodes) == 0 {
 		return
@@ -418,6 +436,7 @@ func (ba *BatchDeleteClusterNodesAction) handleExternalNodes() {
 	}
 }
 
+// handleNodeGroupNodes handle node group nodes
 func (ba *BatchDeleteClusterNodesAction) handleNodeGroupNodes() {
 	if len(ba.nodeGroupNodes) == 0 {
 		return
@@ -461,5 +480,4 @@ func (ba *BatchDeleteClusterNodesAction) Handle(ctx context.Context, req *cmprot
 	ba.handleNodeGroupNodes()
 
 	ba.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

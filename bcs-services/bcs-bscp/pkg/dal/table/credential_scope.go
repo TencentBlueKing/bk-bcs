@@ -80,8 +80,8 @@ func (c *CredentialScope) ValidateCreate() error {
 
 // CredentialScopeSpec defines credential scope's Spec
 type CredentialScopeSpec struct {
-	CredentialScope credential.CredentialScope `json:"credential_scope" gorm:"column:credential_scope"`
-	ExpiredAt       time.Time                  `json:"expired_at" gorm:"column:expired_at"`
+	CredentialScope credential.Scope `json:"credential_scope" gorm:"column:credential_scope"`
+	ExpiredAt       time.Time        `json:"expired_at" gorm:"column:expired_at"`
 }
 
 // CredentialScopeAttachment defines the credential scope attachments.

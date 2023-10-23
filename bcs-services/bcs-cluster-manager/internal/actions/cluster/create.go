@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -43,7 +44,7 @@ type CreateAction struct {
 	locker       lock.DistributedLock
 	model        store.ClusterManagerModel
 	cloud        *cmproto.Cloud
-	nodeTemplate *cmproto.NodeTemplate
+	nodeTemplate *cmproto.NodeTemplate // nolint
 	task         *cmproto.Task
 	req          *cmproto.CreateClusterReq
 	resp         *cmproto.CreateClusterResp
@@ -147,6 +148,8 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		CreateTime:              createTime,
 		UpdateTime:              createTime,
 		Status:                  common.StatusInitialization,
+		Area:                    ca.req.Area,
+		Module:                  ca.req.Module,
 	}
 
 	// set cloud default values
@@ -179,7 +182,7 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 	return cls, err
 }
 
-func (ca *CreateAction) checkClusterWorkerNodes(cls *cmproto.Cluster) error {
+func (ca *CreateAction) checkClusterWorkerNodes(cls *cmproto.Cluster) error { // nolint
 	for _, nodeIP := range ca.req.Nodes {
 		n, err := ca.transNodeIPToCloudNode(nodeIP)
 		if err != nil {
@@ -327,7 +330,7 @@ func (ca *CreateAction) setResp(code uint32, msg string) {
 	ca.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-func (ca *CreateAction) getCloudInfo(ctx context.Context, req *cmproto.CreateClusterReq) error {
+func (ca *CreateAction) getCloudInfo(ctx context.Context, req *cmproto.CreateClusterReq) error { // nolint
 	cloud, err := actions.GetCloudByCloudID(ca.model, req.Provider)
 	if err != nil {
 		blog.Errorf("get cluster %s relative Cloud %s failed, %s", req.ClusterID, req.CloudID, err.Error())
@@ -414,8 +417,8 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 		return
 	}
 
-	ca.locker.Lock(createClusterIDLockKey, []lock.LockOption{lock.LockTTL(time.Second * 10)}...)
-	defer ca.locker.Unlock(createClusterIDLockKey)
+	ca.locker.Lock(createClusterIDLockKey, []lock.LockOption{lock.LockTTL(time.Second * 10)}...) // nolint
+	defer ca.locker.Unlock(createClusterIDLockKey)                                               // nolint
 
 	// create validate cluster
 	if err = ca.validate(); err != nil {
@@ -468,7 +471,6 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 	ca.resp.Data = cls
 	ca.resp.Task = ca.task
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Cluster) error {
@@ -482,7 +484,7 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 			ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
 			return err
 		}
-		//other db operation error
+		// other db operation error
 		ca.resp.Data = cls
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return err

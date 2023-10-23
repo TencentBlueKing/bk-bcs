@@ -4,20 +4,21 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package store xxx
 package store
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
 
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/account"
@@ -86,7 +87,7 @@ type ClusterManagerModel interface {
 	ListClusterCredential(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
 		[]types.ClusterCredential, error)
 
-	//TKE CIDR information storage management
+	// TKE CIDR information storage management
 	CreateTkeCidr(ctx context.Context, cidr *types.TkeCidr) error
 	UpdateTkeCidr(ctx context.Context, cidr *types.TkeCidr) error
 	DeleteTkeCidr(ctx context.Context, vpc string, cidr string) error
@@ -94,35 +95,35 @@ type ClusterManagerModel interface {
 	ListTkeCidr(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.TkeCidr, error)
 	ListTkeCidrCount(ctx context.Context, opt *options.ListOption) ([]types.TkeCidrCount, error)
 
-	//project information storage management
+	// project information storage management
 	CreateProject(ctx context.Context, project *types.Project) error
 	UpdateProject(ctx context.Context, project *types.Project) error
 	DeleteProject(ctx context.Context, projectID string) error
 	GetProject(ctx context.Context, projectID string) (*types.Project, error)
 	ListProject(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Project, error)
 
-	//cloud information storage management
+	// cloud information storage management
 	CreateCloud(ctx context.Context, cloud *types.Cloud) error
 	UpdateCloud(ctx context.Context, cloud *types.Cloud) error
 	DeleteCloud(ctx context.Context, cloudID string) error
 	GetCloud(ctx context.Context, cloudID string) (*types.Cloud, error)
 	ListCloud(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Cloud, error)
 
-	//cloud vpc information storage manager
+	// cloud vpc information storage manager
 	CreateCloudVPC(ctx context.Context, vpc *types.CloudVPC) error
 	UpdateCloudVPC(ctx context.Context, vpc *types.CloudVPC) error
 	DeleteCloudVPC(ctx context.Context, cloudID string, vpcID string) error
 	ListCloudVPC(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.CloudVPC, error)
 	GetCloudVPC(ctx context.Context, cloudID, vpcID string) (*types.CloudVPC, error)
 
-	//cloud account info storage manager
+	// cloud account info storage manager
 	CreateCloudAccount(ctx context.Context, account *types.CloudAccount) error
 	UpdateCloudAccount(ctx context.Context, account *types.CloudAccount, skipEncrypt bool) error
 	DeleteCloudAccount(ctx context.Context, cloudID string, accountID string) error
 	ListCloudAccount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.CloudAccount, error)
 	GetCloudAccount(ctx context.Context, cloudID, accountID string, skipDecrypt bool) (*types.CloudAccount, error)
 
-	//cloud nodeTemplate info storage management
+	// cloud nodeTemplate info storage management
 	CreateNodeTemplate(ctx context.Context, template *types.NodeTemplate) error
 	UpdateNodeTemplate(ctx context.Context, template *types.NodeTemplate) error
 	DeleteNodeTemplate(ctx context.Context, projectID string, templateID string) error
@@ -130,7 +131,7 @@ type ClusterManagerModel interface {
 	GetNodeTemplate(ctx context.Context, projectID, templateID string) (*types.NodeTemplate, error)
 	GetNodeTemplateByID(ctx context.Context, templateID string) (*types.NodeTemplate, error)
 
-	//nodegroup information storage management
+	// nodegroup information storage management
 	CreateNodeGroup(ctx context.Context, group *types.NodeGroup) error
 	UpdateNodeGroup(ctx context.Context, group *types.NodeGroup) error
 	DeleteNodeGroup(ctx context.Context, groupID string) error
@@ -138,7 +139,7 @@ type ClusterManagerModel interface {
 	ListNodeGroup(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.NodeGroup, error)
 	DeleteNodeGroupByClusterID(ctx context.Context, clusterID string) error
 
-	//task information storage management
+	// task information storage management
 	CreateTask(ctx context.Context, task *types.Task) error
 	UpdateTask(ctx context.Context, task *types.Task) error
 	PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error
@@ -155,19 +156,21 @@ type ClusterManagerModel interface {
 	ListAggreOperationLog(ctx context.Context, condSrc, condDst []bson.E,
 		opt *options.ListOption) ([]types.TaskOperationLog, error)
 
-	//project information storage management
+	// project information storage management
 	CreateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error
 	UpdateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error
 	DeleteAutoScalingOption(ctx context.Context, clusterID string) error
 	GetAutoScalingOption(ctx context.Context, clusterID string) (*types.ClusterAutoScalingOption, error)
-	ListAutoScalingOption(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.ClusterAutoScalingOption, error)
+	ListAutoScalingOption(ctx context.Context, cond *operator.Condition,
+		opt *options.ListOption) ([]types.ClusterAutoScalingOption, error)
 
 	// cloudModuleFlag storage management
 	CreateCloudModuleFlag(ctx context.Context, flag *types.CloudModuleFlag) error
 	UpdateCloudModuleFlag(ctx context.Context, flag *types.CloudModuleFlag) error
 	DeleteCloudModuleFlag(ctx context.Context, cloudID, version, module, flag string) error
 	GetCloudModuleFlag(ctx context.Context, cloudID, version, module, flag string) (*types.CloudModuleFlag, error)
-	ListCloudModuleFlag(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.CloudModuleFlag, error)
+	ListCloudModuleFlag(ctx context.Context, cond *operator.Condition,
+		opt *options.ListOption) ([]types.CloudModuleFlag, error)
 }
 
 // ModelSet a set of client

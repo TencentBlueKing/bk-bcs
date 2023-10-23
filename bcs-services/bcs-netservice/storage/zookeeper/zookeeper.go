@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package zookeeper xxx
@@ -19,13 +18,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
-
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
 )
 
 var (
@@ -246,6 +244,7 @@ func (zks *zkStorage) RegisterAndWatch(path string, data []byte) error {
 	go func() {
 		tick := time.NewTicker(20 * time.Second)
 		defer tick.Stop()
+		// nolint
 		for {
 			select {
 			case <-tick.C:

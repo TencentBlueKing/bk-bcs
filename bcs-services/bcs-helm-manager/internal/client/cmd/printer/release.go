@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -16,13 +16,13 @@ import (
 	"os"
 	"strconv"
 
-	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
 	"github.com/olekukonko/tablewriter"
+
+	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 // PrintReleaseInTable print release data in table format
-func PrintReleaseInTable(wide bool, release *helmmanager.ReleaseListData) {
+func PrintReleaseInTable(wide bool, release *helmmanager.ReleaseListData) { // nolint
 	if release == nil {
 		return
 	}
@@ -30,9 +30,6 @@ func PrintReleaseInTable(wide bool, release *helmmanager.ReleaseListData) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
 		r := []string{"NAME", "NAMESPACE", "REVISION", "UPDATED", "STATUS", "CHART", "CHART_VERSION", "APP_VERSION"}
-		if wide {
-			// nothing to do
-		}
 
 		return r
 	}())
@@ -59,10 +56,6 @@ func PrintReleaseInTable(wide bool, release *helmmanager.ReleaseListData) {
 				rl.GetChart(),
 				rl.GetChartVersion(),
 				rl.GetAppVersion(),
-			}
-
-			if wide {
-				// nothing to do
 			}
 
 			return r
@@ -122,7 +115,7 @@ func PrintReleaseDetailInTable(wide bool, release []*helmmanager.ReleaseDetail) 
 }
 
 // PrintReleaseHistoryInTable print release history data in table format
-func PrintReleaseHistoryInTable(wide bool, release []*helmmanager.ReleaseHistory) {
+func PrintReleaseHistoryInTable(wide bool, release []*helmmanager.ReleaseHistory) { // nolint
 	if release == nil {
 		return
 	}
@@ -130,9 +123,6 @@ func PrintReleaseHistoryInTable(wide bool, release []*helmmanager.ReleaseHistory
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
 		r := []string{"REVISION", "UPDATED", "STATUS", "CHART", "CHART_VERSION", "APP_VERSION", "DESCRIPTION"}
-		if wide {
-			// nothing to do
-		}
 
 		return r
 	}())
@@ -158,10 +148,6 @@ func PrintReleaseHistoryInTable(wide bool, release []*helmmanager.ReleaseHistory
 				rl.GetChartVersion(),
 				rl.GetAppVersion(),
 				rl.GetDescription(),
-			}
-
-			if wide {
-				// nothing to do
 			}
 
 			return r

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package master
@@ -21,12 +20,12 @@ import (
 	"strings"
 	"time"
 
+	zktype "github.com/samuel/go-zookeeper/zk"
+	"golang.org/x/net/context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
-
-	zktype "github.com/samuel/go-zookeeper/zk"
-	"golang.org/x/net/context"
 )
 
 // NewZookeeperMaster create zk master
@@ -103,7 +102,7 @@ func (zk *ZookeeperMaster) Clean() error {
 	// delete self node
 	zk.exitCancel()
 	if len(zk.selfPath) > 0 || zk.client != nil {
-		zk.client.Del(zk.selfPath, 0)
+		_ = zk.client.Del(zk.selfPath, 0)
 	}
 	zk.isMaster = false
 	return nil
@@ -273,7 +272,7 @@ func (zk *ZookeeperMaster) healthLoop() {
 			blog.Infof("zookeeper master healthy Loop asked exit.")
 			return
 		case <-masterTick.C:
-			if zk.healthy == false {
+			if !zk.healthy {
 				blog.Warnf("****************master check loop exit, arise this loop*****************")
 				go zk.masterLoop()
 			}

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package utils xxx
@@ -18,34 +17,34 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
-	"github.com/opentracing/opentracing-go"
+	opentrace "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/log"
+	tracinglog "github.com/opentracing/opentracing-go/log"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // StartSpanFromContext starts and returns a Span with `operationName`, using any Span found within `ctx`
 // as a ChildOfRef. If no such parent could be found, StartSpanFromContext creates a root (parentless) Span.
 func StartSpanFromContext(ctx context.Context, operationName string,
-	opts ...opentracing.StartSpanOption) (opentracing.Span, context.Context) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, operationName, opts...)
+	opts ...opentrace.StartSpanOption) (opentrace.Span, context.Context) {
+	span, ctx := opentrace.StartSpanFromContext(ctx, operationName, opts...)
 
 	return span, ctx
 }
 
 // WithSpanForContext returns a new `context.Context` that holds a reference to the span
-func WithSpanForContext(ctx context.Context, span opentracing.Span) context.Context {
-	return opentracing.ContextWithSpan(ctx, span)
+func WithSpanForContext(ctx context.Context, span opentrace.Span) context.Context {
+	return opentrace.ContextWithSpan(ctx, span)
 }
 
 // GetSpanFromContext returns the `Span` previously associated with `ctx`, or `nil` if no such `Span` could be found.
-func GetSpanFromContext(ctx context.Context) opentracing.Span {
-	return opentracing.SpanFromContext(ctx)
+func GetSpanFromContext(ctx context.Context) opentrace.Span {
+	return opentrace.SpanFromContext(ctx)
 }
 
 // NewWrapHTTPClientSpan for init WrapHTTPClientSpan
-func NewWrapHTTPClientSpan(ctx context.Context, span opentracing.Span, request *http.Request) *WrapHTTPClientSpan {
+func NewWrapHTTPClientSpan(ctx context.Context, span opentrace.Span, request *http.Request) *WrapHTTPClientSpan {
 	return &WrapHTTPClientSpan{
 		ctx:     ctx,
 		span:    span,
@@ -56,7 +55,7 @@ func NewWrapHTTPClientSpan(ctx context.Context, span opentracing.Span, request *
 // WrapHTTPClientSpan wrap ctx and span for http client request
 type WrapHTTPClientSpan struct {
 	ctx     context.Context
-	span    opentracing.Span
+	span    opentrace.Span
 	request *http.Request
 }
 
@@ -70,7 +69,7 @@ func (wp *WrapHTTPClientSpan) GetRootContext() context.Context {
 }
 
 // GetRootSpan get root span
-func (wp *WrapHTTPClientSpan) GetRootSpan() opentracing.Span {
+func (wp *WrapHTTPClientSpan) GetRootSpan() opentrace.Span {
 	if wp == nil {
 		return nil
 	}
@@ -79,7 +78,7 @@ func (wp *WrapHTTPClientSpan) GetRootSpan() opentracing.Span {
 }
 
 // SetSpan set request span
-func (wp *WrapHTTPClientSpan) SetSpan(span opentracing.Span) {
+func (wp *WrapHTTPClientSpan) SetSpan(span opentrace.Span) {
 	if wp == nil {
 		return
 	}
@@ -125,8 +124,8 @@ func (wp *WrapHTTPClientSpan) InjectTracerIntoHeader() error {
 		return nil
 	}
 
-	err := wp.span.Tracer().Inject(wp.span.Context(), opentracing.HTTPHeaders,
-		opentracing.HTTPHeadersCarrier(wp.request.Header))
+	err := wp.span.Tracer().Inject(wp.span.Context(), opentrace.HTTPHeaders,
+		opentrace.HTTPHeadersCarrier(wp.request.Header))
 	if err != nil {
 		blog.Errorf("InjectTracerIntoHeader failed: %v", err)
 		return err
@@ -136,7 +135,7 @@ func (wp *WrapHTTPClientSpan) InjectTracerIntoHeader() error {
 }
 
 // SetRequestSpanResult set response result into span
-func (wp *WrapHTTPClientSpan) SetRequestSpanResult(err error, response *http.Response, fields ...log.Field) {
+func (wp *WrapHTTPClientSpan) SetRequestSpanResult(err error, response *http.Response, fields ...tracinglog.Field) {
 	if wp == nil {
 		return
 	}
@@ -159,7 +158,7 @@ func (wp *WrapHTTPClientSpan) SetRequestSpanTags(key string, value interface{}) 
 }
 
 // SetRequestSpanLogs set common logs
-func (wp *WrapHTTPClientSpan) SetRequestSpanLogs(fields ...log.Field) {
+func (wp *WrapHTTPClientSpan) SetRequestSpanLogs(fields ...tracinglog.Field) {
 	if wp == nil {
 		return
 	}

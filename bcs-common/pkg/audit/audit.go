@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package audit
@@ -199,6 +198,8 @@ func (r *Recorder) Do() error {
 			Status:       r.result.Status,
 			Username:     r.ctx.Username,
 			Description:  r.result.ResultContent,
+			SourceIP:     r.ctx.SourceIP,
+			UserAgent:    r.ctx.UserAgent,
 			Extra:        extra,
 		})
 	}
@@ -240,7 +241,7 @@ type ActionResult struct {
 }
 
 // AuditData is the data to be recorded.
-type AuditData struct {
+type AuditData struct { // nolint
 	EventContent  string
 	ActionID      string
 	RequestID     string

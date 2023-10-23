@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package tracing xxx
 package tracing
 
 import (
@@ -18,7 +18,6 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -61,7 +60,7 @@ func (o optionFunc) apply(c *Config) {
 func NewConfig(opts ...Option) *Config {
 	c := &Config{
 		Propagators:    otel.GetTextMapPropagator(),
-		MeterProvider:  global.GetMeterProvider(),
+		MeterProvider:  otel.GetMeterProvider(),
 		Filters:        []Filter{},
 		TracerProvider: otel.GetTracerProvider(),
 	}

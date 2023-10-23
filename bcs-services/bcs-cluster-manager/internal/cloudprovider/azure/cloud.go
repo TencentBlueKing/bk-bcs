@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package azure xxx
 package azure
 
 import (
@@ -30,7 +30,7 @@ var cloudInfoMgr sync.Once
 
 func init() {
 	cloudInfoMgr.Do(func() {
-		//init Cluster
+		// init Cluster
 		cloudprovider.InitCloudInfoManager(cloudName, &CloudInfoManager{})
 	})
 }
@@ -97,7 +97,7 @@ func clusterBasicSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservic
 	}
 }
 
-func clusterNetworkSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) error {
+func clusterNetworkSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) error { // nolint
 	cidrs := cluster.Properties.NetworkProfile.PodCidrs
 	podCidrs := make([]string, len(cidrs))
 	for i := range cidrs {

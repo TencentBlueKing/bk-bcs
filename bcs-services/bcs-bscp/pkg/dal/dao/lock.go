@@ -76,7 +76,8 @@ func (dao *lockDao) IncreaseCount(kit *kit.Kit, tx *gen.Query, lock *table.Resou
 
 	// the lock exists, get the count from db and returns the count before the operation
 	if result.RowsAffected == 1 {
-		count, err := dao.getLockCount(kit, tx, lock)
+		var count uint32
+		count, err = dao.getLockCount(kit, tx, lock)
 		if err != nil {
 			return 0, err
 		}
@@ -85,7 +86,8 @@ func (dao *lockDao) IncreaseCount(kit *kit.Kit, tx *gen.Query, lock *table.Resou
 
 	// the lock key is not exist, set count = 1 and insert it, returns 0.
 	lock.ResCount = num
-	id, err := dao.idGen.One(kit, table.ResourceLockTable)
+	var id uint32
+	id, err = dao.idGen.One(kit, table.ResourceLockTable)
 	if err != nil {
 		logs.Errorf("generate lock id failed, lock: %v, err: %v, rid: %s", lock, err, kit.Rid)
 		return 0, fmt.Errorf("insert lock failed, err: %v", err)

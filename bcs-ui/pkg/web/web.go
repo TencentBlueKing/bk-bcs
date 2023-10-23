@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package web xxx
 package web
 
 import (
@@ -20,13 +20,13 @@ import (
 	"net/http/httputil"
 	"net/url"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/go-chi/chi/v5"
 	chimid "github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/metrics"
@@ -34,7 +34,7 @@ import (
 )
 
 // WebServer :
-type WebServer struct {
+type WebServer struct { // nolint
 	ctx            context.Context
 	srv            *http.Server
 	addrIPv6       string

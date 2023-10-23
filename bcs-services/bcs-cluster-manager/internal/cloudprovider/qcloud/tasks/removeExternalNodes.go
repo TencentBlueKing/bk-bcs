@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -19,7 +18,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 )
 
 // ReturnIDCNodeToResourcePoolTask clean IDCNodes in group task for background running
@@ -54,8 +55,8 @@ func ReturnIDCNodeToResourcePoolTask(taskID, stepName string) error {
 		NodeGroupID: nodeGroupID,
 	})
 	if err != nil {
-		blog.Errorf("ReturnIDCNodeToResourcePoolTask[%s] GetClusterDependBasicInfo for NodeGroup %s to clean Node in task %s "+
-			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
+		blog.Errorf("ReturnIDCNodeToResourcePoolTask[%s] GetClusterDependBasicInfo for NodeGroup %s to "+
+			"clean Node in task %s step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -117,7 +118,8 @@ func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
 		NodeGroupID: groupID,
 	})
 	if err != nil {
-		blog.Errorf("RemoveExternalNodesFromClusterTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s step %s failed, %s",
+		blog.Errorf("RemoveExternalNodesFromClusterTask[%s]: GetClusterDependBasicInfo for cluster %s in "+
+			"task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -126,7 +128,7 @@ func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = RemoveExternalNodesFromCluster(ctx, dependInfo, ipList)
+	err = business.RemoveExternalNodesFromCluster(ctx, dependInfo, ipList)
 	if err != nil {
 		blog.Errorf("RemoveExternalNodesFromClusterTask[%s] RemoveExternalNodesFromCluster failed: %v",
 			taskID, err)
@@ -137,7 +139,7 @@ func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
 	blog.Infof("RemoveExternalNodesFromClusterTask[%s] removeNodes[%v]", taskID, ipList)
 
 	// get add external nodes script from cluster
-	script, err := GetClusterExternalNodeScript(ctx, dependInfo)
+	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo)
 	if err != nil {
 		blog.Errorf("RemoveExternalNodesFromClusterTask[%s]: GetClusterExternalNodeScript for cluster[%s] failed, %s",
 			taskID, clusterID, err.Error())

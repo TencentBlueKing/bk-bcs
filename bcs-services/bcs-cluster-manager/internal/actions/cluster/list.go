@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,14 +18,15 @@ import (
 	"fmt"
 	"sort"
 
-	spb "google.golang.org/protobuf/types/known/structpb"
-	corev1 "k8s.io/api/core/v1"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	spb "google.golang.org/protobuf/types/known/structpb"
+	corev1 "k8s.io/api/core/v1"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
@@ -38,7 +39,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 )
 
 // ListAction list action for cluster
@@ -116,10 +116,8 @@ func (la *ListAction) getSharedCluster() error {
 		la.resp.WebAnnotations = &cmproto.WebAnnotations{
 			Perms: make(map[string]*spb.Struct),
 		}
-	} else {
-		if la.resp.WebAnnotations.Perms == nil {
-			la.resp.WebAnnotations.Perms = make(map[string]*spb.Struct)
-		}
+	} else if la.resp.WebAnnotations.Perms == nil {
+		la.resp.WebAnnotations.Perms = make(map[string]*spb.Struct)
 	}
 
 	for _, clusterID := range clusterIDs {
@@ -198,12 +196,13 @@ func (la *ListAction) listCluster() error {
 
 	// projectID / operator get user perm
 	if la.req.ProjectID != "" && la.req.Operator != "" {
-		v3Perm, err := la.GetProjectClustersV3Perm(actions.PermInfo{
+		v3Perm, err := la.GetProjectClustersV3Perm(actions.PermInfo{ // nolint
 			ProjectID: la.req.ProjectID,
 			UserID:    la.req.Operator,
 		}, clusterIDList)
 		if err != nil {
 			blog.Errorf("listCluster GetUserPermListByProjectAndCluster failed: %v", err.Error())
+			return err
 		}
 		la.resp.WebAnnotations = &cmproto.WebAnnotations{
 			Perms: v3Perm,
@@ -278,7 +277,6 @@ func (la *ListAction) Handle(ctx context.Context, req *cmproto.ListClusterReq, r
 		return
 	}
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // ListProjectClusterAction list action for project clusters
@@ -482,7 +480,6 @@ func (la *ListProjectClusterAction) Handle(ctx context.Context,
 		return
 	}
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // ListCommonClusterAction list action for cluster
@@ -578,7 +575,6 @@ func (la *ListCommonClusterAction) Handle(ctx context.Context,
 		return
 	}
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // ListNodesInClusterAction list action for cluster
@@ -713,7 +709,6 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 	la.handleNodes()
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (la *ListNodesInClusterAction) handleNodes() {
@@ -735,6 +730,7 @@ func (la *ListNodesInClusterAction) handleNodes() {
 	}
 	// 获取语言
 	lang := i18n.LanguageFromCtx(la.ctx)
+
 	// get node zoneName
 	for i := range la.nodes {
 		node, ok := instanceMap[la.nodes[i].InnerIP]
@@ -798,7 +794,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 }
 
 // appendNodeAgent appedn node agentInfo
-func (la *ListMastersInClusterAction) appendNodeAgent() {
+func (la *ListMastersInClusterAction) appendNodeAgent() { // nolint
 	gseClient := gse.GetGseClient()
 	hosts := make([]gse.Host, 0)
 	for _, v := range la.nodes {
@@ -879,7 +875,6 @@ func (la *ListMastersInClusterAction) Handle(ctx context.Context,
 		return
 	}
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // getUserClusterPermList get user clusters perm

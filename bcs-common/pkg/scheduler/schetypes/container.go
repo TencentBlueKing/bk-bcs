@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package types
@@ -57,7 +56,7 @@ type BcsContainerInfo struct {
 	Pid                     int         `json:"Pid,omitempty"`         // container pid
 	StartAt                 time.Time   `json:"StartAt,omitempty"`     // startting time
 	FinishAt                time.Time   `json:"FinishAt,omitempty"`    // Exit time
-	Status                  string      `json:"Status,omitempty"`      // status string, paused, restarting, running, dead, created, exited
+	Status                  string      `json:"Status,omitempty"`      // nolint status string, paused, restarting, running, dead, created, exited
 	Healthy                 bool        `json:"Healthy,omitempty"`     // Container healthy
 	IsChecked               bool        `json:",omitempty"`            // is health check
 	ConsecutiveFailureTimes int         `json:",omitempty"`            // consecutive failure times

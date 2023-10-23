@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -462,7 +461,8 @@ func (r *DescribeExternalNodeSupportConfigRequest) FromJsonString(s string) erro
 
 // DescribeExternalNodeSupportConfigResponseParams Predefined struct for user
 type DescribeExternalNodeSupportConfigResponseParams struct {
-	// 用于分配集群容器和服务 IP 的 CIDR，不得与 VPC CIDR 冲突，也不得与同 VPC 内其他集群 CIDR 冲突。且网段范围必须在内网网段内，例如:10.1.0.0/14, 192.168.0.1/18,172.16.0.0/16。
+	// 用于分配集群容器和服务 IP 的 CIDR，不得与 VPC CIDR 冲突，也不得与同 VPC 内其他集群 CIDR 冲突。且网段范围必须在内网网段内，
+	// 例如:10.1.0.0/14, 192.168.0.1/18,172.16.0.0/16。
 	// 注意：此字段可能返回 null，表示取不到有效值。
 	ClusterCIDR *string `json:"ClusterCIDR,omitempty" name:"ClusterCIDR"`
 
@@ -579,7 +579,7 @@ type CreateExternalNodePoolRequestParams struct {
 	Taints []*Taint `json:"Taints,omitempty" name:"Taints"`
 
 	// 第三方节点高级设置
-	InstanceAdvancedSettings *InstanceAdvancedSettings `json:"InstanceAdvancedSettings,omitempty" name:"InstanceAdvancedSettings"`
+	InstanceAdvancedSettings *InstanceAdvancedSettings `json:"InstanceAdvancedSettings,omitempty" name:"InstanceAdvancedSettings"` // nolint
 
 	// 第三方节点池机器的CPU架构
 	Arch *string `json:"Arch,omitempty" name:"Arch"`
@@ -608,7 +608,7 @@ type CreateExternalNodePoolRequest struct {
 	Taints []*Taint `json:"Taints,omitempty" name:"Taints"`
 
 	// 第三方节点高级设置
-	InstanceAdvancedSettings *tke.InstanceAdvancedSettings `json:"InstanceAdvancedSettings,omitempty" name:"InstanceAdvancedSettings"`
+	InstanceAdvancedSettings *tke.InstanceAdvancedSettings `json:"InstanceAdvancedSettings,omitempty" name:"InstanceAdvancedSettings"` // nolint
 
 	// 第三方节点池机器的CPU架构
 	Arch *string `json:"Arch,omitempty" name:"Arch"`
@@ -965,7 +965,7 @@ type ExternalNodePool struct {
 
 	// 第三方节点高级设置
 	// 注意：此字段可能返回 null，表示取不到有效值。
-	InstanceAdvancedSettings *tke.InstanceAdvancedSettings `json:"InstanceAdvancedSettings,omitempty" name:"InstanceAdvancedSettings"`
+	InstanceAdvancedSettings *tke.InstanceAdvancedSettings `json:"InstanceAdvancedSettings,omitempty" name:"InstanceAdvancedSettings"` // nolint
 }
 
 // RuntimeConfig xxx
@@ -1008,7 +1008,7 @@ type DescribeOSImagesRequest struct {
 
 // ToJsonString xxx
 func (r *DescribeOSImagesRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
+	b, _ := json.Marshal(r) // nolint
 	return string(b)
 }
 

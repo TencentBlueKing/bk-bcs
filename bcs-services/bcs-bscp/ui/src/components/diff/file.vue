@@ -1,27 +1,3 @@
-<script setup lang="ts">
-    import { useRoute } from 'vue-router'
-    import { TextFill } from 'bkui-vue/lib/icon'
-    import { IFileConfigContentSummary } from '../../../types/config';
-    import { getConfigContent } from '../../api/config'
-    import { fileDownload } from '../../utils/file'
-
-    const route = useRoute()
-    const bkBizId = String(route.params.spaceId)
-    const appId = Number(route.params.appId)
-
-    const props = defineProps<{
-        current: IFileConfigContentSummary,
-        base: IFileConfigContentSummary
-    }>()
-
-      // 下载已上传文件
-    const handleDownloadFile = async (config: IFileConfigContentSummary) => {
-        const { signature, name } = config
-        const res = await getConfigContent(bkBizId, appId, signature)
-        fileDownload(res, `${name}.bin`)
-    }
-
-</script>
 <template>
     <section class="file-diff">
         <div class="left-version-content">
@@ -48,6 +24,33 @@
         </div>
     </section>
 </template>
+<script setup lang="ts">
+import { useRoute } from 'vue-router';
+import { TextFill } from 'bkui-vue/lib/icon';
+import { IFileConfigContentSummary } from '../../../types/config';
+import { downloadConfigContent } from '../../api/config';
+import { downloadTemplateContent } from '../../api/template';
+import { fileDownload } from '../../utils/file';
+
+const route = useRoute();
+const bkBizId = String(route.params.spaceId);
+
+const props = defineProps<{
+        current: IFileConfigContentSummary,
+        base: IFileConfigContentSummary,
+        id: number;
+        isTpl?: boolean;
+    }>();
+
+// 下载已上传文件
+const handleDownloadFile = async (config: IFileConfigContentSummary) => {
+  const { signature, name } = config;
+  const getConfigContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
+  const res = await getConfigContent(bkBizId, props.id, signature);
+  fileDownload(res, `${name}.bin`);
+};
+
+</script>
 <style lang="scss" scoped>
     .file-diff {
         display: flex;

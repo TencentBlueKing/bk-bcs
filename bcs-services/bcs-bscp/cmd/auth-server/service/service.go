@@ -75,7 +75,7 @@ type Service struct {
 	initial *initial.Initial
 	// auth logic module.
 	auth     *auth.Auth
-	spaceMgr *space.SpaceMgr
+	spaceMgr *space.Manager
 }
 
 // NewService create a service instance.
@@ -126,6 +126,7 @@ func (s *Service) Handler() (http.Handler, error) {
 	return s.gateway.handler(), nil
 }
 
+// nolint: funlen
 func newClientSet(sd serviced.Discover, tls cc.TLSConfig, iamSettings cc.IAM, disableAuth bool) (
 	*ClientSet, error) {
 
@@ -251,7 +252,8 @@ func (s *Service) InitAuthCenter(ctx context.Context, req *pbas.InitAuthCenterRe
 }
 
 // GetAuthLoginConf get auth login conf
-func (s *Service) GetAuthLoginConf(ctx context.Context, req *pbas.GetAuthLoginConfReq) (*pbas.GetAuthLoginConfResp, error) {
+func (s *Service) GetAuthLoginConf(_ context.Context,
+	_ *pbas.GetAuthLoginConfReq) (*pbas.GetAuthLoginConfResp, error) {
 	resp := &pbas.GetAuthLoginConfResp{
 		Host:      cc.AuthServer().LoginAuth.Host,
 		InnerHost: cc.AuthServer().LoginAuth.InnerHost,
@@ -273,8 +275,9 @@ func (s *Service) GetPermissionToApply(ctx context.Context, req *pbas.GetPermiss
 	return s.auth.GetPermissionToApply(ctx, req)
 }
 
-// GetPermissionToApply get iam permission to apply.
-func (s *Service) GrantResourceCreatorAction(ctx context.Context, req *pbas.GrantResourceCreatorActionReq) (*base.EmptyResp, error) {
+// GrantResourceCreatorAction GetPermissionToApply get iam permission to apply.
+func (s *Service) GrantResourceCreatorAction(ctx context.Context, req *pbas.
+	GrantResourceCreatorActionReq) (*base.EmptyResp, error) {
 
 	err := s.auth.GrantResourceCreatorAction(ctx, pbas.GrantResourceCreatorAction(req))
 	return nil, err
@@ -409,7 +412,9 @@ func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) 
 }
 
 // ListUserSpaceAnnotation list user space permission annotations
-func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamauth.Authorizer, msg proto.Message) (*webannotation.Annotation, error) {
+func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamauth.Authorizer,
+	msg proto.Message) (*webannotation.Annotation, error) {
+
 	resp, ok := msg.(*pbas.ListUserSpaceResp)
 	if !ok {
 		return nil, nil

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -34,6 +34,7 @@ import (
 	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/job/notify"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
@@ -50,7 +51,7 @@ func main() {
 
 	app.Run(op)
 
-	//初始化 Tracer
+	// 初始化 Tracer
 	shutdown, errorInitTracing := tracing.InitTracing(&op.TracingConf)
 	if errorInitTracing != nil {
 		blog.Info(errorInitTracing.Error())
@@ -67,6 +68,7 @@ func main() {
 	etcdRegistry, err := turnOnEtcdRegistry(op)
 	if err != nil {
 		blog.Errorf("turnOnEtcdRegistry failed: %v", err.Error())
+		// nolint
 		os.Exit(1)
 	}
 	defer func() {
@@ -75,6 +77,7 @@ func main() {
 			_ = etcdRegistry.Deregister()
 			time.Sleep(time.Second * 5)
 		}
+		component.GetAuditClient().Close()
 	}()
 
 	// sync expired token and notify
@@ -99,7 +102,6 @@ func main() {
 
 	blog.Infof("Got OS shutdown signal, shutting down bcs-user-manager server gracefully...")
 
-	return
 }
 
 // turnOnEtcdRegistry xxx

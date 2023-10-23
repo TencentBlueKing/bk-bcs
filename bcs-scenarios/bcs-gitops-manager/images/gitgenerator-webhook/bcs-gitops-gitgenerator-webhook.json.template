@@ -1,0 +1,16 @@
+{
+    "log_dir": "${log_dir}",
+    "v": ${bcsGitOpsWebhookVerbosity},
+    "alsologtostderr": true,
+    "log_max_size": 500,
+    "log_max_num": 10,
+    "logtostderr": false,
+    "stderrthreshold": "2",
+    "listen_addr": "${localIp}",
+    "listen_port": ${listenPort},
+    "tls_cert": "${tlsCert}",
+    "tls_key": "${tlsKey}",
+    "argo_service": "${argoService}",
+    "argo_user": "${argoUser}",
+    "argo_pass": "${argoPass}"
+}

@@ -41,17 +41,17 @@ type Commit struct {
 }
 
 // AppID AuditRes interface
-func (s *Commit) AppID() uint32 {
+func (c *Commit) AppID() uint32 {
 	return 0
 }
 
 // ResID AuditRes interface
-func (s *Commit) ResID() uint32 {
-	return s.ID
+func (c *Commit) ResID() uint32 {
+	return c.ID
 }
 
 // ResType AuditRes interface
-func (s *Commit) ResType() string {
+func (c *Commit) ResType() string {
 	return "commit"
 }
 

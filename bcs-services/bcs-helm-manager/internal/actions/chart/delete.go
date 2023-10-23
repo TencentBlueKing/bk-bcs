@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package chart xxx
 package chart
 
 import (
@@ -153,7 +154,7 @@ func (d *DeleteChartVersionAction) deleteChartVersion() error {
 	repository, err := d.model.GetRepository(d.ctx, projectCode, repoName)
 	if err != nil {
 		blog.Errorf("delete chart version failed, %s, "+
-			"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s",
+			"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s", // nolint
 			err.Error(), projectCode, repoName, chartName, version, username)
 		d.setResp(common.ErrHelmManagerListActionFailed, err.Error())
 		return nil

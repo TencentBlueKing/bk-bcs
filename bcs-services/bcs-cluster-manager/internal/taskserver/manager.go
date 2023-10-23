@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package taskserver xxx
 package taskserver
 
 import (
@@ -19,12 +19,6 @@ import (
 	"sync"
 	"time"
 
-	cmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	localtask "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-
 	"github.com/RichardKnop/machinery/v2"
 	"github.com/RichardKnop/machinery/v2/backends/mongo"
 	"github.com/RichardKnop/machinery/v2/brokers/amqp"
@@ -32,8 +26,14 @@ import (
 	"github.com/RichardKnop/machinery/v2/locks/eager"
 	"github.com/RichardKnop/machinery/v2/tasks"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	cmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	driver "go.mongodb.org/mongo-driver/mongo"
 	mopt "go.mongodb.org/mongo-driver/mongo/options"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	localtask "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 )
 
 var taskSvc *TaskServer
@@ -76,7 +76,7 @@ func (ts *TaskServer) Init(opt *options.BrokerConfig, backend *cmongo.Options) e
 		blog.Errorf("taskserver validate broker/backend Option failed, %s", err.Error())
 		return err
 	}
-	//init server & worker
+	// init server & worker
 	if err := ts.initServer(); err != nil {
 		blog.Errorf("task server init go-machinery server failed, %s", err.Error())
 		return err
@@ -100,12 +100,12 @@ func (ts *TaskServer) Stop() {
 
 // Dispatch dispatch task to worker
 func (ts *TaskServer) Dispatch(task *proto.Task) error {
-	//store all task information and then dispatch to remote worker
+	// store all task information and then dispatch to remote worker
 	if err := validateTask(task); err != nil {
 		blog.Errorf("task %s/%s is not validate, %s", task.TaskID, task.TaskType, err.Error())
 		return err
 	}
-	//create all task to signature
+	// create all task to signature
 	blog.Infof("task %s/%s with steps %v ready to dispatch worker", task.TaskID, task.TaskType, task.StepSequence)
 	var signatures []*tasks.Signature
 	for _, stepName := range task.StepSequence {
@@ -122,10 +122,11 @@ func (ts *TaskServer) Dispatch(task *proto.Task) error {
 	ts.lock.Lock()
 	defer ts.lock.Unlock()
 
-	//sending to workers
+	// sending to workers
 	chain, _ := tasks.NewChain(signatures...)
 	// NOCC:vet/vet(设计如此)
-	cxt, _ := context.WithCancel(ts.cxt)
+	cxt, cancelCtx := context.WithCancel(ts.cxt)
+	defer cancelCtx()
 	asyncResult, err := ts.server.SendChainWithContext(cxt, chain)
 	if err != nil {
 		// try to re-send tasks with back-off strategy in for loop?
@@ -133,15 +134,15 @@ func (ts *TaskServer) Dispatch(task *proto.Task) error {
 		return err
 	}
 
-	go func(t *proto.Task, c *tasks.Chain) {
-		//check async results
+	go func(t *proto.Task, c *tasks.Chain) { // nolint
+		// check async results
 		for retry := 3; retry > 0; retry-- {
 			results, err := asyncResult.Get(time.Second * 5)
 			if err != nil {
 				blog.Errorf("tracing task %s result failed, %s. retry %d", t.TaskID, err.Error(), retry)
 				continue
 			}
-			//check results
+			// check results
 			blog.Infof("tracing task %s result %s", t.TaskID, tasks.HumanReadableResults(results))
 		}
 	}(task, chain)

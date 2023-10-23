@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -20,9 +19,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
-
 	"github.com/emicklei/go-restful"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 )
 
 // RegisterPoolHandler create pool handler,
@@ -67,7 +66,7 @@ func (pool *PoolHandler) Add(request *restful.Request, response *restful.Respons
 	if err := request.ReadEntity(netReq); err != nil {
 		response.AddHeader("Content-Type", "text/plain")
 		blog.Errorf("PoolHandler[Add] json decode Err: %s", err.Error())
-		response.WriteErrorString(http.StatusBadRequest, err.Error())
+		_ = response.WriteErrorString(http.StatusBadRequest, err.Error())
 		reportMetrics("createIPPool", "4xx", started)
 		return
 	}
@@ -78,7 +77,7 @@ func (pool *PoolHandler) Add(request *restful.Request, response *restful.Respons
 		netRes.Code = 1
 		netRes.Message = "Request Type Err or Pool lost"
 		blog.Errorf("PoolHandler check Pool request, but got unexpect type %d, pool %v", netReq.Type, netReq.Pool)
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("createIPPool", "4xx", started)
 		return
 	}
@@ -87,7 +86,7 @@ func (pool *PoolHandler) Add(request *restful.Request, response *restful.Respons
 		netRes.Message = "Request Pool data lost"
 		blog.Errorf("PoolHandler check pool data err, data lost, Net: %s, Mask: %d, Gateway: %s", netReq.Pool.Net,
 			netReq.Pool.Mask, netReq.Pool.Gateway)
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("createIPPool", "4xx", started)
 		return
 	}
@@ -96,7 +95,7 @@ func (pool *PoolHandler) Add(request *restful.Request, response *restful.Respons
 		netRes.Code = 2
 		netRes.Message = err.Error()
 		blog.Errorf("PoolHandler add pool Err: %s", err.Error())
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("createIPPool", "5xx", started)
 		return
 	}
@@ -121,7 +120,7 @@ func (pool *PoolHandler) Delete(request *restful.Request, response *restful.Resp
 	if len(netKey) == 0 || len(netCluster) == 0 {
 		netRes.Code = 1
 		netRes.Message = "Lost param needed"
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("deleteIPPool", "4xx", started)
 		return
 	}
@@ -129,7 +128,7 @@ func (pool *PoolHandler) Delete(request *restful.Request, response *restful.Resp
 		blog.Errorf("NetPool Delete %s/%s request err: %s", netCluster, netKey, err.Error())
 		netRes.Code = 1
 		netRes.Message = err.Error()
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("deleteIPPool", "5xx", started)
 		return
 	}
@@ -148,7 +147,7 @@ func (pool *PoolHandler) Update(request *restful.Request, response *restful.Resp
 	if err := request.ReadEntity(netReq); err != nil {
 		response.AddHeader("Content-Type", "text/plain")
 		blog.Errorf("PoolHandler[Update] json decode Err: %s", err.Error())
-		response.WriteErrorString(http.StatusBadRequest, err.Error())
+		_ = response.WriteErrorString(http.StatusBadRequest, err.Error())
 		reportMetrics("updateIPPool", "4xx", started)
 		return
 	}
@@ -161,7 +160,7 @@ func (pool *PoolHandler) Update(request *restful.Request, response *restful.Resp
 		netRes.Code = 1
 		netRes.Message = "Request Type Err or Pool lost"
 		blog.Errorf("PoolHandler check Pool request, but got unexpect type %d, pool %v", netReq.Type, netReq.Pool)
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("updateIPPool", "4xx", started)
 		return
 	}
@@ -175,7 +174,7 @@ func (pool *PoolHandler) Update(request *restful.Request, response *restful.Resp
 			netReq.Pool.Mask,
 			netReq.Pool.Gateway,
 		)
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("updateIPPool", "4xx", started)
 		return
 	}
@@ -185,7 +184,7 @@ func (pool *PoolHandler) Update(request *restful.Request, response *restful.Resp
 		netRes.Code = 2
 		netRes.Message = err.Error()
 		blog.Errorf("PoolHandler add pool Err: %s", err.Error())
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("updateIPPool", "5xx", started)
 		return
 	}
@@ -214,7 +213,7 @@ func (pool *PoolHandler) List(request *restful.Request, response *restful.Respon
 		blog.Errorf("NetPool List all request err: %s", err.Error())
 		netRes.Code = 1
 		netRes.Message = err.Error()
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("listIPPool", "5xx", started)
 		return
 	}
@@ -242,7 +241,7 @@ func (pool *PoolHandler) ListByID(request *restful.Request, response *restful.Re
 		blog.Errorf("NetPool list pool %s/%s request err: %s", netCluster, netKey, err.Error())
 		netRes.Code = 1
 		netRes.Message = err.Error()
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("listIPPoolByID", "5xx", started)
 		return
 	}
@@ -269,7 +268,7 @@ func (pool *PoolHandler) Query(request *restful.Request, response *restful.Respo
 		blog.Errorf("NetPool List cluster %s request err %v", cluster, err)
 		netRes.Code = 1
 		netRes.Message = err.Error()
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("queryIPPool", "5xx", started)
 		return
 	}

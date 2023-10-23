@@ -87,9 +87,10 @@ func NewScheduler(opt *Option, name string) (*Scheduler, error) {
 // 1. it accepts subscribe from sidecar and unsubscribe when the sidecar close the connection.
 // 2. it sends events to all the subscribers and will retry to send event if it fails.
 type Scheduler struct {
-	appPool      *appPool
-	ob           observer.Interface
-	lc           *lcache.Cache
+	appPool *appPool
+	ob      observer.Interface
+	lc      *lcache.Cache
+	//nolint:unused
 	csm          *consumer
 	retry        *retryList
 	handler      *Handler
@@ -248,7 +249,6 @@ func (sch *Scheduler) notifyEvent(kt *kit.Kit, cursorID uint32, members []*membe
 	}
 
 	wg.Wait()
-	return
 }
 
 func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {

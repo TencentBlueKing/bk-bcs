@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,13 +16,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
-	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/TencentBlueKing/gopkg/collection/set"
 	"github.com/mitchellh/mapstructure"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -101,7 +100,7 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 			readyCnt++
 		}
 		totalCnt++
-		restartCnt += s.(map[string]interface{})["restartCount"].(int64)
+		restartCnt += mapx.GetInt64(s.(map[string]interface{}), "restartCount")
 	}
 	ret["readyCnt"], ret["totalCnt"], ret["restartCnt"] = readyCnt, totalCnt, restartCnt
 
@@ -183,10 +182,8 @@ type STSStatusChecker struct{}
 // IsNormal 检查逻辑：若 status.currentReplicas 存在，则检查与其他几项是否相等，若不存在，则检查剩余几项是否相等
 func (c *STSStatusChecker) IsNormal(manifest map[string]interface{}) bool {
 	replicas := mapx.GetInt64(manifest, "spec.replicas")
-	if curReplicas, err := mapx.GetItems(manifest, "status.currentReplicas"); err == nil {
-		if curReplicas.(int64) != replicas {
-			return false
-		}
+	if curReplicas := mapx.GetInt64(manifest, "status.currentReplicas"); curReplicas != replicas {
+		return false
 	}
 	return slice.AllInt64Equal([]int64{
 		mapx.GetInt64(manifest, "status.readyReplicas"),
@@ -214,6 +211,13 @@ func (p *WorkloadStatusParser) Parse() string {
 	// 若非正常情况，检查 generation，若为 1（第一个版本），则状态为创建中
 	if gen := mapx.GetInt64(p.manifest, "metadata.generation"); gen == int64(1) {
 		return WorkloadStatusCreating
+	}
+	// 如果包含重启标识，则状态为重启中
+	restartPath := []string{"spec", "template", "metadata", "annotations", WorkloadRestartAnnotationKey}
+	versionPath := []string{"spec", "template", "metadata", "annotations", WorkloadRestartVersionAnnotationKey}
+	if mapx.GetStr(p.manifest, restartPath) != "" &&
+		mapx.GetStr(p.manifest, versionPath) == strconv.Itoa(int(mapx.GetInt64(p.manifest, "metadata.generation"))) {
+		return WorkloadStatusRestarting
 	}
 	return WorkloadStatusUpdating
 }
@@ -245,7 +249,9 @@ type PodStatusParser struct {
 	totalStatus string
 }
 
-// Parse 状态解析逻辑，参考来源：https://github.com/kubernetes/dashboard/blob/92a8491b99afa2cfb94dbe6f3410cadc42b0dc31/modules/api/pkg/resource/pod/common.go#L40
+// Parse 状态解析逻辑
+// nolint
+// 参考来源：https://github.com/kubernetes/dashboard/blob/92a8491b99afa2cfb94dbe6f3410cadc42b0dc31/modules/api/pkg/resource/pod/common.go#L40
 func (p *PodStatusParser) Parse() string {
 	// 构造轻量化的 PodStatus 用于解析 Pod Status（total）字段
 	podStatus := LightPodStatus{}

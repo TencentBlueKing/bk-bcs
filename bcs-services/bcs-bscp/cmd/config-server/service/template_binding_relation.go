@@ -186,6 +186,8 @@ func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context, req *pbcs.ListTm
 }
 
 // ListTmplBoundNamedApps list template bound named app details
+// Deprecated: not in use currently
+// if use it, consider to add column app_name, release_name on table released_app_templates in case of app is deleted
 func (s *Service) ListTmplBoundNamedApps(ctx context.Context, req *pbcs.ListTmplBoundNamedAppsReq) (
 	*pbcs.ListTmplBoundNamedAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
@@ -274,8 +276,8 @@ func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context, req *pbcs.List
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
-		return nil, err
+	if e := s.authorizer.Authorize(grpcKit, res...); e != nil {
+		return nil, e
 	}
 
 	r := &pbds.ListMultiTmplBoundTmplSetsReq{
@@ -338,6 +340,8 @@ func (s *Service) ListTmplRevisionBoundUnnamedApps(ctx context.Context, req *pbc
 }
 
 // ListTmplRevisionBoundNamedApps list template revision bound named app details
+// Deprecated: not in use currently
+// if use it, consider to add column app_name, release_name on table released_app_templates in case of app is deleted
 func (s *Service) ListTmplRevisionBoundNamedApps(ctx context.Context,
 	req *pbcs.ListTmplRevisionBoundNamedAppsReq) (*pbcs.ListTmplRevisionBoundNamedAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
@@ -427,8 +431,8 @@ func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context, req *pbc
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
-		return nil, err
+	if e := s.authorizer.Authorize(grpcKit, res...); e != nil {
+		return nil, e
 	}
 
 	r := &pbds.ListMultiTmplSetBoundUnnamedAppsReq{
@@ -454,6 +458,8 @@ func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context, req *pbc
 }
 
 // ListTmplSetBoundNamedApps list template set bound named app details
+// Deprecated: not in use currently
+// if use it, consider to add column app_name, release_name on table released_app_templates in case of app is deleted
 func (s *Service) ListTmplSetBoundNamedApps(ctx context.Context, req *pbcs.ListTmplSetBoundNamedAppsReq) (
 	*pbcs.ListTmplSetBoundNamedAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)

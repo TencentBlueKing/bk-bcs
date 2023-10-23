@@ -29,6 +29,8 @@ import (
 	"bscp.io/pkg/config"
 )
 
+// nolint:typecheck
+//
 //go:embed ui/dist
 var frontendAssets embed.FS
 
@@ -165,7 +167,7 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 			tplData["BK_BCS_BSCP_API"] = "/bscp"
 		}
 
-		e.tpl.ExecuteTemplate(w, "index.html", tplData) // nolint
+		e.tpl.ExecuteTemplate(w, "index.html", tplData) //nolint
 	}
 
 	return http.HandlerFunc(fn)
@@ -194,7 +196,7 @@ func (e *EmbedWeb) Render403Handler(conf *IndexConfig) http.Handler {
 			"BK_STATIC_URL": conf.StaticURL,
 		}
 
-		e.tpl.ExecuteTemplate(w, "403.html", tplData) // nolint
+		e.tpl.ExecuteTemplate(w, "403.html", tplData) //nolint
 	}
 
 	return http.HandlerFunc(fn)

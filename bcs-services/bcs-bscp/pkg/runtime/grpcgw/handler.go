@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package grpcgw is a grpc-gateway wrapper
 package grpcgw
 
 import (
@@ -28,7 +29,8 @@ import (
 )
 
 // bkErrorHandler 蓝鲸规范化的错误返回
-func bkErrorHandler(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
+func bkErrorHandler(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler,
+	w http.ResponseWriter, r *http.Request, err error) {
 	ww, ok := w.(*view.GenericResponseWriter)
 	if ok {
 		ww.SetError(err)

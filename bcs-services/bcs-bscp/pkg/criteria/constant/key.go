@@ -40,10 +40,10 @@ const (
 	LanguageKey = "HTTP_BLUEKING_LANGUAGE"
 
 	// BKGWJWTTokenKey is blueking api gateway jwt header key.
-	BKGWJWTTokenKey = "X-Bkapi-JWT" // nolint
+	BKGWJWTTokenKey = "X-Bkapi-JWT" //nolint
 
 	// BKTokenForTest is a token for test
-	BKTokenForTest = "bk-token-for-test"
+	BKTokenForTest = "bk-token-for-test" //nolint:gosec
 
 	// BKUserForTestPrefix is a user prefix for test
 	BKUserForTestPrefix = "bk-user-for-test-"
@@ -56,6 +56,7 @@ const (
 	// AppIDHeaderKey is app id.
 	AppIDHeaderKey = "X-Bscp-App-Id"
 	// TmplSpaceIDHeaderKey is template space id.
+	//nolint:gosec
 	TmplSpaceIDHeaderKey = "X-Bscp-Template-Space-Id"
 
 	// TemplateVariablePrefix is the prefix for template variable name
@@ -99,7 +100,7 @@ const (
 	// AuthLoginUID is auth login uid
 	AuthLoginUID = "auth-login-uid"
 	// AuthLoginToken is auth login token
-	AuthLoginToken = "auth-login-token" // nolint
+	AuthLoginToken = "auth-login-token" //nolint
 )
 
 var (

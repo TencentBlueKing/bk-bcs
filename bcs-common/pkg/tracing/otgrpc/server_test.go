@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// NOCC:gofmt/notformat(误报)
 package grpc
 
 import (
@@ -21,13 +21,13 @@ import (
 	"net"
 	"testing"
 
+	opentrace "github.com/opentracing/opentracing-go"
+	tracinglog "github.com/opentracing/opentracing-go/log"
+	"google.golang.org/grpc"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/jaeger"
 	pb "github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/otgrpc/hello"
-
-	"github.com/opentracing/opentracing-go"
-	tracinglog "github.com/opentracing/opentracing-go/log"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -57,7 +57,9 @@ func TestOpenTracingServerInterceptor(t *testing.T) {
 	}
 
 	if closer != nil {
-		defer closer.Close()
+		defer func(closer io.Closer) {
+			_ = closer.Close()
+		}(closer)
 	}
 
 	runGRPCServer()
@@ -83,7 +85,7 @@ func runGRPCServer() {
 	}
 
 	s := grpc.NewServer(
-		grpc.UnaryInterceptor(OpenTracingServerInterceptor(opentracing.GlobalTracer())),
+		grpc.UnaryInterceptor(OpenTracingServerInterceptor(opentrace.GlobalTracer())),
 	)
 
 	pb.RegisterGreeterServer(s, &server{})
@@ -94,7 +96,7 @@ func runGRPCServer() {
 }
 
 func formatString(ctx context.Context, helloTo string) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "formatString")
+	span, _ := opentrace.StartSpanFromContext(ctx, "formatString")
 	defer span.Finish()
 
 	helloStr := fmt.Sprintf("hello, %s", helloTo)

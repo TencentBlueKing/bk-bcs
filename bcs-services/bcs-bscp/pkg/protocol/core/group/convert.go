@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbgroup provides group core protocol struct and convert functions.
 package pbgroup
 
 import (
@@ -63,7 +64,7 @@ func (m *GroupSpec) GroupSpec() (*table.GroupSpec, error) {
 }
 
 // PbGroupSpec convert table GroupSpec to pb GroupSpec
-func PbGroupSpec(spec *table.GroupSpec) (*GroupSpec, error) {
+func PbGroupSpec(spec *table.GroupSpec) (*GroupSpec, error) { //nolint:revive
 	if spec == nil {
 		return nil, nil
 	}
@@ -98,7 +99,7 @@ func (m *GroupAttachment) GroupAttachment() *table.GroupAttachment {
 }
 
 // PbGroupAttachment convert table GroupAttachment to pb GroupAttachment
-func PbGroupAttachment(at *table.GroupAttachment) *GroupAttachment {
+func PbGroupAttachment(at *table.GroupAttachment) *GroupAttachment { //nolint:revive
 	if at == nil {
 		return nil
 	}

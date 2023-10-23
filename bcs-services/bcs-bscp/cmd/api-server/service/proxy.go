@@ -103,7 +103,8 @@ func newAuthServerMux(dis serviced.Discover) (http.Handler, error) {
 	}
 
 	// new grpc mux.
-	mux := runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt, grpcgw.BKErrorHandlerOpt, grpcgw.BSCPResponseOpt)
+	mux := runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt, grpcgw.BKErrorHandlerOpt,
+		grpcgw.BSCPResponseOpt)
 
 	// register client to mux.
 	if err = pbas.RegisterAuthHandler(context.Background(), mux, conn); err != nil {
@@ -184,5 +185,6 @@ func newGrpcDialOption(dis serviced.Discover, tls cc.TLSConfig) ([]grpc.DialOpti
 
 // newGrpcMux new grpc mux that has some processing of built-in http request to grpc request.
 func newGrpcMux() *runtime.ServeMux {
-	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt, grpcgw.BKErrorHandlerOpt, grpcgw.BSCPResponseOpt)
+	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt, grpcgw.BKErrorHandlerOpt,
+		grpcgw.BSCPResponseOpt)
 }

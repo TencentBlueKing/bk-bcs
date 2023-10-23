@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tracing
@@ -16,13 +15,14 @@ package tracing
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 	"go.opentelemetry.io/otel/attribute"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
 const (
+	// ServiceName service name
 	ServiceName = "bcs-user-manager"
 )
 

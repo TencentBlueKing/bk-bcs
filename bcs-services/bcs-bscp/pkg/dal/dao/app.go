@@ -43,8 +43,8 @@ type App interface {
 	ListAppsByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*table.App, error)
 	// ListAppsByIDs list apps by app ids.
 	ListAppsByIDs(kit *kit.Kit, ids []uint32) ([]*table.App, error)
-	// Delete one app instance.
-	Delete(kit *kit.Kit, app *table.App) error
+	// DeleteWithTx delete one app instance with transaction.
+	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, app *table.App) error
 	// ListAppMetaForCache list app's basic meta info.
 	ListAppMetaForCache(kt *kit.Kit, bizID uint32, appID []uint32) (map[ /*appID*/ uint32]*types.AppCacheMeta, error)
 }
@@ -249,8 +249,8 @@ func (dao *appDao) Update(kit *kit.Kit, g *table.App) error {
 	return nil
 }
 
-// Delete an app instance.
-func (dao *appDao) Delete(kit *kit.Kit, g *table.App) error {
+// DeleteWithTx delete one app instance with transaction.
+func (dao *appDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.App) error {
 	if g == nil {
 		return errors.New("app is nil")
 	}
@@ -260,50 +260,40 @@ func (dao *appDao) Delete(kit *kit.Kit, g *table.App) error {
 	}
 
 	// 删除操作, 获取当前记录做审计
-	m := dao.genQ.App
-	q := dao.genQ.App.WithContext(kit.Ctx)
+	m := tx.App
+	q := tx.App.WithContext(kit.Ctx)
 	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.BizID)).Take()
 	if err != nil {
 		return err
 	}
 	ad := dao.auditDao.DecoratorV2(kit, g.BizID).PrepareDelete(oldOne)
-	eDecorator := dao.event.Eventf(kit)
-
-	// 多个使用事务处理
-	deleteTx := func(tx *gen.Query) error {
-		q = tx.App.WithContext(kit.Ctx)
-		if _, err = q.Where(m.BizID.Eq(g.BizID)).Delete(g); err != nil {
-			return err
-		}
-
-		// archived this deleted app to archive table.
-		if err = dao.archiveApp(kit, tx, oldOne); err != nil {
-			return err
-		}
-
-		if err = ad.Do(tx); err != nil {
-			return err
-		}
-
-		// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
-		one := types.Event{
-			Spec: &table.EventSpec{
-				Resource:   table.Application,
-				ResourceID: g.ID,
-				OpType:     table.DeleteOp,
-			},
-			Attachment: &table.EventAttachment{BizID: g.BizID, AppID: g.ID},
-			Revision:   &table.CreatedRevision{Creator: kit.User},
-		}
-		if err = eDecorator.Fire(one); err != nil {
-			logs.Errorf("fire delete app: %s event failed, err: %v, rid: %s", g.ID, err, kit.Rid)
-			return errors.New("fire event failed, " + err.Error())
-		}
-
-		return nil
+	if err = ad.Do(tx.Query); err != nil {
+		return err
 	}
-	err = dao.genQ.Transaction(deleteTx)
 
+	if _, err = q.Where(m.BizID.Eq(g.BizID)).Delete(g); err != nil {
+		return err
+	}
+
+	// archived this deleted app to archive table.
+	if err = dao.archiveApp(kit, tx, oldOne); err != nil {
+		return err
+	}
+
+	// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
+	one := types.Event{
+		Spec: &table.EventSpec{
+			Resource:   table.Application,
+			ResourceID: g.ID,
+			OpType:     table.DeleteOp,
+		},
+		Attachment: &table.EventAttachment{BizID: g.BizID, AppID: g.ID},
+		Revision:   &table.CreatedRevision{Creator: kit.User},
+	}
+	eDecorator := dao.event.Eventf(kit)
+	if err = eDecorator.Fire(one); err != nil {
+		logs.Errorf("fire delete app: %s event failed, err: %v, rid: %s", g.ID, err, kit.Rid)
+	}
 	eDecorator.Finalizer(err)
 
 	if err != nil {
@@ -351,7 +341,7 @@ func (dao *appDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Ap
 	return app, nil
 }
 
-func (dao *appDao) archiveApp(kit *kit.Kit, tx *gen.Query, g *table.App) error {
+func (dao *appDao) archiveApp(kit *kit.Kit, tx *gen.QueryTx, g *table.App) error {
 	id, err := dao.idGen.One(kit, table.ArchivedAppTable)
 	if err != nil {
 		return err

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package component
@@ -103,9 +102,9 @@ type Namespace struct {
 }
 
 // GetClusterNamespaces get cluster namespaces
-func GetClusterNamespaces(ctx context.Context, projectID, clusterID string) ([]Namespace, error) {
+func GetClusterNamespaces(ctx context.Context, projectCode, clusterID string) ([]Namespace, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s/clusters/%s/namespaces",
-		config.GetGlobalConfig().BcsAPI.InnerHost, projectID, clusterID)
+		config.GetGlobalConfig().BcsAPI.InnerHost, projectCode, clusterID)
 
 	resp, err := GetClient().R().
 		SetContext(ctx).
@@ -121,6 +120,26 @@ func GetClusterNamespaces(ctx context.Context, projectID, clusterID string) ([]N
 		return nil, err
 	}
 	return data, nil
+}
+
+// GetCachedClusterNamespaces get cached cluster namespaces
+func GetCachedClusterNamespaces(ctx context.Context, projectCode, clusterID string) ([]Namespace, error) {
+	cacheName := func(projectCode, clusterID string) string {
+		return fmt.Sprintf("cluster_namespaces_%s_%s", projectCode, clusterID)
+	}
+	val, ok := cache.LocalCache.Get(cacheName(projectCode, clusterID))
+	if ok && val != nil {
+		if namespaces, ok1 := val.([]Namespace); ok1 {
+			return namespaces, nil
+		}
+	}
+
+	namespaces, err := GetClusterNamespaces(ctx, projectCode, clusterID)
+	if err != nil {
+		return nil, err
+	}
+	cache.LocalCache.Set(cacheName(projectCode, clusterID), namespaces, 0)
+	return namespaces, nil
 }
 
 // GetCachedNamespace get cached namespace

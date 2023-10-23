@@ -8,20 +8,21 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package resthdrs utils
 package resthdrs
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	"github.com/emicklei/go-restful"
-	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 )
 
 // QueryBCSCredentialsForm xxx
@@ -50,7 +51,7 @@ func QueryBCSClusterByID(request *restful.Request, response *restful.Response) {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Debug(fmt.Sprintf("QueryBCSClusterByID form validate failed, %s", err))
-		response.WriteEntity(FormatValidationError(err))
+		_ = response.WriteEntity(FormatValidationError(err))
 		return
 	}
 
@@ -71,13 +72,15 @@ func QueryBCSClusterByID(request *restful.Request, response *restful.Response) {
 		user := filters.GetUser(request)
 		err = auth.SyncUserClusterPerms(user, cluster)
 		if err != nil {
-			WriteServerError(response, "SERVER_ERROR", fmt.Sprintf("permission check error: can not sync permission from external service"))
+			WriteServerError(response, "SERVER_ERROR", fmt.Sprintf("permission check error:
+				can not sync permission from external service"))
 			return
 		}
 
 		// Check cluster permission
 		if !auth.UserHasClusterPerm(user, cluster, m.ClusterPermNameView) {
-			WriteForbiddenError(response, "PERMISION_DENIED", fmt.Sprintf("current user is not authorized to perform this action"))
+			WriteForbiddenError(response, "PERMISION_DENIED",
+				fmt.Sprintf("current user is not authorized to perform this action"))
 			return
 		}
 	*/
@@ -85,7 +88,7 @@ func QueryBCSClusterByID(request *restful.Request, response *restful.Response) {
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 
-	response.WriteEntity(cluster)
+	_ = response.WriteEntity(cluster)
 }
 
 // QueryBCSClusterByClusterID query for bke cluster info by given BCS cluster_id
@@ -100,9 +103,10 @@ func QueryBCSClusterByClusterID(request *restful.Request, response *restful.Resp
 	err := validate.Struct(&form)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
-		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest",
+			request.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Debug(fmt.Sprintf("QueryBCSClusterByClusterID form validate failed, %s", err))
-		response.WriteEntity(FormatValidationError(err))
+		_ = response.WriteEntity(FormatValidationError(err))
 		return
 	}
 
@@ -117,7 +121,7 @@ func QueryBCSClusterByClusterID(request *restful.Request, response *restful.Resp
 		return
 	}
 
-	response.WriteEntity(cluster)
+	_ = response.WriteEntity(cluster)
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())

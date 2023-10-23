@@ -535,6 +535,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_variables"
         };
     }
+    rpc ImportTemplateVariables(ImportTemplateVariablesReq) returns (ImportTemplateVariablesResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_variables/import"
+            body : "*"
+        };
+    }
 
     rpc ExtractAppTmplVariables(ExtractAppTmplVariablesReq) returns (ExtractAppTmplVariablesResp) {
         option (google.api.http) = {
@@ -694,7 +700,8 @@ message UpdateCredentialsReq {
     uint32 id     = 1;
     uint32 biz_id = 2;
     bool   enable = 3;
-    string memo   = 4;
+    string name   = 4;
+    string memo   = 5;
 }
 
 message UpdateCredentialsResp {}
@@ -713,8 +720,9 @@ message ListCredentialsResp {
 
 message CreateCredentialReq {
     string          memo   = 1;
-    uint32          biz_id = 2;
-    repeated string scope  = 3;
+    string          name   = 2;
+    uint32          biz_id = 3;
+    repeated string scope  = 4;
 }
 
 message CreateCredentialResp {
@@ -1808,6 +1816,16 @@ message ListTemplateVariablesReq {
 message ListTemplateVariablesResp {
     uint32                         count   = 1;
     repeated pbtv.TemplateVariable details = 2;
+}
+
+message ImportTemplateVariablesReq {
+    uint32 biz_id    = 1;
+    string separator = 2;
+    string variables = 3;
+}
+
+message ImportTemplateVariablesResp {
+    uint32 variable_count = 1;
 }
 
 message ExtractAppTmplVariablesReq {

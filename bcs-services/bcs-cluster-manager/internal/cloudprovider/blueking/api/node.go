@@ -8,15 +8,16 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package api xxx
 package api
 
 import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -26,7 +27,7 @@ var nodeMgr sync.Once
 
 func init() {
 	nodeMgr.Do(func() {
-		//init Node
+		// init Node
 		cloudprovider.InitNodeManager("blueking", &NodeManager{})
 	})
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package nodegroup
@@ -16,12 +15,13 @@ package nodegroup
 import (
 	"errors"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 )
 
 // Create 创建节点池,创建成功返回节点池ID和任务ID
-func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (types.CreateNodeGroupResp, error) {
+func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (types.CreateNodeGroupResp, error) { // nolint
 	var (
 		resp types.CreateNodeGroupResp
 		err  error

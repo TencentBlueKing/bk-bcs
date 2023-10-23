@@ -28,7 +28,7 @@ type esbAuthTransport struct {
 }
 
 // newEsbAuthTransport .
-func newEsbAuthTransport(cfg *cc.Esb, Transport http.RoundTripper) (http.RoundTripper, error) {
+func newEsbAuthTransport(cfg *cc.Esb, transport http.RoundTripper) (http.RoundTripper, error) {
 	params := types.GetCommParams(cfg)
 	value, err := json.Marshal(params)
 	if err != nil {
@@ -37,7 +37,7 @@ func newEsbAuthTransport(cfg *cc.Esb, Transport http.RoundTripper) (http.RoundTr
 	t := &esbAuthTransport{
 		commParams: params,
 		authValue:  string(value),
-		Transport:  Transport,
+		Transport:  transport,
 	}
 	return t, nil
 }
@@ -49,7 +49,7 @@ func (t *esbAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	return resp, err
 }
 
-func (t *esbAuthTransport) transport(req *http.Request) http.RoundTripper {
+func (t *esbAuthTransport) transport(req *http.Request) http.RoundTripper { //nolint:unparam
 	if t.Transport != nil {
 		return t.Transport
 	}

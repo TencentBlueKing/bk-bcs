@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -204,7 +204,7 @@ func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) 
 	chartF, err := getChartFile(config.Chart)
 	if err != nil {
 		blog.Errorf("sdk client install and load chart files failed, %s, "+
-			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name) // nolint
 		return nil, err
 	}
 
@@ -295,8 +295,7 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 		if e, ok := err.(*driver.StorageDriverError); ok && upgrader.Install &&
 			errors.Is(e.Unwrap(), driver.ErrNoDeployedReleases) {
 			blog.Infof("%s of namespace %s, installing it now.", e.Error(), config.Namespace)
-			result := &release.HelmInstallResult{}
-			result, err = c.Install(context.Background(), config.ToInstallConfig())
+			result, err := c.Install(context.Background(), config.ToInstallConfig()) // nolint
 			if err != nil {
 				return result.ToUpgradeResult(), err
 			}

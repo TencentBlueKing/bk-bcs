@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package update
@@ -17,12 +16,13 @@ import (
 	"context"
 	"fmt"
 
-	nodeMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/node"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/util/i18n"
 	"k8s.io/kubectl/pkg/util/templates"
+
+	nodeMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/node"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 )
 
 var (
@@ -38,10 +38,12 @@ func newUpdateNodeCmd() *cobra.Command {
 		Run:     updateNode,
 	}
 
-	cmd.Flags().StringSliceVarP(&innerIPs, "innerIPs", "i", []string{}, "node inner ip, for example: -i xxx.xxx.xxx.xxx -i xxx.xxx.xxx.xxx")
-	cmd.MarkFlagRequired("innerIPs")
+	cmd.Flags().StringSliceVarP(&innerIPs, "innerIPs", "i", []string{},
+		"node inner ip, for example: -i xxx.xxx.xxx.xxx -i xxx.xxx.xxx.xxx")
+	_ = cmd.MarkFlagRequired("innerIPs")
 
-	cmd.Flags().StringVarP(&status, "status", "s", "", "更新节点状态(INITIALIZATION/RUNNING/DELETING/ADD-FAILURE/REMOVE-FAILURE)")
+	cmd.Flags().StringVarP(&status, "status", "s", "",
+		"更新节点状态(INITIALIZATION/RUNNING/DELETING/ADD-FAILURE/REMOVE-FAILURE)")
 	cmd.Flags().StringVarP(&nodeGroupID, "nodeGroupID", "n", "", "更新节点所属的node group ID")
 	cmd.Flags().StringVarP(&clusterID, "clusterID", "c", "", "更新节点所属的clusterID")
 

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package loop xxx
 package loop
 
 import (
@@ -32,14 +32,14 @@ type Action interface {
 
 var (
 	// EndLoop xxx
-	EndLoop = errors.New("end loop")
+	EndLoop = errors.New("end loop") // nolint
 )
 
 // LoopOption init LoopOptions
-type LoopOption func(loop *LoopOptions)
+type LoopOption func(loop *LoopOptions) // nolint
 
 // LoopInterval set LoopOptions interval parameter
-func LoopInterval(duration time.Duration) LoopOption {
+func LoopInterval(duration time.Duration) LoopOption { // nolint
 	return func(loop *LoopOptions) {
 		if duration != 0 {
 			loop.interval = duration
@@ -48,12 +48,12 @@ func LoopInterval(duration time.Duration) LoopOption {
 }
 
 // LoopOptions loop parameter
-type LoopOptions struct {
+type LoopOptions struct { // nolint
 	interval time.Duration
 }
 
 // LoopDoFunc execute func do for interval
-func LoopDoFunc(ctx context.Context, do func() error, ops ...LoopOption) error {
+func LoopDoFunc(ctx context.Context, do func() error, ops ...LoopOption) error { // nolint
 	opt := &LoopOptions{interval: time.Second}
 
 	for _, o := range ops {
@@ -63,7 +63,7 @@ func LoopDoFunc(ctx context.Context, do func() error, ops ...LoopOption) error {
 	coldStart := make(chan struct{}, 1)
 	coldStart <- struct{}{}
 
-	tick := time.Tick(opt.interval)
+	tick := time.Tick(opt.interval) // nolint
 	for {
 		select {
 		case <-coldStart:

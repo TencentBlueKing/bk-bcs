@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package tasks xxx
 package tasks
 
 import (
@@ -20,8 +20,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 )
 
 // RemoveNodesFromClusterTask remove nodes from cluster
@@ -53,7 +54,7 @@ func RemoveNodesFromClusterTask(taskID, stepName string) error {
 	})
 	if err != nil {
 		blog.Errorf("RemoveNodesFromClusterTask[%s] GetClusterDependBasicInfo for NodeGroup %s to clean Node in task %s "+
-			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
+			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error()) // nolint
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -62,7 +63,7 @@ func RemoveNodesFromClusterTask(taskID, stepName string) error {
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	success, err := tasks.RemoveNodesFromCluster(ctx, dependInfo, nodeIDs)
+	success, err := business.RemoveNodesFromCluster(ctx, dependInfo, nodeIDs, true)
 	if err != nil {
 		blog.Errorf("RemoveNodesFromClusterTask[%s] removeNodesFromCluster for NodeGroup %s to clean Node in task %s "+
 			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -71,7 +72,7 @@ func RemoveNodesFromClusterTask(taskID, stepName string) error {
 		return retErr
 	}
 
-	//update response information to task common params
+	// update response information to task common params
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
@@ -79,7 +80,7 @@ func RemoveNodesFromClusterTask(taskID, stepName string) error {
 		state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(success, ",")
 	}
 
-	//update step
+	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
 		return err
@@ -120,7 +121,8 @@ func ReturnInstanceToResourcePoolTask(taskID, stepName string) error {
 		NodeGroupID: nodeGroupID,
 	})
 	if err != nil {
-		blog.Errorf("ReturnInstanceToResourcePoolTask[%s] GetClusterDependBasicInfo for NodeGroup %s to clean Node in task %s "+
+		blog.Errorf("ReturnInstanceToResourcePoolTask[%s] GetClusterDependBasicInfo for NodeGroup %s to "+
+			"clean Node in task %s "+
 			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -129,7 +131,7 @@ func ReturnInstanceToResourcePoolTask(taskID, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	cloudprovider.ShieldHostAlarm(ctx, dependInfo.Cluster.BusinessID, nodeIPList)
+	cloudprovider.ShieldHostAlarm(ctx, dependInfo.Cluster.BusinessID, nodeIPList) // nolint
 
 	// return device from resource-manager module if ResourceModule true, else retain yunti style
 	orderID, err := destroyDeviceList(ctx, dependInfo, deviceList, operator)

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package edit
@@ -62,7 +61,7 @@ type readOnlyVariableParam struct {
 	Updater      string `json:"updater"`
 }
 
-func editVariable() *cobra.Command {
+func editVariable() *cobra.Command { // nolint
 	cmd := &cobra.Command{
 		Use:                   "variable --key=key",
 		DisableFlagsInUseLine: true,
@@ -83,7 +82,7 @@ func editVariable() *cobra.Command {
 				All:       true,
 			}, projectCode)
 			if err != nil {
-				klog.Infoln("list variable definitions failed: %v", err)
+				klog.Infof("list variable definitions failed: %v", err)
 				return
 			}
 
@@ -107,41 +106,42 @@ func editVariable() *cobra.Command {
 			}
 			variable, ok := variableList[searchKey]
 			if !ok {
-				klog.Infoln("No variable found for key: %v", searchKey)
+				klog.Infof("No variable found for key: %v", searchKey)
 				return
 			}
 			// 原内容
 			marshal, err := json.Marshal(variable)
 			if err != nil {
-				klog.Infoln("[variable] deserialize failed: %v", err)
+				klog.Infof("[variable] deserialize failed: %v", err)
 				return
 			}
 			// 把json转成yaml
 			original, err := yaml.JSONToYAML(marshal)
 			if err != nil {
-				klog.Infoln("json to yaml failed: %v", err)
+				klog.Infof("json to yaml failed: %v", err)
 				return
 			}
 			edit := editor.NewDefaultEditor([]string{})
 			// 编辑后的
-			edited, path, err := edit.LaunchTempFile(fmt.Sprintf("%s-edit-", filepath.Base(os.Args[0])), ".yaml", bytes.NewBufferString(string(original)))
+			edited, path, err := edit.LaunchTempFile(fmt.Sprintf("%s-edit-", filepath.Base(os.Args[0])),
+				".yaml", bytes.NewBufferString(string(original)))
 			if err != nil {
-				klog.Infoln("unexpected error: %v", err)
+				klog.Infof("unexpected error: %v", err)
 				return
 			}
-			if _, err := os.Stat(path); err != nil {
-				klog.Infoln("no temp file: %s", path)
+			if _, err = os.Stat(path); err != nil {
+				klog.Infof("no temp file: %s", path)
 				return
 			}
 			// 对比原内容是否更改
 			if bytes.Equal(cmdutil.StripComments(original), cmdutil.StripComments(edited)) {
-				klog.Infoln("Edit cancelled, no valid changes were saved.")
+				klog.Infof("Edit canceled, no valid changes were saved.")
 				return
 			}
 			// 把编辑后的内容yaml转成json
 			editedJson, err := yaml.YAMLToJSON(edited)
 			if err != nil {
-				klog.Infoln("json to yaml failed: %v", err)
+				klog.Infof("json to yaml failed: %v", err)
 				return
 			}
 
@@ -153,12 +153,12 @@ func editVariable() *cobra.Command {
 			{
 				err = json.Unmarshal(editedJson, &editBefore)
 				if err != nil {
-					klog.Infoln("[edit before] deserialize failed: %v", err)
+					klog.Infof("[edit before] deserialize failed: %v", err)
 					return
 				}
 				err = json.Unmarshal(marshal, &editAfter)
 				if err != nil {
-					klog.Infoln("[edit after] deserialize failed: %v", err)
+					klog.Infof("[edit after] deserialize failed: %v", err)
 					return
 				}
 				editAfter.DefaultValue = editBefore.DefaultValue
@@ -181,7 +181,7 @@ func editVariable() *cobra.Command {
 
 			resp, err := client.UpdateVariable(updateData)
 			if err != nil {
-				klog.Infoln("update project variable failed: %v", err)
+				klog.Infof("update project variable failed: %v", err)
 				return
 			}
 			printer.PrintInJSON(resp)

@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,6 +18,7 @@ import (
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
@@ -52,7 +53,8 @@ func (la *GetCustomSettingAction) setResp(code uint32, msg string) {
 }
 
 func (la *GetCustomSettingAction) listModuleCustomSetting() error {
-	moduleInfo := cmdb.NewIpSelector(cmdb.GetCmdbClient(), gse.GetGseClient()).GetCustomSettingModuleList(la.req.ModuleList)
+	moduleInfo := cmdb.NewIpSelector(cmdb.GetCmdbClient(),
+		gse.GetGseClient()).GetCustomSettingModuleList(la.req.ModuleList)
 
 	result, err := utils.MarshalInterfaceToValue(moduleInfo)
 	if err != nil {
@@ -84,7 +86,6 @@ func (la *GetCustomSettingAction) Handle(ctx context.Context, req *cmproto.GetBa
 
 	blog.Infof("GetCustomSettingAction list module custom setting successfully")
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // GetBizInstanceTopoAction action for get biz topo
@@ -169,7 +170,6 @@ func (ga *GetBizInstanceTopoAction) Handle(ctx context.Context, req *cmproto.Get
 
 	blog.Infof("GetBizInstanceTopoAction get biz[%v] instanceTopo successfully", ga.req.ScopeId)
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // GetTopologyNodesAction action for get biz topology nodes
@@ -299,7 +299,6 @@ func (gt *GetTopologyNodesAction) Handle(ctx context.Context, req *cmproto.GetTo
 
 	blog.Infof("GetTopologyNodesAction get biz[%v] topologyNodes successfully", gt.req.ScopeId)
 	gt.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // GetScopeHostCheckAction action for get scope host check
@@ -409,7 +408,6 @@ func (gt *GetScopeHostCheckAction) Handle(ctx context.Context, req *cmproto.GetS
 
 	blog.Infof("GetScopeHostCheckAction get biz[%v] scopeHost successfully", gt.req.ScopeId)
 	gt.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // GetTopologyHostIdsNodesAction action for get biz topology hostIds
@@ -495,9 +493,12 @@ func (gt *GetTopologyHostIdsNodesAction) listBizTopologyHostIdsNodes() error {
 	}
 
 	data := make([]*cmproto.HostIDsNodeData, 0)
-	endIndex := gt.req.Start + gt.req.PageSize
+
+	var endIndex uint64
 	if gt.req.PageSize <= 0 {
 		endIndex = uint64(len(topoNodes))
+	} else {
+		endIndex = gt.req.Start + uint64(gt.req.PageSize)
 	}
 
 	for index, host := range topoNodes {
@@ -531,7 +532,6 @@ func (gt *GetTopologyHostIdsNodesAction) Handle(ctx context.Context, req *cmprot
 
 	blog.Infof("GetTopologyNodesAction get biz[%v] topologyNodes successfully", gt.req.ScopeId)
 	gt.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // GetHostsDetailsAction action for get biz host details
@@ -557,7 +557,7 @@ func (gt *GetHostsDetailsAction) validate() error {
 	if gt.req.ScopeType != common.Biz {
 		return fmt.Errorf("GetTopologyHostIdsNodesAction scopeType[%s] not supported", gt.req.ScopeType)
 	}
-	if len(gt.req.GetHostList()) <= 0 {
+	if len(gt.req.GetHostList()) == 0 {
 		return fmt.Errorf("GetTopologyHostIdsNodesAction hostList empty")
 	}
 
@@ -627,5 +627,4 @@ func (gt *GetHostsDetailsAction) Handle(ctx context.Context, req *cmproto.GetHos
 
 	blog.Infof("GetTopologyNodesAction get biz[%v] topologyNodes successfully", gt.req.ScopeId)
 	gt.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

@@ -161,7 +161,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	nodeCache := nodecache.NewNodeCache(mgr.GetClient(), nodeClient)
+	nodeCache := nodecache.NewNodeCache(mgr.GetClient(), nodeClient, opts.NodeExternalWorkerEnable,
+		opts.NodeExternalIPConfigmap, opts.PodNamespace)
 	// ingressCache 缓存ingress相关的service/workload信息，避免量大时影响ingress调谐时间
 	ingressCache := ingresscache.NewDefaultCache()
 	if err = (&ingressctrl.IngressReconciler{

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package bkmonitor bk monitor
 package bkmonitor
 
 import (
@@ -119,7 +120,7 @@ func (m *BKMonitor) GetClusterCPUTotal(ctx context.Context, projectID, clusterID
 	promql :=
 		`sum(avg_over_time(kube_node_status_allocatable_cpu_cores{%<cluster>s, ` +
 			`job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
-		// NOCC:goconst/string(设计如此)
+	// NOCC:goconst/string(设计如此)
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
 
@@ -219,8 +220,8 @@ func (m *BKMonitor) GetClusterCPURequestUsage(ctx context.Context, projectID, cl
 // GetClusterMemoryTotal 获取集群CPU核心总量
 func (m *BKMonitor) GetClusterMemoryTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
+	// NOCC:goconst/string(设计如此)
 	promql :=
-		// NOCC:goconst/string(设计如此)
 		`sum(avg_over_time(kube_node_status_allocatable_memory_bytes{%<cluster>s, ` +
 			`job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
 
@@ -284,8 +285,8 @@ func (m *BKMonitor) GetClusterMemoryRequestUsage(ctx context.Context, projectID,
 func (m *BKMonitor) GetClusterDiskTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", ` +
-			`mountpoint=~"%<mountpoint>s", %<provider>s})`
+		`sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", ` + // nolint
+			`mountpoint=~"%<mountpoint>s", %<provider>s})` // nolint
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -331,7 +332,7 @@ func (m *BKMonitor) GetClusterDiskioUsage(ctx context.Context, projectID, cluste
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promqlA :=
 		`sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", ` +
-			`%<provider>s}[2m])))`
+			`%<provider>s}[2m])))` // nolint
 	promqlB :=
 		`count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", ` +
 			`%<provider>s}[2m])))`

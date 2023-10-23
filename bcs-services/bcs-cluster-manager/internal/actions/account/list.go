@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package account
@@ -22,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -124,8 +124,6 @@ func (la *ListAction) getAccountListPerm(accountList []string) {
 			Perms: v3Perm,
 		}
 	}
-
-	return
 }
 
 func (la *ListAction) setResp(code uint32, msg string) {
@@ -155,7 +153,6 @@ func (la *ListAction) Handle(
 		return
 	}
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // shieldReturnCloudKey return key by '***'
@@ -293,5 +290,4 @@ func (la *ListPermDataAction) Handle(
 		return
 	}
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

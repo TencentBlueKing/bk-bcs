@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package create
@@ -68,8 +67,8 @@ func createVariable() *cobra.Command {
 		"Variable description and description, limited to 100 characters")
 	cmd.Flags().StringVarP(&request.Default, "default", "", "",
 		"Variable default value")
-	cmd.MarkFlagRequired("name")
-	cmd.MarkFlagRequired("key")
+	_ = cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("key")
 
 	return cmd
 }

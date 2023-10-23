@@ -1,27 +1,3 @@
-<script lang="ts" setup>
-  import { ref } from 'vue'
-  import { IDiffDetail } from '../../../../../../../../../types/service';
-  import { IConfigDiffSelected } from '../../../../../../../../../types/config'
-  import { IVariableEditParams } from '../../../../../../../../../types/variable'
-  import Configs from './configs.vue'
-  import Scripts from './scripts.vue'
-
-  const props = defineProps<{
-    baseVersionId: number;
-    currentVersionId: number;
-    unNamedVersionVariables?: IVariableEditParams[];
-    selectedConfig?: IConfigDiffSelected;
-  }>()
-
-  const emits = defineEmits(['selected'])
-
-  const selectedType = ref('config')
-
-  const handleSelect = (data: IDiffDetail, type: string) => {
-    selectedType.value = type
-    emits('selected', data)
-  }
-</script>
 <template>
   <div class="version-diff-side">
     <div class="config-list-apart">
@@ -40,6 +16,30 @@
       @selected="handleSelect($event, 'script')" />
   </div>
 </template>
+<script lang="ts" setup>
+import { ref } from 'vue';
+import { IDiffDetail } from '../../../../../../../../../types/service';
+import { IConfigDiffSelected } from '../../../../../../../../../types/config';
+import { IVariableEditParams } from '../../../../../../../../../types/variable';
+import Configs from './configs.vue';
+import Scripts from './scripts.vue';
+
+const props = defineProps<{
+    baseVersionId: number;
+    currentVersionId: number;
+    unNamedVersionVariables?: IVariableEditParams[];
+    selectedConfig?: IConfigDiffSelected;
+  }>();
+
+const emits = defineEmits(['selected']);
+
+const selectedType = ref('config');
+
+const handleSelect = (data: IDiffDetail, type: string) => {
+  selectedType.value = type;
+  emits('selected', data);
+};
+</script>
 <style lang="scss" scoped>
   .version-diff-side {
     width: 264px;

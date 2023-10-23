@@ -213,9 +213,9 @@ func (r *Request) WrapURL() *url.URL {
 	}
 
 	if len(r.subPathArgs) > 0 {
-		finalURL.Path = finalURL.Path + fmt.Sprintf(r.subPath, r.subPathArgs...)
+		finalURL.Path += fmt.Sprintf(r.subPath, r.subPathArgs...)
 	} else {
-		finalURL.Path = finalURL.Path + r.subPath
+		finalURL.Path += r.subPath
 	}
 
 	query := url.Values{}
@@ -307,6 +307,8 @@ func (r *Request) tryThrottle(url string) {
 }
 
 // Do http request do.
+//
+//nolint:funlen
 func (r *Request) Do() *Result {
 	result := new(Result)
 

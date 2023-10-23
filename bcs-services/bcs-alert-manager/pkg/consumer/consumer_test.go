@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package consumer
@@ -17,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/cmd/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/handler/eventhandler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/remote/alert"

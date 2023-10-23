@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -199,7 +199,7 @@ func (c *Collection) CreateIndex(ctx context.Context, idx drivers.Index) error {
 	indexOpt := mopt.Index()
 	indexOpt.SetUnique(idx.Unique)
 	indexOpt.SetName(idx.Name)
-	indexOpt.SetBackground(idx.Background)
+	indexOpt.SetBackground(idx.Background) // nolint
 	indexModel := mongo.IndexModel{
 		Keys:    idx.Key,
 		Options: indexOpt,
@@ -232,11 +232,13 @@ func (c *Collection) HasIndex(ctx context.Context, indexName string) (bool, erro
 	if err != nil {
 		return false, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		_ = cursor.Close(ctx)
+	}(cursor, ctx)
 
 	for cursor.Next(ctx) {
 		tmpIndex := &drivers.Index{}
-		cursor.Decode(tmpIndex)
+		_ = cursor.Decode(tmpIndex)
 		if tmpIndex.Name == indexName {
 			return true, nil
 		}
@@ -256,7 +258,9 @@ func (c *Collection) Indexes(ctx context.Context) ([]drivers.Index, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		_ = cursor.Close(ctx)
+	}(cursor, ctx)
 
 	var idxArr []drivers.Index
 	for cursor.Next(ctx) {
@@ -293,7 +297,7 @@ func (c *Collection) Aggregation(ctx context.Context, pipeline interface{}, resu
 		return err
 	}
 	defer func() {
-		cursor.Close(ctx)
+		_ = cursor.Close(ctx)
 	}()
 	return cursor.All(ctx, result)
 }
@@ -467,7 +471,7 @@ func (f *Finder) One(ctx context.Context, result interface{}) error {
 		return err
 	}
 	defer func() {
-		cursor.Close(ctx)
+		_ = cursor.Close(ctx)
 	}()
 	for cursor.Next(ctx) {
 		return cursor.Decode(result)
@@ -528,7 +532,7 @@ func (f *Finder) Count(ctx context.Context) (int64, error) {
 
 // Watcher wrap mongodb change stream
 type Watcher struct {
-	projection       map[string]int
+	projection       map[string]int // nolint
 	batchSize        int32
 	isFull           bool
 	maxAwaitDuration time.Duration
@@ -603,7 +607,9 @@ func (w *Watcher) DoWatch(ctx context.Context) (chan *drivers.WatchEvent, error)
 
 	eventChannel := make(chan *drivers.WatchEvent, 100)
 	go func() {
-		defer changeStream.Close(ctx)
+		defer func(changeStream *mongo.ChangeStream, ctx context.Context) {
+			_ = changeStream.Close(ctx)
+		}(changeStream, ctx)
 		errEvent := &drivers.WatchEvent{
 			Type:           drivers.EventError,
 			DBName:         w.dbName,

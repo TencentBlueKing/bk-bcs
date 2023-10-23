@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package servicemonitor prometheus service monitor
 package servicemonitor
 
 import (
@@ -82,9 +82,7 @@ func ListServiceMonitors(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, v := range data.Items {
-		serviceMonitors = append(serviceMonitors, v)
-	}
+	serviceMonitors = append(serviceMonitors, data.Items...)
 	return serviceMonitors, nil
 }
 
@@ -305,14 +303,11 @@ func validateName(name string) bool {
 
 // validatePath 校验参数是否合法，不可为空
 func validateSelector(selector map[string]string) bool {
-	if selector == nil || len(selector) == 0 {
-		return false
-	}
-	return true
+	return len(selector) != 0
 }
 
 // validateSampleLimit 校验参数是否合法
-func validateSampleLimit(samplelimit int) bool {
+func validateSampleLimit(samplelimit int) bool { // nolint
 	if SampleLimitMax >= samplelimit && samplelimit >= SampleLimitMin {
 		return true
 	}

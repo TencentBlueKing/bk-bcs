@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package rbac
@@ -18,14 +17,14 @@ import (
 	"reflect"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/rbac/template"
-
 	mapset "github.com/deckarep/golang-set"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/rbac/template"
 )
 
 const (
@@ -121,20 +120,20 @@ func (rm *rbacManager) ensureRole(role string) error {
 		return nil
 	} else if err != nil {
 		return fmt.Errorf("error when get clusterrole %s from cluster %s: %s", clusterRoleName, rm.clusterId, err.Error())
-	} else {
-		// clusterrole已存在，判断rules是否一致，如果一致则跳过
-		if reflect.DeepEqual(existedClusterRole.Rules, rules) {
-			return nil
-		}
-		// 如果不一致，则更新已存在的clusterrole
-		existedClusterRole = existedClusterRole.DeepCopy()
-		existedClusterRole.Rules = rules
-		err := rm.updateClusterRole(existedClusterRole)
-		if err != nil {
-			return fmt.Errorf("error when updating clusterrole %s to cluster %s: %s", clusterRoleName, rm.clusterId, err.Error())
-		}
+	}
+	// clusterrole已存在，判断rules是否一致，如果一致则跳过
+	if reflect.DeepEqual(existedClusterRole.Rules, rules) {
 		return nil
 	}
+	// 如果不一致，则更新已存在的clusterrole
+	existedClusterRole = existedClusterRole.DeepCopy()
+	existedClusterRole.Rules = rules
+	err = rm.updateClusterRole(existedClusterRole)
+	if err != nil {
+		return fmt.Errorf("error when updating clusterrole %s to cluster %s: %s",
+			clusterRoleName, rm.clusterId, err.Error())
+	}
+	return nil
 }
 
 // createClusterRole 创建 clusterrole

@@ -8,21 +8,20 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
-
 	"github.com/emicklei/go-restful"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
 )
 
 // WriteFuncFactory builds WriteXXX shortcut functions
 func WriteFuncFactory(statusCode int) func(response *restful.Response, codeName, message string) {
 	return func(response *restful.Response, codeName, message string) {
-		response.WriteHeaderAndEntity(statusCode, types.ErrorResponse{
+		_ = response.WriteHeaderAndEntity(statusCode, types.ErrorResponse{
 			CodeName: codeName,
 			Message:  message,
 		})

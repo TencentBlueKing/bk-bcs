@@ -4,18 +4,19 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package mesos xxx
 package mesos
 
 import (
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strings"
 	"time"
 
@@ -23,18 +24,18 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
-
 	"github.com/emicklei/go-restful"
 	"github.com/ghodss/yaml"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 )
 
 const (
-	//mediaHeader key for http media content type
+	// mediaHeader key for http media content type
 	medieTypeHeader = "Content-Type"
-	//mediaTypeApplicationJSON json payload for http body
-	mediaTypeApplicationJSON = "application/json"
-	//mediaTypeApplicationYaml yaml payload for http body
+	// mediaTypeApplicationJSON json payload for http body
+	mediaTypeApplicationJSON = "application/json" // nolint
+	// mediaTypeApplicationYaml yaml payload for http body
 	mediaTypeApplicationYaml = "application/x-yaml"
 )
 
@@ -56,14 +57,14 @@ func NewTunnelHandler(clientTLS *tls.Config, tunnelDispatcher *WsTunnelDispatche
 func (th *TunnelHandler) request2mesosapi(req *restful.Request, uri, method string) (string, error) {
 	start := time.Now()
 
-	data, err := ioutil.ReadAll(req.Request.Body)
+	data, err := io.ReadAll(req.Request.Body)
 	if err != nil {
 		metrics.ReportAPIRequestMetric("mesos_tunnel_request", method, metrics.LibCallStatusErr, start)
 		blog.Error("handler url %s read request body failed, error: %s", uri, err.Error())
 		err1 := bhttp.InternalError(common.BcsErrCommHttpReadBodyFail, common.BcsErrCommHttpReadBodyFailStr)
 		return err1.Error(), nil
 	}
-	//check application media type
+	// check application media type
 	if mediaTypeApplicationYaml == req.Request.Header.Get(medieTypeHeader) {
 		data, err = yamlTOJSON(data)
 		if err != nil {
@@ -126,7 +127,7 @@ func (th *TunnelHandler) HandlePostActions(req *restful.Request, resp *restful.R
 	}
 
 	data, _ := th.request2mesosapi(req, url, "POST")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 // HandleGetActions handle get action
@@ -139,7 +140,7 @@ func (th *TunnelHandler) HandleGetActions(req *restful.Request, resp *restful.Re
 	}
 
 	data, _ := th.request2mesosapi(req, url, "GET")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 // HandleDeleteActions handle delete action
@@ -152,7 +153,7 @@ func (th *TunnelHandler) HandleDeleteActions(req *restful.Request, resp *restful
 	}
 
 	data, _ := th.request2mesosapi(req, url, "DELETE")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 // HandlePutActions handle put action
@@ -165,7 +166,7 @@ func (th *TunnelHandler) HandlePutActions(req *restful.Request, resp *restful.Re
 	}
 
 	data, _ := th.request2mesosapi(req, url, "PUT")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 // yamlTOJSON check if mesos request body is yaml,

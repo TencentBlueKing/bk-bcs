@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -57,7 +55,7 @@ func (ca *ImportAction) Do(ctx context.Context,
 	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
 		username = authUser.GetUsername()
 	}
-	if err := ca.validateParam(ca.req, ca.resp); err != nil {
+	if err := ca.validateParam(); err != nil {
 		return err
 	}
 	for _, variable := range ca.req.GetData() {
@@ -75,7 +73,7 @@ func (ca *ImportAction) Do(ctx context.Context,
 	return nil
 }
 
-func (ca *ImportAction) validateParam(req *proto.ImportVariablesRequest, resp *proto.ImportVariablesResponse) error {
+func (ca *ImportAction) validateParam() error {
 	for _, variable := range ca.req.GetData() {
 		if _, ok := vdm.SystemVariables[variable.GetKey()]; ok {
 			return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("不能与系统变量 key[%s] 重复", variable.GetKey()))

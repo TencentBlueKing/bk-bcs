@@ -13,6 +13,9 @@
 package dao
 
 import (
+	"sort"
+
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -24,6 +27,8 @@ type ReleasedAppTemplateVariable interface {
 	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, variable *table.ReleasedAppTemplateVariable) (uint32, error)
 	// ListVariables lists all variables in released app template variable
 	ListVariables(kit *kit.Kit, bizID, appID, releaseID uint32) ([]*table.TemplateVariableSpec, error)
+	// BatchDeleteByAppIDWithTx batch delete by app id with transaction.
+	BatchDeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID, bizID uint32) error
 }
 
 var _ ReleasedAppTemplateVariable = new(releasedAppTemplateVariableDao)
@@ -74,5 +79,30 @@ func (dao *releasedAppTemplateVariableDao) ListVariables(kit *kit.Kit, bizID, ap
 	if len(appVars) == 0 {
 		return []*table.TemplateVariableSpec{}, nil
 	}
-	return appVars[0].Spec.Variables, nil
+	vars := appVars[0].Spec.Variables
+
+	// Define a custom sorting function that sorts by the name field in ascending order.
+	sortByName := func(i, j int) bool {
+		return vars[i].Name < vars[j].Name
+	}
+	sort.Slice(vars, sortByName)
+
+	return vars, nil
+}
+
+// BatchDeleteByAppIDWithTx batch delete by app id with transaction.
+func (dao *releasedAppTemplateVariableDao) BatchDeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	appID, bizID uint32) error {
+
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+	if appID == 0 {
+		return errf.New(errf.InvalidParameter, "appID is 0")
+	}
+
+	m := tx.ReleasedAppTemplateVariable
+
+	_, err := m.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Delete()
+	return err
 }

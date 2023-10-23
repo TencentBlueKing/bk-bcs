@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package sfs NOTES
 package sfs
 
 import (
@@ -113,7 +114,7 @@ func GetFingerPrint() (FingerPrint, error) {
 
 // minor may be multiple sidecar in the same container, which needs to be distinguished by minor.
 func minor() string {
-	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano())) //nolint:gosec
 	return fmt.Sprintf("%06v", rnd.Int31n(1000000))
 }
 

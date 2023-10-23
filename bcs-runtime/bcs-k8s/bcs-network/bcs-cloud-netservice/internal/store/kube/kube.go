@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package kube use k8s as storage
 package kube
 
 import (

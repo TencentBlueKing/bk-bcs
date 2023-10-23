@@ -23,10 +23,7 @@ func createBackendWithStorage(t testing.TB) (*backend, logical.Storage) {
 	config := logical.TestBackendConfig()
 	config.StorageView = &logical.InmemStorage{}
 
-	b, _ := Backend(context.Background(), config)
-	if b == nil {
-		t.Fatalf("failed to create backend")
-	}
+	b := Backend(context.Background(), config)
 	err := b.Backend.Setup(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)

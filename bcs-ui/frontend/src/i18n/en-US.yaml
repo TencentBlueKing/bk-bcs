@@ -29,9 +29,9 @@ bcs:
     selfDeployed: Self-deployed cluster
     publicIcon: S
     privateIcon: D
-    federation: ''
-    kubeConfig: ''
-    cloud: ''
+    federation: Federation
+    kubeConfig: KubeConfig
+    cloud: Cloud credential import
   msg:
     emptyHostResource: >-
       You do not have any host resources under the current business. Please
@@ -50,6 +50,7 @@ bcs:
         desc: Please check permissions on the BK IAM
       docs:
         desc: 'For more information, please refer to the product documentation.'
+      viewAndApplyOperation: View and Apply for Operations Roles
     label:
       projectKind:
         text: Orchestration Engine
@@ -253,6 +254,7 @@ generic:
       save1: Saved
       copyIP: '{number} IP addresses copied'
       edit: Editd
+      restart: Restart
     empty:
       noData: No data
       noData1: No data
@@ -338,6 +340,7 @@ generic:
     query: Search
     create: Create
     submit: SUBMIT
+    podDelete: Del-Pods
   label:
     key: Key
     value: Value
@@ -414,6 +417,7 @@ generic:
     taskTimeout: Timeout
     taskKill: Terminate
     taskNotEnable: To-Do
+    restarting: Restarting
   validate:
     repeatKey: Repeat key
     required: Requiring item
@@ -430,7 +434,10 @@ generic:
     fileName: >-
       The filename can only contain numbers, letters, mid-range lines (-), down
       line (_), point (.), The beginning and end must be numbers or letters
-    notRootName: ''
+    name: >-
+      Only letters, numbers and characters (-) are supported and start with a
+      letter
+    notRootName: The username cannot be root.
   title:
     curVersion: Current
     basicInfo: Basic Information
@@ -614,8 +621,8 @@ cluster:
     region: Region
     clusterType: Cluster type
     cloudClusterID: Cloud cluster id
-    importCategory: ''
-    maxPodNum: ''
+    importCategory: Import category
+    maxPodNum: Max pod number
   status:
     unknown: Unknown cluster status
     importFailed: Import failed
@@ -697,7 +704,11 @@ cluster:
               specification automatically  when the load on control plane
               components reaches the threshold or the number of nodes reaches
               the upper limit.
-          gkeDesc: ''
+          gkeDesc: >-
+            The Master and ETCDs of the Kubernetes cluster will be centrally
+            managed and maintained by the GKE team. The cluster administrator
+            does not need to care about the management and maintenance of the
+            cluster Master.
         independent:
           desc: >-
             Uses requested or existing CVM resources for Master nodes; Only 3
@@ -854,6 +865,7 @@ cluster:
       noModule: >-
         Enabling the Autoscaler component requires configuration of the CMDB
         topology module
+      noModule2: 'To add a node from a node pool, configure a transfer module'
       notEmptyNodes: Please delete the nodes before removing the node pool.
       noEnableNodePool: >-
         Cluster Autoscaler requires at least one node pool to be enabled. 
@@ -1084,8 +1096,8 @@ cluster:
             premium: High -performance cloud hard disk
             ssd: SSD cloud hard disk
             hssd: Enhanced SSD cloud hard disk
-            balanced: ''
-            standard: ''
+            balanced: Balanced Disk
+            standard: Standard Disk
           disk:
             system: System disk
             data: Data disk
@@ -1417,8 +1429,8 @@ cluster:
       max10NodeDrain: 'At most, it can only expel 10 nodes in batches'
     tips:
       disableImportClusterAction: 'Kubeconfig imports cluster, node management function is unavailable'
-      hasNotNodePoolNode: ''
-      disableImportClusterAddNode: ''
+      hasNotNodePoolNode: There are nodes added by non-node pools among the selected nodes.
+      disableImportClusterAddNode: Importing a cluster does not support adding nodes from existing servers.
     placeholder:
       searchNode: 'Search for IP, label, taints, annotations, status, node source, nodePool'
     title:
@@ -2641,6 +2653,7 @@ dashboard:
   title:
     confirmDelete: Confirm to delete the resource
     overview: Overview
+    confirmSchedule: 'Confirm {action} all Pods under the current resource'
   placeholder:
     selectCRD: Select CRD
     search1: Search name
@@ -2724,6 +2737,8 @@ dashboard:
       scaleNum: Instances
     button:
       yaml: View yaml configuration
+      restart: Restart
+      onDelete: On-Delete
     container:
       title: Container
       name: Container Name
@@ -2964,7 +2979,9 @@ manualNode:
     gotoNodePool: Node pool
   msg:
     confirmText: Confirm whether to continue adding nodes
-    confirmText1: ''
+    confirmText1: >-
+      This node pool has auto-scaling enabled. Please confirm whether to
+      continue adding nodes.
 ca:
   internetAccess:
     label:
@@ -2978,75 +2995,131 @@ ca:
       createBandWidth: Create bandWidth
 googleCloud:
   button:
-    create: ''
-    validate: ''
-    create1: ''
-    cancel: ''
+    create: Create
+    validate: Validate
+    create1: Create
+    cancel: Cancel
   placeholder:
-    search: ''
+    search: Search name/cluster
   label:
-    projectID: ''
-    tokenName: ''
-    desc: ''
-    tokenID: ''
-    oAuth2ID: ''
-    cluster: ''
-    createdAt: ''
-    createdBy: ''
-    operate: ''
-    gcpFile: ''
+    projectID: ProjectID
+    tokenName: Token name
+    desc: Description
+    tokenID: Token ID
+    oAuth2ID: OAuth2 ID
+    cluster: Associated cluster
+    createdAt: Created At
+    createdBy: Created By
+    operate: Action
+    gcpFile: GCP key file
     zoneCluster:
-      title: ''
-      desc: ''
+      title: Zones
+      desc: >-
+        The current cluster specifications can manage up to 2,000 nodes, 200,000
+        Pods, and 400,000 containers. Each node pool supports up to 1,000 nodes,
+        and each node supports up to 256 Pods.
     regionCluster:
-      title: ''
-      desc: ''
-    loginUser: ''
+      title: Regions
+      desc: >-
+        The current cluster specifications can manage up to 15,000 nodes. For
+        nodes exceeding 5,000, you need to contact the GKE service team to
+        increase the cluster quota, which is 200,000 Pods and 400,000
+        containers. Each node pool supports up to 1,000 nodes, and each node
+        supports up to 256 Pods.
+    loginUser: Login user
   tips:
-    onlySupportJsonFile: ''
+    onlySupportJsonFile: >-
+      Only the json file generated when a service account is created is
+      supported
 importGoogleCloud:
-  title: ''
+  title: Import a public cloud cluster - Google Cloud
   label:
-    clusterName: ''
-    token: ''
-    region: ''
-    clusterID: ''
-    desc: ''
+    clusterName: Cluster name
+    token: Cloud Credentials
+    region: Region
+    clusterID: Cluster ID
+    desc: Description
   button:
-    test: ''
-    import: ''
-    create: ''
+    test: Test
+    import: Import
+    create: Create
   clusterRegion:
-    zones: ''
-    regions: ''
+    zones: Zones
+    regions: Regions
   tips:
-    disabledTips: ''
+    disabledTips: Credentials associated with the cluster and cannot be deleted
 publicCloud:
   tencent:
-    title: ''
-    desc: ''
+    title: Tencent Cloud
+    desc: >-
+      Tencent Cloud Container Service (Tencent Kubernetes Engine, TKE) provides
+      highly scalable, high-performance container management services based on
+      native kubernetes with containers as the core.
   amazon:
-    title: ''
-    desc: ''
+    title: Amazon
+    desc: >-
+      Amazon Elastic Kubernetes Service (Amazon EKS) is a managed container
+      service that can run and scale Kubernetes applications in the cloud and
+      on-premises.
   google:
-    title: ''
-    desc: ''
+    title: Google
+    desc: >-
+      Google Kubernetes Engine (GKE) provides a managed environment where you
+      can use Google The infrastructure within which containerized applications
+      are deployed, hosted, and scaled. A GKE environment consists of multiple
+      machines that are grouped together to form a cluster.
   azure:
-    title: ''
-    desc: ''
+    title: Azure
+    desc: >-
+      Azure Kubernetes Service (AKS) has built-in code-to-cloud pipelines and
+      guardrails to help developers start developing and deploying cloud-native
+      applications in the fastest way possible. Try unified management and
+      governance across on-premises, edge, and multi-cloud Kubernetes clusters.
+      Provides interoperability with Azure security, identity, cost management,
+      and migration services.
 regions:
-  asia: ''
-  australia: ''
-  europe: ''
-  northamerica: ''
-  southamerica: ''
-  us: ''
-  other: ''
+  asia: Asia
+  australia: Australia
+  europe: Europe
+  northamerica: North America
+  southamerica: South America
+  us: US
+  other: Other
+updateRecord:
+  label:
+    versionDiff: Version comparison
+    onlineVersion: Online
+    revision: Revision
+    images: Images
+    updater: Updater
+    createTime: Create At
+    operator: Action
+    versionDetail: Detail
+    rollbackVersion: Version rollback
+  button:
+    rolloutThisVersion: Rollback
+    diff: Diff
+    rollout: Rollback
+    diff2: Diff
+    close: Close
+  confirmRollout:
+    title: Are you sure you want to roll back to this version?
+    subTitle: 'Target version: {0}'
+  placeholder:
+    search: Search images/updater
 googleCA:
   tips:
-    system: ''
-    zone: ''
-    dataDisk: ''
-    securityGroup: ''
+    system: >-
+      Because the operating system “Container-Optimized OS (cos_containerd)
+      including Containerd (default)” has many restrictions, BlueKing components
+      depend on these restricted features, currently only the operating system
+      “Ubuntu including Containerd (ubuntu_containerd)” is supported.
+    zone: 'Currently, only a single availability zone is supported.'
+    dataDisk: >-
+      After purchasing a data disk and adding nodes, you need to manually format
+      and mount the disk.
+    securityGroup: >-
+      Node pool uses VPC firewall rules to control the incoming/outgoing traffic
+      of node instances, please go to the {0} page to set up.
   button:
-    vpcRule: ''
+    vpcRule: VPC Rule

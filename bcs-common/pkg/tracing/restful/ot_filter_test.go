@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package restful
@@ -22,14 +21,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/emicklei/go-restful"
+	opentrace "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
+	tracinglog "github.com/opentracing/opentracing-go/log"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/jaeger"
-
-	"github.com/emicklei/go-restful"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	tracinglog "github.com/opentracing/opentracing-go/log"
 )
 
 func initTracing(t *testing.T) (io.Closer, error) {
@@ -56,7 +55,9 @@ func TestNewOTFilter(t *testing.T) {
 	}
 
 	if closer != nil {
-		defer closer.Close()
+		defer func(closer io.Closer) {
+			_ = closer.Close()
+		}(closer)
 	}
 
 	registerWebService()
@@ -82,7 +83,7 @@ func registerWebService() {
 	}()
 
 	filters := []restful.FilterFunction{}
-	filters = append(filters, NewOTFilter(opentracing.GlobalTracer()), webserviceLogging)
+	filters = append(filters, NewOTFilter(opentrace.GlobalTracer()), webserviceLogging)
 
 	webService := server.NewWebService("/tracing", filters)
 	webService.Route(webService.GET("/hello").To(hello))
@@ -98,11 +99,11 @@ func webserviceLogging(req *restful.Request, resp *restful.Response, chain *rest
 func hello(req *restful.Request, resp *restful.Response) {
 	formatString(req.Request.Context(), "hello")
 	resp.WriteHeader(http.StatusOK)
-	resp.Write([]byte("hello"))
+	_, _ = resp.Write([]byte("hello"))
 }
 
 func formatString(ctx context.Context, helloTo string) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "formatString")
+	span, _ := opentrace.StartSpanFromContext(ctx, "formatString")
 	defer span.Finish()
 
 	helloStr := fmt.Sprintf("hello, %s", helloTo)
@@ -113,23 +114,24 @@ func formatString(ctx context.Context, helloTo string) {
 }
 
 func getServiceHello(ctx context.Context) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "getServiceHello")
-	defer span.Finish()
+	span, _ := opentrace.StartSpanFromContext(ctx, "getServiceHello")
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", "http://127.0.0.1:8083/tracing/hello", nil)
 	if err != nil {
+		span.Finish()
 		log.Fatal(err)
 	}
 
 	ext.SpanKindRPCClient.Set(span)
 	ext.HTTPUrl.Set(span, req.URL.Path)
 	ext.HTTPMethod.Set(span, "GET")
-	span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+	_ = span.Tracer().Inject(span.Context(), opentrace.HTTPHeaders, opentrace.HTTPHeadersCarrier(req.Header))
 
 	_, err = client.Do(req)
 	if err != nil {
 		ext.LogError(span, err)
+		span.Finish()
 		log.Fatal(err)
 	}
 }

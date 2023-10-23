@@ -8,20 +8,20 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package application xxx
 package application
 
 import (
 	"fmt"
 	"net/url"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
-
 	"github.com/urfave/cli"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 )
 
 // NewRescheduleCommand xxx
@@ -117,10 +117,10 @@ func rescheduleTaskGroupByIP(c *utils.ClientContext) error {
 	}
 
 	fmt.Printf("total success taskgroups: %d\n", successCnt)
-	fmt.Printf(successMsg)
+	fmt.Print(successMsg)
 	fmt.Println()
 	fmt.Printf("total failure taskgroups: %d\n", failureCnt)
-	fmt.Printf(failureMsg)
+	fmt.Print(failureMsg)
 	return nil
 }
 

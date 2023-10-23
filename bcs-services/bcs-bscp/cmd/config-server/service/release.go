@@ -28,7 +28,6 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 	grpcKit := kit.FromGrpcContext(ctx)
 	// the url path doesn't include appID, set the appID to use later
 	grpcKit.AppID = req.AppId
-	resp := new(pbcs.CreateReleaseResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -56,7 +55,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 		return nil, err
 	}
 
-	resp = &pbcs.CreateReleaseResp{
+	resp := &pbcs.CreateReleaseResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -65,7 +64,6 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 // ListReleases list releases with options
 func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (*pbcs.ListReleasesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListReleasesResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -90,7 +88,7 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 		return nil, err
 	}
 
-	resp = &pbcs.ListReleasesResp{
+	resp := &pbcs.ListReleasesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

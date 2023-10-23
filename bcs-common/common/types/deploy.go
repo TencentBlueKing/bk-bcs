@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package types
@@ -80,7 +79,7 @@ func (rc RenderConfig) Render(s string) (r string) {
 		field := typeOf.Field(i)
 		tag := field.Tag.Get("render")
 		value := reflect.ValueOf(rc).FieldByName(field.Name).String()
-		r = strings.Replace(r, fmt.Sprintf(tagFormat, tag), value, -1)
+		r = strings.ReplaceAll(r, fmt.Sprintf(tagFormat, tag), value)
 		i++
 	}
 	return r

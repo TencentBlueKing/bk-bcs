@@ -8,10 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-// Package pod xxx
+// Package pod pod operate
 package pod
 
 import (
@@ -89,7 +88,7 @@ func DownloadPodLog(c *rest.Context) {
 	}
 
 	// 下载参数
-	logQuery.TailLines = int64(k8sclient.MAX_TAIL_LINES)
+	logQuery.TailLines = k8sclient.MAX_TAIL_LINES
 	logQuery.LimitBytes = int64(k8sclient.MAX_LIMIT_BYTES)
 
 	logs, err := k8sclient.GetPodLogByte(c.Request.Context(), clusterId, namespace, pod, logQuery)

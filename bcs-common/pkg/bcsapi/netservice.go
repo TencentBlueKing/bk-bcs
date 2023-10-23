@@ -18,7 +18,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net"
 	"net/http"
@@ -74,7 +74,7 @@ type NetserviceCli struct {
 func NewNetserviceCli() *NetserviceCli {
 	return &NetserviceCli{
 		httpClientTimeout: 3,
-		random:            rand.New(rand.NewSource(time.Now().UnixNano())),
+		random:            rand.New(rand.NewSource(time.Now().UnixNano())), // nolint
 	}
 }
 
@@ -82,7 +82,7 @@ func NewNetserviceCli() *NetserviceCli {
 func NewNetserviceCliWithTimeout(timeoutSeconds int) *NetserviceCli {
 	return &NetserviceCli{
 		httpClientTimeout: timeoutSeconds,
-		random:            rand.New(rand.NewSource(time.Now().UnixNano())),
+		random:            rand.New(rand.NewSource(time.Now().UnixNano())), // nolint
 	}
 }
 
@@ -112,8 +112,8 @@ func (nc *NetserviceCli) GetNetServiceWithEtcd(etcdHosts []string, tlsConfig *tl
 	netSvrStr := os.Getenv(envVarNameNetservice)
 	if len(netSvrStr) != 0 {
 		netSvrs := strings.Split(
-			strings.Replace(
-				strings.TrimSpace(netSvrStr), ";", ",", -1), ",")
+			strings.ReplaceAll(
+				strings.TrimSpace(netSvrStr), ";", ","), ",")
 		nc.netSvrs = append(nc.netSvrs, netSvrs...)
 		return nil
 	}
@@ -233,8 +233,10 @@ func (nc *NetserviceCli) RegisterPool(pool *types.NetPool) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("register pool Got err response: %s", response.Status)
 	}
-	defer response.Body.Close()
-	resDatas, err := ioutil.ReadAll(response.Body)
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(response.Body)
+	resDatas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("register pool read response body failed, %s", err)
 	}
@@ -282,8 +284,10 @@ func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("udpate pool Got err response: %s", response.Status)
 	}
-	defer response.Body.Close()
-	resDatas, err := ioutil.ReadAll(response.Body)
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(response.Body)
+	resDatas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("udpate pool read response body failed, %s", err)
 	}
@@ -321,8 +325,10 @@ func (nc *NetserviceCli) GetPool(cluster, net string) ([]*types.NetPool, error) 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("get pool http response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	defer response.Body.Close()
-	datas, err := ioutil.ReadAll(response.Body)
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(response.Body)
+	datas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("get pool read netservice response failed, %s", err.Error())
 	}
@@ -364,8 +370,10 @@ func (nc *NetserviceCli) ListAllPool() ([]*types.NetPool, error) {
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("list all pool http response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	defer response.Body.Close()
-	datas, err := ioutil.ReadAll(response.Body)
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(response.Body)
+	datas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("list all pool read netservice response failed, %s", err.Error())
 	}
@@ -409,8 +417,10 @@ func (nc *NetserviceCli) ListAllPoolWithCluster(cluster string) ([]*types.NetPoo
 		return nil, fmt.Errorf("list all pool with cluster http response %s from %s",
 			response.Status, nc.netSvrs[seq[0]])
 	}
-	defer response.Body.Close()
-	datas, err := ioutil.ReadAll(response.Body)
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(response.Body)
+	datas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("list all pool with cluster read netservice response failed, %s", err.Error())
 	}
@@ -452,8 +462,10 @@ func (nc *NetserviceCli) DeletePool(cluster, net string) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("delete pool http response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	defer response.Body.Close()
-	datas, err := ioutil.ReadAll(response.Body)
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(response.Body)
+	datas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("delete pool read netservice response failed, %s", err.Error())
 	}
@@ -492,11 +504,13 @@ func (nc *NetserviceCli) RegisterHost(host *types.HostInfo) error {
 	if err != nil {
 		return fmt.Errorf("send request failed, %s", err)
 	}
-	defer response.Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(response.Body)
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("register host got response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	resDatas, err := ioutil.ReadAll(response.Body)
+	resDatas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("register host  read netservice response failed, %s", err.Error())
 	}
@@ -543,11 +557,13 @@ func (nc *NetserviceCli) DeleteHost(host string, ips []string) error {
 	if err != nil {
 		return fmt.Errorf("delete host send request to net service failed, %s", err)
 	}
-	defer response.Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(response.Body)
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("delete host got response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	resDatas, err := ioutil.ReadAll(response.Body)
+	resDatas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("delete host read netservice response failed, %s", err.Error())
 	}
@@ -589,7 +605,7 @@ func (nc *NetserviceCli) GetHostInfo(host string, timeout int) (*types.HostInfo,
 			continue
 		}
 		defer response.Body.Close()
-		data, err := ioutil.ReadAll(response.Body)
+		data, err := io.ReadAll(response.Body)
 		if err != nil {
 			return nil, err
 		}
@@ -656,7 +672,7 @@ func (nc *NetserviceCli) LeaseIPAddr(lease *types.IPLease, timeout int) (*types.
 			continue
 		}
 		defer httpResponse.Body.Close()
-		data, err := ioutil.ReadAll(httpResponse.Body)
+		data, err := io.ReadAll(httpResponse.Body)
 		if err != nil {
 			return nil, err
 		}
@@ -690,7 +706,7 @@ func (nc *NetserviceCli) LeaseIPAddr(lease *types.IPLease, timeout int) (*types.
 
 // ReleaseIPAddr release ip address to bcs-netservice. It will send http request to netservice to
 // allocate the ip address.
-func (nc *NetserviceCli) ReleaseIPAddr(release *types.IPRelease, ipInfo *types.IPInfo, timeout int) error {
+func (nc *NetserviceCli) ReleaseIPAddr(release *types.IPRelease, _ *types.IPInfo, timeout int) error {
 	// create net request
 	request := &types.NetRequest{
 		Type:    types.RequestType_RELEASE,
@@ -728,7 +744,7 @@ func (nc *NetserviceCli) ReleaseIPAddr(release *types.IPRelease, ipInfo *types.I
 			continue
 		}
 		defer httpResponse.Body.Close()
-		data, err := ioutil.ReadAll(httpResponse.Body)
+		data, err := io.ReadAll(httpResponse.Body)
 		if err != nil {
 			return err
 		}
@@ -773,11 +789,13 @@ func (nc *NetserviceCli) UpdateIPInstance(inst *types.IPInst) error {
 	if err != nil {
 		return fmt.Errorf("send request failed, %s", err)
 	}
-	defer response.Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(response.Body)
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("update instance got response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	resDatas, err := ioutil.ReadAll(response.Body)
+	resDatas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("update instance read netservice response failed, %s", err.Error())
 	}
@@ -817,11 +835,13 @@ func (nc *NetserviceCli) TransferIPAttr(input *types.TranIPAttrInput) error {
 	if err != nil {
 		return fmt.Errorf("tranfer ip attr send request failed, %s", err)
 	}
-	defer response.Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(response.Body)
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("tranfer ip attr got response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	resDatas, err := ioutil.ReadAll(response.Body)
+	resDatas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("tranfer ip attr read netservice response failed, %s", err.Error())
 	}
@@ -844,7 +864,7 @@ func (nc *NetserviceCli) getHTTPClient(timeout int) (*http.Client, string) {
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
-			DualStack: true,
+			DualStack: true, // nolint
 		}).DialContext,
 		MaxIdleConns:          100,
 		IdleConnTimeout:       90 * time.Second,

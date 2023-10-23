@@ -82,7 +82,7 @@ gen:
 
 .PHONY: lint
 lint:
-	@golangci-lint run --issues-exit-code=0 --fix
+	@golangci-lint run --issues-exit-code=0 --fix --skip-dirs=test --skip-dirs=pkg/logs/glog
 
 test: pre
 	@cd test/suite && make && cp -rf suite-test ${OUTPUT_DIR}/ && rm -rf suite-test

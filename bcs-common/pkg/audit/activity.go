@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package audit xxx
 package audit
 
 import (
@@ -42,6 +42,8 @@ const (
 	// ActivityStatusPending means the activity is pending
 	ActivityStatusPending ActivityStatus = "pending"
 
+	// ActivityTypeView means the activity type is view
+	ActivityTypeView ActivityType = "view"
 	// ActivityTypeCreate means the activity type is create
 	ActivityTypeCreate ActivityType = "create"
 	// ActivityTypeUpdate means the activity type is update
@@ -93,6 +95,8 @@ type Activity struct {
 	Status       ActivityStatus `json:"status"`
 	Username     string         `json:"username"`
 	Description  string         `json:"description"`
+	SourceIP     string         `json:"source_ip"`
+	UserAgent    string         `json:"user_agent"`
 	Extra        string         `json:"extra"`
 }
 

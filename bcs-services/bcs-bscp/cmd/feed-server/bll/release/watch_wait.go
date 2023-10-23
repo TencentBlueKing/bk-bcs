@@ -42,11 +42,9 @@ func (ws *waitShutdown) waiting() {
 
 	var start time.Time
 	notifier := shutdown.AddNotifier()
-	select {
-	case <-notifier.Signal:
-		start = time.Now()
-		logs.Infof("sidecar watch received shutdown message, start broadcast the bounce message now.")
-	}
+	<-notifier.Signal
+	start = time.Now()
+	logs.Infof("sidecar watch received shutdown message, start broadcast the bounce message now.")
 
 	// broadcast the shutdown message to all the watching sidecar
 	close(ws.broadcast)

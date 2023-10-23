@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -25,7 +25,7 @@ type basicRecord struct {
 	TotalPages   int64 `json:"totalPages"`
 }
 
-type createRepo struct {
+type createRepo struct { // nolint
 	// project id in bk-repo
 	ProjectID             string             `json:"projectId"`
 	Name                  string             `json:"name"`
@@ -38,40 +38,40 @@ type createRepo struct {
 	Quota                 int64              `json:"quota"`
 }
 
-type repoConfiguration struct {
+type repoConfiguration struct { // nolint
 	Type     string      `json:"type"`
 	Settings interface{} `json:"settings"`
 }
 
-type repoConfiguration4Local struct {
+type repoConfiguration4Local struct { // nolint
 }
 
-type repoConfiguration4Remote struct {
+type repoConfiguration4Remote struct { // nolint
 	URL         string                                    `json:"url"`
 	Credentials *repoConfiguration4RemoteAboutCredentials `json:"credentials"`
 	Network     *repoConfiguration4RemoteAboutNetwork     `json:"network"`
 	Cache       *repoConfiguration4RemoteAboutCache       `json:"cache"`
 }
 
-type repoConfiguration4RemoteAboutCredentials struct {
+type repoConfiguration4RemoteAboutCredentials struct { // nolint
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-type repoConfiguration4RemoteAboutNetwork struct {
+type repoConfiguration4RemoteAboutNetwork struct { // nolint
 	Proxy          *repoConfiguration4RemoteAboutNetworkProxy `json:"proxy"`
 	ConnectTimeout int64                                      `json:"connectTimeout"`
 	ReadTimeout    int64                                      `json:"readTimeout"`
 }
 
-type repoConfiguration4RemoteAboutNetworkProxy struct {
+type repoConfiguration4RemoteAboutNetworkProxy struct { // nolint
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-type repoConfiguration4RemoteAboutCache struct {
+type repoConfiguration4RemoteAboutCache struct { // nolint
 	Enabled    bool  `json:"enabled"`
 	Expiration int64 `json:"expiration"`
 }

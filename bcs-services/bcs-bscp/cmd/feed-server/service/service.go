@@ -111,21 +111,19 @@ func (s *Service) ListenAndServeRest() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
-		case <-notifier.Signal:
-			defer notifier.Done()
+		<-notifier.Signal
+		defer notifier.Done()
 
-			logs.Infof("start shutdown restful server gracefully...")
+		logs.Infof("start shutdown restful server gracefully...")
 
-			ctx, cancel := context.WithTimeout(context.TODO(), 20*time.Second)
-			defer cancel()
-			if err := server.Shutdown(ctx); err != nil {
-				logs.Errorf("shutdown restful server failed, err: %v", err)
-				return
-			}
-
-			logs.Infof("shutdown restful server success...")
+		ctx, cancel := context.WithTimeout(context.TODO(), 20*time.Second)
+		defer cancel()
+		if err := server.Shutdown(ctx); err != nil {
+			logs.Errorf("shutdown restful server failed, err: %v", err)
+			return
 		}
+
+		logs.Infof("shutdown restful server success...")
 	}()
 
 	go func() {

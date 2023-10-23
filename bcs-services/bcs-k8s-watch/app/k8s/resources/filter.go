@@ -14,6 +14,7 @@ package resources
 
 import (
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 )
 

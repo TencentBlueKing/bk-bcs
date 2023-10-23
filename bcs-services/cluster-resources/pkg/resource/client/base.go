@@ -1,17 +1,16 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package client xxx
 package client
 
 import (
@@ -63,6 +62,14 @@ func (c *ResClient) List(
 	if err := c.permValidate(ctx, action.List, namespace); err != nil {
 		return nil, err
 	}
+	ret, err := c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
+	return ret, c.handleErr(ctx, err)
+}
+
+// ListWithoutPerm 获取资源列表，不做权限校验
+func (c *ResClient) ListWithoutPerm(
+	ctx context.Context, namespace string, opts metav1.ListOptions,
+) (*unstructured.UnstructuredList, error) {
 	ret, err := c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
 	return ret, c.handleErr(ctx, err)
 }

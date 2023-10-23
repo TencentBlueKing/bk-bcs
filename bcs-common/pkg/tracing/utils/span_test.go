@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -19,9 +18,10 @@ import (
 	"io"
 	"testing"
 
+	tracinglog "github.com/opentracing/opentracing-go/log"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/jaeger"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 func initTracing(t *testing.T, serviceName string) (io.Closer, error) {
@@ -46,7 +46,9 @@ func TestSpanPackage(t *testing.T) {
 	}
 
 	if closer != nil {
-		defer closer.Close()
+		defer func(closer io.Closer) {
+			_ = closer.Close()
+		}(closer)
 	}
 
 	span, ctx := StartSpanFromContext(context.Background(), "say-hello-2")
@@ -54,8 +56,8 @@ func TestSpanPackage(t *testing.T) {
 
 	SetSpanCommonTag(span, "hello-to", "evan")
 	SetSpanLogFields(span,
-		log.Event("string-format"),
-		log.String("value", "lixin"),
+		tracinglog.Event("string-format"),
+		tracinglog.String("value", "lixin"),
 	)
 
 	formatString(ctx, "evan")
@@ -68,8 +70,8 @@ func formatString(ctx context.Context, helloTo string) string {
 
 	helloStr := fmt.Sprintf("Hello, %s!", helloTo)
 	span.LogFields(
-		log.String("event", "string-format"),
-		log.String("value", helloStr),
+		tracinglog.String("event", "string-format"),
+		tracinglog.String("value", helloStr),
 	)
 
 	printHello(ctx, helloTo)

@@ -27,9 +27,10 @@ import (
 )
 
 // CreateCredentials create a credential
-func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredentialReq) (*pbcs.CreateCredentialResp, error) {
+func (s *Service) CreateCredentials(ctx context.Context,
+	req *pbcs.CreateCredentialReq) (*pbcs.CreateCredentialResp, error) {
+
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateCredentialResp)
 
 	bizID := req.BizId
 	res := []*meta.ResourceAttribute{
@@ -44,7 +45,7 @@ func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredent
 	masterKey := cc.ConfigServer().Credential.MasterKey
 	encryptionAlgorithm := cc.ConfigServer().Credential.EncryptionAlgorithm
 
-	//create token
+	// create token
 	credential, err := tools.CreateCredential(masterKey, encryptionAlgorithm)
 	if err != nil {
 		return nil, err
@@ -57,6 +58,7 @@ func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredent
 		},
 		Spec: &pbcredential.CredentialSpec{
 			Memo:           req.Memo,
+			Name:           req.Name,
 			CredentialType: table.BearToken.String(),
 			Enable:         true,
 			EncAlgorithm:   encryptionAlgorithm,
@@ -70,16 +72,17 @@ func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredent
 		return nil, err
 	}
 
-	resp = &pbcs.CreateCredentialResp{
+	resp := &pbcs.CreateCredentialResp{
 		Id: rp.Id,
 	}
 	return resp, nil
 }
 
 // ListCredentials get Credentials
-func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentialsReq) (*pbcs.ListCredentialsResp, error) {
+func (s *Service) ListCredentials(ctx context.Context,
+	req *pbcs.ListCredentialsReq) (*pbcs.ListCredentialsResp, error) {
+
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListCredentialsResp)
 
 	bizID := req.BizId
 	res := []*meta.ResourceAttribute{
@@ -105,15 +108,16 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentials
 	}
 
 	for _, val := range rp.Details {
-		credential, err := tools.DecryptCredential(val.Spec.EncCredential, cc.ConfigServer().Credential.MasterKey, val.Spec.EncAlgorithm)
-		if err != nil {
-			logs.Errorf("credentials decrypt failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
+		credential, e := tools.DecryptCredential(val.Spec.EncCredential, cc.ConfigServer().Credential.MasterKey,
+			val.Spec.EncAlgorithm)
+		if e != nil {
+			logs.Errorf("credentials decrypt failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return nil, e
 		}
 		val.Spec.EncCredential = credential
 	}
 
-	resp = &pbcs.ListCredentialsResp{
+	resp := &pbcs.ListCredentialsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -121,7 +125,9 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentials
 }
 
 // DeleteCredential delete Credential
-func (s *Service) DeleteCredential(ctx context.Context, req *pbcs.DeleteCredentialsReq) (*pbcs.DeleteCredentialsResp, error) {
+func (s *Service) DeleteCredential(ctx context.Context,
+	req *pbcs.DeleteCredentialsReq) (*pbcs.DeleteCredentialsResp, error) {
+
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteCredentialsResp)
 
@@ -150,8 +156,10 @@ func (s *Service) DeleteCredential(ctx context.Context, req *pbcs.DeleteCredenti
 }
 
 // UpdateCredential update credential
-func (s *Service) UpdateCredential(ctx context.Context, req *pbcs.UpdateCredentialsReq) (*pbcs.UpdateCredentialsResp, error) {
+func (s *Service) UpdateCredential(ctx context.Context,
+	req *pbcs.UpdateCredentialsReq) (*pbcs.UpdateCredentialsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
+
 	resp := new(pbcs.UpdateCredentialsResp)
 
 	res := []*meta.ResourceAttribute{
@@ -169,6 +177,7 @@ func (s *Service) UpdateCredential(ctx context.Context, req *pbcs.UpdateCredenti
 		},
 		Spec: &pbcredential.CredentialSpec{
 			Enable: req.Enable,
+			Name:   req.Name,
 			Memo:   req.Memo,
 		},
 	}

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package template for template
 package template
 
 import (
@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -192,7 +193,8 @@ func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *pr
 	return step, nil
 }
 
-func getTemplateParameterByName(name string, cluster *proto.Cluster, extra ExtraInfo) (string, error) {
+// NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
+func getTemplateParameterByName(name string, cluster *proto.Cluster, extra ExtraInfo) (string, error) { // nolint
 	if cluster == nil {
 		errMsg := fmt.Errorf("cluster is empty when getTemplateParameterByName")
 		blog.Errorf(errMsg.Error())

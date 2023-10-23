@@ -1,28 +1,3 @@
-<script lang="ts" setup>
-  import { useRoute, useRouter } from 'vue-router'
-  import { storeToRefs } from 'pinia'
-  import { useTemplateStore } from '../../../../store/template'
-  import SpaceSelector from './space/selector.vue';
-  import PackageMenu from './package-menu/menu.vue';
-  import PackageDetail from './package-detail/index.vue';
-import { onMounted } from 'vue';
-
-  const route = useRoute()
-  const templateStore = useTemplateStore()
-
-  onMounted(() => {
-    const { templateSpaceId, packageId } = route.params
-    templateStore.$patch((state) => {
-      if (templateSpaceId) {
-        state.currentTemplateSpace = Number(templateSpaceId)
-      }
-      if (packageId) {
-        state.currentPkg = /\d+/.test(<string>packageId) ? Number(packageId) : <string>packageId
-      }
-    })
-  })
-
-</script>
 <template>
   <div class="templates-page">
     <bk-alert class="template-tips" theme="info">
@@ -31,50 +6,84 @@ import { onMounted } from 'vue';
         <!-- <bk-button text theme="primary">go template</bk-button> -->
       </div>
     </bk-alert>
-    <div class="main-content-container">
-      <div class="side-menu-area">
-        <space-selector></space-selector>
-        <package-menu></package-menu>
-      </div>
-      <div class="package-detail-area">
-        <package-detail></package-detail>
-      </div>
-    </div>
+    <bk-resize-layout class="main-content-container" :min="240" :initial-divide="240" :max="480">
+      <template #aside>
+        <div class="side-menu-area">
+          <space-selector></space-selector>
+          <package-menu></package-menu>
+        </div>
+      </template>
+      <template #main>
+        <div class="package-detail-area">
+          <package-detail></package-detail>
+        </div>
+      </template>
+    </bk-resize-layout>
   </div>
 </template>
+<script lang="ts" setup>
+import { useRoute } from 'vue-router';
+import useTemplateStore from '../../../../store/template';
+import SpaceSelector from './space/selector.vue';
+import PackageMenu from './package-menu/menu.vue';
+import PackageDetail from './package-detail/index.vue';
+import { onMounted } from 'vue';
+
+const route = useRoute();
+const templateStore = useTemplateStore();
+
+onMounted(() => {
+  const { templateSpaceId, packageId } = route.params;
+  templateStore.$patch((state) => {
+    if (templateSpaceId) {
+      state.currentTemplateSpace = Number(templateSpaceId);
+    }
+    if (packageId) {
+      state.currentPkg = /\d+/.test(packageId as string) ? Number(packageId) : (packageId as string);
+    }
+  });
+});
+</script>
 <style lang="scss" scoped>
-  .templates-page {
-    height: 100%;
+.templates-page {
+  height: 100%;
+}
+.template-tips {
+  height: 38px;
+}
+.tips-wrapper {
+  display: flex;
+  align-items: center;
+  .message {
+    line-height: 20px;
   }
-  .template-tips {
-    height: 38px;
+  .bk-button {
+    margin-left: 8px;
   }
-  .tips-wrapper {
-    display: flex;
-    align-items: center;
-    .message {
-      line-height: 20px;
-    }
-    .bk-button {
-      margin-left: 8px;
-    }
-  }
-  .main-content-container {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    height: calc(100% - 38px);
-  }
-  .side-menu-area {
-    padding: 16px 0;
-    width: 240px;
-    height: 100%;
-    background: #ffffff;
-    border-right: 1px solid #dcdee5;
-  }
-  .package-detail-area {
-    width: calc(100% - 240px);
-    height: 100%;
-    background: #f5f7fa;
-  }
+}
+.main-content-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  height: calc(100% - 38px);
+  border: none;
+}
+.side-menu-area {
+  padding: 16px 0;
+  height: 100%;
+  background: #ffffff;
+}
+.package-detail-area {
+  height: 100%;
+  background: #f5f7fa;
+}
+</style>
+
+<style>
+.main-content-container > .bk-resize-layout-aside {
+  height: 100%;
+}
+.main-content-container > .bk-resize-layout-main {
+  height: 100%;
+}
 </style>

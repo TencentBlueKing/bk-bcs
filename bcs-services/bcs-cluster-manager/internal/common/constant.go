@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package common xxx
 package common
 
 import (
@@ -103,6 +104,11 @@ const (
 	RootDir = "root-dir"
 	// RootDirValue kubelet root-dir value
 	RootDirValue = "/data/bcs/service/kubelet"
+)
+
+var (
+	// Unschedulable set node unSchedulable
+	Unschedulable int64 = 1
 )
 
 // DefaultClusterConfig cluster default service config
@@ -226,9 +232,9 @@ const (
 	// MicroMetaKeyHTTPPort http port in micro service meta
 	MicroMetaKeyHTTPPort = "httpport"
 
-	//ClusterManageTypeManaged cloud manage cluster
+	// ClusterManageTypeManaged cloud manage cluster
 	ClusterManageTypeManaged = "MANAGED_CLUSTER"
-	//ClusterManageTypeIndependent BCS manage cluster
+	// ClusterManageTypeIndependent BCS manage cluster
 	ClusterManageTypeIndependent = "INDEPENDENT_CLUSTER"
 
 	// TkeCidrStatusAvailable available tke cidr status
@@ -238,23 +244,23 @@ const (
 	// TkeCidrStatusReserved reserved tke cidr status
 	TkeCidrStatusReserved = "reserved"
 
-	//StatusInitialization node/cluster/nodegroup status
+	// StatusInitialization node/cluster/nodegroup status
 	StatusInitialization = "INITIALIZATION"
-	//StatusCreateClusterFailed status create failed
+	// StatusCreateClusterFailed status create failed
 	StatusCreateClusterFailed = "CREATE-FAILURE"
-	//StatusImportClusterFailed status import failed
+	// StatusImportClusterFailed status import failed
 	StatusImportClusterFailed = "IMPORT-FAILURE"
-	//StatusRunning status running
+	// StatusRunning status running
 	StatusRunning = "RUNNING"
-	//StatusDeleting status deleting for scaling down
+	// StatusDeleting status deleting for scaling down
 	StatusDeleting = "DELETING"
-	//StatusDeleted status deleted
+	// StatusDeleted status deleted
 	StatusDeleted = "DELETED"
-	//StatusDeleteClusterFailed status delete failed
+	// StatusDeleteClusterFailed status delete failed
 	StatusDeleteClusterFailed = "DELETE-FAILURE"
-	//StatusAddNodesFailed status add nodes failed
+	// StatusAddNodesFailed status add nodes failed
 	StatusAddNodesFailed = "ADD-FAILURE"
-	//StatusRemoveNodesFailed status remove nodes failed
+	// StatusRemoveNodesFailed status remove nodes failed
 	StatusRemoveNodesFailed = "REMOVE-FAILURE"
 	// StatusNodeRemovable node is removable
 	StatusNodeRemovable = "REMOVABLE"
@@ -369,12 +375,12 @@ const (
 
 // ClusterIDRange for generate clusterID range
 var ClusterIDRange = map[string][]int{
-	"mesos-stag":  []int{10000, 15000},
-	"mesos-debug": []int{20000, 25000},
-	"mesos-prod":  []int{30000, 399999},
-	"k8s-stag":    []int{15001, 19999},
-	"k8s-debug":   []int{25001, 29999},
-	"k8s-prod":    []int{40000, 1000000},
+	"mesos-stag":  {10000, 15000},
+	"mesos-debug": {20000, 25000},
+	"mesos-prod":  {30000, 399999},
+	"k8s-stag":    {15001, 19999},
+	"k8s-debug":   {25001, 29999},
+	"k8s-prod":    {40000, 1000000},
 }
 
 // Develop run environment
@@ -408,6 +414,10 @@ const (
 	True = "true"
 	// False xxx
 	False = "false"
+	// Limit xxx
+	Limit = 100
+	// MaxFilterValues xxx
+	MaxFilterValues = 5
 )
 
 const (

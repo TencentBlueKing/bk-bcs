@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package create
@@ -46,22 +45,24 @@ var (
 		kubectl-bcs-project-manager create namespace --filename=file-address`))
 )
 
-func createClustersNamespace() *cobra.Command {
+func createClustersNamespace() *cobra.Command { // nolint
 	cmd := &cobra.Command{
 		Use:                   "namespace [--cluster-id=clusterID | --filename=file-address]",
 		DisableFlagsInUseLine: true,
 		Aliases:               []string{"n"},
-		Short:                 i18n.T("Create a project namespace using the specified file or standard input"),
-		Long:                  createClustersNamespaceLong,
-		Example:               createClustersNamespaceExample,
+		Short: i18n.T("Create a project namespace using the " +
+			"specified file or standard input"),
+		Long:    createClustersNamespaceLong,
+		Example: createClustersNamespaceExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			projectCode := viper.GetString("bcs.project_code")
 			if len(projectCode) == 0 {
-				klog.Infoln("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				klog.Infoln("Project code (English abbreviation), " +
+					"global unique, the length cannot exceed 64 characters")
 				return
 			}
 			client := pkg.NewClientWithConfiguration(context.Background())
-			//获取当前集群信息
+			// 获取当前集群信息
 			cluster, err := client.GetCluster(&pkg.GetClusterRequest{ClusterID: clusterID})
 			if err != nil {
 				klog.Infoln(err)
@@ -106,17 +107,18 @@ func createClustersNamespace() *cobra.Command {
 					}
 					marshal, err = json.Marshal(requestParam)
 					if err != nil {
-						klog.Infoln("[requestParam] deserialize failed: %v", err)
+						klog.Infof("[requestParam] deserialize failed: %v", err)
 						return
 					}
 					err = json.Unmarshal(marshal, &parameters)
 					if err != nil {
-						klog.Infoln("[parameters] deserialize failed: %v", err)
+						klog.Infof("[parameters] deserialize failed: %v", err)
 						return
 					}
 					// 判断环境变量Project Code和文件里面是否一致
 					if projectCode != parameters.ProjectCode {
-						klog.Infoln("The environment variable project code is inconsistent with the file project code")
+						klog.Infoln("The environment variable project code is " +
+							"inconsistent with the file project code")
 						return
 					}
 					clusterID = parameters.ClusterID
@@ -124,55 +126,58 @@ func createClustersNamespace() *cobra.Command {
 					// 处理模板数据
 					marshal, err = json.Marshal(parameters)
 					if err != nil {
-						klog.Infoln("[CreateNamespaceRequest] deserialize failed: %v", err)
+						klog.Infof("[CreateNamespaceRequest] deserialize failed: %v", err)
 						return
 					}
 					// 把json转成yaml
 					original, formatErr := yaml.JSONToYAML(marshal)
 					if err != nil {
-						klog.Infoln("json to yaml failed: %v", formatErr)
+						klog.Infof("json to yaml failed: %v", formatErr)
 						return
 					}
 					create := editor.NewDefaultEditor([]string{})
 
-					created, path, err = create.LaunchTempFile(fmt.Sprintf("%s-create-", filepath.Base(os.Args[0])), ".yaml", bytes.NewBufferString(string(original)))
+					created, path, err = create.LaunchTempFile(fmt.Sprintf("%s-create-", filepath.Base(os.Args[0])),
+						".yaml", bytes.NewBufferString(string(original)))
 
 					if err != nil {
-						klog.Infoln("unexpected error: %v", err)
+						klog.Infof("unexpected error: %v", err)
 						return
 					}
 					if _, err = os.Stat(path); err != nil {
-						klog.Infoln("no temp file: %s", path)
+						klog.Infof("no temp file: %s", path)
 						return
 					}
 					// 把创建的内容yaml转成json
 					createdJson, err = yaml.YAMLToJSON(created)
 					if err != nil {
-						klog.Infoln("json to yaml failed: %v", err)
+						klog.Infof("json to yaml failed: %v", err)
 						return
 					}
 					err = json.Unmarshal(createdJson, &parameters)
 					if err != nil {
-						klog.Infoln("[YAMLToJSON] deserialize failed: %v", err)
+						klog.Infof("[YAMLToJSON] deserialize failed: %v", err)
 						return
 					}
 				}
 			}
 			if parameters.Name == "" {
-				klog.Infoln("Namespace name is required, The length cannot exceed 63 characters, can only contain lowercase letters, numbers, " +
+				klog.Infoln("Namespace name is required, The length cannot exceed 63 characters, " +
+					"can only contain lowercase letters, numbers, " +
 					"and '-', must start with a letter, and cannot end with '-'")
 				return
 			}
 			resp, err := client.CreateNamespace(parameters, projectCode, clusterID)
 			if err != nil {
-				klog.Infoln("create namespace failed: %v", err)
+				klog.Infof("create namespace failed: %v", err)
 				return
 			}
 			printer.PrintInJSON(resp)
 		},
 	}
 	cmd.Flags().StringVarP(&clusterID, "cluster-id", "", "",
-		"cluster ID, If you specify to create a file, cluster id you can leave it blank, otherwise it is required")
+		"cluster ID, If you specify to create a file, cluster id you can leave it blank, "+
+			"otherwise it is required")
 
 	return cmd
 }

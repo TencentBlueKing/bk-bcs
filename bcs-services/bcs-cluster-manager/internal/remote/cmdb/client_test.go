@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cmdb
@@ -74,8 +73,10 @@ func TestClient_FindHostBizRelations(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Log(hostBizRelations[0].BkHostID, hostBizRelations[0].BkBizID, hostBizRelations[0].BkModuleID, hostBizRelations[0].BkSetID)
-	t.Log(hostBizRelations[1].BkHostID, hostBizRelations[1].BkBizID, hostBizRelations[1].BkModuleID, hostBizRelations[1].BkSetID)
+	t.Log(hostBizRelations[0].BkHostID, hostBizRelations[0].BkBizID, hostBizRelations[0].BkModuleID,
+		hostBizRelations[0].BkSetID)
+	t.Log(hostBizRelations[1].BkHostID, hostBizRelations[1].BkBizID, hostBizRelations[1].BkModuleID,
+		hostBizRelations[1].BkSetID)
 }
 
 func TestClient_TransHostToRecycleModule(t *testing.T) {
@@ -116,7 +117,8 @@ func TestClient_GetBizInfo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Log(business.BsiID, business.BsiName, business.BsipID, business.BsiProductId, business.BsiProductName, business.BsiL1, business.BsiL2)
+	t.Log(business.BsiID, business.BsiName, business.BsipID, business.BsiProductId, business.BsiProductName,
+		business.BsiL1, business.BsiL2)
 
 	// 查询一级业务详情
 	business1, err := cli.GetBizInfo(int64(business.BsiL1))
@@ -185,7 +187,7 @@ func TestClient_FindHostTopoRelation(t *testing.T) {
 	t.Log(data)
 }
 
-func TestClient_FetchAllHostTopoRelationsByBizID(t *testing.T) {
+func TestFetchAllHostTopoRelByBizID(t *testing.T) {
 	cli := getNewClient()
 
 	data, err := cli.FetchAllHostTopoRelationsByBizID(100148)

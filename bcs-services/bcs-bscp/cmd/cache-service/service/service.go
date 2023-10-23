@@ -31,7 +31,8 @@ type Service struct {
 	dao     dao.Set
 	op      client.Interface
 	gateway *gateway
-	state   serviced.State
+	//nolint:unused
+	state serviced.State
 }
 
 // NewService initial the service instance.

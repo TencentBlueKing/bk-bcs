@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package templateset
@@ -17,6 +16,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
@@ -31,6 +31,7 @@ const (
 )
 
 // TemplateSetResourcePath build IAMPath for templateSet resource
+// nolint
 type TemplateSetResourcePath struct {
 	ProjectID         string
 	TemplateSetCreate bool
@@ -45,6 +46,7 @@ func (rp TemplateSetResourcePath) BuildIAMPath() string {
 }
 
 // TemplateSetResourceNode build templateSet resourceNode
+// nolint
 type TemplateSetResourceNode struct {
 	IsCreateTemplateSet bool
 

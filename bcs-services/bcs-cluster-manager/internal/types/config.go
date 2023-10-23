@@ -8,13 +8,13 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package types xxx
 package types
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/ghodss/yaml"
 )
@@ -37,7 +37,8 @@ type Config struct {
 	Contexts []NamedContext `json:"contexts"`
 	// CurrentContext is the name of the context that you would like to use by default
 	CurrentContext string `json:"current-context"`
-	// Extensions holds additional information. This is useful for extenders so that reads and writes don't clobber unknown fields
+	// Extensions holds additional information. This is useful for extenders so that
+	// reads and writes don't clobber unknown fields
 	// +optional
 	Extensions []NamedExtension `json:"extensions,omitempty"`
 }
@@ -67,7 +68,8 @@ type ClusterInfo struct {
 	Extensions []NamedExtension `json:"extensions,omitempty"`
 }
 
-// AuthInfo contains information that describes identity information.  This is use to tell the kubernetes cluster who you are.
+// AuthInfo contains information that describes identity information.
+// This is use to tell the kubernetes cluster who you are.
 type AuthInfo struct {
 	// ClientCertificate is the path to a client cert file for TLS.
 	// +optional
@@ -210,7 +212,7 @@ func GetKubeConfigFromYAMLBody(isFile bool, input YamlInput) (*Config, error) {
 	)
 
 	if isFile {
-		kubeConfig, err = ioutil.ReadFile(input.FileName)
+		kubeConfig, err = os.ReadFile(input.FileName)
 		if err != nil {
 			return nil, err
 		}

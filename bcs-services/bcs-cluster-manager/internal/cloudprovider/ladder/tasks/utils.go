@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -17,17 +16,16 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/avast/retry-go"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	qapi "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/avast/retry-go"
 )
 
 // buildApplyInstanceRequest build resource request
@@ -108,11 +106,13 @@ func applyInstanceFromResourcePool(ctx context.Context, info *cloudprovider.Clou
 }
 
 // consumeDevicesFromResourcePool apply cvm instances to generate orderID form resource pool
-func consumeDevicesFromResourcePool(ctx context.Context, group *proto.NodeGroup, nodeNum int, operator string) (string, error) {
+func consumeDevicesFromResourcePool(
+	ctx context.Context, group *proto.NodeGroup, nodeNum int, operator string) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	ctx = utils.WithTraceIDForContext(ctx, taskID)
-	resp, err := tresource.GetResourceManagerClient().ApplyInstances(ctx, nodeNum, buildApplyInstanceRequest(group, operator))
+	resp, err := tresource.GetResourceManagerClient().ApplyInstances(ctx, nodeNum,
+		buildApplyInstanceRequest(group, operator))
 	if err != nil {
 		blog.Errorf("consumeDevicesFromResourcePool[%s] ApplyInstances failed: %v", taskID, err)
 		return "", err
@@ -162,11 +162,12 @@ type RecordInstanceToDBOption struct {
 }
 
 // 录入机器
-func recordClusterCVMInfoToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, opt *RecordInstanceToDBOption) error {
+func recordClusterCVMInfoToDB(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, opt *RecordInstanceToDBOption) error {
+
 	var (
-		cvmCli = qapi.NodeManager{}
-		nodes  = make([]*proto.Node, 0)
-		err    error
+		nodes = make([]*proto.Node, 0)
+		err   error
 	)
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -182,7 +183,7 @@ func recordClusterCVMInfoToDB(ctx context.Context, info *cloudprovider.CloudDepe
 	}
 
 	err = retry.Do(func() error {
-		nodes, err = cvmCli.ListNodesByInstanceID(opt.InstanceIDs, &cloudprovider.ListNodesOption{
+		nodes, err = business.ListNodesByInstanceID(opt.InstanceIDs, &cloudprovider.ListNodesOption{
 			Common:       info.CmOption,
 			ClusterVPCID: info.Cluster.VpcID,
 		})
@@ -220,7 +221,8 @@ func recordClusterCVMInfoToDB(ctx context.Context, info *cloudprovider.CloudDepe
 }
 
 // 销毁归还机器
-func destroyDeviceList(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, deviceList []string, operator string) (string, error) {
+func destroyDeviceList(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, deviceList []string,
+	operator string) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	if info == nil || info.NodeGroup == nil || info.Cluster == nil || len(deviceList) == 0 {
 		return "", fmt.Errorf("destroyDeviceList[%s] lost validate info", taskID)
@@ -247,7 +249,7 @@ func destroyDeviceList(ctx context.Context, info *cloudprovider.CloudDependBasic
 // 2. delete cluster nodes
 // 3. return devices to resourceManager module
 func returnDevicesToRMAndCleanNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, instanceIDs []string,
-	delInstance bool, operator string) error {
+	delInstance bool, operator string) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	if len(instanceIDs) == 0 {
@@ -263,9 +265,11 @@ func returnDevicesToRMAndCleanNodes(ctx context.Context, info *cloudprovider.Clo
 
 	// delete db data record
 	for _, instanceID := range instanceIDs {
-		err := cloudprovider.GetStorageModel().DeleteClusterNode(context.Background(), info.Cluster.ClusterID, instanceID)
+		err := cloudprovider.GetStorageModel().DeleteClusterNode(context.Background(), info.Cluster.ClusterID,
+			instanceID)
 		if err != nil {
-			blog.Errorf("returnDevicesToRMAndCleanNodes[%s] DeleteClusterNode[%s] failed: %v", taskID, instanceID, err)
+			blog.Errorf("returnDevicesToRMAndCleanNodes[%s] DeleteClusterNode[%s] failed: %v", taskID,
+				instanceID, err)
 		} else {
 			blog.Infof("returnDevicesToRMAndCleanNodes[%s] DeleteClusterNode success[%+v]", taskID, instanceID)
 		}
@@ -273,7 +277,7 @@ func returnDevicesToRMAndCleanNodes(ctx context.Context, info *cloudprovider.Clo
 
 	// delete cluster instances
 	if delInstance {
-		successIDs, err := tasks.DeleteClusterInstance(ctx, info, instanceIDs)
+		successIDs, err := business.DeleteClusterInstance(ctx, info, instanceIDs, true)
 		if err != nil {
 			blog.Errorf("returnDevicesToRMAndCleanNodes[%s] DeleteClusterInstance failed: %v", taskID, err)
 		} else {

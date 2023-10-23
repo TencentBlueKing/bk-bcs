@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package proxier xxx
@@ -25,14 +24,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/auth"
-	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/credentials"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/utils"
-
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -40,6 +31,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/proxy"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/auth"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/credentials"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/utils"
 )
 
 // ReverseProxyDispatcher is the handler which dispatch and proxy the incoming requests to external
@@ -83,14 +82,14 @@ var DefaultReverseProxyDispatcher = NewReverseProxyDispatcher("cluster_identifie
 
 // Initialize the required components for dispatcher
 func (f *ReverseProxyDispatcher) Initialize() {
-	credentials.GFixtureCredentialBackend.ExtractCredentialsFixtures()
+	_ = credentials.GFixtureCredentialBackend.ExtractCredentialsFixtures()
 	// Load default backends for credentials
 	f.credentialBackends = append(f.credentialBackends, credentials.GDatabaseCrendentialBackend)
 	f.credentialBackends = append(f.credentialBackends, credentials.GFixtureCredentialBackend)
 }
 
 // ServeHTTP 用于HTTP服务
-func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Request) { // nolint
 
 	start := time.Now()
 
@@ -119,8 +118,7 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 	clusterId := cluster.ID
 
 	// Authenticate user
-	var authenticater *auth.TokenAuthenticater
-	authenticater = auth.NewTokenAuthenticater(req, &auth.TokenAuthConfig{
+	var authenticater = auth.NewTokenAuthenticater(req, &auth.TokenAuthConfig{
 		SourceBearerEnabled: true,
 	})
 
@@ -207,7 +205,6 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 		metric.RequestCount.WithLabelValues("k8s_native", req.Method).Inc()
 		metric.RequestLatency.WithLabelValues("k8s_native", req.Method).Observe(time.Since(start).Seconds())
 	}
-	return
 }
 
 // InitializeUpstreamServer initialize the upstreamServer instance for cluster
@@ -221,7 +218,7 @@ func (f *ReverseProxyDispatcher) InitializeUpstreamServer(clusterId string, serv
 		blog.Infof("endpoints availablility changes, delete cached proxy handler instance for cluster<%s>", clusterId)
 		f.DelHandlerStoreByClusterId(clusterId)
 	})
-	upstreamServer.Initialize()
+	_ = upstreamServer.Initialize()
 	f.availableSrvStore[clusterId] = upstreamServer
 
 	// Starts a new period checker to notify the upstreamServer when cluster's apiservers have been majorly changed
@@ -271,7 +268,7 @@ func (f *ReverseProxyDispatcher) StartClusterAddressesPoller(clusterId string) {
 	refreshTicker := time.NewTicker(60 * time.Second)
 	defer refreshTicker.Stop()
 	upstreamServer := f.availableSrvStore[clusterId]
-	for {
+	for { // nolint
 		select {
 		case <-refreshTicker.C:
 			existedHander := f.handlerStore[clusterId]
@@ -347,7 +344,7 @@ func NewProxyHandlerFromConfig(config *rest.Config) (*proxy.UpgradeAwareHandler,
 
 	host := config.Host
 	if !strings.HasSuffix(host, "/") {
-		host = host + "/"
+		host += "/"
 	}
 	target, err := url.Parse(host)
 	if err != nil {
@@ -394,9 +391,9 @@ func makeUpgradeTransport(config *rest.Config, keepalive time.Duration) (proxy.U
 	}
 	rt := utilnet.SetOldTransportDefaults(&http.Transport{
 		TLSClientConfig: tlsConfig,
-		Dial: func(network, addr string) (net.Conn, error) {
+		Dial: func(network, addr string) (net.Conn, error) { // nolint
 			// resolve domain to real apiserver address
-			addr = ipAddress.Host
+			addr = ipAddress.Host // nolint
 			return dialer.Dial(network, addr)
 		},
 	})

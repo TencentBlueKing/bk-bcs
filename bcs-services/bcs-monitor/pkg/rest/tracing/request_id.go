@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package tracing request id
 package tracing
 
 import (
@@ -23,7 +24,7 @@ import (
 // RequestIdGenerator :
 func RequestIdGenerator() string {
 	uid := uuid.New().String()
-	requestId := strings.Replace(uid, "-", "", -1)
+	requestId := strings.ReplaceAll(uid, "-", "")
 	return requestId
 }
 

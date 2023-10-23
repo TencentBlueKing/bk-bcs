@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package main is the entry point of the API server.
 package main
 
 import (

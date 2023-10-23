@@ -218,6 +218,8 @@ func (s *Service) ListTmplSetBoundCounts(ctx context.Context, req *pbds.ListTmpl
 }
 
 // ListTmplBoundUnnamedApps list template bound unnamed app details.
+//
+//nolint:funlen
 func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context,
 	req *pbds.ListTmplBoundUnnamedAppsReq) (
 	*pbds.ListTmplBoundUnnamedAppsResp, error) {
@@ -265,15 +267,21 @@ func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context,
 	details := make([]*pbtbr.TemplateBoundUnnamedAppDetail, 0)
 	for _, r := range relations {
 		for _, id := range r.TemplateRevisionIDs {
-			// the template revision must belong to the target template
-			if _, ok := tmplRevisionMap[id]; ok {
-				details = append(details, &pbtbr.TemplateBoundUnnamedAppDetail{
-					TemplateRevisionId:   id,
-					TemplateRevisionName: tmplRevisionMap[id].Spec.RevisionName,
-					AppId:                r.AppID,
-					AppName:              appMap[r.AppID].Spec.Name,
-				})
+			// if app doesn't exist, ignore the invalid record
+			if _, ok := appMap[r.AppID]; !ok {
+				continue
 			}
+			// the template revision must belong to the target template
+			if _, ok := tmplRevisionMap[id]; !ok {
+				continue
+			}
+			details = append(details, &pbtbr.TemplateBoundUnnamedAppDetail{
+				TemplateRevisionId:   id,
+				TemplateRevisionName: tmplRevisionMap[id].Spec.RevisionName,
+				AppId:                r.AppID,
+				AppName:              appMap[r.AppID].Spec.Name,
+			})
+
 		}
 	}
 
@@ -327,9 +335,13 @@ func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context,
 }
 
 // ListTmplBoundNamedApps list template bound named app details.
+// Deprecated: not in use currently
+// if use it, consider to add column app_name, release_name on table released_app_templates in case of app is deleted.
+//
+//nolint:funlen
 func (s *Service) ListTmplBoundNamedApps(ctx context.Context,
-	req *pbds.ListTmplBoundNamedAppsReq) (
-	*pbds.ListTmplBoundNamedAppsResp, error) {
+	req *pbds.ListTmplBoundNamedAppsReq) (*pbds.ListTmplBoundNamedAppsResp, error) {
+
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
@@ -371,7 +383,6 @@ func (s *Service) ListTmplBoundNamedApps(ctx context.Context,
 	for _, a := range apps {
 		appMap[a.ID] = a
 	}
-	appIDs = tools.RemoveDuplicates(appIDs)
 	releaseIDs = tools.RemoveDuplicates(releaseIDs)
 
 	releases, err := s.dao.Release().ListAllByIDs(kt, releaseIDs, req.BizId)
@@ -388,16 +399,21 @@ func (s *Service) ListTmplBoundNamedApps(ctx context.Context,
 	details := make([]*pbtbr.TemplateBoundNamedAppDetail, 0)
 	for _, r := range relations {
 		// the template revision must belong to the target template
-		if _, ok := tmplRevisionMap[r.TemplateRevisionID]; ok {
-			details = append(details, &pbtbr.TemplateBoundNamedAppDetail{
-				TemplateRevisionId:   r.TemplateRevisionID,
-				TemplateRevisionName: tmplRevisionMap[r.TemplateRevisionID].Spec.RevisionName,
-				AppId:                r.AppID,
-				AppName:              appMap[r.AppID].Spec.Name,
-				ReleaseId:            r.ReleaseID,
-				ReleaseName:          releaseMap[r.ReleaseID].Spec.Name,
-			})
+		if _, ok := tmplRevisionMap[r.TemplateRevisionID]; !ok {
+			continue
 		}
+		appName := ""
+		if _, ok := appMap[r.AppID]; ok {
+			appName = appMap[r.AppID].Spec.Name
+		}
+		details = append(details, &pbtbr.TemplateBoundNamedAppDetail{
+			TemplateRevisionId:   r.TemplateRevisionID,
+			TemplateRevisionName: tmplRevisionMap[r.TemplateRevisionID].Spec.RevisionName,
+			AppId:                r.AppID,
+			AppName:              appName,
+			ReleaseId:            r.ReleaseID,
+			ReleaseName:          releaseMap[r.ReleaseID].Spec.Name,
+		})
 	}
 
 	// search by logic
@@ -515,6 +531,8 @@ func (s *Service) ListTmplBoundTmplSets(ctx context.Context,
 }
 
 // ListMultiTmplBoundTmplSets list template bound template set details.
+//
+//nolint:funlen
 func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context,
 	req *pbds.ListMultiTmplBoundTmplSetsReq) (
 	*pbds.ListMultiTmplBoundTmplSetsResp, error) {
@@ -656,6 +674,10 @@ func (s *Service) ListTmplRevisionBoundUnnamedApps(ctx context.Context,
 	// combine resp details
 	details := make([]*pbtbr.TemplateRevisionBoundUnnamedAppDetail, 0)
 	for _, id := range appIDs {
+		// if app doesn't exist, ignore the invalid record
+		if _, ok := appMap[id]; !ok {
+			continue
+		}
 		details = append(details, &pbtbr.TemplateRevisionBoundUnnamedAppDetail{
 			AppId:   id,
 			AppName: appMap[id].Spec.Name,
@@ -710,6 +732,10 @@ func (s *Service) ListTmplRevisionBoundUnnamedApps(ctx context.Context,
 }
 
 // ListTmplRevisionBoundNamedApps list template revision bound named app details.
+// Deprecated: not in use currently
+// if use it, consider to add column app_name, release_name on table released_app_templates in case of app is deleted.
+//
+//nolint:funlen
 func (s *Service) ListTmplRevisionBoundNamedApps(ctx context.Context,
 	req *pbds.ListTmplRevisionBoundNamedAppsReq) (
 	*pbds.ListTmplRevisionBoundNamedAppsResp, error) {
@@ -758,9 +784,13 @@ func (s *Service) ListTmplRevisionBoundNamedApps(ctx context.Context,
 	// combine resp details
 	details := make([]*pbtbr.TemplateRevisionBoundNamedAppDetail, 0)
 	for _, r := range relations {
+		appName := ""
+		if _, ok := appMap[r.AppID]; ok {
+			appName = appMap[r.AppID].Spec.Name
+		}
 		details = append(details, &pbtbr.TemplateRevisionBoundNamedAppDetail{
 			AppId:       r.AppID,
-			AppName:     appMap[r.AppID].Spec.Name,
+			AppName:     appName,
 			ReleaseId:   r.ReleaseID,
 			ReleaseName: releaseMap[r.ReleaseID].Spec.Name,
 		})
@@ -845,6 +875,10 @@ func (s *Service) ListTmplSetBoundUnnamedApps(ctx context.Context,
 	// combine resp details
 	details := make([]*pbtbr.TemplateSetBoundUnnamedAppDetail, 0)
 	for _, id := range appIDs {
+		// if app doesn't exist, ignore the invalid record
+		if _, ok := appMap[id]; !ok {
+			continue
+		}
 		details = append(details, &pbtbr.TemplateSetBoundUnnamedAppDetail{
 			AppId:   id,
 			AppName: appMap[id].Spec.Name,
@@ -879,8 +913,11 @@ func (s *Service) ListTmplSetBoundUnnamedApps(ctx context.Context,
 }
 
 // ListMultiTmplSetBoundUnnamedApps list template set bound unnamed app details.
+//
+//nolint:funlen
 func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context,
 	req *pbds.ListMultiTmplSetBoundUnnamedAppsReq) (
+
 	*pbds.ListMultiTmplSetBoundUnnamedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -952,6 +989,10 @@ func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context,
 	details := make([]*pbtbr.MultiTemplateSetBoundUnnamedAppDetail, 0)
 	for tmplSetID, appIDs := range tmplSetAppsMap {
 		for _, id := range appIDs {
+			// if app doesn't exist, ignore the invalid record
+			if _, ok := appMap[id]; !ok {
+				continue
+			}
 			details = append(details, &pbtbr.MultiTemplateSetBoundUnnamedAppDetail{
 				TemplateSetId:   tmplSetID,
 				TemplateSetName: tmplSetMap[tmplSetID].Spec.Name,
@@ -990,6 +1031,10 @@ func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context,
 }
 
 // ListTmplSetBoundNamedApps list template set bound named app details.
+// Deprecated: not in use currently
+// if use it, consider to add column app_name, release_name on table released_app_templates in case of app is deleted
+//
+//nolint:funlen
 func (s *Service) ListTmplSetBoundNamedApps(ctx context.Context,
 	req *pbds.ListTmplSetBoundNamedAppsReq) (
 	*pbds.ListTmplSetBoundNamedAppsResp, error) {
@@ -1045,9 +1090,13 @@ func (s *Service) ListTmplSetBoundNamedApps(ctx context.Context,
 	// combine resp details
 	details := make([]*pbtbr.TemplateSetBoundNamedAppDetail, 0)
 	for _, r := range uniqueRelations {
+		appName := ""
+		if _, ok := appMap[r.AppID]; ok {
+			appName = appMap[r.AppID].Spec.Name
+		}
 		details = append(details, &pbtbr.TemplateSetBoundNamedAppDetail{
 			AppId:       r.AppID,
-			AppName:     appMap[r.AppID].Spec.Name,
+			AppName:     appName,
 			ReleaseId:   r.ReleaseID,
 			ReleaseName: releaseMap[r.ReleaseID].Spec.Name,
 		})
@@ -1081,6 +1130,8 @@ func (s *Service) ListTmplSetBoundNamedApps(ctx context.Context,
 }
 
 // ListLatestTmplBoundUnnamedApps list the latest template bound unnamed app details.
+//
+//nolint:funlen
 func (s *Service) ListLatestTmplBoundUnnamedApps(ctx context.Context,
 	req *pbds.ListLatestTmplBoundUnnamedAppsReq) (
 	*pbds.ListLatestTmplBoundUnnamedAppsResp, error) {
@@ -1151,6 +1202,10 @@ func (s *Service) ListLatestTmplBoundUnnamedApps(ctx context.Context,
 	// combine resp details
 	details := make([]*pbtbr.LatestTemplateBoundUnnamedAppDetail, 0)
 	for _, appID := range appIDs {
+		// if app doesn't exist, ignore the invalid record
+		if _, ok := appMap[appID]; !ok {
+			continue
+		}
 		details = append(details, &pbtbr.LatestTemplateBoundUnnamedAppDetail{
 			TemplateSetId:   appTmplSetMap[appID],
 			TemplateSetName: tmplSetMap[appTmplSetMap[appID]].Spec.Name,

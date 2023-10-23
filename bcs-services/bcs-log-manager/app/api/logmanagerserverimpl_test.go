@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -19,9 +18,9 @@ import (
 	"testing"
 	"time"
 
+	moc_bkdata "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata/mock"
 	"github.com/golang/mock/gomock"
 
-	moc_bkdata "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata/mock"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
 	k8s "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/mock/manager"
@@ -49,15 +48,18 @@ func TestObtainDataID(t *testing.T) {
 	resp := proto.ObtainDataidResp{}
 	err := server.ObtainDataID(context.Background(), &proto.ObtainDataidReq{}, &resp)
 	if err == nil {
-		t.Errorf("LogManagerServerImpl.ObtainDataID returns dataid(%d), error(%+v), expect dataid(-1), error(%+v)", resp.DataID, err, errRet)
+		t.Errorf("LogManagerServerImpl.ObtainDataID returns dataid(%d), error(%+v), expect dataid(-1), "+
+			"error(%+v)", resp.DataID, err, errRet) // nolint
 	}
 	err = server.ObtainDataID(context.Background(), &proto.ObtainDataidReq{}, &resp)
 	if err != nil {
-		t.Errorf("LogManagerServerImpl.ObtainDataID returns dataid(%d), error(%+v), expect dataid(21903), error(%+v)", resp.DataID, err, nil)
+		t.Errorf("LogManagerServerImpl.ObtainDataID returns dataid(%d), error(%+v), expect dataid(21903), "+
+			"error(%+v)", resp.DataID, err, nil)
 	}
 	err = server.ObtainDataID(context.Background(), &proto.ObtainDataidReq{}, &resp)
 	if resp.Message == "" {
-		t.Errorf("LogManagerServerImpl.ObtainDataID returns dataid(%d), error(%+v), expect dataid(21903), error(%+v)", resp.DataID, err, errRet)
+		t.Errorf("LogManagerServerImpl.ObtainDataID returns dataid(%d), error(%+v), expect dataid(21903), "+
+			"error(%+v)", resp.DataID, err, errRet)
 	}
 }
 
@@ -94,12 +96,14 @@ func TestCreateLogCollectionTask(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogManager := k8s.NewMockLogManagerInterface(ctrl)
-	mockLogManager.EXPECT().HandleAddLogCollectionTask(gomock.Any(), gomock.Any()).Return(&proto.CollectionTaskCommonResp{})
+	mockLogManager.EXPECT().HandleAddLogCollectionTask(gomock.Any(),
+		gomock.Any()).Return(&proto.CollectionTaskCommonResp{})
 	mockLogManager.EXPECT().HandleAddLogCollectionTask(gomock.Any(), gomock.Any()).Return(nil)
-	mockLogManager.EXPECT().HandleAddLogCollectionTask(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, conf *config.CollectionConfig) *proto.CollectionTaskCommonResp {
-		time.Sleep(time.Second * 12)
-		return nil
-	})
+	mockLogManager.EXPECT().HandleAddLogCollectionTask(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, conf *config.CollectionConfig) *proto.CollectionTaskCommonResp {
+			time.Sleep(time.Second * 12)
+			return nil
+		})
 	server := &LogManagerServerImpl{
 		logManager: mockLogManager,
 	}
@@ -117,17 +121,20 @@ func TestCreateLogCollectionTask(t *testing.T) {
 
 	err = server.CreateLogCollectionTask(context.Background(), emptyReq, &resp)
 	if err == nil {
-		t.Errorf("LogManagerServerImpl.CreateLogCollectionTask returns error(%+v), expect error(%+v)", err, fmt.Errorf("Error in CreateLogCollectionTask: no LogCollectionConfig specified"))
+		t.Errorf("LogManagerServerImpl.CreateLogCollectionTask returns error(%+v), expect error(%+v)", err,
+			fmt.Errorf("Error in CreateLogCollectionTask: no LogCollectionConfig specified"))
 	}
 
 	err = server.CreateLogCollectionTask(context.Background(), normalReq, &resp)
 	if err == nil {
-		t.Errorf("LogManagerServerImpl.CreateLogCollectionTask returns error(%+v), expect error(%+v)", err, fmt.Errorf("Log Manager internal error"))
+		t.Errorf("LogManagerServerImpl.CreateLogCollectionTask returns error(%+v), expect error(%+v)", err,
+			fmt.Errorf("Log Manager internal error"))
 	}
 
 	err = server.CreateLogCollectionTask(context.Background(), normalReq, &resp)
 	if err == nil {
-		t.Errorf("LogManagerServerImpl.CreateLogCollectionTask returns error(%+v), expect error(%+v)", err, fmt.Errorf("LogManagerServerImpl DeleteLogCollectionTask timeout"))
+		t.Errorf("LogManagerServerImpl.CreateLogCollectionTask returns error(%+v), expect error(%+v)", err,
+			fmt.Errorf("LogManagerServerImpl DeleteLogCollectionTask timeout"))
 	}
 }
 
@@ -136,12 +143,14 @@ func TestDeleteLogCollectionTask(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogManager := k8s.NewMockLogManagerInterface(ctrl)
-	mockLogManager.EXPECT().HandleDeleteLogCollectionTask(gomock.Any(), gomock.Any()).Return(&proto.CollectionTaskCommonResp{})
+	mockLogManager.EXPECT().HandleDeleteLogCollectionTask(gomock.Any(),
+		gomock.Any()).Return(&proto.CollectionTaskCommonResp{})
 	mockLogManager.EXPECT().HandleDeleteLogCollectionTask(gomock.Any(), gomock.Any()).Return(nil)
-	mockLogManager.EXPECT().HandleDeleteLogCollectionTask(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, filter *config.CollectionFilterConfig) *proto.CollectionTaskCommonResp {
-		time.Sleep(time.Second * 12)
-		return nil
-	})
+	mockLogManager.EXPECT().HandleDeleteLogCollectionTask(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, filter *config.CollectionFilterConfig) *proto.CollectionTaskCommonResp {
+			time.Sleep(time.Second * 12)
+			return nil
+		})
 	server := &LogManagerServerImpl{
 		logManager: mockLogManager,
 	}
@@ -153,12 +162,14 @@ func TestDeleteLogCollectionTask(t *testing.T) {
 
 	err = server.DeleteLogCollectionTask(context.Background(), &proto.DeleteLogCollectionTaskReq{}, &resp)
 	if err == nil {
-		t.Errorf("LogManagerServerImpl.DeleteLogCollectionTask returns error(%+v), expect error(%+v)", err, fmt.Errorf("Log Manager internal error"))
+		t.Errorf("LogManagerServerImpl.DeleteLogCollectionTask returns error(%+v), expect error(%+v)", err,
+			fmt.Errorf("Log Manager internal error"))
 	}
 
 	err = server.DeleteLogCollectionTask(context.Background(), &proto.DeleteLogCollectionTaskReq{}, &resp)
 	if err == nil {
-		t.Errorf("LogManagerServerImpl.DeleteLogCollectionTask returns error(%+v), expect error(%+v)", err, fmt.Errorf("LogManagerServerImpl DeleteLogCollectionTask timeout"))
+		t.Errorf("LogManagerServerImpl.DeleteLogCollectionTask returns error(%+v), expect error(%+v)", err,
+			fmt.Errorf("LogManagerServerImpl DeleteLogCollectionTask timeout"))
 	}
 }
 
@@ -167,12 +178,14 @@ func TestListLogCollectionTask(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogManager := k8s.NewMockLogManagerInterface(ctrl)
-	mockLogManager.EXPECT().HandleListLogCollectionTask(gomock.Any(), gomock.Any()).Return(make(map[string][]config.CollectionConfig))
+	mockLogManager.EXPECT().HandleListLogCollectionTask(gomock.Any(),
+		gomock.Any()).Return(make(map[string][]config.CollectionConfig))
 	mockLogManager.EXPECT().HandleListLogCollectionTask(gomock.Any(), gomock.Any()).Return(nil)
-	mockLogManager.EXPECT().HandleListLogCollectionTask(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, filter *config.CollectionFilterConfig) map[string][]config.CollectionConfig {
-		time.Sleep(time.Second * 12)
-		return nil
-	})
+	mockLogManager.EXPECT().HandleListLogCollectionTask(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, filter *config.CollectionFilterConfig) map[string][]config.CollectionConfig {
+			time.Sleep(time.Second * 12)
+			return nil
+		})
 	server := &LogManagerServerImpl{
 		logManager: mockLogManager,
 	}
@@ -184,11 +197,13 @@ func TestListLogCollectionTask(t *testing.T) {
 
 	err = server.ListLogCollectionTask(context.Background(), &proto.ListLogCollectionTaskReq{}, &resp)
 	if err == nil {
-		t.Errorf("LogManagerServerImpl.DeleteLogCollectionTask returns error(%+v), expect error(%+v)", err, fmt.Errorf("Log Manager internal error"))
+		t.Errorf("LogManagerServerImpl.DeleteLogCollectionTask returns error(%+v), expect error(%+v)", err,
+			fmt.Errorf("Log Manager internal error"))
 	}
 
 	err = server.ListLogCollectionTask(context.Background(), &proto.ListLogCollectionTaskReq{}, &resp)
 	if err == nil {
-		t.Errorf("LogManagerServerImpl.DeleteLogCollectionTask returns error(%+v), expect error(%+v)", err, fmt.Errorf("LogManagerServerImpl DeleteLogCollectionTask timeout"))
+		t.Errorf("LogManagerServerImpl.DeleteLogCollectionTask returns error(%+v), expect error(%+v)", err,
+			fmt.Errorf("LogManagerServerImpl DeleteLogCollectionTask timeout"))
 	}
 }

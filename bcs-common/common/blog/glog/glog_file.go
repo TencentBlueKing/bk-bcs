@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Go support for leveled logs, analogous to https://code.google.com/p/google-glog/
@@ -236,7 +235,7 @@ func init() {
 	}
 
 	// Sanitize userName since it may contain filepath separators on Windows.
-	userName = strings.Replace(userName, `\`, "_", -1)
+	userName = strings.ReplaceAll(userName, `\`, "_")
 }
 
 // shortHostname returns its argument, truncating at the first period.
@@ -293,8 +292,8 @@ func create(tag string, t time.Time) (f *os.File, filename string, err error) {
 		f, err := os.Create(fname)
 		if err == nil {
 			symlink := filepath.Join(lk.dir, link)
-			os.Remove(symlink)        // ignore err
-			os.Symlink(name, symlink) // ignore err
+			_ = os.Remove(symlink)        // ignore err
+			_ = os.Symlink(name, symlink) // ignore err
 			lk.add(tag, &fileBlock{fileInfo: fileInfo{name: name, timestamp: ""}, next: nil})
 			return f, fname, nil
 		}

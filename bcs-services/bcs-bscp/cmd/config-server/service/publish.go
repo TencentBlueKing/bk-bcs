@@ -27,7 +27,6 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 	*pbcs.PublishResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.PublishResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -53,7 +52,7 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 		return nil, err
 	}
 
-	resp = &pbcs.PublishResp{
+	resp := &pbcs.PublishResp{
 		Id: rp.PublishedStrategyHistoryId,
 	}
 	return resp, nil
@@ -64,7 +63,6 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbcs.Gener
 	*pbcs.PublishResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.PublishResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -91,7 +89,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbcs.Gener
 		return nil, err
 	}
 
-	resp = &pbcs.PublishResp{
+	resp := &pbcs.PublishResp{
 		Id: rp.PublishedStrategyHistoryId,
 	}
 	return resp, nil

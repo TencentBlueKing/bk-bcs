@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package tmp xxx
 package tmp
 
 import (
@@ -19,10 +19,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/parnurzeal/gorequest"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
-
-	"github.com/parnurzeal/gorequest"
 )
 
 // Options bkops options
@@ -133,7 +133,7 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 		return fmt.Errorf(respData.Message)
 	}
 
-	//successfully request
+	// successfully request
 	blog.Infof("call api ShieldHostAlarmConfig with shields(%v) successfully", respData.Data.ShieldID)
 	return nil
 }

@@ -360,7 +360,7 @@ const handleInputFile = (event) => {
   reader.readAsText(file);
   reader.onload = () => {
     formData.value.account.serviceAccountSecret = String(reader.result);
-    formData.value.accountName = JSON.parse(reader.result)?.client_email?.split('@')?.[0];
+    formData.value.accountName = JSON.parse(reader.result as any)?.client_email?.split('@')?.[0];
     fileRef.value && (fileRef.value.value = '');
     editorKey.value = Math.random();
   };

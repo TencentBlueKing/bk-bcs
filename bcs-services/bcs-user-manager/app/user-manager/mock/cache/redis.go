@@ -10,14 +10,16 @@
  * limitations under the License.
  */
 
+// Package cache xxx
 package cache
 
 import (
 	"context"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 )
 
 // MockCache is a mock of Cache interface

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package node
@@ -113,7 +112,8 @@ func (ua *UnCordonNodeAction) setResp(code uint32, msg string) {
 }
 
 // Handle handles node uncordon
-func (ua *UnCordonNodeAction) Handle(ctx context.Context, req *cmproto.UnCordonNodeRequest, resp *cmproto.UnCordonNodeResponse) {
+func (ua *UnCordonNodeAction) Handle(
+	ctx context.Context, req *cmproto.UnCordonNodeRequest, resp *cmproto.UnCordonNodeResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("uncordon cluster node failed, req or resp is empty")
 		return
@@ -133,7 +133,6 @@ func (ua *UnCordonNodeAction) Handle(ctx context.Context, req *cmproto.UnCordonN
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // CordonNodeAction action for cordon node
@@ -223,7 +222,8 @@ func (ua *CordonNodeAction) setResp(code uint32, msg string) {
 }
 
 // Handle handles node cordon
-func (ua *CordonNodeAction) Handle(ctx context.Context, req *cmproto.CordonNodeRequest, resp *cmproto.CordonNodeResponse) {
+func (ua *CordonNodeAction) Handle(
+	ctx context.Context, req *cmproto.CordonNodeRequest, resp *cmproto.CordonNodeResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("cordon cluster node failed, req or resp is empty")
 		return
@@ -243,5 +243,4 @@ func (ua *CordonNodeAction) Handle(ctx context.Context, req *cmproto.CordonNodeR
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

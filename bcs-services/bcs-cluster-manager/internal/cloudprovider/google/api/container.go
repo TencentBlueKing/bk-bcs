@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -19,11 +18,11 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-
 	"golang.org/x/oauth2"
 	"google.golang.org/api/container/v1"
 	"google.golang.org/api/option"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
 const (
@@ -87,7 +86,7 @@ func (cs *ContainerServiceClient) ListCluster(ctx context.Context, location stri
 	if location != "" {
 		cs.region = location
 	}
-	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region
+	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region // nolint
 	clusters, err := cs.containerServiceClient.Projects.Locations.Clusters.List(parent).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gke client ListCluster failed: %v", err)
@@ -115,7 +114,7 @@ func (cs *ContainerServiceClient) GetCluster(ctx context.Context, clusterName st
 
 	switch clusterLevel {
 	case RegionLevel:
-		parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName
+		parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName // nolint
 		gkeCluster, err = cs.containerServiceClient.Projects.Locations.Clusters.Get(parent).Context(ctx).Do()
 	case ZoneLevel:
 		gkeCluster, err = cs.containerServiceClient.Projects.Zones.
@@ -159,7 +158,7 @@ func (cs *ContainerServiceClient) CreateClusterNodePool(ctx context.Context, req
 func (cs *ContainerServiceClient) GetClusterNodePool(ctx context.Context, clusterName, nodePoolName string) (
 	*container.NodePool, error) {
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName +
-		"/nodePools/" + nodePoolName
+		"/nodePools/" + nodePoolName // nolint
 	np, err := cs.containerServiceClient.Projects.Locations.Clusters.NodePools.Get(parent).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gke client GetClusterNodePool failed: %v", err)

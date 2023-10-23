@@ -8,15 +8,14 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package namespace
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/utils"
@@ -30,6 +29,7 @@ type ProjectNamespaceData struct {
 }
 
 // NamespaceInstances build namespaceInstances
+// nolint
 type NamespaceInstances struct {
 	IsClusterPerm bool
 	Data          []ProjectNamespaceData
@@ -76,6 +76,7 @@ func (cls NamespaceInstances) BuildInstances() [][]iam.Instance {
 }
 
 // NamespaceScopedInstances build namespaceScopedInstances
+// nolint
 type NamespaceScopedInstances struct {
 	Data []ProjectNamespaceData
 }
@@ -105,6 +106,7 @@ func (cls NamespaceScopedInstances) BuildInstances() [][]iam.Instance {
 }
 
 // NamespaceApplicationAction struct for namespaceApplication
+// nolint
 type NamespaceApplicationAction struct {
 	IsClusterPerm bool
 	ActionID      string
@@ -130,6 +132,7 @@ func BuildNamespaceApplicationInstance(nsAppAction NamespaceApplicationAction) i
 }
 
 // NamespaceScopedApplicationAction struct for namespaceApplication
+// nolint
 type NamespaceScopedApplicationAction struct {
 	ActionID string
 	Data     []ProjectNamespaceData

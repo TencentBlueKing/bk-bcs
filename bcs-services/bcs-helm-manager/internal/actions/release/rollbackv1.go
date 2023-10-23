@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -116,16 +116,15 @@ func (r *RollbackReleaseV1Action) saveDB() error {
 	create := false
 	_, err := r.model.GetRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(), r.req.GetName())
 	if err != nil {
-		if errors.Is(err, drivers.ErrTableRecordNotFound) {
-			create = true
-		} else {
+		if !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			return err
 		}
+		create = true
 	}
 
 	username := auth.GetUserFromCtx(r.ctx)
 	if create {
-		if err := r.model.CreateRelease(r.ctx, &entity.Release{
+		if err = r.model.CreateRelease(r.ctx, &entity.Release{
 			Name:        r.req.GetName(),
 			ProjectCode: contextx.GetProjectCodeFromCtx(r.ctx),
 			Namespace:   r.req.GetNamespace(),
@@ -141,9 +140,9 @@ func (r *RollbackReleaseV1Action) saveDB() error {
 			entity.FieldKeyStatus:   helmrelease.StatusPendingRollback.String(),
 			entity.FieldKeyMessage:  "",
 		}
-		if err := r.model.UpdateRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(),
+		if err = r.model.UpdateRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(),
 			r.req.GetName(), rl); err != nil {
-
+			return err
 		}
 	}
 	return nil

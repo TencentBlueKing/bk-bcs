@@ -60,7 +60,7 @@ func (_m *Client) GetResourcePoolByCondition(poolID string, consumerID string, d
 }
 
 // GetTask provides a mock function with given fields: poolID, consumerID, option
-func (_m *Client) GetTask(poolID string, consumerID string, option *resourcemgr.ListOptions) ([]*storage.ScaleDownTask, error) {
+func (_m *Client) ListTasks(poolID string, consumerID string, option *resourcemgr.ListOptions) ([]*storage.ScaleDownTask, error) {
 	ret := _m.Called(poolID, consumerID, option)
 
 	var r0 []*storage.ScaleDownTask
@@ -80,6 +80,10 @@ func (_m *Client) GetTask(poolID string, consumerID string, option *resourcemgr.
 	}
 
 	return r0, r1
+}
+
+func (_m *Client) GetTaskByID(recordID string, opt *resourcemgr.GetOptions) (*storage.ScaleDownTask, error){
+	panic("not impleted")
 }
 
 // ListResourcePools provides a mock function with given fields: option

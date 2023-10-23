@@ -8,20 +8,19 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package hostconfig
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/emicklei/go-restful"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 )
 
 func getHostFeat(req *restful.Request) *operator.Condition {
@@ -104,26 +103,13 @@ func remove(req *restful.Request, condition *operator.Condition) error {
 	return RemoveHost(req.Request.Context(), condition)
 }
 
-// cleanCluster xxx
-// List all host whose cluster equals clusterID
-// and make their cluster empty string
-func cleanCluster(req *restful.Request, clusterID string) error {
-	// 参数
-	data := operator.M{
-		clusterIDTag:  "",
-		updateTimeTag: time.Now(),
-	}
-	condition := operator.NewLeafCondition(operator.Eq, operator.M{clusterIDTag: clusterID})
-	return UpdateMany(req.Request.Context(), tableName, condition, data)
-}
-
 // doRelation has 2 options:
-// - put(isPut=true): make cluster clusterId just contains ips, for instance,
-//                    put(127.0.0.1, 127.0.0.2)=bcs-10001, then cluster=bcs-10001 contains 2 ips, 127.0.0.1, 127.0.0.2,
-//                       no matter what host it contains before.
-// - post(isPut=false): add ips to cluster clusterId, for instance,
-//                    post(127.0.0.3)=bcs-10001, then cluster=bcs-10001 contains 3 ips, 127.0.0.1, 127.0.0.2, 127.0.0.3.
-//                    it just add.
+//   - put(isPut=true): make cluster clusterId just contains ips, for instance,
+//     put(127.0.0.1, 127.0.0.2)=bcs-10001, then cluster=bcs-10001 contains 2 ips, 127.0.0.1, 127.0.0.2,
+//     no matter what host it contains before.
+//   - post(isPut=false): add ips to cluster clusterId, for instance,
+//     post(127.0.0.3)=bcs-10001, then cluster=bcs-10001 contains 3 ips, 127.0.0.1, 127.0.0.2, 127.0.0.3.
+//     it just add.
 func doRelation(req *restful.Request, isPut bool) error {
 	// 参数
 	relation, err := getRelationFeat(req)
@@ -164,14 +150,4 @@ func inList(key string, list []string) bool {
 		}
 	}
 	return false
-}
-
-func listInterface2String(s []interface{}) (r []string) {
-	r = make([]string, len(s))
-	for _, v := range s {
-		if vv, ok := v.(string); ok {
-			r = append(r, vv)
-		}
-	}
-	return
 }

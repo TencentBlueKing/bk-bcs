@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package pkg
@@ -187,7 +186,8 @@ func (p *ProjectManagerClient) ListNamespaces(in *ListNamespacesRequest) (*bcspr
 }
 
 // CreateNamespace Create namespace
-func (p *ProjectManagerClient) CreateNamespace(in *CreateNamespaceRequest, projectCode, clusterID string) (*bcsproject.CreateNamespaceResponse, error) {
+func (p *ProjectManagerClient) CreateNamespace(in *CreateNamespaceRequest, projectCode, clusterID string) (
+	*bcsproject.CreateNamespaceResponse, error) {
 	bs, err := p.do(fmt.Sprintf(listNamespacesUrl, projectCode, clusterID), http.MethodPost, nil, in)
 	if err != nil {
 		return nil, fmt.Errorf("create namespaces failed: %v", err)
@@ -203,7 +203,8 @@ func (p *ProjectManagerClient) CreateNamespace(in *CreateNamespaceRequest, proje
 }
 
 // UpdateNamespace Update namespace
-func (p *ProjectManagerClient) UpdateNamespace(in *UpdateNamespaceRequest, projectCode, clusterID, name string) (*bcsproject.UpdateNamespaceResponse, error) {
+func (p *ProjectManagerClient) UpdateNamespace(in *UpdateNamespaceRequest, projectCode, clusterID, name string) (
+	*bcsproject.UpdateNamespaceResponse, error) {
 	bs, err := p.do(fmt.Sprintf(namespaceUrl, projectCode, clusterID, name), http.MethodPut, nil, in)
 	if err != nil {
 		return nil, fmt.Errorf("update namespaces failed: %v", err)
@@ -219,8 +220,10 @@ func (p *ProjectManagerClient) UpdateNamespace(in *UpdateNamespaceRequest, proje
 }
 
 // DeleteNamespace Delete namespace
-func (p *ProjectManagerClient) DeleteNamespace(in *DeleteNamespaceRequest) (*bcsproject.DeleteNamespaceResponse, error) {
-	bs, err := p.do(fmt.Sprintf(namespaceUrl, in.ProjectCode, in.ClusterID, in.Name), http.MethodDelete, nil, nil)
+func (p *ProjectManagerClient) DeleteNamespace(in *DeleteNamespaceRequest) (
+	*bcsproject.DeleteNamespaceResponse, error) {
+	bs, err := p.do(fmt.Sprintf(namespaceUrl, in.ProjectCode, in.ClusterID, in.Name),
+		http.MethodDelete, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("delete namespaces failed: %v", err)
 	}
@@ -235,8 +238,10 @@ func (p *ProjectManagerClient) DeleteNamespace(in *DeleteNamespaceRequest) (*bcs
 }
 
 // CreateNamespaceCallback create namespace ITSM callback
-func (p *ProjectManagerClient) CreateNamespaceCallback(in *NamespaceCallbackRequest) (*bcsproject.NamespaceCallbackResponse, error) {
-	bs, err := p.do(fmt.Sprintf(createNamespaceCallbackUrl, in.ProjectCode, in.ClusterID, in.Name), http.MethodPost, nil, in)
+func (p *ProjectManagerClient) CreateNamespaceCallback(in *NamespaceCallbackRequest) (
+	*bcsproject.NamespaceCallbackResponse, error) {
+	bs, err := p.do(fmt.Sprintf(createNamespaceCallbackUrl, in.ProjectCode, in.ClusterID, in.Name), http.MethodPost,
+		nil, in)
 	if err != nil {
 		return nil, fmt.Errorf("create namespaces itsm callback failed: %v", err)
 	}
@@ -251,8 +256,10 @@ func (p *ProjectManagerClient) CreateNamespaceCallback(in *NamespaceCallbackRequ
 }
 
 // DeleteNamespaceCallback Delete namespace ITSM callback
-func (p *ProjectManagerClient) DeleteNamespaceCallback(in *NamespaceCallbackRequest) (*bcsproject.NamespaceCallbackResponse, error) {
-	bs, err := p.do(fmt.Sprintf(deleteNamespaceCallbackUrl, in.ProjectCode, in.ClusterID, in.Name), http.MethodPost, nil, in)
+func (p *ProjectManagerClient) DeleteNamespaceCallback(in *NamespaceCallbackRequest) (
+	*bcsproject.NamespaceCallbackResponse, error) {
+	bs, err := p.do(fmt.Sprintf(deleteNamespaceCallbackUrl, in.ProjectCode, in.ClusterID, in.Name), http.MethodPost,
+		nil, in)
 	if err != nil {
 		return nil, fmt.Errorf("delete namespaces itsm callback failed: %v", err)
 	}
@@ -267,8 +274,10 @@ func (p *ProjectManagerClient) DeleteNamespaceCallback(in *NamespaceCallbackRequ
 }
 
 // UpdateNamespaceCallback Update namespace ITSM callback
-func (p *ProjectManagerClient) UpdateNamespaceCallback(in *NamespaceCallbackRequest) (*bcsproject.NamespaceCallbackResponse, error) {
-	bs, err := p.do(fmt.Sprintf(updateNamespaceCallbackUrl, in.ProjectCode, in.ClusterID, in.Name), http.MethodPost, nil, in)
+func (p *ProjectManagerClient) UpdateNamespaceCallback(in *NamespaceCallbackRequest) (
+	*bcsproject.NamespaceCallbackResponse, error) {
+	bs, err := p.do(fmt.Sprintf(updateNamespaceCallbackUrl, in.ProjectCode, in.ClusterID, in.Name), http.MethodPost,
+		nil, in)
 	if err != nil {
 		return nil, fmt.Errorf("update namespaces itsm callback failed: %v", err)
 	}
@@ -283,8 +292,10 @@ func (p *ProjectManagerClient) UpdateNamespaceCallback(in *NamespaceCallbackRequ
 }
 
 // UpdateNamespaceVariables 更新命名变量
-func (p *ProjectManagerClient) UpdateNamespaceVariables(in *UpdateNamespaceVariablesReq) (*bcsproject.UpdateNamespacesVariablesResponse, error) {
-	bs, err := p.do(fmt.Sprintf(updateNamespaceVariablesUrl, in.ProjectCode, in.ClusterID, in.Namespace), http.MethodPut, nil, in)
+func (p *ProjectManagerClient) UpdateNamespaceVariables(in *UpdateNamespaceVariablesReq) (
+	*bcsproject.UpdateNamespacesVariablesResponse, error) {
+	bs, err := p.do(fmt.Sprintf(updateNamespaceVariablesUrl, in.ProjectCode, in.ClusterID, in.Namespace),
+		http.MethodPut, nil, in)
 	if err != nil {
 		return nil, fmt.Errorf("update namespaces variables failed: %v", err)
 	}

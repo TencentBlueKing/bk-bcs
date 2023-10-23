@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -22,6 +21,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
@@ -30,10 +33,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/avast/retry-go"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ApplyInstanceMachinesTask update desired nodes task
@@ -175,7 +174,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 	err = checkOperationStatus(client, operation.SelfLink, taskID, 5*time.Second)
 	if err != nil {
 		// rollout instances
-		removeMigInstances(ctx, info, mig.Name, instanceNames)
+		removeMigInstances(ctx, info, mig.Name, instanceNames) // nolint
 		return nil, fmt.Errorf("applyInstanceMachines[%s] GetOperation failed: %v", taskID, err)
 	}
 
@@ -209,7 +208,7 @@ func removeMigInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 	}
 
 	// async to check deleteMigInstances operation status
-	go checkOperationStatus(client, operation.SelfLink, taskID, time.Second*10)
+	go checkOperationStatus(client, operation.SelfLink, taskID, time.Second*10) // nolint
 
 	return nil
 }
@@ -235,7 +234,8 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 		blog.Errorf("recordClusterInstanceToDB[%s]: ListInstanceGroupsInstances failed: %s", taskID, err.Error())
 		return err
 	}
-	blog.Infof("recordClusterInstanceToDB[%s]: ListInstanceGroupsInstances got %d instances, %#v", taskID, len(instances), instances)
+	blog.Infof("recordClusterInstanceToDB[%s]: ListInstanceGroupsInstances got %d instances, %#v", taskID,
+		len(instances), instances)
 
 	for _, ins := range instancesNames {
 		for _, cloudIns := range instances {
@@ -344,7 +344,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 		nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID)
 		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed", taskID, info.Cluster.ClusterID, err)
+			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
 			return nil
 		}
 
@@ -379,9 +379,9 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	if errors.Is(err, context.DeadlineExceeded) {
 		running, failure := make([]string, 0), make([]string, 0)
 
-		nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID)
+		nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID) // nolint
 		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed", taskID, info.Cluster.ClusterID, err)
+			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
 			return nil, nil, err
 		}
 
@@ -597,13 +597,14 @@ func removeClusterNodesTaint(ctx context.Context, clusterID string, successInsta
 			continue
 		}
 
-		blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s] success", taskID, ins, err)
+		blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s] success", taskID, ins)
 	}
 
 	return nil
 }
 
-func returnGkeInstancesAndCleanNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, instanceNames []string) error {
+func returnGkeInstancesAndCleanNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	instanceNames []string) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	if len(instanceNames) == 0 {

@@ -8,15 +8,16 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package manager xxx
 package manager
 
 import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
@@ -86,6 +87,8 @@ func (c *Cluster) buildClusterOtherScope() iam.AuthorizationScope {
 	})
 }
 
+// NOCC:golint/unused(误报)
+// nolint
 func (c *Cluster) buildClusterViewScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(cluster.SysCluster, []iam.ActionID{
 		cluster.ClusterView},
@@ -120,6 +123,8 @@ func (c *Cluster) buildClusterScopedScope() iam.AuthorizationScope {
 	})
 }
 
+// NOCC:golint/unused(误报)
+// nolint
 func (c *Cluster) buildClusterScopedViewScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(cluster.SysCluster, []iam.ActionID{
 		cluster.ClusterScopedView,
@@ -154,6 +159,8 @@ func (c *Cluster) buildNamespaceCreateListScope() iam.AuthorizationScope {
 	})
 }
 
+// NOCC:golint/unused(误报)
+// nolint
 func (c *Cluster) buildNamespaceListScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(cluster.SysCluster, []iam.ActionID{
 		namespace.NameSpaceList,
@@ -188,6 +195,8 @@ func (c *Cluster) buildNamespaceOtherScope() iam.AuthorizationScope {
 	})
 }
 
+// NOCC:golint/unused(误报)
+// nolint
 func (c *Cluster) buildNamespaceViewScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(namespace.SysNamespace, []iam.ActionID{
 		namespace.NameSpaceView,
@@ -223,6 +232,8 @@ func (c *Cluster) buildNamespaceScopedScope() iam.AuthorizationScope {
 	})
 }
 
+// NOCC:golint/unused(误报)
+// nolint
 func (c *Cluster) buildNamespaceScopedViewScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(namespace.SysNamespace, []iam.ActionID{
 		namespace.NameSpaceScopedView,

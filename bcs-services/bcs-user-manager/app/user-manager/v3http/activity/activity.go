@@ -8,18 +8,18 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package activity xxx
 package activity
 
 import (
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/emicklei/go-restful"
 	"github.com/gorilla/schema"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/errors"
 	utils2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
@@ -51,6 +51,8 @@ type SearchActivitiesResponse struct {
 	Username     string          `json:"username"`
 	CreatedAt    utils2.JSONTime `json:"created_at"`
 	Description  string          `json:"description"`
+	SourceIP     string          `json:"source_ip"`
+	UserAgent    string          `json:"user_agent"`
 	Extra        string          `json:"extra"`
 }
 
@@ -96,13 +98,15 @@ func SearchActivities(request *restful.Request, response *restful.Response) {
 			CreatedAt:    utils2.JSONTime{Time: v.CreatedAt},
 			Description:  v.Description,
 			Extra:        v.Extra,
+			SourceIP:     v.SourceIP,
+			UserAgent:    v.UserAgent,
 		})
 	}
 	utils.ResponseOK(response, map[string]interface{}{
 		"count": count,
 		"items": results,
 	})
-	return
+
 }
 
 // PushActivitiesForm push activities form
@@ -120,6 +124,8 @@ type PushActivitiesData struct {
 	Status       string `json:"status"`
 	Username     string `json:"username" validate:"required"`
 	Description  string `json:"description"`
+	SourceIP     string `json:"source_ip"`
+	UserAgent    string `json:"user_agent"`
 	Extra        string `json:"extra"`
 }
 
@@ -135,7 +141,8 @@ func PushActivities(request *restful.Request, response *restful.Response) {
 
 	activities := make([]*models.Activity, 0)
 	for _, v := range form.Activities {
-		project, err := component.GetProject(request.Request.Context(), v.ProjectCode)
+		var project *component.Project
+		project, err = component.GetProject(request.Request.Context(), v.ProjectCode)
 		if err != nil {
 			blog.Errorf("get project failed, err %s", err.Error())
 			continue
@@ -150,6 +157,8 @@ func PushActivities(request *restful.Request, response *restful.Response) {
 			Username:     v.Username,
 			Description:  v.Description,
 			Extra:        v.Extra,
+			SourceIP:     v.SourceIP,
+			UserAgent:    v.UserAgent,
 		})
 	}
 	err = sqlstore.CreateActivity(activities)
@@ -158,5 +167,4 @@ func PushActivities(request *restful.Request, response *restful.Response) {
 		return
 	}
 	utils.ResponseOK(response, nil)
-	return
 }

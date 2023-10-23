@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package safestore xxx
 package safestore
 
 import "sync"
@@ -67,9 +67,7 @@ func (c *threadSafeMap) Update(key string, obj interface{}) {
 func (c *threadSafeMap) Delete(key string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	if _, exists := c.items[key]; exists {
-		delete(c.items, key)
-	}
+	delete(c.items, key)
 }
 
 // Get xxx

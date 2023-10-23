@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -22,6 +21,7 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 )
 
+// APIVersion xxx
 const APIVersion = "2018-05-25"
 
 // Client tke common client
@@ -30,7 +30,8 @@ type Client struct {
 }
 
 // NewClient init client
-func NewClient(credential common.CredentialIface, region string, clientProfile *profile.ClientProfile) (client *Client, err error) {
+func NewClient(credential common.CredentialIface, region string,
+	clientProfile *profile.ClientProfile) (client *Client, err error) {
 	client = &Client{}
 	client.Init(region).
 		WithCredential(credential).
@@ -57,12 +58,15 @@ func NewEnableExternalNodeSupportResponse() (response *EnableExternalNodeSupport
 }
 
 // EnableExternalNodeSupport 开启第三方节点池支持
-func (c *Client) EnableExternalNodeSupport(request *EnableExternalNodeSupportRequest) (response *EnableExternalNodeSupportResponse, err error) {
+func (c *Client) EnableExternalNodeSupport(request *EnableExternalNodeSupportRequest) (
+	response *EnableExternalNodeSupportResponse, err error) {
 	return c.EnableExternalNodeSupportWithContext(context.Background(), request)
 }
 
 // EnableExternalNodeSupportWithContext 开启第三方节点池支持
-func (c *Client) EnableExternalNodeSupportWithContext(ctx context.Context, request *EnableExternalNodeSupportRequest) (response *EnableExternalNodeSupportResponse, err error) {
+func (c *Client) EnableExternalNodeSupportWithContext(
+	ctx context.Context, request *EnableExternalNodeSupportRequest) (
+	response *EnableExternalNodeSupportResponse, err error) {
 	if request == nil {
 		request = NewEnableExternalNodeSupportRequest()
 	}
@@ -97,12 +101,14 @@ func NewDescribeExternalNodeScriptResponse() (response *DescribeExternalNodeScri
 }
 
 // DescribeExternalNodeScript 获取第三方节点添加脚本
-func (c *Client) DescribeExternalNodeScript(request *DescribeExternalNodeScriptRequest) (response *DescribeExternalNodeScriptResponse, err error) {
+func (c *Client) DescribeExternalNodeScript(request *DescribeExternalNodeScriptRequest) (
+	response *DescribeExternalNodeScriptResponse, err error) {
 	return c.DescribeExternalNodeScriptWithContext(context.Background(), request)
 }
 
 // DescribeExternalNodeScriptWithContext 获取第三方节点添加脚本
-func (c *Client) DescribeExternalNodeScriptWithContext(ctx context.Context, request *DescribeExternalNodeScriptRequest) (response *DescribeExternalNodeScriptResponse, err error) {
+func (c *Client) DescribeExternalNodeScriptWithContext(ctx context.Context,
+	request *DescribeExternalNodeScriptRequest) (response *DescribeExternalNodeScriptResponse, err error) {
 	if request == nil {
 		request = NewDescribeExternalNodeScriptRequest()
 	}
@@ -137,12 +143,14 @@ func NewDeleteExternalNodeResponse() (response *DeleteExternalNodeResponse) {
 }
 
 // DeleteExternalNode 删除第三方节点
-func (c *Client) DeleteExternalNode(request *DeleteExternalNodeRequest) (response *DeleteExternalNodeResponse, err error) {
+func (c *Client) DeleteExternalNode(request *DeleteExternalNodeRequest) (
+	response *DeleteExternalNodeResponse, err error) {
 	return c.DeleteExternalNodeWithContext(context.Background(), request)
 }
 
 // DeleteExternalNodeWithContext 删除第三方节点
-func (c *Client) DeleteExternalNodeWithContext(ctx context.Context, request *DeleteExternalNodeRequest) (response *DeleteExternalNodeResponse, err error) {
+func (c *Client) DeleteExternalNodeWithContext(ctx context.Context, request *DeleteExternalNodeRequest) (
+	response *DeleteExternalNodeResponse, err error) {
 	if request == nil {
 		request = NewDeleteExternalNodeRequest()
 	}
@@ -182,7 +190,8 @@ func (c *Client) DrainExternalNode(request *DrainExternalNodeRequest) (response 
 }
 
 // DrainExternalNodeWithContext 驱逐第三方节点
-func (c *Client) DrainExternalNodeWithContext(ctx context.Context, request *DrainExternalNodeRequest) (response *DrainExternalNodeResponse, err error) {
+func (c *Client) DrainExternalNodeWithContext(ctx context.Context, request *DrainExternalNodeRequest) (
+	response *DrainExternalNodeResponse, err error) {
 	if request == nil {
 		request = NewDrainExternalNodeRequest()
 	}
@@ -217,12 +226,14 @@ func NewDeleteExternalNodePoolResponse() (response *DeleteExternalNodePoolRespon
 }
 
 // DeleteExternalNodePool 删除第三方节点池
-func (c *Client) DeleteExternalNodePool(request *DeleteExternalNodePoolRequest) (response *DeleteExternalNodePoolResponse, err error) {
+func (c *Client) DeleteExternalNodePool(request *DeleteExternalNodePoolRequest) (
+	response *DeleteExternalNodePoolResponse, err error) {
 	return c.DeleteExternalNodePoolWithContext(context.Background(), request)
 }
 
 // DeleteExternalNodePoolWithContext 删除第三方节点池
-func (c *Client) DeleteExternalNodePoolWithContext(ctx context.Context, request *DeleteExternalNodePoolRequest) (response *DeleteExternalNodePoolResponse, err error) {
+func (c *Client) DeleteExternalNodePoolWithContext(ctx context.Context, request *DeleteExternalNodePoolRequest) (
+	response *DeleteExternalNodePoolResponse, err error) {
 	if request == nil {
 		request = NewDeleteExternalNodePoolRequest()
 	}
@@ -257,12 +268,14 @@ func NewDescribeExternalNodePoolsResponse() (response *DescribeExternalNodePools
 }
 
 // DescribeExternalNodePools 查看第三方节点池列表
-func (c *Client) DescribeExternalNodePools(request *DescribeExternalNodePoolsRequest) (response *DescribeExternalNodePoolsResponse, err error) {
+func (c *Client) DescribeExternalNodePools(request *DescribeExternalNodePoolsRequest) (
+	response *DescribeExternalNodePoolsResponse, err error) {
 	return c.DescribeExternalNodePoolsWithContext(context.Background(), request)
 }
 
 // DescribeExternalNodePoolsWithContext 查看第三方节点池列表
-func (c *Client) DescribeExternalNodePoolsWithContext(ctx context.Context, request *DescribeExternalNodePoolsRequest) (response *DescribeExternalNodePoolsResponse, err error) {
+func (c *Client) DescribeExternalNodePoolsWithContext(ctx context.Context, request *DescribeExternalNodePoolsRequest) (
+	response *DescribeExternalNodePoolsResponse, err error) {
 	if request == nil {
 		request = NewDescribeExternalNodePoolsRequest()
 	}
@@ -297,12 +310,15 @@ func NewDescribeExternalNodeSupportConfigResponse() (response *DescribeExternalN
 }
 
 // DescribeExternalNodeSupportConfig 查看开启第三方节点池配置信息
-func (c *Client) DescribeExternalNodeSupportConfig(request *DescribeExternalNodeSupportConfigRequest) (response *DescribeExternalNodeSupportConfigResponse, err error) {
+func (c *Client) DescribeExternalNodeSupportConfig(request *DescribeExternalNodeSupportConfigRequest) (
+	response *DescribeExternalNodeSupportConfigResponse, err error) {
 	return c.DescribeExternalNodeSupportConfigWithContext(context.Background(), request)
 }
 
 // DescribeExternalNodeSupportConfigWithContext 查看开启第三方节点池配置信息
-func (c *Client) DescribeExternalNodeSupportConfigWithContext(ctx context.Context, request *DescribeExternalNodeSupportConfigRequest) (response *DescribeExternalNodeSupportConfigResponse, err error) {
+func (c *Client) DescribeExternalNodeSupportConfigWithContext(ctx context.Context,
+	request *DescribeExternalNodeSupportConfigRequest) (response *DescribeExternalNodeSupportConfigResponse,
+	err error) {
 	if request == nil {
 		request = NewDescribeExternalNodeSupportConfigRequest()
 	}
@@ -337,12 +353,14 @@ func NewCreateExternalNodePoolResponse() (response *CreateExternalNodePoolRespon
 }
 
 // CreateExternalNodePool 创建第三方节点池
-func (c *Client) CreateExternalNodePool(request *CreateExternalNodePoolRequest) (response *CreateExternalNodePoolResponse, err error) {
+func (c *Client) CreateExternalNodePool(request *CreateExternalNodePoolRequest) (
+	response *CreateExternalNodePoolResponse, err error) {
 	return c.CreateExternalNodePoolWithContext(context.Background(), request)
 }
 
 // CreateExternalNodePoolWithContext 创建第三方节点池
-func (c *Client) CreateExternalNodePoolWithContext(ctx context.Context, request *CreateExternalNodePoolRequest) (response *CreateExternalNodePoolResponse, err error) {
+func (c *Client) CreateExternalNodePoolWithContext(ctx context.Context, request *CreateExternalNodePoolRequest) (
+	response *CreateExternalNodePoolResponse, err error) {
 	if request == nil {
 		request = NewCreateExternalNodePoolRequest()
 	}
@@ -377,12 +395,14 @@ func NewModifyExternalNodePoolResponse() (response *ModifyExternalNodePoolRespon
 }
 
 // ModifyExternalNodePool 修改第三方节点池
-func (c *Client) ModifyExternalNodePool(request *ModifyExternalNodePoolRequest) (response *ModifyExternalNodePoolResponse, err error) {
+func (c *Client) ModifyExternalNodePool(request *ModifyExternalNodePoolRequest) (
+	response *ModifyExternalNodePoolResponse, err error) {
 	return c.ModifyExternalNodePoolWithContext(context.Background(), request)
 }
 
 // ModifyExternalNodePoolWithContext 修改第三方节点池
-func (c *Client) ModifyExternalNodePoolWithContext(ctx context.Context, request *ModifyExternalNodePoolRequest) (response *ModifyExternalNodePoolResponse, err error) {
+func (c *Client) ModifyExternalNodePoolWithContext(ctx context.Context, request *ModifyExternalNodePoolRequest) (
+	response *ModifyExternalNodePoolResponse, err error) {
 	if request == nil {
 		request = NewModifyExternalNodePoolRequest()
 	}
@@ -417,12 +437,14 @@ func NewDescribeExternalNodeResponse() (response *DescribeExternalNodeResponse) 
 }
 
 // DescribeExternalNode 查看第三方节点列表
-func (c *Client) DescribeExternalNode(request *DescribeExternalNodeRequest) (response *DescribeExternalNodeResponse, err error) {
+func (c *Client) DescribeExternalNode(request *DescribeExternalNodeRequest) (
+	response *DescribeExternalNodeResponse, err error) {
 	return c.DescribeExternalNodeWithContext(context.Background(), request)
 }
 
 // DescribeExternalNodeWithContext 查看第三方节点列表
-func (c *Client) DescribeExternalNodeWithContext(ctx context.Context, request *DescribeExternalNodeRequest) (response *DescribeExternalNodeResponse, err error) {
+func (c *Client) DescribeExternalNodeWithContext(ctx context.Context, request *DescribeExternalNodeRequest) (
+	response *DescribeExternalNodeResponse, err error) {
 	if request == nil {
 		request = NewDescribeExternalNodeRequest()
 	}
@@ -444,7 +466,8 @@ func (c *Client) DescribeOSImages(request *DescribeOSImagesRequest) (response *D
 }
 
 // DescribeOSImagesWithContext 获取OS聚合信息
-func (c *Client) DescribeOSImagesWithContext(ctx context.Context, request *DescribeOSImagesRequest) (response *DescribeOSImagesResponse, err error) {
+func (c *Client) DescribeOSImagesWithContext(ctx context.Context, request *DescribeOSImagesRequest) (
+	response *DescribeOSImagesResponse, err error) {
 	if request == nil {
 		request = NewDescribeOSImagesRequest()
 	}

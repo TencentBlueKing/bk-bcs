@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package pod
@@ -39,7 +38,7 @@ const (
 // @Produce text/event-stream
 // @Success 200 {string} string
 // @Router  /namespaces/:namespace/pods/:pod/logs/stream [get]
-func PodLogStream(c *rest.Context) {
+func PodLogStream(c *rest.Context) { // nolint
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
 	pod := c.Param("pod")

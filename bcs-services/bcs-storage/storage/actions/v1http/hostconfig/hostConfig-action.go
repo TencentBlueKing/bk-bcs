@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package hostconfig
@@ -19,10 +18,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
-	"github.com/emicklei/go-restful"
 )
 
 const (
@@ -35,7 +35,6 @@ const (
 	timeLayout    = "2006-01-02 15:04:05"
 )
 
-var needTimeFormatList = [...]string{updateTimeTag, createTimeTag}
 var hostFeatTags = []string{ipTag}
 var hostQueryFeatTags = []string{clusterIDTag}
 var indexKeys = []string{ipTag}

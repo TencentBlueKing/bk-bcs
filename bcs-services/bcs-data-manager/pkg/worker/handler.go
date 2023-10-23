@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -19,19 +19,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/smallnest/chanx"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+	"github.com/smallnest/chanx"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/datajob"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
 
 // DataJobHandler handler for dataJob
@@ -89,7 +87,7 @@ func (h *DataJobHandler) Consume(sub msgqueue.MessageQueue) error {
 	}
 	blog.Infof("subscribe success")
 	h.unSub = func() {
-		unSub.Unsubscribe()
+		_ = unSub.Unsubscribe()
 	}
 	go h.handleJob()
 	return nil
@@ -243,7 +241,7 @@ func (h *DataJobHandler) handleOneJob(job datajob.DataJob) {
 		blog.Errorf("get cm conn error:%v", err)
 		return
 	}
-	defer cmConn.Close()
+	defer cmConn.Close() // nolint
 	cliWithHeader := h.clients.CmCli.NewGrpcClientWithHeader(context.Background(), cmConn)
 	client := types.NewClients(h.clients.BcsMonitorClient, h.clients.K8sStorageCli,
 		h.clients.MesosStorageCli, cliWithHeader)

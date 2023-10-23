@@ -18,18 +18,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/dchest/uniuri"
+	"github.com/emicklei/go-restful"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
-	"github.com/dchest/uniuri"
-	"github.com/emicklei/go-restful"
 )
 
 const (
@@ -46,6 +46,7 @@ const (
 var NeverExpired, _ = time.Parse(time.RFC3339, "2032-01-19T03:14:07Z")
 
 // TokenHandler is a restful handler for token.
+// nolint
 type TokenHandler struct {
 	tokenStore  sqlstore.TokenStore
 	notifyStore sqlstore.TokenNotifyStore
@@ -75,6 +76,7 @@ type CreateTokenForm struct {
 }
 
 // TokenStatus is a enum for token status.
+// nolint
 type TokenStatus uint8
 
 const (
@@ -85,6 +87,7 @@ const (
 )
 
 // TokenResp is a response for creating token and other token handler's response data.
+// nolint
 type TokenResp struct {
 	Token     string       `json:"token"`
 	JWT       string       `json:"jwt,omitempty"`
@@ -104,6 +107,7 @@ type UpdateTokenForm struct {
 func checkTokenCreateBy(request *restful.Request, targetUser string) (allow, isClient bool, createBy string) {
 	currentUser := request.Attribute(constant.CurrentUserAttr)
 	var userToken *models.BcsUser
+	// nolint
 	if v, ok := currentUser.(*models.BcsUser); ok {
 		userToken = v
 	} else {
@@ -121,6 +125,7 @@ func checkTokenCreateBy(request *restful.Request, targetUser string) (allow, isC
 
 // CreateToken create a token for user.
 // NOCC:golint/fnsize(设计如此)
+// nolint
 func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	form := CreateTokenForm{}
@@ -492,6 +497,7 @@ type CreateClientTokenForm struct {
 
 // CreateClientToken create client token
 // NOCC:golint/fnsize(设计如此)
+// nolint
 func (t *TokenHandler) CreateClientToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	form := CreateClientTokenForm{}

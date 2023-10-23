@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bkapi
@@ -39,7 +38,7 @@ var retryable = retry.RetryIf(func(err error) bool {
 
 var (
 	defaultTimeOut         = time.Second * 5
-	defaultCheckAppTimeout = time.Minute * 10
+	defaultCheckAppTimeout = time.Minute * 10 // nolint
 	// ErrServerNotInit server notInit
 	ErrServerNotInit = errors.New("server not inited")
 )

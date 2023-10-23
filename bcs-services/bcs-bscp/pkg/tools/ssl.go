@@ -56,7 +56,7 @@ func ClientTLSConfVerify(skipVerify bool, caFile, certFile, keyFile, passwd stri
 	}
 
 	conf := &tls.Config{
-		InsecureSkipVerify: skipVerify, // nolint
+		InsecureSkipVerify: skipVerify, //nolint
 		RootCAs:            caPool,
 		Certificates:       []tls.Certificate{*cert},
 	}
@@ -80,6 +80,7 @@ func ServerTLSConfVerify(caFile, certFile, keyFile, passwd string) (*tls.Config,
 		ClientCAs:    caPool,
 		Certificates: []tls.Certificate{*cert},
 		ClientAuth:   tls.RequireAndVerifyClientCert,
+		MinVersion:   tls.VersionTLS12, // 使用TLS 1.2 或以上版本
 	}
 
 	return conf, nil
@@ -111,7 +112,7 @@ func loadCertificates(certFile, keyFile, passwd string) (*tls.Certificate, error
 			return nil, fmt.Errorf("decode private key failed")
 		}
 
-		priDecrPem, decErr := x509.DecryptPEMBlock(priPem, []byte(passwd))
+		priDecrPem, decErr := x509.DecryptPEMBlock(priPem, []byte(passwd)) //nolint:staticcheck
 		if decErr != nil {
 			return nil, decErr
 		}

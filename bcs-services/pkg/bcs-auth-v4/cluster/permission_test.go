@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cluster
@@ -52,6 +51,7 @@ func TestBCSClusterPerm_CanCreateCluster(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// nolint
 	projectID := "b37778ec757544868a01e1f01f07037f"
 	// projectID := "846e8195d9ca4097b354ed190acce4b1"
 	allow, url, _, err := cli.CanCreateCluster("liming", projectID)

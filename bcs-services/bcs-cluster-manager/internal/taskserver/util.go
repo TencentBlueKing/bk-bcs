@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package taskserver
@@ -24,13 +23,13 @@ func validateTask(task *proto.Task) error {
 		len(task.TaskType) == 0 {
 		return fmt.Errorf("lost task execution information")
 	}
-	//check current step in sequence
+	// check current step in sequence
 	currentFound := false
 	for _, stepName := range task.StepSequence {
 		if stepName == task.CurrentStep {
 			currentFound = true
 		}
-		//check step detail
+		// check step detail
 		step, ok := task.Steps[stepName]
 		if !ok {
 			return fmt.Errorf("task lost step %s execution information", stepName)

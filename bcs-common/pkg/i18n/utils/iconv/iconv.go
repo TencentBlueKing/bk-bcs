@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package iconv xxx
 package iconv
 
 import (
@@ -32,7 +32,7 @@ type iError interface {
 }
 
 // String converts `any` to string.
-// It's most commonly used converting function.
+// NOCC:CCN_threshold(设计如此:),golint/fnsize(设计如此:)
 func String(any interface{}) string {
 	if any == nil {
 		return ""
@@ -116,10 +116,10 @@ func String(any interface{}) string {
 			return String(rv.Elem().Interface())
 		}
 		// Finally, we use json.Marshal to convert.
-		if jsonContent, err := json.Marshal(value); err != nil {
+		jsonContent, err := json.Marshal(value)
+		if err != nil {
 			return fmt.Sprint(value)
-		} else {
-			return string(jsonContent)
 		}
+		return String(jsonContent)
 	}
 }

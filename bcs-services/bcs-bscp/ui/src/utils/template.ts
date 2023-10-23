@@ -1,4 +1,4 @@
-export function getDefaultPackageConfig () {
+export default function () {
   return {
     id: 0,
     spec: {
@@ -17,6 +17,6 @@ export function getDefaultPackageConfig () {
       reviser: '',
       create_at: '',
       update_at: '',
-    }
-  }
+    },
+  };
 }

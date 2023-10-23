@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package discovery
@@ -16,11 +15,11 @@ package discovery
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
-
 	"k8s.io/apimachinery/pkg/labels"
 	k8scache "k8s.io/client-go/tools/cache"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 )
 
 // AppendFunc is used to add a matching item to whatever list the caller is using

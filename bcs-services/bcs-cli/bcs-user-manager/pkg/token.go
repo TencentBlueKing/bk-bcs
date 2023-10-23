@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package pkg
@@ -19,18 +18,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
+	"github.com/pkg/errors"
 )
 
 const (
-	createTokenUrl       = "/v1/tokens"
+	createTokenUrl       = "/v1/tokens"          // nolint
 	getTokenUrl          = "/v1/users/%s/tokens" // nolint
-	deleteTokenUrl       = "/v1/tokens/%s"
-	updateTokenUrl       = "/v1/tokens/%s"
-	createTempTokenUrl   = "/v1/tokens/temp"
-	createClientTokenUrl = "/v1/tokens/client"
+	deleteTokenUrl       = "/v1/tokens/%s"       // nolint
+	updateTokenUrl       = "/v1/tokens/%s"       // nolint
+	createTempTokenUrl   = "/v1/tokens/temp"     // nolint
+	createClientTokenUrl = "/v1/tokens/client"   // nolint
 )
 
 // CreateTokenForm is a form for create token.
@@ -70,7 +68,7 @@ func (c *UserManagerClient) CreateToken(reqBody string) (*CreateTokenResponse, e
 	}
 	bs, err := c.do(createTokenUrl, http.MethodPost, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "create token with '%s' failed", reqForm)
+		return nil, errors.Wrapf(err, "create token with '%v' failed", reqForm)
 	}
 	resp := new(CreateTokenResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
@@ -143,7 +141,7 @@ func (c *UserManagerClient) UpdateToken(token, tokenBody string) (*UpdateTokenRe
 	}
 	bs, err := c.do(fmt.Sprintf(updateTokenUrl, token), http.MethodPut, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "update token with '%s' failed", reqForm)
+		return nil, errors.Wrapf(err, "update token with '%v' failed", reqForm)
 	}
 	resp := new(UpdateTokenResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
@@ -168,7 +166,7 @@ func (c *UserManagerClient) CreateTempToken(reqBody string) (*CreateTempTokenRes
 	}
 	bs, err := c.do(createTempTokenUrl, http.MethodPost, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "create temp token with '%s' failed", reqForm)
+		return nil, errors.Wrapf(err, "create temp token with '%v' failed", reqForm)
 	}
 	resp := new(CreateTempTokenResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
@@ -203,7 +201,7 @@ func (c *UserManagerClient) CreateClientToken(reqBody string) (*CreateClientToke
 	}
 	bs, err := c.do(createClientTokenUrl, http.MethodPost, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "create client token with '%s' failed", reqForm)
+		return nil, errors.Wrapf(err, "create client token with '%v' failed", reqForm)
 	}
 	resp := new(CreateClientTokenResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {

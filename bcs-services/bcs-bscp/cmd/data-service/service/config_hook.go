@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -28,7 +29,6 @@ import (
 func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHookReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
-
 	tx := s.dao.GenQuery().Begin()
 
 	preHook := &table.ReleasedHook{
@@ -36,6 +36,7 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		BizID: req.BizId,
 		// ReleasedID 0 for editing release
 		ReleaseID: 0,
+		HookID:    req.PreHookId,
 		HookType:  table.PreHook,
 	}
 	postHook := &table.ReleasedHook{
@@ -43,87 +44,102 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		BizID: req.BizId,
 		// ReleasedID 0 for editing release
 		ReleaseID: 0,
+		HookID:    req.PostHookId,
 		HookType:  table.PostHook,
 	}
+
 	if req.PreHookId > 0 {
-		opt := &types.GetByPubStateOption{
-			BizID:  req.BizId,
-			HookID: req.PreHookId,
-			State:  table.HookRevisionStatusDeployed,
-		}
-		h, err := s.dao.Hook().GetByID(kt, req.BizId, req.PreHookId)
-		if err != nil {
-			logs.Errorf("get pre-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
-			return nil, err
-		}
-		hr, err := s.dao.HookRevision().GetByPubState(kt, opt)
+		hook, err := s.getReleasedHook(kt, preHook)
 		if err != nil {
 			logs.Errorf("no released releases of the pre-hook, err: %v, rid: %s", err, kt.Rid)
 			return nil, errors.New("no released releases of the pre-hook")
 		}
-		preHook.HookID = h.ID
-		preHook.HookName = h.Spec.Name
-		preHook.HookRevisionID = hr.ID
-		preHook.HookRevisionName = hr.Spec.Name
-		preHook.Content = hr.Spec.Content
-		preHook.ScriptType = h.Spec.Type
-		preHook.Reviser = kt.User
-		if err = s.dao.ReleasedHook().UpsertWithTx(kt, tx, preHook); err != nil {
+
+		if err = s.dao.ReleasedHook().UpsertWithTx(kt, tx, hook); err != nil {
 			logs.Errorf("upsert pre-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
 			return nil, err
 		}
 	} else {
 		if err := s.dao.ReleasedHook().DeleteByUniqueKeyWithTx(kt, tx, preHook); err != nil {
 			logs.Errorf("delete pre-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
 			return nil, err
 		}
 	}
 
 	if req.PostHookId > 0 {
-		opt := &types.GetByPubStateOption{
-			BizID:  req.BizId,
-			HookID: req.PostHookId,
-			State:  table.HookRevisionStatusDeployed,
-		}
-		h, err := s.dao.Hook().GetByID(kt, req.BizId, req.PostHookId)
+		hook, err := s.getReleasedHook(kt, postHook)
 		if err != nil {
-			logs.Errorf("get pre-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			logs.Errorf("get post-hook failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
 			return nil, err
 		}
-		hr, err := s.dao.HookRevision().GetByPubState(kt, opt)
-		if err != nil {
-			logs.Errorf("no released releases of the post-hook, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
-			return nil, errors.New("no released releases of the post-hook")
-		}
-		postHook.HookID = h.ID
-		postHook.HookName = h.Spec.Name
-		postHook.HookRevisionID = hr.ID
-		postHook.HookRevisionName = hr.Spec.Name
-		postHook.Content = hr.Spec.Content
-		postHook.ScriptType = h.Spec.Type
-		postHook.Reviser = kt.User
-		if err = s.dao.ReleasedHook().UpsertWithTx(kt, tx, postHook); err != nil {
+
+		if err = s.dao.ReleasedHook().UpsertWithTx(kt, tx, hook); err != nil {
 			logs.Errorf("upsert post-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
 			return nil, err
 		}
 	} else {
 		if err := s.dao.ReleasedHook().DeleteByUniqueKeyWithTx(kt, tx, postHook); err != nil {
 			logs.Errorf("delete post-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
 			return nil, err
 		}
 	}
 	if err := tx.Commit(); err != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
 		return nil, err
 	}
 
 	return new(pbbase.EmptyResp), nil
+}
+
+// getReleasedHook ...
+func (s *Service) getReleasedHook(kt *kit.Kit, rh *table.ReleasedHook) (*table.ReleasedHook, error) {
+
+	h, err := s.dao.Hook().GetByID(kt, rh.BizID, rh.HookID)
+	if err != nil {
+		logs.Errorf("get %s failed, err: %v, rid: %s", rh.HookType.String(), err, kt.Rid)
+		return nil, err
+	}
+
+	opt := &types.GetByPubStateOption{
+		BizID:  rh.BizID,
+		HookID: rh.HookID,
+		State:  table.HookRevisionStatusDeployed,
+	}
+	hr, err := s.dao.HookRevision().GetByPubState(kt, opt)
+	if err != nil {
+		logs.Errorf("no released releases of the %s, err: %v, rid: %s", rh.HookType.String(), err, kt.Rid)
+		return nil, fmt.Errorf("no released releases of the %s", rh.HookType.String())
+	}
+
+	return &table.ReleasedHook{
+		BizID:            rh.BizID,
+		AppID:            rh.AppID,
+		ReleaseID:        0,
+		HookID:           h.ID,
+		HookName:         h.Spec.Name,
+		HookRevisionID:   hr.ID,
+		HookRevisionName: hr.Spec.Name,
+		Content:          hr.Spec.Content,
+		ScriptType:       h.Spec.Type,
+		HookType:         rh.HookType,
+		Reviser:          kt.User,
+	}, nil
 }

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package main This is the entry point for the authentication server, providing authentication services.
 package main
 
 import "bscp.io/cmd/auth-server/cmd"

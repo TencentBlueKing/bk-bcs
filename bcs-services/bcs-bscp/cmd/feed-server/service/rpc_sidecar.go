@@ -89,6 +89,7 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 }
 
 // getAppReload get app reload option.
+// nolint: unused
 func (s *Service) getAppReload(kt *kit.Kit, bizID uint32, appIDs []uint32) (map[uint32]*sfs.Reload, error) {
 	appReloadList := make(map[uint32]*sfs.Reload)
 
@@ -251,7 +252,8 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 		if err != nil {
 			return nil, status.Errorf(codes.Aborted, "get app meta failed, %s", err.Error())
 		}
-		if match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, app.Name, req.Token, ci.ConfigItemSpec); err != nil || !match {
+		if match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, app.Name, req.Token,
+			ci.ConfigItemSpec); err != nil || !match {
 			logs.Errorf("no permission to access config item %d, err: %v", ci.RciId, err)
 			return nil, status.Errorf(codes.PermissionDenied, "no permission to access config item %d", ci.RciId)
 		}

@@ -15,6 +15,7 @@ package service
 import (
 	"bytes"
 	"context"
+	"sort"
 	"time"
 
 	"bscp.io/pkg/dal/table"
@@ -245,6 +246,9 @@ func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.Temp
 	}
 
 	allVariables = tools.RemoveDuplicateStrings(allVariables)
+	// Sort in ascending order
+	sort.Strings(allVariables)
+
 	refs := make([]*pbatv.AppTemplateVariableReference, len(allVariables))
 	for idx, v := range allVariables {
 		ref := &pbatv.AppTemplateVariableReference{
@@ -334,10 +338,30 @@ func (s *Service) ListAppTmplVariables(ctx context.Context, req *pbds.ListAppTmp
 		// for unset variable, just return its name, other fields keep empty
 		finalVar = append(finalVar, &pbtv.TemplateVariableSpec{Name: name})
 	}
+	finalVar = sortVariables(finalVar)
 
 	return &pbds.ListAppTmplVariablesResp{
 		Details: finalVar,
 	}, nil
+}
+
+func sortVariables(vars []*pbtv.TemplateVariableSpec) []*pbtv.TemplateVariableSpec {
+	// Define a custom sorting function that sorts by the name field in ascending order.
+	sortByName := func(i, j int) bool {
+		return vars[i].Name < vars[j].Name
+	}
+	sort.Slice(vars, sortByName)
+
+	// put the variables whose value is empty in front
+	var varsNoVal, varWithVal []*pbtv.TemplateVariableSpec
+	for _, v := range vars {
+		if v.DefaultVal == "" {
+			varsNoVal = append(varsNoVal, v)
+		} else {
+			varWithVal = append(varWithVal, v)
+		}
+	}
+	return append(varsNoVal, varWithVal...)
 }
 
 // ListReleasedAppTmplVariables get app template variable references.

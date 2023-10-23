@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package edit
@@ -43,7 +42,7 @@ var (
 		kubectl-bcs-project-manager edit project PROJECT_ID/PROJECT_CODE`))
 )
 
-func editProject() *cobra.Command {
+func editProject() *cobra.Command { // nolint
 	cmd := &cobra.Command{
 		Use:                   "project (ID/CODE)",
 		DisableFlagsInUseLine: true,
@@ -58,7 +57,7 @@ func editProject() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(context.Background())
 			resp, err := client.GetProject(args[0])
 			if err != nil {
-				klog.Infoln("get project failed: %v", err)
+				klog.Infof("get project failed: %v", err)
 				return
 			}
 
@@ -66,33 +65,34 @@ func editProject() *cobra.Command {
 			// 原内容
 			marshal, err := json.Marshal(projectInfo)
 			if err != nil {
-				klog.Infoln("json marshal failed: %v", err)
+				klog.Infof("json marshal failed: %v", err)
 				return
 			}
 
 			// 把json转成yaml
 			original, err := yaml.JSONToYAML(marshal)
 			if err != nil {
-				klog.Infoln("json to yaml failed: %v", err)
+				klog.Infof("json to yaml failed: %v", err)
 				return
 			}
 			edit := editor.NewDefaultEditor([]string{})
 			// 编辑后的
-			edited, path, err := edit.LaunchTempFile(fmt.Sprintf("%s-edit-", filepath.Base(os.Args[0])), ".yaml", bytes.NewBufferString(string(original)))
+			edited, path, err := edit.LaunchTempFile(fmt.Sprintf("%s-edit-", filepath.Base(os.Args[0])),
+				".yaml", bytes.NewBufferString(string(original)))
 			if err != nil {
-				klog.Infoln("unexpected error: %v", err)
+				klog.Infof("unexpected error: %v", err)
 			}
-			if _, err := os.Stat(path); err != nil {
-				klog.Infoln("no temp file: %s", path)
+			if _, err = os.Stat(path); err != nil {
+				klog.Infof("no temp file: %s", path)
 			}
 			// 对比原内容是否更改
 			if bytes.Equal(cmdutil.StripComments(original), cmdutil.StripComments(edited)) {
-				klog.Infoln("Edit cancelled, no valid changes were saved.")
+				klog.Infoln("Edit canceled, no valid changes were saved.")
 			}
 			// 把编辑后的内容yaml转成json
 			editedJson, err := yaml.YAMLToJSON(edited)
 			if err != nil {
-				klog.Infoln("json to yaml failed: %v", err)
+				klog.Infof("json to yaml failed: %v", err)
 				return
 			}
 
@@ -104,12 +104,12 @@ func editProject() *cobra.Command {
 			{
 				err = json.Unmarshal(editedJson, &editBefore)
 				if err != nil {
-					klog.Infoln("[edited] deserialize failed: %v", err)
+					klog.Infof("[edited] deserialize failed: %v", err)
 					return
 				}
 				err = json.Unmarshal(marshal, &editAfter)
 				if err != nil {
-					klog.Infoln("[project info] deserialize failed: %v", err)
+					klog.Infof("[project info] deserialize failed: %v", err)
 					return
 				}
 				editAfter.BusinessID = editBefore.BusinessID
@@ -152,7 +152,7 @@ func editProject() *cobra.Command {
 			}
 			updateProjectResp, err := client.UpdateProject(updateData)
 			if err != nil {
-				klog.Infoln("update project failed: %v", err)
+				klog.Infof("update project failed: %v", err)
 				return
 			}
 			printer.PrintInJSON(updateProjectResp)

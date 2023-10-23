@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -21,13 +19,12 @@ import (
 	"reflect"
 	"strings"
 	"time"
-	"unicode"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"go-micro.dev/v4/errors"
 	"go-micro.dev/v4/server"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	audit2 "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -108,14 +105,6 @@ func genNewRespData(ctx context.Context, err interface{}) *structpb.Struct {
 	}
 }
 
-// actionDesc 操作描述
-type actionDesc string
-
-// String string
-func (a actionDesc) String() string {
-	return string(a)
-}
-
 type reqResource struct {
 	ProjectID   string `json:"projectID" yaml:"projectID"`
 	ClusterID   string `json:"clusterID" yaml:"clusterID"`
@@ -186,62 +175,63 @@ func getReqResource(req server.Request) reqResource {
 	return resourceID
 }
 
+// nolint
 var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.Resource, audit.Action){
 	"Create": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeCreate}
+		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeCreate}
 	},
 	"Update": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeUpdate}
 	},
 	"Delete": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeDelete}
+		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeDelete}
 	},
 	"Restart": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeUpdate}
 	},
 	"PauseOrResume": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeUpdate}
 	},
 	"Scale": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeUpdate}
 	},
 	"Rollout": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeUpdate}
 	},
 	"Reschedule": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeUpdate}
 	},
 }
 
@@ -324,26 +314,8 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 	if result.ResultCode != errcode.NoErr {
 		result.Status = audit.ActivityStatusFailed
 	}
-	audit2.GetAuditClient().R().
+	_ = audit2.GetAuditClient().R().
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 }
 
 // 驼峰转蛇形
-func camelToSnake(s string) string {
-	arr := strings.Split(s, ".")
-	if len(arr) <= 1 {
-		return ""
-	}
-	var result strings.Builder
-	for i, c := range arr[1] {
-		if unicode.IsUpper(c) {
-			if i > 0 {
-				result.WriteRune('_')
-			}
-			result.WriteRune(unicode.ToLower(c))
-		} else {
-			result.WriteRune(c)
-		}
-	}
-	return result.String()
-}

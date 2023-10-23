@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package bcsapi xxx
 package bcsapi
 
 import (
@@ -19,9 +19,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // ! v4 version binding~
@@ -33,6 +33,7 @@ const (
 
 // Config for bcsapi
 type Config struct {
+
 	// bcsapi host, available like 127.0.0.1:8080
 	Hosts []string
 	// tls configuratio
@@ -92,7 +93,7 @@ type GrpcTokenAuth struct {
 }
 
 // GetRequestMetadata convert http Authorization for grpc key
-func (t GrpcTokenAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
+func (t GrpcTokenAuth) GetRequestMetadata(_ context.Context, _ ...string) (map[string]string, error) {
 	return map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", t.Token),
 	}, nil

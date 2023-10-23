@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -354,7 +354,7 @@ func (ua *UpdateAction) getRelativeResource() error {
 
 // updateCloudNodeGroup update cloud nodeGroup
 func (ua *UpdateAction) updateCloudNodeGroup() error {
-	//get credential for cloudprovider operation
+	// get credential for cloudprovider operation
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
 		Cloud:     ua.cloud,
 		AccountID: ua.cluster.CloudAccountID,
@@ -437,8 +437,10 @@ func (ua *UpdateAction) saveNodeGroupStatus(status string) error {
 // checkStatus check status
 func (ua *UpdateAction) checkStatus() error {
 	// if nodegroup is creating/deleting/deleted, return error
-	if ua.group.Status == common.StatusCreateNodeGroupCreating || ua.group.Status == common.StatusDeleteNodeGroupDeleting ||
-		ua.group.Status == common.StatusCreateNodeGroupFailed || ua.group.Status == common.StatusDeleteNodeGroupFailed {
+	if ua.group.Status == common.StatusCreateNodeGroupCreating ||
+		ua.group.Status == common.StatusDeleteNodeGroupDeleting ||
+		ua.group.Status == common.StatusCreateNodeGroupFailed ||
+		ua.group.Status == common.StatusDeleteNodeGroupFailed {
 		err := fmt.Errorf("nodegroup %s status is not running, can not update nodegroup", ua.group.NodeGroupID)
 		return err
 	}
@@ -500,7 +502,6 @@ func (ua *UpdateAction) Handle(
 
 	ua.resp.Data = ua.group
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // MoveNodeAction move nodes to nodegroup
@@ -534,14 +535,14 @@ func (ua *MoveNodeAction) validate() error {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return err
 	}
-	//get nodegroup for validation
+	// get nodegroup for validation
 	destGroup, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		blog.Errorf("Get NodeGroup %s in pre-MoveNode checking failed, err %s", ua.req.NodeGroupID, err.Error())
 		return err
 	}
-	//check cluster info consistency
+	// check cluster info consistency
 	if destGroup.ClusterID != ua.req.ClusterID {
 		blog.Errorf(
 			"request ClusterID %s is not same with NodeGroup.ClusterID %s when MoveNode",
@@ -564,7 +565,7 @@ func (ua *MoveNodeAction) validate() error {
 		return err
 	}
 	ua.cluster = cluster
-	//get specified node for move validation
+	// get specified node for move validation
 	condM := make(operator.M)
 	condM["clusterid"] = ua.group.ClusterID
 	cond := operator.NewLeafCondition(operator.Eq, condM)
@@ -606,7 +607,7 @@ func (ua *MoveNodeAction) Handle(
 	ua.resp = resp
 
 	if err := ua.validate(); err != nil {
-		//valiate already setting response message
+		// valiate already setting response message
 		return
 	}
 
@@ -644,11 +645,10 @@ func (ua *MoveNodeAction) Handle(
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (ua *MoveNodeAction) moveCloudNodeGroupNodes() error {
-	//try to move node in cloudprovider
+	// try to move node in cloudprovider
 	cloud, cluster, err := actions.GetCloudAndCluster(ua.model, ua.group.Provider, ua.group.ClusterID)
 	if err != nil {
 		blog.Errorf("get cloud %s and project %s when move nodes %v to NodeGroup %s failed, %s",
@@ -821,7 +821,8 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 
 	ua.task = task
 	ua.resp.Data = task
-	blog.Infof("scaling %d node, %v desired node task for NodeGroup successfully for %s", scaling, ua.req.DesiredNode, ua.group.NodeGroupID)
+	blog.Infof("scaling %d node, %v desired node task for NodeGroup successfully for %s", scaling,
+		ua.req.DesiredNode, ua.group.NodeGroupID)
 	return nil
 }
 
@@ -927,11 +928,7 @@ func (ua *UpdateDesiredNodeAction) checkCloudClusterResource(scaleNodesNum uint3
 	available, err := clusterMgr.CheckClusterCidrAvailable(ua.cluster, &cloudprovider.CheckClusterCIDROption{
 		IncomingNodeCnt: uint64(scaleNodesNum),
 		ExternalNode: func() bool {
-			if ua.group.GetNodeGroupType() == common.External.String() {
-				return true
-			}
-
-			return false
+			return ua.group.GetNodeGroupType() == common.External.String()
 		}(),
 	})
 	if !available {
@@ -957,8 +954,8 @@ func (ua *UpdateDesiredNodeAction) Handle(
 	const (
 		updateClusterDesiredNodeLockKey = "/bcs-services/bcs-cluster-manager/UpdateDesiredNodeAction"
 	)
-	ua.locker.Lock(updateClusterDesiredNodeLockKey, []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
-	defer ua.locker.Unlock(updateClusterDesiredNodeLockKey)
+	ua.locker.Lock(updateClusterDesiredNodeLockKey, []lock.LockOption{lock.LockTTL(time.Second * 5)}...) // nolint
+	defer ua.locker.Unlock(updateClusterDesiredNodeLockKey)                                              // nolint
 
 	if err := ua.validate(); err != nil {
 		// validation already setting response
@@ -1024,11 +1021,10 @@ func (ua *UpdateDesiredNodeAction) Handle(
 
 	blog.Infof("updateDesiredNode %d to NodeGroup %s successfully", req.DesiredNode, req.NodeGroupID)
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (ua *UpdateDesiredNodeAction) injectVirtualNodeData(nodeNum uint32) {
-	var i uint32 = 0
+	var i uint32
 
 	for ; i < nodeNum; i++ {
 		err := ua.model.CreateNode(context.Background(), &cmproto.Node{
@@ -1118,7 +1114,6 @@ func (ua *UpdateDesiredSizeAction) Handle(
 
 	blog.Infof("update nodegroup desiredSize %s successfully", destGroup.NodeGroupID)
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // UpdateGroupMinMaxAction update nodegroup autoscaling min/max size
@@ -1190,5 +1185,4 @@ func (ua *UpdateGroupMinMaxAction) Handle(
 
 	blog.Infof("update nodegroup min/maxSize %s successfully", destGroup.NodeGroupID)
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

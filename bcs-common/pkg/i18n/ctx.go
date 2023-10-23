@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package i18n xxx
 package i18n
 
 import (
@@ -18,8 +18,14 @@ import (
 	"strings"
 )
 
+type contextKey string
+
+func (c contextKey) String() string {
+	return string(c)
+}
+
 const (
-	ctxLanguage = "I18nLanguage"
+	ctxLanguage = contextKey("I18nLanguage")
 	// DefaultLanguage  defines the default language if user does not specify in options.
 	DefaultLanguage = zh
 	// zh 中文

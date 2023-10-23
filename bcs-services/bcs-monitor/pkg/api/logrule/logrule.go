@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package logrule log rule
 package logrule
 
 import (
@@ -368,7 +368,7 @@ func RetryLogRule(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		data.Update(entity.FieldKeyStatus, entity.FailedStatus)
 		data.Update(entity.FieldKeyMessage, err.Error())
-		store.UpdateLogRule(c.Context, id, data)
+		store.UpdateLogRule(c.Context, id, data) // nolint
 		return nil, err
 	}
 

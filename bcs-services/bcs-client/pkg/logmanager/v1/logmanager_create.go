@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1
@@ -17,9 +16,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogo/protobuf/jsonpb"
-
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
+	"github.com/gogo/protobuf/jsonpb"
 )
 
 // CreateLogCollectionTask call CreateLogCollectionTask of LogManager grpc server
@@ -31,7 +29,7 @@ func (m *LogManager) CreateLogCollectionTask(req *proto.CreateLogCollectionTaskR
 	if resp.ErrName != proto.ErrCode_ERROR_OK {
 		m := jsonpb.Marshaler{EmitDefaults: true}
 		var sb strings.Builder
-		m.Marshal(&sb, resp)
+		_ = m.Marshal(&sb, resp)
 		return fmt.Errorf(sb.String())
 	}
 	return nil

@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -25,15 +25,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/segmentio/kafka-go"
-	"github.com/segmentio/kafka-go/sasl/scram"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
-	kafka2 "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/kafka"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/requester"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
@@ -48,22 +39,27 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/robfig/cron/v3"
-	"google.golang.org/grpc"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
-	dmmongo "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store/mongo"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/worker"
-	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
-
 	microsvc "github.com/micro/go-micro/v2/service"
 	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/robfig/cron/v3"
+	"github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go/sasl/scram"
+	"google.golang.org/grpc"
 	grpccred "google.golang.org/grpc/credentials"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	kafka2 "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/kafka"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/requester"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
+	dmmongo "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store/mongo"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/worker"
+	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 // Server data manager server
@@ -237,7 +233,7 @@ func (s *Server) initModel() error {
 
 // initRegistry init micro service registry
 func (s *Server) initRegistry() error {
-	endpoints := strings.Replace(s.opt.Etcd.EtcdEndpoints, ";", ",", -1)
+	endpoints := strings.ReplaceAll(s.opt.Etcd.EtcdEndpoints, ";", ",")
 	etcdEndpoints := strings.Split(endpoints, ",")
 	etcdSecure := false
 	var etcdTLS *tls.Config
@@ -378,8 +374,8 @@ func (s *Server) initSignalHandler() {
 func (s *Server) close() {
 	closeCtx, closeCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer closeCancel()
-	s.httpServer.Shutdown(closeCtx)
-	s.extraServer.Shutdown(closeCtx)
+	_ = s.httpServer.Shutdown(closeCtx)
+	_ = s.extraServer.Shutdown(closeCtx)
 	s.ctxCancelFunc()
 }
 

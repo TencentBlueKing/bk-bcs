@@ -409,7 +409,7 @@ func (s *SidecarController) createCrdV1(bcsLogConfigPlural, bcsLogConfigFullName
 							"spec":       {Type: "object", XPreserveUnknownFields: &T},
 							"status":     {Type: "object", XPreserveUnknownFields: &T},
 						},
-						Required: []string{"metadata,spec"},
+						Required: []string{"metadata", "spec"},
 						Type:     "object",
 					},
 				},

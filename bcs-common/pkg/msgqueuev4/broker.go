@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package msgqueuev4 xxx
 package msgqueuev4
 
 import (
@@ -41,12 +41,12 @@ func rabbitmqBroker(q *QueueOptions) (broker.Broker, error) {
 	// init rabbitmq broker
 	err := brokerRabbit.Init()
 	if err != nil {
-		return nil, errors.Wrapf(err, "brokerRabbitmq init failed.")
+		return nil, errors.Wrapf(err, "brokerRabbitmq init failed")
 	}
 
 	// create connect
 	if err = brokerRabbit.Connect(); err != nil {
-		return nil, errors.Wrapf(err, "can't connect to rabbit broker.")
+		return nil, errors.Wrapf(err, "can't connect to rabbit broker")
 	}
 
 	return brokerRabbit, nil
@@ -66,12 +66,12 @@ func natstreamingBroker(q *QueueOptions) (broker.Broker, error) {
 	// init natstreaming broker
 	err := brokerNatstreaming.Init()
 	if err != nil {
-		return nil, errors.Wrapf(err, "brokerNatstreaming init failed.")
+		return nil, errors.Wrapf(err, "brokerNatstreaming init failed")
 	}
 
 	// create connect
 	if err = brokerNatstreaming.Connect(); err != nil {
-		return nil, errors.Wrapf(err, "can't connect to natstreaming broker.")
+		return nil, errors.Wrapf(err, "can't connect to natstreaming broker")
 	}
 
 	return brokerNatstreaming, nil

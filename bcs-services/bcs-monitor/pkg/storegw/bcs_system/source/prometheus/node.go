@@ -103,8 +103,8 @@ func (m *Prometheus) GetNodeInfo(ctx context.Context, projectID, clusterID, node
 // GetNodeCPUTotal 节点CPU总量
 func (m *Prometheus) GetNodeCPUTotal(ctx context.Context, projectID, clusterID, nodeName string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterID>s", job="node-exporter", ` +
-		`mode="idle", instance=~"%<ip>s", %<provider>s}))`
+	promql := `sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterID>s", ` +
+		`job="node-exporter", mode="idle", instance=~"%<ip>s", %<provider>s}))`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }
@@ -213,8 +213,8 @@ func (m *Prometheus) GetNodeMemoryRequestUsage(ctx context.Context, projectID, c
 // GetNodeDiskTotal 节点磁盘总量
 func (m *Prometheus) GetNodeDiskTotal(ctx context.Context, projectID, clusterID, nodeName string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", job="node-exporter", ` +
-		`fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`
+	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", ` +
+		`job="node-exporter", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})` // nolint
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }

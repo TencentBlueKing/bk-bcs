@@ -42,6 +42,8 @@ const DashboardResourceUpdate = () => import(/* webpackChunkName: 'dashboard' */
 // HPA
 const DashboardHPA = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/hpa/hpa.vue');
 
+const UpdateRecord = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/update-record.vue');
+
 const childRoutes = [
   {
     path: ':clusterId',
@@ -254,6 +256,17 @@ const childRoutes = [
         name: 'dashboardFormResourceUpdate',
         props: route => ({ ...route.params, ...route.query }),
         component: DashboardFormResourceUpdate,
+        beforeEnter: (to, from, next) => {
+          to.meta.menuId = String(to.query.menuId || to.query.kind).toUpperCase();
+          next();
+        },
+      },
+      // update record
+      {
+        path: 'workloads/:category/:namespace/:name/record',
+        name: 'workloadRecord',
+        props: true,
+        component: UpdateRecord,
         beforeEnter: (to, from, next) => {
           to.meta.menuId = String(to.query.menuId || to.query.kind).toUpperCase();
           next();

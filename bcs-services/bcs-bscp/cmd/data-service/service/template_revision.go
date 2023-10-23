@@ -28,7 +28,9 @@ import (
 )
 
 // CreateTemplateRevision create template revision.
-func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTemplateRevisionReq) (*pbds.CreateResp, error) {
+func (s *Service) CreateTemplateRevision(ctx context.Context,
+	req *pbds.CreateTemplateRevisionReq) (*pbds.CreateResp, error) {
+
 	kt := kit.FromGrpcContext(ctx)
 
 	if _, err := s.dao.TemplateRevision().GetByUniqueKey(kt, req.Attachment.BizId, req.Attachment.TemplateId,
@@ -64,7 +66,9 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 	id, err := s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision)
 	if err != nil {
 		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
 		return nil, err
 	}
 
@@ -77,25 +81,26 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 	}
 	if len(atbs) > 0 {
 		for _, atb := range atbs {
-			if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
-				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
-				tx.Rollback()
-				return nil, err
+			if e := s.CascadeUpdateATB(kt, tx, atb); e != nil {
+				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", e, kt.Rid)
+				if rErr := tx.Rollback(); rErr != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+				}
+				return nil, e
 			}
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
-
-	resp := &pbds.CreateResp{Id: id}
-	return resp, nil
+	return &pbds.CreateResp{Id: id}, nil
 }
 
 // ListTemplateRevisions list template revision.
-func (s *Service) ListTemplateRevisions(ctx context.Context, req *pbds.ListTemplateRevisionsReq) (*pbds.ListTemplateRevisionsResp, error) {
+func (s *Service) ListTemplateRevisions(ctx context.Context,
+	req *pbds.ListTemplateRevisionsReq) (*pbds.ListTemplateRevisionsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
@@ -123,7 +128,8 @@ func (s *Service) ListTemplateRevisions(ctx context.Context, req *pbds.ListTempl
 }
 
 // DeleteTemplateRevision delete template revision.
-func (s *Service) DeleteTemplateRevision(ctx context.Context, req *pbds.DeleteTemplateRevisionReq) (*pbbase.EmptyResp, error) {
+func (s *Service) DeleteTemplateRevision(ctx context.Context,
+	req *pbds.DeleteTemplateRevisionReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	templateRevision := &table.TemplateRevision{
@@ -223,10 +229,8 @@ func getLatestTmplRevisions(tmplRevisions []*table.TemplateRevision) map[uint32]
 	for _, t := range tmplRevisions {
 		if _, ok := latestRevisionMap[t.Attachment.TemplateID]; !ok {
 			latestRevisionMap[t.Attachment.TemplateID] = t.ID
-		} else {
-			if t.ID > latestRevisionMap[t.Attachment.TemplateID] {
-				latestRevisionMap[t.Attachment.TemplateID] = t.ID
-			}
+		} else if t.ID > latestRevisionMap[t.Attachment.TemplateID] {
+			latestRevisionMap[t.Attachment.TemplateID] = t.ID
 		}
 	}
 

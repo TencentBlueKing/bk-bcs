@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package component xxx
 package component
 
 import (
@@ -25,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/dustin/go-humanize"
 	resty "github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
@@ -145,6 +146,7 @@ var defaultTransport http.RoundTripper = &http.Transport{
 	TLSHandshakeTimeout:   10 * time.Second,
 	ExpectContinueTimeout: 1 * time.Second,
 	// NOCC:gas/tls(设计如此)
+	// nolint
 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 }
 
@@ -214,4 +216,19 @@ func (r *BKResult) ValidateCode() error {
 		return errors.Errorf("resp code %d != 0, %s", resultCode, r.Message)
 	}
 	return nil
+}
+
+var (
+	auditClient *audit.Client
+	auditOnce   sync.Once
+)
+
+// GetAuditClient 获取审计客户端
+func GetAuditClient() *audit.Client {
+	if auditClient == nil {
+		auditOnce.Do(func() {
+			auditClient = audit.NewClient("", "", nil)
+		})
+	}
+	return auditClient
 }

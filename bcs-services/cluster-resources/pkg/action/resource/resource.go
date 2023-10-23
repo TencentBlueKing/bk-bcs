@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -29,11 +27,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -72,7 +72,8 @@ func (m *ResMgr) List(
 		return nil, err
 	}
 	return resp.BuildListAPIResp(ctx, resp.ListParams{
-		m.ClusterID, m.Kind, m.GroupVersion, namespace, format, scene,
+		ClusterID: m.ClusterID, ResKind: m.Kind, GroupVersion: m.GroupVersion, Namespace: namespace,
+		Format: format, Scene: scene,
 	}, opts)
 }
 
@@ -84,7 +85,8 @@ func (m *ResMgr) Get(
 		return nil, err
 	}
 	return resp.BuildRetrieveAPIResp(ctx, resp.GetParams{
-		m.ClusterID, m.Kind, m.GroupVersion, namespace, name, format,
+		ClusterID: m.ClusterID, ResKind: m.Kind, GroupVersion: m.GroupVersion, Namespace: namespace,
+		Name: name, Format: format,
 	}, opts)
 }
 
@@ -196,6 +198,10 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 	if clusterInfo.Type == cluster.ClusterTypeSingle {
 		return nil
 	}
+	// SC 允许用户查看，PV 返回空，不报错
+	if slice.StringInSlice(m.Kind, cluster.SharedClusterBypassNativeKinds) {
+		return nil
+	}
 	// 不允许的资源类型，直接抛出错误
 	if !slice.StringInSlice(m.Kind, cluster.SharedClusterEnabledNativeKinds) &&
 		!slice.StringInSlice(m.Kind, conf.G.SharedCluster.EnabledCObjKinds) {
@@ -213,12 +219,17 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 
 // Restart 对某个资源进行调度
 func (m *ResMgr) Restart(
-	ctx context.Context, namespace, name string, opts metav1.PatchOptions,
+	ctx context.Context, namespace, name string, generation int64, opts metav1.PatchOptions,
 ) (*structpb.Struct, error) {
-	patchByte := fmt.Sprintf(`{"spec":{"template":{"metadata":{"annotations":{"kubectl.kubernetes.io/restartedAt":"%s"}}}}}`,
-		metav1.Now().Format(time.RFC3339))
+	username := ctxkey.GetUsernameFromCtx(ctx)
+	patchByte := fmt.Sprintf(
+		`{"metadata":{"annotations":{"%s":"%s"}},"spec":{"template":{"metadata":{"annotations":{"%s":"%s","%s":"%d"}}}}}`,
+		resCsts.UpdaterAnnoKey, username,
+		formatter.WorkloadRestartAnnotationKey, metav1.Now().Format(time.RFC3339),
+		formatter.WorkloadRestartVersionAnnotationKey, generation)
 	return resp.BuildPatchAPIResp(
-		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.StrategicMergePatchType, []byte(patchByte), opts,
+		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.StrategicMergePatchType, []byte(patchByte),
+		opts,
 	)
 }
 
@@ -232,6 +243,7 @@ func (m *ResMgr) PauseOrResume(
 	}
 	patchByte := fmt.Sprintf(`{"spec":{"paused":%v}}`, paused)
 	return resp.BuildPatchAPIResp(
-		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.StrategicMergePatchType, []byte(patchByte), opts,
+		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.StrategicMergePatchType, []byte(patchByte),
+		opts,
 	)
 }

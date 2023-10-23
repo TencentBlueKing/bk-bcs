@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -16,9 +16,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
@@ -47,7 +48,7 @@ func (ga *ListAction) setResp(code uint32, msg string) {
 
 func (ga *ListAction) getSchema() error {
 	schemaList := []*types.ResourceSchema{}
-	schemaBytes, err := ioutil.ReadFile(ga.schemaPath)
+	schemaBytes, err := os.ReadFile(ga.schemaPath)
 	if err != nil {
 		blog.Errorf("load resource schema from file %s err: %v", ga.schemaPath, err)
 		return fmt.Errorf("load resource schema from file %s err: %v", ga.schemaPath, err)
@@ -97,5 +98,4 @@ func (ga *ListAction) Handle(
 	}
 
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

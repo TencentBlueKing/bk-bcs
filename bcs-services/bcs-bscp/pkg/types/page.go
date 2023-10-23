@@ -15,10 +15,6 @@ package types
 import (
 	"errors"
 	"fmt"
-	"strconv"
-
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/runtime/filter"
 )
 
 const (
@@ -91,12 +87,6 @@ func (sd Order) Order() Order {
 
 // BasePage define the basic page limitation to query resources.
 type BasePage struct {
-	// Count describe if this query only return the total request
-	// count of the resources.
-	// If true, then the request will only return the total count
-	// without the resource's detail infos. and start, limit must
-	// be 0.
-	Count bool `json:"count"`
 	// Start is the start position of the queried resource's page.
 	// Note:
 	// 1. Start only works when the Count = false.
@@ -133,26 +123,6 @@ func (bp *BasePage) LimitInt() int {
 func (bp BasePage) Validate(opt ...*PageOption) (err error) {
 	if len(opt) >= 2 {
 		return errors.New("at most one page options is allows")
-	}
-
-	if bp.Count {
-		if bp.Start > 0 {
-			return errors.New("count is enabled, page.start should be 0")
-		}
-
-		if bp.Limit > 0 {
-			return errors.New("count is enabled, page.limit should be 0")
-		}
-
-		if len(bp.Sort) > 0 {
-			return errors.New("count is enabled, page.sort should be null")
-		}
-
-		if len(bp.Order) > 0 {
-			return errors.New("count is enabled, page.order should be empty")
-		}
-
-		return nil
 	}
 
 	maxLimit := DefaultMaxPageLimit
@@ -200,92 +170,4 @@ func (bp BasePage) Validate(opt ...*PageOption) (err error) {
 	}
 
 	return nil
-}
-
-// PageSQLOption defines the options to generate a sql expression
-// based on the BasePage.
-type PageSQLOption struct {
-	// Sort defines the field to do sort.
-	// Note:
-	// 1. If set, then user defined Sort field will be overlapped.
-	// 2. Sort field should always be an indexed field in db.
-	Sort SortOption `json:"sort"`
-}
-
-// SortOption defines how to set the order column when do the BasePage.SQLExpr
-// operation.
-type SortOption struct {
-	// Sort defines the sorted column.
-	Sort string `json:"sort"`
-	// IfNotPresent means if the sort column is not defined by user, then
-	// use this Sort column as default.
-	IfNotPresent bool `json:"if_not_present"`
-	// ForceOverlap means no matter what sort column defined, use this
-	// Sort column overlapped.
-	// Note: ForceOverlap option have more priority than IfNotPresent
-	ForceOverlap bool `json:"force_overlap"`
-}
-
-// SQLExpr return the expression of the query clause based one the page options.
-// Note:
-//  1. do not call this, when it's a count request.
-//  2. if sort is not set, use the default resource's identity 'id' as the sort key.
-//  3. if Sort is set by the system(PageSQLOption.Sort), then use its Sort value
-//     according to the various options.
-//
-// see the test case to get more returned example and learn the supported scenarios.
-func (bp BasePage) SQLExpr(ps *PageSQLOption) (where string, err error) {
-	defer func() {
-		if err != nil {
-			err = errf.New(errf.InvalidParameter, err.Error())
-		}
-	}()
-
-	if ps == nil {
-		return "", errors.New("page sql option is nil")
-	}
-
-	if bp.Count {
-		// this is a count query clause.
-		return "", errors.New("page.count is enabled, do not support generate SQL expression")
-	}
-
-	var sort string
-	if ps.Sort.ForceOverlap {
-		// force overlapped user defined sort field.
-		sort = ps.Sort.Sort
-	} else {
-		if ps.Sort.IfNotPresent && len(bp.Sort) == 0 {
-			// user note defined sort, then use default sort.
-			sort = ps.Sort.Sort
-		} else {
-			// use user defined sort column
-			sort = bp.Sort
-		}
-	}
-
-	if len(sort) == 0 {
-		// if sort is not set, use the default resource's
-		// identity id as the default sort column.
-		sort = "id"
-	}
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, " ORDER BY ", sort)
-	expr := filter.SqlJoint(sqlSentence)
-
-	if bp.Start == 0 && bp.Limit == 0 {
-		// this is a special scenario, which means query all the resources at once.
-		return fmt.Sprintf(" %s %s", expr, bp.Order.Order()), nil
-	}
-
-	// if Start >=1, then Limit can not be 0.
-	if bp.Limit == 0 {
-		return "", errors.New("page.limit value should >= 1")
-	}
-
-	// bp.Limit is > 0, already validated upper.
-	var sqlSentenceLimit []string
-	sqlSentenceLimit = append(sqlSentenceLimit, expr, " ", string(bp.Order.Order()), " LIMIT ", strconv.Itoa(int(bp.Limit)), " OFFSET ", strconv.Itoa(int(bp.Start)))
-	expr = filter.SqlJoint(sqlSentenceLimit)
-	return expr, nil
 }

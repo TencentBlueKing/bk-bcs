@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package google
@@ -21,6 +20,7 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
@@ -321,6 +321,7 @@ func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest, op
 }
 
 // DeleteNodesFromClusterValidate xxx
-func (c *CloudValidate) DeleteNodesFromClusterValidate(req *proto.DeleteNodesRequest, opt *cloudprovider.CommonOption) error {
+func (c *CloudValidate) DeleteNodesFromClusterValidate(
+	req *proto.DeleteNodesRequest, opt *cloudprovider.CommonOption) error {
 	return nil
 }

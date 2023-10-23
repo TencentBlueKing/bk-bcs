@@ -123,7 +123,7 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	resp := p.handler(ctx, r)
 	blog.V(5).Infof("RequestID[%s] handler '%s' cost time: %v", requestID, p.handlerName, time.Since(start))
 	if resp == nil {
-		blog.Errorf("RequestID[%s] response should not be nil", requestID)
+		blog.Warnf("RequestID[%s] response should not be nil", requestID)
 		resp = &HttpResponse{
 			respType: reverseArgo,
 		}

@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -129,9 +129,11 @@ func TestModelEvent_ListNodeGroupEvent(t *testing.T) {
 				mockFields.find.On("WithSort", mock.Anything).Return(mockFields.find)
 				mockFields.find.On("WithStart", mock.Anything).Return(mockFields.find)
 				mockFields.find.On("WithLimit", mock.Anything).Return(mockFields.find)
-				mockFields.find.On("All", context.Background(), mock.Anything).Return(func(ctx context.Context, result interface{}) error {
-					return reflectInterface(result, []*storage.NodeGroupEvent{event})
-				})
+				mockFields.find.On("All",
+					context.Background(), mock.Anything).
+					Return(func(ctx context.Context, result interface{}) error {
+						return reflectInterface(result, []*storage.NodeGroupEvent{event})
+					})
 			},
 		},
 		{

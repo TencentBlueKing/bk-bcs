@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -23,10 +23,11 @@ const (
 )
 
 // New return a new Auth instance
-//   authType: Basic or Platform
-//   uid: user id
-//   username: auth username
-//   password: auth password
+//
+//	authType: Basic or Platform
+//	uid: user id
+//	username: auth username
+//	password: auth password
 func New(authType, uid, username, password string) *Auth {
 	if authType == "" {
 		authType = "Basic"
@@ -44,7 +45,7 @@ func New(authType, uid, username, password string) *Auth {
 type Auth struct {
 	authType string
 	uid      string
-	upwd     string
+	upwd     string // nolint
 	username string
 	password string
 
@@ -65,8 +66,9 @@ func (a *Auth) GetAuthToken() string {
 
 // SetHeader set the auth-relative http headers before request to bk-repo
 // by default we need:
-//   Authorization: token
-//   X-BKREPO-UID: uid
+//
+//	Authorization: token
+//	X-BKREPO-UID: uid
 func (a *Auth) SetHeader(header http.Header) {
 	header.Set("Authorization", a.GetAuthToken())
 	header.Set(headerUID, a.uid)

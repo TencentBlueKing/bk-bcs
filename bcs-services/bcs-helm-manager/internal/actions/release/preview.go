@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -41,7 +41,7 @@ func NewReleasePreviewAction(model store.HelmManagerModel, platform repo.Platfor
 }
 
 // ReleasePreviewAction provides the action to get release preview
-type ReleasePreviewAction struct {
+type ReleasePreviewAction struct { // nolint
 	ctx context.Context
 
 	model          store.HelmManagerModel
@@ -94,8 +94,7 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 
 	// revision 之间对比，用于回滚
 	if r.req.GetRevision() != 0 {
-		newRelease := &release.Release{}
-		newRelease, err = r.releaseHandler.Cluster(r.req.GetClusterID()).Get(r.ctx, release.GetOption{
+		newRelease, err := r.releaseHandler.Cluster(r.req.GetClusterID()).Get(r.ctx, release.GetOption{ // nolint
 			Namespace: r.req.GetNamespace(), Name: r.req.GetName(), Revision: int(r.req.GetRevision())})
 		if err != nil {
 			return nil, fmt.Errorf("get release revision %d failed, err %s", r.req.GetRevision(), err.Error())

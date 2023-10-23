@@ -1,4 +1,4 @@
-import { IGroupRuleItem } from "./group";
+import { IGroupRuleItem } from './group';
 
 // 单个版本详情
 export interface IConfigVersion {
@@ -168,4 +168,9 @@ export interface IConfigDiffSelected {
   pkgId: number; // 套餐ID
   id: number; // 非模板或模板配置项 ID
   version: number; // 版本ID
+  permission?: {
+    privilege: string;
+    user: string;
+    user_group: string;
+  }
 }

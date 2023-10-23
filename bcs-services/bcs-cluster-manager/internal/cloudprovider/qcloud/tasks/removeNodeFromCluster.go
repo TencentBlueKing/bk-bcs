@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -20,7 +19,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 )
 
 // RemoveNodesFromClusterTask remove node from cluster
@@ -47,7 +48,8 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	ipList := strings.Split(step.Params[cloudprovider.NodeIPsKey.String()], ",")
 	idList := strings.Split(step.Params[cloudprovider.NodeIDsKey.String()], ",")
 	if len(idList) != len(ipList) {
-		blog.Errorf("RemoveNodesFromClusterTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to InnerIP %d, fatal", taskID, taskID, stepName,
+		blog.Errorf("RemoveNodesFromClusterTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to "+
+			"InnerIP %d, fatal", taskID, taskID, stepName,
 			len(idList), len(ipList))
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("NodeID & InnerIP params err"))
 		return fmt.Errorf("task %s parameter err", taskID)
@@ -69,7 +71,7 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	deleteResult, err := RemoveNodesFromCluster(ctx, dependInfo, idList)
+	deleteResult, err := business.RemoveNodesFromCluster(ctx, dependInfo, idList, false)
 	if err != nil {
 		blog.Errorf("RemoveNodesFromClusterTask[%s] RemoveNodesFromCluster failed: %v",
 			taskID, err)

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package models
@@ -48,10 +47,7 @@ func (t *BcsUser) HasExpired() bool {
 
 // IsClient check if this user is client
 func (t *BcsUser) IsClient() bool {
-	if t.UserType == PlainUser {
-		return false
-	}
-	return true
+	return t.UserType != PlainUser
 }
 
 // IsAdmin check if this user is admin

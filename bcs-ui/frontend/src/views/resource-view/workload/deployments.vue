@@ -4,7 +4,8 @@
       #default="{
         curPageData, pageConf, statusMap, updateStrategyMap, handlePageChange, handlePageSizeChange,
         handleGetExtData, handleSortChange, gotoDetail, handleUpdateResource, handleDeleteResource,
-        handleEnlargeCapacity, statusFilters, statusFilterMethod, nameValue, handleClearSearchData
+        handleEnlargeCapacity, statusFilters, statusFilterMethod, nameValue, handleClearSearchData,
+        handleGotoUpdateRecord, handleRestart, handleRollback
       }">
       <bk-table
         :data="curPageData"
@@ -106,10 +107,39 @@
               @click="handleEnlargeCapacity(row)">{{ $t('deploy.templateset.scale') }}</bk-button>
             <bk-button
               class="ml10" text
-              @click="gotoDetail(row)">{{ $t('dashboard.workload.pods.delete') }}</bk-button>
-            <bk-button
-              class="ml10" text
-              @click="handleDeleteResource(row)">{{ $t('generic.button.delete') }}</bk-button>
+              @click="handleRestart(
+                row,
+                row.spec.strategy.type === 'Recreate'
+                  ? updateStrategyMap[row.spec.strategy.type]
+                  : $t('dashboard.workload.button.restart')
+              )">
+              {{ row.spec.strategy.type === 'Recreate'
+                ? $t('k8s.updateStrategy.reCreate')
+                : $t('dashboard.workload.button.restart') }}
+            </bk-button>
+            <bk-popover
+              placement="bottom"
+              theme="light dropdown"
+              :arrow="false"
+              trigger="click"
+              class="ml-[10px]">
+              <span :class="['bcs-icon-more-btn', { disabled: false }]">
+                <i class="bcs-icon bcs-icon-more"></i>
+              </span>
+              <template #content>
+                <ul class="bcs-dropdown-list">
+                  <li class="bcs-dropdown-item" @click="handleGotoUpdateRecord(row)">
+                    {{$t('deploy.helm.history')}}
+                  </li>
+                  <li class="bcs-dropdown-item" @click="handleRollback(row)">
+                    {{$t('deploy.helm.rollback')}}
+                  </li>
+                  <li class="bcs-dropdown-item" @click="handleDeleteResource(row)">
+                    {{$t('generic.button.delete')}}
+                  </li>
+                </ul>
+              </template>
+            </bk-popover>
           </template>
         </bk-table-column>
         <template #empty>

@@ -61,7 +61,7 @@ func (m *Federation) handleContainerMetric(ctx context.Context, projectID, clust
 		}
 		eg.Go(groupFunc)
 	}
-	eg.Wait()
+	_ = eg.Wait()
 	return series, nil
 }
 

@@ -69,6 +69,7 @@ type PullResourceResp struct {
 	Data    interface{} `json:"data"`
 }
 
+// ConvertToPb ...
 func (r *PullResourceResp) ConvertToPb() (*pbstruct.Struct, error) {
 
 	data := new(pbstruct.Struct)
@@ -115,6 +116,7 @@ type ListInstanceFilter struct {
 }
 
 // getResourceNameField get the query instance field corresponding to the resource type.
+// nolint: unused
 func getResourceNameField(resType client.TypeID) (string, error) {
 	switch resType {
 	case sys.Application:

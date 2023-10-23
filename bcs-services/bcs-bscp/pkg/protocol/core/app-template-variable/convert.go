@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbatv provides app template variable core protocol struct and convert functions.
 package pbatv
 
 import (

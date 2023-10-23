@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package storage
@@ -132,7 +131,7 @@ type Pvc struct {
 }
 
 // StorageClass is k8s storageclass
-type StorageClass struct {
+type StorageClass struct { // nolint
 	CommonDataHeader
 	Data *storagev1.StorageClass
 }

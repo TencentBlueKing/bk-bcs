@@ -23,9 +23,10 @@ import (
 )
 
 // ListCredentialScopes get credential scopes
-func (s *Service) ListCredentialScopes(ctx context.Context, req *pbcs.ListCredentialScopesReq) (*pbcs.ListCredentialScopesResp, error) {
+func (s *Service) ListCredentialScopes(ctx context.Context,
+	req *pbcs.ListCredentialScopesReq) (*pbcs.ListCredentialScopesResp, error) {
+
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListCredentialScopesResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -46,7 +47,7 @@ func (s *Service) ListCredentialScopes(ctx context.Context, req *pbcs.ListCreden
 		return nil, err
 	}
 
-	resp = &pbcs.ListCredentialScopesResp{
+	resp := &pbcs.ListCredentialScopesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -55,8 +56,11 @@ func (s *Service) ListCredentialScopes(ctx context.Context, req *pbcs.ListCreden
 }
 
 // UpdateCredentialScope  update credential scope
-func (s *Service) UpdateCredentialScope(ctx context.Context, req *pbcs.UpdateCredentialScopeReq) (*pbcs.UpdateCredentialScopeResp, error) {
+func (s *Service) UpdateCredentialScope(ctx context.Context,
+	req *pbcs.UpdateCredentialScopeReq) (*pbcs.UpdateCredentialScopeResp, error) {
+
 	grpcKit := kit.FromGrpcContext(ctx)
+
 	resp := new(pbcs.UpdateCredentialScopeResp)
 
 	res := []*meta.ResourceAttribute{

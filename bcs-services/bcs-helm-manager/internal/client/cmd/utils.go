@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -14,8 +14,8 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -37,17 +37,17 @@ func newClientWithConfiguration() pkg.HelmClient {
 	})
 }
 
-func newGRPCClientWithConfiguration() helmmanager.HelmManagerClient {
+func newGRPCClientWithConfiguration() helmmanager.HelmManagerClient { // nolint
 	cli, _ := newHelmClient(&bcsapi.Config{
-		Hosts:     []string{fmt.Sprintf("%s", viper.GetString("config.apiserver"))},
+		Hosts:     []string{viper.GetString("config.apiserver")},
 		AuthToken: viper.GetString("config.token"),
 	})
 	return cli
 }
 
 // newHelmClient create HelmManager SDK implementation
-func newHelmClient(config *bcsapi.Config) (helmmanager.HelmManagerClient, func()) {
-	rand.Seed(time.Now().UnixNano())
+func newHelmClient(config *bcsapi.Config) (helmmanager.HelmManagerClient, func()) { // nolint
+	rand.Seed(time.Now().UnixNano()) // nolint
 	if len(config.Hosts) == 0 {
 		// ! pay more attention for nil return
 		return nil, nil
@@ -82,7 +82,7 @@ func newHelmClient(config *bcsapi.Config) (helmmanager.HelmManagerClient, func()
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
-		selected := rand.Intn(1024) % len(config.Hosts)
+		selected := rand.Intn(1024) % len(config.Hosts) // nolint
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
@@ -97,7 +97,7 @@ func newHelmClient(config *bcsapi.Config) (helmmanager.HelmManagerClient, func()
 		blog.Errorf("create no helm manager client after all instance tries")
 		return nil, nil
 	}
-	return helmmanager.NewHelmManagerClient(conn), func() { conn.Close() }
+	return helmmanager.NewHelmManagerClient(conn), func() { conn.Close() } // nolint
 }
 
 func getInputData() ([]byte, error) {
@@ -106,7 +106,7 @@ func getInputData() ([]byte, error) {
 	}
 
 	if jsonFile != "" {
-		data, err := ioutil.ReadFile(jsonFile)
+		data, err := os.ReadFile(jsonFile)
 		if err != nil {
 			return nil, err
 		}

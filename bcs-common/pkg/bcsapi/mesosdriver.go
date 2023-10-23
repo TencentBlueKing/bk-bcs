@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bcsapi
@@ -74,7 +73,7 @@ func NewMesosDriverClient(conf *MesosDriverClientConfig) (*MesosDriverClient, er
 	// if https
 	if m.conf.ClientCert != nil && m.conf.ClientCert.IsSSL {
 		blog.Infof("NetworkDetection http client cert ssl")
-		m.cli.SetTlsVerity(m.conf.ClientCert.CAFile, m.conf.ClientCert.CertFile, m.conf.ClientCert.KeyFile,
+		_ = m.cli.SetTlsVerity(m.conf.ClientCert.CAFile, m.conf.ClientCert.CertFile, m.conf.ClientCert.KeyFile,
 			m.conf.ClientCert.CertPasswd)
 	}
 	m.cli.SetHeader("Content-Type", "application/json")
@@ -86,7 +85,7 @@ func NewMesosDriverClient(conf *MesosDriverClientConfig) (*MesosDriverClient, er
 // get module address
 // clusterid, example BCS-MESOS-10001
 // return first parameter: module address, example 127.0.0.1:8090
-func (m *MesosDriverClient) getModuleAddr(clusterid string) (string, error) {
+func (m *MesosDriverClient) getModuleAddr(_ string) (string, error) {
 	serv, err := m.moduleDiscovery.GetRandModuleServer(commtypes.BCS_MODULE_MESOSAPISERVER)
 	if err != nil {
 		blog.Errorf("discovery zk %s module %s error %s",

@@ -310,7 +310,7 @@ func (le *LessThanEqualType) Match(match *Element, labels map[string]string) (bo
 		return false, nil
 	}
 
-	to, err := strconv.ParseFloat(compare, 10)
+	to, err := strconv.ParseFloat(compare, 32)
 	if err != nil {
 		return false, fmt.Errorf("parse le oper's target label value: %s to float failed, err: %v", compare, err)
 	}
@@ -533,34 +533,34 @@ func isNumeric(val interface{}) bool {
 // mustFloat64 convert a interface to float64, if not, it will be panic.
 // so the interface should be numeric.
 func mustFloat64(val interface{}) float64 {
-	switch val.(type) {
+	switch v := val.(type) {
 	case int:
-		return float64(val.(int))
+		return float64(v)
 	case int8:
-		return float64(val.(int8))
+		return float64(v)
 	case int16:
-		return float64(val.(int16))
+		return float64(v)
 	case int32:
-		return float64(val.(int32))
+		return float64(v)
 	case int64:
-		return float64(val.(int64))
+		return float64(v)
 	case uint:
-		return float64(val.(uint))
+		return float64(v)
 	case uint8:
-		return float64(val.(uint8))
+		return float64(v)
 	case uint16:
-		return float64(val.(uint16))
+		return float64(v)
 	case uint32:
-		return float64(val.(uint32))
+		return float64(v)
 	case uint64:
-		return float64(val.(uint64))
+		return float64(v)
 	case json.Number:
 		val, _ := val.(json.Number).Float64()
 		return val
 	case float64:
-		return val.(float64)
+		return v
 	case float32:
-		return val.(float64)
+		return float64(v)
 	default:
 		panic(fmt.Sprintf("unsupported type, value: %v", val))
 	}

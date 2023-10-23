@@ -24,9 +24,9 @@ type RepositoryConf struct {
 type BkRepoConf struct {
 	Endpoint string `yaml:"endpoint"`
 	Project  string `yaml:"project"`
-	UserName string `yaml:"user_name"`
-	Password string `yaml:"password"`
 	Repo     string `yaml:"repo"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
 }
 
 // CosConf cos配置

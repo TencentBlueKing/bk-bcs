@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package notify xxx
@@ -19,22 +18,22 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sync/atomic"
 	"text/template"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/lock"
-	etcdlock "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/lock/etcd"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
-	"github.com/robfig/cron"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb"
+	"github.com/robfig/cron"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/lock"
+	etcdlock "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/lock/etcd"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
@@ -299,7 +298,7 @@ func (t *tokenNotify) requestEsb(method, url string, payload map[string]interfac
 
 	// Parse body as JSON
 	var result APIResponse
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, _ := io.ReadAll(resp.Body)
 	blog.V(3).Infof("request esb %s resp body(%s)", url, string(respBody))
 
 	err = json.Unmarshal(respBody, &result)

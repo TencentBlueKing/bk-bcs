@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package websocketDialer
@@ -27,8 +26,8 @@ import (
 type connection struct {
 	sync.Mutex
 
-	ctx           context.Context
-	cancel        func()
+	ctx           context.Context // nolint
+	cancel        func()          // nolint
 	err           error
 	writeDeadline time.Time
 	buf           chan []byte
@@ -130,7 +129,7 @@ func (c *connection) Write(b []byte) (int, error) {
 
 	deadline := int64(0)
 	if !c.writeDeadline.IsZero() {
-		deadline = c.writeDeadline.Sub(time.Now()).Nanoseconds() / 1000000
+		deadline = c.writeDeadline.Sub(time.Now()).Nanoseconds() / 1000000 // nolint
 	}
 	msg := newMessage(c.connID, deadline, b)
 	metrics.AddSMTotalTransmitBytesOnWS(c.session.clientKey, float64(len(msg.Bytes())))
@@ -141,7 +140,7 @@ func (c *connection) writeErr(err error) {
 	if err != nil {
 		msg := newErrorMessage(c.connID, err)
 		metrics.AddSMTotalTransmitErrorBytesOnWS(c.session.clientKey, float64(len(msg.Bytes())))
-		c.session.writeMessage(msg)
+		_, _ = c.session.writeMessage(msg)
 	}
 }
 

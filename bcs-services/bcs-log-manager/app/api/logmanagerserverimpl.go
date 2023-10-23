@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package api xxx
 package api
 
 import (
@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bkdata "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
@@ -173,8 +174,8 @@ func (l *LogManagerServerImpl) ListLogCollectionTask(ctx context.Context, req *p
 	case result = <-resultCh:
 		if result == nil {
 			resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
-			resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
-			resp.Message = "Log Mnagaer internal error"
+			resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED // nolint
+			resp.Message = "Log Mnagaer internal error"           // nolint
 			return fmt.Errorf("Log Manager internal error")
 		}
 		// PARSE []logconfigs TO clusterid => []logconfigs

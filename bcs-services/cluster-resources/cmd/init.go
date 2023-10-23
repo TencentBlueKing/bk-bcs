@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -52,6 +50,7 @@ import (
 	configHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/config"
 	customResHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/customresource"
 	hpaHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/hpa"
+	multiHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/multicluster"
 	nsHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/namespace"
 	networkHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/network"
 	nodeHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/node"
@@ -230,6 +229,9 @@ func (crSvc *clusterResourcesService) initHandler() error { // nolint:cyclop
 	if err := clusterRes.RegisterViewConfigHandler(crSvc.microSvc.Server(), viewHdlr.New(crSvc.model)); err != nil {
 		return err
 	}
+	if err := clusterRes.RegisterMultiClusterHandler(crSvc.microSvc.Server(), multiHdlr.New()); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -307,6 +309,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	if crSvc.tlsConfig != nil && crSvc.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpcCreds.NewTLS(crSvc.clientTLSConfig)))
 	} else {
+		// nolint
 		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
 	}
 
@@ -319,7 +322,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		clusterRes.RegisterConfigGwFromEndpoint, clusterRes.RegisterStorageGwFromEndpoint,
 		clusterRes.RegisterRBACGwFromEndpoint, clusterRes.RegisterHPAGwFromEndpoint,
 		clusterRes.RegisterCustomResGwFromEndpoint, clusterRes.RegisterResourceGwFromEndpoint,
-		clusterRes.RegisterViewConfigGwFromEndpoint,
+		clusterRes.RegisterViewConfigGwFromEndpoint, clusterRes.RegisterMultiClusterGwFromEndpoint,
 	} {
 		err := epRegister(crSvc.ctx, rmMux, endpoint, grpcDialOpts)
 		if err != nil {
@@ -339,7 +342,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		log.Info(crSvc.ctx, "swagger doc is enabled")
 		// 加载 swagger.json
 		// 配置 swagger-ui 服务
-		originMux.HandleFunc("/swagger/", handlerSwagger)
+		originMux.HandleFunc("/clusterresources/swagger/", handlerSwagger)
 	}
 
 	httpPort := strconv.Itoa(crSvc.conf.Server.HTTPPort)
@@ -382,7 +385,7 @@ func handlerSwagger(w http.ResponseWriter, r *http.Request) {
 		w.Write(file)
 		return
 	}
-	httpSwagger.Handler(httpSwagger.URL("/swagger/cluster-resources.swagger.json")).ServeHTTP(w, r)
+	httpSwagger.Handler(httpSwagger.URL("cluster-resources.swagger.json")).ServeHTTP(w, r)
 }
 
 func (crSvc *clusterResourcesService) run(httpAddr string, dualStackListener net.Listener) {

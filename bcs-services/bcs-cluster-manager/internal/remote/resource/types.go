@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package resource
@@ -184,7 +183,7 @@ type InstanceSpec struct {
 }
 
 // ResourcePoolInfo resource pool info
-type ResourcePoolInfo struct {
+type ResourcePoolInfo struct { // nolint
 	Name               string
 	Provider           string
 	ClusterID          string

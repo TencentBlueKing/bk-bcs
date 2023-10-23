@@ -1,56 +1,3 @@
-<script setup lang="ts">
-  import { ref, watch } from 'vue';
-  import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../../types/group'
-  import PreviewVersionGroup from './preview-version-group.vue';
-
-  // 将分组按照版本聚合
-  const aggregateGroup = (groups: IGroupToPublish[]) => {
-    const list: IGroupPreviewItem[] = []
-    const modifyVersions: IGroupPreviewItem[] = []
-    const noVersions: IGroupPreviewItem[] = [{ id: 0, name: '无版本', type: 'plain', children: [] }]
-    groups.forEach((group) => {
-      const { release_id, release_name } = group
-      if (release_id) {
-        const version = modifyVersions.find(item => item.id === release_id)
-        if (version) {
-          version.children.push(group)
-        } else {
-          modifyVersions.push({ id: release_id, name: <string>release_name, type: 'modify', children: [group] })
-        }
-      } else {
-        noVersions[0].children.push(group)
-      }
-    })
-    list.push(...modifyVersions)
-    if (noVersions[0].children.length > 0) {
-      list.push(...noVersions)
-    }
-    return list
-  }
-
-  const props = withDefaults(defineProps<{
-    groupListLoading: boolean;
-    groupList: IGroupToPublish[];
-    allowPreviewDelete: boolean;
-    disabled?: number[];
-    value: IGroupToPublish[];
-  }>(), {
-    disabled: () => []
-  })
-
-  const emits = defineEmits(['diff', 'change'])
-
-  const previewData = ref<IGroupPreviewItem[]>([])
-
-  watch(() => props.value, (val) => {
-    previewData.value = aggregateGroup(val)
-  }, { immediate: true })
-
-  const handleDelete = (id: number) => {
-    emits('change', props.value.filter(group => group.id !== id))
-  }
-
-</script>
 <template>
   <div class="roll-back-preview">
     <h3 class="title">
@@ -78,6 +25,59 @@
     </div>
   </div>
 </template>
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../../types/group';
+import PreviewVersionGroup from './preview-version-group.vue';
+
+// 将分组按照版本聚合
+const aggregateGroup = (groups: IGroupToPublish[]) => {
+  const list: IGroupPreviewItem[] = [];
+  const modifyVersions: IGroupPreviewItem[] = [];
+  const noVersions: IGroupPreviewItem[] = [{ id: 0, name: '无版本', type: 'plain', children: [] }];
+  groups.forEach((group) => {
+    const { release_id, release_name } = group;
+    if (release_id) {
+      const version = modifyVersions.find(item => item.id === release_id);
+      if (version) {
+        version.children.push(group);
+      } else {
+        modifyVersions.push({ id: release_id, name: release_name as string, type: 'modify', children: [group] });
+      }
+    } else {
+      noVersions[0].children.push(group);
+    }
+  });
+  list.push(...modifyVersions);
+  if (noVersions[0].children.length > 0) {
+    list.push(...noVersions);
+  }
+  return list;
+};
+
+const props = withDefaults(defineProps<{
+    groupListLoading: boolean;
+    groupList: IGroupToPublish[];
+    allowPreviewDelete: boolean;
+    disabled?: number[];
+    value: IGroupToPublish[];
+  }>(), {
+  disabled: () => [],
+});
+
+const emits = defineEmits(['diff', 'change']);
+
+const previewData = ref<IGroupPreviewItem[]>([]);
+
+watch(() => props.value, (val) => {
+  previewData.value = aggregateGroup(val);
+}, { immediate: true });
+
+const handleDelete = (id: number) => {
+  emits('change', props.value.filter(group => group.id !== id));
+};
+
+</script>
 <style lang="scss" scoped>
   .roll-back-preview {
     height: 100%;

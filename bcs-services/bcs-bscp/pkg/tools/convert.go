@@ -62,9 +62,5 @@ func IsNumber(s string) bool {
 
 	// Try to convert to a float64
 	_, err = strconv.ParseFloat(s, 64)
-	if err == nil {
-		return true
-	}
-
-	return false
+	return err == nil
 }

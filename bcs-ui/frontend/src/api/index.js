@@ -228,14 +228,14 @@ function handleReject(error, config) {
 
     if (config.globalError && !CUSTOM_HANDLE_CODE.includes(data?.code)) {
       messageError({
-        code: data?.code,
+        code: data?.code || '',
         overview: message,
         suggestion: '',
         assistant: window.BCS_CONFIG?.contact,
         type: 'key-value',
         details: {
           traceparent: error.response?.config?.headers?.Traceparent,
-          requestId: error.response?.headers?.['x-request-id'],
+          requestId: error.response?.headers?.['x-request-id'] || '--',
           message: data.message,
         },
       });

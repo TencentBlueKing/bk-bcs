@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package main is the entry of the gorm/gen code generator.
 package main
 
 import (

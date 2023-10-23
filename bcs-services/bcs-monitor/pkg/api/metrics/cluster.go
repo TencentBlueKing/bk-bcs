@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package metrics api metric
 package metrics
 
 import (

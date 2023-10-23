@@ -8,19 +8,20 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package bkmonitor xxx
 package bkmonitor
 
 import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/parnurzeal/gorequest"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
-	"github.com/parnurzeal/gorequest"
 )
 
 // Options monitor options

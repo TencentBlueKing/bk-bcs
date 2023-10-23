@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package storage xxx
 package storage
 
 import (
@@ -21,10 +21,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/emicklei/go-restful"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/regdiscv"

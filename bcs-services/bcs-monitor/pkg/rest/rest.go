@@ -20,19 +20,19 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/thanos-io/thanos/pkg/store"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
 
 var (
-	// UnauthorizedError 错误
-	UnauthorizedError = errors.New("用户未登入")
+	// ErrorUnauthorized 错误
+	ErrorUnauthorized = errors.New("用户未登入")
 )
 
 // Result 返回的标准结构
@@ -102,19 +102,19 @@ func InitRestContext(c *gin.Context) *Context {
 func GetRestContext(c *gin.Context) (*Context, error) {
 	ctxObj, ok := c.Get("rest_context")
 	if !ok {
-		return nil, UnauthorizedError
+		return nil, ErrorUnauthorized
 	}
 
 	restContext, ok := ctxObj.(*Context)
 	if !ok {
-		return nil, UnauthorizedError
+		return nil, ErrorUnauthorized
 	}
 
 	return restContext, nil
 }
 
 // RestHandlerFunc rest handler
-func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
+func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc { // nolint
 	return func(c *gin.Context) {
 		startTime := time.Now()
 		// 需要在审计操作记录中对body进行解析
@@ -172,6 +172,7 @@ type resource struct {
 	ClusterID string `json:"cluster_id" yaml:"cluster_id"`
 	ProjectID string `json:"project_id" yaml:"project_id"`
 	Name      string `json:"name" yaml:"name"`
+	RuleID    string `json:"-" yaml:"-"`
 }
 
 // resource to map
@@ -190,6 +191,10 @@ func (r resource) toMap() map[string]any {
 		result["Name"] = r.Name
 	}
 
+	if r.RuleID != "" {
+		result["RuleID"] = r.RuleID
+	}
+
 	return result
 }
 
@@ -199,6 +204,7 @@ func getResourceID(b []byte, ctx *Context) resource {
 	_ = json.Unmarshal(b, &resourceID)
 	resourceID.ClusterID = ctx.ClusterId
 	resourceID.ProjectID = ctx.ProjectId
+	resourceID.RuleID = ctx.Param("id")
 	return resourceID
 }
 
@@ -216,7 +222,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_log_rule", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -224,7 +230,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "delete_log_rule", ActivityType: audit.ActivityTypeDelete}
 	},
@@ -232,7 +238,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "retry_log_rule", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -240,7 +246,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "enable_log_rule", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -248,7 +254,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "disable_log_rule", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -271,9 +277,9 @@ func addAudit(ctx *Context, b []byte, startTime, endTime time.Time, code int, me
 		EndTime:   endTime,
 	}
 	resource := audit.Resource{
-		ProjectCode:  ctx.ProjectId,
+		ProjectCode:  ctx.ProjectCode,
 		ResourceType: res.ResourceType,
-		ResourceID:   ctx.RequestId,
+		ResourceID:   res.ResourceID,
 		ResourceName: res.ResourceName,
 		ResourceData: res.ResourceData,
 	}
@@ -292,7 +298,7 @@ func addAudit(ctx *Context, b []byte, startTime, endTime time.Time, code int, me
 	if code != 0 {
 		result.Status = audit.ActivityStatusFailed
 	}
-	component.GetAuditClient().R().
+	_ = component.GetAuditClient().R().
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 }
 

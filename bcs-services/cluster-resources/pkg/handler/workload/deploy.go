@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -20,9 +18,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
+	respAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -118,8 +118,16 @@ func (h *Handler) DeleteDeploy(
 func (h *Handler) RestartDeploy(
 	ctx context.Context, req *clusterRes.ResRestartReq, resp *clusterRes.CommonResp,
 ) (err error) {
+	currentManifest, err := respAction.BuildRetrieveAPIRespData(ctx, respAction.GetParams{
+		ClusterID: req.ClusterID, ResKind: resCsts.Deploy, Namespace: req.Namespace, Name: req.Name,
+	}, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	generation := mapx.GetInt64(currentManifest, "manifest.metadata.generation")
+	// 标记 generation 用来标识应用是否在重启状态
 	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.Deploy).Restart(
-		ctx, req.Namespace, req.Name, metav1.PatchOptions{FieldManager: "kubectl-rollout"},
+		ctx, req.Namespace, req.Name, generation+1, metav1.PatchOptions{FieldManager: "kubectl-rollout"},
 	)
 	return err
 }

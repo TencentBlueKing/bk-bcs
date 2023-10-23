@@ -10,28 +10,33 @@
  * limitations under the License.
  */
 
+// Package tools provides bscp common tools.
 package tools
 
 import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"math/rand"
-	"time"
+	"math/big"
 )
 
 var (
-	// 加密算法
+	// AES 加密算法
 	AES = "aes"
-	// 加密长度
+	// EncryptionLen 加密长度
 	EncryptionLen = 32
 )
 
 // CreateCredential create credential
 func CreateCredential(masterKey, encryptionAlgorithm string) (string, error) {
-	return EncryptCredential(randStr(EncryptionLen), masterKey, encryptionAlgorithm)
+	str, err := randStr(EncryptionLen)
+	if err != nil {
+		return "", err
+	}
+	return EncryptCredential(str, masterKey, encryptionAlgorithm)
 }
 
 // EncryptCredential encrypt credential
@@ -68,14 +73,17 @@ func DecryptCredential(credential, masterKey, encryptionAlgorithm string) (strin
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-// randStr 随机生成字符串
-func randStr(n int) string {
+// randStr 安全地生成随机字符串
+func randStr(n int) (string, error) {
 	b := make([]rune, n)
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := range b {
-		b[i] = letters[r.Intn(len(letters))]
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			return "", err
+		}
+		b[i] = letters[num.Int64()]
 	}
-	return string(b)
+	return string(b), nil
 }
 
 // PKCS7Padding PKCS7Padding

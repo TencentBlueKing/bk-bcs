@@ -1,7 +1,7 @@
-import * as axios from 'axios'
+/* eslint-disable */
+import * as axios from 'axios';
 
 declare module 'axios' {
-  interface AxiosInstance {
-    (config: AxiosRequestConfig): Promise<any>
-  }
+  type AxiosInstance = (config: AxiosRequestConfig) => Promise<any>
 }
+/* eslint-enable */

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package common
@@ -22,6 +21,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
@@ -29,9 +31,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -83,6 +82,7 @@ var (
 		StepName:   "节点设置注解",
 	}
 
+	// CheckClusterCleanNodesActionStep 检测下架节点状态
 	CheckClusterCleanNodesActionStep = cloudprovider.StepInfo{
 		StepMethod: cloudprovider.CheckClusterCleanNodesAction,
 		StepName:   "检测下架节点状态",
@@ -166,7 +166,7 @@ func CheckKubeAgentStatusTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	if len(clusterID) == 0 {
 		errMsg := fmt.Sprintf("CheckKubeAgentStatusTask[%s] validateParameter failed: clusterID or "+
-			"namespace empty", taskID)
+			"namespace empty", taskID) // nolint
 		blog.Errorf(errMsg)
 		retErr := fmt.Errorf("CheckKubeAgentStatusTask err: %s", errMsg)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -433,7 +433,7 @@ func SetNodeAnnotationsTask(taskID string, stepName string) error {
 	})
 	blog.Infof("SetNodeAnnotationsTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
 
-	//update step
+	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
 		return err
@@ -449,7 +449,7 @@ type NodeAnnotationsData struct {
 	annotations map[string]string
 }
 
-func updateClusterNodesAnnotations(ctx context.Context, data NodeAnnotationsData) error {
+func updateClusterNodesAnnotations(ctx context.Context, data NodeAnnotationsData) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	if len(data.annotations) == 0 {
@@ -547,7 +547,7 @@ func SetNodeLabelsTask(taskID string, stepName string) error {
 	})
 	blog.Infof("SetNodeLabelsTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
 
-	//update step
+	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
 		return err
@@ -688,7 +688,7 @@ func GetNodeBizRelation(hostIDs []int) (map[int]cmdb.HostBizRelations, error) {
 	return hostTopo, nil
 }
 
-func checkNodeValidatePods(ctx context.Context, clusterID, nodeName string) (bool, error) {
+func checkNodeValidatePods(ctx context.Context, clusterID, nodeName string) (bool, error) { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	k8sCli, err := clusterops.NewK8SOperator(options.GetGlobalCMOptions(),
@@ -710,7 +710,8 @@ func checkNodeValidatePods(ctx context.Context, clusterID, nodeName string) (boo
 	var warnMessages []string
 	for _, item := range podList.Items {
 		if !canDelete(item) {
-			warnMessages = append(warnMessages, fmt.Sprintf("pod: %s/%s status is %v", item.Namespace, item.Name, item.Status.Phase))
+			warnMessages = append(warnMessages, fmt.Sprintf("pod: %s/%s status is %v", item.Namespace,
+				item.Name, item.Status.Phase))
 		}
 	}
 	if len(warnMessages) > 0 {
@@ -720,7 +721,7 @@ func checkNodeValidatePods(ctx context.Context, clusterID, nodeName string) (boo
 	return true, nil
 }
 
-func canDelete(pod v1.Pod) bool {
+func canDelete(pod v1.Pod) bool { // nolint
 	// ignore kube-system pod
 	if pod.Namespace == metav1.NamespaceSystem ||
 		pod.Namespace == utils.BkSystem || pod.Namespace == utils.BCSSystem {
@@ -1034,7 +1035,7 @@ func FilterClusterNodesByNodeNames(ctx context.Context, info *cloudprovider.Clou
 
 	nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID)
 	if err != nil {
-		blog.Errorf("FilterClusterNodesByNodeNames[%s] cluster[%s] failed", taskID, info.Cluster.ClusterID, err)
+		blog.Errorf("FilterClusterNodesByNodeNames[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
 		return nil, nil, err
 	}
 
@@ -1129,7 +1130,7 @@ func SetNodeTaintsTask(taskID string, stepName string) error {
 	})
 	blog.Infof("SetNodeTaintsTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
 
-	//update step
+	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
 		return err
@@ -1138,6 +1139,7 @@ func SetNodeTaintsTask(taskID string, stepName string) error {
 	return nil
 }
 
+// NodeTaintData Node data
 type NodeTaintData struct {
 	ClusterID string
 	NodeNames []string

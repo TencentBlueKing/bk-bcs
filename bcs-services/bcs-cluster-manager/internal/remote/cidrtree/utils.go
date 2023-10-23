@@ -1,0 +1,112 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under,
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package cidrtree
+
+import (
+	"errors"
+	"math"
+	"net"
+
+	"github.com/apparentlymart/go-cidr/cidr"
+)
+
+// Subnet container info for vpc subnet
+type Subnet struct {
+	ID          string     `json:"id,omitempty"`
+	IPNet       *net.IPNet `json:"ipNet,omitempty"`
+	Name        string     `json:"name,omitempty"`
+	Zone        string     `json:"zone,omitempty"`
+	ZoneName    string     `json:"zonename,omitempty"`
+	VpcID       string     `json:"vpcId,omitempty"`
+	CreatedTime string     `json:"createdTime,omitempty"`
+	AvaliableIP uint64     `json:"avaliableIP,omitempty"`
+}
+
+// InSlice report wether a in s
+func InSlice(a *net.IPNet, s []*net.IPNet) bool {
+	for _, v := range s {
+		if IsIPnetEqual(a, v) {
+			return true
+		}
+	}
+	return false
+}
+
+// StringToCidr convert string to cidr
+func StringToCidr(cidrstr string) (cidr *Cidr, err error) {
+	_, ipnet, err := net.ParseCIDR(cidrstr)
+	if err != nil {
+		return nil, err
+	}
+	cidr = &Cidr{
+		IPNet: ipnet,
+	}
+	return cidr, err
+}
+
+// GetFreeIPNets get cidr block free cidrs
+func GetFreeIPNets(allBlocks, allExistingSubnets []*net.IPNet) []*net.IPNet {
+	var allFrees []*net.IPNet
+
+	for _, block := range allBlocks {
+		exsits := filterSubnet(block, allExistingSubnets)
+
+		man := NewCidrManager(block, exsits)
+		for _, free := range man.GetFrees() {
+			allFrees = append(allFrees, free)
+		}
+	}
+	return allFrees
+}
+
+// filterSubnet cidr filter allocated subnets
+func filterSubnet(cidrBlock *net.IPNet, subnets []*net.IPNet) []*net.IPNet {
+	var filterd []*net.IPNet
+	for _, subnet := range subnets {
+		if cidrContains(cidrBlock, subnet) {
+			filterd = append(filterd, subnet)
+		}
+	}
+	return filterd
+}
+
+// subnet exist reserved cidrs
+func inReserved(subnet *net.IPNet, reservedBlocks []*net.IPNet) bool {
+	for _, r := range reservedBlocks {
+		if cidrContains(r, subnet) {
+			return true
+		}
+	}
+	return false
+}
+
+// cidr(a) contain cidr(b)
+func cidrContains(a, b *net.IPNet) bool {
+	first, last := cidr.AddressRange(b)
+	if a.Contains(first) && a.Contains(last) {
+		return true
+	}
+	return false
+}
+
+// GetIPNum get ip num
+func GetIPNum(ipnet *net.IPNet) (ipnum uint32, err error) {
+	prefixSize, totalSize := ipnet.Mask.Size()
+	if totalSize > 32 {
+		ipnum = 0
+		err = errors.New("currently only ipv4 cidr is supported")
+		return
+	}
+	ipnum = uint32(math.Pow(2, float64(totalSize-prefixSize)))
+	return
+}

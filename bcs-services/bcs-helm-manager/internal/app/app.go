@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -19,9 +19,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-
-	// pprof
-	_ "net/http/pprof"
+	_ "net/http/pprof" // pprof
 	"os"
 	"os/signal"
 	"path"
@@ -42,6 +40,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	"github.com/gorilla/mux"
 	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microCfg "github.com/micro/go-micro/v2/config"
@@ -76,7 +75,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/wrapper"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 var (
@@ -397,7 +395,10 @@ func (hm *HelmManager) initMicro() error {
 			// stop all operation
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
-			hm.httpServer.Shutdown(ctx)
+			err := hm.httpServer.Shutdown(ctx)
+			if err != nil {
+				return err
+			}
 			operation.GlobalOperator.TerminateOperation()
 			operation.GlobalOperator.WaitTerminate(ctx, time.Second)
 			return nil
@@ -659,14 +660,13 @@ func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
 	return r, nil
 }
 
-func (hm *HelmManager) getServerAddress() error {
+func (hm *HelmManager) getServerAddress() {
 	// 通过环境变量获取LocalIP，这里是用的是podIP
 	if hm.opt.UseLocalIP && envx.LocalIP != "" {
 		hm.opt.Address = envx.LocalIP
 		hm.opt.InsecureAddress = envx.LocalIP
 	}
 	hm.opt.IPv6Address = util.InitIPv6Address(hm.opt.IPv6Address)
-	return nil
 }
 
 // InitComponentConfig init component config

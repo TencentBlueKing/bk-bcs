@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package batch
@@ -21,19 +20,20 @@ import (
 	"strings"
 
 	mesostype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/urfave/cli"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/metastream"
 	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
-
-	"github.com/urfave/cli"
 )
 
 // NewCleanCommand sub command clean all  registration
 func NewCleanCommand() cli.Command {
 	return cli.Command{
-		Name:  "clean",
-		Usage: "delete multiple Mesos resources, like application/deployment/service/configmap/secret/customresourcedefinition",
+		Name: "clean",
+		Usage: "delete multiple Mesos resources, " +
+			"like application/deployment/service/configmap/secret/customresourcedefinition",
 		UsageText: `
 		example:
 			> helm template myname sometemplate -n bcs-system | grep -v "^#" | bcs-client clean 

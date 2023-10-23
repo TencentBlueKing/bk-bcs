@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -21,15 +20,15 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/container/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/container/v1"
 )
 
 // CreateCloudNodeGroupTask create cloud node group task
@@ -61,6 +60,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// create node group
 	dependInfo.NodeGroup.Region = dependInfo.Cluster.Region
 	dependInfo.NodeGroup.CloudNodeGroupID = strings.ToLower(nodeGroupID)
 	err = createGKENodeGroup(dependInfo.CmOption, dependInfo.NodeGroup, dependInfo.Cluster, nodeGroupID, taskID, stepName)
@@ -96,9 +96,11 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	return nil
 }
 
+// createGKENodeGroup create gke node group
 func createGKENodeGroup(cmOption *cloudprovider.CommonOption, group *proto.NodeGroup, cluster *proto.Cluster,
 	nodeGroupID, taskID, stepName string) error {
 
+	// get google cloud client
 	gkeCli, err := api.NewContainerServiceClient(cmOption)
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: get gke client for nodegroup[%s] in task %s step %s failed, %s",
@@ -115,6 +117,7 @@ func createGKENodeGroup(cmOption *cloudprovider.CommonOption, group *proto.NodeG
 			nodeGroupID, err.Error())
 	}
 
+	// 检查操作是否成功
 	if err = checkGKEOperationStatus(gkeCli, operation, taskID, 3*time.Second); err != nil {
 		return fmt.Errorf("CreateCloudNodeGroupTask[%s]: checkGKEOperationStatus failed, %v", taskID, err)
 	}
@@ -123,6 +126,7 @@ func createGKENodeGroup(cmOption *cloudprovider.CommonOption, group *proto.NodeG
 	return nil
 }
 
+// generateCreateNodePoolInput generate create node pool input
 func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster) *api.CreateNodePoolRequest {
 	if group.NodeTemplate.MaxPodsPerNode == 0 {
 		group.NodeTemplate.MaxPodsPerNode = 110
@@ -147,7 +151,7 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 }
 
 // CheckCloudNodeGroupStatusTask check cloud node group status task
-func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
+func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -225,6 +229,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// get instanceGroupManager
 	newIt, igm, err := getIgmAndIt(computeCli, cloudNodeGroup, group, taskID)
 	if err != nil {
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: getIgmAndIt failed: %v", taskID, err)
@@ -233,6 +238,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// update node group cloud args id
 	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromIgmAndIt(group,
 		igm, newIt, cmOption))
 	if err != nil {
@@ -257,6 +263,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
+// getIgmAndIt get instanceGroupManager and instanceTemplate
 func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container.NodePool, group *proto.NodeGroup,
 	taskID string) (*compute.InstanceTemplate, *compute.InstanceGroupManager, error) {
 	// get instanceGroupManager
@@ -301,6 +308,7 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 	return newIt, igm, nil
 }
 
+// patchIgm patch instanceGroupManager
 func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager, computeCli *api.ComputeServiceClient,
 	taskID string) error {
 	ItInfo := strings.Split(newIt.SelfLink, "/")
@@ -326,7 +334,8 @@ func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager
 	return nil
 }
 
-func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup,
+// newItFromBaseIt new instanceTemplate from base instanceTemplate
+func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup, // nolint
 	computeCli *api.ComputeServiceClient, taskID string) error {
 	oldItNameInfo := strings.Split(newIt.Name, "-")
 	randStr := utils.RandomHexString(8)
@@ -352,7 +361,6 @@ func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup,
 		newIt.Properties.Disks = append(newIt.Properties.Disks, dataDisks...)
 	}
 
-	// TODO: 设置网络
 	if group.LaunchTemplate.InternetAccess != nil && !group.LaunchTemplate.InternetAccess.PublicIPAssigned {
 		newIt.Properties.NetworkInterfaces[0].AccessConfigs = make([]*compute.AccessConfig, 0)
 	}
@@ -397,6 +405,7 @@ func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup,
 		}
 	}
 
+	// 设置启动脚本
 	if group.NodeTemplate.PreStartUserScript != "" {
 		var startupScript string
 		for k := range newIt.Properties.Metadata.Items {
@@ -430,12 +439,14 @@ func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup,
 	return nil
 }
 
+// generateNodeGroupFromIgmAndIt generate node group from igm and it
 func generateNodeGroupFromIgmAndIt(group *proto.NodeGroup, igm *compute.InstanceGroupManager,
 	it *compute.InstanceTemplate, opt *cloudprovider.CommonOption) *proto.NodeGroup {
 	group = generateNodeGroupFromIgm(group, igm)
 	return generateNodeGroupFromIt(group, it, opt)
 }
 
+// generateNodeGroupFromIgm generate node group from igm
 func generateNodeGroupFromIgm(group *proto.NodeGroup, igm *compute.InstanceGroupManager) *proto.NodeGroup {
 	group.AutoScaling.AutoScalingID = igm.SelfLink
 	group.AutoScaling.AutoScalingName = igm.Name
@@ -443,6 +454,7 @@ func generateNodeGroupFromIgm(group *proto.NodeGroup, igm *compute.InstanceGroup
 	return group
 }
 
+// generateNodeGroupFromIt generate node group from it
 func generateNodeGroupFromIt(group *proto.NodeGroup, it *compute.InstanceTemplate,
 	opt *cloudprovider.CommonOption) *proto.NodeGroup {
 	group.LaunchTemplate.LaunchConfigurationID = it.SelfLink
@@ -509,6 +521,7 @@ func UpdateCreateNodeGroupDBInfoTask(taskID string, stepName string) error {
 	return nil
 }
 
+// generateNodeConfig generate node config
 func generateNodeConfig(nodeGroup *proto.NodeGroup) *api.NodeConfig {
 	if nodeGroup.LaunchTemplate == nil {
 		return nil
@@ -528,6 +541,7 @@ func generateNodeConfig(nodeGroup *proto.NodeGroup) *api.NodeConfig {
 	return conf
 }
 
+// generateNodeManagement generate node management
 func generateNodeManagement(nodeGroup *proto.NodeGroup, cluster *proto.Cluster) *api.NodeManagement {
 	if nodeGroup.AutoScaling == nil {
 		return nil

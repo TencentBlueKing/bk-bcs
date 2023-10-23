@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -15,9 +15,10 @@ package entity
 import (
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 // Release 定义了chart的部署信息, 存储在helm-manager的数据库中, 用于对部署版本做记录

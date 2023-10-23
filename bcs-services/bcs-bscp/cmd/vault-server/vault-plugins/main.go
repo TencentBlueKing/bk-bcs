@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package service encapsulates Vault secret plugins and provides key-value storage and PKI storage functionality.
 package main
 
 import (
@@ -24,8 +25,12 @@ import (
 
 func main() {
 	apiClientMeta := &api.PluginAPIClientMeta{}
+	logger := hclog.New(&hclog.LoggerOptions{Name: "bcs-bscp-vault-plugin"})
 	flags := apiClientMeta.FlagSet()
-	flags.Parse(os.Args[1:])
+	if err := flags.Parse(os.Args[1:]); err != nil {
+		logger.Error("plugin shutting down", "error", err)
+		os.Exit(1)
+	}
 
 	tlsConfig := apiClientMeta.GetTLSConfig()
 	tlsProviderFunc := api.VaultPluginTLSProvider(tlsConfig)
@@ -35,7 +40,6 @@ func main() {
 		TLSProviderFunc:    tlsProviderFunc,
 	})
 	if err != nil {
-		logger := hclog.New(&hclog.LoggerOptions{Name: "bcs-bscp-vault-plugin"})
 		logger.Error("plugin shutting down", "error", err)
 		os.Exit(1)
 	}

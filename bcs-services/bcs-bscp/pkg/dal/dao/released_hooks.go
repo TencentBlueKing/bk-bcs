@@ -58,7 +58,6 @@ type releasedHookDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
-	lock     LockDao
 }
 
 // Get gets the released hook.

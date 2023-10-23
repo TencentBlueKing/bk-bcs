@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package permission
@@ -21,8 +20,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
@@ -30,7 +29,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	blog "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/log"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/parser"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
@@ -291,7 +289,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 	case http.MethodGet:
 		actionID = namespace.NameSpaceScopedView.String()
 	default:
-		return false, fmt.Errorf("invlid action[%s]", action)
+		return false, fmt.Errorf("invalid action[%s]", action)
 	}
 
 	// get project id
@@ -340,31 +338,37 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 
 	// check permission
 	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, true)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": resource.ClusterID,
-		"Namespace": resource.Namespace,
-	}
-	defer audit.AddEvent(actionID, string(rn1.RType), rn1.RInstance, user, allow, instanceData)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check namespaceScoped resource permission failed: %v", err)
 		return false, err
 	}
+
+	go addAudit(ctx, user, projectID, action, actionID, resource)
 	return allow, nil
 }
 
 // checkNamespaceInProjectCluster
 func (cli *PermVerifyClient) checkNamespaceInProjectCluster(ctx context.Context, projectID, clusterID string,
 	namespace string) (bool, error) {
+	project, err := component.GetProject(ctx, projectID)
+	if err != nil {
+		blog.Log(ctx).Errorf("checkNamespaceInProjectCluster get project failed: %v", err)
+		return false, err
+	}
 	// 获取共享集群所在项目的命名空间列表，检查是否属于该项目
-	namespaceList, err := passcc.GetCCClient().GetProjectSharedNamespaces(projectID, clusterID)
+	namespaceList, err := component.GetCachedClusterNamespaces(ctx, project.ProjectCode, clusterID)
 	if err != nil {
 		blog.Log(ctx).Errorf("checkNamespaceInProjectCluster failed: %v", err)
 		return false, err
 	}
 
-	return utils.StringInSlice(namespace, namespaceList), nil
+	for _, v := range namespaceList {
+		if v.Name == namespace {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // verifyUserNamespacePermission
@@ -372,6 +376,7 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 	resource ClusterResource) (bool, error) {
 
 	var (
+		// nolint
 		actionID              = ""
 		isClusterResourcePerm = false
 		clusterType           ClusterType
@@ -427,18 +432,13 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 	start := time.Now()
 
 	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{*rn1}, true)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": resource.ClusterID,
-		"Namespace": resource.Namespace,
-	}
-	defer audit.AddEvent(actionID, string(rn1.RType), rn1.RInstance, user, allow, instanceData)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespacePermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check namespace permission failed: %v", err)
 		return false, err
 	}
 
+	go addAudit(ctx, user, projectID, action, actionID, resource)
 	return allow, nil
 }
 
@@ -572,18 +572,13 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(ctx context.Conte
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserClusterScopedPermission user[%s] actionID[%s] resource[%+v]",
 		user, actionID, rn1)
 	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, true)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": resource.ClusterID,
-		"Namespace": resource.Namespace,
-	}
-	defer audit.AddEvent(actionID, string(rn1.RType), rn1.RInstance, user, allow, instanceData)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserClusterScopedPermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check cluster permission failed: %v", err)
 		return false, err
 	}
 
+	go addAudit(ctx, user, projectID, action, actionID, resource)
 	return allow, nil
 }
 
@@ -632,49 +627,78 @@ func transToAPIServerURL(url string) string {
 	return ""
 }
 
-// buildK8sOperationLog
-func buildK8sOperationLog(user string, resource ClusterResource, info *parser.RequestInfo, allow bool) error {
-	const (
-		MessageTemplate = "user[%s] perm[%t] verb[%s] APIPrefix[%s] GVK[%s-%s-%s] namespace[%s] resource[%s] subresource[%s]"
-	)
+func addAudit(pCtx context.Context, user, projectID, method, actionID string, res ClusterResource) {
+	requestID := utils.GetRequestIDFromContext(pCtx)
+	ctx := context.WithValue(context.Background(), utils.ContextValueKeyRequestID, requestID)
 
-	log := &models.BcsOperationLog{
-		ClusterType: resource.ClusterType.String(),
-		ClusterID:   resource.ClusterID,
-		Path:        resource.URL,
-		Message: fmt.Sprintf(MessageTemplate, user, allow, info.Verb, info.APIPrefix, info.APIGroup, info.APIVersion,
-			info.Resource, info.Namespace, info.Resource, info.Subresource),
-		OpUser:    user,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	var activityType audit.ActivityType
+	switch method {
+	case http.MethodPost:
+		activityType = audit.ActivityTypeCreate
+	case http.MethodPut:
+		activityType = audit.ActivityTypeUpdate
+	case http.MethodDelete:
+		activityType = audit.ActivityTypeDelete
+	default:
+		// Get 类型不需要审计
+		return
 	}
-	err := sqlstore.CreateOperationLog(log)
+
+	project, err := component.GetProject(ctx, projectID)
 	if err != nil {
-		return err
+		blog.Log(ctx).Errorf("get project failed: %v", err.Error())
+		return
+	}
+	auditCtx := audit.RecorderContext{
+		Username:  user,
+		RequestID: utils.GetRequestIDFromContext(ctx),
+		StartTime: time.Now(),
+		EndTime:   time.Now(),
+	}
+	resource := audit.Resource{
+		ProjectCode:  project.ProjectCode,
+		ResourceType: audit.ResourceTypeK8SResource,
+		ResourceID:   res.URL,
+		ResourceName: res.URL,
+		ResourceData: map[string]interface{}{
+			"ProjectCode": project.ProjectCode,
+			"ClusterID":   res.ClusterID,
+			"Namespace":   res.Namespace,
+			"URL":         res.URL,
+			"Method":      method,
+		},
 	}
 
-	return nil
-}
-
-// buildAdminOperationLog
-func buildAdminOperationLog(user string, req VerifyPermissionReq) error {
-	const (
-		MessageTemplate = "管理员用户[%s]操作[%s]资源类型[%s]资源[%s]allow[%v]"
-	)
-
-	log := &models.BcsOperationLog{
-		ClusterType: req.ResourceType.String(),
-		ClusterID:   req.Resource,
-		Path:        req.RequestURL,
-		Message:     fmt.Sprintf(MessageTemplate, user, req.Action, req.ResourceType, req.Resource, true),
-		OpUser:      user,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+	action := audit.Action{
+		ActionID:     actionID,
+		ActivityType: activityType,
 	}
-	err := sqlstore.CreateOperationLog(log)
+
+	result := audit.ActionResult{
+		Status: audit.ActivityStatusSuccess,
+		ResultContent: fmt.Sprintf("user %s access to %s in cluster %s, method: %s", auditCtx.Username,
+			resource.ResourceID, res.ClusterID, method),
+	}
+
+	// audit
+	_ = component.GetAuditClient().R().DisableActivity().
+		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
+
+	// activity
+	err = sqlstore.CreateActivity([]*models.Activity{
+		{
+			ProjectCode:  resource.ProjectCode,
+			ResourceType: string(resource.ResourceType),
+			ResourceName: resource.ResourceName,
+			ResourceID:   resource.ResourceID,
+			ActivityType: string(action.ActivityType),
+			Status:       models.GetStatus(string(result.Status)),
+			Username:     auditCtx.Username,
+			Description:  result.ResultContent,
+		},
+	})
 	if err != nil {
-		return err
+		blog.Log(ctx).Errorf("create activity failed: %v", err.Error())
+		return
 	}
-
-	return nil
 }

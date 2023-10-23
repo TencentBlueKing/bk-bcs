@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package logrule
@@ -112,6 +111,7 @@ type CreateLogRuleReq struct {
 	FromRule    string        `json:"from_rule"`
 }
 
+// toEntity convert to entity.LogRule
 func (req *CreateLogRuleReq) toEntity(c *rest.Context) *entity.LogRule {
 	return &entity.LogRule{
 		Name:        req.Name,
@@ -128,6 +128,7 @@ func (req *CreateLogRuleReq) toEntity(c *rest.Context) *entity.LogRule {
 	}
 }
 
+// toBKLog convert to bklog.CreateBCSCollectorReq
 func (req *CreateLogRuleReq) toBKLog(c *rest.Context) *bklog.CreateBCSCollectorReq {
 	if req.Rule.LogRuleContainer.DataEncoding == "" {
 		req.Rule.LogRuleContainer.DataEncoding = bklog.DefaultEncoding
@@ -151,6 +152,7 @@ type UpdateLogRuleReq struct {
 	Rule        bklog.LogRule `json:"rule"`
 }
 
+// toEntity convert to entity.LogRule
 func (req *UpdateLogRuleReq) toEntity(username, projectCode string) entity.M {
 	return entity.M{
 		"description":              req.Description,
@@ -162,6 +164,7 @@ func (req *UpdateLogRuleReq) toEntity(username, projectCode string) entity.M {
 	}
 }
 
+// toBKLog convert to bklog.UpdateBCSCollectorReq
 func (req *UpdateLogRuleReq) toBKLog(c *rest.Context, ruleName string) *bklog.UpdateBCSCollectorReq {
 	if req.Rule.LogRuleContainer.DataEncoding == "" {
 		req.Rule.LogRuleContainer.DataEncoding = bklog.DefaultEncoding
@@ -198,6 +201,7 @@ func toBcsLogConfigID(namespace, name string) string {
 	return fmt.Sprintf("%s%s%s", namespace, bcsLogConfigSeparator, name)
 }
 
+// getBcsLogConfigNamespaces takes in a string 'id' and splits it into two strings
 func getBcsLogConfigNamespaces(id string) (string, string) {
 	s := strings.Split(id, bcsLogConfigSeparator)
 	if len(s) < 2 {
@@ -206,14 +210,17 @@ func getBcsLogConfigNamespaces(id string) (string, string) {
 	return s[0], s[1]
 }
 
+// isBKLogID check if id is bklog id
 func isBKLogID(id string) bool {
 	return strings.HasPrefix(id, bkLogPrefix)
 }
 
+// toBKLogID convert to bklog id
 func toBKLogID(name string) string {
 	return fmt.Sprintf("%s%s", bkLogPrefix, name)
 }
 
+// getBKLogName get bklog name
 func getBKLogName(id string) string {
 	return strings.TrimPrefix(id, bkLogPrefix)
 }
@@ -265,7 +272,7 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 		resp.Config.ExtraLabels = append(resp.Config.ExtraLabels, bklog.Label{Key: tagk, Value: tagv})
 	}
 	for tagk, tagv := range logConfig.Spec.Selector.MatchLabels {
-		resp.Config.LogRuleContainer.LabelSelector.MatchLabels = append(resp.Config.ExtraLabels,
+		resp.Config.LogRuleContainer.LabelSelector.MatchLabels = append(resp.Config.ExtraLabels, // nolint
 			bklog.Label{Key: tagk, Value: tagv})
 	}
 	if logConfig.Spec.WorkloadNamespace != "" {
@@ -396,6 +403,7 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 	}
 }
 
+// getContainerQueryLogLinks get container query log links
 func getContainerQueryLogLinks(containerIDs []string, stdIndexSetID, fileIndexSetID int,
 	projectCode string) map[string]Entrypoint {
 	defaultEntrypoint := Entrypoint{
@@ -431,6 +439,7 @@ func getContainerQueryLogLinks(containerIDs []string, stdIndexSetID, fileIndexSe
 	return result
 }
 
+// getRuleIDByNames get rule id by names
 func getRuleIDByName(projectID, clusterID, ruleName string) (string, error) {
 	store := storage.GlobalStorage
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
@@ -445,6 +454,7 @@ func getRuleIDByName(projectID, clusterID, ruleName string) (string, error) {
 	return list[0].ID.Hex(), nil
 }
 
+// createBKlog create bklog
 func createBKLog(req *bklog.CreateBCSCollectorReq) {
 	klog.Infof("ready to create bklog, req: %s", req)
 	ctx := context.Background()
@@ -486,6 +496,7 @@ func createBKLog(req *bklog.CreateBCSCollectorReq) {
 	}
 }
 
+// updateBKLog update bklog
 func updateBKLog(ruleID string, bkRuleID int, req *bklog.UpdateBCSCollectorReq) {
 	klog.Infof("ready to update bklog, req: %s", req)
 	ctx := context.Background()
@@ -520,6 +531,7 @@ func updateBKLog(ruleID string, bkRuleID int, req *bklog.UpdateBCSCollectorReq) 
 	}
 }
 
+// getFromRuleIDFromLogRules get from rule id from log rules
 func getFromRuleIDFromLogRules(id string, rules []*entity.LogRule) string {
 	for _, v := range rules {
 		if v.FromRule == id {
@@ -529,6 +541,7 @@ func getFromRuleIDFromLogRules(id string, rules []*entity.LogRule) string {
 	return ""
 }
 
+// getClusterLogRules get cluster log rules
 func getClusterLogRules(ctx context.Context, projectID, clusterID string) ([]*entity.LogRule, error) {
 	store := storage.GlobalStorage
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
@@ -540,6 +553,7 @@ func getClusterLogRules(ctx context.Context, projectID, clusterID string) ([]*en
 	return listInDB, err
 }
 
+// getBKBaseEntrypoing get bkbase entrypoint
 func getBKBaseEntrypoing(host string, dataID int) string {
 	return fmt.Sprintf("%s/#/data-hub-detail/index/%d?data_scenario=custom",
 		strings.TrimRight(host, "/"), dataID)

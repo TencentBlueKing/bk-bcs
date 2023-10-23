@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -68,18 +67,18 @@ func (as ActivityStatus) String() string {
 }
 
 var (
-	// InitActivity xxx
+	// InitActivity ActivityStatus xxx
 	InitActivity ActivityStatus = "INIT"
-	// RunningActivity xxx
+	// RunningActivity ActivityStatus xxx
 	RunningActivity ActivityStatus = "RUNNING"
-	// SuccessfulActivity xxx
+	// SuccessfulActivity ActivityStatus xxx
 	SuccessfulActivity ActivityStatus = "SUCCESSFUL"
-	// SuccessfulPartActivity xxx
+	// SuccessfulPartActivity ActivityStatus xxx
 	SuccessfulPartActivity ActivityStatus = "PARTIALLY_SUCCESSFUL"
-	// FailedActivity xxx
+	// FailedActivity ActivityStatus  xxx
 	FailedActivity ActivityStatus = "FAILED"
-	// CancelledActivity xxx
-	CancelledActivity ActivityStatus = "CANCELLED"
+	// CancelledActivity ActivityStatus xxx
+	CancelledActivity ActivityStatus = "CANCELLED" // nolint
 )
 
 // InstanceAsStatus 实例在伸缩活动中的状态
@@ -296,7 +295,8 @@ type AddExistedInstanceReq struct {
 	NodePool        *NodePoolOption  `json:"nodePool"`
 	EnhancedSetting *EnhancedService `json:"enhancedSetting"`
 	LoginSetting    *LoginSettings   `json:"loginSetting"`
-	// SkipValidateOptions 校验规则相关选项，可配置跳过某些校验规则。目前支持GlobalRouteCIDRCheck(跳过GlobalRouter的相关校验), VpcCniCIDRCheck（跳过VpcCni相关校验）
+	// SkipValidateOptions 校验规则相关选项，可配置跳过某些校验规则。目前支持GlobalRouteCIDRCheck(跳过GlobalRouter的相关校验),
+	// VpcCniCIDRCheck（跳过VpcCni相关校验）
 	SkipValidateOptions []string `json:"skipValidateOptions"`
 	// InstanceAdvancedSettingsOverrides 参数InstanceAdvancedSettingsOverride数组的长度应与InstanceIds数组一致；
 	// 当长度大于InstanceIds数组长度时将报错；当长度小于InstanceIds数组时，没有对应配置的instace将使用默认配置。
@@ -340,7 +340,9 @@ var DefaultDiskPartition = []string{"/dev/vdb", "/dev/vdc", "/dev/vdd", "/dev/vd
 
 // InstanceAdvancedSettings instance advanced setting
 type InstanceAdvancedSettings struct {
-	// 数据盘挂载点, 默认不挂载数据盘. 已格式化的 ext3，ext4，xfs 文件系统的数据盘将直接挂载，其他文件系统或未格式化的数据盘将自动格式化为ext4 (tlinux系统格式化成xfs)并挂载，请注意备份数据! 无数据盘或有多块数据盘的云主机此设置不生效。
+	// 数据盘挂载点, 默认不挂载数据盘. 已格式化的 ext3，ext4，xfs 文件系统的数据盘将直接挂载，
+	// 其他文件系统或未格式化的数据盘将自动格式化为ext4 (tlinux系统格式化成xfs)并挂载，请注意备份数据!
+	// 无数据盘或有多块数据盘的云主机此设置不生效。
 	// 注意，多盘场景请使用下方的DataDisks数据结构，设置对应的云盘类型、云盘大小、挂载路径、是否格式化等信息。
 	// MountTarget data disk mountPoint
 	MountTarget string `json:"mountTarget"`
@@ -371,7 +373,8 @@ type KeyValue struct {
 // InstanceExtraArgs kubelet startup parameter
 type InstanceExtraArgs struct {
 	// Kubelet user-defined parameter，["k1=v1", "k1=v2"]
-	// for example: ["root-dir=/var/lib/kubelet","feature-gates=PodShareProcessNamespace=true,DynamicKubeletConfig=true"]
+	// for example: ["root-dir=/var/lib/kubelet","feature-gates=PodShareProcessNamespace=true,
+	// DynamicKubeletConfig=true"]
 	Kubelet []string `json:"kubelet"`
 }
 
@@ -430,15 +433,15 @@ type NodePoolOption struct {
 
 // CreateCVMRequest create cluster cvm request
 type CreateCVMRequest struct {
-	//tke clusterId, required
+	// tke clusterId, required
 	ClusterID string `json:"clusterId"`
-	//VPCID, required
+	// VPCID, required
 	VPCID string `json:"vpcId"`
-	//subnet, required
+	// subnet, required
 	SubNetID string `json:"subnetId"`
-	//available zone, required
+	// available zone, required
 	Zone string `json:"zone"`
-	//cvm number, required
+	// cvm number, required
 	ApplyNum uint32 `json:"applyNum"`
 	// cvm instance type, required
 	InstanceType string `json:"instanceType"`
@@ -448,15 +451,15 @@ type CreateCVMRequest struct {
 	SystemDiskSize uint32 `json:"systemDiskSize"`
 	// dataDisk, optional
 	DataDisks []*DataDisk `json:"dataDisk"`
-	//image information for system, required
+	// image information for system, required
 	Image *ImageInfo `json:"image"`
-	//security group, optional
+	// security group, optional
 	Security *SecurityGroup `json:"security"`
-	//setup security service, optional, default 0
+	// setup security service, optional, default 0
 	IsSecurityService uint32 `json:"isSecurityService,omitempty"`
-	//cloud monitor, optional, default 1
+	// cloud monitor, optional, default 1
 	IsMonitorService uint32 `json:"isMonitorService"`
-	//cvm instance name, optional
+	// cvm instance name, optional
 	InstanceName string `json:"instanceName,omitempty"`
 	// instance login setting
 	Login LoginSettings `json:"login"`
@@ -466,17 +469,17 @@ type CreateCVMRequest struct {
 
 // ImageInfo for system
 type ImageInfo struct {
-	ID   string `json:"imageId"`           //required
-	Name string `json:"imageName"`         //required
-	OS   string `json:"imageOs,omitempty"` //optional
-	Type string `json:"imageType"`         //optional
+	ID   string `json:"imageId"`           // required
+	Name string `json:"imageName"`         // required
+	OS   string `json:"imageOs,omitempty"` // optional
+	Type string `json:"imageType"`         // optional
 }
 
 // SecurityGroup sg information
 type SecurityGroup struct {
-	ID   string `json:"securityGroupId"`             //required
-	Name string `json:"securityGroupName,omitempty"` //optional
-	Desc string `json:"securityGroupDesc,omitempty"` //optional
+	ID   string `json:"securityGroupId"`             // required
+	Name string `json:"securityGroupName,omitempty"` // optional
+	Desc string `json:"securityGroupDesc,omitempty"` // optional
 }
 
 // DataDisk for CVMOrder
@@ -608,16 +611,19 @@ type ExistedInstancesPara struct {
 type RunInstancesForNode struct {
 	// NodeRole node role (MASTER_ETCD, WORKER)
 	NodeRole string `json:"nodeRole"`
-	// CVM创建透传参数，json化字符串格式，详见[CVM创建实例](https://cloud.tencent.com/document/product/213/15730)接口，传入公共参数外的其他参数即可，其中ImageId会替换为TKE集群OS对应的镜像。
+	// CVM创建透传参数，json化字符串格式，详见[CVM创建实例](https://cloud.tencent.com/document/product/213/15730)接口，
+	// 传入公共参数外的其他参数即可，其中ImageId会替换为TKE集群OS对应的镜像。
 	RunInstancesPara []*string `json:"runInstancesPara"`
-	// InstanceAdvancedSettingsOverrides node advanced setting(上边的RunInstancesPara按照顺序一一对应（当前只对节点自定义参数ExtraArgs生效）
-	InstanceAdvancedSettingsOverrides []*InstanceAdvancedSettings `json:"InstanceAdvancedSettingsOverrides,omitempty" name:"InstanceAdvancedSettingsOverrides"`
+	// InstanceAdvancedSettingsOverrides node advanced setting(上边的RunInstancesPara按照顺序一一对应
+	// （当前只对节点自定义参数ExtraArgs生效）
+	InstanceAdvancedSettingsOverrides []*InstanceAdvancedSettings `json:"InstanceAdvancedSettingsOverrides,omitempty" name:"InstanceAdvancedSettingsOverrides"` // nolint
 }
 
 // ClusterExtraArgs cluster extra args
 type ClusterExtraArgs struct {
 	// KubeAPIServer xxx
-	// kube-apiserver自定义参数，参数格式为["k1=v1", "k1=v2"]， 例如["max-requests-inflight=500","feature-gates=PodShareProcessNamespace=true,DynamicKubeletConfig=true"]
+	// kube-apiserver自定义参数，参数格式为["k1=v1", "k1=v2"]， 例如["max-requests-inflight=500",
+	// "feature-gates=PodShareProcessNamespace=true,DynamicKubeletConfig=true"]
 	KubeAPIServer []*string `json:"KubeAPIServer"`
 	// KubeControllerManager kube-controller-manager自定义参数
 	KubeControllerManager []*string `json:"KubeControllerManager"`
@@ -728,7 +734,7 @@ type CreateNodePoolInput struct {
 	LaunchConfigurePara *LaunchConfiguration `json:"LaunchConfigurePara,omitempty" name:"LaunchConfigurePara"`
 
 	// InstanceAdvancedSettings 实例参数
-	InstanceAdvancedSettings *InstanceAdvancedSettings `json:"InstanceAdvancedSettings,omitempty" name:"InstanceAdvancedSettings"`
+	InstanceAdvancedSettings *InstanceAdvancedSettings `json:"InstanceAdvancedSettings,omitempty" name:"InstanceAdvancedSettings"` // nolint
 
 	// 是否启用自动伸缩
 	EnableAutoscale *bool `json:"EnableAutoscale,omitempty" name:"EnableAutoscale"`
@@ -848,32 +854,38 @@ type AutoScalingGroup struct {
 	Ipv6AddressCount *int64 `json:"Ipv6AddressCount,omitempty" name:"Ipv6AddressCount"`
 
 	// 多可用区/子网策略，取值包括 PRIORITY 和 EQUALITY，默认为 PRIORITY。
-	// <br><li> PRIORITY，按照可用区/子网列表的顺序，作为优先级来尝试创建实例，如果优先级最高的可用区/子网可以创建成功，则总在该可用区/子网创建。
+	// <br><li> PRIORITY，按照可用区/子网列表的顺序，作为优先级来尝试创建实例，如果优先级最高的可用区/子网可以创建成功，
+	// 则总在该可用区/子网创建。
 	// <br><li> EQUALITY：扩容出的实例会打散到多个可用区/子网，保证扩容后的各个可用区/子网实例数相对均衡。
 	//
 	// 与本策略相关的注意点：
-	// <br><li> 当伸缩组为基础网络时，本策略适用于多可用区；当伸缩组为VPC网络时，本策略适用于多子网，此时不再考虑可用区因素，例如四个子网ABCD，其中ABC处于可用区1，D处于可用区2，此时考虑子网ABCD进行排序，而不考虑可用区1、2。
+	// <br><li> 当伸缩组为基础网络时，本策略适用于多可用区；当伸缩组为VPC网络时，本策略适用于多子网，此时不再考虑可用区因素，
+	// 例如四个子网ABCD，其中ABC处于可用区1，D处于可用区2，此时考虑子网ABCD进行排序，而不考虑可用区1、2。
 	// <br><li> 本策略适用于多可用区/子网，不适用于启动配置的多机型。多机型按照优先级策略进行选择。
-	// <br><li> 按照 PRIORITY 策略创建实例时，先保证多机型的策略，后保证多可用区/子网的策略。例如多机型A、B，多子网1、2、3，会按照A1、A2、A3、B1、B2、B3 进行尝试，如果A1售罄，会尝试A2（而非B1）。
+	// <br><li> 按照 PRIORITY 策略创建实例时，先保证多机型的策略，后保证多可用区/子网的策略。例如多机型A、B，
+	// 多子网1、2、3，会按照A1、A2、A3、B1、B2、B3 进行尝试，如果A1售罄，会尝试A2（而非B1）。
 	MultiZoneSubnetPolicy *string `json:"MultiZoneSubnetPolicy,omitempty" name:"MultiZoneSubnetPolicy"`
 
 	// 伸缩组实例健康检查类型
 	HealthCheckType *string `json:"HealthCheckType,omitempty" name:"HealthCheckType"`
 
-	// CLB健康检查宽限期，当扩容的实例进入`IN_SERVICE`后，在宽限期时间范围内将不会被标记为不健康`CLB_UNHEALTHY`。<br>默认值：0。取值范围[0, 7200]，单位：秒。
-	LoadBalancerHealthCheckGracePeriod *uint64 `json:"LoadBalancerHealthCheckGracePeriod,omitempty" name:"LoadBalancerHealthCheckGracePeriod"`
+	// CLB健康检查宽限期，当扩容的实例进入`IN_SERVICE`后，在宽限期时间范围内将不会被标记为不健康`CLB_UNHEALTHY`。<br>默认值：0。
+	// 取值范围[0, 7200]，单位：秒。
+	LoadBalancerHealthCheckGracePeriod *uint64 `json:"LoadBalancerHealthCheckGracePeriod,omitempty" name:"LoadBalancerHealthCheckGracePeriod"` // nolint
 
 	// 实例分配策略，取值包括 LAUNCH_CONFIGURATION 和 SPOT_MIXED，默认取 LAUNCH_CONFIGURATION。
 	// <br><li> LAUNCH_CONFIGURATION，代表传统的按照启动配置模式。
-	// <br><li> SPOT_MIXED，代表竞价混合模式。目前仅支持启动配置为按量计费模式时使用混合模式，混合模式下，伸缩组将根据设定扩容按量或竞价机型。使用混合模式时，关联的启动配置的计费类型不可被修改。
+	// <br><li> SPOT_MIXED，代表竞价混合模式。目前仅支持启动配置为按量计费模式时使用混合模式，混合模式下，伸缩组将根据设定扩容按量或竞价机型。
+	// 使用混合模式时，关联的启动配置的计费类型不可被修改。
 	InstanceAllocationPolicy *string `json:"InstanceAllocationPolicy,omitempty" name:"InstanceAllocationPolicy"`
 
 	// 竞价混合模式下，各计费类型实例的分配策略。
 	// 仅当 InstanceAllocationPolicy 取 SPOT_MIXED 时可用。
-	SpotMixedAllocationPolicy *SpotMixedAllocationPolicy `json:"SpotMixedAllocationPolicy,omitempty" name:"SpotMixedAllocationPolicy"`
+	SpotMixedAllocationPolicy *SpotMixedAllocationPolicy `json:"SpotMixedAllocationPolicy,omitempty" name:"SpotMixedAllocationPolicy"` // nolint
 
 	// 容量重平衡功能，仅对伸缩组内的竞价实例有效。取值范围：
-	// <br><li> TRUE，开启该功能，当伸缩组内的竞价实例即将被竞价实例服务自动回收前，AS 主动发起竞价实例销毁流程，如果有配置过缩容 hook，则销毁前 hook 会生效。销毁流程启动后，AS 会异步开启一个扩容活动，用于补齐期望实例数。
+	// <br><li> TRUE，开启该功能，当伸缩组内的竞价实例即将被竞价实例服务自动回收前，AS 主动发起竞价实例销毁流程，如果有配置过缩容 hook，
+	// 则销毁前 hook 会生效。销毁流程启动后，AS 会异步开启一个扩容活动，用于补齐期望实例数。
 	// <br><li> FALSE，不开启该功能，则 AS 等待竞价实例被销毁后才会去扩容补齐伸缩组期望实例数。
 	//
 	// 默认取 FALSE。
@@ -917,7 +929,8 @@ type ServiceSettings struct {
 
 	// 取值范围：
 	// CLASSIC_SCALING：经典方式，使用创建、销毁实例来实现扩缩容；
-	// WAKE_UP_STOPPED_SCALING：扩容优先开机。扩容时优先对已关机的实例执行开机操作，若开机后实例数仍低于期望实例数，则创建实例，缩容仍采用销毁实例的方式。用户可以使用StopAutoScalingInstances接口来关闭伸缩组内的实例。监控告警触发的扩容仍将创建实例
+	// WAKE_UP_STOPPED_SCALING：扩容优先开机。扩容时优先对已关机的实例执行开机操作，若开机后实例数仍低于期望实例数，则创建实例，
+	// 缩容仍采用销毁实例的方式。用户可以使用StopAutoScalingInstances接口来关闭伸缩组内的实例。监控告警触发的扩容仍将创建实例
 	// 默认取值：CLASSIC_SCALING
 	ScalingMode *string `json:"ScalingMode,omitempty" name:"ScalingMode"`
 
@@ -932,14 +945,18 @@ type SpotMixedAllocationPolicy struct {
 	// 注意：此字段可能返回 null，表示取不到有效值。
 	BaseCapacity *uint64 `json:"BaseCapacity,omitempty" name:"BaseCapacity"`
 
-	// 超出基础容量部分，按量计费实例所占的比例。取值范围 [0, 100]，0 代表超出基础容量的部分仅生产竞价实例，100 代表仅生产按量实例，默认值为 70。按百分比计算按量实例数时，向上取整。
-	// 比如，总期望实例数取 3，基础容量取 1，超基础部分按量百分比取 1，则最终按量 2 台（1 台来自基础容量，1 台按百分比向上取整得到），竞价 1台。
+	// 超出基础容量部分，按量计费实例所占的比例。取值范围 [0, 100]，0 代表超出基础容量的部分仅生产竞价实例，100 代表仅生产按量实例，
+	// 默认值为 70。按百分比计算按量实例数时，向上取整。
+	// 比如，总期望实例数取 3，基础容量取 1，超基础部分按量百分比取 1，则最终按量 2 台（1 台来自基础容量，1 台按百分比向上取整得到），
+	// 竞价 1台。
 	// 注意：此字段可能返回 null，表示取不到有效值。
-	OnDemandPercentageAboveBaseCapacity *uint64 `json:"OnDemandPercentageAboveBaseCapacity,omitempty" name:"OnDemandPercentageAboveBaseCapacity"`
+	OnDemandPercentageAboveBaseCapacity *uint64 `json:"OnDemandPercentageAboveBaseCapacity,omitempty" name:"OnDemandPercentageAboveBaseCapacity"` // nolint
 
 	// 混合模式下，竞价实例的分配策略。取值包括 COST_OPTIMIZED 和 CAPACITY_OPTIMIZED，默认取 COST_OPTIMIZED。
-	// <br><li> COST_OPTIMIZED，成本优化策略。对于启动配置内的所有机型，按照各机型在各可用区的每核单价由小到大依次尝试。优先尝试购买每核单价最便宜的，如果购买失败则尝试购买次便宜的，以此类推。
-	// <br><li> CAPACITY_OPTIMIZED，容量优化策略。对于启动配置内的所有机型，按照各机型在各可用区的库存情况由大到小依次尝试。优先尝试购买剩余库存最大的机型，这样可尽量降低竞价实例被动回收的发生概率。
+	// <br><li> COST_OPTIMIZED，成本优化策略。对于启动配置内的所有机型，按照各机型在各可用区的每核单价由小到大依次尝试。
+	// 优先尝试购买每核单价最便宜的，如果购买失败则尝试购买次便宜的，以此类推。
+	// <br><li> CAPACITY_OPTIMIZED，容量优化策略。对于启动配置内的所有机型，按照各机型在各可用区的库存情况由大到小依次尝试。
+	// 优先尝试购买剩余库存最大的机型，这样可尽量降低竞价实例被动回收的发生概率。
 	// 注意：此字段可能返回 null，表示取不到有效值。
 	SpotAllocationStrategy *string `json:"SpotAllocationStrategy,omitempty" name:"SpotAllocationStrategy"`
 
@@ -979,7 +996,8 @@ type LaunchConfiguration struct {
 	// 实例登录设置。通过该参数可以设置实例的登录方式密码、密钥或保持镜像的原始登录设置。默认情况下会随机生成密码，并以站内信方式知会到用户。
 	LoginSettings *LoginSettings `json:"LoginSettings,omitempty" name:"LoginSettings"`
 
-	// 实例所属安全组。该参数可以通过调用 [DescribeSecurityGroups](https://cloud.tencent.com/document/api/215/15808) 的返回值中的`SecurityGroupId`字段来获取。若不指定该参数，则默认不绑定安全组。
+	// 实例所属安全组。该参数可以通过调用 [DescribeSecurityGroups](https://cloud.tencent.com/document/api/215/15808)
+	// 的返回值中的`SecurityGroupId`字段来获取。若不指定该参数，则默认不绑定安全组。
 	SecurityGroupIds []*string `json:"SecurityGroupIds,omitempty" name:"SecurityGroupIds"`
 
 	// 增强服务。通过该参数可以指定是否开启云安全、云监控等服务。若不指定该参数，则默认开启云监控、云安全服务。
@@ -995,7 +1013,7 @@ type LaunchConfiguration struct {
 	InstanceChargeType *string `json:"InstanceChargeType,omitempty" name:"InstanceChargeType"`
 
 	// 实例的市场相关选项，如竞价实例相关参数，若指定实例的付费模式为竞价付费则该参数必传。
-	InstanceMarketOptions *InstanceMarketOptionsRequest `json:"InstanceMarketOptions,omitempty" name:"InstanceMarketOptions"`
+	InstanceMarketOptions *InstanceMarketOptionsRequest `json:"InstanceMarketOptions,omitempty" name:"InstanceMarketOptions"` // nolint
 
 	// 实例机型列表，不同实例机型指定了不同的资源规格，最多支持10种实例机型。
 	// `InstanceType`和`InstanceTypes`参数互斥，二者必填一个且只能填写一个。
@@ -1019,10 +1037,12 @@ type LaunchConfiguration struct {
 	HostNameSettings *HostNameSettings `json:"HostNameSettings,omitempty" name:"HostNameSettings"`
 
 	// 云服务器实例名（InstanceName）的相关设置。
-	// 如果用户在启动配置中设置此字段，则伸缩组创建出的实例 InstanceName 参照此字段进行设置，并传递给 CVM；如果用户未在启动配置中设置此字段，则伸缩组创建出的实例 InstanceName 按照“as-{{ 伸缩组AutoScalingGroupName }}”进行设置，并传递给 CVM。
+	// 如果用户在启动配置中设置此字段，则伸缩组创建出的实例 InstanceName 参照此字段进行设置，并传递给 CVM；如果用户未在启动配置中设置此字段，
+	// 则伸缩组创建出的实例 InstanceName 按照“as-{{ 伸缩组AutoScalingGroupName }}”进行设置，并传递给 CVM。
 	InstanceNameSettings *InstanceNameSettings `json:"InstanceNameSettings,omitempty" name:"InstanceNameSettings"`
 
-	// 预付费模式，即包年包月相关参数设置。通过该参数可以指定包年包月实例的购买时长、是否设置自动续费等属性。若指定实例的付费模式为预付费则该参数必传。
+	// 预付费模式，即包年包月相关参数设置。通过该参数可以指定包年包月实例的购买时长、是否设置自动续费等属性。
+	// 若指定实例的付费模式为预付费则该参数必传。
 	InstanceChargePrepaid *InstanceChargePrepaid `json:"InstanceChargePrepaid,omitempty" name:"InstanceChargePrepaid"`
 
 	// 云盘类型选择策略，默认取值 ORIGINAL，取值范围：
@@ -1058,15 +1078,18 @@ type InternetAccessible struct {
 	// 网络计费类型
 	InternetChargeType *string `json:"InternetChargeType,omitempty" name:"InternetChargeType"`
 
-	// 公网出带宽上限，单位：Mbps。默认值：0Mbps。不同机型带宽上限范围不一致，具体限制详见[购买网络带宽](https://cloud.tencent.com/document/product/213/509)。
+	// 公网出带宽上限，单位：Mbps。默认值：0Mbps。不同机型带宽上限范围不一致，
+	// 具体限制详见[购买网络带宽](https://cloud.tencent.com/document/product/213/509)。
 	// 注意：此字段可能返回 null，表示取不到有效值。
 	InternetMaxBandwidthOut *uint64 `json:"InternetMaxBandwidthOut,omitempty" name:"InternetMaxBandwidthOut"`
 
-	// 是否分配公网IP。取值范围：<br><li>TRUE：表示分配公网IP<br><li>FALSE：表示不分配公网IP<br><br>当公网带宽大于0Mbps时，可自由选择开通与否，默认开通公网IP；当公网带宽为0，则不允许分配公网IP。
+	// 是否分配公网IP。取值范围：<br><li>TRUE：表示分配公网IP<br><li>FALSE：表示不分配公网IP<br><br>当公网带宽大于0Mbps时，
+	// 可自由选择开通与否，默认开通公网IP；当公网带宽为0，则不允许分配公网IP。
 	// 注意：此字段可能返回 null，表示取不到有效值。
 	PublicIPAssigned *bool `json:"PublicIpAssigned,omitempty" name:"PublicIpAssigned"`
 
-	// 带宽包ID。可通过[DescribeBandwidthPackages](https://cloud.tencent.com/document/api/215/19209)接口返回值中的`BandwidthPackageId`获取。
+	// 带宽包ID。可通过[DescribeBandwidthPackages]
+	// (https://cloud.tencent.com/document/api/215/19209)接口返回值中的`BandwidthPackageId`获取。
 	// 注意：此字段可能返回 null，表示取不到有效值。
 	BandwidthPackageID *string `json:"BandwidthPackageId,omitempty" name:"BandwidthPackageId"`
 }
@@ -1620,7 +1643,8 @@ type ClusterEndpointInfo struct {
 
 // ZoneInfo zone info
 type ZoneInfo struct {
-	ZoneID   uint64
-	Zone     string
-	ZoneName string
+	ZoneID    string
+	Zone      string
+	ZoneName  string
+	ZoneState string
 }

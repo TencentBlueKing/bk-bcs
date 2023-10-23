@@ -113,7 +113,7 @@ func (m *BKMonitor) GetNodeInfo(ctx context.Context, projectID, clusterID, nodeN
 func (m *BKMonitor) GetNodeCPUTotal(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `sum(kube_node_status_allocatable_cpu_cores{cluster_id="%<clusterID>s", node="%<node>s", ` +
-		`%<provider>s})`
+		`%<provider>s})` // nolint
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
 }
@@ -122,7 +122,7 @@ func (m *BKMonitor) GetNodeCPUTotal(ctx context.Context, projectID, clusterID, n
 func (m *BKMonitor) GetNodeCPURequest(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `sum(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterID>s", node="%<node>s", ` +
-		`%<provider>s})`
+		`%<provider>s})` // nolint
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
 }
@@ -131,7 +131,7 @@ func (m *BKMonitor) GetNodeCPURequest(ctx context.Context, projectID, clusterID,
 func (m *BKMonitor) GetNodeCPUUsed(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `sum(irate(node_cpu_seconds_total{cluster_id="%<clusterID>s", mode!="idle", bk_instance=~"%<ip>s", ` +
-		`%<provider>s}[2m]))`
+		`%<provider>s}[2m]))` // nolint
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
 }

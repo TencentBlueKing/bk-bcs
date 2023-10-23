@@ -77,11 +77,22 @@ func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]string,
 	return files, nil
 }
 
+// IsExist 是否存在
+func (c *cosStorage) IsExist(ctx context.Context, filePath string) (bool, error) {
+	return c.client.Object.IsExist(ctx, filePath)
+}
+
 // ListFolders list current folder folders
 func (c *cosStorage) ListFolders(ctx context.Context, folderName string) ([]string, error) {
 	var marker string
 	folderName = strings.Trim(folderName, "/")
 	folderName += "/"
+
+	// cos 规范, 根目录需为空
+	if folderName == "/" {
+		folderName = ""
+	}
+
 	opt := &cos.BucketGetOptions{
 		Prefix:    folderName, // 表示要查询的文件夹
 		Delimiter: "/",        // 表示分隔符,设置为/表示列出当前目录下的 object, 设置为空表示列出所有的 object(包括子目录文件)
@@ -96,7 +107,8 @@ func (c *cosStorage) ListFolders(ctx context.Context, folderName string) ([]stri
 		if err != nil {
 			return folders, fmt.Errorf("list file failed: %v", err)
 		}
-		if len(v.Contents) == 0 {
+
+		if len(v.Contents) == 0 && len(v.CommonPrefixes) == 0 {
 			return folders, fmt.Errorf("folder %s is not exit", folderName)
 		}
 		// common prefix 表示表示被 delimiter 截断的路径, 如 delimter 设置为/, common prefix 则表示所有子目录的路径
@@ -120,13 +132,13 @@ func (c *cosStorage) DownloadFile(ctx context.Context, filePath string) (io.Read
 }
 
 func newCosStorage() (Provider, error) {
-	u := fmt.Sprintf("https://%s-%s", config.G.Repository.Cos.BucketName,
+	rawURL := fmt.Sprintf("https://%s.%s", config.G.Repository.Cos.BucketName,
 		config.G.Repository.Cos.Endpoint)
-	bu, err := url.Parse(u)
+	u, err := url.Parse(rawURL)
 	if err != nil {
 		return nil, err
 	}
-	bucketUrl := &cos.BaseURL{BucketURL: bu}
+	bucketUrl := &cos.BaseURL{BucketURL: u}
 	cli := cos.NewClient(bucketUrl, &http.Client{
 		Transport: &cos.AuthorizationTransport{
 			SecretID:  config.G.Repository.Cos.SecretID,

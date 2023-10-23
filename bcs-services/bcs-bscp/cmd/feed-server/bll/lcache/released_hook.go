@@ -50,6 +50,7 @@ func newReleasedHook(mc *metric, cs *clientset.ClientSet) *ReleasedHook {
 
 const (
 	// maxReleasedHookSize defines the max size of the released hook's cache.
+	//nolint:unused
 	maxReleasedHookSize = 1024 * 1024 // 1MB
 )
 
@@ -117,24 +118,24 @@ func (r *ReleasedHook) Get(kt *kit.Kit, bizID uint32, releaseID uint32) (
 	return hooks.PreHook, hooks.PostHook, nil
 }
 
-func (ci *ReleasedHook) evictRecorder(key interface{}, _ interface{}) {
+func (r *ReleasedHook) evictRecorder(key interface{}, _ interface{}) {
 	releaseID, yes := key.(uint32)
 	if !yes {
 		return
 	}
 
-	ci.mc.evictCounter.With(prm.Labels{"resource": "released_hook"}).Inc()
+	r.mc.evictCounter.With(prm.Labels{"resource": "released_hook"}).Inc()
 
 	if logs.V(2) {
 		logs.Infof("evict released hook cache, release: %d", releaseID)
 	}
 }
 
-func (ci *ReleasedHook) collectHitRate() {
+func (r *ReleasedHook) collectHitRate() {
 	go func() {
 		for {
 			time.Sleep(5 * time.Second)
-			ci.mc.hitRate.With(prm.Labels{"resource": "released_hook"}).Set(ci.client.HitRate())
+			r.mc.hitRate.With(prm.Labels{"resource": "released_hook"}).Set(r.client.HitRate())
 		}
 	}()
 }

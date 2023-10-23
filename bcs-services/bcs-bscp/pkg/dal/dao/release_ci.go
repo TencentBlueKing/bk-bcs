@@ -94,7 +94,8 @@ func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items 
 }
 
 // Get released config item.
-func (dao *releasedCIDao) Get(kit *kit.Kit, bizID, appID, releaseID, configItemID uint32) (*table.ReleasedConfigItem, error) {
+func (dao *releasedCIDao) Get(kit *kit.Kit, bizID, appID, releaseID, configItemID uint32) (*table.ReleasedConfigItem,
+	error) {
 	m := dao.genQ.ReleasedConfigItem
 	return m.WithContext(kit.Ctx).Where(
 		m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID), m.ConfigItemID.Eq(configItemID)).Take()

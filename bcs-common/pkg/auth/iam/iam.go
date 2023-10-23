@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package iam xxx
@@ -198,7 +197,7 @@ type BkUser struct {
 	BkUserName string
 }
 
-func (ic *iamClient) generateGateWayAuth(bkUserName string) (string, error) {
+func (ic *iamClient) generateGateWayAuth(bkUserName string) (string, error) { // nolint
 	if ic == nil {
 		return "", ErrServerNotInit
 	}
