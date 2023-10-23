@@ -17,9 +17,9 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/gin-gonic/gin"
-	"k8s.io/klog/v2"
 
 	consoleAudit "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
@@ -128,7 +128,7 @@ func addAudit(c *gin.Context, startTime, endTime time.Time, data *types.APIRespo
 	err := consoleAudit.GetAuditClient().R().
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 	if err != nil {
-		klog.Errorf("audit recorder err: %v", err)
+		blog.Errorf("audit recorder err: %v", err)
 	}
 }
 

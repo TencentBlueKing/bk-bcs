@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/repository"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
@@ -71,12 +72,12 @@ func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 	folderName := c.Param("folder")
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
+		rest.APIError(c, fmt.Sprintf("Init storage err: %v\n", err))
 		return
 	}
 	fileNames, err := storage.ListFile(c, folderName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("List storage files err: %v\n", err))
+		rest.APIError(c, fmt.Sprintf("List storage files err: %v\n", err))
 		return
 	}
 	data := gin.H{
@@ -91,12 +92,12 @@ func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 func (s *service) ReplayFoldersPageHandler(c *gin.Context) {
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v", err))
+		rest.APIError(c, fmt.Sprintf("Init storage err: %v", err))
 		return
 	}
 	folderNames, err := storage.ListFolders(c, "")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("List storage folder err: %v", err))
+		rest.APIError(c, fmt.Sprintf("List storage folder err: %v", err))
 		return
 	}
 	data := gin.H{
@@ -126,12 +127,12 @@ func (s *service) PlayHandler(c *gin.Context) {
 	filePath := path.Join(folder, file)
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
+		rest.APIError(c, fmt.Sprintf("Init storage err: %v\n", err))
 		return
 	}
 	resp, err := storage.DownloadFile(c, filePath)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("Download storage file err: %v\n", err))
+		rest.APIError(c, fmt.Sprintf("Download storage file err: %v\n", err))
 		return
 	}
 
