@@ -14,7 +14,10 @@ package dao
 
 import (
 	"errors"
+	"fmt"
 	"time"
+
+	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
@@ -59,12 +62,18 @@ func (dao *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, erro
 
 	// 手动事务处理
 	tx := dao.genQ.Begin()
+	if err := dao.validatePublishGroups(kit, tx, opt); err != nil {
+		if e := tx.Rollback(); e != nil {
+			logs.Errorf("rollback publish transaction failed, err: %v, rid: %s", e, kit.Rid)
+		}
+		return 0, err
+	}
 	stgID, err := func() (uint32, error) {
 		groups := make([]*table.Group, 0, len(opt.Groups))
 		var err error
 		if len(opt.Groups) > 0 {
-			m := dao.genQ.Group
-			q := dao.genQ.Group.WithContext(kit.Ctx)
+			m := tx.Group
+			q := tx.Group.WithContext(kit.Ctx)
 			groups, err = q.Where(m.ID.In(opt.Groups...), m.BizID.Eq(opt.BizID)).Find()
 			if err != nil {
 				logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",
@@ -77,7 +86,6 @@ func (dao *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, erro
 	if err != nil {
 		if e := tx.Rollback(); e != nil {
 			logs.Errorf("rollback publish transaction failed, err: %v, rid: %s", e, kit.Rid)
-			return 0, e
 		}
 		return 0, err
 	}
@@ -87,6 +95,37 @@ func (dao *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, erro
 	}
 
 	return stgID, nil
+}
+
+func (dao *pubDao) validatePublishGroups(kt *kit.Kit, tx *gen.QueryTx, opt *types.PublishOption) error {
+	for _, groupID := range opt.Groups {
+		// frontend would set groupID 0 as default.
+		if groupID == 0 {
+			opt.Default = true
+			continue
+		}
+		gm := tx.Group
+		group, e := gm.WithContext(kt.Ctx).Where(gm.ID.Eq(groupID), gm.BizID.Eq(opt.BizID)).Take()
+		if e != nil {
+			if e == gorm.ErrRecordNotFound {
+				return fmt.Errorf("group %d not exists", groupID)
+			}
+			return e
+		}
+		if group.Spec.Public {
+			continue
+		}
+
+		gam := tx.GroupAppBind
+		if _, e := gam.WithContext(kt.Ctx).Where(
+			gam.GroupID.Eq(groupID), gam.AppID.Eq(opt.AppID), gam.BizID.Eq(opt.BizID)).Take(); e != nil {
+			if e == gorm.ErrRecordNotFound {
+				return fmt.Errorf("group %d not bind app %d", groupID, opt.AppID)
+			}
+			return e
+		}
+	}
+	return nil
 }
 
 func genStrategy(kit *kit.Kit, opt *types.PublishOption, stgID uint32, groups []*table.Group) *table.Strategy {
@@ -127,11 +166,18 @@ func (dao *pubDao) PublishWithTx(kit *kit.Kit, tx *gen.QueryTx, opt *types.Publi
 		return 0, err
 	}
 
+	if err := dao.validatePublishGroups(kit, tx, opt); err != nil {
+		if e := tx.Rollback(); e != nil {
+			logs.Errorf("rollback publish transaction failed, err: %v, rid: %s", e, kit.Rid)
+		}
+		return 0, err
+	}
+
 	groups := make([]*table.Group, 0, len(opt.Groups))
 	var err error
 	if len(opt.Groups) > 0 {
-		m := dao.genQ.Group
-		q := dao.genQ.Group.WithContext(kit.Ctx)
+		m := tx.Group
+		q := tx.Group.WithContext(kit.Ctx)
 		groups, err = q.Where(m.ID.In(opt.Groups...), m.BizID.Eq(opt.BizID)).Find()
 		if err != nil {
 			logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",

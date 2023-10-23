@@ -38,13 +38,15 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 	}
 
 	r := &pbds.PublishReq{
-		BizId:     req.BizId,
-		AppId:     req.AppId,
-		ReleaseId: req.ReleaseId,
-		Memo:      req.Memo,
-		All:       req.All,
-		Default:   req.Default,
-		Groups:    req.Groups,
+		BizId:           req.BizId,
+		AppId:           req.AppId,
+		ReleaseId:       req.ReleaseId,
+		Memo:            req.Memo,
+		All:             req.All,
+		GrayPublishMode: req.GrayPublishMode,
+		Default:         req.Default,
+		Groups:          req.Groups,
+		Labels:          req.Labels,
 	}
 	rp, err := s.client.DS.Publish(grpcKit.RpcCtx(), r)
 	if err != nil {
@@ -75,13 +77,15 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbcs.Gener
 	}
 
 	r := &pbds.GenerateReleaseAndPublishReq{
-		BizId:       req.BizId,
-		AppId:       req.AppId,
-		ReleaseName: req.ReleaseName,
-		ReleaseMemo: req.ReleaseMemo,
-		All:         req.All,
-		Groups:      req.Groups,
-		Variables:   req.Variables,
+		BizId:           req.BizId,
+		AppId:           req.AppId,
+		ReleaseName:     req.ReleaseName,
+		ReleaseMemo:     req.ReleaseMemo,
+		Variables:       req.Variables,
+		All:             req.All,
+		GrayPublishMode: req.GrayPublishMode,
+		Groups:          req.Groups,
+		Labels:          req.Labels,
 	}
 	rp, err := s.client.DS.GenerateReleaseAndPublish(grpcKit.RpcCtx(), r)
 	if err != nil {
