@@ -232,7 +232,7 @@ const handleDeleteService = async () => {
     display: flex;
     align-items: end;
     .config-info {
-      width: 80px;
+      width: 85px;
     }
     .time-info {
       padding-left: 10px;

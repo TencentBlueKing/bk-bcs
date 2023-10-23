@@ -9,7 +9,7 @@
           class="view-diff-checkbox"
           @change="handleSearch"
         >
-          只查看差异项({{ diffCount }})
+          只查看差异文件({{ diffCount }})
         </bk-checkbox>
         <div :class="['search-trigger', { actived: isOpenSearch }]" @click="isOpenSearch = !isOpenSearch">
           <Search />

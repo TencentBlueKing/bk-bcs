@@ -61,10 +61,12 @@
             <template #default="{ row, index }">
               <span v-if="index === 0 && isCreateCredential" style="color: #c4c6cc">待确认</span>
               <div v-if="row.spec" class="credential-text">
-                <div class="text">{{ row.visible ? row.spec.enc_credential : '********************************' }}</div>
+                <div class="text">
+                  <bk-overflow-title>{{ row.visible ? row.spec.enc_credential : '************' }}</bk-overflow-title>
+                </div>
                 <div class="actions">
-                  <Eye v-if="!row.visible" class="view-icon" @click="row.visible = true" />
-                  <Unvisible v-else class="view-icon" @click="row.visible = false" />
+                  <Eye v-if="row.visible" class="view-icon" @click="row.visible = false" />
+                  <Unvisible v-else class="view-icon" @click="row.visible = true" />
                   <Copy class="copy-icon" @click="handleCopyText(row.spec.enc_credential)" />
                 </div>
               </div>
