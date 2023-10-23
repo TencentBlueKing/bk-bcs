@@ -52,6 +52,7 @@
                 v-if="index === 0 && isCreateCredential"
                 placeholder="密钥名称支持中英文"
                 v-model="createCredentialName"
+                @blur="testCreateCredentialName"
               ></bk-input>
               <span v-if="row.spec">{{ row.spec.name }}</span>
             </template>
@@ -346,8 +347,13 @@ const getCredentialName = async () => {
 // 创建密钥
 const handleCreateCredential = async () => {
   if (!checkPermBeforeOperate() || !createCredentialName.value) {
+    BkMessage({
+      theme: 'error',
+      message: '请输入密钥名称',
+    });
     return;
   }
+  await testCreateCredentialName();
   try {
     createPending.value = true;
     const params = { memo: createCredentialMemo.value, name: createCredentialName.value };
@@ -507,6 +513,18 @@ const clearSearchStr = () => {
   refreshListWithLoading();
 };
 
+// 校验新建密钥名称
+const testCreateCredentialName = () => {
+  if (!createCredentialName.value) return;
+  const regex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-]*[\u4e00-\u9fa5a-zA-Z0-9]$/;
+  if (!regex.test(createCredentialName.value)) {
+    BkMessage({
+      theme: 'error',
+      message: `无效名称：${createCredentialName.value}，只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾。`,
+    });
+    return Promise.reject();
+  }
+};
 const goToIAM = () => {
   window.open(`${(window as any).BK_IAM_HOST}/apply-join-user-group`, '__blank');
 };
