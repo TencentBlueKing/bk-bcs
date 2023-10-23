@@ -72,12 +72,12 @@ func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 	folderName := c.Param("folder")
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
-		rest.AbortWithBadRequestError(c, fmt.Sprintf("Init storage err: %v\n", err))
+		rest.APIError(c, fmt.Sprintf("Init storage err: %v\n", err))
 		return
 	}
 	fileNames, err := storage.ListFile(c, folderName)
 	if err != nil {
-		rest.AbortWithBadRequestError(c, fmt.Sprintf("List storage files err: %v\n", err))
+		rest.APIError(c, fmt.Sprintf("List storage files err: %v\n", err))
 		return
 	}
 	data := gin.H{
@@ -92,12 +92,12 @@ func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 func (s *service) ReplayFoldersPageHandler(c *gin.Context) {
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
-		rest.AbortWithBadRequestError(c, fmt.Sprintf("Init storage err: %v", err))
+		rest.APIError(c, fmt.Sprintf("Init storage err: %v", err))
 		return
 	}
 	folderNames, err := storage.ListFolders(c, "")
 	if err != nil {
-		rest.AbortWithBadRequestError(c, fmt.Sprintf("List storage folder err: %v", err))
+		rest.APIError(c, fmt.Sprintf("List storage folder err: %v", err))
 		return
 	}
 	data := gin.H{
@@ -127,12 +127,12 @@ func (s *service) PlayHandler(c *gin.Context) {
 	filePath := path.Join(folder, file)
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
-		rest.AbortWithBadRequestError(c, fmt.Sprintf("Init storage err: %v\n", err))
+		rest.APIError(c, fmt.Sprintf("Init storage err: %v\n", err))
 		return
 	}
 	resp, err := storage.DownloadFile(c, filePath)
 	if err != nil {
-		rest.AbortWithBadRequestError(c, fmt.Sprintf("Download storage file err: %v\n", err))
+		rest.APIError(c, fmt.Sprintf("Download storage file err: %v\n", err))
 		return
 	}
 

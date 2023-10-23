@@ -30,15 +30,15 @@ type Result struct {
 	Data      interface{} `json:"data"`
 }
 
-// AbortWithBadRequestError 错误返回，兼容国际化
-func AbortWithBadRequestError(c *gin.Context, err string) {
+// APIError 错误返回，兼容国际化
+func APIError(c *gin.Context, err string) {
 	requestId := route.MustGetAuthContext(c).RequestId
 	result := Result{Code: types.ApiErrorCode, Message: err, RequestId: requestId}
 	c.AbortWithStatusJSON(http.StatusBadRequest, result)
 }
 
-// AbortWithRequestSuccess 正常返回
-func AbortWithRequestSuccess(c *gin.Context, message string, data interface{}) {
+// APIOK 正常返回
+func APIOK(c *gin.Context, message string, data interface{}) {
 	requestId := route.MustGetAuthContext(c).RequestId
 	result := Result{Code: types.NoError, Message: message, RequestId: requestId, Data: data}
 	c.AbortWithStatusJSON(http.StatusOK, result)
