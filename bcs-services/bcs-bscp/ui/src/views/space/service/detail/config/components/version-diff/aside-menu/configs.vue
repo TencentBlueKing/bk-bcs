@@ -81,6 +81,7 @@ import { getReleasedAppVariables } from '../../../../../../../../api/variable';
 import { byteUnitConverse } from '../../../../../../../../utils';
 import SearchInput from '../../../../../../../../components/search-input.vue';
 import tableEmpty from '../../../../../../../../components/table/table-empty.vue';
+import config from '../../../../../../../../store/config';
 
 interface IConfigMenuItem {
   type: string;
@@ -166,6 +167,7 @@ watch(
     aggregatedList.value = calcDiff();
     groupedConfigListOnShow.value = aggregatedList.value.slice();
     setDefaultSelected();
+    isOnlyShowDiff.value && handleSearch();
   }
 );
 
@@ -179,6 +181,34 @@ watch(
   },
   {
     immediate: true,
+  }
+);
+
+watch(
+  () => isOnlyShowDiff.value,
+  (val: boolean) => {
+    let hasSelectConfig = false;
+    groupedConfigListOnShow.value.forEach((group) => {
+      group.configs.forEach((config) => {
+        if (config.id === selected.value.id) {
+          console.log('config', config);
+          hasSelectConfig = true;
+          handleSelectItem({
+            pkgId: group.id,
+            id: config.id,
+            version: config.template_revision_id,
+            permission: config.permission,
+          });
+        }
+      });
+    });
+    if (!hasSelectConfig) {
+      emits('selected', {
+        contentType: 'text',
+        base: { content: '', variables: '' },
+        current: { content: '', variables: '' },
+      });
+    }
   }
 );
 

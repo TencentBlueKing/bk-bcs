@@ -8,7 +8,7 @@
             <bk-input v-model="formData.name" @change="formChange" />
           </bk-form-item>
           <bk-form-item label="版本描述" property="memo">
-            <bk-input v-model="formData.memo" type="textarea" :maxlength="100" @change="formChange" :resize="false"/>
+            <bk-input v-model="formData.memo" type="textarea" :maxlength="100" @change="formChange" :resize="false" />
           </bk-form-item>
           <bk-checkbox v-model="isPublish" :true-label="true" :false-label="false" @change="formChange">
             同时上线版本
@@ -22,7 +22,7 @@
       </div>
     </div>
     <div class="action-btns">
-      <bk-button theme="primary" @click="handleOpenDiff">预览</bk-button>
+      <bk-button theme="primary" @click="confirm">确定</bk-button>
       <bk-button @click="close">取消</bk-button>
     </div>
   </bk-sideslider>
@@ -90,7 +90,7 @@ watch(
       isPublish.value = false;
       getVariableList();
     }
-  },
+  }
 );
 
 const getVariableList = async () => {
