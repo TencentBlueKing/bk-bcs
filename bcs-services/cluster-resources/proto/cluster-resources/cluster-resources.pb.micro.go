@@ -3759,6 +3759,12 @@ func NewCustomResEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "CustomRes.GetCObjRevisionDiff",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/revisions/{revision}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "CustomRes.RestartCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/restart"},
 			Method:  []string{"PUT"},
@@ -3811,6 +3817,7 @@ type CustomResService interface {
 	ListCObj(ctx context.Context, in *CObjListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetCObj(ctx context.Context, in *CObjGetReq, opts ...client.CallOption) (*CommonResp, error)
 	GetCObjHistoryRevision(ctx context.Context, in *CObjHistoryReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetCObjRevisionDiff(ctx context.Context, in *CObjRolloutReq, opts ...client.CallOption) (*CommonResp, error)
 	RestartCObj(ctx context.Context, in *CObjRestartReq, opts ...client.CallOption) (*CommonResp, error)
 	RolloutCObj(ctx context.Context, in *CObjRolloutReq, opts ...client.CallOption) (*CommonResp, error)
 	CreateCObj(ctx context.Context, in *CObjCreateReq, opts ...client.CallOption) (*CommonResp, error)
@@ -3875,6 +3882,16 @@ func (c *customResService) GetCObj(ctx context.Context, in *CObjGetReq, opts ...
 func (c *customResService) GetCObjHistoryRevision(ctx context.Context, in *CObjHistoryReq, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "CustomRes.GetCObjHistoryRevision", in)
 	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) GetCObjRevisionDiff(ctx context.Context, in *CObjRolloutReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.GetCObjRevisionDiff", in)
+	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -3960,6 +3977,7 @@ type CustomResHandler interface {
 	ListCObj(context.Context, *CObjListReq, *CommonResp) error
 	GetCObj(context.Context, *CObjGetReq, *CommonResp) error
 	GetCObjHistoryRevision(context.Context, *CObjHistoryReq, *CommonListResp) error
+	GetCObjRevisionDiff(context.Context, *CObjRolloutReq, *CommonResp) error
 	RestartCObj(context.Context, *CObjRestartReq, *CommonResp) error
 	RolloutCObj(context.Context, *CObjRolloutReq, *CommonResp) error
 	CreateCObj(context.Context, *CObjCreateReq, *CommonResp) error
@@ -3976,6 +3994,7 @@ func RegisterCustomResHandler(s server.Server, hdlr CustomResHandler, opts ...se
 		ListCObj(ctx context.Context, in *CObjListReq, out *CommonResp) error
 		GetCObj(ctx context.Context, in *CObjGetReq, out *CommonResp) error
 		GetCObjHistoryRevision(ctx context.Context, in *CObjHistoryReq, out *CommonListResp) error
+		GetCObjRevisionDiff(ctx context.Context, in *CObjRolloutReq, out *CommonResp) error
 		RestartCObj(ctx context.Context, in *CObjRestartReq, out *CommonResp) error
 		RolloutCObj(ctx context.Context, in *CObjRolloutReq, out *CommonResp) error
 		CreateCObj(ctx context.Context, in *CObjCreateReq, out *CommonResp) error
@@ -4015,6 +4034,12 @@ func RegisterCustomResHandler(s server.Server, hdlr CustomResHandler, opts ...se
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "CustomRes.GetCObjHistoryRevision",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/history"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.GetCObjRevisionDiff",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/revisions/{revision}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -4085,6 +4110,10 @@ func (h *customResHandler) GetCObj(ctx context.Context, in *CObjGetReq, out *Com
 
 func (h *customResHandler) GetCObjHistoryRevision(ctx context.Context, in *CObjHistoryReq, out *CommonListResp) error {
 	return h.CustomResHandler.GetCObjHistoryRevision(ctx, in, out)
+}
+
+func (h *customResHandler) GetCObjRevisionDiff(ctx context.Context, in *CObjRolloutReq, out *CommonResp) error {
+	return h.CustomResHandler.GetCObjRevisionDiff(ctx, in, out)
 }
 
 func (h *customResHandler) RestartCObj(ctx context.Context, in *CObjRestartReq, out *CommonResp) error {

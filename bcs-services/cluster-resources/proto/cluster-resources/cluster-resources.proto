@@ -1297,6 +1297,16 @@ service CustomRes {
 		};
 	}
 
+	rpc GetCObjRevisionDiff(CObjRolloutReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/revisions/{revision}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 自定义资源 Revision diff"
+			summary: "GetCObjRevisionDiff API"
+		};
+	}
+
 	rpc RestartCObj(CObjRestartReq) returns (CommonResp) {
 		option (google.api.http) = {
 			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/restart"

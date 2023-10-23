@@ -189,6 +189,52 @@ func (c *CRDClient) HistoryRevision(ctx context.Context, kind, namespace, name s
 	return m, err
 }
 
+// GetResRevisionDiff 获取 workload revision差异信息
+func (c *CRDClient) GetResRevisionDiff(
+	ctx context.Context, kind, namespace, name string, revision int64) (m map[string]interface{}, err error) {
+
+	// permValidate IAM 权限校验
+	if err = c.permValidate(ctx, action.View, namespace); err != nil {
+		return nil, err
+	}
+
+	// 初始化
+	m = map[string]interface{}{}
+
+	clientSet, err := kubernetes.NewForConfig(c.conf.Rest)
+	if err != nil {
+		return m, err
+	}
+
+	gameClientSet, err := versioned.NewForConfig(c.conf.Rest)
+	if err != nil {
+		return m, err
+	}
+
+	// 通过Group创建HistoryViewer
+	historyViewer, err := CustomHistoryViewerFor(
+		schema.GroupKind{Group: c.res.Group, Kind: kind}, clientSet, gameClientSet)
+	if err != nil {
+		return m, err
+	}
+
+	// 以string的方法返回revision相关信息
+	rolloutHistory, err := historyViewer.ViewHistory(namespace, name, revision)
+	if err != nil {
+		return m, err
+	}
+
+	currentHistory, err := historyViewer.ViewHistory(namespace, name, 0)
+	if err != nil {
+		return m, err
+	}
+
+	// key为revision，值为template，string格式
+	m[resCsts.RolloutRevision] = rolloutHistory
+	m[resCsts.CurrentRevision] = currentHistory
+	return m, err
+}
+
 // RolloutRevision 自定义资源回滚history revision
 func (c *CRDClient) RolloutRevision(ctx context.Context, namespace, name, kind string, revision int64) error {
 	// permValidate IAM 权限校验

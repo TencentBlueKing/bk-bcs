@@ -246,6 +246,35 @@ func (h *Handler) GetCObjHistoryRevision(ctx context.Context, req *clusterRes.CO
 	return nil
 }
 
+// GetCObjRevisionDiff 获取自定义资源 revision差异信息
+func (h *Handler) GetCObjRevisionDiff(ctx context.Context, req *clusterRes.CObjRolloutReq,
+	resp *clusterRes.CommonResp) error {
+
+	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
+	if err != nil {
+		return err
+	}
+	if err = validateNSParam(ctx, crdInfo, req.Namespace); err != nil {
+		return err
+	}
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+		return err
+	}
+	kind := crdInfo["kind"].(string)
+
+	ret, err := cli.NewCRDCliByClusterID(ctx, req.ClusterID).GetResRevisionDiff(ctx, kind,
+		req.Namespace, req.CobjName, req.Revision)
+	if err != nil {
+		return err
+	}
+
+	resp.Data, err = pbstruct.Map2pbStruct(ret)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // RestartCObj 重新调度单个自定义资源
 func (h *Handler) RestartCObj(ctx context.Context, req *clusterRes.CObjRestartReq, resp *clusterRes.CommonResp) error {
 	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
