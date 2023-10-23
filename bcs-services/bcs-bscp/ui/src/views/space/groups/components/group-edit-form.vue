@@ -13,7 +13,6 @@
         v-model="formData.bind_apps"
         class="service-selector"
         multiple
-        filterable
         placeholder="请选择服务"
         @change="change"
       >
@@ -137,7 +136,7 @@ watch(
   () => props.group,
   (val) => {
     formData.value = cloneDeep(val);
-  },
+  }
 );
 
 onMounted(() => {

@@ -4,7 +4,8 @@
     title="新增配置文件"
     :is-show="props.show"
     :before-close="handleBeforeClose"
-    @closed="close">
+    @closed="close"
+  >
     <ConfigForm
       ref="formRef"
       class="config-form-wrapper"
@@ -14,7 +15,8 @@
       :editable="true"
       :bk-biz-id="props.bkBizId"
       :id="props.appId"
-      @change="handleFormChange"/>
+      @change="handleFormChange"
+    />
     <section class="action-btns">
       <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">保存</bk-button>
       <bk-button @click="close">取消</bk-button>
@@ -31,29 +33,33 @@ import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-m
 import ConfigForm from '../config-form.vue';
 
 const props = defineProps<{
-    show: boolean;
-    bkBizId: string;
-    appId: number;
-  }>();
+  show: boolean;
+  bkBizId: string;
+  appId: number;
+}>();
 
 const emits = defineEmits(['update:show', 'confirm']);
 
 const configForm = ref<IConfigEditParams>(getConfigEditParams());
 const fileUploading = ref(false);
 const pending = ref(false);
-const content = ref<IFileConfigContentSummary|string>('');
+const content = ref<IFileConfigContentSummary | string>('');
 const formRef = ref();
 const isFormChange = ref(false);
 
-watch(() => props.show, (val) => {
-  console.log(val);
-  if (val) {
-    configForm.value = getConfigEditParams();
-    isFormChange.value = false;
+watch(
+  () => props.show,
+  (val) => {
+    console.log(val);
+    if (val) {
+      configForm.value = getConfigEditParams();
+      content.value = '';
+      isFormChange.value = false;
+    }
   }
-});
+);
 
-const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary|string) => {
+const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary | string) => {
   configForm.value = data;
   content.value = configContent;
   isFormChange.value = true;
@@ -100,20 +106,19 @@ const handleSubmit = async () => {
 const close = () => {
   emits('update:show', false);
 };
-
 </script>
 <style lang="scss" scoped>
-  .config-form-wrapper {
-    padding: 20px 40px;
-    height: calc(100vh - 101px);
-    overflow: auto;
+.config-form-wrapper {
+  padding: 20px 40px;
+  height: calc(100vh - 101px);
+  overflow: auto;
+}
+.action-btns {
+  border-top: 1px solid #dcdee5;
+  padding: 8px 24px;
+  .bk-button {
+    margin-right: 8px;
+    min-width: 88px;
   }
-  .action-btns {
-    border-top: 1px solid #dcdee5;
-    padding: 8px 24px;
-    .bk-button {
-      margin-right: 8px;
-      min-width: 88px;
-    }
-  }
+}
 </style>

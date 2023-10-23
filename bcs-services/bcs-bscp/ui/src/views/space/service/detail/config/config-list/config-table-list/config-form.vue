@@ -29,7 +29,13 @@
     <div class="user-settings">
       <bk-form-item label="文件权限" property="privilege" required>
         <div class="perm-input">
-          <bk-popover theme="light" trigger="manual" placement="top" :is-show="showPrivilegeErrorTips">
+          <bk-popover
+            ext-cls="privilege-tips-wrap"
+            theme="light"
+            trigger="manual"
+            placement="top"
+            :is-show="showPrivilegeErrorTips"
+          >
             <bk-input
               v-model="privilegeInputVal"
               type="number"
@@ -386,6 +392,7 @@ defineExpose({
     }
   }
 }
+
 .privilege-tips-btn-area {
   margin-top: 8px;
   text-align: right;
@@ -467,5 +474,8 @@ defineExpose({
 <style lang="scss">
 .privilege-select-popover.bk-popover {
   padding: 0;
+}
+.privilege-tips-wrap {
+  border: 1px solid #dcdee5;
 }
 </style>

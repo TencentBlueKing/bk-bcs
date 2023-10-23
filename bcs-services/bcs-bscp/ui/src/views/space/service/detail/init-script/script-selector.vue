@@ -24,10 +24,12 @@
     </bk-option>
     <template #extension>
       <div class="selector-extension" @click="goToScriptList">
-        <i class="bk-bscp-icon icon-setting"></i>
-        <span>脚本管理</span>
-        <div class="refresh-area">
-          <RightTurnLine class="refresh-icon" @click.stop="emits('refresh')" />
+        <div class="selector-script">
+          <i class="bk-bscp-icon icon-setting"></i>
+          <span>脚本管理</span>
+        </div>
+        <div class="refresh-area" @click.stop="emits('refresh')">
+          <RightTurnLine class="refresh-icon" />
         </div>
       </div>
     </template>
@@ -67,39 +69,54 @@ const goToScriptList = () => {
 <style lang="scss" scoped>
 .selector-extension {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 100%;
   height: 100%;
-  color: #63656e;
-  cursor: pointer;
-  &:hover {
-    color: #3a84ff;
-    .icon-setting {
+  .selector-script {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #63656e;
+    cursor: pointer;
+    &:hover {
       color: #3a84ff;
+      .icon-setting {
+        color: #3a84ff;
+      }
     }
   }
+
   .icon-setting {
     margin-right: 4px;
     color: #979ba5;
   }
   .refresh-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
-    top: 12px;
+    top: 0;
     right: 0;
-    height: 16px;
+    height: 100%;
     width: 48px;
     font-size: 12px;
-    border-left: 1px solid #dcdee5;
-    text-align: center;
-    vertical-align: middle;
+    cursor: pointer;
+    &:hover .refresh-icon {
+      color: #3a84ff;
+    }
+    &::before {
+      display: block;
+      content: '';
+      position: absolute;
+      left: 0;
+      width: 1px;
+      height: 16px;
+      background-color: #dcdee5;
+    }
     .refresh-icon {
       font-size: 16px;
       color: #979ba5;
-      &:hover {
-        color: #3a84ff;
-      }
     }
   }
 }
