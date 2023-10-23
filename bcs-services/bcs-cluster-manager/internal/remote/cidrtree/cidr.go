@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package cidrtree xxx
 package cidrtree
 
 import (
@@ -20,6 +21,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ErrNoEnoughFreeSubnet xxx
 var ErrNoEnoughFreeSubnet = errors.New("no enough free subnet")
 
 // Mananger define interface to manage cidr
@@ -40,10 +42,14 @@ func NewCidrManager(cidrBlock *net.IPNet, subnets []*net.IPNet) Mananger {
 }
 
 const (
+	// NODE_UNUSED unused
 	NODE_UNUSED byte = 0
-	NODE_USED   byte = 1
-	NODE_SPLIT  byte = 2
-	NODE_FULL   byte = 3
+	// NODE_USED use
+	NODE_USED byte = 1
+	// NODE_SPLIT split
+	NODE_SPLIT byte = 2
+	// NODE_FULL fill
+	NODE_FULL byte = 3 // nolint
 )
 
 type node struct {
