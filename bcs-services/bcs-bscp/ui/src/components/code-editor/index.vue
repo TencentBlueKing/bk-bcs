@@ -129,6 +129,8 @@ onMounted(() => {
       listener.dispose();
     }
   });
+  // 自动换行
+  editor.updateOptions({ wordWrap: 'on' });
 });
 
 // 添加错误行

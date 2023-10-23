@@ -3,7 +3,7 @@ import { IConfigEditParams, IConfigVersionQueryParams, ITemplateBoundByAppData }
 import { IVariableEditParams } from '../../types/variable';
 import { ICommonQuery } from '../../types/index';
 
-// 配置项版本下脚本配置接口可能会返回null，做数据兼容处理
+// 配置文件版本下脚本配置接口可能会返回null，做数据兼容处理
 export const getDefaultConfigScriptData = () => ({
   hook_id: 0,
   hook_name: '',
@@ -14,7 +14,7 @@ export const getDefaultConfigScriptData = () => ({
 });
 
 /**
- * 获取未命名版本的配置项列表
+ * 获取未命名版本的配置文件列表
  * @param biz_id 空间ID
  * @param app_id 应用ID
  * @param query 查询参数
@@ -25,7 +25,7 @@ export const getConfigList = (biz_id: string, app_id: number, query: ICommonQuer
   .then(res => res.data);
 
 /**
- * 获取已发布版本的非模板配置项列表
+ * 获取已发布版本的非模板配置文件列表
  * @param biz_id 空间ID
  * @param app_id 应用ID
  * @param release_id 版本ID
@@ -34,7 +34,7 @@ export const getConfigList = (biz_id: string, app_id: number, query: ICommonQuer
  */
 export const getReleasedConfigList = (biz_id: string, app_id: number, release_id: number, params: ICommonQuery) => http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/config_items`, { params }).then((res) => {
   res.data.details.forEach((item: any) => {
-    // 接口返回的config_item_id为实际的配置项id，id字段没有到，统一替换
+    // 接口返回的config_item_id为实际的配置文件id，id字段没有到，统一替换
     item.id = item.config_item_id;
   });
   return res.data;
@@ -69,7 +69,7 @@ export const updateServiceConfigItem = (id: number, app_id: number, biz_id: stri
 export const deleteServiceConfigItem = (id: number, bizId: string, appId: number) => http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
 
 /**
- * 获取未命名版本配置项详情
+ * 获取未命名版本配置文件详情
  * @param biz_id 空间ID
  * @param id 配置ID
  * @param appId 应用ID
@@ -78,11 +78,11 @@ export const deleteServiceConfigItem = (id: number, bizId: string, appId: number
 export const getConfigItemDetail = (biz_id: string, id: number, appId: number) => http.get(`/config/biz/${biz_id}/apps/${appId}/config_items/${id}`).then(resp => resp.data);
 
 /**
- * 获取已发布版本配置项详情
+ * 获取已发布版本配置文件详情
  * @param biz_id 空间ID
  * @param app_id 应用ID
  * @param release_id 版本ID
- * @param config_item_id 配置项ID
+ * @param config_item_id 配置文件ID
  * @returns
  */
 export const getReleasedConfigItemDetail = (
@@ -98,7 +98,7 @@ export const getReleasedConfigItemDetail = (
   });
 
 /**
- * 上传配置项内容
+ * 上传配置文件内容
  * @param bizId 业务ID
  * @param appId 应用ID
  * @param data 配置内容
@@ -117,7 +117,7 @@ export const updateConfigContent = (bizId: string, appId: number, data: string |
   .then(res => res.data);
 
 /**
- * 下载配置项内容
+ * 下载配置文件内容
  * @param bizId 业务ID
  * @param appId 模板空间ID
  * @param signature sha256签名
@@ -213,7 +213,7 @@ export const updateConfigInitScript = (
 ) => http.put(`/config/biz/${bizId}/apps/${appId}/config_hooks`, params);
 
 /**
- * 检测导入模板与已存在配置项的冲突详情
+ * 检测导入模板与已存在配置文件的冲突详情
  * @param bizId 业务ID
  * @param appId 应用ID
  * @returns
@@ -236,7 +236,7 @@ export const checkAppTemplateBinding = (
 });
 
 /**
- * 新建模板配置项和服务绑定关系
+ * 新建模板配置文件和服务绑定关系
  * @param bizId 业务ID
  * @param appId 应用ID
  * @param params 查询参数
@@ -249,7 +249,7 @@ export const importTemplateConfigPkgs = (
 ) => http.post(`/config/biz/${bizId}/apps/${appId}/template_bindings`, params);
 
 /**
- * 更新模板配置项和服务绑定关系
+ * 更新模板配置文件和服务绑定关系
  * @param bizId 业务ID
  * @param appId 应用ID
  * @param bindingId 模板和服务绑定关系ID
@@ -264,7 +264,7 @@ export const updateTemplateConfigPkgs = (
 ) => http.put(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}`, params);
 
 /**
- * 获取服务下未命名版本绑定的模板配置项列表
+ * 获取服务下未命名版本绑定的模板配置文件列表
  * @param bizId 业务ID
  * @param appId 应用ID
  * @param query 查询参数
@@ -275,7 +275,7 @@ export const getBoundTemplates = (bizId: string, appId: number, query: ICommonQu
   .then(res => res.data);
 
 /**
- * 获取服务下已命名版本绑定的模板配置项列表
+ * 获取服务下已命名版本绑定的模板配置文件列表
  * @param bizId
  * @param appId
  * @param releaseId
@@ -287,7 +287,7 @@ export const getBoundTemplatesByAppVersion =
     .then(res => res.data);
 
 /**
- * 更新服务下模板配置项版本
+ * 更新服务下模板配置文件版本
  * @param bizId 业务ID
  * @param appId 应用ID
  * @param bindingId 模板和服务绑定关系ID

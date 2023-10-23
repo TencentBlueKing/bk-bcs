@@ -1,10 +1,5 @@
 <template>
-  <bk-sideslider
-    title="导入配置项"
-    :width="960"
-    :is-show="isShow"
-    :before-close="handleBeforeClose"
-    @closed="close">
+  <bk-sideslider title="导入配置文件" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="slider-content-container">
       <bk-form form-type="vertical">
         <bk-form-item label="上传配置包" required property="package">
@@ -16,7 +11,8 @@
             :size="100"
             :multiple="false"
             :files="fileList"
-            :custom-request="handleFileUpload">
+            :custom-request="handleFileUpload"
+          >
           </bk-upload>
         </bk-form-item>
       </bk-form>
@@ -32,8 +28,8 @@ import { ref, watch } from 'vue';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
 
 const props = defineProps<{
-    show: boolean;
-  }>();
+  show: boolean;
+}>();
 
 const emits = defineEmits(['update:show']);
 
@@ -42,10 +38,13 @@ const fileList = ref<File[]>([]);
 const isFormChange = ref(false);
 const pending = ref(false);
 
-watch(() => props.show, (val) => {
-  isShow.value = val;
-  isFormChange.value = false;
-});
+watch(
+  () => props.show,
+  (val) => {
+    isShow.value = val;
+    isFormChange.value = false;
+  }
+);
 
 const handleFileUpload = () => {};
 
@@ -60,19 +59,18 @@ const handleBeforeClose = async () => {
 const close = () => {
   emits('update:show', false);
 };
-
 </script>
 <style lang="scss" scoped>
-  .slider-content-container {
-    padding: 20px 40px;
-    height: calc(100vh - 101px);
+.slider-content-container {
+  padding: 20px 40px;
+  height: calc(100vh - 101px);
+}
+.action-btns {
+  border-top: 1px solid #dcdee5;
+  padding: 8px 24px;
+  .bk-button {
+    margin-right: 8px;
+    min-width: 88px;
   }
-  .action-btns {
-    border-top: 1px solid #dcdee5;
-    padding: 8px 24px;
-    .bk-button {
-      margin-right: 8px;
-      min-width: 88px;
-    }
-  }
+}
 </style>

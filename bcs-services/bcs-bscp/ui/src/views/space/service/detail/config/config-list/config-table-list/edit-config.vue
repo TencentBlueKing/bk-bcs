@@ -1,5 +1,11 @@
 <template>
-  <bk-sideslider width="640" title="编辑配置项" :is-show="props.show" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider
+    width="640"
+    title="编辑配置文件"
+    :is-show="props.show"
+    :before-close="handleBeforeClose"
+    @closed="close"
+  >
     <bk-loading :loading="configDetailLoading" class="config-loading-container">
       <ConfigForm
         v-if="!configDetailLoading"
@@ -70,10 +76,10 @@ watch(
       isFormChange.value = false;
       getConfigDetail();
     }
-  },
+  }
 );
 
-// 获取配置项详情配置及配置内容
+// 获取配置文件详情配置及配置内容
 const getConfigDetail = async () => {
   try {
     configDetailLoading.value = true;
@@ -141,7 +147,7 @@ const handleSubmit = async () => {
     close();
     Message({
       theme: 'success',
-      message: '编辑配置项成功',
+      message: '编辑配置文件成功',
     });
   } catch (e) {
     console.log(e);

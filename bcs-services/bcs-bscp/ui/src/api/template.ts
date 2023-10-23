@@ -95,7 +95,7 @@ export const getTemplatePackageList = (biz_id: string, template_space_id: string
 export const getAllPackagesGroupBySpace = (biz_id: string, params: { app_id?: number }) => http.get(`/config/biz/${biz_id}/template_sets/list_all_of_biz`, { params }).then(res => res.data);
 
 /**
- * 获取模板空间下的全部配置项模板列表
+ * 获取模板空间下的全部配置文件模板列表
  * @param biz_id 业务ID
  * @param template_space_id 模板空间ID
  * @returns
@@ -171,7 +171,7 @@ export const getReleasedVersionAppsBoundByPackage = (
   .then(res => res.data);
 
 /**
- * 获取模板套餐下的配置项模板列表
+ * 获取模板套餐下的配置文件模板列表
  * @param biz_id 业务ID
  * @param template_space_id 模板空间ID
  * @returns
@@ -191,7 +191,7 @@ export const getTemplatesByPackageId = (
  * 创建模板
  * @param biz_id 业务ID
  * @param template_space_id 空间ID
- * @param params 配置项参数
+ * @param params 配置文件参数
  * @returns
  */
 export const createTemplate = (biz_id: string, template_space_id: number, params: IConfigEditParams) => http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, params);

@@ -1,6 +1,6 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
-    <bk-form-item label="配置项名称" property="name" :required="true">
+    <bk-form-item label="配置文件名称" property="name" :required="true">
       <bk-input
         v-model="localVal.name"
         placeholder="请输入1~64个字符，只允许英文、数字、下划线、中划线或点"
@@ -8,7 +8,7 @@
         @change="change"
       />
     </bk-form-item>
-    <bk-form-item label="配置项路径" property="path" :required="true">
+    <bk-form-item label="配置文件路径" property="path" :required="true">
       <bk-input
         v-model="localVal.path"
         placeholder="请输入绝对路径，下载路径为前缀+配置路径"
@@ -16,10 +16,10 @@
         @change="change"
       />
     </bk-form-item>
-    <bk-form-item label="配置项描述" property="memo">
+    <bk-form-item label="配置文件描述" property="memo">
       <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change" :resize="false" />
     </bk-form-item>
-    <bk-form-item label="配置项格式">
+    <bk-form-item label="配置文件格式">
       <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">
         <bk-radio v-for="typeItem in CONFIG_FILE_TYPE" :key="typeItem.id" :label="typeItem.id" :disabled="!editable">{{
           typeItem.name
@@ -29,7 +29,13 @@
     <div class="user-settings">
       <bk-form-item label="文件权限" property="privilege" required>
         <div class="perm-input">
-          <bk-popover theme="light" trigger="manual" placement="top" :is-show="showPrivilegeErrorTips">
+          <bk-popover
+            ext-cls="privilege-tips-wrap"
+            theme="light"
+            trigger="manual"
+            placement="top"
+            :is-show="showPrivilegeErrorTips"
+          >
             <bk-input
               v-model="privilegeInputVal"
               type="number"
@@ -150,7 +156,7 @@ const props = withDefaults(
     bkBizId: string;
     id: number; // 服务ID或者模板空间ID
     fileUploading?: boolean;
-    isTpl?: boolean; // 是否未模板配置项，非模板配置项和模板配置项的上传、下载接口参数有差异
+    isTpl?: boolean; // 是否未模板配置文件，非模板配置文件和模板配置文件的上传、下载接口参数有差异
   }>(),
   {
     editable: true,
@@ -164,7 +170,7 @@ const privilegeInputVal = ref('');
 const showPrivilegeErrorTips = ref(false);
 const stringContent = ref('');
 const fileContent = ref<IFileConfigContentSummary | File>();
-const isFileChanged = ref(false); // 标识文件是否被修改，编辑配置项时若文件未修改，不重新上传文件
+const isFileChanged = ref(false); // 标识文件是否被修改，编辑配置文件时若文件未修改，不重新上传文件
 const uploadPending = ref(false);
 const formRef = ref();
 const rules = {
@@ -386,6 +392,7 @@ defineExpose({
     }
   }
 }
+
 .privilege-tips-btn-area {
   margin-top: 8px;
   text-align: right;
@@ -467,5 +474,8 @@ defineExpose({
 <style lang="scss">
 .privilege-select-popover.bk-popover {
   padding: 0;
+}
+.privilege-tips-wrap {
+  border: 1px solid #dcdee5;
 }
 </style>

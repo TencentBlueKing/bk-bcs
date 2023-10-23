@@ -38,7 +38,7 @@ export interface ITemplatePackageItem {
   }
 }
 
-// 模板套餐左侧菜单单条配置项
+// 模板套餐左侧菜单单条配置文件
 export interface IPackageMenuItem {
   id: number|string;
   name: string;
@@ -56,7 +56,7 @@ export interface ITemplatePackageEditParams {
   force?: boolean;
 }
 
-// 模板套餐下配置项列表单条数据
+// 模板套餐下配置文件列表单条数据
 export interface ITemplateConfigItem {
   id: number;
   spec: {

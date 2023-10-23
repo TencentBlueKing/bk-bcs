@@ -15,11 +15,11 @@
                   :indeterminate="isIndeterminate"
                   @change="handleAllSelectionChange"
                 />
-                <div class="name-text">配置项名称</div>
+                <div class="name-text">配置文件名称</div>
               </div>
             </th>
-            <th class="th-cell path">配置项路径</th>
-            <th class="th-cell memo">配置项描述</th>
+            <th class="th-cell path">配置文件路径</th>
+            <th class="th-cell memo">配置文件描述</th>
           </tr>
         </thead>
         <tbody>
@@ -46,7 +46,7 @@
           </tr>
           <tr v-if="props.configList.length === 0">
             <td class="td-cell" :colspan="3">
-              <bk-exception class="empty-tips" type="empty" scene="part">暂无配置项</bk-exception>
+              <bk-exception class="empty-tips" type="empty" scene="part">暂无配置文件</bk-exception>
             </td>
           </tr>
         </tbody>
@@ -69,7 +69,7 @@ const props = defineProps<{
 const emits = defineEmits(['toggleOpen', 'update:selectedConfigs', 'change']);
 
 const isAllSelected = computed(() => {
-  const res = props.configList.length > 0 && props.configList.every(item => isConfigSelected(item.id));
+  const res = props.configList.length > 0 && props.configList.every((item) => isConfigSelected(item.id));
   return res;
 });
 
@@ -78,20 +78,20 @@ const isIndeterminate = computed(() => {
   return res;
 });
 
-const isConfigSelected = (id: number) => props.selectedConfigs.findIndex(item => item.id === id) > -1;
+const isConfigSelected = (id: number) => props.selectedConfigs.findIndex((item) => item.id === id) > -1;
 
 const handleAllSelectionChange = (checked: boolean) => {
   const configs = props.selectedConfigs.slice();
   if (checked) {
     props.configList.forEach((config) => {
-      if (!configs.find(item => item.id === config.id)) {
+      if (!configs.find((item) => item.id === config.id)) {
         const { id, spec } = config;
         configs.push({ id, name: spec.name });
       }
     });
   } else {
     props.configList.forEach((config) => {
-      const index = configs.findIndex(item => item.id === config.id);
+      const index = configs.findIndex((item) => item.id === config.id);
       if (index > -1) {
         configs.splice(index, 1);
       }
@@ -104,12 +104,12 @@ const handleAllSelectionChange = (checked: boolean) => {
 const handleConfigSelectionChange = (checked: boolean, config: ITemplateConfigItem) => {
   const configs = props.selectedConfigs.slice();
   if (checked) {
-    if (!configs.find(item => item.id === config.id)) {
+    if (!configs.find((item) => item.id === config.id)) {
       const { id, spec } = config;
       configs.push({ id, name: spec.name });
     }
   } else {
-    const index = configs.findIndex(item => item.id === config.id);
+    const index = configs.findIndex((item) => item.id === config.id);
     if (index > -1) {
       configs.splice(index, 1);
     }

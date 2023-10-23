@@ -166,6 +166,9 @@ const getScripts = async () => {
   }
   const res = await getScriptList(spaceId.value, params);
   scriptsData.value = res.details;
+  scriptsData.value.forEach((item) => {
+    item.hook.spec.type = item.hook.spec.type.charAt(0).toUpperCase() + item.hook.spec.type.slice(1);
+  });
   pagination.value.count = res.count;
   scriptsLoading.value = false;
 };

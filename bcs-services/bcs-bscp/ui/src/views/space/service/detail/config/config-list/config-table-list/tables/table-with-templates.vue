@@ -3,7 +3,7 @@
     <table class="config-groups-table">
       <thead>
         <tr class="config-groups-table-tr">
-          <th class="name">配置项名称</th>
+          <th class="name">配置文件名称</th>
           <th class="version">配置模板版本</th>
           <th class="path">配置路径</th>
           <th class="user">创建人</th>
@@ -82,7 +82,7 @@
                         <td class="status"><StatusTag :status="config.file_state" /></td>
                         <td class="operation">
                           <div class="config-actions">
-                            <!-- 非套餐配置项 -->
+                            <!-- 非套餐配置文件 -->
                             <template v-if="group.id === 0">
                               <template v-if="isUnNamedVersion">
                                 <bk-button
@@ -255,10 +255,10 @@ const emits = defineEmits(['clearStr']);
 const loading = ref(false);
 const commonConfigListLoading = ref(false);
 const bindingId = ref(0);
-const configList = ref<IConfigItem[]>([]); // 非模板配置项
+const configList = ref<IConfigItem[]>([]); // 非模板配置文件
 const configsCount = ref(0);
 const boundTemplateListLoading = ref(false);
-const templateGroupList = ref<IBoundTemplateGroup[]>([]); // 配置项模板（按套餐分组）
+const templateGroupList = ref<IBoundTemplateGroup[]>([]); // 配置文件模板（按套餐分组）
 const templatesCount = ref(0);
 const tableGroupsData = ref<IConfigsGroupData[]>([]);
 const editPanelShow = ref(false);
@@ -292,7 +292,7 @@ watch(
   async () => {
     await getBindingId();
     getAllConfigList();
-  },
+  }
 );
 
 watch(
@@ -300,7 +300,7 @@ watch(
   () => {
     props.searchStr ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
     getAllConfigList();
-  },
+  }
 );
 
 watch([() => configsCount.value, () => templatesCount.value], () => {
@@ -324,7 +324,7 @@ const getAllConfigList = async () => {
   tableGroupsData.value = transListToTableData();
 };
 
-// 获取非模板配置项列表
+// 获取非模板配置文件列表
 const getCommonConfigList = async () => {
   commonConfigListLoading.value = true;
   try {
@@ -356,7 +356,7 @@ const getCommonConfigList = async () => {
   }
 };
 
-// 获取模板配置项列表
+// 获取模板配置文件列表
 const getBoundTemplateList = async () => {
   boundTemplateListLoading.value = true;
   try {
@@ -378,7 +378,7 @@ const getBoundTemplateList = async () => {
     templateGroupList.value = res.details;
     templatesCount.value = res.details.reduce(
       (acc: number, crt: IBoundTemplateGroup) => acc + crt.template_revisions.length,
-      0,
+      0
     );
   } catch (e) {
     console.error(e);
@@ -395,24 +395,25 @@ const transListToTableData = () => {
   ];
 };
 
-// 将非模板配置项数据转为表格数据
-const transConfigsToTableItemData = (list: IConfigItem[]) => list.map((item: IConfigItem) => {
-  const { id, spec, revision, file_state } = item;
-  const { name, path, permission } = spec;
-  const { creator, reviser, update_at } = revision;
-  return {
-    id,
-    name,
-    versionId: 0,
-    versionName: '--',
-    path,
-    creator,
-    reviser,
-    update_at: datetimeFormat(update_at),
-    file_state,
-    permission,
-  };
-});
+// 将非模板配置文件数据转为表格数据
+const transConfigsToTableItemData = (list: IConfigItem[]) =>
+  list.map((item: IConfigItem) => {
+    const { id, spec, revision, file_state } = item;
+    const { name, path, permission } = spec;
+    const { creator, reviser, update_at } = revision;
+    return {
+      id,
+      name,
+      versionId: 0,
+      versionName: '--',
+      path,
+      creator,
+      reviser,
+      update_at: datetimeFormat(update_at),
+      file_state,
+      permission,
+    };
+  });
 
 // 将模板按套餐分组，并将模板数据格式转为表格数据
 const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
@@ -466,7 +467,7 @@ const handleEditConfigConfirm = async () => {
   tableGroupsData.value = transListToTableData();
 };
 
-// 查看配置项或模板版本
+// 查看配置文件或模板版本
 const handleViewConfig = (id: number, type: string) => {
   viewConfigSliderData.value = {
     open: true,
@@ -506,7 +507,7 @@ const handleDeletePkg = async (pkgId: number, name: string) => {
   } as any);
 };
 
-// 非模板配置项diff
+// 非模板配置文件diff
 const handleConfigDiff = (groupId: number, config: IConfigTableItem) => {
   diffConfig.value = {
     pkgId: groupId,
@@ -517,13 +518,13 @@ const handleConfigDiff = (groupId: number, config: IConfigTableItem) => {
   isDiffPanelShow.value = true;
 };
 
-// 删除配置项
+// 删除配置文件
 const handleDel = (config: IConfigTableItem) => {
   if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
     return;
   }
   InfoBox({
-    title: `确认是否删除配置项【${config.name}】?`,
+    title: `确认是否删除配置文件【${config.name}】?`,
     headerAlign: 'center' as const,
     footerAlign: 'center' as const,
     onConfirm: async () => {

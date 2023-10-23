@@ -10,6 +10,7 @@
             :clearable="false"
             :filterable="true"
             @change="handleSelectVersion"
+            :show-on-init="true"
           >
             <bk-option v-for="version in versionList" :key="version.id" :label="version.spec.name" :value="version.id">
             </bk-option>
@@ -65,13 +66,13 @@ const getVersionList = async () => {
   };
   const res = await getScriptVersionList(props.spaceId, props.scriptId, params);
   versionList.value = (res.details as IScriptVersionListItem[])
-    .filter(item => item.hook_revision.id !== props.crtVersion.id)
-    .map(item => item.hook_revision);
+    .filter((item) => item.hook_revision.id !== props.crtVersion.id)
+    .map((item) => item.hook_revision);
   versionListLoading.value = false;
 };
 
 const handleSelectVersion = (id: number) => {
-  const version = versionList.value.find(item => item.id === id);
+  const version = versionList.value.find((item) => item.id === id);
   if (version) {
     baseContent.value = version.spec.content;
   }

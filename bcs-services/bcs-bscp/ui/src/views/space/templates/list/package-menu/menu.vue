@@ -118,7 +118,7 @@ const deletingPkgData = ref<{ open: boolean; data: ITemplatePackageItem | undefi
 
 const MenuItemOfallConfigList = computed(() => ({
   id: 'all',
-  name: '全部配置项',
+  name: '全部配置文件',
   count: CountOfAllTemplatesInSpace.value,
 }));
 
@@ -135,7 +135,7 @@ watch(
     if (val) {
       getMenuInitData();
     }
-  },
+  }
 );
 
 watch(
@@ -147,7 +147,7 @@ watch(
         state.needRefreshMenuFlag = false;
       });
     }
-  },
+  }
 );
 
 onMounted(() => {
@@ -171,7 +171,7 @@ const getMenuInitData = async () => {
   }
 };
 
-// 获取全部配置项数量
+// 获取全部配置文件数量
 const getCountOfAllTemplatesInSpace = async () => {
   const params = {
     start: 0,
@@ -183,7 +183,7 @@ const getCountOfAllTemplatesInSpace = async () => {
   });
 };
 
-// 获取未指定套餐配置项数量
+// 获取未指定套餐配置文件数量
 const getCountOfTemplatesForNoSpecifiedPackage = async () => {
   const params = {
     start: 0,
@@ -218,7 +218,7 @@ const handleSearch = () => {
   let result: ITemplatePackageItem[] = [];
   searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
   if (searchStr.value) {
-    result = packages.value.filter(item => item.spec.name.toLowerCase().includes(searchStr.value.toLowerCase()));
+    result = packages.value.filter((item) => item.spec.name.toLowerCase().includes(searchStr.value.toLowerCase()));
   } else {
     result = packages.value.slice();
   }
@@ -229,7 +229,7 @@ const handleSearch = () => {
 };
 
 const handlePkgAction = (id: number, type: string) => {
-  const pkg = packages.value.find(item => item.id === id);
+  const pkg = packages.value.find((item) => item.id === id);
   if (pkg) {
     if (type === 'edit') {
       editingPkgData.value = {

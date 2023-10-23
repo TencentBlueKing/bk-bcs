@@ -7,7 +7,7 @@ const useDeleteTemplateConfigs = (space_id: string, current_template_space: numb
 
   return new Promise((resolve) => {
     InfoBox({
-      title: `确认彻底删除${configs.length > 1 ? `${configs.length}条配置项` : `配置项【${configs[0].spec.name}】`}？`,
+      title: `确认彻底删除${configs.length > 1 ? `${configs.length}条配置文件` : `配置文件【${configs[0].spec.name}】`}？`,
       subTitle: '删除后不可找回，请谨慎操作。',
       confirmText: '确认删除',
       infoType: 'warning',
