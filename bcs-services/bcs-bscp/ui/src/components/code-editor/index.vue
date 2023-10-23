@@ -106,6 +106,7 @@ onMounted(() => {
       automaticLayout: true,
       language: props.language,
       readOnly: !props.editable,
+      scrollBeyondLastLine: false,
     });
   }
   if (props.lfEol) {

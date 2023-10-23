@@ -1981,23 +1981,27 @@ message GetGroupByNameReq {
 }
 
 message PublishReq {
-    uint32          biz_id     = 1;
-    uint32          app_id     = 2;
-    uint32          release_id = 3;
-    string          memo       = 4;
-    bool            all        = 5;
-    bool            default    = 6;
-    repeated uint32 groups     = 7;
+    uint32                             biz_id            = 1;
+    uint32                             app_id            = 2;
+    uint32                             release_id        = 3;
+    string                             memo              = 4;
+    bool                               all               = 5;
+    string                             gray_publish_mode = 6;
+    bool                               default           = 7;
+    repeated uint32                    groups            = 8;
+    repeated google.protobuf.Struct    labels            = 9;
 }
 
 message GenerateReleaseAndPublishReq {
-    uint32                             biz_id       = 1;
-    uint32                             app_id       = 2;
-    string                             release_name = 3;
-    string                             release_memo = 4;
-    bool                               all          = 5;
-    repeated string                    groups       = 6;
-    repeated pbtv.TemplateVariableSpec variables    = 7;
+    uint32                             biz_id            = 1;
+    uint32                             app_id            = 2;
+    string                             release_name      = 3;
+    string                             release_memo      = 4;
+    repeated pbtv.TemplateVariableSpec variables         = 5;
+    bool                               all               = 6;
+    string                             gray_publish_mode = 7;
+    repeated string                    groups            = 8;
+    repeated google.protobuf.Struct    labels            = 9;
 }
 
 message GenerateReleaseAndPublishResp {

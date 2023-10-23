@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -62,6 +62,7 @@ func GetFreeIPNets(allBlocks, allExistingSubnets []*net.IPNet) []*net.IPNet {
 		exsits := filterSubnet(block, allExistingSubnets)
 
 		man := NewCidrManager(block, exsits)
+		// nolint
 		for _, free := range man.GetFrees() {
 			allFrees = append(allFrees, free)
 		}
@@ -71,16 +72,17 @@ func GetFreeIPNets(allBlocks, allExistingSubnets []*net.IPNet) []*net.IPNet {
 
 // filterSubnet cidr filter allocated subnets
 func filterSubnet(cidrBlock *net.IPNet, subnets []*net.IPNet) []*net.IPNet {
-	var filterd []*net.IPNet
+	var filtered []*net.IPNet
 	for _, subnet := range subnets {
 		if cidrContains(cidrBlock, subnet) {
-			filterd = append(filterd, subnet)
+			filtered = append(filtered, subnet)
 		}
 	}
-	return filterd
+	return filtered
 }
 
 // subnet exist reserved cidrs
+// nolint
 func inReserved(subnet *net.IPNet, reservedBlocks []*net.IPNet) bool {
 	for _, r := range reservedBlocks {
 		if cidrContains(r, subnet) {

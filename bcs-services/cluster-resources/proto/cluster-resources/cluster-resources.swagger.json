@@ -984,6 +984,63 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/history": {
+      "get": {
+        "summary": "GetCObjHistoryRevision API",
+        "description": "获取 自定义资源 Revision",
+        "operationId": "CustomRes_GetCObjHistoryRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cobjName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/reschedule": {
       "put": {
         "summary": "RescheduleCObjPo API",
@@ -1034,6 +1091,129 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterresourcesCObjBatchRescheduleReq"
+            }
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/restart": {
+      "put": {
+        "summary": "RestartCObj API",
+        "description": "重新调度 自定义资源",
+        "operationId": "CustomRes_RestartCObj",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cobjName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCObjRestartReq"
+            }
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/rollout/{revision}": {
+      "put": {
+        "summary": "RolloutCObj API",
+        "description": "回滚 自定义资源 Revision",
+        "operationId": "CustomRes_RolloutCObj",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cobjName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "revision",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCObjRolloutReq"
             }
           }
         ],
@@ -8127,6 +8307,65 @@
       },
       "description": "创建单个自定义资源请求体",
       "title": "CObjCreateReq"
+    },
+    "clusterresourcesCObjRestartReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "CRDName": {
+          "type": "string",
+          "title": "CRD 名称"
+        },
+        "cobjName": {
+          "type": "string",
+          "title": "自定义资源名称"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        }
+      },
+      "description": "重新部署单个自定义资源请求体",
+      "title": "CObjRestartReq"
+    },
+    "clusterresourcesCObjRolloutReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "CRDName": {
+          "type": "string",
+          "title": "CRD 名称"
+        },
+        "cobjName": {
+          "type": "string",
+          "title": "自定义资源名称"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "revision": {
+          "type": "string",
+          "format": "int64",
+          "title": "revision 版本"
+        }
+      },
+      "description": "回滚自定义资源请求体",
+      "title": "CObjRolloutReq"
     },
     "clusterresourcesCObjScaleReq": {
       "type": "object",
