@@ -10963,8 +10963,8 @@
           "format": "uint64"
         },
         "pageSize": {
-          "type": "string",
-          "format": "uint64"
+          "type": "integer",
+          "format": "int32"
         },
         "total": {
           "type": "string",
@@ -11017,8 +11017,8 @@
           "title": "start"
         },
         "pageSize": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int32",
           "description": "拉取数据数量，最大500，不传默认为20",
           "title": "pageSize"
         }

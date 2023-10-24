@@ -12027,7 +12027,7 @@ message GetTopologyNodesRequest {
     title: "start",
     description: "数据起始位置，不传默认为0"
   }];
-  uint64 pageSize = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  int32 pageSize = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "pageSize",
     description: "拉取数据数量，最大500，不传默认为20"
   }];
@@ -12058,7 +12058,7 @@ message GetTopologyNodesResponse {
 
 message GetTopologyNodesData {
   uint64 start = 1;
-  uint64 pageSize = 2;
+  int32 pageSize = 2;
   uint64 total = 3;
   repeated HostData data = 4;
 }
