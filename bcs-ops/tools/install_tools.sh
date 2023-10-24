@@ -25,67 +25,67 @@ PROJECTS=(yq jq)
 readonly SELF_DIR ROOT_DIR PROJECTS
 
 usage_and_exit() {
-    cat <<EOF
+  cat <<EOF
 Usage:
     $PROGRAM
       [ -h --help -?  show usage ]
       [ -v -V --version show script version]
       [ ${PROJECTS[*]} ]
 EOF
-    exit "$1"
+  exit "$1"
 }
 
 version() {
-    echo "$PROGRAM version $VERSION"
+  echo "$PROGRAM version $VERSION"
 }
 
 safe_source() {
-    local source_file=$1
-    if [[ -f ${source_file} ]]; then
-        #shellcheck source=/dev/null
-        source "${source_file}"
-    else
-        echo "[ERROR]: FAIL to source, missing ${source_file}"
-        exit 1
-    fi
+  local source_file=$1
+  if [[ -f ${source_file} ]]; then
+    #shellcheck source=/dev/null
+    source "${source_file}"
+  else
+    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    exit 1
+  fi
 }
 
 main() {
-    local source_files
-    source_files=("${ROOT_DIR}/functions/utils.sh")
-    for file in "${source_files[@]}"; do
-        safe_source "$file"
-    done
+  local source_files
+  source_files=("${ROOT_DIR}/functions/utils.sh")
+  for file in "${source_files[@]}"; do
+    safe_source "$file"
+  done
 
-    local project
+  local project
 
-    (($# == 0)) && usage_and_exit 1
-    while (($# > 0)); do
-        case "$1" in
-            --help | -h | '-?')
-                usage_and_exit 0
-                ;;
-            --version | -v | -V)
-                version
-                exit 0
-                ;;
-            -*)
-                # ToDo: Unified standard error code
-                export ERR_CODE=1
-                utils::log "ERROR" "unkown para: $1"
-                ;;
-            *)
-                project="${ROOT_DIR}/tools/install_$1"
-                if [[ -x "${project}" ]]; then
-                    "${project}"
-                else
-                    utils::log "ERROR" "can't exec ${project}"
-                fi
-                ;;
-        esac
-        shift
-    done
-    return 0
+  (($# == 0)) && usage_and_exit 1
+  while (($# > 0)); do
+    case "$1" in
+      --help | -h | '-?')
+        usage_and_exit 0
+        ;;
+      --version | -v | -V)
+        version
+        exit 0
+        ;;
+      -*)
+        # ToDo: Unified standard error code
+        export ERR_CODE=1
+        utils::log "ERROR" "unkown para: $1"
+        ;;
+      *)
+        project="${ROOT_DIR}/tools/install_$1"
+        if [[ -x "${project}" ]]; then
+          "${project}"
+        else
+          utils::log "ERROR" "can't exec ${project}"
+        fi
+        ;;
+    esac
+    shift
+  done
+  return 0
 }
 
 main "$@"

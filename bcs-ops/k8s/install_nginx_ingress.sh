@@ -51,9 +51,9 @@ install_nginx_ingress() {
   local namespace=$NAMESPACE
   local chart_path
   if [[ -n ${BCS_OFFLINE:-} ]]; then
-    chart_path="$(find "${ROOT_DIR}/version-${VERSION}/charts/" -iname "ingress-nginx-*.tgz" -type f | head -1)"
+    chart_path="$(find "${ROOT_DIR}/version-${K8S_VER}/charts/" -iname "ingress-nginx-*.tgz" -type f | head -1)"
     if [[ -z $chart_path ]]; then
-      utils::log "FATAL" "can't find ingress-nginx chart in ${ROOT_DIR}/version-${VERSION}/charts/"
+      utils::log "FATAL" "can't find ingress-nginx chart in ${ROOT_DIR}/version-${K8S_VER}/charts/"
     fi
   else
     [[ -n ${BKREPO_URL:-} ]] || utils::log "FAIL" "missing bkrepo url ${BKREPO_URL}"
@@ -64,10 +64,10 @@ install_nginx_ingress() {
     chart_path="blueking/ingress-nginx"
   fi
   local registry
-  if [[ -n ${BK_PUBLIC_REPO} ]];then
-	registry="${BK_PUBLIC_REPO}/registry.k8s.io"
+  if [[ -n ${BK_PUBLIC_REPO} ]]; then
+    registry="${BK_PUBLIC_REPO}/registry.k8s.io"
   else
-	registry="registry.k8s.io"
+    registry="registry.k8s.io"
   fi
 
   utils::log "INFO" "installing ingress-nginx"
