@@ -384,6 +384,11 @@ generic:
     execTime: Started
     execTime2: Time cost
     whenFailed: After failed
+    create: Create
+    update: Update
+    delete: Delete
+    start: Start
+    stop: Stop
   status:
     ready: Normal
     error: Error
@@ -417,6 +422,7 @@ generic:
     taskKill: Terminate
     taskNotEnable: To-Do
     restarting: Restarting
+    pending: Pending
   validate:
     repeatKey: Repeat key
     required: Requiring item
@@ -782,6 +788,10 @@ cluster:
       importType: Import Type
       cloudToken: Cloud Token
       kubeConfig: Cluster KubeConfig
+      network:
+        text: ''
+        intranet: ''
+        extranet: ''
     msg:
       managedClusterInfo: >-
         Create a custody cluster must add at least one node to run the necessary

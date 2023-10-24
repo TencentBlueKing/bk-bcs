@@ -75,12 +75,16 @@
           </bk-table-column>
           <bk-table-column :label="$t('generic.label.status')">
             <template slot-scope="{ row }">
-              <i class="bk-icon" :class="row.activity_status === 'completed' || row.activity_status === 'succeed' ? 'success icon-check-circle' : 'fail icon-close-circle'"></i>
+              <i class="bk-icon" :class="row.activity_status === 'success' ? 'success icon-check-circle' : 'fail icon-close-circle'"></i>
               {{row.activityStatus}}
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('projects.operateAudit.operator')" prop="user"></bk-table-column>
-          <bk-table-column :label="$t('cluster.create.label.desc')" prop="description" :show-overflow-tooltip="true" min-width="160"></bk-table-column>
+          <bk-table-column :label="$t('cluster.create.label.desc')" prop="description" :show-overflow-tooltip="true" min-width="160">
+            <template #default="{ row }">
+              {{ row.description || '--' }}
+            </template>
+          </bk-table-column>
           <template #empty>
             <BcsEmptyTableStatus :type="searchEmpty ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
           </template>
@@ -91,7 +95,8 @@
 </template>
 
 <script>
-import Header from '@/components/layout/Header.vue';
+import { activityLogs, activityLogsResourceTypes } from '@/api/modules/user-manager';
+import Header from '@/components/layout/Header.vue';;
 
 export default {
   name: 'OperateAudit',
@@ -100,18 +105,11 @@ export default {
     // 操作类型下拉框 list
     const activityTypeList = [
       { id: 'all', name: this.$t('generic.label.total') },
-      { id: 'note', name: this.$t('projects.operateAudit.note') },
-      { id: 'add', name: this.$t('generic.button.create') },
-      { id: 'modify', name: this.$t('generic.button.update') },
-      { id: 'delete', name: this.$t('generic.button.delete') },
-      { id: 'begin', name: this.$t('projects.operateAudit.begin') },
-      { id: 'end', name: this.$t('projects.operateAudit.end') },
-      { id: 'start', name: this.$t('projects.operateAudit.start') },
-      { id: 'pause', name: this.$t('projects.operateAudit.pause') },
-      { id: 'carryon', name: this.$t('projects.operateAudit.continue') },
-      { id: 'stop', name: this.$t('projects.operateAudit.stop') },
-      { id: 'restart', name: this.$t('projects.operateAudit.restart') },
-      { id: 'query', name: this.$t('generic.button.query') },
+      { id: 'create', name: this.$t('generic.label.create') },
+      { id: 'update', name: this.$t('generic.label.update') },
+      { id: 'delete', name: this.$t('generic.label.delete') },
+      { id: 'start', name: this.$t('generic.label.start') },
+      { id: 'stop', name: this.$t('generic.label.stop') },
     ];
     // 操作类型 map
     const activityTypeMap = {};
@@ -122,12 +120,10 @@ export default {
     // 状态下拉框 list
     const activityStatusList = [
       { id: 'all', name: this.$t('generic.label.total') },
-      { id: 'unknown', name: this.$t('generic.status.unknown') },
-      { id: 'completed', name: this.$t('generic.status.done') },
-      { id: 'error', name: this.$t('projects.operateAudit.error') },
-      { id: 'busy', name: this.$t('projects.operateAudit.doing') },
-      { id: 'succeed', name: this.$t('generic.status.success') },
+      { id: 'success', name: this.$t('generic.status.success') },
       { id: 'failed', name: this.$t('generic.status.failed') },
+      { id: 'pending', name: this.$t('generic.status.pending') },
+      { id: 'unknown', name: this.$t('generic.status.unknown') },
     ];
     // 操作状态 map
     const activityStatusMap = {};
@@ -257,22 +253,21 @@ export default {
   },
   methods: {
     /**
-             * 分页大小更改
-             *
-             * @param {number} pageSize pageSize
-             */
+     * 分页大小更改
+     *
+     * @param {number} pageSize pageSize
+     */
     changePageSize(pageSize) {
       this.pageConf.pageSize = pageSize;
       this.pageConf.curPage = 1;
       this.pageChange();
     },
     /**
-             * router change 回调(根据projectId变化更新数据)
-             */
+     * router change 回调(根据projectId变化更新数据)
+     */
     async routerChangeHandler() {
       this.projId = this.$route.params.projectId || '000';
       this.fetchData({
-        projId: this.projId,
         limit: this.pageConf.pageSize,
         offset: 0,
       });
@@ -280,31 +275,29 @@ export default {
     },
 
     /**
-             * 获取所有的操作对象类型
-             */
+     * 获取所有的操作对象类型
+     */
     async getResourceTypes() {
       try {
-        const res = await this.$store.dispatch('mc/getResourceTypes', {
-          serviceType: this.serviceType,
-        });
-        this.resourceTypeMap = res.data;
-        this.resourceTypeList.splice(0, this.resourceTypeList.length);
-        Object.keys(this.resourceTypeMap).forEach((key) => {
-          this.resourceTypeList.push({
-            id: key,
-            name: this.resourceTypeMap[key],
-          });
-        });
+        const data = await activityLogsResourceTypes({}, { globalError: false }).catch(() => []);
+        this.resourceTypeList = data.map(item => ({
+          id: item.resource_type,
+          name: item.name,
+        }));
+        this.resourceTypeMap = data.reduce((pre, item) => {
+          pre[item.resource_type] = item.name;
+          return pre;
+        }, ({}));
         this.resourceTypeList.unshift({ id: 'all', name: this.$t('generic.label.total') });
       } catch (e) {
       }
     },
 
     /**
-             * 获取表格数据
-             *
-             * @param {Object} params ajax 查询参数
-             */
+     * 获取表格数据
+     *
+     * @param {Object} params ajax 查询参数
+     */
     async fetchData(params = {}) {
       // 操作类型
       // const activityType = this.activityTypeIndex !== -1
@@ -329,14 +322,14 @@ export default {
 
       this.isPageLoading = true;
       try {
-        const res = await this.$store.dispatch('mc/getActivityLogs', Object.assign({}, params, {
-          activityType,
-          activityStatus,
-          resourceType,
-          beginTime,
-          endTime,
-          serviceType: this.serviceType,
-        }));
+        const res = await activityLogs({
+          ...params,
+          activity_type: activityType || '',
+          resource_type: resourceType || '',
+          status: activityStatus || '',
+          start_time: beginTime ? new Date(beginTime).getTime() / 1000 : '',
+          end_time: endTime ? new Date(endTime).getTime() / 1000 : '',
+        }, { globalError: false }).catch(() => ({ items: [], count: 0 }));
 
         this.dataList = [];
 
@@ -355,27 +348,28 @@ export default {
         }
         this.pageConf.show = true;
 
-        const list = res.results || [];
+        const list = res.items || [];
         list.forEach((item) => {
           this.dataList.push({
-            activity_status: item.activity_status,
+            activity_status: item.status,
             // 操作时间
-            activityTime: item.activity_time,
+            activityTime: item.created_at,
             // 操作类型
             activityType: this.activityTypeMap[item.activity_type],
             extra: {
               // 操作对象类型
               resourceType: this.resourceTypeMap[item.resource_type] || item.resource_type,
               // 操作对象
-              resource: item.resource,
+              resource: item.resource_name,
             },
             // 状态
-            activityStatus: this.activityStatusMap[item.activity_status],
-            user: item.user,
+            activityStatus: this.activityStatusMap[item.status],
+            user: item.username,
             description: item.description,
           });
         });
       } catch (e) {
+        console.log(e);
       } finally {
         this.isPageLoading = false;
         // 晚消失是为了防止整个页面loading和表格数据loading效果叠加产生闪动
@@ -386,71 +380,68 @@ export default {
     },
 
     /**
-             * 翻页
-             *
-             * @param {number} page 页码
-             */
+     * 翻页
+     *
+     * @param {number} page 页码
+     */
     pageChange(page = 1) {
       this.pageConf.curPage = page;
       this.fetchData({
-        projId: this.projId,
         limit: this.pageConf.pageSize,
         offset: this.pageConf.pageSize * (page - 1),
       });
     },
 
     /**
-             * 清除操作对象类型
-             */
+     * 清除操作对象类型
+     */
     resourceTypeClear() {
       this.resourceTypeIndex = -1;
     },
 
     /**
-             * 清除操作类型
-             */
+     * 清除操作类型
+     */
     activityTypeClear() {
       this.activityTypeIndex = -1;
     },
 
     /**
-             * 清除状态
-             */
+     * 清除状态
+     */
     activityStatusClear() {
       this.activityStatusIndex = -1;
     },
 
     /**
-             * 日期范围搜索条件
-             *
-             * @param {string} newValue 变化前的值
-             */
+     * 日期范围搜索条件
+     *
+     * @param {string} newValue 变化前的值
+     */
     change(newValue) {
       this.dataRange = newValue;
     },
 
     /**
-             * 搜索按钮点击
-             *
-             * @param {Object} e 事件对象
-             */
+     * 搜索按钮点击
+     *
+     * @param {Object} e 事件对象
+     */
     handleClick() {
       this.pageConf.curPage = 1;
       this.fetchData({
-        projId: this.projId,
         limit: this.pageConf.pageSize,
         offset: 0,
       });
     },
 
     /**
-             * 分页大小更改
-             *
-             * @param {Object} e 事件对象
-             */
+     * 分页大小更改
+     *
+     * @param {Object} e 事件对象
+     */
     handlePageSizeChange() {
       this.fetchData({
-        projId: this.projId,
         limit: this.pageConf.pageSize,
         offset: 0,
       });

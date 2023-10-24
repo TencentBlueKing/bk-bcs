@@ -362,6 +362,11 @@ generic:
     execTime: 执行时间
     execTime2: 耗时
     whenFailed: 失败后
+    create: 创建
+    update: 更新
+    delete: 删除
+    start: 开始
+    stop: 停止
   status:
     ready: 正常
     error: 异常
@@ -395,6 +400,7 @@ generic:
     taskKill: 强制终止
     taskNotEnable: 未启动
     restarting: 重启中
+    pending: 处理中
   validate:
     name: 仅支持字母，数字和字符(-)，且以字母开头
     repeatKey: 重复键
