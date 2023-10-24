@@ -713,4 +713,10 @@ const goToIAM = () => {
     display: none;
   }
 }
+.delete-service-dialog {
+  .bk-modal-footer {
+    background-color: #fff !important;
+    border-top: none !important;
+  }
+}
 </style>
