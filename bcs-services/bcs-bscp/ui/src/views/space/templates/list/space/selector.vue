@@ -26,11 +26,7 @@
               class="bk-bscp-icon icon-edit-small"
               @click.stop="handleEditOpen(item)"
             ></i>
-            <Del
-              v-if="item.spec.name !== 'default_space'"
-              class="delete-icon"
-              @click.stop="handleDelete(item)"
-            />
+            <Del v-if="item.spec.name !== 'default_space'" class="delete-icon" @click.stop="handleDelete(item)" />
           </div>
         </div>
       </bk-option>
@@ -84,7 +80,7 @@ const spaceName = computed(() => {
 });
 
 const templateSpaceDetail = computed(() => {
-  const item = templateSpaceList.value.find(item => item.id === currentTemplateSpace.value);
+  const item = templateSpaceList.value.find((item) => item.id === currentTemplateSpace.value);
   if (item) {
     const { name, memo } = item.spec;
     return { name, memo };
@@ -96,7 +92,7 @@ watch(
   () => spaceId.value,
   () => {
     initData();
-  },
+  }
 );
 
 onMounted(() => {
@@ -165,7 +161,7 @@ const handleDelete = async (space: ITemplateSpaceItem) => {
   if (res.count > 0) {
     InfoBox({
       title: `未能删除【${space.spec.name}】`,
-      subTitle: '请先确认删除此空间下所有配置项',
+      subTitle: '请先确认删除此空间下所有配置文件',
       dialogType: 'confirm',
       confirmText: '我知道了',
     } as any);

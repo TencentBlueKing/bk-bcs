@@ -18,9 +18,9 @@
     <div class="title-area">
       <template v-if="props.configs.length > 1">
         确认删除<span>{{ props.configs.length }}</span
-        >条配置项?
+        >条配置文件?
       </template>
-      <template v-else> 确认删除配置项【{{ props.configs[0] ? props.configs[0].spec.name : '' }}】？ </template>
+      <template v-else> 确认删除配置文件【{{ props.configs[0] ? props.configs[0].spec.name : '' }}】？ </template>
     </div>
     <div class="tips">删除后不可找回，请谨慎操作。</div>
     <template #footer>
@@ -56,13 +56,13 @@ const pending = ref(false);
 const handleConfirm = async () => {
   try {
     pending.value = true;
-    const ids = props.configs.map(config => config.id);
+    const ids = props.configs.map((config) => config.id);
     await deleteTemplate(spaceId.value, currentTemplateSpace.value, ids);
     close();
     emits('deleted');
     Message({
       theme: 'success',
-      message: '删除配置项成功',
+      message: '删除配置文件成功',
     });
   } catch (e) {
     console.log(e);

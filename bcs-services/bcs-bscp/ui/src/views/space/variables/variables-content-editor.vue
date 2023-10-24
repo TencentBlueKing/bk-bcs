@@ -111,7 +111,7 @@ const handleSearch = () => {
 
 // 校验编辑器内容
 const handleValidateEditor = () => {
-  const variablesArray = variables.value.split('\r\n');
+  const variablesArray = variables.value.split('\n');
   errorLine.value = [];
   variablesArray.forEach((item, index) => {
     if (item === '') return;

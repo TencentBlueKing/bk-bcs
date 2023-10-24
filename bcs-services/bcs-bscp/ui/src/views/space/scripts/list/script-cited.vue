@@ -1,5 +1,5 @@
 <template>
-  <bk-sideslider title="关联配置项" width="640" :is-show="props.show" @closed="handleClose">
+  <bk-sideslider title="关联配置文件" width="640" :is-show="props.show" @closed="handleClose">
     <div class="search-area">
       <SearchInput v-model="searchStr" placeholder="服务名称/版本名称/被引用的版本" @search="refreshList()" />
     </div>
@@ -21,7 +21,7 @@
           </template>
         </bk-table-column>
         <bk-table-column label="服务名称" prop="app_name"></bk-table-column>
-        <bk-table-column label="配置文件版本">
+        <bk-table-column label="服务版本">
           <template #default="{ row }">
             <bk-link
               v-if="row.release_name"
@@ -76,7 +76,7 @@ watch(
     if (val) {
       getCitedData();
     }
-  },
+  }
 );
 
 const getCitedData = async () => {

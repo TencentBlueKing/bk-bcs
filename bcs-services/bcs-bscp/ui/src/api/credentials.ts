@@ -31,7 +31,7 @@ export const deleteCredential = (biz_id: string, id: number) => http.delete(`/co
 export const updateCredential = (biz_id: string, params: { id: number; memo?: string; enable?: boolean }) => http.put(`/config/biz_id/${biz_id}/credential`, params).then(res => res.data);
 
 /**
- * 获取密钥关联的配置项规则
+ * 获取密钥关联的配置文件规则
  * @param biz_id 空间ID
  * @param credential_id 密钥ID
  * @returns
@@ -39,7 +39,7 @@ export const updateCredential = (biz_id: string, params: { id: number; memo?: st
 export const getCredentialScopes = (biz_id: string, credential_id: number) => http.get(`/config/biz_id/${biz_id}/credential/${credential_id}/scopes`).then(res => res.data);
 
 /**
- * 更新密钥关联的配置项规则
+ * 更新密钥关联的配置文件规则
  * @param biz_id 空间ID
  * @param credential_id 密钥ID
  * @returns

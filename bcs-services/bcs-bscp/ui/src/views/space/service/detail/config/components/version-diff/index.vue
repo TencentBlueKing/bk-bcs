@@ -80,7 +80,7 @@ const props = defineProps<{
   currentVersion: IConfigVersion; // 当前版本详情
   unNamedVersionVariables?: IVariableEditParams[];
   baseVersionId?: number; // 默认选中的基准版本id
-  selectedConfig?: IConfigDiffSelected; // 默认选中的配置项id
+  selectedConfig?: IConfigDiffSelected; // 默认选中的配置文件id
 }>();
 
 const emits = defineEmits(['update:show', 'publish']);
@@ -112,7 +112,7 @@ watch(
     if (val) {
       getVersionList();
     }
-  },
+  }
 );
 
 watch(
@@ -122,7 +122,7 @@ watch(
       selectedBaseVersion.value = val;
     }
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 // 获取所有对比基准版本

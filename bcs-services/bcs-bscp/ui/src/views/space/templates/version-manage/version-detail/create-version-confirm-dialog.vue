@@ -1,7 +1,7 @@
 <template>
   <bk-dialog
     ext-cls="create-version-confirm-dialog"
-    title="确认更新配置项版本？"
+    title="确认更新配置文件版本？"
     header-align="center"
     footer-align="center"
     :width="400"
@@ -10,7 +10,7 @@
     :quick-close="false"
     @closed="close"
   >
-    <p class="tips">以下套餐及服务未命名版本中引用的此配置项也将更新</p>
+    <p class="tips">以下套餐及服务未命名版本中引用的此配置文件也将更新</p>
     <bk-loading style="min-height: 100px" :loading="loading">
       <bk-table :data="citedList" :max-height="maxTableHeight">
         <bk-table-column label="所在套餐" prop="template_set_name"></bk-table-column>
@@ -63,7 +63,7 @@ watch(
     if (val) {
       getCitedData();
     }
-  },
+  }
 );
 
 const getCitedData = async () => {
@@ -76,7 +76,7 @@ const getCitedData = async () => {
     props.spaceId,
     props.templateSpaceId,
     props.templateId,
-    params,
+    params
   );
   citedList.value = res.details;
   loading.value = false;

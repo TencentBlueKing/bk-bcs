@@ -114,14 +114,14 @@ watch(
   () => versionData.value.id,
   () => {
     getListData();
-  },
+  }
 );
 
 watch(
   () => props.searchStr,
   () => {
     refresh();
-  },
+  }
 );
 
 onMounted(() => {
@@ -160,7 +160,7 @@ const handleDiff = (config: IConfigItem) => {
 
 const handleDel = (config: IConfigItem) => {
   InfoBox({
-    title: `确认是否删除配置项【${config.spec.name}】?`,
+    title: `确认是否删除配置文件【${config.spec.name}】?`,
     infoType: 'danger',
     headerAlign: 'center' as const,
     footerAlign: 'center' as const,

@@ -74,9 +74,27 @@ _yum_docker() {
   return 0
 }
 
+_curl_docker() {
+  local bin_path name ver file url
+  bin_path=${ROOT_DIR}/version-${K8S_VER}/bin-tools/
+  mkdir -p "$bin_path"
+
+  name="docker"
+  ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
+  file="${name}-${ver}.tgz"
+  url=${REPO_URL}/${file}
+  if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
+    utils::log "INFO" "Downloaded ${url}"
+  else
+    utils::log "ERROR" "fail to download ${url}"
+  fi
+
+  _offline_docker
+}
+
 _offline_docker() {
   local bin_path tar_name
-  bin_path=${ROOT_DIR}/version-${VERSION}/bin-tools/
+  bin_path=${ROOT_DIR}/version-${K8S_VER}/bin-tools/
   tar_name=$(find "$bin_path" -iname "docker-*.tgz" -type f | head -1)
 
   if [[ -z ${tar_name} ]]; then
@@ -84,6 +102,14 @@ _offline_docker() {
   else
     tar xvzf "${tar_name}" -C /usr/bin/ --strip-components=1 bin/
     tar xvzf "${tar_name}" -C /etc/systemd/system/ --strip-components=1 systemd/
+  fi
+
+  # docker.sock need docker group
+  if getent group docker >/dev/null 2>&1; then
+    utils::log "INFO" "docker group existed"
+  else
+    utils::log "INFO" "creating docker group"
+    groupadd docker
   fi
 }
 
@@ -150,7 +176,17 @@ main() {
     if [[ -n ${BCS_OFFLINE:-} ]]; then
       _offline_docker
     else
-      _yum_docker
+      case ${INSTALL_METHOD} in
+        "yum")
+          _yum_docker
+          ;;
+        "curl")
+          _curl_docker
+          ;;
+        *)
+          utils::log "ERROR" "unkown ${INSTALL_METHOD} to exec download docker"
+          ;;
+      esac
     fi
   fi
 
@@ -164,7 +200,12 @@ main() {
     utils::log "ERROR" "Did docker get installed?"
   fi
 
-  # load image
+  # add insecure_registry
+  if [[ -n ${INSECURE_REGISTRY:-} ]]; then
+    "${ROOT_DIR}"/k8s/insecure_registry.sh -c docker -a "${INSECURE_REGISTRY}"
+  fi
+
+  # bcs_offline load image
   if [[ -n ${BCS_OFFLINE:-} ]]; then
     find "${ROOT_DIR}"/version-"${VERSION}"/images -name '*.tar' -type f -print0 \
       | xargs -0 -I {} docker load -i {}
@@ -174,11 +215,6 @@ main() {
   local test_img_url
   test_img_url=${BK_PUBLIC_REPO:-"docker.io"}/library/hello-world:latest
   utils::log "DEBUG" "hello-world: ${test_img_url}"
-
-  if [[ -n ${BCS_OFFLINE:-} ]]; then
-    # ToDo hello world image offline install
-    true
-  fi
 
   if ! docker run --rm "${test_img_url}"; then
     utils::log "ERROR" "Count not get docker to run ${test_img_url}"
