@@ -194,6 +194,14 @@ const rules = {
       message: '文件权限 不能为空',
       trigger: 'change',
     },
+    {
+      validator: () => {
+        const privilege = parseInt(privilegeInputVal.value[0]);
+        return privilege >= 4;
+      },
+      message: '文件own必须有读取权限',
+      trigger: 'blur',
+    },
   ],
   path: [
     {
