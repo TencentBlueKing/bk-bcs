@@ -29,7 +29,7 @@
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
-            <bcs-table class="mt15" :data="ipList">
+            <bcs-table class="mt15" :data="ipList" :key="tableKey">
               <bcs-table-column type="index" :label="$t('cluster.nodeList.label.index')" width="60"></bcs-table-column>
               <bcs-table-column
                 :label="$t('generic.ipSelector.label.innerIp')"
@@ -43,10 +43,13 @@
                   </StatusIcon>
                 </template>
               </bcs-table-column>
-              <bcs-table-column :label="$t('generic.ipSelector.label.idc')" prop="idc_unit_name"></bcs-table-column>
+              <!-- <bcs-table-column
+                :label="$t('generic.ipSelector.label.idc')"
+                prop="idc_unit_name">
+              </bcs-table-column> -->
               <bcs-table-column
                 :label="$t('generic.ipSelector.label.serverModel')"
-                prop="svr_device_class">
+                prop="instanceType">
               </bcs-table-column>
               <bcs-table-column :label="$t('generic.label.action')" width="100">
                 <template #default="{ row }">
@@ -172,9 +175,10 @@
       :cloud-id="curCluster.provider"
       :region="curCluster.region"
       :vpc="{ vpcID: curCluster.vpcID }"
-      v-model="showIpSelector"
+      :show-dialog="showIpSelector"
       :ip-list="ipList"
-      @confirm="chooseServer">
+      @confirm="chooseServer"
+      @cancel="showIpSelector = false">
     </IpSelector>
   </div>
 </template>
@@ -189,7 +193,7 @@ import { desirednode, nodeGroups } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
-import IpSelector from '@/components/ip-selector/selector-dialog.vue';
+import IpSelector from '@/components/ip-selector/ip-selector.vue';
 import StatusIcon from '@/components/status-icon';
 import { useConfig } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
@@ -206,6 +210,7 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const tableKey = ref('');
     const formRef = ref();
     const formRules = ref({
       ip: [{
@@ -239,9 +244,10 @@ export default defineComponent({
       showIpSelector.value = true;
     };
     const handleRemoveIp = (row) => {
-      const index = ipList.value.findIndex(item => item.bk_host_innerip === row.bk_host_innerip);
+      const index = ipList.value.findIndex(item => item?.cloudArea?.id === row?.cloudArea?.id && item.ip === row.ip);
       if (index > -1) {
         ipList.value.splice(index, 1);
+        tableKey.value = `${Math.random() * 10}`;
       }
     };
     const chooseServer = (data) => {
@@ -443,6 +449,7 @@ export default defineComponent({
     });
 
     return {
+      tableKey,
       saving,
       isImportCluster,
       formRef,

@@ -258,7 +258,6 @@ generic:
     empty:
       noData: No data
       noData1: No data
-      noData2: No data
       noData3: No data
       noMatchData: No matching data
       searchEmpty:
@@ -293,7 +292,6 @@ generic:
     confirm1: Confirm
     cancel: Cancel
     clearSearch: Clear search conditions
-    cancelSelectAll: Cancel
     selectAll: SelectAll
     add: 'Add '
     save: Save
@@ -467,23 +465,12 @@ generic:
   ipSelector:
     placeholder:
       searchIp: 'Please enter the IP, multi -ip can be separated by spaces'
-      searchIp2: Multiple IP uses Enter as a separator
-      searchTopo: Search topology node
     validate:
       emptyHost: Please Select Host
-    title:
-      searchResult: search results
     action:
-      accurateSearch: accurate
-      expandSelectedPanel: Click on
       selectHost: Select Host
-    button:
-      staticTop: Static topology
-      customInput: Manually input
-      parseIp: Click to analyze
     tips:
       ipNotAvailable: Current IP is not available
-      dockerIpNotAvailable: Docker is not allowed to use
       ipInUsed: 'IP is occupied by {name}{id}'
       ipRegionNotMatched: >-
         The area of the belonging to the election node must be consistent with
@@ -491,21 +478,10 @@ generic:
       ipVpcNotMatched: >-
         The VPC that belongs to the election node must be consistent with the
         cluster. The selected node VPC: {0}, cluster VPC: {1}
-      ipError: 'IP format is wrong or does not exist, retry after inspection!'
     selected:
-      text: Selected node
-      suffix: '{count} Ip nodes'
       text2: '{remainCount} items'
-      emptyMsg: Please check the IP or node on the left
-      action:
-        removeAll: Remove everything
-        copyIp:
-          text: Copy IP
-          msg: '{number} IP addresses copied'
     label:
       innerIp: "Private\_IP"
-      outerIp: Public IP
-      otherIp: Other IP
       agentStatus: Agent Status
       idc: IDC
       serverModel: Specification name

@@ -103,7 +103,7 @@ const store = new Vuex.Store<{
   plugins: [
     VuexStorage({
       key: '__bcs_vuex_stroage__',
-      paths: ['curProject.projectID', 'curProject.projectCode', 'curCluster.clusterID', 'openSideMenu', 'curNamespace', 'clusterViewType'],
+      paths: ['curProject.projectID', 'curProject.projectCode', 'curProject.businessID', 'curCluster.clusterID', 'openSideMenu', 'curNamespace', 'clusterViewType'],
       mutationEffect: [
         {
           type: 'cluster/forceUpdateClusterList',

@@ -11,7 +11,7 @@ const CreateTencentCloudCluster = () => import(/* webpackChunkName: 'cluster' */
 // VCluster集群
 const CreateVCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/add-vcluster.vue');
 // ee版本创建集群流程
-const CreateCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-cluster.vue');
+// const CreateCluster = () => import('@/views/cluster-manage/cluster/create/create-cluster.vue');
 // import模式
 const ImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/import-cluster.vue');
 const ImportGoogleCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/google-cloud.vue');
@@ -62,15 +62,15 @@ export default [
       menuId: 'CLUSTER',
     },
   },
-  {
-    path: 'clusters/create',
-    name: 'createCluster',
-    component: CreateCluster,
-    meta: {
-      menuId: 'CLUSTER',
-      title: window.i18n.t('cluster.button.addCluster'),
-    },
-  },
+  // {
+  //   path: 'clusters/create',
+  //   name: 'createCluster',
+  //   component: CreateCluster,
+  //   meta: {
+  //     menuId: 'CLUSTER',
+  //     title: window.i18n.t('cluster.button.addCluster'),
+  //   },
+  // },
   // 创建VCluster集群
   {
     path: 'clusters/vcluster',

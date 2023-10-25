@@ -79,3 +79,11 @@ export const nodeGroups = request('get', '/clusters/$clusterId/nodegroups');
 export const desirednode = request('post', '/nodegroup/$id/desirednode');
 
 export const batchDeleteNodes = request('delete', '/clusters/$clusterId/nodes/-/batch');
+
+// ip selector（ip选择器）
+export const customSettings = request('post', '/web/customSettings/scope/$scope/$biz/batchGet');
+export const topologyHostCount = request('post', '/web/scope/$scope/$biz/topology/hostCount');
+export const hostCheck = request('post', '/web/scope/$scope/$biz/host/check');
+export const topologyHostsNodes = request('post', '/web/scope/$scope/$biz/topology/hosts/nodes');
+export const topologyHostIdList = request('post', '/web/scope/$scope/$biz/topology/hostids/nodes');
+export const hostInfoByHostId = request('post', '/web/scope/$scope/$biz/hosts/details');
