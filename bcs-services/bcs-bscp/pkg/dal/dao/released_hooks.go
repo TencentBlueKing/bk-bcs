@@ -39,6 +39,8 @@ type ReleasedHook interface {
 	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, releasedHook *table.ReleasedHook) (uint32, error)
 	// ListAll list all released hooks in biz
 	ListAll(kit *kit.Kit, bizID uint32) ([]*table.ReleasedHook, error)
+	// DeleteByAppIDWithTx deletes the released hook by app id with transaction.
+	DeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID, bizID uint32) error
 	// DeleteByUniqueKeyWithTx deletes the released hook by unique key with transaction.
 	DeleteByUniqueKeyWithTx(kit *kit.Kit, tx *gen.QueryTx, rh *table.ReleasedHook) error
 	// DeleteByHookIDAndReleaseIDWithTx deletes the released hook by hook id and release id with transaction.
@@ -225,6 +227,19 @@ func (dao *releasedHookDao) ListAll(kit *kit.Kit, bizID uint32) ([]*table.Releas
 		rhs[i].Content = string(content)
 	}
 	return rhs, nil
+}
+
+// DeleteByAppIDWithTx deletes the released hook by app id with transaction.
+func (dao *releasedHookDao) DeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID, bizID uint32) error {
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+	if appID == 0 {
+		return errf.New(errf.InvalidParameter, "appID is 0")
+	}
+	m := tx.ReleasedHook
+	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Delete()
+	return err
 }
 
 // DeleteByUniqueKeyWithTx deletes the released hook by unique key with transaction.

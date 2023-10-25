@@ -163,6 +163,12 @@ func (s *Service) deleteAppRelatedResources(grpcKit *kit.Kit, req *pbds.DeleteAp
 		return err
 	}
 
+	// delete released hook
+	if err := s.dao.ReleasedHook().DeleteByAppIDWithTx(grpcKit, tx, req.Id, req.BizId); err != nil {
+		logs.Errorf("delete released hooks failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return err
+	}
+
 	return nil
 }
 
