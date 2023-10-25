@@ -340,7 +340,6 @@ generic:
     query: Search
     create: Create
     submit: SUBMIT
-    podDelete: Del-Pods
   label:
     key: Key
     value: Value
@@ -2729,6 +2728,7 @@ dashboard:
       containerMemoryWorkingSetBytesOom: >-
         container_memory_working_Set_bytes, limit restrictions OOM judgment
         basis
+      inplaceUpdateNotSupportRestart: InplaceUpdate not support restart pods
     label:
       upgrade:
         maxSurg: 'Maximum scheduling pod quantity (MaxSurge): {num}'

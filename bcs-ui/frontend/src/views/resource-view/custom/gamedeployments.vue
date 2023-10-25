@@ -17,7 +17,9 @@
         gotoDetail, renderCrdHeader,
         getJsonPathValue, additionalColumns,
         webAnnotations, updateStrategyMap,
-        handleEnlargeCapacity, nameValue, handleClearSearchData
+        handleEnlargeCapacity, nameValue, handleClearSearchData,
+        statusFilters, statusFilterMethod, statusMap,
+        handleRestart, handleGotoUpdateRecord, handleRollback
       }">
       <bk-table
         :data="curPageData"
@@ -44,6 +46,22 @@
           </template>
         </bk-table-column>
         <bk-table-column
+          :label="$t('generic.label.status')"
+          prop="status"
+          :filters="statusFilters"
+          :filter-method="statusFilterMethod"
+          filter-multiple
+          min-width="100">
+          <template slot-scope="{ row }">
+            <StatusIcon status="running" v-if="handleGetExtData(row.metadata.uid, 'resStatus') === 'normal'">
+              {{statusMap[handleGetExtData(row.metadata.uid, 'resStatus')] || '--'}}
+            </StatusIcon>
+            <LoadingIcon v-else>
+              <span class="bcs-ellipsis">{{ statusMap[handleGetExtData(row.metadata.uid, 'resStatus')] || '--' }}</span>
+            </LoadingIcon>
+          </template>
+        </bk-table-column>
+        <bk-table-column
           v-for="item in additionalColumns"
           :key="item.name"
           :label="item.name"
@@ -51,8 +69,7 @@
           :render-header="renderCrdHeader">
           <template #default="{ row }">
             <span>
-              {{ typeof getJsonPathValue(row, item.jsonPath) !== 'undefined'
-                ? getJsonPathValue(row, item.jsonPath) : '--' }}
+              {{ getJsonPathValue(row, item.jsonPath) || '--' }}
             </span>
           </template>
         </bk-table-column>
@@ -60,6 +77,11 @@
           <template #default="{ row }">
             <span v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'createTime') }">
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('generic.label.createdBy')">
+          <template slot-scope="{ row }">
+            <span>{{handleGetExtData(row.metadata.uid, 'creator') || '--'}}</span>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
@@ -79,18 +101,53 @@
               class="ml10" text
               @click="handleEnlargeCapacity(row)">{{ $t('deploy.templateset.scale') }}</bk-button>
             <bk-button
-              class="ml10" text
-              @click="gotoDetail(row)">{{ $t('generic.button.podDelete') }}</bk-button>
-            <bk-button
-              class="ml10" text
-              v-authority="{
-                clickable: webAnnotations.perms.items[row.metadata.uid]
-                  ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.clickable : true,
-                content: webAnnotations.perms.items[row.metadata.uid]
-                  ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.tip : '',
-                disablePerms: true
-              }"
-              @click="handleDeleteResource(row)">{{ $t('generic.button.delete') }}</bk-button>
+              class="ml10"
+              text
+              :disabled="row.spec.updateStrategy.type === 'InplaceUpdate'"
+              @click="handleRestart(
+                row,
+                $t('dashboard.workload.button.restart')
+              )">
+              <span
+                v-bk-tooltips="{
+                  content: $t('dashboard.workload.tips.inplaceUpdateNotSupportRestart'),
+                  disabled: row.spec.updateStrategy.type !== 'InplaceUpdate'
+                }">
+                {{ $t('dashboard.workload.button.restart') }}
+              </span>
+            </bk-button>
+            <bk-popover
+              placement="bottom"
+              theme="light dropdown"
+              :arrow="false"
+              trigger="click"
+              class="ml-[10px]">
+              <span :class="['bcs-icon-more-btn', { disabled: false }]">
+                <i class="bcs-icon bcs-icon-more"></i>
+              </span>
+              <template #content>
+                <ul class="bcs-dropdown-list">
+                  <li class="bcs-dropdown-item" @click="handleGotoUpdateRecord(row)">
+                    {{$t('deploy.helm.history')}}
+                  </li>
+                  <li class="bcs-dropdown-item" @click="handleRollback(row)">
+                    {{$t('deploy.helm.rollback')}}
+                  </li>
+                  <li
+                    class="bcs-dropdown-item"
+                    v-authority="{
+                      clickable: webAnnotations.perms.items[row.metadata.uid]
+                        ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.clickable : true,
+                      content: webAnnotations.perms.items[row.metadata.uid]
+                        ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.tip : '',
+                      disablePerms: true
+                    }"
+                    @click="handleDeleteResource(row)">
+                    {{ $t('generic.button.delete') }}
+                  </li>
+                </ul>
+              </template>
+            </bk-popover>
           </template>
         </bk-table-column>
         <template #empty>
@@ -103,10 +160,13 @@
 <script>
 import { defineComponent } from 'vue';
 
+import StatusIcon from '../../../components/status-icon';
+
+import LoadingIcon from '@/components/loading-icon.vue';
 import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   name: 'GameDeployments',
-  components: { BaseLayout },
+  components: { BaseLayout, StatusIcon, LoadingIcon },
 });
 </script>
