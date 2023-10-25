@@ -34,6 +34,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/repository"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
@@ -136,6 +137,12 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	if err != nil {
 		rest.APIError(c, i18n.GetMessage(c, err.Error()))
 		return
+	}
+
+	// 创建.bash_history文件
+	errCreate := CreateBashHistory(podCtx)
+	if errCreate != nil {
+		logger.Warnf("create bash history fail: %s", errCreate.Error())
 	}
 
 	podCtx.ProjectId = authCtx.ProjectId
@@ -545,4 +552,60 @@ func makeWebSocketURL(sessionId, lang string, withScheme bool) string {
 // CreateClusterPortalSession 集群级别的 webconsole openapi
 func (s *service) CreateClusterPortalSession(c *gin.Context) {
 	rest.APIError(c, "Not implemented")
+}
+
+// getBashHistory直接读取存储在远程repo中的文件
+func getBashHistory(podName string) ([]byte, error) {
+	filename := podName + podmanager.HistoryFileName
+
+	// 使用系统对象存储
+	storage, err := repository.NewProvider(config.G.Repository.StorageType)
+	if err != nil {
+		return nil, err
+	}
+
+	// 5秒下载时间
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	// 下载对象储存文件
+	fileInput, err := storage.DownloadFile(ctx, podmanager.HistoryRepoDir+filename)
+	if err != nil {
+		return nil, err
+	}
+
+	// 读取.bash_history内容byte格式
+	output, err := io.ReadAll(fileInput)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// CreateBashHistory 创建.bash_history文件
+func CreateBashHistory(podCtx *types.PodContext) error {
+	// 往容器写文件
+	pe, err := podCtx.NewPodExec()
+	if err != nil {
+		return err
+	}
+	pe.Command = []string{"cp", "/dev/stdin", "/root/.bash_history"}
+	stdin := &bytes.Buffer{}
+	pe.Stderr = &bytes.Buffer{}
+	// 读取保存的.bash_history文件
+	historyFileByte, err := getBashHistory(podCtx.PodName)
+	if err != nil {
+		return err
+	}
+	_, err = stdin.Write(historyFileByte)
+	if err != nil {
+		return err
+	}
+	pe.Stdin = stdin
+	err = pe.Exec()
+	if err != nil {
+		return err
+	}
+	return nil
 }

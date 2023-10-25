@@ -11,7 +11,7 @@ const routes = [
       const { spaceList } = useGlobalStore();
       const firstHasPermSpace = spaceList.find((item: ISpaceDetail) => item.permission);
       const spaceId = firstHasPermSpace ? firstHasPermSpace.space_id : spaceList[0]?.space_id;
-      return { name: 'service-mine', params: { spaceId } };
+      return { name: 'service-all', params: { spaceId } };
     },
   },
   {

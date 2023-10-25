@@ -59,6 +59,31 @@ func (b *bkrepoStorage) UploadFile(ctx context.Context, localFile, filePath stri
 	return nil
 }
 
+// UploadFileByReader upload file to bkRepo by Reader
+func (b *bkrepoStorage) UploadFileByReader(ctx context.Context, r io.Reader, filePath string) error {
+	// 上传文件API PUT /generic/{project}/{repoName}/{fullPath}
+	rawURL := fmt.Sprintf("%s/generic/%s/%s/%s", config.G.Repository.Bkrepo.Endpoint,
+		config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo, filePath)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, rawURL, r)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/octet-stream")
+	req.Header.Set("X-BKREPO-OVERWRITE", "true")
+
+	resp, err := b.client.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		blog.Errorf("Upload file failed, resp: %s\n", string(body))
+		return fmt.Errorf("upload file failed, Err code: %v", resp.StatusCode)
+	}
+	return nil
+}
+
 // IsExist 是否存在
 func (b *bkrepoStorage) IsExist(ctx context.Context, filePath string) (bool, error) {
 	rawURL := fmt.Sprintf("%s/generic/%s/%s%s", config.G.Repository.Bkrepo.Endpoint,

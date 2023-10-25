@@ -22,6 +22,7 @@ import (
 // Provider 对象存储接口
 type Provider interface {
 	UploadFile(ctx context.Context, localFile, filePath string) error
+	UploadFileByReader(ctx context.Context, r io.Reader, filePath string) error
 	ListFile(ctx context.Context, folderName string) ([]string, error)
 	ListFolders(ctx context.Context, folderName string) ([]string, error)
 	IsExist(ctx context.Context, filePath string) (bool, error)
