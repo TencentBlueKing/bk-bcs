@@ -185,6 +185,17 @@
     :app-id="props.appId"
     @updated="getAllConfigList"
   />
+  <bk-dialog ext-cls="delete-template-pkg" :is-show="isDeleteDialogShow" :width="440" footer-align="center">
+    <template #header>
+      <bk-overflow-title type="tips">确认是否删除模板套餐【{{ deleteTemplatePkgName }}】</bk-overflow-title>
+    </template>
+    <template #footer>
+      <bk-button theme="primary" style="margin-right: 10px; width: 88px" @click="handleDeletePkgConfirm"
+        >确认</bk-button
+      >
+      <bk-button style="width: 88px" @click="isDeleteDialogShow = false">取消</bk-button>
+    </template>
+  </bk-dialog>
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
@@ -265,6 +276,9 @@ const editPanelShow = ref(false);
 const activeConfig = ref(0);
 const isDiffPanelShow = ref(false);
 const isSearchEmpty = ref(false);
+const isDeleteDialogShow = ref(false);
+const deleteTemplatePkgName = ref('');
+const deleteTemplatePkgId = ref(0);
 const viewConfigSliderData = ref({
   open: false,
   data: { id: 0, type: '' },
@@ -491,20 +505,19 @@ const handleDeletePkg = async (pkgId: number, name: string) => {
   if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
     return;
   }
-  InfoBox({
-    title: `确认是否删除模板套餐【${name}】?`,
-    headerAlign: 'center' as const,
-    footerAlign: 'center' as const,
-    onConfirm: async () => {
-      await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [pkgId]);
-      await getBoundTemplateList();
-      tableGroupsData.value = transListToTableData();
-      Message({
-        theme: 'success',
-        message: '删除模板套餐成功',
-      });
-    },
-  } as any);
+  isDeleteDialogShow.value = true;
+  deleteTemplatePkgName.value = name;
+  deleteTemplatePkgId.value = pkgId;
+};
+
+const handleDeletePkgConfirm = async () => {
+  await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [deleteTemplatePkgId.value]);
+  await getBoundTemplateList();
+  tableGroupsData.value = transListToTableData();
+  Message({
+    theme: 'success',
+    message: '删除模板套餐成功',
+  });
 };
 
 // 非模板配置文件diff
@@ -649,6 +662,24 @@ defineExpose({
     .bk-button:not(:last-child) {
       margin-right: 8px;
     }
+  }
+}
+</style>
+
+<style lang="scss">
+.delete-template-pkg {
+  .bk-dialog-header {
+    padding: 24px 24px 0 !important;
+    .bk-dialog-title {
+      margin: 15px 0 10px;
+    }
+  }
+  .bk-modal-content {
+    display: none;
+  }
+  .bk-modal-footer {
+    border: none !important;
+    background-color: #fff !important;
   }
 }
 </style>
