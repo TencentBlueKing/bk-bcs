@@ -206,7 +206,9 @@ func (s *StorageServer) initHTTPServer() error {
 
 	// ApiResource
 	a := apiserver.GetAPIResource()
-	a.SetConfig(s.conf)
+	if err := a.SetConfig(s.conf); err != nil {
+		return err
+	}
 	a.InitActions()
 
 	// register middleware
