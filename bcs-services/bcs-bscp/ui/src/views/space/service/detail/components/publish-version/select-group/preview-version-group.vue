@@ -13,7 +13,7 @@
         >共 <span class="count">{{ previewGroup.children.length }}</span> 个分组</span
       >
       <bk-button
-        v-if="previewGroup.id"
+        v-if="previewGroup.id && previewGroup.id !== versionData.id"
         text
         class="diff-btn"
         theme="primary"
@@ -47,8 +47,11 @@
 import { ref } from 'vue';
 import { Del, AngleDown, AngleRight } from 'bkui-vue/lib/icon';
 import { IGroupPreviewItem } from '../../../../../../../../types/group';
+import { storeToRefs } from 'pinia';
+import useConfigStore from '../../../../../../../store/config';
 import RuleTag from '../../../../../groups/components/rule-tag.vue';
-
+const versionStore = useConfigStore();
+const { versionData } = storeToRefs(versionStore);
 const props = defineProps<{
   allowPreviewDelete: boolean;
   previewGroup: IGroupPreviewItem;
