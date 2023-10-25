@@ -45,6 +45,16 @@ func (c *cosStorage) UploadFile(ctx context.Context, localFile, filePath string)
 	return nil
 }
 
+// UploadFileByReader upload file to cos by Reader
+func (c *cosStorage) UploadFileByReader(ctx context.Context, r io.Reader, filePath string) error {
+	_, err := c.client.Object.Put(ctx, filePath, r, nil)
+	if err != nil {
+		return fmt.Errorf("upload file failed: %v", err)
+	}
+
+	return nil
+}
+
 // ListFile list current folder files
 func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]string, error) {
 	var marker string
