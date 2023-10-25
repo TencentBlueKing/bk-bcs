@@ -26,10 +26,10 @@
     </bk-form-item>
     <bk-form-item class="radio-group-form" label="分组规则" required property="rules">
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
-        <bk-input v-model="rule.key" style="width: 176px" placeholder="" @change="ruleChange"></bk-input>
+        <bk-input v-model="rule.key" style="width: 174px" placeholder="" @change="ruleChange"></bk-input>
         <bk-select
           :model-value="rule.op"
-          style="width: 120px"
+          style="width: 72px"
           :clearable="false"
           @change="handleLogicChange(index, $event)"
         >
@@ -271,7 +271,7 @@ defineExpose({
     cursor: pointer;
   }
   .value-input {
-    width: 250px;
+    width: 280px;
   }
 }
 .action-btns {
