@@ -154,7 +154,7 @@ func (mgr *WatcherManager) initWatchers(clusterID string,
 				glog.Errorf("get crd version from cluster failed and not set crd version supported in cluster, err: %s", err)
 				panic(err)
 			}
-			glog.Warnf("get crd version from cluster failed, use config from file")
+			glog.Warnf("get crd version from cluster failed, use config from file, err: %s", err)
 			crdVersion = filterConfig.CrdVersionSupport
 		}
 
