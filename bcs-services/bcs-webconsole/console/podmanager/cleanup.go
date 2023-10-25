@@ -170,8 +170,8 @@ func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace strin
 		}
 
 		// 命令行持久化保存
-		errCommand := persistenceCommand(k8sClient, pod.Name, pod.Namespace, pod.Spec.Containers[0].Name, clusterId)
-		if errCommand != nil {
+		if errCommand := persistenceCommand(
+			k8sClient, pod.Name, pod.Namespace, pod.Spec.Containers[0].Name, clusterId); errCommand != nil {
 			logger.Errorf("persistenceCommand, err: %s", errCommand)
 		}
 
@@ -219,15 +219,17 @@ func persistenceCommand(k8sClient *kubernetes.Clientset, podName, namespace, con
 	// 文件名
 	filename := podName + HistoryFileName
 
-	// 上传cos
+	// 上传远程repo对象存储
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
 		return err
 	}
 
-	ctx := context.Background()
+	// 10秒上传超时时间
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
 
-	// 推送至cos存储桶
+	// 推送至远程repo对象存储
 	err = storage.UploadFileByReader(ctx, stdout, HistoryRepoDir+filename)
 	if err != nil {
 		return err

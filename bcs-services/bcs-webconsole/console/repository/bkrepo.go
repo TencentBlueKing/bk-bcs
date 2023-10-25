@@ -78,7 +78,7 @@ func (b *bkrepoStorage) UploadFileByReader(ctx context.Context, r io.Reader, fil
 	}
 	if resp.StatusCode != 200 {
 		body, _ := io.ReadAll(resp.Body)
-		klog.Errorf("Upload file failed, resp: %s\n", string(body))
+		blog.Errorf("Upload file failed, resp: %s\n", string(body))
 		return fmt.Errorf("upload file failed, Err code: %v", resp.StatusCode)
 	}
 	return nil
