@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -87,6 +88,9 @@ func NewTracingWrapper() server.HandlerWrapper {
 				respBody = fmt.Sprintf("%s...(Total %s)", respBody[:1024], humanize.Bytes(uint64(len(respBody))))
 			}
 
+			// 以utf-8方式合法截取字符串
+			reqBody = strings.ToValidUTF8(reqBody, "")
+			respBody = strings.ToValidUTF8(respBody, "")
 			// 设置额外标签
 			span.SetAttributes(attribute.Key("req").String(reqBody))
 			span.SetAttributes(attribute.Key("elapsed_ime").String(elapsedTime.String()))
