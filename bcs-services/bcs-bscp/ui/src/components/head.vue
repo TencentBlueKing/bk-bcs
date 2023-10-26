@@ -112,7 +112,7 @@ const md = new MarkdownIt({
 const navList = [
   { id: 'service-all', module: 'service', name: '服务管理' },
   { id: 'groups-management', module: 'groups', name: '分组管理' },
-  { id: 'variables-management', module: 'variables', name: '变量管理' },
+  { id: 'variables-management', module: 'variables', name: '全局变量' },
   { id: 'templates-list', module: 'templates', name: '配置模板' },
   { id: 'script-list', module: 'scripts', name: '脚本管理' },
   { id: 'credentials-management', module: 'credentials', name: '服务密钥' },
