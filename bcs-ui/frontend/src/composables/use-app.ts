@@ -95,26 +95,28 @@ export function useCluster() {
   const clusterList = computed<Partial<ICluster>[]>(() => $store.state.cluster.clusterList || []);
 
   const { projectCode } = useProject();
-  const terminalWins = ref<Window | null>(null);
+  // const terminalWins = ref<Window | null>(null);
   const handleGotoConsole = ({ clusterID, clusterName }: {
     clusterID: string
     clusterName?: string
   }) => {
+    console.log(clusterName);
     const url = `${window.BCS_API_HOST}/bcsapi/v4/webconsole/projects/${projectCode.value}/mgr/#cluster=${clusterID}`;
+    window.open(url, '');
     // 缓存当前窗口，再次打开时重新进入
-    if (terminalWins.value) {
-      if (!terminalWins.value.closed) {
-        terminalWins.value.postMessage({
-          clusterId: clusterID,
-          clusterName,
-        }, location.origin);
-        terminalWins.value.focus();
-      } else {
-        terminalWins.value = window.open(url, '');
-      }
-    } else {
-      terminalWins.value = window.open(url, '');
-    }
+    // if (terminalWins.value) {
+    //   if (!terminalWins.value.closed) {
+    //     terminalWins.value.postMessage({
+    //       clusterId: clusterID,
+    //       clusterName,
+    //     }, location.origin);
+    //     terminalWins.value.focus();
+    //   } else {
+    //     terminalWins.value = window.open(url, '');
+    //   }
+    // } else {
+    //   terminalWins.value = window.open(url, '');
+    // }
   };
 
   return {
