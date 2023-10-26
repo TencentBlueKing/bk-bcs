@@ -386,7 +386,13 @@ const calcDiff = () => {
           basePermission: baseItem.permission,
           currentPermission: crtItem.permission,
         };
-        if (crtItem.template_revision_id !== baseItem.template_revision_id || diffConfig.current !== diffConfig.base) {
+        if (
+          crtItem.template_revision_id !== baseItem.template_revision_id ||
+          diffConfig.current !== diffConfig.base ||
+          diffConfig.currentPermission?.privilege !== diffConfig.basePermission?.privilege ||
+          diffConfig.currentPermission?.user !== diffConfig.basePermission?.user ||
+          diffConfig.currentPermission?.user_group !== diffConfig.basePermission?.user_group
+        ) {
           diffCount.value += 1;
           diffConfig.diff_type = isBaseVersionExist.value ? 'modify' : '';
         }
