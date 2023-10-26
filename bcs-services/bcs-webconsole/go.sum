@@ -70,6 +70,8 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/DATA-DOG/go-sqlmock v1.3.3/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
+github.com/LidolLxf/bk-bcs/bcs-common/pkg/otel v0.0.0-20231026074848-6f8f64e2f591 h1:eyTr+b8YQ9jsENTM681Slth83iiJ1Xlca8tbPhW7G5A=
+github.com/LidolLxf/bk-bcs/bcs-common/pkg/otel v0.0.0-20231026074848-6f8f64e2f591/go.mod h1:Oswz2fWQcjF3sZ1+9uLQR5srW01bqJVk3Ip5HiO1+N8=
 github.com/Microsoft/go-winio v0.4.14/go.mod h1:qXqCSQ3Xa7+6tgxaGTIe4Kpcdsi+P8jBhyzoq1bpyYA=
 github.com/Microsoft/go-winio v0.4.16/go.mod h1:XB6nPKklQyQ7GC9LdcBEcBl8PF76WugXOPRXwdLnMv0=
 github.com/Microsoft/go-winio v0.5.2/go.mod h1:WpS1mjBmmwHBEWmogvA2mj8546UReBk4v8QkMxJ6pZY=
@@ -97,8 +99,6 @@ github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230920051541-b2fbd0fe23a
 github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230920051541-b2fbd0fe23aa/go.mod h1:t+dL+56hGTiV+11XO9vvEUTEFJiMUOH51ecJJsavhXI=
 github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230906015939-61de9e6ddee9 h1:hKLO0Ou7WPMQ8nfH8B2l0p+atWtMWARJ8If+mYOuDLs=
 github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230906015939-61de9e6ddee9/go.mod h1:brH9gS85hBIx4wwlihn9TKPom5VrcMuZwnHfKBAmsWI=
-github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230906015939-61de9e6ddee9 h1:LZvENFHIeXmQa8KjWaWiqYpuFby4dGhhMbMC83Y2xCw=
-github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230906015939-61de9e6ddee9/go.mod h1:Oswz2fWQcjF3sZ1+9uLQR5srW01bqJVk3Ip5HiO1+N8=
 github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230906015939-61de9e6ddee9 h1:fI9LtnLR7TbVkot8xGuJ/SK5aO20jobJLORVDAJLKqo=
 github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230906015939-61de9e6ddee9/go.mod h1:SiXcPyURXmZy7VEvfZt8FqinrIfqF0TofD20zEKPHNQ=
 github.com/TencentBlueKing/bk-audit-go-sdk v0.0.5 h1:ncWmzuwRvx7RBg07LaVZF1DVlXm/STLa1+d6ESEUFJo=

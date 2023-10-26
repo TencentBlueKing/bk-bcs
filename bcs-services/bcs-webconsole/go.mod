@@ -172,6 +172,7 @@ require (
 )
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-common/pkg/otel => github.com/LidolLxf/bk-bcs/bcs-common/pkg/otel v0.0.0-20231026074848-6f8f64e2f591
 	// concurrency safe
 	github.com/gin-contrib/i18n v0.0.1 => github.com/ifooth/i18n v0.0.0-20230609093731-5838804173a5
 	// 修复 IPv6 单栈 Bug
