@@ -11,7 +11,7 @@
           :class="['nav-item', { actived: route.meta.navModule === nav.module }]"
           :key="nav.id"
           :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }"
-        >
+          @click="handleNavClick(nav.id)">
           {{ nav.name }}
         </router-link>
       </div>
@@ -137,6 +137,19 @@ watch(
     immediate: true,
   }
 );
+
+const handleNavClick = (navId: String) => {
+  if (navId === 'service-all') {
+    const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
+    if (lastAccessedServiceDetail) {
+      const detail = JSON.parse(lastAccessedServiceDetail);
+      if (detail.spaceId === spaceId.value) {
+        router.push({ name: 'service-config', params: { spaceId: detail.spaceId, appId: detail.appId } });
+        return;
+      };
+    };
+  };
+};
 
 const handleSpaceSearch = (searchStr: string) => {
   if (searchStr) {
