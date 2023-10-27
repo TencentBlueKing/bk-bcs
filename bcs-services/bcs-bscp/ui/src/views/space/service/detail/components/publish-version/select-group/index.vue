@@ -20,6 +20,7 @@
       <Preview
         :group-list="groupList"
         :group-list-loading="groupListLoading"
+        :group-type="groupType"
         :version-list="versionList"
         :version-list-loading="versionListLoading"
         :allow-preview-delete="groupType === 'select'"
@@ -54,7 +55,7 @@ const props = withDefaults(
   }>(),
   {
     groupType: 'select',
-  },
+  }
 );
 const emits = defineEmits(['openPreviewVersionDiff', 'groupTypeChange', 'change']);
 

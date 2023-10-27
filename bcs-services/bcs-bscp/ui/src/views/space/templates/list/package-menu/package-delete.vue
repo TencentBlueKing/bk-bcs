@@ -69,7 +69,7 @@ watch(
     if (val) {
       getRelatedApps();
     }
-  },
+  }
 );
 
 const getRelatedApps = async () => {
@@ -127,6 +127,14 @@ const close = () => {
   /* border-top: 1px solid #dcdee5; */
   .delete-btn {
     margin-right: 8px;
+  }
+}
+</style>
+
+<style lang="scss">
+.service-table {
+  thead th[colspan] {
+    background-color: #f0f1f5 !important;
   }
 }
 </style>
