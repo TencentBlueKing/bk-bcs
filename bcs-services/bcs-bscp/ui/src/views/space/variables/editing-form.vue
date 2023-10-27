@@ -64,7 +64,7 @@ const rules = {
     {
       validator: (value: string) => {
         if (value.length > 0) {
-          return /^(?!^[0-9])\w+$/.test(value);
+          return /^[a-zA-Z_]\w*$/.test(value);
         }
         return true;
       },
