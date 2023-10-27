@@ -64,11 +64,12 @@ const rules = {
     {
       validator: (value: string) => {
         if (value.length > 0) {
-          return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_-]*[\u4e00-\u9fa5a-zA-Z0-9]?$/.test(value);
+          return /^(?!^[0-9])\w+$/.test(value);
         }
         return true;
       },
-      message: '仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾',
+      message: '仅允许使用中文、英文、数字、下划线，且不能以数字开头',
+      trigger: 'blur',
     },
   ],
   memo: [

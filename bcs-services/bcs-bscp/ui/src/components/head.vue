@@ -35,6 +35,12 @@
             <AngleDown class="arrow-icon" />
           </div>
         </template>
+        <template #extension>
+          <div class="create-operation" @click="handleToCMDB">
+            <plus />
+            <div class="content">新建业务</div>
+          </div>
+        </template>
         <bk-option v-for="item in optionList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
           <div
             v-cursor="{ active: !item.permission }"
@@ -88,7 +94,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { AngleDown, HelpFill, DownShape } from 'bkui-vue/lib/icon';
+import { AngleDown, HelpFill, DownShape, Plus } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../store/global';
 import useUserStore from '../store/user';
 import useTemplateStore from '../store/template';
@@ -121,7 +127,7 @@ const navList = [
 const optionList = ref<ISpaceDetail[]>([]);
 
 const crtSpaceText = computed(() => {
-  const space = spaceList.value.find((item) => item.space_id === spaceId.value);
+  const space = spaceList.value.find(item => item.space_id === spaceId.value);
   if (space) {
     return `${space.space_name}(${spaceId.value})`;
   }
@@ -135,7 +141,7 @@ watch(
   },
   {
     immediate: true,
-  }
+  },
 );
 
 const handleSpaceSearch = (searchStr: string) => {
@@ -174,7 +180,7 @@ const handleSelectSpace = (id: string) => {
       state.currentTemplateSpace = 0;
       state.currentPkg = '';
     });
-    const nav = navList.find((item) => item.module === route.meta.navModule);
+    const nav = navList.find(item => item.module === route.meta.navModule);
     if (nav) {
       router.push({ name: nav.id, params: { spaceId: id } });
     } else {
@@ -241,6 +247,10 @@ Object.keys(module).forEach((path) => {
 });
 const handleLoginOut = () => {
   loginOut();
+};
+const handleToCMDB = () => {
+  // @ts-ignore
+  window.open(BK_CC_HOST); // eslint-disable-line no-undef
 };
 </script>
 
@@ -384,6 +394,20 @@ const handleLoginOut = () => {
   &:hover {
     background-color: #eaf3ff;
     color: #3a84ff;
+  }
+}
+.create-operation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  height: 33px;
+  padding: 0 12px;
+  width: 100%;
+  color: #2B353E;
+  span {
+    font-size: 16px;
+    margin-right: 3px;
   }
 }
 </style>
