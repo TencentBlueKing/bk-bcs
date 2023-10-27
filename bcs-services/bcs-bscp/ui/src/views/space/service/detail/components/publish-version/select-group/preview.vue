@@ -2,7 +2,9 @@
   <div class="roll-back-preview">
     <h3 class="title">
       上线预览
-      <span class="tips">上线后，所选分组将从以下各版本更新至当前版本</span>
+      <span class="tips"
+        >上线后，{{ groupType === 'exclude' ? '以下分组' : '所选分组' }}将从以下各版本更新至当前版本</span
+      >
     </h3>
     <div class="version-list-wrapper">
       <bk-exception v-if="previewData.length === 0" scene="part" type="empty">
@@ -19,7 +21,8 @@
           :allow-preview-delete="allowPreviewDelete"
           :disabled="props.disabled"
           @diff="emits('diff', $event)"
-          @delete="handleDelete">
+          @delete="handleDelete"
+        >
         </preview-version-group>
       </template>
     </div>
@@ -38,7 +41,7 @@ const aggregateGroup = (groups: IGroupToPublish[]) => {
   groups.forEach((group) => {
     const { release_id, release_name } = group;
     if (release_id) {
-      const version = modifyVersions.find(item => item.id === release_id);
+      const version = modifyVersions.find((item) => item.id === release_id);
       if (version) {
         version.children.push(group);
       } else {
@@ -55,59 +58,69 @@ const aggregateGroup = (groups: IGroupToPublish[]) => {
   return list;
 };
 
-const props = withDefaults(defineProps<{
+const props = withDefaults(
+  defineProps<{
     groupListLoading: boolean;
     groupList: IGroupToPublish[];
     allowPreviewDelete: boolean;
     disabled?: number[];
     value: IGroupToPublish[];
-  }>(), {
-  disabled: () => [],
-});
+    groupType: string;
+  }>(),
+  {
+    disabled: () => [],
+  }
+);
 
 const emits = defineEmits(['diff', 'change']);
 
 const previewData = ref<IGroupPreviewItem[]>([]);
 
-watch(() => props.value, (val) => {
-  previewData.value = aggregateGroup(val);
-}, { immediate: true });
+watch(
+  () => props.value,
+  (val) => {
+    previewData.value = aggregateGroup(val);
+  },
+  { immediate: true }
+);
 
 const handleDelete = (id: number) => {
-  emits('change', props.value.filter(group => group.id !== id));
+  emits(
+    'change',
+    props.value.filter((group) => group.id !== id)
+  );
 };
-
 </script>
 <style lang="scss" scoped>
-  .roll-back-preview {
-    height: 100%;
+.roll-back-preview {
+  height: 100%;
+}
+.version-list-wrapper {
+  height: calc(100% - 36px);
+  overflow: auto;
+}
+.title {
+  margin: 0 0 16px;
+  padding: 0 24px;
+  line-height: 19px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #63656e;
+  .tips {
+    margin-left: 16px;
+    line-height: 20px;
+    color: #979ba5;
+    font-size: 12px;
+    font-weight: 400;
   }
-  .version-list-wrapper {
-    height: calc(100% - 36px);
-    overflow: auto;
+}
+.empty-tips {
+  font-size: 14px;
+  color: #63656e;
+  & > p {
+    margin: 8px 0 0;
+    color: #979ba5;
+    font-size: 12px;
   }
-  .title {
-    margin: 0 0 16px;
-    padding: 0 24px;
-    line-height: 19px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #63656e;
-    .tips {
-      margin-left: 16px;
-      line-height: 20px;
-      color: #979ba5;
-      font-size: 12px;
-      font-weight: 400;
-    }
-  }
-  .empty-tips {
-    font-size: 14px;
-    color: #63656e;
-    & > p {
-      margin: 8px 0 0;
-      color: #979ba5;
-      font-size: 12px;
-    }
-  }
+}
 </style>
