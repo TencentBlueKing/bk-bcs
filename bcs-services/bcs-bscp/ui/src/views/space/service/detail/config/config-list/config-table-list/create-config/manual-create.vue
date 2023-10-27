@@ -56,7 +56,7 @@ watch(
       content.value = '';
       isFormChange.value = false;
     }
-  }
+  },
 );
 
 const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary | string) => {
