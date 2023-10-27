@@ -81,6 +81,7 @@ const props = defineProps<{
   unNamedVersionVariables?: IVariableEditParams[];
   baseVersionId?: number; // 默认选中的基准版本id
   selectedConfig?: IConfigDiffSelected; // 默认选中的配置文件id
+  versionDiffList?: IConfigVersion[];
 }>();
 
 const emits = defineEmits(['update:show', 'publish']);
@@ -112,7 +113,7 @@ watch(
     if (val) {
       getVersionList();
     }
-  }
+  },
 );
 
 watch(
@@ -122,13 +123,17 @@ watch(
       selectedBaseVersion.value = val;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // 获取所有对比基准版本
 const getVersionList = async () => {
   try {
     versionListLoading.value = true;
+    if (props.versionDiffList) {
+      versionList.value = props.versionDiffList;
+      return;
+    }
     const res = await getConfigVersionList(bkBizId, appId, { start: 0, all: true });
     versionList.value = res.data.details.filter((item: IConfigVersion) => item.id !== props.currentVersion.id);
   } catch (e) {
