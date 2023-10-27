@@ -19,7 +19,8 @@
           :allow-preview-delete="props.groupType === 'select'"
           :disabled="props.disabled"
           @diff="emits('diff', $event)"
-          @delete="handleDelete">
+          @delete="handleDelete"
+        >
         </preview-version-group>
       </template>
     </div>
@@ -62,59 +63,69 @@ const aggregateGroup = (groups: IGroupToPublish[]) => {
   return list;
 };
 
-const props = withDefaults(defineProps<{
+const props = withDefaults(
+  defineProps<{
     groupListLoading: boolean;
     groupList: IGroupToPublish[];
     groupType: string;
     disabled?: number[];
     value: IGroupToPublish[];
-  }>(), {
-  disabled: () => [],
-});
+    groupType: string;
+  }>(),
+  {
+    disabled: () => [],
+  }
+);
 
 const emits = defineEmits(['diff', 'change']);
 
 const previewData = ref<IGroupPreviewItem[]>([]);
 
-watch(() => props.value, (val) => {
-  previewData.value = aggregateGroup(val);
-}, { immediate: true });
+watch(
+  () => props.value,
+  (val) => {
+    previewData.value = aggregateGroup(val);
+  },
+  { immediate: true }
+);
 
 const handleDelete = (id: number) => {
-  emits('change', props.value.filter(group => group.id !== id));
+  emits(
+    'change',
+    props.value.filter((group) => group.id !== id)
+  );
 };
-
 </script>
 <style lang="scss" scoped>
-  .roll-back-preview {
-    height: 100%;
+.roll-back-preview {
+  height: 100%;
+}
+.version-list-wrapper {
+  height: calc(100% - 36px);
+  overflow: auto;
+}
+.title {
+  margin: 0 0 16px;
+  padding: 0 24px;
+  line-height: 19px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #63656e;
+  .tips {
+    margin-left: 16px;
+    line-height: 20px;
+    color: #979ba5;
+    font-size: 12px;
+    font-weight: 400;
   }
-  .version-list-wrapper {
-    height: calc(100% - 36px);
-    overflow: auto;
+}
+.empty-tips {
+  font-size: 14px;
+  color: #63656e;
+  & > p {
+    margin: 8px 0 0;
+    color: #979ba5;
+    font-size: 12px;
   }
-  .title {
-    margin: 0 0 16px;
-    padding: 0 24px;
-    line-height: 19px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #63656e;
-    .tips {
-      margin-left: 16px;
-      line-height: 20px;
-      color: #979ba5;
-      font-size: 12px;
-      font-weight: 400;
-    }
-  }
-  .empty-tips {
-    font-size: 14px;
-    color: #63656e;
-    & > p {
-      margin: 8px 0 0;
-      color: #979ba5;
-      font-size: 12px;
-    }
-  }
+}
 </style>

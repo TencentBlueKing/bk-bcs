@@ -148,9 +148,7 @@ const getServiceList = async () => {
   try {
     const bizId = route.params.spaceId as string;
     const query = {
-      start: 0,
-      limit: 1000, // @todo 确认拉全量列表参数
-      operator: userInfo.value.username,
+      all: true,
     };
     const resp = await getAppList(bizId, query);
     serviceList.value = resp.details;

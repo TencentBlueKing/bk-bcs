@@ -2541,7 +2541,7 @@ div.jsoneditor {
 }
 .tippy-tooltip {
     &.dropdown-theme {
-        padding: 5px 0;
+        padding: 5px 0 !important;
         .dropdown-list {
             padding: 6px, 0;
             li {

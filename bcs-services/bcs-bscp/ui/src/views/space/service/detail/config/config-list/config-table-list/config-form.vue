@@ -165,7 +165,7 @@ const props = withDefaults(
   }>(),
   {
     editable: true,
-  }
+  },
 );
 
 const emits = defineEmits(['change', 'update:fileUploading']);
@@ -201,7 +201,7 @@ const rules = {
     },
     {
       validator: () => {
-        const privilege = parseInt(privilegeInputVal.value[0]);
+        const privilege = parseInt(privilegeInputVal.value[0], 10);
         return privilege >= 4;
       },
       message: '文件own必须有读取权限',
@@ -214,9 +214,19 @@ const rules = {
       message: '最大长度256个字符',
     },
     {
-      validator: (value: string) => /^\/([a-zA-Z0-9\/\-\.]+\/)*[a-zA-Z0-9\/\-\.]+$/.test(value),
+      validator: (value: string) => /^\/([a-zA-Z0-9/\-.]+\/)*[a-zA-Z0-9/\-.]+$/.test(value),
       message: '无效的路径,路径不符合Unix文件路径格式规范',
       trigger: 'blur',
+    },
+  ],
+  memo: [
+    {
+      validator: (value: string) => {
+        if (!value) return true;
+        return /^[\u4E00-\u9FA5a-zA-Z0-9_\- ]*[\u4E00-\u9FA5a-zA-Z0-9](?!.*[,])[\u4E00-\u9FA5a-zA-Z0-9_\- ]*$/.test(value);
+      },
+      message: '只允许包含中文、英文、数字、下划线、连字符、空格，并且必须以中文、英文、数字开头和结尾。',
+      trigger: 'change',
     },
   ],
 };
@@ -228,7 +238,7 @@ const fileList = computed(() => (fileContent.value ? [transFileToObject(fileCont
 const privilegeGroupsValue = computed(() => {
   const data: { [index: string]: number[] } = { 0: [], 1: [], 2: [] };
   if (typeof localVal.value.privilege === 'string' && localVal.value.privilege.length > 0) {
-    const valArr = localVal.value.privilege.split('').map((i) => parseInt(i, 10));
+    const valArr = localVal.value.privilege.split('').map(i => parseInt(i, 10));
     valArr.forEach((item, index) => {
       data[index as keyof typeof data] = PRIVILEGE_VALUE_MAP[item as keyof typeof PRIVILEGE_VALUE_MAP];
     });
@@ -241,7 +251,7 @@ watch(
   (val) => {
     privilegeInputVal.value = val as string;
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -253,7 +263,7 @@ watch(
       stringContent.value = props.content as string;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入

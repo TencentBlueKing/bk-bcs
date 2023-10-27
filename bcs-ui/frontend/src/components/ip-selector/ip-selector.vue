@@ -3,23 +3,28 @@
     :show-dialog="showDialog"
     :disable-host-method="disableHostMethod"
     :service="{
-      fetchTopologyHostsNodes
+      fetchTopologyHostsNodes,
+      fetchHostCheck
     }"
     :value="{
       hostList: ipList
     }"
     :key="selectorKey"
+    keep-host-field-output
     @change="confirm"
     @close-dialog="cancel" />
 </template>
 <script setup lang="ts">
 import { computed, PropType, ref, watch } from 'vue';
 
-import { topolopyHostsNodes as topologyHostsNodesAdapter } from '@blueking/ip-selector/dist/adapter';
+import {
+  hostCheck as hostCheckAdapter,
+  topolopyHostsNodes as topologyHostsNodesAdapter,
+} from '@blueking/ip-selector/dist/adapter';
 
 import IpSelector from './ipv6-selector';
 
-import { cloudNodes, nodeAvailable, topologyHostsNodes } from '@/api/modules/cluster-manager';
+import { cloudNodes, hostCheck, nodeAvailable, topologyHostsNodes  } from '@/api/modules/cluster-manager';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 
@@ -93,7 +98,6 @@ const getRegionName = (region) => {
 // 获取topo树当前页的主机列表
 const $biz = computed(() => $store.state.curProject.businessID);
 const $scope = 'biz';
-const nodeList = ref<IHostData[]>([]);
 // 节点是否被占用Map
 let cacheNodeAvailableMap: Record<string, {
   clusterID: string
@@ -106,23 +110,16 @@ let cacheNodeListCloudDataMap: Record<string, {
   innerIP: string
   vpc: string
 }> = {};
-// 获取topo树当前页的主机列表
-const fetchTopologyHostsNodes = async (params) => {
-  const data: {data: IHostData[]} = await topologyHostsNodes({
-    ...params,
-    $biz: $biz.value,
-    $scope,
-  }).catch(() => []);
-  nodeList.value = data.data;
-
-  const ipList = data.data.filter(item => !!item.ip).map(item => item.ip);
+// 获取主机云和占有信息
+const handleGetHostAvailableAndCloudInfo = async (hostData: IHostData[]) => {
+  const ipList = hostData.filter(item => !!item.ip).map(item => item.ip);
   // 查询主机是否可用
   const nodeAvailableData = await nodeAvailable({
     innerIPs: ipList,
   });
   cacheNodeAvailableMap = nodeAvailableData;
   // 查询当前主机云上信息
-  if (props.cloudId && props.region && data.data.length && props.validateVpcAndRegion) {
+  if (props.cloudId && props.region && ipList.length && props.validateVpcAndRegion) {
     const cloudData = await cloudNodes({
       $cloudId: props.cloudId,
       region: props.region,
@@ -134,9 +131,31 @@ const fetchTopologyHostsNodes = async (params) => {
       }
       return pre;
     }, {});
-    cacheNodeListCloudDataMap = cloudDataMap;
+    cacheNodeListCloudDataMap = {
+      ...cacheNodeListCloudDataMap,
+      ...cloudDataMap,
+    };
   }
+};
+// 获取topo树当前页的主机列表
+const fetchTopologyHostsNodes = async (params) => {
+  const data: {data: IHostData[]} = await topologyHostsNodes({
+    ...params,
+    $biz: $biz.value,
+    $scope,
+  }).catch(() => []);
+  await handleGetHostAvailableAndCloudInfo(data.data);
   return topologyHostsNodesAdapter(data);
+};
+// 手动输入IP获取主机列表
+const fetchHostCheck = async (params) => {
+  const data = await hostCheck({
+    ...params,
+    $biz: $biz.value,
+    $scope,
+  }).catch(() => []);
+  await handleGetHostAvailableAndCloudInfo(data);
+  return hostCheckAdapter(data);
 };
 
 // 禁用ip列表
@@ -171,18 +190,16 @@ const disableHostMethod = (row: IHostData) => {
 };
 
 const confirm = ({ hostList }) => {
+  console.log(hostList);
   // 兼容以前数据
-  const data = hostList.map((item) => {
-    const host = nodeList.value.find(node => node.ip === item.ip) || item;
-    return {
-      ...host,
-      ...(cacheNodeListCloudDataMap[host.ip] || {}),
-      // 兼容以前数据结构（新UI不要使用这些字段）
-      bk_host_innerip: host.ip,
-      bk_cloud_id: host?.cloudArea?.id,
-      agent_alive: host.alive, // agent状态
-    };
-  });
+  const data = hostList.map(item => ({
+    ...item,
+    ...(cacheNodeListCloudDataMap[item.ip] || {}),
+    // 兼容以前数据结构（新UI不要使用这些字段）
+    bk_host_innerip: item.ip,
+    bk_cloud_id: item?.cloudArea?.id,
+    agent_alive: item.alive, // agent状态
+  }));
   emits('confirm', data);
 };
 const cancel = () => {

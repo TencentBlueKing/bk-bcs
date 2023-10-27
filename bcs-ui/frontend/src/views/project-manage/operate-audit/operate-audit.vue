@@ -104,7 +104,7 @@ export default {
   data() {
     // 操作类型下拉框 list
     const activityTypeList = [
-      { id: 'all', name: this.$t('generic.label.total') },
+      { id: '', name: this.$t('generic.label.total') },
       { id: 'create', name: this.$t('generic.label.create') },
       { id: 'update', name: this.$t('generic.label.update') },
       { id: 'delete', name: this.$t('generic.label.delete') },
@@ -119,7 +119,7 @@ export default {
 
     // 状态下拉框 list
     const activityStatusList = [
-      { id: 'all', name: this.$t('generic.label.total') },
+      { id: '', name: this.$t('generic.label.total') },
       { id: 'success', name: this.$t('generic.status.success') },
       { id: 'failed', name: this.$t('generic.status.failed') },
       { id: 'pending', name: this.$t('generic.status.pending') },
@@ -288,7 +288,7 @@ export default {
           pre[item.resource_type] = item.name;
           return pre;
         }, ({}));
-        this.resourceTypeList.unshift({ id: 'all', name: this.$t('generic.label.total') });
+        this.resourceTypeList.unshift({ id: '', name: this.$t('generic.label.total') });
       } catch (e) {
       }
     },

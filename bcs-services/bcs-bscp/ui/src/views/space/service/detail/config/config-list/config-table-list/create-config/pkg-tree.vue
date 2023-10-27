@@ -20,7 +20,15 @@
             :indeterminate="node.indeterminate"
             @change="handleNodeCheckChange(node, $event)"
           />
-          <div class="node-name-text">{{ node.name }}</div>
+          <div
+            class="node-name-text"
+            v-bk-tooltips="{
+              content: '暂无可用配置项',
+              disabled: !node.disabled,
+            }"
+          >
+            {{ node.name }}
+          </div>
           <span v-if="node.children" class="num">({{ node.children.length }})</span>
         </div>
       </template>
