@@ -257,9 +257,10 @@ const (
 
 // Repository defines all the repo related runtime.
 type Repository struct {
-	StorageType StorageMode   `yaml:"storageType"`
-	S3          S3Storage     `yaml:"s3"`
-	BkRepo      BkRepoStorage `yaml:"bkRepo"`
+	StorageType  StorageMode   `yaml:"storageType"`
+	S3           S3Storage     `yaml:"s3"`
+	BkRepo       BkRepoStorage `yaml:"bkRepo"`
+	RedisCluster RedisCluster  `yaml:"redisCluster"`
 }
 
 // BkRepoStorage BKRepo 存储类型
