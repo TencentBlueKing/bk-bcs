@@ -2,7 +2,7 @@
   <div class="roll-back-preview">
     <h3 class="title">
       上线预览
-      <span class="tips">上线后，所选分组将从以下各版本更新至当前版本</span>
+      <span class="tips">上线后，以下分组将从以下各版本更新至当前版本</span>
     </h3>
     <div class="version-list-wrapper">
       <bk-exception v-if="previewData.length === 0" scene="part" type="empty">
@@ -16,7 +16,7 @@
           v-for="previewGroup in previewData"
           :key="previewGroup.id"
           :preview-group="previewGroup"
-          :allow-preview-delete="allowPreviewDelete"
+          :allow-preview-delete="props.groupType === 'select'"
           :disabled="props.disabled"
           @diff="emits('diff', $event)"
           @delete="handleDelete">
@@ -28,9 +28,14 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../../types/group';
+import { storeToRefs } from 'pinia';
+import useConfigStore from '../../../../../../../store/config';
 import PreviewVersionGroup from './preview-version-group.vue';
 
-// 将分组按照版本聚合
+const versionStore = useConfigStore();
+const { versionData } = storeToRefs(versionStore);
+
+// 将分组按照版本聚合，如果为调整分组上线，则需要过滤掉当前版本已上线分组
 const aggregateGroup = (groups: IGroupToPublish[]) => {
   const list: IGroupPreviewItem[] = [];
   const modifyVersions: IGroupPreviewItem[] = [];
@@ -38,11 +43,13 @@ const aggregateGroup = (groups: IGroupToPublish[]) => {
   groups.forEach((group) => {
     const { release_id, release_name } = group;
     if (release_id) {
-      const version = modifyVersions.find(item => item.id === release_id);
-      if (version) {
-        version.children.push(group);
-      } else {
-        modifyVersions.push({ id: release_id, name: release_name as string, type: 'modify', children: [group] });
+      if (release_id !== versionData.value.id) {
+        const version = modifyVersions.find(item => item.id === release_id);
+        if (version) {
+          version.children.push(group);
+        } else {
+          modifyVersions.push({ id: release_id, name: release_name as string, type: 'modify', children: [group] });
+        }
       }
     } else {
       noVersions[0].children.push(group);
@@ -58,7 +65,7 @@ const aggregateGroup = (groups: IGroupToPublish[]) => {
 const props = withDefaults(defineProps<{
     groupListLoading: boolean;
     groupList: IGroupToPublish[];
-    allowPreviewDelete: boolean;
+    groupType: string;
     disabled?: number[];
     value: IGroupToPublish[];
   }>(), {
