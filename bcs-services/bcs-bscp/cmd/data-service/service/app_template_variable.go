@@ -13,7 +13,6 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"sort"
 	"time"
@@ -28,7 +27,6 @@ import (
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	pbtv "bscp.io/pkg/protocol/core/template-variable"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -44,25 +42,15 @@ func (s *Service) ExtractAppTmplVariables(ctx context.Context, req *pbds.Extract
 		return nil, err
 	}
 
-	contents, err := s.downloadTmplContent(kt, tmplRevisions)
+	var allVars []string
+	_, _, allVars, err = s.getVariables(kt, tmplRevisions, cis)
 	if err != nil {
-		logs.Errorf("download template content failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("get variables failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	ciContents, err := s.downloadCIContent(kt, cis)
-	if err != nil {
-		logs.Errorf("download config item content failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	contents = append(contents, ciContents...)
-
-	// merge all template content
-	allContent := bytes.Join(contents, []byte(" "))
-	// extract all template variables
-	variables := s.tmplProc.ExtractVariables(allContent)
 
 	return &pbds.ExtractAppTmplVariablesResp{
-		Details: variables,
+		Details: allVars,
 	}, nil
 }
 
@@ -205,28 +193,18 @@ func getPbConfigItemsFromReleased(releasedCIs []*table.ReleasedConfigItem) []*pb
 // GetAppTmplVariableRefs get app template variable references.
 func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.TemplateRevision, cis []*pbci.ConfigItem) (
 	[]*pbatv.AppTemplateVariableReference, error) {
-	contents, err := s.downloadTmplContent(kt, tmplRevisions)
+	vars, ciVars, allVars, err := s.getVariables(kt, tmplRevisions, cis)
 	if err != nil {
-		logs.Errorf("download template content failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	ciContents, err := s.downloadCIContent(kt, cis)
-	if err != nil {
-		logs.Errorf("download config item content failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("get variables failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
-	allVariables := make([]string, 0)
 	revisionVariableMap := make(map[uint32]map[string]struct{}, len(tmplRevisions))
 	revisionMap := make(map[uint32]*table.TemplateRevision, len(tmplRevisions))
 	for idx, r := range tmplRevisions {
-		// extract template variables for one template config item
-		variables := s.tmplProc.ExtractVariables(contents[idx])
-		allVariables = append(allVariables, variables...)
 		revisionMap[r.ID] = r
-
 		revisionVariableMap[r.ID] = map[string]struct{}{}
-		for _, v := range variables {
+		for _, v := range vars[idx] {
 			revisionVariableMap[r.ID][v] = struct{}{}
 		}
 	}
@@ -234,23 +212,16 @@ func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.Temp
 	ciVariableMap := make(map[uint32]map[string]struct{}, len(cis))
 	ciMap := make(map[uint32]*pbci.ConfigItem, len(cis))
 	for idx, ci := range cis {
-		// extract config item variables for one config item
-		variables := s.tmplProc.ExtractVariables(ciContents[idx])
-		allVariables = append(allVariables, variables...)
 		ciMap[ci.Id] = ci
 
 		ciVariableMap[ci.Id] = map[string]struct{}{}
-		for _, v := range variables {
+		for _, v := range ciVars[idx] {
 			ciVariableMap[ci.Id][v] = struct{}{}
 		}
 	}
 
-	allVariables = tools.RemoveDuplicateStrings(allVariables)
-	// Sort in ascending order
-	sort.Strings(allVariables)
-
-	refs := make([]*pbatv.AppTemplateVariableReference, len(allVariables))
-	for idx, v := range allVariables {
+	refs := make([]*pbatv.AppTemplateVariableReference, len(allVars))
+	for idx, v := range allVars {
 		ref := &pbatv.AppTemplateVariableReference{
 			VariableName: v,
 		}

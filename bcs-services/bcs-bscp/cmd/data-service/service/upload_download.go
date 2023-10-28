@@ -24,6 +24,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -91,10 +92,10 @@ func (s *Service) getAppConfigItems(kt *kit.Kit) ([]*pbci.ConfigItem, error) {
 	return resp.Details, nil
 }
 
-// filterSizeForTmplRevisions get template config items which can be rendered
-func filterSizeForTmplRevisions(tmplRevisions []*table.TemplateRevision) []*table.TemplateRevision {
+// filterSizeForTmplRevisions get template config items whose content size are satisfied to render
+func filterSizeForTmplRevisions(tmpls []*table.TemplateRevision) []*table.TemplateRevision {
 	rs := make([]*table.TemplateRevision, 0)
-	for _, r := range tmplRevisions {
+	for _, r := range tmpls {
 		if r.Spec.ContentSpec.ByteSize <= constant.MaxRenderBytes {
 			rs = append(rs, r)
 		}
@@ -102,7 +103,7 @@ func filterSizeForTmplRevisions(tmplRevisions []*table.TemplateRevision) []*tabl
 	return rs
 }
 
-// filterSizeForConfigItems get non-template config items which can be rendered
+// filterSizeForConfigItems get non-template config items whose content size are satisfied to render
 func filterSizeForConfigItems(cis []*pbci.ConfigItem) []*pbci.ConfigItem {
 	rs := make([]*pbci.ConfigItem, 0)
 	for _, ci := range cis {
@@ -111,6 +112,141 @@ func filterSizeForConfigItems(cis []*pbci.ConfigItem) []*pbci.ConfigItem {
 		}
 	}
 	return rs
+}
+
+// filterVarsForTmplRevisions get template config items which have variables so that need to render
+func filterVarsForTmplRevisions(tmpls []*table.TemplateRevision, vars [][]string) []*table.TemplateRevision {
+	rs := make([]*table.TemplateRevision, 0)
+	for idx, v := range vars {
+		if len(v) > 0 {
+			rs = append(rs, tmpls[idx])
+		}
+	}
+	return rs
+}
+
+// filterVarsForConfigItems get non-template config items which have variables so that need to render
+func filterVarsForConfigItems(cis []*pbci.ConfigItem, ciVars [][]string) []*pbci.ConfigItem {
+	rs := make([]*pbci.ConfigItem, 0)
+	for idx, v := range ciVars {
+		if len(v) > 0 {
+			rs = append(rs, cis[idx])
+		}
+	}
+	return rs
+}
+
+// getVariables get variables of template config items, normal config items and all
+func (s *Service) getVariables(kt *kit.Kit, tmplRevisions []*table.TemplateRevision, cis []*pbci.ConfigItem) (
+	vars [][]string, ciVars [][]string, allVars []string, err error) {
+	vars, err = s.getTmplVariables(kt, tmplRevisions)
+	if err != nil {
+		logs.Errorf("get template variables failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, nil, nil, err
+	}
+
+	ciVars, err = s.getCIVariables(kt, cis)
+	if err != nil {
+		logs.Errorf("get normal config item variables failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, nil, nil, err
+	}
+
+	// merge all template variables
+	allVariables := make([][]string, 0, len(vars)+len(ciVars))
+	allVariables = append(allVariables, vars...)
+	allVariables = append(allVariables, ciVars...)
+
+	allVars = tools.MergeDoubleStringSlice(allVariables)
+
+	return vars, ciVars, allVars, nil
+}
+
+// getTmplVariables get variables of template config items from repo
+// the order of elements in slice variables and slice tmplRevisions is consistent
+func (s *Service) getTmplVariables(kt *kit.Kit, tmplRevisions []*table.TemplateRevision) ([][]string, error) {
+	if len(tmplRevisions) == 0 {
+		return [][]string{}, nil
+	}
+
+	variables := make([][]string, len(tmplRevisions))
+	var hitError error
+	pipe := make(chan struct{}, 10)
+	wg := sync.WaitGroup{}
+
+	for idx, r := range tmplRevisions {
+		wg.Add(1)
+
+		pipe <- struct{}{}
+		go func(idx int, r *table.TemplateRevision) {
+			defer func() {
+				wg.Done()
+				<-pipe
+			}()
+
+			k := kt.GetKitForRepoTmpl(r.Attachment.TemplateSpaceID)
+			// all the files have filtered by content size, so no need to check size again in repo
+			vars, err := s.repo.GetVariables(k, r.Spec.ContentSpec.Signature, false)
+			if err != nil {
+				hitError = fmt.Errorf("get template config variables from repo failed, "+
+					"template id: %d, name: %s, path: %s, error: %v",
+					r.Attachment.TemplateID, r.Spec.Name, r.Spec.Path, err)
+				return
+			}
+			variables[idx] = vars
+		}(idx, r)
+	}
+	wg.Wait()
+
+	if hitError != nil {
+		logs.Errorf("get template config variables failed, err: %v, rid: %s", hitError, kt.Rid)
+		return nil, hitError
+	}
+
+	return variables, nil
+}
+
+// getCIVariables get variables of normal config items from repo
+// the order of elements in slice variables and slice tmplRevisions is consistent
+func (s *Service) getCIVariables(kt *kit.Kit, cis []*pbci.ConfigItem) ([][]string, error) {
+	if len(cis) == 0 {
+		return [][]string{}, nil
+	}
+
+	variables := make([][]string, len(cis))
+	var hitError error
+	pipe := make(chan struct{}, 10)
+	wg := sync.WaitGroup{}
+
+	for idx, c := range cis {
+		wg.Add(1)
+
+		pipe <- struct{}{}
+		go func(idx int, c *pbci.ConfigItem) {
+			defer func() {
+				wg.Done()
+				<-pipe
+			}()
+
+			k := kt.GetKitForRepoCfg()
+			// all the files have filtered by content size, so no need to check size again in repo
+			vars, err := s.repo.GetVariables(k, c.CommitSpec.Content.Signature, false)
+			if err != nil {
+				hitError = fmt.Errorf("get config item variables from repo failed, "+
+					"config item id: %d, name: %s, path: %s, error: %v",
+					c.Id, c.Spec.Name, c.Spec.Path, err)
+				return
+			}
+			variables[idx] = vars
+		}(idx, c)
+	}
+	wg.Wait()
+
+	if hitError != nil {
+		logs.Errorf("get config item variables failed, err: %v, rid: %s", hitError, kt.Rid)
+		return nil, hitError
+	}
+
+	return variables, nil
 }
 
 // downloadTmplContent download template config item content from repo.
