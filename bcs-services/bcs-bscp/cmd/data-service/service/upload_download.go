@@ -184,7 +184,8 @@ func (s *Service) getTmplVariables(kt *kit.Kit, tmplRevisions []*table.TemplateR
 			}()
 
 			k := kt.GetKitForRepoTmpl(r.Attachment.TemplateSpaceID)
-			vars, err := s.repo.GetVariables(k, r.Spec.ContentSpec.Signature)
+			// all the files have filtered by content size, so no need to check size again in repo
+			vars, err := s.repo.GetVariables(k, r.Spec.ContentSpec.Signature, false)
 			if err != nil {
 				hitError = fmt.Errorf("get template config variables from repo failed, "+
 					"template id: %d, name: %s, path: %s, error: %v",
@@ -227,7 +228,8 @@ func (s *Service) getCIVariables(kt *kit.Kit, cis []*pbci.ConfigItem) ([][]strin
 			}()
 
 			k := kt.GetKitForRepoCfg()
-			vars, err := s.repo.GetVariables(k, c.CommitSpec.Content.Signature)
+			// all the files have filtered by content size, so no need to check size again in repo
+			vars, err := s.repo.GetVariables(k, c.CommitSpec.Content.Signature, false)
 			if err != nil {
 				hitError = fmt.Errorf("get config item variables from repo failed, "+
 					"config item id: %d, name: %s, path: %s, error: %v",

@@ -34,9 +34,9 @@ var errContentSizeExceedsLimit = fmt.Errorf("content size exceeds maximum limit 
 // VariableCacher is used to set/get template variables with cache
 type VariableCacher interface {
 	// SetVariables sets template variables into cache, the variables extracted from repository file content
-	SetVariables(kt *kit.Kit, sign string) ([]string, error)
+	SetVariables(kt *kit.Kit, sign string, checkSize bool) ([]string, error)
 	// GetVariables gets template variables from the cache firstly; if not found, then get from the repository
-	GetVariables(kt *kit.Kit, sign string) ([]string, error)
+	GetVariables(kt *kit.Kit, sign string, checkSize bool) ([]string, error)
 }
 
 type varCacher struct {
@@ -61,19 +61,20 @@ func newVariableCacher(redisConf cc.RedisCluster, p BaseProvider) (VariableCache
 }
 
 // SetVariables sets template variables into cache, the variables extracted from repository file content
-func (c *varCacher) SetVariables(kt *kit.Kit, sign string) ([]string, error) {
-	// check content byte size
-	m, err := c.p.Metadata(kt, sign)
-	if err != nil {
-		return nil, err
-	}
-	if m.ByteSize > constant.MaxRenderBytes {
-		return nil, errContentSizeExceedsLimit
+func (c *varCacher) SetVariables(kt *kit.Kit, sign string, checkSize bool) ([]string, error) {
+	if checkSize {
+		// check content byte size
+		m, err := c.p.Metadata(kt, sign)
+		if err != nil {
+			return nil, err
+		}
+		if m.ByteSize > constant.MaxRenderBytes {
+			return nil, errContentSizeExceedsLimit
+		}
 	}
 
 	// get template variables from repository
-	var vars []string
-	vars, err = c.getVarsFromRepo(kt, sign)
+	vars, err := c.getVarsFromRepo(kt, sign)
 	if err != nil {
 		return nil, err
 	}
@@ -94,19 +95,20 @@ func (c *varCacher) SetVariables(kt *kit.Kit, sign string) ([]string, error) {
 }
 
 // GetVariables gets template variables from the cache firstly; if not found, then get from the repository
-func (c *varCacher) GetVariables(kt *kit.Kit, sign string) ([]string, error) {
-	// check content byte size
-	m, err := c.p.Metadata(kt, sign)
-	if err != nil {
-		return nil, err
-	}
-	if m.ByteSize > constant.MaxRenderBytes {
-		return nil, errContentSizeExceedsLimit
+func (c *varCacher) GetVariables(kt *kit.Kit, sign string, checkSize bool) ([]string, error) {
+	if checkSize {
+		// check content byte size
+		m, err := c.p.Metadata(kt, sign)
+		if err != nil {
+			return nil, err
+		}
+		if m.ByteSize > constant.MaxRenderBytes {
+			return nil, errContentSizeExceedsLimit
+		}
 	}
 
 	// get variables from cache
-	var val string
-	val, err = c.bds.Get(kt.Ctx, variableCacheKey(sign))
+	val, err := c.bds.Get(kt.Ctx, variableCacheKey(sign))
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +122,7 @@ func (c *varCacher) GetVariables(kt *kit.Kit, sign string) ([]string, error) {
 	}
 
 	// if no variables in cache, get them from the repository and set them into cache
-	return c.SetVariables(kt, sign)
+	return c.SetVariables(kt, sign, false)
 }
 
 // getVarsFromRepo get template variables from repository
