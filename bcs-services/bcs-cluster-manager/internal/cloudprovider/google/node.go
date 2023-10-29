@@ -10,13 +10,12 @@
  * limitations under the License.
  */
 
-package api
+package google
 
 import (
 	"context"
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -25,12 +24,8 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-)
-
-const (
-	limit = 100
 )
 
 var nodeMgr sync.Once
@@ -38,7 +33,7 @@ var nodeMgr sync.Once
 func init() {
 	nodeMgr.Do(func() {
 		// init Node
-		cloudprovider.InitNodeManager("google", &NodeManager{})
+		cloudprovider.InitNodeManager(cloudName, &NodeManager{})
 	})
 }
 
@@ -63,7 +58,7 @@ func (n *NodeManager) GetCVMImageIDByImageName(imageName string, opt *cloudprovi
 
 // GetCloudRegions get cloud regions
 func (n *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
-	client, err := NewComputeServiceClient(opt)
+	client, err := api.NewComputeServiceClient(opt)
 	if err != nil {
 		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
 	}
@@ -76,7 +71,7 @@ func (n *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto
 
 // GetZoneList get zoneList by region
 func (n *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.ZoneInfo, error) {
-	client, err := NewComputeServiceClient(opt)
+	client, err := api.NewComputeServiceClient(opt)
 	if err != nil {
 		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
 	}
@@ -93,7 +88,7 @@ func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt 
 	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
 		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
 
-	client, err := NewComputeServiceClient(opt)
+	client, err := api.NewComputeServiceClient(opt)
 	if err != nil {
 		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
 	}
@@ -175,101 +170,7 @@ func (n *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Lis
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// ListNodesByInstanceID list node by instance id
-func (n *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
-	idChunks := utils.SplitStringsChunks(ids, limit)
-	nodeList := make([]*proto.Node, 0)
-
-	blog.Infof("ListNodesByInstanceID idChunks %+v", idChunks)
-	for _, chunk := range idChunks {
-		if len(chunk) > 0 {
-			nodes, err := n.transInstanceIDsToNodes(chunk, opt)
-			if err != nil {
-				blog.Errorf("ListNodesByInstanceID failed: %v", err)
-				return nil, err
-			}
-			if len(nodes) == 0 {
-				continue
-			}
-			nodeList = append(nodeList, nodes...)
-		}
-	}
-
-	return nodeList, nil
-}
-
 // ListKeyPairs keyPairs list
 func (n *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
-}
-
-// transInstanceIDsToNodes trans IDList to Nodes
-func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node,
-	error) {
-	client, err := NewComputeServiceClient(opt.Common)
-	if err != nil {
-		blog.Errorf("create ComputeServiceClient failed when GetNodeByIP, %s", err.Error())
-		return nil, err
-	}
-
-	insList, err := client.ListZoneInstanceWithFilter(context.Background(), InstanceNameFilter(ids))
-	if err != nil {
-		blog.Errorf("ListZoneInstanceWithFilter failed, %s", err.Error())
-		return nil, err
-	}
-	instances := insList.Items
-	// check response data
-	blog.Infof("ListZoneInstanceWithFilter len(%d) id response num %d", len(ids), len(instances))
-	if len(instances) == 0 {
-		// * no data response
-		return nil, nil
-	}
-	if len(instances) != len(ids) {
-		blog.Warnf("ListZoneInstanceWithFilter expect %d, but got %d", len(ids), len(instances))
-	}
-
-	nodeMap := make(map[string]*proto.Node)
-	var nodes []*proto.Node
-	for _, inst := range instances {
-		node := InstanceToNode(client, inst)
-		// clean duplicated Node if user input multiple ip that
-		// belong to one instance
-		if _, ok := nodeMap[node.NodeID]; ok {
-			continue
-		}
-
-		nodeMap[node.NodeID] = node
-		node.InnerIP = inst.NetworkInterfaces[0].NetworkIP
-		nodes = append(nodes, node)
-	}
-
-	return nodes, nil
-}
-
-// InstanceToNode parse Instance information in gcloud to Node in clustermanager
-// @param Instance: gcloud instance information, can not be nil;
-// @return Node: cluster-manager node information;
-func InstanceToNode(cli *ComputeServiceClient, ins *compute.Instance) *proto.Node {
-	zoneInfo, _ := GetGCEResourceInfo(ins.Zone)
-	zone, _ := cli.GetZone(context.Background(), zoneInfo[len(zoneInfo)-1])
-
-	node := &proto.Node{}
-	node.NodeID = strconv.Itoa(int(ins.Id))
-	node.NodeName = ins.Name
-
-	if zoneInfo != nil {
-		node.ZoneID = zone.Zone
-		zoneID, _ := strconv.Atoi(zone.ZoneID)
-		node.Zone = uint32(zoneID)
-		node.ZoneName = zone.ZoneName
-	}
-
-	machineInfo, _ := GetGCEResourceInfo(ins.MachineType)
-	node.InstanceType = machineInfo[len(machineInfo)-1]
-
-	networkInfo := strings.Split(ins.NetworkInterfaces[0].Subnetwork, "/")
-	node.VPC = networkInfo[len(networkInfo)-1]
-	node.Status = common.StatusRunning
-
-	return node
 }

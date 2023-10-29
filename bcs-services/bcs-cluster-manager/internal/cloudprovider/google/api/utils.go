@@ -47,6 +47,10 @@ const (
 	BCSNodeGroupTaintEffect = "NO_EXECUTE"
 )
 
+const (
+	limit = 100
+)
+
 // GenerateInstanceUrl generates url for instance.
 func GenerateInstanceUrl(zone, name string) string {
 	return fmt.Sprintf("/zones/%s/instances/%s", zone, name)
@@ -412,4 +416,70 @@ func GenerateUpdatePolicy() *compute.InstanceGroupManagerUpdatePolicy {
 	}
 
 	return p
+}
+
+// ListNodesByInstanceID list node by instance id
+func ListNodesByInstanceID(ids []string, opt *cloudprovider.ListNodesOption) ([]*cmproto.Node, error) {
+	idChunks := utils.SplitStringsChunks(ids, limit)
+	nodeList := make([]*cmproto.Node, 0)
+
+	blog.Infof("ListNodesByInstanceID idChunks %+v", idChunks)
+	for _, chunk := range idChunks {
+		if len(chunk) > 0 {
+			nodes, err := transInstanceIDsToNodes(chunk, opt)
+			if err != nil {
+				blog.Errorf("ListNodesByInstanceID failed: %v", err)
+				return nil, err
+			}
+			if len(nodes) == 0 {
+				continue
+			}
+			nodeList = append(nodeList, nodes...)
+		}
+	}
+
+	return nodeList, nil
+}
+
+// transInstanceIDsToNodes trans IDList to Nodes
+func transInstanceIDsToNodes(ids []string, opt *cloudprovider.ListNodesOption) ([]*cmproto.Node,
+	error) {
+	client, err := NewComputeServiceClient(opt.Common)
+	if err != nil {
+		blog.Errorf("create ComputeServiceClient failed when GetNodeByIP, %s", err.Error())
+		return nil, err
+	}
+
+	insList, err := client.ListZoneInstanceWithFilter(context.Background(), InstanceNameFilter(ids))
+	if err != nil {
+		blog.Errorf("ListZoneInstanceWithFilter failed, %s", err.Error())
+		return nil, err
+	}
+	instances := insList.Items
+	// check response data
+	blog.Infof("ListZoneInstanceWithFilter len(%d) id response num %d", len(ids), len(instances))
+	if len(instances) == 0 {
+		// * no data response
+		return nil, nil
+	}
+	if len(instances) != len(ids) {
+		blog.Warnf("ListZoneInstanceWithFilter expect %d, but got %d", len(ids), len(instances))
+	}
+
+	nodeMap := make(map[string]*cmproto.Node)
+	var nodes []*cmproto.Node
+	for _, inst := range instances {
+		node := client.InstanceToNode(inst)
+		// clean duplicated Node if user input multiple ip that
+		// belong to one instance
+		if _, ok := nodeMap[node.NodeID]; ok {
+			continue
+		}
+
+		nodeMap[node.NodeID] = node
+		node.InnerIP = inst.NetworkInterfaces[0].NetworkIP
+		nodes = append(nodes, node)
+	}
+
+	return nodes, nil
 }
