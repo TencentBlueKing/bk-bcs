@@ -70,7 +70,6 @@ const props = withDefaults(
     groupType: string;
     disabled?: number[];
     value: IGroupToPublish[];
-    groupType: string;
   }>(),
   {
     disabled: () => [],
