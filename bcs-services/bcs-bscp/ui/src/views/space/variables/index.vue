@@ -6,7 +6,7 @@
     <div class="operation-area">
       <div class="button">
         <bk-button theme="primary" @click="isCreateSliderShow = true"><Plus class="button-icon" />新增变量</bk-button>
-        <bk-button theme="primary" @click="isImportVariableShow = true">导入变量</bk-button>
+        <bk-button @click="isImportVariableShow = true">导入变量</bk-button>
       </div>
       <SearchInput v-model="searchStr" placeholder="请输入变量名称" :width="320" @search="refreshList()" />
     </div>

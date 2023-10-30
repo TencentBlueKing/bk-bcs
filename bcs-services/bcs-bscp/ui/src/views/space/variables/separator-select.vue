@@ -86,8 +86,6 @@ const handleConfirm = async () => {
       width: 52px;
       height: 26px;
       border: 1px solid #8e8e8e;
-      border-radius: 2px 0 0 2px;
-      border-radius: 2px 0 0 2px;
       color: #e0e0e0;
       text-align: center;
       line-height: 26px;
@@ -97,7 +95,14 @@ const handleConfirm = async () => {
         color: #488eff;
         border-color: #488eff;
       }
+      &:nth-child(1) {
+        border-radius: 2px 0 0 2px;
+      }
+      &:nth-child(5) {
+        border-radius: 0 2px 2px 0;
+      }
     }
+
     .select-item {
       color: #488eff;
       border-color: #488eff;
