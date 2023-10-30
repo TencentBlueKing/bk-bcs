@@ -40,7 +40,7 @@
         <bk-table-column label="模板套餐" prop="template_set_name"></bk-table-column>
         <bk-table-column label="使用此套餐的服务">
           <template #default="{ row }">
-            <div v-if="row.app_id" class="app-info">
+            <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
               <LinkToApp class="link-icon" :id="row.app_id" />
             </div>
@@ -52,6 +52,7 @@
 </template>
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Done } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../../../../../../store/global';
@@ -72,16 +73,16 @@ const props = defineProps<{
 
 const emits = defineEmits(['update:show', 'confirm']);
 
+const router = useRouter();
+
 const selectedPkgs = ref<number[]>([]);
 const formRef = ref();
 const loading = ref(false);
 const citedList = ref<IPackagesCitedByApps[]>([]);
 
-const tips = computed(() =>
-  selectedPkgs.value.includes(0)
-    ? '若未指定套餐，此配置文件模板将无法被服务引用。后续请使用「添加至」或「添加已有配置文件」功能添加至指定套餐'
-    : '以下服务配置的未命名版本引用目标套餐的内容也将更新'
-);
+const tips = computed(() => (selectedPkgs.value.includes(0)
+  ? '若未指定套餐，此配置文件模板将无法被服务引用。后续请使用「添加至」或「添加已有配置文件」功能添加至指定套餐'
+  : '以下服务配置的未命名版本引用目标套餐的内容也将更新'));
 
 const maxTableHeight = computed(() => {
   const windowHeight = window.innerHeight;
@@ -100,7 +101,7 @@ watch(
         getCitedData();
       }
     }
-  }
+  },
 );
 
 const allOptions = computed(() => {
@@ -123,7 +124,7 @@ const getCitedData = async () => {
     spaceId.value,
     currentTemplateSpace.value,
     selectedPkgs.value,
-    params
+    params,
   );
   citedList.value = res.details;
   loading.value = false;
@@ -137,7 +138,7 @@ const handleSelectPkg = (val: number[]) => {
   }
 
   if (unSpecifiedSelected.value) {
-    selectedPkgs.value = val.filter((id) => id !== 0);
+    selectedPkgs.value = val.filter(id => id !== 0);
   } else {
     selectedPkgs.value = val.slice();
   }
@@ -161,6 +162,15 @@ const handleConfirm = async () => {
 
 const close = () => {
   emits('update:show', false);
+};
+
+const goToConfigPageImport = (id: number) => {
+  const { href } = router.resolve({
+    name: 'service-config',
+    params: { appId: id },
+    query: { pkg_id: currentTemplateSpace.value },
+  });
+  window.open(href, '_blank');
 };
 </script>
 <style lang="scss" scoped>
@@ -218,6 +228,7 @@ const close = () => {
   display: flex;
   align-items: center;
   overflow: hidden;
+  cursor: pointer;
   .name-text {
     overflow: hidden;
     white-space: nowrap;

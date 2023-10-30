@@ -77,9 +77,9 @@ const rules = {
 watch(
   () => props.groups,
   () => {
-    localVal.value.groups = props.groups.map((item) => item.id);
+    localVal.value.groups = props.groups.map(item => item.id);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const handleClose = () => {

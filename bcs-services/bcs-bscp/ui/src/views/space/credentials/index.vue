@@ -246,7 +246,7 @@ watch(
     createPending.value = false;
     getPermData();
     refreshListWithLoading();
-  }
+  },
 );
 
 onMounted(() => {

@@ -12,7 +12,7 @@
 import { defineComponent } from 'vue';
 
 export default defineComponent({
-  name: 'app-footer',
+  name: 'AppFooter',
   setup() {
     return {
       // @ts-ignore

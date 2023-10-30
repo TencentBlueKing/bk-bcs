@@ -76,7 +76,7 @@ watch(
       isFormChange.value = false;
       getConfigDetail();
     }
-  }
+  },
 );
 
 // 获取配置文件详情配置及配置内容

@@ -177,7 +177,7 @@ onMounted(async () => {
     unPublishVersion.value = await getScriptVersionDetail(
       spaceId.value,
       scriptId.value,
-      scriptDetail.value.not_release_id
+      scriptDetail.value.not_release_id,
     );
   }
   initLoading.value = false;
@@ -322,7 +322,7 @@ const handleSelectVersion = (version: IScriptVersion) => {
 // 新建、编辑脚本后回调
 const handleVersionEditSubmitted = async (
   data: { id: number; name: string; memo: string; content: string },
-  type: string
+  type: string,
 ) => {
   versionEditData.value.form = { ...data };
   refreshList();
@@ -333,10 +333,10 @@ const handleVersionEditSubmitted = async (
     unPublishVersion.value = await getScriptVersionDetail(
       spaceId.value,
       scriptId.value,
-      scriptDetail.value.not_release_id
+      scriptDetail.value.not_release_id,
     );
     createBtnDisabled.value = false;
-    handleEditVersionClick()
+    handleEditVersionClick();
   } else {
     // 如果是编辑旧版本，则直接修改版本数据
     const { memo, content } = data;

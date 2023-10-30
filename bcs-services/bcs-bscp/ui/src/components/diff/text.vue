@@ -59,7 +59,7 @@ const props = withDefaults(
     currentVariables: () => [],
     currentLanguage: '',
     baseVariables: () => [],
-  }
+  },
 );
 
 const textDiffRef = ref();
@@ -76,7 +76,7 @@ watch(
   () => {
     updateModel();
     replaceDiffVariables();
-  }
+  },
 );
 
 watch(
@@ -84,7 +84,7 @@ watch(
   () => {
     updateModel();
     replaceDiffVariables();
-  }
+  },
 );
 
 watch(
@@ -92,7 +92,7 @@ watch(
   () => {
     updateModel();
     replaceDiffVariables();
-  }
+  },
 );
 
 onMounted(() => {
@@ -182,7 +182,7 @@ const replaceDiffVariables = () => {
     permissionDiffEditorHoverProvider = useDiffEditorVariableReplace(
       permissionEditor,
       props.currentVariables,
-      props.baseVariables
+      props.baseVariables,
     );
   }
 };

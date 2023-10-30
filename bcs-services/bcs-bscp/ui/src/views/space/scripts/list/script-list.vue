@@ -141,7 +141,7 @@ watch(
   () => {
     refreshList();
     getTags();
-  }
+  },
 );
 
 onMounted(() => {

@@ -43,7 +43,7 @@ watch(
   (val) => {
     isShow.value = val;
     isFormChange.value = false;
-  }
+  },
 );
 
 const handleFileUpload = () => {};

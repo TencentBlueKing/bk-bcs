@@ -73,7 +73,7 @@ const props = withDefaults(
   }>(),
   {
     disabled: () => [],
-  }
+  },
 );
 
 const emits = defineEmits(['diff', 'change']);
@@ -85,13 +85,13 @@ watch(
   (val) => {
     previewData.value = aggregateGroup(val);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const handleDelete = (id: number) => {
   emits(
     'change',
-    props.value.filter((group) => group.id !== id)
+    props.value.filter(group => group.id !== id),
   );
 };
 </script>
