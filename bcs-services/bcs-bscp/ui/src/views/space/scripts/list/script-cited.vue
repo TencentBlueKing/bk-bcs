@@ -20,6 +20,9 @@
             }}</template>
           </template>
         </bk-table-column>
+        <bk-table-column label="脚本类型">
+          <template #default="{ row }">{{ row.type === 'pre_hook' ? '前置脚本':'后置脚本' }}</template>
+        </bk-table-column>
         <bk-table-column label="服务名称" prop="app_name"></bk-table-column>
         <bk-table-column label="服务版本">
           <template #default="{ row }">
