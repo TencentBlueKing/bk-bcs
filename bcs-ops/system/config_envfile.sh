@@ -118,7 +118,7 @@ init_env() {
   BK_PUBLIC_REPO=${BK_PUBLIC_REPO:-"hub.bktencent.com"}
 
   # helm
-  BKREPO_URL=${BKREPO_URL:-"https://hub.bktencent.com/chartrepo"}
+  BKREPO_URL=${BKREPO_URL:-"https://hub.bktencent.com/chartrepo/blueking"}
 
   # apiserver HA
   ENABLE_APISERVER_HA=${ENABLE_APISERVER_HA:-"false"}
