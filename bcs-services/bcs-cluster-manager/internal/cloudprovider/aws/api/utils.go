@@ -5,9 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"net"
 	"time"
+
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -61,7 +62,7 @@ func GetClusterKubeConfig(sess *session.Session, cluster *eks.Cluster) (string, 
 			{
 				Name: *cluster.Name,
 				Cluster: types.ClusterInfo{
-					Server:                   "https://" + *cluster.Endpoint,
+					Server:                   *cluster.Endpoint,
 					CertificateAuthorityData: decodedCA,
 				},
 			},
