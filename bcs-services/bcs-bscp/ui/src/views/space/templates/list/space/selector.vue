@@ -12,14 +12,14 @@
     >
       <template #trigger>
         <div class="select-trigger">
-          <h5 class="space-name" :title="spaceName">{{ spaceName }}</h5>
+          <h5 class="space-name" :title="templateSpaceDetail.name">{{ templateSpaceDetail.name }}</h5>
           <div class="space-desc">{{ templateSpaceDetail.memo || '--' }}</div>
           <DownShape :class="['triangle-icon', { up: selectorOpen }]" />
         </div>
       </template>
       <bk-option v-for="item in spaceList" :key="item.id" :value="item.id" :label="item.spec.name">
         <div class="space-option-item">
-          <div class="name-text">{{ item.spec.name === 'default_space' ? '默认空间' : item.spec.name }}</div>
+          <div class="name-text">{{ item.spec.name }}</div>
           <div class="actions">
             <i
               v-if="item.spec.name !== 'default_space'"
@@ -72,13 +72,6 @@ const editingData = ref({
   data: { id: 0, name: '', memo: '' },
 });
 
-const spaceName = computed(() => {
-  if (templateSpaceDetail.value.name === 'default_space') {
-    return '默认空间';
-  }
-  return templateSpaceDetail.value.name;
-});
-
 const templateSpaceDetail = computed(() => {
   const item = templateSpaceList.value.find((item) => item.id === currentTemplateSpace.value);
   if (item) {
@@ -120,7 +113,13 @@ const loadList = async () => {
     all: true,
   };
   const res = await getTemplateSpaceList(spaceId.value, params);
-  spaceList.value = res.details;
+  const index = (res.details as ITemplateSpaceItem[]).findIndex(item => ['默认空间', 'default_space'].includes(item.spec.name))
+  if (index > -1) {
+    // 默认空间放到首位
+    spaceList.value = res.details.splice(index, 1).concat(res.details)
+  } else {
+    spaceList.value = res.details;
+  }
   templateStore.$patch((state) => {
     state.templateSpaceList = spaceList.value;
   });

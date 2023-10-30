@@ -312,7 +312,7 @@ const getBoundTemplateList = async (id: number) => {
     const group: IConfigsGroupData = {
       template_space_id,
       id: template_set_id,
-      name: `${template_space_name === 'default_space' ? '默认空间' : template_space_name} - ${template_set_name}`,
+      name: `${template_space_name} - ${template_set_name}`,
       expand: false,
       configs: [],
     };

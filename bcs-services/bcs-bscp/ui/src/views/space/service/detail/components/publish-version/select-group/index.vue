@@ -23,7 +23,6 @@
         :group-type="groupType"
         :version-list="versionList"
         :version-list-loading="versionListLoading"
-        :allow-preview-delete="groupType === 'select'"
         :disabled="props.disabled"
         :value="props.groups"
         @diff="emits('openPreviewVersionDiff', $event)"
