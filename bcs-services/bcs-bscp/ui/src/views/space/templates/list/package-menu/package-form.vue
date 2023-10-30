@@ -55,12 +55,7 @@ const props = defineProps<{
 
 const emits = defineEmits(['change']);
 
-const localVal = ref<ITemplatePackageEditParams>({
-  name: '',
-  memo: '',
-  public: true,
-  bound_apps: [],
-});
+const localVal = ref<ITemplatePackageEditParams>(cloneDeep(props.data));
 const formRef = ref();
 const serviceLoading = ref(false);
 const serviceList = ref<IAppItem[]>([]);
@@ -83,15 +78,11 @@ watch(
   () => props.data,
   (val) => {
     localVal.value = cloneDeep(val);
-  },
-  {
-    immediate: true,
-  },
+  }
 );
 
 onMounted(() => {
   getServiceList();
-  localVal.value.name = '';
 });
 
 const getServiceList = async () => {

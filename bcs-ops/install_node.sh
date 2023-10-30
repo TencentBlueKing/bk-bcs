@@ -122,10 +122,6 @@ case "${K8S_CSI,,}" in
     ;;
 esac
 
-if [[ -z ${BCS_OFFLINE:-} ]]; then
-  kubeadm --config="${ROOT_DIR}/kubeadm-config" config images pull \
-    || utils::log "FATAL" "fail to pull k8s image"
-fi
 
 # wait kubelet to start
 sleep 30

@@ -434,7 +434,7 @@ const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
     const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem;
     const group: IConfigsGroupData = {
       id: template_set_id,
-      name: `${template_space_name === 'default_space' ? '默认空间' : template_space_name} - ${template_set_name}`,
+      name: `${template_space_name} - ${template_set_name}`,
       expand: true,
       configs: [],
     };

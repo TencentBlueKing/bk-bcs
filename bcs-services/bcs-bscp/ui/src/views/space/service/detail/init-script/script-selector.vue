@@ -133,6 +133,7 @@ const goToScriptList = () => {
     }
     .option-wrapper {
       padding: 0 12px;
+      width: 100%;
     }
   }
 }
