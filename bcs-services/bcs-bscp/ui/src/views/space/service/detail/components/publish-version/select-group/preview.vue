@@ -41,7 +41,7 @@ const aggregateGroup = (groups: IGroupToPublish[]) => {
   groups.forEach((group) => {
     const { release_id, release_name } = group;
     if (release_id) {
-      const version = modifyVersions.find((item) => item.id === release_id);
+      const version = modifyVersions.find(item => item.id === release_id);
       if (version) {
         version.children.push(group);
       } else {
@@ -69,7 +69,7 @@ const props = withDefaults(
   }>(),
   {
     disabled: () => [],
-  }
+  },
 );
 
 const emits = defineEmits(['diff', 'change']);
@@ -81,13 +81,13 @@ watch(
   (val) => {
     previewData.value = aggregateGroup(val);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const handleDelete = (id: number) => {
   emits(
     'change',
-    props.value.filter((group) => group.id !== id)
+    props.value.filter(group => group.id !== id),
   );
 };
 </script>

@@ -114,14 +114,14 @@ watch(
   () => versionData.value.id,
   () => {
     getListData();
-  }
+  },
 );
 
 watch(
   () => props.searchStr,
   () => {
     refresh();
-  }
+  },
 );
 
 onMounted(() => {

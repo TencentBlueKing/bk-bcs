@@ -136,7 +136,7 @@ watch(
   () => props.group,
   (val) => {
     formData.value = cloneDeep(val);
-  }
+  },
 );
 
 onMounted(() => {

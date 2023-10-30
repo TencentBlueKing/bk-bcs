@@ -76,7 +76,7 @@ watch(
     if (val) {
       getCitedData();
     }
-  }
+  },
 );
 
 const getCitedData = async () => {

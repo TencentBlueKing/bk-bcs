@@ -85,7 +85,7 @@ const props = withDefaults(
     citedList: () => [],
     editable: true,
     showCited: false,
-  }
+  },
 );
 
 const emits = defineEmits(['change']);
@@ -111,7 +111,7 @@ watch(
   (val) => {
     variables = cloneDeep(val).value();
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const isCellEditable = (prop: string) => props.editable && ['type', 'default_val', 'memo'].includes(prop);
@@ -126,8 +126,8 @@ const getCellVal = (variable: IVariableEditParams, prop: string) => {
 };
 
 const getCitedTpls = (name: string) => {
-  const detail = props.citedList.find((item) => item.variable_name === name);
-  return detail?.references.map((item) => item.name).join(',');
+  const detail = props.citedList.find(item => item.variable_name === name);
+  return detail?.references.map(item => item.name).join(',');
 };
 
 const deleteCellError = (name: string, key: string) => {
@@ -136,7 +136,7 @@ const deleteCellError = (name: string, key: string) => {
     if (errorDetails.value[name].length === 0) {
       delete errorDetails.value[name];
     } else {
-      errorDetails.value[name] = errorDetails.value[name].filter((item) => item !== key);
+      errorDetails.value[name] = errorDetails.value[name].filter(item => item !== key);
     }
   }
 };
