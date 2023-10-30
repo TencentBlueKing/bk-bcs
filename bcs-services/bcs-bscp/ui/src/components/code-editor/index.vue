@@ -167,8 +167,8 @@ const handleVariableList = async () => {
     getVariableList(bkBizId.value, { start: 0, limit: 1000 }),
     getUnReleasedAppVariables(bkBizId.value, appId.value),
   ]);
-  variableNameList.value = variableList.details.map((item: any) => item.spec.name);
-  privateVariableNameList.value = privateVariableList.details.map((item: any) => item.name);
+  variableNameList.value = variableList.details.map((item: any) => `.${item.spec.name}`);
+  privateVariableNameList.value = privateVariableList.details.map((item: any) => `.${item.name}`);
   variableNameList.value?.filter(item => !privateVariableNameList.value!.includes(item));
 };
 

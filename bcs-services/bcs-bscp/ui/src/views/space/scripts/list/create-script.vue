@@ -2,7 +2,7 @@
   <DetailLayout name="新建脚本" @close="handleClose">
     <template #content>
       <div class="create-script-forms">
-        <bk-form ref="formRef" form-type="vertical" :model="formData">
+        <bk-form ref="formRef" form-type="vertical" :model="formData" :rules="rules">
           <bk-form-item class="fixed-width-form" label="脚本名称" property="name" required>
             <bk-input v-model="formData.name" />
           </bk-form-item>
@@ -83,6 +83,21 @@ const formData = ref<IScriptEditingForm>({
   type: EScriptType.Shell,
   content: '',
 });
+
+const rules = {
+  name: [
+    {
+      validator: (value: string) => /^[A-Za-z\u4e00-\u9fa5][^/]*$/.test(value),
+      message: '必须以大小写字母、中文开头,不能包含/',
+      trigger: 'blur',
+    },
+    {
+      validator: (value: string) => value.length <= 256,
+      message: '不能超过256个字符',
+      trigger: 'change',
+    },
+  ],
+};
 
 onMounted(() => {
   getTags();
