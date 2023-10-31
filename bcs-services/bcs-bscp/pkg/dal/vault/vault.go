@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package vault NOTES
 package vault
 
 import (
@@ -23,7 +24,7 @@ import (
 type Set interface {
 	// IsMountPathExists 挂载目录是否存在
 	IsMountPathExists(path string) (bool, error)
-	//CreateMountPath 创建挂载目录
+	// CreateMountPath 创建挂载目录
 	CreateMountPath(path string, config *vault.MountInput) error
 	// UpsertKv 创建｜更新kv
 	UpsertKv(kit kit.Kit, bizID, appID uint32, key, content string) (int, error)
