@@ -16,6 +16,7 @@ import (
 	"fmt"
 
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/types"
 )
 
 const (
@@ -26,12 +27,17 @@ const (
 )
 
 // UpsertKv 创建｜更新kv
-func (s *set) UpsertKv(kit *kit.Kit, bizID, appID uint32, key, content string) (int, error) {
+func (s *set) UpsertKv(kit *kit.Kit, opt *types.UpsertKvOption) (int, error) {
+
+	if err := opt.Validate(); err != nil {
+		return 0, err
+	}
 
 	data := map[string]interface{}{
-		"data": content,
+		"type":  opt.KvType,
+		"value": opt.Value,
 	}
-	secret, err := s.cli.KVv2(MountPath).Put(kit.Ctx, fmt.Sprintf(kvPath, bizID, appID, key), data)
+	secret, err := s.cli.KVv2(MountPath).Put(kit.Ctx, fmt.Sprintf(kvPath, opt.BizID, opt.AppID, opt.Key), data)
 	if err != nil {
 		return 0, err
 	}
@@ -41,9 +47,9 @@ func (s *set) UpsertKv(kit *kit.Kit, bizID, appID uint32, key, content string) (
 }
 
 // GetLastKv 获取最新的kv
-func (s *set) GetLastKv(kit *kit.Kit, bizID, appID uint32, key string) (string, error) {
+func (s *set) GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (string, error) {
 
-	kv, err := s.cli.KVv2(MountPath).Get(kit.Ctx, fmt.Sprintf(kvPath, bizID, appID, key))
+	kv, err := s.cli.KVv2(MountPath).Get(kit.Ctx, fmt.Sprintf(kvPath, opt.BizID, opt.AppID, opt.Key))
 	if err != nil {
 		return "", err
 	}
