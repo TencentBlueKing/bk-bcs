@@ -60,6 +60,9 @@ func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster,
 	if len(cls.ManageType) == 0 {
 		cls.ManageType = common.ClusterManageTypeIndependent
 	}
+	if len(cls.ClusterCategory) == 0 {
+		cls.ClusterCategory = common.Builder
+	}
 
 	// cluster cloud basic setting
 	clusterCloudDefaultBasicSetting(cls, opt.Cloud, opt.ClusterVersion)

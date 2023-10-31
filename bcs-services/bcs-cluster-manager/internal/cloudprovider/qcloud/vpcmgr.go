@@ -20,6 +20,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var vpcMgr sync.Once
@@ -33,6 +34,47 @@ func init() {
 
 // VPCManager is the manager for VPC
 type VPCManager struct{}
+
+// ListVpcs list vpcs
+func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.CloudVpc, error) {
+	vpcCli, err := api.NewVPCClient(opt)
+	if err != nil {
+		blog.Errorf("create VPC client when failed: %v", err)
+		return nil, err
+	}
+
+	filter := make([]*api.Filter, 0)
+	if vpcID != "" {
+		filter = append(filter, &api.Filter{Name: "vpc-id", Values: []string{vpcID}})
+	}
+
+	vpcs, err := vpcCli.DescribeVpcs(nil, filter)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*proto.CloudVpc, 0)
+	for _, v := range vpcs {
+		result = append(result, &proto.CloudVpc{
+			Name:     utils.StringPtrToString(v.VpcName),
+			VpcId:    utils.StringPtrToString(v.VpcId),
+			Ipv4Cidr: utils.StringPtrToString(v.CidrBlock),
+			Ipv6Cidr: utils.StringPtrToString(v.Ipv6CidrBlock),
+			Cidrs: func() []*proto.AssistantCidr {
+				cidrs := make([]*proto.AssistantCidr, 0)
+
+				for _, c := range v.AssistantCidrSet {
+					cidrs = append(cidrs, &proto.AssistantCidr{
+						Cidr:     utils.StringPtrToString(c.CidrBlock),
+						CidrType: int32(utils.Int64PtrToInt64(c.AssistantType)),
+					})
+				}
+
+				return cidrs
+			}(),
+		})
+	}
+	return result, nil
+}
 
 // ListSubnets list vpc subnets
 func (c *VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {

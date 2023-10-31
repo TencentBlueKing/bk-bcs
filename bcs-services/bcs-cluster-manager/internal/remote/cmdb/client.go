@@ -13,6 +13,7 @@
 package cmdb
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,10 +22,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/parnurzeal/gorequest"
 	"github.com/patrickmn/go-cache"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -545,10 +547,12 @@ func (c *Client) TransHostToRecycleModule(bizID int, hostID []int) error {
 }
 
 // GetBizInternalModule get biz recycle module info
-func (c *Client) GetBizInternalModule(bizID int) (*BizInternalModuleData, error) {
+func (c *Client) GetBizInternalModule(ctx context.Context, bizID int) (*BizInternalModuleData, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
+
+	language := i18n.LanguageFromCtx(ctx)
 
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/get_biz_internal_module/", c.server)
@@ -563,6 +567,7 @@ func (c *Client) GetBizInternalModule(bizID int) (*BizInternalModuleData, error)
 		Post(reqURL).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
+		Set("Blueking-Language", language).
 		Set("X-Bkapi-Authorization", c.userAuth).
 		SetDebug(c.serverDebug).
 		Send(request).
@@ -917,7 +922,8 @@ func (c *Client) SearchBizInstTopo(bizID int) ([]SearchBizInstTopoData, error) {
 }
 
 // ListTopology list topology
-func (c *Client) ListTopology(bizID int, filterInter bool, cache bool) (*SearchBizInstTopoData, error) {
+func (c *Client) ListTopology(ctx context.Context, bizID int, filterInter bool, cache bool) (
+	*SearchBizInstTopoData, error) {
 	if cache {
 		bizTopo, ok := GetBizTopoData(c.cache, bizID)
 		if ok {
@@ -927,11 +933,11 @@ func (c *Client) ListTopology(bizID int, filterInter bool, cache bool) (*SearchB
 		blog.V(3).Infof("ListTopology miss cache by bizID[%v]", bizID)
 	}
 
-	internalModules, err := c.GetBizInternalModule(bizID)
+	internalModules, err := c.GetBizInternalModule(ctx, bizID)
 	if err != nil {
 		return nil, err
 	}
-	internalModules.ReplaceName()
+	// internalModules.ReplaceName()
 
 	topos, err := c.SearchBizInstTopo(bizID)
 	if err != nil {

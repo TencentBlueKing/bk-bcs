@@ -149,6 +149,8 @@ type ListNodesOption struct {
 	ClusterVPCID string
 	// ClusterID for cluster id
 	ClusterID string
+	// NodeTemplateID for node templateID
+	NodeTemplateID string
 }
 
 // TaskOptions option for create specified task
@@ -167,7 +169,8 @@ type CreateClusterOption struct {
 	Operator     string
 	// cloud is used for cloudprovider template
 	Cloud        *proto.Cloud
-	Nodes        []string
+	WorkerNodes  []string
+	MasterNodes  []string
 	NodeTemplate *proto.NodeTemplate
 }
 

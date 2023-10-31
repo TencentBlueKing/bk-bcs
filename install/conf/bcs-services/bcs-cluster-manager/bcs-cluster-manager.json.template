@@ -145,6 +145,7 @@
         "appSecret": "${bcsAppSecret}",
         "bkUserName": "${bcsBkUserName}",
         "server": "${bcsGseServer}",
+        "gatewayServer": "${bcsGseGatewayServer}",
         "debug": ${bcsGseDebug}
     },
     "job": {

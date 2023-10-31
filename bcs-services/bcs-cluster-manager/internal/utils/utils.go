@@ -44,6 +44,8 @@ const (
 	IPV4 = "ipv4"
 	// IPV6 ipv6 flag
 	IPV6 = "ipv6"
+	// DualStack dual stack flag
+	DualStack = "dual"
 )
 
 const (
@@ -400,6 +402,15 @@ func StringPtrToString(str *string) string {
 	}
 
 	return *str
+}
+
+// Int64PtrToInt64 ptrInt64 to int64
+func Int64PtrToInt64(num *int64) int64 {
+	if num == nil {
+		return 0
+	}
+
+	return *num
 }
 
 // MatchSubnet inner match subnet
