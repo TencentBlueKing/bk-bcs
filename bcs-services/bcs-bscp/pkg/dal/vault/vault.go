@@ -27,11 +27,11 @@ type Set interface {
 	// CreateMountPath 创建挂载目录
 	CreateMountPath(path string, config *vault.MountInput) error
 	// UpsertKv 创建｜更新kv
-	UpsertKv(kit kit.Kit, bizID, appID uint32, key, content string) (int, error)
+	UpsertKv(kit *kit.Kit, bizID, appID uint32, key, content string) (int, error)
 	// GetLastKv 获取最新的kv
-	GetLastKv(kit kit.Kit, bizID, appID uint32, key string) (string, error)
+	GetLastKv(kit *kit.Kit, bizID, appID uint32, key string) (string, error)
 	// GetKvByVersion 根据版本获取kv
-	GetKvByVersion(kit kit.Kit, bizID, appID uint32, key string, version int) (string, error)
+	GetKvByVersion(kit *kit.Kit, bizID, appID uint32, key string, version int) (string, error)
 }
 
 type set struct {

@@ -26,7 +26,7 @@ const (
 )
 
 // UpsertKv 创建｜更新kv
-func (s *set) UpsertKv(kit kit.Kit, bizID, appID uint32, key, content string) (int, error) {
+func (s *set) UpsertKv(kit *kit.Kit, bizID, appID uint32, key, content string) (int, error) {
 
 	data := map[string]interface{}{
 		"data": content,
@@ -41,7 +41,7 @@ func (s *set) UpsertKv(kit kit.Kit, bizID, appID uint32, key, content string) (i
 }
 
 // GetLastKv 获取最新的kv
-func (s *set) GetLastKv(kit kit.Kit, bizID, appID uint32, key string) (string, error) {
+func (s *set) GetLastKv(kit *kit.Kit, bizID, appID uint32, key string) (string, error) {
 
 	kv, err := s.cli.KVv2(MountPath).Get(kit.Ctx, fmt.Sprintf(kvPath, bizID, appID, key))
 	if err != nil {
@@ -58,7 +58,7 @@ func (s *set) GetLastKv(kit kit.Kit, bizID, appID uint32, key string) (string, e
 }
 
 // GetKvByVersion 根据版本获取kv
-func (s *set) GetKvByVersion(kit kit.Kit, bizID, appID uint32, key string, version int) (string, error) {
+func (s *set) GetKvByVersion(kit *kit.Kit, bizID, appID uint32, key string, version int) (string, error) {
 
 	kv, err := s.cli.KVv2(MountPath).GetVersion(kit.Ctx, fmt.Sprintf(kvPath, bizID, appID, key), version)
 	if err != nil {
