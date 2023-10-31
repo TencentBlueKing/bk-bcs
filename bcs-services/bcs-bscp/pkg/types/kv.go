@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package types
 
@@ -20,36 +20,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 )
-
-// ListKvOption defines options to list kv.
-type ListKvOption struct {
-	BizID     uint32    `json:"biz_id"`
-	AppID     uint32    `json:"app_id"`
-	Name      string    `json:"name"`
-	ID        uint32    `json:"id"`
-	SearchKey string    `json:"search_key"`
-	All       bool      `json:"all"`
-	Page      *BasePage `json:"page"`
-}
-
-func (opt *ListKvOption) Validate(po *PageOption) error {
-	if opt.BizID <= 0 {
-		return errors.New("invalid biz id, should >= 1")
-	}
-	if opt.AppID <= 0 {
-		return errors.New("invalid app id, should >= 1")
-	}
-
-	if opt.Page == nil {
-		return errors.New("page is null")
-	}
-
-	if err := opt.Page.Validate(po); err != nil {
-		return err
-	}
-
-	return nil
-}
 
 // KvType is the type of kv
 type KvType string
