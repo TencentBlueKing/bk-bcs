@@ -78,7 +78,7 @@ const formRef = ref();
 const memoRef = ref();
 
 const spaceName = computed(() => {
-  const space = spaceList.value.find((item) => item.space_id === props.service.space_id);
+  const space = spaceList.value.find(item => item.space_id === props.service.space_id);
   return space?.space_name;
 });
 
@@ -102,7 +102,7 @@ watch(
     if (val) {
       formData.value.memo = props.service.spec.memo;
     }
-  }
+  },
 );
 
 const handleEditMemo = () => {

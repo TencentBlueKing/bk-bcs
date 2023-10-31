@@ -56,7 +56,7 @@ const pending = ref(false);
 const handleConfirm = async () => {
   try {
     pending.value = true;
-    const ids = props.configs.map((config) => config.id);
+    const ids = props.configs.map(config => config.id);
     await deleteTemplate(spaceId.value, currentTemplateSpace.value, ids);
     close();
     emits('deleted');

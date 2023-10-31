@@ -44,14 +44,14 @@ watch(
   () => route.name,
   (val) => {
     activeTabName.value = val as string;
-  }
+  },
 );
 
 watch(
   () => spaceId.value,
   () => {
     checkCreateServicePerm();
-  }
+  },
 );
 
 onMounted(() => {

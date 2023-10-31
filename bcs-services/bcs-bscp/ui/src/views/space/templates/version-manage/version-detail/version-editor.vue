@@ -159,7 +159,7 @@ watch(
   (val) => {
     formData.value = { ...val };
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -169,7 +169,7 @@ watch(
       getContent();
       getBoundCount();
     }
-  }
+  },
 );
 
 onMounted(() => {

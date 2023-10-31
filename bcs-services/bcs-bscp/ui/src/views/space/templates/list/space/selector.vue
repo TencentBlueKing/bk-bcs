@@ -73,7 +73,7 @@ const editingData = ref({
 });
 
 const templateSpaceDetail = computed(() => {
-  const item = templateSpaceList.value.find((item) => item.id === currentTemplateSpace.value);
+  const item = templateSpaceList.value.find(item => item.id === currentTemplateSpace.value);
   if (item) {
     const { name, memo } = item.spec;
     return { name, memo };
@@ -85,7 +85,7 @@ watch(
   () => spaceId.value,
   () => {
     initData();
-  }
+  },
 );
 
 onMounted(() => {

@@ -8,9 +8,9 @@
         </div>
       </template>
       <bk-option v-for="app in unBoundApps" :key="app.id" :id="app.id" :label="app.spec.name">
-        <div class="app-option" @click.stop>
+        <div class="app-option" @click="goToConfigPageImport(app.id as number)">
           <div class="name-text">{{ app.spec.name }}</div>
-          <LinkToApp class="link-icon" :id="app.id as number" @custom-click="goToConfigPageImport(app.id as number)" />
+          <LinkToApp class="link-icon" :id="app.id as number"  />
         </div>
       </bk-option>
     </bk-select>
@@ -18,9 +18,9 @@
       <bk-table :border="['outer']" :data="boundApps">
         <bk-table-column label="当前使用此套餐的服务">
           <template #default="{ row }">
-            <div v-if="row.app_id" class="app-info">
+            <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
-              <LinkToApp class="link-icon" :id="row.app_id" @custom-click="goToConfigPageImport(row.app_id)" />
+              <LinkToApp class="link-icon" :id="row.app_id" />
             </div>
           </template>
         </bk-table-column>
@@ -145,6 +145,7 @@ const goToConfigPageImport = (id: number) => {
   display: flex;
   align-items: center;
   overflow: hidden;
+  cursor: pointer;
 }
 .table-wrapper {
   margin-top: 16px;

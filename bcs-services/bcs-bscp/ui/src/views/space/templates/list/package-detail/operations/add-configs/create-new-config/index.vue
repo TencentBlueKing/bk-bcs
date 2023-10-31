@@ -71,7 +71,7 @@ watch(
       configForm.value = getConfigEditParams();
       isFormChanged.value = false;
     }
-  }
+  },
 );
 
 const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary | string) => {

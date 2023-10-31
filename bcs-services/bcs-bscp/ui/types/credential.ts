@@ -46,6 +46,7 @@ export interface IRuleEditing {
   type: string;
   content: string;
   original: string;
+  isRight: boolean;
 }
 
 // 调用关联规则更新接口参数

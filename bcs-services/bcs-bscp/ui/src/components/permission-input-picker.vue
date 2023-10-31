@@ -78,14 +78,14 @@ watch(
     privilegeInputVal.value = val;
     localVal.value = val;
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // 将权限数字拆分成三个分组配置
 const privilegeGroupsValue = computed(() => {
   const data: { [index: string]: number[] } = { 0: [], 1: [], 2: [] };
   if (typeof localVal.value === 'string' && localVal.value.length > 0) {
-    const valArr = localVal.value.split('').map((i) => parseInt(i, 10));
+    const valArr = localVal.value.split('').map(i => parseInt(i, 10));
     valArr.forEach((item, index) => {
       data[index as keyof typeof data] = PRIVILEGE_VALUE_MAP[item as keyof typeof PRIVILEGE_VALUE_MAP];
     });

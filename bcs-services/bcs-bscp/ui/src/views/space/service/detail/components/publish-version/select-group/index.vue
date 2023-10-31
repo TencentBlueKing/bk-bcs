@@ -54,7 +54,7 @@ const props = withDefaults(
   }>(),
   {
     groupType: 'select',
-  }
+  },
 );
 const emits = defineEmits(['openPreviewVersionDiff', 'groupTypeChange', 'change']);
 
