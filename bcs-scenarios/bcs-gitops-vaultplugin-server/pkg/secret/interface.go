@@ -56,6 +56,7 @@ type SecretManager interface {
 	// 2. 需要存储认证到secret中
 	// NOTE 全部通过projectName来定义一些默认规则
 	InitProject(project string) error
+	ReverseInitProject(project string) []error
 	// GetSecretAnnotation 通过initProject创建的secret信息需要传入project的annotations，为了不侵入gitops-manager需要从vault-plugin获取
 	GetSecretAnnotation(project string) string
 

@@ -13,7 +13,6 @@
 package argocd
 
 import (
-	"context"
 	"net/http"
 
 	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
@@ -64,29 +63,29 @@ func (plugin *ClusterPlugin) forbidden(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /api/v1/clusters
-func (plugin *ClusterPlugin) listClustersHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
+func (plugin *ClusterPlugin) listClustersHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	params := mux.Vars(r)
 	projectName, ok := params["projects"]
 	if !ok || projectName == "" {
-		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("lost projects param"))
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("lost projects param"))
 	}
-	clusterList, statusCode, err := plugin.middleware.ListClusters(ctx, []string{projectName})
+	clusterList, statusCode, err := plugin.middleware.ListClusters(r.Context(), []string{projectName})
 	if statusCode != http.StatusOK {
-		return mw.ReturnErrorResponse(statusCode,
+		return r, mw.ReturnErrorResponse(statusCode,
 			errors.Wrapf(err, "list clusters by project '%s' failed", projectName))
 	}
-	return mw.ReturnJSONResponse(clusterList)
+	return r, mw.ReturnJSONResponse(clusterList)
 }
 
 // GET /api/v1/clusters/{name}
-func (plugin *ClusterPlugin) clusterViewHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
+func (plugin *ClusterPlugin) clusterViewHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	clusterName := mux.Vars(r)["name"]
-	statusCode, err := plugin.middleware.CheckClusterPermission(ctx, &clusterclient.ClusterQuery{
+	statusCode, err := plugin.middleware.CheckClusterPermission(r.Context(), &clusterclient.ClusterQuery{
 		Name: clusterName,
 	}, iam.ClusterView)
 	if statusCode != http.StatusOK {
-		return mw.ReturnErrorResponse(statusCode,
+		return r, mw.ReturnErrorResponse(statusCode,
 			errors.Wrapf(err, "check cluster '%s' view permision failed", clusterName))
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }

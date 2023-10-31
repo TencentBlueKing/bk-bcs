@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
 )
 
@@ -105,9 +106,11 @@ func (e *BcsGitopsHandler) StartupProject(ctx context.Context, req *pb.ProjectSy
 	}
 
 	// 完成project同步之后，需要初始化secret vault相关信息
-	if err := e.option.SecretClient.InitProjectSecret(ctx, project.ProjectCode); err != nil {
-		return e.startProjectResult(resp, failedCode, "",
-			errors.Wrapf(err, "init secret project '%s' failed", project.ProjectCode))
+	if err = e.option.SecretClient.InitProjectSecret(ctx, project.ProjectCode); err != nil {
+		if !utils.IsSecretAlreadyExist(err) {
+			return e.startProjectResult(resp, failedCode, "",
+				errors.Wrapf(err, "init secret project '%s' failed", project.ProjectCode))
+		}
 	}
 	return e.startProjectResult(resp, successCode, "ok", nil)
 }
