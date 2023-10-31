@@ -43,7 +43,7 @@ require (
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230911112816-85f490b1c029
-	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230908014411-0783f4d68dd5
+	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20231030071618-1e6240162176
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230908014411-0783f4d68dd5
 	github.com/chartmuseum/helm-push v0.10.4
 	github.com/goccy/go-yaml v1.9.6
