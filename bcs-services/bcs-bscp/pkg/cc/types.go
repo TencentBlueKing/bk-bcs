@@ -966,11 +966,11 @@ func (c Credential) validate() error {
 	return nil
 }
 
-// Vault ...
+// Vault Used to store the configuration information required for connecting to the Vault server.
 type Vault struct {
-	// Address ...
+	// Address is used to store the address of the Vault server
 	Address string `yaml:"address"`
-	// Token ...
+	// Token is used for accessing the Vault server
 	Token string `yaml:"token"`
 }
 
