@@ -320,6 +320,10 @@ func (s DataServiceSetting) Validate() error {
 		return err
 	}
 
+	if err := s.Vault.validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 

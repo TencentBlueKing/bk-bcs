@@ -13,8 +13,6 @@
 package vault
 
 import (
-	"log"
-
 	vault "github.com/hashicorp/vault/api"
 
 	"bscp.io/pkg/cc"
@@ -47,7 +45,7 @@ func NewSet(opt cc.Vault) (Set, error) {
 
 	client, err := vault.NewClient(config)
 	if err != nil {
-		log.Fatalf("unable to initialize Vault client: %v", err)
+		return nil, err
 	}
 
 	client.SetToken(opt.Token)
