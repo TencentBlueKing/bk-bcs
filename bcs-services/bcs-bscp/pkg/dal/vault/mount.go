@@ -14,6 +14,7 @@ package vault
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/vault/api"
 )
 
