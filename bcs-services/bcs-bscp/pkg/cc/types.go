@@ -965,3 +965,25 @@ func (c Credential) validate() error {
 
 	return nil
 }
+
+// Vault ...
+type Vault struct {
+	// Address ...
+	Address string `yaml:"address"`
+	// Token ...
+	Token string `yaml:"token"`
+}
+
+// validate Vault options
+func (v Vault) validate() error {
+
+	if v.Address == "" {
+		return errors.New("vault address is not set")
+	}
+
+	if v.Token == "" {
+		return errors.New("vault token is not set")
+	}
+
+	return nil
+}

@@ -22,6 +22,7 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/dal/dao"
 	"bscp.io/pkg/dal/repository"
+	"bscp.io/pkg/dal/vault"
 	"bscp.io/pkg/metrics"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/serviced"
@@ -32,6 +33,7 @@ import (
 // Service do all the data service's work
 type Service struct {
 	dao     dao.Set
+	vault   vault.Set
 	gateway *gateway
 	// esb esb api client.
 	esb      client.Client
@@ -40,7 +42,7 @@ type Service struct {
 }
 
 // NewService create a service instance.
-func NewService(sd serviced.Service, daoSet dao.Set) (*Service, error) {
+func NewService(sd serviced.Service, daoSet dao.Set, vaultSet vault.Set) (*Service, error) {
 	state, ok := sd.(serviced.State)
 	if !ok {
 		return nil, errors.New("discover convert state failed")
@@ -65,6 +67,7 @@ func NewService(sd serviced.Service, daoSet dao.Set) (*Service, error) {
 
 	svc := &Service{
 		dao:      daoSet,
+		vault:    vaultSet,
 		gateway:  gateway,
 		esb:      esbCli,
 		repo:     repo,

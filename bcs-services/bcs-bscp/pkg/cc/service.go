@@ -275,6 +275,7 @@ type DataServiceSetting struct {
 	Sharding   Sharding   `yaml:"sharding"`
 	Esb        Esb        `yaml:"esb"`
 	Repo       Repository `yaml:"repository"`
+	Vault      Vault      `yaml:"vault"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
