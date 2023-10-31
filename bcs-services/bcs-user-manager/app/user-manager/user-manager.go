@@ -13,11 +13,13 @@
 package usermanager
 
 import (
+	"bytes"
 	"crypto/tls"
 	"embed"
 	"errors"
 	"fmt"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 
@@ -106,6 +108,9 @@ func (u *UserManager) Start() error {
 
 	router := u.httpServ.GetRouter()
 	webContainer := u.httpServ.GetWebContainer()
+	// set recover handler
+	webContainer.RecoverHandler(responseOnRecover)
+	webContainer.DoNotRecover(false)
 
 	// handle user and cluster manager request
 	router.Handle("/usermanager/{sub_path:.*}", webContainer)
@@ -304,4 +309,20 @@ func (u *UserManager) initUserManagerServer() error {
 	u.initI18n()
 
 	return nil
+}
+
+// responseOnRecover response on recover
+func responseOnRecover(panicReason interface{}, httpWriter http.ResponseWriter) {
+	var buffer bytes.Buffer
+	buffer.WriteString(fmt.Sprintf("recover from panic situation: - %v\r\n", panicReason))
+	for i := 2; ; i++ {
+		_, file, line, ok := runtime.Caller(i)
+		if !ok {
+			break
+		}
+		buffer.WriteString(fmt.Sprintf("    %s:%d\r\n", file, line))
+	}
+	blog.Error(buffer.String())
+	httpWriter.WriteHeader(http.StatusInternalServerError)
+	httpWriter.Write([]byte(`{"code": 500, "message": "server error"}`))
 }
