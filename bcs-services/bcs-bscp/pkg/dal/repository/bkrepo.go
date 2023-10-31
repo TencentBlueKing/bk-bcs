@@ -372,8 +372,8 @@ func (c *bkrepoClient) AsyncDownloadStatus(kt *kit.Kit, sign string, taskID stri
 	return false, nil
 }
 
-// newBKRepoProvider new bkrepo provider
-func newBKRepoProvider(settings cc.Repository) (Provider, error) {
+// newBKRepoClient new bkrepo client
+func newBKRepoClient(settings cc.Repository) (BaseProvider, error) {
 	cli, err := repo.NewClient(settings, metrics.Register())
 	if err != nil {
 		return nil, err
@@ -399,4 +399,23 @@ func newBKRepoProvider(settings cc.Repository) (Provider, error) {
 	p.client = &http.Client{Transport: transport}
 
 	return p, nil
+}
+
+// newBKRepoProvider new bkrepo provider
+func newBKRepoProvider(settings cc.Repository) (Provider, error) {
+	p, err := newBKRepoClient(settings)
+	if err != nil {
+		return nil, err
+	}
+
+	var c VariableCacher
+	c, err = newVariableCacher(settings.RedisCluster, p)
+	if err != nil {
+		return nil, err
+	}
+
+	return &repoProvider{
+		BaseProvider:   p,
+		VariableCacher: c,
+	}, nil
 }

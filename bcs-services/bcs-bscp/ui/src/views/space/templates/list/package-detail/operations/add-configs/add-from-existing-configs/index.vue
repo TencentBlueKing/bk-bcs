@@ -105,7 +105,7 @@ watch(
       isFormChange.value = false;
       getGroupConfigs();
     }
-  }
+  },
 );
 
 // 加载全部配置文件
@@ -179,7 +179,7 @@ const handleToggleOpenTable = (id: string | number) => {
 };
 
 const handleDeleteConfig = (id: number) => {
-  const index = selectedConfigs.value.findIndex((item) => item.id === id);
+  const index = selectedConfigs.value.findIndex(item => item.id === id);
   if (index > -1) {
     selectedConfigs.value.splice(index, 1);
   }
@@ -188,7 +188,7 @@ const handleDeleteConfig = (id: number) => {
 const handleAddConfigs = async () => {
   try {
     pending.value = true;
-    const configIds = selectedConfigs.value.map((item) => item.id);
+    const configIds = selectedConfigs.value.map(item => item.id);
     await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, configIds, [currentPkg.value as number]);
     emits('added');
     close();

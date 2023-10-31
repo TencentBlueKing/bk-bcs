@@ -13,7 +13,6 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -161,11 +160,18 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		inputVarMap[v.Name] = v.TemplateVariableSpec()
 	}
 
-	// NOTE: optimize to get config items whose content really contains variable
-	tmplRevisionsNeedRender := filterSizeForTmplRevisions(tmplRevisions)
+	tmplsNeedRender := filterSizeForTmplRevisions(tmplRevisions)
 	cisNeedRender := filterSizeForConfigItems(cis)
 
-	contents, err := s.downloadTmplContent(kt, tmplRevisionsNeedRender)
+	vars, ciVars, allVars, err := s.getVariables(kt, tmplsNeedRender, cisNeedRender)
+	if err != nil {
+		logs.Errorf("get variables failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+	tmplsNeedRender = filterVarsForTmplRevisions(tmplsNeedRender, vars)
+	cisNeedRender = filterVarsForConfigItems(cisNeedRender, ciVars)
+
+	contents, err := s.downloadTmplContent(kt, tmplsNeedRender)
 	if err != nil {
 		logs.Errorf("download template content failed, err: %v, rid: %s", err, kt.Rid)
 		return err
@@ -175,12 +181,6 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		logs.Errorf("download config item content failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
-	contents = append(contents, ciContents...)
-
-	// merge all template content
-	allContent := bytes.Join(contents, []byte(" "))
-	// extract all template variables
-	allVars := s.tmplProc.ExtractVariables(allContent)
 
 	usedVars, renderKV, err := s.getRenderedVars(kt, allVars, inputVarMap)
 	if err != nil {
@@ -194,7 +194,7 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 	byteSizeMap := make(map[uint32]uint64, len(tmplRevisions))
 	revisionMap := make(map[uint32]*table.TemplateRevision, len(tmplRevisions))
 	// data which need render
-	for idx, r := range tmplRevisionsNeedRender {
+	for idx, r := range tmplsNeedRender {
 		revisionMap[r.ID] = r
 		renderedContentMap[r.ID] = s.tmplProc.Render(contents[idx], renderKV)
 		signatureMap[r.ID] = tools.ByteSHA256(renderedContentMap[r.ID])

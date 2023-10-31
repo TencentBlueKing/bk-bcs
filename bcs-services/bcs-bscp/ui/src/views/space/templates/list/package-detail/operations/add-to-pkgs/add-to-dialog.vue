@@ -32,7 +32,7 @@
         <bk-table-column label="目标模板套餐" prop="template_set_name"></bk-table-column>
         <bk-table-column label="使用此套餐的服务">
           <template #default="{ row }">
-            <div v-if="row.app_id" class="app-info">
+            <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
               <LinkToApp class="link-icon" :id="row.app_id" />
             </div>
@@ -44,6 +44,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue';
 import { ITemplateConfigItem, IPackagesCitedByApps } from '../../../../../../../../types/template';
@@ -62,13 +63,15 @@ const props = defineProps<{
 
 const emits = defineEmits(['update:show', 'added']);
 
+const router = useRouter();
+
 const formRef = ref();
 const selectedPkgs = ref<number[]>([]);
 const loading = ref(false);
 const citedList = ref<IPackagesCitedByApps[]>([]);
 const pending = ref(false);
 
-const allPackages = computed(() => packageList.value.filter((pkg) => pkg.id !== currentPkg.value));
+const allPackages = computed(() => packageList.value.filter(pkg => pkg.id !== currentPkg.value));
 
 const isMultiple = computed(() => props.value.length > 1);
 
@@ -85,8 +88,17 @@ watch(
       citedList.value = [];
       pending.value = false;
     }
-  }
+  },
 );
+
+const goToConfigPageImport = (id: number) => {
+  const { href } = router.resolve({
+    name: 'service-config',
+    params: { appId: id },
+    query: { pkg_id: currentTemplateSpace.value },
+  });
+  window.open(href, '_blank');
+};
 
 const getCitedData = async () => {
   loading.value = true;
@@ -98,7 +110,7 @@ const getCitedData = async () => {
     spaceId.value,
     currentTemplateSpace.value,
     selectedPkgs.value,
-    params
+    params,
   );
   citedList.value = res.details;
   loading.value = false;
@@ -118,7 +130,7 @@ const handleConfirm = async () => {
 
   try {
     pending.value = true;
-    const templateIds = props.value.map((item) => item.id);
+    const templateIds = props.value.map(item => item.id);
     await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, templateIds, selectedPkgs.value);
     emits('added');
     close();
@@ -182,6 +194,7 @@ const close = () => {
   display: flex;
   align-items: center;
   overflow: hidden;
+  cursor: pointer;
   .name-text {
     overflow: hidden;
     white-space: nowrap;

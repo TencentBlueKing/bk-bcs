@@ -70,7 +70,7 @@ watch(
       searchStr.value = '';
       getList();
     }
-  }
+  },
 );
 
 const getList = async () => {
@@ -87,7 +87,7 @@ const getList = async () => {
     props.spaceId,
     props.currentTemplateSpace,
     props.config.id,
-    params
+    params,
   );
   appList.value = res.details;
   pagination.value.count = res.count;

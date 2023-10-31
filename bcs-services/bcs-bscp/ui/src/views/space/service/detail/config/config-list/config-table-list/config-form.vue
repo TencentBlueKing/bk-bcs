@@ -98,14 +98,19 @@
         :disabled="!editable"
         :multiple="false"
         :files="fileList"
-        :custom-request="handleFileUpload"
-      >
+        :custom-request="handleFileUpload">
         <template #file="{ file }">
-          <div class="file-wrapper">
-            <Done class="done-icon" />
-            <TextFill class="file-icon" />
-            <div v-bk-ellipsis class="name" @click="handleDownloadFile">{{ file.name }}</div>
-            ({{ file.size }})
+          <div>
+            <div class="file-wrapper">
+              <div class="status-icon-area">
+                <Done v-if="file.status === 'success'" class="success-icon" />
+                <Error v-if="file.status === 'fail'" class="error-icon" />
+              </div>
+              <TextFill class="file-icon" />
+              <div class="name" :title="file.name" @click="handleDownloadFile">{{ file.name }}</div>
+              ({{ file.status === 'fail' ? byteUnitConverse(file.size) : file.size }})
+            </div>
+            <div v-if="file.status === 'fail'" class="error-msg">{{ file.statusText }}</div>
           </div>
         </template>
       </bk-upload>
@@ -124,13 +129,13 @@
 import { ref, computed, watch } from 'vue';
 import SHA256 from 'crypto-js/sha256';
 import WordArray from 'crypto-js/lib-typedarrays';
-import { TextFill, Done } from 'bkui-vue/lib/icon';
+import { TextFill, Done, Error } from 'bkui-vue/lib/icon';
 import BkMessage from 'bkui-vue/lib/message';
 import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
 import { IVariableEditParams } from '../../../../../../../../types/variable';
 import { updateConfigContent, downloadConfigContent } from '../../../../../../../api/config';
 import { downloadTemplateContent, updateTemplateContent } from '../../../../../../../api/template';
-import { stringLengthInBytes } from '../../../../../../../utils/index';
+import { stringLengthInBytes, byteUnitConverse } from '../../../../../../../utils/index';
 import { transFileToObject, fileDownload } from '../../../../../../../utils/file';
 import { CONFIG_FILE_TYPE } from '../../../../../../../constants/config';
 import ConfigContentEditor from '../../components/config-content-editor.vue';
@@ -160,7 +165,7 @@ const props = withDefaults(
   }>(),
   {
     editable: true,
-  }
+  },
 );
 
 const emits = defineEmits(['change', 'update:fileUploading']);
@@ -196,7 +201,7 @@ const rules = {
     },
     {
       validator: () => {
-        const privilege = parseInt(privilegeInputVal.value[0]);
+        const privilege = parseInt(privilegeInputVal.value[0], 10);
         return privilege >= 4;
       },
       message: '文件own必须有读取权限',
@@ -209,9 +214,19 @@ const rules = {
       message: '最大长度256个字符',
     },
     {
-      validator: (value: string) => /^\/([a-zA-Z0-9\/\-\.]+\/)*[a-zA-Z0-9\/\-\.]+$/.test(value),
+      validator: (value: string) => /^\/([a-zA-Z0-9/\-.]+\/)*[a-zA-Z0-9/\-.]+$/.test(value),
       message: '无效的路径,路径不符合Unix文件路径格式规范',
       trigger: 'blur',
+    },
+  ],
+  memo: [
+    {
+      validator: (value: string) => {
+        if (!value) return true;
+        return /^[\u4E00-\u9FA5a-zA-Z0-9_\- ]*[\u4E00-\u9FA5a-zA-Z0-9](?!.*[,])[\u4E00-\u9FA5a-zA-Z0-9_\- ]*$/.test(value);
+      },
+      message: '只允许包含中文、英文、数字、下划线、连字符、空格，并且必须以中文、英文、数字开头和结尾。',
+      trigger: 'change',
     },
   ],
 };
@@ -223,7 +238,7 @@ const fileList = computed(() => (fileContent.value ? [transFileToObject(fileCont
 const privilegeGroupsValue = computed(() => {
   const data: { [index: string]: number[] } = { 0: [], 1: [], 2: [] };
   if (typeof localVal.value.privilege === 'string' && localVal.value.privilege.length > 0) {
-    const valArr = localVal.value.privilege.split('').map((i) => parseInt(i, 10));
+    const valArr = localVal.value.privilege.split('').map(i => parseInt(i, 10));
     valArr.forEach((item, index) => {
       data[index as keyof typeof data] = PRIVILEGE_VALUE_MAP[item as keyof typeof PRIVILEGE_VALUE_MAP];
     });
@@ -236,7 +251,7 @@ watch(
   (val) => {
     privilegeInputVal.value = val as string;
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -248,7 +263,7 @@ watch(
       stringContent.value = props.content as string;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
@@ -456,9 +471,20 @@ defineExpose({
     align-items: center;
     color: #979ba5;
     font-size: 12px;
-    .done-icon {
-      font-size: 20px;
-      color: #2dcb56;
+    .status-icon-area {
+      display: flex;
+      width: 20px;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      .success-icon {
+        font-size: 20px;
+        color: #2dcb56;
+      }
+      .error-icon {
+        font-size: 14px;
+        color: #ea3636;
+      }
     }
     .file-icon {
       margin: 0 6px 0 0;
@@ -476,6 +502,12 @@ defineExpose({
         text-decoration: underline;
       }
     }
+  }
+  .error-msg {
+    padding: 0 0 10px 38px;
+    line-height: 1;
+    font-size: 12px;
+    color: #ff5656;
   }
 }
 </style>

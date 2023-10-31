@@ -31,7 +31,9 @@
         />
         <template #footer>
           <section class="actions-wrapper">
-            <bk-button class="publish-btn" theme="primary" @click="isDiffSliderShow = true">对比并上线</bk-button>
+            <bk-button class="publish-btn" theme="primary" @click="handleDiffOrPublish">{{
+              versionList.length ? '对比并上线' : '上线版本'
+            }}</bk-button>
             <bk-button @click="handlePanelClose">取消</bk-button>
           </section>
         </template>
@@ -52,6 +54,7 @@
       :base-version-id="baseVersionId"
       :show-publish-btn="true"
       @publish="handleOpenPublishDialog"
+      :version-diff-list="versionList"
     />
   </section>
 </template>
@@ -70,6 +73,9 @@ import VersionLayout from '../../config/components/version-layout.vue';
 import ConfirmDialog from './confirm-dialog.vue';
 import SelectGroup from './select-group/index.vue';
 import VersionDiff from '../../config/components/version-diff/index.vue';
+import { useRoute } from 'vue-router';
+import { getConfigVersionList } from '../../../../../../api/config';
+import { IConfigVersion } from '../../../../../../../types/config';
 
 const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 const serviceStore = useServiceStore();
@@ -86,6 +92,10 @@ const props = defineProps<{
 
 const emit = defineEmits(['confirm']);
 
+const route = useRoute();
+const bkBizId = String(route.params.spaceId);
+const appId = Number(route.params.appId);
+const versionList = ref<IConfigVersion[]>([]);
 const isSelectGroupPanelOpen = ref(false);
 const isDiffSliderShow = ref(false);
 const isConfirmDialogShow = ref(false);
@@ -104,7 +114,27 @@ const permissionQueryResource = computed(() => [
   },
 ]);
 
+// 判断是否需要对比上线版本
+const handleDiffOrPublish = () => {
+  if (versionList.value.length) {
+    isDiffSliderShow.value = true;
+    return;
+  }
+  handleOpenPublishDialog();
+};
+
+// 获取所有对比基准版本
+const getVersionList = async () => {
+  try {
+    const res = await getConfigVersionList(bkBizId, appId, { start: 0, all: true });
+    versionList.value = res.data.details.filter((item: IConfigVersion) => item.id !== versionData.value.id && item.status.publish_status === 'partial_released');
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const handleBtnClick = () => {
+  getVersionList();
   if (props.hasPerm) {
     isSelectGroupPanelOpen.value = true;
   } else {

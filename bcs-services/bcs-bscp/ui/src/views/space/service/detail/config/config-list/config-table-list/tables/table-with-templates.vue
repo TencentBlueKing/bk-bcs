@@ -306,7 +306,7 @@ watch(
   async () => {
     await getBindingId();
     getAllConfigList();
-  }
+  },
 );
 
 watch(
@@ -314,7 +314,7 @@ watch(
   () => {
     props.searchStr ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
     getAllConfigList();
-  }
+  },
 );
 
 watch([() => configsCount.value, () => templatesCount.value], () => {
@@ -392,7 +392,7 @@ const getBoundTemplateList = async () => {
     templateGroupList.value = res.details;
     templatesCount.value = res.details.reduce(
       (acc: number, crt: IBoundTemplateGroup) => acc + crt.template_revisions.length,
-      0
+      0,
     );
   } catch (e) {
     console.error(e);
@@ -410,24 +410,23 @@ const transListToTableData = () => {
 };
 
 // 将非模板配置文件数据转为表格数据
-const transConfigsToTableItemData = (list: IConfigItem[]) =>
-  list.map((item: IConfigItem) => {
-    const { id, spec, revision, file_state } = item;
-    const { name, path, permission } = spec;
-    const { creator, reviser, update_at } = revision;
-    return {
-      id,
-      name,
-      versionId: 0,
-      versionName: '--',
-      path,
-      creator,
-      reviser,
-      update_at: datetimeFormat(update_at),
-      file_state,
-      permission,
-    };
-  });
+const transConfigsToTableItemData = (list: IConfigItem[]) => list.map((item: IConfigItem) => {
+  const { id, spec, revision, file_state } = item;
+  const { name, path, permission } = spec;
+  const { creator, reviser, update_at } = revision;
+  return {
+    id,
+    name,
+    versionId: 0,
+    versionName: '--',
+    path,
+    creator,
+    reviser,
+    update_at: datetimeFormat(update_at),
+    file_state,
+    permission,
+  };
+});
 
 // 将模板按套餐分组，并将模板数据格式转为表格数据
 const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
@@ -435,7 +434,7 @@ const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
     const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem;
     const group: IConfigsGroupData = {
       id: template_set_id,
-      name: `${template_space_name === 'default_space' ? '默认空间' : template_space_name} - ${template_set_name}`,
+      name: `${template_space_name} - ${template_set_name}`,
       expand: true,
       configs: [],
     };

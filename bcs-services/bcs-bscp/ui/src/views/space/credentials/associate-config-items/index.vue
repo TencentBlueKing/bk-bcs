@@ -74,7 +74,7 @@ watch(
         alter_scope: [],
       };
     }
-  }
+  },
 );
 
 const loadRules = async () => {

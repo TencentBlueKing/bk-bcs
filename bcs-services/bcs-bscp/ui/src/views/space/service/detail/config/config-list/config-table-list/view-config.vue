@@ -65,7 +65,7 @@ watch(
       getDetailData();
       variables.value = [];
     }
-  }
+  },
 );
 
 const getDetailData = async () => {

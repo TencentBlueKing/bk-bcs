@@ -90,7 +90,7 @@ watch(
       isPublish.value = false;
       getVariableList();
     }
-  }
+  },
 );
 
 const getVariableList = async () => {

@@ -168,8 +168,7 @@ const getRowCls = (data: IConfigVersion) => {
   return '';
 };
 
-const getGroupNames = (data: IConfigVersion) =>
-  data.status?.released_groups.length ? data.status.released_groups.map((item) => item.name).join('; ') : '--';
+const getGroupNames = (data: IConfigVersion) => (data.status?.released_groups.length ? data.status.released_groups.map(item => item.name).join('; ') : '--');
 
 const handleTabChange = (tab: string) => {
   currentTab.value = tab;

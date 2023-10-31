@@ -184,8 +184,8 @@ func (c *cosClient) AsyncDownloadStatus(kt *kit.Kit, sign string, taskID string)
 	return false, errNotImplemented
 }
 
-// newCosProvider new cos provider
-func newCosProvider(conf cc.S3Storage) (Provider, error) {
+// newCosClient new cos client
+func newCosClient(conf cc.S3Storage) (BaseProvider, error) {
 	host := fmt.Sprintf("%s://%s.%s", cosSchema, conf.BucketName, conf.Endpoint)
 
 	// cos 鉴权签名
@@ -208,4 +208,23 @@ func newCosProvider(conf cc.S3Storage) (Provider, error) {
 	}
 
 	return p, nil
+}
+
+// newCosProvider new cos provider
+func newCosProvider(settings cc.Repository) (Provider, error) {
+	p, err := newCosClient(settings.S3)
+	if err != nil {
+		return nil, err
+	}
+
+	var c VariableCacher
+	c, err = newVariableCacher(settings.RedisCluster, p)
+	if err != nil {
+		return nil, err
+	}
+
+	return &repoProvider{
+		BaseProvider:   p,
+		VariableCacher: c,
+	}, nil
 }

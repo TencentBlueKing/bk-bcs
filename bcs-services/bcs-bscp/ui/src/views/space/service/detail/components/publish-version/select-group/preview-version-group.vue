@@ -10,8 +10,7 @@
       </div>
       <span v-if="previewGroup.type === 'modify'" class="name"> - {{ previewGroup.name }}</span>
       <span class="group-count-wrapper"
-        >共 <span class="count">{{ previewGroup.children.length }}</span> 个分组</span
-      >
+        >共 <span class="count">{{ previewGroup.children.length }}</span> 个分组</span>
       <bk-button
         v-if="previewGroup.id && previewGroup.id !== versionData.id"
         text
@@ -63,7 +62,7 @@ const emits = defineEmits(['diff', 'delete']);
 const TYPE_MAP = {
   current: '当前版本',
   modify: '变更版本',
-  plain: '无版本',
+  plain: '首次上线',
 };
 
 const fold = ref(false);

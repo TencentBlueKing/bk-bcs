@@ -50,6 +50,7 @@ type IndexConfig struct {
 	RunEnv    string
 	StaticURL string
 	IAMHost   string
+	CMDBHost  string
 	APIURL    string
 	SiteURL   string // vue 路由前缀
 	ProxyAPI  bool
@@ -158,6 +159,7 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 			"RUN_ENV":         conf.RunEnv,
 			"BK_BCS_BSCP_API": conf.APIURL,
 			"BK_IAM_HOST":     conf.IAMHost,
+			"BK_CC_HOST":      conf.CMDBHost,
 			"BK_BSCP_CONFIG":  bscpConfig,
 			"SITE_URL":        conf.SiteURL,
 		}

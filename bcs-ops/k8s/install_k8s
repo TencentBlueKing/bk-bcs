@@ -138,7 +138,9 @@ for pod in ${pods[@]};do
       fi
       ;;
     "containerd")
-      if ! crictl ps |grep ${pod}|grep -i running;then
+      if ! crictl --runtime-endpoint=unix:///run/containerd/containerd.sock ps \
+        | grep "${pod}" \
+        | grep -i running; then
         utils::log "ERROR" "${pod} fail to run "
       fi
       ;;
@@ -155,7 +157,7 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
 
   kubectl get cm -n kube-system kube-proxy -o yaml|yq '.data.["kubeconfig.conf"]' > ${ROOT_DIR}/kubeconfig.conf
   kubectl get cm -n kube-system kube-proxy -o yaml|yq '.data.["config.conf"]'|yq '.ipvs.udpTimeout="10s"' > ${ROOT_DIR}/config.conf
-  kubectl delete cm kube-proxy -n kube-system 
+  kubectl delete cm kube-proxy -n kube-system
   kubectl create cm kube-proxy -n kube-system --from-file config.conf --from-file kubeconfig.conf
 
   if ! kubectl get ds -n kube-system kube-proxy -o yaml|grep madvdontneed;then
