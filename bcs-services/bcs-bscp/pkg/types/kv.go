@@ -37,6 +37,7 @@ const (
 	KvYAML KvType = "yaml"
 )
 
+// Validate the kvType and value match
 func (k KvType) Validate(value string) error {
 
 	if value == "" {
