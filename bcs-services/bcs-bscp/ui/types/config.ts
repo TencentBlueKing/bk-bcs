@@ -184,4 +184,5 @@ export interface IConfigImport {
   privilege: string;
   user: string;
   user_group: string;
+  isEdit?: boolean;
 }
