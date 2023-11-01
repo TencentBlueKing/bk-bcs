@@ -48,14 +48,17 @@ const props = defineProps<{
 }>();
 
 watch(
-  () => props.permissionEditor,
+  () => props.diffEditor,
   () => {
     createNavigator();
   },
 );
 
+
 onBeforeUnmount(() => {
-  contentNavigator.dispose();
+  if (contentNavigator) {
+    contentNavigator.dispose();
+  }
   if (permissionNavigator) {
     permissionNavigator.dispose();
   }
