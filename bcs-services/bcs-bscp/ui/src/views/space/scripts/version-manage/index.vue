@@ -118,6 +118,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { InfoBox, Message } from 'bkui-vue';
 import { Search, AngleDoubleRightLine } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
+import dayjs from 'dayjs';
 import useGlobalStore from '../../../../store/global';
 import useScriptStore from '../../../../store/script';
 import { IScriptVersion, IScriptVersionListItem } from '../../../../../types/script';
@@ -223,7 +224,7 @@ const handleCreateVersionClick = (content: string) => {
     editable: true,
     form: {
       id: 0,
-      name: '',
+      name: `v${dayjs().format('YYYYMMDDHHmmss')}`,
       memo: '',
       content,
     },

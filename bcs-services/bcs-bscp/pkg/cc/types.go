@@ -312,6 +312,7 @@ func (s *Repository) trySetDefault() {
 	if len(s.StorageType) == 0 {
 		s.StorageType = BkRepo
 	}
+	s.RedisCluster.trySetDefault()
 }
 
 // validate repo runtime.
