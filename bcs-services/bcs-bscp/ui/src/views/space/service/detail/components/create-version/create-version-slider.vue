@@ -110,13 +110,13 @@ const handleVariablesChange = (variables: IVariableEditParams[]) => {
   variableList.value = variables;
 };
 
-const handleOpenDiff = async () => {
-  await formRef.value.validate();
-  if (!tableRef.value.validate()) {
-    return;
-  }
-  emits('open-diff', variableList.value);
-};
+// const handleOpenDiff = async () => {
+//   await formRef.value.validate();
+//   if (!tableRef.value.validate()) {
+//     return;
+//   }
+//   emits('open-diff', variableList.value);
+// };
 
 const confirm = async () => {
   try {
