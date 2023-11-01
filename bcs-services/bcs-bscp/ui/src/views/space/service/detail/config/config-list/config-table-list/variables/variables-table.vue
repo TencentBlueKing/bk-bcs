@@ -159,7 +159,7 @@ const validate = () => {
 };
 
 const change = () => {
-  emits('change', variables);
+  emits('change', variables.value);
 };
 
 const handleValueChange = (type: string, value: string) => {
