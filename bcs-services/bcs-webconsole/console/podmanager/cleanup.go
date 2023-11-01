@@ -14,6 +14,7 @@
 package podmanager
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strconv"
@@ -23,10 +24,14 @@ import (
 	"github.com/go-redis/redis/v8"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/remotecommand"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/repository"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
@@ -164,6 +169,12 @@ func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace strin
 			continue
 		}
 
+		// 命令行持久化保存
+		if errCommand := persistenceCommand(
+			k8sClient, pod.Name, pod.Namespace, pod.Spec.Containers[0].Name, clusterId); errCommand != nil {
+			logger.Errorf("persistenceCommand, err: %s", errCommand)
+		}
+
 		// 删除pod
 		if err := k8sClient.CoreV1().Pods(namespace).Delete(p.ctx, pod.Name, metav1.DeleteOptions{}); err != nil {
 			logger.Errorf("delete pod(%s) failed, err: %s", pod.Name, err)
@@ -173,6 +184,56 @@ func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace strin
 		logger.Infof("delete pod %s done", pod.Name)
 	}
 
+	return nil
+}
+
+// persistenceCommand 命令行持久化保存
+func persistenceCommand(k8sClient *kubernetes.Clientset, podName, namespace, containerName, clusterId string) error {
+	req := k8sClient.CoreV1().RESTClient().Post().Resource("pods").Name(podName).Namespace(namespace).
+		SubResource("exec")
+
+	req.VersionedParams(&v1.PodExecOptions{
+		Command:   []string{"/bin/bash", "-c", "cat /root/.bash_history"},
+		Container: containerName,
+		Stdin:     false,
+		Stdout:    true,
+		Stderr:    true, // kubectl 默认 stderr 未设置, virtual-kubelet 节点 stderr 和 tty 不能同时为 true
+		TTY:       false,
+	}, scheme.ParameterCodec)
+
+	k8sConfig := k8sclient.GetK8SConfigByClusterId(clusterId)
+	executor, err := remotecommand.NewSPDYExecutor(k8sConfig, "POST", req.URL())
+	if err != nil {
+		return err
+	}
+
+	stdout, stderr := &bytes.Buffer{}, &bytes.Buffer{}
+	err = executor.Stream(remotecommand.StreamOptions{
+		Stdout: stdout,
+		Stderr: stderr,
+	})
+	if err != nil {
+		return err
+	}
+
+	// 文件名
+	filename := podName + HistoryFileName
+
+	// 上传远程repo对象存储
+	storage, err := repository.NewProvider(config.G.Repository.StorageType)
+	if err != nil {
+		return err
+	}
+
+	// 10秒上传超时时间
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	// 推送至远程repo对象存储
+	err = storage.UploadFileByReader(ctx, stdout, HistoryRepoDir+filename)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

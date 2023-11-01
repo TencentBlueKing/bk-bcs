@@ -41,10 +41,9 @@
         ref="treeRef"
         label="name"
         node-key="node_id"
-        :data="treeData"
+        :data="searchTreeData"
         :expand-all="false"
         :show-node-type-icon="false"
-        :search="searchOption"
       >
         <template #node="node">
           <div class="node-item-wrapper">
@@ -171,10 +170,12 @@ const searchStr = ref('');
 const treeRef = ref();
 const isSearchEmpty = ref(false);
 
-const searchOption = computed(() => ({
-  value: searchStr.value,
-  match: handleSearch,
-}));
+// 节点搜索
+const searchTreeData = computed(() => {
+  if (searchStr.value === '') return treeData.value;
+  isSearchEmpty.value = true;
+  return treeData.value.filter(treeNode => treeNode.name.toLowerCase().includes(searchStr.value.toLowerCase()));
+});
 
 // 分组列表变更
 watch(
@@ -250,12 +251,6 @@ const handleSelectVersion = (versions: number[]) => {
     });
   });
   emits('change', list);
-};
-
-// 节点搜索
-const handleSearch = (val: string, itemValue: string) => {
-  isSearchEmpty.value = true;
-  return itemValue.toLowerCase().includes(val.toLowerCase());
 };
 
 // 选中/取消选中节点

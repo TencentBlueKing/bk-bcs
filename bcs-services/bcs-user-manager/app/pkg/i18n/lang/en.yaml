@@ -1,0 +1,14 @@
+project: Project
+cluster: Cluster
+node: Node
+node_group: NodePool
+cloud_account: CloudAccount
+namespace: Namespace
+templateset: TemplateSet
+variable: Variable
+k8s_resource: K8SResource
+helm: Helm
+addons: Add-ons
+chart: Chart
+web_console: WebConsole
+log_rule: LogRule

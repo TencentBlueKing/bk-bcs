@@ -1,5 +1,5 @@
 <template>
-  <bk-sideslider title="导入配置项" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider title="导入配置文件" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="slider-content-container">
       <bk-form form-type="vertical">
         <bk-form-item label="上传配置包" required property="package">
@@ -48,7 +48,7 @@ watch(
   (val) => {
     isShow.value = val;
     isFormChange.value = false;
-  }
+  },
 );
 
 const handleFileUpload = () => {};

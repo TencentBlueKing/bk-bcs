@@ -298,6 +298,7 @@ type GlobalConf struct {
 	BCSAPIGW      BCSAPIGatewayConf `yaml:"bcsApiGW"` // nolint:tagliatelle
 	IAM           IAMConf           `yaml:"iam"`
 	SharedCluster SharedClusterConf `yaml:"sharedCluster"`
+	MultiCluster  MultiClusterConf  `yaml:"multiCluster"`
 }
 
 // AuthConf 认证相关配置
@@ -338,4 +339,9 @@ type IAMConf struct {
 type SharedClusterConf struct {
 	EnabledCObjKinds []string `yaml:"enabledCObjKinds" usage:"共享集群中支持的自定义对象 Kind"`
 	EnabledCRDs      []string `yaml:"enabledCRDs" usage:"共享集群中支持的 CRD"` // nolint:tagliatelle
+}
+
+// MultiClusterConf 多集群相关配置
+type MultiClusterConf struct {
+	EnabledQueryFromStorageKinds []string `yaml:"enabledQueryFromStorageKinds" usage:"支持从 storage 中查询的资源 Kind"`
 }

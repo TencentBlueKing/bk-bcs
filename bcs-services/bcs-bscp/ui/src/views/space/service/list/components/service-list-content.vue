@@ -159,7 +159,7 @@ watch(
     searchStr.value = '';
     pagination.value.limit = 50;
     refreshSeviceList();
-  }
+  },
 );
 
 onMounted(() => {
@@ -260,8 +260,8 @@ const handleClearSearchStr = () => {
   display: flex;
   justify-content: space-between;
   margin: 0 auto;
-  padding: 16px 0;
-  width: 1200px;
+  padding: 16px 25px 16px 8px;
+  width: 1233px;
   .create-icon {
     font-size: 22px;
   }

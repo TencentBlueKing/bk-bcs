@@ -135,6 +135,7 @@
 
 .tippy-content {
   max-width: 600px;
+  padding: 0 !important;
 }
 
 .bk-dialog-wrapper .bk-dialog {

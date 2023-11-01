@@ -1,6 +1,6 @@
 <template>
   <bk-sideslider
-    title="新建配置项"
+    title="新建配置文件"
     :width="640"
     :is-show="props.show"
     :quick-close="!isSelectPkgDialogShow"
@@ -109,7 +109,7 @@ const handleCreateConfirm = async (pkgIds: number[]) => {
     close();
     Message({
       theme: 'success',
-      message: '新建配置项成功',
+      message: '新建配置文件成功',
     });
   } catch (e) {
     console.log(e);

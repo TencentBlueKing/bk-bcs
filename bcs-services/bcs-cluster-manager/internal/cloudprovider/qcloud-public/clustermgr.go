@@ -36,7 +36,7 @@ var clsMgr sync.Once
 func init() {
 	clsMgr.Do(func() {
 		// init Node
-		cloudprovider.InitClusterManager("qcloud", &Cluster{})
+		cloudprovider.InitClusterManager(cloudName, &Cluster{})
 	})
 }
 
@@ -312,13 +312,13 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 	}
 
 	if cls.ImageId != nil && *cls.ImageId != "" {
-		nodeMgr := &api.NodeManager{}
+		nodeMgr := &NodeManager{}
 		image, errGet := nodeMgr.GetImageInfoByImageID(*cls.ImageId, &opt.CommonOption)
 		if errGet != nil {
 			blog.Errorf("%s checkIfWhiteImageOsNames GetImageInfoByImageID failed: %v", cloudName, errGet)
 			osName = *cls.ClusterOs
 		} else {
-			osName = *image.OsName
+			osName = image.OsName
 		}
 	} else {
 		osName = *cls.ClusterOs
@@ -350,13 +350,13 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 	}
 
 	if cls.ImageId != nil && *cls.ImageId != "" {
-		nodeMgr := &api.NodeManager{}
+		nodeMgr := &NodeManager{}
 		image, errGet := nodeMgr.GetImageInfoByImageID(*cls.ImageId, &opt.CommonOption)
 		if errGet != nil {
 			blog.Errorf("%s updateClusterInfo GetImageInfoByImageID failed: %v", cloudID, errGet)
 			opt.Cluster.ClusterBasicSettings.OS = *cls.ClusterOs
 		} else {
-			opt.Cluster.ClusterBasicSettings.OS = *image.OsName
+			opt.Cluster.ClusterBasicSettings.OS = image.OsName
 		}
 		opt.Cluster.ExtraInfo[icommon.ImageProvider] = icommon.PrivateImageProvider
 	} else {
@@ -593,12 +593,35 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 		return nil, fmt.Errorf("qcloud ListOsImage lost authoration")
 	}
 
+	images := make([]*proto.OsImage, 0)
+
 	cli, err := api.NewTkeClient(opt)
 	if err != nil {
 		return nil, err
 	}
+	cloudImages, err := cli.DescribeOsImages(provider, opt)
+	if err != nil {
+		return nil, err
+	}
 
-	return cli.DescribeOsImages(provider, opt)
+	for _, image := range cloudImages {
+		if image == nil || *image.Status == "offline" {
+			continue
+		}
+
+		images = append(images, &proto.OsImage{
+			ImageID:         *image.ImageId,
+			Alias:           *image.Alias,
+			Arch:            *image.Arch,
+			OsCustomizeType: *image.OsCustomizeType,
+			OsName:          *image.OsName,
+			SeriesName:      *image.SeriesName,
+			Status:          *image.Status,
+			Provider:        provider,
+		})
+	}
+
+	return images, nil
 }
 
 // CheckClusterEndpointStatus check cluster endpoint status

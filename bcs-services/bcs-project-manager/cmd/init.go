@@ -268,6 +268,7 @@ func (p *ProjectService) initPermClient() error {
 }
 
 // initMicro init micro service
+// NOCC:golint/fnsize(设计如此)
 func (p *ProjectService) initMicro() error {
 
 	// server listen ip
@@ -318,13 +319,14 @@ func (p *ProjectService) initMicro() error {
 			wrapper.NewAPILatencyWrapper,
 			wrapper.NewInjectContextWrapper,
 			wrapper.HandleLanguageWrapper,
+			wrapper.NewResponseWrapper,
 			wrapper.NewLogWrapper,
 			wrapper.NewValidatorWrapper,
 			wrapper.NewAuthHeaderAdapter,
 			authWrapper.AuthenticationFunc,
 			wrapper.NewAuthLogWrapper,
 			authWrapper.AuthorizationFunc,
-			wrapper.NewResponseWrapper,
+			wrapper.NewAuditWrapper,
 		),
 	)
 	svc.Init()

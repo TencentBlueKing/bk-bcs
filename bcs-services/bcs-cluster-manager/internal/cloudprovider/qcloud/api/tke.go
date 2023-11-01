@@ -22,7 +22,6 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -359,6 +358,7 @@ func (cli *TkeClient) DeleteTkeClusterInstance(deleteReq *DeleteInstancesRequest
 	req.ClusterId = common.StringPtr(deleteReq.ClusterID)
 	req.InstanceDeleteMode = common.StringPtr(deleteReq.DeleteMode.String())
 	req.InstanceIds = common.StringPtrs(deleteReq.Instances)
+	req.ForceDelete = common.BoolPtr(deleteReq.ForceDelete)
 
 	// tke DeleteClusterInstances
 	resp, err := cli.tke.DeleteClusterInstances(req)
@@ -1367,9 +1367,7 @@ func (cli *TkeClient) DescribeExternalNode(
 	return externalNodes, nil
 }
 
-func (cli *TkeClient) getCommonImages() ([]*proto.OsImage, error) {
-	images := make([]*proto.OsImage, 0)
-
+func (cli *TkeClient) getCommonImages() ([]*OSImage, error) {
 	req := NewDescribeOSImagesRequest()
 
 	// tke DescribeOSImages
@@ -1388,47 +1386,51 @@ func (cli *TkeClient) getCommonImages() ([]*proto.OsImage, error) {
 	blog.Infof("RequestId[%s] tke client DescribeOsImages success: %v",
 		*response.RequestId, *response.TotalCount)
 
-	for _, image := range response.OSImageSeriesSet {
-		if image == nil || *image.Status == "offline" {
-			continue
-		}
-
-		images = append(images, &proto.OsImage{
-			ImageID:         *image.ImageId,
-			Alias:           *image.Alias,
-			Arch:            *image.Arch,
-			OsCustomizeType: *image.OsCustomizeType,
-			OsName:          *image.OsName,
-			SeriesName:      *image.SeriesName,
-			Status:          *image.Status,
-			Provider:        icommon.PublicImageProvider,
-		})
-	}
-
-	return images, nil
+	return response.OSImageSeriesSet, nil
 }
 
 // DescribeOsImages pull common images
-func (cli *TkeClient) DescribeOsImages(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+func (cli *TkeClient) DescribeOsImages(provider string, opt *cloudprovider.CommonOption) ([]*OSImage, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
 	}
 
-	images := make([]*proto.OsImage, 0)
+	images := make([]*OSImage, 0)
 
 	switch provider {
 	case icommon.MarketImageProvider:
 		for _, v := range utils.ImageOsList {
 			if provider == v.Provider {
-				images = append(images, v)
+				images = append(images, &OSImage{
+					SeriesName:      &v.SeriesName,
+					Alias:           &v.Alias,
+					Arch:            &v.Arch,
+					OsName:          &v.OsName,
+					OsCustomizeType: &v.OsCustomizeType,
+					Status:          &v.Status,
+					ImageId:         &v.ImageID,
+				})
 			}
 		}
 		return images, nil
 	case icommon.PublicImageProvider:
 		return cli.getCommonImages()
 	case icommon.PrivateImageProvider:
-		nodeMgr := &NodeManager{}
-		return nodeMgr.DescribeImages(provider, opt)
+		cvmImages, err := getCvmImagesByImageType(provider, opt)
+		if err != nil {
+			return nil, fmt.Errorf("DescribeOsImages[%s] DescribeImages failed: %v", provider, err)
+		}
+
+		for i := range cvmImages {
+			images = append(images, &OSImage{
+				Alias:   cvmImages[i].ImageName,
+				Arch:    cvmImages[i].Architecture,
+				OsName:  cvmImages[i].OsName,
+				Status:  cvmImages[i].ImageState,
+				ImageId: cvmImages[i].ImageId,
+			})
+		}
+		return images, nil
 	default:
 	}
 

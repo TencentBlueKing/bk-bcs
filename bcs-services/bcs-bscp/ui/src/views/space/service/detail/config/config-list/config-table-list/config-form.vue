@@ -1,6 +1,6 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
-    <bk-form-item label="配置项名称" property="name" :required="true">
+    <bk-form-item label="配置文件名称" property="name" :required="true">
       <bk-input
         v-model="localVal.name"
         placeholder="请输入1~64个字符，只允许英文、数字、下划线、中划线或点"
@@ -8,7 +8,7 @@
         @change="change"
       />
     </bk-form-item>
-    <bk-form-item label="配置项路径" property="path" :required="true">
+    <bk-form-item label="配置文件路径" property="path" :required="true">
       <bk-input
         v-model="localVal.path"
         placeholder="请输入绝对路径，下载路径为前缀+配置路径"
@@ -16,10 +16,10 @@
         @change="change"
       />
     </bk-form-item>
-    <bk-form-item label="配置项描述" property="memo">
+    <bk-form-item label="配置文件描述" property="memo">
       <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change" :resize="false" />
     </bk-form-item>
-    <bk-form-item label="配置项格式">
+    <bk-form-item label="配置文件格式">
       <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">
         <bk-radio v-for="typeItem in CONFIG_FILE_TYPE" :key="typeItem.id" :label="typeItem.id" :disabled="!editable">{{
           typeItem.name
@@ -29,7 +29,13 @@
     <div class="user-settings">
       <bk-form-item label="文件权限" property="privilege" required>
         <div class="perm-input">
-          <bk-popover theme="light" trigger="manual" placement="top" :is-show="showPrivilegeErrorTips">
+          <bk-popover
+            ext-cls="privilege-tips-wrap"
+            theme="light"
+            trigger="manual"
+            placement="top"
+            :is-show="showPrivilegeErrorTips"
+          >
             <bk-input
               v-model="privilegeInputVal"
               type="number"
@@ -92,15 +98,19 @@
         :disabled="!editable"
         :multiple="false"
         :files="fileList"
-        :custom-request="handleFileUpload"
-        :limit="1"
-      >
+        :custom-request="handleFileUpload">
         <template #file="{ file }">
-          <div class="file-wrapper">
-            <Done class="done-icon" />
-            <TextFill class="file-icon" />
-            <div v-bk-ellipsis class="name" @click="handleDownloadFile">{{ file.name }}</div>
-            ({{ file.size }})
+          <div>
+            <div class="file-wrapper">
+              <div class="status-icon-area">
+                <Done v-if="file.status === 'success'" class="success-icon" />
+                <Error v-if="file.status === 'fail'" class="error-icon" />
+              </div>
+              <TextFill class="file-icon" />
+              <div class="name" :title="file.name" @click="handleDownloadFile">{{ file.name }}</div>
+              ({{ file.status === 'fail' ? byteUnitConverse(file.size) : file.size }})
+            </div>
+            <div v-if="file.status === 'fail'" class="error-msg">{{ file.statusText }}</div>
           </div>
         </template>
       </bk-upload>
@@ -119,13 +129,13 @@
 import { ref, computed, watch } from 'vue';
 import SHA256 from 'crypto-js/sha256';
 import WordArray from 'crypto-js/lib-typedarrays';
-import { TextFill, Done } from 'bkui-vue/lib/icon';
+import { TextFill, Done, Error } from 'bkui-vue/lib/icon';
 import BkMessage from 'bkui-vue/lib/message';
 import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
 import { IVariableEditParams } from '../../../../../../../../types/variable';
 import { updateConfigContent, downloadConfigContent } from '../../../../../../../api/config';
 import { downloadTemplateContent, updateTemplateContent } from '../../../../../../../api/template';
-import { stringLengthInBytes } from '../../../../../../../utils/index';
+import { stringLengthInBytes, byteUnitConverse } from '../../../../../../../utils/index';
 import { transFileToObject, fileDownload } from '../../../../../../../utils/file';
 import { CONFIG_FILE_TYPE } from '../../../../../../../constants/config';
 import ConfigContentEditor from '../../components/config-content-editor.vue';
@@ -151,11 +161,11 @@ const props = withDefaults(
     bkBizId: string;
     id: number; // 服务ID或者模板空间ID
     fileUploading?: boolean;
-    isTpl?: boolean; // 是否未模板配置项，非模板配置项和模板配置项的上传、下载接口参数有差异
+    isTpl?: boolean; // 是否未模板配置文件，非模板配置文件和模板配置文件的上传、下载接口参数有差异
   }>(),
   {
     editable: true,
-  }
+  },
 );
 
 const emits = defineEmits(['change', 'update:fileUploading']);
@@ -165,7 +175,7 @@ const privilegeInputVal = ref('');
 const showPrivilegeErrorTips = ref(false);
 const stringContent = ref('');
 const fileContent = ref<IFileConfigContentSummary | File>();
-const isFileChanged = ref(false); // 标识文件是否被修改，编辑配置项时若文件未修改，不重新上传文件
+const isFileChanged = ref(false); // 标识文件是否被修改，编辑配置文件时若文件未修改，不重新上传文件
 const uploadPending = ref(false);
 const formRef = ref();
 const rules = {
@@ -189,11 +199,34 @@ const rules = {
       message: '文件权限 不能为空',
       trigger: 'change',
     },
+    {
+      validator: () => {
+        const privilege = parseInt(privilegeInputVal.value[0], 10);
+        return privilege >= 4;
+      },
+      message: '文件own必须有读取权限',
+      trigger: 'blur',
+    },
   ],
   path: [
     {
       validator: (value: string) => value.length <= 256,
       message: '最大长度256个字符',
+    },
+    {
+      validator: (value: string) => /^\/([a-zA-Z0-9/\-.]+\/)*[a-zA-Z0-9/\-.]+$/.test(value),
+      message: '无效的路径,路径不符合Unix文件路径格式规范',
+      trigger: 'blur',
+    },
+  ],
+  memo: [
+    {
+      validator: (value: string) => {
+        if (!value) return true;
+        return /^[\u4E00-\u9FA5a-zA-Z0-9_\- ]*[\u4E00-\u9FA5a-zA-Z0-9](?!.*[,])[\u4E00-\u9FA5a-zA-Z0-9_\- ]*$/.test(value);
+      },
+      message: '只允许包含中文、英文、数字、下划线、连字符、空格，并且必须以中文、英文、数字开头和结尾。',
+      trigger: 'change',
     },
   ],
 };
@@ -205,7 +238,7 @@ const fileList = computed(() => (fileContent.value ? [transFileToObject(fileCont
 const privilegeGroupsValue = computed(() => {
   const data: { [index: string]: number[] } = { 0: [], 1: [], 2: [] };
   if (typeof localVal.value.privilege === 'string' && localVal.value.privilege.length > 0) {
-    const valArr = localVal.value.privilege.split('').map((i) => parseInt(i, 10));
+    const valArr = localVal.value.privilege.split('').map(i => parseInt(i, 10));
     valArr.forEach((item, index) => {
       data[index as keyof typeof data] = PRIVILEGE_VALUE_MAP[item as keyof typeof PRIVILEGE_VALUE_MAP];
     });
@@ -218,7 +251,7 @@ watch(
   (val) => {
     privilegeInputVal.value = val as string;
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -230,7 +263,7 @@ watch(
       stringContent.value = props.content as string;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
@@ -382,6 +415,7 @@ defineExpose({
     }
   }
 }
+
 .privilege-tips-btn-area {
   margin-top: 8px;
   text-align: right;
@@ -437,9 +471,20 @@ defineExpose({
     align-items: center;
     color: #979ba5;
     font-size: 12px;
-    .done-icon {
-      font-size: 20px;
-      color: #2dcb56;
+    .status-icon-area {
+      display: flex;
+      width: 20px;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      .success-icon {
+        font-size: 20px;
+        color: #2dcb56;
+      }
+      .error-icon {
+        font-size: 14px;
+        color: #ea3636;
+      }
     }
     .file-icon {
       margin: 0 6px 0 0;
@@ -458,10 +503,19 @@ defineExpose({
       }
     }
   }
+  .error-msg {
+    padding: 0 0 10px 38px;
+    line-height: 1;
+    font-size: 12px;
+    color: #ff5656;
+  }
 }
 </style>
 <style lang="scss">
 .privilege-select-popover.bk-popover {
   padding: 0;
+}
+.privilege-tips-wrap {
+  border: 1px solid #dcdee5;
 }
 </style>

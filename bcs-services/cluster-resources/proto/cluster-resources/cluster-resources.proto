@@ -18,7 +18,6 @@ option go_package = "./;clusterresources";
 
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
-import "google/protobuf/any.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 
@@ -1288,6 +1287,48 @@ service CustomRes {
 		};
 	}
 
+	rpc GetCObjHistoryRevision(CObjHistoryReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/history"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 自定义资源 Revision"
+			summary: "GetCObjHistoryRevision API"
+		};
+	}
+
+	rpc GetCObjRevisionDiff(CObjRolloutReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/revisions/{revision}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 自定义资源 Revision diff"
+			summary: "GetCObjRevisionDiff API"
+		};
+	}
+
+	rpc RestartCObj(CObjRestartReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/restart"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "重新调度 自定义资源"
+			summary: "RestartCObj API"
+		};
+	}
+
+	rpc RolloutCObj(CObjRolloutReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/rollout/{revision}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "回滚 自定义资源 Revision"
+			summary: "RolloutCObj API"
+		};
+	}
+
 	rpc CreateCObj(CObjCreateReq) returns (CommonResp) {
 		option (google.api.http) = {
 			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"
@@ -1491,6 +1532,41 @@ service ViewConfig {
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "删除单个视图配置"
 			summary: "Delete view config"
+		};
+	}
+}
+
+service MultiCluster {
+	rpc FetchMultiClusterResource(FetchMultiClusterResourceReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{kind}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取多集群原生资源列表"
+			summary: "Get multi cluster resources"
+		};
+	}
+
+	rpc FetchMultiClusterCustomResource(FetchMultiClusterCustomResourceReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取多集群自定义资源列表"
+			summary: "Get multi cluster custom resources"
+		};
+	}
+
+	rpc MultiClusterResourceCount(MultiClusterResourceCountReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources_count"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取集群资源数量"
+			summary: "Get multi cluster resources count"
 		};
 	}
 }
@@ -1948,6 +2024,72 @@ message CObjGetReq {
 	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
+message CObjHistoryReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CObjHistoryReq", description: "自定义资源列表历史版本请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CRD 名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string cobjName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "自定义资源名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+}
+
+message CObjRestartReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CObjRestartReq", description: "重新部署单个自定义资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CRD 名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string cobjName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "自定义资源名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+}
+
+message CObjRolloutReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CObjRolloutReq", description: "回滚自定义资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CRD 名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string cobjName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "自定义资源名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	int64 revision = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "revision 版本"
+	}, (validate.rules).int64 = {gte: 0}];
+}
+
 message CObjCreateReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {title: "CObjCreateReq", description: "创建单个自定义资源请求体"}
@@ -2358,4 +2500,104 @@ message DeleteViewConfigReq {
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
 	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message ClusterNamespaces {
+	string clusterID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	repeated string namespaces = 2;
+}
+
+message LabelSelector {
+	string key = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "key"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+	string op = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "op"
+	}, (validate.rules).string = {in : ["=", "In", "NotIn", "Exists", "DoesNotExist"]}];
+	repeated string values = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "values"
+	}];
+}
+
+message FetchMultiClusterResourceReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "FetchMultiClusterResourceReq", description: "获取多集群资源请求体"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
+	repeated ClusterNamespaces clusterNamespaces = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群和命名空间"
+	}, (validate.rules).repeated = {min_items: 1}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {min_len: 1}];
+	string creator = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "creator"
+	}];
+	repeated LabelSelector labelSelector = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "标签选择器"
+	}];
+	string name = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "name"
+	}];
+	uint32 limit = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "limit"
+	}, (validate.rules).uint32 = {gte: 1, lte: 1000}];
+	uint32 offset = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "offset"
+	}, (validate.rules).uint32 = {gte: 0}];
+}
+
+message FetchMultiClusterCustomResourceReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "FetchMultiClusterCustomResourceReq", description: "获取多集群自定义资源请求体"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
+	repeated ClusterNamespaces clusterNamespaces = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群和命名空间"
+	}, (validate.rules).repeated = {min_items: 1}];
+	string crd = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "crd"
+	}, (validate.rules).string = {min_len: 1}];
+	string creator = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "creator"
+	}];
+	repeated LabelSelector labelSelector = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "标签选择器"
+	}];
+	string name = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "name"
+	}];
+	uint32 limit = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "limit"
+	}, (validate.rules).uint32 = {gte: 1, lte: 1000}];
+	uint32 offset = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "offset"
+	}, (validate.rules).uint32 = {gte: 0}];
+}
+
+message MultiClusterResourceCountReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "MultiClusterResourceCountReq", description: "获取多集群资源数量请求体"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
+	repeated ClusterNamespaces clusterNamespaces = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群和命名空间"
+	}, (validate.rules).repeated = {min_items: 1}];
+	string creator = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "creator"
+	}];
+	repeated LabelSelector labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "标签选择器"
+	}];
+	string name = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "name"
+	}];
 }

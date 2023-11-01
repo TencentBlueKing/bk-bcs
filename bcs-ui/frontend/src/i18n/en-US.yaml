@@ -258,7 +258,6 @@ generic:
     empty:
       noData: No data
       noData1: No data
-      noData2: No data
       noData3: No data
       noMatchData: No matching data
       searchEmpty:
@@ -293,7 +292,6 @@ generic:
     confirm1: Confirm
     cancel: Cancel
     clearSearch: Clear search conditions
-    cancelSelectAll: Cancel
     selectAll: SelectAll
     add: 'Add '
     save: Save
@@ -340,7 +338,6 @@ generic:
     query: Search
     create: Create
     submit: SUBMIT
-    podDelete: Del-Pods
   label:
     key: Key
     value: Value
@@ -385,6 +382,11 @@ generic:
     execTime: Started
     execTime2: Time cost
     whenFailed: After failed
+    create: Create
+    update: Update
+    delete: Delete
+    start: Start
+    stop: Stop
   status:
     ready: Normal
     error: Error
@@ -418,6 +420,7 @@ generic:
     taskKill: Terminate
     taskNotEnable: To-Do
     restarting: Restarting
+    pending: Pending
   validate:
     repeatKey: Repeat key
     required: Requiring item
@@ -462,23 +465,12 @@ generic:
   ipSelector:
     placeholder:
       searchIp: 'Please enter the IP, multi -ip can be separated by spaces'
-      searchIp2: Multiple IP uses Enter as a separator
-      searchTopo: Search topology node
     validate:
       emptyHost: Please Select Host
-    title:
-      searchResult: search results
     action:
-      accurateSearch: accurate
-      expandSelectedPanel: Click on
       selectHost: Select Host
-    button:
-      staticTop: Static topology
-      customInput: Manually input
-      parseIp: Click to analyze
     tips:
       ipNotAvailable: Current IP is not available
-      dockerIpNotAvailable: Docker is not allowed to use
       ipInUsed: 'IP is occupied by {name}{id}'
       ipRegionNotMatched: >-
         The area of the belonging to the election node must be consistent with
@@ -486,21 +478,10 @@ generic:
       ipVpcNotMatched: >-
         The VPC that belongs to the election node must be consistent with the
         cluster. The selected node VPC: {0}, cluster VPC: {1}
-      ipError: 'IP format is wrong or does not exist, retry after inspection!'
     selected:
-      text: Selected node
-      suffix: '{count} Ip nodes'
       text2: '{remainCount} items'
-      emptyMsg: Please check the IP or node on the left
-      action:
-        removeAll: Remove everything
-        copyIp:
-          text: Copy IP
-          msg: '{number} IP addresses copied'
     label:
       innerIp: "Private\_IP"
-      outerIp: Public IP
-      otherIp: Other IP
       agentStatus: Agent Status
       idc: IDC
       serverModel: Specification name
@@ -783,6 +764,10 @@ cluster:
       importType: Import Type
       cloudToken: Cloud Token
       kubeConfig: Cluster KubeConfig
+      network:
+        text: ''
+        intranet: ''
+        extranet: ''
     msg:
       managedClusterInfo: >-
         Create a custody cluster must add at least one node to run the necessary
@@ -865,7 +850,7 @@ cluster:
       noModule: >-
         Enabling the Autoscaler component requires configuration of the CMDB
         topology module
-      noModule2: To add a node from a node pool, configure a transfer module
+      noModule2: 'To add a node from a node pool, configure a transfer module'
       notEmptyNodes: Please delete the nodes before removing the node pool.
       noEnableNodePool: >-
         Cluster Autoscaler requires at least one node pool to be enabled. 
@@ -2729,6 +2714,7 @@ dashboard:
       containerMemoryWorkingSetBytesOom: >-
         container_memory_working_Set_bytes, limit restrictions OOM judgment
         basis
+      inplaceUpdateNotSupportRestart: InplaceUpdate not support restart pods
     label:
       upgrade:
         maxSurg: 'Maximum scheduling pod quantity (MaxSurge): {num}'

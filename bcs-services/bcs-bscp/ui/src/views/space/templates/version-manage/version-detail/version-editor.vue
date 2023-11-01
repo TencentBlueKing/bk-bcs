@@ -189,7 +189,7 @@ const handleFileUpload = (option: { file: File }) => {
   });
 };
 
-// 获取非文件类型配置项内容，文件类型手动点击时再下载
+// 获取非文件类型配置文件内容，文件类型手动点击时再下载
 const getContent = async () => {
   try {
     contentLoading.value = true;

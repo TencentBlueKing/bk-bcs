@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -230,7 +230,7 @@ func AddNodesToClusterTask(taskID, stepName string) error { // nolint
 	cloudprovider.ShieldHostAlarm(ctx, dependInfo.Cluster.BusinessID, instanceIPs) // nolint
 
 	// tke cluster add nodes to cluster
-	result, err := tasks.AddNodesToCluster(ctx, dependInfo, nil, instanceIDs,
+	result, err := business.AddNodesToCluster(ctx, dependInfo, nil, instanceIDs,
 		passwd, true, idToIPMap, operator)
 	if err != nil {
 		// rollback nodes when addNodes failed
@@ -346,7 +346,7 @@ func CheckClusterNodeStatusTask(taskID, stepName string) error { // nolint
 	}
 
 	// check cluster nodes status
-	success, failed, err := tasks.CheckClusterInstanceStatus(ctx, dependInfo, successNodes)
+	success, failed, err := business.CheckClusterInstanceStatus(ctx, dependInfo, successNodes)
 	if err != nil || len(success) == 0 {
 		// rollback failed nodes
 		if manual != common.True {

@@ -22,14 +22,12 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 func transImageNameToImageID(cmOption *cloudprovider.CommonOption, imageName string) (string, error) { // nolint
-	nodeManager := &api.NodeManager{}
-
-	imageID, err := nodeManager.GetCVMImageIDByImageName(imageName, cmOption)
+	imageID, err := business.GetCVMImageIDByImageName(imageName, cmOption)
 	if err == nil {
 		return imageID, nil
 	}
@@ -38,8 +36,7 @@ func transImageNameToImageID(cmOption *cloudprovider.CommonOption, imageName str
 }
 
 func transIPsToInstances(cmOption *cloudprovider.ListNodesOption, ips []string) (map[string]*cmproto.Node, error) {
-	nodeManager := &api.NodeManager{}
-	nodes, err := nodeManager.ListNodesByIP(ips, cmOption)
+	nodes, err := business.ListNodesByIP(ips, cmOption)
 	if err != nil {
 		return nil, err
 	}
@@ -52,71 +49,6 @@ func transIPsToInstances(cmOption *cloudprovider.ListNodesOption, ips []string) 
 	return instances, nil
 }
 
-// InstanceDisk xxx
-type InstanceDisk struct {
-	InstanceID string
-	InstanceIP string
-	DiskCount  int
-}
-
-// GetNodeInstanceDataDiskInfo get node instance dataDisks
-func GetNodeInstanceDataDiskInfo(
-	instanceIDs []string, opt *cloudprovider.CommonOption) (map[string]InstanceDisk, error) {
-	nodeManager := &api.NodeManager{}
-	instanceList, err := nodeManager.ListNodeInstancesByInstanceID(instanceIDs, opt)
-	if err != nil {
-		blog.Errorf("GetNodeInstanceDataDiskInfo[%+v] failed: %v", instanceIDs, err)
-		return nil, err
-	}
-
-	instances := make(map[string]InstanceDisk, 0)
-	for _, cvm := range instanceList {
-		instances[*cvm.InstanceId] = InstanceDisk{
-			InstanceID: *cvm.InstanceId,
-			InstanceIP: *cvm.PrivateIpAddresses[0],
-			DiskCount:  len(cvm.DataDisks),
-		}
-	}
-
-	return instances, nil
-}
-
-// FilterInstanceByDataDisk xxx
-type FilterInstanceByDataDisk struct {
-	SingleDiskInstance   []string
-	SingleDiskInstanceIP []string
-	ManyDiskInstance     []string
-	ManyDiskInstanceIP   []string
-}
-
-// FilterNodesByDataDisk filter instance by data disks
-func FilterNodesByDataDisk(instanceIDs []string, opt *cloudprovider.CommonOption) (*FilterInstanceByDataDisk, error) {
-	instanceDisk, err := GetNodeInstanceDataDiskInfo(instanceIDs, opt)
-	if err != nil {
-		blog.Errorf("FilterNodesByDataDisk GetNodeInstanceDataDiskInfo failed: %v", err)
-		return nil, err
-	}
-
-	filter := &FilterInstanceByDataDisk{
-		SingleDiskInstance:   make([]string, 0),
-		SingleDiskInstanceIP: make([]string, 0),
-		ManyDiskInstance:     make([]string, 0),
-		ManyDiskInstanceIP:   make([]string, 0),
-	}
-
-	for i := range instanceDisk {
-		if instanceDisk[i].DiskCount <= 1 {
-			filter.SingleDiskInstance = append(filter.SingleDiskInstance, instanceDisk[i].InstanceID)
-			filter.SingleDiskInstanceIP = append(filter.SingleDiskInstanceIP, instanceDisk[i].InstanceIP)
-			continue
-		}
-		filter.ManyDiskInstance = append(filter.ManyDiskInstance, instanceDisk[i].InstanceID)
-		filter.ManyDiskInstanceIP = append(filter.ManyDiskInstanceIP, instanceDisk[i].InstanceIP)
-	}
-
-	return filter, nil
-}
-
 // updateClusterSystemID set cluster systemID
 func updateClusterSystemID(clusterID string, systemID string) error {
 	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
@@ -125,22 +57,6 @@ func updateClusterSystemID(clusterID string, systemID string) error {
 	}
 
 	cluster.SystemID = systemID
-	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cluster)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// updateClusterStatus set cluster status
-func updateClusterStatus(clusterID string, status string) error { // nolint
-	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
-	if err != nil {
-		return err
-	}
-
-	cluster.Status = status
 	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cluster)
 	if err != nil {
 		return err
@@ -171,8 +87,7 @@ func updateNodeStatusByNodeID(idList []string, status string) error { // nolint
 }
 
 func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption) ([]*cmproto.Node, error) {
-	nodeMgr := api.NodeManager{}
-	nodes, err := nodeMgr.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
+	nodes, err := business.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
 		Common:       opt.Common,
 		ClusterVPCID: opt.ClusterVPCID,
 	})
@@ -184,8 +99,7 @@ func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption)
 }
 
 func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprovider.ListNodesOption) error {
-	nodeMgr := api.NodeManager{}
-	nodes, err := nodeMgr.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
+	nodes, err := business.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
 		Common:       opt.Common,
 		ClusterVPCID: opt.ClusterVPCID,
 	})

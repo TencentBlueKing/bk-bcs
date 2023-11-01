@@ -37,3 +37,8 @@ export const restartWorkloads = request('put', '/namespaces/$namespaceId/workloa
 export const workloadHistory = request('get', '/namespaces/$namespaceId/workloads/$category/$name/history');// 工作负载历史
 export const rollbackWorkload = request('put', '/namespaces/$namespaceId/workloads/$category/$name/rollout/$revision');// 回滚
 export const revisionDetail = request('get', '/namespaces/$namespaceId/workloads/$category/$name/revisions/$revision');// 版本详情
+
+export const restartGameWorkloads = request('put', '/crds/$crd/$category/$name/restart');// 滚动重启
+export const gameWorkloadHistory = request('get', '/crds/$crd/$category/$name/history');// 工作负载历史
+export const rollbackGameWorkload = request('put', '/crds/$crd/$category/$name/rollout/$revision');// 回滚
+export const revisionGameDetail = request('get', '/crds/$crd/$category/$name/revisions/$revision');// 版本详情

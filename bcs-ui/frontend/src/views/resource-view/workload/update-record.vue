@@ -95,6 +95,7 @@
       :revision="curRow.revision"
       :value="showDiffSideslider"
       :rollback="rollback"
+      :crd="crd"
       @hidden="handleRollbackSidesilderHide"
       @rollback-success="handleRollbackSuccess" />
   </div>
@@ -117,6 +118,10 @@ const props = defineProps({
     default: '',
     required: true,
   },
+  crd: {
+    type: String,
+    default: '',
+  },
   name: {
     type: String,
     default: '',
@@ -134,7 +139,7 @@ const props = defineProps({
   },
 });
 
-const { workloadHistory, revisionDetail } = useRecords();
+const { workloadHistory, gameWorkloadHistory, revisionDetail, revisionGameDetail } = useRecords();
 
 const tableData = ref<IRevisionData[]>([]);
 
@@ -147,14 +152,24 @@ const { tableDataMatchSearch, searchValue } = useTableSearch(tableData, keys);
 const { pageChange, pageSizeChange, curPageData, pagination } = usePage(tableDataMatchSearch);
 const onlineVersion = ref('');
 const handleGetHistory = async () => {
-  const params = {
-    $namespaceId: props.namespace,
-    $clusterId: props.clusterId,
-    $name: props.name,
-    $category: props.category,
-  };
   isLoading.value = true;
-  tableData.value = await workloadHistory(params);
+  if (props.category === 'custom_objects') {
+    tableData.value = await gameWorkloadHistory({
+      $crd: props.crd,
+      $clusterId: props.clusterId,
+      $name: props.name,
+      $category: props.category,
+      namespace: props.namespace,
+    });
+  } else {
+    tableData.value = await workloadHistory({
+      $namespaceId: props.namespace,
+      $clusterId: props.clusterId,
+      $name: props.name,
+      $category: props.category,
+    });
+  }
+
   onlineVersion.value = tableData.value[0]?.revision;
   isLoading.value = false;
 };
@@ -167,14 +182,27 @@ const showDetail = async (row: IRevisionData) => {
   curRow.value = row;
   showDetailSideslider.value = true;
   detailLoading.value = true;
-  const { rollout_revision } = await revisionDetail({
-    $namespaceId: props.namespace,
-    $clusterId: props.clusterId,
-    $name: props.name,
-    $category: props.category,
-    $revision: row.revision,
-  });
-  detail.value = rollout_revision;
+  let data = { rollout_revision: '' };
+  if (props.category === 'custom_objects') {
+    data = await revisionGameDetail({
+      $crd: props.crd,
+      $clusterId: props.clusterId,
+      $name: props.name,
+      $category: props.category,
+      $revision: row.revision,
+      namespace: props.namespace,
+    });
+  } else {
+    data = await revisionDetail({
+      $namespaceId: props.namespace,
+      $clusterId: props.clusterId,
+      $name: props.name,
+      $category: props.category,
+      $revision: row.revision,
+    });
+  }
+
+  detail.value = data.rollout_revision;
   detailLoading.value = false;
 };
 

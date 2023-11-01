@@ -95,11 +95,11 @@ func (sw *SdkWrapper) getRegionClient(region string) (*tclb.Client, error) {
 // checkErrCode common method for check tencent cloud sdk err
 func (sw *SdkWrapper) checkErrCode(err *terrors.TencentCloudSDKError, metricFunc func(ret string)) {
 	if err.Code == RequestLimitExceededCode { // API请求速率超过QPS
-		blog.Warnf("request exceed limit, have a rest for %d second", waitPeriodLBDealing)
+		blog.Warnf("request exceed limit, have a rest for %d second, err: %s", waitPeriodLBDealing, err.Error())
 		metricFunc(metrics.LibCallStatusExceedLimit)
 		time.Sleep(time.Duration(waitPeriodLBDealing) * time.Second)
 	} else if err.Code == WrongStatusCode { // 通常是由于有多个请求同时操作LB（如同时创建/删除监听器）
-		blog.Warnf("clb is dealing another action, have a rest for %d second", waitPeriodLBDealing)
+		blog.Warnf("clb is dealing another action, have a rest for %d second, err: %s", waitPeriodLBDealing, err.Error())
 		metricFunc(metrics.LibCallStatusLBLock)
 		time.Sleep(time.Duration(waitPeriodLBDealing) * time.Second)
 	}

@@ -68,25 +68,38 @@ type WatcherManager struct {
 	storageService *bcs.InnerService
 }
 
+// WatcherManagerOptions options for WatcherManager
+type WatcherManagerOptions struct {
+	ClusterID      string
+	WatchResource  *options.WatchResource
+	FilterConfig   *options.FilterConfig
+	Writer         *output.Writer
+	K8sConfig      *options.K8sConfig
+	StorageService *bcs.InnerService
+	Netservice     *bcs.InnerService
+	StopChan       <-chan struct{}
+}
+
+// clusterID string, watchResource *options.WatchResource, filterConfig *options.FilterConfig, writer *output.Writer,
+// k8sConfig *options.K8sConfig,
+// storageService, netservice *bcs.InnerService, sc <-chan struct{}
+
 // NewWatcherManager creates a new WatcherManager instance.
-func NewWatcherManager(
-	clusterID string, watchResource *options.WatchResource, filterConfig *options.FilterConfig, writer *output.Writer,
-	k8sConfig *options.K8sConfig,
-	storageService, netservice *bcs.InnerService, sc <-chan struct{}) (*WatcherManager, error) {
+func NewWatcherManager(wmo *WatcherManagerOptions) (*WatcherManager, error) {
 
 	mgr := &WatcherManager{
 		watchers:       make(map[string]WatcherInterface),
 		crdWatchers:    make(map[string]WatcherInterface),
-		stopChan:       sc,
-		writer:         writer,
-		clusterID:      clusterID,
-		storageService: storageService,
-		watchResource:  watchResource,
+		stopChan:       wmo.StopChan,
+		writer:         wmo.Writer,
+		clusterID:      wmo.ClusterID,
+		storageService: wmo.StorageService,
+		watchResource:  wmo.WatchResource,
 	}
-	mgr.initWatchers(clusterID, k8sConfig, filterConfig, storageService, netservice)
+	mgr.initWatchers(wmo.ClusterID, wmo.K8sConfig, wmo.FilterConfig, wmo.StorageService, wmo.Netservice)
 
-	mgr.synchronizer = NewSynchronizer(clusterID, watchResource.Namespace, watchResource.LabelSelectors,
-		mgr.watchers, mgr.crdWatchers, storageService)
+	mgr.synchronizer = NewSynchronizer(wmo.ClusterID, wmo.WatchResource.Namespace, wmo.WatchResource.LabelSelectors,
+		mgr.watchers, mgr.crdWatchers, wmo.StorageService)
 	return mgr, nil
 }
 
@@ -118,6 +131,7 @@ func (mgr *WatcherManager) initWatchers(clusterID string,
 			LabelSelector:    labelSelector,
 			NamespaceFilters: filterConfig.NamespaceFilters,
 			NameFilters:      filterConfig.NameFilters,
+			MaskerConfigs:    filterConfig.DataMaskConfigList,
 		})
 		if err != nil {
 			panic(err)
@@ -140,7 +154,7 @@ func (mgr *WatcherManager) initWatchers(clusterID string,
 				glog.Errorf("get crd version from cluster failed and not set crd version supported in cluster, err: %s", err)
 				panic(err)
 			}
-			glog.Warnf("get crd version from cluster failed, use config from file")
+			glog.Warnf("get crd version from cluster failed, use config from file, err: %s", err)
 			crdVersion = filterConfig.CrdVersionSupport
 		}
 

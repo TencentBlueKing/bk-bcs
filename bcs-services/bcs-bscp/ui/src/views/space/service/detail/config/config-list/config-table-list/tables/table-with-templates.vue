@@ -3,7 +3,7 @@
     <table class="config-groups-table">
       <thead>
         <tr class="config-groups-table-tr">
-          <th class="name">配置项名称</th>
+          <th class="name">配置文件名称</th>
           <th class="version">配置模板版本</th>
           <th class="path">配置路径</th>
           <th class="user">创建人</th>
@@ -82,7 +82,7 @@
                         <td class="status"><StatusTag :status="config.file_state" /></td>
                         <td class="operation">
                           <div class="config-actions">
-                            <!-- 非套餐配置项 -->
+                            <!-- 非套餐配置文件 -->
                             <template v-if="group.id === 0">
                               <template v-if="isUnNamedVersion">
                                 <bk-button
@@ -185,6 +185,17 @@
     :app-id="props.appId"
     @updated="getAllConfigList"
   />
+  <bk-dialog ext-cls="delete-template-pkg" :is-show="isDeleteDialogShow" :width="440" footer-align="center">
+    <template #header>
+      <bk-overflow-title type="tips">确认是否删除模板套餐【{{ deleteTemplatePkgName }}】</bk-overflow-title>
+    </template>
+    <template #footer>
+      <bk-button theme="primary" style="margin-right: 10px; width: 88px" @click="handleDeletePkgConfirm"
+        >确认</bk-button
+      >
+      <bk-button style="width: 88px" @click="isDeleteDialogShow = false">取消</bk-button>
+    </template>
+  </bk-dialog>
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
@@ -255,16 +266,19 @@ const emits = defineEmits(['clearStr']);
 const loading = ref(false);
 const commonConfigListLoading = ref(false);
 const bindingId = ref(0);
-const configList = ref<IConfigItem[]>([]); // 非模板配置项
+const configList = ref<IConfigItem[]>([]); // 非模板配置文件
 const configsCount = ref(0);
 const boundTemplateListLoading = ref(false);
-const templateGroupList = ref<IBoundTemplateGroup[]>([]); // 配置项模板（按套餐分组）
+const templateGroupList = ref<IBoundTemplateGroup[]>([]); // 配置文件模板（按套餐分组）
 const templatesCount = ref(0);
 const tableGroupsData = ref<IConfigsGroupData[]>([]);
 const editPanelShow = ref(false);
 const activeConfig = ref(0);
 const isDiffPanelShow = ref(false);
 const isSearchEmpty = ref(false);
+const isDeleteDialogShow = ref(false);
+const deleteTemplatePkgName = ref('');
+const deleteTemplatePkgId = ref(0);
 const viewConfigSliderData = ref({
   open: false,
   data: { id: 0, type: '' },
@@ -324,7 +338,7 @@ const getAllConfigList = async () => {
   tableGroupsData.value = transListToTableData();
 };
 
-// 获取非模板配置项列表
+// 获取非模板配置文件列表
 const getCommonConfigList = async () => {
   commonConfigListLoading.value = true;
   try {
@@ -356,7 +370,7 @@ const getCommonConfigList = async () => {
   }
 };
 
-// 获取模板配置项列表
+// 获取模板配置文件列表
 const getBoundTemplateList = async () => {
   boundTemplateListLoading.value = true;
   try {
@@ -395,7 +409,7 @@ const transListToTableData = () => {
   ];
 };
 
-// 将非模板配置项数据转为表格数据
+// 将非模板配置文件数据转为表格数据
 const transConfigsToTableItemData = (list: IConfigItem[]) => list.map((item: IConfigItem) => {
   const { id, spec, revision, file_state } = item;
   const { name, path, permission } = spec;
@@ -420,7 +434,7 @@ const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
     const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem;
     const group: IConfigsGroupData = {
       id: template_set_id,
-      name: `${template_space_name === 'default_space' ? '默认空间' : template_space_name} - ${template_set_name}`,
+      name: `${template_space_name} - ${template_set_name}`,
       expand: true,
       configs: [],
     };
@@ -466,7 +480,7 @@ const handleEditConfigConfirm = async () => {
   tableGroupsData.value = transListToTableData();
 };
 
-// 查看配置项或模板版本
+// 查看配置文件或模板版本
 const handleViewConfig = (id: number, type: string) => {
   viewConfigSliderData.value = {
     open: true,
@@ -490,23 +504,22 @@ const handleDeletePkg = async (pkgId: number, name: string) => {
   if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
     return;
   }
-  InfoBox({
-    title: `确认是否删除模板套餐【${name}】?`,
-    headerAlign: 'center' as const,
-    footerAlign: 'center' as const,
-    onConfirm: async () => {
-      await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [pkgId]);
-      await getBoundTemplateList();
-      tableGroupsData.value = transListToTableData();
-      Message({
-        theme: 'success',
-        message: '删除模板套餐成功',
-      });
-    },
-  } as any);
+  isDeleteDialogShow.value = true;
+  deleteTemplatePkgName.value = name;
+  deleteTemplatePkgId.value = pkgId;
 };
 
-// 非模板配置项diff
+const handleDeletePkgConfirm = async () => {
+  await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [deleteTemplatePkgId.value]);
+  await getBoundTemplateList();
+  tableGroupsData.value = transListToTableData();
+  Message({
+    theme: 'success',
+    message: '删除模板套餐成功',
+  });
+};
+
+// 非模板配置文件diff
 const handleConfigDiff = (groupId: number, config: IConfigTableItem) => {
   diffConfig.value = {
     pkgId: groupId,
@@ -517,13 +530,13 @@ const handleConfigDiff = (groupId: number, config: IConfigTableItem) => {
   isDiffPanelShow.value = true;
 };
 
-// 删除配置项
+// 删除配置文件
 const handleDel = (config: IConfigTableItem) => {
   if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
     return;
   }
   InfoBox({
-    title: `确认是否删除配置项【${config.name}】?`,
+    title: `确认是否删除配置文件【${config.name}】?`,
     headerAlign: 'center' as const,
     footerAlign: 'center' as const,
     onConfirm: async () => {
@@ -648,6 +661,24 @@ defineExpose({
     .bk-button:not(:last-child) {
       margin-right: 8px;
     }
+  }
+}
+</style>
+
+<style lang="scss">
+.delete-template-pkg {
+  .bk-dialog-header {
+    padding: 24px 24px 0 !important;
+    .bk-dialog-title {
+      margin: 15px 0 10px;
+    }
+  }
+  .bk-modal-content {
+    display: none;
+  }
+  .bk-modal-footer {
+    border: none !important;
+    background-color: #fff !important;
   }
 }
 </style>

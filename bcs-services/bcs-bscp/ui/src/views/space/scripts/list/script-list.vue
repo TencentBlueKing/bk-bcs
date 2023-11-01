@@ -46,7 +46,7 @@
           :remote-pagination="true"
           :pagination="pagination"
           @page-limit-change="handlePageLimitChange"
-          @page-value-change="refreshList"
+          @page-value-change="handlePageCurrentChange"
         >
           <bk-table-column label="脚本名称">
             <template #default="{ row }">
@@ -156,20 +156,19 @@ const getScripts = async () => {
     start: (pagination.value.current - 1) * pagination.value.limit,
     limit: pagination.value.limit,
   };
-  if (showAllTag.value) {
-    params.all = true;
+  if (selectedTag.value === '' && !showAllTag.value) {
+    params.not_tag = true;
   } else {
-    if (selectedTag.value === '') {
-      params.not_tag = true;
-    } else {
-      params.tag = selectedTag.value;
-    }
+    params.tag = selectedTag.value;
   }
   if (searchStr.value) {
     params.name = searchStr.value;
   }
   const res = await getScriptList(spaceId.value, params);
   scriptsData.value = res.details;
+  scriptsData.value.forEach((item) => {
+    item.hook.spec.type = item.hook.spec.type.charAt(0).toUpperCase() + item.hook.spec.type.slice(1);
+  });
   pagination.value.count = res.count;
   scriptsLoading.value = false;
 };
@@ -244,6 +243,13 @@ const refreshList = () => {
 const handlePageLimitChange = (val: number) => {
   pagination.value.limit = val;
   refreshList();
+};
+
+const handlePageCurrentChange = (val: number) => {
+  console.log('val', val);
+
+  pagination.value.current = val;
+  getScripts();
 };
 
 const clearSearchStr = () => {
@@ -330,6 +336,7 @@ const clearSearchStr = () => {
   width: calc(100% - 280px);
   height: 100%;
   background: #ffffff;
+  overflow: auto;
 }
 .operate-area {
   display: flex;

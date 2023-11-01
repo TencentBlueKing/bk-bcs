@@ -114,6 +114,13 @@ func NewDataManagerEndpoints() []*api.Endpoint {
 			Body:    "*",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "DataManager.GetCloudNativeWorkloadList",
+			Path:    []string{"/datamanager/v2/cloudnativeworkload"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -132,6 +139,7 @@ type DataManagerService interface {
 	GetPodAutoscalerList(ctx context.Context, in *GetPodAutoscalerListRequest, opts ...client.CallOption) (*GetPodAutoscalerListResponse, error)
 	GetPodAutoscaler(ctx context.Context, in *GetPodAutoscalerRequest, opts ...client.CallOption) (*GetPodAutoscalerResponse, error)
 	GetPowerTrading(ctx context.Context, in *GetPowerTradingDataRequest, opts ...client.CallOption) (*GetPowerTradingDataResponse, error)
+	GetCloudNativeWorkloadList(ctx context.Context, in *GetCloudNativeWorkloadListRequest, opts ...client.CallOption) (*GetCloudNativeWorkloadListResponse, error)
 }
 
 type dataManagerService struct {
@@ -266,6 +274,16 @@ func (c *dataManagerService) GetPowerTrading(ctx context.Context, in *GetPowerTr
 	return out, nil
 }
 
+func (c *dataManagerService) GetCloudNativeWorkloadList(ctx context.Context, in *GetCloudNativeWorkloadListRequest, opts ...client.CallOption) (*GetCloudNativeWorkloadListResponse, error) {
+	req := c.c.NewRequest(c.name, "DataManager.GetCloudNativeWorkloadList", in)
+	out := new(GetCloudNativeWorkloadListResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for DataManager service
 
 type DataManagerHandler interface {
@@ -281,6 +299,7 @@ type DataManagerHandler interface {
 	GetPodAutoscalerList(context.Context, *GetPodAutoscalerListRequest, *GetPodAutoscalerListResponse) error
 	GetPodAutoscaler(context.Context, *GetPodAutoscalerRequest, *GetPodAutoscalerResponse) error
 	GetPowerTrading(context.Context, *GetPowerTradingDataRequest, *GetPowerTradingDataResponse) error
+	GetCloudNativeWorkloadList(context.Context, *GetCloudNativeWorkloadListRequest, *GetCloudNativeWorkloadListResponse) error
 }
 
 func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts ...server.HandlerOption) error {
@@ -297,6 +316,7 @@ func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts .
 		GetPodAutoscalerList(ctx context.Context, in *GetPodAutoscalerListRequest, out *GetPodAutoscalerListResponse) error
 		GetPodAutoscaler(ctx context.Context, in *GetPodAutoscalerRequest, out *GetPodAutoscalerResponse) error
 		GetPowerTrading(ctx context.Context, in *GetPowerTradingDataRequest, out *GetPowerTradingDataResponse) error
+		GetCloudNativeWorkloadList(ctx context.Context, in *GetCloudNativeWorkloadListRequest, out *GetCloudNativeWorkloadListResponse) error
 	}
 	type DataManager struct {
 		dataManager
@@ -375,6 +395,13 @@ func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts .
 		Body:    "*",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "DataManager.GetCloudNativeWorkloadList",
+		Path:    []string{"/datamanager/v2/cloudnativeworkload"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&DataManager{h}, opts...))
 }
 
@@ -428,4 +455,8 @@ func (h *dataManagerHandler) GetPodAutoscaler(ctx context.Context, in *GetPodAut
 
 func (h *dataManagerHandler) GetPowerTrading(ctx context.Context, in *GetPowerTradingDataRequest, out *GetPowerTradingDataResponse) error {
 	return h.DataManagerHandler.GetPowerTrading(ctx, in, out)
+}
+
+func (h *dataManagerHandler) GetCloudNativeWorkloadList(ctx context.Context, in *GetCloudNativeWorkloadListRequest, out *GetCloudNativeWorkloadListResponse) error {
+	return h.DataManagerHandler.GetCloudNativeWorkloadList(ctx, in, out)
 }

@@ -106,6 +106,7 @@ safe_source "${ROOT_DIR}/functions/k8s.sh"
 
 "${ROOT_DIR}"/system/config_envfile.sh -c init
 "${ROOT_DIR}"/system/config_system.sh -c dns sysctl
+"${ROOT_DIR}"/tools/install_tools.sh jq yq
 "${ROOT_DIR}"/k8s/install_cri.sh
 "${ROOT_DIR}"/k8s/install_k8s_tools
 "${ROOT_DIR}"/k8s/render_kubeadm
@@ -121,15 +122,16 @@ case "${K8S_CSI,,}" in
     ;;
 esac
 
-kubeadm --config="${ROOT_DIR}/kubeadm-config" config images pull \
-  || utils::log "FATAL" "fail to pull k8s image"
 
+# wait kubelet to start
+sleep 30
 if systemctl is-active kubelet.service -q; then
   utils::log "WARN" "kubelet service is active now, skip kubeadm join"
 else
   kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
     || utils::log "FATAL" "${LAN_IP} failed to join cluster: ${K8S_CTRL_IP}"
 fi
+
 
 if [[ "${ENABLE_APISERVER_HA}" == "true" ]]; then
   if [[ "${APISERVER_HA_MODE}" == "bcs-apiserver-proxy" ]]; then

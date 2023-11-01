@@ -37,6 +37,7 @@
               <bk-input
                 v-else-if="col.prop === 'default_val'"
                 v-model="variable.default_val"
+                @blur="handleValueChange(variable.type, variable.default_val)"
                 @change="deleteCellError(variable.name, col.prop)"
               />
               <bk-input v-else-if="col.prop === 'memo'" v-model="variable.memo" @change="change" />
@@ -65,6 +66,7 @@
 <script lang="ts" setup>
 import { ref, reactive, computed, watch } from 'vue';
 import cloneDeep from 'lodash';
+import { Message } from 'bkui-vue';
 import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
 
 interface IErrorDetail {
@@ -158,6 +160,15 @@ const validate = () => {
 
 const change = () => {
   emits('change', variables);
+};
+
+const handleValueChange = (type: string, value: string) => {
+  if (type === 'number' && !/^\d+$/.test(value)) {
+    Message({
+      theme: 'error',
+      message: `${value}不是数字类型`,
+    });
+  }
 };
 
 defineExpose({

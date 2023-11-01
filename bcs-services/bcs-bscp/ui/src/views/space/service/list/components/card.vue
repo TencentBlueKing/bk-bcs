@@ -6,7 +6,7 @@
       <div class="service-config">
         <div class="config-info">
           <span class="bk-bscp-icon icon-configuration-line"></span>
-          {{ props.service.config?.count }}个配置项
+          {{ props.service.config?.count }}个配置文件
         </div>
         <div class="time-info">
           <span class="bk-bscp-icon icon-time-2"></span>
@@ -149,7 +149,7 @@ const handleDeleteService = async () => {
 .service-card {
   position: relative;
   width: 304px;
-  height: 165px;
+  height: 143px;
   padding: 0px 8px 16px 8px;
   &.no-view-perm {
     cursor: pointer;
@@ -224,7 +224,7 @@ const handleDeleteService = async () => {
   }
   .service-config {
     padding: 0 16px;
-    height: 55px;
+    height: 33px;
     font-size: 12px;
     color: #979ba5;
     line-height: 20px;
@@ -232,7 +232,7 @@ const handleDeleteService = async () => {
     display: flex;
     align-items: end;
     .config-info {
-      width: 80px;
+      width: 85px;
     }
     .time-info {
       padding-left: 10px;

@@ -38,6 +38,7 @@ func InitV1Routers(ws *restful.WebService, service *permission.PermVerifyClient)
 	ws.Filter(middleware.RequestIDFilter)
 	ws.Filter(middleware.TracingFilter)
 	ws.Filter(middleware.LoggingFilter)
+	ws.Filter(middleware.LanguageFilter)
 
 	initUsersRouters(ws)
 	initClustersRouters(ws)

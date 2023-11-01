@@ -52,6 +52,7 @@
                 v-if="index === 0 && isCreateCredential"
                 placeholder="密钥名称支持中英文"
                 v-model="createCredentialName"
+                @blur="testCreateCredentialName"
               ></bk-input>
               <span v-if="row.spec">{{ row.spec.name }}</span>
             </template>
@@ -60,10 +61,12 @@
             <template #default="{ row, index }">
               <span v-if="index === 0 && isCreateCredential" style="color: #c4c6cc">待确认</span>
               <div v-if="row.spec" class="credential-text">
-                <div class="text">{{ row.visible ? row.spec.enc_credential : '********************************' }}</div>
+                <div class="text">
+                  <bk-overflow-title>{{ row.visible ? row.spec.enc_credential : '************' }}</bk-overflow-title>
+                </div>
                 <div class="actions">
-                  <Eye v-if="!row.visible" class="view-icon" @click="row.visible = true" />
-                  <Unvisible v-else class="view-icon" @click="row.visible = false" />
+                  <Eye v-if="row.visible" class="view-icon" @click="row.visible = false" />
+                  <Unvisible v-else class="view-icon" @click="row.visible = true" />
                   <Copy class="copy-icon" @click="handleCopyText(row.spec.enc_credential)" />
                 </div>
               </div>
@@ -129,7 +132,7 @@
               </template>
               <template v-if="row.spec">
                 <bk-button text theme="primary" @click="handleOpenAssociate(row)">
-                  <span :class="{ redPoint: newCredentials[0] === row.id }">关联配置项</span>
+                  <span :class="{ redPoint: newCredentials[0] === row.id }">关联配置文件</span>
                 </bk-button>
                 <bk-button
                   v-cursor="{ active: !hasManagePerm }"
@@ -243,7 +246,7 @@ watch(
     createPending.value = false;
     getPermData();
     refreshListWithLoading();
-  }
+  },
 );
 
 onMounted(() => {
@@ -346,8 +349,13 @@ const getCredentialName = async () => {
 // 创建密钥
 const handleCreateCredential = async () => {
   if (!checkPermBeforeOperate() || !createCredentialName.value) {
+    BkMessage({
+      theme: 'error',
+      message: '请输入密钥名称',
+    });
     return;
   }
+  await testCreateCredentialName();
   try {
     createPending.value = true;
     const params = { memo: createCredentialMemo.value, name: createCredentialName.value };
@@ -425,7 +433,6 @@ const handelToggleEnable = async (credential: ICredentialItem) => {
     InfoBox({
       title: '确定禁用此密钥',
       subTitle: '禁用密钥后，使用此密钥的应用将无法正常使用 SDK/API 拉取配置',
-      infoType: 'warning',
       confirmText: '禁用',
       onConfirm: async () => {
         const params = {
@@ -453,24 +460,24 @@ const handelToggleEnable = async (credential: ICredentialItem) => {
   }
 };
 
-// 打开关联配置项侧滑
+// 打开关联配置文件侧滑
 const handleOpenAssociate = (credential: ICredentialItem) => {
   isAssociateSliderShow.value = true;
   currentCredential.value = credential.id;
 };
 
-// 关闭关联配置项侧滑
+// 关闭关联配置文件侧滑
 const handleAssociateSliderClose = () => {
   isAssociateSliderShow.value = false;
   currentCredential.value = 0;
 };
 
-// 删除配置项二次确认
+// 删除配置文件二次确认
 const handleDeleteConfirm = async (credential: ICredentialItem) => {
   isShowDeleteDialog.value = true;
   deleteCredentialInfo.value = credential;
 };
-// 删除配置项
+// 删除配置文件
 const handleDelete = async () => {
   if (!checkPermBeforeOperate()) {
     return;
@@ -482,7 +489,7 @@ const handleDelete = async () => {
   isShowDeleteDialog.value = false;
   loadCredentialList();
 };
-// 删除配置项提示文字
+// 删除配置文件提示文字
 const deleteTooltip = (isShowTooltip: boolean) => {
   if (isShowTooltip) {
     return {
@@ -507,6 +514,18 @@ const clearSearchStr = () => {
   refreshListWithLoading();
 };
 
+// 校验新建密钥名称
+const testCreateCredentialName = () => {
+  if (!createCredentialName.value) return;
+  const regex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-]*[\u4e00-\u9fa5a-zA-Z0-9]$/;
+  if (!regex.test(createCredentialName.value)) {
+    BkMessage({
+      theme: 'error',
+      message: `无效名称：${createCredentialName.value}，只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾。`,
+    });
+    return Promise.reject();
+  }
+};
 const goToIAM = () => {
   window.open(`${(window as any).BK_IAM_HOST}/apply-join-user-group`, '__blank');
 };
@@ -692,6 +711,12 @@ const goToIAM = () => {
   top: 40% !important;
   .bk-modal-header {
     display: none;
+  }
+}
+.delete-service-dialog {
+  .bk-modal-footer {
+    background-color: #fff !important;
+    border-top: none !important;
   }
 }
 </style>

@@ -6,7 +6,6 @@ package clusterresources
 import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
-	_ "github.com/golang/protobuf/ptypes/any"
 	_ "github.com/golang/protobuf/ptypes/struct"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -3754,6 +3753,30 @@ func NewCustomResEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "CustomRes.GetCObjHistoryRevision",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/history"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "CustomRes.GetCObjRevisionDiff",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/revisions/{revision}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "CustomRes.RestartCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/restart"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "CustomRes.RolloutCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/rollout/{revision}"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "CustomRes.CreateCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
 			Method:  []string{"POST"},
@@ -3793,6 +3816,10 @@ type CustomResService interface {
 	GetCRD(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	ListCObj(ctx context.Context, in *CObjListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetCObj(ctx context.Context, in *CObjGetReq, opts ...client.CallOption) (*CommonResp, error)
+	GetCObjHistoryRevision(ctx context.Context, in *CObjHistoryReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetCObjRevisionDiff(ctx context.Context, in *CObjRolloutReq, opts ...client.CallOption) (*CommonResp, error)
+	RestartCObj(ctx context.Context, in *CObjRestartReq, opts ...client.CallOption) (*CommonResp, error)
+	RolloutCObj(ctx context.Context, in *CObjRolloutReq, opts ...client.CallOption) (*CommonResp, error)
 	CreateCObj(ctx context.Context, in *CObjCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateCObj(ctx context.Context, in *CObjUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	ScaleCObj(ctx context.Context, in *CObjScaleReq, opts ...client.CallOption) (*CommonResp, error)
@@ -3844,6 +3871,46 @@ func (c *customResService) ListCObj(ctx context.Context, in *CObjListReq, opts .
 
 func (c *customResService) GetCObj(ctx context.Context, in *CObjGetReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "CustomRes.GetCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) GetCObjHistoryRevision(ctx context.Context, in *CObjHistoryReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.GetCObjHistoryRevision", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) GetCObjRevisionDiff(ctx context.Context, in *CObjRolloutReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.GetCObjRevisionDiff", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) RestartCObj(ctx context.Context, in *CObjRestartReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.RestartCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) RolloutCObj(ctx context.Context, in *CObjRolloutReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.RolloutCObj", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -3909,6 +3976,10 @@ type CustomResHandler interface {
 	GetCRD(context.Context, *ResGetReq, *CommonResp) error
 	ListCObj(context.Context, *CObjListReq, *CommonResp) error
 	GetCObj(context.Context, *CObjGetReq, *CommonResp) error
+	GetCObjHistoryRevision(context.Context, *CObjHistoryReq, *CommonListResp) error
+	GetCObjRevisionDiff(context.Context, *CObjRolloutReq, *CommonResp) error
+	RestartCObj(context.Context, *CObjRestartReq, *CommonResp) error
+	RolloutCObj(context.Context, *CObjRolloutReq, *CommonResp) error
 	CreateCObj(context.Context, *CObjCreateReq, *CommonResp) error
 	UpdateCObj(context.Context, *CObjUpdateReq, *CommonResp) error
 	ScaleCObj(context.Context, *CObjScaleReq, *CommonResp) error
@@ -3922,6 +3993,10 @@ func RegisterCustomResHandler(s server.Server, hdlr CustomResHandler, opts ...se
 		GetCRD(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		ListCObj(ctx context.Context, in *CObjListReq, out *CommonResp) error
 		GetCObj(ctx context.Context, in *CObjGetReq, out *CommonResp) error
+		GetCObjHistoryRevision(ctx context.Context, in *CObjHistoryReq, out *CommonListResp) error
+		GetCObjRevisionDiff(ctx context.Context, in *CObjRolloutReq, out *CommonResp) error
+		RestartCObj(ctx context.Context, in *CObjRestartReq, out *CommonResp) error
+		RolloutCObj(ctx context.Context, in *CObjRolloutReq, out *CommonResp) error
 		CreateCObj(ctx context.Context, in *CObjCreateReq, out *CommonResp) error
 		UpdateCObj(ctx context.Context, in *CObjUpdateReq, out *CommonResp) error
 		ScaleCObj(ctx context.Context, in *CObjScaleReq, out *CommonResp) error
@@ -3954,6 +4029,30 @@ func RegisterCustomResHandler(s server.Server, hdlr CustomResHandler, opts ...se
 		Name:    "CustomRes.GetCObj",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.GetCObjHistoryRevision",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/history"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.GetCObjRevisionDiff",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/revisions/{revision}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.RestartCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/restart"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.RolloutCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/rollout/{revision}"},
+		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -4007,6 +4106,22 @@ func (h *customResHandler) ListCObj(ctx context.Context, in *CObjListReq, out *C
 
 func (h *customResHandler) GetCObj(ctx context.Context, in *CObjGetReq, out *CommonResp) error {
 	return h.CustomResHandler.GetCObj(ctx, in, out)
+}
+
+func (h *customResHandler) GetCObjHistoryRevision(ctx context.Context, in *CObjHistoryReq, out *CommonListResp) error {
+	return h.CustomResHandler.GetCObjHistoryRevision(ctx, in, out)
+}
+
+func (h *customResHandler) GetCObjRevisionDiff(ctx context.Context, in *CObjRolloutReq, out *CommonResp) error {
+	return h.CustomResHandler.GetCObjRevisionDiff(ctx, in, out)
+}
+
+func (h *customResHandler) RestartCObj(ctx context.Context, in *CObjRestartReq, out *CommonResp) error {
+	return h.CustomResHandler.RestartCObj(ctx, in, out)
+}
+
+func (h *customResHandler) RolloutCObj(ctx context.Context, in *CObjRolloutReq, out *CommonResp) error {
+	return h.CustomResHandler.RolloutCObj(ctx, in, out)
 }
 
 func (h *customResHandler) CreateCObj(ctx context.Context, in *CObjCreateReq, out *CommonResp) error {
@@ -4596,4 +4711,134 @@ func (h *viewConfigHandler) RenameViewConfig(ctx context.Context, in *RenameView
 
 func (h *viewConfigHandler) DeleteViewConfig(ctx context.Context, in *DeleteViewConfigReq, out *CommonResp) error {
 	return h.ViewConfigHandler.DeleteViewConfig(ctx, in, out)
+}
+
+// Api Endpoints for MultiCluster service
+
+func NewMultiClusterEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "MultiCluster.FetchMultiClusterResource",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{kind}"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "MultiCluster.FetchMultiClusterCustomResource",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "MultiCluster.MultiClusterResourceCount",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources_count"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for MultiCluster service
+
+type MultiClusterService interface {
+	FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, opts ...client.CallOption) (*CommonResp, error)
+	FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, opts ...client.CallOption) (*CommonResp, error)
+	MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, opts ...client.CallOption) (*CommonResp, error)
+}
+
+type multiClusterService struct {
+	c    client.Client
+	name string
+}
+
+func NewMultiClusterService(name string, c client.Client) MultiClusterService {
+	return &multiClusterService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *multiClusterService) FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "MultiCluster.FetchMultiClusterResource", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *multiClusterService) FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "MultiCluster.FetchMultiClusterCustomResource", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *multiClusterService) MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "MultiCluster.MultiClusterResourceCount", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for MultiCluster service
+
+type MultiClusterHandler interface {
+	FetchMultiClusterResource(context.Context, *FetchMultiClusterResourceReq, *CommonResp) error
+	FetchMultiClusterCustomResource(context.Context, *FetchMultiClusterCustomResourceReq, *CommonResp) error
+	MultiClusterResourceCount(context.Context, *MultiClusterResourceCountReq, *CommonResp) error
+}
+
+func RegisterMultiClusterHandler(s server.Server, hdlr MultiClusterHandler, opts ...server.HandlerOption) error {
+	type multiCluster interface {
+		FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, out *CommonResp) error
+		FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, out *CommonResp) error
+		MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, out *CommonResp) error
+	}
+	type MultiCluster struct {
+		multiCluster
+	}
+	h := &multiClusterHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MultiCluster.FetchMultiClusterResource",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{kind}"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MultiCluster.FetchMultiClusterCustomResource",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MultiCluster.MultiClusterResourceCount",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources_count"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&MultiCluster{h}, opts...))
+}
+
+type multiClusterHandler struct {
+	MultiClusterHandler
+}
+
+func (h *multiClusterHandler) FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, out *CommonResp) error {
+	return h.MultiClusterHandler.FetchMultiClusterResource(ctx, in, out)
+}
+
+func (h *multiClusterHandler) FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, out *CommonResp) error {
+	return h.MultiClusterHandler.FetchMultiClusterCustomResource(ctx, in, out)
+}
+
+func (h *multiClusterHandler) MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, out *CommonResp) error {
+	return h.MultiClusterHandler.MultiClusterResourceCount(ctx, in, out)
 }

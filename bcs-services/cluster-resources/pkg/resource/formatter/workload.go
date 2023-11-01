@@ -100,7 +100,7 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 			readyCnt++
 		}
 		totalCnt++
-		restartCnt += s.(map[string]interface{})["restartCount"].(int64)
+		restartCnt += mapx.GetInt64(s.(map[string]interface{}), "restartCount")
 	}
 	ret["readyCnt"], ret["totalCnt"], ret["restartCnt"] = readyCnt, totalCnt, restartCnt
 
@@ -182,10 +182,8 @@ type STSStatusChecker struct{}
 // IsNormal 检查逻辑：若 status.currentReplicas 存在，则检查与其他几项是否相等，若不存在，则检查剩余几项是否相等
 func (c *STSStatusChecker) IsNormal(manifest map[string]interface{}) bool {
 	replicas := mapx.GetInt64(manifest, "spec.replicas")
-	if curReplicas, err := mapx.GetItems(manifest, "status.currentReplicas"); err == nil {
-		if curReplicas.(int64) != replicas {
-			return false
-		}
+	if curReplicas := mapx.GetInt64(manifest, "status.currentReplicas"); curReplicas != replicas {
+		return false
 	}
 	return slice.AllInt64Equal([]int64{
 		mapx.GetInt64(manifest, "status.readyReplicas"),

@@ -118,7 +118,7 @@ const deletingPkgData = ref<{ open: boolean; data: ITemplatePackageItem | undefi
 
 const MenuItemOfallConfigList = computed(() => ({
   id: 'all',
-  name: '全部配置项',
+  name: '全部配置文件',
   count: CountOfAllTemplatesInSpace.value,
 }));
 
@@ -171,7 +171,7 @@ const getMenuInitData = async () => {
   }
 };
 
-// 获取全部配置项数量
+// 获取全部配置文件数量
 const getCountOfAllTemplatesInSpace = async () => {
   const params = {
     start: 0,
@@ -183,7 +183,7 @@ const getCountOfAllTemplatesInSpace = async () => {
   });
 };
 
-// 获取未指定套餐配置项数量
+// 获取未指定套餐配置文件数量
 const getCountOfTemplatesForNoSpecifiedPackage = async () => {
   const params = {
     start: 0,

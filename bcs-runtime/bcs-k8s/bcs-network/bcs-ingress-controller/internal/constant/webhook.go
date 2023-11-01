@@ -20,6 +20,10 @@ const (
 	ValidateMsgEmptySvc = "rule[%d] should have service"
 	// ValidateMsgNotFoundSvc ingress validate can not get specified service
 	ValidateMsgNotFoundSvc = "rule[%d] service '%s/%s' not found"
+	// ValidateRouteMsgEmptySvc ingress validate get empty service
+	ValidateRouteMsgEmptySvc = "rule[%d] route[%d] should have service"
+	// ValidateRouteMsgNotFoundSvc ingress validate can not get specified service
+	ValidateRouteMsgNotFoundSvc = "rule[%d] route[%d] service '%s/%s' not found"
 	// ValidateMsgInvalidWorkload ingress validate get invalid workload
 	ValidateMsgInvalidWorkload = "port mapping[%d]'s workload have empty workload kind/namespace/name "
 	// ValidateMsgEmptyWorkload ingress validate get empty workload

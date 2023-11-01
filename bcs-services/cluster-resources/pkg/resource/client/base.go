@@ -66,6 +66,14 @@ func (c *ResClient) List(
 	return ret, c.handleErr(ctx, err)
 }
 
+// ListWithoutPerm 获取资源列表，不做权限校验
+func (c *ResClient) ListWithoutPerm(
+	ctx context.Context, namespace string, opts metav1.ListOptions,
+) (*unstructured.UnstructuredList, error) {
+	ret, err := c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
+	return ret, c.handleErr(ctx, err)
+}
+
 // Get 获取单个资源
 func (c *ResClient) Get(
 	ctx context.Context, namespace, name string, opts metav1.GetOptions,

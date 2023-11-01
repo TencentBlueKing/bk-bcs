@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -138,7 +139,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	existedInstance, notExistedInstance, err := FilterClusterInstanceFromNodesIDs(ctx, dependInfo, idList)
+	existedInstance, notExistedInstance, err := business.FilterClusterInstanceFromNodesIDs(ctx, dependInfo, idList)
 	if err != nil {
 		blog.Errorf("AddNodesToClusterTask[%s]: FilterClusterInstanceFromNodesIDs for cluster[%s] failed, %s",
 			taskID, clusterID, err.Error())
@@ -155,7 +156,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	successNodes = append(successNodes, existedInstance...)
 
 	if len(notExistedInstance) > 0 {
-		result, err := AddNodesToCluster(ctx, dependInfo, &NodeAdvancedOptions{NodeScheduler: schedule}, // nolint
+		result, err := business.AddNodesToCluster(ctx, dependInfo, &business.NodeAdvancedOptions{NodeScheduler: schedule}, // nolint
 			notExistedInstance, initPasswd, false, idToIPMap, operator)
 		if err != nil {
 			blog.Errorf("AddNodesToClusterTask[%s] AddNodesToCluster failed: %v", taskID, err)
@@ -237,7 +238,7 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	addSuccessNodes, addFailureNodes, err := CheckClusterInstanceStatus(ctx, dependInfo, successNodes)
+	addSuccessNodes, addFailureNodes, err := business.CheckClusterInstanceStatus(ctx, dependInfo, successNodes)
 	if err != nil {
 		blog.Errorf("CheckAddNodesStatusTask[%s] CheckClusterInstanceStatus failed, %s",
 			taskID, err.Error())

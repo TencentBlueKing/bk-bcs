@@ -13,6 +13,7 @@
 package tools
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -157,4 +158,27 @@ func IsSameSlice(s1, s2 []uint32) bool {
 	}
 
 	return true
+}
+
+// MergeDoubleStringSlice merge [][]string elements into []string
+// keep the elements in result is unique and sorted in ASCII character order
+// eg: input [][]string{{"a", "b"}, {"a", "c"}} return []string{"a", "b", "c"}
+func MergeDoubleStringSlice(input [][]string) []string {
+	uniqueMap := make(map[string]bool)
+
+	for _, subSlice := range input {
+		for _, element := range subSlice {
+			uniqueMap[element] = true
+		}
+	}
+
+	uniqueElements := make([]string, 0, len(uniqueMap))
+	for element := range uniqueMap {
+		uniqueElements = append(uniqueElements, element)
+	}
+
+	// Sort the unique elements in ASCII character order
+	sort.Strings(uniqueElements)
+
+	return uniqueElements
 }

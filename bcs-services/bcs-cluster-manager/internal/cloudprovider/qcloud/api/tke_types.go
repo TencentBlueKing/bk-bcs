@@ -1643,7 +1643,8 @@ type ClusterEndpointInfo struct {
 
 // ZoneInfo zone info
 type ZoneInfo struct {
-	ZoneID   uint64
-	Zone     string
-	ZoneName string
+	ZoneID    string
+	Zone      string
+	ZoneName  string
+	ZoneState string
 }

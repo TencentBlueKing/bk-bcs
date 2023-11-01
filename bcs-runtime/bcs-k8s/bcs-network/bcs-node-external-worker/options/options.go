@@ -70,6 +70,7 @@ func (op *Options) BindFromCommandLine() {
 	flag.StringVar(&op.VModule, "vmodule", "", "comma-separated list of pattern=N settings for file-filtered logging")
 	flag.StringVar(&op.TraceLocation, "log_backtrace_at", "", "when logging hits line file:N, emit a stack trace")
 
+	flag.Parse()
 	op.Verbosity = int32(verbosity)
 
 }

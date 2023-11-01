@@ -46,16 +46,16 @@ safe_source "${ROOT_DIR}/functions/k8s.sh"
 
 "${ROOT_DIR}"/system/config_envfile.sh -c init
 "${ROOT_DIR}"/system/config_system.sh -c dns sysctl
+"${ROOT_DIR}"/tools/install_tools.sh jq yq
 "${ROOT_DIR}"/k8s/install_cri.sh
 "${ROOT_DIR}"/k8s/install_k8s_tools
 "${ROOT_DIR}"/k8s/render_kubeadm
 
 safe_source "${ROOT_DIR}/env/bcs.env"
 
-# pull image
-kubeadm --config="${ROOT_DIR}/kubeadm-config" config images pull \
-  || utils::log "FATAL" "fail to pull k8s image"
 
+# wait to check kubelet start
+sleep 30
 if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   if systemctl is-active kubelet.service -q; then
     utils::log "WARN" "kubelet service is active now, skip kubeadm init"

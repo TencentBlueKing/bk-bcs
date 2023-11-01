@@ -4,7 +4,7 @@
       <EditingForm ref="formRef" type="edit" :prefix="prefix" :value="variableConfig" @change="handleFormChange" />
     </div>
     <div class="action-btns">
-      <bk-button theme="primary" :loading="pending" @click="handleEditSubmit">编辑</bk-button>
+      <bk-button theme="primary" :loading="pending" @click="handleEditSubmit">保存</bk-button>
       <bk-button @click="close">取消</bk-button>
     </div>
   </bk-sideslider>

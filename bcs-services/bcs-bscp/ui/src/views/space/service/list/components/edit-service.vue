@@ -188,6 +188,7 @@ const handleClose = () => {
     position: relative;
     // padding-right: 16px;
     .edit-icon {
+      display: none;
       position: absolute;
       right: -20px;
       top: -3px;
@@ -200,6 +201,9 @@ const handleClose = () => {
       &.no-edit-perm {
         color: #c4c6cc;
       }
+    }
+    &:hover .edit-icon {
+      display: block;
     }
   }
 }

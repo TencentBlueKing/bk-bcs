@@ -1,7 +1,7 @@
 <template>
   <bk-dialog
     ext-cls="create-version-confirm-dialog"
-    title="确认更新配置项版本？"
+    title="确认更新配置文件版本？"
     header-align="center"
     footer-align="center"
     :width="400"
@@ -10,13 +10,13 @@
     :quick-close="false"
     @closed="close"
   >
-    <p class="tips">以下套餐及服务未命名版本中引用的此配置项也将更新</p>
+    <p class="tips">以下套餐及服务未命名版本中引用的此配置文件也将更新</p>
     <bk-loading style="min-height: 100px" :loading="loading">
       <bk-table :data="citedList" :max-height="maxTableHeight">
         <bk-table-column label="所在套餐" prop="template_set_name"></bk-table-column>
         <bk-table-column label="引用此模板的服务">
           <template #default="{ row }">
-            <div v-if="row.app_id" class="app-info">
+            <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
               <LinkToApp class="link-icon" :id="row.app_id" auto-jump />
             </div>
@@ -34,9 +34,14 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
 import { IPackagesCitedByApps } from '../../../../../../types/template';
 import { getUnNamedVersionAppsBoundByLatestTemplateVersion } from '../../../../../api/template';
 import LinkToApp from '../../list/components/link-to-app.vue';
+import useTemplateStore from '../../../../../store/template';
+
+const { currentTemplateSpace } = storeToRefs(useTemplateStore());
 
 const props = defineProps<{
   show: boolean;
@@ -48,6 +53,8 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits(['update:show', 'confirm']);
+
+const router = useRouter();
 
 const loading = ref(false);
 const citedList = ref<IPackagesCitedByApps[]>([]);
@@ -65,6 +72,16 @@ watch(
     }
   },
 );
+
+const goToConfigPageImport = (id: number) => {
+  const { href } = router.resolve({
+    name: 'service-config',
+    params: { appId: id },
+    query: { pkg_id: currentTemplateSpace.value },
+  });
+  window.open(href, '_blank');
+};
+
 
 const getCitedData = async () => {
   loading.value = true;
@@ -95,6 +112,7 @@ defineExpose({
   display: flex;
   align-items: center;
   overflow: hidden;
+  cursor: pointer;
   .name-text {
     overflow: hidden;
     white-space: nowrap;

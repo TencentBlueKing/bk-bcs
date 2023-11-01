@@ -122,6 +122,7 @@ const createDiffEditor = () => {
   diffEditor = monaco.editor.createDiffEditor(textDiffRef.value, {
     theme: 'vs-dark',
     automaticLayout: true,
+    scrollBeyondLastLine: false,
     readOnly: true,
   });
   diffEditor.setModel({

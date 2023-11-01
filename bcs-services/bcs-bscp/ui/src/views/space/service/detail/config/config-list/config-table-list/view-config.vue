@@ -1,5 +1,5 @@
 <template>
-  <bk-sideslider width="640" :title="'查看配置项'" :is-show="props.show" @closed="close">
+  <bk-sideslider width="640" :title="'查看配置文件'" :is-show="props.show" @closed="close">
     <bk-loading :loading="detailLoading" class="config-loading-container">
       <ConfigForm
         v-if="props.show && !detailLoading"
@@ -45,7 +45,7 @@ const props = defineProps<{
   appId: number;
   id: number;
   versionId: number;
-  type: string; // 取值为config/template，分别表示非模板套餐下配置项和模板套餐下配置项
+  type: string; // 取值为config/template，分别表示非模板套餐下配置文件和模板套餐下配置文件
   show: Boolean;
 }>();
 
@@ -81,7 +81,7 @@ const getDetailData = async () => {
   }
 };
 
-// 获取非模板套餐下配置项详情配置，非文件类型配置项内容下载内容，文件类型手动点击时再下载
+// 获取非模板套餐下配置文件详情配置，非文件类型配置文件内容下载内容，文件类型手动点击时再下载
 const getConfigDetail = async () => {
   try {
     let detail;
@@ -112,7 +112,7 @@ const getConfigDetail = async () => {
   }
 };
 
-// 获取模板配置详情，非文件类型配置项内容下载内容，文件类型手动点击时再下载
+// 获取模板配置详情，非文件类型配置文件内容下载内容，文件类型手动点击时再下载
 const getTemplateDetail = async () => {
   try {
     detailLoading.value = true;

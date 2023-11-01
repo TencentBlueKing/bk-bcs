@@ -4,7 +4,8 @@
       <bk-form-item :label="$t('cluster.labels.name')" property="clusterName" error-display-type="normal" required>
         <bk-input :maxlength="64" class="w640" v-model="basicInfo.clusterName"></bk-input>
       </bk-form-item>
-      <bk-form-item :label="$t('cluster.create.label.provider')" property="provider" error-display-type="normal" required>
+      <bk-form-item
+        :label="$t('cluster.create.label.provider')" property="provider" error-display-type="normal" required>
         <bcs-select :loading="templateLoading" class="w640" v-model="basicInfo.provider" :clearable="false">
           <bcs-option
             v-for="item in availableTemplateList"
@@ -14,7 +15,11 @@
           </bcs-option>
         </bcs-select>
       </bk-form-item>
-      <bk-form-item :label="$t('generic.label.version')" property="clusterBasicSettings.version" error-display-type="normal" required>
+      <bk-form-item
+        :label="$t('generic.label.version')"
+        property="clusterBasicSettings.version"
+        error-display-type="normal"
+        required>
         <bcs-select class="w640" v-model="basicInfo.clusterBasicSettings.version" searchable :clearable="false">
           <bcs-option v-for="item in versionList" :key="item" :id="item" :name="item"></bcs-option>
         </bcs-select>
@@ -34,10 +39,16 @@
       <bk-form-item>
         <div class="action">
           <i :class="['bk-icon', expanded ? 'icon-angle-double-up' : 'icon-angle-double-down']"></i>
-          <span @click="toggleSettings">{{ expanded ? $t('cluster.create.button.putAwayConfig') : $t('cluster.create.button.expandConfig')}}</span>
+          <span @click="toggleSettings">
+            {{ expanded ? $t('cluster.create.button.putAwayConfig') : $t('cluster.create.button.expandConfig')}}
+          </span>
         </div>
       </bk-form-item>
-      <bk-form-item :label="$t('cluster.create.label.chooseMaster')" property="ipList" error-display-type="normal" required>
+      <bk-form-item
+        :label="$t('cluster.create.label.chooseMaster')"
+        property="ipList"
+        error-display-type="normal"
+        required>
         <bk-button icon="plus" @click="handleShowIpSelector">
           {{$t('generic.ipSelector.action.selectHost')}}
         </bk-button>
@@ -45,7 +56,8 @@
           <bk-table-column type="index" :label="$t('cluster.create.label.index')" width="60"></bk-table-column>
           <bk-table-column :label="$t('generic.ipSelector.label.innerIp')" prop="bk_host_innerip"></bk-table-column>
           <bk-table-column :label="$t('generic.ipSelector.label.idc')" prop="idc_name"></bk-table-column>
-          <bk-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="svr_device_class"></bk-table-column>
+          <bk-table-column
+            :label="$t('generic.ipSelector.label.serverModel')" prop="svr_device_class"></bk-table-column>
           <bk-table-column :label="$t('generic.label.action')" width="100">
             <template #default="{ row }">
               <bcs-button text @click="handleRemoveServer(row)">{{$t('cluster.create.button.remove')}}</bcs-button>
@@ -54,7 +66,10 @@
         </bk-table>
       </bk-form-item>
       <bk-form-item>
-        <bk-button class="btn" theme="primary" @click="handleShowConfirmDialog">{{$t('generic.button.confirm')}}</bk-button>
+        <bk-button
+          class="btn"
+          theme="primary"
+          @click="handleShowConfirmDialog">{{$t('generic.button.confirm')}}</bk-button>
         <bk-button class="btn" @click="handleCancel">{{$t('generic.button.cancel')}}</bk-button>
       </bk-form-item>
     </bk-form>
@@ -67,7 +82,11 @@
       <div class="create-cluster-dialog">
         <div class="title">{{$t('cluster.create.button.confirmCreateCluster.doc.title')}}:</div>
         <bcs-checkbox-group class="confirm-wrapper" v-model="createConfirm">
-          <bcs-checkbox value="2" class="mt10">{{$t('cluster.create.button.confirmCreateCluster.doc.article0')}}</bcs-checkbox>
+          <bcs-checkbox
+            value="2"
+            class="mt10">
+            {{$t('cluster.create.button.confirmCreateCluster.doc.article0')}}
+          </bcs-checkbox>
         </bcs-checkbox-group>
       </div>
       <template #footer>
@@ -82,14 +101,19 @@
         </div>
       </template>
     </bcs-dialog>
-    <IpSelector v-model="showIpSelector" :ip-list="basicInfo.ipList" @confirm="handleChooseServer"></IpSelector>
+    <IpSelector
+      :show-dialog="showIpSelector"
+      :ip-list="basicInfo.ipList"
+      @confirm="handleChooseServer"
+      @cancel="showIpSelector = false">
+    </IpSelector>
   </section>
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 
 import $bkMessage from '@/common/bkmagic';
-import IpSelector from '@/components/ip-selector/selector-dialog.vue';
+import IpSelector from '@/components/ip-selector/ip-selector.vue';
 import KeyValue from '@/components/key-value.vue';
 import useFormLabel from '@/composables/use-form-label';
 import $i18n from '@/i18n/i18n-setup';
@@ -273,8 +297,8 @@ export default defineComponent({
       templateLoading.value = false;
     };
     const handleRemoveServer = async (row) => {
-      const index = basicInfo.value.ipList.findIndex(item => item.bk_cloud_id === row.bk_cloud_id
-                    && item.bk_host_innerip === row.bk_host_innerip);
+      const index = basicInfo.value.ipList.findIndex(item => item?.cloudArea?.id === row?.cloudArea?.id
+                    && item.ip === row.ip);
       if (index > -1) {
         basicInfo.value.ipList.splice(index, 1);
       }

@@ -27,6 +27,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 )
@@ -254,7 +255,6 @@ func recordClusterInstanceToDB(ctx context.Context, activity *as.Activity, state
 func transInstancesToNode(
 	ctx context.Context, successInstanceID []string, info *cloudprovider.CloudDependBasicInfo) ([]string, error) {
 	var (
-		cvmCli  = api.NodeManager{}
 		nodes   = make([]*proto.Node, 0)
 		nodeIPs = make([]string, 0)
 		err     error
@@ -262,7 +262,7 @@ func transInstancesToNode(
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	err = retry.Do(func() error {
-		nodes, err = cvmCli.ListNodesByInstanceID(successInstanceID, &cloudprovider.ListNodesOption{
+		nodes, err = business.ListNodesByInstanceID(successInstanceID, &cloudprovider.ListNodesOption{
 			Common:       info.CmOption,
 			ClusterVPCID: info.Cluster.VpcID,
 		})
@@ -386,7 +386,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error { // noli
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	successInstances, failureInstances, err := CheckClusterInstanceStatus(ctx, dependInfo, successInstanceID)
+	successInstances, failureInstances, err := business.CheckClusterInstanceStatus(ctx, dependInfo, successInstanceID)
 	if err != nil || len(successInstances) == 0 {
 		if manual != common.True {
 			// rollback failed nodes

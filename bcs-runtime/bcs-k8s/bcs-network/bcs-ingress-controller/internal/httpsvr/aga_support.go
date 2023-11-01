@@ -66,7 +66,8 @@ func (h *HttpServerClient) getPodRelatedAgaEntrance(request *restful.Request, re
 		podNamespace, region)
 
 	pod := &v1.Pod{}
-	if err := h.Mgr.GetClient().Get(context.TODO(), types.NamespacedName{
+	// 通过API Server获取信息，避免获取Pod信息延迟（获取不到pod IP）
+	if err := h.Mgr.GetAPIReader().Get(context.TODO(), types.NamespacedName{
 		Namespace: podNamespace,
 		Name:      podName,
 	}, pod); err != nil {
@@ -77,6 +78,12 @@ func (h *HttpServerClient) getPodRelatedAgaEntrance(request *restful.Request, re
 		return
 	}
 
+	if pod.Status.PodIP == "" {
+		err := errors.Errorf("empty pod ip [%s/%s]", podNamespace, podName)
+		blog.Warnf(err.Error())
+		_, _ = response.Write(CreateResponseData(err, "", nil))
+		return
+	}
 	// get node from pod's spec
 	node := &v1.Node{}
 	if err := h.Mgr.GetClient().Get(context.TODO(), types.NamespacedName{

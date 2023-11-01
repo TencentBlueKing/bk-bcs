@@ -2,7 +2,7 @@
   <bk-sideslider title="被引用" :width="640" :quick-close="true" :is-show="isShow" @closed="close">
     <div class="top-area">
       <div class="config-name">{{ props.config.name }}</div>
-      <SearchInput placeholder="服务名称/配置项版本" v-model="searchStr" :width="320" @search="handleSearch" />
+      <SearchInput placeholder="服务名称/配置文件版本" v-model="searchStr" :width="320" @search="handleSearch" />
     </div>
     <div class="apps-table">
       <bk-table
@@ -13,8 +13,8 @@
         @page-limit-change="handlePageLimitChange"
         @page-value-change="getList"
       >
-        <bk-table-column label="配置项版本" prop="template_revision_name"></bk-table-column>
-        <bk-table-column label="引用此配置项的服务">
+        <bk-table-column label="配置文件版本" prop="template_revision_name"></bk-table-column>
+        <bk-table-column label="引用此配置文件的服务">
           <template #default="{ row }">
             <bk-link v-if="row.app_id" class="link-btn" theme="primary" target="_blank" :href="getHref(row.app_id)">
               {{ row.app_name }}
@@ -70,7 +70,7 @@ watch(
       searchStr.value = '';
       getList();
     }
-  }
+  },
 );
 
 const getList = async () => {
@@ -87,7 +87,7 @@ const getList = async () => {
     props.spaceId,
     props.currentTemplateSpace,
     props.config.id,
-    params
+    params,
   );
   appList.value = res.details;
   pagination.value.count = res.count;

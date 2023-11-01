@@ -1,0 +1,14 @@
+project: 项目
+cluster: 集群
+node: 节点
+node_group: 节点池
+cloud_account: 云账号
+namespace: 命名空间
+templateset: 模板集
+variable: 变量
+k8s_resource: K8S 资源
+helm: Helm
+addons: 集群组件
+chart: Chart
+web_console: WebConsole
+log_rule: 日志采集规则
