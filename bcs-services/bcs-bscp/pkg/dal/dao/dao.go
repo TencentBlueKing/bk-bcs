@@ -427,6 +427,7 @@ func (s *set) Credential() Credential {
 		idGen:             s.idGen,
 		auditDao:          s.auditDao,
 		genQ:              s.genQ,
+		event:             s.event,
 	}
 }
 

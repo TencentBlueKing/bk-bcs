@@ -79,6 +79,9 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 
 	if hit {
 		s.mc.hitCounter.With(prm.Labels{"resource": "credential", "biz": tools.Itoa(bizID)}).Inc()
+		if !c.Enabled {
+			return false, nil
+		}
 		for _, s := range c.Scope {
 			if tools.MatchAppConfigItem(s, app, ci.Path, ci.Name) {
 				return true, nil
@@ -103,12 +106,15 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 		return false, err
 	}
 
-	if err := s.client.SetWithExpire(fmt.Sprintf("%d-%s", bizID, credential), c, time.Second); err != nil {
+	if err := s.client.SetWithExpire(fmt.Sprintf("%d-%s", bizID, credential), c, 10*time.Second); err != nil {
 		logs.Errorf("refresh credential %d-%s cache failed, %s", bizID, credential, err.Error())
 		// do not return, ignore th error directly.
 	}
 
 	for _, s := range c.Scope {
+		if !c.Enabled {
+			return false, nil
+		}
 		if tools.MatchAppConfigItem(s, app, ci.Path, ci.Name) {
 			return true, nil
 		}
