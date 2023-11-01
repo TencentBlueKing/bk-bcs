@@ -261,7 +261,7 @@ const props = defineProps<{
   searchStr: string;
 }>();
 
-const emits = defineEmits(['clearStr']);
+const emits = defineEmits(['clearStr', 'editConfig']);
 
 const loading = ref(false);
 const commonConfigListLoading = ref(false);
@@ -478,6 +478,7 @@ const handleEditOpen = (config: IConfigTableItem) => {
 const handleEditConfigConfirm = async () => {
   await getCommonConfigList();
   tableGroupsData.value = transListToTableData();
+  emits('editConfig');
 };
 
 // 查看配置文件或模板版本
@@ -517,6 +518,7 @@ const handleDeletePkgConfirm = async () => {
     theme: 'success',
     message: '删除模板套餐成功',
   });
+  isDeleteDialogShow.value = false;
 };
 
 // 非模板配置文件diff
