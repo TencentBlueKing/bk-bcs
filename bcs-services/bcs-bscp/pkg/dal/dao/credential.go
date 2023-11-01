@@ -23,6 +23,7 @@ import (
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/logs"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
@@ -33,6 +34,8 @@ type Credential interface {
 	Get(kit *kit.Kit, bizID, id uint32) (*table.Credential, error)
 	// GetByCredentialString get credential by credential string
 	GetByCredentialString(kit *kit.Kit, bizID uint32, credential string) (*table.Credential, error)
+	// ListByCredentialString list credential by credential string array
+	ListByCredentialString(kit *kit.Kit, bizID uint32, credentials []string) ([]*table.Credential, error)
 	// Create one credential instance.
 	Create(kit *kit.Kit, credential *table.Credential) (uint32, error)
 	// List get credentials
@@ -54,6 +57,7 @@ type credentialDao struct {
 	idGen             IDGenInterface
 	auditDao          AuditDao
 	credentialSetting *cc.Credential
+	event             Event
 }
 
 // Get ..
@@ -76,7 +80,7 @@ func (dao *credentialDao) Get(kit *kit.Kit, bizID, id uint32) (*table.Credential
 	return credential, nil
 }
 
-// Get Credential by encoded credential string.
+// GetByCredentialString get credential by encoded credential string.
 func (dao *credentialDao) GetByCredentialString(kit *kit.Kit, bizID uint32, str string) (*table.Credential, error) {
 	if bizID == 0 {
 		return nil, errors.New("bizID is empty")
@@ -102,6 +106,35 @@ func (dao *credentialDao) GetByCredentialString(kit *kit.Kit, bizID uint32, str 
 	}
 
 	return credential, nil
+}
+
+// ListByCredentialString list credential by encoded credential string array.
+func (dao *credentialDao) ListByCredentialString(kit *kit.Kit, bizID uint32, strArr []string) (
+	[]*table.Credential, error) {
+	if bizID == 0 {
+		return nil, errors.New("bizID is empty")
+	}
+	if len(strArr) == 0 {
+		return nil, errors.New("credential string is empty")
+	}
+
+	encryptedArr := make([]string, 0, len(strArr))
+
+	for _, str := range strArr {
+		// encode credential string
+		encryptionAlgorithm := dao.credentialSetting.EncryptionAlgorithm
+		masterKey := dao.credentialSetting.MasterKey
+		encrypted, err := tools.EncryptCredential(str, masterKey, encryptionAlgorithm)
+		if err != nil {
+			return nil, errf.ErrCredentialInvalid
+		}
+		encryptedArr = append(encryptedArr, encrypted)
+	}
+
+	m := dao.genQ.Credential
+	q := dao.genQ.Credential.WithContext(kit.Ctx)
+
+	return q.Where(m.BizID.Eq(bizID), m.EncCredential.In(encryptedArr...)).Find()
 }
 
 // Create create credential
@@ -163,6 +196,7 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 }
 
 // Delete delete credential
+// !Note: delete credential should emit a delete event.
 func (dao *credentialDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error {
 	// 参数校验
 	if bizID == 0 {
@@ -185,11 +219,34 @@ func (dao *credentialDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id 
 		return err
 	}
 
+	// decode credential string
+	masterKey := dao.credentialSetting.MasterKey
+	encrypted, err := tools.DecryptCredential(oldOne.Spec.EncCredential, masterKey, oldOne.Spec.EncAlgorithm)
+	if err != nil {
+		return err
+	}
+	// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
+	one := types.Event{
+		Spec: &table.EventSpec{
+			Resource:    table.CredentialEvent,
+			ResourceID:  id,
+			ResourceUid: encrypted,
+			OpType:      table.DeleteOp,
+		},
+		Attachment: &table.EventAttachment{BizID: bizID},
+		Revision:   &table.CreatedRevision{Creator: kit.User},
+	}
+	eDecorator := dao.event.Eventf(kit)
+	if err = eDecorator.FireWithTx(tx, one); err != nil {
+		logs.Errorf("fire delete credential: %s event failed, err: %v, rid: %s", id, err, kit.Rid)
+		return errors.New("fire event failed, " + err.Error())
+	}
+
 	return ad.Do(tx.Query)
 }
 
-// Update update credential
-// Note: only update name, description, enable
+// Update update credential's name, description, enable
+// !Note: update credential should emit a update event.
 func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	if err := g.ValidateUpdate(); err != nil {
 		return err
@@ -202,6 +259,25 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	if err != nil {
 		return err
 	}
+
+	// decode credential string
+	masterKey := dao.credentialSetting.MasterKey
+	encrypted, err := tools.DecryptCredential(oldOne.Spec.EncCredential, masterKey, oldOne.Spec.EncAlgorithm)
+	if err != nil {
+		return err
+	}
+	// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
+	one := types.Event{
+		Spec: &table.EventSpec{
+			Resource:    table.CredentialEvent,
+			ResourceID:  g.ID,
+			ResourceUid: encrypted,
+			OpType:      table.UpdateOp,
+		},
+		Attachment: &table.EventAttachment{BizID: g.Attachment.BizID},
+		Revision:   &table.CreatedRevision{Creator: kit.User},
+	}
+	eDecorator := dao.event.Eventf(kit)
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
 
 	// 多个使用事务处理
@@ -215,26 +291,62 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 		if err := ad.Do(tx); err != nil {
 			return err
 		}
+
+		if err = eDecorator.Fire(one); err != nil {
+			logs.Errorf("fire update credential: %s event failed, err: %v, rid: %s", g.ID, err, kit.Rid)
+			return errors.New("fire event failed, " + err.Error())
+		}
+
 		return nil
 	}
-	if err := dao.genQ.Transaction(updateTx); err != nil {
-		return err
-	}
+	err = dao.genQ.Transaction(updateTx)
 
-	return nil
+	eDecorator.Finalizer(err)
+
+	return err
 }
 
 // UpdateRevisionWithTx update credential revision with transaction
+// !Note: update credential should emit a update event.
 func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32, id uint32) error {
 	if bizID == 0 || id == 0 {
 		return errors.New("credential bizID or id is zero")
 	}
 
 	m := tx.Credential
+	oldOne, err := m.WithContext(kit.Ctx).Where(m.ID.Eq(id), m.BizID.Eq(bizID)).Take()
+	if err != nil {
+		return err
+	}
+
+	// decode credential string
+	masterKey := dao.credentialSetting.MasterKey
+	encrypted, err := tools.DecryptCredential(oldOne.Spec.EncCredential, masterKey, oldOne.Spec.EncAlgorithm)
+	if err != nil {
+		return err
+	}
+
 	q := tx.Credential.WithContext(kit.Ctx)
 	if _, err := q.Where(m.BizID.Eq(bizID), m.ID.Eq(id)).
 		Select(m.Reviser).Update(m.Reviser, kit.User); err != nil {
 		return err
+	}
+
+	// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
+	one := types.Event{
+		Spec: &table.EventSpec{
+			Resource:    table.CredentialEvent,
+			ResourceID:  id,
+			ResourceUid: encrypted,
+			OpType:      table.UpdateOp,
+		},
+		Attachment: &table.EventAttachment{BizID: bizID},
+		Revision:   &table.CreatedRevision{Creator: kit.User},
+	}
+	eDecorator := dao.event.Eventf(kit)
+	if err = eDecorator.FireWithTx(tx, one); err != nil {
+		logs.Errorf("fire update credential: %s event failed, err: %v, rid: %s", id, err, kit.Rid)
+		return errors.New("fire event failed, " + err.Error())
 	}
 
 	return nil

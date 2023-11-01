@@ -14,6 +14,7 @@ package event
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"bscp.io/cmd/cache-service/service/cache/keys"
@@ -151,10 +152,13 @@ func (c *consumer) refreshAllCache(kt *kit.Kit, events []*table.Event) error {
 // consumeUpdateEvent consume update event.
 func (c *consumer) consumeUpdateEvent(kt *kit.Kit, events []*table.Event) error {
 	updateAppEvents := make([]*table.Event, 0)
+	updateCredentialEvents := make([]*table.Event, 0)
 	for _, event := range events {
 		switch event.Spec.Resource {
 		case table.Application:
 			updateAppEvents = append(updateAppEvents, event)
+		case table.CredentialEvent:
+			updateCredentialEvents = append(updateCredentialEvents, event)
 		default:
 			logs.Errorf("unsupported update event resource: %s, id: %s, rid: %s", event.Spec.Resource, event.ID, kt.Rid)
 			continue
@@ -168,6 +172,13 @@ func (c *consumer) consumeUpdateEvent(kt *kit.Kit, events []*table.Event) error 
 		}
 	}
 
+	if len(updateCredentialEvents) != 0 {
+		if err := c.refreshCredentialCache(kt, updateCredentialEvents); err != nil {
+			logs.Errorf("refresh credential cache failed, err: %v, rid: %s", err, kt.Rid)
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -175,12 +186,16 @@ func (c *consumer) consumeUpdateEvent(kt *kit.Kit, events []*table.Event) error 
 func (c *consumer) consumeDeleteEvent(kt *kit.Kit, events []*table.Event) error {
 	delPublishEvents := make([]*table.Event, 0)
 	delAppEvents := make([]*table.Event, 0)
+	delCredentialEvents := make([]*table.Event, 0)
 	for _, event := range events {
 		switch event.Spec.Resource {
 		case table.Publish:
 			delPublishEvents = append(delPublishEvents, event)
 		case table.Application:
 			delAppEvents = append(delAppEvents, event)
+		case table.CredentialEvent:
+			delCredentialEvents = append(delCredentialEvents, event)
+
 		default:
 			logs.Errorf("unsupported delete event resource: %s, id: %s, rid: %s", event.Spec.Resource, event.ID, kt.Rid)
 			continue
@@ -199,6 +214,12 @@ func (c *consumer) consumeDeleteEvent(kt *kit.Kit, events []*table.Event) error 
 		}
 	}
 
+	if len(delCredentialEvents) != 0 {
+		if err := c.deleteCredentialCache(kt, delCredentialEvents); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -212,6 +233,22 @@ func (c *consumer) deleteAppMetaCache(kt *kit.Kit, events []*table.Event) error 
 
 	if err := c.bds.Delete(kt.Ctx, appKeys...); err != nil {
 		logs.Errorf("delete app meta cache failed, keys: %v, err: %v, rid: %s", appKeys, err, kt.Rid)
+		return err
+	}
+
+	return nil
+}
+
+// deleteCredentialCache delete credential cache from event.
+func (c *consumer) deleteCredentialCache(kt *kit.Kit, events []*table.Event) error {
+
+	appKeys := make([]string, 0)
+	for _, one := range events {
+		appKeys = append(appKeys, keys.Key.Credential(one.Attachment.BizID, one.Spec.ResourceUid))
+	}
+
+	if err := c.bds.Delete(kt.Ctx, appKeys...); err != nil {
+		logs.Errorf("delete credential cache failed, keys: %v, err: %v, rid: %s", appKeys, err, kt.Rid)
 		return err
 	}
 
@@ -395,6 +432,44 @@ func (c *consumer) refreshOneBizAppMetaCache(kt *kit.Kit, bizID uint32, appIDs [
 		}
 
 		logs.V(1).Infof("refresh app: %d app meta: %s successfully, rid: %s", appID, js, kt.Rid)
+	}
+
+	return nil
+}
+
+func (c *consumer) refreshCredentialCache(kt *kit.Kit, events []*table.Event) error {
+	if len(events) == 0 {
+		return nil
+	}
+
+	for _, event := range events {
+		cred, err := c.op.Credential().GetByCredentialString(kt, event.Attachment.BizID, event.Spec.ResourceUid)
+		if err != nil {
+			return err
+		}
+		details, _, err := c.op.CredentialScope().Get(kt, cred.ID, cred.Attachment.BizID)
+		if err != nil {
+			return err
+		}
+		scope := make([]string, 0, len(details))
+		for _, detail := range details {
+			scope = append(scope, string(detail.Spec.CredentialScope))
+		}
+		credentialCache := &types.CredentialCache{
+			Enabled: cred.Spec.Enable,
+			Scope:   scope,
+		}
+		b, err := jsoni.Marshal(credentialCache)
+		if err != nil {
+			logs.Errorf("marshal credential: %d-%s,failed, err: %v", cred.Attachment.BizID, event.Spec.ResourceUid, err)
+			return err
+		}
+		// refresh credential cache.
+		if err := c.bds.Set(kt.Ctx, keys.Key.Credential(event.Attachment.BizID, event.Spec.ResourceUid),
+			b, keys.Key.CredentialTtlSec(false)); err != nil {
+			return fmt.Errorf("set biz: %d, credential: %s, cache failed, err: %v",
+				event.Attachment.BizID, event.Spec.ResourceUid, err)
+		}
 	}
 
 	return nil
