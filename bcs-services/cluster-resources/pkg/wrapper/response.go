@@ -172,61 +172,72 @@ func getReqResource(req server.Request) reqResource {
 			resourceID.Version = resourceID.RawData.Version
 		}
 	}
+	// name没有的情况下使用ProjectCode代替
+	if resourceID.Name == "" {
+		resourceID.Name = resourceID.ProjectCode
+	}
 	return resourceID
 }
 
 // nolint
-var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.Resource, audit.Action){
-	"Create": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Action){
+	"Get": func(req server.Request) (audit.Resource, audit.Action) {
+		res := getReqResource(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeView}
+	},
+	"Create": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeCreate}
 	},
-	"Update": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Update": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeUpdate}
 	},
-	"Delete": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Delete": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeDelete}
 	},
-	"Restart": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Restart": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeUpdate}
 	},
-	"PauseOrResume": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"PauseOrResume": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeUpdate}
 	},
-	"Scale": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Scale": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeUpdate}
 	},
-	"Rollout": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Rollout": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: req.Method(), ActivityType: audit.ActivityTypeUpdate}
 	},
-	"Reschedule": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Reschedule": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getReqResource(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
@@ -240,6 +251,9 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 	if req.Method() != "" {
 		arr := strings.Split(req.Method(), ".")
 		if len(arr) >= 2 {
+			if strings.Contains(arr[1], "Get") {
+				method = "Get"
+			}
 			if strings.Contains(arr[1], "Create") {
 				method = "Create"
 			}
@@ -273,7 +287,7 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 		return
 	}
 
-	res, act := fn(req, rsp)
+	res, act := fn(req)
 
 	auditCtx := audit.RecorderContext{
 		Username:  GetUserFromCtx(ctx),
@@ -314,8 +328,12 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 	if result.ResultCode != errcode.NoErr {
 		result.Status = audit.ActivityStatusFailed
 	}
-	_ = audit2.GetAuditClient().R().
-		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
-}
 
-// 驼峰转蛇形
+	// add audit
+	auditAction := audit2.GetAuditClient().R()
+	// 查看类型不用记录 activity
+	if act.ActivityType == audit.ActivityTypeView {
+		auditAction.DisableActivity()
+	}
+	_ = auditAction.SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
+}

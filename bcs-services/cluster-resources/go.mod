@@ -230,7 +230,7 @@ require (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230921024236-fc3b5f7e6d87
+	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20231031062827-2cd36075dfea
 	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230921024236-fc3b5f7e6d87
 	github.com/Tencent/bk-bcs/bcs-scenarios/kourse v0.0.0-20231011121510-d30829b961ad
 	github.com/go-redis/redis/extra/redisotel/v8 v8.11.5
