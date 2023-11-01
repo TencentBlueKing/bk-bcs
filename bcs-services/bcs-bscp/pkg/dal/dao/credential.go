@@ -215,8 +215,8 @@ func (dao *credentialDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id 
 	}
 	ad := dao.auditDao.DecoratorV2(kit, bizID).PrepareDelete(oldOne)
 
-	if _, err := q.Where(m.BizID.Eq(bizID), m.ID.Eq(id)).Delete(); err != nil {
-		return err
+	if _, e := q.Where(m.BizID.Eq(bizID), m.ID.Eq(id)).Delete(); e != nil {
+		return e
 	}
 
 	// decode credential string
@@ -283,18 +283,18 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	// 多个使用事务处理
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Credential.WithContext(kit.Ctx)
-		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
-			Select(m.Memo, m.Name, m.Enable, m.Reviser).Updates(g); err != nil {
-			return err
+		if _, e := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
+			Select(m.Memo, m.Name, m.Enable, m.Reviser).Updates(g); e != nil {
+			return e
 		}
 
-		if err := ad.Do(tx); err != nil {
-			return err
+		if e := ad.Do(tx); e != nil {
+			return e
 		}
 
-		if err = eDecorator.Fire(one); err != nil {
-			logs.Errorf("fire update credential: %s event failed, err: %v, rid: %s", g.ID, err, kit.Rid)
-			return errors.New("fire event failed, " + err.Error())
+		if e := eDecorator.Fire(one); e != nil {
+			logs.Errorf("fire update credential: %s event failed, err: %v, rid: %s", g.ID, e, kit.Rid)
+			return errors.New("fire event failed, " + e.Error())
 		}
 
 		return nil
@@ -327,9 +327,9 @@ func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *gen.QueryTx, bi
 	}
 
 	q := tx.Credential.WithContext(kit.Ctx)
-	if _, err := q.Where(m.BizID.Eq(bizID), m.ID.Eq(id)).
-		Select(m.Reviser).Update(m.Reviser, kit.User); err != nil {
-		return err
+	if _, e := q.Where(m.BizID.Eq(bizID), m.ID.Eq(id)).
+		Select(m.Reviser).Update(m.Reviser, kit.User); e != nil {
+		return e
 	}
 
 	// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
