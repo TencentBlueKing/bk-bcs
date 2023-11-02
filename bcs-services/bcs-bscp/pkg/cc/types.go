@@ -966,3 +966,25 @@ func (c Credential) validate() error {
 
 	return nil
 }
+
+// Vault Used to store the configuration information required for connecting to the Vault server.
+type Vault struct {
+	// Address is used to store the address of the Vault server
+	Address string `yaml:"address"`
+	// Token is used for accessing the Vault server
+	Token string `yaml:"token"`
+}
+
+// validate Vault options
+func (v Vault) validate() error {
+
+	if v.Address == "" {
+		return errors.New("vault address is not set")
+	}
+
+	if v.Token == "" {
+		return errors.New("vault token is not set")
+	}
+
+	return nil
+}
