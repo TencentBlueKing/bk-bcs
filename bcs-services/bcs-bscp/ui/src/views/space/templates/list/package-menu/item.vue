@@ -41,12 +41,12 @@ const props = defineProps<{
   hideActions?: boolean;
 }>();
 const popoverShow = ref(false);
-const emits = defineEmits(['edit', 'clone', 'delete', 'select']);
+const emits = defineEmits(['openSlider', 'select']);
 
 const handlePopoverClick = (item: string) => {
-  if (item === 'edit') emits('edit', props.pkg.id, 'edit');
-  if (item === 'clone') emits('clone', props.pkg.id, 'clone');
-  if (item === 'delete') emits('delete', props.pkg.id, 'delete');
+  if (item === 'edit') emits('openSlider', props.pkg.id, 'edit');
+  if (item === 'clone') emits('openSlider', props.pkg.id, 'clone');
+  if (item === 'delete') emits('openSlider', props.pkg.id, 'delete');
   popoverShow.value = false;
 };
 </script>
