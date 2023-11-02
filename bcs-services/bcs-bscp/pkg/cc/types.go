@@ -988,3 +988,9 @@ func (v Vault) validate() error {
 
 	return nil
 }
+
+// GetConfigFromEnv Read configuration from environment variables
+func (s *Vault) GetConfigFromEnv() {
+	s.Token = os.Getenv("VAULT_ROOT_TOKEN")
+	s.Address = os.Getenv("VAULT_ADDRESS")
+}

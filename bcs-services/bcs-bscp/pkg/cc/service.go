@@ -295,6 +295,7 @@ func (s *DataServiceSetting) trySetDefault() {
 	s.Log.trySetDefault()
 	s.Sharding.trySetDefault()
 	s.Repo.trySetDefault()
+	s.Vault.GetConfigFromEnv()
 }
 
 // Validate DataServiceSetting option.
