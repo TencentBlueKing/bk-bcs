@@ -65,7 +65,6 @@
           ></i>
           <i
             v-if="index === formData.rules.length - 1"
-            style="margin-left: 10px"
             class="bk-bscp-icon icon-add"
             @click="handleAddRule(index)"
           ></i>
@@ -275,6 +274,7 @@ defineExpose({
 .action-btns {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   width: 38px;
   font-size: 14px;
   color: #979ba5;

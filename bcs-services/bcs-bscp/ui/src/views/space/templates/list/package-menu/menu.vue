@@ -15,9 +15,7 @@
         :pkg="pkg"
         :current-pkg="currentPkg"
         @select="handleSelect"
-        @edit="handlePkgAction"
-        @clone="handlePkgAction"
-        @delete="handlePkgAction"
+        @open-slider="handlePkgAction"
       />
     </div>
     <div v-else class="exception-notice">

@@ -16,13 +16,14 @@
         placement="bottom-end"
         :popover-delay="[0, 100]"
         :arrow="false"
+        :is-show="popoverShow"
       >
-        <Ellipsis class="action-more-icon" @click.stop />
+        <Ellipsis class="action-more-icon" @click.stop @mouseenter="popoverShow = true"/>
         <template #content>
           <div class="package-actions">
-            <div class="action-item" @click="emits('edit', props.pkg.id, 'edit')">编辑</div>
-            <div class="action-item" @click="emits('clone', props.pkg.id, 'clone')">克隆</div>
-            <div class="action-item" @click="emits('delete', props.pkg.id, 'delete')">删除</div>
+            <div class="action-item" @click="handlePopoverClick('edit')">编辑</div>
+            <div class="action-item" @click="handlePopoverClick('clone')">克隆</div>
+            <div class="action-item" @click="handlePopoverClick('delete')">删除</div>
           </div>
         </template>
       </bk-popover>
@@ -30,6 +31,7 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { ref } from 'vue';
 import { Ellipsis } from 'bkui-vue/lib/icon';
 import { IPackageMenuItem } from '../../../../../../types/template';
 
@@ -38,8 +40,15 @@ const props = defineProps<{
   pkg: IPackageMenuItem;
   hideActions?: boolean;
 }>();
+const popoverShow = ref(false);
+const emits = defineEmits(['openSlider', 'select']);
 
-const emits = defineEmits(['edit', 'clone', 'delete', 'select']);
+const handlePopoverClick = (item: string) => {
+  if (item === 'edit') emits('openSlider', props.pkg.id, 'edit');
+  if (item === 'clone') emits('openSlider', props.pkg.id, 'clone');
+  if (item === 'delete') emits('openSlider', props.pkg.id, 'delete');
+  popoverShow.value = false;
+};
 </script>
 <style lang="scss" scoped>
 .package-item {
@@ -69,7 +78,7 @@ const emits = defineEmits(['edit', 'clone', 'delete', 'select']);
     align-items: center;
     width: 16px;
     height: 16px;
-    color: #c4c6cc;
+    color: #979BA5;
     font-size: 16px;
     .icon-folder {
       color: #979ba5;

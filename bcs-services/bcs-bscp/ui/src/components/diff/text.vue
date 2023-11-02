@@ -209,7 +209,7 @@ const syncCursor = (editorA: any, editorB: any) => {
     height: 100%;
     :deep(.monaco-editor) {
       .template-variable-item {
-        color: #1768ef;
+        color: #3A84FF;
         border: 1px solid #1768ef;
         cursor: pointer;
       }
