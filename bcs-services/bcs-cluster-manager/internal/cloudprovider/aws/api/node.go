@@ -25,6 +25,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
+const (
+	defaultRegion = "ap-northeast-1"
+)
+
 var nodeMgr sync.Once
 
 func init() {
@@ -40,7 +44,11 @@ func GetEc2Client(opt *cloudprovider.CommonOption) (*ec2.EC2, error) {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 
-	awsConf := &aws.Config{}
+	if len(opt.Region) == 0 {
+		return nil, cloudprovider.ErrCloudRegionLost
+	}
+
+	awsConf := &aws.Config{Region: &opt.Region}
 	awsConf.Credentials = credentials.NewStaticCredentials(opt.Account.SecretID, opt.Account.SecretKey, "")
 
 	sess, err := session.NewSession(awsConf)
@@ -72,16 +80,16 @@ func (nm *NodeManager) GetCVMImageIDByImageName(imageName string, opt *cloudprov
 
 // GetCloudRegions get cloud regions
 func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
+	//set default region
+	opt.Region = defaultRegion
+
 	client, err := GetEc2Client(opt)
 	if err != nil {
 		blog.Errorf("create ec2 client when GetRegionsInfo failed: %v", err)
 		return nil, err
 	}
 
-	input := &ec2.DescribeRegionsInput{
-		AllRegions: aws.Bool(true),
-	}
-	output, err := client.DescribeRegions(input)
+	output, err := client.DescribeRegions(&ec2.DescribeRegionsInput{})
 	if err != nil {
 		blog.Errorf("ec2 client DescribeRegions failed: %v", err)
 		return nil, err
@@ -90,7 +98,7 @@ func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*prot
 	regions := make([]*proto.RegionInfo, 0)
 	for _, v := range output.Regions {
 		regions = append(regions, &proto.RegionInfo{
-			Region:      *v.Endpoint,
+			Region:      *v.RegionName,
 			RegionName:  *v.RegionName,
 			RegionState: *v.OptInStatus,
 		})

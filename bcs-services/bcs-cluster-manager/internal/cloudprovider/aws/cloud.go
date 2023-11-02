@@ -58,13 +58,15 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 
 	client, err := api.NewEksClient(opt.Common)
 	if err != nil {
-		return err
+		return fmt.Errorf("New EKS Client failed: %v", err)
 	}
 
-	cluster, err := client.GetEksCluster(cls.ClusterName)
+	cluster, err := client.GetEksCluster(opt.ImportMode.CloudID)
 	if err != nil {
-		return err
+		return fmt.Errorf("Get EKS Cluster failed: %v", err)
 	}
+	cls.SystemID = *cluster.Name
+	cls.VpcID = *cluster.ResourcesVpcConfig.VpcId
 
 	kubeConfig, err := api.GetClusterKubeConfig(client.Session, cluster)
 	if err != nil {
@@ -92,8 +94,15 @@ func clusterBasicSettingByEKS(cls *cmproto.Cluster, cluster *eks.Cluster) {
 }
 
 func clusterNetworkSettingByEKS(cls *cmproto.Cluster, cluster *eks.Cluster) {
-	cls.NetworkSettings = &cmproto.NetworkSetting{
-		ClusterIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
-		ServiceIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
+	if cluster.KubernetesNetworkConfig.ServiceIpv4Cidr != nil {
+		cls.NetworkSettings = &cmproto.NetworkSetting{
+			ClusterIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
+			ServiceIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
+		}
+	} else if cluster.KubernetesNetworkConfig.ServiceIpv6Cidr != nil {
+		cls.NetworkSettings = &cmproto.NetworkSetting{
+			ClusterIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
+			ServiceIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
+		}
 	}
 }
