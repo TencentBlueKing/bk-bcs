@@ -26,7 +26,7 @@ export interface IVariableEditParams {
   memo: string;
 }
 
-// 变量被配置项引用详情
+// 变量被配置文件引用详情
 export interface IVariableCitedByConfigDetailItem {
   variable_name: string;
   references: {

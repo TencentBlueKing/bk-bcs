@@ -265,7 +265,7 @@ const childRoutes = [
       {
         path: 'workloads/:category/:namespace/:name/record',
         name: 'workloadRecord',
-        props: true,
+        props: route => ({ ...route.params, ...route.query }),
         component: UpdateRecord,
         beforeEnter: (to, from, next) => {
           to.meta.menuId = String(to.query.menuId || to.query.kind).toUpperCase();

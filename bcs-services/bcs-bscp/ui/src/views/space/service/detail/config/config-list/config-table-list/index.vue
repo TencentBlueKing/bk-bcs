@@ -9,7 +9,7 @@
             @created="refreshConfigList"
             @imported="refreshConfigList"
           />
-          <EditVariables :bk-biz-id="props.bkBizId" :app-id="props.appId" />
+          <EditVariables :variables-change="variableChange" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
         </template>
         <ViewVariables v-else :bk-biz-id="props.bkBizId" :app-id="props.appId" :verision-id="versionData.id" />
       </div>
@@ -33,6 +33,7 @@
         :app-id="props.appId"
         :search-str="searchStr"
         @clear-str="clearStr"
+        @edit-config="variableChange = !variableChange"
       />
       <TableWithPagination
         v-else
@@ -63,6 +64,7 @@ const props = defineProps<{
   appId: number;
 }>();
 
+const variableChange = ref(false);
 const tableRef = ref();
 const searchStr = ref('');
 const useTemplate = ref(true);

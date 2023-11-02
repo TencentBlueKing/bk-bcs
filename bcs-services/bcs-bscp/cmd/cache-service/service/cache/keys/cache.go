@@ -28,7 +28,7 @@ var Key = &keyGenerator{
 	nullKeyTTLRange:             [2]int{60, 120},
 	releasedGroupTTLRange:       [2]int{30 * 60, 60 * 60},
 	credentialMatchedCITTLRange: [2]int{30 * 60, 60 * 60},
-	credentialTTLRange:          [2]int{5, 60},
+	credentialTTLRange:          [2]int{30 * 60, 60 * 60},
 	releasedCITTLRange:          [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
 	releasedHookTTLRange:        [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
 	appMetaTTLRange:             [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},

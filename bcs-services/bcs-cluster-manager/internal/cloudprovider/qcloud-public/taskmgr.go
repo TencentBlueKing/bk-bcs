@@ -51,9 +51,8 @@ func newtask() *Task {
 	// create cluster task
 	task.works[createTKEClusterStep.StepMethod] = tasks.CreateTkeClusterTask
 	task.works[checkTKEClusterStatusStep.StepMethod] = tasks.CheckTkeClusterStatusTask
-	task.works[enableTkeClusterVpcCniStep.StepMethod] = tasks.EnableTkeClusterVpcCniTask
 	task.works[checkCreateClusterNodeStatusStep.StepMethod] = tasks.CheckCreateClusterNodeStatusTask
-	task.works[registerManageClusterKubeConfigStep.StepMethod] = tasks.RegisterManageClusterKubeConfigTask
+	task.works[registerTkeClusterKubeConfigStep.StepMethod] = tasks.RegisterTkeClusterKubeConfigTask
 	task.works[updateCreateClusterDBInfoStep.StepMethod] = tasks.UpdateCreateClusterDBInfoTask
 
 	// delete cluster task
@@ -61,7 +60,6 @@ func newtask() *Task {
 	task.works[cleanClusterDBInfoStep.StepMethod] = tasks.CleanClusterDBInfoTask
 
 	// add node to cluster
-	task.works[addNodesShieldAlarmStep.StepMethod] = tasks.AddNodesShieldAlarmTask
 	task.works[addNodesToClusterStep.StepMethod] = tasks.AddNodesToClusterTask
 	task.works[checkAddNodesStatusStep.StepMethod] = tasks.CheckAddNodesStatusTask
 	task.works[updateAddNodeDBInfoStep.StepMethod] = tasks.UpdateNodeDBInfoTask
@@ -156,15 +154,9 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	taskName := fmt.Sprintf(createClusterTaskTemplate, cls.ClusterID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	// init instance passwd
-	passwd := utils.BuildInstancePwd()
-	if opt.InitPassword != "" {
-		passwd = opt.InitPassword
-	}
-	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
-
 	// setting all steps details
-	createClusterTask := &CreateClusterTaskOption{Cluster: cls, Nodes: opt.Nodes, NodeTemplate: opt.NodeTemplate}
+	createClusterTask := &CreateClusterTaskOption{
+		Cluster: cls, MasterNodes: opt.MasterNodes, WorkerNodes: opt.WorkerNodes, NodeTemplate: opt.NodeTemplate}
 
 	// step1: createTKECluster and return clusterID inject common paras
 	createClusterTask.BuildCreateClusterStep(task)
@@ -172,56 +164,69 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	createClusterTask.BuildCheckClusterStatusStep(task)
 	// step3: check cluster nodes status
 	createClusterTask.BuildCheckClusterNodesStatusStep(task)
-
 	// step4: qcloud-public register cluster kubeConfig
 	createClusterTask.BuildRegisterClsKubeConfigStep(task)
-
-	// step5: install gse agent
-	common.BuildInstallGseAgentTaskStep(task, cls, nil, passwd, func() string {
-		exist := checkIfWhiteImageOsNames(&cloudprovider.ClusterGroupOption{
-			CommonOption: opt.CommonOption,
-			Cluster:      cls,
-			Group:        nil,
-		})
-		if exist {
-			return fmt.Sprintf("%v", utils.ConnectPort)
+	// step5: install cluster watch component
+	common.BuildWatchComponentTaskStep(task, cls, "")
+	// step4: 若需要则设置节点注解
+	common.BuildNodeAnnotationsTaskStep(task, cls.ClusterID, nil, func() map[string]string {
+		if opt.NodeTemplate != nil && len(opt.NodeTemplate.GetAnnotations()) > 0 {
+			return opt.NodeTemplate.GetAnnotations()
 		}
-
-		return ""
+		return nil
 	}())
-	// step6: transfer host module
-	moduleID := cloudprovider.GetTransModuleInfo(nil, nil)
+
+	// step6: install gse agent
+	common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
+		ClusterId:  cls.ClusterID,
+		BusinessId: cls.BusinessID,
+		CloudArea:  cls.GetArea(),
+		User:       cls.GetNodeSettings().InitLoginUsername,
+		Passwd:     cls.GetNodeSettings().InitLoginPassword,
+		KeyInfo:    cls.GetNodeSettings().GetKeyPair(),
+		Port: func() string {
+			exist := checkClusterOsNameInWhiteImages(cls, &opt.CommonOption)
+			if exist {
+				return fmt.Sprintf("%v", utils.ConnectPort)
+			}
+
+			return ""
+		}(),
+	})
+	// step7: transfer host module
+	moduleID := cls.GetModule().GetScaleOutModuleID()
 	if moduleID != "" {
 		common.BuildTransferHostModuleStep(task, cls.BusinessID, moduleID)
 	}
 
-	// step6: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
-	if len(opt.Nodes) > 0 && opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
+	// step8: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
+	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID: cls.ClusterID,
 			Content:   opt.NodeTemplate.UserScript,
-			NodeIps:   strings.Join(opt.Nodes, ","),
-			Operator:  opt.Operator,
-			StepName:  common.PostInitStepJob,
+			// dynamic node ips
+			NodeIps:  "",
+			Operator: opt.Operator,
+			StepName: common.PostInitStepJob,
 		})
 	}
 	// business post define sops task or script
-	if len(opt.Nodes) > 0 && opt.NodeTemplate != nil && opt.NodeTemplate.ScaleOutExtraAddons != nil {
+	if opt.NodeTemplate != nil && opt.NodeTemplate.ScaleOutExtraAddons != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.UserAfterInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
-				InstancePasswd: passwd,
-				NodeIPList:     strings.Join(opt.Nodes, ","),
-				NodeOperator:   opt.Operator,
-				ShowSopsUrl:    true,
+				// dynamic node ips
+				NodeIPList:   "",
+				NodeOperator: opt.Operator,
+				ShowSopsUrl:  true,
 			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
 		}
 	}
 
-	// step8: update DB info by cluster data
+	// step9: update DB info by cluster data
 	createClusterTask.BuildUpdateTaskStatusStep(task)
 
 	// set current step
@@ -230,10 +235,13 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	}
 	task.CurrentStep = task.StepSequence[0]
 	task.CommonParams[cloudprovider.OperatorKey.String()] = opt.Operator
-	task.CommonParams[cloudprovider.UserKey.String()] = opt.Operator
 	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CreateClusterJob.String()
-	if len(opt.Nodes) > 0 {
-		task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(opt.Nodes, ",")
+
+	if len(opt.WorkerNodes) > 0 {
+		task.CommonParams[cloudprovider.WorkerNodeIPsKey.String()] = strings.Join(opt.WorkerNodes, ",")
+	}
+	if len(opt.MasterNodes) > 0 {
+		task.CommonParams[cloudprovider.MasterNodeIPsKey.String()] = strings.Join(opt.MasterNodes, ",")
 	}
 
 	return task, nil
@@ -1030,18 +1038,26 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	// step2. check cluster nodes and all nodes status is running
 	updateDesiredNodesTask.BuildCheckClusterNodeStatusStep(task)
 	// step3: install gse agent
-	common.BuildInstallGseAgentTaskStep(task, opt.Cluster, group, passwd, func() string {
-		exist := checkIfWhiteImageOsNames(&cloudprovider.ClusterGroupOption{
-			CommonOption: opt.CommonOption,
-			Cluster:      opt.Cluster,
-			Group:        opt.NodeGroup,
-		})
-		if exist {
-			return fmt.Sprintf("%v", utils.ConnectPort)
-		}
+	common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
+		ClusterId:  opt.Cluster.ClusterID,
+		BusinessId: opt.Cluster.BusinessID,
+		CloudArea:  group.GetArea(),
+		User:       group.GetLaunchTemplate().GetInitLoginUsername(),
+		Passwd:     passwd,
+		KeyInfo:    group.GetLaunchTemplate().GetKeyPair(),
+		Port: func() string {
+			exist := checkIfWhiteImageOsNames(&cloudprovider.ClusterGroupOption{
+				CommonOption: opt.CommonOption,
+				Cluster:      opt.Cluster,
+				Group:        opt.NodeGroup,
+			})
+			if exist {
+				return fmt.Sprintf("%v", utils.ConnectPort)
+			}
 
-		return ""
-	}())
+			return ""
+		}(),
+	})
 	// step4: transfer host module
 	moduleID := cloudprovider.GetTransModuleInfo(opt.AsOption, opt.NodeGroup)
 	if moduleID != "" {

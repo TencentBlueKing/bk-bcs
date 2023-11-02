@@ -11,7 +11,7 @@ import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe'
 import useTableData from './use-table-data';
 
 import './base-layout.css';
-import { restartWorkloads } from '@/api/modules/cluster-resource';
+import { restartGameWorkloads, restartWorkloads } from '@/api/modules/cluster-resource';
 import $bkMessage from '@/common/bkmagic';
 import { CUR_SELECT_CRD } from '@/common/constant';
 import { padIPv6 } from '@/common/util';
@@ -515,6 +515,7 @@ export default defineComponent({
         },
         query: {
           kind: type.value === 'crd' ? kind.value : row.kind,
+          crd: currentCrd.value,
         },
       });
     };
@@ -544,14 +545,28 @@ export default defineComponent({
         subTitle: `${row.kind} ${name}`,
         defaultInfo: true,
         confirmFn: async () => {
-          const result = await restartWorkloads({
-            $namespaceId: namespace,
-            $type: type.value,
-            $category: category.value,
-            $clusterId: clusterId.value,
-            $name: name,
-          }).then(() => true)
-            .catch(() => false);
+          let result = false;
+          if (category.value === 'custom_objects') {
+            result = await restartGameWorkloads({
+              $crd: currentCrd.value,
+              $type: type.value,
+              $category: category.value,
+              $clusterId: clusterId.value,
+              $name: name,
+              namespace,
+            }).then(() => true)
+              .catch(() => false);
+          } else {
+            result = await restartWorkloads({
+              $namespaceId: namespace,
+              $type: type.value,
+              $category: category.value,
+              $clusterId: clusterId.value,
+              $name: name,
+            }).then(() => true)
+              .catch(() => false);
+          }
+
           if (result) {
             $bkMessage({
               theme: 'success',
@@ -862,6 +877,7 @@ export default defineComponent({
           category={this.category}
           cluster-id={this.clusterId}
           revision={''}
+          crd={this.currentCrd}
           value={this.showRollbackSideslider}
           rollback={true}
           on-hidden={this.handleRollbackSidesilderHide}

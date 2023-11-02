@@ -12,7 +12,7 @@
     @closed="close"
   >
     <div class="selected-mark">
-      已选 <span class="num">{{ props.value.length }}</span> 个配置项
+      已选 <span class="num">{{ props.value.length }}</span> 个配置文件
     </div>
     <p class="tips">以下服务配置的未命名版本中引用此套餐的内容也将更新</p>
     <bk-loading style="min-height: 100px" :loading="loading">
@@ -20,7 +20,7 @@
         <bk-table-column label="所在模板套餐" prop="template_set_name"></bk-table-column>
         <bk-table-column label="使用此套餐的服务">
           <template #default="{ row }">
-            <div v-if="row.app_id" class="app-info">
+            <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
               <LinkToApp class="link-icon" :id="row.app_id" />
             </div>
@@ -32,6 +32,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue';
 import useGlobalStore from '../../../../../../../store/global';
@@ -51,6 +52,8 @@ const props = defineProps<{
 
 const emits = defineEmits(['update:show', 'movedOut']);
 
+const router = useRouter();
+
 const loading = ref(false);
 const citedList = ref<IPackagesCitedByApps[]>([]);
 const pending = ref(false);
@@ -66,6 +69,15 @@ watch(
     getCitedData();
   },
 );
+
+const goToConfigPageImport = (id: number) => {
+  const { href } = router.resolve({
+    name: 'service-config',
+    params: { appId: id },
+    query: { pkg_id: currentTemplateSpace.value },
+  });
+  window.open(href, '_blank');
+};
 
 const getCitedData = async () => {
   loading.value = true;
@@ -95,7 +107,7 @@ const handleConfirm = async () => {
     close();
     Message({
       theme: 'success',
-      message: '配置项移出套餐成功',
+      message: '配置文件移出套餐成功',
     });
   } catch (e) {
     console.log(e);
@@ -127,6 +139,7 @@ const close = () => {
   display: flex;
   align-items: center;
   overflow: hidden;
+  cursor: pointer;
   .name-text {
     overflow: hidden;
     white-space: nowrap;

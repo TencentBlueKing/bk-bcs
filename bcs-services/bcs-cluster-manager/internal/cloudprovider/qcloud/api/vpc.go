@@ -18,12 +18,12 @@ import (
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // NewVPCClient init VPC client
@@ -48,6 +48,7 @@ func NewVPCClient(opt *cloudprovider.CommonOption) (*VpcClient, error) {
 	return &VpcClient{client: cli}, nil
 }
 
+// VpcClient xxx
 type VpcClient struct {
 	client *vpc.Client
 }
@@ -275,7 +276,7 @@ func (v *VpcClient) CheckAssistantCidr(vpcId string, news []string, olds []strin
 	req := vpc.NewCheckAssistantCidrRequest()
 	req.VpcId = common.StringPtr(vpcId)
 	req.NewCidrBlocks = common.StringPtrs(news)
-	//req.OldCidrBlocks = common.StringPtrs(olds)
+	// req.OldCidrBlocks = common.StringPtrs(olds)
 
 	resp, err := v.client.CheckAssistantCidr(req)
 	if err != nil {

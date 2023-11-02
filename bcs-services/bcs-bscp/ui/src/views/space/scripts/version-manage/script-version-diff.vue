@@ -10,6 +10,7 @@
             :clearable="false"
             :filterable="true"
             @change="handleSelectVersion"
+            :show-on-init="true"
           >
             <bk-option v-for="version in versionList" :key="version.id" :label="version.spec.name" :value="version.id">
             </bk-option>

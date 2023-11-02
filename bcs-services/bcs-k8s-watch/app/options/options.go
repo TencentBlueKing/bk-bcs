@@ -120,6 +120,7 @@ type FilterConfig struct {
 	NameFilters              []string            `json:"resourceNameFilters"`
 	APIResourceLists         []ApiResourceList   `json:"apiResourceLists"`
 	IsWatchManagedFields     bool                `json:"isFilterManagedFields"`
+	DataMaskConfigList       []MaskerConfig      `json:"resourceMaskers"`
 }
 
 // APIResourceFilter api resource exception
@@ -142,4 +143,11 @@ func (wc *WatchConfig) ParseFilter() *FilterConfig {
 	}
 	IsWatchManagedFields = filter.IsWatchManagedFields
 	return filter
+}
+
+// MaskerConfig config for data mask
+type MaskerConfig struct {
+	Kind      string   `json:"kind"`
+	Namespace string   `json:"namespace"`
+	Path      []string `json:"path"`
 }

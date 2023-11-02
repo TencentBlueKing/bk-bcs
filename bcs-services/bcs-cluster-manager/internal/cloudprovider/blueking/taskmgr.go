@@ -122,6 +122,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			Plugins:  opt.Cloud.ClusterManagement.CreateCluster.Plugins,
 		}
 		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
+			NodeIPList:   strings.Join(opt.WorkerNodes, ","),
 			BusinessID:   cls.BusinessID,
 			NodeOperator: opt.Operator,
 			Operator:     opt.Operator,

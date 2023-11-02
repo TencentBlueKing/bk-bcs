@@ -14,7 +14,6 @@
 package argocd
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -38,8 +37,8 @@ func (plugin *WebhookPlugin) Init() error {
 	return nil
 }
 
-func (plugin *WebhookPlugin) executeWebhook(ctx context.Context, r *http.Request) *mw.HttpResponse {
-	user := mw.User(ctx)
-	blog.Infof("RequestID[%s], user %s request webhook", mw.RequestID(ctx), user.GetUser())
-	return nil
+func (plugin *WebhookPlugin) executeWebhook(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := mw.User(r.Context())
+	blog.Infof("RequestID[%s], user %s request webhook", mw.RequestID(r.Context()), user.GetUser())
+	return r, mw.ReturnArgoReverse()
 }

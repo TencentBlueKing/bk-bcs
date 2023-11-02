@@ -17,6 +17,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -32,12 +33,6 @@ import (
 )
 
 const (
-	apiServer  = "apiServer"
-	etcdServer = "etcdServer"
-
-	createCluster = "create_cluster"
-	addNodes      = "add_nodes"
-
 	// defaultPolicy default cpu_manager policy
 	defaultPolicy = "none"
 	staticPolicy  = "static"
@@ -45,14 +40,19 @@ const (
 	// bk-sops template vars prefix
 	prefix   = "CM"
 	template = "template"
+
+	// disable xxx
+	disable = "disable"
+	// singleStack xxx
+	singleStack = "singlestack"
+	// dualStack xxx
+	dualStack = "dualstack"
 )
 
 var (
 	// cluster render info
-	clusterID           = "CM.cluster.ClusterID"
-	clusterMasterIPs    = "CM.cluster.ClusterMasterIPs"
-	clusterMasterDomain = "CM.cluster.ClusterMasterDomain"
-	clusterEtcdDomain   = "CM.cluster.ClusterEtcdDomain"
+	clusterID        = "CM.cluster.ClusterID"
+	clusterMasterIPs = "CM.cluster.ClusterMasterIPs"
 
 	clusterRegion         = "CM.cluster.ClusterRegion"
 	clusterVPC            = "CM.cluster.ClusterVPC"
@@ -121,48 +121,12 @@ func getClusterMasterIPs(cluster *proto.Cluster) string {
 	return strings.Join(masterIPs, ",")
 }
 
-func getMasterDomain(cls *proto.Cluster) string {
-	server, ok := cls.ExtraInfo[apiServer]
-	if ok {
-		return server
-	}
-
-	return ""
-}
-
-func getEtcdDomain(cls *proto.Cluster) string {
-	etcd, ok := cls.ExtraInfo[etcdServer]
-	if ok {
-		return etcd
-	}
-
-	return ""
-}
-
 func getClusterType(cls *proto.Cluster) string {
 	if len(cls.GetExtraClusterID()) > 0 {
 		return "1"
 	}
 
 	return "0"
-}
-
-func getClusterCreateExtraEnv(cls *proto.Cluster) string {
-	value, ok := cls.ExtraInfo[createCluster]
-	if ok {
-		return value
-	}
-
-	return ""
-}
-
-func getAddNodesExtraEnv(cls *proto.Cluster) string {
-	value, ok := cls.ExtraInfo[addNodes]
-	if ok {
-		return value
-	}
-
-	return ""
 }
 
 func getEnv(k, v string) string {
@@ -251,4 +215,107 @@ func getInitClusterIPs(clusterID string) (string, error) {
 	}
 
 	return strings.Join(ips, ","), nil
+}
+
+// self builder cluster envs
+
+// EnvKey key
+type EnvKey string
+
+// String xxx
+func (ek EnvKey) String() string {
+	return string(ek)
+}
+
+var (
+	// K8S_VER cluster version
+	k8sVersion EnvKey = "K8S_VER"
+
+	// CRI_TYPE runtime type
+	criType EnvKey = "CRI_TYPE"
+	// DOCKER_VER docker version
+	dockerVersion EnvKey = "DOCKER_VER"
+	// CONTAINERD_VER containerd version
+	containerdVersion EnvKey = "CONTAINERD_VER"
+
+	// K8S_POD_CIDR pod cidr
+	podCidrIpv4 EnvKey = "K8S_POD_CIDR"
+	// K8S_SVC_CIDR service cidr
+	serviceCidrIpv4 EnvKey = "K8S_SVC_CIDR"
+	// K8S_MASK ipv4 mask
+	mask EnvKey = "K8S_MASK"
+
+	// K8S_POD_CIDRv6 pod ipv6 cidr
+	podCidripv6 EnvKey = "K8S_POD_CIDRv6"
+	// K8S_SVC_CIDRv6 service ipv6 cidr
+	serviceCidrIpv6 EnvKey = "K8S_SVC_CIDRv6"
+	// K8S_IPv6_MASK ipv6 mask
+	maskIpv6 EnvKey = "K8S_IPv6_MASK"
+
+	// K8S_IPv6_STATUS = disable - ipv4单栈 | singlestack - ipv6 单栈 | dualstack - ipv4/ipv6 双栈;  集群单双栈
+	ipv6Status EnvKey = "K8S_IPv6_STATUS"
+
+	// K8S_CNI cni plugin
+	cniPlugin EnvKey = "K8S_CNI"
+	// ENABLE_APISERVER_HA enable apiserver ha
+	apiserverHa EnvKey = "ENABLE_APISERVER_HA"
+)
+
+func getSelfBuilderClusterEnvs(cls *proto.Cluster) (string, error) {
+	envs := make([]string, 0)
+
+	// cluster version & runtime & runtimeVersion
+	version := getEnv(k8sVersion.String(), cls.GetClusterBasicSettings().Version)
+	runtime := getEnv(criType.String(), cls.GetClusterAdvanceSettings().GetContainerRuntime())
+	dockerVer := getEnv(dockerVersion.String(), cls.GetClusterAdvanceSettings().GetRuntimeVersion())
+	containerdVer := getEnv(containerdVersion.String(), cls.GetClusterAdvanceSettings().GetRuntimeVersion())
+
+	envs = append(envs, version, runtime, dockerVer, containerdVer)
+
+	// check ipv4 or ipv6
+	ipType := iutils.IPV4
+	if cls.GetNetworkSettings().GetClusterIpType() != "" {
+		ipType = cls.GetNetworkSettings().GetClusterIpType()
+	}
+
+	switch ipType {
+	case iutils.IPV4:
+		podCidr := getEnv(podCidrIpv4.String(), cls.GetNetworkSettings().GetClusterIPv4CIDR())
+		serviceCidr := getEnv(serviceCidrIpv4.String(), cls.GetNetworkSettings().GetServiceIPv4CIDR())
+		size, _ := iutils.GetMaskLenByNum(ipType, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
+		ipv4Mask := getEnv(mask.String(), fmt.Sprintf("%v", size))
+		stack := getEnv(ipv6Status.String(), disable)
+
+		envs = append(envs, podCidr, serviceCidr, ipv4Mask, stack)
+	case iutils.IPV6:
+		podCidr := getEnv(podCidripv6.String(), cls.GetNetworkSettings().GetClusterIPv6CIDR())
+		serviceCidr := getEnv(serviceCidrIpv6.String(), cls.GetNetworkSettings().GetServiceIPv6CIDR())
+		size, _ := iutils.GetMaskLenByNum(ipType, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
+		ipv6Mask := getEnv(maskIpv6.String(), fmt.Sprintf("%v", size))
+		stack := getEnv(ipv6Status.String(), singleStack)
+
+		envs = append(envs, podCidr, serviceCidr, ipv6Mask, stack)
+	case iutils.DualStack:
+		ipv4PodCidr := getEnv(podCidrIpv4.String(), cls.GetNetworkSettings().GetClusterIPv4CIDR())
+		ipv4ServiceCidr := getEnv(serviceCidrIpv4.String(), cls.GetNetworkSettings().GetServiceIPv4CIDR())
+		size, _ := iutils.GetMaskLenByNum(ipType, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
+		ipv4Mask := getEnv(mask.String(), fmt.Sprintf("%v", size))
+
+		ipv6PodCidr := getEnv(podCidripv6.String(), cls.GetNetworkSettings().GetClusterIPv6CIDR())
+		ipv6ServiceCidr := getEnv(serviceCidrIpv6.String(), cls.GetNetworkSettings().GetServiceIPv6CIDR())
+		size, _ = iutils.GetMaskLenByNum(ipType, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
+		ipv6Mask := getEnv(maskIpv6.String(), fmt.Sprintf("%v", size))
+
+		stack := getEnv(ipv6Status.String(), dualStack)
+		envs = append(envs, ipv4PodCidr, ipv4ServiceCidr, ipv4Mask, ipv6PodCidr, ipv6ServiceCidr, ipv6Mask, stack)
+	default:
+		return "", fmt.Errorf("not supported ipType[%s]", ipType)
+	}
+
+	cni := getEnv(cniPlugin.String(), cls.GetClusterAdvanceSettings().GetNetworkType())
+	apiServerHa := getEnv(apiserverHa.String(), strconv.FormatBool(cls.GetClusterAdvanceSettings().GetEnableHa()))
+
+	envs = append(envs, cni, apiServerHa)
+
+	return strings.Join(envs, ";"), nil
 }

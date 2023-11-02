@@ -1,6 +1,6 @@
 <template>
   <bk-sideslider
-    title="从已有配置项添加"
+    title="从已有配置文件添加"
     :width="640"
     :is-show="isShow"
     :before-close="handleBeforeClose"
@@ -9,7 +9,7 @@
     <div v-bkloading="{ loading }" class="slider-content-container">
       <div class="package-configs-pick">
         <div class="search-wrapper">
-          <SearchInput v-model="searchStr" placeholder="配置项名称/路径/描述" @search="handleSearch" />
+          <SearchInput v-model="searchStr" placeholder="配置文件名称/路径/描述" @search="handleSearch" />
         </div>
         <div class="package-tables">
           <PackageTable
@@ -28,14 +28,14 @@
       </div>
       <div class="selected-panel">
         <h5 class="title-text">
-          已选 <span class="num">{{ selectedConfigs.length }}</span> 个配置项
+          已选 <span class="num">{{ selectedConfigs.length }}</span> 个配置文件
         </h5>
         <div class="selected-list">
           <div v-for="config in selectedConfigs" class="config-item" :key="config.id">
             <div class="name" :title="config.name">{{ config.name }}</div>
             <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(config.id)" />
           </div>
-          <p v-if="selectedConfigs.length === 0" class="empty-tips">请先从左侧选择配置项</p>
+          <p v-if="selectedConfigs.length === 0" class="empty-tips">请先从左侧选择配置文件</p>
         </div>
       </div>
     </div>
@@ -87,7 +87,7 @@ const emits = defineEmits(['update:show', 'added']);
 const isShow = ref(false);
 const isFormChange = ref(false);
 const loading = ref(false);
-const packageGroups = ref<IPackageTableGroup[]>([]); // 所有套餐配置项数据
+const packageGroups = ref<IPackageTableGroup[]>([]); // 所有套餐配置文件数据
 const packageGroupsOnShow = ref<IPackageTableGroup[]>([]); // 实际展示的数据，处理搜索的场景
 const pending = ref(false);
 const searchStr = ref('');
@@ -108,7 +108,7 @@ watch(
   },
 );
 
-// 加载全部配置项
+// 加载全部配置文件
 const getGroupConfigs = async () => {
   loading.value = true;
   const params = {
@@ -119,11 +119,11 @@ const getGroupConfigs = async () => {
     getTemplatePackageList(spaceId.value, currentTemplateSpace.value, params),
     getTemplatesBySpaceId(spaceId.value, currentTemplateSpace.value, params),
   ]);
-  // 第一个分组默认为“全部配置项”
+  // 第一个分组默认为“全部配置文件”
   const packages: IPackageTableGroup[] = [
     {
       id: 0,
-      name: '全部配置项',
+      name: '全部配置文件',
       configs: configsRes.details,
     },
   ];
@@ -194,7 +194,7 @@ const handleAddConfigs = async () => {
     close();
     Message({
       theme: 'success',
-      message: '添加配置项成功',
+      message: '添加配置文件成功',
     });
   } catch (e) {
     console.log(e);

@@ -233,6 +233,8 @@ type NodeManager interface {
 
 // CloudValidateManager validate interface for check cloud resourceInfo
 type CloudValidateManager interface {
+	// CreateClusterValidate create cluster validate
+	CreateClusterValidate(req *proto.CreateClusterReq, opt *CommonOption) error
 	// ImportClusterValidate import cluster validate
 	ImportClusterValidate(req *proto.ImportClusterReq, opt *CommonOption) error
 	// AddNodesToClusterValidate validate
@@ -249,6 +251,8 @@ type CloudValidateManager interface {
 	ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error
 	// ListCloudSubnetsValidate list subnets validate
 	ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error
+	// ListCloudVpcsValidate list vpcs validate
+	ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest, account *proto.Account) error
 	// ListSecurityGroupsValidate list SecurityGroups validate
 	ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error
 	// ListKeyPairsValidate list key pairs validate
@@ -291,6 +295,8 @@ type ClusterManager interface {
 	EnableExternalNodeSupport(cls *proto.Cluster, opt *EnableExternalNodeOption) error
 	// ListOsImage get osimage list
 	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
+	// ListProjects get cloud projects list
+	ListProjects(opt *CommonOption) ([]*proto.CloudProject, error)
 	// CheckClusterEndpointStatus check cluster endpoint status
 	CheckClusterEndpointStatus(clusterID string, isExtranet bool, opt *CheckEndpointStatusOption) (bool, error)
 }
@@ -352,6 +358,8 @@ type NodeGroupManager interface {
 
 // VPCManager cloud interface for vpc management
 type VPCManager interface {
+	// ListVpcs list cloud vpcs
+	ListVpcs(vpcID string, opt *CommonOption) ([]*proto.CloudVpc, error)
 	// ListSubnets list vpc's subnets
 	ListSubnets(vpcID string, opt *CommonOption) ([]*proto.Subnet, error)
 	// ListSecurityGroups list security groups

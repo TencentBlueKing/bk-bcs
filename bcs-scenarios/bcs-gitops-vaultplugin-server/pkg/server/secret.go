@@ -23,6 +23,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/secret"
 )
 
@@ -226,10 +227,19 @@ func (s *Server) routerInitProject(w http.ResponseWriter, r *http.Request) {
 
 	err := s.secretManager.InitProject(project)
 	if err != nil {
+		blog.Errorf("init project '%s' failed: %s", project, err.Error())
+		if errs := s.secretManager.ReverseInitProject(project); len(errs) != 0 {
+			for i := range errs {
+				blog.Errorf("project '%s' reserve init failed: %s", project, errs[i].Error())
+			}
+		} else {
+			blog.Warnf("project '%s' reverse init complete", project)
+		}
 		s.responseError(r, w, http.StatusInternalServerError,
 			errors.Wrapf(err, "init secret for project %s failed", project))
 		return
 	}
+	blog.Infof("init project '%s' success", project)
 	s.responseSuccess(w, nil)
 	return
 }

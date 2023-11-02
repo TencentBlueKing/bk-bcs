@@ -257,9 +257,10 @@ const (
 
 // Repository defines all the repo related runtime.
 type Repository struct {
-	StorageType StorageMode   `yaml:"storageType"`
-	S3          S3Storage     `yaml:"s3"`
-	BkRepo      BkRepoStorage `yaml:"bkRepo"`
+	StorageType  StorageMode   `yaml:"storageType"`
+	S3           S3Storage     `yaml:"s3"`
+	BkRepo       BkRepoStorage `yaml:"bkRepo"`
+	RedisCluster RedisCluster  `yaml:"redisCluster"`
 }
 
 // BkRepoStorage BKRepo 存储类型
@@ -311,6 +312,7 @@ func (s *Repository) trySetDefault() {
 	if len(s.StorageType) == 0 {
 		s.StorageType = BkRepo
 	}
+	s.RedisCluster.trySetDefault()
 }
 
 // validate repo runtime.
@@ -960,6 +962,28 @@ func (c Credential) validate() error {
 
 	if len(c.EncryptionAlgorithm) == 0 {
 		return errors.New("credential Encryption Algorithm is not set")
+	}
+
+	return nil
+}
+
+// Vault Used to store the configuration information required for connecting to the Vault server.
+type Vault struct {
+	// Address is used to store the address of the Vault server
+	Address string `yaml:"address"`
+	// Token is used for accessing the Vault server
+	Token string `yaml:"token"`
+}
+
+// validate Vault options
+func (v Vault) validate() error {
+
+	if v.Address == "" {
+		return errors.New("vault address is not set")
+	}
+
+	if v.Token == "" {
+		return errors.New("vault token is not set")
 	}
 
 	return nil

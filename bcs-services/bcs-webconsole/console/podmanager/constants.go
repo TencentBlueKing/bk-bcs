@@ -31,4 +31,9 @@ const (
 	// UserCtxExpireTime Context 过期时间, 12个小时
 	UserCtxExpireTime    = 3600 * 12
 	clusterExpireSeconds = 3600 * 24 * 7
+
+	// HistoryFileName .bash_history文件结尾
+	HistoryFileName = "-history.txt"
+	// HistoryRepoDir .bash_history repo远程存放的目录
+	HistoryRepoDir = "/bash-history/latest/"
 )

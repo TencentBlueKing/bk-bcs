@@ -86,6 +86,7 @@ type Watcher struct {
 	labelMap         map[string]string
 	namespaceFilters map[string]struct{}
 	nameFilters      map[string]struct{}
+	dataMaskers      []Masker
 }
 
 // WatcherOptions provide options for create Watcher
@@ -102,6 +103,7 @@ type WatcherOptions struct {
 	LabelSelector    string
 	NamespaceFilters []string
 	NameFilters      []string
+	MaskerConfigs    []options.MaskerConfig
 }
 
 // Validate validate WatcherOptions
@@ -150,12 +152,24 @@ func NewWatcher(wo *WatcherOptions) (*Watcher, error) {
 		labelMap:         labelSet,
 		namespaceFilters: map[string]struct{}{},
 		nameFilters:      map[string]struct{}{},
+		dataMaskers:      make([]Masker, 0),
 	}
 	for _, ns := range wo.NamespaceFilters {
 		watcher.namespaceFilters[ns] = struct{}{}
 	}
 	for _, name := range wo.NameFilters {
 		watcher.nameFilters[name] = struct{}{}
+	}
+	for _, mc := range wo.MaskerConfigs {
+		// watcher 保留与自己相关的masker
+		if mc.Kind == wo.ResourceType {
+			path := make([]string, len(mc.Path))
+			copy(path, mc.Path)
+			watcher.dataMaskers = append(watcher.dataMaskers, Masker{
+				Namespace: mc.Namespace,
+				Path:      path,
+			})
+		}
 	}
 
 	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s",
@@ -522,6 +536,9 @@ func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, ev
 		if !options.IsWatchManagedFields {
 			dMeta.SetManagedFields(nil)
 		}
+
+		// mask data
+		w.dataMasking(dMeta)
 	}
 
 	ownerUID := ""
@@ -537,6 +554,16 @@ func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, ev
 	}
 
 	return syncData
+}
+
+// mask data by masker
+func (w *Watcher) dataMasking(dMeta *unstructured.Unstructured) {
+	if len(w.dataMaskers) == 0 {
+		return
+	}
+	for _, m := range w.dataMaskers {
+		m.MaskData(dMeta)
+	}
 }
 
 // NetServiceWatcher watchs resources in netservice, and sync to storage.

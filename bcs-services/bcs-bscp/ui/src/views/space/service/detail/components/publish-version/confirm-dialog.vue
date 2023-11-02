@@ -101,8 +101,11 @@ const handleConfirm = async () => {
       params.all = true;
     }
     await publishVersion(props.bkBizId, props.appId, props.releaseId as number, params);
-    emits('confirm');
     handleClose();
+    // 目前组件库dialog关闭自带250ms的延迟，所以这里延时300ms
+    setTimeout(() => {
+      emits('confirm');
+    }, 300);
   } catch (e) {
     console.error(e);
     // InfoBox({

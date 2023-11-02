@@ -63,7 +63,7 @@ ip -6 route add fd00::/8 via <next hop> dev <interface> src <lan_ipv6>
 > 注意：`fe80::/10` link-local 地址不能用于 k8s 的 node-ip。
 
 ## 安装示例
-
+目前仅支持 k8s `1.20.15` （默认）, `1.23.17` 和 `1.24.15` 版本。
 ### 集群创建与节点添加
 
 1. 在第一台主机（后称中控机）上启动集群控制平面：`./bcs-ops --instal master`，集群启动成功后会显示加入集群的指令
@@ -105,6 +105,15 @@ ip -6 route add fd00::/8 via <next hop> dev <interface> src <lan_ipv6>
 ## 环境变量
 
 通过配置环境变量来设置集群相关的参数。在中控机创建集群前，通过 `set -a` 设置环境变量。 你可以执行 `system/config_envfile.sh -init` 查看默认的环境变量。
+注意，当你要使用多个特性时，相关的环境变量都得申明
+
+### 示例：使用 containerd 作为容器运行时
+```bash
+set -a
+K8S_VER="1.24.15"
+CRI_TYPE="containerd"
+set +a
+```
 
 ### 示例：创建 ipv6 双栈集群
 
@@ -118,9 +127,20 @@ set +a
 ./bcs-ops -i master
 ```
 
+### 示例： 修改镜像 registry，并信任
+相关环境变量。镜像仓库默认为蓝鲸官方镜像仓库`hub.bktencent.com`，如果采用自己的镜像仓库，并且没有证书信任，需要添加下面两项环境变量
+```bash
+# 默认镜像地址
+set -a
+BK_PUBLIC_REPO=hub.bktencent.com
+# 信任不安全的registry
+INSECURE_REGISTRY=""
+set +a
+```
+
 ### 示例：离线安装
 
-离线安装资源清单见 `env/offline-manifest.yaml`。目前仅支持 k8s `1.20.15`, `1.23.17` 和 `1.24.15` 版本。
+离线安装资源清单见 `env/offline-manifest.yaml`。
 
 你需要把对应的离线包解压到 bcs-ops 的工作根目录下 `tar xfvz bcs-ops-offline-${version}.tgz`，并且安装对应的版本 `${VERSION}`。
 
@@ -128,7 +148,16 @@ set +a
 set -a
 BCS_OFFLINE="1"
 K8S_VER="${VERSION}"
-./bcs-ops -i master
+set +a
+```
+
+### 示例：开启 apiserver 高可用
+APISERVER_HA_MODE 支持 [bcs-apiserver-proxy](https://github.com/TencentBlueKing/bk-bcs/blob/master/docs/features/bcs-apiserver-proxy/bcs-apiserver-proxy.md)（默认） 和 kube-vip。
+```bash
+set -a
+VIP=192.168.1.1 # 按照实际的需求填写，避免冲突
+ENABLE_APISERVER_HA=true
+APISERVER_HA_MODE=bcs-apiserver-proxy
 set +a
 ```
 
@@ -138,11 +167,14 @@ bcs-ops 脚本工具集也支持安装 k8s 相关插件。多数的插件需要�
 
 ### csi
 
-安装的 k8s 组件由 `K8S_CSI` 环境变量决定，目前默认且只支持 `localpv`
+安装的 k8s 组件由 `K8S_CSI` 环境变量决定，默认为空，只支持 `localpv`
 
 #### localpv
 
+相关配置项，中控机启动前需要运行
 ```bash
+# 申明 CSI 组件 为 `localpv`
+K8S_CSI=localpv
 # localpv 挂载点，默认为${BK_HOME}/localpv
 LOCALPV_DIR=${LOCALPV_DIR:-${BK_HOME}/localpv}
 # 创建的 localpv 数量，默认为20个

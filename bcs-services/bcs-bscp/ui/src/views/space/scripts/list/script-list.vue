@@ -82,7 +82,7 @@
           <bk-table-column label="操作">
             <template #default="{ row }" width="180">
               <div class="action-btns">
-                <!-- <bk-button text theme="primary" @click="handleEditClick(row)">编辑</bk-button> -->
+                <bk-button text theme="primary" @click="handleEditClick(row)">编辑</bk-button>
                 <bk-button
                   text
                   theme="primary"
@@ -110,6 +110,7 @@ import { InfoBox, Message } from 'bkui-vue';
 import { Plus, Search } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../store/global';
+import useScriptStore from '../../../../store/script';
 import { getScriptList, getScriptTagList, deleteScript } from '../../../../api/script';
 import { IScriptItem, IScriptTagItem, IScriptListQuery } from '../../../../../types/script';
 import { datetimeFormat } from '../../../../utils/index';
@@ -118,6 +119,7 @@ import ScriptCited from './script-cited.vue';
 import TableEmpty from '../../../../components/table/table-empty.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const {versionListPageShouldOpenEdit } = storeToRefs(useScriptStore());
 const router = useRouter();
 
 const showCreateScript = ref(false);
@@ -141,7 +143,7 @@ watch(
   () => {
     refreshList();
     getTags();
-  }
+  },
 );
 
 onMounted(() => {
@@ -166,6 +168,9 @@ const getScripts = async () => {
   }
   const res = await getScriptList(spaceId.value, params);
   scriptsData.value = res.details;
+  scriptsData.value.forEach((item) => {
+    item.hook.spec.type = item.hook.spec.type.charAt(0).toUpperCase() + item.hook.spec.type.slice(1);
+  });
   pagination.value.count = res.count;
   scriptsLoading.value = false;
 };
@@ -190,10 +195,10 @@ const handleOpenCitedSlider = (id: number) => {
   showCiteSlider.value = true;
 };
 
-// const handleEditClick = (script: IScriptItem) => {
-//   router.push({ name: 'script-version-manage', params: { spaceId: spaceId.value, scriptId: script.hook.id } });
-//   versionListPageShouldOpenEdit.value = true;
-// };
+const handleEditClick = (script: IScriptItem) => {
+  router.push({ name: 'script-version-manage', params: { spaceId: spaceId.value, scriptId: script.hook.id } });
+  versionListPageShouldOpenEdit.value = true;
+};
 
 // 删除分组
 const handleDeleteScript = (script: IScriptItem) => {

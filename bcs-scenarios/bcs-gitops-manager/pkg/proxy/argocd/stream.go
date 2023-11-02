@@ -13,7 +13,6 @@
 package argocd
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -51,18 +50,19 @@ func (plugin *StreamPlugin) Init() error {
 	return nil
 }
 
-func (plugin *StreamPlugin) projectViewHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
+func (plugin *StreamPlugin) projectViewHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projects := r.URL.Query()["projects"]
 	if len(projects) == 0 {
-		return mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("query param 'projects' cannot be empty"))
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("query param 'projects' cannot be empty"))
 	}
 	for i := range projects {
 		projectName := projects[i]
-		_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
+		_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), projectName, iam.ProjectView)
 		if statusCode != http.StatusOK {
-			return mw.ReturnErrorResponse(statusCode,
+			return r, mw.ReturnErrorResponse(statusCode,
 				errors.Wrapf(err, "check project '%s' permission failed", projectName))
 		}
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }

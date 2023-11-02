@@ -11,7 +11,7 @@
           :class="['nav-item', { actived: route.meta.navModule === nav.module }]"
           :key="nav.id"
           :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }"
-        >
+          @click="handleNavClick(nav.id)">
           {{ nav.name }}
         </router-link>
       </div>
@@ -33,6 +33,12 @@
           <div class="space-name">
             <input readonly :value="crtSpaceText" />
             <AngleDown class="arrow-icon" />
+          </div>
+        </template>
+        <template #extension>
+          <div class="create-operation" @click="handleToCMDB">
+            <plus />
+            <div class="content">新建业务</div>
           </div>
         </template>
         <bk-option v-for="item in optionList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
@@ -88,7 +94,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { AngleDown, HelpFill, DownShape } from 'bkui-vue/lib/icon';
+import { AngleDown, HelpFill, DownShape, Plus } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../store/global';
 import useUserStore from '../store/user';
 import useTemplateStore from '../store/template';
@@ -110,9 +116,9 @@ const md = new MarkdownIt({
   typographer: true,
 });
 const navList = [
-  { id: 'service-mine', module: 'service', name: '服务管理' },
+  { id: 'service-all', module: 'service', name: '服务管理' },
   { id: 'groups-management', module: 'groups', name: '分组管理' },
-  { id: 'variables-management', module: 'variables', name: '变量管理' },
+  { id: 'variables-management', module: 'variables', name: '全局变量' },
   { id: 'templates-list', module: 'templates', name: '配置模板' },
   { id: 'script-list', module: 'scripts', name: '脚本管理' },
   { id: 'credentials-management', module: 'credentials', name: '服务密钥' },
@@ -137,6 +143,19 @@ watch(
     immediate: true,
   },
 );
+
+const handleNavClick = (navId: String) => {
+  if (navId === 'service-all') {
+    const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
+    if (lastAccessedServiceDetail) {
+      const detail = JSON.parse(lastAccessedServiceDetail);
+      if (detail.spaceId === spaceId.value) {
+        router.push({ name: 'service-config', params: { spaceId: detail.spaceId, appId: detail.appId } });
+        return;
+      };
+    };
+  };
+};
 
 const handleSpaceSearch = (searchStr: string) => {
   if (searchStr) {
@@ -241,6 +260,10 @@ Object.keys(module).forEach((path) => {
 });
 const handleLoginOut = () => {
   loginOut();
+};
+const handleToCMDB = () => {
+  // @ts-ignore
+  window.open(BK_CC_HOST); // eslint-disable-line no-undef
 };
 </script>
 
@@ -384,6 +407,20 @@ const handleLoginOut = () => {
   &:hover {
     background-color: #eaf3ff;
     color: #3a84ff;
+  }
+}
+.create-operation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  height: 33px;
+  padding: 0 12px;
+  width: 100%;
+  color: #2B353E;
+  span {
+    font-size: 16px;
+    margin-right: 3px;
   }
 }
 </style>

@@ -59,7 +59,7 @@ const props = withDefaults(
     currentVariables: () => [],
     currentLanguage: '',
     baseVariables: () => [],
-  }
+  },
 );
 
 const textDiffRef = ref();
@@ -76,7 +76,7 @@ watch(
   () => {
     updateModel();
     replaceDiffVariables();
-  }
+  },
 );
 
 watch(
@@ -84,7 +84,7 @@ watch(
   () => {
     updateModel();
     replaceDiffVariables();
-  }
+  },
 );
 
 watch(
@@ -92,7 +92,7 @@ watch(
   () => {
     updateModel();
     replaceDiffVariables();
-  }
+  },
 );
 
 onMounted(() => {
@@ -182,7 +182,7 @@ const replaceDiffVariables = () => {
     permissionDiffEditorHoverProvider = useDiffEditorVariableReplace(
       permissionEditor,
       props.currentVariables,
-      props.baseVariables
+      props.baseVariables,
     );
   }
 };
@@ -209,7 +209,7 @@ const syncCursor = (editorA: any, editorB: any) => {
     height: 100%;
     :deep(.monaco-editor) {
       .template-variable-item {
-        color: #1768ef;
+        color: #3A84FF;
         border: 1px solid #1768ef;
         cursor: pointer;
       }

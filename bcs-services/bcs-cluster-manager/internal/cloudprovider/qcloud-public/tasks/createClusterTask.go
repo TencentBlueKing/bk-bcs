@@ -14,7 +14,7 @@ package tasks
 
 import (
 	"context"
-	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/ghodss/yaml"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 
@@ -33,91 +32,100 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // as far as possible to keep every operation unit simple
 
 // generateClusterCIDRInfo cidr info
-func generateClusterCIDRInfo(cluster *proto.Cluster) *api.ClusterCIDRSettings {
+func generateClusterCIDRInfo(info *cloudprovider.CloudDependBasicInfo) (*api.ClusterCIDRSettings, error) {
 	cidrInfo := &api.ClusterCIDRSettings{
-		ClusterCIDR:          cluster.NetworkSettings.ClusterIPv4CIDR,
-		MaxNodePodNum:        uint64(cluster.NetworkSettings.MaxNodePodNum),
-		MaxClusterServiceNum: uint64(cluster.NetworkSettings.MaxServiceNum),
-		ServiceCIDR:          cluster.NetworkSettings.ServiceIPv4CIDR,
+		// 用于分配集群容器和服务 IP 的 CIDR，不得与 VPC CIDR 冲突，也不得与同 VPC 内其他集群 CIDR 冲突。
+		// 且网段范围必须在内网网段内，例如:10.1.0.0/14, 192.168.0.1/18,172.16.0.0/16。
+		ClusterCIDR:          info.Cluster.NetworkSettings.ClusterIPv4CIDR,
+		MaxNodePodNum:        uint64(info.Cluster.NetworkSettings.MaxNodePodNum),
+		MaxClusterServiceNum: uint64(info.Cluster.NetworkSettings.MaxServiceNum),
+		ServiceCIDR:          info.Cluster.NetworkSettings.ServiceIPv4CIDR,
 	}
 
-	return cidrInfo
-}
+	// vpc-cni模式下设置
+	if info.Cluster.GetClusterAdvanceSettings().GetNetworkType() == icommon.VpcCni {
+		if info.Cluster.GetNetworkSettings().GetClaimExpiredSeconds() > 0 {
+			cidrInfo.ClaimExpiredSeconds = info.Cluster.GetNetworkSettings().GetClaimExpiredSeconds()
+		}
 
-// generateTags tags info
-func generateTags(bizID int64, operator string) map[string]string {
-	cli := cmdb.GetCmdbClient()
-	if cli == nil {
-		return nil
+		subnetIds := make([]string, 0)
+		if len(info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew()) > 0 {
+			// 各个可用区自动分配指定数量的子网
+			ids, err := business.AllocateClusterVpcCniSubnets(context.Background(), info.Cluster.ClusterID, info.Cluster.VpcID,
+				info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), info.CmOption)
+			if err != nil {
+				return nil, err
+			}
+
+			subnetIds = append(subnetIds, ids...)
+		}
+
+		if len(info.Cluster.GetNetworkSettings().GetSubnetSource().GetExisted().GetIds()) > 0 {
+			subnetIds = append(subnetIds, info.Cluster.GetNetworkSettings().GetSubnetSource().GetExisted().GetIds()...)
+		}
+
+		cidrInfo.EniSubnetIds = subnetIds
 	}
 
-	// get internal cloud tags
-	tags, err := cli.GetCloudTags(cmdb.BizInfo{BizID: bizID}, operator)
-	if err != nil {
-		blog.Errorf("TKE cluster generateTags failed: %v", err)
-		return nil
-	}
-
-	return tags
+	return cidrInfo, nil
 }
 
 // generateClusterBasicInfo cluster basic info
-func generateClusterBasicInfo(cluster *proto.Cluster, imageID, operator string) *api.ClusterBasicSettings {
+func generateClusterBasicInfo(cluster *proto.Cluster) *api.ClusterBasicSettings {
 	basicInfo := &api.ClusterBasicSettings{
-		ClusterOS:                 imageID,
-		ClusterVersion:            cluster.ClusterBasicSettings.Version,
-		ClusterName:               cluster.ClusterID,
-		VpcID:                     cluster.VpcID,
-		SubnetID:                  cluster.ClusterBasicSettings.SubnetID,
-		ClusterLevel:              cluster.ClusterBasicSettings.ClusterLevel,
-		IsAutoUpgradeClusterLevel: cluster.ClusterBasicSettings.IsAutoUpgradeClusterLevel,
-	}
-
-	basicInfo.TagSpecification = make([]*api.TagSpecification, 0)
-	// build qcloud tag info
-	if len(cluster.ClusterBasicSettings.ClusterTags) > 0 {
-		tags := make([]*api.Tag, 0)
-		for k, v := range cluster.ClusterBasicSettings.ClusterTags {
-			tags = append(tags, &api.Tag{
-				Key:   common.StringPtr(k),
-				Value: common.StringPtr(v),
-			})
-		}
-		basicInfo.TagSpecification = append(basicInfo.TagSpecification, &api.TagSpecification{
-			ResourceType: "cluster",
-			Tags:         tags,
-		})
-	}
-
-	// internal cloud tags
-	if options.GetEditionInfo().IsInnerEdition() {
-		// according to cloud different realization to adapt
-		bizID, _ := strconv.Atoi(cluster.BusinessID)
-		cloudTags := generateTags(int64(bizID), operator)
-		tags := make([]*api.Tag, 0)
-		if len(cloudTags) > 0 {
-			for k, v := range cloudTags {
-				tags = append(tags, &api.Tag{
-					Key:   common.StringPtr(k),
-					Value: common.StringPtr(v),
-				})
+		// 集群操作系统，支持设置公共镜像(字段传相应镜像Name)和自定义镜像(字段传相应镜像ID)
+		// 详情参考：https://cloud.tencent.com/document/product/457/68289
+		ClusterOS:          cluster.ClusterBasicSettings.OS,
+		ClusterVersion:     cluster.ClusterBasicSettings.Version,
+		ClusterName:        cluster.ClusterID,
+		ClusterDescription: cluster.GetDescription(),
+		VpcID:              cluster.VpcID,
+		ProjectID: func() int64 {
+			extra := cluster.GetExtraInfo()
+			id, ok := extra[icommon.CloudProjectId]
+			if ok {
+				projectId, _ := strconv.Atoi(id)
+				return int64(projectId)
 			}
 
-			basicInfo.TagSpecification = append(basicInfo.TagSpecification, &api.TagSpecification{
-				ResourceType: "cluster",
-				Tags:         tags,
-			})
-		}
+			return 0
+		}(),
+		TagSpecification: func() []*api.TagSpecification {
+			// build qcloud tag info
+			if len(cluster.ClusterBasicSettings.ClusterTags) > 0 {
+				var (
+					cloudClusterTags = make([]*api.TagSpecification, 0)
+					tags             = make([]*api.Tag, 0)
+				)
+
+				for k, v := range cluster.ClusterBasicSettings.ClusterTags {
+					tags = append(tags, &api.Tag{
+						Key:   common.StringPtr(k),
+						Value: common.StringPtr(v),
+					})
+				}
+				cloudClusterTags = append(cloudClusterTags, &api.TagSpecification{
+					ResourceType: icommon.TagClusterResourceKey,
+					Tags:         tags,
+				})
+
+				return cloudClusterTags
+			}
+
+			return nil
+		}(),
+		// 当选择Cilium Overlay网络插件时，TKE会从该子网获取2个IP用来创建内网负载均衡
+		SubnetID: cluster.ClusterBasicSettings.SubnetID,
+		// 托管集群等级 & 是否自动变更集群等级
+		ClusterLevel:              cluster.ClusterBasicSettings.ClusterLevel,
+		IsAutoUpgradeClusterLevel: cluster.ClusterBasicSettings.IsAutoUpgradeClusterLevel,
 	}
 
 	return basicInfo
@@ -126,21 +134,25 @@ func generateClusterBasicInfo(cluster *proto.Cluster, imageID, operator string) 
 // generateClusterAdvancedInfo cluster advanced info
 func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSettings {
 	advancedInfo := &api.ClusterAdvancedSettings{
-		IPVS:               cluster.ClusterAdvanceSettings.IPVS,
-		ContainerRuntime:   cluster.ClusterAdvanceSettings.ContainerRuntime,
+		IPVS:             cluster.ClusterAdvanceSettings.IPVS,
+		ContainerRuntime: cluster.ClusterAdvanceSettings.ContainerRuntime,
+		// 集群网络类型（包括GR(全局路由)和VPC-CNI两种模式，默认为GR
+		NetworkType: cluster.ClusterAdvanceSettings.NetworkType,
+		ExtraArgs:   &api.ClusterExtraArgs{},
+		IsNonStaticIpMode: func() bool {
+			if cluster.GetNetworkSettings().GetIsStaticIpMode() {
+				return false
+			}
+
+			return true
+		}(),
+		VpcCniType:         api.TKERouteEni,
 		RuntimeVersion:     cluster.ClusterAdvanceSettings.RuntimeVersion,
-		ExtraArgs:          &api.ClusterExtraArgs{},
-		NetworkType:        cluster.ClusterAdvanceSettings.NetworkType,
 		DeletionProtection: cluster.ClusterAdvanceSettings.DeletionProtection,
+		AuditEnabled:       cluster.ClusterAdvanceSettings.AuditEnabled,
 	}
 
-	if options.GetEditionInfo().IsInnerEdition() {
-		advancedInfo.AuditEnabled = true
-	} else {
-		advancedInfo.AuditEnabled = cluster.ClusterAdvanceSettings.AuditEnabled
-	}
-
-	// extraArgs
+	// cluster control component extraArgs
 	if len(cluster.ClusterAdvanceSettings.ExtraArgs) > 0 {
 		if apiserver, ok := cluster.ClusterAdvanceSettings.ExtraArgs[icommon.KubeAPIServer]; ok {
 			paras := strings.Split(apiserver, ";")
@@ -166,65 +178,11 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 	return advancedInfo
 }
 
-// generateInstanceAdvanceInfo instance advanced info
-func generateInstanceAdvanceInfo(cluster *proto.Cluster,
-	options *business.NodeAdvancedOptions) *api.InstanceAdvancedSettings {
-	if cluster.NodeSettings.MountTarget == "" {
-		cluster.NodeSettings.MountTarget = icommon.MountTarget
-	}
-	if cluster.NodeSettings.DockerGraphPath == "" {
-		cluster.NodeSettings.DockerGraphPath = icommon.DockerGraphPath
-	}
-
-	// advanced instance setting
-	advanceInfo := &api.InstanceAdvancedSettings{
-		MountTarget:     cluster.NodeSettings.MountTarget,
-		DockerGraphPath: cluster.NodeSettings.DockerGraphPath,
-		Unschedulable: func() *int64 {
-			if options != nil && options.NodeScheduler {
-				return common.Int64Ptr(0)
-			}
-
-			return common.Int64Ptr(int64(cluster.NodeSettings.UnSchedulable))
-		}(),
-	}
-
-	// node common labels
-	if len(business.ClusterCommonLabels(cluster)) > 0 {
-		for key, value := range business.ClusterCommonLabels(cluster) {
-			advanceInfo.Labels = append(advanceInfo.Labels, &api.KeyValue{
-				Name:  key,
-				Value: value,
-			})
-		}
-	}
-
-	// cluster node common labels
-	if len(cluster.NodeSettings.Labels) > 0 {
-		for key, value := range cluster.NodeSettings.Labels {
-			advanceInfo.Labels = append(advanceInfo.Labels, &api.KeyValue{
-				Name:  key,
-				Value: value,
-			})
-		}
-	}
-
-	// Kubelet start params
-	if len(cluster.NodeSettings.ExtraArgs) > 0 {
-		advanceInfo.ExtraArgs = &api.InstanceExtraArgs{}
-
-		if kubelet, ok := cluster.NodeSettings.ExtraArgs[icommon.Kubelet]; ok {
-			paras := strings.Split(kubelet, ";")
-			advanceInfo.ExtraArgs.Kubelet = paras
-		}
-	}
-
-	return advanceInfo
-}
+// 独立集群创建集群请求
 
 // handleClusterMasterNodes handle cluster master nodes
 func handleClusterMasterNodes(ctx context.Context, req *api.CreateClusterRequest,
-	info *cloudprovider.CloudDependBasicInfo, passwd string, instanceIDs []string) error {
+	info *cloudprovider.CloudDependBasicInfo, instanceIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	// filter nodes data disks
@@ -244,30 +202,36 @@ func handleClusterMasterNodes(ctx context.Context, req *api.CreateClusterRequest
 	// single disk & many disk
 	if len(filterDisk.SingleDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
-			generateMasterExistedInstance(api.MASTER_ETCD.String(), passwd, filterDisk.SingleDiskInstance, false, info.Cluster))
+			generateMasterExistedInstance(api.MASTER_ETCD.String(), filterDisk.SingleDiskInstance, false, info.Cluster))
 	}
 	if len(filterDisk.ManyDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
-			generateMasterExistedInstance(api.MASTER_ETCD.String(), passwd, filterDisk.ManyDiskInstance, true, info.Cluster))
+			generateMasterExistedInstance(api.MASTER_ETCD.String(), filterDisk.ManyDiskInstance, true, info.Cluster))
 	}
 
 	return nil
 }
 
 // generateMasterExistedInstance cluster master setting
-func generateMasterExistedInstance(role, passwd string, instanceIDs []string, manyDisk bool,
+func generateMasterExistedInstance(role string, instanceIDs []string, manyDisk bool,
 	cls *proto.Cluster) *api.ExistedInstancesForNode {
 	existedInstance := &api.ExistedInstancesForNode{
 		NodeRole: role,
 		ExistedInstancesPara: &api.ExistedInstancesPara{
-			InstanceIDs:              instanceIDs,
-			LoginSettings:            &api.LoginSettings{Password: passwd},
-			InstanceAdvancedSettings: generateInstanceAdvanceInfo(cls, nil),
+			InstanceIDs: instanceIDs,
+			LoginSettings: func() *api.LoginSettings {
+				return &api.LoginSettings{
+					Password: cls.GetNodeSettings().InitLoginPassword,
+					KeyIds:   strings.Split(cls.GetNodeSettings().GetKeyPair().KeyID, ","),
+				}
+			}(),
+			InstanceAdvancedSettings: business.GenerateInstanceAdvanceInfo(cls, nil),
+			SecurityGroupIds:         nil,
 		},
 	}
 
 	// instance advanced setting override
-	existedInstance.InstanceAdvancedSettingsOverride = generateInstanceAdvanceInfo(cls, nil)
+	existedInstance.InstanceAdvancedSettingsOverride = business.GenerateInstanceAdvanceInfo(cls, nil)
 	if manyDisk {
 		existedInstance.InstanceAdvancedSettingsOverride.DataDisks = []api.DataDetailDisk{api.DefaultDataDisk}
 	}
@@ -277,7 +241,7 @@ func generateMasterExistedInstance(role, passwd string, instanceIDs []string, ma
 
 // handleClusterWorkerNodes handle cluster worker nodes
 func handleClusterWorkerNodes(ctx context.Context, req *api.CreateClusterRequest,
-	info *cloudprovider.CloudDependBasicInfo, passwd string, instanceIDs []string, operator string) error {
+	info *cloudprovider.CloudDependBasicInfo, instanceIDs []string, operator string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	if len(instanceIDs) == 0 {
@@ -302,13 +266,13 @@ func handleClusterWorkerNodes(ctx context.Context, req *api.CreateClusterRequest
 	// single disk
 	if len(filterDisk.SingleDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
-			generateWorkerExistedInstance(info, filterDisk.SingleDiskInstance, filterDisk.SingleDiskInstanceIP, passwd,
+			generateWorkerExistedInstance(info, filterDisk.SingleDiskInstance, filterDisk.SingleDiskInstanceIP,
 				false, operator))
 	}
 	// many disk
 	if len(filterDisk.ManyDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
-			generateWorkerExistedInstance(info, filterDisk.ManyDiskInstance, filterDisk.ManyDiskInstanceIP, passwd,
+			generateWorkerExistedInstance(info, filterDisk.ManyDiskInstance, filterDisk.ManyDiskInstanceIP,
 				true, operator))
 	}
 
@@ -317,18 +281,24 @@ func handleClusterWorkerNodes(ctx context.Context, req *api.CreateClusterRequest
 
 // generateWorkerExistedInstance cluster worker setting
 func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nodeIDs, nodeIPs []string,
-	passwd string, manyDisk bool, operator string) *api.ExistedInstancesForNode {
+	manyDisk bool, operator string) *api.ExistedInstancesForNode {
 	existedInstance := &api.ExistedInstancesForNode{
 		NodeRole: api.WORKER.String(),
 		ExistedInstancesPara: &api.ExistedInstancesPara{
-			InstanceIDs:   nodeIDs,
-			LoginSettings: &api.LoginSettings{Password: passwd},
+			InstanceIDs: nodeIDs,
+			LoginSettings: func() *api.LoginSettings {
+				return &api.LoginSettings{
+					Password: info.Cluster.GetNodeSettings().InitLoginPassword,
+					KeyIds:   strings.Split(info.Cluster.GetNodeSettings().GetKeyPair().KeyID, ","),
+				}
+			}(),
 			InstanceAdvancedSettings: business.GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
 				Cluster:  info.Cluster,
 				IPList:   strings.Join(nodeIPs, ","),
 				Operator: operator,
 				Render:   true,
 			}, &business.NodeAdvancedOptions{NodeScheduler: true}),
+			SecurityGroupIds: nil,
 		},
 	}
 
@@ -349,7 +319,7 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 }
 
 // disksToCVMDisks transfer cvm disk
-func disksToCVMDisks(disks []*proto.DataDisk) []*cvm.DataDisk {
+func disksToCVMDisks(disks []*proto.CloudDataDisk) []*cvm.DataDisk {
 	if len(disks) == 0 {
 		return nil
 	}
@@ -366,218 +336,169 @@ func disksToCVMDisks(disks []*proto.DataDisk) []*cvm.DataDisk {
 	return cvmDisks
 }
 
-// generateRunInstance run instances
-func generateRunInstance(cluster *proto.Cluster, role, passwd string) *api.RunInstancesForNode {
+// generateNewRunInstance run instances by instance template
+func generateNewRunInstance(info *cloudprovider.CloudDependBasicInfo, role string,
+	templates []*proto.InstanceTemplateConfig, operator string) *api.RunInstancesForNode {
 	runInstance := &api.RunInstancesForNode{
 		NodeRole: role,
 	}
 
 	// create instance template
-	for i := range cluster.Template {
-		systemDiskSize, _ := utils.StringToInt(cluster.Template[i].SystemDisk.DiskSize)
-		req := &cvm.RunInstancesRequest{
-			Placement: &cvm.Placement{
-				Zone: common.StringPtr(cluster.Template[i].Zone),
-			},
-			InstanceType: common.StringPtr(cluster.Template[i].InstanceType),
-			ImageId:      common.StringPtr(cluster.Template[i].ImageInfo.ImageID),
-			SystemDisk: &cvm.SystemDisk{
-				DiskType: common.StringPtr(cluster.Template[i].SystemDisk.DiskType),
-				DiskSize: common.Int64Ptr(int64(systemDiskSize)),
-			},
-			DataDisks: disksToCVMDisks(cluster.Template[i].DataDisks),
-			VirtualPrivateCloud: &cvm.VirtualPrivateCloud{
-				VpcId:    common.StringPtr(cluster.Template[i].VpcID),
-				SubnetId: common.StringPtr(cluster.Template[i].SubnetID),
-			},
+	for i := range templates {
+		createInsRequest := cvm.NewRunInstancesRequest()
 
-			InstanceCount: common.Int64Ptr(int64(cluster.Template[i].ApplyNum)),
-			LoginSettings: &cvm.LoginSettings{
-				Password: common.StringPtr(passwd),
-			},
+		// 实例计费类型: 默认值 POSTPAID_BY_HOUR
+		createInsRequest.InstanceChargeType = common.StringPtr(templates[i].InstanceChargeType)
+
+		createInsRequest.Placement = &cvm.Placement{
+			Zone: common.StringPtr(templates[i].GetZone()),
+			ProjectId: func() *int64 {
+				extra := info.Cluster.GetExtraInfo()
+				id, ok := extra[icommon.CloudProjectId]
+				if ok {
+					projectId, _ := strconv.Atoi(id)
+					return common.Int64Ptr(int64(projectId))
+				}
+
+				return nil
+			}(),
 		}
 
-		requestStr := req.ToJsonString()
+		createInsRequest.InstanceType = common.StringPtr(templates[i].GetInstanceType())
+		// createInsRequest.ImageId = nil
+
+		systemDiskSize, _ := utils.StringToInt(templates[i].GetSystemDisk().GetDiskSize())
+		createInsRequest.SystemDisk = &cvm.SystemDisk{
+			DiskType: common.StringPtr(templates[i].GetSystemDisk().GetDiskType()),
+			DiskSize: common.Int64Ptr(int64(systemDiskSize)),
+		}
+		createInsRequest.DataDisks = disksToCVMDisks(info.Cluster.Template[i].CloudDataDisks)
+
+		createInsRequest.VirtualPrivateCloud = &cvm.VirtualPrivateCloud{
+			VpcId:    common.StringPtr(templates[i].VpcID),
+			SubnetId: common.StringPtr(templates[i].SubnetID),
+		}
+
+		/* 公网带宽相关信息设置
+		createInsRequest.InternetAccessible = &cvm.InternetAccessible{
+			InternetChargeType:      nil,
+			InternetMaxBandwidthOut: nil,
+			PublicIpAssigned:        nil,
+			BandwidthPackageId:      nil,
+		}
+		*/
+		// createInsRequest.EnhancedService = nil
+
+		createInsRequest.InstanceCount = common.Int64Ptr(int64(templates[i].GetApplyNum()))
+		createInsRequest.LoginSettings = &cvm.LoginSettings{
+			Password: func() *string {
+				if len(info.Cluster.GetNodeSettings().GetInitLoginPassword()) > 0 {
+					return common.StringPtr(info.Cluster.GetNodeSettings().GetInitLoginPassword())
+				}
+				return nil
+			}(),
+			KeyIds: func() []*string {
+				if len(info.Cluster.GetNodeSettings().GetKeyPair().GetKeyID()) > 0 {
+					keyIds := strings.Split(info.Cluster.GetNodeSettings().GetKeyPair().GetKeyID(), ",")
+					return common.StringPtrs(keyIds)
+				}
+
+				return nil
+			}(),
+		}
+		createInsRequest.SecurityGroupIds = common.StringPtrs(templates[i].GetSecurityGroupIDs())
+
+		requestStr := createInsRequest.ToJsonString()
 		runInstance.RunInstancesPara = append(runInstance.RunInstancesPara, common.StringPtr(requestStr))
+
+		runInstance.InstanceAdvancedSettingsOverrides = append(runInstance.InstanceAdvancedSettingsOverrides,
+			business.GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
+				Cluster:  info.Cluster,
+				IPList:   "",
+				Operator: operator,
+				Render:   true,
+			}, &business.NodeAdvancedOptions{
+				NodeScheduler: true,
+				Disks:         templates[i].GetCloudDataDisks(),
+			}))
 	}
 
 	return runInstance
 }
 
-// CreateClusterShieldAlarmTask call alarm interface to shield alarm
-func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
-	start := time.Now()
-
-	// get task and task current step
-	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
-	if err != nil {
-		return err
-	}
-	// previous step successful when retry task
-	if step == nil {
-		blog.Infof("CreateClusterShieldAlarmTask[%s]: current step[%s] successful and skip", taskID, stepName)
-		return nil
-	}
-	blog.Infof("CreateClusterShieldAlarmTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
-		taskID, taskID, stepName, step.System, step.Status, step.Params)
-
-	// step login started here
-	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	nodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
-
-	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
-	if err != nil {
-		blog.Errorf("CreateClusterShieldAlarmTask[%s]: get cluster for %s failed", taskID, clusterID)
-		retErr := fmt.Errorf("get cluster information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-
-	// masterIP list
-	masterIPs := cloudprovider.GetClusterMasterIPList(cluster)
-
-	allIPs := make([]string, 0)
-	if len(masterIPs) > 0 {
-		allIPs = append(allIPs, masterIPs...)
-	}
-	if len(nodes) > 0 {
-		allIPs = append(allIPs, nodes...)
-	}
-	blog.Infof("CreateClusterShieldAlarmTask[%s] ShieldHostAlarmConfig: %+v", taskID, allIPs)
-
-	if len(allIPs) > 0 {
-		err = cloudprovider.ShieldHostAlarm(ctx, cluster.BusinessID, masterIPs)
-		if err != nil {
-			blog.Errorf("CreateClusterShieldAlarmTask[%s] ShieldHostAlarmConfig failed: %v", taskID, err)
-		} else {
-			blog.Infof("CreateClusterShieldAlarmTask[%s] ShieldHostAlarmConfig successful", taskID)
-		}
-	}
-
-	// update step
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("CreateClusterShieldAlarmTask[%s] task %s %s update to storage fatal",
-			taskID, taskID, stepName)
-		return err
-	}
-	return nil
-}
-
-type clusterInfo struct {
-	systemID  string
-	masterIPs []string
-	masterIDs []string
-	nodeIPs   []string
-	nodeIDs   []string
-}
-
-// createTkeCluster create tke cluster
-func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
-	nodeIPs []string, passwd, operator string) (*clusterInfo, error) {
+// generateCreateClusterRequest 独立集群 or 托管集群
+func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	masterIps, workerIps []string, operator string) (*api.CreateClusterRequest, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-
-	var (
-		err       error
-		masterIDs []string
-		nodeIDs   []string
-	)
-
-	// get qcloud client
-	tkeCli, err := api.NewTkeClient(info.CmOption)
-	if err != nil {
-		blog.Errorf("createTkeCluster[%s]: get tke client for cluster[%s] failed, %s",
-			taskID, info.Cluster.ClusterID, err.Error())
-		retErr := fmt.Errorf("get cloud tke client err, %s", err.Error())
-		return nil, retErr
-	}
-
-	// image info
-	imageID, err := transImageNameToImageID(info.CmOption, info.Cluster.ClusterBasicSettings.OS)
-	if err != nil {
-		blog.Errorf("createTkeCluster[%s]: transImageNameToImageID for cluster[%s] failed, %v",
-			taskID, info.Cluster.ClusterID, err)
-		retErr := fmt.Errorf("createTkeCluster transImageNameToImageID err, %s", err)
-		return nil, retErr
-	}
-
-	// passwd
-	if passwd == "" {
-		passwd = utils.BuildInstancePwd()
-	}
-
-	// masterIP list
-	masterIPs := cloudprovider.GetClusterMasterIPList(info.Cluster)
-	if len(masterIPs) > 0 {
-		masterNodes, errTrans := transIPsToInstances(&cloudprovider.ListNodesOption{
-			Common:       info.CmOption,
-			ClusterVPCID: info.Cluster.VpcID,
-		}, masterIPs)
-		if errTrans != nil || len(masterNodes) == 0 {
-			blog.Errorf("createTkeCluster[%s]: transMasterIPs for cluster[%s] failed: %v",
-				taskID, info.Cluster.ClusterID, errTrans)
-			retErr := fmt.Errorf("createTkeCluster transMasterIPs err, %s", errTrans)
-			return nil, retErr
-		}
-
-		for i := range masterNodes {
-			masterIDs = append(masterIDs, masterNodes[i].NodeID)
-		}
-	}
-
-	// handle nodeIPs if exist
-	if len(nodeIPs) > 0 {
-		nodes, errTrans := transIPsToInstances(&cloudprovider.ListNodesOption{
-			Common:       info.CmOption,
-			ClusterVPCID: info.Cluster.VpcID,
-		}, nodeIPs)
-		if errTrans != nil || len(nodes) == 0 {
-			blog.Errorf("createTkeCluster[%s] transNodeIPs for cluster[%s] failed: %v",
-				taskID, info.Cluster.ClusterID, errTrans)
-			retErr := fmt.Errorf("createTkeCluster transNodeIPs err, %s", errTrans)
-			return nil, retErr
-		}
-
-		for i := range nodes {
-			nodeIDs = append(nodeIDs, nodes[i].NodeID)
-		}
-	}
 
 	// cluster create request
 	req := &api.CreateClusterRequest{
-		AddNodeMode:     info.Cluster.AutoGenerateMasterNodes,
-		Region:          info.Cluster.Region,
-		ClusterType:     info.Cluster.ManageType,
-		ClusterCIDR:     generateClusterCIDRInfo(info.Cluster),
-		ClusterBasic:    generateClusterBasicInfo(info.Cluster, imageID, operator),
+		// 新增节点 or 使用已有节点
+		AddNodeMode: info.Cluster.AutoGenerateMasterNodes,
+
+		Region:      info.Cluster.Region,
+		ClusterType: info.Cluster.ManageType,
+
+		ClusterBasic:    generateClusterBasicInfo(info.Cluster),
 		ClusterAdvanced: generateClusterAdvancedInfo(info.Cluster),
-		InstanceAdvanced: business.GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
-			Cluster:  info.Cluster,
-			IPList:   strings.Join(nodeIPs, ","),
-			Operator: operator,
-			Render:   true,
-		}, &business.NodeAdvancedOptions{NodeScheduler: true}),
-		ExistedInstancesForNode: nil,
-		RunInstancesForNode:     nil,
+
+		/*
+			InstanceAdvanced: business.GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
+				Cluster:  info.Cluster,
+				IPList:   strings.Join(nodeIPs, ","),
+				Operator: operator,
+				Render:   true,
+			}, &business.NodeAdvancedOptions{NodeScheduler: true}),
+		*/
+
+		ExistedInstancesForNode: make([]*api.ExistedInstancesForNode, 0),
+		RunInstancesForNode:     make([]*api.RunInstancesForNode, 0),
 	}
 
-	// 独立集群 和 托管集群
+	// network info
+	cidr, err := generateClusterCIDRInfo(info)
+	if err != nil {
+		return nil, err
+	}
+	req.ClusterCIDR = cidr
+
 	switch info.Cluster.ManageType {
 	case icommon.ClusterManageTypeIndependent:
+		// 新增节点模式
 		if req.AddNodeMode {
-			req.RunInstancesForNode = []*api.RunInstancesForNode{
-				generateRunInstance(info.Cluster, api.MASTER_ETCD.String(), passwd),
-			}
-		} else {
-			err = handleClusterMasterNodes(ctx, req, info, passwd, masterIDs)
+			masterNodesTpl, workerNodesTpl := business.GetMasterNodeTemplateConfig(info.Cluster.Template)
+
+			// master && worker nodes
+			req.RunInstancesForNode = append(req.RunInstancesForNode,
+				generateNewRunInstance(info, api.MASTER_ETCD.String(), masterNodesTpl, operator))
+
+			req.RunInstancesForNode = append(req.RunInstancesForNode,
+				generateNewRunInstance(info, api.WORKER.String(), workerNodesTpl, operator))
+
+			return req, nil
+		}
+		// 使用已有节点模式
+		masterIds, err := trans2InsIdByInsIp(masterIps, info.CmOption)
+		if err != nil {
+			blog.Errorf("generateIndependentClusterRequest[%s] trans2InsIdByInsIp masterIps failed: %v", taskID, err)
+			return nil, err
+		}
+		err = handleClusterMasterNodes(ctx, req, info, masterIds)
+		if err != nil {
+			blog.Errorf("createTkeCluster[%s] handleClusterMasterNodes for cluster[%s] failed: %v",
+				taskID, info.Cluster.ClusterID, err)
+			return nil, err
+		}
+
+		// 节点:  使用已存在节点 / 也可能是通过自动生产
+		if len(workerIps) > 0 {
+			workerIds, err := trans2InsIdByInsIp(workerIps, info.CmOption)
 			if err != nil {
-				blog.Errorf("createTkeCluster[%s] handleClusterMasterNodes for cluster[%s] failed: %v",
-					taskID, info.Cluster.ClusterID, err)
+				blog.Errorf("generateIndependentClusterRequest[%s] trans2InsIdByInsIp workerIps failed: %v", taskID, err)
 				return nil, err
 			}
 
-			err = handleClusterWorkerNodes(ctx, req, info, passwd, nodeIDs, operator)
+			err = handleClusterWorkerNodes(ctx, req, info, workerIds, operator)
 			if err != nil {
 				blog.Errorf("createTkeCluster[%s] handleClusterWorkerNodes for cluster[%s] failed: %v",
 					taskID, info.Cluster.ClusterID, err)
@@ -585,66 +506,132 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 			}
 		}
 	case icommon.ClusterManageTypeManaged:
+		// 新增节点模式
 		if req.AddNodeMode {
-			req.RunInstancesForNode = []*api.RunInstancesForNode{
-				generateRunInstance(info.Cluster, api.WORKER.String(), passwd),
-			}
-		} else {
-			err = handleClusterWorkerNodes(ctx, req, info, passwd, nodeIDs, operator)
+			_, workerNodesTpl := business.GetMasterNodeTemplateConfig(info.Cluster.Template)
+
+			// worker nodes
+			req.RunInstancesForNode = append(req.RunInstancesForNode,
+				generateNewRunInstance(info, api.WORKER.String(), workerNodesTpl, operator))
+
+			return req, nil
+		}
+
+		// 节点:  使用已存在节点
+		if len(workerIps) > 0 {
+			workerIds, err := trans2InsIdByInsIp(workerIps, info.CmOption)
 			if err != nil {
-				blog.Errorf("createTkeCluster[%s] createClusterReq for cluster[%s] failed: %v",
+				blog.Errorf("generateIndependentClusterRequest[%s] trans2InsIdByInsIp workerIps failed: %v", taskID, err)
+				return nil, err
+			}
+
+			err = handleClusterWorkerNodes(ctx, req, info, workerIds, operator)
+			if err != nil {
+				blog.Errorf("createTkeCluster[%s] handleClusterWorkerNodes for cluster[%s] failed: %v",
 					taskID, info.Cluster.ClusterID, err)
 				return nil, err
 			}
 		}
 	default:
-		return nil, fmt.Errorf("createTkeCluster[%s] not support manageType[%s]", taskID, info.Cluster.ManageType)
+		return nil, fmt.Errorf("generateCreateClusterRequest[%s] not supported clusterType[%s]",
+			taskID, info.Cluster.ManageType)
+	}
+
+	// handle default addon parameters
+	// req.Addons = handleTkeDefaultExtensionAddons(ctx, info.CmOption)
+
+	return req, nil
+}
+
+func trans2InsIdByInsIp(ips []string, opt *cloudprovider.CommonOption) ([]string, error) {
+	nodes, err := business.ListNodesByIP(ips, &cloudprovider.ListNodesOption{
+		Common: opt,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	instanceIds := make([]string, 0)
+	for i := range nodes {
+		instanceIds = append(instanceIds, nodes[i].NodeID)
+	}
+	return instanceIds, nil
+}
+
+// createCluster check cluster if exist, create cluster when not exist
+func createCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	request *api.CreateClusterRequest, clsId string) (string, error) {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	tkeCli, err := api.NewTkeClient(info.CmOption)
+	if err != nil {
+		blog.Errorf("createCluster[%s]: get tke client for cluster[%s] failed, %s",
+			taskID, info.Cluster.ClusterID, err.Error())
+		retErr := fmt.Errorf("get cloud tke client err, %s", err.Error())
+		return "", retErr
+	}
+
+	if clsId != "" {
+		// check clusterId if exist in qcloud
+		tkeCluster, errGet := tkeCli.GetTKECluster(clsId)
+		if errGet != nil {
+			blog.Errorf("createCluster[%s] GetTKECluster[%s] failed, %s",
+				taskID, info.Cluster.ClusterID, errGet.Error())
+			retErr := fmt.Errorf("call GetTKECluster[%s] api err, %s", info.Cluster.ClusterID, errGet.Error())
+			return "", retErr
+		}
+		return *tkeCluster.ClusterId, nil
+	}
+
+	resp, errCreate := tkeCli.CreateTKECluster(request)
+	if errCreate != nil {
+		blog.Errorf("createCluster[%s] call CreateTKECluster[%s] failed, %s",
+			taskID, info.Cluster.ClusterID, errCreate.Error())
+		retErr := fmt.Errorf("call CreateTKECluster[%s] api err, %s", info.Cluster.ClusterID, errCreate.Error())
+		return "", retErr
+	}
+	blog.Infof("createCluster[%s] CreateTKECluster[%s] successful", taskID, info.Cluster.ClusterID)
+
+	return resp.ClusterID, nil
+}
+
+// createTkeCluster create tke cluster
+func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
+	masterIps []string, workerIps []string, operator string) (string, error) {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	// 分别操作 独立集群 和 托管集群
+	req, err := generateCreateClusterRequest(ctx, info, masterIps, workerIps, operator)
+	if err != nil {
+		blog.Errorf("createTkeCluster[%s] generateCreateClusterRequest failed: %v", taskID, err)
+		return "", err
 	}
 
 	// handle default addon parameters
 	req.Addons = handleTkeDefaultExtensionAddons(ctx, info.CmOption)
 
-	// check cluster if exist
-	systemID := info.Cluster.SystemID
-	if systemID != "" {
-		tkeCluster, errGet := tkeCli.GetTKECluster(info.Cluster.SystemID)
-		if errGet != nil {
-			blog.Errorf("createTkeCluster[%s] GetTKECluster[%s] failed, %s",
-				taskID, info.Cluster.ClusterID, errGet.Error())
-			retErr := fmt.Errorf("call GetTKECluster[%s] api err, %s", info.Cluster.ClusterID, errGet.Error())
-			return nil, retErr
-		}
-		systemID = *tkeCluster.ClusterId
-	} else {
-		resp, errCreate := tkeCli.CreateTKECluster(req)
-		if errCreate != nil {
-			blog.Errorf("createTkeCluster[%s] call CreateTKECluster[%s] failed, %s",
-				taskID, info.Cluster.ClusterID, errCreate.Error())
-			retErr := fmt.Errorf("call CreateTKECluster[%s] api err, %s", info.Cluster.ClusterID, errCreate.Error())
-			return nil, retErr
-		}
-		blog.Infof("createTkeCluster[%s] CreateTKECluster[%s] successful", taskID, info.Cluster.ClusterID)
-
-		// update cluster systemID
-		err = updateClusterSystemID(info.Cluster.ClusterID, resp.ClusterID)
-		if err != nil {
-			blog.Errorf("createTkeCluster[%s] updateClusterSystemID[%s] failed %s",
-				taskID, info.Cluster.ClusterID, err.Error())
-			retErr := fmt.Errorf("call CreateTKECluster updateClusterSystemID[%s] api err: %s",
-				info.Cluster.ClusterID, err.Error())
-			return nil, retErr
-		}
-		blog.Infof("createTkeCluster[%s] call CreateTKECluster updateClusterSystemID successful", taskID)
-		systemID = resp.ClusterID
+	systemId, err := createCluster(ctx, info, req, info.Cluster.SystemID)
+	if err != nil {
+		blog.Errorf("createTkeCluster[%s] call createCluster[%s] failed, %s",
+			taskID, info.Cluster.ClusterID, err.Error())
+		retErr := fmt.Errorf("call CreateTKECluster[%s] api err, %s", info.Cluster.ClusterID, err.Error())
+		return "", retErr
 	}
 
-	return &clusterInfo{
-		systemID:  systemID,
-		masterIPs: masterIPs,
-		masterIDs: masterIDs,
-		nodeIPs:   nodeIPs,
-		nodeIDs:   nodeIDs,
-	}, nil
+	blog.Infof("createTkeCluster[%s] CreateTKECluster[%s] successful", taskID, info.Cluster.ClusterID)
+
+	// update cluster systemID
+	err = updateClusterSystemID(info.Cluster.ClusterID, systemId)
+	if err != nil {
+		blog.Errorf("createTkeCluster[%s] updateClusterSystemID[%s] failed %s",
+			taskID, info.Cluster.ClusterID, err.Error())
+		retErr := fmt.Errorf("call CreateTKECluster updateClusterSystemID[%s] api err: %s",
+			info.Cluster.ClusterID, err.Error())
+		return "", retErr
+	}
+	blog.Infof("createTkeCluster[%s] call CreateTKECluster updateClusterSystemID successful", taskID)
+
+	return systemId, nil
 }
 
 // CreateTkeClusterTask call qcloud interface to create cluster
@@ -664,14 +651,16 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	blog.Infof("CreateTkeClusterTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
-	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	nodeIPs := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
-	passwd := state.Task.CommonParams[cloudprovider.PasswordKey.String()]
-	operator := state.Task.CommonParams[cloudprovider.OperatorKey.String()]
+	masterNodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params,
+		cloudprovider.MasterNodeIPsKey.String(), ",")
+	workerNodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params,
+		cloudprovider.WorkerNodeIPsKey.String(), ",")
 	nodeTemplateID := step.Params[cloudprovider.NodeTemplateIDKey.String()]
+	operator := state.Task.CommonParams[cloudprovider.OperatorKey.String()]
 
+	// get dependent basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:      clusterID,
 		CloudID:        cloudID,
@@ -689,7 +678,7 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
 	// create cluster task
-	cls, err := createTkeCluster(ctx, dependInfo, nodeIPs, passwd, operator)
+	clsId, err := createTkeCluster(ctx, dependInfo, masterNodes, workerNodes, operator)
 	if err != nil {
 		blog.Errorf("CreateTkeClusterTask[%s] createTkeCluster for cluster[%s] failed, %s",
 			taskID, clusterID, err.Error())
@@ -702,12 +691,7 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
-
-	state.Task.CommonParams[cloudprovider.CloudSystemID.String()] = cls.systemID
-	state.Task.CommonParams[cloudprovider.MasterIPs.String()] = strings.Join(cls.masterIPs, ",")
-	state.Task.CommonParams[cloudprovider.MasterIDs.String()] = strings.Join(cls.masterIDs, ",")
-	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(cls.nodeIPs, ",")
-	state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(cls.nodeIDs, ",")
+	state.Task.CommonParams[cloudprovider.CloudSystemID.String()] = clsId
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
@@ -825,130 +809,6 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-// enableTkeClusterVpcCni enable tke cluster vpc-cni mode
-func enableTkeClusterVpcCni(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, systemID string) error {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-
-	cli, err := api.NewTkeClient(info.CmOption)
-	if err != nil {
-		blog.Errorf("enableTkeClusterVpcCni[%s] getTkeClient cluster[%s] failed: %v",
-			taskID, info.Cluster.ClusterID, err.Error())
-		retErr := fmt.Errorf("get cloud tke client err, %s", err.Error())
-		return retErr
-	}
-
-	blog.Infof("enableTkeClusterVpcCni[%s]: enableVPCCni %v", taskID, info.Cluster.NetworkSettings.EnableVPCCni)
-
-	var (
-		abnormal = false
-	)
-
-	if info.Cluster.NetworkSettings.EnableVPCCni {
-		err = cli.EnableTKEVpcCniMode(&api.EnableVpcCniInput{
-			TkeClusterID:   systemID,
-			VpcCniType:     api.TKEDirectEni,
-			SubnetsIDs:     info.Cluster.NetworkSettings.EniSubnetIDs,
-			EnableStaticIp: info.Cluster.NetworkSettings.IsStaticIpMode,
-			ExpiredSeconds: int(info.Cluster.NetworkSettings.ClaimExpiredSeconds),
-		})
-		if err != nil {
-			blog.Errorf("enableTkeClusterVpcCni[%s] tke EnableTKEVpcCniMode for cluster[%s] failed: %v",
-				taskID, info.Cluster.ClusterID, err)
-			retErr := fmt.Errorf("EnableTKEVpcCniMode failed: %s", err.Error())
-			return retErr
-		}
-
-		ctxTime, cancel := context.WithTimeout(context.Background(), time.Minute*30)
-		defer cancel()
-
-		err = loop.LoopDoFunc(ctxTime, func() error {
-			status, errGet := cli.GetEnableVpcCniProgress(systemID)
-			if errGet != nil {
-				blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress failed: %v", taskID, errGet)
-				return nil
-			}
-
-			blog.Infof("enableTkeClusterVpcCni[%s]: GetEnableVpcCniProgress current status[%s]",
-				taskID, status.Status)
-
-			switch status.Status {
-			case string(api.Succeed):
-				return loop.EndLoop
-			case string(api.Failed):
-				abnormal = true
-				return loop.EndLoop
-			}
-
-			return nil
-		}, loop.LoopInterval(time.Second*5))
-		if err != nil {
-			blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress failed: %v", taskID, err)
-			return err
-		}
-		if abnormal {
-			blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress status abnormal", taskID)
-			retErr := fmt.Errorf("GetEnableVpcCniProgress[%s] api timeout|abnormal", info.Cluster.ClusterID)
-			return retErr
-		}
-	}
-
-	return nil
-}
-
-// EnableTkeClusterVpcCniTask enable on vpc-cni networkMode
-func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
-	start := time.Now()
-	// get task and task current step
-	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
-	if err != nil {
-		return err
-	}
-	// previous step successful when retry task
-	if step == nil {
-		blog.Infof("EnableTkeClusterVpcCniTask[%s]: current step[%s] successful and skip", taskID, stepName)
-		return nil
-	}
-	blog.Infof("EnableTkeClusterVpcCniTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
-		taskID, taskID, stepName, step.System, step.Status, step.Params)
-
-	// step login started here
-	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	systemID := state.Task.CommonParams[cloudprovider.CloudSystemID.String()]
-
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
-		ClusterID: clusterID,
-		CloudID:   cloudID,
-	})
-	if err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-
-	// enableTkeClusterVpcCni task
-	err = enableTkeClusterVpcCni(ctx, dependInfo, systemID)
-	if err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s] enableTkeClusterVpcCni failed: %v",
-			taskID, err)
-		retErr := fmt.Errorf("enableTkeClusterVpcCni[%s] abnormal", clusterID)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// update step
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
-		return err
-	}
-
-	return nil
-}
-
 // CheckCreateClusterNodeStatusTask check cluster node status
 func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error {
 	start := time.Now()
@@ -969,9 +829,6 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error {
 	// extract valid info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	// get previous step paras
-	nodeIDs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
-		cloudprovider.NodeIDsKey.String(), ",")
 
 	// handler logic
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
@@ -989,8 +846,8 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error {
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	// check cluster nodes status
-	addSuccessNodes, addFailureNodes, err := business.CheckClusterInstanceStatus(ctx, dependInfo, nodeIDs)
+	// check cluster all nodes status
+	addSuccessNodes, addFailureNodes, err := business.CheckClusterAllInstanceStatus(ctx, dependInfo)
 	if err != nil {
 		blog.Errorf("CheckCreateClusterNodeStatusTask[%s] CheckClusterInstanceStatus failed, %s",
 			taskID, err.Error())
@@ -1025,8 +882,8 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-// RegisterManageClusterKubeConfigTask register cluster kubeconfig
-func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error { // nolint
+// RegisterTkeClusterKubeConfigTask register cluster kubeconfig
+func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step
@@ -1047,8 +904,8 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	subnetID := step.Params[cloudprovider.SubnetIDKey.String()]
-	isExtranet := step.Params[cloudprovider.IsExtranetKey.String()]
+	nodeIpList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
+		cloudprovider.NodeIPsKey.String(), ",")
 
 	// handler logic
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
@@ -1063,23 +920,53 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// cluster vpc subnet selection
-	subnet := subnetID
-	if subnet == "" {
-		subnet, err = getRandomSubnetByVpcID(ctx, dependInfo)
+	var (
+		subnet = dependInfo.Cluster.GetClusterConnectSetting().GetSubnetId()
+	)
+
+	// inter connect && subnet empty
+	if !dependInfo.Cluster.GetClusterConnectSetting().GetIsExtranet() && subnet == "" {
+		subnet, err = getRandomSubnetFromNodes(ctx, dependInfo, nodeIpList)
 		if err != nil {
-			blog.Errorf("RegisterManageClusterKubeConfigTask[%s] getRandomSubnetByVpcID failed: %s", taskID, err.Error())
-			retErr := fmt.Errorf("getRandomSubnetByVpcID failed, %s", err.Error())
+			blog.Errorf("RegisterManageClusterKubeConfigTask[%s] GetClusterDependBasicInfo in task %s step %s failed, %s",
+				taskID, taskID, stepName, err.Error())
+			retErr := fmt.Errorf("getRandomSubnetFromNodes failed, %s", err.Error())
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
 		}
 	}
-	blog.Infof("RegisterManageClusterKubeConfigTask[%s] subnet[%s]", taskID, subnet)
 
 	// open tke internal kubeconfig
 	err = registerTKEClusterEndpoint(ctx, dependInfo, api.ClusterEndpointConfig{
-		IsExtranet: false,
+		IsExtranet: dependInfo.Cluster.GetClusterConnectSetting().GetIsExtranet(),
 		SubnetId:   subnet,
+		SecurityGroup: func() string {
+			if !dependInfo.Cluster.GetClusterConnectSetting().GetIsExtranet() {
+				return ""
+			}
+
+			return dependInfo.Cluster.GetClusterConnectSetting().GetSecurityGroup()
+		}(),
+		ExtensiveParameters: func() string {
+			if !dependInfo.Cluster.GetClusterConnectSetting().GetIsExtranet() {
+				return ""
+			}
+
+			bandWidth, _ := strconv.Atoi(
+				dependInfo.Cluster.GetClusterConnectSetting().GetInternet().GetInternetMaxBandwidth())
+
+			internet := &business.InternetConnect{
+				InternetAccessible: struct {
+					InternetChargeType      string `json:"InternetChargeType"`
+					InternetMaxBandwidthOut int    `json:"InternetMaxBandwidthOut"`
+				}{
+					InternetChargeType:      dependInfo.Cluster.GetClusterConnectSetting().GetInternet().GetInternetChargeType(),
+					InternetMaxBandwidthOut: bandWidth,
+				},
+			}
+			internetBytes, _ := json.Marshal(internet)
+			return string(internetBytes)
+		}(),
 	})
 	if err != nil {
 		blog.Errorf("RegisterManageClusterKubeConfigTask[%s] registerTKEClusterEndpoint failed: %s", taskID, err.Error())
@@ -1099,20 +986,9 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 	}
 	blog.Infof("RegisterManageClusterKubeConfigTask[%s] openClusterAdminKubeConfig[%s] success", taskID, kube)
 
-	// 生成jwt token
-	token, err := providerutils.GenerateSATokenByKubeConfig(ctx, kube)
-	if err != nil {
-		blog.Errorf("RegisterManageClusterKubeConfigTask[%s] GenerateSAToken failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("GenerateSAToken failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	blog.Infof("RegisterManageClusterKubeConfigTask[%s] GenerateSAToken[%s] success", taskID, token)
-
 	// import cluster credential
-	err = importClusterCredential(ctx, dependInfo, func() bool {
-		return isExtranet == icommon.True
-	}(), false, token, kube)
+	err = importClusterCredential(ctx, dependInfo,
+		dependInfo.Cluster.GetClusterConnectSetting().GetIsExtranet(), false, "", kube)
 	if err != nil {
 		blog.Errorf("RegisterManageClusterKubeConfigTask[%s] importClusterCredential failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("importClusterCredential failed %s", err.Error())
@@ -1137,39 +1013,38 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 	return nil
 }
 
-// getRandomSubnetByVpcID get random subnet by vpcID
-func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (string, error) {
+// getRandomSubnetFromNodes get random subnet from nodes
+func getRandomSubnetFromNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIps []string) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
-	vpcClient, err := api.NewVPCClient(info.CmOption)
+	cvmClient, err := api.GetCVMClient(info.CmOption)
 	if err != nil {
-		blog.Errorf("getRandomSubnetByVpcID[%s] newVpcClient failed: %v", taskID, err)
+		blog.Errorf("getRandomSubnetFromNodes[%s] GetCVMClient failed: %v", taskID, err)
+		return "", err
+	}
+
+	insList, err := cvmClient.GetInstancesByIp(nodeIps)
+	if err != nil {
+		blog.Errorf("getRandomSubnetFromNodes[%s] GetInstancesByIp failed: %v", taskID, err)
 		return "", err
 	}
 
 	// filter vpc subnets
-	filter := make([]*api.Filter, 0)
-	filter = append(filter, &api.Filter{Name: "vpc-id", Values: []string{info.Cluster.VpcID}})
-	subnets, err := vpcClient.DescribeSubnets(nil, filter)
-	if err != nil {
-		blog.Errorf("getRandomSubnetByVpcID[%s] failed: %v", taskID, err)
-		return "", err
-	}
-
-	// pick available subnet
-	availableSubnet := make([]*api.Subnet, 0)
-	for i := range subnets {
-		match := utils.MatchSubnet(*subnets[i].SubnetName, info.Cluster.Region)
-		if match && *subnets[i].AvailableIPAddressCount > 0 {
-			availableSubnet = append(availableSubnet, subnets[i])
+	var (
+		subnetMap  = make(map[string]struct{}, 0)
+		subnetList = make([]string, 0)
+	)
+	for i := range insList {
+		_, ok := subnetMap[*insList[i].VirtualPrivateCloud.SubnetId]
+		if !ok {
+			subnetMap[*insList[i].VirtualPrivateCloud.SubnetId] = struct{}{}
+			subnetList = append(subnetList, *insList[i].VirtualPrivateCloud.SubnetId)
 		}
 	}
-	if len(availableSubnet) == 0 {
-		return "", fmt.Errorf("region[%s] vpc[%s]无可用匹配子网", info.Cluster.Region, info.Cluster.VpcID)
-	}
+	blog.Infof("getRandomSubnetFromNodes[%s] success[%+v]", taskID, subnetList)
 
-	rand.Seed(time.Now().Unix())                                           // nolint
-	return *availableSubnet[rand.Intn(len(availableSubnet))].SubnetID, nil // nolint
+	rand.Seed(time.Now().Unix())                       // nolint
+	return subnetList[rand.Intn(len(subnetList))], nil // nolint
 }
 
 // openClusterAdminKubeConfig open account cluster admin perm
@@ -1189,42 +1064,14 @@ func openClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDe
 		return "", err
 	}
 
-	// get qcloud cluster endpoint
-	ep, err := tkeCli.DescribeClusterEndpoints(info.Cluster.SystemID)
-	if err != nil {
-		blog.Errorf("openClusterAdminKubeConfig[%s] DescribeClusterEndpoints failed: %v", taskID, err)
-		return "", err
-	}
-
-	if ep.ClusterIntranetDomain == "" {
-		return tkeCli.GetTKEClusterKubeConfig(info.Cluster.SystemID, false)
-	}
-
-	kube, err := tkeCli.GetTKEClusterKubeConfig(info.Cluster.SystemID, false)
+	kube, err := tkeCli.GetTKEClusterKubeConfig(info.Cluster.SystemID,
+		info.Cluster.GetClusterConnectSetting().GetIsExtranet())
 	if err != nil {
 		blog.Errorf("openClusterAdminKubeConfig[%s] GetTKEClusterKubeConfig failed: %v", taskID, err)
 		return "", err
 	}
-	kubeConfig, _ := base64.StdEncoding.DecodeString(kube)
-	// parse kubeConfig to Config
-	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{YamlContent: string(kubeConfig)})
-	if err != nil {
-		blog.Errorf("openClusterAdminKubeConfig[%s] GetKubeConfigFromYAMLBody failed: %v", taskID, err)
-		return "", err
-	}
 
-	if len(config.Clusters) == 0 {
-		return "", fmt.Errorf("openClusterAdminKubeConfig[%s] yamlConfig[%s] cluster emptp",
-			taskID, info.Cluster.SystemID)
-	}
-
-	// cluster kubeConfig server by server IP address
-	if strings.Contains(config.Clusters[0].Cluster.Server, ep.ClusterIntranetDomain) {
-		config.Clusters[0].Cluster.Server = fmt.Sprintf("https://%s", ep.ClusterIntranetEndpoint)
-	}
-	newKubeBytes, _ := yaml.Marshal(config)
-
-	return base64.StdEncoding.EncodeToString(newKubeBytes), nil
+	return kube, nil
 }
 
 // UpdateCreateClusterDBInfoTask update cluster DB info
@@ -1246,8 +1093,6 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	// systemID := state.Task.CommonParams[cloudprovider.CloudSystemID.String()]
-	nodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
@@ -1262,23 +1107,6 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
-	}
-
-	for _, ip := range nodes {
-		node, errGet := cloudprovider.GetStorageModel().GetNodeByIP(context.Background(), ip)
-		if errGet != nil {
-			blog.Errorf("UpdateCreateClusterDBInfoTask[%s] GetNodeByIP[%s] failed: %v",
-				taskID, ip, errGet)
-			// no import node when found err
-			continue
-		}
-		node.Status = icommon.StatusRunning
-
-		err = cloudprovider.GetStorageModel().UpdateNode(context.Background(), node)
-		if err != nil {
-			blog.Errorf("UpdateCreateClusterDBInfoTask[%s] UpdateNode[%s] failed: %v",
-				taskID, ip, err)
-		}
 	}
 
 	// sync clusterData to pass-cc

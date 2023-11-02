@@ -111,7 +111,7 @@ const handleSearch = () => {
 
 // 校验编辑器内容
 const handleValidateEditor = () => {
-  const variablesArray = variables.value.split('\r\n');
+  const variablesArray = variables.value.split('\n');
   errorLine.value = [];
   variablesArray.forEach((item, index) => {
     if (item === '') return;
@@ -124,7 +124,7 @@ const handleValidateEditor = () => {
         errorInfo: '请检查是否已正确使用分隔符',
         lineNumber: index + 1,
       });
-    } else if (!key.startsWith('bk_bscp_')) {
+    } else if (!key.startsWith('bk_bscp_') && !key.startsWith('BK_BSCP_')) {
       errorLine.value.push({
         errorInfo: '变量必须以bk_bscp_开头',
         lineNumber: index + 1,
@@ -134,7 +134,7 @@ const handleValidateEditor = () => {
         errorInfo: '类型必须为 string 或者 number',
         lineNumber: index + 1,
       });
-    } else if (type === 'number' && !/^\d+$/.test(value)) {
+    } else if (type === 'number' && !/^\d+(\.\d+)?$/.test(value)) {
       errorLine.value.push({
         errorInfo: '类型为number 值不为number',
         lineNumber: index + 1,

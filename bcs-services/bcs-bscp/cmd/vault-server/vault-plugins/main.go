@@ -38,6 +38,7 @@ func main() {
 	err := plugin.Serve(&plugin.ServeOpts{
 		BackendFactoryFunc: service.Factory,
 		TLSProviderFunc:    tlsProviderFunc,
+		Logger:             logger,
 	})
 	if err != nil {
 		logger.Error("plugin shutting down", "error", err)

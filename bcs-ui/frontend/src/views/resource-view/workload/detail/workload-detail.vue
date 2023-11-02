@@ -627,6 +627,12 @@ export default defineComponent({
     // 刷新Pod状态
     const handleRefreshPodsStatus = async () => {
       workloadPods.value = await handleGetPodsData();
+      // 获取详情
+      if (props.category === 'custom_objects') {
+        await handleGetCustomObjectDetail(false);
+      } else {
+        await handleGetDetail(false);
+      }
     };
     const { start, stop } = useInterval(handleRefreshPodsStatus, 8000);
 

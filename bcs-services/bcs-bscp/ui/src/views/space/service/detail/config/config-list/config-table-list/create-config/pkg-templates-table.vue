@@ -28,10 +28,10 @@
             :class="{ 'has-conflict': props.conflictTpls.includes(tpl.id) }"
           >
             <td>
-              <div class="cell">{{ tpl.spec.name }}</div>
+              <bk-overflow-title class="cell" type="tips">{{ tpl.spec.name }}</bk-overflow-title>
             </td>
             <td>
-              <div class="cell">{{ tpl.spec.path }}</div>
+              <bk-overflow-title class="cell" type="tips" :resizeable="true">{{ tpl.spec.path }}</bk-overflow-title>
             </td>
             <td class="select-version">
               <bk-select

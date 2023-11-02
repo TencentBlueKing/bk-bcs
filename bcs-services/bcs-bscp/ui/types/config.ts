@@ -57,7 +57,7 @@ export interface IConfigItem {
   file_state: string;
 }
 
-// 配置项详情（包含签名信息）
+// 配置文件详情（包含签名信息）
 export interface IConfigDetail {
   config_item: IConfigItem;
   content: {
@@ -66,7 +66,7 @@ export interface IConfigDetail {
   }
 }
 
-// 配置项编辑表单参数
+// 配置文件编辑表单参数
 export interface IConfigEditParams {
   id?: number;
   name: string;
@@ -88,7 +88,7 @@ export interface IFileConfigContentSummary {
   update_at?: string;
 }
 
-// 配置项列表查询接口请求参数
+// 配置文件列表查询接口请求参数
 export interface IConfigListQueryParams {
   searchKey?: string;
   release_id?: number;
@@ -131,7 +131,7 @@ export interface ITemplateBoundByAppData {
   }[]
 }
 
-// 服务绑定下的模板配置项按照套餐分组数据
+// 服务绑定下的模板配置文件按照套餐分组数据
 export interface IBoundTemplateGroup {
   template_space_id: number;
   template_space_name: string;
@@ -163,10 +163,10 @@ export interface IBoundTemplateDetail {
   create_at: string;
 }
 
-// 配置项对比选中项
+// 配置文件对比选中项
 export interface IConfigDiffSelected {
   pkgId: number; // 套餐ID
-  id: number; // 非模板或模板配置项 ID
+  id: number; // 非模板或模板配置文件 ID
   version: number; // 版本ID
   permission?: {
     privilege: string;

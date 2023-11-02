@@ -77,12 +77,18 @@ type ObjectDownloader interface {
 	URIDecorator(bizID uint32) DecoratorInter
 }
 
-// Provider repo provider interface
-type Provider interface {
+// BaseProvider repo base provider interface
+type BaseProvider interface {
 	ObjectDownloader
 	Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMetadata, error)
 	Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, error)
 	Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error)
+}
+
+// Provider repo provider interface
+type Provider interface {
+	BaseProvider
+	VariableCacher
 }
 
 // GetFileSign get file sha256
@@ -163,11 +169,17 @@ func newUriDecoratorInter(bizID uint32) DecoratorInter {
 	return &uriDecoratorInter{bizID: bizID}
 }
 
+// repoProvider implements interface Provider
+type repoProvider struct {
+	BaseProvider
+	VariableCacher
+}
+
 // NewProvider init provider factory by storage type
 func NewProvider(conf cc.Repository) (Provider, error) {
 	switch strings.ToUpper(string(conf.StorageType)) {
 	case string(cc.S3):
-		return newCosProvider(conf.S3)
+		return newCosProvider(conf)
 	case string(cc.BkRepo):
 		return newBKRepoProvider(conf)
 	}

@@ -34,6 +34,11 @@ func init() {
 // VPCManager is the manager for VPC
 type VPCManager struct{}
 
+// ListVpcs list vpcs
+func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.CloudVpc, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // ListSubnets list vpc subnets
 func (vm VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
 	locationList := strings.Split(opt.Region, "-")

@@ -224,16 +224,18 @@ func (ir IngressReconciler) patchWarningAnnotationForIngress(ingress *networkext
 			ingress.GetName())
 	}
 	rawPatch := client.RawPatch(k8stypes.MergePatchType, patchBytes)
-	updatePod := &k8scorev1.Pod{
+	updateIngress := &networkextensionv1.Ingress{
 		ObjectMeta: k8smetav1.ObjectMeta{
 			Name:      ingress.GetName(),
 			Namespace: ingress.GetNamespace(),
 		},
 	}
-	if err := ir.Client.Patch(context.Background(), updatePod, rawPatch, &client.PatchOptions{}); err != nil {
+	if err := ir.Client.Patch(context.Background(), updateIngress, rawPatch, &client.PatchOptions{}); err != nil {
 		return errors.Wrapf(err, "patch ingress %s/%s annotation failed, patcheStruct: %s", ingress.GetName(),
 			ingress.GetNamespace(), string(patchBytes))
 	}
+
+	ir.IngressEventer.Eventf(updateIngress, k8scorev1.EventTypeWarning, "ingress warning", attachWarning)
 	return nil
 }
 

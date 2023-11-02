@@ -3,7 +3,7 @@
     ext-cls="move-out-from-pkgs-dialog"
     header-align="center"
     footer-align="center"
-    :title="`确认将配置项【${name}】移出套餐?`"
+    :title="`确认将配置文件【${name}】移出套餐?`"
     :width="600"
     :is-show="props.show"
     :esc-close="false"
@@ -11,7 +11,8 @@
     @confirm="handleConfirm"
     @closed="close"
   >
-    <bk-loading style="min-height: 100px" :loading="loading">
+    <div class="service-table">
+      <bk-loading style="min-height: 100px" :loading="loading">
       <bk-table
         v-if="!loading"
         :data="citedList"
@@ -31,9 +32,10 @@
         <bk-table-column show-overflow-tooltip label="使用此套餐的服务" prop="appNames"></bk-table-column>
       </bk-table>
     </bk-loading>
+    </div>
     <p v-if="citedList.length === 1" class="tips">
       <Warn class="warn-icon" />
-      移出后配置项将不存在任一套餐。你仍可在「全部配置项」或「未指定套餐」分类下找回。
+      移出后配置文件将不存在任一套餐。你仍可在「全部配置文件」或「未指定套餐」分类下找回。
     </p>
     <template #footer>
       <div class="actions-wrapper">

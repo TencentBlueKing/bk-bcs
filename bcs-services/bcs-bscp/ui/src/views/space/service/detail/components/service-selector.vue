@@ -2,28 +2,44 @@
   <div>
     <bk-select
       v-model="localVal"
-      class="app-selector"
+      ref="selectorRef"
+      class="service-selector"
+      :popover-options="{ theme: 'light bk-select-popover service-selector-popover' }"
       :filterable="true"
       :input-search="false"
       :clearable="false"
       :loading="loading"
-      @change="handleAppChange"
-    >
+      @change="handleAppChange">
       <template #trigger>
         <div class="selector-trigger">
           <input readonly :value="appData.spec.name" />
           <AngleDown class="arrow-icon" />
         </div>
       </template>
-      <bk-option v-for="item in serviceList" :key="item.id" :value="item.id" :label="item.spec.name"> </bk-option>
-      <div class="selector-extensition">
-        <template slot="extension">
-          <div class="content" @click="router.push({ name: 'service-mine' })">
+      <bk-option
+        v-for="item in serviceList"
+        :key="item.id"
+        :value="item.id"
+        :label="item.spec.name">
+        <div
+            v-cursor="{
+              active: !item.permissions.view
+            }"
+            :class="['service-option-item', { 'no-perm': !item.permissions.view }]"
+            @click="handleOptionClick(item, $event)">
+            <div class="name-wrapper">
+              {{ item.spec.name }}
+            </div>
+          </div>
+      </bk-option>
+      <template #extension>
+        <div class="selector-extensition">
+          <div class="content" @click="router.push({ name: 'service-all' })">
             <i class="bk-bscp-icon icon-app-store app-icon"></i>
             服务管理
           </div>
-        </template>
-      </div>
+        </div>
+      </template>
     </bk-select>
   </div>
 </template>
@@ -32,7 +48,7 @@ import { ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { AngleDown } from 'bkui-vue/lib/icon';
-import useUserStore from '../../../../../store/user';
+import useGlobalStore from '../../../../../store/global';
 import useServiceStore from '../../../../../store/service';
 import { IAppItem } from '../../../../../../types/app';
 import { getAppList } from '../../../../../api';
@@ -41,7 +57,7 @@ const route = useRoute();
 const router = useRouter();
 
 const { appData } = storeToRefs(useServiceStore());
-const { userInfo } = storeToRefs(useUserStore());
+const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 
 const bizId = route.params.spaceId as string;
 
@@ -54,6 +70,7 @@ defineEmits(['change']);
 const serviceList = ref<IAppItem[]>([]);
 const loading = ref(false);
 const localVal = ref(props.value);
+const selectorRef = ref();
 
 watch(
   () => props.value,
@@ -71,8 +88,7 @@ const loadServiceList = async () => {
   try {
     const query = {
       start: 0,
-      limit: 100,
-      operator: userInfo.value.username,
+      all: true,
     };
     const resp = await getAppList(bizId, query);
     serviceList.value = resp.details;
@@ -80,6 +96,28 @@ const loadServiceList = async () => {
     console.error(e);
   } finally {
     loading.value = false;
+  }
+};
+
+// 点击无查看权限的选项，弹出申请权限弹窗
+const handleOptionClick = (service: IAppItem, event: Event) => {
+  if (!service.permissions.view) {
+    selectorRef.value.hidePopover();
+    event.stopPropagation();
+    permissionQuery.value = {
+      resources: [
+        {
+          biz_id: service.biz_id,
+          basic: {
+            type: 'app',
+            action: 'view',
+            resource_id: service.id,
+          },
+        },
+      ],
+    };
+
+    showApplyPermDialog.value = true;
   }
 };
 
@@ -91,7 +129,7 @@ const handleAppChange = (id: number) => {
 };
 </script>
 <style lang="scss" scoped>
-.app-selector {
+.service-selector {
   &.popover-show {
     .selector-trigger .arrow-icon {
       transform: rotate(-180deg);
@@ -144,12 +182,21 @@ const handleAppChange = (id: number) => {
     color: #979ba5;
   }
 }
+
+.service-option-item {
+  flex: 1;
+  padding: 0 12px;
+  &.no-perm {
+    background-color: #fafafa !important;
+    color: #cccccc !important;
+  }
+}
 .selector-extensition {
+  flex: 1;
   .content {
     height: 40px;
     line-height: 40px;
     text-align: center;
-    border-top: 1px solid #dcdee5;
     background: #fafbfd;
     cursor: pointer;
     &:hover {
@@ -160,4 +207,11 @@ const handleAppChange = (id: number) => {
     font-size: 14px;
   }
 }
+</style>
+<style lang="scss">
+  .service-selector-popover {
+    .bk-select-option {
+      padding: 0 !important;
+    }
+  }
 </style>

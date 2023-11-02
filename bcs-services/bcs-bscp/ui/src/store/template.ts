@@ -10,9 +10,9 @@ export default defineStore('template', () => {
   const currentTemplateSpace = ref();
   // 套餐列表
   const packageList = ref<ITemplatePackageItem[]>([]);
-  // 模板空间下所有配置项模板数量
+  // 模板空间下所有配置文件模板数量
   const CountOfAllTemplatesInSpace = ref(0);
-  // 未指定套餐的配置项数量
+  // 未指定套餐的配置文件数量
   const countOfTemplatesForNoSpecifiedPackage = ref(0);
   // 当前套餐
   const currentPkg = ref<string | number>('');

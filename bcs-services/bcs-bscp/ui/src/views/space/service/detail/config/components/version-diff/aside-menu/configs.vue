@@ -1,7 +1,7 @@
 <template>
   <div :class="['configs-menu', { 'search-opened': isOpenSearch }]">
     <div class="title-area">
-      <div class="title">配置项</div>
+      <div class="title">配置文件</div>
       <div class="title-extend">
         <bk-checkbox
           v-if="isBaseVersionExist"
@@ -9,7 +9,7 @@
           class="view-diff-checkbox"
           @change="handleSearch"
         >
-          只查看差异项({{ diffCount }})
+          只查看差异文件({{ diffCount }})
         </bk-checkbox>
         <div :class="['search-trigger', { actived: isOpenSearch }]" @click="isOpenSearch = !isOpenSearch">
           <Search />
@@ -17,7 +17,7 @@
       </div>
     </div>
     <div v-if="isOpenSearch" class="search-wrapper">
-      <SearchInput v-model="searchStr" placeholder="搜索配置项名称" @search="handleSearch" />
+      <SearchInput v-model="searchStr" placeholder="搜索配置文件名称" @search="handleSearch" />
     </div>
     <div class="groups-wrapper">
       <div v-for="group in groupedConfigListOnShow" class="config-group-item" :key="group.id">
@@ -133,7 +133,7 @@ const props = withDefaults(
   {
     unNamedVersionVariables: () => [],
     selectedConfig: () => ({ pkgId: 0, id: 0, version: 0 }),
-  }
+  },
 );
 
 const emits = defineEmits(['selected']);
@@ -148,7 +148,7 @@ const currentGroupList = ref<IConfigsGroupData[]>([]);
 const currentVariables = ref<IVariableEditParams[]>([]);
 const baseGroupList = ref<IConfigsGroupData[]>([]);
 const baseVariables = ref<IVariableEditParams[]>([]);
-// 汇总的配置项列表，包含未修改、增加、删除、修改的所有配置项
+// 汇总的配置文件列表，包含未修改、增加、删除、修改的所有配置文件
 const aggregatedList = ref<IDiffGroupData[]>([]);
 const groupedConfigListOnShow = ref<IDiffGroupData[]>([]);
 const isOnlyShowDiff = ref(false); // 只显示差异项
@@ -168,10 +168,10 @@ watch(
     groupedConfigListOnShow.value = aggregatedList.value.slice();
     setDefaultSelected();
     isOnlyShowDiff.value && handleSearch();
-  }
+  },
 );
 
-// 当前版本默认选中的配置项
+// 当前版本默认选中的配置文件
 watch(
   () => props.selectedConfig,
   (val) => {
@@ -181,7 +181,7 @@ watch(
   },
   {
     immediate: true,
-  }
+  },
 );
 
 watch(
@@ -209,7 +209,7 @@ watch(
         current: { content: '', variables: '' },
       });
     }
-  }
+  },
 );
 
 onMounted(async () => {
@@ -229,13 +229,13 @@ onMounted(async () => {
 // 判断版本是否为未命名版本
 const isUnNamedVersion = (id: number) => id === 0;
 
-// 获取当前版本和基准版本的所有配置项列表(非模板配置和套餐下模板)
+// 获取当前版本和基准版本的所有配置文件列表(非模板配置和套餐下模板)
 const getAllConfigList = async () => {
   currentGroupList.value = await getConfigsOfVersion(props.currentVersionId);
   baseGroupList.value = await getConfigsOfVersion(props.baseVersionId);
 };
 
-// 获取某一版本下配置项和模板列表
+// 获取某一版本下配置文件和模板列表
 const getConfigsOfVersion = async (releaseId: number | undefined) => {
   if (typeof releaseId !== 'number') {
     return [];
@@ -249,7 +249,7 @@ const getConfigsOfVersion = async (releaseId: number | undefined) => {
   return commonConfigList.concat(templateList);
 };
 
-// 获取非模板配置项列表
+// 获取非模板配置文件列表
 const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => {
   const unNamedVersion = isUnNamedVersion(id);
   const params: ICommonQuery = {
@@ -264,7 +264,7 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
     configsRes = await getReleasedConfigList(bkBizId.value, appData.value.id as number, id, params);
   }
 
-  // 未命名版本中包含被删除的配置项，需要过滤掉
+  // 未命名版本中包含被删除的配置文件，需要过滤掉
   const configs: IConfigItem[] = configsRes.details.filter((item: IConfigItem) => item.file_state !== 'DELETE');
 
   return [
@@ -294,7 +294,7 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
   ];
 };
 
-// 获取模板配置项列表
+// 获取模板配置文件列表
 const getBoundTemplateList = async (id: number) => {
   const unNamedVersion = isUnNamedVersion(id);
   const params: ICommonQuery = {
@@ -312,7 +312,7 @@ const getBoundTemplateList = async (id: number) => {
     const group: IConfigsGroupData = {
       template_space_id,
       id: template_set_id,
-      name: `${template_space_name === 'default_space' ? '默认空间' : template_space_name} - ${template_set_name}`,
+      name: `${template_space_name} - ${template_set_name}`,
       expand: false,
       configs: [],
     };
@@ -386,7 +386,13 @@ const calcDiff = () => {
           basePermission: baseItem.permission,
           currentPermission: crtItem.permission,
         };
-        if (crtItem.template_revision_id !== baseItem.template_revision_id || diffConfig.current !== diffConfig.base) {
+        if (
+          crtItem.template_revision_id !== baseItem.template_revision_id ||
+          diffConfig.current !== diffConfig.base ||
+          diffConfig.currentPermission?.privilege !== diffConfig.basePermission?.privilege ||
+          diffConfig.currentPermission?.user !== diffConfig.basePermission?.user ||
+          diffConfig.currentPermission?.user_group !== diffConfig.basePermission?.user_group
+        ) {
           diffCount.value += 1;
           diffConfig.diff_type = isBaseVersionExist.value ? 'modify' : '';
         }
@@ -410,7 +416,7 @@ const calcDiff = () => {
   // 计算当前版本删除项
   baseGroupList.value.forEach((baseGroupItem) => {
     const { template_space_id, id, name, expand, configs } = baseGroupItem;
-    const groupIndex = list.findIndex((item) => item.id === baseGroupItem.id);
+    const groupIndex = list.findIndex(item => item.id === baseGroupItem.id);
     const diffGroup: IDiffGroupData =
       groupIndex > -1 ? list[groupIndex] : { template_space_id, id, name, expand, configs: [] };
 
@@ -447,18 +453,18 @@ const calcDiff = () => {
   return list;
 };
 
-// 设置默认选中的配置项
+// 设置默认选中的配置文件
 // 如果props有设置选中项，取props值
-// 否则取第一个非空分组的第一个配置项
+// 否则取第一个非空分组的第一个配置文件
 const setDefaultSelected = () => {
   if (props.selectedConfig.id) {
-    const pkg = aggregatedList.value.find((group) => group.id === props.selectedConfig.pkgId);
+    const pkg = aggregatedList.value.find(group => group.id === props.selectedConfig.pkgId);
     if (pkg) {
       pkg.expand = true;
     }
     handleSelectItem(props.selectedConfig);
   } else {
-    const group = aggregatedList.value.find((group) => group.configs.length > 0);
+    const group = aggregatedList.value.find(group => group.configs.length > 0);
     if (group) {
       handleSelectItem({ pkgId: group.id, id: group.configs[0].id, version: group.configs[0].template_revision_id });
     }
@@ -500,9 +506,9 @@ const getItemSelectedStatus = (pkgId: number, config: IConfigDiffItem) => {
   );
 };
 
-// 选择对比配置项后，加载配置项详情，组装对比数据
+// 选择对比配置文件后，加载配置文件详情，组装对比数据
 const handleSelectItem = async (selectedConfig: IConfigDiffSelected) => {
-  const pkg = aggregatedList.value.find((item) => item.id === selectedConfig.pkgId);
+  const pkg = aggregatedList.value.find(item => item.id === selectedConfig.pkgId);
   if (pkg) {
     const config = pkg.configs.find((item) => {
       const res = item.id === selectedConfig.id && item.template_revision_id === selectedConfig.version;

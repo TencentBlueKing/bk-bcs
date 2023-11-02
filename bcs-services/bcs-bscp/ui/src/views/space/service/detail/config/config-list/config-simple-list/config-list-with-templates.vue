@@ -26,7 +26,7 @@
             v-if="group.configs.length === 0"
             scene="part"
             type="empty"
-            description="暂无配置项"
+            description="暂无配置文件"
           ></bk-exception>
         </div>
       </div>
@@ -94,9 +94,9 @@ const props = defineProps<{
 
 const loading = ref(false);
 const commonConfigListLoading = ref(false);
-const configList = ref<IConfigItem[]>([]); // 非模板配置项
+const configList = ref<IConfigItem[]>([]); // 非模板配置文件
 const boundTemplateListLoading = ref(false);
-const templateGroupList = ref<IBoundTemplateGroup[]>([]); // 配置项模板
+const templateGroupList = ref<IBoundTemplateGroup[]>([]); // 配置文件模板
 const tableGroupsData = ref<IConfigsGroupData[]>([]);
 const searchStr = ref('');
 const editConfigSliderData = ref({
@@ -133,7 +133,7 @@ const getListData = async () => {
   loading.value = false;
 };
 
-// 获取非模板配置项列表
+// 获取非模板配置文件列表
 const getCommonConfigList = async () => {
   commonConfigListLoading.value = true;
   try {
@@ -161,7 +161,7 @@ const getCommonConfigList = async () => {
   }
 };
 
-// 获取模板配置项列表
+// 获取模板配置文件列表
 const getBoundTemplateList = async () => {
   boundTemplateListLoading.value = true;
   try {
@@ -196,7 +196,7 @@ const transListToTableData = () => {
   ];
 };
 
-// 将非模板配置项数据转为表格数据
+// 将非模板配置文件数据转为表格数据
 const transConfigsToTableItemData = (list: IConfigItem[]) => list.map((item: IConfigItem) => {
   const { id, spec, revision, file_state } = item;
   const { name, file_type, path } = spec;

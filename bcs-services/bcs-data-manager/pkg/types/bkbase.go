@@ -15,12 +15,20 @@ package types
 
 // BkbaseConfig bkbase config for tables for query
 type BkbaseConfig struct {
-	PowerTrading []BkbaseTable `json:"powerTrading"`
-	Bcs          []BkbaseTable `json:"bcs,omitempty"`
+	PowerTrading []BkbaseTable     `json:"powerTrading"`
+	Bcs          []BkbaseTable     `json:"bcs,omitempty"`
+	CloudNative  CloudNativeConfig `json:"cloudNative,omitempty"`
 }
 
 // BkbaseTable table for bkbaseconfig
 type BkbaseTable struct {
 	Table string `json:"table"`
 	Index string `json:"index"`
+}
+
+// CloudNativeConfig config for cloud native score
+type CloudNativeConfig struct {
+	Bkbase   BkbaseTable `json:"bkbase,omitepty"`
+	Platform uint32      `json:"platform,omitempty"`
+	AppId    string      `json:"appid,omitempty"`
 }

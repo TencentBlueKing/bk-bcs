@@ -2,29 +2,26 @@
   <DetailLayout name="新建脚本" @close="handleClose">
     <template #content>
       <div class="create-script-forms">
-        <bk-form ref="formRef" form-type="vertical" :model="formData">
+        <bk-form ref="formRef" form-type="vertical" :model="formData" :rules="rules">
           <bk-form-item class="fixed-width-form" label="脚本名称" property="name" required>
             <bk-input v-model="formData.name" />
           </bk-form-item>
           <bk-form-item class="fixed-width-form" property="tag" label="分类标签">
             <!-- <bk-input v-model="formData.tag" /> -->
-            <bk-select
-              v-model="formData.tag"
+            <bk-tag-input
+              v-model="selectTags"
               placeholder="请选择标签或输入新标签按Enter结束"
-              :loading="tagsLoading"
+              display-key="tag"
+              save-key="tag"
+              search-key="tag"
+              :max-data="1"
+              :list="tagsData"
               :allow-create="true"
-              :filterable="true"
-            >
-              <bk-option
-                v-for="option in tagsData"
-                :key="option.tag"
-                :value="option.tag"
-                :label="option.tag"
-              ></bk-option>
-            </bk-select>
+              trigger="focus"
+            />
           </bk-form-item>
           <bk-form-item class="fixed-width-form" property="memo" label="脚本描述">
-            <bk-input v-model="formData.memo" type="textarea" :rows="3" :maxlength="200" :resize="false"/>
+            <bk-input v-model="formData.memo" type="textarea" :rows="3" :maxlength="200" :resize="false" />
           </bk-form-item>
           <bk-form-item label="脚本内容" property="content" required>
             <div class="script-content-wrapper">
@@ -74,6 +71,11 @@ const SCRIPT_TYPE = [
   { id: EScriptType.Python, name: 'Python' },
 ];
 
+const formRef = ref();
+const pending = ref(false);
+const tagsLoading = ref(false);
+const tagsData = ref<IScriptTagItem[]>([]);
+const selectTags = ref<string[]>([]);
 const formData = ref<IScriptEditingForm>({
   name: '',
   tag: '',
@@ -81,10 +83,21 @@ const formData = ref<IScriptEditingForm>({
   type: EScriptType.Shell,
   content: '',
 });
-const formRef = ref();
-const pending = ref(false);
-const tagsLoading = ref(false);
-const tagsData = ref<IScriptTagItem[]>([]);
+
+const rules = {
+  name: [
+    {
+      validator: (value: string) => /^[A-Za-z\u4e00-\u9fa5][^/]*$/.test(value),
+      message: '必须以大小写字母、中文开头,不能包含/',
+      trigger: 'blur',
+    },
+    {
+      validator: (value: string) => value.length <= 256,
+      message: '不能超过256个字符',
+      trigger: 'change',
+    },
+  ],
+};
 
 onMounted(() => {
   getTags();
@@ -102,6 +115,7 @@ const handleCreate = async () => {
   await formRef.value.validate();
   try {
     pending.value = true;
+    formData.value.tag = selectTags.value[0];
     await createScript(spaceId.value, formData.value);
     BkMessage({
       theme: 'success',

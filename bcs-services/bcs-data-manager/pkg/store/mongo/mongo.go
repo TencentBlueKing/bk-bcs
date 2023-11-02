@@ -27,6 +27,7 @@ type server struct {
 	*ModelPublic
 	*ModelPodAutoscaler
 	*ModelPowerTrading
+	*ModelCloudNative
 }
 
 // NewServer new db server
@@ -39,5 +40,6 @@ func NewServer(db drivers.DB, bkbaseConf *types.BkbaseConfig) store.Server {
 		ModelPublic:        NewModelPublic(db),
 		ModelPodAutoscaler: NewModelPodAutoscaler(db),
 		ModelPowerTrading:  NewModelPowerTrading(db, bkbaseConf),
+		ModelCloudNative:   NewModelCloudNative(db, bkbaseConf),
 	}
 }

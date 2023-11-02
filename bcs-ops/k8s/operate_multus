@@ -62,7 +62,7 @@ check_k8s_status() {
 
 check_envsubst() {
   if ! command -v envsubst &>/dev/null; then
-    utils:log "WARN" "command 'envsubst' not install, will be installed"
+    utils::log "WARN" "command 'envsubst' not install, will be installed"
     yum install gettext -y -q
   fi
 }

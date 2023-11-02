@@ -59,9 +59,12 @@ init_env() {
     LAN_IPv6="$("${ROOT_DIR}"/system/get_lan_ip -6)"
   fi
   BCS_OFFLINE=${BCS_OFFLINE:-}
+  INSTALL_METHOD=${INSTALL_METHOD:-"yum"}
 
   # cri
   CRI_TYPE=${CRI_TYPE:-"docker"}
+  ## insregistry
+  INSECURE_REGISTRY=${INSECURE_REGISTRY:-""}
   ## DOCKER
   DOCKER_VER=${DOCKER_VER:-"19.03.9"}
   DOCKER_LIB=${DOCKER_LIB:-"${BK_HOME}/lib/docker"}
@@ -95,7 +98,7 @@ init_env() {
   BCS_CP_WORKER=${BCS_CP_WORKER:-0}
 
   # csi
-  K8S_CSI=${K8S_CSI:-"localpv"}
+  K8S_CSI=${K8S_CSI:-""}
   ## localpv
   LOCALPV_DIR=${LOCALPV_DIR:-${BK_HOME}/localpv}
   LOCALPV_COUNT=${LOCALPV_COUNT:-20}
@@ -115,7 +118,7 @@ init_env() {
   BK_PUBLIC_REPO=${BK_PUBLIC_REPO:-"hub.bktencent.com"}
 
   # helm
-  BKREPO_URL=${BKREPO_URL:-"https://hub.bktencent.com/chartrepo"}
+  BKREPO_URL=${BKREPO_URL:-"https://hub.bktencent.com/chartrepo/blueking"}
 
   # apiserver HA
   ENABLE_APISERVER_HA=${ENABLE_APISERVER_HA:-"false"}
@@ -219,9 +222,11 @@ $(
 BCS_SYSCTL=${BCS_SYSCTL:=1}
 K8S_IPv6_STATUS="${K8S_IPv6_STATUS}"
 BCS_OFFLINE="${BCS_OFFLINE}"
+INSTALL_METHOD="${INSTALL_METHOD}"
 
 ## CRI
 CRI_TYPE="${CRI_TYPE}"
+INSECURE_REGISTRY=${INSECURE_REGISTRY}
 $(
     case "${CRI_TYPE,,}" in
       "containerd")

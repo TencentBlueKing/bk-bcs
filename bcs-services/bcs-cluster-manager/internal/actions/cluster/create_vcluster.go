@@ -92,7 +92,7 @@ func (ca *CreateVirtualClusterAction) constructCluster(cloud *cmproto.Cloud) (*c
 		IsCommonCluster:        false,
 		Description:            ca.req.Description,
 		IsShared:               false,
-		ClusterCategory:        Builder,
+		ClusterCategory:        common.Builder,
 	}
 
 	err := ca.generateClusterID(cls)

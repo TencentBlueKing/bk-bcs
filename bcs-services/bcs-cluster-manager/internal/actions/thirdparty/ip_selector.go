@@ -130,7 +130,7 @@ func (ga *GetBizInstanceTopoAction) listBizHostTopo() error {
 	for _, scope := range ga.req.ScopeList {
 		if scope.ScopeType == common.Biz {
 			bizID, _ := strconv.Atoi(scope.ScopeId)
-			topoData, err := ipSelector.GetBizModuleTopoData(bizID)
+			topoData, err := ipSelector.GetBizModuleTopoData(ga.ctx, bizID)
 			if err != nil {
 				blog.Errorf("GetBizInstanceTopoAction GetBizModuleTopoData[%v] failed: %v", bizID, err)
 				continue
@@ -196,9 +196,6 @@ func (gt *GetTopologyNodesAction) validate() error {
 	if gt.req.Start <= 0 {
 		gt.req.Start = 0
 	}
-	if gt.req.PageSize <= 0 {
-		gt.req.PageSize = 20
-	}
 
 	return nil
 }
@@ -258,7 +255,14 @@ func (gt *GetTopologyNodesAction) listBizTopologyNodes() error {
 	}
 
 	data := make([]*cmproto.HostData, 0)
-	endIndex := gt.req.Start + gt.req.PageSize
+
+	var endIndex uint64
+	if gt.req.PageSize <= 0 {
+		endIndex = uint64(len(topoNodes))
+	} else {
+		endIndex = gt.req.Start + uint64(gt.req.PageSize)
+	}
+
 	for index, host := range topoNodes {
 		if index >= int(gt.req.Start) && index < int(endIndex) {
 			data = append(data, &cmproto.HostData{

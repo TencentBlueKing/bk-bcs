@@ -13,7 +13,6 @@
         v-model="formData.bind_apps"
         class="service-selector"
         multiple
-        filterable
         placeholder="请选择服务"
         @change="change"
       >
@@ -27,10 +26,10 @@
     </bk-form-item>
     <bk-form-item class="radio-group-form" label="分组规则" required property="rules">
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
-        <bk-input v-model="rule.key" style="width: 176px" placeholder="" @change="ruleChange"></bk-input>
+        <bk-input v-model="rule.key" style="width: 174px" placeholder="" @change="ruleChange"></bk-input>
         <bk-select
           :model-value="rule.op"
-          style="width: 120px"
+          style="width: 72px"
           :clearable="false"
           @change="handleLogicChange(index, $event)"
         >
@@ -66,7 +65,6 @@
           ></i>
           <i
             v-if="index === formData.rules.length - 1"
-            style="margin-left: 10px"
             class="bk-bscp-icon icon-add"
             @click="handleAddRule(index)"
           ></i>
@@ -149,9 +147,7 @@ const getServiceList = async () => {
   try {
     const bizId = route.params.spaceId as string;
     const query = {
-      start: 0,
-      limit: 1000, // @todo 确认拉全量列表参数
-      operator: userInfo.value.username,
+      all: true,
     };
     const resp = await getAppList(bizId, query);
     serviceList.value = resp.details;
@@ -272,12 +268,13 @@ defineExpose({
     cursor: pointer;
   }
   .value-input {
-    width: 250px;
+    width: 280px;
   }
 }
 .action-btns {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   width: 38px;
   font-size: 14px;
   color: #979ba5;

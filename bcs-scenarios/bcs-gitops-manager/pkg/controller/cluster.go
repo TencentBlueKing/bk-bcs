@@ -211,11 +211,14 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 		blog.Infof("sync clusters for project [%s]%s complete, next...", appPro.Name, proID)
 
 		// sync secret init
-		if err := control.option.Secret.InitProjectSecret(ctx, appPro.Name); err != nil {
+		if err = control.option.Secret.InitProjectSecret(ctx, appPro.Name); err != nil {
+			if utils.IsSecretAlreadyExist(err) {
+				continue
+			}
 			blog.Errorf("sync secrets for project [%s]%s failed: %s", appPro.Name, proID, err.Error())
-			//continue
+			continue
 		}
-		blog.Infof("sync secrets for project [%s]%s complete. next...", appPro.Name, proID)
+		blog.Infof("init project [%s]%s secrets complete", appPro.Name, proID)
 
 		// sync secret info to pro annotations
 		//secretVal := vaultcommon.GetVaultSecForProAnno(appPro.Name)

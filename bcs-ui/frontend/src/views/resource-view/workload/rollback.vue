@@ -84,7 +84,14 @@ import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import $i18n from '@/i18n/i18n-setup';
 
-const { revisionDetail, workloadHistory, rollbackWorkload } = useRecords();
+const {
+  revisionDetail,
+  revisionGameDetail,
+  workloadHistory,
+  gameWorkloadHistory,
+  rollbackWorkload,
+  rollbackGameWorkload,
+} = useRecords();
 
 const props = defineProps({
   value: {
@@ -95,6 +102,10 @@ const props = defineProps({
     type: [String, Number],
     default: '',
     required: true,
+  },
+  crd: {
+    type: String,
+    default: '',
   },
   namespace: {
     type: String,
@@ -144,15 +155,28 @@ const detailLoading = ref(false);
 const getRevisionDetail = async ($revision: string|number) => {
   if (!$revision || !isShow.value) return '';
   detailLoading.value = true;
-  const { rollout_revision } = await revisionDetail({
-    $namespaceId: props.namespace,
-    $clusterId: props.clusterId,
-    $name: props.name,
-    $category: props.category,
-    $revision,
-  });
+  let data = { rollout_revision: '' };
+  if (props.category === 'custom_objects') {
+    data = await revisionGameDetail({
+      $crd: props.crd,
+      $clusterId: props.clusterId,
+      $name: props.name,
+      $category: props.category,
+      $revision,
+      namespace: props.namespace,
+    });
+  } else {
+    data = await revisionDetail({
+      $namespaceId: props.namespace,
+      $clusterId: props.clusterId,
+      $name: props.name,
+      $category: props.category,
+      $revision,
+    });
+  }
+
   detailLoading.value = false;
-  return rollout_revision;
+  return data?.rollout_revision;
 };
 
 // 当前版本
@@ -174,14 +198,24 @@ const tableData = ref<IRevisionData[]>([]);
 const versionListLoading = ref(false);
 const handleGetHistory = async () => {
   if (!props.name || !isShow.value) return;
-  const params = {
-    $namespaceId: props.namespace,
-    $clusterId: props.clusterId,
-    $name: props.name,
-    $category: props.category,
-  };
   versionListLoading.value = true;
-  tableData.value = await workloadHistory(params);
+  if (props.category === 'custom_objects') {
+    tableData.value = await gameWorkloadHistory({
+      $crd: props.crd,
+      $clusterId: props.clusterId,
+      $name: props.name,
+      $category: props.category,
+      namespace: props.namespace,
+    });
+  } else {
+    tableData.value = await workloadHistory({
+      $namespaceId: props.namespace,
+      $clusterId: props.clusterId,
+      $name: props.name,
+      $category: props.category,
+    });
+  }
+
   onlineVersion.value = tableData.value[0]?.revision;
   // 初始化左侧diff数据
   currentVersion.value = onlineVersion.value;
@@ -198,13 +232,26 @@ const handleRollback = () => {
     subTitle: $i18n.t('updateRecord.confirmRollout.subTitle', [rollbackReversion.value]),
     defaultInfo: true,
     confirmFn: async () => {
-      const result = await rollbackWorkload({
-        $namespaceId: props.namespace,
-        $clusterId: props.clusterId,
-        $name: props.name,
-        $category: props.category,
-        $revision: rollbackReversion.value,
-      });
+      let result = false;
+      if (props.category === 'custom_objects') {
+        result = await rollbackGameWorkload({
+          $crd: props.crd,
+          $clusterId: props.clusterId,
+          $name: props.name,
+          $category: props.category,
+          $revision: rollbackReversion.value,
+          namespace: props.namespace,
+        });
+      } else {
+        result = await rollbackWorkload({
+          $namespaceId: props.namespace,
+          $clusterId: props.clusterId,
+          $name: props.name,
+          $category: props.category,
+          $revision: rollbackReversion.value,
+        });
+      }
+
       if (result) {
         $bkMessage({
           theme: 'success',

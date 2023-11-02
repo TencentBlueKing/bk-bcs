@@ -17,7 +17,7 @@
       </div>
     </template>
     <div v-if="isMultiple" class="selected-mark">
-      已选 <span class="num">{{ props.value.length }}</span> 个配置项
+      已选 <span class="num">{{ props.value.length }}</span> 个配置文件
     </div>
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
       <bk-form-item :label="isMultiple ? '添加至模板套餐' : '模板套餐'" property="pkgs" required>
@@ -26,24 +26,27 @@
         </bk-select>
       </bk-form-item>
     </bk-form>
-    <p class="tips">以下服务配置的未命名版本中将添加已选配置项的 <span class="notice">latest 版本</span></p>
-    <bk-loading style="min-height: 100px" :loading="loading">
-      <bk-table :data="citedList" :max-height="maxTableHeight">
-        <bk-table-column label="目标模板套餐" prop="template_set_name"></bk-table-column>
-        <bk-table-column label="使用此套餐的服务">
-          <template #default="{ row }">
-            <div v-if="row.app_id" class="app-info">
-              <div v-overflow-title class="name-text">{{ row.app_name }}</div>
-              <LinkToApp class="link-icon" :id="row.app_id" />
-            </div>
-          </template>
-        </bk-table-column>
-      </bk-table>
-    </bk-loading>
+    <p class="tips">以下服务配置的未命名版本中将添加已选配置文件的 <span class="notice">latest 版本</span></p>
+    <div class="service-table">
+      <bk-loading style="min-height: 100px" :loading="loading">
+        <bk-table :data="citedList" :max-height="maxTableHeight">
+          <bk-table-column label="目标模板套餐" prop="template_set_name"></bk-table-column>
+          <bk-table-column label="使用此套餐的服务">
+            <template #default="{ row }">
+              <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
+                <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+                <LinkToApp class="link-icon" :id="row.app_id" />
+              </div>
+            </template>
+          </bk-table-column>
+        </bk-table>
+      </bk-loading>
+    </div>
   </bk-dialog>
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue';
 import { ITemplateConfigItem, IPackagesCitedByApps } from '../../../../../../../../types/template';
@@ -61,6 +64,8 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits(['update:show', 'added']);
+
+const router = useRouter();
 
 const formRef = ref();
 const selectedPkgs = ref<number[]>([]);
@@ -87,6 +92,15 @@ watch(
     }
   },
 );
+
+const goToConfigPageImport = (id: number) => {
+  const { href } = router.resolve({
+    name: 'service-config',
+    params: { appId: id },
+    query: { pkg_id: currentTemplateSpace.value },
+  });
+  window.open(href, '_blank');
+};
 
 const getCitedData = async () => {
   loading.value = true;
@@ -124,7 +138,7 @@ const handleConfirm = async () => {
     close();
     Message({
       theme: 'success',
-      message: '添加配置项成功',
+      message: '添加配置文件成功',
     });
   } catch (e) {
     console.log(e);
@@ -182,6 +196,7 @@ const close = () => {
   display: flex;
   align-items: center;
   overflow: hidden;
+  cursor: pointer;
   .name-text {
     overflow: hidden;
     white-space: nowrap;

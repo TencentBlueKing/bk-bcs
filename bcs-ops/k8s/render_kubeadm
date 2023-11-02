@@ -169,6 +169,7 @@ render_init_join() {
   fi
 
   node_name="${role}-$(tr ":." "-" <<<"$LAN_IP")"
+  "${ROOT_DIR}"/system/config_bcs_dns -u "$LAN_IP" "$node_name"
 
   cat >"${config_file}" <<EOF
 apiVersion: kubeadm.k8s.io/$kubeadm_tag

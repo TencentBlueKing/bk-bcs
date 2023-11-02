@@ -13,35 +13,46 @@
 package bedis
 
 import (
+	"sync"
+
 	"github.com/prometheus/client_golang/prometheus"
 
 	"bscp.io/pkg/metrics"
 )
 
-func initMetric() *metric {
-	m := new(metric)
-	labels := prometheus.Labels{}
-	m.cmdLagMS = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace:   metrics.Namespace,
-		Subsystem:   metrics.BedisCmdSubSys,
-		Name:        "lag_milliseconds",
-		Help:        "the lags(milliseconds) to exec a bedis command",
-		ConstLabels: labels,
-		Buckets:     []float64{1, 2, 3, 4, 5, 7, 9, 12, 14, 16, 18, 20, 40, 60, 80, 100, 150, 200, 500},
-	}, []string{"cmd"})
-	metrics.Register().MustRegister(m.cmdLagMS)
+var (
+	metricInstance *metric
+	once           sync.Once
+)
 
-	m.errCounter = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
+func initMetric() *metric {
+	once.Do(func() {
+		m := new(metric)
+		labels := prometheus.Labels{}
+		m.cmdLagMS = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace:   metrics.Namespace,
 			Subsystem:   metrics.BedisCmdSubSys,
-			Name:        "total_err_count",
-			Help:        "the total error count when exec a bedis command",
+			Name:        "lag_milliseconds",
+			Help:        "the lags(milliseconds) to exec a bedis command",
 			ConstLabels: labels,
+			Buckets:     []float64{1, 2, 3, 4, 5, 7, 9, 12, 14, 16, 18, 20, 40, 60, 80, 100, 150, 200, 500},
 		}, []string{"cmd"})
-	metrics.Register().MustRegister(m.errCounter)
+		metrics.Register().MustRegister(m.cmdLagMS)
 
-	return m
+		m.errCounter = prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace:   metrics.Namespace,
+				Subsystem:   metrics.BedisCmdSubSys,
+				Name:        "total_err_count",
+				Help:        "the total error count when exec a bedis command",
+				ConstLabels: labels,
+			}, []string{"cmd"})
+		metrics.Register().MustRegister(m.errCounter)
+
+		metricInstance = m
+
+	})
+	return metricInstance
 }
 
 type metric struct {

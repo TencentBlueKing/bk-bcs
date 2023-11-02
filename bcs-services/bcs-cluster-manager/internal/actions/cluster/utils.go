@@ -49,21 +49,6 @@ type clusterInfo struct {
 	clusterID   string
 }
 
-const (
-	// Builder self builder cluster
-	Builder = "builder"
-	// Importer import external cluster
-	Importer = "importer"
-
-	// KubeConfig import
-	KubeConfig = "kubeConfig"
-	// Cloud import
-	Cloud = "cloud"
-
-	// Prod environment
-	Prod = "prod"
-)
-
 func generateClusterID(cls *proto.Cluster, model store.ClusterManagerModel) (string, int, error) {
 	clusterEnv := cls.Environment
 	clusterEngine := cls.EngineType
@@ -702,7 +687,7 @@ func IsSupportAutoScale(cls proto.Cluster) bool {
 	if cls.ClusterType == common.ClusterTypeVirtual {
 		return false
 	}
-	if cls.ClusterCategory == Importer && cls.ImportCategory == KubeConfig {
+	if cls.ClusterCategory == common.Importer && cls.ImportCategory == common.KubeConfigImport {
 		return false
 	}
 

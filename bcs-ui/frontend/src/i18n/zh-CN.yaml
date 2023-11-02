@@ -239,7 +239,6 @@ generic:
     empty:
       noData: 暂无数据
       noData1: 无数据
-      noData2: 查无数据
       noData3: 没有数据
       noMatchData: 无匹配数据
       searchEmpty:
@@ -272,7 +271,6 @@ generic:
     confirm1: 确认
     cancel: 取消
     clearSearch: 清空筛选条件
-    cancelSelectAll: 取消全选
     selectAll: 全选
     add: 添加
     save: 保存
@@ -318,7 +316,6 @@ generic:
     query: 查询
     create: 创建
     submit: 提交
-    podDelete: 重新调度
   label:
     key: 键
     value: 值
@@ -363,6 +360,11 @@ generic:
     execTime: 执行时间
     execTime2: 耗时
     whenFailed: 失败后
+    create: 创建
+    update: 更新
+    delete: 删除
+    start: 开始
+    stop: 停止
   status:
     ready: 正常
     error: 异常
@@ -396,6 +398,7 @@ generic:
     taskKill: 强制终止
     taskNotEnable: 未启动
     restarting: 重启中
+    pending: 处理中
   validate:
     name: 仅支持字母，数字和字符(-)，且以字母开头
     repeatKey: 重复键
@@ -432,41 +435,19 @@ generic:
   ipSelector:
     placeholder:
       searchIp: 请输入IP，多IP可使用空格分隔
-      searchIp2: 多个IP以回车为分隔符
-      searchTopo: 搜索拓扑节点
     validate:
       emptyHost: 请选择服务器
-    title:
-      searchResult: 搜索结果
     action:
-      accurateSearch: 精确
-      expandSelectedPanel: 点击展开
       selectHost: 选择服务器
-    button:
-      staticTop: 静态拓扑
-      customInput: 手动输入
-      parseIp: 点击解析
     tips:
       ipNotAvailable: 当前IP不可用
-      dockerIpNotAvailable: Docker机不允许使用
       ipInUsed: 'IP已被 {name}{id} 占用'
       ipRegionNotMatched: '待选节点所属地域需与集群保持一致, 集群地域: {0}'
       ipVpcNotMatched: '待选节点所属VPC需与集群保持一致, 待选节点VPC: {0}, 集群VPC: {1}'
-      ipError: IP格式有误或不存在，检查后重试！
     selected:
-      text: 已选节点
-      suffix: '{count} 个IP节点'
       text2: '已选择{remainCount}个节点'
-      emptyMsg: 请在左侧勾选IP或者节点
-      action:
-        removeAll: 移除所有
-        copyIp:
-          text: 复制IP
-          msg: '成功复制IP {number} 个'
     label:
       innerIp: 内网IP
-      outerIp: 外网IP
-      otherIp: 其他IP
       agentStatus: Agent状态
       idc: 机房
       serverModel: 机型
@@ -682,6 +663,10 @@ cluster:
       importType: 导入方式
       cloudToken: 云凭证
       kubeConfig: 集群kubeconfig
+      network:
+        text: 集群访问网络
+        intranet: 内网访问
+        extranet: 外网访问
     msg:
       managedClusterInfo: 创建托管集群必须添加至少一个节点，以运行必要的服务
       independentClusterInfo:
@@ -2202,6 +2187,7 @@ dashboard:
   workload:
     tips:
       containerMemoryWorkingSetBytesOom: container_memory_working_set_bytes，limit限制时oom判断依据
+      inplaceUpdateNotSupportRestart: 原地升级策略不支持滚动重启操作
     label:
       upgrade:
         maxSurg: '最大调度Pod数量（maxSurge）: {num}'

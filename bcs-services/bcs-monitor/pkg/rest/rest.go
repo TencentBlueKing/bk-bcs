@@ -209,6 +209,14 @@ func getResourceID(b []byte, ctx *Context) resource {
 }
 
 var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audit.Action){
+	"POST./projects/:projectId/clusters/:clusterId/log_collector/entrypoints": func(
+		b []byte, ctx *Context) (audit.Resource, audit.Action) {
+		res := getResourceID(b, ctx)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.ClusterID, ResourceName: res.ClusterID,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "get_log_rule", ActivityType: audit.ActivityTypeView}
+	},
 	"POST./projects/:projectId/clusters/:clusterId/log_collector/rules": func(
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		// resourceData解析
@@ -217,6 +225,14 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "create_log_rule", ActivityType: audit.ActivityTypeCreate}
+	},
+	"GET./projects/:projectId/clusters/:clusterId/log_collector/rules/:id": func(
+		b []byte, ctx *Context) (audit.Resource, audit.Action) {
+		res := getResourceID(b, ctx)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "get_log_rule", ActivityType: audit.ActivityTypeView}
 	},
 	"PUT./projects/:projectId/clusters/:clusterId/log_collector/rules/:id": func(
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
@@ -298,8 +314,14 @@ func addAudit(ctx *Context, b []byte, startTime, endTime time.Time, code int, me
 	if code != 0 {
 		result.Status = audit.ActivityStatusFailed
 	}
-	_ = component.GetAuditClient().R().
-		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
+
+	// add audit
+	auditAction := component.GetAuditClient().R()
+	// 查看类型不用记录activity
+	if act.ActivityType == audit.ActivityTypeView {
+		auditAction.DisableActivity()
+	}
+	_ = auditAction.SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 }
 
 // 获取请求体

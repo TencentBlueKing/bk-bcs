@@ -83,6 +83,8 @@ const (
 	ResourceTypeWebConsole ResourceType = "web_console"
 	// ResourceTypeLogRule means the resource type is log rule
 	ResourceTypeLogRule ResourceType = "log_rule"
+	// ResourceTypeGitOps means the source type is gitops
+	ResourceTypeGitOps ResourceType = "gitops"
 )
 
 // Activity is the struct of activity

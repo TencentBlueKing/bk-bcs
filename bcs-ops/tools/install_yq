@@ -30,24 +30,30 @@ safe_source() {
 }
 
 _curl_yq() {
-  local url save_file version
-  version=$1
-  url="${REPO_URL}/yq-${version}.xz"
-  save_file="/tmp/yq.xz"
-  if curl -sSfL "${url}" -o "${save_file}" -m "360"; then
-    # rm -f /tmp/yq
-    unxz -dc ${save_file} >/tmp/yq
-    chmod +x /tmp/yq
-    mv /tmp/yq /usr/local/bin/yq
-    rm -f ${save_file}
+  local bin_path name ver file url
+  bin_path=${ROOT_DIR}/version-${K8S_VER}/bin-tools/
+  mkdir -p "$bin_path"
+
+  name="yq"
+  ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
+  file="${name}-${ver}.xz"
+  url=${REPO_URL:-}/${file}
+  if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
+    utils::log "INFO" "Downloaded ${url}"
   else
-    utils::log "ERROR" "fail to download yq: $url"
+    utils::log "ERROR" "fail to download ${url}"
   fi
+  _offline_yq
 }
 
 _offline_yq() {
-  # ToDo
-  true
+  local bin_path tar_name
+  bin_path=${ROOT_DIR}/version-${K8S_VER}/bin-tools/
+  tar_name=$(find "$bin_path" -iname "yq-*.xz" -type f | head -1)
+
+  unxz -dc "${tar_name}" >/tmp/yq
+  chmod +x /tmp/yq
+  mv /tmp/yq /usr/local/bin/yq
 }
 
 main() {

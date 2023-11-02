@@ -527,21 +527,47 @@ func (g *IngressConverter) CheckIngressServiceAvailable(ingress *networkextensio
 	// use set to avoid repeat message
 	msgSet := make(map[string]struct{})
 	for i, rule := range ingress.Spec.Rules {
-		if len(rule.Services) == 0 {
-			msgSet[fmt.Sprintf(constant.ValidateMsgEmptySvc, i+1)] = struct{}{}
-			continue
+		protocol := strings.ToLower(rule.Protocol)
+		if protocol == networkextensionv1.ProtocolUDP || protocol == networkextensionv1.ProtocolTCP {
+			if len(rule.Services) == 0 {
+				msgSet[fmt.Sprintf(constant.ValidateMsgEmptySvc, i+1)] = struct{}{}
+				continue
+			}
+			for _, service := range rule.Services {
+				svc := &k8scorev1.Service{}
+				err := g.cli.Get(context.TODO(), k8stypes.NamespacedName{Namespace: service.ServiceNamespace,
+					Name: service.ServiceName}, svc)
+				if err != nil {
+					if k8serrors.IsNotFound(err) {
+						msgSet[fmt.Sprintf(constant.ValidateMsgNotFoundSvc, i+1, service.ServiceNamespace,
+							service.ServiceName)] = struct{}{}
+					} else {
+						blog.Errorf("k8s get resource failed, err: %+v", err)
+						msgSet[fmt.Sprintf(constant.ValidateMsgUnknownErr, err)] = struct{}{}
+					}
+				}
+			}
 		}
-		for _, service := range rule.Services {
-			svc := &k8scorev1.Service{}
-			err := g.cli.Get(context.TODO(), k8stypes.NamespacedName{Namespace: service.ServiceNamespace,
-				Name: service.ServiceName}, svc)
-			if err != nil {
-				if k8serrors.IsNotFound(err) {
-					msgSet[fmt.Sprintf(constant.ValidateMsgNotFoundSvc, i+1, service.ServiceNamespace,
-						service.ServiceName)] = struct{}{}
-				} else {
-					blog.Errorf("k8s get resource failed, err: %+v", err)
-					msgSet[fmt.Sprintf(constant.ValidateMsgUnknownErr, err)] = struct{}{}
+
+		if protocol == networkextensionv1.ProtocolHTTP || protocol == networkextensionv1.ProtocolHTTPS {
+			for j, route := range rule.Routes {
+				if len(route.Services) == 0 {
+					msgSet[fmt.Sprintf(constant.ValidateRouteMsgEmptySvc, i+1, j+1)] = struct{}{}
+					continue
+				}
+				for _, service := range route.Services {
+					svc := &k8scorev1.Service{}
+					err := g.cli.Get(context.TODO(), k8stypes.NamespacedName{Namespace: service.ServiceNamespace,
+						Name: service.ServiceName}, svc)
+					if err != nil {
+						if k8serrors.IsNotFound(err) {
+							msgSet[fmt.Sprintf(constant.ValidateRouteMsgNotFoundSvc, i+1, j+1, service.ServiceNamespace,
+								service.ServiceName)] = struct{}{}
+						} else {
+							blog.Errorf("k8s get resource failed, err: %+v", err)
+							msgSet[fmt.Sprintf(constant.ValidateMsgUnknownErr, err)] = struct{}{}
+						}
+					}
 				}
 			}
 		}

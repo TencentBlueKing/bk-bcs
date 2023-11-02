@@ -1,6 +1,12 @@
 <template>
   <div class="permission-input-picker">
-    <bk-popover theme="light" trigger="manual" placement="top" :is-show="showPrivilegeErrorTips">
+    <bk-popover
+      ext-cls="privilege-tips-wrap"
+      theme="light"
+      trigger="manual"
+      placement="top"
+      :is-show="showPrivilegeErrorTips"
+    >
       <bk-input
         v-model="privilegeInputVal"
         type="number"

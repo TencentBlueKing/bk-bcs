@@ -71,15 +71,15 @@ func (plugin *MetricPlugin) inClusterClient() error {
 	return nil
 }
 
-func (plugin *MetricPlugin) metric(ctx context.Context, r *http.Request) *mw.HttpResponse {
-	namespace, smName, resp := plugin.parseParam(ctx, r)
+func (plugin *MetricPlugin) metric(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	namespace, smName, resp := plugin.parseParam(r.Context(), r)
 	if resp != nil {
-		return resp
+		return r, resp
 	}
 	serviceMonitor, err := plugin.monitorClient.MonitoringV1().ServiceMonitors(namespace).
-		Get(ctx, smName, metav1.GetOptions{})
+		Get(r.Context(), smName, metav1.GetOptions{})
 	if err != nil {
-		return mw.ReturnErrorResponse(http.StatusBadRequest,
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Wrapf(err, "get service monitor '%s/%s' failed", namespace, smName))
 	}
 	metricPortPath := make(map[string][]string)
@@ -93,11 +93,11 @@ func (plugin *MetricPlugin) metric(ctx context.Context, r *http.Request) *mw.Htt
 	}
 
 	labelSelector := labels.SelectorFromSet(serviceMonitor.Spec.Selector.MatchLabels)
-	endpoints, err := plugin.k8sClient.CoreV1().Endpoints(namespace).List(ctx, metav1.ListOptions{
+	endpoints, err := plugin.k8sClient.CoreV1().Endpoints(namespace).List(r.Context(), metav1.ListOptions{
 		LabelSelector: labelSelector.String(),
 	})
 	if err != nil {
-		return mw.ReturnErrorResponse(http.StatusBadRequest,
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Wrapf(err, "get endpoints by label '%s' failed", labelSelector.String()))
 	}
 
@@ -106,7 +106,7 @@ func (plugin *MetricPlugin) metric(ctx context.Context, r *http.Request) *mw.Htt
 		epMetrics := plugin.buildEndpointsMetrics(smName, metricPortPath, &ep)
 		result = append(result, epMetrics...)
 	}
-	return mw.ReturnDirectResponse(strings.Join(result, "\n"))
+	return r, mw.ReturnDirectResponse(strings.Join(result, "\n"))
 }
 
 func (plugin *MetricPlugin) buildEndpointsMetrics(smName string, metricPortPath map[string][]string,

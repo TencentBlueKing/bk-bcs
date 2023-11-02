@@ -77,10 +77,10 @@ export default function useDetail(options: IDetailOptions) {
     activePanel.value = item.name;
   };
   // 获取workload详情
-  const handleGetDetail = async () => {
+  const handleGetDetail = async (loading = true) => {
     const { namespace, category, name, type, clusterId } = options;
     // workload详情
-    isLoading.value = true;
+    isLoading.value = loading;
     const res = await $store.dispatch('dashboard/getResourceDetail', {
       $namespaceId: namespace,
       $category: category,
@@ -94,10 +94,10 @@ export default function useDetail(options: IDetailOptions) {
     return detail.value;
   };
 
-  const handleGetCustomObjectDetail = async () => {
+  const handleGetCustomObjectDetail = async (loading = true) => {
     const { name, crd, namespace, clusterId } = options;
     // workload详情
-    isLoading.value = true;
+    isLoading.value = loading;
     const res = await $store.dispatch('dashboard/getCustomObjectResourceDetail', {
       $crdName: crd,
       $namespaceId: namespace,

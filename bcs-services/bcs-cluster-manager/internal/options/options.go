@@ -251,12 +251,13 @@ type AuthConfig struct {
 
 // GseConfig for gse
 type GseConfig struct {
-	Enable     bool   `json:"enable"`
-	AppCode    string `json:"appCode"`
-	AppSecret  string `json:"appSecret"`
-	BkUserName string `json:"bkUserName"`
-	Server     string `json:"server"`
-	Debug      bool   `json:"debug"`
+	Enable        bool   `json:"enable"`
+	AppCode       string `json:"appCode"`
+	AppSecret     string `json:"appSecret"`
+	BkUserName    string `json:"bkUserName"`
+	EsbServer     string `json:"server"`
+	GatewayServer string `json:"gatewayServer"`
+	Debug         bool   `json:"debug"`
 }
 
 // JobConfig for job

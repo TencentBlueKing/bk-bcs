@@ -71,7 +71,7 @@ func (s *secretStore) InitProjectSecret(ctx context.Context, project string) err
 		},
 	}
 	bs, err := s.send(ctx, hr)
-	if err != nil && !utils.IsSecretAlreadyExist(err) {
+	if err != nil {
 		return errors.Wrapf(err, "init secret for project '%s' failed", project)
 	}
 	response := new(secretResponse)

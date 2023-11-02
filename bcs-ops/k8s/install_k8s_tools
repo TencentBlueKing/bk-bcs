@@ -72,9 +72,47 @@ _yum_k8s() {
   yum install -y "kubeadm-${pkg_ver}" "kubelet-${pkg_ver}" "kubectl-${pkg_ver}"
 }
 
+_curl_k8s() {
+  local bin_path name ver file url
+  bin_path=${ROOT_DIR}/version-${K8S_VER}/bin-tools/
+  mkdir -p "$bin_path"
+
+  name="k8s"
+  ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
+  file="${name}-${ver}.tgz"
+  url=${REPO_URL:-}/${file}
+  if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
+    utils::log "INFO" "Downloaded ${url}"
+  else
+    utils::log "ERROR" "fail to download ${url}"
+  fi
+
+  name="crictl"
+  ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
+  file="${name}-${ver}.tgz"
+  url="${REPO_URL}/${file}"
+  if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
+    utils::log "INFO" "Downloaded ${url}"
+  else
+    utils::log "ERROR" "fail to download ${url}"
+  fi
+
+  name="cni-plugins"
+  ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
+  file="${name}-${ver}.tgz"
+  url="${REPO_URL}/${file}"
+  if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
+    utils::log "INFO" "Downloaded ${url}"
+  else
+    utils::log "ERROR" "fail to download ${url}"
+  fi
+
+  _offline_k8s
+}
+
 _offline_k8s() {
   local bin_path tar_name
-  bin_path=${ROOT_DIR}/version-${VERSION}/bin-tools/
+  bin_path=${ROOT_DIR}/version-${K8S_VER}/bin-tools/
 
   tar_name=$(find "$bin_path" -iname "k8s-*.tgz" -type f | head -1)
   if [[ -z ${tar_name} ]]; then
@@ -82,9 +120,9 @@ _offline_k8s() {
   else
     tar xvzf "${tar_name}" -C /usr/bin/ --strip-components=1 bin/
     tar xvzf "${tar_name}" -C /etc/systemd/system/ --strip-components=1 systemd/
-	mkdir -pv /etc/systemd/system/kubelet.service.d/
-	tar xvzf "${tar_name}" -C /etc/systemd/system/kubelet.service.d/ \
-	  --strip-components=1 systemd/10-kubeadm.conf
+    mkdir -pv /etc/systemd/system/kubelet.service.d/
+    tar xvzf "${tar_name}" -C /etc/systemd/system/kubelet.service.d/ \
+      --strip-components=1 systemd/10-kubeadm.conf
   fi
 
   tar_name=$(find "$bin_path" -iname "crictl-*.tgz" -type f | head -1)
@@ -113,7 +151,17 @@ main() {
   if [[ -n ${BCS_OFFLINE:-} ]]; then
     _offline_k8s
   else
-    _yum_k8s
+    case ${INSTALL_METHOD} in
+      "yum")
+        _yum_k8s
+        ;;
+      "curl")
+        _curl_k8s
+        ;;
+      *)
+        utils::log "ERROR" "unkown ${INSTALL_METHOD} to exec download k8s tools"
+        ;;
+    esac
   fi
 
   utils::log "INFO" "check kubeadm status"

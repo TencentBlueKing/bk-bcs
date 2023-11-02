@@ -27,6 +27,7 @@ func InitV3Routers(ws *restful.WebService) {
 	ws.Filter(middleware.ProjectFilter)
 	ws.Filter(middleware.TracingFilter)
 	ws.Filter(middleware.LoggingFilter)
+	ws.Filter(middleware.LanguageFilter)
 
 	initActivityLogRouters(ws)
 }
@@ -36,4 +37,5 @@ func initActivityLogRouters(ws *restful.WebService) {
 	ws.Route(auth.ManagerAuthFunc(ws.POST("/activity_logs")).To(activity.PushActivities))
 	ws.Route(auth.ProjectViewFunc(auth.TokenAuthenticateV2Func(ws.GET("/projects/{project_code}/activity_logs"))).
 		To(activity.SearchActivities))
+	ws.Route(ws.GET("/activity_logs/resource_types").To(activity.ResourceTypes))
 }

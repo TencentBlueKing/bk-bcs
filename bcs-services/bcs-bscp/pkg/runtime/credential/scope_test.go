@@ -54,12 +54,12 @@ func TestCredentialScopeMatchApp(t *testing.T) {
 		appName     string
 		expectMatch bool
 	}{
+		{"*/*", "mysql", true},
 		{"mysql/*", "mysql", true},
 		{"test-*/*", "test-123", true},
 		{"*-test-*/*", "abc-test-123", true},
 		{"test-*/*", "prod-123", false},
 		{"mysql/*", "nginx", false},
-		{"nginx/*.conf", "apache", false},
 	}
 
 	for _, tc := range testCases {

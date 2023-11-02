@@ -14,6 +14,7 @@ package manager
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
@@ -30,6 +31,7 @@ type GitOps struct {
 	User           string `json:"user,omitempty"`
 	Pass           string `json:"pass,omitempty"`
 	AdminNamespace string `json:"adminnamespace,omitempty"`
+	RepoServer     string `json:"repoServer,omitempty"`
 }
 
 // Options for bcs-gitops-manager
@@ -48,9 +50,12 @@ type Options struct {
 	APIConnectURL        string                          `json:"apiconnecturl,omitempty"`
 	ClusterSyncInterval  uint                            `json:"clustersyncinterval,omitempty"`
 	GitOps               *GitOps                         `json:"gitops,omitempty"`
+	PublicProjectsStr    string                          `json:"publicProjects"`
+	PublicProjects       []string                        `json:"-"`
 	SecretServer         *secretstore.SecretStoreOptions `json:"secretserver,omitempty"`
 	Auth                 *common.AuthConfig              `json:"auth,omitempty"`
 	TraceConfig          *common.TraceConfig             `json:"traceConfig,omitempty"`
+	AuditConfig          *common.AuditConfig             `json:"auditConfig"`
 }
 
 // DefaultOptions for gitops-manager
@@ -141,6 +146,9 @@ func (opt *Options) Validate() error {
 	}
 	if len(opt.GitOps.AdminNamespace) == 0 {
 		return fmt.Errorf("lost gitops service admin namespace")
+	}
+	if opt.PublicProjectsStr != "" {
+		opt.PublicProjects = strings.Split(opt.PublicProjectsStr, ",")
 	}
 	if opt.SecretServer == nil || opt.SecretServer.Address == "" || opt.SecretServer.Port == "" {
 		return fmt.Errorf("lost secret service address or port")

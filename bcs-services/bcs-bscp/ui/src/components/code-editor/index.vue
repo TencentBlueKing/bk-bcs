@@ -11,6 +11,8 @@ import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker.js?worker
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker.js?worker';
 import { IVariableEditParams } from '../../../types/variable';
 import useEditorVariableReplace from '../../utils/hooks/use-editor-variable-replace';
+import { useRoute } from 'vue-router';
+import { getUnReleasedAppVariables, getVariableList } from '../../api/variable';
 
 interface errorLineItem {
   lineNumber: number;
@@ -49,7 +51,7 @@ const props = withDefaults(
     editable: true,
     lfEol: true,
     language: '',
-  }
+  },
 );
 
 const emit = defineEmits(['update:modelValue', 'change', 'enter']);
@@ -57,29 +59,34 @@ const emit = defineEmits(['update:modelValue', 'change', 'enter']);
 const codeEditorRef = ref();
 let editor: monaco.editor.IStandaloneCodeEditor;
 let editorHoverProvider: monaco.IDisposable;
+let editorVariableProvide: monaco.IDisposable;
 const localVal = ref(props.modelValue);
-
+const route = useRoute();
+const bkBizId = ref(String(route.params.spaceId));
+const appId = ref(Number(route.params.appId));
+const variableNameList = ref<string[]>();
+const privateVariableNameList = ref<string[]>();
 watch(
   () => props.modelValue,
   (val) => {
     if (val !== localVal.value) {
       editor.setValue(val);
     }
-  }
+  },
 );
 
 watch(
   () => props.language,
   (val) => {
     monaco.editor.setModelLanguage(editor.getModel() as monaco.editor.ITextModel, val);
-  }
+  },
 );
 
 watch(
   () => props.editable,
   (val) => {
     editor.updateOptions({ readOnly: !val });
-  }
+  },
 );
 
 watch(
@@ -88,23 +95,28 @@ watch(
     if (Array.isArray(val) && val.length > 0) {
       editorHoverProvider = useEditorVariableReplace(editor, val);
     }
-  }
+  },
 );
 
 watch(
   () => props.errorLine,
   () => {
     setErrorLine();
-  }
+  },
 );
 
 onMounted(() => {
+  if (bkBizId.value && appId.value) {
+    handleVariableList();
+    aotoCompletion();
+  }
   if (!editor) {
+    registerLanguage();
     editor = monaco.editor.create(codeEditorRef.value as HTMLElement, {
       value: localVal.value,
-      theme: 'vs-dark',
+      theme: 'custom-theme',
       automaticLayout: true,
-      language: props.language,
+      language: props.language || 'custom-language',
       readOnly: !props.editable,
       scrollBeyondLastLine: false,
     });
@@ -116,6 +128,7 @@ onMounted(() => {
   if (Array.isArray(props.variables) && props.variables.length > 0) {
     editorHoverProvider = useEditorVariableReplace(editor, props.variables);
   }
+
   editor.onDidChangeModelContent(() => {
     localVal.value = editor.getValue();
     emit('update:modelValue', localVal.value);
@@ -129,6 +142,8 @@ onMounted(() => {
       listener.dispose();
     }
   });
+  // 自动换行
+  editor.updateOptions({ wordWrap: 'on' });
 });
 
 // 添加错误行
@@ -146,6 +161,79 @@ const setErrorLine = () => {
   monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
 };
 
+// 获取全局变量和私有变量列表
+const handleVariableList = async () => {
+  const [variableList, privateVariableList] = await Promise.all([
+    getVariableList(bkBizId.value, { start: 0, limit: 1000 }),
+    getUnReleasedAppVariables(bkBizId.value, appId.value),
+  ]);
+  variableNameList.value = variableList.details.map((item: any) => `.${item.spec.name}`);
+  privateVariableNameList.value = privateVariableList.details.map((item: any) => `.${item.name}`);
+  variableNameList.value?.filter(item => !privateVariableNameList.value!.includes(item));
+};
+
+// 注册自定义语言
+const registerLanguage = () => {
+  // 注册自定义语言
+  monaco.languages.register({ id: 'custom-language' });
+  monaco.languages.setMonarchTokensProvider('custom-language', {
+    tokenizer: {
+      root: [{ regex: /\{/, action: { token: 'delimiter.curly', next: '@curly' } }],
+      curly: [
+        { regex: /\}/, action: { token: 'delimiter.curly', next: '@pop' } },
+        { regex: /[^{}\s]+/, action: 'custom-token' }, // 自定义内部内容的高亮规则
+        { regex: /\s+/, action: '' }, // 忽略空白符
+      ],
+    },
+  });
+  monaco.editor.defineTheme('custom-theme', {
+    base: 'vs-dark',
+    inherit: true,
+    colors: {},
+    rules: [
+      { token: 'custom-token', foreground: '38C197' },
+      { token: 'delimiter.curly', foreground: '38C197' },
+    ],
+  });
+  // 设置语言配置
+  monaco.languages.setLanguageConfiguration('custom-language', {
+    brackets: [['{', '}']],
+  });
+};
+// 联想输入
+const aotoCompletion = () => {
+  editorVariableProvide = monaco.languages.registerCompletionItemProvider(props.language || 'custom-language', {
+    triggerCharacters: ['{'], // 触发自动补全的字符
+    provideCompletionItems(model: any, position: any) {
+      const lineContent = model.getLineContent(position.lineNumber);
+      const charBeforeCursor = lineContent.charAt(position.column - 2);
+      // 根据当前的文本内容和光标位置，返回自动补全的候选项列表
+      const variableSuggestions = variableNameList.value!.map((item: string) => ({
+        label: item, // 候选项的显示文本
+        kind: monaco.languages.CompletionItemKind.Variable, // 候选项的类型
+        insertText: item, // 插入光标后的文本
+        range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+      }));
+      const privateVariableSuggestions = privateVariableNameList.value!.map((item: string) => ({
+        label: item,
+        kind: monaco.languages.CompletionItemKind.Variable,
+        insertText: item,
+        range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+      }));
+      const suggestions = [...variableSuggestions, ...privateVariableSuggestions];
+      if (charBeforeCursor === '{') {
+        return {
+          suggestions,
+        };
+      }
+      return {
+        suggestions: [],
+      };
+    },
+    resolveCompletionItem: (item: any) => item,
+  });
+};
+
 // @bug vue3的Teleport组件销毁时，子组件的onBeforeUnmount不会被执行，会出现内存泄漏，目前尚未被修复 https://github.com/vuejs/core/issues/6347
 // onBeforeUnmount(() => {
 //   if (editor) {
@@ -161,6 +249,9 @@ const destroy = () => {
   }
   if (editorHoverProvider) {
     editorHoverProvider.dispose();
+  }
+  if (editorVariableProvide) {
+    editorVariableProvide.dispose();
   }
 };
 

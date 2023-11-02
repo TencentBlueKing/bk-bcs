@@ -24,3 +24,11 @@ const userRequest = createRequest({
 });
 // user
 export const userInfo = userRequest('get', '/users/info');
+
+// 操作审计
+const v3Request = createRequest({
+  domain: window.BCS_API_HOST,
+  prefix: '/bcsapi/v4/usermanager/v3',
+});
+export const activityLogsResourceTypes = v3Request('get', '/activity_logs/resource_types');
+export const activityLogs = v3Request('get', '/projects/$projectCode/activity_logs');

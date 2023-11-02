@@ -81,6 +81,8 @@ var NoAuthMethod = []string{
 	"ClusterManager.ListCloudOsImage",
 	"ClusterManager.ListCloudInstances",
 	"ClusterManager.ListKeypairs",
+	"ClusterManager.ListCloudProjects",
+	"ClusterManager.ListCloudVpcs",
 
 	"ClusterManager.ListOperationLogs",
 	"ClusterManager.ListResourceSchema",

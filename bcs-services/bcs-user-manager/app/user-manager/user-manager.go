@@ -13,10 +13,13 @@
 package usermanager
 
 import (
+	"bytes"
 	"crypto/tls"
+	"embed"
 	"errors"
 	"fmt"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 
@@ -28,11 +31,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/emicklei/go-restful"
 	"github.com/go-micro/plugins/v4/registry/etcd"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"go-micro.dev/v4/registry"
 
+	i18n2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
@@ -103,6 +108,9 @@ func (u *UserManager) Start() error {
 
 	router := u.httpServ.GetRouter()
 	webContainer := u.httpServ.GetWebContainer()
+	// set recover handler
+	webContainer.RecoverHandler(responseOnRecover)
+	webContainer.DoNotRecover(false)
 
 	// handle user and cluster manager request
 	router.Handle("/usermanager/{sub_path:.*}", webContainer)
@@ -265,6 +273,16 @@ func (u *UserManager) migrate() {
 	}()
 }
 
+// initI18n init i18n
+func (u *UserManager) initI18n() {
+	i18n.Instance()
+	// 加载翻译文件路径
+	i18n.SetPath([]embed.FS{i18n2.Assets})
+	// 设置默认语言
+	// 默认是 zh
+	i18n.SetLanguage("zh")
+}
+
 func (u *UserManager) initUserManagerServer() error {
 	var err error
 	err = u.initCryptor()
@@ -288,6 +306,23 @@ func (u *UserManager) initUserManagerServer() error {
 	}
 
 	u.migrate()
+	u.initI18n()
 
 	return nil
+}
+
+// responseOnRecover response on recover
+func responseOnRecover(panicReason interface{}, httpWriter http.ResponseWriter) {
+	var buffer bytes.Buffer
+	buffer.WriteString(fmt.Sprintf("recover from panic situation: - %v\r\n", panicReason))
+	for i := 2; ; i++ {
+		_, file, line, ok := runtime.Caller(i)
+		if !ok {
+			break
+		}
+		buffer.WriteString(fmt.Sprintf("    %s:%d\r\n", file, line))
+	}
+	blog.Error(buffer.String())
+	httpWriter.WriteHeader(http.StatusInternalServerError)
+	httpWriter.Write([]byte(`{"code": 500, "message": "server error"}`))
 }

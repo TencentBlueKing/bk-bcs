@@ -15,11 +15,11 @@
                   :indeterminate="isIndeterminate"
                   @change="handleAllSelectionChange"
                 />
-                <div class="name-text">配置项名称</div>
+                <div class="name-text">配置文件名称</div>
               </div>
             </th>
-            <th class="th-cell path">配置项路径</th>
-            <th class="th-cell memo">配置项描述</th>
+            <th class="th-cell path">配置文件路径</th>
+            <th class="th-cell memo">配置文件描述</th>
           </tr>
         </thead>
         <tbody>
@@ -46,7 +46,7 @@
           </tr>
           <tr v-if="props.configList.length === 0">
             <td class="td-cell" :colspan="3">
-              <bk-exception class="empty-tips" type="empty" scene="part">暂无配置项</bk-exception>
+              <bk-exception class="empty-tips" type="empty" scene="part">暂无配置文件</bk-exception>
             </td>
           </tr>
         </tbody>

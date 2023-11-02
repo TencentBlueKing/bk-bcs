@@ -55,7 +55,7 @@ watch(
       prefix.value = currentPrefix;
       variableConfig.value = { ...props.data, name };
     }
-  }
+  },
 );
 
 const handleFormChange = (val: IVariableEditParams, localPrefix: string) => {

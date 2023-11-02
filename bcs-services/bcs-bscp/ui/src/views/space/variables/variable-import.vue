@@ -31,7 +31,7 @@ watch(
   () => props.show,
   (val) => {
     isShow.value = val;
-  }
+  },
 );
 onMounted(() => {});
 const handleClose = () => {
