@@ -967,6 +967,13 @@ func (c Credential) validate() error {
 	return nil
 }
 
+const (
+	// VaultTokenEnv represents the environment variable key for the Vault token.
+	VaultTokenEnv = "VAULT_TOKEN"
+	// VaultAddressEnv represents the environment variable key for the Vault server address.
+	VaultAddressEnv = "VAULT_ADDR"
+)
+
 // Vault Used to store the configuration information required for connecting to the Vault server.
 type Vault struct {
 	// Address is used to store the address of the Vault server
@@ -987,4 +994,12 @@ func (v Vault) validate() error {
 	}
 
 	return nil
+}
+
+// getConfigFromEnv Read configuration from environment variables
+func (v *Vault) getConfigFromEnv() {
+
+	v.Token = os.Getenv(VaultTokenEnv)
+	v.Address = os.Getenv(VaultAddressEnv)
+
 }
