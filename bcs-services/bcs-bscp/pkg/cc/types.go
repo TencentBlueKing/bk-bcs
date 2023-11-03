@@ -971,7 +971,7 @@ const (
 	// VaultTokenEnv represents the environment variable key for the Vault token.
 	VaultTokenEnv = "VAULT_TOKEN"
 	// VaultAddressEnv represents the environment variable key for the Vault server address.
-	VaultAddressEnv = "VAULT_ADDRESS"
+	VaultAddressEnv = "VAULT_ADDR"
 )
 
 // Vault Used to store the configuration information required for connecting to the Vault server.
