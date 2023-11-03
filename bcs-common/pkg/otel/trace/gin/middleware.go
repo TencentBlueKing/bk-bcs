@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -116,6 +117,8 @@ func Middleware(server string, opts ...Option) gin.HandlerFunc { // nolint
 		if len(query) > 1024 {
 			query = fmt.Sprintf("%s...(Total %s)", query[:1024], humanize.Bytes(uint64(len(query))))
 		}
+		// 以utf-8方式合法截取字符串
+		query = strings.ToValidUTF8(query, "")
 		span.SetAttributes(attribute.Key("query").String(query))
 
 		// 记录body
@@ -123,6 +126,8 @@ func Middleware(server string, opts ...Option) gin.HandlerFunc { // nolint
 		if len(body) > 1024 {
 			body = fmt.Sprintf("%s...(Total %s)", body[:1024], humanize.Bytes(uint64(len(body))))
 		}
+		// 以utf-8方式合法截取字符串
+		body = strings.ToValidUTF8(body, "")
 		span.SetAttributes(attribute.Key("body").String(body))
 
 		// pass the span through the request context
@@ -139,6 +144,8 @@ func Middleware(server string, opts ...Option) gin.HandlerFunc { // nolint
 		if len(respBody) > 1024 {
 			respBody = fmt.Sprintf("%s...(Total %s)", writer.b.String()[:1024], humanize.Bytes(uint64(len(writer.b.String()))))
 		}
+		// 以utf-8方式合法截取字符串
+		respBody = strings.ToValidUTF8(respBody, "")
 		span.SetAttributes(attribute.Key("rsp").String(respBody))
 		elapsedTime := time.Since(startTime)
 		span.SetAttributes(attribute.Key("elapsed_ime").String(elapsedTime.String()))

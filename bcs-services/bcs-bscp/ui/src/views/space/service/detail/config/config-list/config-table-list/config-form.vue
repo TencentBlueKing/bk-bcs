@@ -514,8 +514,16 @@ defineExpose({
 <style lang="scss">
 .privilege-select-popover.bk-popover {
   padding: 0;
+  .bk-pop2-arrow {
+    border-left: 1px solid #dcdee5;
+    border-top: 1px solid #dcdee5;
+  }
 }
 .privilege-tips-wrap {
   border: 1px solid #dcdee5;
+  .bk-pop2-arrow {
+    border-right: 1px solid #dcdee5;
+    border-bottom: 1px solid #dcdee5;
+  }
 }
 </style>

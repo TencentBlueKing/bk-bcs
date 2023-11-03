@@ -115,8 +115,10 @@ func (b *bkrepoStorage) IsExist(ctx context.Context, filePath string) (bool, err
 func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]string, error) {
 	// 节点详情 https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/node/node.md
 	// GET /repository/api/node/page/{projectId}/{repoName}/{fullPath}
-	rawURL := fmt.Sprintf("%s/repository/api/node/page/%s/%s/%s", config.G.Repository.Bkrepo.Endpoint,
-		config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo, folderName)
+	// 目前一天最多一千条，pageSize限制为1000条
+	rawURL := fmt.Sprintf("%s/repository/api/node/page/%s/%s/%s?pageSize=1000",
+		config.G.Repository.Bkrepo.Endpoint, config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo,
+		folderName)
 
 	files := make([]string, 0)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
