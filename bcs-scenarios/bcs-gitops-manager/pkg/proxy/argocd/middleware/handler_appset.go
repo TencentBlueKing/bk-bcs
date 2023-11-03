@@ -19,13 +19,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/argoproj/argo-cd/v2/applicationset/generators"
 	"github.com/argoproj/argo-cd/v2/applicationset/utils"
 	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
-	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
@@ -33,29 +32,6 @@ import (
 var (
 	render = utils.Render{}
 )
-
-func (h *handler) checkDryRunApplication(ctx context.Context, app *v1alpha1.Application) (int, error) {
-	repoUrl := app.Spec.Source.RepoURL
-	repo, err := h.option.Storage.GetRepository(ctx, repoUrl)
-	if err != nil {
-		return http.StatusInternalServerError, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
-	}
-	if repo == nil {
-		return http.StatusNotFound, fmt.Errorf("repo '%s' not found", repoUrl)
-	}
-	clusterQuery := clusterclient.ClusterQuery{
-		Server: app.Spec.Destination.Server,
-		Name:   app.Spec.Destination.Name,
-	}
-	argoCluster, err := h.option.Storage.GetCluster(ctx, &clusterQuery)
-	if err != nil {
-		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster '%v' failed", clusterQuery)
-	}
-	if argoCluster == nil {
-		return http.StatusNotFound, fmt.Errorf("cluster '%v' not found", clusterQuery)
-	}
-	return 0, nil
-}
 
 // CheckCreateApplicationSet check the applicationset creation
 func (h *handler) CheckCreateApplicationSet(ctx context.Context,
@@ -77,15 +53,69 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 	appset.Spec.Template.Annotations[common.ProjectIDKey] = common.GetBCSProjectID(argoProject.Annotations)
 	appset.Spec.Template.Annotations[common.ProjectBusinessIDKey] =
 		common.GetBCSProjectBusinessKey(argoProject.Annotations)
+	if err = h.checkApplicationSetGenerator(ctx, appset); err != nil {
+		return nil, http.StatusBadRequest, errors.Wrapf(err, "check applicationset generator failed")
+	}
+	blog.Infof("RequestID[%s] check applicationset generator success", RequestID(ctx))
 
+	//repoClientSet := apiclient.NewRepoServerClientset(h.option.RepoServerUrl, 60,
+	//	apiclient.TLSConfiguration{
+	//		DisableTLS:       false,
+	//		StrictValidation: false,
+	//	})
+	//argoCDService, err := services.NewArgoCDService(h.option.Storage.GetArgoDB(),
+	//	true, repoClientSet, false)
+	// this will render the Applications by ApplicationSet's generators
+	// refer to: https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
+	results := make([]*v1alpha1.Application, 0)
+	//for i := range appset.Spec.Generators {
+	//	generator := appset.Spec.Generators[i]
+	//	if generator.List == nil && generator.Git == nil && generator.Matrix == nil {
+	//		continue
+	//	}
+	//	var tsResult []generators.TransformResult
+	//	tsResult, err = generators.Transform(generator, map[string]generators.Generator{
+	//		"List": generators.NewListGenerator(),
+	//		//"Git":  generators.NewGitGenerator(argoCDService),
+	//		"Matrix": generators.NewMatrixGenerator(nestedGenerators),
+	//	}, appset.Spec.Template, appset, map[string]interface{}{})
+	//	if err != nil {
+	//		return nil, http.StatusBadRequest, errors.Wrapf(err, "transform generator[%d] failed", i)
+	//	}
+	//	for j := range tsResult {
+	//		ts := tsResult[j]
+	//		tmplApplication := getTempApplication(ts.Template)
+	//		if tmplApplication.Labels == nil {
+	//			tmplApplication.Labels = make(map[string]string)
+	//		}
+	//		for _, p := range ts.Params {
+	//			var app *v1alpha1.Application
+	//			app, err = render.RenderTemplateParams(tmplApplication, appset.Spec.SyncPolicy,
+	//				p, appset.Spec.GoTemplate)
+	//			if err != nil {
+	//				return nil, http.StatusBadRequest, errors.Wrap(err, "error generating application from params")
+	//			}
+	//			statusCode, err = h.CheckCreateApplication(ctx, app)
+	//			if err != nil {
+	//				return nil, statusCode, errors.Wrapf(err, "check create application failed")
+	//			}
+	//			results = append(results, app)
+	//		}
+	//	}
+	//}
+	return results, 0, nil
+}
+
+func (h *handler) checkApplicationSetGenerator(ctx context.Context, appset *v1alpha1.ApplicationSet) error {
+	projName := appset.Spec.Template.Spec.Project
 	var errs []string
 	var repoUrls []string
-	// NOTE: 仅允许 List/Git Generator
+	// NOTE: 仅允许 List/Git/Matrix Generator
 	for i := range appset.Spec.Generators {
 		generator := appset.Spec.Generators[i]
 		if generator.Clusters != nil || generator.SCMProvider != nil ||
 			generator.ClusterDecisionResource != nil || generator.PullRequest != nil ||
-			generator.Matrix != nil || generator.Merge != nil {
+			generator.Merge != nil {
 			errs = append(errs, fmt.Sprintf("generator[%d] has not allowed generator type", i))
 			continue
 		}
@@ -97,66 +127,40 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 			// rewrite generator.List.Template to empty value
 			generator.List.Template = v1alpha1.ApplicationSetTemplate{}
 		}
+		if generator.Matrix != nil {
+			if len(generator.Matrix.Generators) == 0 {
+				errs = append(errs, fmt.Sprintf("generator[%d] with matrix generator have 0 generators", i))
+				continue
+			}
+			for j := range generator.Matrix.Generators {
+				matrixGenerator := generator.Matrix.Generators[j]
+				if matrixGenerator.Clusters != nil || matrixGenerator.SCMProvider != nil ||
+					matrixGenerator.ClusterDecisionResource != nil || matrixGenerator.PullRequest != nil ||
+					matrixGenerator.Merge != nil {
+					errs = append(errs, fmt.Sprintf("generator[%d] with matrix generator[%d] "+
+						"has not allowed generator type", i, j))
+				}
+				if matrixGenerator.Git != nil {
+					repoUrls = append(repoUrls, matrixGenerator.Git.RepoURL)
+				}
+			}
+			generator.Matrix.Template = v1alpha1.ApplicationSetTemplate{}
+		}
 	}
 	if len(errs) != 0 {
-		return nil, http.StatusBadRequest,
-			errors.Errorf("gitops only allowed [list,git] generator: %s", strings.Join(errs, "; "))
+		return errors.Errorf("gitops only allowed [list,git,matrix] generator: %s", strings.Join(errs, "; "))
 	}
 	// check repository permission
 	for _, repoUrl := range repoUrls {
 		repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projName)
 		if err != nil {
-			return nil, http.StatusBadRequest, errors.Wrapf(err, "check repository permission failed")
+			return errors.Wrapf(err, "check repository permission failed")
 		}
 		if !repoBelong {
-			return nil, http.StatusForbidden,
-				errors.Errorf("repo '%s' not belong to project '%s'", repoUrl, projName)
+			return errors.Errorf("repo '%s' not belong to project '%s'", repoUrl, projName)
 		}
 	}
-	//repoClientSet := apiclient.NewRepoServerClientset(h.option.RepoServerUrl, 60,
-	//	apiclient.TLSConfiguration{
-	//		DisableTLS:       false,
-	//		StrictValidation: false,
-	//	})
-	//argoCDService, err := services.NewArgoCDService(h.option.Storage.GetArgoDB(), true, repoClientSet, false)
-	// this will render the Applications by ApplicationSet's generators
-	// refer to: https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
-	results := make([]*v1alpha1.Application, 0)
-	for i := range appset.Spec.Generators {
-		generator := appset.Spec.Generators[i]
-		if generator.List == nil {
-			continue
-		}
-		var tsResult []generators.TransformResult
-		tsResult, err = generators.Transform(generator, map[string]generators.Generator{
-			"List": generators.NewListGenerator(),
-			// "Git":  generators.NewGitGenerator(argoCDService),
-		}, appset.Spec.Template, appset, map[string]interface{}{})
-		if err != nil {
-			return nil, http.StatusBadRequest, errors.Wrapf(err, "transform generator[%d] failed", i)
-		}
-		for j := range tsResult {
-			ts := tsResult[j]
-			tmplApplication := getTempApplication(ts.Template)
-			if tmplApplication.Labels == nil {
-				tmplApplication.Labels = make(map[string]string)
-			}
-			for _, p := range ts.Params {
-				var app *v1alpha1.Application
-				app, err = render.RenderTemplateParams(tmplApplication, appset.Spec.SyncPolicy,
-					p, appset.Spec.GoTemplate)
-				if err != nil {
-					return nil, http.StatusBadRequest, errors.Wrap(err, "error generating application from params")
-				}
-				statusCode, err = h.checkDryRunApplication(ctx, app)
-				if err != nil {
-					return nil, statusCode, errors.Wrapf(err, "check create application failed")
-				}
-				results = append(results, app)
-			}
-		}
-	}
-	return results, 0, nil
+	return nil
 }
 
 // refer to: https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L487

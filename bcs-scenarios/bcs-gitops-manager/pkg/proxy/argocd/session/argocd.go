@@ -14,10 +14,8 @@
 package session
 
 import (
-	"bytes"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -83,9 +81,6 @@ func (s *ArgoSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		ModifyResponse: func(r *http.Response) error {
 			blog.Infof("RequestID[%s] GitOps proxy %s response header details: %+v, status %s, code: %d",
 				requestID, fullPath, r.Header, r.Status, r.StatusCode)
-			bs, _ := io.ReadAll(r.Body)
-			blog.Infof("%s", string(bs))
-			r.Body = io.NopCloser(bytes.NewBuffer(bs))
 			return nil
 		},
 	}

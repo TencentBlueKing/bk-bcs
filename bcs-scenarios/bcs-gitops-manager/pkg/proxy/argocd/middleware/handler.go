@@ -188,14 +188,30 @@ func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Appl
 		return statusCode, errors.Wrapf(err, "check application '%s' permission failed", projectName)
 	}
 
-	// check repository permission
-	repoUrl := app.Spec.Source.RepoURL
-	repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
-	if err != nil {
-		return http.StatusBadRequest, errors.Wrapf(err, "check repository permission failed")
+	for i := range app.Spec.Sources {
+		appSource := app.Spec.Sources[i]
+		repoUrl := appSource.RepoURL
+		repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
+		if err != nil {
+			return http.StatusBadRequest,
+				errors.Wrapf(err, "check multi-source repository '%s' permission failed", repoUrl)
+		}
+		if !repoBelong {
+			return http.StatusForbidden,
+				errors.Errorf("check multi-source repo '%s' not belong to project '%s'", repoUrl, projectName)
+		}
+		blog.Infof("RequestID[%s] check multi-source repo '%s' success", RequestID(ctx), repoUrl)
 	}
-	if !repoBelong {
-		return http.StatusForbidden, errors.Errorf("repo '%s' not belong to project '%s'", repoUrl, projectName)
+	if app.Spec.Source != nil {
+		repoUrl := app.Spec.Source.RepoURL
+		repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
+		if err != nil {
+			return http.StatusBadRequest, errors.Wrapf(err, "check repository permission failed")
+		}
+		if !repoBelong {
+			return http.StatusForbidden, errors.Errorf("repo '%s' not belong to project '%s'", repoUrl, projectName)
+		}
+		blog.Infof("RequestID[%s] check source repo '%s' success", RequestID(ctx), repoUrl)
 	}
 
 	clusterQuery := clusterclient.ClusterQuery{

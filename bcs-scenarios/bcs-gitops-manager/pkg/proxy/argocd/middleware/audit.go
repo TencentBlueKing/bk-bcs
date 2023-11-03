@@ -141,7 +141,7 @@ func handleAudit(req *http.Request, resp *HttpResponse, start, end time.Time) {
 		}
 		switch action {
 		case ApplicationSetCreateOrUpdate:
-			auditAction.ActivityType = audit.ActivityTypeCreate
+			auditAction.ActivityType = audit.ActivityTypeUpdate
 			auditResource.ResourceData["Data"] = appset
 		case ApplicationSetDelete:
 			auditAction.ActivityType = audit.ActivityTypeDelete
@@ -175,10 +175,12 @@ func handleAudit(req *http.Request, resp *HttpResponse, start, end time.Time) {
 			ResourceData: make(map[string]any),
 		}
 	}
-	auditResource.ResourceData["Method"] = req.Method
-	auditResource.ResourceData["Path"] = req.RequestURI
 	var auditResult = audit.ActionResult{
 		Status: audit.ActivityStatusSuccess,
+		ExtraData: map[string]any{
+			"Method": req.Method,
+			"Path":   req.RequestURI,
+		},
 	}
 	if resp.respType == returnError || resp.respType == returnGrpcError {
 		auditResult.Status = audit.ActivityStatusFailed

@@ -61,6 +61,8 @@ import (
 )
 
 type argo struct {
+	sync.RWMutex
+
 	option *Options
 	token  string
 
@@ -401,7 +403,7 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 	}
 	var result *v1alpha1.Application
 	cd.cacheApplication.Range(func(key, value any) bool {
-		apps := value.(map[string]*v1alpha1.Application)
+		apps := cd.getProjectApplications(key.(string))
 		app, ok := apps[name]
 		if ok {
 			result = app
@@ -495,11 +497,8 @@ func (cd *argo) ListApplications(ctx context.Context, query *appclient.Applicati
 	}
 	for i := range query.Projects {
 		projName := query.Projects[i]
-		projApps, ok := cd.cacheApplication.Load(projName)
-		if !ok {
-			continue
-		}
-		for _, v := range projApps.(map[string]*v1alpha1.Application) {
+		projApps := cd.getProjectApplications(projName)
+		for _, v := range projApps {
 			if query.Name != nil && (*query.Name != "" && *query.Name != v.Name) {
 				continue
 			}
@@ -776,24 +775,52 @@ func (cd *argo) handleApplicationWatch() error {
 				blog.Infof("[store] application watch received: %s/%s", string(event.Type), event.Application.Name)
 			}
 			application := event.Application
-			projName := application.Spec.Project
 			switch event.Type {
 			case watch.Added, watch.Modified:
-				projectApps, ok := cd.cacheApplication.Load(projName)
-				if !ok {
-					cd.cacheApplication.Store(projName, map[string]*v1alpha1.Application{
-						application.Name: &application,
-					})
-				} else {
-					projectApps.(map[string]*v1alpha1.Application)[application.Name] = &application
-				}
+				cd.storeApplication(&application)
 			case watch.Deleted:
-				projectApps, ok := cd.cacheApplication.Load(projName)
-				if ok {
-					delete(projectApps.(map[string]*v1alpha1.Application), application.Name)
-				}
+				cd.deleteApplication(&application)
 			}
 		}
 	}()
 	return nil
+}
+
+func (cd *argo) getProjectApplications(projName string) map[string]*v1alpha1.Application {
+	cd.RLock()
+	defer cd.RUnlock()
+	v, ok := cd.cacheApplication.Load(projName)
+	if !ok {
+		return map[string]*v1alpha1.Application{}
+	}
+	result := v.(map[string]*v1alpha1.Application)
+	newResult := make(map[string]*v1alpha1.Application)
+	for proj, apps := range result {
+		newResult[proj] = apps
+	}
+	return newResult
+}
+
+func (cd *argo) storeApplication(application *v1alpha1.Application) {
+	cd.Lock()
+	defer cd.Unlock()
+	projName := application.Spec.Project
+	projectApps, ok := cd.cacheApplication.Load(projName)
+	if !ok {
+		cd.cacheApplication.Store(projName, map[string]*v1alpha1.Application{
+			application.Name: application,
+		})
+	} else {
+		projectApps.(map[string]*v1alpha1.Application)[application.Name] = application
+	}
+}
+
+func (cd *argo) deleteApplication(application *v1alpha1.Application) {
+	cd.Lock()
+	defer cd.Unlock()
+	projName := application.Spec.Project
+	projectApps, ok := cd.cacheApplication.Load(projName)
+	if ok {
+		delete(projectApps.(map[string]*v1alpha1.Application), application.Name)
+	}
 }
