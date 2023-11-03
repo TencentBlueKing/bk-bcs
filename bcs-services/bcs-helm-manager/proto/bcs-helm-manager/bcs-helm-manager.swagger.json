@@ -1848,6 +1848,11 @@
           },
           "description": "组件支持的操作，目前有 install, upgrade, stop, uninstall",
           "title": "supportedActions"
+        },
+        "releaseName": {
+          "type": "string",
+          "description": "组件在集群中的 release name",
+          "title": "releaseName"
         }
       },
       "description": "集群组件",

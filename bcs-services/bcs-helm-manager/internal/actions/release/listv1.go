@@ -134,6 +134,7 @@ func (l *ListReleaseV1Action) mergeReleases(clusterReleases,
 			// 使用数据库中的状态，因为创建或者更新失败状态，原生中没有该状态
 			if v.GetStatus() != "" {
 				newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Status = v.Status
+				newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Message = v.Message
 			}
 			// 集群中版本比数据库中的版本新，则使用集群中的数据
 			if *v.Revision >= *newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Revision {
@@ -224,7 +225,9 @@ func (l *ListReleaseV1Action) getCondition(shared bool) *operator.Condition {
 	if len(l.req.GetName()) != 0 {
 		cond.Update(entity.FieldKeyName, primitive.Regex{Pattern: strings.ToLower(l.req.GetName()), Options: "i"})
 	}
-	return operator.NewLeafCondition(operator.Eq, cond)
+	cond1 := operator.NewLeafCondition(operator.Eq, cond)
+	cond2 := operator.NewLeafCondition(operator.Ne, operator.M{entity.FieldKeyChartName: ""})
+	return operator.NewBranchCondition(operator.And, cond1, cond2)
 }
 
 func (l *ListReleaseV1Action) setResp(err common.HelmManagerError, message string, r *helmmanager.ReleaseListData) {

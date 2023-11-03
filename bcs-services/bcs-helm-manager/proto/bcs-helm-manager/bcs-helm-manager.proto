@@ -2605,6 +2605,10 @@ message Addons {
         title: "supportedActions",
         description: "组件支持的操作，目前有 install, upgrade, stop, uninstall"
     }];
+    optional string releaseName = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "releaseName",
+        description: "组件在集群中的 release name"
+    }];
 }
 
 message GetAddonsDetailReq {

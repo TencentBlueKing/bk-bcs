@@ -76,7 +76,7 @@ func (g *GetAddonsDetailAction) Handle(ctx context.Context,
 	clusterAddons.Version = &version
 
 	// get current status
-	rl, err := g.model.GetRelease(ctx, g.req.GetClusterID(), addons.Namespace, addons.Name)
+	rl, err := g.model.GetRelease(ctx, g.req.GetClusterID(), addons.Namespace, addons.ReleaseName())
 	if err != nil {
 		if errors.Is(err, drivers.ErrTableRecordNotFound) {
 			g.setResp(common.ErrHelmManagerSuccess, "ok", clusterAddons)
@@ -89,6 +89,7 @@ func (g *GetAddonsDetailAction) Handle(ctx context.Context,
 	clusterAddons.CurrentVersion = &rl.ChartVersion
 	clusterAddons.Status = &rl.Status
 	clusterAddons.Message = &rl.Message
+	clusterAddons.ReleaseName = &rl.Name
 	if len(rl.Values) > 0 {
 		clusterAddons.CurrentValues = &rl.Values[len(rl.Values)-1]
 	}

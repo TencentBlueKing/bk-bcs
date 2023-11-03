@@ -71,22 +71,27 @@ func (u *UninstallAddonsAction) Handle(ctx context.Context,
 		return nil
 	}
 
-	if err := u.uninstall(ctx, addons.Namespace); err != nil {
+	if err := u.uninstall(ctx, addons.Namespace, addons.ChartName, addons.ReleaseName()); err != nil {
 		blog.Errorf("uninstall addons %s failed, clusterID: %s, namespace: %s, error: %s",
-			u.req.GetName(), u.req.GetClusterID(), addons.Namespace, err.Error())
+			addons.ReleaseName(), u.req.GetClusterID(), addons.Namespace, err.Error())
 		u.setResp(common.ErrHelmManagerUninstallActionFailed, err.Error())
 		return nil
 	}
 
 	blog.Infof("dispatch release successfully, projectCode: %s, clusterID: %s, namespace: %s, name: %s, operator: %s",
-		u.req.GetProjectCode(), u.req.GetClusterID(), addons.Namespace, u.req.GetName(), auth.GetUserFromCtx(ctx))
+		u.req.GetProjectCode(), u.req.GetClusterID(), addons.Namespace, addons.ReleaseName(), auth.GetUserFromCtx(ctx))
 	u.setResp(common.ErrHelmManagerSuccess, "ok")
 	return nil
 }
 
-func (u *UninstallAddonsAction) uninstall(ctx context.Context, ns string) error {
-	if err := u.saveDB(ctx, ns); err != nil {
+func (u *UninstallAddonsAction) uninstall(ctx context.Context, ns, chartName, releaseName string) error {
+	if err := u.saveDB(ctx, ns, chartName, releaseName); err != nil {
 		return fmt.Errorf("db error, %s", err.Error())
+	}
+
+	// 对于非 chart 类型的 addons，直接返回成功
+	if chartName == "" {
+		return nil
 	}
 
 	// dispatch release
@@ -94,7 +99,7 @@ func (u *UninstallAddonsAction) uninstall(ctx context.Context, ns string) error 
 		Model:          u.model,
 		ReleaseHandler: u.releaseHandler,
 		ClusterID:      u.req.GetClusterID(),
-		Name:           u.req.GetName(),
+		Name:           releaseName,
 		Namespace:      ns,
 		Username:       auth.GetUserFromCtx(ctx),
 	}
@@ -106,10 +111,17 @@ func (u *UninstallAddonsAction) uninstall(ctx context.Context, ns string) error 
 	return nil
 }
 
-func (u *UninstallAddonsAction) saveDB(ctx context.Context, ns string) error {
-	_, err := u.model.GetRelease(ctx, u.req.GetClusterID(), ns, u.req.GetName())
+func (u *UninstallAddonsAction) saveDB(ctx context.Context, ns, chartName, releaseName string) error {
+	_, err := u.model.GetRelease(ctx, u.req.GetClusterID(), ns, releaseName)
 	if err != nil {
 		return err
+	}
+
+	if chartName == "" {
+		if err := u.model.DeleteRelease(ctx, u.req.GetClusterID(), ns, releaseName); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	username := auth.GetUserFromCtx(ctx)
@@ -118,8 +130,7 @@ func (u *UninstallAddonsAction) saveDB(ctx context.Context, ns string) error {
 		entity.FieldKeyStatus:   helmrelease.StatusUninstalling.String(),
 		entity.FieldKeyMessage:  "",
 	}
-	if err := u.model.UpdateRelease(ctx, u.req.GetClusterID(), ns,
-		u.req.GetName(), rl); err != nil {
+	if err := u.model.UpdateRelease(ctx, u.req.GetClusterID(), ns, releaseName, rl); err != nil {
 		return err
 	}
 	return nil

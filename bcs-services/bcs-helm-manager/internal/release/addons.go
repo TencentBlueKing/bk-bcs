@@ -14,6 +14,8 @@
 package release
 
 import (
+	"strings"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
@@ -62,7 +64,13 @@ func (a Addons) ToAddonsProto() *helmmanager.Addons {
 		Status:           common.GetStringP(""),
 		Message:          common.GetStringP(""),
 		SupportedActions: a.SupportedActions,
+		ReleaseName:      common.GetStringP(a.ReleaseName()),
 	}
+}
+
+// ReleaseName return release name
+func (a Addons) ReleaseName() string {
+	return strings.ToLower(a.Name)
 }
 
 // CanStop check addons can stop
@@ -79,6 +87,16 @@ func (a Addons) CanStop() bool {
 func (a Addons) CanUpgrade() bool {
 	for _, v := range a.SupportedActions {
 		if v == "upgrade" {
+			return true
+		}
+	}
+	return false
+}
+
+// CanConfig check addons can config
+func (a Addons) CanConfig() bool {
+	for _, v := range a.SupportedActions {
+		if v == "config" {
 			return true
 		}
 	}
