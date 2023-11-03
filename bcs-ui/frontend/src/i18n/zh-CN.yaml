@@ -1209,7 +1209,7 @@ deploy:
     deleteChartVer: '删除 {name} Chart的版本'
     downloadChartVer: '下载 {name} Chart的版本'
     confirmDeleteChart: '确定删除 {name}'
-    deleteWarning: '您需要先删除以下所有Release, 再进行删除操作'
+    deleteWarning: '删除 Chart 后，如下 Release 将不能使用该 Chart 进行更新，请谨慎操作'
     chartInstall: Chart部署
     showNotes: 查看Notes
     chartNSTips: 如果Chart中已经配置命名空间，则会使用Chart中的命名空间，会导致不匹配等问题;建议Chart中不要配置命名空间
@@ -2091,15 +2091,6 @@ projects:
     objType: 对象及类型
     obj: 对象：
     operator: 发起者
-    begin: 开始
-    end: 结束
-    start: 启动
-    pause: 暂停
-    continue: 继续
-    stop: 停止
-    restart: 重启
-    error: 错误
-    doing: 处理中
   project:
     create: 创建项目
     name: 项目名称

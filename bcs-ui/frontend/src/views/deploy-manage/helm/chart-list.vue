@@ -208,7 +208,6 @@
           <bcs-button
             theme="primary"
             :loading="dialogLoading"
-            :disabled="!!chartReleaseData.length && versionDialogType === 'delete'"
             @click="handleDeleteOrDownloadVersion">{{$t('generic.button.confirm')}}</bcs-button>
           <bcs-button @click="handleCancelVersionDialog">{{$t('generic.button.cancel')}}</bcs-button>
         </template>
@@ -225,7 +224,6 @@
           <bcs-button
             theme="primary"
             :loading="dialogLoading"
-            :disabled="!!chartReleaseData.length"
             @click="handleConfirmDelete">{{$t('generic.button.confirm')}}</bcs-button>
           <bcs-button @click="showDeleteChartDialog = false">{{$t('generic.button.cancel')}}</bcs-button>
         </template>
