@@ -303,7 +303,7 @@ export default {
       this.updateInstanceLoading = true;
       try {
         const clusterId = this.curClusterId;
-        const result = updateOns({
+        const result = await updateOns({
           $clusterId: clusterId,
           $name: this.curApp.name,
           values: this.editorOptions.content || '',

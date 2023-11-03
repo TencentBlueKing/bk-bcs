@@ -252,7 +252,7 @@ export default {
   },
   data() {
     return {
-      pendingStatus: ['uninstalling', 'pending-install', 'pending-upgrade', 'pending-rollback'],
+      pendingStatus: ['pending', 'uninstalling', 'pending-install', 'pending-upgrade', 'pending-rollback'],
       failedStatus: ['failed', 'failed-install', 'failed-upgrade', 'failed-rollback', 'failed-uninstall'],
       isInitLoading: true,
       isPageLoading: false,
