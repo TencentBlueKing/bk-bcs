@@ -1,7 +1,6 @@
 <template>
   <section class="variables-management-page">
-    <bk-alert theme="info">
-      可为配置文件内的变量预先定义默认值。默认变量值只在变量首次使用时生效，之后更新配置文件，变量值将使用上一次生成版本是的变量值填充。
+    <bk-alert theme="info">{{ headInfo }}<span @click="goVariablesDoc" class="hyperlink">配置模板与变量配置模板与变量</span>
     </bk-alert>
     <div class="operation-area">
       <div class="button">
@@ -81,6 +80,8 @@ const pagination = ref<IPagination>({
 });
 const isCreateSliderShow = ref(false);
 const isImportVariableShow = ref(false);
+const headInfo = `定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如{{ .bk_bscp_appid }},
+      可在服务配置中修改全局变量值，变量使用详情请参考：`;
 const editSliderData = ref<{ open: boolean; id: number; data: IVariableEditParams }>({
   open: false,
   id: 0,
@@ -96,7 +97,7 @@ watch(
   () => spaceId.value,
   () => {
     refreshList();
-  }
+  },
 );
 
 onMounted(() => {
@@ -157,11 +158,19 @@ const clearSearchStr = () => {
   searchStr.value = '';
   refreshList();
 };
+
+// @ts-ignore
+// eslint-disable-next-line
+const goVariablesDoc = () => window.open(BSCP_CONFIG.variable_template_doc);
 </script>
 <style lang="scss" scoped>
 .variables-management-page {
   height: 100%;
   background: #f5f7fa;
+  .hyperlink {
+    color: #3a84ff;
+    cursor: pointer;
+  }
 }
 .operation-area {
   display: flex;

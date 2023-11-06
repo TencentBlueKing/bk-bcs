@@ -81,7 +81,7 @@ const formData = ref<IScriptEditingForm>({
   tag: '',
   memo: '',
   type: EScriptType.Shell,
-  content: '',
+  content: '#!/bin/bash',
 });
 
 onMounted(() => {
