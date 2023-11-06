@@ -7,22 +7,22 @@
           仅支持大小不超过 100M
         </div>
         <div class="btns">
-            <i
-              class="bk-bscp-icon icon-separator"
-              v-bk-tooltips="{
-                content: '分隔符',
-                placement: 'top',
-                distance: 20,
-              }"
-              @click="separatorShow = !separatorShow"
-            />
+          <i
+            class="bk-bscp-icon icon-separator"
+            v-bk-tooltips="{
+              content: '分隔符',
+              placement: 'top',
+              distance: 20,
+            }"
+            @click="separatorShow = !separatorShow"
+          />
           <Search
             v-bk-tooltips="{
               content: '搜索',
               placement: 'top',
               distance: 20,
             }"
-            @click="handleSearch"
+            @click="codeEditorRef.openSearch()"
           />
           <FilliscreenLine
             v-if="!isOpenFullScreen"
@@ -60,7 +60,7 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { ref, onBeforeUnmount } from 'vue';
+import { ref, onBeforeUnmount, watch } from 'vue';
 import BkMessage from 'bkui-vue/lib/message';
 import { InfoLine, FilliscreenLine, UnfullScreen, Search } from 'bkui-vue/lib/icon';
 import { batchImportTemplateVariables } from '../../../api/variable';
@@ -79,7 +79,28 @@ const codeEditorRef = ref();
 const separatorShow = ref(false);
 const variables = ref('');
 const separator = ref(' ');
+const shouldValidate = ref(false);
 const errorLine = ref<errorLineItem[]>([]);
+
+watch(
+  () => variables.value,
+  () => {
+    if (shouldValidate.value) {
+      handleValidateEditor();
+    }
+  },
+);
+
+watch(
+  () => errorLine.value,
+  (val) => {
+    if (val.length === 0) {
+      shouldValidate.value = false;
+    }
+  },
+);
+
+
 onBeforeUnmount(() => {
   codeEditorRef.value.destroy();
 });
@@ -104,10 +125,6 @@ const handleEscClose = (event: KeyboardEvent) => {
   if (event.code === 'Escape') {
     isOpenFullScreen.value = false;
   }
-};
-
-const handleSearch = () => {
-  handleValidateEditor();
 };
 
 // 校验编辑器内容
@@ -146,6 +163,7 @@ const handleValidateEditor = () => {
 // 导入变量
 const handleImport = async () => {
   handleValidateEditor();
+  shouldValidate.value = true;
   if (errorLine.value.length > 0) return Promise.reject();
   const params = {
     separator: separator.value === ' ' ? 'white-space' : separator.value,
@@ -192,7 +210,8 @@ defineExpose({
       width: 80px;
       height: 16px;
       align-items: center;
-      & > span, & > i {
+      & > span,
+      & > i {
         cursor: pointer;
         &:hover {
           color: #3a84ff;

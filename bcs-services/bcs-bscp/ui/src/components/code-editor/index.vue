@@ -51,7 +51,7 @@ const props = withDefaults(
     editable: true,
     lfEol: true,
     language: '',
-  }
+  },
 );
 
 const emit = defineEmits(['update:modelValue', 'change', 'enter']);
@@ -72,21 +72,21 @@ watch(
     if (val !== localVal.value) {
       editor.setValue(val);
     }
-  }
+  },
 );
 
 watch(
   () => props.language,
   (val) => {
     monaco.editor.setModelLanguage(editor.getModel() as monaco.editor.ITextModel, val);
-  }
+  },
 );
 
 watch(
   () => props.editable,
   (val) => {
     editor.updateOptions({ readOnly: !val });
-  }
+  },
 );
 
 watch(
@@ -95,14 +95,14 @@ watch(
     if (Array.isArray(val) && val.length > 0) {
       editorHoverProvider = useEditorVariableReplace(editor, val);
     }
-  }
+  },
 );
 
 watch(
   () => props.errorLine,
   () => {
     setErrorLine();
-  }
+  },
 );
 
 onMounted(() => {
@@ -169,7 +169,7 @@ const handleVariableList = async () => {
   ]);
   variableNameList.value = variableList.details.map((item: any) => item.spec.name);
   privateVariableNameList.value = privateVariableList.details.map((item: any) => item.name);
-  variableNameList.value?.filter((item) => !privateVariableNameList.value!.includes(item));
+  variableNameList.value?.filter(item => !privateVariableNameList.value!.includes(item));
 };
 
 // 注册自定义语言
@@ -208,22 +208,18 @@ const aotoCompletion = () => {
       const lineContent = model.getLineContent(position.lineNumber);
       const charBeforeCursor = lineContent.charAt(position.column - 2);
       // 根据当前的文本内容和光标位置，返回自动补全的候选项列表
-      const variableSuggestions = variableNameList.value!.map((item: string) => {
-        return {
-          label: item, // 候选项的显示文本
-          kind: monaco.languages.CompletionItemKind.Variable, // 候选项的类型
-          insertText: item, // 插入光标后的文本
-          range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-        };
-      });
-      const privateVariableSuggestions = privateVariableNameList.value!.map((item: string) => {
-        return {
-          label: item,
-          kind: monaco.languages.CompletionItemKind.Variable,
-          insertText: item,
-          range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-        };
-      });
+      const variableSuggestions = variableNameList.value!.map((item: string) => ({
+        label: item, // 候选项的显示文本
+        kind: monaco.languages.CompletionItemKind.Variable, // 候选项的类型
+        insertText: item, // 插入光标后的文本
+        range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+      }));
+      const privateVariableSuggestions = privateVariableNameList.value!.map((item: string) => ({
+        label: item,
+        kind: monaco.languages.CompletionItemKind.Variable,
+        insertText: item,
+        range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+      }));
       const suggestions = [...variableSuggestions, ...privateVariableSuggestions];
       if (charBeforeCursor === '{') {
         return {
@@ -234,10 +230,13 @@ const aotoCompletion = () => {
         suggestions: [],
       };
     },
-    resolveCompletionItem: (item: any) => {
-      return item;
-    },
+    resolveCompletionItem: (item: any) => item,
   });
+};
+
+const openSearch = () => {
+  const findAction = editor.getAction('actions.find');
+  findAction.run();
 };
 
 // @bug vue3的Teleport组件销毁时，子组件的onBeforeUnmount不会被执行，会出现内存泄漏，目前尚未被修复 https://github.com/vuejs/core/issues/6347
@@ -263,6 +262,7 @@ const destroy = () => {
 
 defineExpose({
   destroy,
+  openSearch,
 });
 </script>
 <style lang="scss" scoped>
