@@ -1,70 +1,92 @@
 @font-face {
 	font-family: "bk-bscp";
 	src: url("../assets/fonts/iconcool.svg#iconcool") format("svg"),
-url("../assets/fonts/iconcool.ttf") format("truetype"),
-url("../assets/fonts/iconcool.woff") format("woff"),
-url("../assets/fonts/iconcool.eot?#iefix") format("embedded-opentype");
-    font-weight: normal;
-    font-style: normal;
+		url("../assets/fonts/iconcool.ttf") format("truetype"),
+		url("../assets/fonts/iconcool.woff") format("woff"),
+		url("../assets/fonts/iconcool.eot?#iefix") format("embedded-opentype");
+	src: url("../assets/fonts/iconcool.svg#iconcool") format("svg"),
+		url("../assets/fonts/iconcool.ttf") format("truetype"),
+		url("../assets/fonts/iconcool.woff") format("woff"),
+		url("../assets/fonts/iconcool.eot?#iefix") format("embedded-opentype");
+	font-weight: normal;
+	font-style: normal;
 }
 
 .bk-bscp-icon {
-  /* use !important to prevent issues with browser extensions that change fonts */
-  font-family: 'bk-bscp' !important;
-  speak: none;
-  font-style: normal;
-  font-weight: normal;
-  font-variant: normal;
-  text-transform: none;
-  line-height: 1;
-  text-align: center;
-  /* Better Font Rendering =========== */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+	/* use !important to prevent issues with browser extensions that change fonts */
+	font-family: 'bk-bscp' !important;
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+	text-align: center;
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 .icon-help-fill:before {
 	content: "\e107";
 }
+
 .icon-help:before {
 	content: "\e106";
 }
+
 .icon-help-document-fill:before {
 	content: "\e105";
 }
+
 .icon-edit-small:before {
 	content: "\e104";
 }
+
 .icon-configuration-line:before {
 	content: "\e101";
 }
+
 .icon-time-2:before {
 	content: "\e102";
 }
+
 .icon-reduce:before {
 	content: "\e108";
 }
+
 .icon-add:before {
 	content: "\e109";
 }
+
 .icon-app-store:before {
 	content: "\e10a";
 }
+
 .icon-revoke:before {
 	content: "\e10b";
 }
+
 .icon-tags:before {
 	content: "\e10c";
 }
+
 .icon-block-shape:before {
 	content: "\e10d";
 }
+
 .icon-empty:before {
 	content: "\e10e";
 }
+
 .icon-folder:before {
 	content: "\e10f";
 }
+
 .icon-setting:before {
 	content: "\e110";
+}
+
+.icon-separator:before {
+	content: "\e111";
 }
