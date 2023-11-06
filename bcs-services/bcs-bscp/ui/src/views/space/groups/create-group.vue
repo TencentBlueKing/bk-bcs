@@ -34,7 +34,7 @@ const groupData = ref<IGroupEditing>({
   public: true,
   bind_apps: [],
   rule_logic: 'AND',
-  rules: [{ key: '', op: '', value: '' }],
+  rules: [{ key: '', op: 'eq', value: '' }],
 });
 const groupFormRef = ref();
 const pending = ref(false);
