@@ -16,9 +16,9 @@ export function getDefaultConfigItem() {
       name: '',
       path: '',
       permission: {
-        privilege: '',
-        user: '',
-        user_group: '',
+        privilege: '644',
+        user: 'root',
+        user_group: 'root',
       },
     },
     attachment: {
@@ -42,8 +42,8 @@ export function getConfigEditParams() {
     path: '',
     file_type: 'text',
     file_mode: 'unix',
-    user: '',
-    user_group: '',
-    privilege: '',
+    user: 'root',
+    user_group: 'root',
+    privilege: '644',
   };
 }

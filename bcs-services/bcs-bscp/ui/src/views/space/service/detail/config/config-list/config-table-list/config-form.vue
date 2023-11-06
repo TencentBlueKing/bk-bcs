@@ -70,7 +70,7 @@
                       :model-value="privilegeGroupsValue[index]"
                       @change="handleSelectPrivilege(index, $event)"
                     >
-                      <bk-checkbox size="small" :label="4">读</bk-checkbox>
+                      <bk-checkbox size="small" :label="4" :disabled="privilegeGroupsValue[0]">读</bk-checkbox>
                       <bk-checkbox size="small" :label="2">写</bk-checkbox>
                       <bk-checkbox size="small" :label="1">执行</bk-checkbox>
                     </bk-checkbox-group>
