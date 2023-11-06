@@ -163,7 +163,7 @@ const getScripts = async () => {
     versionId: item.published_revision_id,
     name: item.hook.spec.name,
     type: item.hook.spec.type,
-  }));
+  })).sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
   scriptsData.value = [{ id: 0, versionId: 0, name: '<不使用脚本>', type: '' }, ...list];
   scriptsLoading.value = false;
 };
