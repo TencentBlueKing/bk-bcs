@@ -312,6 +312,7 @@ func (s *Repository) trySetDefault() {
 	if len(s.StorageType) == 0 {
 		s.StorageType = BkRepo
 	}
+	s.RedisCluster.trySetDefault()
 }
 
 // validate repo runtime.
@@ -964,4 +965,41 @@ func (c Credential) validate() error {
 	}
 
 	return nil
+}
+
+const (
+	// VaultTokenEnv represents the environment variable key for the Vault token.
+	VaultTokenEnv = "VAULT_TOKEN"
+	// VaultAddressEnv represents the environment variable key for the Vault server address.
+	VaultAddressEnv = "VAULT_ADDR"
+)
+
+// Vault Used to store the configuration information required for connecting to the Vault server.
+type Vault struct {
+	// Address is used to store the address of the Vault server
+	Address string `yaml:"address"`
+	// Token is used for accessing the Vault server
+	Token string `yaml:"token"`
+}
+
+// validate Vault options
+func (v Vault) validate() error {
+
+	if v.Address == "" {
+		return errors.New("vault address is not set")
+	}
+
+	if v.Token == "" {
+		return errors.New("vault token is not set")
+	}
+
+	return nil
+}
+
+// getConfigFromEnv Read configuration from environment variables
+func (v *Vault) getConfigFromEnv() {
+
+	v.Token = os.Getenv(VaultTokenEnv)
+	v.Address = os.Getenv(VaultAddressEnv)
+
 }

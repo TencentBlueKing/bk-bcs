@@ -15,9 +15,7 @@
         :pkg="pkg"
         :current-pkg="currentPkg"
         @select="handleSelect"
-        @edit="handlePkgAction"
-        @clone="handlePkgAction"
-        @delete="handlePkgAction"
+        @open-slider="handlePkgAction"
       />
     </div>
     <div v-else class="exception-notice">
@@ -135,7 +133,7 @@ watch(
     if (val) {
       getMenuInitData();
     }
-  }
+  },
 );
 
 watch(
@@ -147,7 +145,7 @@ watch(
         state.needRefreshMenuFlag = false;
       });
     }
-  }
+  },
 );
 
 onMounted(() => {
@@ -218,7 +216,7 @@ const handleSearch = () => {
   let result: ITemplatePackageItem[] = [];
   searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
   if (searchStr.value) {
-    result = packages.value.filter((item) => item.spec.name.toLowerCase().includes(searchStr.value.toLowerCase()));
+    result = packages.value.filter(item => item.spec.name.toLowerCase().includes(searchStr.value.toLowerCase()));
   } else {
     result = packages.value.slice();
   }
@@ -229,7 +227,7 @@ const handleSearch = () => {
 };
 
 const handlePkgAction = (id: number, type: string) => {
-  const pkg = packages.value.find((item) => item.id === id);
+  const pkg = packages.value.find(item => item.id === id);
   if (pkg) {
     if (type === 'edit') {
       editingPkgData.value = {

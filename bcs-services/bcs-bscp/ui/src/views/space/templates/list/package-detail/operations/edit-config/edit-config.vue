@@ -26,7 +26,7 @@ watch(
   (val) => {
     isShow.value = val;
     isFormChange.value = false;
-  }
+  },
 );
 
 const handleBeforeClose = async () => {

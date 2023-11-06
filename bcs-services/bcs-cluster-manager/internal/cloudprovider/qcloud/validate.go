@@ -47,15 +47,62 @@ func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error
 	return cloudprovider.ErrCloudNotImplemented
 }
 
+// CreateClusterValidate check createCluster operation
+func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
+	// call qcloud interface to check cluster
+	if c == nil || req == nil || opt == nil {
+		return fmt.Errorf("%s CreateClusterValidate request&options is empty", cloudName)
+	}
+
+	if opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate opt lost valid crendential info", cloudName)
+	}
+
+	// kubernetes version
+	if len(req.ClusterBasicSettings.Version) == 0 {
+		return fmt.Errorf("lost kubernetes version in request")
+	}
+
+	// check masterIP
+	if req.ManageType == common.ClusterManageTypeIndependent && len(req.Master) == 0 {
+		return fmt.Errorf("lost kubernetes cluster masterIP")
+	}
+
+	// default not handle systemReinstall
+	req.SystemReinstall = true
+
+	// auto generate master nodes
+	if req.AutoGenerateMasterNodes && len(req.Instances) == 0 {
+		return fmt.Errorf("invalid instanceTemplate config when AutoGenerateMasterNodes=true")
+	}
+
+	// use existed instances
+	if !req.AutoGenerateMasterNodes {
+		switch req.ManageType {
+		case common.ClusterManageTypeManaged:
+			if len(req.Nodes) == 0 {
+				return fmt.Errorf("invalid node config when AutoGenerateMasterNodes false in MANAGED_CLUSTER")
+			}
+		default:
+			if len(req.Master) == 0 {
+				return fmt.Errorf("invalid master config when AutoGenerateMasterNodes false in INDEPENDENT_CLUSTER")
+			}
+		}
+	}
+
+	// cluster category
+	if len(req.ClusterCategory) == 0 {
+		req.ClusterCategory = common.Builder
+	}
+
+	return nil
+}
+
 // ImportClusterValidate check importCluster operation
 func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *cloudprovider.CommonOption) error {
 	// call qcloud interface to check cluster
-	if c == nil || req == nil {
-		return fmt.Errorf("%s ImportClusterValidate request is empty", cloudName)
-	}
-
-	if opt == nil {
-		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
+	if c == nil || req == nil || opt == nil {
+		return fmt.Errorf("%s ImportClusterValidate request&options is empty", cloudName)
 	}
 
 	if opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
@@ -183,6 +230,21 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 	}
 	if len(req.VpcID) == 0 {
 		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid vpcID info", cloudName)
+	}
+
+	return nil
+}
+
+// ListCloudVpcsValidate xxx
+func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
+	account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil {
+		return fmt.Errorf("%s ListCloudVpcsValidate request is empty", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudVpcsValidate request lost valid region info", cloudName)
 	}
 
 	return nil

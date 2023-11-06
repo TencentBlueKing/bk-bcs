@@ -1,5 +1,7 @@
 import { computed, ComputedRef, reactive, Ref } from 'vue';
 
+import $store from '@/store';
+
 export interface IPageConf {
   current: number;
   limit: number;
@@ -31,7 +33,7 @@ export interface IPageConfResult {
  */
 export default function usePageConf(data: Ref<any[]>, options: IOptions = {
   current: 1,
-  limit: 10,
+  limit: $store.state.globalPageSize || 10,
 }): IPageConfResult {
   const pageConf = reactive<IPageConf>({
     current: options.current,
@@ -51,6 +53,7 @@ export default function usePageConf(data: Ref<any[]>, options: IOptions = {
 
   const pageSizeChange = (pageSize = 10) => {
     pageConf.limit = pageSize;
+    $store.commit('updatePageSize', pageSize);
     pageConf.current = 1;
     const { onPageSizeChange = null } = options;
     onPageSizeChange && typeof onPageSizeChange === 'function' && onPageSizeChange(pageSize);

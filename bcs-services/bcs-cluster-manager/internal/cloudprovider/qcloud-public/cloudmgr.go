@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -60,22 +61,33 @@ func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster,
 	if len(cls.ManageType) == 0 {
 		cls.ManageType = common.ClusterManageTypeIndependent
 	}
+	if len(cls.ClusterCategory) == 0 {
+		cls.ClusterCategory = common.Builder
+	}
 
 	// cluster cloud basic setting
-	clusterCloudDefaultBasicSetting(cls, opt.Cloud, opt.ClusterVersion)
-	// cluster cloud advanced setting
-	clusterCloudDefaultAdvancedSetting(cls, opt.Cloud, opt.ClusterVersion)
-	// cluster cloud node setting
-	clusterCloudDefaultNodeSetting(cls, true)
-
-	if cls.NetworkSettings.CidrStep <= 0 {
-		switch cls.Environment {
-		case common.Prod:
-			cls.NetworkSettings.CidrStep = 4096
-		default:
-			cls.NetworkSettings.CidrStep = 2048
-		}
+	err := clusterCloudDefaultBasicSetting(cls, opt.ClusterVersion)
+	if err != nil {
+		return err
 	}
+	// cluster cloud advanced setting
+	err = clusterCloudDefaultAdvancedSetting(cls, opt.Cloud, opt.ClusterVersion)
+	if err != nil {
+		return err
+	}
+	// cluster cloud node setting
+	err = clusterCloudDefaultNodeSetting(cls, true)
+	if err != nil {
+		return err
+	}
+
+	// cluster cloud node setting
+	err = clusterCloudNetworkSetting(cls)
+	if err != nil {
+		return err
+	}
+
+	// cluster connect setting
 
 	return nil
 }
@@ -279,7 +291,13 @@ func clusterNetworkSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) e
 	return nil
 }
 
-func clusterCloudDefaultAdvancedSetting(cls *cmproto.Cluster, cloud *cmproto.Cloud, version string) {
+func clusterCloudDefaultAdvancedSetting(cls *cmproto.Cluster, cloud *cmproto.Cloud, version string) error {
+	if cls.GetClusterAdvanceSettings() == nil {
+		return fmt.Errorf("initCloudCluster advanced setting empty")
+	}
+
+	cls.ClusterAdvanceSettings.IPVS = true
+
 	runtimeInfo, err := putils.GetCloudDefaultRuntimeVersion(cloud, version)
 	if err != nil {
 		blog.Errorf("clusterCloudDefaultAdvancedSetting[%s] getCloudDefaultRuntimeInfo "+
@@ -290,27 +308,21 @@ func clusterCloudDefaultAdvancedSetting(cls *cmproto.Cluster, cloud *cmproto.Clo
 		}
 	}
 
-	if cls.ClusterAdvanceSettings == nil {
-		cls.ClusterAdvanceSettings = &cmproto.ClusterAdvanceSetting{
-			IPVS:             true,
-			ContainerRuntime: runtimeInfo.ContainerRuntime,
-			RuntimeVersion:   runtimeInfo.RuntimeVersion,
-			ExtraArgs:        common.DefaultClusterConfig,
-		}
-	} else {
-		if cls.ClusterAdvanceSettings.ContainerRuntime == "" {
-			cls.ClusterAdvanceSettings.ContainerRuntime = runtimeInfo.ContainerRuntime
-		}
-		if cls.ClusterAdvanceSettings.RuntimeVersion == "" {
-			cls.ClusterAdvanceSettings.RuntimeVersion = runtimeInfo.RuntimeVersion
-		}
-		if cls.ClusterAdvanceSettings.ExtraArgs == nil {
-			cls.ClusterAdvanceSettings.ExtraArgs = common.DefaultClusterConfig
-		}
+	cls.ClusterAdvanceSettings.ContainerRuntime = runtimeInfo.ContainerRuntime
+	cls.ClusterAdvanceSettings.RuntimeVersion = runtimeInfo.RuntimeVersion
+	if cls.ClusterAdvanceSettings.ExtraArgs == nil {
+		cls.ClusterAdvanceSettings.ExtraArgs = common.DefaultClusterConfig
 	}
+
+	if !utils.StringInSlice(cls.ClusterAdvanceSettings.NetworkType,
+		[]string{common.GlobalRouter, common.VpcCni, common.CiliumOverlay}) {
+		return fmt.Errorf("initCloudCluster not supported networkPlugin[%s]", cls.ClusterAdvanceSettings.NetworkType)
+	}
+
+	return nil
 }
 
-func clusterCloudDefaultNodeSetting(cls *cmproto.Cluster, defaultNodeConfig bool) {
+func clusterCloudDefaultNodeSetting(cls *cmproto.Cluster, defaultNodeConfig bool) error {
 	if cls.NodeSettings == nil {
 		cls.NodeSettings = &cmproto.NodeSetting{
 			DockerGraphPath: common.DockerGraphPath,
@@ -334,28 +346,89 @@ func clusterCloudDefaultNodeSetting(cls *cmproto.Cluster, defaultNodeConfig bool
 			cls.NodeSettings.ExtraArgs = common.DefaultNodeConfig
 		}
 	}
+
+	return nil
 }
 
-func clusterCloudDefaultBasicSetting(cls *cmproto.Cluster, cloud *cmproto.Cloud, version string) {
-	defaultOSImage := common.DefaultImageName
-	if len(cloud.OsManagement.AvailableVersion) > 0 {
-		defaultOSImage = cloud.OsManagement.AvailableVersion[0]
-	}
-	if version == "" {
-		version = cloud.ClusterManagement.AvailableVersion[0]
+func clusterCloudDefaultBasicSetting(cls *cmproto.Cluster, version string) error {
+	if cls.GetClusterBasicSettings() == nil {
+		return fmt.Errorf("initCloudCluster default basic setting empty")
 	}
 
-	if cls.ClusterBasicSettings == nil {
-		cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
-			OS:          defaultOSImage,
-			Version:     version,
-			VersionName: version,
-		}
-	} else {
-		if cls.ClusterBasicSettings.OS == "" {
-			cls.ClusterBasicSettings.OS = defaultOSImage
-		}
-		cls.ClusterBasicSettings.Version = version
-		cls.ClusterBasicSettings.VersionName = version
+	if cls.GetClusterBasicSettings().GetOS() == "" || version == "" {
+		return fmt.Errorf("initCloudCluster default basic setting version/os empty")
 	}
+
+	return nil
+}
+
+func clusterCloudNetworkSetting(cls *cmproto.Cluster) error {
+	if cls.GetNetworkSettings() == nil {
+		return fmt.Errorf("initCloudCluster network setting empty")
+	}
+
+	switch cls.GetClusterAdvanceSettings().GetNetworkType() {
+	case common.GlobalRouter:
+		if cls.NetworkSettings.MaxNodePodNum == 0 || cls.NetworkSettings.MaxServiceNum == 0 {
+			return fmt.Errorf("network[%s] MaxNodePodNum/MaxServiceNum error", common.GlobalRouter)
+		}
+
+		// need to auto allocate network cidr
+		if cls.NetworkSettings.CidrStep > 0 {
+			break
+		}
+
+		if cls.NetworkSettings.ClusterIPv4CIDR == "" {
+			return fmt.Errorf("network[%s] ClusterIPv4CIDR empty", common.GlobalRouter)
+		}
+
+		cidrStep, _ := utils.ConvertCIDRToStep(cls.NetworkSettings.ClusterIPv4CIDR)
+		cls.NetworkSettings.CidrStep = cidrStep
+	case common.VpcCni:
+		if cls.NetworkSettings.ServiceIPv4CIDR == "" {
+			return fmt.Errorf("network[%s] ServiceIPv4CIDR empty", common.VpcCni)
+		}
+		if cls.NetworkSettings.SubnetSource == nil || (len(cls.NetworkSettings.SubnetSource.New) == 0 && cls.NetworkSettings.SubnetSource.Existed == nil) {
+			return fmt.Errorf("network[%s] subnet resource empty", common.VpcCni)
+		}
+	}
+
+	return nil
+}
+
+func clusterCloudConnectSetting(cls *cmproto.Cluster) error {
+	if cls.GetClusterConnectSetting() == nil {
+		return fmt.Errorf("initCloudCluster connect setting empty")
+	}
+
+	if cls.GetClusterConnectSetting().IsExtranet {
+		if len(cls.GetClusterConnectSetting().GetSecurityGroup()) == 0 {
+			return fmt.Errorf("%s clusterCloudConnectSetting securityGroup empty", cloudName)
+		}
+
+		if cls.GetClusterConnectSetting().GetInternet() == nil {
+			cls.ClusterConnectSetting.Internet = &cmproto.InternetAccessible{
+				InternetChargeType:   api.InternetChargeTypeTrafficPostpaidByHour,
+				InternetMaxBandwidth: strconv.Itoa(200),
+			}
+		} else {
+			if cls.ClusterConnectSetting.Internet.InternetChargeType == "" {
+				cls.ClusterConnectSetting.Internet.InternetChargeType = api.InternetChargeTypeTrafficPostpaidByHour
+			}
+			if cls.ClusterConnectSetting.Internet.InternetMaxBandwidth == "" {
+				cls.ClusterConnectSetting.Internet.InternetMaxBandwidth = strconv.Itoa(200)
+			}
+		}
+
+		return nil
+	}
+
+	/*
+		// auto select vpc subnet resource
+		if cls.GetClusterConnectSetting().GetSubnetId() == "" {
+			return fmt.Errorf("%s inter access kubeConfig subnetInfo empty", cloudName)
+		}
+	*/
+
+	return nil
 }

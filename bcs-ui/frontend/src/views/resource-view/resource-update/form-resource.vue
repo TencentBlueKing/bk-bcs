@@ -122,6 +122,8 @@ import request from '@/api/request';
 import Header from '@/components/layout/Header.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
+import $router from '@/router';
+import $store from '@/store';
 
 const BKForm = createForm({
   namespace: 'bcs',
@@ -432,7 +434,8 @@ export default {
               theme: 'success',
               message: this.$t('generic.msg.success.update'),
             });
-            this.$router.back();
+            // 跳转回列表页
+            $router.push({ name: $store.state.curSideMenu?.route });
           }
         },
       });
@@ -472,7 +475,8 @@ export default {
           message: this.$t('generic.msg.success.create'),
         });
         this.$store.commit('updateCurNamespace', this.schemaFormData.metadata?.namespace);
-        this.$router.back();
+        // 跳转回列表页
+        $router.push({ name: $store.state.curSideMenu?.route });
       }
     },
     // 表单预览

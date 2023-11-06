@@ -98,14 +98,19 @@
         :disabled="!editable"
         :multiple="false"
         :files="fileList"
-        :custom-request="handleFileUpload"
-      >
+        :custom-request="handleFileUpload">
         <template #file="{ file }">
-          <div class="file-wrapper">
-            <Done class="done-icon" />
-            <TextFill class="file-icon" />
-            <div v-bk-ellipsis class="name" @click="handleDownloadFile">{{ file.name }}</div>
-            ({{ file.size }})
+          <div>
+            <div class="file-wrapper">
+              <div class="status-icon-area">
+                <Done v-if="file.status === 'success'" class="success-icon" />
+                <Error v-if="file.status === 'fail'" class="error-icon" />
+              </div>
+              <TextFill class="file-icon" />
+              <div class="name" :title="file.name" @click="handleDownloadFile">{{ file.name }}</div>
+              ({{ file.status === 'fail' ? byteUnitConverse(file.size) : file.size }})
+            </div>
+            <div v-if="file.status === 'fail'" class="error-msg">{{ file.statusText }}</div>
           </div>
         </template>
       </bk-upload>
@@ -128,13 +133,13 @@
 import { ref, computed, watch } from 'vue';
 import SHA256 from 'crypto-js/sha256';
 import WordArray from 'crypto-js/lib-typedarrays';
-import { TextFill, Done, Info } from 'bkui-vue/lib/icon';
+import { TextFill, Done, Info, Error } from 'bkui-vue/lib/icon';
 import BkMessage from 'bkui-vue/lib/message';
 import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
 import { IVariableEditParams } from '../../../../../../../../types/variable';
 import { updateConfigContent, downloadConfigContent } from '../../../../../../../api/config';
 import { downloadTemplateContent, updateTemplateContent } from '../../../../../../../api/template';
-import { stringLengthInBytes } from '../../../../../../../utils/index';
+import { stringLengthInBytes, byteUnitConverse } from '../../../../../../../utils/index';
 import { transFileToObject, fileDownload } from '../../../../../../../utils/file';
 import { CONFIG_FILE_TYPE } from '../../../../../../../constants/config';
 import ConfigContentEditor from '../../components/config-content-editor.vue';
@@ -472,9 +477,20 @@ defineExpose({
     align-items: center;
     color: #979ba5;
     font-size: 12px;
-    .done-icon {
-      font-size: 20px;
-      color: #2dcb56;
+    .status-icon-area {
+      display: flex;
+      width: 20px;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      .success-icon {
+        font-size: 20px;
+        color: #2dcb56;
+      }
+      .error-icon {
+        font-size: 14px;
+        color: #ea3636;
+      }
     }
     .file-icon {
       margin: 0 6px 0 0;
@@ -493,6 +509,12 @@ defineExpose({
       }
     }
   }
+  .error-msg {
+    padding: 0 0 10px 38px;
+    line-height: 1;
+    font-size: 12px;
+    color: #ff5656;
+  }
 }
 .config-content-label {
   display: flex;
@@ -505,8 +527,16 @@ defineExpose({
 <style lang="scss">
 .privilege-select-popover.bk-popover {
   padding: 0;
+  .bk-pop2-arrow {
+    border-left: 1px solid #dcdee5;
+    border-top: 1px solid #dcdee5;
+  }
 }
 .privilege-tips-wrap {
   border: 1px solid #dcdee5;
+  .bk-pop2-arrow {
+    border-right: 1px solid #dcdee5;
+    border-bottom: 1px solid #dcdee5;
+  }
 }
 </style>

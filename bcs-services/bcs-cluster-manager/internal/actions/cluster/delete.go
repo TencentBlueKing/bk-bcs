@@ -25,7 +25,6 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -150,9 +149,9 @@ func (da *DeleteAction) canDelete() error {
 	return nil
 }
 
-func (da *DeleteAction) cleanLocalInformation(connect bool) error {
+func (da *DeleteAction) cleanLocalInformation() error {
 	// importer cluster only delete cluster related data
-	if da.isImporterCluster() || !connect {
+	if da.isImporterCluster() {
 		da.req.IsForced = true
 	}
 	if da.req.IsForced {
@@ -398,10 +397,10 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	//     OnlyDeleteInfo = true && IsForced = true (delete relative resource and delete cluster)
 	//     and IsForced = false (check resource, can't delete cluster if resource do not nil).
 	// if delete importer cluster need to delete cluster extra data, thus set IsForced = true
-	connect := utils.CheckClusterConnection(da.kube, da.req.ClusterID)
-	if req.OnlyDeleteInfo || da.isImporterCluster() || !connect {
+	// connect := utils.CheckClusterConnection(da.kube, da.req.ClusterID)
+	if req.OnlyDeleteInfo || da.isImporterCluster() {
 		// clean all relative resource then delete cluster finally
-		if err := da.cleanLocalInformation(connect); err != nil {
+		if err := da.cleanLocalInformation(); err != nil {
 			blog.Errorf("only delete Cluster %s local information err, %s", req.ClusterID, err.Error())
 			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 			return
@@ -468,7 +467,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 }
 
 func (da *DeleteAction) isImporterCluster() bool {
-	return da.cluster.ClusterCategory == Importer
+	return da.cluster.ClusterCategory == common.Importer
 }
 
 func (da *DeleteAction) createDeleteClusterTask(req *cmproto.DeleteClusterReq) error {

@@ -26,7 +26,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
@@ -59,9 +58,10 @@ func NewCreateAction(model store.ClusterManagerModel, locker lock.DistributedLoc
 }
 
 func (ca *CreateAction) applyClusterCIDR(cls *cmproto.Cluster) error {
-	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 || options.GetEditionInfo().IsCommunicationEdition() {
+	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 || len(cls.NetworkSettings.ClusterIPv6CIDR) > 0 {
 		return nil
 	}
+
 	// auto update set cluster cidr
 	cidr, err := applyClusterCIDR(cls)
 	if err != nil {
@@ -253,43 +253,43 @@ func (ca *CreateAction) transNodeIPToCloudNode(ip string) (*cmproto.Node, error)
 	return node, nil
 }
 
-func (ca *CreateAction) validate() error {
-	if err := ca.req.Validate(); err != nil {
+// createClusterValidate create cluster validate
+func (ca *CreateAction) createClusterValidate() error {
+	// cloud validate
+	cloudValidate, err := cloudprovider.GetCloudValidateMgr(ca.cloud.CloudProvider)
+	if err != nil {
 		return err
 	}
-	// kubernetes version
-	if len(ca.req.ClusterBasicSettings.Version) == 0 {
-		return fmt.Errorf("lost kubernetes version in request")
+	cOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ca.cloud,
+		AccountID: ca.req.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("Get Credential failed from Cloud %s: %s",
+			ca.cloud.CloudID, err.Error())
+		return err
+	}
+	cOption.Region = ca.req.Region
+
+	err = cloudValidate.CreateClusterValidate(ca.req, cOption)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ca *CreateAction) validate() error {
+	err := ca.req.Validate()
+	if err != nil {
+		return err
 	}
 
-	// check masterIP
-	if ca.req.ManageType == common.ClusterManageTypeIndependent && len(ca.req.Master) == 0 {
-		return fmt.Errorf("lost kubernetes cluster masterIP")
+	err = ca.createClusterValidate()
+	if err != nil {
+		return err
 	}
 
-	// default not handle systemReinstall
-	ca.req.SystemReinstall = true
-
-	// auto generate master nodes
-	if ca.req.AutoGenerateMasterNodes && len(ca.req.Instances) == 0 {
-		return fmt.Errorf("invalid instanceTemplate config when AutoGenerateMasterNodes=true")
-	}
-
-	// use existed instances
-	if !ca.req.AutoGenerateMasterNodes {
-		switch ca.req.ManageType {
-		case common.ClusterManageTypeManaged:
-			if len(ca.req.Nodes) == 0 {
-				return fmt.Errorf("invalid node config when AutoGenerateMasterNodes false in MANAGED_CLUSTER")
-			}
-		default:
-			if len(ca.req.Master) == 0 {
-				return fmt.Errorf("invalid master config when AutoGenerateMasterNodes false in INDEPENDENT_CLUSTER")
-			}
-		}
-	}
-
-	// masterIP check
+	// masterIP check && cloudArea + ip
 	ipList := getAllIPList(ca.req.Provider, ca.model)
 	for _, ip := range ca.req.Master {
 		if _, ok := ipList[ip]; ok {
@@ -297,10 +297,6 @@ func (ca *CreateAction) validate() error {
 			blog.Errorf(errMsg.Error())
 			return errMsg
 		}
-	}
-	// cluster category
-	if len(ca.req.ClusterCategory) == 0 {
-		ca.req.ClusterCategory = Builder
 	}
 
 	// check operator host permission
@@ -522,7 +518,9 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 		InitPassword: ca.req.InitLoginPassword,
 		Operator:     ca.req.Creator,
 		Cloud:        ca.cloud,
-		Nodes:        ca.req.Nodes,
+		// worker nodes info
+		WorkerNodes: ca.req.Nodes,
+		MasterNodes: ca.req.Master,
 		NodeTemplate: func() *cmproto.NodeTemplate {
 			if ca.req.NodeTemplateID == "" {
 				return nil

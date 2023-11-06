@@ -275,6 +275,7 @@ type DataServiceSetting struct {
 	Sharding   Sharding   `yaml:"sharding"`
 	Esb        Esb        `yaml:"esb"`
 	Repo       Repository `yaml:"repository"`
+	Vault      Vault      `yaml:"vault"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -294,6 +295,7 @@ func (s *DataServiceSetting) trySetDefault() {
 	s.Log.trySetDefault()
 	s.Sharding.trySetDefault()
 	s.Repo.trySetDefault()
+	s.Vault.getConfigFromEnv()
 }
 
 // Validate DataServiceSetting option.
@@ -316,6 +318,10 @@ func (s DataServiceSetting) Validate() error {
 	}
 
 	if err := s.Repo.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Vault.validate(); err != nil {
 		return err
 	}
 

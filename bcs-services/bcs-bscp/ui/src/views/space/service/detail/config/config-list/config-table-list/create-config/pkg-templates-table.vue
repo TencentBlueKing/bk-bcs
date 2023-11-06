@@ -94,7 +94,7 @@ const props = withDefaults(
   }>(),
   {
     conflictTpls: () => [],
-  }
+  },
 );
 
 const emits = defineEmits(['delete', 'expand', 'selectVersion', 'updateVersions']);
@@ -106,15 +106,13 @@ const templateSpaceId = ref(0);
 const expand = ref(true);
 
 onMounted(async () => {
-  props.pkgList.some((templateSpace) =>
-    templateSpace.template_sets.some((pkg) => {
-      if (pkg.template_set_id === props.pkgId) {
-        title.value = `${templateSpace.template_space_name} - ${pkg.template_set_name}`;
-        templateSpaceId.value = templateSpace.template_space_id;
-      }
-      return undefined;
-    })
-  );
+  props.pkgList.some(templateSpace => templateSpace.template_sets.some((pkg) => {
+    if (pkg.template_set_id === props.pkgId) {
+      title.value = `${templateSpace.template_space_name} - ${pkg.template_set_name}`;
+      templateSpaceId.value = templateSpace.template_space_id;
+    }
+    return undefined;
+  }));
   await getTemplateList();
   setTemplatesDefaultVersion();
 });
@@ -128,13 +126,13 @@ const getTemplateList = async () => {
     all: true,
   });
   configTemplateList.value = templateListRes.details.map((item: ITemplateConfigItem) => ({ ...item, versions: [] }));
-  const ids = configTemplateList.value.map((item) => item.id);
+  const ids = configTemplateList.value.map(item => item.id);
   if (ids.length > 0) {
     // 再根据模板列表取对应模板的版本列表
     const versionListRes = await getTemplateVersionsNameByIds(props.bkBizId, ids);
     versionListRes.details.forEach((item: ITemplateVersionsName) => {
       const { template_id, latest_template_revision_id, template_revisions } = item;
-      const configTemplate = configTemplateList.value.find((tpl) => tpl.id === template_id);
+      const configTemplate = configTemplateList.value.find(tpl => tpl.id === template_id);
       if (configTemplate) {
         configTemplate.versions = template_revisions.map((version) => {
           const { template_revision_id, template_revision_name, template_revision_memo } = version;
@@ -167,8 +165,8 @@ const getTemplateList = async () => {
 const setTemplatesDefaultVersion = () => {
   const selectedTplVersionsData = props.selectedVersions.slice();
   configTemplateList.value.forEach((tpl) => {
-    if (!props.selectedVersions.find((item) => item.template_id === tpl.id)) {
-      const lasteVersion = tpl.versions.find((v) => v.isLatest);
+    if (!props.selectedVersions.find(item => item.template_id === tpl.id)) {
+      const lasteVersion = tpl.versions.find(v => v.isLatest);
       if (lasteVersion) {
         selectedTplVersionsData.push({
           template_id: tpl.id,
@@ -184,7 +182,7 @@ const setTemplatesDefaultVersion = () => {
 };
 
 const getVersionSelectVal = (id: number) => {
-  const version = props.selectedVersions.find((item) => item.template_id === id);
+  const version = props.selectedVersions.find(item => item.template_id === id);
   if (version) {
     return version.is_latest ? 0 : version.template_revision_id;
   }
@@ -201,10 +199,10 @@ const handleToggleExpand = () => {
 const handleSelectVersion = (
   tplId: number,
   versions: { id: number; name: string; isLatest: boolean }[],
-  val: number
+  val: number,
 ) => {
   const isLatest = val === 0;
-  const versionId = isLatest ? versions.find((item) => item.isLatest)?.id : val;
+  const versionId = isLatest ? versions.find(item => item.isLatest)?.id : val;
   const versionData = {
     template_id: tplId,
     template_revision_id: versionId,

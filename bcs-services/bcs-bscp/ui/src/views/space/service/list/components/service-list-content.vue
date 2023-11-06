@@ -159,7 +159,7 @@ watch(
     searchStr.value = '';
     pagination.value.limit = 50;
     refreshSeviceList();
-  }
+  },
 );
 
 onMounted(() => {

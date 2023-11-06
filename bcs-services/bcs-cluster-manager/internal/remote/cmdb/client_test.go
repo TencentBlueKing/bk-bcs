@@ -13,6 +13,7 @@
 package cmdb
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -153,7 +154,7 @@ func TestClient_SearchBizInstTopo(t *testing.T) {
 func TestClient_GetBizInternalModule(t *testing.T) {
 	cli := getNewClient()
 
-	internalModule, err := cli.GetBizInternalModule(100148)
+	internalModule, err := cli.GetBizInternalModule(context.Background(), 100148)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +165,7 @@ func TestClient_GetBizInternalModule(t *testing.T) {
 func TestClient_ListTopology(t *testing.T) {
 	cli := getNewClient()
 
-	topoData, err := cli.ListTopology(100148, true, true)
+	topoData, err := cli.ListTopology(context.Background(), 100148, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}

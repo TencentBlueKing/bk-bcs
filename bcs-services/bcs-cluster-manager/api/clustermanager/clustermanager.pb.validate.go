@@ -243,6 +243,16 @@ func (m *Cluster) Validate() error {
 		}
 	}
 
+	if v, ok := interface{}(m.GetClusterConnectSetting()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterValidationError{
+				field:  "ClusterConnectSetting",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -454,6 +464,12 @@ func (m *NetworkSetting) Validate() error {
 
 	// no validation rules for CidrStep
 
+	// no validation rules for ClusterIpType
+
+	// no validation rules for ClusterIPv6CIDR
+
+	// no validation rules for ServiceIPv6CIDR
+
 	return nil
 }
 
@@ -519,14 +535,19 @@ func (m *SubnetSource) Validate() error {
 		return nil
 	}
 
-	if v, ok := interface{}(m.GetNew()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return SubnetSourceValidationError{
-				field:  "New",
-				reason: "embedded message failed validation",
-				cause:  err,
+	for idx, item := range m.GetNew() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SubnetSourceValidationError{
+					field:  fmt.Sprintf("New[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
 			}
 		}
+
 	}
 
 	if v, ok := interface{}(m.GetExisted()).(interface{ Validate() error }); ok {
@@ -671,6 +692,8 @@ func (m *NewSubnet) Validate() error {
 	// no validation rules for Mask
 
 	// no validation rules for Zone
+
+	// no validation rules for IpCnt
 
 	return nil
 }
@@ -832,6 +855,8 @@ func (m *ClusterAdvanceSetting) Validate() error {
 
 	// no validation rules for AuditEnabled
 
+	// no validation rules for EnableHa
+
 	return nil
 }
 
@@ -891,6 +916,91 @@ var _ interface {
 	ErrorName() string
 } = ClusterAdvanceSettingValidationError{}
 
+// Validate checks the field values on ClusterConnectSetting with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ClusterConnectSetting) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for IsExtranet
+
+	// no validation rules for SubnetId
+
+	// no validation rules for Domain
+
+	// no validation rules for SecurityGroup
+
+	if v, ok := interface{}(m.GetInternet()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterConnectSettingValidationError{
+				field:  "Internet",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// ClusterConnectSettingValidationError is the validation error returned by
+// ClusterConnectSetting.Validate if the designated constraints aren't met.
+type ClusterConnectSettingValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterConnectSettingValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterConnectSettingValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterConnectSettingValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterConnectSettingValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterConnectSettingValidationError) ErrorName() string {
+	return "ClusterConnectSettingValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ClusterConnectSettingValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterConnectSetting.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterConnectSettingValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterConnectSettingValidationError{}
+
 // Validate checks the field values on NodeSetting with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
 // is returned.
@@ -908,6 +1018,35 @@ func (m *NodeSetting) Validate() error {
 	// no validation rules for Labels
 
 	// no validation rules for ExtraArgs
+
+	// no validation rules for InitLoginUsername
+
+	// no validation rules for InitLoginPassword
+
+	if v, ok := interface{}(m.GetKeyPair()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeSettingValidationError{
+				field:  "KeyPair",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetTaints() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return NodeSettingValidationError{
+					field:  fmt.Sprintf("Taints[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	return nil
 }
@@ -5990,6 +6129,10 @@ func (m *InstanceTemplateConfig) Validate() error {
 		}
 	}
 
+	// no validation rules for DockerGraphPath
+
+	// no validation rules for NodeRole
+
 	return nil
 }
 
@@ -8836,6 +8979,16 @@ func (m *CreateClusterReq) Validate() error {
 		if err := v.Validate(); err != nil {
 			return CreateClusterReqValidationError{
 				field:  "Module",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetClusterConnectSetting()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateClusterReqValidationError{
+				field:  "ClusterConnectSetting",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -26089,6 +26242,565 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = OsImageValidationError{}
+
+// Validate checks the field values on ListCloudProjectsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCloudProjectsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetCloudID()) < 2 {
+		return ListCloudProjectsRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at least 2 runes",
+		}
+	}
+
+	// no validation rules for Region
+
+	// no validation rules for AccountID
+
+	return nil
+}
+
+// ListCloudProjectsRequestValidationError is the validation error returned by
+// ListCloudProjectsRequest.Validate if the designated constraints aren't met.
+type ListCloudProjectsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudProjectsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudProjectsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudProjectsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudProjectsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudProjectsRequestValidationError) ErrorName() string {
+	return "ListCloudProjectsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudProjectsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudProjectsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudProjectsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudProjectsRequestValidationError{}
+
+// Validate checks the field values on ListCloudProjectsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCloudProjectsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudProjectsResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListCloudProjectsResponseValidationError is the validation error returned by
+// ListCloudProjectsResponse.Validate if the designated constraints aren't met.
+type ListCloudProjectsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudProjectsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudProjectsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudProjectsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudProjectsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudProjectsResponseValidationError) ErrorName() string {
+	return "ListCloudProjectsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudProjectsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudProjectsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudProjectsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudProjectsResponseValidationError{}
+
+// Validate checks the field values on CloudProject with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *CloudProject) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProjectID
+
+	// no validation rules for ProjectName
+
+	return nil
+}
+
+// CloudProjectValidationError is the validation error returned by
+// CloudProject.Validate if the designated constraints aren't met.
+type CloudProjectValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CloudProjectValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CloudProjectValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CloudProjectValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CloudProjectValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CloudProjectValidationError) ErrorName() string { return "CloudProjectValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CloudProjectValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCloudProject.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CloudProjectValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CloudProjectValidationError{}
+
+// Validate checks the field values on ListCloudVpcsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCloudVpcsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetCloudID()) < 2 {
+		return ListCloudVpcsRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at least 2 runes",
+		}
+	}
+
+	// no validation rules for Region
+
+	// no validation rules for AccountID
+
+	// no validation rules for VpcID
+
+	return nil
+}
+
+// ListCloudVpcsRequestValidationError is the validation error returned by
+// ListCloudVpcsRequest.Validate if the designated constraints aren't met.
+type ListCloudVpcsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVpcsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVpcsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVpcsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVpcsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVpcsRequestValidationError) ErrorName() string {
+	return "ListCloudVpcsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVpcsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVpcsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVpcsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVpcsRequestValidationError{}
+
+// Validate checks the field values on ListCloudVpcsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCloudVpcsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudVpcsResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListCloudVpcsResponseValidationError is the validation error returned by
+// ListCloudVpcsResponse.Validate if the designated constraints aren't met.
+type ListCloudVpcsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVpcsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVpcsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVpcsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVpcsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVpcsResponseValidationError) ErrorName() string {
+	return "ListCloudVpcsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVpcsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVpcsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVpcsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVpcsResponseValidationError{}
+
+// Validate checks the field values on CloudVpc with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *CloudVpc) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Name
+
+	// no validation rules for VpcId
+
+	// no validation rules for Ipv4Cidr
+
+	// no validation rules for Ipv6Cidr
+
+	for idx, item := range m.GetCidrs() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CloudVpcValidationError{
+					field:  fmt.Sprintf("Cidrs[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// CloudVpcValidationError is the validation error returned by
+// CloudVpc.Validate if the designated constraints aren't met.
+type CloudVpcValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CloudVpcValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CloudVpcValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CloudVpcValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CloudVpcValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CloudVpcValidationError) ErrorName() string { return "CloudVpcValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CloudVpcValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCloudVpc.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CloudVpcValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CloudVpcValidationError{}
+
+// Validate checks the field values on AssistantCidr with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *AssistantCidr) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Cidr
+
+	// no validation rules for CidrType
+
+	return nil
+}
+
+// AssistantCidrValidationError is the validation error returned by
+// AssistantCidr.Validate if the designated constraints aren't met.
+type AssistantCidrValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AssistantCidrValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AssistantCidrValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AssistantCidrValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AssistantCidrValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AssistantCidrValidationError) ErrorName() string { return "AssistantCidrValidationError" }
+
+// Error satisfies the builtin error interface
+func (e AssistantCidrValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAssistantCidr.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AssistantCidrValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AssistantCidrValidationError{}
 
 // Validate checks the field values on ListCloudSubnetsRequest with the rules
 // defined in the proto definition for this message. If any rules are

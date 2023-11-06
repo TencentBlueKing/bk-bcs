@@ -6,7 +6,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230906015939-61de9e6ddee9
 	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230920051541-b2fbd0fe23aa
 	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230906015939-61de9e6ddee9
-	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230906015939-61de9e6ddee9
+	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20231103023231-8ec56ea4af9f
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230906015939-61de9e6ddee9
 	github.com/TencentBlueKing/iam-go-sdk v0.1.4
 	github.com/dustin/go-humanize v1.0.0

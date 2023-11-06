@@ -335,6 +335,8 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 		return nil, err
 	}
 
+	opt.Cluster.ManageType = *cls.ClusterType
+
 	if opt.Cluster.ClusterAdvanceSettings != nil {
 		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = *cls.ContainerRuntime
 		opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = *cls.RuntimeVersion
@@ -610,18 +612,56 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 		}
 
 		images = append(images, &proto.OsImage{
-			ImageID:         *image.ImageId,
-			Alias:           *image.Alias,
-			Arch:            *image.Arch,
-			OsCustomizeType: *image.OsCustomizeType,
-			OsName:          *image.OsName,
-			SeriesName:      *image.SeriesName,
-			Status:          *image.Status,
-			Provider:        provider,
+			ImageID: *image.ImageId,
+			Alias:   *image.Alias,
+			Arch:    *image.Arch,
+			OsCustomizeType: func() string {
+				if image.OsCustomizeType == nil {
+					return ""
+				}
+				return *image.OsCustomizeType
+			}(),
+			OsName: *image.OsName,
+			SeriesName: func() string {
+				if image.SeriesName == nil {
+					return ""
+				}
+				return *image.SeriesName
+			}(),
+			Status:   *image.Status,
+			Provider: provider,
 		})
 	}
 
 	return images, nil
+}
+
+// ListProjects list cloud projects
+func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudProject, error) {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("qcloud ListProjects lost authoration")
+	}
+
+	projects := make([]*proto.CloudProject, 0)
+
+	cli, err := api.NewTagClient(opt)
+	if err != nil {
+		return nil, err
+	}
+	cloudProjects, err := cli.ListProjects()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pro := range cloudProjects {
+		projects = append(projects, &proto.CloudProject{
+			ProjectID:   *pro.ProjectId,
+			ProjectName: *pro.ProjectName,
+		})
+	}
+
+	return projects, nil
 }
 
 // CheckClusterEndpointStatus check cluster endpoint status

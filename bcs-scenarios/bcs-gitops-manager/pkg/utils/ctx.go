@@ -14,16 +14,8 @@
 package utils
 
 import (
-	"context"
 	"strings"
-
-	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 )
-
-// RequestID defines how to get requestID from context
-func RequestID(ctx context.Context) string {
-	return ctx.Value(traceconst.RequestIDHeaderKey).(string)
-}
 
 // IsContextCanceled confirm the error whether context canceled
 func IsContextCanceled(err error) bool {
@@ -47,4 +39,12 @@ func IsArgoResourceNotFound(err error) bool {
 		return false
 	}
 	return strings.Contains(err.Error(), "code = NotFound")
+}
+
+// IsArgoNotFoundAsPartOf defines the resource not found as port of application
+func IsArgoNotFoundAsPartOf(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "not found as part of")
 }

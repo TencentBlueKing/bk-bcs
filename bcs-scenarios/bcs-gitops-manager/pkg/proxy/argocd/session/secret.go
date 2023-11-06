@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
@@ -44,6 +45,7 @@ func NewSecretSession(op *proxy.SecretOption) *SecretSession {
 
 // ServeHTTP http.Handler implementation
 func (s *SecretSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	requestID := req.Context().Value(traceconst.RequestIDHeaderKey).(string)
 	// backend real path with encoded format
 	realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
 	// !force https link
@@ -64,8 +66,8 @@ func (s *SecretSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			if !utils.IsContextCanceled(e) {
 				metric.ManagerSecretProxyFailed.WithLabelValues().Inc()
 			}
-			blog.Errorf("secret session proxy '%s' with header '%s' failure: %s",
-				fullPath, request.Header, e.Error())
+			blog.Errorf("RequestID[%s] secret session proxy '%s' with header '%s' failure: %s",
+				requestID, fullPath, request.Header, e.Error())
 			res.WriteHeader(http.StatusInternalServerError)
 			_, _ = res.Write([]byte("secret session proxy failed")) // nolint
 		},
@@ -76,6 +78,8 @@ func (s *SecretSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			return nil
 		},
 	}
-	blog.Infof("secret session serve: %s/%s", req.Method, fullPath)
+
+	req.Header.Set(traceconst.RequestIDHeaderKey, requestID)
+	blog.Infof("RequestID[%s] secret session serve: %s/%s", requestID, req.Method, fullPath)
 	reverseProxy.ServeHTTP(rw, req)
 }

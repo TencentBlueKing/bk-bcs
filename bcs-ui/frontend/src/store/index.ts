@@ -77,6 +77,7 @@ const store = new Vuex.Store<{
   isEn: boolean
   crdInstanceList: any[]
   cluster: typeof cluster.state
+  globalPageSize: number
 }>({
   // todo 废弃模块
   modules: {
@@ -103,7 +104,7 @@ const store = new Vuex.Store<{
   plugins: [
     VuexStorage({
       key: '__bcs_vuex_stroage__',
-      paths: ['curProject.projectID', 'curProject.projectCode', 'curProject.businessID', 'curCluster.clusterID', 'openSideMenu', 'curNamespace', 'clusterViewType'],
+      paths: ['curProject.projectID', 'curProject.projectCode', 'curProject.businessID', 'curCluster.clusterID', 'openSideMenu', 'curNamespace', 'clusterViewType', 'globalPageSize'],
       mutationEffect: [
         {
           type: 'cluster/forceUpdateClusterList',
@@ -129,6 +130,7 @@ const store = new Vuex.Store<{
     clusterViewType: 'card', // 集群展示模式 card 或者 list
     isEn: lang === 'en-US', // todo 废弃
     crdInstanceList: [], // todo 放入对应的module中
+    globalPageSize: 10,
   } as any,
   // 公共 getters
   getters: {
@@ -203,6 +205,9 @@ const store = new Vuex.Store<{
     },
     updateFeatureFlags(state, data) {
       state.featureFlags = data;
+    },
+    updatePageSize(state, size = 10) {
+      state.globalPageSize = size;
     },
   },
   actions: {

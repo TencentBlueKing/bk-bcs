@@ -29,6 +29,11 @@ func init() {
 	})
 }
 
+// CreateClusterValidate check createCluster operation
+func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
 // CloudValidate blueKingCloud validate management implementation
 type CloudValidate struct {
 }
@@ -67,6 +72,12 @@ func (c *CloudValidate) ListCloudRegionClusterValidate(
 // ListCloudSubnetsValidate xxx
 func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error {
 	return nil
+}
+
+// ListCloudVpcsValidate xxx
+func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
+	account *proto.Account) error {
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // ListSecurityGroupsValidate xxx

@@ -82,7 +82,7 @@ func (u *UpgradeAddonsAction) Handle(ctx context.Context,
 	}
 
 	// save db
-	if err := u.saveDB(ctx, addons.Namespace, addons.ChartName); err != nil {
+	if err := u.saveDB(ctx, addons.Namespace, addons.ChartName, addons.ReleaseName()); err != nil {
 		blog.Errorf("save addons failed, %s", err.Error())
 		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error())
 		return nil
@@ -96,12 +96,13 @@ func (u *UpgradeAddonsAction) Handle(ctx context.Context,
 		ProjectCode:    contextx.GetProjectCodeFromCtx(ctx),
 		ProjectID:      contextx.GetProjectIDFromCtx(ctx),
 		ClusterID:      u.req.GetClusterID(),
-		Name:           u.req.GetName(),
+		Name:           addons.ReleaseName(),
 		Namespace:      addons.Namespace,
 		RepoName:       common.PublicRepoName,
 		ChartName:      addons.ChartName,
 		Version:        u.req.GetVersion(),
 		Values:         []string{addons.DefaultValues, u.req.GetValues()},
+		Args:           []string{"--wait"},
 		CreateBy:       u.createBy,
 		UpdateBy:       u.updateBy,
 	}
@@ -114,9 +115,9 @@ func (u *UpgradeAddonsAction) Handle(ctx context.Context,
 	return nil
 }
 
-func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName string) error {
+func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName, releaseName string) error {
 	create := false
-	old, err := u.model.GetRelease(ctx, u.req.GetClusterID(), ns, u.req.GetName())
+	old, err := u.model.GetRelease(ctx, u.req.GetClusterID(), ns, releaseName)
 	if err != nil {
 		if !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			return err
@@ -129,7 +130,7 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName string) 
 		u.createBy = createBy
 		u.updateBy = createBy
 		if err := u.model.CreateRelease(ctx, &entity.Release{
-			Name:         u.req.GetName(),
+			Name:         releaseName,
 			ProjectCode:  contextx.GetProjectCodeFromCtx(ctx),
 			Namespace:    ns,
 			ClusterID:    u.req.GetClusterID(),
@@ -160,8 +161,7 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName string) 
 			entity.FieldKeyStatus:       helmrelease.StatusPendingUpgrade.String(),
 			entity.FieldKeyMessage:      "",
 		}
-		if err := u.model.UpdateRelease(ctx, u.req.GetClusterID(), ns,
-			u.req.GetName(), rl); err != nil {
+		if err := u.model.UpdateRelease(ctx, u.req.GetClusterID(), ns, releaseName, rl); err != nil {
 			return err
 		}
 	}

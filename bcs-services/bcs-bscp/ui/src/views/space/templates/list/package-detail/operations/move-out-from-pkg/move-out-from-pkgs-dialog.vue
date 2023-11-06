@@ -11,7 +11,8 @@
     @confirm="handleConfirm"
     @closed="close"
   >
-    <bk-loading style="min-height: 100px" :loading="loading">
+    <div class="service-table">
+      <bk-loading style="min-height: 100px" :loading="loading">
       <bk-table
         v-if="!loading"
         :data="citedList"
@@ -31,6 +32,7 @@
         <bk-table-column show-overflow-tooltip label="使用此套餐的服务" prop="appNames"></bk-table-column>
       </bk-table>
     </bk-loading>
+    </div>
     <p v-if="citedList.length === 1" class="tips">
       <Warn class="warn-icon" />
       移出后配置文件将不存在任一套餐。你仍可在「全部配置文件」或「未指定套餐」分类下找回。
@@ -94,14 +96,14 @@ watch(
       selectedPkgs.value = [];
       getCitedData();
     }
-  }
+  },
 );
 
 const getCitedData = async () => {
   loading.value = true;
   const citedPkgsRes = await getPackagesByTemplateIds(spaceId.value, currentTemplateSpace.value, [props.id]);
   if (citedPkgsRes.details.length === 1) {
-    const pkgs = citedPkgsRes.details[0].map((item) => item.template_set_id);
+    const pkgs = citedPkgsRes.details[0].map(item => item.template_set_id);
     const params = {
       start: 0,
       all: true,
@@ -111,7 +113,7 @@ const getCitedData = async () => {
       spaceId.value,
       currentTemplateSpace.value,
       pkgs,
-      params
+      params,
     );
     citedPkgsRes.details[0].forEach((item) => {
       const { template_set_id, template_set_name } = item;
@@ -126,7 +128,7 @@ const getCitedData = async () => {
         appNames,
       });
     });
-    const index = list.findIndex((item) => item.id === props.currentPkg);
+    const index = list.findIndex(item => item.id === props.currentPkg);
     const currentPkgData = list.splice(index, 1);
     list = currentPkgData.concat(list);
     citedList.value = list;
@@ -149,7 +151,7 @@ const getSelectionStatus = ({ row }: { row: ICitedItem }) => {
 const handleSelectionChange = ({ checked, isAll, row }: { checked: boolean; isAll: boolean; row: ICitedItem }) => {
   if (isAll) {
     if (checked) {
-      selectedPkgs.value = citedList.value.map((item) => item.id);
+      selectedPkgs.value = citedList.value.map(item => item.id);
     } else {
       selectedPkgs.value = [];
     }
@@ -159,7 +161,7 @@ const handleSelectionChange = ({ checked, isAll, row }: { checked: boolean; isAl
         selectedPkgs.value.push(row.id);
       }
     } else {
-      const index = selectedPkgs.value.findIndex((id) => id === row.id);
+      const index = selectedPkgs.value.findIndex(id => id === row.id);
       if (index > -1) {
         selectedPkgs.value.splice(index, 1);
       }

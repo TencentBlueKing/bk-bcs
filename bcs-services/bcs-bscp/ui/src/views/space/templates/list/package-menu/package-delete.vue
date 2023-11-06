@@ -16,8 +16,8 @@
         <bk-table :data="appList" :max-height="maxTableHeight" empty-text="暂无未命名版本引用此套餐">
           <bk-table-column label="引用此套餐的服务">
             <template #default="{ row }">
-              <div class="app-info">
-                <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+              <div class="app-info" @click="goToConfigPageImport(row.app_id)">
+                <div v-overflow-title class="name-text" >{{ row.app_name }}</div>
                 <LinkToApp class="link-icon" :id="row.app_id" :auto-jump="true" />
               </div>
             </template>
@@ -35,14 +35,17 @@
 </template>
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue/lib';
 import useGlobalStore from '../../../../../store/global';
 import { getUnNamedVersionAppsBoundByPackage, deleteTemplatePackage } from '../../../../../api/template';
 import { ITemplatePackageItem, IPackageCitedByApps } from '../../../../../../types/template';
+import useTemplateStore from '../../../../../store/template';
 import LinkToApp from '../components/link-to-app.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { currentTemplateSpace } = storeToRefs(useTemplateStore());
 
 const props = defineProps<{
   show: boolean;
@@ -51,6 +54,8 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits(['update:show', 'deleted']);
+
+const router = useRouter();
 
 const isShow = ref(false);
 const appsLoading = ref(false);
@@ -69,8 +74,17 @@ watch(
     if (val) {
       getRelatedApps();
     }
-  }
+  },
 );
+
+const goToConfigPageImport = (id: number) => {
+  const { href } = router.resolve({
+    name: 'service-config',
+    params: { appId: id },
+    query: { pkg_id: currentTemplateSpace.value },
+  });
+  window.open(href, '_blank');
+};
 
 const getRelatedApps = async () => {
   appsLoading.value = true;
@@ -111,6 +125,7 @@ const close = () => {
   display: flex;
   align-items: center;
   overflow: hidden;
+  cursor: pointer;
   .name-text {
     overflow: hidden;
     white-space: nowrap;

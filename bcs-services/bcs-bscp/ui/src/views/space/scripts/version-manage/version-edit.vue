@@ -12,6 +12,9 @@
       <template v-if="props.editable" #preContent="{ fullscreen }">
         <div v-show="!fullscreen" class="version-config-form">
           <bk-form ref="formRef" form-type="vertical" :model="localVal">
+            <bk-form-item label="版本号" property="revision_name">
+              <bk-input v-model="localVal.name" />
+            </bk-form-item>
             <bk-form-item label="版本说明" propperty="memo">
               <bk-input v-model="localVal.memo" type="textarea" :rows="8" :resize="false"/>
             </bk-form-item>
@@ -20,7 +23,7 @@
       </template>
     </ScriptEditor>
     <div v-if="props.editable" class="action-btns">
-      <bk-button class="submit-btn" theme="primary" :loading="pending" @click="handleSubmit">提交</bk-button>
+      <bk-button class="submit-btn" theme="primary" :loading="pending" @click="handleSubmit">{{ props.versionData.id ? '保存' : '提交' }} </bk-button>
       <bk-button class="cancel-btn" @click="emits('close')">取消</bk-button>
     </div>
   </section>
@@ -86,8 +89,8 @@ const handleSubmit = async () => {
   try {
     pending.value = true;
     const { name, memo, content } = localVal.value;
+    const params = { name, memo, content };
     if (localVal.value.id) {
-      const params = { name, memo, content };
       await updateScriptVersion(spaceId.value, props.scriptId, localVal.value.id, params);
       emits('submitted', { ...localVal.value }, 'update');
       BkMessage({
@@ -95,7 +98,6 @@ const handleSubmit = async () => {
         message: '编辑版本成功',
       });
     } else {
-      const params = { memo, content };
       const res = await createScriptVersion(spaceId.value, props.scriptId, params);
       emits('submitted', { ...localVal.value, id: res.id }, 'create');
       BkMessage({

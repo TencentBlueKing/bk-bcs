@@ -97,7 +97,8 @@ func (m *VaultSecretManager) hasInitProject(project string) bool {
 	return false
 }
 
-func (m *VaultSecretManager) reverseInitProject(project string) []error {
+// ReverseInitProject reverse the project init when error occurred
+func (m *VaultSecretManager) ReverseInitProject(project string) []error {
 	var errs []error
 	ml, err := m.client.Sys().ListMounts()
 	if err != nil {
@@ -130,16 +131,6 @@ func (m *VaultSecretManager) InitProject(project string) error {
 	}
 
 	blog.Infof("Project '%s' init starting", project)
-	defer func() {
-		if errs := m.reverseInitProject(project); len(errs) != 0 {
-			for i := range errs {
-				blog.Errorf("Project '%s' reserve init failed: %s", project, errs[i].Error())
-			}
-		} else {
-			blog.Warnf("Project '%s' reverse init complete", project)
-		}
-	}()
-
 	// create kv, secrets volume for project root path
 	kvMount := &vault.MountInput{
 		Type:        "kv",

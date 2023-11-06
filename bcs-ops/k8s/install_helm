@@ -35,7 +35,7 @@ for file in "${source_files[@]}"; do
   safe_source "$file"
 done
 
-if ! helm version --short /dev/null | grep -qoE "^v${HELM_VER}"; then
+if ! helm version --short 2>/dev/null | grep -qoE "^v${HELM_VER}"; then
   helm_image=${BK_PUBLIC_REPO:-"docker.io"}/alpine/helm:3.7.2
   utils::log "DEBUG" "helm image url: ${helm_image}"
 

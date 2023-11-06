@@ -54,6 +54,7 @@ watch(
       versionData.value = GET_UNNAMED_VERSION_DATE();
       getPermData();
       getAppData();
+      setLastAccessedServiceDetail();
     }
   },
 );
@@ -61,6 +62,7 @@ watch(
 onMounted(() => {
   getPermData();
   getAppData();
+  setLastAccessedServiceDetail();
 });
 
 onBeforeUnmount(() => {
@@ -98,6 +100,10 @@ const getAppData = async () => {
   } catch (e) {
     console.error(e);
   }
+};
+
+const setLastAccessedServiceDetail = () => {
+  localStorage.setItem('lastAccessedServiceDetail', JSON.stringify({ spaceId: bkBizId.value, appId: appId.value }));
 };
 
 // 切换视图

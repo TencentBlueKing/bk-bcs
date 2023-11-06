@@ -308,5 +308,9 @@ const handleDeleteService = async () => {
   .bk-modal-header {
     display: none;
   }
+  .bk-modal-footer {
+    border: none !important;
+    background-color: #fff !important;
+  }
 }
 </style>

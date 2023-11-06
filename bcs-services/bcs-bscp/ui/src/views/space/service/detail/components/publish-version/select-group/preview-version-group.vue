@@ -62,7 +62,7 @@ const emits = defineEmits(['diff', 'delete']);
 const TYPE_MAP = {
   current: '当前版本',
   modify: '变更版本',
-  plain: '无版本',
+  plain: '首次上线',
 };
 
 const fold = ref(false);

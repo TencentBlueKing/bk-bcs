@@ -88,7 +88,7 @@ const pkgTreeData = computed(() => {
     const group: ISpaceTreeItem = {
       id: template_space_id,
       nodeId,
-      name: template_space_name === 'default_space' ? '默认空间' : template_space_name,
+      name: template_space_name,
       children: [],
       checked,
       indeterminate,

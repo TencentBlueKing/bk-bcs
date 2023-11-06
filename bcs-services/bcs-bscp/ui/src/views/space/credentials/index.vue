@@ -62,7 +62,8 @@
               <span v-if="index === 0 && isCreateCredential" style="color: #c4c6cc">待确认</span>
               <div v-if="row.spec" class="credential-text">
                 <div class="text">
-                  <bk-overflow-title>{{ row.visible ? row.spec.enc_credential : '************' }}</bk-overflow-title>
+                  <span v-if="!row.visible">************</span>
+                  <bk-overflow-title v-else type="tips">{{ row.spec.enc_credential }}</bk-overflow-title>
                 </div>
                 <div class="actions">
                   <Eye v-if="row.visible" class="view-icon" @click="row.visible = false" />
@@ -100,11 +101,11 @@
               <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
             </template>
           </bk-table-column>
-          <bk-table-column label="最近使用时间" width="154">
+          <!-- <bk-table-column label="最近使用时间" width="154">
             <template #default="{ row }">
               <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
             </template>
-          </bk-table-column>
+          </bk-table-column> -->
           <bk-table-column label="状态" width="110">
             <template #default="{ row }">
               <div v-if="row.spec" class="status-action">
@@ -246,7 +247,7 @@ watch(
     createPending.value = false;
     getPermData();
     refreshListWithLoading();
-  }
+  },
 );
 
 onMounted(() => {
@@ -450,6 +451,7 @@ const handelToggleEnable = async (credential: ICredentialItem) => {
       id: credential.id,
       memo: credential.spec.memo,
       enable: true,
+      name: credential.spec.name,
     };
     await updateCredential(spaceId.value, params);
     credential.spec.enable = true;
@@ -517,7 +519,7 @@ const clearSearchStr = () => {
 // 校验新建密钥名称
 const testCreateCredentialName = () => {
   if (!createCredentialName.value) return;
-  const regex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-]*[\u4e00-\u9fa5a-zA-Z0-9]$/;
+  const regex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_-]*[\u4e00-\u9fa5a-zA-Z0-9]$/;
   if (!regex.test(createCredentialName.value)) {
     BkMessage({
       theme: 'error',

@@ -13,7 +13,6 @@
 package argocd
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -65,12 +64,12 @@ func (plugin *ProjectPlugin) forbidden(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /api/v1/projects
-func (plugin *ProjectPlugin) listProjectsHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
-	projectList, statusCode, err := plugin.middleware.ListProjects(ctx)
+func (plugin *ProjectPlugin) listProjectsHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	projectList, statusCode, err := plugin.middleware.ListProjects(r.Context())
 	if statusCode != http.StatusOK {
-		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
+		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
-	return mw.ReturnJSONResponse(projectList)
+	return r, mw.ReturnJSONResponse(projectList)
 }
 
 // handle path projectPermission belows:
@@ -79,12 +78,12 @@ func (plugin *ProjectPlugin) listProjectsHandler(ctx context.Context, r *http.Re
 // GET /api/v1/projects/{name}/events
 // GET /api/v1/projects/{name}/globalprojects
 // GET /api/v1/projects/{name}/syncwindows
-func (plugin *ProjectPlugin) projectViewsHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
+func (plugin *ProjectPlugin) projectViewsHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectName := mux.Vars(r)["name"]
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), projectName, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return mw.ReturnErrorResponse(statusCode,
+		return r, mw.ReturnErrorResponse(statusCode,
 			errors.Wrapf(err, "check project '%s' view permission failed", projectName))
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }
