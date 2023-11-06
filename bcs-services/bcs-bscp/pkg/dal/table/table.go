@@ -239,6 +239,8 @@ const (
 	ResourceLockTable Name = "resource_locks"
 	// CredentialTable is credential table's name
 	CredentialTable Name = "credentials"
+	// KvTable is kv table's name
+	KvTable Name = "kvs"
 )
 
 // RevisionColumns defines all the Revision table's columns.

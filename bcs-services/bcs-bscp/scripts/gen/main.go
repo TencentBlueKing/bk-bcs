@@ -58,6 +58,7 @@ func main() {
 		table.ReleasedAppTemplate{},
 		table.AppTemplateVariable{},
 		table.ReleasedAppTemplateVariable{},
+		table.Kv{},
 	)
 
 	g.Execute()
