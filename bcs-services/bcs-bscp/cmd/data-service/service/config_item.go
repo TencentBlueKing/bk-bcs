@@ -647,3 +647,24 @@ func (s *Service) ListConfigItemCount(ctx context.Context, req *pbds.ListConfigI
 
 	return resp, nil
 }
+
+// ListConfigItemByTuple 按照多个字段in查询
+func (s *Service) ListConfigItemByTuple(ctx context.Context, req *pbds.ListConfigItemByTupleReq) (
+	*pbds.ListConfigItemByTupleResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	data := [][]interface{}{}
+	for _, item := range req.Items {
+		data = append(data, []interface{}{item.BizId, item.AppId, item.Name, item.Path})
+	}
+	tuple, err := s.dao.ConfigItem().ListConfigItemByTuple(grpcKit, data)
+	if err != nil {
+		logs.Errorf("list config item by tuple failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	configItems := []*pbci.ConfigItem{}
+	for _, item := range tuple {
+		configItems = append(configItems, pbci.PbConfigItem(item, ""))
+	}
+	resp := &pbds.ListConfigItemByTupleResp{ConfigItems: configItems}
+	return resp, nil
+}

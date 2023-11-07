@@ -152,3 +152,17 @@ func PbConfigItemCount(cc *table.ListConfigItemCounts) *ListConfigItemCounts {
 		UpdateAt: cc.UpdatedAt.Format(time.RFC3339),
 	}
 }
+
+// PbConfigItemSpecs convert table Templates to pb Templates
+func PbConfigItemSpecs(s []*table.ConfigItem) []*ConfigItem {
+	if s == nil {
+		return make([]*ConfigItem, 0)
+	}
+
+	result := make([]*ConfigItem, 0)
+	for _, one := range s {
+		result = append(result, PbConfigItem(one, ""))
+	}
+
+	return result
+}
