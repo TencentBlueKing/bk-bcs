@@ -85,14 +85,14 @@
                         </td>
                         <td class="status">
                           <span class="biz-mark" v-if="crdcontroller.status === 'deployed'">
-                            <bk-tag type="filled" theme="success">{{$t('plugin.tools.deployed')}}</bk-tag>
+                            <bk-tag type="filled" theme="success">{{statusTextMap[crdcontroller.status] || $t('plugin.tools.deployed')}}</bk-tag>
                           </span>
                           <span class="biz-mark" v-else-if="!crdcontroller.status">
-                            <bk-tag type="filled">{{$t('generic.status.notEnable')}}</bk-tag>
+                            <bk-tag type="filled">{{statusTextMap[crdcontroller.status] || $t('generic.status.notEnable')}}</bk-tag>
                           </span>
                           <span class="biz-mark" v-else-if="crdcontroller.status === 'unknown'">
                             <bcs-popover :content="$t('plugin.tools.contact')" placement="top">
-                              <bk-tag type="filled" theme="warning">{{$t('generic.status.unknown')}}</bk-tag>
+                              <bk-tag type="filled" theme="warning">{{statusTextMap[crdcontroller.status] || $t('generic.status.unknown')}}</bk-tag>
                             </bcs-popover>
                           </span>
                           <template v-else-if="pendingStatus.includes(crdcontroller.status)">
@@ -106,11 +106,11 @@
                               <div class="rotate rotate7"></div>
                               <div class="rotate rotate8"></div>
                             </div>
-                            <span class="vm">{{$t('plugin.tools.doing')}}</span>
+                            <span class="vm">{{statusTextMap[crdcontroller.status] || $t('plugin.tools.doing')}}</span>
                           </template>
                           <span class="biz-mark" v-else>
                             <bcs-popover :width="500" :content="crdcontroller.message" placement="top">
-                              <bk-tag type="filled" theme="danger">{{$t('generic.status.error')}}</bk-tag>
+                              <bk-tag type="filled" theme="danger">{{statusTextMap[crdcontroller.status] || $t('generic.status.error')}}</bk-tag>
                             </bcs-popover>
                           </span>
                         </td>
@@ -252,8 +252,23 @@ export default {
   },
   data() {
     return {
-      pendingStatus: ['pending', 'uninstalling', 'pending-install', 'pending-upgrade', 'pending-rollback'],
+      pendingStatus: ['uninstalling', 'pending-install', 'pending-upgrade', 'pending-rollback'],
       failedStatus: ['failed', 'failed-install', 'failed-upgrade', 'failed-rollback', 'failed-uninstall'],
+      statusTextMap: {
+        unknown: this.$t('generic.status.error'),
+        deployed: this.$t('generic.status.ready'),
+        uninstalled: this.$t('generic.status.deleted'),
+        superseded: this.$t('deploy.helm.invalidate'),
+        failed: this.$t('generic.status.failed'),
+        uninstalling: this.$t('generic.status.deleting'),
+        'pending-install': this.$t('deploy.helm.pending'),
+        'pending-upgrade': this.$t('generic.status.updating'),
+        'pending-rollback': this.$t('deploy.helm.pendingRollback'),
+        'failed-install': this.$t('deploy.helm.failed'),
+        'failed-upgrade': this.$t('generic.status.updateFailed'),
+        'failed-rollback': this.$t('deploy.helm.rollbackFailed'),
+        'failed-uninstall': this.$t('generic.status.deleteFailed'),
+      },
       isInitLoading: true,
       isPageLoading: false,
       crdControllerList: [],
@@ -388,7 +403,6 @@ export default {
       try {
         const crdcontroller = this.curCrdcontroller;
         const clusterId = this.searchScope;
-        crdcontroller.status = 'pending';
         this.valueSlider.isShow = false;
         await addonsInstall({
           $clusterId: clusterId,
