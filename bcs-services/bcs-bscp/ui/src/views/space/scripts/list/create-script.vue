@@ -25,7 +25,7 @@
           </bk-form-item>
           <bk-form-item label="脚本内容" property="content" required>
             <div class="script-content-wrapper">
-              <ScriptEditor v-model="formData.content" :language="formData.type">
+              <ScriptEditor v-model="showContent" :language="formData.type">
                 <template #header>
                   <div class="language-tabs">
                     <div
@@ -53,7 +53,7 @@
   </DetailLayout>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import BkMessage from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../store/global';
@@ -81,7 +81,15 @@ const formData = ref<IScriptEditingForm>({
   tag: '',
   memo: '',
   type: EScriptType.Shell,
-  content: '#!/bin/bash',
+  content: '',
+});
+const formDataContent = ref({
+  shell: '#!/bin/bash',
+  python: '#!/bin/bash',
+});
+const showContent = computed({
+  get: () => (formData.value.type === 'shell' ? formDataContent.value.shell : formDataContent.value.python),
+  set: val => (formData.value.type === 'shell' ? formDataContent.value.shell = val : formDataContent.value.python = val),
 });
 
 const rules = {
@@ -112,6 +120,7 @@ const getTags = async () => {
 };
 
 const handleCreate = async () => {
+  formData.value.content = formData.value.type === 'shell' ? formDataContent.value.shell : formDataContent.value.python;
   await formRef.value.validate();
   try {
     pending.value = true;
