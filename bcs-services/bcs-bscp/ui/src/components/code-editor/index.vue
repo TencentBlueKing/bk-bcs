@@ -217,8 +217,12 @@ const aotoCompletion = () => {
   editorVariableProvide = monaco.languages.registerCompletionItemProvider(props.language || 'custom-language', {
     triggerCharacters: ['{'], // 触发自动补全的字符
     provideCompletionItems(model: any, position: any) {
-      const lineContent = model.getLineContent(position.lineNumber);
-      const charBeforeCursor = lineContent.charAt(position.column - 2);
+      const textBeforePosition = model.getValueInRange({
+        startLineNumber: position.lineNumber,
+        startColumn: 1,
+        endLineNumber: position.lineNumber,
+        endColumn: position.column,
+      });
       // 根据当前的文本内容和光标位置，返回自动补全的候选项列表
       const variableSuggestions = variableNameList.value!.map((item: string) => ({
         label: item, // 候选项的显示文本
@@ -237,7 +241,7 @@ const aotoCompletion = () => {
         suggestions.push(...privateVariableSuggestions);
       }
 
-      if (charBeforeCursor === '{') {
+      if (textBeforePosition === '{{') {
         return {
           suggestions,
         };

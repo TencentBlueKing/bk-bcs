@@ -222,7 +222,7 @@ const rules = {
     {
       validator: (value: string) => /^\/([a-zA-Z0-9/\-.]+\/)*[a-zA-Z0-9/\-.]+$/.test(value),
       message: '无效的路径,路径不符合Unix文件路径格式规范',
-      trigger: 'blur',
+      trigger: 'change',
     },
   ],
   memo: [
