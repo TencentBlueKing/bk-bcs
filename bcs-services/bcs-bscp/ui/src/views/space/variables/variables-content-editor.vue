@@ -51,6 +51,7 @@
           @update:model-value="variables = $event"
           @enter="separatorShow = true"
           :error-line="errorLine"
+          :placeholder="editorPlaceholder"
         />
         <div class="separator" v-show="separatorShow">
           <SeparatorSelect @closed="separatorShow = false" @confirm="separator = $event" />
@@ -81,6 +82,7 @@ const variables = ref('');
 const separator = ref(' ');
 const shouldValidate = ref(false);
 const errorLine = ref<errorLineItem[]>([]);
+const editorPlaceholder = ref(['示例：', '变量名 变量类型 变量值 变量描述（可选）', 'nginx_ip string 1.1.1.1', 'nginx_port number 8080 nginx端口']);
 
 watch(
   () => variables.value,

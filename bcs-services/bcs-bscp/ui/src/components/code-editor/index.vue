@@ -1,8 +1,14 @@
 <template>
-  <section class="code-editor-wrapper" ref="codeEditorRef"></section>
+  <div v-show="isShowPlaceholder && placeholder" class="placeholderBox">
+    <div class="placeholderLine" v-for="(content, number) in placeholder" :key="number" @click="handlePlaceholderClick">
+      <div class="lineNumber">{{ number + 1}}</div>
+      <div class="lineContent">{{ content }}</div>
+    </div>
+  </div>
+  <section v-show="!isShowPlaceholder || !placeholder" class="code-editor-wrapper" ref="codeEditorRef"></section>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker.js?worker';
@@ -45,6 +51,7 @@ const props = withDefaults(
     editable?: boolean;
     language?: string;
     errorLine?: errorLineItem[];
+    placeholder?: string[];
   }>(),
   {
     variables: () => [],
@@ -66,6 +73,8 @@ const bkBizId = ref(String(route.params.spaceId));
 const appId = ref(Number(route.params.appId));
 const variableNameList = ref<string[]>();
 const privateVariableNameList = ref<string[]>();
+const isShowPlaceholder = ref(true);
+
 watch(
   () => props.modelValue,
   (val) => {
@@ -144,6 +153,11 @@ onMounted(() => {
   });
   // 自动换行
   editor.updateOptions({ wordWrap: 'on' });
+  editor.onDidBlurEditorWidget(() => {
+    if (!props.modelValue) {
+      isShowPlaceholder.value = true;
+    }
+  });
 });
 
 // 添加错误行
@@ -233,10 +247,15 @@ const aotoCompletion = () => {
     resolveCompletionItem: (item: any) => item,
   });
 };
-
+// 打开搜索框
 const openSearch = () => {
   const findAction = editor.getAction('actions.find');
   findAction.run();
+};
+
+const handlePlaceholderClick = () => {
+  isShowPlaceholder.value = false;
+  nextTick(() => editor.focus());
 };
 
 // @bug vue3的Teleport组件销毁时，子组件的onBeforeUnmount不会被执行，会出现内存泄漏，目前尚未被修复 https://github.com/vuejs/core/issues/6347
@@ -274,6 +293,25 @@ defineExpose({
       color: #1768ef;
       border: 1px solid #1768ef;
       cursor: pointer;
+    }
+  }
+}
+.placeholderBox {
+  height: 100%;
+  background-color: #1e1e1e;
+  .placeholderLine {
+    display: flex;
+    height: 19px;
+    line-height: 19px;
+    .lineNumber {
+      font-family: Consolas, "Courier New", monospace;
+      width: 64px;
+      text-align: center;
+      color: #979BA5;
+      font-size: 14px;
+    }
+    .lineContent {
+      color: #63656e;
     }
   }
 }
