@@ -332,7 +332,7 @@
           <bk-switcher
             v-model="showQuota"
             class="ml-[10px]"
-            :disabled="isSharedCluster"
+            :disabled="isSharedCluster && showQuota"
             size="small"
             :selected="showQuota"
             :key="showQuota"

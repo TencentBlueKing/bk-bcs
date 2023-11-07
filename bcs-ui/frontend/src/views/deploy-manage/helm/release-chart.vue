@@ -410,7 +410,7 @@ export default defineComponent({
     const activeTab = ref('values');
     // 表单化参数
     const args = ref({
-      '--timeout': 600,
+      '--timeout': 300,
     });
     // 自定义参数
     const customArgs = ref<IData[]>([]);
