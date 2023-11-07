@@ -22,7 +22,7 @@ ROOT_DIR="${SELF_DIR}/.."
 
 RC_FILE="/etc/bash_completion.d/bcs.bash"
 
-PROJECTS=(kubeadm kubectl helm ctr yq)
+PROJECTS=(kubeadm kubectl crictl helm ctr yq)
 readonly SELF_DIR ROOT_DIR RC_FILE PROJECTS
 
 usage_and_exit() {
@@ -137,6 +137,18 @@ completion_kubeadm() {
 # kubeadm 命令补全
 source <(kubeadm completion bash)
 # bcs config end for kubeadm
+EOF
+}
+
+completion_crictl() {
+  check_completion
+  sed -ri \
+    '/bcs config begin for crictl/,/bcs config end for crictl/d' ${RC_FILE}
+  cat >>"$RC_FILE" <<'EOF'
+# bcs config begin for crictl
+# crictl 命令补全
+source <(crictl completion bash)
+# bcs config end for crictl
 EOF
 }
 

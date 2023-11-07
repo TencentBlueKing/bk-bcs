@@ -69,7 +69,13 @@ _yum_k8s() {
     | awk '/'"$pkg_pat"'/{last=$2} END{sub(/.*:/,"",last);print last}')"
   [[ -n $pkg_ver ]] \
     || utils::log "ERROR" "${K8S_VER:-} not found amongst yum list results"
-  yum install -y "kubeadm-${pkg_ver}" "kubelet-${pkg_ver}" "kubectl-${pkg_ver}"
+  local crictl_pat crictl_ver
+  crictl_pat=$(awk '/crictl:/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
+
+  crictl_ver=$(yum list cri-tools --showduplicates \
+    | awk '/'"${crictl_pat}"'/{last=$2} END{sub(/.*:/,"",last);print last}')
+
+  yum install -y "kubeadm-${pkg_ver}" "kubelet-${pkg_ver}" "kubectl-${pkg_ver}" "cri-tools-${crictl_ver}"
 }
 
 _curl_k8s() {
@@ -78,7 +84,9 @@ _curl_k8s() {
   mkdir -p "$bin_path"
 
   name="k8s"
-  ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
+  ver=$(awk \
+    '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' \
+    "${ROOT_DIR}"/env/offline-manifest.yaml)
   file="${name}-${ver}.tgz"
   url=${REPO_URL:-}/${file}
   if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
@@ -88,7 +96,9 @@ _curl_k8s() {
   fi
 
   name="crictl"
-  ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
+  ver=$(awk \
+    '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' \
+    "${ROOT_DIR}"/env/offline-manifest.yaml)
   file="${name}-${ver}.tgz"
   url="${REPO_URL}/${file}"
   if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
@@ -98,7 +108,9 @@ _curl_k8s() {
   fi
 
   name="cni-plugins"
-  ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
+  ver=$(awk \
+    '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' \
+    "${ROOT_DIR}"/env/offline-manifest.yaml)
   file="${name}-${ver}.tgz"
   url="${REPO_URL}/${file}"
   if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
@@ -141,6 +153,28 @@ _offline_k8s() {
   fi
 }
 
+config_crictl() {
+  local sock config_file
+  config_file="/etc/crictl.yaml"
+  [[ -f $config_file ]] || touch $config_file
+  case "${CRI_TYPE,,}" in
+    "docker")
+      sock="unix:///var/run/dockershim.sock"
+      ;;
+    "containerd")
+      sock="unix:///run/containerd/containerd.sock"
+      ;;
+    *)
+      # ToDo: Unified standard error code
+      export ERR_CODE=1
+      utils::log FATAL "unkown CRI_TYPE:$CRI_TYPE"
+      ;;
+  esac
+  crictl config runtime-endpoint $sock
+  crictl config image-endpoint $sock
+  "${ROOT_DIR}"/k8s/operate_completion crictl
+}
+
 main() {
   local source_files
   source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
@@ -163,6 +197,8 @@ main() {
         ;;
     esac
   fi
+
+  config_crictl
 
   utils::log "INFO" "check kubeadm status"
   if kubeadm version -o short; then
