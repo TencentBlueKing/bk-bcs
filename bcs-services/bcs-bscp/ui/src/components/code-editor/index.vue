@@ -1,7 +1,7 @@
 <template>
   <div v-show="isShowPlaceholder && placeholder" class="placeholderBox">
     <div class="placeholderLine" v-for="(content, number) in placeholder" :key="number" @click="handlePlaceholderClick">
-      <div class="lineNumber">{{ number + 1}}</div>
+      <div class="lineNumber">{{ number + 1 }}</div>
       <div class="lineContent">{{ content }}</div>
     </div>
   </div>
@@ -71,8 +71,8 @@ const localVal = ref(props.modelValue);
 const route = useRoute();
 const bkBizId = ref(String(route.params.spaceId));
 const appId = ref(Number(route.params.appId));
-const variableNameList = ref<string[]>();
-const privateVariableNameList = ref<string[]>();
+const variableNameList = ref<string[]>(['']);
+const privateVariableNameList = ref<string[]>(['']);
 const isShowPlaceholder = ref(true);
 
 watch(
@@ -115,10 +115,8 @@ watch(
 );
 
 onMounted(() => {
-  if (bkBizId.value && appId.value) {
-    handleVariableList();
-    aotoCompletion();
-  }
+  handleVariableList();
+  aotoCompletion();
   if (!editor) {
     registerLanguage();
     editor = monaco.editor.create(codeEditorRef.value as HTMLElement, {
@@ -177,13 +175,13 @@ const setErrorLine = () => {
 
 // 获取全局变量和私有变量列表
 const handleVariableList = async () => {
-  const [variableList, privateVariableList] = await Promise.all([
-    getVariableList(bkBizId.value, { start: 0, limit: 1000 }),
-    getUnReleasedAppVariables(bkBizId.value, appId.value),
-  ]);
-  variableNameList.value = variableList.details.map((item: any) => `.${item.spec.name}`);
-  privateVariableNameList.value = privateVariableList.details.map((item: any) => `.${item.name}`);
-  variableNameList.value?.filter(item => !privateVariableNameList.value!.includes(item));
+  const variableList = await getVariableList(bkBizId.value, { start: 0, limit: 1000 });
+  variableNameList.value = variableList.details.map((item: any) => ` .${item.spec.name} `);
+  if (appId.value) {
+    const privateVariableList = await getUnReleasedAppVariables(bkBizId.value, appId.value);
+    privateVariableNameList.value = privateVariableList.details.map((item: any) => ` .${item.name} `);
+    variableNameList.value!.filter(item => !privateVariableNameList.value!.includes(item));
+  }
 };
 
 // 注册自定义语言
@@ -192,9 +190,9 @@ const registerLanguage = () => {
   monaco.languages.register({ id: 'custom-language' });
   monaco.languages.setMonarchTokensProvider('custom-language', {
     tokenizer: {
-      root: [{ regex: /\{/, action: { token: 'delimiter.curly', next: '@curly' } }],
+      root: [{ regex: /\{\{/, action: { token: 'delimiter.curly', next: '@curly' } }],
       curly: [
-        { regex: /\}/, action: { token: 'delimiter.curly', next: '@pop' } },
+        { regex: /\}\}/, action: { token: 'delimiter.curly', next: '@pop' } },
         { regex: /[^{}\s]+/, action: 'custom-token' }, // 自定义内部内容的高亮规则
         { regex: /\s+/, action: '' }, // 忽略空白符
       ],
@@ -228,13 +226,17 @@ const aotoCompletion = () => {
         insertText: item, // 插入光标后的文本
         range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
       }));
-      const privateVariableSuggestions = privateVariableNameList.value!.map((item: string) => ({
-        label: item,
-        kind: monaco.languages.CompletionItemKind.Variable,
-        insertText: item,
-        range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-      }));
-      const suggestions = [...variableSuggestions, ...privateVariableSuggestions];
+      const suggestions = [...variableSuggestions];
+      if (privateVariableNameList.value?.length > 0) {
+        const privateVariableSuggestions = privateVariableNameList.value!.map((item: string) => ({
+          label: item,
+          kind: monaco.languages.CompletionItemKind.Variable,
+          insertText: item,
+          range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+        }));
+        suggestions.push(...privateVariableSuggestions);
+      }
+
       if (charBeforeCursor === '{') {
         return {
           suggestions,
@@ -304,10 +306,10 @@ defineExpose({
     height: 19px;
     line-height: 19px;
     .lineNumber {
-      font-family: Consolas, "Courier New", monospace;
+      font-family: Consolas, 'Courier New', monospace;
       width: 64px;
       text-align: center;
-      color: #979BA5;
+      color: #979ba5;
       font-size: 14px;
     }
     .lineContent {

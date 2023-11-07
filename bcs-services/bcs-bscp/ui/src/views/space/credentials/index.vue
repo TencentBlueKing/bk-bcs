@@ -318,6 +318,7 @@ const refreshListWithLoading = async (current = 1) => {
   pagination.value.current = current;
   await loadCredentialList();
   listLoading.value = false;
+  isCreateCredential.value = false;
 };
 
 // 设置新增行的标记class
