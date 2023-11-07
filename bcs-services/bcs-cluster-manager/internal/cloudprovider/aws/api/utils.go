@@ -11,6 +11,7 @@ import (
 	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"k8s.io/client-go/rest"
@@ -26,19 +27,20 @@ func GetClusterKubeConfig(sess *session.Session, cluster *eks.Cluster) (string, 
 
 	awsToken, err := generator.GetWithOptions(&token.GetTokenOptions{
 		Session:   sess,
-		ClusterID: *cluster.Name,
+		ClusterID: aws.StringValue(cluster.Name),
 	})
 	if err != nil {
 		return "", err
 	}
 
-	decodedCA, err := base64.StdEncoding.DecodeString(*cluster.CertificateAuthority.Data)
+	decodedCA, err := base64.StdEncoding.DecodeString(aws.StringValue(cluster.CertificateAuthority.Data))
 	if err != nil {
-		return "", fmt.Errorf("GetClusterKubeConfig invalid certificate failed, cluster=%s: %w", *cluster.Name, err)
+		return "", fmt.Errorf("GetClusterKubeConfig invalid certificate failed, cluster=%s: %w",
+			aws.StringValue(cluster.Name), err)
 	}
 
 	restConfig := &rest.Config{
-		Host: *cluster.Endpoint,
+		Host: aws.StringValue(cluster.Endpoint),
 		TLSClientConfig: rest.TLSClientConfig{
 			CAData: decodedCA,
 		},
@@ -52,7 +54,7 @@ func GetClusterKubeConfig(sess *session.Session, cluster *eks.Cluster) (string, 
 	saToken, err := cutils.GenerateSATokenByRestConfig(context.Background(), restConfig)
 	if err != nil {
 		return "", fmt.Errorf("getClusterKubeConfig generate k8s serviceaccount token failed,cluster=%s: %w",
-			*cluster.Name, err)
+			aws.StringValue(cluster.Name), err)
 	}
 
 	typesConfig := &types.Config{
@@ -60,16 +62,16 @@ func GetClusterKubeConfig(sess *session.Session, cluster *eks.Cluster) (string, 
 		Kind:       "Config",
 		Clusters: []types.NamedCluster{
 			{
-				Name: *cluster.Name,
+				Name: aws.StringValue(cluster.Name),
 				Cluster: types.ClusterInfo{
-					Server:                   *cluster.Endpoint,
+					Server:                   aws.StringValue(cluster.Endpoint),
 					CertificateAuthorityData: decodedCA,
 				},
 			},
 		},
 		AuthInfos: []types.NamedAuthInfo{
 			{
-				Name: *cluster.Name,
+				Name: aws.StringValue(cluster.Name),
 				AuthInfo: types.AuthInfo{
 					Token: saToken,
 				},
@@ -77,14 +79,14 @@ func GetClusterKubeConfig(sess *session.Session, cluster *eks.Cluster) (string, 
 		},
 		Contexts: []types.NamedContext{
 			{
-				Name: *cluster.Name,
+				Name: aws.StringValue(cluster.Name),
 				Context: types.Context{
-					Cluster:  *cluster.Name,
-					AuthInfo: *cluster.Name,
+					Cluster:  aws.StringValue(cluster.Name),
+					AuthInfo: aws.StringValue(cluster.Name),
 				},
 			},
 		},
-		CurrentContext: *cluster.Name,
+		CurrentContext: aws.StringValue(cluster.Name),
 	}
 
 	configByte, err := json.Marshal(typesConfig)

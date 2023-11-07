@@ -98,9 +98,9 @@ func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*prot
 	regions := make([]*proto.RegionInfo, 0)
 	for _, v := range output.Regions {
 		regions = append(regions, &proto.RegionInfo{
-			Region:      *v.RegionName,
-			RegionName:  *v.RegionName,
-			RegionState: *v.OptInStatus,
+			Region:      aws.StringValue(v.RegionName),
+			RegionName:  aws.StringValue(v.RegionName),
+			RegionState: aws.StringValue(v.OptInStatus),
 		})
 	}
 
