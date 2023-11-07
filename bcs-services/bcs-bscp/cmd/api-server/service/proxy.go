@@ -35,12 +35,13 @@ import (
 
 // proxy all server's mux proxy.
 type proxy struct {
-	cfgSvrMux  *runtime.ServeMux
-	authSvrMux http.Handler
-	repo       *repoService
-	state      serviced.State
-	authorizer auth.Authorizer
-	cfgClient  pbcs.ConfigClient
+	cfgSvrMux           *runtime.ServeMux
+	authSvrMux          http.Handler
+	repo                *repoService
+	state               serviced.State
+	authorizer          auth.Authorizer
+	cfgClient           pbcs.ConfigClient
+	configImportService *configImport
 }
 
 // newProxy create new mux proxy.
@@ -75,13 +76,19 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		return nil, err
 	}
 
+	configImportService, err := newConfigImportService(cc.ApiServer().Repo, authorizer, cfgClient)
+	if err != nil {
+		return nil, err
+	}
+
 	p := &proxy{
-		cfgSvrMux:  cfgSvrMux,
-		repo:       repo,
-		state:      state,
-		authorizer: authorizer,
-		authSvrMux: authSvrMux,
-		cfgClient:  cfgClient,
+		cfgSvrMux:           cfgSvrMux,
+		repo:                repo,
+		configImportService: configImportService,
+		state:               state,
+		authorizer:          authorizer,
+		authSvrMux:          authSvrMux,
+		cfgClient:           cfgClient,
 	}
 
 	p.initBizsOfTmplSpaces()

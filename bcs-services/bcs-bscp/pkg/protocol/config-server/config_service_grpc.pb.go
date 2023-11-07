@@ -40,6 +40,7 @@ const (
 	Config_ListConfigItems_FullMethodName                   = "/pbcs.Config/ListConfigItems"
 	Config_ListReleasedConfigItems_FullMethodName           = "/pbcs.Config/ListReleasedConfigItems"
 	Config_ListConfigItemCount_FullMethodName               = "/pbcs.Config/ListConfigItemCount"
+	Config_ListConfigItemByTuple_FullMethodName             = "/pbcs.Config/ListConfigItemByTuple"
 	Config_UpdateConfigHook_FullMethodName                  = "/pbcs.Config/UpdateConfigHook"
 	Config_CreateRelease_FullMethodName                     = "/pbcs.Config/CreateRelease"
 	Config_ListReleases_FullMethodName                      = "/pbcs.Config/ListReleases"
@@ -70,10 +71,12 @@ const (
 	Config_BatchDeleteTemplate_FullMethodName               = "/pbcs.Config/BatchDeleteTemplate"
 	Config_UpdateTemplate_FullMethodName                    = "/pbcs.Config/UpdateTemplate"
 	Config_ListTemplates_FullMethodName                     = "/pbcs.Config/ListTemplates"
+	Config_BatchUpsertTemplates_FullMethodName              = "/pbcs.Config/BatchUpsertTemplates"
 	Config_AddTmplsToTmplSets_FullMethodName                = "/pbcs.Config/AddTmplsToTmplSets"
 	Config_DeleteTmplsFromTmplSets_FullMethodName           = "/pbcs.Config/DeleteTmplsFromTmplSets"
 	Config_ListTemplatesByIDs_FullMethodName                = "/pbcs.Config/ListTemplatesByIDs"
 	Config_ListTemplatesNotBound_FullMethodName             = "/pbcs.Config/ListTemplatesNotBound"
+	Config_ListTemplateByTuple_FullMethodName               = "/pbcs.Config/ListTemplateByTuple"
 	Config_ListTmplsOfTmplSet_FullMethodName                = "/pbcs.Config/ListTmplsOfTmplSet"
 	Config_CreateTemplateRevision_FullMethodName            = "/pbcs.Config/CreateTemplateRevision"
 	Config_ListTemplateRevisions_FullMethodName             = "/pbcs.Config/ListTemplateRevisions"
@@ -159,6 +162,7 @@ type ConfigClient interface {
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
 	ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error)
+	ListConfigItemByTuple(ctx context.Context, in *ListConfigItemByTupleReq, opts ...grpc.CallOption) (*ListConfigItemByTupleResp, error)
 	UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*UpdateConfigHookResp, error)
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
@@ -191,19 +195,21 @@ type ConfigClient interface {
 	BatchDeleteTemplate(ctx context.Context, in *BatchDeleteTemplateReq, opts ...grpc.CallOption) (*BatchDeleteTemplateResp, error)
 	UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, opts ...grpc.CallOption) (*UpdateTemplateResp, error)
 	ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error)
+	BatchUpsertTemplates(ctx context.Context, in *BatchUpsertTemplatesReq, opts ...grpc.CallOption) (*BatchUpsertTemplatesResp, error)
 	AddTmplsToTmplSets(ctx context.Context, in *AddTmplsToTmplSetsReq, opts ...grpc.CallOption) (*AddTmplsToTmplSetsResp, error)
 	DeleteTmplsFromTmplSets(ctx context.Context, in *DeleteTmplsFromTmplSetsReq, opts ...grpc.CallOption) (*DeleteTmplsFromTmplSetsResp, error)
 	ListTemplatesByIDs(ctx context.Context, in *ListTemplatesByIDsReq, opts ...grpc.CallOption) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(ctx context.Context, in *ListTemplatesNotBoundReq, opts ...grpc.CallOption) (*ListTemplatesNotBoundResp, error)
+	ListTemplateByTuple(ctx context.Context, in *ListTemplateByTupleReq, opts ...grpc.CallOption) (*ListTemplateByTupleResp, error)
 	ListTmplsOfTmplSet(ctx context.Context, in *ListTmplsOfTmplSetReq, opts ...grpc.CallOption) (*ListTmplsOfTmplSetResp, error)
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -410,6 +416,15 @@ func (c *configClient) ListReleasedConfigItems(ctx context.Context, in *ListRele
 func (c *configClient) ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error) {
 	out := new(ListConfigItemCountResp)
 	err := c.cc.Invoke(ctx, Config_ListConfigItemCount_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListConfigItemByTuple(ctx context.Context, in *ListConfigItemByTupleReq, opts ...grpc.CallOption) (*ListConfigItemByTupleResp, error) {
+	out := new(ListConfigItemByTupleResp)
+	err := c.cc.Invoke(ctx, Config_ListConfigItemByTuple_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -686,6 +701,15 @@ func (c *configClient) ListTemplates(ctx context.Context, in *ListTemplatesReq, 
 	return out, nil
 }
 
+func (c *configClient) BatchUpsertTemplates(ctx context.Context, in *BatchUpsertTemplatesReq, opts ...grpc.CallOption) (*BatchUpsertTemplatesResp, error) {
+	out := new(BatchUpsertTemplatesResp)
+	err := c.cc.Invoke(ctx, Config_BatchUpsertTemplates_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) AddTmplsToTmplSets(ctx context.Context, in *AddTmplsToTmplSetsReq, opts ...grpc.CallOption) (*AddTmplsToTmplSetsResp, error) {
 	out := new(AddTmplsToTmplSetsResp)
 	err := c.cc.Invoke(ctx, Config_AddTmplsToTmplSets_FullMethodName, in, out, opts...)
@@ -716,6 +740,15 @@ func (c *configClient) ListTemplatesByIDs(ctx context.Context, in *ListTemplates
 func (c *configClient) ListTemplatesNotBound(ctx context.Context, in *ListTemplatesNotBoundReq, opts ...grpc.CallOption) (*ListTemplatesNotBoundResp, error) {
 	out := new(ListTemplatesNotBoundResp)
 	err := c.cc.Invoke(ctx, Config_ListTemplatesNotBound_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListTemplateByTuple(ctx context.Context, in *ListTemplateByTupleReq, opts ...grpc.CallOption) (*ListTemplateByTupleResp, error) {
+	out := new(ListTemplateByTupleResp)
+	err := c.cc.Invoke(ctx, Config_ListTemplateByTuple_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1293,6 +1326,7 @@ type ConfigServer interface {
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
 	ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error)
+	ListConfigItemByTuple(context.Context, *ListConfigItemByTupleReq) (*ListConfigItemByTupleResp, error)
 	UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*UpdateConfigHookResp, error)
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
@@ -1325,19 +1359,21 @@ type ConfigServer interface {
 	BatchDeleteTemplate(context.Context, *BatchDeleteTemplateReq) (*BatchDeleteTemplateResp, error)
 	UpdateTemplate(context.Context, *UpdateTemplateReq) (*UpdateTemplateResp, error)
 	ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error)
+	BatchUpsertTemplates(context.Context, *BatchUpsertTemplatesReq) (*BatchUpsertTemplatesResp, error)
 	AddTmplsToTmplSets(context.Context, *AddTmplsToTmplSetsReq) (*AddTmplsToTmplSetsResp, error)
 	DeleteTmplsFromTmplSets(context.Context, *DeleteTmplsFromTmplSetsReq) (*DeleteTmplsFromTmplSetsResp, error)
 	ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(context.Context, *ListTemplatesNotBoundReq) (*ListTemplatesNotBoundResp, error)
+	ListTemplateByTuple(context.Context, *ListTemplateByTupleReq) (*ListTemplateByTupleResp, error)
 	ListTmplsOfTmplSet(context.Context, *ListTmplsOfTmplSetReq) (*ListTmplsOfTmplSetResp, error)
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1450,6 +1486,9 @@ func (UnimplementedConfigServer) ListReleasedConfigItems(context.Context, *ListR
 func (UnimplementedConfigServer) ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItemCount not implemented")
 }
+func (UnimplementedConfigServer) ListConfigItemByTuple(context.Context, *ListConfigItemByTupleReq) (*ListConfigItemByTupleResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItemByTuple not implemented")
+}
 func (UnimplementedConfigServer) UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*UpdateConfigHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateConfigHook not implemented")
 }
@@ -1540,6 +1579,9 @@ func (UnimplementedConfigServer) UpdateTemplate(context.Context, *UpdateTemplate
 func (UnimplementedConfigServer) ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplates not implemented")
 }
+func (UnimplementedConfigServer) BatchUpsertTemplates(context.Context, *BatchUpsertTemplatesReq) (*BatchUpsertTemplatesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertTemplates not implemented")
+}
 func (UnimplementedConfigServer) AddTmplsToTmplSets(context.Context, *AddTmplsToTmplSetsReq) (*AddTmplsToTmplSetsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTmplsToTmplSets not implemented")
 }
@@ -1551,6 +1593,9 @@ func (UnimplementedConfigServer) ListTemplatesByIDs(context.Context, *ListTempla
 }
 func (UnimplementedConfigServer) ListTemplatesNotBound(context.Context, *ListTemplatesNotBoundReq) (*ListTemplatesNotBoundResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplatesNotBound not implemented")
+}
+func (UnimplementedConfigServer) ListTemplateByTuple(context.Context, *ListTemplateByTupleReq) (*ListTemplateByTupleResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateByTuple not implemented")
 }
 func (UnimplementedConfigServer) ListTmplsOfTmplSet(context.Context, *ListTmplsOfTmplSetReq) (*ListTmplsOfTmplSetResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTmplsOfTmplSet not implemented")
@@ -2031,6 +2076,24 @@ func _Config_ListConfigItemCount_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListConfigItemCount(ctx, req.(*ListConfigItemCountReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListConfigItemByTuple_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListConfigItemByTupleReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListConfigItemByTuple(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListConfigItemByTuple_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListConfigItemByTuple(ctx, req.(*ListConfigItemByTupleReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2575,6 +2638,24 @@ func _Config_ListTemplates_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_BatchUpsertTemplates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpsertTemplatesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchUpsertTemplates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchUpsertTemplates_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchUpsertTemplates(ctx, req.(*BatchUpsertTemplatesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_AddTmplsToTmplSets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddTmplsToTmplSetsReq)
 	if err := dec(in); err != nil {
@@ -2643,6 +2724,24 @@ func _Config_ListTemplatesNotBound_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListTemplatesNotBound(ctx, req.(*ListTemplatesNotBoundReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListTemplateByTuple_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateByTupleReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListTemplateByTuple(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListTemplateByTuple_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListTemplateByTuple(ctx, req.(*ListTemplateByTupleReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3817,6 +3916,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_ListConfigItemCount_Handler,
 		},
 		{
+			MethodName: "ListConfigItemByTuple",
+			Handler:    _Config_ListConfigItemByTuple_Handler,
+		},
+		{
 			MethodName: "UpdateConfigHook",
 			Handler:    _Config_UpdateConfigHook_Handler,
 		},
@@ -3937,6 +4040,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_ListTemplates_Handler,
 		},
 		{
+			MethodName: "BatchUpsertTemplates",
+			Handler:    _Config_BatchUpsertTemplates_Handler,
+		},
+		{
 			MethodName: "AddTmplsToTmplSets",
 			Handler:    _Config_AddTmplsToTmplSets_Handler,
 		},
@@ -3951,6 +4058,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplatesNotBound",
 			Handler:    _Config_ListTemplatesNotBound_Handler,
+		},
+		{
+			MethodName: "ListTemplateByTuple",
+			Handler:    _Config_ListTemplateByTuple_Handler,
 		},
 		{
 			MethodName: "ListTmplsOfTmplSet",
