@@ -29,7 +29,7 @@
                   @click="handleDeletePkg(group.id, group.name)"
                 >
                   <Close class="close-icon" />
-                  删除套餐
+                  移除套餐
                 </div>
               </div>
             </td>
@@ -187,7 +187,7 @@
   />
   <bk-dialog ext-cls="delete-template-pkg" :is-show="isDeleteDialogShow" :width="440" footer-align="center">
     <template #header>
-      <bk-overflow-title type="tips">确认是否删除模板套餐【{{ deleteTemplatePkgName }}】</bk-overflow-title>
+      <bk-overflow-title type="tips">确认是否移除模板套餐【{{ deleteTemplatePkgName }}】</bk-overflow-title>
     </template>
     <template #footer>
       <bk-button theme="primary" style="margin-right: 10px; width: 88px" @click="handleDeletePkgConfirm"
