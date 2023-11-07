@@ -49,6 +49,7 @@ service Data {
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
     rpc ListReleasedConfigItems(ListReleasedConfigItemsReq) returns (ListReleasedConfigItemsResp) {}
     rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {}
+    rpc ListConfigItemByTuple(ListConfigItemByTupleReq) returns (ListConfigItemByTupleResp) {}
 
     // config hook related interface.
     rpc UpdateConfigHook(UpdateConfigHookReq) returns (pbbase.EmptyResp) {}
@@ -108,6 +109,8 @@ service Data {
     rpc ListTemplatesByIDs(ListTemplatesByIDsReq) returns (ListTemplatesByIDsResp) {}
     rpc ListTemplatesNotBound(ListTemplatesNotBoundReq) returns (ListTemplatesNotBoundResp) {}
     rpc ListTmplsOfTmplSet(ListTmplsOfTmplSetReq) returns (ListTmplsOfTmplSetResp) {}
+    rpc ListTemplateByTuple(ListTemplateByTupleReq) returns (ListTemplateByTupleReqResp) {}
+    rpc BatchUpsertTemplates(BatchUpsertTemplatesReq) returns (BatchUpsertTemplatesReqResp) {}
 
     // template release related interface.
     rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateResp) {}
@@ -430,6 +433,20 @@ message ListConfigItemCountReq {
 
 message ListConfigItemCountResp {
     repeated pbci.ListConfigItemCounts details = 1;
+}
+
+message ListConfigItemByTupleReq {
+    message Item {
+        uint32 biz_id = 1;
+        uint32 app_id = 2;
+        string name   = 3;
+        string path   = 4;
+    }
+    repeated Item items = 1;
+}
+
+message ListConfigItemByTupleResp {
+    repeated pbci.ConfigItem config_items = 1;
 }
 
 message CreateContentReq {
@@ -813,6 +830,37 @@ message ListTmplsOfTmplSetResp {
     uint32                       count   = 1;
     repeated pbtemplate.Template details = 2;
 }
+
+message ListTemplateByTupleReq {
+    message Item {
+        uint32 biz_id            = 1;
+        uint32 template_space_id = 2;
+        string name              = 3;
+        string path              = 4;
+    }
+    repeated Item items = 1;
+}
+
+message ListTemplateByTupleReqResp {
+    message Item {
+        pbtemplate.Template   template            = 1;
+        pbtr.TemplateRevision template_revision   = 2;
+    }
+    repeated Item items            = 1;
+}
+
+message BatchUpsertTemplatesReq {
+    message Item {
+        pbtemplate.Template   template            = 1;
+        pbtr.TemplateRevision template_revision   = 2;
+    }
+    repeated Item items            = 1;
+}
+
+message BatchUpsertTemplatesReqResp {
+    repeated uint32 ids = 1;
+}
+
 
 message CreateTemplateRevisionReq {
     pbtr.TemplateRevisionAttachment attachment = 1;

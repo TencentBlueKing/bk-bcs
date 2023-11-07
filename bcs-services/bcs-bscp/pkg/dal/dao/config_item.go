@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 
+	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/criteria/errf"
@@ -54,6 +55,8 @@ type ConfigItem interface {
 	BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32, bizID, appID uint32) error
 	// GetCount bizID config count
 	GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error)
+	// ListConfigItemByTuple 按照多个字段in查询config item 列表
+	ListConfigItemByTuple(kit *kit.Kit, data [][]interface{}) ([]*table.ConfigItem, error)
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -63,6 +66,16 @@ type configItemDao struct {
 	idGen    IDGenInterface
 	auditDao AuditDao
 	lock     LockDao
+}
+
+// ListConfigItemByTuple 按照多个字段in查询config item 列表
+func (dao *configItemDao) ListConfigItemByTuple(kit *kit.Kit, data [][]interface{}) ([]*table.ConfigItem, error) {
+	m := dao.genQ.ConfigItem
+	return dao.genQ.ConfigItem.WithContext(kit.Ctx).
+		Select(m.ID, m.BizID, m.AppID, m.Name, m.Path, m.FileType).
+		Where(m.WithContext(kit.Ctx).Columns(m.BizID, m.AppID, m.Name, m.Path).
+			In(field.Values(data))).
+		Find()
 }
 
 // CreateWithTx create one configItem instance with transaction.

@@ -241,6 +241,10 @@ const (
 	CredentialTable Name = "credentials"
 	// KvTable is kv table's name
 	KvTable Name = "kvs"
+	// TemplateTable is template table's name
+	TemplateTable Name = "templates"
+	// TemplateRevisionsTable is template revisions table's name
+	TemplateRevisionsTable Name = "template_revisions"
 )
 
 // RevisionColumns defines all the Revision table's columns.

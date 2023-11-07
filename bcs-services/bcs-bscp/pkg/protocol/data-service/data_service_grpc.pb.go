@@ -44,6 +44,7 @@ const (
 	Data_ListConfigItems_FullMethodName                   = "/pbds.Data/ListConfigItems"
 	Data_ListReleasedConfigItems_FullMethodName           = "/pbds.Data/ListReleasedConfigItems"
 	Data_ListConfigItemCount_FullMethodName               = "/pbds.Data/ListConfigItemCount"
+	Data_ListConfigItemByTuple_FullMethodName             = "/pbds.Data/ListConfigItemByTuple"
 	Data_UpdateConfigHook_FullMethodName                  = "/pbds.Data/UpdateConfigHook"
 	Data_CreateContent_FullMethodName                     = "/pbds.Data/CreateContent"
 	Data_GetContent_FullMethodName                        = "/pbds.Data/GetContent"
@@ -85,6 +86,8 @@ const (
 	Data_ListTemplatesByIDs_FullMethodName                = "/pbds.Data/ListTemplatesByIDs"
 	Data_ListTemplatesNotBound_FullMethodName             = "/pbds.Data/ListTemplatesNotBound"
 	Data_ListTmplsOfTmplSet_FullMethodName                = "/pbds.Data/ListTmplsOfTmplSet"
+	Data_ListTemplateByTuple_FullMethodName               = "/pbds.Data/ListTemplateByTuple"
+	Data_BatchUpsertTemplates_FullMethodName              = "/pbds.Data/BatchUpsertTemplates"
 	Data_CreateTemplateRevision_FullMethodName            = "/pbds.Data/CreateTemplateRevision"
 	Data_ListTemplateRevisions_FullMethodName             = "/pbds.Data/ListTemplateRevisions"
 	Data_DeleteTemplateRevision_FullMethodName            = "/pbds.Data/DeleteTemplateRevision"
@@ -178,6 +181,7 @@ type DataClient interface {
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
 	ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error)
+	ListConfigItemByTuple(ctx context.Context, in *ListConfigItemByTupleReq, opts ...grpc.CallOption) (*ListConfigItemByTupleResp, error)
 	// config hook related interface.
 	UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// content related interface.
@@ -228,6 +232,8 @@ type DataClient interface {
 	ListTemplatesByIDs(ctx context.Context, in *ListTemplatesByIDsReq, opts ...grpc.CallOption) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(ctx context.Context, in *ListTemplatesNotBoundReq, opts ...grpc.CallOption) (*ListTemplatesNotBoundResp, error)
 	ListTmplsOfTmplSet(ctx context.Context, in *ListTmplsOfTmplSetReq, opts ...grpc.CallOption) (*ListTmplsOfTmplSetResp, error)
+	ListTemplateByTuple(ctx context.Context, in *ListTemplateByTupleReq, opts ...grpc.CallOption) (*ListTemplateByTupleReqResp, error)
+	BatchUpsertTemplates(ctx context.Context, in *BatchUpsertTemplatesReq, opts ...grpc.CallOption) (*BatchUpsertTemplatesReqResp, error)
 	// template release related interface.
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
@@ -459,6 +465,15 @@ func (c *dataClient) ListReleasedConfigItems(ctx context.Context, in *ListReleas
 func (c *dataClient) ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error) {
 	out := new(ListConfigItemCountResp)
 	err := c.cc.Invoke(ctx, Data_ListConfigItemCount_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListConfigItemByTuple(ctx context.Context, in *ListConfigItemByTupleReq, opts ...grpc.CallOption) (*ListConfigItemByTupleResp, error) {
+	out := new(ListConfigItemByTupleResp)
+	err := c.cc.Invoke(ctx, Data_ListConfigItemByTuple_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -828,6 +843,24 @@ func (c *dataClient) ListTemplatesNotBound(ctx context.Context, in *ListTemplate
 func (c *dataClient) ListTmplsOfTmplSet(ctx context.Context, in *ListTmplsOfTmplSetReq, opts ...grpc.CallOption) (*ListTmplsOfTmplSetResp, error) {
 	out := new(ListTmplsOfTmplSetResp)
 	err := c.cc.Invoke(ctx, Data_ListTmplsOfTmplSet_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateByTuple(ctx context.Context, in *ListTemplateByTupleReq, opts ...grpc.CallOption) (*ListTemplateByTupleReqResp, error) {
+	out := new(ListTemplateByTupleReqResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateByTuple_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) BatchUpsertTemplates(ctx context.Context, in *BatchUpsertTemplatesReq, opts ...grpc.CallOption) (*BatchUpsertTemplatesReqResp, error) {
+	out := new(BatchUpsertTemplatesReqResp)
+	err := c.cc.Invoke(ctx, Data_BatchUpsertTemplates_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1477,6 +1510,7 @@ type DataServer interface {
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
 	ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error)
+	ListConfigItemByTuple(context.Context, *ListConfigItemByTupleReq) (*ListConfigItemByTupleResp, error)
 	// config hook related interface.
 	UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*base.EmptyResp, error)
 	// content related interface.
@@ -1527,6 +1561,8 @@ type DataServer interface {
 	ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(context.Context, *ListTemplatesNotBoundReq) (*ListTemplatesNotBoundResp, error)
 	ListTmplsOfTmplSet(context.Context, *ListTmplsOfTmplSetReq) (*ListTmplsOfTmplSetResp, error)
+	ListTemplateByTuple(context.Context, *ListTemplateByTupleReq) (*ListTemplateByTupleReqResp, error)
+	BatchUpsertTemplates(context.Context, *BatchUpsertTemplatesReq) (*BatchUpsertTemplatesReqResp, error)
 	// template release related interface.
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
@@ -1664,6 +1700,9 @@ func (UnimplementedDataServer) ListReleasedConfigItems(context.Context, *ListRel
 func (UnimplementedDataServer) ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItemCount not implemented")
 }
+func (UnimplementedDataServer) ListConfigItemByTuple(context.Context, *ListConfigItemByTupleReq) (*ListConfigItemByTupleResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItemByTuple not implemented")
+}
 func (UnimplementedDataServer) UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateConfigHook not implemented")
 }
@@ -1786,6 +1825,12 @@ func (UnimplementedDataServer) ListTemplatesNotBound(context.Context, *ListTempl
 }
 func (UnimplementedDataServer) ListTmplsOfTmplSet(context.Context, *ListTmplsOfTmplSetReq) (*ListTmplsOfTmplSetResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTmplsOfTmplSet not implemented")
+}
+func (UnimplementedDataServer) ListTemplateByTuple(context.Context, *ListTemplateByTupleReq) (*ListTemplateByTupleReqResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateByTuple not implemented")
+}
+func (UnimplementedDataServer) BatchUpsertTemplates(context.Context, *BatchUpsertTemplatesReq) (*BatchUpsertTemplatesReqResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertTemplates not implemented")
 }
 func (UnimplementedDataServer) CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateRevision not implemented")
@@ -2290,6 +2335,24 @@ func _Data_ListConfigItemCount_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListConfigItemCount(ctx, req.(*ListConfigItemCountReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListConfigItemByTuple_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListConfigItemByTupleReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListConfigItemByTuple(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListConfigItemByTuple_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListConfigItemByTuple(ctx, req.(*ListConfigItemByTupleReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3028,6 +3091,42 @@ func _Data_ListTmplsOfTmplSet_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListTmplsOfTmplSet(ctx, req.(*ListTmplsOfTmplSetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateByTuple_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateByTupleReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateByTuple(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateByTuple_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateByTuple(ctx, req.(*ListTemplateByTupleReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_BatchUpsertTemplates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpsertTemplatesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).BatchUpsertTemplates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_BatchUpsertTemplates_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).BatchUpsertTemplates(ctx, req.(*BatchUpsertTemplatesReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4346,6 +4445,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_ListConfigItemCount_Handler,
 		},
 		{
+			MethodName: "ListConfigItemByTuple",
+			Handler:    _Data_ListConfigItemByTuple_Handler,
+		},
+		{
 			MethodName: "UpdateConfigHook",
 			Handler:    _Data_UpdateConfigHook_Handler,
 		},
@@ -4508,6 +4611,14 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTmplsOfTmplSet",
 			Handler:    _Data_ListTmplsOfTmplSet_Handler,
+		},
+		{
+			MethodName: "ListTemplateByTuple",
+			Handler:    _Data_ListTemplateByTuple_Handler,
+		},
+		{
+			MethodName: "BatchUpsertTemplates",
+			Handler:    _Data_BatchUpsertTemplates_Handler,
 		},
 		{
 			MethodName: "CreateTemplateRevision",
