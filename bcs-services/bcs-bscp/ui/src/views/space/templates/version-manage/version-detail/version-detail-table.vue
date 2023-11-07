@@ -5,7 +5,7 @@
         class="close-btn"
         text
         theme="primary"
-        @click="emits('close')">
+        @click="handleClose">
         展开列表
         <AngleDoubleRightLine class="arrow-icon" />
       </bk-button>
@@ -13,7 +13,7 @@
         :list="props.list"
         :pagination="props.pagination"
         :id="props.type === 'create' ? 0 : props.versionId"
-        @select="emits('select', $event)" />
+        @select="handleSelect($event)" />
     </div>
     <div class="version-detail-content">
       <VersionEditor
@@ -38,6 +38,7 @@ import { IPagination } from '../../../../../../types/index';
 import { ITemplateVersionItem } from '../../../../../../types/template';
 import List from './list.vue';
 import VersionEditor from './version-editor.vue';
+import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
 
 const props = defineProps<{
     spaceId: string;
@@ -87,6 +88,22 @@ watch(() => props.versionId, (val) => {
     }
   }
 }, { immediate: true });
+
+const handleClose = async () => {
+  if (props.type === 'create') {
+    const result = await useModalCloseConfirmation();
+    if (!result) return;
+  }
+  emits('close');
+};
+
+const handleSelect = async (id: number) => {
+  if (props.type === 'create') {
+    const result = await useModalCloseConfirmation();
+    if (!result) return;
+  }
+  emits('select', id);
+};
 
 </script>
 <style lang="scss" scoped>

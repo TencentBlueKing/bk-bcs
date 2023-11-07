@@ -23,7 +23,7 @@
           <div
             class="node-name-text"
             v-bk-tooltips="{
-              content: '暂无可用配置项',
+              content: checkboxTooltips(node.checked),
               disabled: !node.disabled,
             }"
           >
@@ -57,6 +57,7 @@ const emits = defineEmits(['change']);
 
 const searchStr = ref('');
 const isSearchEmpty = ref(false);
+const checkboxTooltips = (isImport: boolean) => (isImport ? '导入配置模板套餐时无法移除已有配置模板套餐' : '暂无可用配置项');
 const pkgTreeData = computed(() => {
   let list: IAllPkgsGroupBySpaceInBiz[] = [];
   if (searchStr.value) {
