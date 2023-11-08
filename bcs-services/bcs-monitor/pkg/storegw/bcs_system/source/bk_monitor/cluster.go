@@ -35,7 +35,7 @@ const (
 	// DisFstype xxx
 	DisFstype = "ext[234]|btrfs|xfs|zfs" // 磁盘统计 允许的文件系统
 	// DiskMountPoint xxx
-	DiskMountPoint = "/|/data" // 磁盘统计 允许的挂载目录
+	DiskMountPoint = "/data" // 磁盘统计 允许的挂载目录
 	// PROVIDER xxx
 	PROVIDER = `provider="BK_MONITOR"`
 

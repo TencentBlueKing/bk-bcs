@@ -28,7 +28,7 @@ const (
 	// DiskFstype xxx
 	DiskFstype = "ext[234]|btrfs|xfs|zfs" // 磁盘统计 允许的文件系统
 	// DiskMountpoint xxx
-	DiskMountpoint = "/|/data" // 磁盘统计 允许的挂载目录
+	DiskMountpoint = "/data" // 磁盘统计 允许的挂载目录
 	// PROVIDER xxx 查询限制
 	PROVIDER = `prometheus=~"thanos/po-kube-prometheus-stack-prometheus|thanos/po-prometheus-operator-prometheus"`
 )

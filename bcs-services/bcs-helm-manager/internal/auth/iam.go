@@ -26,7 +26,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 )
 
 var (
@@ -85,39 +84,31 @@ func GetUserNamespacePermList(username, projectID, clusterID string, namespaces 
 }
 
 // ReleaseResourcePermCheck 检测用户是否有 release 中资源的创建、更新权限
-func ReleaseResourcePermCheck(username, projectCode, projectID, clusterID string, namespaceCreated, clusterScope bool,
-	namespaces []string, isShardCluster bool) (bool, string, []utils.ResourceAction, error) {
-	// 如果是共享集群，且集群不属于该项目，说明是用户使用共享集群，需要单独鉴权
-	cls, err := clustermanager.GetCluster(clusterID)
+func ReleaseResourcePermCheck(projectCode, clusterID string, namespaceCreated, clusterScope bool,
+	namespaces []string) (bool, string, []utils.ResourceAction, error) {
+	if namespaceCreated {
+		return false, "", nil, fmt.Errorf("共享集群不支持通过 Helm 创建命名空间")
+	}
+	if clusterScope {
+		return false, "", nil, fmt.Errorf("共享集群不支持通过 Helm 创建集群域资源")
+	}
+	// 检测命名空间是否属于该项目
+	var client *kubernetes.Clientset
+	var err error
+	client, err = component.GetK8SClientByClusterID(clusterID)
 	if err != nil {
 		return false, "", nil, err
 	}
-	if isShardCluster && cls.ProjectID != projectID {
-		if namespaceCreated {
-			return false, "", nil, fmt.Errorf("共享集群不支持通过 Helm 创建命名空间")
-		}
-		if clusterScope {
-			return false, "", nil, fmt.Errorf("共享集群不支持通过 Helm 创建集群域资源")
-		}
-		// 检测命名空间是否属于该项目
-		var client *kubernetes.Clientset
-		client, err = component.GetK8SClientByClusterID(clusterID)
+	for _, v := range namespaces {
+		var ns *corev1.Namespace
+		ns, err = client.CoreV1().Namespaces().Get(context.TODO(), v, v1.GetOptions{})
 		if err != nil {
 			return false, "", nil, err
 		}
-		for _, v := range namespaces {
-			var ns *corev1.Namespace
-			ns, err = client.CoreV1().Namespaces().Get(context.TODO(), v, v1.GetOptions{})
-			if err != nil {
-				return false, "", nil, err
-			}
-			if ns.Annotations[ProjCodeAnnoKey] != projectCode {
-				return false, "", nil, fmt.Errorf("命名空间 %s 在该共享集群中不属于指定项目", v)
-			}
+		if ns.Annotations[ProjCodeAnnoKey] != projectCode {
+			return false, "", nil, fmt.Errorf("命名空间 %s 在该共享集群中不属于指定项目", v)
 		}
 	}
-
-	// 独立集群，不根据 manifest 鉴权
 	return true, "", nil, nil
 }
 

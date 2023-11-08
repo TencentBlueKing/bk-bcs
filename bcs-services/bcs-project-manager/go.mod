@@ -12,7 +12,7 @@ replace (
 )
 
 require (
-	github.com/TencentBlueKing/iam-go-sdk v0.1.4
+	github.com/TencentBlueKing/iam-go-sdk v0.1.5
 	github.com/envoyproxy/protoc-gen-validate v0.6.13
 	github.com/golang/glog v1.0.0
 	github.com/golang/protobuf v1.5.2

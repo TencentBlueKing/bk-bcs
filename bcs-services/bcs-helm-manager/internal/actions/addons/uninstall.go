@@ -14,9 +14,11 @@ package addons
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
@@ -114,6 +116,9 @@ func (u *UninstallAddonsAction) uninstall(ctx context.Context, ns, chartName, re
 func (u *UninstallAddonsAction) saveDB(ctx context.Context, ns, chartName, releaseName string) error {
 	_, err := u.model.GetRelease(ctx, u.req.GetClusterID(), ns, releaseName)
 	if err != nil {
+		if errors.Is(err, drivers.ErrTableRecordNotFound) {
+			return nil
+		}
 		return err
 	}
 

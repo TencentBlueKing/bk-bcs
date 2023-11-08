@@ -216,13 +216,7 @@ func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) 
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
 		return nil, err
 	}
-	configValues, err := parseVarValue(config.Values, vars)
-	if err != nil {
-		blog.Errorf("sdk client install and parse values failed, %s, "+
-			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
-		return nil, err
-	}
-	values, err := getValues(append(configValues, varValues))
+	values, err := getValues(append(parseVarValue(config.Values, vars), varValues))
 	if err != nil {
 		blog.Errorf("sdk client install and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -283,13 +277,7 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
 		return nil, err
 	}
-	configValues, err := parseVarValue(config.Values, vars)
-	if err != nil {
-		blog.Errorf("sdk client upgrade and parse values failed, %s, "+
-			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
-		return nil, err
-	}
-	values, err := getValues(append(configValues, varValues))
+	values, err := getValues(append(parseVarValue(config.Values, vars), varValues))
 	if err != nil {
 		blog.Errorf("sdk client upgrade and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -340,6 +328,7 @@ func (c *client) Uninstall(_ context.Context, config release.HelmUninstallConfig
 	uninstaller.DryRun = config.DryRun
 	uninstaller.Wait = true
 	uninstaller.Timeout = 10 * time.Minute
+	uninstaller.DisableOpenAPIValidation = true
 
 	_, err := uninstaller.Run(config.Name)
 	if err != nil {
@@ -515,7 +504,7 @@ func mergeValues(valuesOpts *values.Options, base map[string]interface{}) (map[s
 }
 
 // 渲染 values 中的变量，将 {{xxx}} 替换为变量值
-func parseVarValue(fs []*release.File, vars map[string]interface{}) ([]*release.File, error) {
+func parseVarValue(fs []*release.File, vars map[string]interface{}) []*release.File {
 	newVars := make(map[string]interface{}, 0)
 	for k, v := range vars {
 		newVars["BCS_"+k] = v
@@ -523,16 +512,18 @@ func parseVarValue(fs []*release.File, vars map[string]interface{}) ([]*release.
 	for i := range fs {
 		tmpl, err := template.New("vars").Parse(string(fs[i].Content))
 		if err != nil {
-			return nil, err
+			blog.Errorf("parse template failed, %s", err.Error())
+			continue
 		}
 		var buf bytes.Buffer
 		err = tmpl.Execute(&buf, newVars)
 		if err != nil {
-			return nil, err
+			blog.Errorf("execute template failed, %s", err.Error())
+			continue
 		}
 		fs[i].Content = buf.Bytes()
 	}
-	return fs, nil
+	return fs
 }
 
 // removeValuesTemplate 移除 values 中的 bcs 模版变量

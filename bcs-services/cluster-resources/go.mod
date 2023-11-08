@@ -41,7 +41,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230920065036-5ec367ec2378
 	github.com/TencentBlueKing/gopkg v1.1.0
-	github.com/TencentBlueKing/iam-go-sdk v0.1.4
+	github.com/TencentBlueKing/iam-go-sdk v0.1.5
 	// fork 自 https://github.com/signalfx/splunk-otel-go/tree/main/instrumentation/k8s.io/client-go/splunkclient-go
 	// 待升级到 go1.18 后，可直接引用社区的包
 	github.com/adevjoe/opentelemetry-go-contrib/instrumentation/k8s.io/client-go v1.0.2

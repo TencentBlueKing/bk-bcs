@@ -99,7 +99,7 @@ func (i *InstallAddonsAction) Handle(ctx context.Context,
 		ChartName:      addons.ChartName,
 		Version:        i.req.GetVersion(),
 		Values:         []string{i.req.GetValues()},
-		Args:           []string{"--wait"},
+		Args:           defaultArgs,
 		Username:       auth.GetUserFromCtx(ctx),
 	}
 	action := actions.NewReleaseInstallAction(options)
@@ -129,6 +129,7 @@ func (i *InstallAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 		ChartName:    chartName,
 		ChartVersion: i.req.GetVersion(),
 		Values:       []string{i.req.GetValues()},
+		Args:         defaultArgs,
 		CreateBy:     createBy,
 		Status:       status,
 	}); err != nil {

@@ -2,3 +2,4 @@
 bcs-webconsole
 etc/*dev*
 data
+go.sum

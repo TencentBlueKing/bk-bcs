@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -146,6 +147,15 @@ func (r *ReleaseInstallAction) Validate() error {
 	if len(r.AuthUser) == 0 {
 		return nil
 	}
+	// 如果是共享集群，且集群不属于该项目，说明是用户使用共享集群，需要单独鉴权
+	cls, err := clustermanager.GetCluster(r.clusterID)
+	if err != nil {
+		return err
+	}
+	if !r.IsShardCluster || cls.ProjectID == r.projectID {
+		return nil
+	}
+
 	// get manifest from helm dry run
 	result, err := release.InstallRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
 		r.namespace, r.chartName, r.version, r.username, r.username, r.args, nil, r.contents, r.values,

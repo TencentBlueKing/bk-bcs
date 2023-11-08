@@ -20,6 +20,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"golang.org/x/sync/errgroup"
+	helmrelease "helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -30,25 +32,28 @@ import (
 
 // NewListAddonsAction return a new ListAddonsAction instance
 func NewListAddonsAction(model store.HelmManagerModel, addons release.AddonsSlice,
-	platform repo.Platform) *ListAddonsAction {
+	platform repo.Platform, releaseHandler release.Handler) *ListAddonsAction {
 	return &ListAddonsAction{
-		model:    model,
-		addons:   addons,
-		platform: platform,
+		model:          model,
+		addons:         addons,
+		platform:       platform,
+		releaseHandler: releaseHandler,
 	}
 }
 
 // ListAddonsAction provides the action to do list addons
 type ListAddonsAction struct {
-	model    store.HelmManagerModel
-	addons   release.AddonsSlice
-	platform repo.Platform
+	model          store.HelmManagerModel
+	addons         release.AddonsSlice
+	platform       repo.Platform
+	releaseHandler release.Handler
 
 	req  *helmmanager.ListAddonsReq
 	resp *helmmanager.ListAddonsResp
 }
 
 // Handle the addons listing process
+// NOCC:golint/fnsize(设计如此：无法拆分代码行数)
 func (l *ListAddonsAction) Handle(ctx context.Context,
 	req *helmmanager.ListAddonsReq, resp *helmmanager.ListAddonsResp) error {
 	l.req = req
@@ -84,19 +89,44 @@ func (l *ListAddonsAction) Handle(ctx context.Context,
 			// get current status
 			rl, err := l.model.GetRelease(ctx, l.req.GetClusterID(), addons[i].GetNamespace(),
 				addons[i].GetReleaseName())
-			if err != nil {
-				if errors.Is(err, drivers.ErrTableRecordNotFound) {
-					return nil
-				}
+			if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 				blog.Errorf("get addons %s status failed, %s", addons[i].GetName(), err.Error())
 				return err
 			}
 			mux.Lock()
-			addons[i].CurrentVersion = &rl.ChartVersion
-			addons[i].Status = &rl.Status
-			addons[i].Message = &rl.Message
-			if len(rl.Values) > 0 {
-				addons[i].CurrentValues = &rl.Values[len(rl.Values)-1]
+			revision := 0
+			if rl != nil {
+				addons[i].CurrentVersion = &rl.ChartVersion
+				addons[i].Status = &rl.Status
+				addons[i].Message = &rl.Message
+				if len(rl.Values) > 0 {
+					addons[i].CurrentValues = &rl.Values[len(rl.Values)-1]
+				}
+				revision = rl.Revision
+			}
+			mux.Unlock()
+
+			// 读取集群状态
+			clusterRelease, err := l.releaseHandler.Cluster(l.req.GetClusterID()).
+				Get(ctx, release.GetOption{Namespace: addons[i].GetNamespace(), Name: addons[i].GetReleaseName()})
+			mux.Lock()
+			if err != nil {
+				if errors.Is(err, driver.ErrReleaseNotFound) &&
+					*addons[i].Status == helmrelease.StatusDeployed.String() && *addons[i].ChartName != "" {
+					// 如果集群中没有改 release，则置为未安装状态
+					if *addons[i].Status == helmrelease.StatusDeployed.String() && *addons[i].ChartName != "" {
+						addons[i].Status = common.GetStringP("")
+						addons[i].Message = common.GetStringP("")
+					}
+				} else {
+					blog.Warnf("releaseHandler get release detail failed, %s, clusterID: %s namespace: %s, name: %s",
+						err.Error(), l.req.GetClusterID(), addons[i].GetNamespace(), addons[i].GetReleaseName())
+				}
+			}
+			if clusterRelease != nil && clusterRelease.Revision > revision {
+				addons[i].CurrentVersion = &clusterRelease.ChartVersion
+				addons[i].Status = &clusterRelease.Status
+				addons[i].Message = &clusterRelease.Description
 			}
 			mux.Unlock()
 			return nil

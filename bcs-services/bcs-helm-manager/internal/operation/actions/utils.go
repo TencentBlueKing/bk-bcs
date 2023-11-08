@@ -60,9 +60,8 @@ func checkReleaseAccess(manifest []release.SimpleHead, resources []*metav1.APIRe
 		}
 	}
 	namespaceScope = stringx.RemoveDuplicateValues(namespaceScope)
-	allow, url, _, err := auth.ReleaseResourcePermCheck(basePermInfo.username, basePermInfo.projectCode,
-		basePermInfo.projectID, basePermInfo.clusterID,
-		createNamespace, clusterScope, namespaceScope, basePermInfo.isShardCluster)
+	allow, url, _, err := auth.ReleaseResourcePermCheck(basePermInfo.projectCode,
+		basePermInfo.clusterID, createNamespace, clusterScope, namespaceScope)
 	if err != nil {
 		return err
 	}
