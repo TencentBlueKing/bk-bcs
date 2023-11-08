@@ -669,18 +669,28 @@ defineExpose({
 
 <style lang="scss">
 .delete-template-pkg {
-  .bk-dialog-header {
-    padding: 24px 24px 0 !important;
-    .bk-dialog-title {
-      margin: 15px 0 10px;
+  .bk-modal-body {
+    padding: 0 !important;
+    .bk-dialog-header {
+      padding: 48px 24px 104px !important;
+      .bk-dialog-title {
+        width: 352px;
+        height: 32px;
+        font-size: 20px;
+        color: #313238;
+        letter-spacing: 0;
+        text-align: center;
+        line-height: 32px;
+      }
     }
-  }
-  .bk-modal-content {
-    display: none;
-  }
-  .bk-modal-footer {
-    border: none !important;
-    background-color: #fff !important;
+    .bk-modal-content {
+      display: none;
+    }
+    .bk-modal-footer {
+      bottom: 48px !important;
+      border: none !important;
+      background-color: #fff !important;
+    }
   }
 }
 </style>

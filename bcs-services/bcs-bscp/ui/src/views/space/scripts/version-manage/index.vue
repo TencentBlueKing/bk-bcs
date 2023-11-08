@@ -187,7 +187,7 @@ onMounted(async () => {
     if (scriptDetail.value.not_release_id) {
       handleEditVersionClick();
     } else {
-      handleCreateVersionClick('');
+      handleCreateVersionClick(versionList.value[0].hook_revision.spec.content);
     }
   }
 });

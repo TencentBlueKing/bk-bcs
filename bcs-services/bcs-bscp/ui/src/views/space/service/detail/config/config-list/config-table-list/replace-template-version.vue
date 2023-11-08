@@ -9,7 +9,7 @@
     @confirm="handleReplaceConfirm"
     @closed="close"
   >
-    <bk-form ref="formRef" :model="{ selected }">
+    <bk-form ref="formRef" :model="{ selected }" label-width="120">
       <bk-form-item label="当前版本">
         <div>{{ props.versionName }}</div>
       </bk-form-item>

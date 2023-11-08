@@ -11,8 +11,8 @@
       </template>
       <template v-if="props.editable" #preContent="{ fullscreen }">
         <div v-show="!fullscreen" class="version-config-form">
-          <bk-form ref="formRef" form-type="vertical" :model="localVal">
-            <bk-form-item label="版本号" property="revision_name">
+          <bk-form ref="formRef" :rules="rules" form-type="vertical" :model="localVal">
+            <bk-form-item label="版本号" property="name">
               <bk-input v-model="localVal.name" />
             </bk-form-item>
             <bk-form-item label="版本说明" propperty="memo">
@@ -53,6 +53,25 @@ const props = withDefaults(
 
 const emits = defineEmits(['close', 'submitted']);
 
+const rules = {
+  name: [
+    {
+      validator: (value: string) => /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value),
+      message: '无效名称，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
+      trigger: 'change',
+    },
+  ],
+  memo: [
+    {
+      validator: (value: string) => {
+        if (!value) return true;
+        return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value);
+      },
+      message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
+      trigger: 'change',
+    },
+  ],
+};
 const localVal = ref<IScriptVersionForm>({
   id: 0,
   name: '',
@@ -141,6 +160,9 @@ const handleSubmit = async () => {
     .bk-form-label {
       font-size: 12px;
       color: #979ba5;
+    }
+    .bk-form-item {
+      margin-bottom: 40px !important;
     }
     .bk-input {
       border: 1px solid #63656e;

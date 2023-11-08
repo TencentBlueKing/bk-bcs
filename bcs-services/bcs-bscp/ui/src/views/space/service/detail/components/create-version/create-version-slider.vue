@@ -11,7 +11,7 @@
             <bk-input v-model="formData.memo" type="textarea" :maxlength="100" @change="formChange" :resize="false" />
           </bk-form-item>
           <bk-checkbox v-model="isPublish" :true-label="true" :false-label="false" @change="formChange">
-            同时上线版本
+            <span style="font-size: 12px;">同时上线版本</span>
           </bk-checkbox>
         </bk-form>
       </div>
@@ -76,6 +76,14 @@ const rules = {
       validator: (value: string) => value.length <= 100,
       message: '最大长度100个字符',
     },
+    {
+      validator: (value: string) => {
+        if (!value) return true;
+        return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value);
+      },
+      message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
+      trigger: 'change',
+    },
   ],
 };
 
@@ -120,6 +128,8 @@ const handleVariablesChange = (variables: IVariableEditParams[]) => {
 
 const confirm = async () => {
   try {
+    await formRef.value.validate();
+    if (!tableRef.value.validate()) return;
     pending.value = true;
     const params = {
       name: formData.value.name,
@@ -196,6 +206,11 @@ defineExpose({
   .bk-button {
     margin-right: 8px;
     min-width: 88px;
+  }
+}
+.form-wrapper {
+  &:deep(.bk-form-label){
+    font-size: 12px !important;
   }
 }
 </style>

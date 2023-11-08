@@ -370,7 +370,6 @@ const handleCreateCredential = async () => {
       newCredentials.value.splice(index, 1);
     }, 3000);
   } catch (e) {
-    console.log(e);
     console.error(e);
   } finally {
     createPending.value = false;

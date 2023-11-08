@@ -50,7 +50,6 @@ const isFormChange = ref(false);
 watch(
   () => props.show,
   (val) => {
-    console.log(val);
     if (val) {
       configForm.value = getConfigEditParams();
       content.value = '';
