@@ -216,8 +216,9 @@ const rules = {
   ],
   path: [
     {
-      validator: (value: string) => value.length <= 256,
-      message: '最大长度256个字符',
+      validator: (value: string) => value.length <= 2048,
+      message: '最大长度2048个字符',
+      trigger: 'change',
     },
     {
       validator: (value: string) => /^\/(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)?$/.test(value),

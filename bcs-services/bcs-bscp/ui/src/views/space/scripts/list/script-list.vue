@@ -119,7 +119,7 @@ import ScriptCited from './script-cited.vue';
 import TableEmpty from '../../../../components/table/table-empty.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
-const {versionListPageShouldOpenEdit } = storeToRefs(useScriptStore());
+const { versionListPageShouldOpenEdit } = storeToRefs(useScriptStore());
 const router = useRouter();
 
 const showCreateScript = ref(false);

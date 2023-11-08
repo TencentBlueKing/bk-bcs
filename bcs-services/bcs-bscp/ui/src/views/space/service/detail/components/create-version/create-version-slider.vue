@@ -11,7 +11,7 @@
             <bk-input v-model="formData.memo" type="textarea" :maxlength="100" @change="formChange" :resize="false" />
           </bk-form-item>
           <bk-checkbox v-model="isPublish" :true-label="true" :false-label="false" @change="formChange">
-            同时上线版本
+            <span style="font-size: 12px;">同时上线版本</span>
           </bk-checkbox>
         </bk-form>
       </div>
@@ -206,6 +206,11 @@ defineExpose({
   .bk-button {
     margin-right: 8px;
     min-width: 88px;
+  }
+}
+.form-wrapper {
+  &:deep(.bk-form-label){
+    font-size: 12px !important;
   }
 }
 </style>

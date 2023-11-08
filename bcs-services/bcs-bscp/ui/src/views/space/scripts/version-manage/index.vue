@@ -187,7 +187,7 @@ onMounted(async () => {
     if (scriptDetail.value.not_release_id) {
       handleEditVersionClick();
     } else {
-      handleCreateVersionClick('');
+      handleCreateVersionClick(versionList.value[0].hook_revision.spec.content);
     }
   }
 });
@@ -219,6 +219,7 @@ const getVersionList = async () => {
 
 // 点击新建版本
 const handleCreateVersionClick = (content: string) => {
+  console.log('新建版本', content);
   versionEditData.value = {
     panelOpen: true,
     editable: true,
