@@ -24,11 +24,11 @@ func GenerateCommonActions() []client.CommonAction {
 
 }
 
-// genBizCommonActions 推荐权限，业务查看、业务运维
+// genBizCommonActions 推荐权限，业务只读、业务运维
 func genBizCommonActions() []client.CommonAction {
 	return []client.CommonAction{
 		{
-			Name:        "业务查看",
+			Name:        "业务只读",
 			EnglishName: "business view",
 			Actions: []client.ActionWithID{
 				{ID: BusinessViewResource},
