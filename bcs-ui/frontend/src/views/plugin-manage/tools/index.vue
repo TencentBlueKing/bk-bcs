@@ -179,7 +179,7 @@
                             </span>
                           </template>
                           <template v-else-if="pendingStatus.includes(crdcontroller.status)">
-                            <bk-button :disabled="true">{{$t('plugin.tools.doing')}}</bk-button>
+                            <bk-button :disabled="true">{{statusTextMap[crdcontroller.status] || $t('plugin.tools.doing')}}</bk-button>
                           </template>
                         </td>
                       </tr>
