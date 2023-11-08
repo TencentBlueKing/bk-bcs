@@ -26,7 +26,7 @@ watch(
 );
 
 const triggerReset = () => {
-  emits('reset', initialList.value);
+  emits('reset', cloneDeep(initialList.value));
 };
 </script>
 <style lang="scss" scoped>

@@ -191,7 +191,6 @@ watch(
     groupedConfigListOnShow.value.forEach((group) => {
       group.configs.forEach((config) => {
         if (config.id === selected.value.id) {
-          console.log('config', config);
           hasSelectConfig = true;
           handleSelectItem({
             pkgId: group.id,
@@ -478,7 +477,6 @@ const handleSearch = () => {
     const list: IDiffGroupData[] = [];
     aggregatedList.value.forEach((group) => {
       const configs = group.configs.filter((item) => {
-        console.log(item.diff_type);
         const isSearchHit = item.name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase());
         if (isOnlyShowDiff.value) {
           return item.diff_type !== '' && isSearchHit;

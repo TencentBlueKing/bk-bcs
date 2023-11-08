@@ -248,8 +248,6 @@ const handlePageLimitChange = (val: number) => {
 };
 
 const handlePageCurrentChange = (val: number) => {
-  console.log('val', val);
-
   pagination.value.current = val;
   getScripts();
 };
