@@ -220,7 +220,7 @@ const rules = {
       message: '最大长度256个字符',
     },
     {
-      validator: (value: string) => /^\/([a-zA-Z0-9/\-.]+\/)*[a-zA-Z0-9/\-.]+$/.test(value),
+      validator: (value: string) => /^\/(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)?$/.test(value),
       message: '无效的路径,路径不符合Unix文件路径格式规范',
       trigger: 'change',
     },
