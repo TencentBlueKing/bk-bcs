@@ -81,7 +81,6 @@ import { getReleasedAppVariables } from '../../../../../../../../api/variable';
 import { byteUnitConverse } from '../../../../../../../../utils';
 import SearchInput from '../../../../../../../../components/search-input.vue';
 import tableEmpty from '../../../../../../../../components/table/table-empty.vue';
-import config from '../../../../../../../../store/config';
 
 interface IConfigMenuItem {
   type: string;
@@ -186,7 +185,7 @@ watch(
 
 watch(
   () => isOnlyShowDiff.value,
-  (val: boolean) => {
+  () => {
     let hasSelectConfig = false;
     groupedConfigListOnShow.value.forEach((group) => {
       group.configs.forEach((config) => {
@@ -490,7 +489,16 @@ const handleSearch = () => {
         });
       }
     });
+    // 点击只查看配置文件 默认展示第一个
     groupedConfigListOnShow.value = list;
+    if (list.length === 0) return;
+    list[0].expand = true;
+    handleSelectItem({
+      pkgId: list[0].id,
+      id: list[0].configs[0].id,
+      version: list[0].configs[0].template_revision_id,
+      permission: list[0].configs[0].permission,
+    });
   }
 };
 
