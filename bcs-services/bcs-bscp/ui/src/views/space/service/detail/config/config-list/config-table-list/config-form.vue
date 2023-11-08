@@ -70,7 +70,7 @@
                       :model-value="privilegeGroupsValue[index]"
                       @change="handleSelectPrivilege(index, $event)"
                     >
-                      <bk-checkbox size="small" :label="4">读</bk-checkbox>
+                      <bk-checkbox size="small" :label="4" :disabled="privilegeGroupsValue[0]">读</bk-checkbox>
                       <bk-checkbox size="small" :label="2">写</bk-checkbox>
                       <bk-checkbox size="small" :label="1">执行</bk-checkbox>
                     </bk-checkbox-group>
@@ -115,7 +115,11 @@
         </template>
       </bk-upload>
     </bk-form-item>
-    <bk-form-item v-else label="配置内容">
+    <bk-form-item v-else>
+      <template #label
+        ><div class="config-content-label">
+          <span>配置内容</span><info v-bk-tooltips="{ content: configContentTip, placement: 'top' }" fill="#3a84ff" /></div
+      ></template>
       <ConfigContentEditor
         :content="stringContent"
         :editable="editable"
@@ -129,7 +133,7 @@
 import { ref, computed, watch } from 'vue';
 import SHA256 from 'crypto-js/sha256';
 import WordArray from 'crypto-js/lib-typedarrays';
-import { TextFill, Done, Error } from 'bkui-vue/lib/icon';
+import { TextFill, Done, Info, Error } from 'bkui-vue/lib/icon';
 import BkMessage from 'bkui-vue/lib/message';
 import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
 import { IVariableEditParams } from '../../../../../../../../types/variable';
@@ -169,7 +173,9 @@ const props = withDefaults(
 );
 
 const emits = defineEmits(['change', 'update:fileUploading']);
-
+const configContentTip = `配置文件内支持引用全局变量与定义新的BSCP变量，变量规则如下
+                          1.需是要go template语法， 例如 {{.bk_bscp_appid}}
+                          2.变量名需以 “bk bscp” 或 “BK BSCP ” 开头`;
 const localVal = ref({ ...props.config });
 const privilegeInputVal = ref('');
 const showPrivilegeErrorTips = ref(false);
@@ -216,7 +222,7 @@ const rules = {
     {
       validator: (value: string) => /^\/([a-zA-Z0-9/\-.]+\/)*[a-zA-Z0-9/\-.]+$/.test(value),
       message: '无效的路径,路径不符合Unix文件路径格式规范',
-      trigger: 'blur',
+      trigger: 'change',
     },
   ],
   memo: [
@@ -508,6 +514,13 @@ defineExpose({
     line-height: 1;
     font-size: 12px;
     color: #ff5656;
+  }
+}
+.config-content-label {
+  display: flex;
+  align-items: center;
+  span {
+    margin-right: 5px;
   }
 }
 </style>

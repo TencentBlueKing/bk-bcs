@@ -496,3 +496,36 @@ func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigI
 	}
 	return resp, nil
 }
+
+// ListConfigItemByTuple 按照多个字段in查询
+func (s *Service) ListConfigItemByTuple(ctx context.Context, req *pbcs.ListConfigItemByTupleReq) (
+	*pbcs.ListConfigItemByTupleResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	data := []*pbds.ListConfigItemByTupleReq_Item{}
+
+	for _, item := range req.Items {
+		data = append(data, &pbds.ListConfigItemByTupleReq_Item{
+			BizId: req.BizId,
+			AppId: req.AppId,
+			Name:  item.Name,
+			Path:  item.Path,
+		})
+	}
+
+	tuple, err := s.client.DS.ListConfigItemByTuple(grpcKit.RpcCtx(), &pbds.ListConfigItemByTupleReq{
+		Items: data,
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp := &pbcs.ListConfigItemByTupleResp{Details: tuple.GetConfigItems()}
+	return resp, nil
+}

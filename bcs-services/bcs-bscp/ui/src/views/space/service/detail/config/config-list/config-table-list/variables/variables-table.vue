@@ -163,7 +163,7 @@ const change = () => {
 };
 
 const handleValueChange = (type: string, value: string) => {
-  if (type === 'number' && !/^\d+$/.test(value)) {
+  if (type === 'number' && !/^\d*(\.\d+)?$/.test(value)) {
     Message({
       theme: 'error',
       message: `${value}不是数字类型`,

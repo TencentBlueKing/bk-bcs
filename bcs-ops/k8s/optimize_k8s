@@ -31,7 +31,7 @@ safe_source() {
 }
 
 
-source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/functions/k8s.sh" "${ROOT_DIR}/env/bcs.env")
 for file in "${source_files[@]}"; do
   safe_source "$file"
 done
@@ -128,6 +128,7 @@ for pod_file in ${pod_files[@]};do
   cp ${ROOT_DIR}/${pod_file} /etc/kubernetes/manifests/
 done
 
+k8s::restart_kubelet
 sleep 30
 pods=(etcd kube-apiserver kube-controller-manager kube-scheduler)
 for pod in ${pods[@]};do

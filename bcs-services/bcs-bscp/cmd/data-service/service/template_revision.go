@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"time"
 
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -241,4 +242,17 @@ func generateRevisionName() string {
 	// Format the current time as YYYYMMDDHHMMSS
 	timestamp := time.Now().Format("20060102150405")
 	return fmt.Sprintf("v%s", timestamp)
+}
+
+func (s *Service) doCreateTemplateRevisions(kt *kit.Kit, tx *gen.QueryTx, data []*table.TemplateRevision) error {
+	for i := range data {
+		// 生成 RevisionName
+		data[i].Spec.RevisionName = generateRevisionName()
+	}
+	// Write template revisions table
+	if err := s.dao.TemplateRevision().BatchCreateWithTx(kt, tx, data); err != nil {
+		logs.Errorf("batch create template revisions failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+	return nil
 }

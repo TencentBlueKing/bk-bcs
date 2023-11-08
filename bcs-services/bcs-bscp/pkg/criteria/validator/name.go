@@ -17,8 +17,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-
-	"bscp.io/pkg/criteria/constant"
 )
 
 // reservedResNamePrefix internal reserved string prefix, case-insensitive.
@@ -28,10 +26,6 @@ var reservedResNamePrefix = []string{"_bk", "bk_"}
 func validResNamePrefix(name string) error {
 	lowerName := strings.ToLower(name)
 	for _, prefix := range reservedResNamePrefix {
-		// ignore the template variable name which also has prefix `bk_`
-		if strings.HasPrefix(lowerName, constant.TemplateVariablePrefix) {
-			continue
-		}
 		if strings.HasPrefix(lowerName, prefix) {
 			return fmt.Errorf("resource name '%s' is prefixed with '%s' is reserved name, "+
 				"which is not allows to use", lowerName, prefix)
@@ -41,7 +35,7 @@ func validResNamePrefix(name string) error {
 	return nil
 }
 
-// qualifiedAppNameRegexp bscp resource's name regexp.
+// qualifiedAppNameRegexp bscp app's name regexp.
 var qualifiedAppNameRegexp = regexp.MustCompile(`^[a-zA-Z0-9][\w\-]*[a-zA-Z0-9]$`)
 
 // ValidateAppName validate bscp app name's length and format.
@@ -61,6 +55,27 @@ func ValidateAppName(name string) error {
 	if !qualifiedAppNameRegexp.MatchString(name) {
 		return fmt.Errorf("invalid name: %s, only allows to include english、numbers、underscore (_)"+
 			"、hyphen (-), and must start and end with an english、numbers", name)
+	}
+
+	return nil
+}
+
+// qualifiedVariableNameRegexp bscp variable's name regexp.
+var qualifiedVariableNameRegexp = regexp.MustCompile(`^(?i)(bk_bscp_)\w*$`)
+
+// ValidateVariableName validate bscp variable's length and format.
+func ValidateVariableName(name string) error {
+	if len(name) < 9 {
+		return errors.New("invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)")
+	}
+
+	if len(name) > 128 {
+		return errors.New("invalid name, length should <= 128")
+	}
+
+	if !qualifiedVariableNameRegexp.MatchString(name) {
+		return fmt.Errorf("invalid name: %s, only allows to include english、numbers、underscore (_)"+
+			", and must start with prefix bk_bscp_ (ignore case)", name)
 	}
 
 	return nil

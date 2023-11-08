@@ -5,6 +5,7 @@
     :clearable="false"
     :disabled="props.disabled"
     :loading="props.loading"
+    filterable
     @change="emits('change', $event, props.type)"
   >
     <bk-option

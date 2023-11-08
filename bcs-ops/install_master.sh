@@ -108,4 +108,4 @@ else
   fi
 fi
 
-"${ROOT_DIR}"/k8s/install_k8s
+"${ROOT_DIR}"/k8s/optimize_k8s

@@ -17,12 +17,15 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbtemplate "bscp.io/pkg/protocol/core/template"
+	pbtr "bscp.io/pkg/protocol/core/template-revision"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/search"
 	"bscp.io/pkg/tools"
@@ -675,4 +678,243 @@ func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfT
 		Count:   totalCnt,
 		Details: details,
 	}, nil
+}
+
+// ListTemplateByTuple 按照多个字段in查询
+func (s *Service) ListTemplateByTuple(ctx context.Context, req *pbds.ListTemplateByTupleReq) (
+	*pbds.ListTemplateByTupleReqResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	data := [][]interface{}{}
+	for _, item := range req.Items {
+		data = append(data, []interface{}{item.BizId, item.TemplateSpaceId, item.Name, item.Path})
+	}
+	templates, err := s.dao.Template().ListTemplateByTuple(kt, data)
+	if err != nil {
+		logs.Errorf("list templates by tuple failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	templateRevision := map[uint32]*table.TemplateRevision{}
+	templateIds := []uint32{}
+	if len(templates) > 0 {
+		for _, item := range templates {
+			templateIds = append(templateIds, item.ID)
+		}
+		revision, err := s.dao.TemplateRevision().ListLatestRevisionsGroupByTemplateIds(kt, templateIds)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range revision {
+			templateRevision[item.Attachment.TemplateID] = item
+		}
+	}
+
+	templatesData := []*pbds.ListTemplateByTupleReqResp_Item{}
+	for _, item := range templates {
+		templatesData = append(templatesData,
+			&pbds.ListTemplateByTupleReqResp_Item{
+				Template:         pbtemplate.PbTemplate(item),
+				TemplateRevision: pbtr.PbTemplateRevision(templateRevision[item.ID]),
+			})
+	}
+
+	resp := &pbds.ListTemplateByTupleReqResp{Items: templatesData}
+
+	return resp, nil
+
+}
+
+// BatchUpsertTemplates batch upsert templates.
+func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbds.BatchUpsertTemplatesReq) (
+	*pbds.BatchUpsertTemplatesReqResp, error) {
+	var (
+		oldTemplateData map[uint32]*table.Template
+		err             error
+	)
+	kt := kit.FromGrpcContext(ctx)
+
+	// 没有ID是都是需要创建 否则都是修改
+	createData := make([]*pbds.BatchUpsertTemplatesReq_Item, 0)
+	updateData := make([]*pbds.BatchUpsertTemplatesReq_Item, 0)
+	updateId := []uint32{}
+	for _, item := range req.Items {
+		if item.GetTemplate().GetId() != 0 {
+			updateId = append(updateId, item.GetTemplate().GetId())
+			updateData = append(updateData, item)
+		} else {
+			createData = append(createData, item)
+		}
+	}
+
+	// 只有更新的情况下
+	// 返回旧数据
+	// 针对文件类型做校验
+	if len(updateId) > 0 {
+		oldTemplateData, err = s.validateBatchUpsertTemplates(kt, updateId, updateData)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	now := time.Now().UTC()
+	tx := s.dao.GenQuery().Begin()
+
+	// 创建模板配置
+	createId, e := s.doBatchCreateTemplates(kt, tx, createData, now)
+	if e != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, e
+	}
+
+	// 更新模板配置
+	if e := s.doBatchUpdateTemplates(kt, tx, updateData, oldTemplateData, now); e != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, e
+	}
+
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
+	}
+	// 返回创建和更新的ID
+	mergedID := append(createId, updateId...) // nolint
+	return &pbds.BatchUpsertTemplatesReqResp{
+		Ids: mergedID,
+	}, nil
+}
+
+func (s *Service) doBatchCreateTemplates(kt *kit.Kit, tx *gen.QueryTx, createData []*pbds.BatchUpsertTemplatesReq_Item,
+	now time.Time) ([]uint32, error) {
+	createId := []uint32{}
+	toCreate := []*table.Template{}
+	for _, item := range createData {
+		toCreate = append(toCreate, &table.Template{
+			Spec:       item.GetTemplate().GetSpec().TemplateSpec(),
+			Attachment: item.GetTemplate().GetAttachment().TemplateAttachment(),
+			Revision: &table.Revision{
+				Creator:   kt.User,
+				Reviser:   kt.User,
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
+		})
+	}
+
+	// Write template table
+	if err := s.dao.Template().BatchCreateWithTx(kt, tx, toCreate); err != nil {
+		logs.Errorf("batch create templates failed, err: %v, rid: %s", err, kt.Rid)
+		return createId, err
+	}
+
+	toCreateTr := []*table.TemplateRevision{}
+	for i, item := range createData {
+		toCreateTr = append(toCreateTr, &table.TemplateRevision{
+			Spec: item.GetTemplateRevision().GetSpec().TemplateRevisionSpec(),
+			Attachment: &table.TemplateRevisionAttachment{
+				BizID:           item.GetTemplateRevision().GetAttachment().TemplateRevisionAttachment().BizID,
+				TemplateSpaceID: item.GetTemplateRevision().GetAttachment().TemplateRevisionAttachment().TemplateSpaceID,
+				TemplateID:      toCreate[i].ID,
+			},
+			Revision: &table.CreatedRevision{
+				Creator:   kt.User,
+				CreatedAt: now,
+			},
+		})
+	}
+
+	err := s.doCreateTemplateRevisions(kt, tx, toCreateTr)
+	if err != nil {
+		return createId, err
+	}
+
+	// 返回创建ID
+	for _, item := range toCreate {
+		createId = append(createId, item.ID)
+	}
+
+	return createId, nil
+}
+
+func (s *Service) doBatchUpdateTemplates(kt *kit.Kit, tx *gen.QueryTx, updateData []*pbds.BatchUpsertTemplatesReq_Item,
+	oldTemplateData map[uint32]*table.Template, now time.Time) error {
+	toUpdate := []*table.Template{}
+	for _, item := range updateData {
+		toUpdate = append(toUpdate, &table.Template{
+			ID:         item.GetTemplate().GetId(),
+			Spec:       item.GetTemplate().GetSpec().TemplateSpec(),
+			Attachment: item.GetTemplate().GetAttachment().TemplateAttachment(),
+			Revision: &table.Revision{
+				Creator:   oldTemplateData[item.GetTemplate().GetId()].Revision.Creator,
+				Reviser:   kt.User,
+				CreatedAt: oldTemplateData[item.GetTemplate().GetId()].Revision.CreatedAt,
+				UpdatedAt: now,
+			},
+		})
+	}
+	if err := s.dao.Template().BatchUpdateWithTx(kt, tx, toUpdate); err != nil {
+		logs.Errorf("batch update templates failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	toUpdateTr := []*table.TemplateRevision{}
+	for i, item := range updateData {
+		toUpdateTr = append(toUpdateTr, &table.TemplateRevision{
+			Spec: item.GetTemplateRevision().GetSpec().TemplateRevisionSpec(),
+			Attachment: &table.TemplateRevisionAttachment{
+				BizID:           item.GetTemplateRevision().GetAttachment().TemplateRevisionAttachment().BizID,
+				TemplateSpaceID: item.GetTemplateRevision().GetAttachment().TemplateRevisionAttachment().TemplateSpaceID,
+				TemplateID:      toUpdate[i].ID,
+			},
+			Revision: &table.CreatedRevision{
+				Creator:   kt.User,
+				CreatedAt: now,
+			},
+		})
+	}
+
+	err := s.doCreateTemplateRevisions(kt, tx, toUpdateTr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Service) validateBatchUpsertTemplates(grpcKit *kit.Kit, updateId []uint32,
+	updateData []*pbds.BatchUpsertTemplatesReq_Item) (map[uint32]*table.Template, error) {
+	// 针对更新的数据做查询 获取创建时间和创建人
+	template, err := s.dao.Template().ListByIDs(grpcKit, updateId)
+	if err != nil {
+		logs.Errorf("list templates by template ids failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	oldTemplateData := make(map[uint32]*table.Template)
+	for _, item := range template {
+		oldTemplateData[item.ID] = item
+	}
+
+	// 通过模板id获取最新的template revision数据
+	templateRevisions, err := s.dao.TemplateRevision().ListLatestRevisionsGroupByTemplateIds(grpcKit, updateId)
+	if err != nil {
+		return nil, err
+	}
+	oldTemplateRevisionData := make(map[uint32]*table.TemplateRevision)
+	for _, item := range templateRevisions {
+		oldTemplateRevisionData[item.Attachment.TemplateID] = item
+	}
+
+	// 验证类型是否变更
+	for _, item := range updateData {
+		if item.GetTemplateRevision().GetSpec().GetFileType() !=
+			string(oldTemplateRevisionData[item.GetTemplate().GetId()].Spec.FileType) {
+			logs.Errorf("batch create templates failed, err: %v, rid: %s, templateId: %s",
+				err, grpcKit.Rid, item.GetTemplate().GetId())
+			return nil, fmt.Errorf("模板配置文件名 %s: 不支持更改文件类型", item.Template.GetSpec().Name)
+		}
+	}
+	return oldTemplateData, nil
 }

@@ -19,6 +19,8 @@
           placeholder="分组名称/分组规则"
           @enter="handleSearch"
           v-model.trim="searchInfo"
+          @clear="handleSearch"
+          :clearable="true"
         >
           <template #suffix>
             <Search class="search-input-icon" />

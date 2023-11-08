@@ -13,6 +13,7 @@
         v-model="formData.bind_apps"
         class="service-selector"
         multiple
+        filterable
         placeholder="请选择服务"
         @change="change"
       >
@@ -24,9 +25,9 @@
         ></bk-option>
       </bk-select>
     </bk-form-item>
-    <bk-form-item class="radio-group-form" label="分组规则" required property="rules">
+    <bk-form-item class="radio-group-form" label="标签选择器" required property="rules">
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
-        <bk-input v-model="rule.key" style="width: 174px" placeholder="" @change="ruleChange"></bk-input>
+        <bk-input v-model="rule.key" style="width: 174px" placeholder="key" @change="ruleChange"></bk-input>
         <bk-select
           :model-value="rule.op"
           style="width: 72px"
@@ -45,13 +46,14 @@
             :show-clear-only-hover="true"
             :allow-auto-match="true"
             :list="[]"
+            placeholder="value"
             @change="ruleChange"
           >
           </bk-tag-input>
           <bk-input
             v-else
             v-model="rule.value"
-            placeholder=""
+            placeholder="value"
             :type="['gt', 'ge', 'lt', 'le'].includes(rule.op) ? 'number' : 'text'"
             @change="ruleChange"
           >
@@ -85,7 +87,7 @@ import GROUP_RULE_OPS from '../../../../constants/group';
 import { getAppList } from '../../../../api/index';
 import { IAppItem } from '../../../../../types/app';
 
-const getDefaultRuleConfig = (): IGroupRuleItem => ({ key: '', op: '', value: '' });
+const getDefaultRuleConfig = (): IGroupRuleItem => ({ key: '', op: 'eq', value: '' });
 
 const route = useRoute();
 const { userInfo } = storeToRefs(useUserStore());

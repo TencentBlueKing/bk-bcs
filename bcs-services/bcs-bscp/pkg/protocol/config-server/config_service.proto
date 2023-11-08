@@ -117,6 +117,12 @@ service Config {
             body : "*"
         };
     }
+    rpc ListConfigItemByTuple(ListConfigItemByTupleReq) returns (ListConfigItemByTupleResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/tuple"
+            body : "*"
+        };
+    }
 
     rpc UpdateConfigHook(UpdateConfigHookReq) returns (UpdateConfigHookResp) {
         option (google.api.http) = {
@@ -286,6 +292,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates"
         };
     }
+    rpc BatchUpsertTemplates(BatchUpsertTemplatesReq) returns (BatchUpsertTemplatesResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/batch_upsert_templates"
+            body : "*"
+        };
+    }
     rpc AddTmplsToTmplSets(AddTmplsToTmplSetsReq) returns (AddTmplsToTmplSetsResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/add_to_template_sets"
@@ -307,6 +319,12 @@ service Config {
     rpc ListTemplatesNotBound(ListTemplatesNotBoundReq) returns (ListTemplatesNotBoundResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/list_not_bound"
+        };
+    }
+    rpc ListTemplateByTuple(ListTemplateByTupleReq) returns (ListTemplateByTupleResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/tuple"
+            body : "*"
         };
     }
     rpc ListTmplsOfTmplSet(ListTmplsOfTmplSetReq) returns (ListTmplsOfTmplSetResp) {
@@ -921,6 +939,20 @@ message ListConfigItemCountResp {
     repeated pbci.ListConfigItemCounts details = 1;
 }
 
+message ListConfigItemByTupleReq {
+    message Item {
+        string name         = 1;
+        string path         = 2;
+    }
+    uint32    biz_id       = 1;
+    uint32    app_id       = 2;
+    repeated  Item   items = 3;
+}
+
+message ListConfigItemByTupleResp {
+    repeated pbci.ConfigItem details = 1;
+}
+
 message UpdateConfigHookReq {
     uint32 biz_id       = 1;
     uint32 app_id       = 2;
@@ -1290,6 +1322,29 @@ message ListTemplatesResp {
     repeated pbtemplate.Template details = 2;
 }
 
+message BatchUpsertTemplatesReq {
+    message Item {
+        uint32 id         = 1;
+        string name       = 2;
+        string path       = 3;
+        string file_type  = 4;  // file_type is enum type, source resource reference: pkg/dal/table/config_item.go
+        string file_mode  = 5;  // file_mode is enum type, source resource reference: pkg/dal/table/config_item.go
+        string memo       = 6;
+        string user       = 7;
+        string user_group = 8;
+        string privilege  = 9;
+        string sign       = 10;
+        uint64 byte_size  = 11;
+    }
+    uint32   biz_id             = 1;
+    uint32   template_space_id  = 2;
+    repeated Item items         = 3;
+}
+
+message BatchUpsertTemplatesResp {
+    repeated uint32 ids      = 1;
+}
+
 message AddTmplsToTmplSetsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
@@ -1326,6 +1381,24 @@ message ListTemplatesNotBoundReq {
     uint32 start             = 5;
     uint32 limit             = 6;
     bool   all               = 7;
+}
+
+message ListTemplateByTupleReq{
+    message Item {
+        string name         = 1;
+        string path         = 2;
+    }
+    uint32    biz_id                  = 1;
+    uint32    template_space_id       = 2;
+    repeated  Item   items            = 3;
+}
+
+message ListTemplateByTupleResp{
+    message Item {
+        pbtemplate.Template   template            = 1;
+        pbtr.TemplateRevision template_revision   = 2;
+    }
+    repeated Item items            = 1;
 }
 
 message ListTemplatesNotBoundResp {
