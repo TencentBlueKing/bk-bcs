@@ -152,6 +152,13 @@ const validate = () => {
           errors[variable.name] = [key];
         }
       }
+      if (variable.type === 'number' && !/^\d*(\.\d+)?$/.test(variable.default_val)) {
+        if (errors[variable.name]) {
+          errors[variable.name].push(key);
+        } else {
+          errors[variable.name] = [key];
+        }
+      }
     });
   });
   errorDetails.value = errors;

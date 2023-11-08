@@ -143,5 +143,8 @@ defineExpose({
       min-width: 88px;
     }
   }
+  .bk-modal-body {
+    padding: 0;
+  }
 }
 </style>
