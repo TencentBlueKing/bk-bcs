@@ -6,7 +6,7 @@
     :before-close="handleBeforeClose"
     @closed="close"
   >
-    <div v-bkloading="{ loading }" class="slider-content-container">
+    <div  class="slider-content-container">
       <div class="package-configs-pick">
         <div class="search-wrapper">
           <SearchInput v-model="searchStr" placeholder="配置文件名称/路径/描述" @search="handleSearch" />
@@ -58,16 +58,15 @@ import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue';
 import useGlobalStore from '../../../../../../../../store/global';
 import useTemplateStore from '../../../../../../../../store/template';
-import { ITemplatePackageItem, ITemplateConfigItem } from '../../../../../../../../../types/template';
+import { ITemplateConfigItem } from '../../../../../../../../../types/template';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
 import {
   addTemplateToPackage,
-  getTemplatesBySpaceId,
-  getTemplatePackageList,
 } from '../../../../../../../../api/template';
 import PackageTable from './package-table.vue';
 import SearchInput from '../../../../../../../../components/search-input.vue';
 import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
+import { cloneDeep } from 'lodash';
 
 interface IPackageTableGroup {
   id: number | string;
@@ -80,6 +79,7 @@ const { currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
 
 const props = defineProps<{
   show: boolean;
+  groups: IPackageTableGroup[]
 }>();
 
 const emits = defineEmits(['update:show', 'added']);
@@ -87,7 +87,7 @@ const emits = defineEmits(['update:show', 'added']);
 const isShow = ref(false);
 const isFormChange = ref(false);
 const loading = ref(false);
-const packageGroups = ref<IPackageTableGroup[]>([]); // 所有套餐配置文件数据
+const packageGroups = ref<IPackageTableGroup[]>([]);
 const packageGroupsOnShow = ref<IPackageTableGroup[]>([]); // 实际展示的数据，处理搜索的场景
 const pending = ref(false);
 const searchStr = ref('');
@@ -103,51 +103,18 @@ watch(
       openedPkgTable.value = '';
       selectedConfigs.value = [];
       isFormChange.value = false;
-      getGroupConfigs();
     }
   },
 );
 
-// 加载全部配置文件
-const getGroupConfigs = async () => {
-  loading.value = true;
-  const params = {
-    start: 0,
-    all: true,
-  };
-  const [packagesRes, configsRes] = await Promise.all([
-    getTemplatePackageList(spaceId.value, currentTemplateSpace.value, params),
-    getTemplatesBySpaceId(spaceId.value, currentTemplateSpace.value, params),
-  ]);
-  // 第一个分组默认为“全部配置文件”
-  const packages: IPackageTableGroup[] = [
-    {
-      id: 0,
-      name: '全部配置文件',
-      configs: configsRes.details,
-    },
-  ];
-  packagesRes.details
-    .filter((pkg: ITemplatePackageItem) => pkg.id !== currentPkg.value)
-    .forEach((pkg: ITemplatePackageItem) => {
-      const { name, template_ids } = pkg.spec;
-      const pkgGroup: IPackageTableGroup = {
-        id: pkg.id,
-        name,
-        configs: [],
-      };
-      template_ids.forEach((id) => {
-        const config = configsRes.details.find((item: ITemplateConfigItem) => item.id === id);
-        if (config) {
-          pkgGroup.configs.push(config);
-        }
-      });
-      packages.push(pkgGroup);
-    });
-  packageGroups.value = packages.slice();
-  packageGroupsOnShow.value = packages.slice();
-  loading.value = false;
-};
+watch(
+  () => props.groups,
+  () => {
+    packageGroups.value = cloneDeep(props.groups);
+    packageGroupsOnShow.value = cloneDeep(props.groups);
+  },
+  { immediate: true },
+);
 
 const handleSearch = () => {
   searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
@@ -175,6 +142,7 @@ const handleSearch = () => {
 };
 
 const handleToggleOpenTable = (id: string | number) => {
+  console.log('1111');
   openedPkgTable.value = openedPkgTable.value === id ? '' : id;
 };
 
