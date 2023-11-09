@@ -18,7 +18,7 @@
     </template>
     <bk-form ref="formRef" form-type="vertical" :model="{ memo }">
       <bk-form-item label="模板空间描述" property="memo">
-        <bk-input v-model="memo" type="textarea" :rows="6" :maxlength="100" :resize="false" />
+        <bk-input v-model="memo" type="textarea" :rows="6" :maxlength="100" :resize="true" />
       </bk-form-item>
     </bk-form>
   </bk-dialog>

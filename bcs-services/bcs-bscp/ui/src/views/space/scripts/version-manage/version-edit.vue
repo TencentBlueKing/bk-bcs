@@ -16,7 +16,7 @@
               <bk-input v-model="localVal.name" />
             </bk-form-item>
             <bk-form-item label="版本说明" propperty="memo">
-              <bk-input v-model="localVal.memo" type="textarea" :rows="8" :resize="false"/>
+              <bk-input v-model="localVal.memo" type="textarea" :rows="8" :resize="true"/>
             </bk-form-item>
           </bk-form>
         </div>

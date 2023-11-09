@@ -21,7 +21,7 @@
             />
           </bk-form-item>
           <bk-form-item class="fixed-width-form" property="memo" label="脚本描述">
-            <bk-input v-model="formData.memo" type="textarea" :rows="3" :maxlength="200" :resize="false" />
+            <bk-input v-model="formData.memo" type="textarea" :rows="3" :maxlength="200" :resize="true" />
           </bk-form-item>
           <bk-form-item label="脚本内容" property="content" required>
             <div class="script-content-wrapper">
