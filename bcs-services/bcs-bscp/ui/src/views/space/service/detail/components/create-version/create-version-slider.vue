@@ -119,6 +119,7 @@ const handleVariablesChange = (variables: IVariableEditParams[]) => {
 // };
 
 const confirm = async () => {
+  if (!formRef.value.validate() || !tableRef.value.validate()) return;
   try {
     pending.value = true;
     const params = {

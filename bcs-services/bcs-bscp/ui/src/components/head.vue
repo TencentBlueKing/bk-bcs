@@ -263,7 +263,7 @@ const handleLoginOut = () => {
 };
 const handleToCMDB = () => {
   // @ts-ignore
-  window.open(BK_CC_HOST); // eslint-disable-line no-undef
+  window.open(`${BK_CC_HOST}/#/resource/business`); // eslint-disable-line no-undef
 };
 </script>
 
