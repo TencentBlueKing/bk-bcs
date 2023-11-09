@@ -14,7 +14,10 @@ package utils
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
 )
@@ -26,4 +29,27 @@ func WriteErrorResponse(rw http.ResponseWriter, statusCode int, err *types.Error
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(statusCode)
 	rw.Write(payload)
+}
+
+// RefineIPv6Addr 修复ipv6链接问题(正常应该在上报地方处理, 目前只有websocket异常, 暂时这里修复)
+func RefineIPv6Addr(serverAddress string) string {
+	u, err := url.Parse(serverAddress)
+	if err != nil {
+		return serverAddress
+	}
+
+	// 正确的ipv6地址
+	if strings.LastIndex(u.Host, "]") > 0 {
+		return serverAddress
+	}
+
+	// ipv6 addr
+	parts := strings.Split(u.Host, ":")
+	if len(parts) > 2 {
+		host := strings.Join(parts[:len(parts)-1], ":")
+		port := parts[len(parts)-1]
+		u.Host = net.JoinHostPort(host, port)
+	}
+
+	return u.String()
 }
