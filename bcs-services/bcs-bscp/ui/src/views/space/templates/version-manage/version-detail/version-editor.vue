@@ -16,7 +16,7 @@
             <bk-input v-model="formData.revision_name" />
           </bk-form-item>
           <bk-form-item label="版本描述" property="revision_memo">
-            <bk-input v-model="formData.revision_memo" type="textarea" :rows="4" :maxlength="200" :resize="false" />
+            <bk-input v-model="formData.revision_memo" type="textarea" :rows="4" :maxlength="200" :resize="true" />
           </bk-form-item>
           <bk-form-item label="文件权限" required>
             <PermissionInputPicker v-model="formData.privilege" />

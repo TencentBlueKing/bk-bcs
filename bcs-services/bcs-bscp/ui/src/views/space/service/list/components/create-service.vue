@@ -21,7 +21,7 @@
             type="textarea"
             v-model="formData.memo"
             @change="isFormChange = true"
-            :resize="false"
+            :resize="true"
           />
         </bk-form-item>
       </bk-form>

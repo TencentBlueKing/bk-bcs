@@ -32,7 +32,7 @@
         <template #footer>
           <section class="actions-wrapper">
             <bk-button class="publish-btn" theme="primary" @click="handleDiffOrPublish">{{
-              versionList.length ? '对比并上线' : '上线版本'
+              versionListByGroup.length ? '对比并上线' : '上线版本'
             }}</bk-button>
             <bk-button @click="handlePanelClose">取消</bk-button>
           </section>
@@ -54,7 +54,7 @@
       :base-version-id="baseVersionId"
       :show-publish-btn="true"
       @publish="handleOpenPublishDialog"
-      :version-diff-list="versionList"
+      :version-diff-list="versionListByGroup"
     />
   </section>
 </template>
@@ -114,9 +114,20 @@ const permissionQueryResource = computed(() => [
   },
 ]);
 
+// 获取所有选择上线范围的上线版本
+const versionListByGroup = computed(() => {
+  const list = [] as IConfigVersion[];
+  versionList.value.forEach((version) => {
+    groups.value.forEach((group) => {
+      if (version.spec.name === group.release_name && !list.includes(version)) list.push(version);
+    });
+  });
+  return list;
+});
+
 // 判断是否需要对比上线版本
 const handleDiffOrPublish = () => {
-  if (versionList.value.length) {
+  if (versionListByGroup.value.length) {
     isDiffSliderShow.value = true;
     return;
   }

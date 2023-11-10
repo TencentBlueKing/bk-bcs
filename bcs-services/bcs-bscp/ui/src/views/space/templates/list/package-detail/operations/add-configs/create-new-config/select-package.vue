@@ -34,6 +34,7 @@
         </bk-select>
       </bk-form-item>
     </bk-form>
+    <div v-if="citedList.length">
     <p class="tips">{{ tips }}</p>
     <bk-loading style="min-height: 100px" :loading="loading">
       <bk-table v-if="!selectedPkgs.includes(0)" :data="citedList" :max-height="maxTableHeight">
@@ -48,6 +49,7 @@
         </bk-table-column>
       </bk-table>
     </bk-loading>
+  </div>
   </bk-dialog>
 </template>
 <script lang="ts" setup>
