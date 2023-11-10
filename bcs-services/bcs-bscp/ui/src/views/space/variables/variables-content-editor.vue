@@ -82,7 +82,7 @@ const variables = ref('');
 const separator = ref(' ');
 const shouldValidate = ref(false);
 const errorLine = ref<errorLineItem[]>([]);
-const editorPlaceholder = ref(['示例：', '变量名 变量类型 变量值 变量描述（可选）', 'nginx_ip string 1.1.1.1', 'nginx_port number 8080 nginx端口']);
+const editorPlaceholder = ref(['示例：', '变量名 变量类型 变量值 变量描述（可选）', 'bk_bscp_nginx_ip string 1.1.1.1', ' bk_bscp_nginx_port number 8080 nginx端口']);
 
 watch(
   () => variables.value,

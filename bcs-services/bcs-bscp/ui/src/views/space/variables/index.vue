@@ -1,6 +1,6 @@
 <template>
   <section class="variables-management-page">
-    <bk-alert theme="info">{{ headInfo }}<span @click="goVariablesDoc" class="hyperlink">配置模板与变量配置模板与变量</span>
+    <bk-alert theme="info">{{ headInfo }}<span @click="goVariablesDoc" class="hyperlink">配置模板与变量</span>
     </bk-alert>
     <div class="operation-area">
       <div class="button">
@@ -93,7 +93,7 @@ const isImportVariableShow = ref(false);
 const isDeleteVariableDialogShow = ref(false);
 const deleteVariableItem = ref<IVariableItem>();
 const headInfo = `定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如{{ .bk_bscp_appid }},
-      可在服务配置中修改全局变量值，变量使用详情请参考：`;
+      变量使用详情请参考：`;
 const editSliderData = ref<{ open: boolean; id: number; data: IVariableEditParams }>({
   open: false,
   id: 0,
