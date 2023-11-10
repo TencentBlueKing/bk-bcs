@@ -346,9 +346,10 @@ const handleVersionEditSubmitted = async (
     handleEditVersionClick();
   } else {
     // 如果是编辑旧版本，则直接修改版本数据
-    const { memo, content } = data;
+    const { memo, content, name } = data;
     unPublishVersion.value!.spec.memo = memo;
     unPublishVersion.value!.spec.content = content;
+    unPublishVersion.value!.spec.name = name;
   }
 };
 
