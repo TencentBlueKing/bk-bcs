@@ -42,5 +42,12 @@ export default defineStore('service', () => {
     return true;
   };
 
-  return { appData, permCheckLoading, hasEditServicePerm, checkPermBeforeOperate };
+  // 保留新建文件用户输入文件权限
+  const lastCreatePermission = ref({
+    privilege: '644',
+    user: 'root',
+    user_group: 'root',
+  });
+
+  return { appData, permCheckLoading, hasEditServicePerm, checkPermBeforeOperate, lastCreatePermission };
 });
