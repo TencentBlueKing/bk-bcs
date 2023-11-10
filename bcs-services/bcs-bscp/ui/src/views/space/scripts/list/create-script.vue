@@ -85,7 +85,7 @@ const formData = ref<IScriptEditingForm>({
 });
 const formDataContent = ref({
   shell: '#!/bin/bash',
-  python: '#!/bin/bash',
+  python: '#!/usr/bin/env python\n# -*- coding: utf8 -*-',
 });
 const showContent = computed({
   get: () => (formData.value.type === 'shell' ? formDataContent.value.shell : formDataContent.value.python),
