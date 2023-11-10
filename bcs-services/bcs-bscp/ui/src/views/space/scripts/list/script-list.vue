@@ -102,11 +102,21 @@
     <CreateScript v-if="showCreateScript" v-model:show="showCreateScript" @created="handleCreatedScript" />
     <ScriptCited v-model:show="showCiteSlider" :id="currentId" />
   </section>
+  <DeleteConfirmDialog
+    v-model:isShow="isDeleteScriptDialogShow"
+    title="确认删除该脚本？"
+    @confirm="handleDeleteScriptConfirm"
+  >
+    <div style="margin-bottom: 8px;">
+      脚本: <span style="color: #313238;font-weight: 600;">{{ deleteScriptItem?.hook.spec.name }}</span>
+    </div>
+    <div>一旦删除，该操作将无法撤销，以下服务配置的未命名版本中引用该脚本也将清除</div>
+  </DeleteConfirmDialog>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { InfoBox, Message } from 'bkui-vue';
+import { Message } from 'bkui-vue';
 import { Plus, Search } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../store/global';
@@ -117,6 +127,7 @@ import { datetimeFormat } from '../../../../utils/index';
 import CreateScript from './create-script.vue';
 import ScriptCited from './script-cited.vue';
 import TableEmpty from '../../../../components/table/table-empty.vue';
+import DeleteConfirmDialog from '../../../../components/delete-confirm-dialog.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { versionListPageShouldOpenEdit } = storeToRefs(useScriptStore());
@@ -132,6 +143,8 @@ const showAllTag = ref(true); // 全部脚本
 const selectedTag = ref(''); // 未分类或具体tag下脚本
 const currentId = ref(0);
 const searchStr = ref('');
+const isDeleteScriptDialogShow = ref(false);
+const deleteScriptItem = ref<IScriptItem>();
 const pagination = ref({
   current: 1,
   count: 0,
@@ -202,27 +215,21 @@ const handleEditClick = (script: IScriptItem) => {
 
 // 删除分组
 const handleDeleteScript = (script: IScriptItem) => {
-  InfoBox({
-    title: `确认是否删除脚本【${script.hook.spec.name}?】`,
-    subTitle: `${
-      script.confirm_delete
-        ? '当前脚本有被服务未命名版本引用，删除后，未命名版本里的引用将会被删除，是否确认删除？'
-        : ''
-    }`,
-    headerAlign: 'center' as const,
-    footerAlign: 'center' as const,
-    onConfirm: async () => {
-      await deleteScript(spaceId.value, script.hook.id);
-      if (scriptsData.value.length === 1 && pagination.value.current > 1) {
-        pagination.value.current = pagination.value.current - 1;
-      }
-      Message({
-        theme: 'success',
-        message: '删除版本成功',
-      });
-      getScripts();
-    },
-  } as any);
+  deleteScriptItem.value = script;
+  isDeleteScriptDialogShow.value = true;
+};
+
+const handleDeleteScriptConfirm = async () => {
+  await deleteScript(spaceId.value, deleteScriptItem.value!.hook.id);
+  if (scriptsData.value.length === 1 && pagination.value.current > 1) {
+    pagination.value.current = pagination.value.current - 1;
+  }
+  Message({
+    theme: 'success',
+    message: '删除版本成功',
+  });
+  isDeleteScriptDialogShow.value = false;
+  getScripts();
 };
 
 const handleNameInputChange = (val: string) => {
