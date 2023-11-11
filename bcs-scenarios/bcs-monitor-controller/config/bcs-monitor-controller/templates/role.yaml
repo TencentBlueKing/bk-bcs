@@ -1,0 +1,71 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-role
+rules:
+  - apiGroups:
+      - monitorextension.bkbcs.tencent.com
+      - batch
+    resources:
+      - appmonitors
+      - appmonitors/status
+      - monitorrules
+      - monitorrules/status
+      - noticegroups
+      - noticegroups/status
+      - panels
+      - panels/status
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - deletecollection
+  - apiGroups:
+      - ""
+    resources:
+      - leases
+      - configmaps
+      - events
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - deletecollection
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: bcs-monitor-controller
+  name: {{ .Release.Name }}-account
+  namespace: {{ .Release.Namespace }}
+
+---
+{{- if .Capabilities.APIVersions.Has "rbac.authorization.k8s.io/v1" }}
+apiVersion: rbac.authorization.k8s.io/v1
+{{- else }}
+apiVersion: rbac.authorization.k8s.io/v1beta1
+{{- end }}
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: bcs-monitor-controller
+  name: {{ .Release.Name }}-cluster-role-binding
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Release.Name }}-account
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-role

@@ -1,0 +1,378 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.0
+  creationTimestamp: null
+  name: appmonitors.monitorextension.bkbcs.tencent.com
+spec:
+  group: monitorextension.bkbcs.tencent.com
+  names:
+    kind: AppMonitor
+    listKind: AppMonitorList
+    plural: appmonitors
+    singular: appmonitor
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.syncStatus.state
+      name: status
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: AppMonitor is the Schema for the appmonitors API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: AppMonitorSpec defines the desired state of AppMonitor
+            properties:
+              bizID:
+                type: string
+              bizToken:
+                type: string
+              dashBoardEnhance:
+                description: DashBoardEnhance 监控面板增强能力
+                properties:
+                  dashboards:
+                    items:
+                      description: DashBoard 监控面板名称
+                      properties:
+                        board:
+                          type: string
+                      type: object
+                    type: array
+                  ignoreChange:
+                    description: if true, controller will ignore resource's change
+                    type: boolean
+                type: object
+              ignoreChange:
+                description: if true, controller will ignore resource's change
+                type: boolean
+              labels:
+                additionalProperties:
+                  type: string
+                type: object
+              noticeGroupEnhance:
+                description: NoticeGroupEnhance 告警组增强能力
+                properties:
+                  appendNoticeGroups:
+                    items:
+                      description: NoticeGroupDetail 告警组配置
+                      properties:
+                        action:
+                          additionalProperties:
+                            description: NoticeAction 执行通知
+                            properties:
+                              execute:
+                                description: NoticeType 通知方式
+                                properties:
+                                  chatids:
+                                    items:
+                                      type: string
+                                    type: array
+                                  type:
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - type
+                                type: object
+                              execute_failed:
+                                description: NoticeType 通知方式
+                                properties:
+                                  chatids:
+                                    items:
+                                      type: string
+                                    type: array
+                                  type:
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - type
+                                type: object
+                              execute_success:
+                                description: NoticeType 通知方式
+                                properties:
+                                  chatids:
+                                    items:
+                                      type: string
+                                    type: array
+                                  type:
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - type
+                                type: object
+                            required:
+                            - execute
+                            - execute_failed
+                            - execute_success
+                            type: object
+                          type: object
+                        alert:
+                          additionalProperties:
+                            description: NoticeAlert 告警通知
+                            properties:
+                              fatal:
+                                description: NoticeType 通知方式
+                                properties:
+                                  chatids:
+                                    items:
+                                      type: string
+                                    type: array
+                                  type:
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - type
+                                type: object
+                              remind:
+                                description: NoticeType 通知方式
+                                properties:
+                                  chatids:
+                                    items:
+                                      type: string
+                                    type: array
+                                  type:
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - type
+                                type: object
+                              warning:
+                                description: NoticeType 通知方式
+                                properties:
+                                  chatids:
+                                    items:
+                                      type: string
+                                    type: array
+                                  type:
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - type
+                                type: object
+                            required:
+                            - fatal
+                            - remind
+                            - warning
+                            type: object
+                          type: object
+                        name:
+                          type: string
+                        users:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  ignoreChange:
+                    description: if true, controller will ignore resource's change
+                    type: boolean
+                type: object
+              override:
+                description: 是否覆盖同名配置，默认为false
+                type: boolean
+              ruleEnhance:
+                description: RuleEnhance 告警规则增强能力
+                properties:
+                  ignoreChange:
+                    description: if true, controller will ignore resource's change
+                    type: boolean
+                  noticeGroupAppend:
+                    items:
+                      type: string
+                    type: array
+                  noticeGroupReplace:
+                    items:
+                      type: string
+                    type: array
+                  rules:
+                    items:
+                      description: Rule 告警规则
+                      properties:
+                        noticeGroup:
+                          items:
+                            type: string
+                          type: array
+                        rule:
+                          type: string
+                        threshold:
+                          description: Algorithm 告警检测算法
+                          properties:
+                            fatal:
+                              items:
+                                description: AlgorithmConfig 告警检测算法配置
+                                properties:
+                                  config:
+                                    type: string
+                                  configObj:
+                                    description: AlgorithmConfigStruct 检测算法详细配置
+                                    properties:
+                                      ceil:
+                                        type: integer
+                                      ceil_interval:
+                                        type: integer
+                                      days:
+                                        type: integer
+                                      floor:
+                                        type: integer
+                                      floor_interval:
+                                        type: integer
+                                      method:
+                                        type: string
+                                      ratio:
+                                        type: integer
+                                      shock:
+                                        type: integer
+                                      threshold:
+                                        type: integer
+                                    type: object
+                                  type:
+                                    type: string
+                                type: object
+                              type: array
+                            operator:
+                              type: string
+                            remind:
+                              items:
+                                description: AlgorithmConfig 告警检测算法配置
+                                properties:
+                                  config:
+                                    type: string
+                                  configObj:
+                                    description: AlgorithmConfigStruct 检测算法详细配置
+                                    properties:
+                                      ceil:
+                                        type: integer
+                                      ceil_interval:
+                                        type: integer
+                                      days:
+                                        type: integer
+                                      floor:
+                                        type: integer
+                                      floor_interval:
+                                        type: integer
+                                      method:
+                                        type: string
+                                      ratio:
+                                        type: integer
+                                      shock:
+                                        type: integer
+                                      threshold:
+                                        type: integer
+                                    type: object
+                                  type:
+                                    type: string
+                                type: object
+                              type: array
+                            warning:
+                              items:
+                                description: AlgorithmConfig 告警检测算法配置
+                                properties:
+                                  config:
+                                    type: string
+                                  configObj:
+                                    description: AlgorithmConfigStruct 检测算法详细配置
+                                    properties:
+                                      ceil:
+                                        type: integer
+                                      ceil_interval:
+                                        type: integer
+                                      days:
+                                        type: integer
+                                      floor:
+                                        type: integer
+                                      floor_interval:
+                                        type: integer
+                                      method:
+                                        type: string
+                                      ratio:
+                                        type: integer
+                                      shock:
+                                        type: integer
+                                      threshold:
+                                        type: integer
+                                    type: object
+                                  type:
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
+                        trigger:
+                          type: string
+                      required:
+                      - rule
+                      type: object
+                    type: array
+                  trigger:
+                    type: string
+                  whereAdd:
+                    type: string
+                  whereOr:
+                    type: string
+                type: object
+              scenario:
+                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                  Important: Run "make" to regenerate code after modifying this file'
+                type: string
+            required:
+            - bizID
+            - scenario
+            type: object
+          status:
+            description: AppMonitorStatus defines the observed state of AppMonitor
+            properties:
+              syncStatus:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                properties:
+                  app:
+                    type: string
+                  lastSyncTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  state:
+                    description: 'SyncState is state for syncing process of polaris
+                      service Syncing: syncing is in process Completed: syncing process
+                      is successfully finished Failed: syncing process failed'
+                    type: string
+                required:
+                - state
+                type: object
+            required:
+            - syncStatus
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

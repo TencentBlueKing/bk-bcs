@@ -63,6 +63,12 @@ type SecretOption struct {
 	Port    string
 }
 
+// MonitorOption defines the config of secret
+type MonitorOption struct {
+	Address string
+	Port    string
+}
+
 // Validate options
 func (opt *GitOpsOptions) Validate() error {
 	if len(opt.Service) == 0 {

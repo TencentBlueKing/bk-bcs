@@ -1,0 +1,42 @@
+domain: monitorextension.bkbcs.tencent.com
+layout:
+- go.kubebuilder.io/v3
+projectName: bcs-monitor-controller
+repo: github.com/Tencent/bk-bcs
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: monitorextension.bkbcs.tencent.com
+  group: monitorextension.bkbcs.tencent.com
+  kind: MonitorRule
+  path: github.com/Tencent/bk-bcs/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: monitorextension.bkbcs.tencent.com
+  group: monitorextension.bkbcs.tencent.com
+  kind: NoticeGroup
+  path: github.com/Tencent/bk-bcs/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: monitorextension.bkbcs.tencent.com
+  group: monitorextension.bkbcs.tencent.com
+  kind: Panel
+  path: github.com/Tencent/bk-bcs/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: monitorextension.bkbcs.tencent.com
+  group: monitorextension.bkbcs.tencent.com
+  kind: AppMonitor
+  path: github.com/Tencent/bk-bcs/api/v1
+  version: v1
+version: "3"

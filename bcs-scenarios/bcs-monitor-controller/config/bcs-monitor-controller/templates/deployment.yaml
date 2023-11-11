@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: bcs-monitor-controller
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: bcs-monitor-controller
+  template:
+    metadata:
+      labels:
+        app: bcs-monitor-controller
+    spec:
+      serviceAccountName: {{ .Release.Name }}-account
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: monitor-controller
+          {{- if .Values.image.registry }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- else }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          - name: metric-port
+            containerPort: 8081
+            protocol: TCP
+          - name: api-port
+            containerPort: 8088
+            protocol: TCP
+          command:
+          - /data/bcs/manager
+          args:
+          - --v
+          - "3"
+          - --log_dir
+          - /data/bcs/logs/bcs
+          - --scenario_refresh_req
+          - {{ .Values.scenarioGitConfig.refreshFreqSec | quote }}
+          - --alsologtostderr
+          resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: GIT_URL
+              value: {{ .Values.scenarioGitConfig.URL }}
+            - name: BKM_FULL_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret
+                  key: bkmFullAuthToken
+            - name: BKM_API_DOMAIN
+              value: {{ .Values.bkmConfig.APIDomain }}

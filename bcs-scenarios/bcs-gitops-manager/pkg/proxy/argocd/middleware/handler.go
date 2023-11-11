@@ -52,6 +52,7 @@ type MiddlewareInterface interface {
 	CheckProjectPermission(ctx context.Context, projectName string,
 		action iam.ActionID) (*v1alpha1.AppProject, int, error)
 	CheckProjectPermissionByID(ctx context.Context, projectID string, action iam.ActionID) (int, error)
+	CheckBusinessPermission(ctx context.Context, bizID string, action iam.ActionID) (int, error)
 
 	CheckMultiClustersPermission(ctx context.Context, projectID string, clusterIDs []string,
 		actions []string) (map[string]map[string]bool, error)
@@ -84,17 +85,19 @@ type handler struct {
 	option            *proxy.GitOpsOptions
 	argoSession       *session.ArgoSession
 	secretSession     *session.SecretSession
+	monitorSession    *session.MonitorSession
 
 	tracer func(context.Context) error
 }
 
 // NewMiddlewareHandler create handler instance
 func NewMiddlewareHandler(option *proxy.GitOpsOptions, session *session.ArgoSession,
-	secretSession *session.SecretSession) MiddlewareInterface {
+	secretSession *session.SecretSession, monitorSession *session.MonitorSession) MiddlewareInterface {
 	return &handler{
 		option:            option,
 		argoSession:       session,
 		secretSession:     secretSession,
+		monitorSession:    monitorSession,
 		projectPermission: project.NewBCSProjectPermClient(option.IAMClient),
 		clusterPermission: cluster.NewBCSClusterPermClient(option.IAMClient),
 	}
@@ -120,11 +123,12 @@ func (h *handler) Init() error {
 func (h *handler) HttpWrapper(handler HttpHandler) http.Handler {
 	handlerName := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
 	hw := &httpWrapper{
-		handler:       handler,
-		handlerName:   handlerName,
-		option:        h.option,
-		argoSession:   h.argoSession,
-		secretSession: h.secretSession,
+		handler:        handler,
+		handlerName:    handlerName,
+		option:         h.option,
+		argoSession:    h.argoSession,
+		secretSession:  h.secretSession,
+		monitorSession: h.monitorSession,
 	}
 	blog.Infof("[Trace] request handler '%s' add to otel", handlerName)
 	return otelhttp.NewHandler(hw, handlerName)
@@ -175,6 +179,28 @@ func (h *handler) CheckProjectPermission(ctx context.Context, projectName string
 	}
 	statusCode, err := h.CheckProjectPermissionByID(ctx, projectID, action)
 	return argoProject, statusCode, err
+}
+
+func (h *handler) CheckBusinessPermission(ctx context.Context, bizID string, action iam.ActionID) (int, error) {
+	if bizID == "" {
+		return http.StatusBadRequest, errors.Errorf("bizID cannot be empty")
+	}
+	projectList, statusCode, err := h.ListProjects(ctx)
+	if statusCode != http.StatusOK {
+		return statusCode, err
+	}
+
+	for _, proj := range projectList.Items {
+		projectBizID := common.GetBCSProjectBusinessKey(proj.Annotations)
+		if projectBizID == bizID {
+			statusCode, err = h.CheckProjectPermissionByID(ctx, common.GetBCSProjectID(proj.Annotations), action)
+			// 只要拥有一个project的权限，则允许操作
+			if statusCode == http.StatusOK {
+				return http.StatusOK, nil
+			}
+		}
+	}
+	return http.StatusForbidden, errors.Errorf("businessID '%s' for action '%s' forbidden", bizID, action)
 }
 
 // CheckCreateApplication 检查创建某个应用是否具备权限

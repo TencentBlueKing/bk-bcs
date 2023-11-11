@@ -71,7 +71,8 @@ func (ops *ArgocdProxy) Stop() {
 func (ops *ArgocdProxy) initArgoPathHandler() error {
 	argoSession := session.NewArgoSession(ops.option)
 	secretSession := session.NewSecretSession(ops.option.SecretOption)
-	middleware := mw.NewMiddlewareHandler(ops.option, argoSession, secretSession)
+	monitorSession := session.NewMonitorSession(nil) // todo
+	middleware := mw.NewMiddlewareHandler(ops.option, argoSession, secretSession, monitorSession)
 	if err := middleware.Init(); err != nil {
 		return errors.Wrapf(err, "middleware init failed")
 	}
@@ -123,10 +124,14 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/metric").Subrouter(),
 		middleware: middleware,
 	}
+	monitoruPlugin := &MonitorPlugin{
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/monitor").Subrouter(),
+		middleware: middleware,
+	}
 	initializer := []func() error{
 		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
-		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init,
+		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, monitoruPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy
