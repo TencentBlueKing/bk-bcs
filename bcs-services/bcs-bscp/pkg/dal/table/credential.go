@@ -97,6 +97,8 @@ type CredentialSpec struct {
 const (
 	// BearToken is the type default
 	BearToken CredentialType = "bearToken"
+	// RSAToken ...
+	RSAToken CredentialType = "AsaToken"
 )
 
 // CredentialType is the type of credential

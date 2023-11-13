@@ -133,9 +133,11 @@ type AppSpec struct {
 	ConfigType ConfigType `json:"config_type" gorm:"column:config_type"`
 	// Mode defines what mode of this app works at.
 	// Mode can not be updated once it is created.
-	Mode   AppMode `json:"mode" gorm:"column:mode"`
-	Memo   string  `json:"memo" gorm:"column:memo"`
-	Reload *Reload `json:"reload" gorm:"embedded"`
+	Mode         AppMode `json:"mode" gorm:"column:mode"`
+	Memo         string  `json:"memo" gorm:"column:memo"`
+	Reload       *Reload `json:"reload" gorm:"embedded"`
+	Alias        string  `json:"alias" gorm:"alias"`
+	CredentialID uint32  `json:"credential_id" gorm:"credential_id"`
 }
 
 const (
@@ -187,6 +189,10 @@ func (as *AppSpec) ValidateCreate() error {
 		return err
 	}
 
+	if err := validator.ValidateName(as.Alias); err != nil {
+		return err
+	}
+
 	switch as.ConfigType {
 	case File:
 		if err := as.Reload.ValidateCreate(); err != nil {
@@ -222,6 +228,10 @@ func (as *AppSpec) ValidateUpdate(configType ConfigType) error {
 	}
 
 	if err := validator.ValidateMemo(as.Memo, false); err != nil {
+		return err
+	}
+
+	if err := validator.ValidateName(as.Alias); err != nil {
 		return err
 	}
 

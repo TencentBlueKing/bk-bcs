@@ -31,12 +31,14 @@ type App interface {
 	Create(kit *kit.Kit, app *table.App) (uint32, error)
 	// Update one app's info
 	Update(kit *kit.Kit, app *table.App) error
-	// get app with id.
+	// Get get app with id.
 	Get(kit *kit.Kit, bizID, appID uint32) (*table.App, error)
-	// get app only with id.
+	// GetByID get app only with id.
 	GetByID(kit *kit.Kit, appID uint32) (*table.App, error)
-	// get app by name.
+	// GetByName get app by name.
 	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.App, error)
+	// GetByAlias get app by alias.
+	GetByAlias(kit *kit.Kit, bizID uint32, alias string) (*table.App, error)
 	// List apps with options.
 	List(kit *kit.Kit, bizList []uint32, name, operator string, opt *types.BasePage) ([]*table.App, int64, error)
 	// ListAppsByGroupID list apps by group id.
@@ -214,7 +216,7 @@ func (dao *appDao) Update(kit *kit.Kit, g *table.App) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.App.WithContext(kit.Ctx)
 		if _, err = q.Where(m.BizID.Eq(g.BizID), m.ID.Eq(g.ID)).
-			Select(m.Memo, m.Reviser).Updates(g); err != nil {
+			Select(m.Memo, m.Alias_, m.CredentialID, m.Reviser).Updates(g); err != nil {
 			return err
 		}
 
@@ -329,6 +331,19 @@ func (dao *appDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Ap
 	q := dao.genQ.App.WithContext(kit.Ctx)
 
 	app, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
+	if err != nil {
+		return nil, fmt.Errorf("get app failed, err: %v", err)
+	}
+
+	return app, nil
+}
+
+// GetByAlias get app by alias.
+func (dao *appDao) GetByAlias(kit *kit.Kit, bizID uint32, alias string) (*table.App, error) {
+	m := dao.genQ.App
+	q := dao.genQ.App.WithContext(kit.Ctx)
+
+	app, err := q.Where(m.BizID.Eq(bizID), m.Alias_.Eq(alias)).Take()
 	if err != nil {
 		return nil, fmt.Errorf("get app failed, err: %v", err)
 	}

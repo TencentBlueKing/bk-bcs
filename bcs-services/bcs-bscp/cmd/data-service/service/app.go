@@ -50,6 +50,20 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 		return nil, fmt.Errorf("app name %s already exists", req.Spec.Name)
 	}
 
+	if _, err := s.dao.App().GetByAlias(kt, req.BizId, req.Spec.Alias); err == nil {
+		return nil, fmt.Errorf("app alias %s already exists", req.Spec.Alias)
+	}
+
+	if req.Spec.CredentialId > 0 {
+		credential, err := s.dao.Credential().Get(kt, req.BizId, req.Spec.CredentialId)
+		if err != nil {
+			return nil, fmt.Errorf("get credential fail, err : %v", err)
+		}
+		if credential.Spec.CredentialType != table.RSAToken {
+			return nil, fmt.Errorf("invalid credential type, expected RSA Token")
+		}
+	}
+
 	app := &table.App{
 		BizID: req.BizId,
 		Spec:  req.Spec.AppSpec(),
@@ -72,6 +86,16 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 // UpdateApp update application.
 func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbase.EmptyResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
+
+	if req.Spec.CredentialId > 0 {
+		credential, err := s.dao.Credential().Get(grpcKit, req.BizId, req.Spec.CredentialId)
+		if err != nil {
+			return nil, fmt.Errorf("get credential fail, err : %v", err)
+		}
+		if credential.Spec.CredentialType != table.RSAToken {
+			return nil, fmt.Errorf("invalid credential type, expected RSA Token")
+		}
+	}
 
 	app := &table.App{
 		ID:    req.Id,

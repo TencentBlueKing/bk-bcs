@@ -25,11 +25,13 @@ func (m *AppSpec) AppSpec() *table.AppSpec {
 	}
 
 	return &table.AppSpec{
-		Name:       m.Name,
-		ConfigType: table.ConfigType(m.ConfigType),
-		Mode:       table.AppMode(m.Mode),
-		Memo:       m.Memo,
-		Reload:     m.Reload.Reload(),
+		Name:         m.Name,
+		ConfigType:   table.ConfigType(m.ConfigType),
+		Mode:         table.AppMode(m.Mode),
+		Memo:         m.Memo,
+		Reload:       m.Reload.Reload(),
+		Alias:        m.Alias,
+		CredentialID: m.CredentialId,
 	}
 }
 
@@ -40,11 +42,13 @@ func PbAppSpec(spec *table.AppSpec) *AppSpec { //nolint:revive
 	}
 
 	return &AppSpec{
-		Name:       spec.Name,
-		ConfigType: string(spec.ConfigType),
-		Mode:       string(spec.Mode),
-		Memo:       spec.Memo,
-		Reload:     PbReload(spec.Reload),
+		Name:         spec.Name,
+		ConfigType:   string(spec.ConfigType),
+		Mode:         string(spec.Mode),
+		Memo:         spec.Memo,
+		Reload:       PbReload(spec.Reload),
+		Alias:        spec.Alias,
+		CredentialId: spec.CredentialID,
 	}
 }
 

@@ -755,6 +755,8 @@ message CreateAppReq {
     string memo             = 5;
     string reload_type      = 6;
     string reload_file_path = 7;
+    string alias            = 8;
+    uint32 credential_id    = 9;
 }
 
 message CreateAppResp {
@@ -768,6 +770,8 @@ message UpdateAppReq {
     string memo             = 4;
     string reload_type      = 5;
     string reload_file_path = 6;
+    string alias            = 7;
+    uint32 credential_id    = 8;
 }
 
 message UpdateAppResp {}
