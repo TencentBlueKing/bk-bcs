@@ -148,7 +148,7 @@ import ScriptVersionDiff from './script-version-diff.vue';
 import DeleteConfirmDialog from '../../../../components/delete-confirm-dialog.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
-const { versionListPageShouldOpenEdit } = storeToRefs(useScriptStore());
+const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useScriptStore());
 const router = useRouter();
 const route = useRoute();
 
@@ -185,7 +185,7 @@ const pagination = ref({
 
 onMounted(async () => {
   initLoading.value = true;
-  getVersionList();
+  await getVersionList();
   await getScriptDetailData();
   if (scriptDetail.value.not_release_id) {
     unPublishVersion.value = await getScriptVersionDetail(
@@ -202,6 +202,10 @@ onMounted(async () => {
     } else {
       handleCreateVersionClick(versionList.value[0].hook_revision.spec.content);
     }
+  }
+  if (versionListPageShouldOpenView.value) {
+    versionListPageShouldOpenView.value = false;
+    handleViewVersionClick(versionList.value[0]);
   }
 });
 
@@ -263,6 +267,7 @@ const handleEditVersionClick = () => {
 
 // 查看版本
 const handleViewVersionClick = (version: IScriptVersionListItem) => {
+  console.log(version, '查看版本');
   const { name, memo, content } = version.hook_revision.spec;
   versionEditData.value = {
     panelOpen: true,

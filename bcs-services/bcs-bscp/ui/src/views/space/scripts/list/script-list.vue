@@ -53,7 +53,7 @@
               <div
                 v-if="row.hook"
                 class="hook-name"
-                @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })"
+                @click="handleViewVersionClick(row.hook.id)"
               >
                 {{ row.hook.spec.name }}
               </div>
@@ -145,7 +145,7 @@ import DeleteConfirmDialog from '../../../../components/delete-confirm-dialog.vu
 import LinkToApp from '../../templates/list/components/link-to-app.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
-const { versionListPageShouldOpenEdit } = storeToRefs(useScriptStore());
+const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useScriptStore());
 const router = useRouter();
 
 interface IAppItem {
@@ -237,6 +237,11 @@ const handleOpenCitedSlider = (id: number) => {
 const handleEditClick = (script: IScriptItem) => {
   router.push({ name: 'script-version-manage', params: { spaceId: spaceId.value, scriptId: script.hook.id } });
   versionListPageShouldOpenEdit.value = true;
+};
+
+const handleViewVersionClick = (id: number) => {
+  router.push({ name: 'script-version-manage', params: { spaceId: spaceId.value, scriptId: id } });
+  versionListPageShouldOpenView.value = true;
 };
 
 // 删除分组
