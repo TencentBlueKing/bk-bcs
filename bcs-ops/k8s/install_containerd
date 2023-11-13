@@ -225,7 +225,7 @@ main() {
   fi
 
   if [[ -n ${BCS_OFFLINE:-} ]]; then
-    find "${ROOT_DIR}"/version-"${VERSION}"/images -name '*.tar' -type f -print0 \
+    find "${ROOT_DIR}"/version-"${K8S_VER}"/images -name '*.tar' -type f -print0 \
       | xargs -0 -I {} ctr -n k8s.io image import {}
   fi
 
