@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
@@ -89,14 +90,15 @@ func (l *ImportClusterReleaseAction) importClusterRelease() error {
 		}
 	}
 	// 记录已存在
-	if getRelease.Name != "" {
-		return fmt.Errorf("import cluster release %s already exists", name)
+	if getRelease != nil {
+		return fmt.Errorf("release %s already exists", name)
 	}
 	// 获取Release信息
 	detail, err := l.getDetail()
 	if err != nil {
 		return err
 	}
+	updateTime, _ := time.Parse(common.TimeFormat, detail.UpdateTime)
 	// 在DB中记录该Release
 	return l.model.CreateRelease(l.ctx, &entity.Release{
 		Name:         l.req.GetName(),
@@ -108,6 +110,8 @@ func (l *ImportClusterReleaseAction) importClusterRelease() error {
 		ChartVersion: detail.ChartVersion,
 		Values:       []string{detail.Values},
 		CreateBy:     createBy,
+		CreateTime:   updateTime.Unix(),
+		UpdateTime:   updateTime.Unix(),
 		Status:       detail.Status,
 	})
 }
