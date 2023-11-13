@@ -47,7 +47,7 @@
                 </bk-overflow-title>
               </div>
             </template>
-            <div v-else >
+            <div v-else>
               <bk-overflow-title type="tips">
                 {{ getCellVal(variable, col.prop) }}
               </bk-overflow-title>
@@ -206,9 +206,11 @@ defineExpose({
       padding: 0;
       :deep(.bk-input) {
         height: 42px;
-        border: none;
         .bk-input--text {
           padding-left: 16px;
+        }
+        &:not(.is-focused) {
+          border: none;
         }
       }
     }
