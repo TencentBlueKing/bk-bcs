@@ -74,43 +74,22 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 
 	kt := kit.FromGrpcContext(ctx)
 
-	var oldKv *table.Kv
-
-	switch {
-	case req.Id > 0:
-		// 通过id修改
-		kv, err := s.dao.Kv().GetByID(kt, req.Attachment.BizId, req.Attachment.AppId, req.Id)
-		if err != nil {
-			logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-			return nil, err
-		}
-		oldKv = kv
-	case req.Spec.Key != "":
-		// 通过name进行修改
-		kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
-		if err != nil {
-			logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-			return nil, err
-		}
-		oldKv = kv
-	default:
-		return nil, fmt.Errorf("id and key cannot both be empty")
-	}
-
-	kvTypeOpt := &types.GetLastKvOpt{
-		BizID: req.Attachment.BizId,
-		AppID: req.Attachment.AppId,
-		Key:   oldKv.Spec.Key,
-	}
-	kvType, _, err := s.vault.GetLastKv(kt, kvTypeOpt)
+	kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
 	if err != nil {
+		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
+	}
+
+	kvType, err := s.getKvType(kt, req.Attachment.BizId, req.Attachment.AppId, kv.Spec.Version, kv.Spec.Key)
+	if err != nil {
+		logs.Errorf("get vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
 		return nil, err
 	}
 
 	opt := &types.UpsertKvOption{
 		BizID:  req.Attachment.BizId,
 		AppID:  req.Attachment.AppId,
-		Key:    oldKv.Spec.Key,
+		Key:    kv.Spec.Key,
 		Value:  req.Spec.Value,
 		KvType: kvType,
 	}
@@ -120,14 +99,11 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 		return nil, err
 	}
 
-	kv := &table.Kv{
-		ID:         oldKv.ID,
-		Spec:       req.Spec.KvSpec(),
-		Attachment: req.Attachment.KvAttachment(),
-		Revision: &table.Revision{
-			Reviser: kt.User,
-		},
+	kv.Revision = &table.Revision{
+		Reviser:   kt.User,
+		UpdatedAt: time.Now().UTC(),
 	}
+
 	kv.Spec.Version = uint32(version)
 	if e := s.dao.Kv().Update(kt, kv); e != nil {
 		logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
@@ -147,12 +123,11 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 	opt := &types.ListKvOption{
 		BizID:     req.BizId,
 		AppID:     req.AppId,
-		ID:        req.Id,
+		Key:       req.Key,
 		SearchKey: req.SearchKey,
 		All:       req.All,
 		Page:      page,
 	}
-
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,
 	}
@@ -205,27 +180,16 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbds.DeleteKvReq) (*pbbase.
 
 	kt := kit.FromGrpcContext(ctx)
 
-	var kv *table.Kv
+	kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
+	if err != nil {
+		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
+	}
 
-	switch {
-	case req.Id > 0:
-		// 通过id修改
-		kvOld, err := s.dao.Kv().GetByID(kt, req.Attachment.BizId, req.Attachment.AppId, req.Id)
-		if err != nil {
-			logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-			return nil, err
-		}
-		kv = kvOld
-	case req.Spec.Key != "":
-		// 通过name进行修改
-		kvOld, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
-		if err != nil {
-			logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-			return nil, err
-		}
-		kv = kvOld
-	default:
-		return nil, fmt.Errorf("id and key cannot both be empty")
+	tx := s.dao.GenQuery().Begin()
+	if e := s.dao.Kv().DeleteWithTx(kt, tx, kv); e != nil {
+		logs.Errorf("delete kv failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	opt := &types.DeleteKvOpt{
@@ -233,14 +197,17 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbds.DeleteKvReq) (*pbbase.
 		AppID: kv.Attachment.AppID,
 		Key:   kv.Spec.Key,
 	}
-
-	if err := s.vault.DeleteKv(kt, opt); err != nil {
-		return nil, err
+	if e := s.vault.DeleteKv(kt, opt); e != nil {
+		logs.Errorf("delete vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, e
 	}
 
-	if err := s.dao.Kv().Delete(kt, kv); err != nil {
-		logs.Errorf("delete kv failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	return new(pbbase.EmptyResp), nil
@@ -311,14 +278,15 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 	return new(pbbase.EmptyResp), nil
 }
 
-func (s *Service) getKvType(kt *kit.Kit, bizID, appID uint32, key string) (types.KvType, error) {
-	opt := &types.GetLastKvOpt{
-		BizID: bizID,
-		AppID: appID,
-		Key:   key,
+func (s *Service) getKvType(kt *kit.Kit, bizID, appID, version uint32, key string) (types.KvType, error) {
+	opt := &types.GetKvByVersion{
+		BizID:   bizID,
+		AppID:   appID,
+		Key:     key,
+		Version: int(version),
 	}
 
-	kvType, _, err := s.vault.GetLastKv(kt, opt)
+	kvType, _, err := s.vault.GetKvByVersion(kt, opt)
 	if err != nil {
 		return "", err
 	}
@@ -340,8 +308,8 @@ func (s *Service) doBatchUpsertVault(kt *kit.Kit, req *pbds.BatchUpsertKvsReq,
 			Value: kv.KvSpec.Value,
 		}
 
-		if _, exists := editingKvMap[kv.KvSpec.Key]; exists {
-			kvType, err := s.getKvType(kt, req.BizId, req.AppId, kv.KvSpec.Key)
+		if editing, exists := editingKvMap[kv.KvSpec.Key]; exists {
+			kvType, err := s.getKvType(kt, req.BizId, req.AppId, editing.Spec.Version, kv.KvSpec.Key)
 			if err != nil {
 				return nil, err
 			}

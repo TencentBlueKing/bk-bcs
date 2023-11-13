@@ -1484,7 +1484,7 @@ message UpdateKvReq {
 message ListKvsReq {
     uint32 biz_id          = 1;
     uint32 app_id          = 2;
-    uint32 id              = 3;
+    string key             = 3;
     uint32 start           = 4;
     uint32 limit           = 5;
     bool   all             = 6;

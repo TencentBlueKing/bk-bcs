@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
@@ -71,7 +72,6 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbcs.UpdateKvReq) (*pbcs.Up
 	}
 
 	r := &pbds.UpdateKvReq{
-		Id: req.Id,
 		Attachment: &pbkv.KvAttachment{
 			BizId: grpcKit.BizID,
 			AppId: req.AppId,
@@ -105,11 +105,18 @@ func (s *Service) ListKvs(ctx context.Context, req *pbcs.ListKvsReq) (*pbcs.List
 	r := &pbds.ListKvsReq{
 		BizId:     req.BizId,
 		AppId:     req.AppId,
-		Id:        req.Id,
+		Key:       req.Key,
 		Start:     req.Start,
 		Limit:     req.Limit,
 		All:       req.All,
 		SearchKey: req.SearchKey,
+	}
+	if !req.All {
+		if req.Limit == 0 {
+			return nil, errors.New("limit has to be greater than 0")
+		}
+		r.Start = req.Start
+		r.Limit = req.Limit
 	}
 
 	rp, err := s.client.DS.ListKvs(grpcKit.RpcCtx(), r)

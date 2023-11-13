@@ -682,29 +682,29 @@ service Config {
 
     rpc CreateKv(CreateKvReq) returns (CreateKvResp) {
         option (google.api.http) = {
-            post : "/api/v1/config/biz_id/{biz_id}/apps/{app_id}/kv"
+            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs"
             body : "*"
         };
     };
     rpc UpdateKv(UpdateKvReq) returns (UpdateKvResp) {
         option (google.api.http) = {
-            put : "/api/v1/config/biz_id/{biz_id}/apps/{app_id}/kv"
+            put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}"
             body : "*"
         };
     };
     rpc ListKvs(ListKvsReq) returns (ListKvsResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/biz_id/{biz_id}/apps/{app_id}/kvs"
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs"
         };
     };
     rpc DeleteKv(DeleteKvReq) returns (DeleteKvResp) {
         option (google.api.http) = {
-            delete : "/api/v1/config/biz_id/{biz_id}/apps/{app_id}/kv/key/{key}"
+            delete : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}"
         };
     };
     rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {
         option (google.api.http) = {
-            put : "/api/v1/config/biz_id/{biz_id}/apps/{app_id}/kvs"
+            put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs"
             body : "*"
         };
     };
@@ -2130,7 +2130,6 @@ message CreateKvResp {
 message UpdateKvReq {
     uint32 biz_id        = 1;
     uint32 app_id        = 2;
-    uint32 id            = 3;
     string key           = 4;
     string value         = 6;
 }
@@ -2142,7 +2141,7 @@ message ListKvsReq {
     uint32 app_id            = 2;
     bool   all               = 3;
     string searchKey         = 4;
-    uint32 id                = 5;
+    string key               = 5;
     uint32 start             = 6;
     uint32 limit             = 7;
 }

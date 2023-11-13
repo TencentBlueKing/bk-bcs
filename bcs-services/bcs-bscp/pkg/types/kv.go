@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -38,6 +39,9 @@ const (
 	KvYAML KvType = "yaml"
 	// KvXml is the type for xml kv
 	KvXml KvType = "xml"
+
+	// MaxValueLength max value length 1MB
+	MaxValueLength = 1 * 1024 * 1024
 )
 
 // ValidateValue the kvType and value match
@@ -45,6 +49,10 @@ func (k KvType) ValidateValue(value string) error {
 
 	if value == "" {
 		return errors.New("kv value is null")
+	}
+
+	if len(value) > MaxValueLength {
+		return fmt.Errorf("the length of the value must not exceed %d MB", MaxValueLength)
 	}
 
 	switch k {
@@ -56,6 +64,9 @@ func (k KvType) ValidateValue(value string) error {
 		}
 		return nil
 	case KvText:
+		if strings.Contains(value, "\n") {
+			return errors.New("newline characters are not allowed in text-type values")
+		}
 		return nil
 	case KvJson:
 		if !json.Valid([]byte(value)) {
@@ -75,7 +86,7 @@ func (k KvType) ValidateValue(value string) error {
 		}
 		return nil
 	default:
-		return errors.New("revision not set")
+		return errors.New("invalid key-value type")
 	}
 }
 
@@ -88,7 +99,7 @@ func (k KvType) Validate() error {
 	case KvJson:
 	case KvYAML:
 	default:
-		return errors.New("invalid KvType")
+		return errors.New("invalid key-value type")
 	}
 	return nil
 }
@@ -219,7 +230,7 @@ type ListKvOption struct {
 	BizID     uint32    `json:"biz_id"`
 	AppID     uint32    `json:"app_id"`
 	Name      string    `json:"name"`
-	ID        uint32    `json:"id"`
+	Key       string    `json:"key"`
 	SearchKey string    `json:"search_key"`
 	All       bool      `json:"all"`
 	Page      *BasePage `json:"page"`

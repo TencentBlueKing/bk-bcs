@@ -21,6 +21,8 @@ type Kv interface {
 	ListAllKvByKey(kit *kit.Kit, appID uint32, bizID uint32, keys []string) ([]*table.Kv, error)
 	// Delete ..
 	Delete(kit *kit.Kit, kv *table.Kv) error
+	// DeleteWithTx delete kv instance with transaction.
+	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
 	// GetByKey get kv by key.
 	GetByKey(kit *kit.Kit, bizID, appID uint32, key string) (*table.Kv, error)
 	// GetByID get kv by id.
@@ -112,7 +114,8 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int64, error) {
 
 	m := dao.genQ.Kv
-	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).Order(m.ID.Desc())
+	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).Or(m.Key.Eq(opt.Key)).
+		Order(m.ID.Desc())
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
 		result, err := q.Find()
@@ -162,6 +165,33 @@ func (dao *kvDao) Delete(kit *kit.Kit, kv *table.Kv) error {
 		return nil
 	}
 	if e := dao.genQ.Transaction(deleteTx); e != nil {
+		return e
+	}
+
+	return nil
+
+}
+func (dao *kvDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error {
+	// 参数校验
+	if err := kv.ValidateDelete(); err != nil {
+		return err
+	}
+
+	// 删除操作, 获取当前记录做审计
+	m := tx.Kv
+	q := tx.Kv.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(kv.ID), m.BizID.Eq(kv.Attachment.BizID), m.AppID.Eq(kv.Attachment.AppID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, kv.Attachment.BizID).PrepareDelete(oldOne)
+
+	_, err = q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Delete(kv)
+	if err != nil {
+		return err
+	}
+
+	if e := ad.Do(tx.Query); e != nil {
 		return e
 	}
 
