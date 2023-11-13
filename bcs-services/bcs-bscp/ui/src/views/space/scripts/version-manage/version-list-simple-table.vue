@@ -5,7 +5,6 @@
         <div v-if="row.hook_revision" class="version-name-wrapper">
           <span :class="['status-dot', row.hook_revision.spec.state]"></span>
           <div class="name">{{ row.hook_revision.spec.name }}</div>
-          <RightShape v-if="props.versionId === row.hook_revision.id" class="arrow-icon" />
         </div>
       </template>
     </bk-table-column>
@@ -23,7 +22,6 @@
   />
 </template>
 <script setup lang="ts">
-import { RightShape } from 'bkui-vue/lib/icon';
 import { IScriptVersionListItem } from '../../../../../types/script';
 import { IPagination } from '../../../../../types/index';
 

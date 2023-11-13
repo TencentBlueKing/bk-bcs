@@ -9,15 +9,18 @@
       />
     </bk-form-item>
     <bk-form-item label="配置文件路径" property="path" :required="true">
-      <bk-input
-        v-model="localVal.path"
-        placeholder="请输入绝对路径，下载路径为前缀+配置路径"
-        :disabled="!editable"
-        @change="change"
-      />
+      <template #label>
+        <span
+          v-bk-tooltips="{
+            content:'客户端拉取配置文件后存放路径为：临时目录/业务ID/服务名称/files/配置文件路径，除了配置文件路径其它参数都在客户端sidecar中配置',
+            placement: 'top'
+          }"
+          >配置文件路径</span>
+      </template>
+      <bk-input v-model="localVal.path" placeholder="请输入绝对路径" :disabled="!editable" @change="change" />
     </bk-form-item>
     <bk-form-item label="配置文件描述" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change" :resize="false" />
+      <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change" :resize="true" />
     </bk-form-item>
     <bk-form-item label="配置文件格式">
       <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">
@@ -98,7 +101,8 @@
         :disabled="!editable"
         :multiple="false"
         :files="fileList"
-        :custom-request="handleFileUpload">
+        :custom-request="handleFileUpload"
+      >
         <template #file="{ file }">
           <div>
             <div class="file-wrapper">
@@ -118,7 +122,8 @@
     <bk-form-item v-else>
       <template #label
         ><div class="config-content-label">
-          <span>配置内容</span><info v-bk-tooltips="{ content: configContentTip, placement: 'top' }" fill="#3a84ff" /></div
+          <span>配置内容</span
+          ><info v-bk-tooltips="{ content: configContentTip, placement: 'top' }" fill="#3a84ff" /></div
       ></template>
       <ConfigContentEditor
         :content="stringContent"
@@ -216,11 +221,12 @@ const rules = {
   ],
   path: [
     {
-      validator: (value: string) => value.length <= 256,
-      message: '最大长度256个字符',
+      validator: (value: string) => value.length <= 2048,
+      message: '最大长度2048个字符',
+      trigger: 'change',
     },
     {
-      validator: (value: string) => /^\/([a-zA-Z0-9/\-.]+\/)*[a-zA-Z0-9/\-.]+$/.test(value),
+      validator: (value: string) => /^\/(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)?$/.test(value),
       message: '无效的路径,路径不符合Unix文件路径格式规范',
       trigger: 'change',
     },
@@ -229,9 +235,9 @@ const rules = {
     {
       validator: (value: string) => {
         if (!value) return true;
-        return /^[\u4E00-\u9FA5a-zA-Z0-9_\- ]*[\u4E00-\u9FA5a-zA-Z0-9](?!.*[,])[\u4E00-\u9FA5a-zA-Z0-9_\- ]*$/.test(value);
+        return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value);
       },
-      message: '只允许包含中文、英文、数字、下划线、连字符、空格，并且必须以中文、英文、数字开头和结尾。',
+      message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
       trigger: 'change',
     },
   ],
@@ -410,7 +416,7 @@ defineExpose({
     width: 32px;
     height: 32px;
     text-align: center;
-    background: #e1ecff;
+    background: #fafcfe;
     color: #3a84ff;
     border: 1px solid #3a84ff;
     cursor: pointer;

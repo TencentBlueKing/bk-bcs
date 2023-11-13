@@ -152,7 +152,21 @@ const validate = () => {
           errors[variable.name] = [key];
         }
       }
+      if (variable.type === 'number' && !/^\d*(\.\d+)?$/.test(variable.default_val)) {
+        if (errors[variable.name]) {
+          errors[variable.name].push(key);
+        } else {
+          errors[variable.name] = [key];
+        }
+      }
     });
+    if (variable.type === 'number' && !/^\d*(\.\d+)?$/.test(variable.default_val)) {
+      if (errors[variable.name]) {
+        errors[variable.name].push('default_val');
+      } else {
+        errors[variable.name] = ['default_val'];
+      }
+    }
   });
   errorDetails.value = errors;
   return Object.keys(errorDetails.value).length === 0;

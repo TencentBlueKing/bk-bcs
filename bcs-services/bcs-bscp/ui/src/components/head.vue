@@ -1,17 +1,20 @@
 <template>
   <div class="header">
     <div class="head-left">
-      <span class="logo">
-        <img src="../assets/logo.svg" alt="" />
-      </span>
-      <span class="head-title"> 服务配置平台 </span>
+      <div class="title-wrap" @click="router.push({name:'home'})">
+        <span class="logo">
+          <img src="../assets/logo.svg" alt="" />
+        </span>
+        <span class="head-title"> 服务配置中心 </span>
+      </div>
       <div class="head-routes">
         <router-link
           v-for="nav in navList"
           :class="['nav-item', { actived: route.meta.navModule === nav.module }]"
           :key="nav.id"
           :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }"
-          @click="handleNavClick(nav.id)">
+          @click="handleNavClick(nav.id)"
+        >
           {{ nav.name }}
         </router-link>
       </div>
@@ -152,9 +155,9 @@ const handleNavClick = (navId: String) => {
       if (detail.spaceId === spaceId.value) {
         router.push({ name: 'service-config', params: { spaceId: detail.spaceId, appId: detail.appId } });
         return;
-      };
-    };
-  };
+      }
+    }
+  }
 };
 
 const handleSpaceSearch = (searchStr: string) => {
@@ -263,7 +266,7 @@ const handleLoginOut = () => {
 };
 const handleToCMDB = () => {
   // @ts-ignore
-  window.open(BK_CC_HOST); // eslint-disable-line no-undef
+  window.open(`${BK_CC_HOST}/#/resource/business`); // eslint-disable-line no-undef
 };
 </script>
 
@@ -417,11 +420,16 @@ const handleToCMDB = () => {
   height: 33px;
   padding: 0 12px;
   width: 100%;
-  color: #2B353E;
+  color: #2b353e;
   span {
     font-size: 16px;
     margin-right: 3px;
   }
+}
+.title-wrap {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }
 </style>
 <style lang="scss">
