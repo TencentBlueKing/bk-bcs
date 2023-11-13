@@ -65,10 +65,13 @@ watch(
 const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary | string) => {
   configForm.value = data;
   const { privilege, user, user_group } = data;
-  lastCreatePermission.value.privilege = privilege as string;
-  lastCreatePermission.value.user = user as string;
-  lastCreatePermission.value.user_group = user_group as string;
-  console.log(lastCreatePermission.value);
+  serviceStore.$patch((state) => {
+    state.lastCreatePermission = {
+      privilege: privilege as string,
+      user: user as string,
+      user_group: user_group as string,
+    };
+  });
   content.value = configContent;
   isFormChange.value = true;
 };

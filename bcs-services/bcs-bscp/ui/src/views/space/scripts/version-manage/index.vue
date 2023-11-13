@@ -112,7 +112,7 @@
   />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteScriptVersionDialogShow"
-    title="确认删除该脚本？"
+    title="确认删除该脚本版本？"
     @confirm="handleDeleteScriptVersionConfirm"
   >
     <div style="margin-bottom: 8px;">

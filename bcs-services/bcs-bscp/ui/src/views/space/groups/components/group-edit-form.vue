@@ -15,6 +15,7 @@
         multiple
         filterable
         placeholder="请选择服务"
+        :input-search="false"
         @change="change"
       >
         <bk-option

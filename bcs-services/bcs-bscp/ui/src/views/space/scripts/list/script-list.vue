@@ -107,32 +107,51 @@
     title="确认删除该脚本？"
     @confirm="handleDeleteScriptConfirm"
   >
-    <div style="margin-bottom: 8px;">
-      脚本: <span style="color: #313238;font-weight: 600;">{{ deleteScriptItem?.hook.spec.name }}</span>
+    <div style="margin-bottom: 8px">
+      脚本: <span style="color: #313238; font-weight: 600">{{ deleteScriptItem?.hook.spec.name }}</span>
     </div>
-    <div>一旦删除，该操作将无法撤销，以下服务配置的未命名版本中引用该脚本也将清除</div>
+    <div style="margin-bottom: 8px">一旦删除，该操作将无法撤销，以下服务配置的未命名版本中引用该脚本也将清除</div>
+    <div class="service-table">
+      <bk-loading style="min-height: 200px" :loading="appsLoading">
+        <bk-table :data="appList" :max-height="maxTableHeight" empty-text="暂无未命名版本引用此脚本">
+          <bk-table-column label="引用此脚本的服务">
+            <template #default="{ row }">
+              <div class="app-info" @click="goToConfigPageImport(row.app_id)">
+                <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+                <LinkToApp class="link-icon" :id="row.app_id" :auto-jump="true" />
+              </div>
+            </template>
+          </bk-table-column>
+        </bk-table>
+      </bk-loading>
+    </div>
   </DeleteConfirmDialog>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { Message } from 'bkui-vue';
 import { Plus, Search } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../store/global';
 import useScriptStore from '../../../../store/script';
-import { getScriptList, getScriptTagList, deleteScript } from '../../../../api/script';
+import { getScriptList, getScriptTagList, deleteScript, getScriptCiteList } from '../../../../api/script';
 import { IScriptItem, IScriptTagItem, IScriptListQuery } from '../../../../../types/script';
 import { datetimeFormat } from '../../../../utils/index';
 import CreateScript from './create-script.vue';
 import ScriptCited from './script-cited.vue';
 import TableEmpty from '../../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../../components/delete-confirm-dialog.vue';
+import LinkToApp from '../../templates/list/components/link-to-app.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { versionListPageShouldOpenEdit } = storeToRefs(useScriptStore());
 const router = useRouter();
 
+interface IAppItem {
+  app_id: number;
+  app_name: string;
+}
 const showCreateScript = ref(false);
 const showCiteSlider = ref(false);
 const scriptsData = ref<IScriptItem[]>([]);
@@ -145,6 +164,13 @@ const currentId = ref(0);
 const searchStr = ref('');
 const isDeleteScriptDialogShow = ref(false);
 const deleteScriptItem = ref<IScriptItem>();
+const appsLoading = ref(false);
+const appList = ref<IAppItem[]>([]);
+
+const maxTableHeight = computed(() => {
+  const windowHeight = window.innerHeight;
+  return windowHeight * 0.6 - 200;
+});
 const pagination = ref({
   current: 1,
   count: 0,
@@ -214,7 +240,20 @@ const handleEditClick = (script: IScriptItem) => {
 };
 
 // 删除分组
-const handleDeleteScript = (script: IScriptItem) => {
+const handleDeleteScript = async (script: IScriptItem) => {
+  const params = {
+    start: (pagination.value.current - 1) * pagination.value.limit,
+    limit: pagination.value.limit,
+  };
+  const res = await getScriptCiteList(spaceId.value, script.hook.id, params);
+  const allAppInfo = res.details.map((item: any) => {
+    const { app_id, app_name } = item;
+    return {
+      app_id,
+      app_name,
+    };
+  });
+  appList.value = Array.from(allAppInfo.reduce((map: Map<number, IAppItem>, obj: IAppItem) => map.set(obj.app_id, obj), new Map()).values());
   deleteScriptItem.value = script;
   isDeleteScriptDialogShow.value = true;
 };
@@ -230,6 +269,25 @@ const handleDeleteScriptConfirm = async () => {
   });
   isDeleteScriptDialogShow.value = false;
   getScripts();
+};
+
+// const getRelatedApps = async () => {
+//   appsLoading.value = true;
+//   const params = {
+//     start: 0,
+//     all: true,
+//   };
+//   const res = await getUnNamedVersionAppsBoundByPackage(spaceId.value, props.templateSpaceId, props.pkg.id, params);
+//   appList.value = res.details;
+//   appsLoading.value = false;
+// };
+
+const goToConfigPageImport = (id: number) => {
+  const { href } = router.resolve({
+    name: 'service-config',
+    params: { appId: id },
+  });
+  window.open(href, '_blank');
 };
 
 const handleNameInputChange = (val: string) => {
@@ -370,5 +428,29 @@ const clearSearchStr = () => {
 .hook-name {
   color: #348aff;
   cursor: pointer;
+}
+.app-info {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  cursor: pointer;
+  .name-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .link-icon {
+    flex-shrink: 0;
+    margin-left: 10px;
+  }
+}
+
+</style>
+
+<style lang="scss">
+.service-table {
+  thead th[colspan] {
+    background-color: #f0f1f5 !important;
+  }
 }
 </style>
