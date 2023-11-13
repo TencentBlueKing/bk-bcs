@@ -6,6 +6,7 @@
     :disabled="props.disabled"
     :loading="props.loading"
     filterable
+    :input-search="false"
     @change="emits('change', $event, props.type)"
   >
     <bk-option

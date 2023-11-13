@@ -267,7 +267,7 @@ const props = defineProps<{
   searchStr: string;
 }>();
 
-const emits = defineEmits(['clearStr', 'editConfig']);
+const emits = defineEmits(['clearStr', 'deleteConfig']);
 
 const loading = ref(false);
 const commonConfigListLoading = ref(false);
@@ -486,7 +486,7 @@ const handleEditOpen = (config: IConfigTableItem) => {
 const handleEditConfigConfirm = async () => {
   await getCommonConfigList();
   tableGroupsData.value = transListToTableData();
-  emits('editConfig');
+  emits('deleteConfig');
 };
 
 // 查看配置文件或模板版本
@@ -522,6 +522,7 @@ const handleDeletePkgConfirm = async () => {
   await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [deleteTemplatePkgId.value]);
   await getBoundTemplateList();
   tableGroupsData.value = transListToTableData();
+  emits('deleteConfig');
   Message({
     theme: 'success',
     message: '删除模板套餐成功',
@@ -552,6 +553,7 @@ const handleDel = (config: IConfigTableItem) => {
 const handleDeleteConfigConfirm = async () => {
   await deleteServiceConfigItem(deleteConfig.value!.id, props.bkBizId, props.appId);
   await getCommonConfigList();
+  emits('deleteConfig');
   tableGroupsData.value = transListToTableData();
   isDeleteConfigDialogShow.value = false;
 };
