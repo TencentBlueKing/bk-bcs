@@ -94,7 +94,8 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 	// 多个使用事务处理
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Kv.WithContext(kit.Ctx)
-		if _, e := q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Select(m.Version, m.UpdatedAt, m.Reviser).Updates(kv); e != nil {
+		if _, e := q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Select(m.Version, m.UpdatedAt,
+			m.Reviser).Updates(kv); e != nil {
 			return e
 		}
 
