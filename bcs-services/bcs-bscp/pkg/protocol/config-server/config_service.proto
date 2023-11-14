@@ -19,6 +19,7 @@ import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/app-template-variable/app_template_variable.proto";
 import "bscp.io/pkg/protocol/core/template-variable/template_variable.proto";
+import "bscp.io/pkg/protocol/core/kv/kvs.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -678,6 +679,35 @@ service Config {
             body : "*"
         };
     }
+
+    rpc CreateKv(CreateKvReq) returns (CreateKvResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs"
+            body : "*"
+        };
+    };
+    rpc UpdateKv(UpdateKvReq) returns (UpdateKvResp) {
+        option (google.api.http) = {
+            put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}"
+            body : "*"
+        };
+    };
+    rpc ListKvs(ListKvsReq) returns (ListKvsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs"
+        };
+    };
+    rpc DeleteKv(DeleteKvReq) returns (DeleteKvResp) {
+        option (google.api.http) = {
+            delete : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}"
+        };
+    };
+    rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {
+        option (google.api.http) = {
+            put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs"
+            body : "*"
+        };
+    };
 }
 
 message UpdateCredentialScopeReq {
@@ -2084,3 +2114,61 @@ message GenerateReleaseAndPublishResp {
 message PublishResp {
     uint32 id = 1;
 }
+
+message CreateKvReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    string key           = 3;
+    string kv_type       = 4;
+    string value         = 5;
+}
+
+message CreateKvResp {
+    uint32 id        = 1;
+}
+
+message UpdateKvReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    string key           = 4;
+    string value         = 6;
+}
+
+message UpdateKvResp {}
+
+message ListKvsReq {
+    uint32 biz_id            = 1;
+    uint32 app_id            = 2;
+    bool   all               = 3;
+    string searchKey         = 4;
+    string key               = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+}
+
+message ListKvsResp {
+    uint32                             count   = 1;
+    repeated pbkv.Kv                   details = 2;
+}
+
+message DeleteKvReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    string key           = 4;
+}
+
+message DeleteKvResp {}
+
+message BatchUpsertKvsReq {
+    message Kv {
+        string key     = 1;
+        string kv_type = 2;
+        string value   = 3;
+    }
+    uint32              biz_id      = 1;
+    uint32              app_id      = 2;
+    repeated Kv         kvs         = 3;
+    bool                replace_all = 4;
+}
+
+message BatchUpsertKvsResp {}

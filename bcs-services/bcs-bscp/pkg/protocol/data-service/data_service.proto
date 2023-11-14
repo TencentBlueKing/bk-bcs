@@ -20,6 +20,7 @@ import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/app-template-variable/app_template_variable.proto";
 import "bscp.io/pkg/protocol/core/template-variable/template_variable.proto";
+import "bscp.io/pkg/protocol/core/kv/kvs.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -206,6 +207,13 @@ service Data {
     // credential scope related interface
     rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {}
     rpc UpdateCredentialScopes(UpdateCredentialScopesReq) returns (UpdateCredentialScopesResp) {}
+
+    // kv related interface
+    rpc CreateKv(CreateKvReq) returns (CreateResp) {};
+    rpc UpdateKv(UpdateKvReq) returns (pbbase.EmptyResp) {};
+    rpc ListKvs(ListKvsReq) returns (ListKvsResp) {};
+    rpc DeleteKv(DeleteKvReq) returns (pbbase.EmptyResp) {};
+    rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (pbbase.EmptyResp) {};
 
     // used iam pull resource callback.
     rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {}
@@ -1460,4 +1468,47 @@ message InstanceInfo {
 
 message PingMsg {
     string data = 1;
+}
+
+message CreateKvReq {
+    pbkv.KvAttachment attachment = 1;
+    pbkv.KvSpec       spec       = 2;
+}
+
+message UpdateKvReq {
+    uint32                      id         = 1;
+    pbkv.KvAttachment           attachment = 2;
+    pbkv.KvSpec                 spec       = 3;
+}
+
+message ListKvsReq {
+    uint32 biz_id          = 1;
+    uint32 app_id          = 2;
+    string key             = 3;
+    uint32 start           = 4;
+    uint32 limit           = 5;
+    bool   all             = 6;
+    string searchKey       = 7;
+}
+
+message ListKvsResp {
+    uint32                      count   = 1;
+    repeated pbkv.Kv            details = 2;
+}
+
+message DeleteKvReq {
+    uint32                        id         = 1;
+    pbkv.KvSpec                   spec       = 2;
+    pbkv.KvAttachment             attachment = 3;
+}
+
+ message BatchUpsertKvsReq {
+    message Kv {
+        pbkv.KvAttachment         kv_attachment = 1;
+        pbkv.KvSpec               kv_spec       = 2;
+    }
+    uint32              biz_id      = 1;
+    uint32              app_id      = 2;
+    repeated Kv         kvs         = 3;
+    bool                replace_all = 4;
 }
