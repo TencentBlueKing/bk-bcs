@@ -30,7 +30,7 @@
           ></bk-option>
         </bk-select>
       </div>
-      <bk-input v-model="searchStr" class="group-search-input" placeholder="搜索分组名称" :clearable="true">
+      <bk-input v-model="searchStr" class="group-search-input" placeholder="搜索分组名称/标签key" :clearable="true">
         <template #suffix>
           <Search class="search-input-icon" />
         </template>
@@ -128,7 +128,11 @@ const isSearchEmpty = ref(false);
 const searchTreeData = computed(() => {
   if (searchStr.value === '') return allGroupNode.value;
   isSearchEmpty.value = true;
-  return allGroupNode.value.filter(node => node.name.toLowerCase().includes(searchStr.value.toLowerCase()));
+  return allGroupNode.value.filter(node => {
+    const { name, rules } = node
+    const searchText = searchStr.value.toLowerCase()
+    return name.toLowerCase().includes(searchText) || rules.some(rule => rule.key.toLowerCase().includes(searchText))
+  });
 });
 
 // 分组列表变更
