@@ -1,4 +1,5 @@
 <template>
+  <bk-alert theme="info">{{ headInfo }}<span @click="goGroupDoc" class="hyperlink">分组管理</span></bk-alert>
   <section class="groups-management-page">
     <div class="operate-area">
       <bk-button theme="primary" @click="openCreateGroupDialog"><Plus class="button-icon" />新增分组</bk-button>
@@ -45,7 +46,7 @@
                 <template v-else>{{ row.name }}</template>
               </template>
             </bk-table-column>
-            <bk-table-column label="分组规则" show-overflow-tooltip>
+            <bk-table-column label="标签选择器" show-overflow-tooltip>
               <template #default="{ row }">
                 <template v-if="!row.IS_CATEORY_ROW">
                   <template v-if="row.selector">
@@ -139,8 +140,8 @@
     title="确认删除该分组？"
     @confirm="handleDeleteGroupConfirm"
   >
-    <div style="margin-bottom: 8px;">
-      配置模板套餐: <span style="color: #313238;font-weight: 600;">{{ deleteGroupItem?.name }}</span>
+    <div style="margin-bottom: 8px">
+      配置模板套餐: <span style="color: #313238; font-weight: 600">{{ deleteGroupItem?.name }}</span>
     </div>
     <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
   </DeleteConfirmDialog>
@@ -190,6 +191,8 @@ const editingGroup = ref<IGroupItem>({
 });
 const isPublishedSliderShow = ref(false);
 const isSearchEmpty = ref(false);
+const headInfo =
+  '分组由 1 个或多个标签组成，服务配置版本选择分组上线结合客户端配置的标签用于灰度发布、A/B Test等运营场景，详情参考文档：';
 
 watch(
   () => spaceId.value,
@@ -392,8 +395,16 @@ const clearSearchInfo = () => {
   searchInfo.value = '';
   handleSearch();
 };
+
+// @ts-ignore
+// eslint-disable-next-line
+const goGroupDoc = () => window.open(BSCP_CONFIG.group_doc);
 </script>
 <style lang="scss" scoped>
+.hyperlink {
+  color: #3a84ff;
+  cursor: pointer;
+}
 .groups-management-page {
   height: 100%;
   padding: 24px;
