@@ -95,13 +95,14 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router'
 import { Search } from 'bkui-vue/lib/icon';
 // import { InfoBox } from 'bkui-vue/lib';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../store/config';
 import { getConfigVersionList } from '../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../utils/index';
-import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config';
+import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
 import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../../types/config';
 import VersionDiff from '../../config/components/version-diff/index.vue';
 import tableEmpty from '../../../../../../components/table/table-empty.vue';
@@ -109,12 +110,14 @@ import tableEmpty from '../../../../../../components/table/table-empty.vue';
 const configStore = useConfigStore();
 const { versionData } = storeToRefs(configStore);
 
+const router = useRouter()
+
 const props = defineProps<{
   bkBizId: string;
   appId: number;
 }>();
 
-const UN_NAMED_VERSION = GET_UNNAMED_VERSION_DATE();
+const UN_NAMED_VERSION = GET_UNNAMED_VERSION_DATA();
 
 const listLoading = ref(true);
 const versionList = ref<Array<IConfigVersion>>([]);
@@ -180,6 +183,14 @@ const handleSelectVersion = (event: Event | undefined, data: IConfigVersion) => 
   configStore.$patch((state) => {
     state.versionData = data;
   });
+  const params: { spaceId: string, appId: number, versionId?: number } = {
+    spaceId: props.bkBizId,
+    appId: props.appId
+  }
+  if (data.id !== 0) {
+    params.versionId = data.id;
+  }
+  router.push({ name: 'service-config', params });
 };
 
 // 搜索框输入事件处理，内容为空时触发一次搜索
