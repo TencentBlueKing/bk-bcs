@@ -109,7 +109,7 @@
               </template>
             </bk-table-column>
             <template #empty>
-              <tableEmpty :is-search-empty="isSearchEmpty" @clear="clearSearchInfo"/>
+              <tableEmpty :is-search-empty="isSearchEmpty" @clear="clearSearchInfo" />
             </template>
           </bk-table>
           <bk-pagination
@@ -134,12 +134,21 @@
       :name="editingGroup.name"
     ></services-to-published>
   </section>
+  <DeleteConfirmDialog
+    v-model:isShow="isDeleteGroupDialogShow"
+    title="确认删除该分组？"
+    @confirm="handleDeleteGroupConfirm"
+  >
+    <div style="margin-bottom: 8px;">
+      配置模板套餐: <span style="color: #313238;font-weight: 600;">{{ deleteGroupItem?.name }}</span>
+    </div>
+    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+  </DeleteConfirmDialog>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted, nextTick } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Plus, Search, DownShape } from 'bkui-vue/lib/icon';
-import { InfoBox } from 'bkui-vue/lib';
 import useGlobalStore from '../../../store/global';
 import { getSpaceGroupList, deleteGroup } from '../../../api/group';
 import { IGroupItem, IGroupCategory, IGroupCategoryItem } from '../../../../types/group';
@@ -148,6 +157,7 @@ import EditGroup from './edit-group.vue';
 import RuleTag from './components/rule-tag.vue';
 import ServicesToPublished from './services-to-published.vue';
 import tableEmpty from '../../../components/table/table-empty.vue';
+import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -159,6 +169,8 @@ const tableData = ref<IGroupItem[] | IGroupCategoryItem[]>([]);
 const isCategorizedView = ref(false); // 按规则分类查看
 const searchInfo = ref('');
 const changeViewPending = ref(false);
+const isDeleteGroupDialogShow = ref(false);
+const deleteGroupItem = ref<IGroupItem>();
 const pagination = ref({
   current: 1,
   count: 0,
@@ -331,18 +343,17 @@ const handleOpenPublishedSlider = (group: IGroupItem) => {
 
 // 删除分组
 const handleDeleteGroup = (group: IGroupItem) => {
-  InfoBox({
-    title: `确认是否删除分组【${group.name}?】`,
-    headerAlign: 'center' as const,
-    footerAlign: 'center' as const,
-    onConfirm: async () => {
-      await deleteGroup(spaceId.value, group.id);
-      if (tableData.value.length === 1 && pagination.value.current > 1) {
-        pagination.value.current = pagination.value.current - 1;
-      }
-      loadGroupList();
-    },
-  } as any);
+  isDeleteGroupDialogShow.value = true;
+  deleteGroupItem.value = group;
+};
+
+const handleDeleteGroupConfirm = async () => {
+  await deleteGroup(spaceId.value, deleteGroupItem.value!.id);
+  if (tableData.value.length === 1 && pagination.value.current > 1) {
+    pagination.value.current = pagination.value.current - 1;
+  }
+  loadGroupList();
+  isDeleteGroupDialogShow.value = false;
 };
 
 // 分类展开/收起

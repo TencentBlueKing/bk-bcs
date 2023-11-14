@@ -26,7 +26,7 @@
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Message } from 'bkui-vue';
 import { storeToRefs } from 'pinia';
 import useServiceStore from '../../../../../../../../store/service';
@@ -47,7 +47,6 @@ const { checkPermBeforeOperate } = serviceStore;
 const props = defineProps<{
   bkBizId: string;
   appId: number;
-  variablesChange: boolean;
 }>();
 
 const isSliderShow = ref(false);
@@ -63,12 +62,6 @@ onMounted(() => {
   getVariableList();
 });
 
-watch(
-  () => props.variablesChange,
-  () => {
-    getVariableList();
-  },
-);
 
 const getVariableList = async () => {
   loading.value = true;

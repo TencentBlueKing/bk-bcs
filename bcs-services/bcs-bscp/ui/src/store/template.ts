@@ -18,6 +18,10 @@ export default defineStore('template', () => {
   const currentPkg = ref<string | number>('');
   // 标识是否需要刷新左侧套餐菜单栏是否需要刷新
   const needRefreshMenuFlag = ref(false);
+  // 配置页面是否需要打开编辑版本面板
+  const versionListPageShouldOpenEdit = ref(false);
+  // 配置页面是否需要打开查看版本面板
+  const versionListPageShouldOpenView = ref(false);
 
   return {
     templateSpaceList,
@@ -27,5 +31,7 @@ export default defineStore('template', () => {
     CountOfAllTemplatesInSpace,
     countOfTemplatesForNoSpecifiedPackage,
     needRefreshMenuFlag,
+    versionListPageShouldOpenEdit,
+    versionListPageShouldOpenView,
   };
 });

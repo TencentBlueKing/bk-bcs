@@ -1,6 +1,6 @@
 <template>
   <section class="variables-management-page">
-    <bk-alert theme="info">{{ headInfo }}<span @click="goVariablesDoc" class="hyperlink">配置模板与变量配置模板与变量</span>
+    <bk-alert theme="info">{{ headInfo }}<span @click="goVariablesDoc" class="hyperlink">配置模板与变量</span>
     </bk-alert>
     <div class="operation-area">
       <div class="button">
@@ -52,12 +52,21 @@
     />
     <VariableImport v-model:show="isImportVariableShow" @edited="refreshList" />
   </section>
+  <DeleteConfirmDialog
+    v-model:isShow="isDeleteVariableDialogShow"
+    title="确认删除该全局变量？"
+    @confirm="handleDeleteVarConfirm"
+  >
+    <div style="margin-bottom: 8px;">
+      全局变量: <span style="color: #313238;font-weight: 600;">{{ deleteVariableItem?.spec.name }}</span>
+    </div>
+    <div>一旦删除，该操作将无法撤销，服务配置文件中不可再引用该全局变量，请谨慎操作</div>
+  </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Plus } from 'bkui-vue/lib/icon';
-import { InfoBox } from 'bkui-vue/lib';
 import useGlobalStore from '../../../store/global';
 import { ICommonQuery, IPagination } from '../../../../types/index';
 import { IVariableEditParams, IVariableItem } from '../../../../types/variable';
@@ -67,6 +76,7 @@ import VariableEdit from './variable-edit.vue';
 import VariableImport from './variable-import.vue';
 import SearchInput from '../../../components/search-input.vue';
 import TableEmpty from '../../../components/table/table-empty.vue';
+import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -80,8 +90,10 @@ const pagination = ref<IPagination>({
 });
 const isCreateSliderShow = ref(false);
 const isImportVariableShow = ref(false);
+const isDeleteVariableDialogShow = ref(false);
+const deleteVariableItem = ref<IVariableItem>();
 const headInfo = `定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如{{ .bk_bscp_appid }},
-      可在服务配置中修改全局变量值，变量使用详情请参考：`;
+      变量使用详情请参考：`;
 const editSliderData = ref<{ open: boolean; id: number; data: IVariableEditParams }>({
   open: false,
   id: 0,
@@ -129,18 +141,19 @@ const handleEditVar = (variable: IVariableItem) => {
   };
 };
 
+// 删除变量
 const handleDeleteVar = (variable: IVariableItem) => {
-  InfoBox({
-    title: `确定删除变量[${variable.spec.name}]?`,
-    confirmText: '删除',
-    onConfirm: async () => {
-      await deleteVariable(spaceId.value, variable.id);
-      if (list.value.length === 1 && pagination.value.current > 1) {
-        pagination.value.current = pagination.value.current - 1;
-      }
-      getVariables();
-    },
-  } as any);
+  isDeleteVariableDialogShow.value = true;
+  deleteVariableItem.value = variable;
+};
+
+const handleDeleteVarConfirm = async () => {
+  await deleteVariable(spaceId.value, deleteVariableItem.value!.id);
+  if (list.value.length === 1 && pagination.value.current > 1) {
+    pagination.value.current = pagination.value.current - 1;
+  }
+  isDeleteVariableDialogShow.value = false;
+  getVariables();
 };
 
 const handlePageLimitChange = (val: number) => {

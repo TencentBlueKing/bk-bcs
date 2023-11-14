@@ -135,7 +135,7 @@
   </bk-form>
 </template>
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, getCurrentInstance } from 'vue';
 import SHA256 from 'crypto-js/sha256';
 import WordArray from 'crypto-js/lib-typedarrays';
 import { TextFill, Done, Info, Error } from 'bkui-vue/lib/icon';
@@ -179,8 +179,8 @@ const props = withDefaults(
 
 const emits = defineEmits(['change', 'update:fileUploading']);
 const configContentTip = `配置文件内支持引用全局变量与定义新的BSCP变量，变量规则如下
-                          1.需是要go template语法， 例如 {{.bk_bscp_appid}}
-                          2.变量名需以 “bk bscp” 或 “BK BSCP ” 开头`;
+                          1.需是要go template语法， 例如 {{ .bk_bscp_appid }}
+                          2.变量名需以 “bk_bscp_” 或 “BK_BSCP_” 开头`;
 const localVal = ref({ ...props.config });
 const privilegeInputVal = ref('');
 const showPrivilegeErrorTips = ref(false);
@@ -221,8 +221,8 @@ const rules = {
   ],
   path: [
     {
-      validator: (value: string) => value.length <= 2048,
-      message: '最大长度2048个字符',
+      validator: (value: string) => value.length <= 256,
+      message: '最大长度256个字符',
       trigger: 'change',
     },
     {
@@ -382,8 +382,10 @@ const validate = async () => {
   }
   return true;
 };
+const instance = getCurrentInstance();
 
 const change = () => {
+  console.log('change', instance?.uid);
   const content = localVal.value.file_type === 'binary' ? fileContent.value : stringContent.value;
   emits('change', localVal.value, content);
 };

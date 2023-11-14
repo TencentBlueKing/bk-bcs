@@ -110,6 +110,16 @@
     :space-id="spaceId"
     :script-id="scriptId"
   />
+  <DeleteConfirmDialog
+    v-model:isShow="isDeleteScriptVersionDialogShow"
+    title="确认删除该脚本版本？"
+    @confirm="handleDeleteScriptVersionConfirm"
+  >
+    <div style="margin-bottom: 8px;">
+      脚本名称: <span style="color: #313238;font-weight: 600;">{{ deleteScriptVersionItem?.hook_revision.spec.name }}</span>
+    </div>
+    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+  </DeleteConfirmDialog>
 </template>
 
 <script setup lang="ts">
@@ -135,9 +145,10 @@ import VersionListSimpleTable from './version-list-simple-table.vue';
 import CreateVersion from './create-version.vue';
 import VersionEdit from './version-edit.vue';
 import ScriptVersionDiff from './script-version-diff.vue';
+import DeleteConfirmDialog from '../../../../components/delete-confirm-dialog.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
-const { versionListPageShouldOpenEdit } = storeToRefs(useScriptStore());
+const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useScriptStore());
 const router = useRouter();
 const route = useRoute();
 
@@ -152,6 +163,8 @@ const createBtnDisabled = ref(false);
 const showVersionDiff = ref(false);
 const crtVersion = ref<IScriptVersion | null>(null);
 const isSearchEmpty = ref(false);
+const isDeleteScriptVersionDialogShow = ref(false);
+const deleteScriptVersionItem = ref<IScriptVersionListItem>();
 const versionEditData = ref({
   panelOpen: false,
   editable: true,
@@ -172,7 +185,7 @@ const pagination = ref({
 
 onMounted(async () => {
   initLoading.value = true;
-  getVersionList();
+  await getVersionList();
   await getScriptDetailData();
   if (scriptDetail.value.not_release_id) {
     unPublishVersion.value = await getScriptVersionDetail(
@@ -189,6 +202,10 @@ onMounted(async () => {
     } else {
       handleCreateVersionClick(versionList.value[0].hook_revision.spec.content);
     }
+  }
+  if (versionListPageShouldOpenView.value) {
+    versionListPageShouldOpenView.value = false;
+    handleViewVersionClick(versionList.value[0]);
   }
 });
 
@@ -250,6 +267,7 @@ const handleEditVersionClick = () => {
 
 // 查看版本
 const handleViewVersionClick = (version: IScriptVersionListItem) => {
+  console.log(version, '查看版本');
   const { name, memo, content } = version.hook_revision.spec;
   versionEditData.value = {
     panelOpen: true,
@@ -280,29 +298,22 @@ const handlePublishClick = (version: IScriptVersion) => {
 
 // 删除版本
 const handleDelClick = (version: IScriptVersionListItem) => {
-  InfoBox({
-    title: `确认是否删除版本【${version.hook_revision.spec.name}?】`,
-    subTitle: `${
-      version.confirm_delete
-        ? '当前脚本有被服务未命名版本引用，删除后，未命名版本里的引用将会被删除，是否确认删除？'
-        : ''
-    }`,
-    headerAlign: 'center' as const,
-    footerAlign: 'center' as const,
-    extCls: 'center-top-infobox',
-    onConfirm: async () => {
-      await deleteScriptVersion(spaceId.value, scriptId.value, version.hook_revision.id);
-      if (versionList.value.length === 1 && pagination.value.current > 1) {
-        pagination.value.current = pagination.value.current - 1;
-      }
-      unPublishVersion.value = null;
-      getVersionList();
-      Message({
-        theme: 'success',
-        message: '删除版本成功',
-      });
-    },
-  } as any);
+  isDeleteScriptVersionDialogShow.value = true;
+  deleteScriptVersionItem.value = version;
+};
+
+const handleDeleteScriptVersionConfirm = async () => {
+  await deleteScriptVersion(spaceId.value, scriptId.value, deleteScriptVersionItem.value!.hook_revision.id);
+  if (versionList.value.length === 1 && pagination.value.current > 1) {
+    pagination.value.current = pagination.value.current - 1;
+  }
+  unPublishVersion.value = null;
+  isDeleteScriptVersionDialogShow.value = false;
+  getVersionList();
+  Message({
+    theme: 'success',
+    message: '删除版本成功',
+  });
 };
 
 // 宽窄表视图下选择脚本
@@ -340,9 +351,10 @@ const handleVersionEditSubmitted = async (
     handleEditVersionClick();
   } else {
     // 如果是编辑旧版本，则直接修改版本数据
-    const { memo, content } = data;
+    const { memo, content, name } = data;
     unPublishVersion.value!.spec.memo = memo;
     unPublishVersion.value!.spec.content = content;
+    unPublishVersion.value!.spec.name = name;
   }
 };
 
