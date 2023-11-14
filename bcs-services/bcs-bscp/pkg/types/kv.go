@@ -57,6 +57,9 @@ func (k KvType) ValidateValue(value string) error {
 
 	switch k {
 	case KvStr:
+		if strings.Contains(value, "\n") {
+			return errors.New("newline characters are not allowed in string-type values")
+		}
 		return nil
 	case KvNumber:
 		if !isStringConvertibleToNumber(value) {
@@ -64,9 +67,6 @@ func (k KvType) ValidateValue(value string) error {
 		}
 		return nil
 	case KvText:
-		if strings.Contains(value, "\n") {
-			return errors.New("newline characters are not allowed in text-type values")
-		}
 		return nil
 	case KvJson:
 		if !json.Valid([]byte(value)) {
