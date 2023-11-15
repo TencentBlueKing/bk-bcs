@@ -32,7 +32,7 @@ export const VERSION_STATUS_MAP = {
   full_released: '已上线',
 };
 
-export const GET_UNNAMED_VERSION_DATE = () => ({
+export const GET_UNNAMED_VERSION_DATA = () => ({
   id: 0,
   attachment: {
     app_id: 0,

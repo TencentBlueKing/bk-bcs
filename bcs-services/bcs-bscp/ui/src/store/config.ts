@@ -2,14 +2,14 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { IConfigVersion } from '../../types/config';
-import { GET_UNNAMED_VERSION_DATE } from '../constants/config';
+import { GET_UNNAMED_VERSION_DATA } from '../constants/config';
 
 export default defineStore('config', () => {
   // 非套餐配置和模板配置文件总数量
   const allConfigCount = ref(0);
 
   // 当前选中版本, 用id为0表示未命名版本
-  const versionData = ref<IConfigVersion>(GET_UNNAMED_VERSION_DATE());
+  const versionData = ref<IConfigVersion>(GET_UNNAMED_VERSION_DATA());
 
   // 是否为版本详情视图，切换服务后保持当前视图
   const versionDetailView = ref(false);
