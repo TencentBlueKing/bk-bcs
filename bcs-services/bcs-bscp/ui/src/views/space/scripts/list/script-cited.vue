@@ -31,7 +31,7 @@
               class="link-btn"
               theme="primary"
               target="_blank"
-              :href="getHref(row.app_id)"
+              :href="getHref(row.app_id, row.release_id)"
               >{{ row.release_name }}</bk-link
             >
           </template>
@@ -102,8 +102,8 @@ const getCitedData = async () => {
   loading.value = false;
 };
 
-const getHref = (id: number) => {
-  const { href } = router.resolve({ name: 'service-config', params: { spaceId: spaceId.value, appId: id } });
+const getHref = (id: number, releaseId: number) => {
+  const { href } = router.resolve({ name: 'service-config', params: { spaceId: spaceId.value, appId: id, versionId: releaseId } });
   return href;
 };
 
