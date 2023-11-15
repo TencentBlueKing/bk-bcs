@@ -110,17 +110,17 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 
 		// Note: need to change batch operator to query config item and its commit.
 		// get app's all config items.
-		cis, err := s.getAppConfigItems(grpcKit)
-		if err != nil {
-			logs.Errorf("get app's all config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
+		cis, fErr := s.getAppConfigItems(grpcKit)
+		if fErr != nil {
+			logs.Errorf("get app's all config items failed, err: %v, rid: %s", fErr, grpcKit.Rid)
+			return nil, fErr
 		}
 
 		// get app template revisions which are template config items
-		tmplRevisions, err := s.getAppTmplRevisions(grpcKit)
-		if err != nil {
-			logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
+		tmplRevisions, fErr := s.getAppTmplRevisions(grpcKit)
+		if fErr != nil {
+			logs.Errorf("get app template revisions failed, err: %v, rid: %s", fErr, grpcKit.Rid)
+			return nil, fErr
 		}
 
 		// if no config item, return directly.
@@ -752,7 +752,8 @@ func (s *Service) genCreateReleasedKvMap(kt *kit.Kit, bizID, appID,
 	return kvsMap, nil
 }
 
-func (s *Service) doBatchReleasedVault(kt *kit.Kit, kvs map[string]*types.CreateReleasedKvOption) (map[string]int, error) {
+func (s *Service) doBatchReleasedVault(kt *kit.Kit, kvs map[string]*types.CreateReleasedKvOption) (map[string]int,
+	error) {
 
 	versionMap := make(map[string]int, len(kvs))
 	for _, kv := range kvs {

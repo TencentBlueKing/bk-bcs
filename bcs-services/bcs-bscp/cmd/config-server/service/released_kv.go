@@ -55,7 +55,8 @@ func (s *Service) GetReleasedKv(ctx context.Context, req *pbcs.GetReleasedKvReq)
 }
 
 // ListReleasedKvs list released kvs
-func (s *Service) ListReleasedKvs(ctx context.Context, req *pbcs.ListReleasedKvsReq) (*pbcs.ListReleasedKvsResp, error) {
+func (s *Service) ListReleasedKvs(ctx context.Context, req *pbcs.ListReleasedKvsReq) (*pbcs.ListReleasedKvsResp,
+	error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
 

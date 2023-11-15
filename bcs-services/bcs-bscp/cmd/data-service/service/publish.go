@@ -128,46 +128,11 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		return nil, fmt.Errorf("release name %s already exists", req.ReleaseName)
 	}
 
-	groupIDs := make([]uint32, 0)
-
 	tx := s.dao.GenQuery().Begin()
 
-	if !req.All {
-		if req.GrayPublishMode == "" {
-			// !NOTE: Compatible with previous pipelined plugins version
-			req.GrayPublishMode = table.PublishByGroups.String()
-		}
-		publishMode := table.GrayPublishMode(req.GrayPublishMode)
-		if e := publishMode.Validate(); e != nil {
-			if rErr := tx.Rollback(); rErr != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-			}
-			return nil, e
-		}
-		// validate and query group ids.
-		if publishMode == table.PublishByGroups {
-			for _, name := range req.Groups {
-				group, e := s.dao.Group().GetByName(grpcKit, req.BizId, name)
-				if e != nil {
-					if rErr := tx.Rollback(); rErr != nil {
-						logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-					}
-					return nil, fmt.Errorf("group %s not exist", name)
-				}
-				groupIDs = append(groupIDs, group.ID)
-			}
-		}
-		if publishMode == table.PublishByLabels {
-			groupID, e := s.createGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.Labels)
-			if e != nil {
-				logs.Errorf("create group by labels failed, err: %v, rid: %s", e, grpcKit.Rid)
-				if rErr := tx.Rollback(); rErr != nil {
-					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-				}
-				return nil, e
-			}
-			groupIDs = append(groupIDs, groupID)
-		}
+	groupIDs, err := s.genReleaseAndPublishGroupID(grpcKit, tx, req)
+	if err != nil {
+		return nil, err
 	}
 
 	// create release.
@@ -206,17 +171,17 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 
 		// Note: need to change batch operator to query config item and it's commit.
 		// query app's all config items.
-		cfgItems, err := s.getAppConfigItems(grpcKit)
-		if err != nil {
-			logs.Errorf("query app config item list failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
+		cfgItems, e := s.getAppConfigItems(grpcKit)
+		if e != nil {
+			logs.Errorf("query app config item list failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return nil, e
 		}
 
 		// get app template revisions which are template config items
-		tmplRevisions, err := s.getAppTmplRevisions(grpcKit)
-		if err != nil {
-			logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
+		tmplRevisions, e := s.getAppTmplRevisions(grpcKit)
+		if e != nil {
+			logs.Errorf("get app template revisions failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return nil, e
 		}
 
 		// if no config item, return directly.
@@ -271,6 +236,52 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		return nil, err
 	}
 	return &pbds.PublishResp{PublishedStrategyHistoryId: pshID}, nil
+}
+
+func (s *Service) genReleaseAndPublishGroupID(grpcKit *kit.Kit, tx *gen.QueryTx,
+	req *pbds.GenerateReleaseAndPublishReq) ([]uint32, error) {
+
+	groupIDs := make([]uint32, 0)
+
+	if req.All {
+		if req.GrayPublishMode == "" {
+			// !NOTE: Compatible with previous pipelined plugins version
+			req.GrayPublishMode = table.PublishByGroups.String()
+		}
+		publishMode := table.GrayPublishMode(req.GrayPublishMode)
+		if e := publishMode.Validate(); e != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
+			return nil, e
+		}
+		// validate and query group ids.
+		if publishMode == table.PublishByGroups {
+			for _, name := range req.Groups {
+				group, e := s.dao.Group().GetByName(grpcKit, req.BizId, name)
+				if e != nil {
+					if rErr := tx.Rollback(); rErr != nil {
+						logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+					}
+					return nil, fmt.Errorf("group %s not exist", name)
+				}
+				groupIDs = append(groupIDs, group.ID)
+			}
+		}
+		if publishMode == table.PublishByLabels {
+			groupID, e := s.createGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.Labels)
+			if e != nil {
+				logs.Errorf("create group by labels failed, err: %v, rid: %s", e, grpcKit.Rid)
+				if rErr := tx.Rollback(); rErr != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+				}
+				return nil, e
+			}
+			groupIDs = append(groupIDs, groupID)
+		}
+	}
+
+	return groupIDs, nil
 }
 
 func (s *Service) createGroupByLabels(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32,

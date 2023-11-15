@@ -148,17 +148,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 			logs.Errorf("list kv failed, err: %v, rid: %s", e, kt.Rid)
 			return nil, e
 		}
-		kvs = append(kvs, &pbkv.Kv{
-			Id: detail.ID,
-			Spec: &pbkv.KvSpec{
-				Key:    detail.Spec.Key,
-				KvType: string(kvType),
-				Value:  value,
-			},
-			Attachment: pbkv.PbKvAttachment(detail.Attachment),
-			Revision:   pbbase.PbRevision(detail.Revision),
-		})
-
+		kvs = append(kvs, pbkv.PbKv(detail, kvType, value))
 	}
 
 	resp := &pbds.ListKvsResp{
