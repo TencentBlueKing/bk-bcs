@@ -22,7 +22,7 @@ ROOT_DIR="${SELF_DIR}/.."
 KERNEL_VERSION="3.10.0"
 LIMIT_VALUE="204800"
 RPM_LIST='zip unzip curl lsof wget expect lsof openssl-devel readline-devel libcurl-devel libxml2-devel glibc-devel zlib-devel procps-ng bind-utils'
-CHECK_LIST=(check_kernel check_swap check_selinux check_firewalld check_yum_proxy check_http_proxy check_openssl check_hostname check_tools)
+CHECK_LIST=(check_kernel check_swap check_selinux check_firewalld check_yum_proxy check_http_proxy check_openssl check_hostname check_tools check_docker)
 
 # common
 _version_ge() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1"; }
@@ -165,7 +165,15 @@ check_tools() {
     diff_array=($(echo "${currfmt[@]}" "${rpm_list_array[@]}" | tr ' ' '\n' | sort | uniq -u))
     utils::log "WARN" "$1 : 目前主机未安装(${diff_array[@]})."
 }
-
+# 检查环境是否预安装了docker/container，如果是的话建议先卸载，安装k8s会自动安装，防止冲突
+check_docker() {
+    curr=$(rpm -qa |grep -E 'docker|container'|xargs)
+    if [ -n "$curr" ]; then
+        utils::log "WARN" "$1 : 当前环境已安装($curr).建议先进行卸载，可使用rpm -e卸载"
+    else
+        utils::log "OK" "$1 : 当前环境未安装docker."
+    fi
+}
 # 解析命令行参数，长短混合模式
 (($# == 0)) && usage_and_exit 1
 while (($# > 0)); do
