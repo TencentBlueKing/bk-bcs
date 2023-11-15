@@ -118,24 +118,10 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	// Note: need to change batch operator to query config item and it's commit.
-	// query app's all config items.
-	cfgItems, err := s.getAppConfigItems(grpcKit)
+	app, err := s.dao.App().GetByID(grpcKit, req.AppId)
 	if err != nil {
-		logs.Errorf("query app config item list failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("get app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
-	}
-
-	// get app template revisions which are template config items
-	tmplRevisions, err := s.getAppTmplRevisions(grpcKit)
-	if err != nil {
-		logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	// if no config item, return directly.
-	if len(cfgItems) == 0 && len(tmplRevisions) == 0 {
-		return nil, errors.New("app config items is empty")
 	}
 
 	if _, e := s.dao.Release().GetByName(grpcKit, req.BizId, req.AppId, req.ReleaseName); e == nil {
@@ -215,13 +201,45 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		return nil, err
 	}
 
-	// do template and non-template config item related operations for create release.
-	if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cfgItems); err != nil {
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+	switch app.Spec.ConfigType {
+	case table.File:
+
+		// Note: need to change batch operator to query config item and it's commit.
+		// query app's all config items.
+		cfgItems, err := s.getAppConfigItems(grpcKit)
+		if err != nil {
+			logs.Errorf("query app config item list failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
 		}
-		logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
+
+		// get app template revisions which are template config items
+		tmplRevisions, err := s.getAppTmplRevisions(grpcKit)
+		if err != nil {
+			logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+
+		// if no config item, return directly.
+		if len(cfgItems) == 0 && len(tmplRevisions) == 0 {
+			return nil, errors.New("app config items is empty")
+		}
+
+		// do template and non-template config item related operations for create release.
+		if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cfgItems); err != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
+			logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+	case table.KV:
+		if err = s.doKvOperations(grpcKit, tx, req.AppId, req.BizId, release.ID); err != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
+			logs.Errorf("do kv action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
 	}
 
 	// publish with transaction.
