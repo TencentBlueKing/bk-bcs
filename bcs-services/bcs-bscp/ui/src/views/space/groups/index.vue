@@ -31,7 +31,6 @@
     </div>
     <div class="group-table-wrapper">
       <bk-loading style="min-height: 300px" :loading="listLoading">
-        <template v-if="groupList.length > 0">
           <bk-table class="group-table" :border="['outer']" :data="tableData">
             <bk-table-column label="分组名称" :width="210" show-overflow-tooltip>
               <template #default="{ row }">
@@ -124,7 +123,6 @@
             @change="handlePageChange"
             @limit-change="handlePageLimitChange"
           />
-        </template>
       </bk-loading>
     </div>
     <create-group v-model:show="isCreateGroupShow" @reload="loadGroupList"></create-group>
