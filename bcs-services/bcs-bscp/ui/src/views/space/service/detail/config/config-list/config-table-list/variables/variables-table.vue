@@ -173,6 +173,7 @@ const validate = () => {
 };
 
 const change = () => {
+  validate();
   emits('change', variables.value);
 };
 
