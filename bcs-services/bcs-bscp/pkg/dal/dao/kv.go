@@ -15,6 +15,7 @@ package dao
 import (
 	"fmt"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -43,6 +44,8 @@ type Kv interface {
 	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error
 	// BatchUpdateWithTx batch create content instances with transaction.
 	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error
+	// ListAllByAppID list all Kv by appID
+	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32) ([]*table.Kv, error)
 }
 
 var _ Kv = new(kvDao)
@@ -286,4 +289,16 @@ func (dao *kvDao) BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.
 		return err
 	}
 	return nil
+}
+
+// ListAllByAppID list all Kv by appID
+func (dao *kvDao) ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32) ([]*table.Kv, error) {
+	if appID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "appID can not be 0")
+	}
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "bizID can not be 0")
+	}
+	m := dao.genQ.Kv
+	return dao.genQ.Kv.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Find()
 }

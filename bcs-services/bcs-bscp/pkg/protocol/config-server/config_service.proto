@@ -20,6 +20,7 @@ import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/app-template-variable/app_template_variable.proto";
 import "bscp.io/pkg/protocol/core/template-variable/template_variable.proto";
 import "bscp.io/pkg/protocol/core/kv/kvs.proto";
+import "bscp.io/pkg/protocol/core/released-kv/released_kv.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -122,6 +123,18 @@ service Config {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/tuple"
             body : "*"
+        };
+    }
+
+    // ReleasedConfigKv
+    rpc GetReleasedKv(GetReleasedKvReq) returns (GetReleasedKvResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs/{key}"
+        };
+    }
+    rpc ListReleasedKvs(ListReleasedKvsReq) returns (ListReleasedKvsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs"
         };
     }
 
@@ -981,6 +994,31 @@ message ListConfigItemByTupleReq {
 
 message ListConfigItemByTupleResp {
     repeated pbci.ConfigItem details = 1;
+}
+
+message GetReleasedKvReq {
+    uint32 biz_id         = 1;
+    uint32 app_id         = 2;
+    uint32 release_id     = 3;
+    string key            = 4;
+}
+
+message GetReleasedKvResp {
+    pbrkv.ReleasedKv kv = 1;
+}
+
+message ListReleasedKvsReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    uint32 release_id    = 3;
+    uint32 start         = 6;
+    uint32 limit         = 7;
+    bool   all           = 8;
+}
+
+message ListReleasedKvsResp {
+    uint32                    count   = 1;
+    repeated pbrkv.ReleasedKv details = 2;
 }
 
 message UpdateConfigHookReq {

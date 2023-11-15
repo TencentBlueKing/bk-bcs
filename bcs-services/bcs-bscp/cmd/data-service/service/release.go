@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 	"gorm.io/gorm"
@@ -37,24 +38,11 @@ import (
 //nolint:funlen
 func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq) (*pbds.CreateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	// Note: need to change batch operator to query config item and its commit.
-	// get app's all config items.
-	cis, err := s.getAppConfigItems(grpcKit)
-	if err != nil {
-		logs.Errorf("get app's all config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
 
-	// get app template revisions which are template config items
-	tmplRevisions, err := s.getAppTmplRevisions(grpcKit)
+	app, err := s.dao.App().GetByID(grpcKit, req.Attachment.AppId)
 	if err != nil {
-		logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("get app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
-	}
-
-	// if no config item, return directly.
-	if len(cis) == 0 && len(tmplRevisions) == 0 {
-		return nil, errors.New("app config items is empty")
 	}
 
 	if _, e := s.dao.Release().GetByName(grpcKit, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Name); e == nil {
@@ -117,13 +105,45 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		return nil, err
 	}
 
-	// 3: do template and non-template config item related operations for create release.
-	if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cis); err != nil {
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+	switch app.Spec.ConfigType {
+	case table.File:
+
+		// Note: need to change batch operator to query config item and its commit.
+		// get app's all config items.
+		cis, err := s.getAppConfigItems(grpcKit)
+		if err != nil {
+			logs.Errorf("get app's all config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
 		}
-		logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
+
+		// get app template revisions which are template config items
+		tmplRevisions, err := s.getAppTmplRevisions(grpcKit)
+		if err != nil {
+			logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+
+		// if no config item, return directly.
+		if len(cis) == 0 && len(tmplRevisions) == 0 {
+			return nil, errors.New("app config items is empty")
+		}
+
+		// 3: do template and non-template config item related operations for create release.
+		if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cis); err != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
+			logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+	case table.KV:
+		if err = s.doKvOperations(grpcKit, tx, req.Attachment.AppId, req.Attachment.BizId, release.ID); err != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
+			logs.Errorf("do kv action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
 	}
 
 	// commit transaction.
@@ -653,4 +673,97 @@ func (s *Service) queryPublishStatus(gcrs []*table.ReleasedGroup, releaseID uint
 		// len(inRelease) != 0 && len(outRelease) == 0 && !includeDefault: gray released
 	}
 	return table.PartialReleased.String(), inRelease
+}
+
+// doKvOperations do kv related operations for create release.
+func (s *Service) doKvOperations(kt *kit.Kit, tx *gen.QueryTx, appID, bizID, releaseID uint32) error {
+
+	rkvMap, err := s.genCreateReleasedKvMap(kt, bizID, appID, releaseID)
+	if err != nil {
+		return err
+	}
+
+	versionMap, err := s.doBatchReleasedVault(kt, rkvMap)
+	if err != nil {
+		return err
+	}
+
+	var rkvs []*table.ReleasedKv
+	for k, i := range versionMap {
+		rkvs = append(rkvs, &table.ReleasedKv{
+			ReleaseID: releaseID,
+			Spec: &table.KvSpec{
+				Key:     k,
+				Version: uint32(i),
+			},
+			Attachment: &table.KvAttachment{
+				BizID: bizID,
+				AppID: appID,
+			},
+			Revision: &table.Revision{
+				Creator:   kt.User,
+				Reviser:   kt.User,
+				CreatedAt: time.Now().UTC(),
+				UpdatedAt: time.Now().UTC(),
+			},
+		})
+	}
+
+	if err = s.dao.ReleasedKv().BulkCreateWithTx(kt, tx, rkvs); err != nil {
+		logs.Errorf("bulk create released kv failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	return nil
+
+}
+
+func (s *Service) genCreateReleasedKvMap(kt *kit.Kit, bizID, appID,
+	releaseID uint32) (map[string]*types.CreateReleasedKvOption, error) {
+
+	kvs, err := s.dao.Kv().ListAllByAppID(kt, appID, bizID)
+	if err != nil {
+		logs.Errorf("list kv failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	kvsMap := make(map[string]*types.CreateReleasedKvOption, len(kvs))
+	for _, kv := range kvs {
+
+		var kvType types.KvType
+		var value string
+
+		kvType, value, err = s.getKv(kt, bizID, appID, kv.Spec.Version, kv.Spec.Key)
+		if err != nil {
+			logs.Errorf("get vault kv failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
+
+		kvsMap[kv.Spec.Key] = &types.CreateReleasedKvOption{
+			BizID:     bizID,
+			AppID:     appID,
+			ReleaseID: releaseID,
+			Key:       kv.Spec.Key,
+			Value:     value,
+			KvType:    kvType,
+		}
+	}
+
+	return kvsMap, nil
+}
+
+func (s *Service) doBatchReleasedVault(kt *kit.Kit, kvs map[string]*types.CreateReleasedKvOption) (map[string]int, error) {
+
+	versionMap := make(map[string]int, len(kvs))
+	for _, kv := range kvs {
+		version, err := s.vault.CreateRKv(kt, kv)
+		if err != nil {
+			logs.Errorf("create vault kv failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
+		versionMap[kv.Key] = version
+	}
+
+	return versionMap, nil
+
 }

@@ -16,6 +16,7 @@ import (
 	hook_revision "bscp.io/pkg/protocol/core/hook-revision"
 	release "bscp.io/pkg/protocol/core/release"
 	released_ci "bscp.io/pkg/protocol/core/released-ci"
+	released_kv "bscp.io/pkg/protocol/core/released-kv"
 	context "context"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -54,6 +55,8 @@ const (
 	Data_ListReleases_FullMethodName                      = "/pbds.Data/ListReleases"
 	Data_GetReleaseByName_FullMethodName                  = "/pbds.Data/GetReleaseByName"
 	Data_GetReleasedConfigItem_FullMethodName             = "/pbds.Data/GetReleasedConfigItem"
+	Data_GetReleasedKv_FullMethodName                     = "/pbds.Data/GetReleasedKv"
+	Data_ListReleasedKvs_FullMethodName                   = "/pbds.Data/ListReleasedKvs"
 	Data_CreateHook_FullMethodName                        = "/pbds.Data/CreateHook"
 	Data_ListHooks_FullMethodName                         = "/pbds.Data/ListHooks"
 	Data_DeleteHook_FullMethodName                        = "/pbds.Data/DeleteHook"
@@ -196,6 +199,9 @@ type DataClient interface {
 	GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error)
 	// released config item related interface.
 	GetReleasedConfigItem(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*released_ci.ReleasedConfigItem, error)
+	// released kv related interface.
+	GetReleasedKv(ctx context.Context, in *GetReleasedKvReq, opts ...grpc.CallOption) (*released_kv.ReleasedKv, error)
+	ListReleasedKvs(ctx context.Context, in *ListReleasedKvReq, opts ...grpc.CallOption) (*ListReleasedKvResp, error)
 	// hook related interface.
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
@@ -555,6 +561,24 @@ func (c *dataClient) GetReleaseByName(ctx context.Context, in *GetReleaseByNameR
 func (c *dataClient) GetReleasedConfigItem(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*released_ci.ReleasedConfigItem, error) {
 	out := new(released_ci.ReleasedConfigItem)
 	err := c.cc.Invoke(ctx, Data_GetReleasedConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetReleasedKv(ctx context.Context, in *GetReleasedKvReq, opts ...grpc.CallOption) (*released_kv.ReleasedKv, error) {
+	out := new(released_kv.ReleasedKv)
+	err := c.cc.Invoke(ctx, Data_GetReleasedKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListReleasedKvs(ctx context.Context, in *ListReleasedKvReq, opts ...grpc.CallOption) (*ListReleasedKvResp, error) {
+	out := new(ListReleasedKvResp)
+	err := c.cc.Invoke(ctx, Data_ListReleasedKvs_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1525,6 +1549,9 @@ type DataServer interface {
 	GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error)
 	// released config item related interface.
 	GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error)
+	// released kv related interface.
+	GetReleasedKv(context.Context, *GetReleasedKvReq) (*released_kv.ReleasedKv, error)
+	ListReleasedKvs(context.Context, *ListReleasedKvReq) (*ListReleasedKvResp, error)
 	// hook related interface.
 	CreateHook(context.Context, *CreateHookReq) (*CreateResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
@@ -1729,6 +1756,12 @@ func (UnimplementedDataServer) GetReleaseByName(context.Context, *GetReleaseByNa
 }
 func (UnimplementedDataServer) GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedConfigItem not implemented")
+}
+func (UnimplementedDataServer) GetReleasedKv(context.Context, *GetReleasedKvReq) (*released_kv.ReleasedKv, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedKv not implemented")
+}
+func (UnimplementedDataServer) ListReleasedKvs(context.Context, *ListReleasedKvReq) (*ListReleasedKvResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedKvs not implemented")
 }
 func (UnimplementedDataServer) CreateHook(context.Context, *CreateHookReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHook not implemented")
@@ -2515,6 +2548,42 @@ func _Data_GetReleasedConfigItem_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).GetReleasedConfigItem(ctx, req.(*GetReleasedCIReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetReleasedKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleasedKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetReleasedKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetReleasedKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetReleasedKv(ctx, req.(*GetReleasedKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListReleasedKvs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListReleasedKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListReleasedKvs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListReleasedKvs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListReleasedKvs(ctx, req.(*ListReleasedKvReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4483,6 +4552,14 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReleasedConfigItem",
 			Handler:    _Data_GetReleasedConfigItem_Handler,
+		},
+		{
+			MethodName: "GetReleasedKv",
+			Handler:    _Data_GetReleasedKv_Handler,
+		},
+		{
+			MethodName: "ListReleasedKvs",
+			Handler:    _Data_ListReleasedKvs_Handler,
 		},
 		{
 			MethodName: "CreateHook",
