@@ -27,7 +27,7 @@ import { storeToRefs } from 'pinia';
 import { AngleDoubleRight } from 'bkui-vue/lib/icon';
 import useServiceStore from '../../../../store/service';
 import useConfigStore from '../../../../store/config';
-import { GET_UNNAMED_VERSION_DATE } from '../../../../constants/config';
+import { GET_UNNAMED_VERSION_DATA } from '../../../../constants/config';
 import { permissionCheck, getAppDetail } from '../../../../api';
 import ServiceSelector from './components/service-selector.vue';
 import DetailHeader from './components/detail-header.vue';
@@ -51,7 +51,7 @@ watch(
     if (val) {
       appId.value = Number(val);
       bkBizId.value = String(route.params.spaceId);
-      versionData.value = GET_UNNAMED_VERSION_DATE();
+      versionData.value = GET_UNNAMED_VERSION_DATA();
       getPermData();
       getAppData();
       setLastAccessedServiceDetail();
