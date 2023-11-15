@@ -18,7 +18,7 @@
         <bk-input
           class="search-group-input"
           placeholder="分组名称/分组规则"
-          @enter="handleSearch"
+          @input="handleSearch"
           v-model.trim="searchInfo"
           @clear="handleSearch"
           :clearable="true"
@@ -157,6 +157,7 @@ import RuleTag from './components/rule-tag.vue';
 import ServicesToPublished from './services-to-published.vue';
 import tableEmpty from '../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
+import { debounce } from 'lodash';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -301,7 +302,7 @@ const handleChangeView = () => {
 
 // 搜索
 // @todo 规则搜索交互确定
-const handleSearch = () => {
+const handleSearch = debounce(() => {
   if (!searchInfo.value) {
     searchGroupList.value = groupList.value;
     isSearchEmpty.value = false;
@@ -334,7 +335,7 @@ const handleSearch = () => {
     isSearchEmpty.value = true;
   }
   refreshTableData();
-};
+}, 300);
 
 // 关联服务
 const handleOpenPublishedSlider = (group: IGroupItem) => {

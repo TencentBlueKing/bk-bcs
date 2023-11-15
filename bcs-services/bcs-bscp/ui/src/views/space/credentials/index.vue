@@ -25,9 +25,8 @@
             class="search-group-input"
             placeholder="说明/更新人"
             :clearable="true"
-            @enter="refreshListWithLoading()"
-            @clear="refreshListWithLoading"
-            @change="handleSearchInputChange"
+            @clear="refreshListWithLoading()"
+            @input="handleSearchInputChange"
           >
             <template #suffix>
               <Search class="search-input-icon" />
@@ -213,6 +212,7 @@ import { copyToClipBoard, datetimeFormat } from '../../../utils/index';
 import { ICredentialItem } from '../../../../types/credential';
 import AssociateConfigItems from './associate-config-items/index.vue';
 import tableEmpty from '../../../components/table/table-empty.vue';
+import { debounce } from 'lodash';
 
 const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 
@@ -387,12 +387,8 @@ const handleCancelCreateCredential = () => {
   createCredentialName.value = '';
 };
 
-// 搜索框输入事件处理，内容为空时触发一次搜索
-const handleSearchInputChange = (val: string) => {
-  if (!val) {
-    refreshListWithLoading();
-  }
-};
+// 搜索内容改变 触发搜索
+const handleSearchInputChange = debounce(() => refreshListWithLoading(), 300);
 
 // 密钥说明编辑
 const handleEditMemo = (id: number) => {

@@ -9,7 +9,6 @@
         class="search-script-input"
         placeholder="配置文件名称/路径/描述/创建人/更新人"
         :clearable="true"
-        @enter="refreshList()"
         @clear="refreshList()"
         @input="handleSearchInputChange"
       >
@@ -145,6 +144,7 @@ import MoveOutFromPkgsDialog from '../operations/move-out-from-pkg/move-out-from
 import PkgsTag from '../../components/packages-tag.vue';
 import AppsBoundByTemplate from '../apps-bound-by-template.vue';
 import TableEmpty from '../../../../../../components/table/table-empty.vue';
+import { debounce } from 'lodash';
 
 const router = useRouter();
 
@@ -256,12 +256,7 @@ const refreshListAfterDeleted = (num: number) => {
   refreshList();
 };
 
-const handleSearchInputChange = () => {
-  if (!searchStr.value) {
-    refreshList();
-  }
-};
-
+const handleSearchInputChange = debounce(() => refreshList(), 300);
 const handleSelectionChange = ({
   checked,
   isAll,
