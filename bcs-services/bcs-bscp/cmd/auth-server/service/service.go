@@ -343,7 +343,7 @@ func (s *Service) CheckPermission(ctx context.Context, req *pbas.CheckPermission
 						Action:       action.Id,
 						ActionName:   action.Name,
 						ResourceId:   i.Id,
-						ResourceName: i.Id,
+						ResourceName: i.Name,
 					})
 				}
 			}
@@ -366,7 +366,8 @@ func (s *Service) initLogicModule() error {
 		return err
 	}
 
-	s.auth, err = auth.NewAuth(s.client.auth, s.client.DS, s.disableAuth, s.client.iamClient, s.disableWriteOpt)
+	s.auth, err = auth.NewAuth(s.client.auth, s.client.DS, s.disableAuth, s.client.iamClient, s.disableWriteOpt,
+		s.spaceMgr)
 	if err != nil {
 		return err
 	}

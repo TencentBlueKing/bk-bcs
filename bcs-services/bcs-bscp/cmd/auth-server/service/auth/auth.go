@@ -16,6 +16,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
@@ -31,6 +32,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/space"
 )
 
 // Auth related operate.
@@ -45,11 +47,13 @@ type Auth struct {
 	disableWriteOpt *options.DisableWriteOption
 	// iamSettings defines iam settings
 	iamClient *bkiam.IAM
+	// spaceMgr defines space manager
+	spaceMgr *space.Manager
 }
 
 // NewAuth new auth.
 func NewAuth(auth auth.Authorizer, ds pbds.DataClient, disableAuth bool, iamClient *bkiam.IAM,
-	disableWriteOpt *options.DisableWriteOption) (*Auth, error) {
+	disableWriteOpt *options.DisableWriteOption, spaceMgr *space.Manager) (*Auth, error) {
 
 	if auth == nil {
 		return nil, errf.New(errf.InvalidParameter, "auth is nil")
@@ -69,6 +73,7 @@ func NewAuth(auth auth.Authorizer, ds pbds.DataClient, disableAuth bool, iamClie
 		disableAuth:     disableAuth,
 		iamClient:       iamClient,
 		disableWriteOpt: disableWriteOpt,
+		spaceMgr:        spaceMgr,
 	}
 
 	return i, nil
@@ -388,8 +393,34 @@ func (a *Auth) parseIamPathToAncestors(iamPath []string) ([]*meta.IamResourceIns
 // getInstIDNameMap get resource id to name map by resource ids, groups by resource type
 func (a *Auth) getInstIDNameMap(kt *kit.Kit, resTypeIDsMap map[client.TypeID][]string) (map[string]string, error) {
 
-	// Note implement this
-	return make(map[string]string), nil
+	nameMap := make(map[string]string)
+	for resType, ids := range resTypeIDsMap {
+		switch resType {
+		case sys.Business:
+			for _, id := range ids {
+				space, err := a.spaceMgr.GetSpaceByUID(id)
+				if err != nil {
+					return nil, err
+				}
+				nameMap[id] = space.SpaceName
+			}
+		case sys.Application:
+			for _, id := range ids {
+				i, err := strconv.Atoi(id)
+				if err != nil {
+					return nil, err
+				}
+				app, err := a.ds.GetAppByID(kt.Ctx, &pbds.GetAppByIDReq{AppId: uint32(i)})
+				if err != nil {
+					return nil, err
+				}
+				nameMap[id] = app.Spec.Name
+			}
+		case sys.AppCredential:
+			return nil, fmt.Errorf("NOT IMPLEMENTED")
+		}
+	}
+	return nameMap, nil
 }
 
 // GrantResourceCreatorAction grant resource creator action.

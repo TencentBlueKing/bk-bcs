@@ -109,7 +109,17 @@ func (s *Manager) AllSpaces() []*Space {
 	return s.cachedSpace
 }
 
-// QuerySpace 按uid查询业务
+// GetSpaceByUID 按id查询业务
+func (s *Manager) GetSpaceByUID(uid string) (*Space, error) {
+	for _, v := range s.AllSpaces() {
+		if v.SpaceId == uid {
+			return v, nil
+		}
+	}
+	return nil, fmt.Errorf("space %s not found", uid)
+}
+
+// QuerySpace 按uid批量查询业务
 func (s *Manager) QuerySpace(spaceUidList []string) ([]*Space, error) {
 	spaceList := []*Space{}
 	spaceUidMap := map[string]struct{}{}
