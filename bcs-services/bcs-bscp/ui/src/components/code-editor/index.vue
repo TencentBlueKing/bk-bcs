@@ -256,6 +256,7 @@ const aotoCompletion = () => {
 // 打开搜索框
 const openSearch = () => {
   const findAction = editor.getAction('actions.find');
+  if (!props.modelValue) handlePlaceholderClick();
   findAction.run();
 };
 

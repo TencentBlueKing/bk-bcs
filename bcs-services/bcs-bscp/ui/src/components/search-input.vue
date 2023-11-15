@@ -4,8 +4,8 @@
       v-model="inputVal"
       :placeholder="props.placeholder"
       :clearable="true"
-      @enter="triggerSearch"
-      @change="handleInputChange">
+      @clear="triggerSearch"
+      @input="triggerSearch">
         <template #suffix>
           <Search class="search-input-icon" />
         </template>
@@ -15,6 +15,7 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import { Search } from 'bkui-vue/lib/icon';
+import { debounce } from 'lodash';
 
 const props = withDefaults(defineProps<{
     modelValue: string;
@@ -32,17 +33,10 @@ watch(() => props.modelValue, (val) => {
   inputVal.value = val;
 });
 
-const handleInputChange = () => {
-  emits('update:modelValue', inputVal.value);
-  if (inputVal.value === '') {
-    triggerSearch();
-  }
-};
-
-const triggerSearch = () => {
+const triggerSearch = debounce(() => {
   emits('update:modelValue', inputVal.value);
   emits('search', inputVal.value);
-};
+}, 300);
 
 </script>
 <style lang="scss" scoped>

@@ -274,7 +274,7 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
       configs: configs.map((config) => {
         const { id, spec, commit_spec, revision, file_state } = config;
         const { name, file_type, permission } = spec;
-        const { origin_byte_size, byte_size, origin_signature, signature } = commit_spec.content;
+        const { origin_byte_size, byte_size, signature } = commit_spec.content;
         return {
           type: 'config',
           id,
@@ -283,7 +283,7 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
           file_state,
           update_at: revision.update_at,
           byte_size: unNamedVersion ? byte_size : origin_byte_size,
-          signature: unNamedVersion ? signature : origin_signature,
+          signature,
           template_revision_id: 0,
           permission,
         };

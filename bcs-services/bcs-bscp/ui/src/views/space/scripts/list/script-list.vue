@@ -30,9 +30,8 @@
           class="search-script-input"
           placeholder="脚本名称"
           :clearable="true"
-          @enter="refreshList"
           @clear="refreshList"
-          @change="handleNameInputChange"
+          @input="handleNameInputChange"
         >
           <template #suffix>
             <Search class="search-input-icon" />
@@ -143,6 +142,7 @@ import ScriptCited from './script-cited.vue';
 import TableEmpty from '../../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../../components/delete-confirm-dialog.vue';
 import LinkToApp from '../../templates/list/components/link-to-app.vue';
+import { debounce } from 'lodash';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useScriptStore());
@@ -295,11 +295,7 @@ const goToConfigPageImport = (id: number) => {
   window.open(href, '_blank');
 };
 
-const handleNameInputChange = (val: string) => {
-  if (!val) {
-    refreshList();
-  }
-};
+const handleNameInputChange = debounce(() => refreshList(), 300);
 
 const handleCreatedScript = () => {
   refreshList();
