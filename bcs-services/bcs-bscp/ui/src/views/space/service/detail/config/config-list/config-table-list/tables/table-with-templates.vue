@@ -197,6 +197,7 @@
     v-model:isShow="isDeletePkgDialogShow"
     title="确认移除该配置模板套餐？"
     @confirm="handleDeletePkgConfirm"
+    confirm-text="移除"
   >
     <div style="margin-bottom: 8px;">配置模板套餐: <span style="color: #313238;">{{ deleteTemplatePkgName }}</span></div>
     <div>移除后本服务配置将不再引用该配置模板套餐，以后需要时可以重新从配置模板导入</div>
@@ -525,7 +526,7 @@ const handleDeletePkgConfirm = async () => {
   emits('deleteConfig');
   Message({
     theme: 'success',
-    message: '删除模板套餐成功',
+    message: '移除模板套餐成功',
   });
   isDeletePkgDialogShow.value = false;
 };

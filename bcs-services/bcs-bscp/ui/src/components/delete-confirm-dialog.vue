@@ -9,17 +9,23 @@
   >
     <slot></slot>
     <template #footer>
-      <bk-button theme="primary" @click="emits('confirm')" style="margin-right: 8px;">删除</bk-button>
+      <bk-button theme="primary" @click="emits('confirm')" style="margin-right: 8px">{{ confirmText }}</bk-button>
       <bk-button @click="handleClose">取消</bk-button>
     </template>
   </bk-dialog>
 </template>
 
 <script lang="ts" setup>
-defineProps<{
-  isShow: boolean;
-  title: string;
-}>();
+withDefaults(
+  defineProps<{
+    isShow: boolean;
+    title: string;
+    confirmText?: string;
+  }>(),
+  {
+    confirmText: '删除',
+  },
+);
 
 const handleClose = () => {
   emits('close');

@@ -19,6 +19,7 @@
             v-if="version.status.publish_status !== 'editing'"
             theme="light config-version-actions-popover"
             placement="bottom-end"
+            :popover-delay="[0, 100]"
             :arrow="false">
             <Ellipsis class="action-more-icon" />
             <template #content>
@@ -37,7 +38,7 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../store/config';
 import { Ellipsis } from 'bkui-vue/lib/icon';
@@ -52,8 +53,8 @@ import VersionDiff from '../../config/components/version-diff/index.vue';
 const configStore = useConfigStore();
 const { versionData, refreshVersionListFlag } = storeToRefs(configStore);
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
 const props = defineProps<{
   bkBizId: string;
@@ -63,7 +64,7 @@ const props = defineProps<{
 const unNamedVersion: IConfigVersion = GET_UNNAMED_VERSION_DATA();
 const versionListLoading = ref(false);
 const versionList = ref<IConfigVersion[]>([]);
-const searchStr = ref('')
+const searchStr = ref('');
 const showDiffPanel = ref(false);
 const diffVersion = ref();
 
@@ -98,14 +99,14 @@ onMounted(async () => {
 });
 
 const init = async () => {
-  await getVersionList()
+  await getVersionList();
   if (route.params.versionId) {
     const version = versionList.value.find(item => item.id === Number(route.params.versionId));
     if (version) {
       versionData.value = version;
     }
   }
-}
+};
 
 const getVersionList = async () => {
   try {
@@ -113,7 +114,7 @@ const getVersionList = async () => {
     const params = {
       // 未命名版本不在实际的版本列表里，需要特殊处理
       start: 0,
-      all: true
+      all: true,
     };
     const res = await getConfigVersionList(props.bkBizId, props.appId, params);
     versionList.value = [unNamedVersion, ...res.data.details];
@@ -128,8 +129,8 @@ const handleSelectVersion = (version: IConfigVersion) => {
   versionData.value = version;
   const params: { spaceId: string, appId: number, versionId?: number } = {
     spaceId: props.bkBizId,
-    appId: props.appId
-  }
+    appId: props.appId,
+  };
   if (version.id !== 0) {
     params.versionId = version.id;
   }
