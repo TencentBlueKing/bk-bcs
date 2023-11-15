@@ -15,6 +15,7 @@ package manager
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"runtime/debug"
@@ -29,11 +30,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
 // ManagerFunc 自定义 Manager 函数
 type ManagerFunc func(podCtx *types.PodContext) error // nolint
+
+var commandDelay = make(map[string]string, 0)
 
 // ConsoleManager websocket 流式处理器
 type ConsoleManager struct {
@@ -41,7 +45,6 @@ type ConsoleManager struct {
 	ConnTime       time.Time // 连接时间
 	LastInputTime  time.Time // 更新ws时间
 	keyWaitingTime time.Time // 记录 webconsole key 响应时间
-	keyDec         byte      // 记录特定的key的 ascii 编码
 	podCtx         *types.PodContext
 	managerFuncs   []ManagerFunc
 	cmdParser      *audit.CmdParse
@@ -60,11 +63,6 @@ func NewConsoleManager(ctx context.Context, podCtx *types.PodContext,
 		podCtx:         podCtx,
 		managerFuncs:   []ManagerFunc{},
 		cmdParser:      audit.NewCmdParse(),
-	}
-
-	// key from env
-	if len(key) > 0 {
-		mgr.keyDec = key[0]
 	}
 
 	// 初始化 terminal record
@@ -97,12 +95,7 @@ func (c *ConsoleManager) HandleInputMsg(msg []byte) ([]byte, error) {
 	now := time.Now()
 	// 更新ws时间
 	c.LastInputTime = now
-
-	// key 性能统计
-	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
-		c.keyWaitingTime = now
-		logger.Info("tracing key input", "key", msg)
-	}
+	c.keyWaitingTime = now
 
 	// 命令行解析与审计
 	_, ss, err := ansi.Decode(msg)
@@ -129,9 +122,9 @@ func (c *ConsoleManager) HandlePostOutputMsg(msg []byte) {
 	// replay 记录数据流
 	record.RecordOutputEvent(c.recorder, msg)
 
-	// key 性能统计
-	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
-		logger.Info("tracing key output", "key", msg, "waiting", time.Since(c.keyWaitingTime))
+	// 性能统计，按照用户设置的key统计
+	if len(msg) > 0 && commandDelay[c.podCtx.Username] != "" {
+		go userDelayCollect(string(msg[0]), c)
 	}
 }
 
@@ -140,6 +133,8 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 	interval := time.NewTicker(10 * time.Second)
 	defer interval.Stop()
 
+	delayDataSync := time.NewTicker(1 * time.Second)
+	defer delayDataSync.Stop()
 	// 结束会话时,处理缓存/关闭文件
 	defer c.recorder.End()
 
@@ -158,9 +153,16 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 					return err
 				}
 			}
-
 			// 定时写入文件
 			c.recorder.Flush()
+		case <-delayDataSync.C:
+			// 定时写入用户设置延时开关数据
+			delayData, err := storage.GetDefaultRedisSession().Client.HGetAll(ctx, types.ConsoleKey).Result()
+			if err != nil {
+				logger.Warnf("failed to synchronize redis data, err: %s", err.Error())
+				continue
+			}
+			commandDelay = delayData
 		}
 	}
 }
@@ -216,4 +218,42 @@ func (c *ConsoleManager) handleIdleTimeout(ctx *gin.Context) error {
 		return errors.New(msg)
 	}
 	return nil
+}
+
+// 用户延时命令统计数据
+func userDelayCollect(msg string, c *ConsoleManager) {
+	// 取出用户设置的延时key
+	// 匹配子字符串，如果包含则表示开启了命令延时统计
+	msgPart := "\"cluster_id\":\"" + c.podCtx.ClusterId + "\",\"enabled\":true,\"console_key\":\"" + msg
+	if strings.Contains(commandDelay[c.podCtx.Username], msgPart) {
+		delayData := types.DelayData{
+			ClusterId:    c.podCtx.ClusterId,
+			TimeDuration: time.Since(c.keyWaitingTime).String(),
+			CreateTime:   time.Now().Format(time.DateTime),
+			SessionId:    c.podCtx.SessionId,
+			PodName:      c.podCtx.PodName,
+			CommandKey:   msg,
+		}
+		delayDataByte, err := json.Marshal(delayData)
+		if err != nil {
+			logger.Errorf("json Marshal failed, err: %s", err.Error())
+			return
+		}
+		// 查看用户是否已经有统计数据在Redis中
+		listLen := storage.GetDefaultRedisSession().Client.LLen(
+			c.ctx, types.DelayUser+c.podCtx.Username).Val()
+		// 往Redis数据
+		err = storage.GetDefaultRedisSession().Client.RPush(
+			c.ctx, types.DelayUser+c.podCtx.Username, string(delayDataByte)).Err()
+		if err != nil {
+			logger.Errorf("redis list push failed, err: %s", err.Error())
+			return
+		}
+		// 没有数据的情况下设置列表过期时间，暂定一天
+		if listLen == 0 {
+			// 列表设置过期时间
+			storage.GetDefaultRedisSession().Client.Expire(
+				c.ctx, types.DelayUser+c.podCtx.Username, types.DelayUserExpire)
+		}
+	}
 }

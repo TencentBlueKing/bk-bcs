@@ -17,6 +17,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/url"
 	"path"
@@ -37,6 +38,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/repository"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
@@ -84,6 +86,16 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	api.POST("/api/sessions/:sessionId/upload/", metrics.RequestCollect("Upload"), s.UploadHandler)
 	api.GET("/api/sessions/:sessionId/download/", metrics.RequestCollect("Download"), s.DownloadHandler)
 	api.GET("/api/sessions/:sessionId/download/check/", metrics.RequestCollect("CheckDownload"), s.CheckDownloadHandler)
+
+	// 用户命令延时统计api
+	api.PUT("/api/command/delay/:username", metrics.RequestCollect("SetUserDelaySwitch"),
+		route.ManagersRequired(), s.SetUserDelaySwitch)
+	api.GET("/api/command/delay/:username", metrics.RequestCollect("GetUserDelaySwitch"),
+		route.ManagersRequired(), s.GetUserDelaySwitch)
+	api.GET("/api/command/delay/:username/meter", metrics.RequestCollect("GetUserDelayMeter"),
+		route.ManagersRequired(), s.GetUserDelayMeter)
+	api.GET("/api/command/delay", metrics.RequestCollect("GetDelayUsers"),
+		route.ManagersRequired(), s.GetDelayUsers)
 }
 
 // ListClusters 集群列表
@@ -339,6 +351,129 @@ func (s *service) CheckDownloadHandler(c *gin.Context) {
 	}
 
 	rest.APIOK(c, i18n.GetMessage(c, "文件可以下载"), data)
+}
+
+// SetUserDelaySwitch 开启/关闭某个用户命令延时统计API
+func (s *service) SetUserDelaySwitch(c *gin.Context) {
+	// 参数解析
+	username := c.Param("username")
+	var commandDelays []types.CommandDelay
+	err := c.BindJSON(&commandDelays)
+	if err != nil {
+		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
+		return
+	}
+
+	// 参数判断
+	if len(commandDelays) == 0 {
+		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", errors.New("data cannot be empty")))
+		return
+	}
+
+	for i := range commandDelays {
+		// 空的参数报错
+		if commandDelays[i].ClusterId == "" || commandDelays[i].ConsoleKey == "" {
+			rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", errors.New("parameter required")))
+			return
+		}
+
+		// 只取第一个字符
+		if len(commandDelays[i].ConsoleKey) > 0 {
+			commandDelays[i].ConsoleKey = commandDelays[i].ConsoleKey[0:1]
+		}
+	}
+
+	command, err := json.Marshal(commandDelays)
+	if err != nil {
+		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
+		return
+	}
+	// 将用户设置的延时命令开关放到redis上保存
+	err = storage.GetDefaultRedisSession().Client.HSet(c, types.ConsoleKey, username, string(command)).Err()
+	if err != nil {
+		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		return
+	}
+	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), nil)
+}
+
+// GetUserDelaySwitch 获取某个用户命令延时统计API
+func (s *service) GetUserDelaySwitch(c *gin.Context) {
+	username := c.Param("username")
+	result, err := storage.GetDefaultRedisSession().Client.HGet(c, types.ConsoleKey, username).Result()
+	if err != nil {
+		if strings.Contains(err.Error(), "nil") {
+			rest.APIError(c, i18n.GetMessage(c, "用户没有设置命令延时", err))
+			return
+		}
+		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		return
+	}
+	// 将用户设置的延时命令转成结构体数组输出
+	var commandDelay []types.CommandDelay
+	err = json.Unmarshal([]byte(result), &commandDelay)
+	if err != nil {
+		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		return
+	}
+	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), commandDelay)
+}
+
+// GetUserDelayMeter 查看用户+集群(选填)命令延时情况 API
+func (s *service) GetUserDelayMeter(c *gin.Context) {
+	username := c.Param("username")
+	clusterId := c.Query("clusterId")
+	result, err := storage.GetDefaultRedisSession().Client.LRange(c, types.DelayUser+username, 0, -1).
+		Result()
+	if err != nil {
+		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		return
+	}
+
+	// 返回筛选的结果
+	var rsp []types.DelayData
+	// 根据clusterId筛选
+	for i := range result {
+		// clusterId不为空的情况及用户没有设置该clusterId的情况不做数据展示
+		if clusterId != "" && !strings.Contains(result[i], clusterId) {
+			continue
+		}
+
+		var delayData types.DelayData
+		err = json.Unmarshal([]byte(result[i]), &delayData)
+		if err != nil {
+			rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+			return
+		}
+		rsp = append(rsp, delayData)
+	}
+	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), rsp)
+}
+
+// GetDelayUsers 查看哪些用户开启命令延时情况 API
+func (s *service) GetDelayUsers(c *gin.Context) {
+	result, err := storage.GetDefaultRedisSession().Client.HGetAll(c, types.ConsoleKey).Result()
+	if err != nil {
+		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		return
+	}
+
+	// 以结构体数组的形式返回
+	var rsp []types.CommandDelayList
+	for key := range result {
+		var commandDelay []types.CommandDelay
+		err = json.Unmarshal([]byte(result[key]), &commandDelay)
+		if err != nil {
+			rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+			return
+		}
+		rsp = append(rsp, types.CommandDelayList{
+			Username:      key,
+			CommandDelays: commandDelay,
+		})
+	}
+
+	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), rsp)
 }
 
 func checkPathIsDir(path, sessionID string) error {
