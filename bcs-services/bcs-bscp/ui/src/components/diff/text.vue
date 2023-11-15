@@ -72,7 +72,6 @@ const permissionDiffNumber = ref(0);
 let diffEditor: monaco.editor.IStandaloneDiffEditor;
 let diffEditorHoverProvider: monaco.IDisposable;
 let permissionEditor: monaco.editor.IStandaloneDiffEditor;
-let permissionDiffEditorHoverProvider: monaco.IDisposable;
 
 const isShowPermissionDiff = computed(() => props.basePermission !== props.currentPermission);
 
@@ -111,7 +110,6 @@ onBeforeUnmount(() => {
   permissionEditor.dispose();
   if (diffEditorHoverProvider) {
     diffEditorHoverProvider.dispose();
-    permissionDiffEditorHoverProvider.dispose();
   }
 });
 
@@ -182,14 +180,9 @@ const updateModel = () => {
 const replaceDiffVariables = () => {
   if (
     (props.currentVariables && props.currentVariables.length > 0) ||
-    (props.currentVariables && props.currentVariables.length > 0)
+    (props.baseVariables && props.baseVariables.length > 0)
   ) {
     diffEditorHoverProvider = useDiffEditorVariableReplace(diffEditor, props.currentVariables, props.baseVariables);
-    permissionDiffEditorHoverProvider = useDiffEditorVariableReplace(
-      permissionEditor,
-      props.currentVariables,
-      props.baseVariables,
-    );
   }
 };
 
