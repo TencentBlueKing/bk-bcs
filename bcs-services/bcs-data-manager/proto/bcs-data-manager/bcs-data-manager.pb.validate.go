@@ -6445,6 +6445,8 @@ func (m *GetPowerTradingDataRequest) validate(all bool) error {
 
 	// no validation rules for Sort
 
+	// no validation rules for PreferStorage
+
 	if len(errors) > 0 {
 		return GetPowerTradingDataRequestMultiError(errors)
 	}
@@ -7180,3 +7182,265 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetCloudNativeWorkloadListResponseValidationError{}
+
+// Validate checks the field values on GetUserOperationDataListRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetUserOperationDataListRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetUserOperationDataListRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetUserOperationDataListRequestMultiError, or nil if none found.
+func (m *GetUserOperationDataListRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetUserOperationDataListRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Type
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterId
+
+	// no validation rules for Namespace
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
+
+	// no validation rules for Page
+
+	// no validation rules for Size
+
+	if len(errors) > 0 {
+		return GetUserOperationDataListRequestMultiError(errors)
+	}
+	return nil
+}
+
+// GetUserOperationDataListRequestMultiError is an error wrapping multiple
+// validation errors returned by GetUserOperationDataListRequest.ValidateAll()
+// if the designated constraints aren't met.
+type GetUserOperationDataListRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetUserOperationDataListRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetUserOperationDataListRequestMultiError) AllErrors() []error { return m }
+
+// GetUserOperationDataListRequestValidationError is the validation error
+// returned by GetUserOperationDataListRequest.Validate if the designated
+// constraints aren't met.
+type GetUserOperationDataListRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetUserOperationDataListRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetUserOperationDataListRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetUserOperationDataListRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetUserOperationDataListRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetUserOperationDataListRequestValidationError) ErrorName() string {
+	return "GetUserOperationDataListRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetUserOperationDataListRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetUserOperationDataListRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetUserOperationDataListRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetUserOperationDataListRequestValidationError{}
+
+// Validate checks the field values on GetUserOperationDataListResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetUserOperationDataListResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetUserOperationDataListResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetUserOperationDataListResponseMultiError, or nil if none found.
+func (m *GetUserOperationDataListResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetUserOperationDataListResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Total
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetUserOperationDataListResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetUserOperationDataListResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetUserOperationDataListResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetUserOperationDataListResponseMultiError(errors)
+	}
+	return nil
+}
+
+// GetUserOperationDataListResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// GetUserOperationDataListResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetUserOperationDataListResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetUserOperationDataListResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetUserOperationDataListResponseMultiError) AllErrors() []error { return m }
+
+// GetUserOperationDataListResponseValidationError is the validation error
+// returned by GetUserOperationDataListResponse.Validate if the designated
+// constraints aren't met.
+type GetUserOperationDataListResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetUserOperationDataListResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetUserOperationDataListResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetUserOperationDataListResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetUserOperationDataListResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetUserOperationDataListResponseValidationError) ErrorName() string {
+	return "GetUserOperationDataListResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetUserOperationDataListResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetUserOperationDataListResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetUserOperationDataListResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetUserOperationDataListResponseValidationError{}

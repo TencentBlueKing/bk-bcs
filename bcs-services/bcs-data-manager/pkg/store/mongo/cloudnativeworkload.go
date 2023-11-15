@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
@@ -31,10 +30,9 @@ type ModelCloudNative struct {
 
 // NewModelCloudNative return a new struct of ModelCloudNative
 func NewModelCloudNative(db drivers.DB, bkbaseConf *types.BkbaseConfig) *ModelCloudNative {
-	blog.Warnf("config: %+v", bkbaseConf)
 	return &ModelCloudNative{
 		Public: Public{
-			TableName: bkbaseConf.CloudNative.Bkbase.Table,
+			TableName: bkbaseConf.CloudNative.Bkbase.MongoTable,
 			Indexes:   make([]drivers.Index, 0),
 			DB:        db,
 		},

@@ -93,3 +93,13 @@ func GetIndex(currentTime time.Time, dimension string) int {
 		return 0
 	}
 }
+
+// Bytes2String convert all []byte in interface to string, avoid base64 in proto struct
+func Bytes2String(in map[string]interface{}) map[string]interface{} {
+	for k, v := range in {
+		if b, ok := v.([]byte); ok {
+			in[k] = string(b)
+		}
+	}
+	return in
+}

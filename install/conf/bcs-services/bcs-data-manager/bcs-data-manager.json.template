@@ -70,5 +70,6 @@
       "username": "${kafkaUsername}",
       "password": "${kafkaPassword}"
   },
-  "bkbaseConfigPath": "${bkbaseConfigPath}"
+  "bkbaseConfigPath": "${bkbaseConfigPath}",
+  "tspiderConfigPath": "${tspiderConfigPath}"
 }

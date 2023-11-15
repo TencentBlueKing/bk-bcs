@@ -359,7 +359,9 @@ func newTestMongo() store.Server {
 		fmt.Println(err)
 	}
 	fmt.Println("init mongo db successfully")
-	return NewServer(mongoDB)
+
+	bkbaseConfig := &types.BkbaseConfig{}
+	return NewServer(mongoDB, bkbaseConfig)
 }
 
 func TestAggregate(t *testing.T) {

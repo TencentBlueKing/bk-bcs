@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/struct.proto";
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   info : {
@@ -136,6 +137,16 @@ service DataManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description: "查询云原生Workload可调度"
       summary: "查询云原生Workload可调度"
+    };
+  }
+  rpc GetUserOperationDataList(GetUserOperationDataListRequest) returns (GetUserOperationDataListResponse) {
+    option (google.api.http) = {
+      post: "/datamanager/v2/useroperationdata"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "查询BCS用户运营数据"
+      summary: "查询BCS用户运营数据"
     };
   }
 }
@@ -1756,6 +1767,12 @@ message GetPowerTradingDataRequest {
       title : "sort",
       description : "排序策略，1表示升序，-1表示降序"
     }];
+  string preferStorage = 6[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "preferStorage",
+      description : "存储偏好，tspider或者mongodb"
+    }
+  ];
 }
 
 message GetPowerTradingDataResponse {
@@ -1917,4 +1934,91 @@ message GetCloudNativeWorkloadListResponse {
       title : "msg",
       description : "返回错误信息"
     }];
+}
+
+message GetUserOperationDataListRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetUserOperationDataRequest"
+      description : "查询BCS用户运营数据请求"
+      required : []
+    }
+  };
+  string type = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "type",
+    description: "数据层级，支持project、cluster、namespace"
+  }];
+  string projectCode = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "projectCode",
+      description: "项目code，必须"
+    }
+  ];
+  string clusterId = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "clusterId",
+      description: "集群Id，集群级、命名空间级必须"
+    }
+  ];
+  string namespace = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "namespace",
+      description: "命名空间，命名空间级必须"
+    }
+  ];
+  int64 startTime = 5 [ 
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，unix时间戳，必须"
+    }
+  ];
+  int64 endTime = 6 [ 
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，unix时间戳，必须"
+    }
+  ];
+  uint32 page = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页码"
+    }
+  ];
+  uint32 size = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "查询限制数量"
+    }
+  ];
+}
+
+
+message GetUserOperationDataListResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetUserOperationDataResponse"
+      description : "查询BCS用户运营数据返回"
+      required : ["code", "message", "data"]
+    }
+  };
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
+    title : "code", 
+    description : "返回错误码"
+  }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  uint32 total = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "total",
+      description : "总数"
+    }];
+  repeated google.protobuf.Struct data = 4 [
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "运营数据列表信息"
+  }];
 }

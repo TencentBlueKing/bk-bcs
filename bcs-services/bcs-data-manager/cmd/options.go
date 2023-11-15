@@ -39,6 +39,12 @@ type MongoOption struct {
 	MongoPassword string `json:"password"`
 }
 
+// TspiderOption option for mysql db
+type TspiderOption struct {
+	StoreName  string `json:"storename"`
+	Connection string `json:"connection"`
+}
+
 // BcsMonitorConfig options for bcs monitor config
 type BcsMonitorConfig struct {
 	BcsMonitorEndpoints string `json:"endpoints"`
@@ -134,6 +140,7 @@ type DataManagerOptions struct {
 	IgnoreBkMonitorCluster bool               `json:"ignoreBkMonitorCluster"`
 	QueryFromBkMonitor     bool               `json:"queryFromBkMonitor"`
 	BkbaseConfigPath       string             `json:"bkbaseConfigPath"`
+	TspiderConfigPath      string             `json:"tspiderConfigPath"`
 }
 
 // ClusterFilterRules rules for cluster filter
@@ -197,6 +204,25 @@ func (opt *DataManagerOptions) GetEtcdRegistryTLS() (*tls.Config, error) {
 	return config, nil
 }
 
+// ParseTspiderConfig parse config for tspider db
+func (opt *DataManagerOptions) ParseTspiderConfig() ([]*TspiderOption, error) {
+	config := []*TspiderOption{}
+	bytes, err := ioutil.ReadFile(opt.TspiderConfigPath)
+	if err != nil {
+		blog.Errorf("open tspider config file(%s) failed: %s", opt.TspiderConfigPath, err.Error())
+		return nil, err
+	}
+	if err := jsoniter.Unmarshal(bytes, &config); err != nil {
+		blog.Errorf("unmarshal config file(%s) failed: %s", opt.BkbaseConfigPath, err.Error())
+		return nil, err
+	}
+	for _, item := range config {
+		blog.Infof("tspider config: %+v", *item)
+	}
+
+	return config, nil
+}
+
 // ParseBkbaseConfig parse config for bkbase data
 func (opt *DataManagerOptions) ParseBkbaseConfig() (*types.BkbaseConfig, error) {
 	config := &types.BkbaseConfig{}
@@ -209,5 +235,6 @@ func (opt *DataManagerOptions) ParseBkbaseConfig() (*types.BkbaseConfig, error) 
 		blog.Errorf("unmarshal config file(%s) failed: %s", opt.BkbaseConfigPath, err.Error())
 		return nil, err
 	}
+	blog.Infof("bkbase config: %+v", config)
 	return config, nil
 }

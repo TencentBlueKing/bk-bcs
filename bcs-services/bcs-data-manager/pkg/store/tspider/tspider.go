@@ -10,38 +10,25 @@
  * limitations under the License.
  */
 
-package mongo
+package tspider
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/jmoiron/sqlx"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
 
 type server struct {
-	*ModelCluster
-	*ModelNamespace
-	*ModelProject
-	*ModelWorkload
-	*ModelPublic
-	*ModelPodAutoscaler
 	*ModelPowerTrading
-	*ModelCloudNative
-	*ModelOperationData
+	*ModelUserOperationData
+	*ModelInterface
 }
 
 // NewServer new db server
-func NewServer(db drivers.DB, bkbaseConf *types.BkbaseConfig) store.Server {
+func NewServer(dbs map[string]*sqlx.DB, bkbaseConf *types.BkbaseConfig) *server {
 	return &server{
-		ModelCluster:       NewModelCluster(db),
-		ModelNamespace:     NewModelNamespace(db),
-		ModelWorkload:      NewModelWorkload(db),
-		ModelProject:       NewModelProject(db),
-		ModelPublic:        NewModelPublic(db),
-		ModelPodAutoscaler: NewModelPodAutoscaler(db),
-		ModelPowerTrading:  NewModelPowerTrading(db, bkbaseConf),
-		ModelCloudNative:   NewModelCloudNative(db, bkbaseConf),
-		ModelOperationData: NewModelOperationData(db, bkbaseConf),
+		ModelPowerTrading:      NewModelPowerTrading(dbs, bkbaseConf),
+		ModelUserOperationData: NewModelUserOperationData(dbs, bkbaseConf),
+		ModelInterface:         NewModelInterface(),
 	}
 }

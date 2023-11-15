@@ -8,6 +8,7 @@ import (
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	proto "github.com/golang/protobuf/proto"
 	_ "github.com/golang/protobuf/ptypes/any"
+	_ "github.com/golang/protobuf/ptypes/struct"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	math "math"
@@ -121,6 +122,13 @@ func NewDataManagerEndpoints() []*api.Endpoint {
 			Body:    "*",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "DataManager.GetUserOperationDataList",
+			Path:    []string{"/datamanager/v2/useroperationdata"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -140,6 +148,7 @@ type DataManagerService interface {
 	GetPodAutoscaler(ctx context.Context, in *GetPodAutoscalerRequest, opts ...client.CallOption) (*GetPodAutoscalerResponse, error)
 	GetPowerTrading(ctx context.Context, in *GetPowerTradingDataRequest, opts ...client.CallOption) (*GetPowerTradingDataResponse, error)
 	GetCloudNativeWorkloadList(ctx context.Context, in *GetCloudNativeWorkloadListRequest, opts ...client.CallOption) (*GetCloudNativeWorkloadListResponse, error)
+	GetUserOperationDataList(ctx context.Context, in *GetUserOperationDataListRequest, opts ...client.CallOption) (*GetUserOperationDataListResponse, error)
 }
 
 type dataManagerService struct {
@@ -284,6 +293,16 @@ func (c *dataManagerService) GetCloudNativeWorkloadList(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *dataManagerService) GetUserOperationDataList(ctx context.Context, in *GetUserOperationDataListRequest, opts ...client.CallOption) (*GetUserOperationDataListResponse, error) {
+	req := c.c.NewRequest(c.name, "DataManager.GetUserOperationDataList", in)
+	out := new(GetUserOperationDataListResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for DataManager service
 
 type DataManagerHandler interface {
@@ -300,6 +319,7 @@ type DataManagerHandler interface {
 	GetPodAutoscaler(context.Context, *GetPodAutoscalerRequest, *GetPodAutoscalerResponse) error
 	GetPowerTrading(context.Context, *GetPowerTradingDataRequest, *GetPowerTradingDataResponse) error
 	GetCloudNativeWorkloadList(context.Context, *GetCloudNativeWorkloadListRequest, *GetCloudNativeWorkloadListResponse) error
+	GetUserOperationDataList(context.Context, *GetUserOperationDataListRequest, *GetUserOperationDataListResponse) error
 }
 
 func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts ...server.HandlerOption) error {
@@ -317,6 +337,7 @@ func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts .
 		GetPodAutoscaler(ctx context.Context, in *GetPodAutoscalerRequest, out *GetPodAutoscalerResponse) error
 		GetPowerTrading(ctx context.Context, in *GetPowerTradingDataRequest, out *GetPowerTradingDataResponse) error
 		GetCloudNativeWorkloadList(ctx context.Context, in *GetCloudNativeWorkloadListRequest, out *GetCloudNativeWorkloadListResponse) error
+		GetUserOperationDataList(ctx context.Context, in *GetUserOperationDataListRequest, out *GetUserOperationDataListResponse) error
 	}
 	type DataManager struct {
 		dataManager
@@ -402,6 +423,13 @@ func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts .
 		Body:    "*",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "DataManager.GetUserOperationDataList",
+		Path:    []string{"/datamanager/v2/useroperationdata"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&DataManager{h}, opts...))
 }
 
@@ -459,4 +487,8 @@ func (h *dataManagerHandler) GetPowerTrading(ctx context.Context, in *GetPowerTr
 
 func (h *dataManagerHandler) GetCloudNativeWorkloadList(ctx context.Context, in *GetCloudNativeWorkloadListRequest, out *GetCloudNativeWorkloadListResponse) error {
 	return h.DataManagerHandler.GetCloudNativeWorkloadList(ctx, in, out)
+}
+
+func (h *dataManagerHandler) GetUserOperationDataList(ctx context.Context, in *GetUserOperationDataListRequest, out *GetUserOperationDataListResponse) error {
+	return h.DataManagerHandler.GetUserOperationDataList(ctx, in, out)
 }

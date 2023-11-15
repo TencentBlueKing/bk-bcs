@@ -18,9 +18,18 @@ import (
 	"time"
 
 	any "github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
+)
+
+// support store type
+const (
+	// TspiderStore tspider store
+	TspiderStore = "tspider"
+	// MongoStore mongoDB store
+	MongoStore = "mongodb"
 )
 
 // Server store server interface
@@ -60,4 +69,6 @@ type Server interface {
 		req *datamanager.GetPowerTradingDataRequest) ([]*any.Any, int64, error)
 	GetCloudNativeWorkloadList(ctx context.Context,
 		req *datamanager.GetCloudNativeWorkloadListRequest) (*datamanager.TEGMessage, error)
+	GetUserOperationDataList(ctx context.Context,
+		req *datamanager.GetUserOperationDataListRequest) ([]*structpb.Struct, int64, error)
 }
