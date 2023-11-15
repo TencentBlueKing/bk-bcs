@@ -2,6 +2,7 @@ FROM centos:7
 
 #for command envsubst
 RUN yum install -y gettext
+## yum install epel-release -y && yum install dsniff -y && yum install net-tools -y
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo 'LANG="en_US.UTF-8"' > /etc/locale.conf

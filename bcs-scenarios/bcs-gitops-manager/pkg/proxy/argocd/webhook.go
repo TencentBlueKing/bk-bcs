@@ -14,18 +14,22 @@
 package argocd
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // WebhookPlugin defines the webhook plugin
 type WebhookPlugin struct {
 	*mux.Router
-	middleware mw.MiddlewareInterface
+	middleware    mw.MiddlewareInterface
+	appsetWebhook string
 }
 
 // Init initialize webhook plugin
@@ -39,6 +43,30 @@ func (plugin *WebhookPlugin) Init() error {
 
 func (plugin *WebhookPlugin) executeWebhook(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	user := mw.User(r.Context())
-	blog.Infof("RequestID[%s], user %s request webhook", mw.RequestID(r.Context()), user.GetUser())
+	requestID := mw.RequestID(r.Context())
+	blog.Infof("RequestID[%s], user %s request webhook", requestID, user.GetUser())
+	reqCopy, err := utils.DeepCopyHttpRequest(r, plugin.appsetWebhook)
+	if err != nil {
+		blog.Errorf("RequestID[%s] copy webhook request failed: %s", mw.RequestID(r.Context()), err.Error())
+	} else {
+		go plugin.forwardToApplicationSet(reqCopy, requestID)
+	}
 	return r, mw.ReturnArgoReverse()
+}
+
+func (plugin *WebhookPlugin) forwardToApplicationSet(r *http.Request, requestID string) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	r.WithContext(ctx)
+	resp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		blog.Errorf("RequestID[%s] webhook forward to appset controller failed: %s", requestID, err.Error())
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		blog.Errorf("RequestID[%s] webhook forward to appset controller resp code %d: %s",
+			requestID, resp.StatusCode)
+		return
+	}
+	blog.Infof("RequestID[%s] webhook forward to appset controller success", requestID)
 }

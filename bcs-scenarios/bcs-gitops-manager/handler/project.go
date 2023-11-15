@@ -128,6 +128,7 @@ func defaultAppProject(ns string, project *bcsproject.Project) *v1alpha1.AppProj
 				common.ProjectAliaName:      project.Name,
 				common.ProjectIDKey:         project.ProjectID,
 				common.ProjectBusinessIDKey: project.BusinessID,
+				common.ProjectBusinessName:  project.BusinessName,
 			},
 		},
 		Spec: v1alpha1.AppProjectSpec{

@@ -28,6 +28,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
@@ -37,8 +38,9 @@ import (
 // AppPlugin for internal project authorization
 type AppPlugin struct {
 	*mux.Router
-	storage    store.Store
-	middleware mw.MiddlewareInterface
+	storage        store.Store
+	middleware     mw.MiddlewareInterface
+	analysisClient analysis.AnalysisInterface
 }
 
 // all argocd application URL:
@@ -89,6 +91,10 @@ func (plugin *AppPlugin) Init() error {
 
 	// Put,Patch,Delete with preifx /api/v1/applications/{name}
 	appRouter := plugin.PathPrefix("/{name}").Subrouter()
+	appRouter.Path("/collect").Methods("PUT").
+		Handler(plugin.middleware.HttpWrapper(plugin.applicationCollect))
+	appRouter.Path("/collect").Methods("DELETE").
+		Handler(plugin.middleware.HttpWrapper(plugin.applicationCancelCollect))
 	appRouter.Path("/clean").Methods("DELETE").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationCleanHandler))
 	appRouter.PathPrefix("").Methods("PUT", "POST", "DELETE", "PATCH").
@@ -226,4 +232,36 @@ func (plugin *AppPlugin) applicationViewsHandler(r *http.Request) (*http.Request
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
 	return r, mw.ReturnArgoReverse()
+}
+
+func (plugin *AppPlugin) applicationCollect(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	appName := mux.Vars(r)["name"]
+	if appName == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request application name cannot be empty"))
+	}
+	argoApp, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectView)
+	if statusCode != http.StatusOK {
+		return r, mw.ReturnErrorResponse(statusCode, err)
+	}
+	if err = plugin.analysisClient.ApplicationCollect(argoApp.Spec.Project, appName); err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+	}
+	return r, mw.ReturnJSONResponse("success")
+}
+
+func (plugin *AppPlugin) applicationCancelCollect(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	appName := mux.Vars(r)["name"]
+	if appName == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request application name cannot be empty"))
+	}
+	argoApp, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectView)
+	if statusCode != http.StatusOK {
+		return r, mw.ReturnErrorResponse(statusCode, err)
+	}
+	if err = plugin.analysisClient.ApplicationCancelCollect(argoApp.Spec.Project, appName); err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+	}
+	return r, mw.ReturnJSONResponse("success")
 }

@@ -13,11 +13,16 @@
 package utils
 
 import (
+	"bytes"
 	"context"
+	"io"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
@@ -54,4 +59,20 @@ func DeepCopyMap(m map[string]string) map[string]string {
 		r[k] = v
 	}
 	return r
+}
+
+func DeepCopyHttpRequest(r *http.Request, newUrl string) (*http.Request, error) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "read http request body failed")
+	}
+	r.Body = io.NopCloser(bytes.NewBuffer(body))
+	newReq, err := http.NewRequest(r.Method, newUrl, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, errors.Wrapf(err, "create http request failed")
+	}
+	newReq.Header = r.Header.Clone()
+	newReq.ContentLength = r.ContentLength
+	newReq.TransferEncoding = r.TransferEncoding
+	return newReq, nil
 }

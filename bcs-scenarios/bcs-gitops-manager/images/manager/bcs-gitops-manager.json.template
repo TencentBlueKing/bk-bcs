@@ -40,7 +40,8 @@
     "user": "${bcsGitOpsManagerServiceUser}",
     "pass": "${bcsGitOpsManagerServicePass}",
     "adminnamespace": "${bcsGitOpsManagerServiceNamespace}",
-    "repoServer": "${bcsGitOpsRepoServer}"
+    "repoServer": "${bcsGitOpsRepoServer}",
+    "appsetControllerWebhook": "${bcsGitOpsAppSetWebhook}"
   },
   "auth": {
     "verifykeyfile": "${bcsJWTPublicKeyFile}",
@@ -54,11 +55,22 @@
     "bkiam": "${bcsIAMbkiHost}"
   },
   "traceConfig": {
-     "endpoint": "${bcsTraceEndpoint}",
-     "token": "${bcsTraceToken}"
+    "endpoint": "${bcsTraceEndpoint}",
+    "token": "${bcsTraceToken}"
   },
   "auditConfig": {
-      "bcsGateway": "${bcsAuditGateway}",
-      "token": "${bcsAuditGatewayToken}"
+    "bcsGateway": "${bcsAuditGateway}",
+    "token": "${bcsAuditGatewayToken}"
+  },
+  "dbconfig": {
+    "username": "${bcsDatabaseUsername}",
+    "password": "${bcsDatabasePassword}",
+    "addr": "${bcsDatabaseAddr}",
+    "database": "${bcsDatabaseName}",
+    "limitQps": ${bcsDatabaseLimitQps}
+  },
+  "metricConfig": {
+    "appMetricNamespace": "${bcsMetricAppNamespace}",
+    "appMetricName": "${bcsMetricAppName}"
   }
 }

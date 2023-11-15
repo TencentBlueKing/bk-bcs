@@ -20,6 +20,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
@@ -78,8 +79,9 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 	}
 
 	projectPlugin := &ProjectPlugin{
-		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/projects").Subrouter(),
-		middleware: middleware,
+		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/projects").Subrouter(),
+		middleware:     middleware,
+		analysisClient: analysis.GetAnalysisClient(),
 	}
 	clusterPlugin := &ClusterPlugin{
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/clusters").Subrouter(),
@@ -92,9 +94,10 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware: middleware,
 	}
 	appPlugin := &AppPlugin{
-		storage:    ops.option.Storage,
-		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
-		middleware: middleware,
+		storage:        ops.option.Storage,
+		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
+		middleware:     middleware,
+		analysisClient: analysis.GetAnalysisClient(),
 	}
 	appsetPlugin := &ApplicationSetPlugin{
 		storage:    ops.option.Storage,
@@ -111,8 +114,9 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware: middleware,
 	}
 	webhookPlugin := &WebhookPlugin{
-		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/webhook").Subrouter(),
-		middleware: middleware,
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/webhook").Subrouter(),
+		middleware:    middleware,
+		appsetWebhook: ops.option.AppSetWebhook,
 	}
 	// grpc access handler
 	grpcPlugin := &GrpcPlugin{
@@ -124,14 +128,21 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/metric").Subrouter(),
 		middleware: middleware,
 	}
-	monitoruPlugin := &MonitorPlugin{
+	analysisPlugin := &AnalysisPlugin{
+		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/analysis").Subrouter(),
+		storage:        ops.option.Storage,
+		middleware:     middleware,
+		analysisClient: analysis.GetAnalysisClient(),
+	}
+	monitorPlugin := &MonitorPlugin{
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/monitor").Subrouter(),
 		middleware: middleware,
 	}
 	initializer := []func() error{
 		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
-		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, monitoruPlugin.Init,
+		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, analysisPlugin.Init,
+		monitorPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy

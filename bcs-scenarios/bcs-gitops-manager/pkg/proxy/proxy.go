@@ -38,6 +38,7 @@ type GitOpsOptions struct {
 	// backend gitops kubernetes service and port
 	Service        string
 	RepoServerUrl  string
+	AppSetWebhook  string
 	PublicProjects []string
 	// URL prefix like /gitopsmanager/proxy/
 	PathPrefix string

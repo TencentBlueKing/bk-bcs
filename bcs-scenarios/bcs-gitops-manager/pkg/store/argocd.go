@@ -43,6 +43,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
 	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
@@ -373,8 +374,7 @@ func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repos
 	return repos, nil
 }
 
-// ListRepository interface
-func (cd *argo) ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, error) {
+func (cd *argo) ListRepository(ctx context.Context, projNames []string) (*v1alpha1.RepositoryList, error) {
 	repos, err := cd.repoClient.List(ctx, &repository.RepoQuery{})
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
@@ -382,6 +382,21 @@ func (cd *argo) ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, e
 		}
 		return nil, errors.Wrapf(err, "argocd list repos failed")
 	}
+	if len(projNames) == 0 {
+		return repos, nil
+	}
+
+	// filter specified project
+	items := v1alpha1.Repositories{}
+	for _, repo := range repos.Items {
+		if sliceutils.StringInSlice(repo.Project, projNames) {
+			items = append(items, repo)
+		}
+	}
+	if len(items) == 0 {
+		return &v1alpha1.RepositoryList{}, nil
+	}
+	repos.Items = items
 	return repos, nil
 }
 
