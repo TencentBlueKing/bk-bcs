@@ -27,6 +27,17 @@
       </bk-select>
     </bk-form-item>
     <bk-form-item class="radio-group-form" label="标签选择器" required property="rules">
+      <template #label>
+        <span class="label-text">标签选择器</span>
+        <span
+          ref="nodeRef"
+          v-bk-tooltips="{
+            content: '标签选择器由key、操作符、value组成，筛选符合条件的客户端拉取服务配置，一般用于灰度发布服务配置',
+          }"
+          class="bk-tooltips-base">
+          <Info />
+        </span>
+      </template>
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
         <bk-input v-model="rule.key" style="width: 174px" placeholder="key" @change="ruleChange"></bk-input>
         <bk-select
@@ -66,11 +77,7 @@
             class="bk-bscp-icon icon-reduce"
             @click="handleDeleteRule(index)"
           ></i>
-          <i
-            v-if="index === formData.rules.length - 1"
-            class="bk-bscp-icon icon-add"
-            @click="handleAddRule(index)"
-          ></i>
+          <i v-if="index === formData.rules.length - 1" class="bk-bscp-icon icon-add" @click="handleAddRule(index)"></i>
         </div>
       </div>
       <div v-if="!rulesValid" class="bk-form-error">分组规则表单不能为空</div>
@@ -80,18 +87,19 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { storeToRefs } from 'pinia';
+// import { storeToRefs } from 'pinia';
 import { cloneDeep } from 'lodash';
-import useUserStore from '../../../../store/user';
+// import useUserStore from '../../../../store/user';
 import { IGroupEditing, EGroupRuleType, IGroupRuleItem } from '../../../../../types/group';
 import GROUP_RULE_OPS from '../../../../constants/group';
 import { getAppList } from '../../../../api/index';
 import { IAppItem } from '../../../../../types/app';
+import { Info } from 'bkui-vue/lib/icon';
 
 const getDefaultRuleConfig = (): IGroupRuleItem => ({ key: '', op: 'eq', value: '' });
 
 const route = useRoute();
-const { userInfo } = storeToRefs(useUserStore());
+// const { userInfo } = storeToRefs(useUserStore());
 
 const props = defineProps<{
   group: IGroupEditing;
@@ -285,5 +293,13 @@ defineExpose({
   i:hover {
     color: #3a84ff;
   }
+}
+.label-text {
+  margin-right: 5px;
+}
+.bk-tooltips-base {
+  font-size: 14px;
+  color: #3a84ff;
+  line-height: 19px;
 }
 </style>

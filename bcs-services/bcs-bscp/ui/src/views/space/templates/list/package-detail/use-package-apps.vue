@@ -15,8 +15,14 @@
       </bk-option>
     </bk-select>
     <div class="table-wrapper">
-      <bk-table :border="['outer']" :data="boundApps">
-        <bk-table-column label="当前使用此套餐的服务">
+      <bk-table :border="['outer']" :data="boundApps" :thead="{isShow:false}">
+        <template #prepend>
+          <div class="table-head">
+            <span class="thead-text">当前使用此套餐的服务</span>
+            <right-turn-line class="refresh-button" @click="getBoundApps"/>
+          </div>
+        </template>
+        <bk-table-column label="">
           <template #default="{ row }">
             <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
@@ -34,9 +40,9 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { Plus } from 'bkui-vue/lib/icon';
+import { Plus, RightTurnLine } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../../../store/global';
-import useUserStore from '../../../../../store/user';
+// import useUserStore from '../../../../../store/user';
 import useTemplateStore from '../../../../../store/template';
 import { getAppList } from '../../../../../api/index';
 import { getUnNamedVersionAppsBoundByPackage } from '../../../../../api/template';
@@ -49,7 +55,7 @@ const router = useRouter();
 const emits = defineEmits(['toggle-open']);
 
 const { spaceId } = storeToRefs(useGlobalStore());
-const { userInfo } = storeToRefs(useUserStore());
+// const { userInfo } = storeToRefs(useUserStore());
 const templateStore = useTemplateStore();
 const { currentTemplateSpace, currentPkg } = storeToRefs(templateStore);
 
@@ -79,7 +85,6 @@ onMounted(() => {
 const getUserApps = async () => {
   userAppListLoading.value = true;
   const params = {
-    operator: userInfo.value.username,
     start: 0,
     all: true,
   };
@@ -156,6 +161,25 @@ const goToConfigPageImport = (id: number) => {
   }
   .table-pagination {
     margin-top: 16px;
+  }
+  .table-head {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 12px;
+    height: 41px;
+    border-bottom: 1px solid #DCDEE5;
+    &:hover {
+      background-color: #f0f1f5;
+    }
+    .thead-text {
+      margin-right: 16px;
+    }
+    .refresh-button {
+      color:#3a84ff;
+      font-size: 16px;
+      cursor: pointer;
+    }
   }
 }
 .name-text {

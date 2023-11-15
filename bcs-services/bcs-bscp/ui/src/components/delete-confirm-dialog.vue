@@ -3,9 +3,9 @@
     :is-show="isShow"
     :title="title"
     :theme="'primary'"
-    :show-mask="false"
     quick-close
     ext-cls="delete-confirm-dialog"
+    @closed="handleClose"
   >
     <slot></slot>
     <template #footer>
@@ -25,7 +25,6 @@ const handleClose = () => {
   emits('close');
   emits('update:isShow', false);
 };
-
 const emits = defineEmits(['update:isShow', 'confirm', 'close']);
 </script>
 

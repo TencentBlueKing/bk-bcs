@@ -106,6 +106,7 @@ defineExpose({
   .groups-info {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     margin-left: 24px;
     .group-item {
       padding: 0 8px;
@@ -114,6 +115,7 @@ defineExpose({
       font-size: 12px;
       background: #f0f1f5;
       border-radius: 2px;
+      margin-bottom: 2px;
       &:not(:last-of-type) {
         margin-right: 8px;
       }
