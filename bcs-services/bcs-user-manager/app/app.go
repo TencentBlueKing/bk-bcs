@@ -102,7 +102,6 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.PeerToken = op.PeerToken
 	userMgrConfig.PermissionSwitch = op.PermissionSwitch
 	userMgrConfig.CommunityEdition = op.CommunityEdition
-	userMgrConfig.PassConfig = op.PassCC
 	userMgrConfig.BcsAPI = &op.BcsAPI
 	userMgrConfig.Encrypt = op.Encrypt
 
@@ -162,7 +161,6 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 		}
 	}
 
-	userMgrConfig.ClusterConfig = op.ClusterConfig
 	userMgrConfig.EtcdConfig = op.Etcd
 	userMgrConfig.IAMConfig = op.IAMConfig
 

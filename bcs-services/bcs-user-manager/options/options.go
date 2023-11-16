@@ -43,15 +43,13 @@ type UserManagerOptions struct {
 	// token notify feature
 	TokenNotify TokenNotifyOptions `json:"token_notify"`
 
-	ClusterConfig    ClusterManagerConfig `json:"cluster_config"`
-	IAMConfig        IAMConfig            `json:"iam_config"`
-	PermissionSwitch bool                 `json:"permission_switch"`
-	Cmdb             CmdbConfig           `json:"cmdb"`
-	CommunityEdition bool                 `json:"community_edition"`
-	PassCC           PassCCConfig         `json:"passcc"`
-	TracingConf      TracingConf          `json:"tracing_conf"`
-	BcsAPI           BcsAPI               `json:"bcs_api"`
-	Encrypt          Encrypt              `json:"encrypt" yaml:"encrypt"`
+	IAMConfig        IAMConfig   `json:"iam_config"`
+	PermissionSwitch bool        `json:"permission_switch"`
+	Cmdb             CmdbConfig  `json:"cmdb"`
+	CommunityEdition bool        `json:"community_edition"`
+	TracingConf      TracingConf `json:"tracing_conf"`
+	BcsAPI           BcsAPI      `json:"bcs_api"`
+	Encrypt          Encrypt     `json:"encrypt" yaml:"encrypt"`
 }
 
 // TracingConf tracing config
@@ -60,20 +58,6 @@ type TracingConf struct {
 	Endpoint      string            `json:"endpoint" usage:"Collector service endpoint"`
 	Token         string            `json:"token" usage:"token for collector service"`
 	ResourceAttrs map[string]string `json:"resource_attrs" usage:"attributes of traced service"`
-}
-
-// PassCCConfig pass-cc config
-type PassCCConfig struct {
-	AuthServer string `json:"auth_server"`
-	PassServer string `json:"pass_server"`
-	AppCode    string `json:"app_code"`
-	AppSecret  string `json:"app_secret"`
-	Enable     bool   `json:"enable"`
-}
-
-// ClusterManagerConfig cluster-manager config
-type ClusterManagerConfig struct {
-	Module string `json:"module"`
 }
 
 // IAMConfig iam config
