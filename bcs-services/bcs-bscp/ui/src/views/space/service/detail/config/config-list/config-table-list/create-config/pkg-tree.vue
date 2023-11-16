@@ -47,6 +47,7 @@ import { IAllPkgsGroupBySpaceInBiz, IPkgTreeItem } from '../../../../../../../..
 import SearchInput from '../../../../../../../../components/search-input.vue';
 import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 interface ISpaceTreeItem extends IPkgTreeItem {
+  isOpen: boolean;
   children: IPkgTreeItem[];
 }
 
@@ -62,14 +63,14 @@ const emits = defineEmits(['change']);
 
 const searchStr = ref('');
 const isSearchEmpty = ref(false);
-const checkboxTooltips = (isImport: boolean) => (isImport ? '导入配置模板套餐时无法移除已有配置模板套餐' : '暂无可用配置项');
+const checkboxTooltips = (isImport: boolean) => (isImport ? '导入配置模板套餐时无法移除已有配置模板套餐' : '该套餐中没有可用配置文件，无法被导入到服务配置中');
 const pkgTreeData = computed(() => {
   let list: IAllPkgsGroupBySpaceInBiz[] = [];
   if (searchStr.value) {
     props.pkgList.forEach((item) => {
       const pkgs = item.template_sets.filter((pkg) => {
-        const res = pkg.template_set_name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase());
-        return res;
+        const isMatched = pkg.template_set_name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase());
+        return isMatched;
       });
       if (pkgs.length > 0) {
         list.push({ ...item, template_sets: pkgs });
@@ -95,22 +96,33 @@ const pkgTreeData = computed(() => {
       id: template_space_id,
       nodeId,
       name: template_space_name,
+      isOpen: template_sets.some(set => props.value.findIndex(item => item.template_set_id === set.template_set_id) > -1),
       children: [],
       checked,
       indeterminate,
       disabled: false,
     };
 
+    const notEmptyTplPkgNodes: IPkgTreeItem[] = []
+    const emptyTplPkgNodes: IPkgTreeItem[] = []
+
     template_sets.forEach((pkg) => {
-      group.children.push({
+      const isEmpty = pkg.template_ids.length === 0
+      const node = {
         id: pkg.template_set_id,
         nodeId: `pkg_${pkg.template_set_id}`,
         name: pkg.template_set_name,
         checked: isPkgNodeChecked(pkg.template_set_id),
-        disabled: isPkgImported(pkg.template_set_id) || pkg.template_ids.length === 0,
+        disabled: isPkgImported(pkg.template_set_id) || isEmpty,
         indeterminate: false,
-      });
+      }
+      if (isEmpty) {
+        emptyTplPkgNodes.push(node)
+      } else {
+        notEmptyTplPkgNodes.push(node)
+      }
     });
+    group.children = [...notEmptyTplPkgNodes, ...emptyTplPkgNodes]
     return group;
   });
 });
