@@ -20,11 +20,12 @@
       </bk-option>
     </bk-select>
     <div class="table-wrapper">
-      <bk-table :border="['outer']" :data="boundApps" :thead="{isShow:false}">
+      <bk-loading :loading="boundAppsLoading">
+        <bk-table :border="['outer']" :data="boundApps" :thead="{isShow:false}">
         <template #prepend>
           <div class="table-head">
             <span class="thead-text">当前使用此套餐的服务</span>
-            <right-turn-line class="refresh-button" @click="getBoundApps"/>
+            <right-turn-line class="refresh-button" :class="{rotate:boundAppsLoading}"  @click="getBoundApps"/>
           </div>
         </template>
         <bk-table-column label="">
@@ -38,6 +39,7 @@
       </bk-table>
       <bk-pagination class="table-pagination" small align="center" :show-limit="false" :show-total-count="false">
       </bk-pagination>
+      </bk-loading>
     </div>
   </div>
 </template>
@@ -203,5 +205,17 @@ const goToConfigPageImport = (id: number) => {
 .link-icon {
   flex-shrink: 0;
   margin-left: 10px;
+}
+.rotate {
+  animation: rotate 0.5s infinite linear;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

@@ -3,7 +3,7 @@
     ext-cls="move-out-from-pkgs-dialog"
     header-align="center"
     footer-align="center"
-    title="确认删除该配置文件？"
+    title="确认从配置套餐中移出该配置文件?"
     :width="600"
     :is-show="props.show"
     :esc-close="false"
@@ -14,7 +14,6 @@
     <div style="margin-bottom: 8px">
       配置文件: <span style="color: #313238; font-weight: 600">{{ name }}</span>
     </div>
-    <div style="margin-bottom: 8px">一旦删除，该操作将无法撤销，请谨慎操作</div>
     <div class="service-table">
       <bk-loading style="min-height: 100px" :loading="loading">
         <bk-table

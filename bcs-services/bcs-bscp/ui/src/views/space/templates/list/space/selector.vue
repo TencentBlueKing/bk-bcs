@@ -61,7 +61,7 @@ import useGlobalStore from '../../../../../store/global';
 import useTemplateStore from '../../../../../store/template';
 import { ITemplateSpaceItem } from '../../../../../../types/template';
 import { ICommonQuery } from '../../../../../../types/index';
-import { getTemplateSpaceList, getTemplatesBySpaceId, deleteTemplateSpace } from '../../../../../api/template';
+import { getTemplateSpaceList, getTemplatesBySpaceId, deleteTemplateSpace, getTemplatePackageList } from '../../../../../api/template';
 import DeleteConfirmDialog from '../../../../../components/delete-confirm-dialog.vue';
 
 import Create from './create.vue';
@@ -171,11 +171,23 @@ const handleDelete = async (space: ITemplateSpaceItem) => {
     limit: 1,
     all: true,
   };
+  const packageParams = {
+    start: 0,
+    all: true,
+  };
   const res = await getTemplatesBySpaceId(spaceId.value, space.id, params);
+  const packageRes = await getTemplatePackageList(spaceId.value, String(space.id), packageParams);
   if (res.count > 0) {
     InfoBox({
       title: `未能删除【${space.spec.name}】`,
       subTitle: '请先确认删除此空间下所有配置文件',
+      dialogType: 'confirm',
+      confirmText: '我知道了',
+    } as any);
+  } else if (packageRes.count > 0) {
+    InfoBox({
+      title: `未能删除【${space.spec.name}】`,
+      subTitle: '请先确认删除此空间下所有配置套餐',
       dialogType: 'confirm',
       confirmText: '我知道了',
     } as any);

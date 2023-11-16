@@ -77,6 +77,7 @@ import VariableImport from './variable-import.vue';
 import SearchInput from '../../../components/search-input.vue';
 import TableEmpty from '../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
+import { Message } from 'bkui-vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -149,6 +150,10 @@ const handleDeleteVar = (variable: IVariableItem) => {
 
 const handleDeleteVarConfirm = async () => {
   await deleteVariable(spaceId.value, deleteVariableItem.value!.id);
+  Message({
+    message: '删除变量成功',
+    theme: 'success',
+  });
   if (list.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current = pagination.value.current - 1;
   }

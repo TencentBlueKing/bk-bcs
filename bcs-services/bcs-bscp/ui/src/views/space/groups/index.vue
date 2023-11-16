@@ -158,6 +158,7 @@ import ServicesToPublished from './services-to-published.vue';
 import tableEmpty from '../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
 import { debounce } from 'lodash';
+import { Message } from 'bkui-vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -351,6 +352,10 @@ const handleDeleteGroup = (group: IGroupItem) => {
 
 const handleDeleteGroupConfirm = async () => {
   await deleteGroup(spaceId.value, deleteGroupItem.value!.id);
+  Message({
+    theme: 'success',
+    message: '删除分组成功',
+  });
   if (tableData.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current = pagination.value.current - 1;
   }
