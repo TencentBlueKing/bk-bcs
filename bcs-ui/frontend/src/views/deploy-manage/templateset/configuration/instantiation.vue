@@ -1397,7 +1397,7 @@ export default {
         }, 100);
       } catch (e) {
         console.error(`error: ${e}`);
-        const errorMsg = e.message || e.data.msg || e.statusText;
+        const errorMsg = e.message || e.data?.msg || e.statusText;
         this.previewErrorMessage = errorMsg;
       } finally {
         this.previewLoading = false;
@@ -1540,7 +1540,7 @@ export default {
         }
       } catch (e) {
         console.error(`error: ${e}`);
-        const errorMsg = e.message || e.data.msg || e.statusText;
+        const errorMsg = e.message || e.data?.msg || e.statusText;
         this.previewErrorMessage = errorMsg;
       } finally {
         this.previewLoading = false;

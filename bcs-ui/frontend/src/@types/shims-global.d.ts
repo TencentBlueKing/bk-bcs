@@ -16,6 +16,8 @@ interface Window {
   RUN_ENV: string
   PREFERRED_DOMAINS: string
   $loginModal: any
+  _project_code_: string
+  _project_id_: string
 }
 
 declare const BK_BCS_WELCOME: string;

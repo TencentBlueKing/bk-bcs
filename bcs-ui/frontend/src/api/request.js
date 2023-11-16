@@ -41,8 +41,8 @@ export const parseUrl = (reqMethod, url, body = {}) => {
   let params = JSON.parse(JSON.stringify(body));
   // 全局URL变量替换
   const variableData = {
-    $projectId: sessionStorage.getItem('_project_id_'),
-    $projectCode: sessionStorage.getItem('_project_code_'),
+    $projectId: window._project_id_,
+    $projectCode: window._project_code_,
   };
   Object.keys(params).forEach((key) => {
     // 自定义url变量
