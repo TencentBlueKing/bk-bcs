@@ -525,7 +525,7 @@ const handleDeletePkgConfirm = async () => {
   emits('deleteConfig');
   Message({
     theme: 'success',
-    message: '删除模板套餐成功',
+    message: '移除模板套餐成功',
   });
   isDeletePkgDialogShow.value = false;
 };
