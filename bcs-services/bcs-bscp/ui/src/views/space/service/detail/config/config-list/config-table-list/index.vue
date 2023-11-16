@@ -9,7 +9,7 @@
             @created="refreshConfigList"
             @imported="refreshConfigList"
           />
-          <EditVariables :variables-change="variableChange" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
+          <EditVariables ref="editVariablesRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
         </template>
         <ViewVariables v-else :bk-biz-id="props.bkBizId" :app-id="props.appId" :verision-id="versionData.id" />
       </div>
@@ -33,7 +33,7 @@
         :app-id="props.appId"
         :search-str="searchStr"
         @clear-str="clearStr"
-        @edit-config="variableChange = !variableChange"
+        @delete-config="refreshVariable"
       />
       <TableWithPagination
         v-else
@@ -64,13 +64,18 @@ const props = defineProps<{
   appId: number;
 }>();
 
-const variableChange = ref(false);
 const tableRef = ref();
 const searchStr = ref('');
 const useTemplate = ref(true);
+const editVariablesRef = ref();
 
 const refreshConfigList = () => {
   tableRef.value.refresh();
+  refreshVariable();
+};
+
+const refreshVariable = () => {
+  editVariablesRef.value.getVariableList();
 };
 
 const clearStr = () => {
@@ -101,6 +106,7 @@ defineExpose({
   .groups-info {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     margin-left: 24px;
     .group-item {
       padding: 0 8px;
@@ -109,6 +115,7 @@ defineExpose({
       font-size: 12px;
       background: #f0f1f5;
       border-radius: 2px;
+      margin-bottom: 2px;
       &:not(:last-of-type) {
         margin-right: 8px;
       }

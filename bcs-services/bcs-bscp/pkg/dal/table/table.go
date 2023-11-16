@@ -239,6 +239,8 @@ const (
 	ResourceLockTable Name = "resource_locks"
 	// CredentialTable is credential table's name
 	CredentialTable Name = "credentials"
+	// KvTable is kv table's name
+	KvTable Name = "kvs"
 	// TemplateTable is template table's name
 	TemplateTable Name = "templates"
 	// TemplateRevisionsTable is template revisions table's name

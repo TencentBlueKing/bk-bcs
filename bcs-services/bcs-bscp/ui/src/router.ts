@@ -43,7 +43,7 @@ const routes = [
             component: () => import('./views/space/service/detail/index.vue'),
             children: [
               {
-                path: 'config',
+                path: 'config/:versionId?',
                 name: 'service-config',
                 meta: {
                   navModule: 'service',

@@ -30,9 +30,11 @@ type Set interface {
 	// UpsertKv 创建｜更新kv
 	UpsertKv(kit *kit.Kit, opt *types.UpsertKvOption) (int, error)
 	// GetLastKv 获取最新的kv
-	GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (string, error)
+	GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType types.KvType, value string, err error)
 	// GetKvByVersion 根据版本获取kv
-	GetKvByVersion(kit *kit.Kit, bizID, appID uint32, key string, version int) (string, error)
+	GetKvByVersion(kit *kit.Kit, opt *types.GetKvByVersion) (kvType types.KvType, value string, err error)
+	// DeleteKv deletes specified key-value data from Vault.
+	DeleteKv(kit *kit.Kit, opt *types.DeleteKvOpt) error
 }
 
 type set struct {

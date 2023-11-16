@@ -110,13 +110,7 @@ const handleRevoke = (index: number) => {
   updateRuleParams();
 };
 
-const testRule = (rule: string) => {
-  const parts = rule.split('/', 2);
-  if (!parts[0] || !parts[1]) {
-    return false;
-  }
-  return /^([!@+*?{}()|\]\\[\-^$])/.test(parts[1]);
-};
+const testRule = (rule: string) => /^[\w-]+\/(.*|\*)$/.test(rule);
 
 const handleRuleContentChange = (index: number) => {
   const rule = localRules.value[index];

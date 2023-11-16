@@ -86,7 +86,7 @@ const loadServicesList = async () => {
 const getHref = (service: IGroupBindService) => {
   const { href } = router.resolve({
     name: 'service-config',
-    params: { spaceId: spaceId.value, appId: service.app_id },
+    params: { spaceId: spaceId.value, appId: service.app_id, versionId: service.release_id },
   });
   return href;
 };

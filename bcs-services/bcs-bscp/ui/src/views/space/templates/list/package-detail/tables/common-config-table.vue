@@ -9,7 +9,6 @@
         class="search-script-input"
         placeholder="配置文件名称/路径/描述/创建人/更新人"
         :clearable="true"
-        @enter="refreshList()"
         @clear="refreshList()"
         @input="handleSearchInputChange"
       >
@@ -23,7 +22,7 @@
         <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
         <bk-table-column label="配置文件名称">
           <template #default="{ row }">
-            <div v-if="row.spec" v-overflow-title class="config-name" @click="goToVersionManage(row.id)">
+            <div v-if="row.spec" v-overflow-title class="config-name" @click="goToViewVersionManage(row.id)">
               {{ row.spec.name }}
             </div>
           </template>
@@ -72,10 +71,11 @@
             </template>
           </template>
         </bk-table-column>
-        <bk-table-column label="操作" width="120" fixed="right">
+        <bk-table-column label="操作" width="140" fixed="right">
           <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
+                <bk-button theme="primary" text @click="goToCreateVersionManage(row.id)">编辑</bk-button>
                 <bk-button theme="primary" text @click="goToVersionManage(row.id)">版本管理</bk-button>
                 <bk-popover
                   theme="light template-config-actions-popover"
@@ -144,12 +144,14 @@ import MoveOutFromPkgsDialog from '../operations/move-out-from-pkg/move-out-from
 import PkgsTag from '../../components/packages-tag.vue';
 import AppsBoundByTemplate from '../apps-bound-by-template.vue';
 import TableEmpty from '../../../../../../components/table/table-empty.vue';
+import { debounce } from 'lodash';
 
 const router = useRouter();
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const templateStore = useTemplateStore();
-const { currentTemplateSpace } = storeToRefs(templateStore);
+const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView } =
+  storeToRefs(templateStore);
 
 const props = defineProps<{
   currentTemplateSpace: number;
@@ -254,12 +256,7 @@ const refreshListAfterDeleted = (num: number) => {
   refreshList();
 };
 
-const handleSearchInputChange = () => {
-  if (!searchStr.value) {
-    refreshList();
-  }
-};
-
+const handleSearchInputChange = debounce(() => refreshList(), 300);
 const handleSelectionChange = ({
   checked,
   isAll,
@@ -348,6 +345,16 @@ const goToVersionManage = (id: number) => {
   });
 };
 
+const goToViewVersionManage = (id: number) => {
+  versionListPageShouldOpenView.value = true;
+  goToVersionManage(id);
+};
+
+const goToCreateVersionManage = (id: number) => {
+  versionListPageShouldOpenEdit.value = true;
+  goToVersionManage(id);
+};
+
 defineExpose({
   refreshList,
   refreshListAfterDeleted,
@@ -395,7 +402,7 @@ const clearSearchStr = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 16px;
+    margin-left: 8px;
     width: 16px;
     height: 16px;
     border-radius: 50%;
@@ -407,6 +414,9 @@ const clearSearchStr = () => {
   }
   .ellipsis-icon {
     transform: rotate(90deg);
+  }
+  .bk-button {
+    margin-right: 8px;
   }
 }
 </style>

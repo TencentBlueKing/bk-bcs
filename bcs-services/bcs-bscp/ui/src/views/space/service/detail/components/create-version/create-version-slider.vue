@@ -30,7 +30,7 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import { assign } from 'lodash';
-import { GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config';
+import { GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
 import { createVersion } from '../../../../../../api/config';
 import useModalCloseConfirmation from '../../../../../../utils/hooks/use-modal-close-confirmation';
 import { IVariableEditParams } from '../../../../../../../types/variable';
@@ -139,7 +139,7 @@ const confirm = async () => {
     };
     const res = await createVersion(props.bkBizId, props.appId, params);
     // 创建接口未返回完整的版本详情数据，在前端拼接最新版本数据，加载完版本列表后再更新
-    const newVersionData = assign({}, GET_UNNAMED_VERSION_DATE(), {
+    const newVersionData = assign({}, GET_UNNAMED_VERSION_DATA(), {
       id: res.data.id,
       spec: { name: formData.value.name, memo: formData.value.memo },
     });

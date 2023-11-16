@@ -26,6 +26,7 @@
         </bk-select>
       </bk-form-item>
     </bk-form>
+    <div v-if="citedList.length">
     <p class="tips">以下服务配置的未命名版本中将添加已选配置文件的 <span class="notice">latest 版本</span></p>
     <div class="service-table">
       <bk-loading style="min-height: 100px" :loading="loading">
@@ -42,6 +43,7 @@
         </bk-table>
       </bk-loading>
     </div>
+  </div>
   </bk-dialog>
 </template>
 <script lang="ts" setup>

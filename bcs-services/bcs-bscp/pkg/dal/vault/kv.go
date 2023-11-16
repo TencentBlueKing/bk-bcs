@@ -34,8 +34,8 @@ func (s *set) UpsertKv(kit *kit.Kit, opt *types.UpsertKvOption) (int, error) {
 	}
 
 	data := map[string]interface{}{
-		"type":  opt.KvType,
-		"value": opt.Value,
+		"kv_type": opt.KvType,
+		"value":   opt.Value,
 	}
 	secret, err := s.cli.KVv2(MountPath).Put(kit.Ctx, fmt.Sprintf(kvPath, opt.BizID, opt.AppID, opt.Key), data)
 	if err != nil {
@@ -47,35 +47,65 @@ func (s *set) UpsertKv(kit *kit.Kit, opt *types.UpsertKvOption) (int, error) {
 }
 
 // GetLastKv 获取最新的kv
-func (s *set) GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (string, error) {
+func (s *set) GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType types.KvType, value string, err error) {
+
+	if err = opt.Validate(); err != nil {
+		return
+	}
 
 	kv, err := s.cli.KVv2(MountPath).Get(kit.Ctx, fmt.Sprintf(kvPath, opt.BizID, opt.AppID, opt.Key))
 	if err != nil {
-		return "", err
+		return
 	}
 
-	value, ok := kv.Data["data"].(string)
+	kvTypeStr, ok := kv.Data["kv_type"].(string)
 	if !ok {
-		return "", fmt.Errorf("value type assertion failed: err : %v", err)
+		return "", "", fmt.Errorf("failed to get 'kv_type' as a string from kv.Data,"+
+			" err : %v", err)
+	}
+	kvType = types.KvType(kvTypeStr)
+
+	value, ok = kv.Data["value"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("value type assertion failed, err : %v", err)
 	}
 
-	return value, nil
-
+	return
 }
 
 // GetKvByVersion 根据版本获取kv
-func (s *set) GetKvByVersion(kit *kit.Kit, bizID, appID uint32, key string, version int) (string, error) {
+func (s *set) GetKvByVersion(kit *kit.Kit, opt *types.GetKvByVersion) (kvType types.KvType, value string, err error) {
 
-	kv, err := s.cli.KVv2(MountPath).GetVersion(kit.Ctx, fmt.Sprintf(kvPath, bizID, appID, key), version)
+	if err = opt.Validate(); err != nil {
+		return
+	}
+
+	kv, err := s.cli.KVv2(MountPath).GetVersion(kit.Ctx, fmt.Sprintf(kvPath, opt.BizID, opt.AppID, opt.Key), opt.Version)
 	if err != nil {
-		return "", err
+		return
 	}
 
-	value, ok := kv.Data["data"].(string)
+	kvTypeStr, ok := kv.Data["kv_type"].(string)
 	if !ok {
-		return "", fmt.Errorf("value type assertion failed: err : %v", err)
+		return "", "", fmt.Errorf("failed to get 'kv_type' as a string from kv.Data,"+
+			" err : %v", err)
+	}
+	kvType = types.KvType(kvTypeStr)
+
+	value, ok = kv.Data["value"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("value type assertion failed: err : %v", err)
 	}
 
-	return value, nil
+	return
 
+}
+
+// DeleteKv deletes specified key-value data from Vault.
+func (s *set) DeleteKv(kit *kit.Kit, opt *types.DeleteKvOpt) error {
+
+	if err := opt.Validate(); err != nil {
+		return err
+	}
+	return s.cli.KVv2(MountPath).DeleteMetadata(kit.Ctx, fmt.Sprintf(kvPath, opt.BizID, opt.AppID, opt.Key))
 }
