@@ -87,7 +87,7 @@ class VariableReplace {
     if (VariableReplace.hoverProvider) {
       VariableReplace.hoverProvider.dispose();
     }
-    VariableReplace.hoverProvider = monaco.languages.registerHoverProvider('plaintext', {
+    VariableReplace.hoverProvider = monaco.languages.registerHoverProvider('*', {
       provideHover(model, position) {
         const { lineNumber, column } = position;
         const variable = self.replacedList.find(v => v.range.startLineNumber === lineNumber
