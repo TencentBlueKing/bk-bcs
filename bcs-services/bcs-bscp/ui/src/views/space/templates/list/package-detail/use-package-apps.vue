@@ -115,7 +115,7 @@ const goToConfigPageImport = (id: number) => {
   const { href } = router.resolve({
     name: 'service-config',
     params: { appId: id },
-    query: { pkg_id: currentTemplateSpace.value },
+    query: { pkg_id: currentPkg.value },
   });
   window.open(href, '_blank');
 };

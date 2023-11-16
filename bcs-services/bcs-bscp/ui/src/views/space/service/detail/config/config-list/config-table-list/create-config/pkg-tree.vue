@@ -47,6 +47,7 @@ import { IAllPkgsGroupBySpaceInBiz, IPkgTreeItem } from '../../../../../../../..
 import SearchInput from '../../../../../../../../components/search-input.vue';
 import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 interface ISpaceTreeItem extends IPkgTreeItem {
+  isOpen: boolean;
   children: IPkgTreeItem[];
 }
 
@@ -95,6 +96,7 @@ const pkgTreeData = computed(() => {
       id: template_space_id,
       nodeId,
       name: template_space_name,
+      isOpen: template_sets.some(set => props.value.findIndex(item => item.template_set_id === set.template_set_id) > -1),
       children: [],
       checked,
       indeterminate,
