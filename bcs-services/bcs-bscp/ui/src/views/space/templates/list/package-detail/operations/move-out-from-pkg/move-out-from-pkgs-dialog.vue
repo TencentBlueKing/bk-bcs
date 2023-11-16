@@ -3,7 +3,7 @@
     ext-cls="move-out-from-pkgs-dialog"
     header-align="center"
     footer-align="center"
-    title="确认删除该配置文件？"
+    title="确认从配置套餐中移出该配置文件?"
     :width="600"
     :is-show="props.show"
     :esc-close="false"
