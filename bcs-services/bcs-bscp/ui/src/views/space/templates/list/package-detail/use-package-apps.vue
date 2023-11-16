@@ -1,8 +1,13 @@
 <template>
   <div class="use-package-apps">
-    <bk-select :value="''" :filterable="true" :input-search="false">
+    <bk-select :value="''" :disabled="tplCounts === 0" :filterable="true" :input-search="false">
       <template #trigger>
-        <div class="select-app-trigger">
+        <div
+            :class="['select-app-trigger', { disabled: tplCounts === 0 }]"
+            v-bk-tooltips="{
+              disabled: tplCounts > 0,
+              content: '该套餐中没有可用配置文件，无法被导入到服务配置中'
+            }">
           <Plus class="plus-icon" />
           新服务中使用
         </div>
@@ -59,6 +64,10 @@ const { spaceId } = storeToRefs(useGlobalStore());
 const templateStore = useTemplateStore();
 const { currentTemplateSpace, currentPkg } = storeToRefs(templateStore);
 
+const props = defineProps<{
+  tplCounts: number;
+}>()
+
 const userApps = ref<IAppItem[]>([]);
 const userAppListLoading = ref(false);
 const boundApps = ref<IPackageCitedByApps[]>([]);
@@ -108,7 +117,6 @@ const getBoundApps = async () => {
   );
   boundApps.value = res.details;
   boundAppsLoading.value = false;
-  emits('toggle-open', boundApps.value.length > 0);
 };
 
 const goToConfigPageImport = (id: number) => {
@@ -141,6 +149,11 @@ const goToConfigPageImport = (id: number) => {
   font-size: 14px;
   overflow: hidden;
   cursor: pointer;
+  &.disabled {
+    color: #dcdee5;
+    border-color: #dcdee5;
+    cursor: not-allowed;
+  }
   .plus-icon {
     font-size: 20px;
   }
