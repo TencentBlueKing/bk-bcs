@@ -21,6 +21,7 @@ body {
   place-items: center;
   min-height: 100vh;
   overflow: hidden;
+  background-color: #fff;
 }
 
 h1 {
@@ -42,7 +43,9 @@ a {
   color: #3A84FF;
   text-decoration: none;
 }
-
+textarea {
+  background-color: #fff;
+}
 .card {
   padding: 2em;
 }

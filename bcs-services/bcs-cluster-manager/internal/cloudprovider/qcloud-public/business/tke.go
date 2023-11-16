@@ -372,15 +372,15 @@ func GenerateNTAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 func GenerateClsAdvancedInsSettingFromNT(info *cloudprovider.CloudDependBasicInfo,
 	vars template.RenderVars, options *NodeAdvancedOptions) *api.InstanceAdvancedSettings {
 	if info.NodeTemplate == nil {
-		return generateInstanceAdvanceInfo(info.Cluster, options)
+		return GenerateInstanceAdvanceInfo(info.Cluster, options)
 	}
 
-	return generateInstanceAdvanceInfoFromNp(info.Cluster, info.NodeTemplate, ClusterCommonLabels(info.Cluster),
-		"", vars, options)
+	return generateInstanceAdvanceInfoFromNp(info.Cluster, info.NodeTemplate, "", vars, options)
 }
 
-// generateInstanceAdvanceInfo instance advanced info
-func generateInstanceAdvanceInfo(cluster *proto.Cluster, options *NodeAdvancedOptions) *api.InstanceAdvancedSettings {
+// GenerateInstanceAdvanceInfo instance advanced info
+func GenerateInstanceAdvanceInfo(cluster *proto.Cluster,
+	options *NodeAdvancedOptions) *api.InstanceAdvancedSettings {
 	if cluster.NodeSettings.MountTarget == "" {
 		cluster.NodeSettings.MountTarget = common.MountTarget
 	}
@@ -401,9 +401,9 @@ func generateInstanceAdvanceInfo(cluster *proto.Cluster, options *NodeAdvancedOp
 		}(),
 	}
 
-	// node common labels
-	if len(ClusterCommonLabels(cluster)) > 0 {
-		for key, value := range ClusterCommonLabels(cluster) {
+	// cluster node common labels
+	if len(cluster.NodeSettings.Labels) > 0 {
+		for key, value := range cluster.NodeSettings.Labels {
 			advanceInfo.Labels = append(advanceInfo.Labels, &api.KeyValue{
 				Name:  key,
 				Value: value,
@@ -411,12 +411,32 @@ func generateInstanceAdvanceInfo(cluster *proto.Cluster, options *NodeAdvancedOp
 		}
 	}
 
-	// cluster node common labels
-	if len(cluster.NodeSettings.Labels) > 0 {
-		for key, value := range cluster.NodeSettings.Labels {
-			advanceInfo.Labels = append(advanceInfo.Labels, &api.KeyValue{
-				Name:  key,
-				Value: value,
+	// cluster node common taints
+	if len(cluster.GetNodeSettings().GetTaints()) > 0 {
+		for i := range cluster.GetNodeSettings().GetTaints() {
+			advanceInfo.TaintList = append(advanceInfo.TaintList, &api.Taint{
+				Key:    &cluster.GetNodeSettings().GetTaints()[i].Key,
+				Value:  &cluster.GetNodeSettings().GetTaints()[i].Value,
+				Effect: &cluster.GetNodeSettings().GetTaints()[i].Effect,
+			})
+		}
+	}
+
+	// attention: nodetemplate datadisks && options datadisks is mutually exclusive
+	if len(options.Disks) > 0 {
+		for i, disk := range options.Disks {
+			diskSize, _ := strconv.Atoi(disk.DiskSize)
+			if disk.DiskPartition == "" && i < len(api.DefaultDiskPartition) {
+				disk.DiskPartition = api.DefaultDiskPartition[i]
+			}
+
+			advanceInfo.DataDisks = append(advanceInfo.DataDisks, api.DataDetailDisk{
+				DiskType:           disk.DiskType,
+				DiskSize:           int64(diskSize),
+				AutoFormatAndMount: disk.AutoFormatAndMount,
+				FileSystem:         disk.FileSystem,
+				MountTarget:        disk.MountTarget,
+				DiskPartition:      disk.DiskPartition,
 			})
 		}
 	}
@@ -475,12 +495,7 @@ func generateClsAdvancedInsSettingFromNP(info *cloudprovider.CloudDependBasicInf
 		return generateInstanceAdvanceInfoFromNg(info.Cluster, info.NodeGroup, options)
 	}
 
-	// inject common labels
-	commonLabels := ClusterCommonLabels(info.Cluster)
-	nodeGroupLabels := info.NodeGroup.GetLabels()
-	newLabels := utils.MergeMap(commonLabels, nodeGroupLabels)
-
-	return generateInstanceAdvanceInfoFromNp(info.Cluster, info.NodeGroup.NodeTemplate, newLabels,
+	return generateInstanceAdvanceInfoFromNp(info.Cluster, info.NodeGroup.NodeTemplate,
 		info.NodeGroup.NodeGroupID, vars, options)
 }
 
@@ -507,14 +522,6 @@ func getNodeCommonLabels(cls *proto.Cluster, group *proto.NodeGroup) []*api.KeyV
 			Value: group.NodeGroupID,
 		})
 		for k, v := range group.Labels {
-			labels = append(labels, &api.KeyValue{
-				Name:  k,
-				Value: v,
-			})
-		}
-	}
-	if cls != nil {
-		for k, v := range ClusterCommonLabels(cls) {
 			labels = append(labels, &api.KeyValue{
 				Name:  k,
 				Value: v,
@@ -549,7 +556,7 @@ func generateInstanceAdvanceInfoFromNg(cluster *proto.Cluster, group *proto.Node
 // nodeGroupID for nodePool label
 // NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
 // nolint
-func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.NodeTemplate, labels map[string]string,
+func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.NodeTemplate,
 	nodeGroupID string, vars template.RenderVars, options *NodeAdvancedOptions) *api.InstanceAdvancedSettings {
 	var (
 		mountTarget     = nodeTemplate.GetMountTarget()
@@ -591,15 +598,8 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 			Value: nodeGroupID,
 		})
 	}
-	if len(nodeTemplate.Labels) > 0 || len(labels) > 0 {
+	if len(nodeTemplate.Labels) > 0 {
 		for key, value := range nodeTemplate.Labels {
-			advanceInfo.Labels = append(advanceInfo.Labels, &api.KeyValue{
-				Name:  key,
-				Value: value,
-			})
-		}
-		// 兼容旧版本nodeGroup, 若存在labels则进行设置
-		for key, value := range labels {
 			advanceInfo.Labels = append(advanceInfo.Labels, &api.KeyValue{
 				Name:  key,
 				Value: value,
@@ -615,8 +615,17 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 			})
 		}
 	}
-	if len(nodeTemplate.DataDisks) > 0 {
-		for i, disk := range nodeTemplate.DataDisks {
+
+	// attention: nodetemplate datadisks && options datadisks is mutually exclusive
+	if len(nodeTemplate.DataDisks) > 0 || len(options.Disks) > 0 {
+		dataDisks := make([]*proto.CloudDataDisk, 0)
+		if len(nodeTemplate.DataDisks) > 0 {
+			dataDisks = append(dataDisks, nodeTemplate.DataDisks...)
+		}
+		if len(options.Disks) > 0 {
+			dataDisks = append(dataDisks, nodeTemplate.DataDisks...)
+		}
+		for i, disk := range dataDisks {
 			diskSize, _ := strconv.Atoi(disk.DiskSize)
 			if disk.DiskPartition == "" && i < len(api.DefaultDiskPartition) {
 				disk.DiskPartition = api.DefaultDiskPartition[i]
@@ -819,6 +828,96 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 			blog.Errorf("checkClusterInstanceStatus[%s] UpdateNodeStatusByInstanceID[%s] failed: %v", taskID, n, err)
 		}
 	}
+
+	return addSuccessNodes, addFailureNodes, nil
+}
+
+// CheckClusterAllInstanceStatus 检测集群所有节点状态
+func CheckClusterAllInstanceStatus(ctx context.Context,
+	info *cloudprovider.CloudDependBasicInfo) ([]string, []string, error) {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	var (
+		addSuccessNodes = make([]string, 0)
+		addFailureNodes = make([]string, 0)
+	)
+
+	// get qcloud client
+	cli, err := api.NewTkeClient(info.CmOption)
+	if err != nil {
+		blog.Errorf("CheckClusterAllInstanceStatus[%s] failed, %s", taskID, err)
+		return nil, nil, err
+	}
+
+	// wait node group state to normal
+	timeCtx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
+	defer cancel()
+
+	// wait all nodes to be ready
+	err = loop.LoopDoFunc(timeCtx, func() error {
+		instances, errQuery := cli.QueryTkeClusterAllInstances(ctx, info.Cluster.SystemID, nil)
+		if errQuery != nil {
+			blog.Errorf("CheckClusterAllInstanceStatus[%s] QueryTkeClusterAllInstances "+
+				"failed: %v", taskID, errQuery)
+			return nil
+		}
+
+		index := 0
+		running, failure := make([]string, 0), make([]string, 0)
+
+		for _, ins := range instances {
+			blog.Infof("CheckClusterAllInstanceStatus[%s] instance[%s] role[%s] status[%s]",
+				taskID, ins.InstanceID, ins.InstanceRole, ins.InstanceState)
+			switch ins.InstanceState {
+			case api.RunningInstanceTke.String():
+				running = append(running, ins.InstanceID)
+				index++
+			case api.FailedInstanceTke.String():
+				failure = append(failure, ins.InstanceID)
+				index++
+			default:
+			}
+		}
+
+		if index == len(instances) {
+			addSuccessNodes = running
+			addFailureNodes = failure
+			return loop.EndLoop
+		}
+
+		return nil
+	}, loop.LoopInterval(20*time.Second))
+	// other error
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		blog.Errorf("CheckClusterAllInstanceStatus[%s] QueryTkeClusterAllInstances failed: %v", taskID, err)
+		return nil, nil, err
+	}
+	// timeout error
+	if errors.Is(err, context.DeadlineExceeded) {
+		blog.Errorf("CheckClusterAllInstanceStatus[%s] QueryTkeClusterAllInstances failed: %v", taskID, err)
+
+		running, failure := make([]string, 0), make([]string, 0)
+		instances, errQuery := cli.QueryTkeClusterAllInstances(ctx, info.Cluster.SystemID, nil)
+		if errQuery != nil {
+			blog.Errorf("CheckClusterAllInstanceStatus[%s] QueryTkeClusterAllInstances "+
+				"failed: %v", taskID, errQuery)
+			return nil, nil, errQuery
+		}
+
+		for _, ins := range instances {
+			blog.Infof("CheckClusterAllInstanceStatus[%s] instance[%s] role[%s] status[%s]",
+				taskID, ins.InstanceID, ins.InstanceRole, ins.InstanceState)
+			switch ins.InstanceState {
+			case api.RunningInstanceTke.String():
+				running = append(running, ins.InstanceID)
+			default:
+				failure = append(failure, ins.InstanceID)
+			}
+		}
+		addSuccessNodes = running
+		addFailureNodes = failure
+	}
+	blog.Infof("CheckClusterAllInstanceStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
 
 	return addSuccessNodes, addFailureNodes, nil
 }

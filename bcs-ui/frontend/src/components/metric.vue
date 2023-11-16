@@ -164,7 +164,7 @@ export default defineComponent({
       const series: any[] = [];
       data.forEach((item, index) => {
         const suffix = metricSuffix.value[index];
-        const list = item?.result.map((result) => {
+        const list = item?.result?.map((result) => {
           // series 配置
           const name = result.metric?.[metricNameProp.value] || metricMap[metrics[index]];
           const defaultSeries = props.series[index] || {};

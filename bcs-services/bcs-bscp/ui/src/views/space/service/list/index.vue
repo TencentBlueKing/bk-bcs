@@ -56,6 +56,8 @@ watch(
 
 onMounted(() => {
   checkCreateServicePerm();
+  // 访问服务管理列表页时，清空上次访问服务记录
+  localStorage.removeItem('lastAccessedServiceDetail');
 });
 
 const checkCreateServicePerm = async () => {

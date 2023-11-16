@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/avast/retry-go"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -104,6 +105,9 @@ func generateClusterBasicInfo(cluster *proto.Cluster, imageID, operator string) 
 		// according to cloud different realization to adapt
 		bizID, _ := strconv.Atoi(cluster.BusinessID)
 		cloudTags := generateTags(int64(bizID), operator)
+
+		blog.Infof("generateClusterBasicInfo tags %+v", cloudTags)
+
 		tags := make([]*api.Tag, 0)
 		if len(cloudTags) > 0 {
 			for k, v := range cloudTags {
@@ -1099,8 +1103,19 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 	}
 	blog.Infof("RegisterManageClusterKubeConfigTask[%s] openClusterAdminKubeConfig[%s] success", taskID, kube)
 
-	// 生成jwt token
-	token, err := providerutils.GenerateSATokenByKubeConfig(ctx, kube)
+	// retry 重试生成jwt token
+	var (
+		token string
+	)
+	err = retry.Do(func() error {
+		token, err = providerutils.GenerateSATokenByKubeConfig(ctx, kube)
+		if err != nil {
+			return err
+		}
+		blog.Infof("RegisterManageClusterKubeConfigTask[%s] GenerateSAToken[%s] success", taskID, token)
+
+		return nil
+	}, retry.Attempts(3), retry.DelayType(retry.FixedDelay), retry.Delay(3*time.Second))
 	if err != nil {
 		blog.Errorf("RegisterManageClusterKubeConfigTask[%s] GenerateSAToken failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("GenerateSAToken failed, %s", err.Error())
@@ -1222,6 +1237,9 @@ func openClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDe
 	if strings.Contains(config.Clusters[0].Cluster.Server, ep.ClusterIntranetDomain) {
 		config.Clusters[0].Cluster.Server = fmt.Sprintf("https://%s", ep.ClusterIntranetEndpoint)
 	}
+
+	config.Clusters[0].Cluster.InsecureSkipTLSVerify = true
+
 	newKubeBytes, _ := yaml.Marshal(config)
 
 	return base64.StdEncoding.EncodeToString(newKubeBytes), nil

@@ -984,6 +984,15 @@ service ClusterManager {
       summary : "查询cloud地域集群列表"
     };
   }
+  rpc ListCloudVpcs(ListCloudVpcsRequest) returns (ListCloudVpcsResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/vpcs"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取云所属地域vpc列表"
+      summary : "获取云所属地域vpc列表"
+    };
+  }
   rpc ListCloudSubnets(ListCloudSubnetsRequest) returns (ListCloudSubnetsResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/clouds/{cloudID}/subnets"
@@ -1018,6 +1027,15 @@ service ClusterManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "根据筛选条件查询Node机型列表"
       summary : "查询Node机型"
+    };
+  }
+  rpc ListCloudProjects(ListCloudProjectsRequest) returns (ListCloudProjectsResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/projects"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取云项目列表"
+      summary : "获取云项目列表"
     };
   }
   rpc ListCloudOsImage(ListCloudOsImageRequest) returns (ListCloudOsImageResponse) {
@@ -1450,6 +1468,10 @@ message Cluster {
     title: "module",
     description: "集群维度节点上下架时当前集群业务下转移模块信息"
   }];
+  ClusterConnectSetting clusterConnectSetting = 43 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterConnectSetting",
+    description: "集群开启内外网设，公有云必须设置此参数"
+  }];
 }
 
 message Node {
@@ -1590,10 +1612,22 @@ message NetworkSetting {
     title: "cidrStep",
     description: "自动分配cidr步长设置(默认是生产环境4096、其他环境2048)"
   }];
+  string clusterIpType = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterIpType",
+    description: "集群使用的网络类型(ipv4/ipv6/dual),目前默认是ipv4类型"
+  }];
+  string clusterIPv6CIDR = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterIPv6CIDR",
+    description: "集群总IPv6地址池"
+  }];
+  string serviceIPv6CIDR = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "serviceIPv6CIDR",
+    description: "集群service使用的IPv6地址池"
+  }];
 }
 
 message SubnetSource {
-  NewSubnet new = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated NewSubnet new = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "new",
     description: "VPC-CNI网络模式下申请subnet"
   }];
@@ -1618,6 +1652,10 @@ message NewSubnet {
   string zone = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "zone",
     description: "申请vpc-cni网络subnet时region下的可用区"
+  }];
+  uint32 ipCnt = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ipCnt",
+    description: "申请vpc-cni网络subnet时的IP个数"
   }];
 }
 
@@ -1673,7 +1711,8 @@ message ClusterAdvanceSetting {
   }];
   string networkType = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "networkType",
-    description: "集群网络类型（包括GR(全局路由)和VPC-CNI两种模式，默认为GR. 也支持CiliumOverlay模式"
+    description: "集群网络类型（包括GR(全局路由)和VPC-CNI两种模式，默认为GR."
+      "也支持CiliumOverlay模式（(flannel、calico、或者云上自研网络插件等)）"
   }];
   bool deletionProtection = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "deletionProtection",
@@ -1683,8 +1722,37 @@ message ClusterAdvanceSetting {
     title: "auditEnabled",
     description: "是否开启审计开关"
   }];
+  bool enableHa = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "enableHa",
+    description: "自建集群是否开启高可用"
+  }];
 }
 
+// ClusterConnectSetting ApiServer内外网访问信息
+message ClusterConnectSetting {
+  bool isExtranet = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isExtranet",
+    description: "isExtranet集群内外网访问(true外网访问 false内网访问, 默认false)"
+  }];
+  string subnetId = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subnetId",
+    description: "集群端口所在的子网ID(开启内网访问所需)"
+  }];
+  string domain = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "domain",
+    description: "用户设置访问端点域名"
+  }];
+  string securityGroup = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "securityGroup",
+    description: "使用的安全组，只有外网访问需要传递（开启外网访问时必传）"
+  }];
+  InternetAccessible internet = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "internet",
+    description: "创建lb参数，只有外网访问需要传递（开启外网访问时必传）"
+  }];
+}
+
+// 集群节点通用配置
 message NodeSetting {
   string dockerGraphPath = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "dockerGraphPath", 
@@ -1706,6 +1774,22 @@ message NodeSetting {
     title: "extraArgs",
     description: "配置各模块自定义参数，预定义的key为kubelet"
         "value为各模块进程启动参数，多个参数之间使用;间隔，例如Kubelet: root-dir=/var/lib/kubelet;"
+  }];
+  string initLoginUsername = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "initLoginUsername",
+    description: "新实例初始设置username"
+  }];
+  string initLoginPassword = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "initLoginPassword",
+    description: "新实例初始设置password,如果不设置系统自动生成"
+  }];
+  KeyInfo keyPair = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "keyPair",
+    description: "节点私钥信息, 与密码2选一，2者均设置优先密钥"
+  }];
+  repeated Taint taints = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taints",
+    description: "新实例初始化taints信息"
   }];
 }
 
@@ -3337,6 +3421,14 @@ message InstanceTemplateConfig {
     title: "keyPair",
     description: "节点私钥信息, 与密码2选一，2者均设置优先密钥"
   }];
+  string dockerGraphPath = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dockerGraphPath",
+    description: "节点运行时容器目录，BCS默认设置/data/bcs/service/docker"
+  }];
+  string nodeRole = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeRole",
+    description: "节点角色, 取值:MASTER_ETCD, WORKER。MASTER_ETCD只有在创建 INDEPENDENT_CLUSTER 独立集群时需要指定"
+  }];
 }
 
 //LaunchConfigure template for scaling node
@@ -4663,7 +4755,7 @@ message CreateClusterReq {
   }];
   bool autoGenerateMasterNodes = 30[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "autoGenerateMasterNodes",
-    description: "创建集群是否使用已存在节点, 默认false; 为true时, 需要生成master instance"
+    description: "创建集群Master节点来源, 默认false表示使用已有节点; 为true时, 需要生成master instance"
   }];
   repeated InstanceTemplateConfig instances = 31[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "instances",
@@ -4712,6 +4804,10 @@ message CreateClusterReq {
   ModuleInfo module = 42 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "module",
     description: "集群维度节点上下架时当前集群业务下转移模块信息"
+  }];
+  ClusterConnectSetting clusterConnectSetting = 43 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterConnectSetting",
+    description: "集群开启内外网设，公有云必须设置此参数"
   }];
 }
 
@@ -10496,6 +10592,127 @@ message OsImage {
     title : "provider",
     description : "镜像提供方，可选值: PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像)"
   }];
+}
+
+message ListCloudProjectsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudProjectsRequest"
+      description : "查询云项目列表"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+}
+
+message ListCloudProjectsResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudProjectsResponse"
+      description : "查询云项目列表返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated CloudProject data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
+  }];
+}
+
+message CloudProject {
+  uint64 projectID=1;
+  string projectName=2;
+}
+
+message ListCloudVpcsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudVpcsRequest"
+      description : "查询云所属项目的vpc列表"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+  string vpcID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcID",
+    description: "过滤查询指定vpc的信息"
+  }];
+}
+
+message ListCloudVpcsResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudVpcsResponse"
+      description : "查询云所属地域的vpc列表"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated CloudVpc data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
+  }];
+}
+
+message CloudVpc {
+  string name=1;
+  string vpcId=2;
+  string ipv4Cidr=3;
+  string ipv6Cidr=4;
+  repeated AssistantCidr cidrs =5;
+}
+
+message AssistantCidr {
+  string cidr=1;
+  // 辅助CIDR类型（0：普通辅助CIDR，1：容器辅助CIDR），默认都是0。
+  int32 cidrType=2;
 }
 
 message ListCloudSubnetsRequest {

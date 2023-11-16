@@ -16,18 +16,46 @@ import "testing"
 
 func getNewClient() *Client {
 	cli, err := NewGseClient(Options{
-		Enable:     true,
-		AppCode:    "xx",
-		AppSecret:  "xxx",
-		Server:     "xxx",
-		BKUserName: "xxx",
-		Debug:      true,
+		Enable:        true,
+		AppCode:       "xx",
+		AppSecret:     "xxx",
+		EsbServer:     "xxx",
+		GatewayServer: "xxx",
+		BKUserName:    "xxx",
+		Debug:         true,
 	})
 	if err != nil {
 		return nil
 	}
 
 	return cli
+}
+
+func TestGetAgentStatus(t *testing.T) {
+	cli := getNewClient()
+
+	resp, err := cli.GetHostsGseAgentStatus(
+		"0", []Host{
+			{
+				IP:        "xxx",
+				BKCloudID: 0,
+			},
+			{
+				IP:        "xxx",
+				BKCloudID: 0,
+			},
+			{
+				IP:        "xxx",
+				BKCloudID: 0,
+				AgentID:   "0200000000525400256d841698141240494m",
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("%+v", resp)
 }
 
 func TestGetAgentStatusV1(t *testing.T) {

@@ -14,6 +14,7 @@ package sqlstore
 
 import (
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/utils"
 )
 
 // GetCredentials query for clusterCredentials by clusterId
@@ -61,6 +62,7 @@ func GetWsCredentials(serverKey string) *m.WsClusterCredentials {
 	credentials := m.WsClusterCredentials{}
 	GCoreDB.Where(&m.WsClusterCredentials{ServerKey: serverKey}).First(&credentials)
 	if credentials.ID != 0 {
+		credentials.ServerAddress = utils.RefineIPv6Addr(credentials.ServerAddress)
 		return &credentials
 	}
 	return nil
@@ -77,5 +79,8 @@ func GetWsCredentialsByClusterId(clusterId string) []*m.WsClusterCredentials {
 	var credentials []*m.WsClusterCredentials
 	query := clusterId + "-%"
 	GCoreDB.Where("server_key LIKE ?", query).Find(&credentials)
+	for _, v := range credentials {
+		v.ServerAddress = utils.RefineIPv6Addr(v.ServerAddress)
+	}
 	return credentials
 }

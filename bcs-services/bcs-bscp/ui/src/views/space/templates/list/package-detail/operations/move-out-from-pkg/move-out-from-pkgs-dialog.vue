@@ -3,7 +3,7 @@
     ext-cls="move-out-from-pkgs-dialog"
     header-align="center"
     footer-align="center"
-    :title="`确认将配置文件【${name}】移出套餐?`"
+    title="确认删除该配置文件？"
     :width="600"
     :is-show="props.show"
     :esc-close="false"
@@ -11,26 +11,32 @@
     @confirm="handleConfirm"
     @closed="close"
   >
-    <bk-loading style="min-height: 100px" :loading="loading">
-      <bk-table
-        v-if="!loading"
-        :data="citedList"
-        :max-height="maxTableHeight"
-        :is-selected-fn="getSelectionStatus"
-        @selection-change="handleSelectionChange"
-      >
-        <bk-table-column v-if="citedList.length > 1" type="selection" min-width="30" width="40" />
-        <bk-table-column label="所在模板套餐">
-          <template #default="{ row }">
-            <div class="pkg-name">
-              <span v-overflow-title class="name-text">{{ row.name }}</span>
-              <span v-if="props.currentPkg === row.id" class="tag">当前</span>
-            </div>
-          </template>
-        </bk-table-column>
-        <bk-table-column show-overflow-tooltip label="使用此套餐的服务" prop="appNames"></bk-table-column>
-      </bk-table>
-    </bk-loading>
+    <div style="margin-bottom: 8px">
+      配置文件: <span style="color: #313238; font-weight: 600">{{ name }}</span>
+    </div>
+    <div style="margin-bottom: 8px">一旦删除，该操作将无法撤销，请谨慎操作</div>
+    <div class="service-table">
+      <bk-loading style="min-height: 100px" :loading="loading">
+        <bk-table
+          v-if="!loading"
+          :data="citedList"
+          :max-height="maxTableHeight"
+          :is-selected-fn="getSelectionStatus"
+          @selection-change="handleSelectionChange"
+        >
+          <bk-table-column v-if="citedList.length > 1" type="selection" min-width="30" width="40" />
+          <bk-table-column label="所在模板套餐">
+            <template #default="{ row }">
+              <div class="pkg-name">
+                <span v-overflow-title class="name-text">{{ row.name }}</span>
+                <span v-if="props.currentPkg === row.id" class="tag">当前</span>
+              </div>
+            </template>
+          </bk-table-column>
+          <bk-table-column show-overflow-tooltip label="使用此套餐的服务" prop="appNames"></bk-table-column>
+        </bk-table>
+      </bk-loading>
+    </div>
     <p v-if="citedList.length === 1" class="tips">
       <Warn class="warn-icon" />
       移出后配置文件将不存在任一套餐。你仍可在「全部配置文件」或「未指定套餐」分类下找回。

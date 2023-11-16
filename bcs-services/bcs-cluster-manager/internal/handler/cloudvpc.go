@@ -137,6 +137,23 @@ func (cm *ClusterManager) ListCloudSubnets(ctx context.Context,
 	return nil
 }
 
+// ListCloudVpcs implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudVpcs(ctx context.Context,
+	req *cmproto.ListCloudVpcsRequest, resp *cmproto.ListCloudVpcsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fa := cloudvpc.NewListCloudVpcsAction(cm.model)
+	fa.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudVpcs", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudVpcs, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCloudVpcs, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListCloudSecurityGroups implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListCloudSecurityGroups(ctx context.Context,
 	req *cmproto.ListCloudSecurityGroupsRequest, resp *cmproto.ListCloudSecurityGroupsResponse) error {

@@ -25,9 +25,8 @@
             class="search-group-input"
             placeholder="说明/更新人"
             :clearable="true"
-            @enter="refreshListWithLoading()"
-            @clear="refreshListWithLoading"
-            @change="handleSearchInputChange"
+            @clear="refreshListWithLoading()"
+            @input="handleSearchInputChange"
           >
             <template #suffix>
               <Search class="search-input-icon" />
@@ -62,7 +61,8 @@
               <span v-if="index === 0 && isCreateCredential" style="color: #c4c6cc">待确认</span>
               <div v-if="row.spec" class="credential-text">
                 <div class="text">
-                  <bk-overflow-title>{{ row.visible ? row.spec.enc_credential : '************' }}</bk-overflow-title>
+                  <span v-if="!row.visible">************</span>
+                  <bk-overflow-title v-else type="tips">{{ row.spec.enc_credential }}</bk-overflow-title>
                 </div>
                 <div class="actions">
                   <Eye v-if="row.visible" class="view-icon" @click="row.visible = false" />
@@ -100,11 +100,11 @@
               <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
             </template>
           </bk-table-column>
-          <bk-table-column label="最近使用时间" width="154">
+          <!-- <bk-table-column label="最近使用时间" width="154">
             <template #default="{ row }">
               <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
             </template>
-          </bk-table-column>
+          </bk-table-column> -->
           <bk-table-column label="状态" width="110">
             <template #default="{ row }">
               <div v-if="row.spec" class="status-action">
@@ -212,6 +212,7 @@ import { copyToClipBoard, datetimeFormat } from '../../../utils/index';
 import { ICredentialItem } from '../../../../types/credential';
 import AssociateConfigItems from './associate-config-items/index.vue';
 import tableEmpty from '../../../components/table/table-empty.vue';
+import { debounce } from 'lodash';
 
 const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 
@@ -317,6 +318,7 @@ const refreshListWithLoading = async (current = 1) => {
   pagination.value.current = current;
   await loadCredentialList();
   listLoading.value = false;
+  isCreateCredential.value = false;
 };
 
 // 设置新增行的标记class
@@ -368,7 +370,6 @@ const handleCreateCredential = async () => {
       newCredentials.value.splice(index, 1);
     }, 3000);
   } catch (e) {
-    console.log(e);
     console.error(e);
   } finally {
     createPending.value = false;
@@ -386,12 +387,8 @@ const handleCancelCreateCredential = () => {
   createCredentialName.value = '';
 };
 
-// 搜索框输入事件处理，内容为空时触发一次搜索
-const handleSearchInputChange = (val: string) => {
-  if (!val) {
-    refreshListWithLoading();
-  }
-};
+// 搜索内容改变 触发搜索
+const handleSearchInputChange = debounce(() => refreshListWithLoading(), 300);
 
 // 密钥说明编辑
 const handleEditMemo = (id: number) => {
@@ -450,6 +447,7 @@ const handelToggleEnable = async (credential: ICredentialItem) => {
       id: credential.id,
       memo: credential.spec.memo,
       enable: true,
+      name: credential.spec.name,
     };
     await updateCredential(spaceId.value, params);
     credential.spec.enable = true;
@@ -517,7 +515,7 @@ const clearSearchStr = () => {
 // 校验新建密钥名称
 const testCreateCredentialName = () => {
   if (!createCredentialName.value) return;
-  const regex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-]*[\u4e00-\u9fa5a-zA-Z0-9]$/;
+  const regex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_-]*[\u4e00-\u9fa5a-zA-Z0-9]$/;
   if (!regex.test(createCredentialName.value)) {
     BkMessage({
       theme: 'error',

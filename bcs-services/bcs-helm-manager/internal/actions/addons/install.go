@@ -73,9 +73,15 @@ func (i *InstallAddonsAction) Handle(ctx context.Context,
 	}
 
 	// save db
-	if err := i.saveDB(ctx, addons.Namespace, addons.ChartName); err != nil {
+	if err := i.saveDB(ctx, addons.Namespace, addons.ChartName, addons.ReleaseName()); err != nil {
 		blog.Errorf("save addons failed, %s", err.Error())
 		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error())
+		return nil
+	}
+
+	// 对于非 chart 类型的 addons，直接返回成功
+	if addons.ChartName == "" {
+		i.setResp(common.ErrHelmManagerSuccess, "ok")
 		return nil
 	}
 
@@ -87,12 +93,13 @@ func (i *InstallAddonsAction) Handle(ctx context.Context,
 		ProjectCode:    contextx.GetProjectCodeFromCtx(ctx),
 		ProjectID:      contextx.GetProjectIDFromCtx(ctx),
 		ClusterID:      i.req.GetClusterID(),
-		Name:           addons.Name,
+		Name:           addons.ReleaseName(),
 		Namespace:      addons.Namespace,
 		RepoName:       common.PublicRepoName,
 		ChartName:      addons.ChartName,
 		Version:        i.req.GetVersion(),
 		Values:         []string{i.req.GetValues()},
+		Args:           defaultArgs,
 		Username:       auth.GetUserFromCtx(ctx),
 	}
 	action := actions.NewReleaseInstallAction(options)
@@ -104,13 +111,17 @@ func (i *InstallAddonsAction) Handle(ctx context.Context,
 	return nil
 }
 
-func (i *InstallAddonsAction) saveDB(ctx context.Context, ns, chartName string) error {
-	if err := i.model.DeleteRelease(ctx, i.req.GetClusterID(), ns, i.req.GetName()); err != nil {
+func (i *InstallAddonsAction) saveDB(ctx context.Context, ns, chartName, releaseName string) error {
+	if err := i.model.DeleteRelease(ctx, i.req.GetClusterID(), ns, releaseName); err != nil {
 		return err
 	}
 	createBy := auth.GetUserFromCtx(ctx)
+	status := helmrelease.StatusPendingInstall.String()
+	if chartName == "" {
+		status = helmrelease.StatusDeployed.String()
+	}
 	if err := i.model.CreateRelease(ctx, &entity.Release{
-		Name:         i.req.GetName(),
+		Name:         releaseName,
 		ProjectCode:  contextx.GetProjectCodeFromCtx(ctx),
 		Namespace:    ns,
 		ClusterID:    i.req.GetClusterID(),
@@ -118,8 +129,9 @@ func (i *InstallAddonsAction) saveDB(ctx context.Context, ns, chartName string) 
 		ChartName:    chartName,
 		ChartVersion: i.req.GetVersion(),
 		Values:       []string{i.req.GetValues()},
+		Args:         defaultArgs,
 		CreateBy:     createBy,
-		Status:       helmrelease.StatusPendingInstall.String(),
+		Status:       status,
 	}); err != nil {
 		return err
 	}

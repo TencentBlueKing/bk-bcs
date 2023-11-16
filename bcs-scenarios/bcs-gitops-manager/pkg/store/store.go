@@ -14,28 +14,41 @@ package store
 
 import (
 	"context"
+	"sync"
 
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
-
-	"sync"
-
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
+	"github.com/argoproj/argo-cd/v2/util/db"
+	settings_util "github.com/argoproj/argo-cd/v2/util/settings"
+	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 // Options for data storage
 type Options struct {
-	Service string // storage host, split by comma
-	User    string // storage user
-	Pass    string // storage pass
-	Cache   bool   // init cache for performance
+	Service        string // storage host, split by comma
+	User           string // storage user
+	Pass           string // storage pass
+	Cache          bool   // init cache for performance
+	AdminNamespace string
+
+	// RepoServerUrl this parameter must be passed in only
+	// when GetApplicationManifestsFromRepoServer needs to be called.
+	RepoServerUrl string
 }
 
 // Store define data interface for argocd structure.
 type Store interface {
 	// store control interface
 	Init() error
+	InitArgoDB(ctx context.Context) error
+	GetArgoDB() db.ArgoDB
 	Stop()
 	GetOptions() *Options
 
@@ -48,6 +61,7 @@ type Store interface {
 	// Cluster interface
 	CreateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
 	GetCluster(ctx context.Context, query *cluster.ClusterQuery) (*v1alpha1.Cluster, error)
+	GetClusterFromDB(ctx context.Context, serverUrL string) (*v1alpha1.Cluster, error)
 	ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error)
 	ListClustersByProject(ctx context.Context, project string) (*v1alpha1.ClusterList, error)
 	UpdateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
@@ -60,6 +74,11 @@ type Store interface {
 	GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error)
 	ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (*v1alpha1.ApplicationList, error)
 	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application) error
+	GetApplicationManifests(ctx context.Context, name, revision string) (*apiclient.ManifestResponse, error)
+	GetApplicationManifestsFromRepoServer(ctx context.Context,
+		application *v1alpha1.Application) (*apiclient.ManifestResponse, error)
+	ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
+		live *unstructured.Unstructured, hideData bool) error
 
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
@@ -75,4 +94,19 @@ func NewStore(opt *Options) Store {
 		option:           opt,
 		cacheApplication: &sync.Map{},
 	}
+}
+
+// NewArgoDB create the DB of argocd
+func NewArgoDB(ctx context.Context, adminNamespace string) (db.ArgoDB, *settings_util.SettingsManager, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "get in-cluster config failed")
+	}
+	kubeClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "create in-cluster client failed")
+	}
+	settingsMgr := settings_util.NewSettingsManager(ctx, kubeClient, adminNamespace)
+	dbInstance := db.NewDB(adminNamespace, settingsMgr, kubeClient)
+	return dbInstance, settingsMgr, nil
 }

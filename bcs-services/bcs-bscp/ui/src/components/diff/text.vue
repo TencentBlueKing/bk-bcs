@@ -9,7 +9,11 @@
       <section ref="textDiffRef" class="text-diff-wrapper"></section>
     </div>
     <div class="footer">
-      <navigator :diff-editor="diffEditor" :permission-editor="permissionEditor"></navigator>
+      <navigator
+        :permission-diff-number="permissionDiffNumber"
+        :diff-editor="diffEditor"
+        :permission-editor="permissionEditor"
+      ></navigator>
     </div>
   </div>
 </template>
@@ -64,10 +68,10 @@ const props = withDefaults(
 
 const textDiffRef = ref();
 const permissionDiffRef = ref();
+const permissionDiffNumber = ref(0);
 let diffEditor: monaco.editor.IStandaloneDiffEditor;
 let diffEditorHoverProvider: monaco.IDisposable;
 let permissionEditor: monaco.editor.IStandaloneDiffEditor;
-let permissionDiffEditorHoverProvider: monaco.IDisposable;
 
 const isShowPermissionDiff = computed(() => props.basePermission !== props.currentPermission);
 
@@ -92,6 +96,7 @@ watch(
   () => {
     updateModel();
     replaceDiffVariables();
+    getPermissionDiffNumber();
   },
 );
 
@@ -105,7 +110,6 @@ onBeforeUnmount(() => {
   permissionEditor.dispose();
   if (diffEditorHoverProvider) {
     diffEditorHoverProvider.dispose();
-    permissionDiffEditorHoverProvider.dispose();
   }
 });
 
@@ -176,14 +180,9 @@ const updateModel = () => {
 const replaceDiffVariables = () => {
   if (
     (props.currentVariables && props.currentVariables.length > 0) ||
-    (props.currentVariables && props.currentVariables.length > 0)
+    (props.baseVariables && props.baseVariables.length > 0)
   ) {
     diffEditorHoverProvider = useDiffEditorVariableReplace(diffEditor, props.currentVariables, props.baseVariables);
-    permissionDiffEditorHoverProvider = useDiffEditorVariableReplace(
-      permissionEditor,
-      props.currentVariables,
-      props.baseVariables,
-    );
   }
 };
 
@@ -199,6 +198,19 @@ const syncCursor = (editorA: any, editorB: any) => {
     editorB.setPosition(positionA);
   }
 };
+
+// 获取文件属性差异个数
+const getPermissionDiffNumber = () => {
+  const basePermissionList = props.basePermission?.split('\n');
+  const currentPermissionList = props.currentPermission?.split('\n');
+  let count = 0;
+  basePermissionList?.forEach((item, index) => {
+    if (item !== currentPermissionList![index]) {
+      count += 1;
+    }
+  });
+  permissionDiffNumber.value = count;
+};
 </script>
 <style lang="scss" scoped>
 .text-diff {
@@ -209,7 +221,7 @@ const syncCursor = (editorA: any, editorB: any) => {
     height: 100%;
     :deep(.monaco-editor) {
       .template-variable-item {
-        color: #1768ef;
+        color: #3a84ff;
         border: 1px solid #1768ef;
         cursor: pointer;
       }

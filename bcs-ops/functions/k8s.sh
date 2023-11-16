@@ -39,9 +39,9 @@ k8s::safe_add_helmrepo() {
     utils::log "INFO" "remove old helm repo: $repo_name"
     helm repo remove "$repo_name"
   fi
-  if ! helm repo add "$repo_name" "$repo_url";then
-	utils::log "ERROR" "can't add helm repo $repo_name $repo_url"
-	return 1
+  if ! helm repo add "$repo_name" "$repo_url"; then
+    utils::log "ERROR" "can't add helm repo $repo_name $repo_url"
+    return 1
   fi
   helm repo list
   if ! helm repo update; then
@@ -96,5 +96,20 @@ k8s::restart_kubelet() {
     return 1
   fi
   utils::log "ERROR" "restart kubelet service failed"
+  return 1
+}
+
+k8s::check_master() {
+  local timeout=5
+  while ((timeout > 0)); do
+    if ! kubectl cluster-info; then
+      utils::log "WARN" "timeout=$timeout, \
+controlplane has not been started yet, waiting"
+      crictl ps
+    else
+      return 0
+    fi
+	sleep 30
+  done
   return 1
 }

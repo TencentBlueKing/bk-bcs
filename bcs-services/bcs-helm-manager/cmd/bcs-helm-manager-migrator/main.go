@@ -132,7 +132,8 @@ func main() {
 
 	// migration
 	migrateRepo(model, mysqlDB)
-	migrateReleases(model, mysqlDB)
+	// migrateReleases(model, mysqlDB)
+	migrateAddons(model, mysqlDB)
 }
 
 // migrate repo from saas to helm
@@ -257,7 +258,7 @@ func createOrUpdatePublicRepo(model store.HelmManagerModel, projectID string) {
 }
 
 // migrate releases from saas
-func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
+func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) { // nolint
 	releases := getSaasHelmReleases(mysqlDB)
 	blog.Infof("get %d releases from saas, syncing", len(releases))
 	syncReleases := 0
@@ -318,7 +319,7 @@ func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 }
 
 // get saas helm releases from db
-func getSaasHelmReleases(db *gorm.DB) []release {
+func getSaasHelmReleases(db *gorm.DB) []release { // nolint
 	var releases []release
 	err := db.Raw("SELECT app.name,app.namespace,app.project_id,app.cluster_id,r.name AS repo," +
 		"hc.name AS chart_name,app.version,rl.revision,rl.valuefile_name,rl.valuefile,app.cmd_flags," +
@@ -366,6 +367,7 @@ type release struct {
 	CreateTime   time.Time `json:"createTime" gorm:"column:created"`
 	UpdateTime   time.Time `json:"updateTime" gorm:"column:updated"`
 	Status       int       `json:"status"`
+	StringStatus string    `json:"stringStatus" gorm:"column:string_status"`
 	Message      string    `json:"message"`
 }
 
@@ -373,20 +375,25 @@ type release struct {
 func (r *release) toEntity() (*entity.Release, error) {
 	args := make([]string, 0)
 	flags := make([]map[string]interface{}, 0)
-	err := json.Unmarshal([]byte(r.ArgString), &flags)
-	if err != nil {
-		return nil, fmt.Errorf("get %s cmd_flags %s error, err %s", r.Name, r.ArgString, err.Error())
-	}
-	// trans flag
-	for _, flag := range flags {
-		for k, v := range flag {
-			args = append(args, fmt.Sprintf("%s=%v", k, v))
+	if r.ArgString != "" {
+		err := json.Unmarshal([]byte(r.ArgString), &flags)
+		if err != nil {
+			return nil, fmt.Errorf("get %s cmd_flags %s error, err %s", r.Name, r.ArgString, err.Error())
+		}
+		// trans flag
+		for _, flag := range flags {
+			for k, v := range flag {
+				args = append(args, fmt.Sprintf("%s=%v", k, v))
+			}
 		}
 	}
 
 	status := helmrelease.StatusDeployed
 	if r.Status != 1 {
 		status = helmrelease.StatusFailed
+	}
+	if r.StringStatus != "" {
+		status = helmrelease.Status(r.StringStatus)
 	}
 	// init release struct
 	return &entity.Release{
@@ -423,6 +430,94 @@ func (r *release) getProjectCode() string {
 func mustInt(s string) int {
 	v, _ := strconv.Atoi(s)
 	return v
+}
+
+// migrate addons from saas
+func migrateAddons(model store.HelmManagerModel, mysqlDB *gorm.DB) {
+	addons := getSaasAddons(mysqlDB)
+	blog.Infof("get %d addons from saas, syncing", len(addons))
+	syncReleases := 0
+	existReleases := 0
+	for _, v := range addons {
+		if len(v.Name) == 0 || len(v.ClusterID) == 0 || len(v.Namespace) == 0 {
+			continue
+		}
+		// trans to helmmanager addons entity
+		rl, err := v.toEntity()
+		if err != nil {
+			blog.Errorf("create addons %s in cluster %s namespace %s, err %s",
+				v.Name, v.ClusterID, v.Namespace, err.Error())
+			continue
+		}
+		// check addons is exist
+		exist, err := model.GetRelease(context.TODO(), v.ClusterID, v.Namespace, v.Name)
+		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+			blog.Errorf("create addons %s in cluster %s namespace %s, err %s",
+				v.Name, v.ClusterID, v.Namespace, err.Error())
+			continue
+		}
+		// update addons
+		if err == nil {
+			existReleases++
+			if rl.UpdateTime <= exist.UpdateTime {
+				continue
+			}
+			up := entity.M{
+				entity.FieldKeyChartVersion: rl.ChartVersion,
+				entity.FieldKeyRevision:     rl.Revision,
+				entity.FieldKeyValueFile:    rl.ValueFile,
+				entity.FieldKeyValues:       rl.Values,
+				entity.FieldKeyArgs:         rl.Args,
+				entity.FieldKeyUpdateBy:     rl.UpdateBy,
+				entity.FieldKeyUpdateTime:   rl.UpdateTime,
+				entity.FieldKeyStatus:       rl.Status,
+				entity.FieldKeyMessage:      rl.Message,
+			}
+			// update release
+			err = model.UpdateRelease(context.TODO(), v.ClusterID, v.Namespace, v.Name, up)
+			if err != nil {
+				blog.Errorf("update addons %s in cluster %s namespace %s, err %s",
+					v.Name, v.ClusterID, v.Namespace, err.Error())
+			}
+			continue
+		}
+		// create addons
+		err = model.CreateRelease(context.TODO(), rl)
+		if err != nil {
+			blog.Errorf("create addons %s in cluster %s namespace %s, err %s",
+				v.Name, v.ClusterID, v.Namespace, err.Error())
+			continue
+		}
+		syncReleases++
+	}
+	blog.Infof("%d addons are synced, %d addons are exist", syncReleases, existReleases)
+}
+
+// get saas addons from db
+func getSaasAddons(db *gorm.DB) []release {
+	var releases []release
+	err := db.Raw("SELECT addons.release_name AS name,addons.namespace,addons.project_id,addons.cluster_id," +
+		"'public-repo' AS repo,tool.chart_name,addons.chart_url AS version,addons.values AS valuefile,addons.creator," +
+		"addons.updator,addons.created,addons.updated,addons.status as string_status,addons.message AS message " +
+		"from cluster_tools_installedtool as addons LEFT JOIN cluster_tools_tool as tool ON tool.id=addons.tool_id " +
+		"where addons.is_deleted=0").
+		Scan(&releases).Error
+	if err != nil {
+		blog.Fatalf("get saas helm releases failed, err %s", err.Error())
+	}
+	// 组件库版本从 chart_url 中解析
+	for i := range releases {
+		if releases[i].ChartVersion == "" {
+			continue
+		}
+		names := strings.Split(releases[i].ChartVersion, "/")
+		if len(names) <= 2 {
+			continue
+		}
+		c := strings.ReplaceAll(names[len(names)-1], ".tgz", "")
+		releases[i].ChartVersion = strings.ReplaceAll(c, fmt.Sprintf("%s-", releases[i].ChartName), "")
+	}
+	return releases
 }
 
 // load config from yaml

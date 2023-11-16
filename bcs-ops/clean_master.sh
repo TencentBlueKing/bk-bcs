@@ -17,7 +17,7 @@ ROOT_DIR=${SELF_DIR}
 readonly SELF_DIR ROOT_DIR
 
 # only 1.2[0-1] to run
-kubeadm reset phase update-cluster-status || true
-kubeadm reset phase remove-etcd-member
+kubeadm reset phase update-cluster-status --v=5 || true
+kubeadm reset phase remove-etcd-member --v=5
 
 "${ROOT_DIR}"/clean_node.sh

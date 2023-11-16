@@ -65,6 +65,7 @@ type Set interface {
 	Healthz() error
 	Credential() Credential
 	CredentialScope() CredentialScope
+	Kv() Kv
 }
 
 // NewDaoSet create the DAO set instance.
@@ -427,12 +428,22 @@ func (s *set) Credential() Credential {
 		idGen:             s.idGen,
 		auditDao:          s.auditDao,
 		genQ:              s.genQ,
+		event:             s.event,
 	}
 }
 
 // CredentialScope returns the Credential scope's DAO
 func (s *set) CredentialScope() CredentialScope {
 	return &credentialScopeDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// Kv returns the kv DAO
+func (s *set) Kv() Kv {
+	return &kvDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,

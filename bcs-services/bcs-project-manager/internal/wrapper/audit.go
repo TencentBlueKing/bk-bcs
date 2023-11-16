@@ -40,14 +40,15 @@ func NewAuditWrapper(fn server.HandlerFunc) server.HandlerFunc {
 
 // resource ResourceData struct
 type resource struct {
-	ClusterID   string `json:"clusterID" yaml:"clusterID"`
-	Namespace   string `json:"namespace" yaml:"namespace"`
-	Name        string `json:"name" yaml:"name"`
-	Key         string `json:"key" yaml:"key"`
-	IDs         string `json:"idList" yaml:"idList"`
-	VariableID  string `json:"variableID" yaml:"variableID"`
-	ProjectID   string `json:"projectID" yaml:"projectID"`
-	ProjectCode string `json:"projectCode" yaml:"projectCode"`
+	ClusterID       string `json:"clusterID" yaml:"clusterID"`
+	Namespace       string `json:"namespace" yaml:"namespace"`
+	Name            string `json:"name" yaml:"name"`
+	Key             string `json:"key" yaml:"key"`
+	IDs             string `json:"idList" yaml:"idList"`
+	VariableID      string `json:"variableID" yaml:"variableID"`
+	ProjectID       string `json:"projectID" yaml:"projectID"`
+	ProjectCode     string `json:"projectCode" yaml:"projectCode"`
+	ProjectIDOrCode string `json:"projectIDOrCode" yaml:"projectIDOrCode"`
 }
 
 // resource to map
@@ -84,13 +85,22 @@ func getResourceID(req server.Request) resource {
 
 	resourceID := resource{}
 	_ = json.Unmarshal(b, &resourceID)
+	// ProjectCode为空的情况下使用ProjectID或者ProjectIDOrCode代替
+	if resourceID.ProjectCode == "" {
+		if resourceID.ProjectID != "" {
+			resourceID.ProjectCode = resourceID.ProjectID
+		} else {
+			resourceID.ProjectCode = resourceID.ProjectIDOrCode
+		}
+	}
+
 	return resourceID
 }
 
 // NOCC: golint/unparam(设计如此:)
 // nolint
-var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.Resource, audit.Action){
-	"BCSProject.CreateProject": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Action){
+	"BCSProject.CreateProject": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
@@ -98,19 +108,23 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "project_create", ActivityType: audit.ActivityTypeCreate}
 	},
-	"BCSProject.UpdateProject": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"BCSProject.GetProject": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
-		// ProjectID 代替 ProjectCode
-		if res.ProjectCode == "" {
-			res.ProjectCode = res.ProjectID
-		}
+		return audit.Resource{
+			ProjectCode:  res.ProjectCode,
+			ResourceType: audit.ResourceTypeProject, ResourceID: res.ProjectCode, ResourceName: res.ProjectCode,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "project_get", ActivityType: audit.ActivityTypeView}
+	},
+	"BCSProject.UpdateProject": func(req server.Request) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
 			ResourceType: audit.ResourceTypeProject, ResourceID: res.ProjectID, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "project_edit", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"Namespace.CreateNamespace": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Namespace.CreateNamespace": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
@@ -118,7 +132,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "namespace_create", ActivityType: audit.ActivityTypeCreate}
 	},
-	"Namespace.UpdateNamespace": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Namespace.UpdateNamespace": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
@@ -126,7 +140,15 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "namespace_update", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"Namespace.DeleteNamespace": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Namespace.GetNamespace": func(req server.Request) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ProjectCode:  res.ProjectCode,
+			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Namespace, ResourceName: res.Namespace,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "namespace_get", ActivityType: audit.ActivityTypeView}
+	},
+	"Namespace.DeleteNamespace": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
@@ -134,7 +156,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "namespace_delete", ActivityType: audit.ActivityTypeDelete}
 	},
-	"Variable.CreateVariable": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Variable.CreateVariable": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
@@ -142,7 +164,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "create_variable", ActivityType: audit.ActivityTypeCreate}
 	},
-	"Variable.UpdateVariable": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Variable.UpdateVariable": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
@@ -150,7 +172,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_variable", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"Variable.DeleteVariableDefinitions": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Variable.DeleteVariableDefinitions": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
@@ -158,7 +180,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "deleteVariable_definitions", ActivityType: audit.ActivityTypeDelete}
 	},
-	"Variable.UpdateClustersVariables": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Variable.UpdateClustersVariables": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
@@ -166,7 +188,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_clusters_variables", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"Variable.UpdateNamespacesVariables": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Variable.UpdateNamespacesVariables": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
@@ -174,7 +196,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_namespaces_variables", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"Variable.UpdateClusterVariables": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Variable.UpdateClusterVariables": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
@@ -182,7 +204,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_cluster_variables", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"Variable.UpdateNamespaceVariables": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"Variable.UpdateNamespaceVariables": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
@@ -200,7 +222,7 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 		return
 	}
 
-	res, act := fn(req, rsp)
+	res, act := fn(req)
 
 	// get audit context
 	auditCtx := audit.RecorderContext{
@@ -246,6 +268,10 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 	}
 
 	// add audit
-	_ = component.GetAuditClient().R().
-		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
+	auditAction := component.GetAuditClient().R()
+	if act.ActivityType == audit.ActivityTypeView {
+		// 查看类型不用记录 activity
+		auditAction.DisableActivity()
+	}
+	_ = auditAction.SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 }

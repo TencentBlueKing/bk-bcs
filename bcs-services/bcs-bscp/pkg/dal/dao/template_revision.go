@@ -50,6 +50,10 @@ type TemplateRevision interface {
 		[]*table.TemplateRevision, error)
 	// DeleteForTmplWithTx delete template revision for one template with transaction.
 	DeleteForTmplWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateID uint32) error
+	// BatchCreateWithTx batch create template revisions instances with transaction.
+	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, revisions []*table.TemplateRevision) error
+	// ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids
+	ListLatestRevisionsGroupByTemplateIds(kit *kit.Kit, templateIDs []uint32) ([]*table.TemplateRevision, error)
 }
 
 var _ TemplateRevision = new(templateRevisionDao)
@@ -263,4 +267,51 @@ func (dao *templateRevisionDao) validateAttachmentExist(kit *kit.Kit, am *table.
 	}
 
 	return nil
+}
+
+// BatchCreateWithTx batch create template revision instances with transaction.
+func (dao *templateRevisionDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	revisions []*table.TemplateRevision) error {
+	if len(revisions) == 0 {
+		return nil
+	}
+	ids, err := dao.idGen.Batch(kit, table.TemplateRevisionsTable, len(revisions))
+	if err != nil {
+		return err
+	}
+	for i, item := range revisions {
+		if err := item.ValidateCreate(); err != nil {
+			return err
+		}
+		item.ID = ids[i]
+	}
+	return tx.Query.TemplateRevision.WithContext(kit.Ctx).Save(revisions...)
+}
+
+// ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids
+func (dao *templateRevisionDao) ListLatestRevisionsGroupByTemplateIds(kit *kit.Kit,
+	templateIDs []uint32) ([]*table.TemplateRevision, error) {
+	m := dao.genQ.TemplateRevision
+	// 根据templateIDs获取一列最大 templateRevisionIDs
+	// 再通过最大 templateRevisionIDs 获取 templateRevision 数据
+	var templateRevisionIDs []struct {
+		Id uint32
+	}
+	err := m.WithContext(kit.Ctx).
+		Select(m.ID.Max().As("id")).
+		Where(m.TemplateID.In(templateIDs...)).
+		Group(m.TemplateID).
+		Scan(&templateRevisionIDs)
+	if err != nil {
+		return nil, err
+	}
+	ids := []uint32{}
+	for _, item := range templateRevisionIDs {
+		ids = append(ids, item.Id)
+	}
+	find, err := m.WithContext(kit.Ctx).Where(m.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return find, nil
 }

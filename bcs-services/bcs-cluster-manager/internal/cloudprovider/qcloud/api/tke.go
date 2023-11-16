@@ -15,6 +15,7 @@ package api
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -75,7 +76,9 @@ func (cli *TkeClient) CreateTKECluster(createReq *CreateClusterRequest) (*Create
 		return nil, err
 	}
 
-	blog.Infof("CreateTKECluster request[%+v]", req)
+	tags, _ := json.Marshal(createReq.ClusterBasic.TagSpecification)
+	blog.Infof("CreateTKECluster tags %s", tags)
+
 	resp, err := cli.tke.CreateCluster(req)
 	if err != nil {
 		blog.Errorf("CreateTKECluster client CreateCluster[%s] failed: %v", createReq.ClusterBasic.ClusterName, err)

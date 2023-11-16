@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -228,7 +229,7 @@ func actionMustExistParas(actionName string, paras map[string]string) error {
 	}
 	// trans to sops CM template paras
 	for k, v := range newParas {
-		if templateVar, ok := template.InnerTemplateVars[v]; ok {
+		if templateVar, ok := template.InnerTemplateVars[strings.TrimSpace(v)]; ok {
 			paras[k] = templateVar.TransMethod
 		}
 	}

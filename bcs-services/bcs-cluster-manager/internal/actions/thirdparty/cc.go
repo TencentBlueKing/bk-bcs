@@ -80,7 +80,7 @@ func (la *ListCCTopologyAction) listTopology() error {
 		return fmt.Errorf("get cluster bkBizID failed, err: %s", err.Error())
 	}
 	cli := cmdb.GetCmdbClient()
-	internalModules, err := cli.ListTopology(bkBizID, la.filterInter(), false)
+	internalModules, err := cli.ListTopology(la.ctx, bkBizID, la.filterInter(), false)
 	if err != nil {
 		blog.Errorf("GetBizInternalModule failed, err %s", err.Error())
 		return err

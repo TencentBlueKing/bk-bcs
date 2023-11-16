@@ -15,39 +15,15 @@ package tasks
 import (
 	"context"
 	"errors"
-	"time"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
-
-func transImageNameToImageID(cmOption *cloudprovider.CommonOption, imageName string) (string, error) { // nolint
-	imageID, err := business.GetCVMImageIDByImageName(imageName, cmOption)
-	if err == nil {
-		return imageID, nil
-	}
-
-	return imageName, nil
-}
-
-func transIPsToInstances(cmOption *cloudprovider.ListNodesOption, ips []string) (map[string]*cmproto.Node, error) {
-	nodes, err := business.ListNodesByIP(ips, cmOption)
-	if err != nil {
-		return nil, err
-	}
-
-	instances := make(map[string]*cmproto.Node, 0)
-	for i := range nodes {
-		instances[nodes[i].InnerIP] = nodes[i]
-	}
-
-	return instances, nil
-}
 
 // updateClusterSystemID set cluster systemID
 func updateClusterSystemID(clusterID string, systemID string) error {
@@ -98,8 +74,16 @@ func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption)
 	return nodes, nil
 }
 
-func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprovider.ListNodesOption) error {
-	nodes, err := business.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
+func importClusterNodesToCM(ctx context.Context, workNodes []InstanceInfo, opt *cloudprovider.ListNodesOption) error {
+	var (
+		workerIps       = make([]string, 0)
+		ipToInstanceMap = make(map[string]InstanceInfo, 0)
+	)
+	for i := range workNodes {
+		workerIps = append(workerIps, workNodes[i].InstanceIP)
+		ipToInstanceMap[workNodes[i].InstanceIP] = workNodes[i]
+	}
+	nodes, err := business.ListNodesByIP(workerIps, &cloudprovider.ListNodesOption{
 		Common:       opt.Common,
 		ClusterVPCID: opt.ClusterVPCID,
 	})
@@ -117,7 +101,14 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 
 		if node == nil {
 			n.ClusterID = opt.ClusterID
-			n.Status = common.StatusRunning
+			n.NodeTemplateID = opt.NodeTemplateID
+
+			ins, ok := ipToInstanceMap[n.InnerIP]
+			if ok && ins.InstanceStatus == api.RunningInstanceTke.String() {
+				n.Status = common.StatusRunning
+			} else {
+				n.Status = common.StatusAddNodesFailed
+			}
 			err = cloudprovider.GetStorageModel().CreateNode(ctx, n)
 			if err != nil {
 				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", n.InnerIP, err)
@@ -127,35 +118,6 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 		err = cloudprovider.GetStorageModel().UpdateNode(ctx, n)
 		if err != nil {
 			blog.Errorf("importClusterNodes UpdateNode[%s] failed: %v", n.InnerIP, err)
-		}
-	}
-
-	return nil
-}
-
-// releaseClusterCIDR release cluster CIDR
-func releaseClusterCIDR(cls *cmproto.Cluster) error {
-	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 {
-		cidr, err := cloudprovider.GetStorageModel().GetTkeCidr(context.Background(),
-			cls.VpcID, cls.NetworkSettings.ClusterIPv4CIDR)
-		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
-			return err
-		}
-
-		if cidr == nil {
-			return nil
-		}
-
-		if cidr.Cluster == cls.ClusterID && cidr.Status == common.TkeCidrStatusUsed {
-			// update cidr and save to DB
-			updateCidr := cidr
-			updateCidr.Status = common.TkeCidrStatusAvailable
-			updateCidr.Cluster = ""
-			updateCidr.UpdateTime = time.Now().String()
-			err = cloudprovider.GetStorageModel().UpdateTkeCidr(context.Background(), updateCidr)
-			if err != nil {
-				return err
-			}
 		}
 	}
 

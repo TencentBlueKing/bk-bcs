@@ -12,7 +12,7 @@ replace (
 )
 
 require (
-	github.com/TencentBlueKing/iam-go-sdk v0.1.4
+	github.com/TencentBlueKing/iam-go-sdk v0.1.5
 	github.com/envoyproxy/protoc-gen-validate v0.6.13
 	github.com/golang/glog v1.0.0
 	github.com/golang/protobuf v1.5.2
@@ -145,7 +145,7 @@ require (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230913100253-5f6cd1c89f29
-	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230913100253-5f6cd1c89f29
+	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20231030071618-1e6240162176
 	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230913100253-5f6cd1c89f29
 	github.com/Tencent/bk-bcs/bcs-common/pkg/i18n v0.0.0-20230817073110-e2040bc0a4cf
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230607093333-1f5cd2719e19

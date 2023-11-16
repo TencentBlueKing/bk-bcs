@@ -34,18 +34,20 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/sync"
 	"go-micro.dev/v4/util/file"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
+	"go-micro.dev/v4"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/handler"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/controller"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
@@ -97,6 +99,10 @@ type Server struct {
 // Init all subsystems
 func (s *Server) Init() error {
 	s.initMetricService()
+	component.InitAuditClient(&component.Option{
+		Gateway: s.option.AuditConfig.BCSGateway,
+		Token:   s.option.AuditConfig.Token,
+	})
 	initializer := []func() error{
 		s.initSecret, s.initIamJWTClient, s.initStorage, s.initController,
 		s.initMicroService, s.initHTTPService, s.initLeaderElection,
@@ -141,15 +147,20 @@ func (s *Server) stop() {
 
 func (s *Server) initStorage() error {
 	opt := &store.Options{
-		Service: s.option.GitOps.Service,
-		User:    s.option.GitOps.User,
-		Pass:    s.option.GitOps.Pass,
-		Cache:   true,
+		Service:        s.option.GitOps.Service,
+		User:           s.option.GitOps.User,
+		Pass:           s.option.GitOps.Pass,
+		Cache:          true,
+		AdminNamespace: s.option.GitOps.AdminNamespace,
+		RepoServerUrl:  s.option.GitOps.RepoServer,
 	}
 	s.storage = store.NewStore(opt)
-	if err := s.storage.Init(); err != nil {
-		blog.Errorf("manager init gitops storage failure, %s", err.Error())
-		return fmt.Errorf("gitops storage failure")
+	var err error
+	if err = s.storage.Init(); err != nil {
+		return errors.Wrapf(err, "init gitops storage failed")
+	}
+	if err = s.storage.InitArgoDB(context.Background()); err != nil {
+		return errors.Wrapf(err, "init argo db failed")
 	}
 	s.stops = append(s.stops, s.storage.Stop)
 	return nil
@@ -348,7 +359,6 @@ func (s *Server) initGrpcGateway(router *mux.Router) error {
 		gatewayCxt, gatewayMux,
 		fmt.Sprintf("%s:%d", s.option.Address, s.option.Port), opts,
 	); err != nil {
-		blog.Errorf("")
 		return fmt.Errorf("manager register grpc http gateway failure")
 	}
 	// register grpc gateway path to root router
@@ -363,11 +373,13 @@ func (s *Server) initGrpcGateway(router *mux.Router) error {
 // change to other gitops solution easilly
 func (s *Server) initGitOpsProxy(router *mux.Router) error {
 	opt := &proxy.GitOpsOptions{
-		Service:    s.option.GitOps.Service,
-		PathPrefix: common.GitOpsProxyURL,
-		JWTDecoder: s.jwtClient,
-		IAMClient:  s.iamClient,
-		Storage:    s.storage,
+		Service:        s.option.GitOps.Service,
+		RepoServerUrl:  s.option.GitOps.RepoServer,
+		PublicProjects: s.option.PublicProjects,
+		PathPrefix:     common.GitOpsProxyURL,
+		JWTDecoder:     s.jwtClient,
+		IAMClient:      s.iamClient,
+		Storage:        s.storage,
 		SecretOption: &proxy.SecretOption{
 			Address: s.option.SecretServer.Address,
 			Port:    s.option.SecretServer.Port,

@@ -343,12 +343,13 @@ func (cm *ClusterManager) initRemoteClient() error { // nolint
 
 	// init gse client
 	if err = gse.SetGseClient(gse.Options{
-		Enable:     cm.opt.Gse.Enable,
-		AppCode:    cm.opt.Gse.AppCode,
-		AppSecret:  cm.opt.Gse.AppSecret,
-		BKUserName: cm.opt.Gse.BkUserName,
-		Server:     cm.opt.Gse.Server,
-		Debug:      cm.opt.Gse.Debug,
+		Enable:        cm.opt.Gse.Enable,
+		AppCode:       cm.opt.Gse.AppCode,
+		AppSecret:     cm.opt.Gse.AppSecret,
+		BKUserName:    cm.opt.Gse.BkUserName,
+		EsbServer:     cm.opt.Gse.EsbServer,
+		GatewayServer: cm.opt.Gse.GatewayServer,
+		Debug:         cm.opt.Gse.Debug,
 	}); err != nil {
 		return err
 	}

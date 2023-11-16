@@ -29,7 +29,7 @@
                   @click="handleDeletePkg(group.id, group.name)"
                 >
                   <Close class="close-icon" />
-                  删除套餐
+                  移除套餐
                 </div>
               </div>
             </td>
@@ -185,22 +185,27 @@
     :app-id="props.appId"
     @updated="getAllConfigList"
   />
-  <bk-dialog ext-cls="delete-template-pkg" :is-show="isDeleteDialogShow" :width="440" footer-align="center">
-    <template #header>
-      <bk-overflow-title type="tips">确认是否删除模板套餐【{{ deleteTemplatePkgName }}】</bk-overflow-title>
-    </template>
-    <template #footer>
-      <bk-button theme="primary" style="margin-right: 10px; width: 88px" @click="handleDeletePkgConfirm"
-        >确认</bk-button
-      >
-      <bk-button style="width: 88px" @click="isDeleteDialogShow = false">取消</bk-button>
-    </template>
-  </bk-dialog>
+  <DeleteConfirmDialog
+    v-model:isShow="isDeleteConfigDialogShow"
+    title="确认删除该配置文件？"
+    @confirm="handleDeleteConfigConfirm"
+  >
+    <div style="margin-bottom: 8px;">配置文件：<span style="color: #313238;">{{ deleteConfig?.name }}</span></div>
+    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+  </DeleteConfirmDialog>
+  <DeleteConfirmDialog
+    v-model:isShow="isDeletePkgDialogShow"
+    title="确认移除该配置模板套餐？"
+    @confirm="handleDeletePkgConfirm"
+  >
+    <div style="margin-bottom: 8px;">配置模板套餐: <span style="color: #313238;">{{ deleteTemplatePkgName }}</span></div>
+    <div>移除后本服务配置将不再引用该配置模板套餐，以后需要时可以重新从配置模板导入</div>
+  </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import { InfoBox, Message } from 'bkui-vue/lib';
+import { Message } from 'bkui-vue/lib';
 import { DownShape, Close } from 'bkui-vue/lib/icon';
 import useConfigStore from '../../../../../../../../store/config';
 import useServiceStore from '../../../../../../../../store/service';
@@ -222,6 +227,7 @@ import ViewConfig from '../view-config.vue';
 import VersionDiff from '../../../components/version-diff/index.vue';
 import ReplaceTemplateVersion from '../replace-template-version.vue';
 import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
+import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
 
 interface IConfigsGroupData {
   id: number;
@@ -261,7 +267,7 @@ const props = defineProps<{
   searchStr: string;
 }>();
 
-const emits = defineEmits(['clearStr']);
+const emits = defineEmits(['clearStr', 'deleteConfig']);
 
 const loading = ref(false);
 const commonConfigListLoading = ref(false);
@@ -276,7 +282,9 @@ const editPanelShow = ref(false);
 const activeConfig = ref(0);
 const isDiffPanelShow = ref(false);
 const isSearchEmpty = ref(false);
-const isDeleteDialogShow = ref(false);
+const isDeleteConfigDialogShow = ref(false);
+const deleteConfig = ref<IConfigTableItem>();
+const isDeletePkgDialogShow = ref(false);
 const deleteTemplatePkgName = ref('');
 const deleteTemplatePkgId = ref(0);
 const viewConfigSliderData = ref({
@@ -478,6 +486,7 @@ const handleEditOpen = (config: IConfigTableItem) => {
 const handleEditConfigConfirm = async () => {
   await getCommonConfigList();
   tableGroupsData.value = transListToTableData();
+  emits('deleteConfig');
 };
 
 // 查看配置文件或模板版本
@@ -504,7 +513,7 @@ const handleDeletePkg = async (pkgId: number, name: string) => {
   if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
     return;
   }
-  isDeleteDialogShow.value = true;
+  isDeletePkgDialogShow.value = true;
   deleteTemplatePkgName.value = name;
   deleteTemplatePkgId.value = pkgId;
 };
@@ -513,10 +522,12 @@ const handleDeletePkgConfirm = async () => {
   await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [deleteTemplatePkgId.value]);
   await getBoundTemplateList();
   tableGroupsData.value = transListToTableData();
+  emits('deleteConfig');
   Message({
     theme: 'success',
     message: '删除模板套餐成功',
   });
+  isDeletePkgDialogShow.value = false;
 };
 
 // 非模板配置文件diff
@@ -535,16 +546,16 @@ const handleDel = (config: IConfigTableItem) => {
   if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
     return;
   }
-  InfoBox({
-    title: `确认是否删除配置文件【${config.name}】?`,
-    headerAlign: 'center' as const,
-    footerAlign: 'center' as const,
-    onConfirm: async () => {
-      await deleteServiceConfigItem(config.id, props.bkBizId, props.appId);
-      await getCommonConfigList();
-      tableGroupsData.value = transListToTableData();
-    },
-  } as any);
+  isDeleteConfigDialogShow.value = true;
+  deleteConfig.value = config;
+};
+
+const handleDeleteConfigConfirm = async () => {
+  await deleteServiceConfigItem(deleteConfig.value!.id, props.bkBizId, props.appId);
+  await getCommonConfigList();
+  emits('deleteConfig');
+  tableGroupsData.value = transListToTableData();
+  isDeleteConfigDialogShow.value = false;
 };
 
 defineExpose({
@@ -667,18 +678,28 @@ defineExpose({
 
 <style lang="scss">
 .delete-template-pkg {
-  .bk-dialog-header {
-    padding: 24px 24px 0 !important;
-    .bk-dialog-title {
-      margin: 15px 0 10px;
+  .bk-modal-body {
+    padding: 0 !important;
+    .bk-dialog-header {
+      padding: 48px 24px 104px !important;
+      .bk-dialog-title {
+        width: 352px;
+        height: 32px;
+        font-size: 20px;
+        color: #313238;
+        letter-spacing: 0;
+        text-align: center;
+        line-height: 32px;
+      }
     }
-  }
-  .bk-modal-content {
-    display: none;
-  }
-  .bk-modal-footer {
-    border: none !important;
-    background-color: #fff !important;
+    .bk-modal-content {
+      display: none;
+    }
+    .bk-modal-footer {
+      bottom: 48px !important;
+      border: none !important;
+      background-color: #fff !important;
+    }
   }
 }
 </style>

@@ -1,8 +1,14 @@
 <template>
-  <section class="code-editor-wrapper" ref="codeEditorRef"></section>
+  <div v-show="isShowPlaceholder && placeholder" class="placeholderBox">
+    <div class="placeholderLine" v-for="(content, number) in placeholder" :key="number" @click="handlePlaceholderClick">
+      <div class="lineNumber">{{ number + 1 }}</div>
+      <div class="lineContent">{{ content }}</div>
+    </div>
+  </div>
+  <section v-show="!isShowPlaceholder || !placeholder" class="code-editor-wrapper" ref="codeEditorRef"></section>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker.js?worker';
@@ -45,6 +51,7 @@ const props = withDefaults(
     editable?: boolean;
     language?: string;
     errorLine?: errorLineItem[];
+    placeholder?: string[];
   }>(),
   {
     variables: () => [],
@@ -64,8 +71,10 @@ const localVal = ref(props.modelValue);
 const route = useRoute();
 const bkBizId = ref(String(route.params.spaceId));
 const appId = ref(Number(route.params.appId));
-const variableNameList = ref<string[]>();
-const privateVariableNameList = ref<string[]>();
+const variableNameList = ref<string[]>(['']);
+const privateVariableNameList = ref<string[]>(['']);
+const isShowPlaceholder = ref(true);
+
 watch(
   () => props.modelValue,
   (val) => {
@@ -106,10 +115,8 @@ watch(
 );
 
 onMounted(() => {
-  if (bkBizId.value && appId.value) {
-    handleVariableList();
-    aotoCompletion();
-  }
+  handleVariableList();
+  aotoCompletion();
   if (!editor) {
     registerLanguage();
     editor = monaco.editor.create(codeEditorRef.value as HTMLElement, {
@@ -144,6 +151,11 @@ onMounted(() => {
   });
   // 自动换行
   editor.updateOptions({ wordWrap: 'on' });
+  editor.onDidBlurEditorWidget(() => {
+    if (!props.modelValue) {
+      isShowPlaceholder.value = true;
+    }
+  });
 });
 
 // 添加错误行
@@ -163,13 +175,13 @@ const setErrorLine = () => {
 
 // 获取全局变量和私有变量列表
 const handleVariableList = async () => {
-  const [variableList, privateVariableList] = await Promise.all([
-    getVariableList(bkBizId.value, { start: 0, limit: 1000 }),
-    getUnReleasedAppVariables(bkBizId.value, appId.value),
-  ]);
-  variableNameList.value = variableList.details.map((item: any) => `.${item.spec.name}`);
-  privateVariableNameList.value = privateVariableList.details.map((item: any) => `.${item.name}`);
-  variableNameList.value?.filter(item => !privateVariableNameList.value!.includes(item));
+  const variableList = await getVariableList(bkBizId.value, { start: 0, limit: 1000 });
+  variableNameList.value = variableList.details.map((item: any) => ` .${item.spec.name} `);
+  if (appId.value) {
+    const privateVariableList = await getUnReleasedAppVariables(bkBizId.value, appId.value);
+    privateVariableNameList.value = privateVariableList.details.map((item: any) => ` .${item.name} `);
+    variableNameList.value!.filter(item => !privateVariableNameList.value!.includes(item));
+  }
 };
 
 // 注册自定义语言
@@ -178,9 +190,9 @@ const registerLanguage = () => {
   monaco.languages.register({ id: 'custom-language' });
   monaco.languages.setMonarchTokensProvider('custom-language', {
     tokenizer: {
-      root: [{ regex: /\{/, action: { token: 'delimiter.curly', next: '@curly' } }],
+      root: [{ regex: /\{\{/, action: { token: 'delimiter.curly', next: '@curly' } }],
       curly: [
-        { regex: /\}/, action: { token: 'delimiter.curly', next: '@pop' } },
+        { regex: /\}\}/, action: { token: 'delimiter.curly', next: '@pop' } },
         { regex: /[^{}\s]+/, action: 'custom-token' }, // 自定义内部内容的高亮规则
         { regex: /\s+/, action: '' }, // 忽略空白符
       ],
@@ -205,8 +217,12 @@ const aotoCompletion = () => {
   editorVariableProvide = monaco.languages.registerCompletionItemProvider(props.language || 'custom-language', {
     triggerCharacters: ['{'], // 触发自动补全的字符
     provideCompletionItems(model: any, position: any) {
-      const lineContent = model.getLineContent(position.lineNumber);
-      const charBeforeCursor = lineContent.charAt(position.column - 2);
+      const textBeforePosition = model.getValueInRange({
+        startLineNumber: position.lineNumber,
+        startColumn: 1,
+        endLineNumber: position.lineNumber,
+        endColumn: position.column,
+      });
       // 根据当前的文本内容和光标位置，返回自动补全的候选项列表
       const variableSuggestions = variableNameList.value!.map((item: string) => ({
         label: item, // 候选项的显示文本
@@ -214,14 +230,18 @@ const aotoCompletion = () => {
         insertText: item, // 插入光标后的文本
         range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
       }));
-      const privateVariableSuggestions = privateVariableNameList.value!.map((item: string) => ({
-        label: item,
-        kind: monaco.languages.CompletionItemKind.Variable,
-        insertText: item,
-        range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-      }));
-      const suggestions = [...variableSuggestions, ...privateVariableSuggestions];
-      if (charBeforeCursor === '{') {
+      const suggestions = [...variableSuggestions];
+      if (privateVariableNameList.value?.length > 0) {
+        const privateVariableSuggestions = privateVariableNameList.value!.map((item: string) => ({
+          label: item,
+          kind: monaco.languages.CompletionItemKind.Variable,
+          insertText: item,
+          range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+        }));
+        suggestions.push(...privateVariableSuggestions);
+      }
+
+      if (textBeforePosition === '{{') {
         return {
           suggestions,
         };
@@ -232,6 +252,17 @@ const aotoCompletion = () => {
     },
     resolveCompletionItem: (item: any) => item,
   });
+};
+// 打开搜索框
+const openSearch = () => {
+  const findAction = editor.getAction('actions.find');
+  if (!props.modelValue) handlePlaceholderClick();
+  findAction.run();
+};
+
+const handlePlaceholderClick = () => {
+  isShowPlaceholder.value = false;
+  nextTick(() => editor.focus());
 };
 
 // @bug vue3的Teleport组件销毁时，子组件的onBeforeUnmount不会被执行，会出现内存泄漏，目前尚未被修复 https://github.com/vuejs/core/issues/6347
@@ -257,6 +288,7 @@ const destroy = () => {
 
 defineExpose({
   destroy,
+  openSearch,
 });
 </script>
 <style lang="scss" scoped>
@@ -268,6 +300,25 @@ defineExpose({
       color: #1768ef;
       border: 1px solid #1768ef;
       cursor: pointer;
+    }
+  }
+}
+.placeholderBox {
+  height: 100%;
+  background-color: #1e1e1e;
+  .placeholderLine {
+    display: flex;
+    height: 19px;
+    line-height: 19px;
+    .lineNumber {
+      font-family: Consolas, 'Courier New', monospace;
+      width: 64px;
+      text-align: center;
+      color: #979ba5;
+      font-size: 14px;
+    }
+    .lineContent {
+      color: #63656e;
     }
   }
 }

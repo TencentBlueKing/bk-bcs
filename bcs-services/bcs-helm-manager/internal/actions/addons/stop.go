@@ -81,7 +81,7 @@ func (s *StopAddonsAction) Handle(ctx context.Context,
 	}
 
 	// save db
-	if err := s.saveDB(ctx, addons.Namespace, addons.ChartName); err != nil {
+	if err := s.saveDB(ctx, addons.Namespace, addons.ChartName, addons.ReleaseName()); err != nil {
 		blog.Errorf("save addons failed, %s", err.Error())
 		s.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error())
 		return nil
@@ -95,7 +95,7 @@ func (s *StopAddonsAction) Handle(ctx context.Context,
 		ProjectCode:    contextx.GetProjectCodeFromCtx(ctx),
 		ProjectID:      contextx.GetProjectIDFromCtx(ctx),
 		ClusterID:      s.req.GetClusterID(),
-		Name:           s.req.GetName(),
+		Name:           addons.ReleaseName(),
 		Namespace:      addons.Namespace,
 		RepoName:       common.PublicRepoName,
 		ChartName:      addons.ChartName,
@@ -113,8 +113,8 @@ func (s *StopAddonsAction) Handle(ctx context.Context,
 	return nil
 }
 
-func (s *StopAddonsAction) saveDB(ctx context.Context, ns, chartName string) error { // nolint
-	old, err := s.model.GetRelease(ctx, s.req.GetClusterID(), ns, s.req.GetName())
+func (s *StopAddonsAction) saveDB(ctx context.Context, ns, chartName, releaseName string) error { // nolint
+	old, err := s.model.GetRelease(ctx, s.req.GetClusterID(), ns, releaseName)
 	if err != nil {
 		return err
 	}
@@ -127,8 +127,7 @@ func (s *StopAddonsAction) saveDB(ctx context.Context, ns, chartName string) err
 		entity.FieldKeyStatus:   helmrelease.StatusPendingUpgrade.String(),
 		entity.FieldKeyMessage:  "",
 	}
-	if err := s.model.UpdateRelease(ctx, s.req.GetClusterID(), ns,
-		s.req.GetName(), rl); err != nil {
+	if err := s.model.UpdateRelease(ctx, s.req.GetClusterID(), ns, releaseName, rl); err != nil {
 		return err
 	}
 	return nil

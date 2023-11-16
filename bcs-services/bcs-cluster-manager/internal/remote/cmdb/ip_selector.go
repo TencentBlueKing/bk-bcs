@@ -13,6 +13,7 @@
 package cmdb
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"sync"
@@ -28,7 +29,7 @@ type IPSelector interface {
 	// GetCustomSettingModuleList get custom setting moduleList
 	GetCustomSettingModuleList(moduleList []string) interface{}
 	// GetBizModuleTopoData get topo modules by bizID
-	GetBizModuleTopoData(bizID int) (*BizInstanceTopoData, error)
+	GetBizModuleTopoData(ctx context.Context, bizID int) (*BizInstanceTopoData, error)
 	// GetBizTopoHostData get host data by bizID
 	GetBizTopoHostData(bizID int, info []HostModuleInfo, filter HostFilter) ([]HostDetailInfo, error)
 }
@@ -65,8 +66,8 @@ func (ipSelector *ipSelectorClient) GetCustomSettingModuleList(moduleList []stri
 }
 
 // GetBizModuleTopoData get biz module topo data
-func (ipSelector *ipSelectorClient) GetBizModuleTopoData(bizID int) (*BizInstanceTopoData, error) {
-	return GetBizModuleTopoData(ipSelector.cmdb, bizID)
+func (ipSelector *ipSelectorClient) GetBizModuleTopoData(ctx context.Context, bizID int) (*BizInstanceTopoData, error) {
+	return GetBizModuleTopoData(ctx, ipSelector.cmdb, bizID)
 }
 
 func (ipSelector *ipSelectorClient) GetBizTopoHostData(
@@ -281,8 +282,8 @@ type Object struct {
 }
 
 // GetBizModuleTopoData get biz topo data
-func GetBizModuleTopoData(cli *Client, bizID int) (*BizInstanceTopoData, error) {
-	bizTopo, err := cli.ListTopology(bizID, false, true)
+func GetBizModuleTopoData(ctx context.Context, cli *Client, bizID int) (*BizInstanceTopoData, error) {
+	bizTopo, err := cli.ListTopology(ctx, bizID, false, true)
 	if err != nil {
 		return nil, err
 	}
@@ -307,40 +308,31 @@ func GetBizModuleTopoData(cli *Client, bizID int) (*BizInstanceTopoData, error) 
 
 	// set childs
 	var (
-		sets    = make([]BizInstanceTopoData, 0)
-		setLock = &sync.RWMutex{}
+		sets = make([]BizInstanceTopoData, 0)
 	)
-	pool := utils.NewRoutinePool(20)
-	defer pool.Close()
 
 	for _, set := range bizTopo.Child {
-		pool.Add(1)
-		go func(set SearchBizInstTopoData) {
-			defer pool.Done()
-			s := BizInstanceTopoData{
-				BKInstID:   set.BKInstID,
-				BKInstName: set.BKInstName,
-				BKObjID:    set.BKObjID,
-				BKObjName:  set.BKObjName,
-				Expanded:   true,
-			}
-			hostCnt, err := GetHostCountByObject(cli, bizID, Object{
-				ObjectName: set.BKObjID,
-				ObjectID:   set.BKInstID,
-			})
-			if err != nil {
-				blog.Errorf("GetBizModuleTopoData GetHostCountByObject failed: %v", err)
-			}
-			s.Count = hostCnt
+		s := BizInstanceTopoData{
+			BKInstID:   set.BKInstID,
+			BKInstName: set.BKInstName,
+			BKObjID:    set.BKObjID,
+			BKObjName:  set.BKObjName,
+			Expanded:   true,
+		}
+		hostCnt, err := GetHostCountByObject(cli, bizID, Object{
+			ObjectName: set.BKObjID,
+			ObjectID:   set.BKInstID,
+		})
+		if err != nil {
+			blog.Errorf("GetBizModuleTopoData GetHostCountByObject failed: %v", err)
+		}
+		s.Count = hostCnt
 
-			modules := GetSetModuleChild(cli, bizID, set.Child)
-			s.Child = modules
-			setLock.Lock()
-			sets = append(sets, s)
-			setLock.Unlock()
-		}(set)
+		modules := GetSetModuleChild(cli, bizID, set.Child)
+		s.Child = modules
+
+		sets = append(sets, s)
 	}
-	pool.Wait()
 
 	topo.Child = sets
 

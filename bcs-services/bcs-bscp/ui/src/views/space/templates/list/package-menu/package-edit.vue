@@ -36,6 +36,7 @@ const data = ref<ITemplatePackageEditParams>({
   memo: '',
   public: true,
   bound_apps: [],
+  template_ids: []
 });
 const apps = ref<number[]>([]);
 const isFormChange = ref(false);
@@ -47,8 +48,8 @@ watch(
     isShow.value = val;
     if (val) {
       isFormChange.value = false;
-      const { name, memo, public: isPublic, bound_apps } = props.pkg.spec;
-      data.value = { name, memo, public: isPublic, bound_apps };
+      const { name, memo, public: isPublic, bound_apps, template_ids } = props.pkg.spec;
+      data.value = { name, memo, public: isPublic, bound_apps, template_ids };
       apps.value = bound_apps.slice();
     }
   },

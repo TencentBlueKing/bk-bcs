@@ -34,11 +34,13 @@
   "apiconnecttoken": "${bcsGitOpsManagerAPIConnectToken}",
   "apiconnecturl": "${bcsGitOpsManagerAPIConnectURL}",
   "clustersyncinterval": ${bcsGitOpsManagerClusterSyncInterval},
+  "publicProjects": "${bcsGitOpsPublicProjects}",
   "gitops": {
     "service": "${bcsGitOpsManagerService}",
     "user": "${bcsGitOpsManagerServiceUser}",
     "pass": "${bcsGitOpsManagerServicePass}",
-    "adminnamespace": "${bcsGitOpsManagerServiceNamespace}"
+    "adminnamespace": "${bcsGitOpsManagerServiceNamespace}",
+    "repoServer": "${bcsGitOpsRepoServer}"
   },
   "auth": {
     "verifykeyfile": "${bcsJWTPublicKeyFile}",
@@ -54,5 +56,9 @@
   "traceConfig": {
      "endpoint": "${bcsTraceEndpoint}",
      "token": "${bcsTraceToken}"
+  },
+  "auditConfig": {
+      "bcsGateway": "${bcsAuditGateway}",
+      "token": "${bcsAuditGatewayToken}"
   }
 }

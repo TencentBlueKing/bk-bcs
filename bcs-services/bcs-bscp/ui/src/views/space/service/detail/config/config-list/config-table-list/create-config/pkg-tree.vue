@@ -1,6 +1,9 @@
 <template>
   <h4 class="title">从配置模板导入</h4>
-  <SearchInput v-model="searchStr" placeholder="搜索模板套餐" @search="handleSearch" />
+  <div class="search-wrap">
+    <SearchInput v-model="searchStr" placeholder="搜索模板套餐" @search="handleSearch" />
+    <bk-button style="margin-left: 8px;" @click="router.push({name:'templates-list'})"> 管理模板 </bk-button>
+  </div>
   <div class="packages-tree">
     <bk-tree
       v-if="pkgTreeData.length"
@@ -23,7 +26,7 @@
           <div
             class="node-name-text"
             v-bk-tooltips="{
-              content: '暂无可用配置项',
+              content: checkboxTooltips(node.checked),
               disabled: !node.disabled,
             }"
           >
@@ -38,6 +41,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { ITemplateBoundByAppData } from '../../../../../../../../../types/config';
 import { IAllPkgsGroupBySpaceInBiz, IPkgTreeItem } from '../../../../../../../../../types/template';
 import SearchInput from '../../../../../../../../components/search-input.vue';
@@ -46,6 +50,7 @@ interface ISpaceTreeItem extends IPkgTreeItem {
   children: IPkgTreeItem[];
 }
 
+const router = useRouter();
 const props = defineProps<{
   bkBizId: string;
   pkgList: IAllPkgsGroupBySpaceInBiz[];
@@ -57,6 +62,7 @@ const emits = defineEmits(['change']);
 
 const searchStr = ref('');
 const isSearchEmpty = ref(false);
+const checkboxTooltips = (isImport: boolean) => (isImport ? '导入配置模板套餐时无法移除已有配置模板套餐' : '暂无可用配置项');
 const pkgTreeData = computed(() => {
   let list: IAllPkgsGroupBySpaceInBiz[] = [];
   if (searchStr.value) {
@@ -174,9 +180,13 @@ const clearSearchStr = () => {
   font-weight: 400;
   color: #313238;
 }
-.search-input {
+.search-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
 }
+
 .packages-tree {
   margin-top: 8px;
   padding: 0 24px;

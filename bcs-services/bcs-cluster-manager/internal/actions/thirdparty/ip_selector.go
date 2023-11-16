@@ -130,7 +130,7 @@ func (ga *GetBizInstanceTopoAction) listBizHostTopo() error {
 	for _, scope := range ga.req.ScopeList {
 		if scope.ScopeType == common.Biz {
 			bizID, _ := strconv.Atoi(scope.ScopeId)
-			topoData, err := ipSelector.GetBizModuleTopoData(bizID)
+			topoData, err := ipSelector.GetBizModuleTopoData(ga.ctx, bizID)
 			if err != nil {
 				blog.Errorf("GetBizInstanceTopoAction GetBizModuleTopoData[%v] failed: %v", bizID, err)
 				continue

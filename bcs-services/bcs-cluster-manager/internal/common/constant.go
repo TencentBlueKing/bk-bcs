@@ -196,6 +196,15 @@ const (
 	// ClusterUnderlayNetwork underlay
 	ClusterUnderlayNetwork = "underlay"
 
+	// Flannel network plugin
+	Flannel = "flannel"
+	// GlobalRouter gr plugin
+	GlobalRouter = "GR"
+	// VpcCni vpc-cni plugin
+	VpcCni = "VPC-CNI"
+	// CiliumOverlay cilium plugin
+	CiliumOverlay = "CiliumOverlay"
+
 	// KubeletRootDirPath root-dir default path
 	KubeletRootDirPath = "/data/bcs/service/kubelet"
 
@@ -211,6 +220,8 @@ const (
 	DockerContainerRuntime = "docker"
 	// DockerRuntimeVersion runtime version
 	DockerRuntimeVersion = "19.3"
+	// DockerRuntimeSelfVersion runtime version
+	DockerRuntimeSelfVersion = "19.03.9"
 
 	// ContainerdRuntime runtime
 	ContainerdRuntime = "containerd"
@@ -243,6 +254,20 @@ const (
 	TkeCidrStatusUsed = "used"
 	// TkeCidrStatusReserved reserved tke cidr status
 	TkeCidrStatusReserved = "reserved"
+
+	// Builder self builder cluster
+	Builder = "builder"
+	// Importer import external cluster
+	Importer = "importer"
+	// KubeConfigImport import
+	KubeConfigImport = "kubeConfig"
+	// CloudImport import
+	CloudImport = "cloud"
+
+	// CloudProjectId cloud project id
+	CloudProjectId = "cloudProjectId"
+	// TagClusterResourceKey resource tag key
+	TagClusterResourceKey = "cluster"
 
 	// StatusInitialization node/cluster/nodegroup status
 	StatusInitialization = "INITIALIZATION"

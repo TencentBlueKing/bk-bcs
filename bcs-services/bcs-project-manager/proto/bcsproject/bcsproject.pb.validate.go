@@ -82,24 +82,6 @@ func (m *Project) validate(all bool) error {
 
 	// no validation rules for BusinessID
 
-	// no validation rules for IsSecret
-
-	// no validation rules for ProjectType
-
-	// no validation rules for DeployType
-
-	// no validation rules for BGID
-
-	// no validation rules for BGName
-
-	// no validation rules for DeptID
-
-	// no validation rules for DeptName
-
-	// no validation rules for CenterID
-
-	// no validation rules for CenterName
-
 	// no validation rules for BusinessName
 
 	if len(errors) > 0 {
@@ -592,51 +574,6 @@ func (m *UpdateProjectRequest) validate(all bool) error {
 	// no validation rules for Kind
 
 	// no validation rules for BusinessID
-
-	if all {
-		switch v := interface{}(m.GetIsSecret()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, UpdateProjectRequestValidationError{
-					field:  "IsSecret",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, UpdateProjectRequestValidationError{
-					field:  "IsSecret",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetIsSecret()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return UpdateProjectRequestValidationError{
-				field:  "IsSecret",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	// no validation rules for DeployType
-
-	// no validation rules for ProjectType
-
-	// no validation rules for BGID
-
-	// no validation rules for BGName
-
-	// no validation rules for DeptID
-
-	// no validation rules for DeptName
-
-	// no validation rules for CenterID
-
-	// no validation rules for CenterName
 
 	// no validation rules for Managers
 

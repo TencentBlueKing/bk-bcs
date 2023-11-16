@@ -67,6 +67,7 @@ import { storeToRefs } from 'pinia';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowsLeft, Plus } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../../store/global';
+import useTemplateStore from '../../../../store/template';
 import { ITemplateConfigItem, ITemplateVersionItem } from '../../../../../types/template';
 import { IPagination, ICommonQuery } from '../../../../../types/index';
 import {
@@ -86,6 +87,7 @@ const getRouteId = (id: string) => {
 };
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useTemplateStore());
 const route = useRoute();
 const router = useRouter();
 const templateDetailLoading = ref(false);
@@ -117,9 +119,17 @@ const templateSpaceId = computed(() => getRouteId(route.params.templateSpaceId a
 const packageId = computed(() => route.params.packageId);
 const templateId = computed(() => getRouteId(route.params.templateId as string));
 
-onMounted(() => {
+onMounted(async () => {
   getTemplateDetail();
-  getVersionList();
+  await getVersionList();
+  if (versionListPageShouldOpenView.value) {
+    versionListPageShouldOpenView.value = false;
+    handleOpenDetailTable(versionList.value[0].id, 'view');
+  }
+  if (versionListPageShouldOpenEdit.value) {
+    versionListPageShouldOpenEdit.value = false;
+    handleOpenDetailTable(versionList.value[0].id, 'create');
+  }
 });
 
 const getTemplateDetail = async () => {

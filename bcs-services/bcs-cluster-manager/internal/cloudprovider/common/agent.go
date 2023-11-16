@@ -36,20 +36,33 @@ var (
 	}
 )
 
+// GseInstallInfo xxx
+type GseInstallInfo struct {
+	ClusterId  string
+	BusinessId string
+
+	CloudArea *proto.CloudArea
+
+	User    string
+	Passwd  string
+	KeyInfo *proto.KeyInfo
+
+	Port string
+}
+
 // BuildInstallGseAgentTaskStep build common watch step
-func BuildInstallGseAgentTaskStep(task *proto.Task, cls *proto.Cluster, group *proto.NodeGroup,
-	passwd string, port string) {
+func BuildInstallGseAgentTaskStep(task *proto.Task, gseInfo *GseInstallInfo) {
 	installGseStep := cloudprovider.InitTaskStep(installGseAgentStep, cloudprovider.WithStepSkipFailed(true))
 
-	installGseStep.Params[cloudprovider.BKBizIDKey.String()] = cls.BusinessID
-	if group != nil && group.Area != nil {
-		installGseStep.Params[cloudprovider.BKCloudIDKey.String()] = strconv.Itoa(int(group.GetArea().BkCloudID))
+	installGseStep.Params[cloudprovider.BKBizIDKey.String()] = gseInfo.BusinessId
+	if gseInfo != nil && gseInfo.CloudArea != nil {
+		installGseStep.Params[cloudprovider.BKCloudIDKey.String()] = strconv.Itoa(int(gseInfo.CloudArea.BkCloudID))
 	}
-	installGseStep.Params[cloudprovider.UsernameKey.String()] = group.GetLaunchTemplate().GetInitLoginUsername()
-	installGseStep.Params[cloudprovider.PasswordKey.String()] = passwd
-	installGseStep.Params[cloudprovider.SecretKey.String()] = group.GetLaunchTemplate().GetKeyPair().GetKeySecret()
-	installGseStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
-	installGseStep.Params[cloudprovider.PortKey.String()] = port
+	installGseStep.Params[cloudprovider.UsernameKey.String()] = gseInfo.User
+	installGseStep.Params[cloudprovider.PasswordKey.String()] = gseInfo.Passwd
+	installGseStep.Params[cloudprovider.SecretKey.String()] = gseInfo.KeyInfo.GetKeySecret()
+	installGseStep.Params[cloudprovider.ClusterIDKey.String()] = gseInfo.ClusterId
+	installGseStep.Params[cloudprovider.PortKey.String()] = gseInfo.Port
 
 	task.Steps[installGseAgentStep.StepMethod] = installGseStep
 	task.StepSequence = append(task.StepSequence, installGseAgentStep.StepMethod)

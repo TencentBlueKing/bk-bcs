@@ -661,6 +661,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.ListCloudVpcs",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/vpcs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ListCloudSubnets",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/subnets"},
 			Method:  []string{"GET"},
@@ -681,6 +687,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		&api.Endpoint{
 			Name:    "ClusterManager.ListCloudInstanceTypes",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/instancetypes"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCloudProjects",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/projects"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -956,10 +968,12 @@ type ClusterManagerService interface {
 	GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, opts ...client.CallOption) (*GetCloudRegionsResponse, error)
 	GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error)
 	ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, opts ...client.CallOption) (*ListCloudRegionClusterResponse, error)
+	ListCloudVpcs(ctx context.Context, in *ListCloudVpcsRequest, opts ...client.CallOption) (*ListCloudVpcsResponse, error)
 	ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...client.CallOption) (*ListCloudSubnetsResponse, error)
 	ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...client.CallOption) (*ListCloudSecurityGroupsResponse, error)
 	ListKeypairs(ctx context.Context, in *ListKeyPairsRequest, opts ...client.CallOption) (*ListKeyPairsResponse, error)
 	ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...client.CallOption) (*ListCloudInstanceTypeResponse, error)
+	ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, opts ...client.CallOption) (*ListCloudProjectsResponse, error)
 	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...client.CallOption) (*ListCloudOsImageResponse, error)
 	ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error)
 	GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...client.CallOption) (*GetCloudAccountTypeResponse, error)
@@ -1944,6 +1958,16 @@ func (c *clusterManagerService) ListCloudRegionCluster(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *clusterManagerService) ListCloudVpcs(ctx context.Context, in *ListCloudVpcsRequest, opts ...client.CallOption) (*ListCloudVpcsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudVpcs", in)
+	out := new(ListCloudVpcsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...client.CallOption) (*ListCloudSubnetsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudSubnets", in)
 	out := new(ListCloudSubnetsResponse)
@@ -1977,6 +2001,16 @@ func (c *clusterManagerService) ListKeypairs(ctx context.Context, in *ListKeyPai
 func (c *clusterManagerService) ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...client.CallOption) (*ListCloudInstanceTypeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudInstanceTypes", in)
 	out := new(ListCloudInstanceTypeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, opts ...client.CallOption) (*ListCloudProjectsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudProjects", in)
+	out := new(ListCloudProjectsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2342,10 +2376,12 @@ type ClusterManagerHandler interface {
 	GetCloudRegions(context.Context, *GetCloudRegionsRequest, *GetCloudRegionsResponse) error
 	GetCloudRegionZones(context.Context, *GetCloudRegionZonesRequest, *GetCloudRegionZonesResponse) error
 	ListCloudRegionCluster(context.Context, *ListCloudRegionClusterRequest, *ListCloudRegionClusterResponse) error
+	ListCloudVpcs(context.Context, *ListCloudVpcsRequest, *ListCloudVpcsResponse) error
 	ListCloudSubnets(context.Context, *ListCloudSubnetsRequest, *ListCloudSubnetsResponse) error
 	ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest, *ListCloudSecurityGroupsResponse) error
 	ListKeypairs(context.Context, *ListKeyPairsRequest, *ListKeyPairsResponse) error
 	ListCloudInstanceTypes(context.Context, *ListCloudInstanceTypeRequest, *ListCloudInstanceTypeResponse) error
+	ListCloudProjects(context.Context, *ListCloudProjectsRequest, *ListCloudProjectsResponse) error
 	ListCloudOsImage(context.Context, *ListCloudOsImageRequest, *ListCloudOsImageResponse) error
 	ListCloudInstances(context.Context, *ListCloudInstancesRequest, *ListCloudInstancesResponse) error
 	GetCloudAccountType(context.Context, *GetCloudAccountTypeRequest, *GetCloudAccountTypeResponse) error
@@ -2483,10 +2519,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, out *GetCloudRegionsResponse) error
 		GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error
 		ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error
+		ListCloudVpcs(ctx context.Context, in *ListCloudVpcsRequest, out *ListCloudVpcsResponse) error
 		ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, out *ListCloudSubnetsResponse) error
 		ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, out *ListCloudSecurityGroupsResponse) error
 		ListKeypairs(ctx context.Context, in *ListKeyPairsRequest, out *ListKeyPairsResponse) error
 		ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error
+		ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, out *ListCloudProjectsResponse) error
 		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
 		ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error
 		GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error
@@ -3136,6 +3174,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudVpcs",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/vpcs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListCloudSubnets",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/subnets"},
 		Method:  []string{"GET"},
@@ -3156,6 +3200,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListCloudInstanceTypes",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/instancetypes"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudProjects",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/projects"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -3699,6 +3749,10 @@ func (h *clusterManagerHandler) ListCloudRegionCluster(ctx context.Context, in *
 	return h.ClusterManagerHandler.ListCloudRegionCluster(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) ListCloudVpcs(ctx context.Context, in *ListCloudVpcsRequest, out *ListCloudVpcsResponse) error {
+	return h.ClusterManagerHandler.ListCloudVpcs(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, out *ListCloudSubnetsResponse) error {
 	return h.ClusterManagerHandler.ListCloudSubnets(ctx, in, out)
 }
@@ -3713,6 +3767,10 @@ func (h *clusterManagerHandler) ListKeypairs(ctx context.Context, in *ListKeyPai
 
 func (h *clusterManagerHandler) ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error {
 	return h.ClusterManagerHandler.ListCloudInstanceTypes(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, out *ListCloudProjectsResponse) error {
+	return h.ClusterManagerHandler.ListCloudProjects(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error {

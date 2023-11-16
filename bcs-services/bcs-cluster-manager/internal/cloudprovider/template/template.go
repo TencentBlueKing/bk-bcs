@@ -206,18 +206,6 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		return cluster.GetClusterID(), nil
 	case clusterMasterIPs:
 		return getClusterMasterIPs(cluster), nil
-	case clusterMasterDomain:
-		masterDomain := getMasterDomain(cluster)
-		if len(masterDomain) == 0 {
-			return "", fmt.Errorf("cluster %s masterDomain empty", cluster.GetExtraClusterID())
-		}
-		return masterDomain, nil
-	case clusterEtcdDomain:
-		etcdDomain := getEtcdDomain(cluster)
-		if len(etcdDomain) == 0 {
-			return "", fmt.Errorf("cluster %s etcdDomain empty", cluster.GetExtraClusterID())
-		}
-		return etcdDomain, nil
 	case clusterRegion:
 		return cluster.GetRegion(), nil
 	case clusterVPC:
@@ -265,10 +253,9 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		return extra.BusinessID, nil
 	case templateOperator:
 		return extra.Operator, nil
-	case clusterExtraEnv:
-		return getClusterCreateExtraEnv(cluster), nil
-	case addNodesExtraEnv:
-		return getAddNodesExtraEnv(cluster), nil
+	// self builder cluster envs
+	case clusterExtraEnv, addNodesExtraEnv:
+		return getSelfBuilderClusterEnvs(cluster)
 	case bcsCommonInfo:
 		envs, err := getBcsEnvs(cluster)
 		if err != nil {

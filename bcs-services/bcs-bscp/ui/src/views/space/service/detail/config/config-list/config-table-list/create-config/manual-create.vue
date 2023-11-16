@@ -31,6 +31,8 @@ import { createServiceConfigItem, updateConfigContent } from '../../../../../../
 import { getConfigEditParams } from '../../../../../../../../utils/config';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
 import ConfigForm from '../config-form.vue';
+import useServiceStore from '../../../../../../../../store/service';
+import { storeToRefs } from 'pinia';
 
 const props = defineProps<{
   show: boolean;
@@ -38,29 +40,38 @@ const props = defineProps<{
   appId: number;
 }>();
 
-const emits = defineEmits(['update:show', 'confirm']);
+const serviceStore = useServiceStore();
+const { lastCreatePermission } = storeToRefs(serviceStore);
 
-const configForm = ref<IConfigEditParams>(getConfigEditParams());
+const emits = defineEmits(['update:show', 'confirm']);
 const fileUploading = ref(false);
 const pending = ref(false);
 const content = ref<IFileConfigContentSummary | string>('');
 const formRef = ref();
 const isFormChange = ref(false);
-
+const configForm = ref<IConfigEditParams>(getConfigEditParams());
 watch(
   () => props.show,
   (val) => {
-    console.log(val);
     if (val) {
-      configForm.value = getConfigEditParams();
+      configForm.value = Object.assign(getConfigEditParams(), lastCreatePermission.value);
       content.value = '';
       isFormChange.value = false;
     }
   },
 );
 
+
 const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary | string) => {
   configForm.value = data;
+  const { privilege, user, user_group } = data;
+  serviceStore.$patch((state) => {
+    state.lastCreatePermission = {
+      privilege: privilege as string,
+      user: user as string,
+      user_group: user_group as string,
+    };
+  });
   content.value = configContent;
   isFormChange.value = true;
 };

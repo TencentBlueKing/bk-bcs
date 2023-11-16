@@ -151,14 +151,6 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	blog.Infof("CleanClusterDBInfoTask[%s]: delete nodeGroups for cluster[%s] in DB successful",
 		taskID, clusterID)
 
-	// delete CIDR and only print logInfo
-	err = releaseClusterCIDR(cluster)
-	if err != nil {
-		blog.Errorf("CleanClusterDBInfoTask[%s]: releaseClusterCIDR[%s] cidr failed", taskID, clusterID)
-	} else {
-		blog.Infof("CleanClusterDBInfoTask[%s]: releaseClusterCIDR[%s] cidr successful", taskID, clusterID)
-	}
-
 	// delete cluster
 	cluster.Status = icommon.StatusDeleting
 	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cluster)

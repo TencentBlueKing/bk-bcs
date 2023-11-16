@@ -74,7 +74,7 @@ func (s *Server) routerDecryptManifest(w http.ResponseWriter, r *http.Request) {
 			errors.Errorf("get secret key for project '%s' failed", argoApp.Spec.Project))
 		return
 	}
-	res, err := s.descryptVaultSecret(projectName, secretKey, req.Manifests)
+	res, err := s.decryptVaultSecret(r.Context(), projectName, secretKey, req.Manifests)
 	if err != nil {
 		s.responseError(r, w, http.StatusInternalServerError,
 			errors.Wrapf(err, "descrypt vault secret for project '%s/%s' failed", projectName, secretKey))
@@ -119,7 +119,8 @@ func (s *Server) buildArgoVaultPlugin(projectName, secretName string) (*argoplug
 	if err != nil {
 		return nil, errors.Wrapf(err, "create argo vault plugin config failed")
 	}
-	argoVaultPlugin := argoplugin.NewVaultArgoPluginBackend(&vault.TokenAuth{}, apiClient, v.GetString(types.EnvAvpKvVersion),
+	argoVaultPlugin := argoplugin.NewVaultArgoPluginBackend(&vault.TokenAuth{}, apiClient,
+		v.GetString(types.EnvAvpKvVersion),
 		s.secretManager, projectName)
 	cmdConfig.Backend = argoVaultPlugin
 	if err = cmdConfig.Backend.Login(); err != nil {
@@ -128,7 +129,7 @@ func (s *Server) buildArgoVaultPlugin(projectName, secretName string) (*argoplug
 	return argoVaultPlugin, nil
 }
 
-func (s *Server) descryptVaultSecret(projectname string, secretName string,
+func (s *Server) decryptVaultSecret(ctx context.Context, projectname string, secretName string,
 	manifestsstring []string) ([]string, error) {
 	argoVaultPlugin, err := s.buildArgoVaultPlugin(projectname, secretName)
 	if err != nil {
@@ -165,8 +166,8 @@ func (s *Server) descryptVaultSecret(projectname string, secretName string,
 					manifest.GetNamespace(), manifest.GetName())
 			}
 		} else {
-			blog.Warnf("skipping %s.%s because annotation '%s' is true",
-				manifest.GetNamespace(), manifest.GetName(), types.AVPIgnoreAnnotation)
+			blog.Warnf("RequestID[%s] skipping %s.%s because annotation '%s' is true",
+				requestID(ctx), manifest.GetNamespace(), manifest.GetName(), types.AVPIgnoreAnnotation)
 		}
 		var jsonData []byte
 		jsonData, err = json.Marshal(template.TemplateData)

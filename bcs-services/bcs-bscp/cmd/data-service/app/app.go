@@ -23,6 +23,7 @@ import (
 
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/hashicorp/vault/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -31,6 +32,7 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/uuid"
 	"bscp.io/pkg/dal/dao"
+	"bscp.io/pkg/dal/vault"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	pbds "bscp.io/pkg/protocol/data-service"
@@ -81,6 +83,7 @@ type dataService struct {
 	service *service.Service
 	sd      serviced.Service
 	daoSet  dao.Set
+	vault   vault.Set
 }
 
 // prepare do prepare jobs before run data service.
@@ -130,6 +133,27 @@ func (ds *dataService) prepare(opt *options.Option) error {
 
 	ds.daoSet = set
 
+	// initial Vault set
+	vaultSet, err := vault.NewSet(cc.DataService().Vault)
+	if err != nil {
+		return fmt.Errorf("initial vault set failed, err: %v", err)
+	}
+	// 挂载目录
+	exists, err := vaultSet.IsMountPathExists(vault.MountPath)
+	if err != nil {
+		return fmt.Errorf("error checking mount path: %v", err)
+	}
+	if !exists {
+		mountConfig := &api.MountInput{
+			Type: "kv-v2",
+		}
+		if err = vaultSet.CreateMountPath(vault.MountPath, mountConfig); err != nil {
+			return fmt.Errorf("initial vault mount path failed, err: %v", err)
+		}
+	}
+
+	ds.vault = vaultSet
+
 	return nil
 }
 
@@ -167,7 +191,7 @@ func (ds *dataService) listenAndServe() error {
 	}
 
 	serve := grpc.NewServer(opts...)
-	svc, err := service.NewService(ds.sd, ds.daoSet)
+	svc, err := service.NewService(ds.sd, ds.daoSet, ds.vault)
 	if err != nil {
 		return err
 	}

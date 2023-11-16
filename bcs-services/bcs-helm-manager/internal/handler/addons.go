@@ -25,7 +25,7 @@ func (ah *AddonsHandler) ListAddons(ctx context.Context,
 	req *helmmanager.ListAddonsReq, resp *helmmanager.ListAddonsResp) error {
 
 	defer recorder(ctx, "ListAddons", req, resp)()
-	action := addons.NewListAddonsAction(ah.model, *ah.addons, ah.platform)
+	action := addons.NewListAddonsAction(ah.model, *ah.addons, ah.platform, ah.releaseHandler)
 	return action.Handle(ctx, req, resp)
 }
 
@@ -34,7 +34,7 @@ func (ah *AddonsHandler) GetAddonsDetail(ctx context.Context,
 	req *helmmanager.GetAddonsDetailReq, resp *helmmanager.GetAddonsDetailResp) error {
 
 	defer recorder(ctx, "GetAddonsDetail", req, resp)()
-	action := addons.NewGetAddonsDetailAction(ah.model, *ah.addons, ah.platform)
+	action := addons.NewGetAddonsDetailAction(ah.model, *ah.addons, ah.platform, ah.releaseHandler)
 	return action.Handle(ctx, req, resp)
 }
 

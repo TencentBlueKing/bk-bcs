@@ -22,6 +22,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -45,6 +46,64 @@ type CloudValidate struct {
 // CreateCloudAccountValidate create cloud account validate
 func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
 	return cloudprovider.ErrCloudNotImplemented
+}
+
+// CreateClusterValidate check createCluster operation
+func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
+	// call qcloud interface to check cluster
+	if c == nil || req == nil || opt == nil {
+		return fmt.Errorf("%s CreateClusterValidate request&options is empty", cloudName)
+	}
+
+	if opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate opt lost valid crendential info", cloudName)
+	}
+
+	// kubernetes version
+	if len(req.ClusterBasicSettings.Version) == 0 {
+		return fmt.Errorf("lost kubernetes version in request")
+	}
+	// default not handle systemReinstall
+	req.SystemReinstall = true
+
+	// cluster type
+	switch req.ManageType {
+	// 托管集群
+	case common.ClusterManageTypeManaged:
+		if req.AutoGenerateMasterNodes {
+			_, nodes := business.GetMasterNodeTemplateConfig(req.Instances)
+			if len(nodes) == 0 {
+				return fmt.Errorf("instance template empty when auto generate worker nodes in MANAGED_CLUSTER")
+			}
+			break
+		}
+
+		if len(req.Nodes) == 0 {
+			return fmt.Errorf("lost kubernetes cluster masterIP when use exited worker nodes")
+		}
+	// 独立集群
+	case common.ClusterManageTypeIndependent:
+		if req.AutoGenerateMasterNodes {
+			masters, nodes := business.GetMasterNodeTemplateConfig(req.Instances)
+			if len(masters) == 0 || len(nodes) == 0 {
+				return fmt.Errorf("instance template empty when auto generate master nodes")
+			}
+			break
+		}
+
+		if len(req.Master) == 0 || len(req.Nodes) == 0 {
+			return fmt.Errorf("lost kubernetes cluster masterIP when use exited master nodes")
+		}
+	default:
+		return fmt.Errorf("%s not supported cluster type[%s]", cloudName, req.ManageType)
+	}
+
+	// cluster category
+	if len(req.ClusterCategory) == 0 {
+		req.ClusterCategory = common.Builder
+	}
+
+	return nil
 }
 
 // ImportClusterValidate check importCluster operation
@@ -183,6 +242,21 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 	}
 	if len(req.VpcID) == 0 {
 		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid vpcID info", cloudName)
+	}
+
+	return nil
+}
+
+// ListCloudVpcsValidate xxx
+func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
+	account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil {
+		return fmt.Errorf("%s ListCloudVpcsValidate request is empty", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudVpcsValidate request lost valid region info", cloudName)
 	}
 
 	return nil

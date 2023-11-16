@@ -95,7 +95,7 @@ init_bap_rule() {
   esac
 
   [[ -z "${VIP}" ]] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
-  "${PROXY_TOOL_PATH}"/bcs-apiserver-proxy-tools -cmd init -vs "${VIP}":"${VS_PORT}" -rs "${LAN_IP}":6443 \
+  "${PROXY_TOOL_PATH}"/bcs-apiserver-proxy-tools -cmd init -vs "${VIP}":"${VS_PORT}" -rs "${K8S_CTRL_IP}":6443 \
     -scheduler "${LVS_SCHEDULER}" -toolPath "${PROXY_TOOL_PATH}"/bcs-apiserver-proxy-tools
   "${ROOT_DIR}"/system/config_bcs_dns -u "${VIP}" k8s-api.bcs.local
   k8s::restart_kubelet

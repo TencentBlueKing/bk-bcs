@@ -465,7 +465,15 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	// step2. check cluster nodes and all nodes status is running
 	updateDesired.BuildCheckClusterNodeStatusStep(task)
 	// install gse agent
-	common.BuildInstallGseAgentTaskStep(task, opt.Cluster, group, passwd, "")
+	common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
+		ClusterId:  opt.Cluster.ClusterID,
+		BusinessId: opt.Cluster.BusinessID,
+		CloudArea:  group.GetArea(),
+		User:       group.GetLaunchTemplate().GetInitLoginUsername(),
+		Passwd:     passwd,
+		KeyInfo:    group.GetLaunchTemplate().GetKeyPair(),
+		Port:       "",
+	})
 	// transfer host module
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {

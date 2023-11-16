@@ -539,6 +539,10 @@ type ClusterCIDRSettings struct {
 	MaxClusterServiceNum uint64 `json:"maxClusterServiceNum,omitempty"`
 	// ServiceCIDR cluster service CIDR
 	ServiceCIDR string `json:"serviceCIDR,omitempty"`
+	// EniSubnetIds VPC-CNI网络模式下，弹性网卡的子网Id
+	EniSubnetIds []string `json:"eniSubnetIds,omitempty"`
+	// ClaimExpiredSeconds VPC-CNI网络模式下，弹性网卡IP的回收时间，取值范围[300,15768000)
+	ClaimExpiredSeconds uint32 `json:"claimExpiredSeconds,omitempty"`
 }
 
 // ClusterBasicSettings cluster basic config
@@ -577,6 +581,10 @@ type ClusterAdvancedSettings struct {
 	NetworkType string `json:"networkType,omitempty" name:"NetworkType"`
 	// cluster extraArgs (cluster component start parameter)
 	ExtraArgs *ClusterExtraArgs `json:"extraArgs"`
+	// IsNonStaticIpMode 集群VPC-CNI模式是否为非固定IP，默认: FALSE 固定IP
+	IsNonStaticIpMode bool `json:"isNonStaticIpMode"`
+	// VpcCniType 共享网卡多IP模式和独立网卡模式，共享网卡多 IP 模式"tke-route-eni"，独立网卡模式"tke-direct-eni"，默认为共享网卡模式
+	VpcCniType string `json:"vpcCniType"`
 	// DeletionProtection cluster delete protection
 	DeletionProtection bool `json:"deletionProtection"`
 	// AuditEnabled cluster audit

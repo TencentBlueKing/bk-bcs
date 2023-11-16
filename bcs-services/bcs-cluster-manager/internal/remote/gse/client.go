@@ -24,7 +24,6 @@ import (
 	"github.com/kirito41dd/xslice"
 	"github.com/parnurzeal/gorequest"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -60,11 +59,12 @@ func GetGseClient() *Client {
 // NewGseClient create gse client
 func NewGseClient(options Options) (*Client, error) {
 	c := &Client{
-		appCode:     options.AppCode,
-		appSecret:   options.AppSecret,
-		bkUserName:  options.BKUserName,
-		server:      options.Server,
-		serverDebug: options.Debug,
+		appCode:       options.AppCode,
+		appSecret:     options.AppSecret,
+		bkUserName:    options.BKUserName,
+		EsbServer:     options.EsbServer,
+		GatewayServer: options.GatewayServer,
+		serverDebug:   options.Debug,
 	}
 
 	if !options.Enable {
@@ -87,12 +87,13 @@ var (
 
 // Options for gse client
 type Options struct {
-	Enable     bool
-	AppCode    string
-	AppSecret  string
-	BKUserName string
-	Server     string
-	Debug      bool
+	Enable        bool
+	AppCode       string
+	AppSecret     string
+	BKUserName    string
+	EsbServer     string
+	GatewayServer string
+	Debug         bool
 }
 
 // AuthInfo auth user
@@ -104,12 +105,13 @@ type AuthInfo struct {
 
 // Client for gse
 type Client struct {
-	appCode     string
-	appSecret   string
-	bkUserName  string
-	server      string
-	serverDebug bool
-	userAuth    string
+	appCode       string
+	appSecret     string
+	bkUserName    string
+	EsbServer     string
+	GatewayServer string
+	serverDebug   bool
+	userAuth      string
 }
 
 func (c *Client) generateGateWayAuth() (string, error) {
@@ -137,10 +139,18 @@ func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]H
 		return nil, ErrServerNotInit
 	}
 
-	chunksHost := xslice.SplitToChunks(hosts, limit)
-	hostList, ok := chunksHost.([][]Host)
-	if !ok {
-		return nil, fmt.Errorf("GetHostsGseAgentStatus SplitToChunks failed")
+	var (
+		agentHost = make([]Host, 0)
+		cloudHost = make([]Host, 0)
+	)
+
+	for i := range hosts {
+		if len(hosts[i].AgentID) > 0 {
+			agentHost = append(agentHost, hosts[i])
+			continue
+		}
+
+		cloudHost = append(cloudHost, hosts[i])
 	}
 
 	var (
@@ -148,37 +158,20 @@ func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]H
 		agentLock       = &sync.RWMutex{}
 	)
 
+	// handle exist agentId hosts
+	chunksAgentHost := xslice.SplitToChunks(agentHost, limit)
+	agentHostList, ok := chunksAgentHost.([][]Host)
+	if !ok {
+		return nil, fmt.Errorf("GetHostsGseAgentStatus SplitToChunks failed")
+	}
+
 	con := utils.NewRoutinePool(20)
 	defer con.Close()
 
-	for i := range hostList {
+	for i := range agentHostList {
 		con.Add(1)
 		go func(hosts []Host) {
 			defer con.Done()
-
-			if options.GetEditionInfo().IsInnerEdition() {
-				resp, err := c.GetAgentStatusV1(&GetAgentStatusReq{
-					BKSupplierAccount: supplyAccount,
-					Hosts:             hosts,
-				})
-				if err != nil {
-					blog.Errorf("GetHostsGseAgentStatus %v failed, %s", supplyAccount, err.Error())
-					return
-				}
-				for _, agent := range resp.Data {
-					agentLock.Lock()
-					hostAgentStatus = append(hostAgentStatus, HostAgentStatus{
-						Host: Host{
-							IP:        agent.IP,
-							BKCloudID: agent.BKCloudID,
-						},
-						Alive: agent.BKAgentAlive,
-					})
-					agentLock.Unlock()
-				}
-
-				return
-			}
 
 			agentIDs := make([]string, 0)
 			for i := range hosts {
@@ -197,11 +190,60 @@ func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]H
 						AgentID:   agent.BkAgentID,
 						BKCloudID: agent.BKCloudID,
 					},
+					Alive: func() int {
+						if agent.Alive() {
+							return 1
+						}
+						return 0
+					}(),
+				})
+				agentLock.Unlock()
+			}
+
+			return
+		}(agentHostList[i])
+	}
+	con.Wait()
+
+	// handle exist cloud hosts
+	chunksCloudHost := xslice.SplitToChunks(cloudHost, limit)
+	cloudHostList, ok := chunksCloudHost.([][]Host)
+	if !ok {
+		return nil, fmt.Errorf("GetHostsGseAgentStatus SplitToChunks failed")
+	}
+
+	for i := range cloudHostList {
+		con.Add(1)
+		go func(hosts []Host) {
+			defer con.Done()
+
+			agentIDs := make([]string, 0)
+			for i := range hosts {
+				agentIDs = append(agentIDs, hosts[i].AgentID)
+			}
+
+			resp, err := c.GetAgentStatusV1(&GetAgentStatusReq{
+				BKSupplierAccount: supplyAccount,
+				Hosts:             hosts,
+			})
+			if err != nil {
+				blog.Errorf("GetHostsGseAgentStatus %v failed, %s", supplyAccount, err.Error())
+				return
+			}
+			for _, agent := range resp.Data {
+				agentLock.Lock()
+				hostAgentStatus = append(hostAgentStatus, HostAgentStatus{
+					Host: Host{
+						IP:        agent.IP,
+						BKCloudID: agent.BKCloudID,
+					},
 					Alive: agent.BKAgentAlive,
 				})
 				agentLock.Unlock()
 			}
-		}(hostList[i])
+
+			return
+		}(cloudHostList[i])
 	}
 	con.Wait()
 
@@ -215,7 +257,7 @@ func (c *Client) GetAgentStatusV2(req *GetAgentStatusReqV2) (*GetAgentStatusResp
 	}
 
 	var (
-		reqURL   = fmt.Sprintf("%s/list_agent_state", c.server)
+		reqURL   = fmt.Sprintf("%s/cluster/list_agent_state", c.GatewayServer)
 		respData = &GetAgentStatusRespV2{}
 	)
 
@@ -256,7 +298,7 @@ func (c *Client) GetAgentStatusV1(req *GetAgentStatusReq) (*GetAgentStatusResp, 
 	}
 
 	var (
-		reqURL   = fmt.Sprintf("%s/get_agent_status", c.server)
+		reqURL   = fmt.Sprintf("%s/gse/get_agent_status", c.EsbServer)
 		respData = &GetAgentStatusResp{}
 	)
 

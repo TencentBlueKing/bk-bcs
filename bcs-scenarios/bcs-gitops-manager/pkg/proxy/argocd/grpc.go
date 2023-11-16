@@ -14,7 +14,6 @@ package argocd
 
 import (
 	"bytes"
-	"context"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -37,14 +36,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
-type argoGrpcHandler func(ctx context.Context, req *http.Request) *mw.HttpResponse
-
 var (
 	// grpcAccessUrl 定义 grpc 模式下准入的 API 列表，及处理方法
-	grpcAccessUrlHandlers map[string]argoGrpcHandler
+	grpcAccessUrlHandlers map[string]middleware.HttpHandler
 )
 
 // GrpcPlugin for internal project authorization
@@ -56,7 +54,7 @@ type GrpcPlugin struct {
 // Init the grpc plugin
 // 参见: github.com/argoproj/argocd/v2/cmd/argocd/commands
 func (plugin *GrpcPlugin) Init() error {
-	grpcAccessUrlHandlers = map[string]argoGrpcHandler{
+	grpcAccessUrlHandlers = map[string]middleware.HttpHandler{
 		"/project.ProjectService/List":               plugin.handleProjectList,
 		"/project.ProjectService/GetDetailedProject": plugin.handleProjectGet,
 		"/project.ProjectService/Get":                plugin.handleProjectGet,
@@ -66,10 +64,10 @@ func (plugin *GrpcPlugin) Init() error {
 		"/repository.RepositoryService/ValidateAccess":   plugin.handleRepoAccess,
 		"/repository.RepositoryService/CreateRepository": plugin.handleRepoCreate,
 		"/repository.RepositoryService/DeleteRepository": plugin.handleRepoDelete,
-		"/repository.RepositoryService/ListRefs":         nil,
-		"/repository.RepositoryService/ListApps":         nil,
-		"/repository.RepositoryService/GetAppDetails":    nil,
-		"/repository.RepositoryService/GetHelmCharts":    nil,
+		//"/repository.RepositoryService/ListRefs":         nil,
+		//"/repository.RepositoryService/ListApps":         nil,
+		//"/repository.RepositoryService/GetAppDetails":    nil,
+		//"/repository.RepositoryService/GetHelmCharts":    nil,
 
 		"/cluster.ClusterService/List": plugin.handleClusterList,
 		"/cluster.SettingsService/Get": plugin.handleClusterSettingGet,
@@ -111,16 +109,16 @@ func (plugin *GrpcPlugin) Init() error {
 }
 
 // ServeHTTP http handler implementation
-func (plugin *GrpcPlugin) serve(ctx context.Context, req *http.Request) *mw.HttpResponse {
-	if !proxy.IsAdmin(req) {
-		return mw.ReturnGRPCErrorResponse(http.StatusForbidden, fmt.Errorf("request not come from admin"))
+func (plugin *GrpcPlugin) serve(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	if !proxy.IsAdmin(r) {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusForbidden, fmt.Errorf("request not come from admin"))
 	}
-	handler, ok := grpcAccessUrlHandlers[strings.TrimPrefix(req.URL.Path, common.GitOpsProxyURL)]
+	handler, ok := grpcAccessUrlHandlers[strings.TrimPrefix(r.URL.Path, common.GitOpsProxyURL)]
 	if !ok {
-		return mw.ReturnGRPCErrorResponse(http.StatusForbidden,
-			fmt.Errorf("request url '%s' unahtourized", req.URL.Path))
+		return r, mw.ReturnGRPCErrorResponse(http.StatusForbidden,
+			fmt.Errorf("request url '%s' unahtourized", r.URL.Path))
 	}
-	return handler(ctx, req)
+	return handler(r)
 }
 
 // parseRequestBytes GRPC 的前 5 位为 header，第 1 位标注是否压缩, 第 2-5 位标注 body 长度。
@@ -138,7 +136,7 @@ func (plugin *GrpcPlugin) parseRequestBytes(request []byte) ([]byte, error) {
 	return request[5 : bodyLen+5], nil
 }
 
-func (plugin *GrpcPlugin) readRequestBody(ctx context.Context, req *http.Request, query interface{}) error {
+func (plugin *GrpcPlugin) readRequestBody(req *http.Request, query interface{}) error {
 	bs, err := io.ReadAll(req.Body)
 	if err != nil {
 		return errors.Wrapf(err, "read request body failed")
@@ -171,191 +169,194 @@ func (plugin *GrpcPlugin) rewriteRequestBody(req *http.Request, body interface{}
 }
 
 // handleProjectList will handle the grpc request of list project
-func (plugin *GrpcPlugin) handleProjectList(ctx context.Context, req *http.Request) *mw.HttpResponse {
-	projectList, statusCode, err := plugin.middleware.ListProjects(ctx)
+func (plugin *GrpcPlugin) handleProjectList(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	projectList, statusCode, err := plugin.middleware.ListProjects(r.Context())
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
-	return mw.ReturnGRPCResponse(projectList)
+	return r, mw.ReturnGRPCResponse(projectList)
 }
 
 // handleProjectGet will return project details by project name
-func (plugin *GrpcPlugin) handleProjectGet(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleProjectGet(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &project.ProjectQuery{}
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, query.Name, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), query.Name, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check project '%s' view permission failed", query.Name))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check project '%s' view permission failed", query.Name))
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleRepoList will return repo list
-func (plugin *GrpcPlugin) handleRepoList(ctx context.Context, req *http.Request) *mw.HttpResponse {
-	projectList, statusCode, err := plugin.middleware.ListProjects(ctx)
+func (plugin *GrpcPlugin) handleRepoList(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	projectList, statusCode, err := plugin.middleware.ListProjects(r.Context())
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
 	names := make([]string, 0, len(projectList.Items))
 	for _, item := range projectList.Items {
 		names = append(names, item.Name)
 	}
-	repoList, statusCode, err := plugin.middleware.ListRepositories(ctx, names, false)
+	repoList, statusCode, err := plugin.middleware.ListRepositories(r.Context(), names, false)
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list repositories failed"))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list repositories failed"))
 	}
-	return mw.ReturnGRPCResponse(repoList)
+	return r, mw.ReturnGRPCResponse(repoList)
 }
 
 // handleRepoGet will return repo details by repo name
-func (plugin *GrpcPlugin) handleRepoGet(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleRepoGet(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoQuery{}
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	repo, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, query.Repo, iam.ProjectView)
+	repo, statusCode, err := plugin.middleware.CheckRepositoryPermission(r.Context(), query.Repo, iam.ProjectView)
 	if err != nil {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check repo '%s' permission failed", query.Repo))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err,
+			"check repo '%s' permission failed", query.Repo))
 	}
-	return mw.ReturnGRPCResponse(repo)
+	return r, mw.ReturnGRPCResponse(repo)
 }
 
 // handleRepoAccess will check repo access
-func (plugin *GrpcPlugin) handleRepoAccess(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleRepoAccess(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	repoAccess := &argorepo.RepoAccessQuery{}
-	if err := plugin.readRequestBody(ctx, req, repoAccess); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, repoAccess); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	if repoAccess.Project == "" {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("create repo request project cannot empty"))
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("create repo request project cannot empty"))
 	}
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, repoAccess.Project, iam.ProjectEdit)
+	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), repoAccess.Project, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode,
+		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check project '%s' edit permission failed", repoAccess.Project))
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleRepoCreate will create repo to argocd
-func (plugin *GrpcPlugin) handleRepoCreate(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleRepoCreate(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	repoCreate := &argorepo.RepoCreateRequest{}
-	if err := plugin.readRequestBody(ctx, req, repoCreate); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, repoCreate); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	if repoCreate.Repo == nil || repoCreate.Repo.Project == "" {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("create repo request project cannot empty"))
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("create repo request project cannot empty"))
 	}
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, repoCreate.Repo.Project, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), repoCreate.Repo.Project, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode,
+		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check project '%s' edit permission failed", repoCreate.Repo.Project))
 	}
-	return mw.ReturnArgoReverse()
+	middleware.SetAuditMessage(r, repoCreate.Repo, middleware.RepositoryCreate)
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleRepoDelete will delete repo from argocd
-func (plugin *GrpcPlugin) handleRepoDelete(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleRepoDelete(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoQuery{}
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	if query.Repo == "" {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
 	}
-	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, query.Repo, iam.ProjectView)
+	repo, statusCode, err := plugin.middleware.CheckRepositoryPermission(r.Context(), query.Repo, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode,
+		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check repo '%s' permission failed", query.Repo))
 	}
-	return mw.ReturnArgoReverse()
+	middleware.SetAuditMessage(r, repo, middleware.RepositoryDelete)
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleRepoListRefs will list repo refs from argocd
-func (plugin *GrpcPlugin) handleRepoListRefs(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleRepoListRefs(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoQuery{}
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	if query.Repo == "" {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
 	}
-	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, query.Repo, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(r.Context(), query.Repo, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode,
+		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check repo '%s' permission failed", query.Repo))
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleRepoListApps will handle repo list apps
-func (plugin *GrpcPlugin) handleRepoListApps(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleRepoListApps(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoAppsQuery{}
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	if query.Repo == "" {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
 	}
-	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, query.Repo, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(r.Context(), query.Repo, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode,
+		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check repo '%s' permission failed", query.Repo))
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleRepoGetAppDetails will handle repo get application details
-func (plugin *GrpcPlugin) handleRepoGetAppDetails(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleRepoGetAppDetails(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoAppDetailsQuery{}
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	if query.Source.RepoURL == "" {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
 	}
-	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, query.Source.RepoURL, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(r.Context(), query.Source.RepoURL, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode,
+		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check repo '%s' permission failed", query.Source.RepoURL))
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleRepoGetHelmCharts will handle repo get helm charts
-func (plugin *GrpcPlugin) handleRepoGetHelmCharts(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleRepoGetHelmCharts(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoQuery{}
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	if query.Repo == "" {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
 	}
-	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, query.Repo, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(r.Context(), query.Repo, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check repo '%s' permission failed", query.Repo))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check repo '%s' permission failed", query.Repo))
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleClusterList will handle cluster list
-func (plugin *GrpcPlugin) handleClusterList(ctx context.Context, req *http.Request) *mw.HttpResponse {
-	projectList, statusCode, err := plugin.middleware.ListProjects(ctx)
+func (plugin *GrpcPlugin) handleClusterList(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	projectList, statusCode, err := plugin.middleware.ListProjects(r.Context())
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
 	names := make([]string, 0, len(projectList.Items))
 	for _, item := range projectList.Items {
 		names = append(names, item.Name)
 	}
-	blog.Infof("RequestID[%s] list cluster with projects: %v", mw.RequestID(ctx), names)
-	clusters, statusCode, err := plugin.middleware.ListClusters(ctx, names)
+	blog.Infof("RequestID[%s] list cluster with projects: %v", mw.RequestID(r.Context()), names)
+	clusters, statusCode, err := plugin.middleware.ListClusters(r.Context(), names)
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list clusters failed"))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list clusters failed"))
 	}
-	return mw.ReturnGRPCResponse(clusters)
+	return r, mw.ReturnGRPCResponse(clusters)
 }
 
 // parseClusterName will parse cluster name and check it
@@ -369,31 +370,33 @@ func (plugin *GrpcPlugin) parseClusterName(server string) (string, error) {
 }
 
 // handleClusterGet will handle cluster get, return cluster details
-func (plugin *GrpcPlugin) handleClusterGet(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleClusterGet(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &cluster.ClusterQuery{}
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	statusCode, err := plugin.middleware.CheckClusterPermission(ctx, query, iam.ClusterView)
+	statusCode, err := plugin.middleware.CheckClusterPermission(r.Context(), query, iam.ClusterView)
 	if err != nil {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check application '%s' permission failed", query.Name))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check application '%s' permission failed", query.Name))
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }
 
-func (plugin *GrpcPlugin) handleClusterSettingGet(ctx context.Context, req *http.Request) *mw.HttpResponse {
-	return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("deny operation"))
+func (plugin *GrpcPlugin) handleClusterSettingGet(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	// return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("deny operation"))
+	// return r, mw.ReturnGRPCResponse(&settings.Settings{})
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleAppSetList will handle applicationSet list, return applicationSets
-func (plugin *GrpcPlugin) handleAppSetList(ctx context.Context, req *http.Request) *mw.HttpResponse {
-	projectList, statusCode, err := plugin.middleware.ListProjects(ctx)
+func (plugin *GrpcPlugin) handleAppSetList(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	projectList, statusCode, err := plugin.middleware.ListProjects(r.Context())
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
 	query := new(applicationset.ApplicationSetListQuery)
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	names := make([]string, 0, len(projectList.Items))
 	if len(query.Projects) != 0 {
@@ -414,9 +417,9 @@ func (plugin *GrpcPlugin) handleAppSetList(ctx context.Context, req *http.Reques
 		}
 	}
 	query.Projects = names
-	appsetList, err := plugin.middleware.ListApplicationSets(ctx, query)
+	appsetList, err := plugin.middleware.ListApplicationSets(r.Context(), query)
 	if err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusInternalServerError,
+		return r, mw.ReturnGRPCErrorResponse(http.StatusInternalServerError,
 			errors.Wrapf(err, "list applicationsets by project '%s' from storage failed", names))
 	}
 	result := make([]v1alpha1.ApplicationSet, 0, len(appsetList.Items))
@@ -425,64 +428,66 @@ func (plugin *GrpcPlugin) handleAppSetList(ctx context.Context, req *http.Reques
 		result = append(result, item)
 	}
 	appsetList.Items = result
-	return mw.ReturnGRPCResponse(appsetList)
+	return r, mw.ReturnGRPCResponse(appsetList)
 }
 
 // handleAppSetGet handle application get, return application details
-func (plugin *GrpcPlugin) handleAppSetGet(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppSetGet(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &applicationset.ApplicationSetGetQuery{}
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	statusCode, err := plugin.middleware.CheckGetApplicationSet(ctx, query.Name)
+	statusCode, err := plugin.middleware.CheckGetApplicationSet(r.Context(), query.Name)
 	if err != nil {
-		return mw.ReturnGRPCErrorResponse(statusCode,
+		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check applicationset '%s' failed", query.Name))
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleAppSetCreate handle application create
-func (plugin *GrpcPlugin) handleAppSetCreate(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppSetCreate(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appCreate := &applicationset.ApplicationSetCreateRequest{}
-	if err := plugin.readRequestBody(ctx, req, appCreate); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appCreate); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	statusCode, err := plugin.middleware.CheckCreateApplicationSet(ctx, appCreate.Applicationset)
+	_, statusCode, err := plugin.middleware.CheckCreateApplicationSet(r.Context(), appCreate.Applicationset)
 	if err != nil {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check create applicationset failed"))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check create applicationset failed"))
 	}
-	contentLen, err := plugin.rewriteRequestBody(req, appCreate)
+	middleware.SetAuditMessage(r, appCreate.Applicationset, middleware.ApplicationSetCreateOrUpdate)
+	contentLen, err := plugin.rewriteRequestBody(r, appCreate)
 	if err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "rewrite request body failed"))
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "rewrite request body failed"))
 	}
-	req.Header.Set("Content-Length", strconv.Itoa(contentLen))
-	req.ContentLength = int64(contentLen)
-	return mw.ReturnArgoReverse()
+	r.Header.Set("Content-Length", strconv.Itoa(contentLen))
+	r.ContentLength = int64(contentLen)
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleAppSetDelete will handle application delete
-func (plugin *GrpcPlugin) handleAppSetDelete(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppSetDelete(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appDelete := &applicationset.ApplicationSetDeleteRequest{}
-	if err := plugin.readRequestBody(ctx, req, appDelete); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appDelete); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	statusCode, err := plugin.middleware.CheckDeleteApplicationSet(ctx, appDelete.Name)
+	appset, statusCode, err := plugin.middleware.CheckDeleteApplicationSet(r.Context(), appDelete.Name)
 	if err != nil {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check delete applicationset failed"))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check delete applicationset failed"))
 	}
-	return mw.ReturnArgoReverse()
+	middleware.SetAuditMessage(r, appset, middleware.ApplicationSetDelete)
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleAppList will handle application list, return applications
-func (plugin *GrpcPlugin) handleAppList(ctx context.Context, req *http.Request) *mw.HttpResponse {
-	projectList, statusCode, err := plugin.middleware.ListProjects(ctx)
+func (plugin *GrpcPlugin) handleAppList(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	projectList, statusCode, err := plugin.middleware.ListProjects(r.Context())
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
 	query := new(application.ApplicationQuery)
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	names := make([]string, 0, len(projectList.Items))
 	if len(query.Projects) != 0 {
@@ -503,251 +508,254 @@ func (plugin *GrpcPlugin) handleAppList(ctx context.Context, req *http.Request) 
 		}
 	}
 	query.Projects = names
-	appList, err := plugin.middleware.ListApplications(ctx, query)
+	appList, err := plugin.middleware.ListApplications(r.Context(), query)
 	if err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusInternalServerError,
+		return r, mw.ReturnGRPCErrorResponse(http.StatusInternalServerError,
 			errors.Wrapf(err, "list applications by project '%s' from storage failed", names))
 	}
-	return mw.ReturnGRPCResponse(appList)
+	return r, mw.ReturnGRPCResponse(appList)
 }
 
 // handleAppGet handle application get, return application details
-func (plugin *GrpcPlugin) handleAppGet(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppGet(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &application.ApplicationQuery{}
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	_, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, *query.Name, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), *query.Name, iam.ProjectView)
 	if err != nil {
-		return mw.ReturnGRPCErrorResponse(statusCode,
+		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check application '%s' permission failed", *query.Name))
 	}
-	return mw.ReturnArgoReverse()
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleAppCreate handle application create
-func (plugin *GrpcPlugin) handleAppCreate(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppCreate(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appCreate := &application.ApplicationCreateRequest{}
-	if err := plugin.readRequestBody(ctx, req, appCreate); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appCreate); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	statusCode, err := plugin.middleware.CheckCreateApplication(ctx, appCreate.Application)
+	statusCode, err := plugin.middleware.CheckCreateApplication(r.Context(), appCreate.Application)
 	if err != nil {
-		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check create application failed"))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check create application failed"))
 	}
-	contentLen, err := plugin.rewriteRequestBody(req, appCreate)
+	middleware.SetAuditMessage(r, appCreate.Application, middleware.ApplicationCreate)
+	contentLen, err := plugin.rewriteRequestBody(r, appCreate)
 	if err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "rewrite request body failed"))
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "rewrite request body failed"))
 	}
-	req.Header.Set("Content-Length", strconv.Itoa(contentLen))
-	req.ContentLength = int64(contentLen)
-	return mw.ReturnArgoReverse()
+	r.Header.Set("Content-Length", strconv.Itoa(contentLen))
+	r.ContentLength = int64(contentLen)
+	return r, mw.ReturnArgoReverse()
 }
 
 // handleAppSync will handle application sync
-func (plugin *GrpcPlugin) handleAppSync(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppSync(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &application.ApplicationSyncRequest{}
-	if err := plugin.readRequestBody(ctx, req, query); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, query); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *query.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *query.Name, iam.ProjectEdit)
 }
 
 // handleAppDelete will handle application delete
-func (plugin *GrpcPlugin) handleAppDelete(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppDelete(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appDelete := &application.ApplicationDeleteRequest{}
-	if err := plugin.readRequestBody(ctx, req, appDelete); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appDelete); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appDelete.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appDelete.Name, iam.ProjectEdit)
 }
 
 // handleAppWatch will handle application watch
-func (plugin *GrpcPlugin) handleAppWatch(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppWatch(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appWatch := new(application.ApplicationQuery)
-	if err := plugin.readRequestBody(ctx, req, appWatch); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appWatch); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appWatch.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appWatch.Name, iam.ProjectEdit)
 }
 
 // handleAppUpdate will handle application update
-func (plugin *GrpcPlugin) handleAppUpdate(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppUpdate(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appUpdate := &application.ApplicationUpdateRequest{}
-	if err := plugin.readRequestBody(ctx, req, appUpdate); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appUpdate); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, appUpdate.Application.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, appUpdate.Application.Name, iam.ProjectEdit)
 }
 
 // handleAppUpdateSpec will handle application update spec information
-func (plugin *GrpcPlugin) handleAppUpdateSpec(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppUpdateSpec(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationUpdateSpecRequest)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppPatch handle application patch
-func (plugin *GrpcPlugin) handleAppPatch(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppPatch(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationPatchRequest)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppListResourceEvents handle application list resource events
-func (plugin *GrpcPlugin) handleAppListResourceEvents(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppListResourceEvents(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationResourceEventsQuery)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppGetApplicationSyncWindows handle application sync windows
-func (plugin *GrpcPlugin) handleAppGetApplicationSyncWindows(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppGetApplicationSyncWindows(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationSyncWindowsQuery)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppRevisionMetadata handle application revision metadata
-func (plugin *GrpcPlugin) handleAppRevisionMetadata(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppRevisionMetadata(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.RevisionMetadataQuery)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppGetManifests handle application get manifests
-func (plugin *GrpcPlugin) handleAppGetManifests(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppGetManifests(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationManifestQuery)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppManagedResources handle application managed resources
-func (plugin *GrpcPlugin) handleAppManagedResources(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppManagedResources(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ResourcesQuery)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.ApplicationName, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.ApplicationName, iam.ProjectEdit)
 }
 
 // handleAppResourceTree handle application resource tree
-func (plugin *GrpcPlugin) handleAppResourceTree(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppResourceTree(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ResourcesQuery)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.ApplicationName, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.ApplicationName, iam.ProjectEdit)
 }
 
 // handleAppRollback handle application rollback
-func (plugin *GrpcPlugin) handleAppRollback(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppRollback(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationRollbackRequest)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppTerminateOperation handle application termination operator
-func (plugin *GrpcPlugin) handleAppTerminateOperation(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppTerminateOperation(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.OperationTerminateRequest)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppGetResource handle application get resource
-func (plugin *GrpcPlugin) handleAppGetResource(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppGetResource(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationResourceRequest)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppPatchResource handle application patch resource
-func (plugin *GrpcPlugin) handleAppPatchResource(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppPatchResource(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationResourcePatchRequest)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppListResourceActions handle application list resource actions
-func (plugin *GrpcPlugin) handleAppListResourceActions(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppListResourceActions(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationResourceRequest)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppRunResourceAction handle application run resource action
-func (plugin *GrpcPlugin) handleAppRunResourceAction(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppRunResourceAction(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ResourceActionRunRequest)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppDeleteResource handle application delete resource
-func (plugin *GrpcPlugin) handleAppDeleteResource(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppDeleteResource(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationResourceDeleteRequest)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppPodLogs handle application pod logs
-func (plugin *GrpcPlugin) handleAppPodLogs(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppPodLogs(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationPodLogsQuery)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppListLinks handle application list links
-func (plugin *GrpcPlugin) handleAppListLinks(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppListLinks(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ListAppLinksRequest)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppListResourceLinks handle application list resource links
-func (plugin *GrpcPlugin) handleAppListResourceLinks(ctx context.Context, req *http.Request) *mw.HttpResponse {
+func (plugin *GrpcPlugin) handleAppListResourceLinks(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appReq := new(application.ApplicationResourceRequest)
-	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
-		return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
+	if err := plugin.readRequestBody(r, appReq); err != nil {
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
 }
 
 // handleAppCommon handle application common handler
-func (plugin *GrpcPlugin) handleAppCommon(ctx context.Context, appName string, actionID iam.ActionID) *mw.HttpResponse {
-	_, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, appName, actionID)
+func (plugin *GrpcPlugin) handleAppCommon(r *http.Request, appName string,
+	actionID iam.ActionID) (*http.Request, *mw.HttpResponse) {
+	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, actionID)
 	if statusCode != http.StatusOK {
-		return mw.ReturnGRPCErrorResponse(statusCode,
+		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check application '%s' permission failed", appName))
 	}
-	return mw.ReturnArgoReverse()
+	middleware.SetAuditMessage(r, app, middleware.ApplicationGRPCOperate)
+	return r, mw.ReturnArgoReverse()
 }

@@ -85,9 +85,9 @@ func (ia *ImportAction) constructCluster() *cmproto.Cluster {
 		// import cluster category
 		ImportCategory: func() string {
 			if ia.req.CloudMode.KubeConfig != "" {
-				return KubeConfig
+				return common.KubeConfigImport
 			}
-			return Cloud
+			return common.CloudImport
 		}(),
 		IsShared:       ia.req.IsShared,
 		CloudAccountID: ia.req.AccountID,
@@ -362,7 +362,7 @@ func (ia *ImportAction) commonValidate(req *cmproto.ImportClusterReq) error {
 		req.NetworkType = common.ClusterOverlayNetwork
 	}
 	if req.ClusterCategory == "" {
-		req.ClusterCategory = Importer
+		req.ClusterCategory = common.Importer
 	}
 
 	if req.CloudMode == nil {

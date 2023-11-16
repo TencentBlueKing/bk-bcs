@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"text/template"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -209,13 +210,13 @@ func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) 
 	}
 
 	// values数据, 增加Var values在最后
-	vars, err := c.getVarValue(config.ProjectCode, config.Namespace)
+	varValues, vars, err := c.getVarValue(config.ProjectCode, config.Namespace)
 	if err != nil {
 		blog.Errorf("sdk client get vars failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
 		return nil, err
 	}
-	values, err := getValues(append(config.Values, vars))
+	values, err := getValues(append(parseVarValue(config.Values, vars), varValues))
 	if err != nil {
 		blog.Errorf("sdk client install and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -270,13 +271,13 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 	}
 
 	// values数据, 增加Var values在最后
-	vars, err := c.getVarValue(config.ProjectCode, config.Namespace)
+	varValues, vars, err := c.getVarValue(config.ProjectCode, config.Namespace)
 	if err != nil {
 		blog.Errorf("sdk client get vars failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
 		return nil, err
 	}
-	values, err := getValues(append(config.Values, vars))
+	values, err := getValues(append(parseVarValue(config.Values, vars), varValues))
 	if err != nil {
 		blog.Errorf("sdk client upgrade and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -327,6 +328,7 @@ func (c *client) Uninstall(_ context.Context, config release.HelmUninstallConfig
 	uninstaller.DryRun = config.DryRun
 	uninstaller.Wait = true
 	uninstaller.Timeout = 10 * time.Minute
+	uninstaller.DisableOpenAPIValidation = true
 
 	_, err := uninstaller.Run(config.Name)
 	if err != nil {
@@ -391,11 +393,11 @@ func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags 
 
 // getVarValue 将命名空间变量转化到 values文件
 // 兼容旧版本，注入 bcs 变量
-func (c *client) getVarValue(projectCode, namespace string) (*release.File, error) {
+func (c *client) getVarValue(projectCode, namespace string) (*release.File, map[string]interface{}, error) {
 	// get project info
 	project, err := projectClient.GetProjectByCode(projectCode)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	variables, err := projectClient.GetVariable(projectCode, c.clusterID, namespace)
 	if err != nil {
@@ -434,9 +436,9 @@ func (c *client) getVarValue(projectCode, namespace string) (*release.File, erro
 	// marshal vars to yaml
 	out, err := yaml3.Marshal(vars)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return &release.File{Name: "vars.yaml", Content: out}, nil
+	return &release.File{Name: "vars.yaml", Content: out}, bcsVars, nil
 }
 
 // getChartFile 从下载的tar包中获取chart数据
@@ -499,6 +501,29 @@ func mergeValues(valuesOpts *values.Options, base map[string]interface{}) (map[s
 		}
 	}
 	return base, nil
+}
+
+// 渲染 values 中的变量，将 {{xxx}} 替换为变量值
+func parseVarValue(fs []*release.File, vars map[string]interface{}) []*release.File {
+	newVars := make(map[string]interface{}, 0)
+	for k, v := range vars {
+		newVars["BCS_"+k] = v
+	}
+	for i := range fs {
+		tmpl, err := template.New("vars").Parse(string(fs[i].Content))
+		if err != nil {
+			blog.Errorf("parse template failed, %s", err.Error())
+			continue
+		}
+		var buf bytes.Buffer
+		err = tmpl.Execute(&buf, newVars)
+		if err != nil {
+			blog.Errorf("execute template failed, %s", err.Error())
+			continue
+		}
+		fs[i].Content = buf.Bytes()
+	}
+	return fs
 }
 
 // removeValuesTemplate 移除 values 中的 bcs 模版变量

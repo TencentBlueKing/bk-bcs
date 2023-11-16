@@ -32,9 +32,15 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/project"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	argoutil "github.com/argoproj/argo-cd/v2/util/argo"
+	"github.com/argoproj/argo-cd/v2/util/argo/normalizers"
+	"github.com/argoproj/argo-cd/v2/util/db"
+	settings_util "github.com/argoproj/argo-cd/v2/util/settings"
+	gitopsdiff "github.com/argoproj/gitops-engine/pkg/diff"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/watch"
 
@@ -44,7 +50,10 @@ import (
 	projectpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/project"
 	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 
+	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/argoconn"
@@ -52,12 +61,16 @@ import (
 )
 
 type argo struct {
+	sync.RWMutex
+
 	option *Options
 	token  string
 
 	basicOpt      *api.ClientOptions
 	conn          *grpc.ClientConn
 	connCloser    io.Closer
+	argoDB        db.ArgoDB
+	settingMgr    *settings_util.SettingsManager
 	appClient     applicationpkg.ApplicationServiceClient
 	appsetClient  appsetpkg.ApplicationSetServiceClient
 	repoClient    repositorypkg.RepositoryServiceClient
@@ -89,6 +102,21 @@ func (cd *argo) Init() error {
 	return nil
 }
 
+// InitArgoDB used to init the DB of argocd
+func (cd *argo) InitArgoDB(ctx context.Context) error {
+	argoDB, settingMgr, err := NewArgoDB(ctx, cd.option.AdminNamespace)
+	if err != nil {
+		return errors.Wrapf(err, "create argo db failed")
+	}
+	cd.argoDB = argoDB
+	cd.settingMgr = settingMgr
+	return nil
+}
+
+func (cd *argo) GetArgoDB() db.ArgoDB {
+	return cd.argoDB
+}
+
 // Stop control interface
 func (cd *argo) Stop() {
 }
@@ -96,6 +124,56 @@ func (cd *argo) Stop() {
 // GetOptions return the options of gitops
 func (cd *argo) GetOptions() *Options {
 	return cd.option
+}
+
+func (cd *argo) ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
+	live *unstructured.Unstructured, hideData bool) error {
+	var err error
+	if hideData {
+		target, live, err = gitopsdiff.HideSecretData(target, live)
+		if err != nil {
+			return fmt.Errorf("error hiding secret data: %s", err)
+		}
+	}
+
+	resourceOverrides, err := cd.settingMgr.GetResourceOverrides()
+	if err != nil {
+		return fmt.Errorf("error getting resource overrides: %s", err)
+	}
+	ignoreNormalizer, err := normalizers.NewIgnoreNormalizer(app.Spec.IgnoreDifferences, resourceOverrides)
+	if err != nil {
+		return errors.Wrapf(err, "create ignore normalizer failed")
+	}
+	knownTypeNorm, err := normalizers.NewKnownTypesNormalizer(resourceOverrides)
+	if err != nil {
+		return errors.Wrapf(err, "create known type normalizer failed")
+	}
+	if err = ignoreNormalizer.Normalize(target); err != nil {
+		return errors.Wrapf(err, "ignore normalizer target failed")
+	}
+	if err = ignoreNormalizer.Normalize(live); err != nil {
+		return errors.Wrapf(err, "ignore normalizer live failed")
+	}
+	if err = knownTypeNorm.Normalize(target); err != nil {
+		return errors.Wrapf(err, "known normalizer target failed")
+	}
+	if err = knownTypeNorm.Normalize(live); err != nil {
+		return errors.Wrapf(err, "known normalizer target failed")
+	}
+
+	appLabelKey, err := cd.settingMgr.GetAppInstanceLabelKey()
+	if err != nil {
+		return fmt.Errorf("error getting app instance label key: %s", err)
+	}
+	trackingMethod, err := cd.settingMgr.GetTrackingMethod()
+	if err != nil {
+		return fmt.Errorf("error getting tracking method: %s", err)
+	}
+	resourceTracking := argoutil.NewResourceTracking()
+	if err = resourceTracking.Normalize(target, live, appLabelKey, trackingMethod); err != nil {
+		blog.Warnf("resource tracking normalize failed: %s", err.Error())
+	}
+	return nil
 }
 
 // CreateProject interface
@@ -159,6 +237,15 @@ func (cd *argo) CreateCluster(ctx context.Context, cls *v1alpha1.Cluster) error 
 		return errors.Wrapf(err, "argocd create cluster '%s' failed", cls.Name)
 	}
 	return nil
+}
+
+// GetClusterFromDB get cluster info from ArgoDB which will return the token
+func (cd *argo) GetClusterFromDB(ctx context.Context, serverUrl string) (*v1alpha1.Cluster, error) {
+	cluster, err := cd.argoDB.GetCluster(ctx, serverUrl)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get cluster '%s' failed", serverUrl)
+	}
+	return cluster, nil
 }
 
 // DeleteCluster delete cluster by clusterID
@@ -316,7 +403,7 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 	}
 	var result *v1alpha1.Application
 	cd.cacheApplication.Range(func(key, value any) bool {
-		apps := value.(map[string]*v1alpha1.Application)
+		apps := cd.getProjectApplications(key.(string))
 		app, ok := apps[name]
 		if ok {
 			result = app
@@ -328,6 +415,58 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 		blog.Warnf("argocd get application %s not found", name)
 	}
 	return result, nil
+}
+
+// GetApplicationManifests returns the manifests result of application
+func (cd *argo) GetApplicationManifests(ctx context.Context, name, revision string) (*apiclient.ManifestResponse, error) {
+	resp, err := cd.appClient.GetManifests(ctx, &appclient.ApplicationManifestQuery{
+		Name:     &name,
+		Revision: &revision,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "get manifests for app '%s/%s' failed", name, revision)
+	}
+	return resp, nil
+}
+
+// GetApplicationManifestsFromRepoServer returns the manifests result of application which not
+// created. This function will direct call reposerver of argocd
+func (cd *argo) GetApplicationManifestsFromRepoServer(ctx context.Context,
+	application *v1alpha1.Application) (*apiclient.ManifestResponse, error) {
+	repoUrl := application.Spec.Source.RepoURL
+	repo, err := cd.argoDB.GetRepository(ctx, repoUrl)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
+	}
+	if repo == nil {
+		return nil, errors.Wrapf(err, "get repo '%s' not found", repoUrl)
+	}
+	repoClientSet := apiclient.NewRepoServerClientset(cd.option.RepoServerUrl, 60,
+		apiclient.TLSConfiguration{
+			DisableTLS:       false,
+			StrictValidation: false,
+		})
+	repoCloser, repoClient, err := repoClientSet.NewRepoServerClient()
+	if err != nil {
+		return nil, errors.Wrapf(err, "create reposerver client failed")
+	}
+	defer repoCloser.Close()
+
+	revision := application.Spec.Source.TargetRevision
+	if revision == "" {
+		revision = "HEAD"
+	}
+	resp, err := repoClient.GenerateManifest(ctx, &apiclient.ManifestRequest{
+		Repo:              repo,
+		Revision:          revision,
+		Namespace:         application.Spec.Destination.Namespace,
+		AppName:           application.Name,
+		ApplicationSource: application.Spec.Source,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "generate manifests failed")
+	}
+	return resp, nil
 }
 
 // ListApplications interface
@@ -358,11 +497,8 @@ func (cd *argo) ListApplications(ctx context.Context, query *appclient.Applicati
 	}
 	for i := range query.Projects {
 		projName := query.Projects[i]
-		projApps, ok := cd.cacheApplication.Load(projName)
-		if !ok {
-			continue
-		}
-		for _, v := range projApps.(map[string]*v1alpha1.Application) {
+		projApps := cd.getProjectApplications(projName)
+		for _, v := range projApps {
 			if query.Name != nil && (*query.Name != "" && *query.Name != v.Name) {
 				continue
 			}
@@ -391,6 +527,7 @@ func (cd *argo) GetToken(ctx context.Context) string {
 func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application) error {
 	server := application.Spec.Destination.Server
 	errs := make([]string, 0)
+	requestID := ctx.Value(traceconst.RequestIDHeaderKey).(string)
 	for _, resource := range application.Status.Resources {
 		_, err := cd.appClient.DeleteResource(ctx, &appclient.ApplicationResourceDeleteRequest{
 			Name:         &application.Name,
@@ -404,14 +541,21 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 			if resource.Status != v1alpha1.SyncStatusCodeSynced {
 				blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
 					"with status '%s', noneed care: %s",
-					utils.RequestID(ctx), resource.Group, resource.Kind, resource.Name,
+					requestID, resource.Group, resource.Kind, resource.Name,
 					server, application.Name, resource.Status, err.Error())
 				continue
 			}
 			if utils.IsArgoResourceNotFound(err) {
 				blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
 					"got 'Not Found': %s",
-					utils.RequestID(ctx), resource.Group, resource.Kind, resource.Name,
+					requestID, resource.Group, resource.Kind, resource.Name,
+					server, application.Name, err.Error())
+				continue
+			}
+			if utils.IsArgoNotFoundAsPartOf(err) {
+				blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
+					"got 'not found as part of': %s",
+					requestID, resource.Group, resource.Kind, resource.Name,
 					server, application.Name, err.Error())
 				continue
 			}
@@ -422,7 +566,7 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 				resource.Group, resource.Kind, resource.Name, server, err.Error()))
 		} else {
 			blog.Infof("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' success",
-				utils.RequestID(ctx), resource.Group, resource.Kind, resource.Name, server, application.Name)
+				requestID, resource.Group, resource.Kind, resource.Name, server, application.Name)
 		}
 	}
 	if len(errs) != 0 {
@@ -490,9 +634,13 @@ func (cd *argo) initToken() error {
 		return errors.Wrapf(err, "argocd login session fatal")
 	}
 	defer response.Body.Close() // nolint
+	bs, err := io.ReadAll(response.Body)
+	if err != nil {
+		return errors.Wrapf(err, "init token response body read failed")
+	}
 	result := make(map[string]string)
-	if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
-		return errors.Wrapf(err, "decode gitops session result fatal")
+	if err = json.Unmarshal(bs, &result); err != nil {
+		return errors.Wrapf(err, "decode gitops session result '%s' fatal", string(bs))
 	}
 	t, ok := result["token"]
 	if !ok {
@@ -627,24 +775,52 @@ func (cd *argo) handleApplicationWatch() error {
 				blog.Infof("[store] application watch received: %s/%s", string(event.Type), event.Application.Name)
 			}
 			application := event.Application
-			projName := application.Spec.Project
 			switch event.Type {
 			case watch.Added, watch.Modified:
-				projectApps, ok := cd.cacheApplication.Load(projName)
-				if !ok {
-					cd.cacheApplication.Store(projName, map[string]*v1alpha1.Application{
-						application.Name: &application,
-					})
-				} else {
-					projectApps.(map[string]*v1alpha1.Application)[application.Name] = &application
-				}
+				cd.storeApplication(&application)
 			case watch.Deleted:
-				projectApps, ok := cd.cacheApplication.Load(projName)
-				if ok {
-					delete(projectApps.(map[string]*v1alpha1.Application), application.Name)
-				}
+				cd.deleteApplication(&application)
 			}
 		}
 	}()
 	return nil
+}
+
+func (cd *argo) getProjectApplications(projName string) map[string]*v1alpha1.Application {
+	cd.RLock()
+	defer cd.RUnlock()
+	v, ok := cd.cacheApplication.Load(projName)
+	if !ok {
+		return map[string]*v1alpha1.Application{}
+	}
+	result := v.(map[string]*v1alpha1.Application)
+	newResult := make(map[string]*v1alpha1.Application)
+	for proj, apps := range result {
+		newResult[proj] = apps
+	}
+	return newResult
+}
+
+func (cd *argo) storeApplication(application *v1alpha1.Application) {
+	cd.Lock()
+	defer cd.Unlock()
+	projName := application.Spec.Project
+	projectApps, ok := cd.cacheApplication.Load(projName)
+	if !ok {
+		cd.cacheApplication.Store(projName, map[string]*v1alpha1.Application{
+			application.Name: application,
+		})
+	} else {
+		projectApps.(map[string]*v1alpha1.Application)[application.Name] = application
+	}
+}
+
+func (cd *argo) deleteApplication(application *v1alpha1.Application) {
+	cd.Lock()
+	defer cd.Unlock()
+	projName := application.Spec.Project
+	projectApps, ok := cd.cacheApplication.Load(projName)
+	if ok {
+		delete(projectApps.(map[string]*v1alpha1.Application), application.Name)
+	}
 }

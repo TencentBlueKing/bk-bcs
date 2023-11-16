@@ -11,7 +11,8 @@
     @closed="close"
   >
     <p class="tips">以下套餐及服务未命名版本中引用的此配置文件也将更新</p>
-    <bk-loading style="min-height: 100px" :loading="loading">
+    <div class="service-table">
+      <bk-loading style="min-height: 100px" :loading="loading">
       <bk-table :data="citedList" :max-height="maxTableHeight">
         <bk-table-column label="所在套餐" prop="template_set_name"></bk-table-column>
         <bk-table-column label="引用此模板的服务">
@@ -24,6 +25,7 @@
         </bk-table-column>
       </bk-table>
     </bk-loading>
+    </div>
     <template #footer>
       <div class="actions-wrapper">
         <bk-button theme="primary" :loading="pending" @click="emits('confirm')">确定</bk-button>
@@ -140,6 +142,9 @@ defineExpose({
     .bk-button {
       min-width: 88px;
     }
+  }
+  .bk-modal-body {
+    padding: 0;
   }
 }
 </style>

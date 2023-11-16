@@ -13,32 +13,17 @@
 package business
 
 import (
-	"strings"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // NodeAdvancedOptions node advanced options
 type NodeAdvancedOptions struct {
 	NodeScheduler bool
-}
-
-// ClusterCommonLabels cluster common labels
-func ClusterCommonLabels(cluster *proto.Cluster) map[string]string {
-	labels := make(map[string]string)
-	if len(cluster.Region) > 0 {
-		regions := strings.Split(cluster.Region, "-")
-		if len(regions) >= 1 {
-			labels[utils.RegionLabelKey] = regions[1]
-		}
-	}
-
-	return labels
+	Disks         []*proto.CloudDataDisk
 }
 
 // instance nodes disk info
@@ -110,4 +95,17 @@ func FilterNodesByDataDisk(instanceIDs []string, opt *cloudprovider.CommonOption
 	}
 
 	return filter, nil
+}
+
+// InternetConnect for cluster connection kubeconfig
+type InternetConnect struct {
+	// InternetAccessible xxx
+	InternetAccessible struct {
+		InternetChargeType      string `json:"InternetChargeType"`
+		InternetMaxBandwidthOut int    `json:"InternetMaxBandwidthOut"`
+	} `json:"InternetAccessible"`
+	// VipIsp xxx
+	VipIsp string `json:"VipIsp"`
+	// BandwidthPackageId xxx
+	BandwidthPackageId string `json:"BandwidthPackageId"`
 }

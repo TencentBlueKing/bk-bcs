@@ -20,7 +20,7 @@
         </span>
         <template #content>
           <!-- 监听change事件会多次触发，这里监听click事件 -->
-          <ClusterSelectPopover cluster-type="all" @click="handleClusterClick" />
+          <ClusterSelectPopover cluster-type="all" :key="curCluster.clusterID" @click="handleClusterClick" />
         </template>
       </PopoverSelector>
     </div>

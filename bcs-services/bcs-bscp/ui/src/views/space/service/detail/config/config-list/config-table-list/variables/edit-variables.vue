@@ -8,7 +8,7 @@
     设置变量
   </bk-button>
   <bk-sideslider width="960" title="设置变量" :is-show="isSliderShow" :before-close="handleBeforeClose" @closed="close">
-    <div v-bkloading="{ loading: loading }" class="variables-table-content">
+    <bk-loading :loading="loading" class="variables-table-content">
       <ResetDefaultValue class="reset-default" :list="initialVariables" @reset="handleResetDefault" />
       <VariablesTable
         ref="tableRef"
@@ -18,7 +18,7 @@
         :show-cited="true"
         @change="handleVariablesChange"
       />
-    </div>
+    </bk-loading>
     <section class="action-btns">
       <bk-button theme="primary" :loading="pending" @click="handleSubmit">保存</bk-button>
       <bk-button @click="close">取消</bk-button>
@@ -61,6 +61,7 @@ const pending = ref(false);
 onMounted(() => {
   getVariableList();
 });
+
 
 const getVariableList = async () => {
   loading.value = true;
@@ -121,6 +122,8 @@ const close = () => {
   isSliderShow.value = false;
   isFormChange.value = false;
 };
+
+defineExpose({ getVariableList });
 </script>
 <style lang="scss" scoped>
 .variables-table-content {

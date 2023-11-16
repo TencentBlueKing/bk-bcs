@@ -18,20 +18,6 @@ ROOT_DIR=${SELF_DIR}
 
 readonly BAK_DIR SELF_DIR ROOT_DIR
 
-clean_container() {
-  case "${CRI_TYPE,,}" in
-    "containerd")
-      ctr -n k8s.io t ls | grep -qv PID && ctr -n k8s.io t rm -f "$(ctr -n k8s.io t ls -q)"
-      ctr -n k8s.io c ls | grep -qv CONTAINER && ctr -n k8s.io c rm "$(ctr -n k8s.io c ls -q)"
-      systemctl disable --now containerd
-      ;;
-    "docker")
-      docker ps | grep -qv NAME && docker rm -f "$(docker ps -aq)"
-      systemctl disable --now docker
-      ;;
-  esac
-}
-
 safe_source() {
   local source_file=$1
   if [[ -f ${source_file} ]]; then
@@ -48,12 +34,35 @@ for file in "${source_files[@]}"; do
   safe_source "$file"
 done
 
+clean_container() {
+  crictl ps -aq | xargs -r crictl rm -f
+}
+
+clean_cni() {
+  case ${K8S_CNI} in
+    "flannel")
+      ip l | awk '/flannel/{eth=$2;gsub(":","",eth);print eth}' | xargs -r -n 1 ip l d
+      ;;
+    *)
+      return 0
+      ;;
+  esac
+  rm -rf /etc/cni/net.d/*
+}
+
+clean_vni() {
+  ip l | awk '/cni0|kube-ipvs0/{eth=$2;gsub(":","",eth);print eth}' | xargs -r -n 1 ip l d
+  ip l | awk '/veth/{eth=$2;split(eth,a,"@");print a[1]}' | xargs -r -n 1 ip l d
+}
+
+utils::log "INFO" "reseting kubelet"
+kubeadm reset phase cleanup-node \
+  --cri-socket "$(crictl config --get runtime-endpoint)" --v=5
 systemctl disable --now kubelet
-kubeadm reset phase cleanup-node
+
+utils::log "INFO" "cleaning remaining containers"
 clean_container
 
-ip l d cni0 || utils::log "WARN" "link cni0 does not exist"
-ip l d kube-ipvs0 || utils::log "WARN" "link kube-ipvs0 does not exist"
 
 utils::log "INFO" "Backing Files"
 install -dv "${BAK_DIR}" || utils::log "FATAL" "create backup dir $BAK_DIR failed"
@@ -79,3 +88,10 @@ utils::log "OK" "Back Files >>> Done"
 
 "${ROOT_DIR}"/system/config_iptables.sh clean \
   && utils::log "OK" "Clean k8s-components iptables rules"
+
+utils::log "INFO" "cleaning remain kubelet mount path"
+df -h | awk '/^'"${BAK_DIR}"'\/kubelet/{print $NF}' | xargs -r umount
+
+utils::log "INFO" "cleaning remain virtual interface"
+clean_cni
+clean_vni

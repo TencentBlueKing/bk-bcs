@@ -1488,7 +1488,7 @@ deploy:
     deleteChartVer: 'Delete {name} chart version'
     downloadChartVer: 'Download {name} chart version'
     confirmDeleteChart: 'Are you sure you want to delete {name}?'
-    deleteWarning: You need to delete all releases before deleting chart
+    deleteWarning: After deleting the Chart, the following Release will not be able to use this Chart for updates. Please proceed with caution.
     chartInstall: Chart Deploy
     showNotes: Show notes
     chartNSTips: >-
@@ -2595,15 +2595,6 @@ projects:
     objType: Object and type
     obj: Object：
     operator: Operator
-    begin: Begin
-    end: End
-    start: Start
-    pause: Pause
-    continue: Carryon
-    stop: Stop
-    restart: Restart
-    error: Error
-    doing: Busy
   project:
     create: Create Project
     name: Project name

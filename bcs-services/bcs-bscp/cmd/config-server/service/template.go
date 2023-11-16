@@ -405,3 +405,105 @@ func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbcs.ListTmplsOfT
 	}
 	return resp, nil
 }
+
+// ListTemplateByTuple 按照多个字段in查询
+func (s *Service) ListTemplateByTuple(ctx context.Context, req *pbcs.ListTemplateByTupleReq) (
+	*pbcs.ListTemplateByTupleResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+	data := []*pbds.ListTemplateByTupleReq_Item{}
+
+	for _, item := range req.Items {
+		data = append(data, &pbds.ListTemplateByTupleReq_Item{
+			BizId:           req.BizId,
+			TemplateSpaceId: req.TemplateSpaceId,
+			Name:            item.Name,
+			Path:            item.Path,
+		})
+	}
+	tuple, err := s.client.DS.ListTemplateByTuple(grpcKit.RpcCtx(), &pbds.ListTemplateByTupleReq{Items: data})
+	if err != nil {
+		return nil, err
+	}
+	templatesData := []*pbcs.ListTemplateByTupleResp_Item{}
+	for _, item := range tuple.Items {
+		templatesData = append(templatesData,
+			&pbcs.ListTemplateByTupleResp_Item{
+				Template:         item.Template,
+				TemplateRevision: item.TemplateRevision,
+			})
+	}
+	resp := &pbcs.ListTemplateByTupleResp{Items: templatesData}
+	return resp, nil
+}
+
+// BatchUpsertTemplates batch upsert templates.
+func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpsertTemplatesReq) (
+	*pbcs.BatchUpsertTemplatesResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	items := make([]*pbds.BatchUpsertTemplatesReq_Item, 0, len(req.Items))
+	for _, item := range req.Items {
+		// validate if file content uploaded.
+		if err := s.validateContentExist(grpcKit, req.BizId, item.Sign); err != nil {
+			logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+
+		items = append(items, &pbds.BatchUpsertTemplatesReq_Item{
+			Template: &pbtemplate.Template{
+				Id: item.Id,
+				Spec: &pbtemplate.TemplateSpec{
+					Name: item.Name,
+					Path: item.Path,
+					Memo: item.Memo,
+				},
+				Attachment: &pbtemplate.TemplateAttachment{
+					BizId:           req.BizId,
+					TemplateSpaceId: req.TemplateSpaceId,
+				},
+			},
+			TemplateRevision: &pbtr.TemplateRevision{
+				Spec: &pbtr.TemplateRevisionSpec{
+					Name:     item.Name,
+					Path:     item.Path,
+					FileType: item.FileType,
+					FileMode: item.FileMode,
+					Permission: &pbci.FilePermission{
+						User:      item.User,
+						UserGroup: item.UserGroup,
+						Privilege: item.Privilege,
+					},
+					ContentSpec: &pbcontent.ContentSpec{
+						Signature: item.Sign,
+						ByteSize:  item.ByteSize,
+					},
+				},
+				Attachment: &pbtr.TemplateRevisionAttachment{
+					BizId:           req.BizId,
+					TemplateSpaceId: req.TemplateSpaceId,
+				},
+			},
+		})
+	}
+
+	in := &pbds.BatchUpsertTemplatesReq{Items: items}
+	data, err := s.client.DS.BatchUpsertTemplates(grpcKit.RpcCtx(), in)
+	if err != nil {
+		return nil, err
+	}
+	resp := &pbcs.BatchUpsertTemplatesResp{Ids: data.Ids}
+	return resp, nil
+}

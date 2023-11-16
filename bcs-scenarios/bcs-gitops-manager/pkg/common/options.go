@@ -122,6 +122,12 @@ type AuthConfig struct {
 	BKIAM         string `json:"bkiam,omitempty"`
 }
 
+// AuditConfig defines the config of audit
+type AuditConfig struct {
+	BCSGateway string `json:"bcsGateway"`
+	Token      string `json:"token"`
+}
+
 // Complete unset item
 func (config *AuthConfig) Complete() error {
 	return nil

@@ -847,7 +847,7 @@ func GetModuleName(bkBizID, bkModuleID int) string {
 	if cli == nil {
 		return ""
 	}
-	list, err := cli.ListTopology(bkBizID, false, true)
+	list, err := cli.ListTopology(context.Background(), bkBizID, false, true)
 	if err != nil {
 		blog.Errorf("list topology failed, err %s", err.Error())
 		return ""

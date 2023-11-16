@@ -36,7 +36,9 @@ import (
 // GitOpsOptions for revese proxy
 type GitOpsOptions struct {
 	// backend gitops kubernetes service and port
-	Service string
+	Service        string
+	RepoServerUrl  string
+	PublicProjects []string
 	// URL prefix like /gitopsmanager/proxy/
 	PathPrefix string
 	// storage interface for access gitops data

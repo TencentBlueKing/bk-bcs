@@ -81,7 +81,6 @@ import { getReleasedAppVariables } from '../../../../../../../../api/variable';
 import { byteUnitConverse } from '../../../../../../../../utils';
 import SearchInput from '../../../../../../../../components/search-input.vue';
 import tableEmpty from '../../../../../../../../components/table/table-empty.vue';
-import config from '../../../../../../../../store/config';
 
 interface IConfigMenuItem {
   type: string;
@@ -186,12 +185,11 @@ watch(
 
 watch(
   () => isOnlyShowDiff.value,
-  (val: boolean) => {
+  () => {
     let hasSelectConfig = false;
     groupedConfigListOnShow.value.forEach((group) => {
       group.configs.forEach((config) => {
         if (config.id === selected.value.id) {
-          console.log('config', config);
           hasSelectConfig = true;
           handleSelectItem({
             pkgId: group.id,
@@ -276,7 +274,7 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
       configs: configs.map((config) => {
         const { id, spec, commit_spec, revision, file_state } = config;
         const { name, file_type, permission } = spec;
-        const { origin_byte_size, byte_size, origin_signature, signature } = commit_spec.content;
+        const { origin_byte_size, byte_size, signature } = commit_spec.content;
         return {
           type: 'config',
           id,
@@ -285,7 +283,7 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
           file_state,
           update_at: revision.update_at,
           byte_size: unNamedVersion ? byte_size : origin_byte_size,
-          signature: unNamedVersion ? signature : origin_signature,
+          signature,
           template_revision_id: 0,
           permission,
         };
@@ -478,7 +476,6 @@ const handleSearch = () => {
     const list: IDiffGroupData[] = [];
     aggregatedList.value.forEach((group) => {
       const configs = group.configs.filter((item) => {
-        console.log(item.diff_type);
         const isSearchHit = item.name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase());
         if (isOnlyShowDiff.value) {
           return item.diff_type !== '' && isSearchHit;
@@ -492,7 +489,16 @@ const handleSearch = () => {
         });
       }
     });
+    // 点击只查看配置文件 默认展示第一个
     groupedConfigListOnShow.value = list;
+    if (list.length === 0) return;
+    list[0].expand = true;
+    handleSelectItem({
+      pkgId: list[0].id,
+      id: list[0].configs[0].id,
+      version: list[0].configs[0].template_revision_id,
+      permission: list[0].configs[0].permission,
+    });
   }
 };
 

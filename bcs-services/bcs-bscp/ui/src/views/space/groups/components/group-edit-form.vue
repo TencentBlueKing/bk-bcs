@@ -13,7 +13,9 @@
         v-model="formData.bind_apps"
         class="service-selector"
         multiple
+        filterable
         placeholder="请选择服务"
+        :input-search="false"
         @change="change"
       >
         <bk-option
@@ -24,9 +26,20 @@
         ></bk-option>
       </bk-select>
     </bk-form-item>
-    <bk-form-item class="radio-group-form" label="分组规则" required property="rules">
+    <bk-form-item class="radio-group-form" label="标签选择器" required property="rules">
+      <template #label>
+        <span class="label-text">标签选择器</span>
+        <span
+          ref="nodeRef"
+          v-bk-tooltips="{
+            content: '标签选择器由key、操作符、value组成，筛选符合条件的客户端拉取服务配置，一般用于灰度发布服务配置',
+          }"
+          class="bk-tooltips-base">
+          <Info />
+        </span>
+      </template>
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
-        <bk-input v-model="rule.key" style="width: 174px" placeholder="" @change="ruleChange"></bk-input>
+        <bk-input v-model="rule.key" style="width: 174px" placeholder="key" @change="ruleChange"></bk-input>
         <bk-select
           :model-value="rule.op"
           style="width: 72px"
@@ -45,13 +58,14 @@
             :show-clear-only-hover="true"
             :allow-auto-match="true"
             :list="[]"
+            placeholder="value"
             @change="ruleChange"
           >
           </bk-tag-input>
           <bk-input
             v-else
             v-model="rule.value"
-            placeholder=""
+            placeholder="value"
             :type="['gt', 'ge', 'lt', 'le'].includes(rule.op) ? 'number' : 'text'"
             @change="ruleChange"
           >
@@ -63,12 +77,7 @@
             class="bk-bscp-icon icon-reduce"
             @click="handleDeleteRule(index)"
           ></i>
-          <i
-            v-if="index === formData.rules.length - 1"
-            style="margin-left: 10px"
-            class="bk-bscp-icon icon-add"
-            @click="handleAddRule(index)"
-          ></i>
+          <i v-if="index === formData.rules.length - 1" class="bk-bscp-icon icon-add" @click="handleAddRule(index)"></i>
         </div>
       </div>
       <div v-if="!rulesValid" class="bk-form-error">分组规则表单不能为空</div>
@@ -78,18 +87,19 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { storeToRefs } from 'pinia';
+// import { storeToRefs } from 'pinia';
 import { cloneDeep } from 'lodash';
-import useUserStore from '../../../../store/user';
+// import useUserStore from '../../../../store/user';
 import { IGroupEditing, EGroupRuleType, IGroupRuleItem } from '../../../../../types/group';
 import GROUP_RULE_OPS from '../../../../constants/group';
 import { getAppList } from '../../../../api/index';
 import { IAppItem } from '../../../../../types/app';
+import { Info } from 'bkui-vue/lib/icon';
 
-const getDefaultRuleConfig = (): IGroupRuleItem => ({ key: '', op: '', value: '' });
+const getDefaultRuleConfig = (): IGroupRuleItem => ({ key: '', op: 'eq', value: '' });
 
 const route = useRoute();
-const { userInfo } = storeToRefs(useUserStore());
+// const { userInfo } = storeToRefs(useUserStore());
 
 const props = defineProps<{
   group: IGroupEditing;
@@ -275,6 +285,7 @@ defineExpose({
 .action-btns {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   width: 38px;
   font-size: 14px;
   color: #979ba5;
@@ -282,5 +293,13 @@ defineExpose({
   i:hover {
     color: #3a84ff;
   }
+}
+.label-text {
+  margin-right: 5px;
+}
+.bk-tooltips-base {
+  font-size: 14px;
+  color: #3a84ff;
+  line-height: 19px;
 }
 </style>

@@ -1,16 +1,14 @@
 <template>
-  <bk-dialog
-    :title="`确认删除【${props.pkg ? props.pkg.spec.name : ''}】?`"
-    ext-cls="delete-template-package-dialog"
-    header-align="center"
-    dialog-type="show"
-    :width="400"
+  <DeleteConfirmDialog
     :is-show="isShow"
-    :esc-close="false"
-    :quick-close="false"
-    @closed="close"
+    title="确认删除该配置模板套餐？"
+    @confirm="handleDelete"
+    @close="emits('update:show',false)"
   >
-    <p v-if="appList.length > 0" class="tips">以下服务的未命名版本中引用此套餐的内容也将删除</p>
+    <div style="margin-bottom: 8px;">
+      配置模板套餐: <span style="color: #313238;font-weight: 600;">{{ props.pkg.spec.name }}</span>
+    </div>
+    <div style="margin-bottom: 8px;">一旦删除，该操作将无法撤销，以下服务配置的未命名版本中引用该套餐的内容也将清除</div>
     <div class="service-table">
       <bk-loading style="min-height: 200px" :loading="appsLoading">
         <bk-table :data="appList" :max-height="maxTableHeight" empty-text="暂无未命名版本引用此套餐">
@@ -25,13 +23,7 @@
         </bk-table>
       </bk-loading>
     </div>
-    <div class="action-btns">
-      <bk-button theme="primary" class="delete-btn" :disabled="appsLoading" :loading="pending" @click="handleDelete"
-        >删除套餐</bk-button
-      >
-      <bk-button @click="close">取消</bk-button>
-    </div>
-  </bk-dialog>
+  </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
@@ -43,6 +35,7 @@ import { getUnNamedVersionAppsBoundByPackage, deleteTemplatePackage } from '../.
 import { ITemplatePackageItem, IPackageCitedByApps } from '../../../../../../types/template';
 import useTemplateStore from '../../../../../store/template';
 import LinkToApp from '../components/link-to-app.vue';
+import DeleteConfirmDialog from '../../../../../components/delete-confirm-dialog.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { currentTemplateSpace } = storeToRefs(useTemplateStore());

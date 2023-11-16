@@ -126,5 +126,20 @@ func (p *proxy) routers() http.Handler {
 		r.Get("/metadata", p.repo.FileMetadata)
 	})
 
+	// 导入模板压缩包
+	r.Route("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/import", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Post("/", p.configImportService.TemplateConfigFileImport)
+
+	})
+
+	// 导入配置压缩包
+	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}/config_item/import", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Post("/", p.configImportService.ConfigFileImport)
+	})
+
 	return r
 }

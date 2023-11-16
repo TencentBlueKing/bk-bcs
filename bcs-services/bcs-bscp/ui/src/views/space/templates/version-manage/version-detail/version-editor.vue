@@ -16,7 +16,7 @@
             <bk-input v-model="formData.revision_name" />
           </bk-form-item>
           <bk-form-item label="版本描述" property="revision_memo">
-            <bk-input v-model="formData.revision_memo" type="textarea" :rows="4" :maxlength="200" :resize="false" />
+            <bk-input v-model="formData.revision_memo" type="textarea" :rows="4" :maxlength="200" :resize="true" />
           </bk-form-item>
           <bk-form-item label="文件权限" required>
             <PermissionInputPicker v-model="formData.privilege" />
@@ -123,6 +123,14 @@ const rules = {
     {
       validator: (value: string) => value.length <= 256,
       message: '最大长度256个字符',
+    },
+    {
+      validator: (value: string) => {
+        if (!value) return true;
+        return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value);
+      },
+      message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
+      trigger: 'change',
     },
   ],
 };

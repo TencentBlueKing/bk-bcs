@@ -27,9 +27,13 @@ export const chartDetail = request('get', '/repos/$repoName/charts/$chartName');
 export const downloadChartUrl = `${window.BCS_API_HOST}/bcsapi/v4/helmmanager/v1/projects/$projectCode/repos/$repoName/charts/$chartName/versions/$version/download`;
 export const chartReleases = request('post', '/repos/$repoName/charts/$chartName/releases');
 export const releasesManifest = request('get', '/clusters/$clusterId/namespaces/$namespaceId/releases/$releaseName/revisions/$revision/manifest');
-// 日志采集
+// 日志采集 & 组件库
 export const addonsDetail = request('get', '/clusters/$clusterId/addons/$name'); // 获取组件详情
 export const updateOns = request('put', '/clusters/$clusterId/addons/$name'); // 更新组件
+export const addonsList = request('get', '/clusters/$clusterId/addons');
+export const addonsInstall = request('post', '/clusters/$clusterId/addons');
+export const addonsUninstall = request('delete', '/clusters/$clusterId/addons/$name');
+export const addonsStop = request('put', '/clusters/$clusterId/addons/$name/stop');
 
 // cluster tools
 const request2 = createRequest({

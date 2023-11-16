@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 import VariableContentEditor from './variables-content-editor.vue';
 const isShow = ref(false);
 const props = defineProps<{
@@ -33,7 +33,6 @@ watch(
     isShow.value = val;
   },
 );
-onMounted(() => {});
 const handleClose = () => {
   emits('update:show', false);
 };

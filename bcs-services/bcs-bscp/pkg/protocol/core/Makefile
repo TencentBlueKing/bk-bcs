@@ -21,6 +21,7 @@ all:
 	@cd template-binding-relation && make
 	@cd template-variable && make
 	@cd app-template-variable && make
+	@cd kv && make
 
 clean:
 	@cd base && make clean
@@ -45,3 +46,4 @@ clean:
 	@cd template-binding-relation && make clean
 	@cd template-variable && make clean
 	@cd app-template-variable && make clean
+	@cd kv && make clean

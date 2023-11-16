@@ -377,6 +377,7 @@ export default defineComponent({
           params: {
             namespace,
             name,
+            clusterId: clusterId.value,
           },
           query: {
             type: 'workloads',
@@ -390,6 +391,7 @@ export default defineComponent({
           params: {
             namespace,
             name,
+            clusterId: clusterId.value,
           },
           query: {
             type: 'workloads',
@@ -415,6 +417,7 @@ export default defineComponent({
             $type: 'workloads',
             $category: 'pods',
             $name: name,
+            $clusterId: clusterId.value,
           });
           result && $bkMessage({
             theme: 'success',

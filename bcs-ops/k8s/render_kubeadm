@@ -148,7 +148,13 @@ EOF
 }
 
 render_kubelet() {
-  true
+  local config_file=$1
+  cat >"${config_file}" <<EOF
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+---
+EOF
 }
 
 render_init_join() {
@@ -186,7 +192,7 @@ $(
     case "${cri_type}" in
       "containerd")
         cat <<CRI_EOF
-  criSocket: "/run/containerd/containerd.sock"
+  criSocket: "unix:///run/containerd/containerd.sock"
 CRI_EOF
         ;;
       "docker")
@@ -341,10 +347,11 @@ main() {
   render_cluster /tmp/cluster-config
   render_init_join /tmp/init-join-config
   render_proxy /tmp/proxy-config
-  cat /tmp/cluster-config /tmp/init-join-config /tmp/proxy-config >"${config_file}"
+  render_kubelet /tmp/kubelet-config
+  cat /tmp/cluster-config /tmp/init-join-config /tmp/proxy-config /tmp/kubelet-config >"${config_file}"
   cat "${config_file}"
   utils::log "OK" "${config_file} rendered"
-  rm -f /tmp/cluster-config /tmp/init-join-config /tmp/proxy-config
+  rm -f /tmp/cluster-config /tmp/init-join-config /tmp/proxy-config /tmp/kubelet-config
 }
 
 main

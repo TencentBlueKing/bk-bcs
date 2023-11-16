@@ -39,7 +39,8 @@ func (r *response) Marshal() []byte {
 }
 
 func (s *Server) responseError(r *http.Request, w http.ResponseWriter, statusCode int, err error) {
-	blog.Errorf("request '%s' response err: %s", r.RequestURI, err.Error())
+	blog.Errorf("RequestID[%s] request '%s' response err: %s", requestID(r.Context()),
+		r.RequestURI, err.Error())
 
 	if statusCode >= 500 {
 		metric.RequestFailed.WithLabelValues().Inc()

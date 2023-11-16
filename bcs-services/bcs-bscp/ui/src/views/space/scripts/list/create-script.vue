@@ -21,11 +21,11 @@
             />
           </bk-form-item>
           <bk-form-item class="fixed-width-form" property="memo" label="脚本描述">
-            <bk-input v-model="formData.memo" type="textarea" :rows="3" :maxlength="200" :resize="false" />
+            <bk-input v-model="formData.memo" type="textarea" :rows="3" :maxlength="200" :resize="true" />
           </bk-form-item>
           <bk-form-item label="脚本内容" property="content" required>
             <div class="script-content-wrapper">
-              <ScriptEditor v-model="formData.content" :language="formData.type">
+              <ScriptEditor v-model="showContent" :language="formData.type">
                 <template #header>
                   <div class="language-tabs">
                     <div
@@ -53,7 +53,7 @@
   </DetailLayout>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import BkMessage from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../store/global';
@@ -83,6 +83,14 @@ const formData = ref<IScriptEditingForm>({
   type: EScriptType.Shell,
   content: '',
 });
+const formDataContent = ref({
+  shell: '#!/bin/bash',
+  python: '#!/usr/bin/env python\n# -*- coding: utf8 -*-',
+});
+const showContent = computed({
+  get: () => (formData.value.type === 'shell' ? formDataContent.value.shell : formDataContent.value.python),
+  set: val => (formData.value.type === 'shell' ? formDataContent.value.shell = val : formDataContent.value.python = val),
+});
 
 const rules = {
   name: [
@@ -94,6 +102,16 @@ const rules = {
     {
       validator: (value: string) => value.length <= 256,
       message: '不能超过256个字符',
+      trigger: 'change',
+    },
+  ],
+  memo: [
+    {
+      validator: (value: string) => {
+        if (!value) return true;
+        return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value);
+      },
+      message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
       trigger: 'change',
     },
   ],
@@ -112,6 +130,7 @@ const getTags = async () => {
 };
 
 const handleCreate = async () => {
+  formData.value.content = formData.value.type === 'shell' ? formDataContent.value.shell : formDataContent.value.python;
   await formRef.value.validate();
   try {
     pending.value = true;

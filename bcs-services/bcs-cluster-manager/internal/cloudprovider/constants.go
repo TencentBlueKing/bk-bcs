@@ -221,6 +221,10 @@ var (
 	DeviceIDsKey ParamKey = "deviceIDs"
 	// NodeSchedule node schedule status
 	NodeSchedule ParamKey = "nodeSchedule"
+	// MasterNodeIPsKey nodes
+	MasterNodeIPsKey ParamKey = "masterIPs"
+	// WorkerNodeIPsKey nodes
+	WorkerNodeIPsKey ParamKey = "workerIPs"
 
 	// NamespaceKey xxx
 	NamespaceKey ParamKey = "namespace"

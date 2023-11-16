@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230920065036-5ec367ec2378
-	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230921024236-fc3b5f7e6d87
+	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20231027074658-46b201bef8d8
 	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230918042150-6020611e4f01
 	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230901032130-5c3e207129c5
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20230506100250-1d5620f4abf4

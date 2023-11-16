@@ -18,7 +18,7 @@
       </div>
     </div>
     <div class="separator-wrapper">
-      <div class="number">{{ currentDiffNumber + permissionDiffNumber }}<span>/</span>{{ diffNumber }}</div>
+      <div class="number">{{ diffNumber }}<span>/</span>{{ currentDiffNumber + permissionDiffNumber }}</div>
       <div class="line"></div>
       <div class="button">
         <angle-up fill="#C4C6CC" @click="previous" />
@@ -36,26 +36,33 @@ import * as monaco from 'monaco-editor';
 let contentNavigator: monaco.editor.IDiffNavigator;
 let permissionNavigator: monaco.editor.IDiffNavigator;
 const contentLineChange = ref();
-const contentDiffNumber = ref(1);
-const permissionLineChange = ref();
-const permissionDiffNumber = ref(0);
-const currentDiffNumber = ref(1);
-const diffNumber = computed(() => contentDiffNumber.value + permissionDiffNumber.value);
+const contentDiffNumber = ref(0);
+const currentDiffNumber = ref(0);
+const diffNumber = computed(() => contentDiffNumber.value + props.permissionDiffNumber);
 
 const props = defineProps<{
   diffEditor: monaco.editor.IStandaloneDiffEditor;
   permissionEditor: monaco.editor.IStandaloneDiffEditor;
+  permissionDiffNumber: number;
 }>();
 
 watch(
-  () => props.permissionEditor,
+  () => props.diffEditor,
   () => {
     createNavigator();
+    getContentDiffNumber();
   },
 );
 
+watch([() => contentDiffNumber.value, () => props.permissionDiffNumber], () => {
+  console.log('contentLineChange', contentLineChange.value);
+  getCurrentDiffIndex();
+});
+
 onBeforeUnmount(() => {
-  contentNavigator.dispose();
+  if (contentNavigator) {
+    contentNavigator.dispose();
+  }
   if (permissionNavigator) {
     permissionNavigator.dispose();
   }
@@ -67,25 +74,26 @@ const createNavigator = () => {
     followsCaret: true,
     ignoreCharChanges: true,
   });
-  // 获取文件内容差异个数
+};
+
+// 获取内容差异个数
+const getContentDiffNumber = () => {
   props.diffEditor.onDidUpdateDiff(() => {
     contentLineChange.value = props.diffEditor.getLineChanges();
     contentDiffNumber.value = contentLineChange.value.length;
-  });
-  // 获取文件属性差异个数
-  props.permissionEditor.onDidUpdateDiff(() => {
-    permissionLineChange.value = props.permissionEditor.getLineChanges();
-    permissionDiffNumber.value = permissionLineChange.value.length;
   });
 };
 
 // 获取当前差异行
 const getCurrentDiffIndex = () => {
   const position = props.diffEditor.getPosition() as monaco.Position;
+  if (contentLineChange.value.length === 0) {
+    currentDiffNumber.value = 0;
+    return;
+  }
   contentLineChange.value.forEach((item: any, index: number) => {
     if (item.modifiedStartLineNumber <= position.lineNumber && item.modifiedEndLineNumber >= position.lineNumber) {
       currentDiffNumber.value = index + 1;
-      console.log(currentDiffNumber.value);
     }
   });
 };
@@ -93,13 +101,11 @@ const getCurrentDiffIndex = () => {
 const previous = () => {
   contentNavigator.previous();
   getCurrentDiffIndex();
-  console.log('aaaaa', contentNavigator);
 };
 
 const next = () => {
   contentNavigator.next();
   getCurrentDiffIndex();
-  console.log('aaaaa');
 };
 </script>
 

@@ -97,8 +97,8 @@ github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230920051541-b2fbd0fe23a
 github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230920051541-b2fbd0fe23aa/go.mod h1:t+dL+56hGTiV+11XO9vvEUTEFJiMUOH51ecJJsavhXI=
 github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230906015939-61de9e6ddee9 h1:hKLO0Ou7WPMQ8nfH8B2l0p+atWtMWARJ8If+mYOuDLs=
 github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230906015939-61de9e6ddee9/go.mod h1:brH9gS85hBIx4wwlihn9TKPom5VrcMuZwnHfKBAmsWI=
-github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230906015939-61de9e6ddee9 h1:LZvENFHIeXmQa8KjWaWiqYpuFby4dGhhMbMC83Y2xCw=
-github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230906015939-61de9e6ddee9/go.mod h1:Oswz2fWQcjF3sZ1+9uLQR5srW01bqJVk3Ip5HiO1+N8=
+github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20231103023231-8ec56ea4af9f h1:uGW2JsiwUerfidoYghpFpwrwF1Kmok5gyBYmJMiiF8E=
+github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20231103023231-8ec56ea4af9f/go.mod h1:Oswz2fWQcjF3sZ1+9uLQR5srW01bqJVk3Ip5HiO1+N8=
 github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230906015939-61de9e6ddee9 h1:fI9LtnLR7TbVkot8xGuJ/SK5aO20jobJLORVDAJLKqo=
 github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230906015939-61de9e6ddee9/go.mod h1:SiXcPyURXmZy7VEvfZt8FqinrIfqF0TofD20zEKPHNQ=
 github.com/TencentBlueKing/bk-audit-go-sdk v0.0.5 h1:ncWmzuwRvx7RBg07LaVZF1DVlXm/STLa1+d6ESEUFJo=

@@ -126,6 +126,23 @@ func (cm *ClusterManager) ListCloudOsImage(ctx context.Context,
 	return nil
 }
 
+// ListCloudProjects implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudProjects(ctx context.Context,
+	req *cmproto.ListCloudProjectsRequest, resp *cmproto.ListCloudProjectsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fa := cloudresource.NewListCloudProjectsAction(cm.model)
+	fa.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudProjects", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudProjects, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCloudProjects, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListKeypairs implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListKeypairs(ctx context.Context,
 	req *cmproto.ListKeyPairsRequest, resp *cmproto.ListKeyPairsResponse) error {

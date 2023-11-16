@@ -1,4 +1,5 @@
 <template>
+  <bk-alert theme="info">{{ headInfo }}<span @click="goGroupDoc" class="hyperlink">分组管理</span></bk-alert>
   <section class="groups-management-page">
     <div class="operate-area">
       <bk-button theme="primary" @click="openCreateGroupDialog"><Plus class="button-icon" />新增分组</bk-button>
@@ -17,8 +18,10 @@
         <bk-input
           class="search-group-input"
           placeholder="分组名称/分组规则"
-          @enter="handleSearch"
+          @input="handleSearch"
           v-model.trim="searchInfo"
+          @clear="handleSearch"
+          :clearable="true"
         >
           <template #suffix>
             <Search class="search-input-icon" />
@@ -28,7 +31,6 @@
     </div>
     <div class="group-table-wrapper">
       <bk-loading style="min-height: 300px" :loading="listLoading">
-        <template v-if="groupList.length > 0">
           <bk-table class="group-table" :border="['outer']" :data="tableData">
             <bk-table-column label="分组名称" :width="210" show-overflow-tooltip>
               <template #default="{ row }">
@@ -43,7 +45,7 @@
                 <template v-else>{{ row.name }}</template>
               </template>
             </bk-table-column>
-            <bk-table-column label="分组规则" show-overflow-tooltip>
+            <bk-table-column label="标签选择器" show-overflow-tooltip>
               <template #default="{ row }">
                 <template v-if="!row.IS_CATEORY_ROW">
                   <template v-if="row.selector">
@@ -107,7 +109,7 @@
               </template>
             </bk-table-column>
             <template #empty>
-              <tableEmpty :is-search-empty="isSearchEmpty" @clear="clearSearchInfo"/>
+              <tableEmpty :is-search-empty="isSearchEmpty" @clear="clearSearchInfo" />
             </template>
           </bk-table>
           <bk-pagination
@@ -121,7 +123,6 @@
             @change="handlePageChange"
             @limit-change="handlePageLimitChange"
           />
-        </template>
       </bk-loading>
     </div>
     <create-group v-model:show="isCreateGroupShow" @reload="loadGroupList"></create-group>
@@ -132,12 +133,21 @@
       :name="editingGroup.name"
     ></services-to-published>
   </section>
+  <DeleteConfirmDialog
+    v-model:isShow="isDeleteGroupDialogShow"
+    title="确认删除该分组？"
+    @confirm="handleDeleteGroupConfirm"
+  >
+    <div style="margin-bottom: 8px">
+      配置模板套餐: <span style="color: #313238; font-weight: 600">{{ deleteGroupItem?.name }}</span>
+    </div>
+    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+  </DeleteConfirmDialog>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted, nextTick } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Plus, Search, DownShape } from 'bkui-vue/lib/icon';
-import { InfoBox } from 'bkui-vue/lib';
 import useGlobalStore from '../../../store/global';
 import { getSpaceGroupList, deleteGroup } from '../../../api/group';
 import { IGroupItem, IGroupCategory, IGroupCategoryItem } from '../../../../types/group';
@@ -146,6 +156,8 @@ import EditGroup from './edit-group.vue';
 import RuleTag from './components/rule-tag.vue';
 import ServicesToPublished from './services-to-published.vue';
 import tableEmpty from '../../../components/table/table-empty.vue';
+import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
+import { debounce } from 'lodash';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -157,6 +169,8 @@ const tableData = ref<IGroupItem[] | IGroupCategoryItem[]>([]);
 const isCategorizedView = ref(false); // 按规则分类查看
 const searchInfo = ref('');
 const changeViewPending = ref(false);
+const isDeleteGroupDialogShow = ref(false);
+const deleteGroupItem = ref<IGroupItem>();
 const pagination = ref({
   current: 1,
   count: 0,
@@ -176,6 +190,8 @@ const editingGroup = ref<IGroupItem>({
 });
 const isPublishedSliderShow = ref(false);
 const isSearchEmpty = ref(false);
+const headInfo =
+  '分组由 1 个或多个标签组成，服务配置版本选择分组上线结合客户端配置的标签用于灰度发布、A/B Test等运营场景，详情参考文档：';
 
 watch(
   () => spaceId.value,
@@ -286,7 +302,7 @@ const handleChangeView = () => {
 
 // 搜索
 // @todo 规则搜索交互确定
-const handleSearch = () => {
+const handleSearch = debounce(() => {
   if (!searchInfo.value) {
     searchGroupList.value = groupList.value;
     isSearchEmpty.value = false;
@@ -319,7 +335,7 @@ const handleSearch = () => {
     isSearchEmpty.value = true;
   }
   refreshTableData();
-};
+}, 300);
 
 // 关联服务
 const handleOpenPublishedSlider = (group: IGroupItem) => {
@@ -329,18 +345,17 @@ const handleOpenPublishedSlider = (group: IGroupItem) => {
 
 // 删除分组
 const handleDeleteGroup = (group: IGroupItem) => {
-  InfoBox({
-    title: `确认是否删除分组【${group.name}?】`,
-    headerAlign: 'center' as const,
-    footerAlign: 'center' as const,
-    onConfirm: async () => {
-      await deleteGroup(spaceId.value, group.id);
-      if (tableData.value.length === 1 && pagination.value.current > 1) {
-        pagination.value.current = pagination.value.current - 1;
-      }
-      loadGroupList();
-    },
-  } as any);
+  isDeleteGroupDialogShow.value = true;
+  deleteGroupItem.value = group;
+};
+
+const handleDeleteGroupConfirm = async () => {
+  await deleteGroup(spaceId.value, deleteGroupItem.value!.id);
+  if (tableData.value.length === 1 && pagination.value.current > 1) {
+    pagination.value.current = pagination.value.current - 1;
+  }
+  loadGroupList();
+  isDeleteGroupDialogShow.value = false;
 };
 
 // 分类展开/收起
@@ -379,8 +394,16 @@ const clearSearchInfo = () => {
   searchInfo.value = '';
   handleSearch();
 };
+
+// @ts-ignore
+// eslint-disable-next-line
+const goGroupDoc = () => window.open(BSCP_CONFIG.group_doc);
 </script>
 <style lang="scss" scoped>
+.hyperlink {
+  color: #3a84ff;
+  cursor: pointer;
+}
 .groups-management-page {
   height: 100%;
   padding: 24px;

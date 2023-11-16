@@ -101,6 +101,11 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// ListProjects list cloud projects
+func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudProject, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // CheckClusterEndpointStatus check cluster endpoint status
 func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {

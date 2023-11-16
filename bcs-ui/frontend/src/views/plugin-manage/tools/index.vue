@@ -81,26 +81,21 @@
                           <p class="text">{{crdcontroller.name || '--'}}</p>
                         </td>
                         <td class="version" style="width: 120px;padding: 0 10px 0 20px;">
-                          <p class="text">{{crdcontroller.installed_info.chart_version || '--'}}</p>
+                          <p class="text">{{crdcontroller.currentVersion || crdcontroller.version || '--'}}</p>
                         </td>
                         <td class="status">
                           <span class="biz-mark" v-if="crdcontroller.status === 'deployed'">
-                            <bk-tag type="filled" theme="success">{{$t('plugin.tools.deployed')}}</bk-tag>
+                            <bk-tag type="filled" theme="success">{{statusTextMap[crdcontroller.status] || $t('plugin.tools.deployed')}}</bk-tag>
                           </span>
                           <span class="biz-mark" v-else-if="!crdcontroller.status">
-                            <bk-tag type="filled">{{$t('generic.status.notEnable')}}</bk-tag>
-                          </span>
-                          <span class="biz-mark" v-else-if="crdcontroller.status === 'failed'">
-                            <bcs-popover :width="500" :content="crdcontroller.message" placement="top">
-                              <bk-tag type="filled" theme="danger">{{$t('generic.status.error')}}</bk-tag>
-                            </bcs-popover>
+                            <bk-tag type="filled">{{statusTextMap[crdcontroller.status] || $t('generic.status.notEnable')}}</bk-tag>
                           </span>
                           <span class="biz-mark" v-else-if="crdcontroller.status === 'unknown'">
                             <bcs-popover :content="$t('plugin.tools.contact')" placement="top">
-                              <bk-tag type="filled" theme="warning">{{$t('generic.status.unknown')}}</bk-tag>
+                              <bk-tag type="filled" theme="warning">{{statusTextMap[crdcontroller.status] || $t('generic.status.unknown')}}</bk-tag>
                             </bcs-popover>
                           </span>
-                          <template v-else-if="crdcontroller.status === 'pending'">
+                          <template v-else-if="pendingStatus.includes(crdcontroller.status)">
                             <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary vm" style="margin-right: 3px;">
                               <div class="rotate rotate1"></div>
                               <div class="rotate rotate2"></div>
@@ -111,8 +106,13 @@
                               <div class="rotate rotate7"></div>
                               <div class="rotate rotate8"></div>
                             </div>
-                            <span class="vm">{{$t('plugin.tools.doing')}}</span>
+                            <span class="vm">{{statusTextMap[crdcontroller.status] || $t('plugin.tools.doing')}}</span>
                           </template>
+                          <span class="biz-mark" v-else>
+                            <bcs-popover :width="500" :content="crdcontroller.message" placement="top">
+                              <bk-tag type="filled" theme="danger">{{statusTextMap[crdcontroller.status] || $t('generic.status.error')}}</bk-tag>
+                            </bcs-popover>
+                          </span>
                         </td>
                         <td class="description">
                           <p class="text">
@@ -147,7 +147,7 @@
                           <template v-else-if="!crdcontroller.status">
                             <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('logCollector.action.enable')}}</bk-button>
                           </template>
-                          <template v-else-if="crdcontroller.status === 'failed'">
+                          <template v-else-if="failedStatus.includes(crdcontroller.status)">
                             <template
                               v-if="!crdcontroller.supported_actions.includes('upgrade')
                                 && !crdcontroller.supported_actions.includes('uninstall')">
@@ -178,8 +178,8 @@
                               <bk-button :disabled="true">{{$t('logCollector.action.enable')}}</bk-button>
                             </span>
                           </template>
-                          <template v-else-if="crdcontroller.status === 'pending'">
-                            <bk-button :disabled="true">{{$t('plugin.tools.doing')}}</bk-button>
+                          <template v-else-if="pendingStatus.includes(crdcontroller.status)">
+                            <bk-button :disabled="true">{{statusTextMap[crdcontroller.status] || $t('plugin.tools.doing')}}</bk-button>
                           </template>
                         </td>
                       </tr>
@@ -197,146 +197,7 @@
             </tbody>
           </table>
 
-          <table class="bk-table biz-templateset-table mb20" v-else>
-            <thead>
-              <tr>
-                <th style="width: 120px; padding-left: 0;" class="center">{{$t('plugin.tools.icon')}}</th>
-                <th style="width: 150px; padding-left: 20px;">{{$t('plugin.tools.toolName')}}</th>
-                <th style="width: 120px; padding-left: 20px">{{$t('generic.label.version')}}</th>
-                <th style="width: 150px; padding-left: 20px;">{{$t('generic.label.status')}}</th>
-                <th style="width: 390px; padding-left: 20px;" v-if="$INTERNAL">{{$t('plugin.tools.dataSourseInfo')}}</th>
-                <th style="width: 390px; padding-left: 20px;" v-else>{{$t('plugin.tools.logSearch')}}</th>
-                <th style="padding-left: 0;">{{$t('cluster.create.label.desc')}}</th>
-                <th style="width: 170px; padding-left: 0;">{{$t('generic.label.action')}}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-if="crdControllerList.length">
-                <tr
-                  v-for="crdcontroller of crdControllerList"
-                  :key="crdcontroller.id">
-                  <td colspan="7">
-                    <table class="biz-inner-table">
-                      <tr>
-                        <td class="logo">
-                          <div class="logo-wrapper" v-if="logMap[crdcontroller.chart_name]">
-                            <i :class="logMap[crdcontroller.chart_name]"></i>
-                          </div>
-                          <svg class="biz-set-icon" v-else>
-                            <use xlink:href="#biz-set-icon"></use>
-                          </svg>
-                        </td>
-                        <td class="log-name">
-                          <p class="text">{{crdcontroller.name || '--'}}</p>
-                        </td>
-                        <td style="width: 120px;padding: 0 10px 0 20px;">
-                          <p class="text">{{crdcontroller.installed_info.chart_version || '--'}}</p>
-                        </td>
-                        <td class="status">
-                          <span class="biz-mark" v-if="crdcontroller.status === 'deployed'">
-                            <bk-tag type="filled" theme="success">{{$t('generic.status.enabled')}}</bk-tag>
-                          </span>
-                          <span class="biz-mark" v-else-if="!crdcontroller.status">
-                            <bk-tag type="filled">{{$t('generic.status.notEnable')}}</bk-tag>
-                          </span>
-                          <span class="biz-mark" v-else-if="crdcontroller.status === 'failed'">
-                            <bcs-popover :content="crdcontroller.message || '--'" placement="top" width="500">
-                              <bk-tag type="filled" theme="danger">{{$t('plugin.tools.failed')}}</bk-tag>
-                            </bcs-popover>
-                          </span>
-                        </td>
-                        <td class="log-source" v-if="$INTERNAL">
-                          <p>{{$t('plugin.tools.standardLog')}}：{{dataSource.std_data_name || '--'}}</p>
-                          <p>{{$t('plugin.tools.fileLogPath')}}：{{dataSource.file_data_name || '--'}}</p>
-                          <!-- <p>{{$t('plugin.tools.OSLog')}}：{{dataSource.sys_data_name || '--'}}</p> -->
-                        </td>
-                        <td class="log-source" v-else>
-                          <p><a :href="dataSource.std_log_link" class="bk-text-button" target="_blank">{{$t('plugin.tools.standardLog')}}</a></p>
-                          <p class="mt5"><a :href="dataSource.file_log_link" class="bk-text-button" target="_blank">{{$t('plugin.tools.fileLogPath')}}</a></p>
-                        </td>
-                        <td class="description">
-                          <p class="text">
-                            {{crdcontroller.description || '--'}}
-                            <a :href="crdcontroller.help_link" class="bk-text-button f12" target="_blank" v-if="crdcontroller.help_link">{{$t('plugin.tools.docs')}}</a>
-                          </p>
-                        </td>
-                        <td class="action">
-                          <template v-if="crdcontroller.status === 'deployed'">
-                            <bk-dropdown-menu
-                              class="dropdown-menu"
-                              :align="'left'"
-                              ref="dropdown">
-                              <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
-                                <span>{{$t('generic.label.action')}}</span>
-                                <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
-                              </bk-button>
 
-                              <ul class="bk-dropdown-list" slot="dropdown-content">
-                                <li v-if="crdcontroller.supported_actions.includes('config')">
-                                  <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('plugin.tools.config')}}</a>
-                                </li>
-                                <li v-if="crdcontroller.supported_actions.includes('upgrade')">
-                                  <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</a>
-                                </li>
-                                <li v-if="crdcontroller.supported_actions.includes('uninstall')">
-                                  <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</a>
-                                </li>
-                              </ul>
-                            </bk-dropdown-menu>
-                          </template>
-                          <template v-else-if="!crdcontroller.status">
-                            <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('logCollector.action.enable')}}</bk-button>
-                          </template>
-                          <template v-else-if="crdcontroller.status === 'failed'">
-                            <template v-if="!crdcontroller.supported_actions.length">
-                              <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('plugin.tools.restart')}}</bk-button>
-                            </template>
-                            <template v-else>
-                              <bk-dropdown-menu
-                                class="dropdown-menu"
-                                :align="'left'"
-                                ref="dropdown">
-                                <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
-                                  <span>{{$t('generic.label.action')}}</span>
-                                  <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
-                                </bk-button>
-                                <ul class="bk-dropdown-list" slot="dropdown-content">
-                                  <li v-if="crdcontroller.supported_actions.includes('config')">
-                                    <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('plugin.tools.config')}}</a>
-                                  </li>
-                                  <li v-if="crdcontroller.supported_actions.includes('upgrade')">
-                                    <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</a>
-                                  </li>
-                                  <li v-if="crdcontroller.supported_actions.includes('uninstall')">
-                                    <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</a>
-                                  </li>
-                                </ul>
-                              </bk-dropdown-menu>
-                            </template>
-                          </template>
-                          <template v-else-if="crdcontroller.status === 'unknown'">
-                            <span v-bk-tooltips="$t('plugin.tools.contact')">
-                              <bk-button :disabled="true">{{$t('logCollector.action.enable')}}</bk-button>
-                            </span>
-                          </template>
-                          <template v-else-if="crdcontroller.status === 'pending'">
-                            <bk-button :disabled="true">{{$t('plugin.tools.doing')}}</bk-button>
-                          </template>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </template>
-              <template v-if="!crdControllerList.length">
-                <tr>
-                  <td colspan="6">
-                    <bcs-exception type="empty" scene="part"></bcs-exception>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
         </div>
       </template>
     </div>
@@ -377,6 +238,7 @@
 </template>
 
 <script>
+import { addonsDetail, addonsInstall, addonsList, addonsUninstall } from '@/api/modules/helm';
 import { catchErrorHandler } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 import Header from '@/components/layout/Header.vue';
@@ -390,7 +252,23 @@ export default {
   },
   data() {
     return {
-      fiexedStatus: ['deployed', 'failed', 'unknown'],
+      pendingStatus: ['uninstalling', 'pending-install', 'pending-upgrade', 'pending-rollback'],
+      failedStatus: ['failed', 'failed-install', 'failed-upgrade', 'failed-rollback', 'failed-uninstall'],
+      statusTextMap: {
+        unknown: this.$t('generic.status.error'),
+        deployed: this.$t('generic.status.ready'),
+        uninstalled: this.$t('generic.status.deleted'),
+        superseded: this.$t('deploy.helm.invalidate'),
+        failed: this.$t('generic.status.failed'),
+        uninstalling: this.$t('generic.status.deleting'),
+        'pending-install': this.$t('deploy.helm.pending'),
+        'pending-upgrade': this.$t('generic.status.updating'),
+        'pending-rollback': this.$t('deploy.helm.pendingRollback'),
+        'failed-install': this.$t('deploy.helm.failed'),
+        'failed-upgrade': this.$t('generic.status.updateFailed'),
+        'failed-rollback': this.$t('deploy.helm.rollbackFailed'),
+        'failed-uninstall': this.$t('generic.status.deleteFailed'),
+      },
       isInitLoading: true,
       isPageLoading: false,
       crdControllerList: [],
@@ -525,14 +403,13 @@ export default {
       try {
         const crdcontroller = this.curCrdcontroller;
         const clusterId = this.searchScope;
-        const { id } = crdcontroller;
-        crdcontroller.status = 'pending';
         this.valueSlider.isShow = false;
-        await this.$store.dispatch('crdcontroller/clusterToolsInstall', {
+        await addonsInstall({
           $clusterId: clusterId,
-          $toolId: id,
+          name: crdcontroller.name,
+          version: crdcontroller.version,
           values: this.editorOptions.content,
-        });
+        }).catch(() => false);
         this.getCrdControllersByCluster();
         this.getCrdcontrollerStatus(crdcontroller);
       } catch (e) {
@@ -560,14 +437,25 @@ export default {
 
       this.isPageLoading = true;
       try {
-        const data = await this.$store.dispatch('crdcontroller/clusterTools', { $clusterId: clusterId });
-        data.forEach((item) => {
-          const instance = item.installed_info;
-          item.cluster_id = instance.cluster_id || '';
-          item.message = instance.message || '';
-          item.status = instance.status || '';
-          item.values_content = instance.values_content || '';
-        });
+        const list = await addonsList({
+          $clusterId: clusterId,
+        }).catch(() => []);
+        const data = list.map(item => ({
+          ...item,
+          // 兼容旧数据
+          chart_name: item.chartName,
+          default_values: item.defaultValues,
+          description: item.description,
+          help_link: item.docsLink,
+          id: item.name,
+          cluster_id: clusterId,
+          message: item.message,
+          status: item.status,
+          logo: item.logo,
+          name: item.name,
+          supported_actions: item.supportedActions,
+          version: item.version,
+        }));
         // 搜索
         let results = data.filter((item) => {
           if (this.crdKind === 'BcsLog') {
@@ -595,7 +483,7 @@ export default {
         this.crdControllerList = results;
         this.clearAllInterval();
         this.crdControllerList.forEach((item) => {
-          if (item.status === 'pending') {
+          if (this.pendingStatus.includes(item.status)) {
             this.getCrdcontrollerStatus(item);
           }
         });
@@ -716,11 +604,27 @@ export default {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       this.statusTimer[crdcontroller.id] = setInterval(async () => {
         try {
-          const data = await this.$store.dispatch('crdcontroller/clusterToolsInstalledDetail', {
+          const item = await addonsDetail({
             $clusterId: clusterId,
-            $toolId: crdcontrollerId,
-          });
-          if (this.fiexedStatus.includes(data.status) || !data.status) {
+            $name: crdcontroller.name,
+          }).catch(() => ({}));
+          const data = {
+            ...item,
+            // 兼容旧数据
+            chart_name: item.chartName,
+            default_values: item.defaultValues,
+            description: item.description,
+            help_link: item.docsLink,
+            id: item.name,
+            cluster_id: clusterId,
+            message: item.message,
+            status: item.status,
+            logo: item.logo,
+            name: item.name,
+            supported_actions: item.supportedActions,
+            version: item.version,
+          };
+          if (!this.pendingStatus.includes(data.status) || !data.status) {
             clearInterval(self.statusTimer[crdcontroller.id]);
             this.crdControllerList.forEach((item) => {
               if (item.id === crdcontrollerId) {
@@ -736,7 +640,6 @@ export default {
     },
     // 卸载组件
     handleUninstall(crdcontroller) {
-      const crdcontrollerId = crdcontroller.id;
       const clusterId = crdcontroller.cluster_id || this.searchScope;
       this.$bkInfo({
         type: 'warning',
@@ -745,10 +648,11 @@ export default {
         title: this.$t('plugin.tools.confirmUninstall'),
         defaultInfo: true,
         confirmFn: async () => {
-          const result = await this.$store.dispatch('crdcontroller/clusterToolsUninstall', {
+          const result = await addonsUninstall({
             $clusterId: clusterId,
-            $toolId: crdcontrollerId,
-          });
+            $name: crdcontroller.name,
+          }).then(() => true)
+            .catch(() => false);
           if (result) {
             this.getCrdControllersByCluster();
           }

@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="biz-content">
-    <Header :title="curApp.tool_info.name" />
+    <Header :title="curApp.name" />
     <div class="biz-content-wrapper">
       <div>
         <div class="biz-crd-header">
@@ -21,7 +21,7 @@
               </svg>
               <div class="desc" :title="curApp.description">
                 <span>{{$t('plugin.tools.intro')}}：</span>
-                {{curApp.tool_info.description || '--'}}
+                {{curApp.description || '--'}}
               </div>
             </div>
           </div>
@@ -36,13 +36,13 @@
                   <div class="inner">
                     <div class="inner-item">
                       <label class="title">{{$t('generic.label.name')}}</label>
-                      <bkbcs-input :value="curApp.release_name" :disabled="true" style="width: 250px;" />
+                      <bkbcs-input :value="curApp.releaseName" :disabled="true" style="width: 250px;" />
                     </div>
 
                     <div class="inner-item">
                       <label class="title">{{$t('generic.label.version')}}</label>
                       <div>
-                        <bcs-select v-model="curApp.chart_version" style="width: 250px;">
+                        <bcs-select v-model="curApp.version" style="width: 250px;">
                           <bcs-option
                             v-for="(opt, index) in chartVersionsList"
                             :key="index"
@@ -158,6 +158,7 @@
 </template>
 
 <script>
+import { addonsDetail, updateOns } from '@/api/modules/helm';
 import { catchErrorHandler } from '@/common/util';
 import Header from '@/components/layout/Header.vue';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
@@ -189,6 +190,7 @@ export default {
         fontSize: 14,
         fullScreen: false,
         isDiff: false,
+        ignoreTrimWhitespace: false,
       },
       updateConfirmDialog: {
         title: this.$t('plugin.tools.confirmUpgrade'),
@@ -206,7 +208,6 @@ export default {
       editorHeight: 500,
       curApp: {
         namespace: '',
-        tool_info: {},
       },
       namespaceList: [],
       chartVersionsList: [],
@@ -234,7 +235,15 @@ export default {
       try {
         const clusterId = this.curClusterId;
         const crdId = this.curCrdId;
-        const data = await this.$store.dispatch('crdcontroller/clusterToolsInstalledDetail', { $clusterId: clusterId, $toolId: crdId });
+        const item = await addonsDetail({
+          $clusterId: clusterId,
+          $name: crdId,
+        });
+        const data = {
+          ...item,
+          cluster_id: clusterId,
+          values: item.currentValues,
+        };
         this.curApp = data;
         this.editorOptions.content = data.values || '';
         this.editorOptions.originContent = data.values;
@@ -293,15 +302,14 @@ export default {
 
       this.updateInstanceLoading = true;
       try {
-        const curVersion = this.chartVersionsList.find(i => i.version === this.curApp.chart_version);
         const clusterId = this.curClusterId;
-        const crdId = this.curApp.tool_info.id;
-        const result = await this.$store.dispatch('crdcontroller/clusterToolsUpgrade', {
+        const result = await updateOns({
           $clusterId: clusterId,
-          $toolId: crdId,
+          $name: this.curApp.name,
           values: this.editorOptions.content || '',
-          chart_url: curVersion.url || '',
-        });
+          version: this.curApp.version,
+        }).then(() => true)
+          .catch(() => false);
         if (result) {
           this.$bkMessage({
             theme: 'success',

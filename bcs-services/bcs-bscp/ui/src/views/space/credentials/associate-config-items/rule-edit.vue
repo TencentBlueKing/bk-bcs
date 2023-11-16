@@ -40,7 +40,12 @@
         </div>
         <div class="error-info"><span v-if="!rule.isRight">输入的规则有误，请重新确认</span></div>
       </div>
-      <p class="tips">可填写服务名称/文件路径，支持glob 表达式，如：myservice/**</p>
+      <div class="tips">
+        <div>填写格式为“服务名称/配置路径”，支持通配符，常用方法：</div>
+        <div>关联myservice服务下所有的配置(包含子目录):myservice/**</div>
+        <div>关联myservice服务/etc目录下所有的配置(不含子目录):myservice/etc/*</div>
+        <div>关联myservice服务/etc/nginx/nginx.conf文件:myservice/etc/nginx/nginx.conf</div>
+      </div>
     </div>
     <!-- <div class="preview-btn">预览匹配结果</div> -->
   </div>
@@ -105,13 +110,7 @@ const handleRevoke = (index: number) => {
   updateRuleParams();
 };
 
-const testRule = (rule: string) => {
-  const parts = rule.split('/', 2);
-  if (!parts[0] || !parts[1]) {
-    return false;
-  }
-  return /^([!@+*?{}()|\]\\[\-^$])/.test(parts[1]);
-};
+const testRule = (rule: string) => /^[\w-]+\/(.*|\*)$/.test(rule);
 
 const handleRuleContentChange = (index: number) => {
   const rule = localRules.value[index];

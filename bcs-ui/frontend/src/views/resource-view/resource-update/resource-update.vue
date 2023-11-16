@@ -569,7 +569,8 @@ export default defineComponent({
           message: $i18n.t('generic.msg.success.create'),
         });
         $store.commit('updateCurNamespace', detail.value.metadata?.namespace);
-        $router.back();
+        // 跳转回列表页
+        $router.push({ name: $store.state.curSideMenu?.route });
       }
     };
     const handleUpdateResource = () => {

@@ -7,7 +7,7 @@ replace (
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
-	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.12.1-tx.2
+	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.12.1-tx.3
 	k8s.io/api => k8s.io/api v0.27.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.27.0
 	k8s.io/apimachinery => k8s.io/apimachinery v0.27.0
@@ -43,7 +43,7 @@ require (
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230911112816-85f490b1c029
-	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230908014411-0783f4d68dd5
+	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20231030071618-1e6240162176
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230908014411-0783f4d68dd5
 	github.com/chartmuseum/helm-push v0.10.4
 	github.com/goccy/go-yaml v1.9.6

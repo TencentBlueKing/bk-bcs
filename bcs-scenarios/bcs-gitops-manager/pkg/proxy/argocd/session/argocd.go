@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
@@ -43,13 +44,15 @@ func NewArgoSession(option *proxy.GitOpsOptions) *ArgoSession {
 
 // ServeHTTP http.Handler implementation
 func (s *ArgoSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	requestID := req.Context().Value(traceconst.RequestIDHeaderKey).(string)
 	// backend real path with encoded format
 	realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
 	// !force https link
 	fullPath := fmt.Sprintf("https://%s%s", s.option.Service, realPath)
 	newURL, err := url.Parse(fullPath)
 	if err != nil {
-		blog.Errorf("GitOps session build new fullpath %s failed, %s", fullPath, err.Error())
+		blog.Errorf("RequestID[%s] GitOps session build new fullpath %s failed, %s",
+			requestID, fullPath, err.Error())
 		rw.WriteHeader(http.StatusInternalServerError)
 		rw.Write([]byte("URL conversion failure in manager")) // nolint
 		return
@@ -66,21 +69,22 @@ func (s *ArgoSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		ErrorHandler: func(res http.ResponseWriter, request *http.Request, e error) {
 			if !utils.IsContextCanceled(e) {
 				metric.ManagerArgoProxyFailed.WithLabelValues().Inc()
-				blog.Errorf("GitOps proxy %s failure, %s. header: %+v", fullPath, e.Error(), request.Header)
+				blog.Errorf("RequestID[%s] GitOps proxy %s failure, %s. header: %+v",
+					requestID, fullPath, e.Error(), request.Header)
 			}
 			res.WriteHeader(http.StatusInternalServerError)
-			res.Write([]byte("GitOps Proxy session failure")) // nolint
+			res.Write([]byte("gitops proxy session failure, requestID=" + requestID)) // nolint
 		},
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
 		},
 		ModifyResponse: func(r *http.Response) error {
-			blog.Infof("GitOps proxy %s response header details: %+v, status %s, code: %d",
-				fullPath, r.Header, r.Status, r.StatusCode)
+			blog.Infof("RequestID[%s] GitOps proxy %s response header details: %+v, status %s, code: %d",
+				requestID, fullPath, r.Header, r.Status, r.StatusCode)
 			return nil
 		},
 	}
 	// all ready to serve
-	blog.Infof("GitOps serve %s %s", req.Method, fullPath)
+	blog.Infof("RequestID[%s] GitOps serve %s %s", requestID, req.Method, fullPath)
 	reverseProxy.ServeHTTP(rw, req)
 }

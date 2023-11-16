@@ -38,6 +38,11 @@ func init() {
 type CloudValidate struct {
 }
 
+// CreateClusterValidate check createCluster operation
+func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
 // CreateCloudAccountValidate create cloud account validate
 func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
 	return cloudprovider.ErrCloudNotImplemented
@@ -164,6 +169,12 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 	}
 
 	return nil
+}
+
+// ListCloudVpcsValidate xxx
+func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
+	account *proto.Account) error {
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // ListSecurityGroupsValidate xxx

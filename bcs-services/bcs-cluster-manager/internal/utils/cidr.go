@@ -15,6 +15,7 @@ package utils
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"math"
 	"math/big"
 	"net"
@@ -49,6 +50,29 @@ func ConvertCIDRToStep(clusterCIDR string) (uint32, error) {
 	}
 
 	return uint32(cnt), err
+}
+
+// GetCidrMaskSize cidr mask size
+func GetCidrMaskSize(cidr string) (int, error) {
+	c, err := ParseCIDR(cidr)
+	if err != nil {
+		return 0, err
+	}
+	size, _ := c.MaskSize()
+
+	return size, nil
+}
+
+// GetMaskLenByNum get mask by num
+func GetMaskLenByNum(t string, num float64) (int, error) {
+	switch t {
+	case "ipv4":
+		return 32 - int(math.Log2(num)), nil
+	case "ipv6":
+		return 120 - int(math.Log2(num)), nil
+	}
+
+	return 0, fmt.Errorf("not supported net type[%s]", t)
 }
 
 // Equal check cidr equal

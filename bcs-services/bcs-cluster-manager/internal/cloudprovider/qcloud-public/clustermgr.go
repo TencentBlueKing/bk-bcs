@@ -50,15 +50,15 @@ type Cluster struct {
 func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
 	// call qcloud interface to create cluster
 	if cls == nil {
-		return nil, fmt.Errorf("qcloud CreateCluster cluster is empty")
+		return nil, fmt.Errorf("%s CreateCluster cluster is empty", cloudName)
 	}
 
 	if opt == nil || opt.Cloud == nil {
-		return nil, fmt.Errorf("qcloud CreateCluster cluster opt or cloud is empty")
+		return nil, fmt.Errorf("%s CreateCluster cluster opt or cloud is empty", cloudName)
 	}
 
 	if opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return nil, fmt.Errorf("qcloud CreateCluster opt lost valid crendential info")
+		return nil, fmt.Errorf("%s CreateCluster opt lost valid crendential info", cloudName)
 	}
 
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
@@ -85,15 +85,15 @@ func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClu
 func (c *Cluster) CreateVirtualCluster(cls *proto.Cluster,
 	opt *cloudprovider.CreateVirtualClusterOption) (*proto.Task, error) {
 	if cls == nil {
-		return nil, fmt.Errorf("qcloud CreateVirtualCluster cluster is empty")
+		return nil, fmt.Errorf("%s CreateVirtualCluster cluster is empty", cloudName)
 	}
 
 	if opt == nil || opt.Cloud == nil || opt.HostCluster == nil {
-		return nil, fmt.Errorf("qcloud CreateVirtualCluster opt/cloud/hostCluster is empty")
+		return nil, fmt.Errorf("%s CreateVirtualCluster opt/cloud/hostCluster is empty", cloudName)
 	}
 
 	if opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return nil, fmt.Errorf("qcloud CreateVirtualCluster lost credential info")
+		return nil, fmt.Errorf("%s CreateVirtualCluster lost credential info", cloudName)
 	}
 
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
@@ -120,15 +120,15 @@ func (c *Cluster) CreateVirtualCluster(cls *proto.Cluster,
 func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
 	opt *cloudprovider.DeleteVirtualClusterOption) (*proto.Task, error) {
 	if cls == nil {
-		return nil, fmt.Errorf("qcloud DeleteVirtualCluster cluster is empty")
+		return nil, fmt.Errorf("%s DeleteVirtualCluster cluster is empty", cloudName)
 	}
 
 	if opt == nil || opt.Cloud == nil || opt.HostCluster == nil || (opt.Namespace == nil || opt.Namespace.Name == "") {
-		return nil, fmt.Errorf("qcloud DeleteVirtualCluster opt/cloud/hostCluster is empty")
+		return nil, fmt.Errorf("%s DeleteVirtualCluster opt/cloud/hostCluster is empty", cloudName)
 	}
 
 	if opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return nil, fmt.Errorf("qcloud DeleteVirtualCluster lost credential info")
+		return nil, fmt.Errorf("%s DeleteVirtualCluster lost credential info", cloudName)
 	}
 
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
@@ -155,15 +155,15 @@ func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
 func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
 	// call qcloud interface to create cluster
 	if cls == nil {
-		return nil, fmt.Errorf("qcloud ImportCluster cluster is empty")
+		return nil, fmt.Errorf("%s ImportCluster cluster is empty", cloudName)
 	}
 
 	if opt == nil || opt.Cloud == nil {
-		return nil, fmt.Errorf("qcloud ImportCluster cluster opt or cloud is empty")
+		return nil, fmt.Errorf("%s ImportCluster cluster opt or cloud is empty", cloudName)
 	}
 
 	if opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return nil, fmt.Errorf("qcloud CreateCluster opt lost valid crendential info")
+		return nil, fmt.Errorf("%s CreateCluster opt lost valid crendential info", cloudName)
 	}
 
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
@@ -228,12 +228,12 @@ func getClusterInstancesByClusterID(clusterID string, option *cloudprovider.Comm
 // DeleteCluster delete kubenretes cluster according cloudprovider
 func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClusterOption) (*proto.Task, error) {
 	if cls == nil {
-		return nil, fmt.Errorf("qcloud DeleteCluster cluster is empty")
+		return nil, fmt.Errorf("%s DeleteCluster cluster is empty", cloudName)
 	}
 
 	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
 		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return nil, fmt.Errorf("qcloud DeleteCluster cluster lost oprion")
+		return nil, fmt.Errorf("%s DeleteCluster cluster lost oprion", cloudName)
 	}
 
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
@@ -282,6 +282,34 @@ func getCloudCluster(cloudID string, opt *cloudprovider.CommonOption) (*tke.Clus
 	}
 
 	return cls, err
+}
+
+// checkClusterOsNameInWhiteImages check cluster osName if it is white image osName
+func checkClusterOsNameInWhiteImages(cls *proto.Cluster, opt *cloudprovider.CommonOption) bool {
+	if cls == nil {
+		blog.Errorf("checkClusterOsNameInWhiteImages failed: %v", "cluster nil")
+		return false
+	}
+
+	osName := cls.GetClusterBasicSettings().GetOS()
+	if osName == "" {
+		blog.Errorf("checkClusterOsNameInWhiteImages[%s] failed: cluster OS empty", cls.ClusterID)
+		return false
+	}
+
+	// osName maybe is imageID
+	if osName != "" {
+		nodeMgr := &NodeManager{}
+		image, errGet := nodeMgr.GetImageInfoByImageID(osName, opt)
+		if errGet != nil {
+			blog.Errorf("%s checkClusterOsNameInWhiteImages GetImageInfoByImageID failed: %v", cloudName, errGet)
+		} else {
+			osName = image.OsName
+		}
+	}
+
+	blog.Infof("checkClusterOsNameInWhiteImages[%s] osName[%s]", cls.ClusterID, osName)
+	return utils.StringInSlice(osName, utils.WhiteImageOsName)
 }
 
 // checkIfWhiteImageOsNames check cluster osName if it is white image osName
@@ -334,6 +362,8 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 		blog.Errorf("%s updateClusterInfo getCloudCluster failed: %v", cloudName, err)
 		return nil, err
 	}
+
+	opt.Cluster.ManageType = *cls.ClusterType
 
 	if opt.Cluster.ClusterAdvanceSettings != nil {
 		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = *cls.ContainerRuntime
@@ -610,18 +640,56 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 		}
 
 		images = append(images, &proto.OsImage{
-			ImageID:         *image.ImageId,
-			Alias:           *image.Alias,
-			Arch:            *image.Arch,
-			OsCustomizeType: *image.OsCustomizeType,
-			OsName:          *image.OsName,
-			SeriesName:      *image.SeriesName,
-			Status:          *image.Status,
-			Provider:        provider,
+			ImageID: *image.ImageId,
+			Alias:   *image.Alias,
+			Arch:    *image.Arch,
+			OsCustomizeType: func() string {
+				if image.OsCustomizeType == nil {
+					return ""
+				}
+				return *image.OsCustomizeType
+			}(),
+			OsName: *image.OsName,
+			SeriesName: func() string {
+				if image.SeriesName == nil {
+					return ""
+				}
+				return *image.SeriesName
+			}(),
+			Status:   *image.Status,
+			Provider: provider,
 		})
 	}
 
 	return images, nil
+}
+
+// ListProjects list cloud projects
+func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudProject, error) {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("qcloud ListProjects lost authoration")
+	}
+
+	projects := make([]*proto.CloudProject, 0)
+
+	cli, err := api.NewTagClient(opt)
+	if err != nil {
+		return nil, err
+	}
+	cloudProjects, err := cli.ListProjects()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pro := range cloudProjects {
+		projects = append(projects, &proto.CloudProject{
+			ProjectID:   *pro.ProjectId,
+			ProjectName: *pro.ProjectName,
+		})
+	}
+
+	return projects, nil
 }
 
 // CheckClusterEndpointStatus check cluster endpoint status

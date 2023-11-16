@@ -207,7 +207,7 @@ main() {
 
   # bcs_offline load image
   if [[ -n ${BCS_OFFLINE:-} ]]; then
-    find "${ROOT_DIR}"/version-"${VERSION}"/images -name '*.tar' -type f -print0 \
+    find "${ROOT_DIR}"/version-"${K8S_VER}"/images -name '*.tar' -type f -print0 \
       | xargs -0 -I {} docker load -i {}
   fi
 

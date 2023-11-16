@@ -45,7 +45,7 @@ import (
 type MiddlewareInterface interface {
 	Init() error
 
-	HttpWrapper(handler httpHandler) http.Handler
+	HttpWrapper(handler HttpHandler) http.Handler
 
 	CheckMultiProjectsPermission(ctx context.Context, projectIDs []string,
 		action []string) (map[string]map[string]bool, error)
@@ -69,8 +69,9 @@ type MiddlewareInterface interface {
 		needCheckPermission bool) (*v1alpha1.RepositoryList, int, error)
 	ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (*v1alpha1.ApplicationList, error)
 
-	CheckCreateApplicationSet(ctx context.Context, appset *v1alpha1.ApplicationSet) (int, error)
-	CheckDeleteApplicationSet(ctx context.Context, appsetName string) (int, error)
+	CheckCreateApplicationSet(ctx context.Context,
+		appset *v1alpha1.ApplicationSet) ([]*v1alpha1.Application, int, error)
+	CheckDeleteApplicationSet(ctx context.Context, appsetName string) (*v1alpha1.ApplicationSet, int, error)
 	CheckGetApplicationSet(ctx context.Context, appsetName string) (int, error)
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
 		*v1alpha1.ApplicationSetList, error)
@@ -116,7 +117,7 @@ func (h *handler) Init() error {
 }
 
 // HttpWrapper 创建 http wrapper 中间件
-func (h *handler) HttpWrapper(handler httpHandler) http.Handler {
+func (h *handler) HttpWrapper(handler HttpHandler) http.Handler {
 	handlerName := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
 	hw := &httpWrapper{
 		handler:       handler,
@@ -186,14 +187,33 @@ func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Appl
 	if statusCode != http.StatusOK {
 		return statusCode, errors.Wrapf(err, "check application '%s' permission failed", projectName)
 	}
-	repoUrl := app.Spec.Source.RepoURL
-	repo, err := h.option.Storage.GetRepository(ctx, repoUrl)
-	if err != nil {
-		return http.StatusInternalServerError, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
+
+	for i := range app.Spec.Sources {
+		appSource := app.Spec.Sources[i]
+		repoUrl := appSource.RepoURL
+		repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
+		if err != nil {
+			return http.StatusBadRequest,
+				errors.Wrapf(err, "check multi-source repository '%s' permission failed", repoUrl)
+		}
+		if !repoBelong {
+			return http.StatusForbidden,
+				errors.Errorf("check multi-source repo '%s' not belong to project '%s'", repoUrl, projectName)
+		}
+		blog.Infof("RequestID[%s] check multi-source repo '%s' success", RequestID(ctx), repoUrl)
 	}
-	if repo == nil {
-		return http.StatusNotFound, fmt.Errorf("repo '%s' not found", repoUrl)
+	if app.Spec.Source != nil {
+		repoUrl := app.Spec.Source.RepoURL
+		repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
+		if err != nil {
+			return http.StatusBadRequest, errors.Wrapf(err, "check repository permission failed")
+		}
+		if !repoBelong {
+			return http.StatusForbidden, errors.Errorf("repo '%s' not belong to project '%s'", repoUrl, projectName)
+		}
+		blog.Infof("RequestID[%s] check source repo '%s' success", RequestID(ctx), repoUrl)
 	}
+
 	clusterQuery := clusterclient.ClusterQuery{
 		Server: app.Spec.Destination.Server,
 		Name:   app.Spec.Destination.Name,
@@ -295,6 +315,26 @@ func (h *handler) CheckRepositoryPermission(ctx context.Context, repoName string
 	projectName := repo.Project
 	_, statusCode, err := h.CheckProjectPermission(ctx, projectName, action)
 	return repo, statusCode, err
+}
+
+func (h *handler) checkRepositoryBelongProject(ctx context.Context, repoUrl, project string) (bool, error) {
+	repo, err := h.option.Storage.GetRepository(ctx, repoUrl)
+	if err != nil {
+		return false, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
+	}
+	if repo == nil {
+		return false, fmt.Errorf("repo '%s' not found", repoUrl)
+	}
+	// passthrough if repository's project equal to public projects
+	for i := range h.option.PublicProjects {
+		if repo.Project == h.option.PublicProjects[i] {
+			return true, nil
+		}
+	}
+	if repo.Project != project {
+		return false, nil
+	}
+	return true, nil
 }
 
 // CheckApplicationPermission 检查应用的权限

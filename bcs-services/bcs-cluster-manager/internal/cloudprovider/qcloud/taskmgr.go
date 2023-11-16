@@ -174,7 +174,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
 	// setting all steps details
-	createClusterTask := &CreateClusterTaskOption{Cluster: cls, Nodes: opt.Nodes, NodeTemplate: opt.NodeTemplate}
+	createClusterTask := &CreateClusterTaskOption{Cluster: cls, Nodes: opt.WorkerNodes, NodeTemplate: opt.NodeTemplate}
 	// step0: create cluster shield alarm step
 	createClusterTask.BuildShieldAlertStep(task)
 	// step1: createTKECluster and return clusterID inject common paras
@@ -195,7 +195,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			Extra: template.ExtraInfo{
 				InstancePasswd: passwd,
 				NodeOperator:   opt.Operator,
-				NodeIPList:     strings.Join(opt.Nodes, ","),
+				NodeIPList:     strings.Join(opt.WorkerNodes, ","),
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CreateCluster, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildCreateClusterTask BuildBkSopsStepAction failed: %v", err)
@@ -203,24 +203,24 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	}
 
 	// step6: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
-	if len(opt.Nodes) > 0 && opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
+	if len(opt.WorkerNodes) > 0 && opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID: cls.ClusterID,
 			Content:   opt.NodeTemplate.UserScript,
-			NodeIps:   strings.Join(opt.Nodes, ","),
+			NodeIps:   strings.Join(opt.WorkerNodes, ","),
 			Operator:  opt.Operator,
 			StepName:  common.PostInitStepJob,
 		})
 	}
 
 	// business post define sops task or script
-	if len(opt.Nodes) > 0 && opt.NodeTemplate != nil && opt.NodeTemplate.ScaleOutExtraAddons != nil {
+	if len(opt.WorkerNodes) > 0 && opt.NodeTemplate != nil && opt.NodeTemplate.ScaleOutExtraAddons != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.UserAfterInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
 				InstancePasswd: passwd,
-				NodeIPList:     strings.Join(opt.Nodes, ","),
+				NodeIPList:     strings.Join(opt.WorkerNodes, ","),
 				NodeOperator:   opt.Operator,
 				ShowSopsUrl:    true,
 			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, false)
@@ -242,8 +242,8 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	task.CommonParams[cloudprovider.OperatorKey.String()] = opt.Operator
 	task.CommonParams[cloudprovider.UserKey.String()] = opt.Operator
 	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CreateClusterJob.String()
-	if len(opt.Nodes) > 0 {
-		task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(opt.Nodes, ",")
+	if len(opt.WorkerNodes) > 0 {
+		task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(opt.WorkerNodes, ",")
 	}
 
 	return task, nil
@@ -1169,18 +1169,26 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		// step2. check cluster nodes and all nodes status is running
 		updateDesiredNodesTask.BuildCheckClusterNodeStatusStep(task)
 		// install gse agent
-		common.BuildInstallGseAgentTaskStep(task, opt.Cluster, group, passwd, func() string {
-			exist := checkIfWhiteImageOsNames(&cloudprovider.ClusterGroupOption{
-				CommonOption: opt.CommonOption,
-				Cluster:      opt.Cluster,
-				Group:        opt.NodeGroup,
-			})
-			if exist {
-				return fmt.Sprintf("%v", utils.ConnectPort)
-			}
+		common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
+			ClusterId:  opt.Cluster.ClusterID,
+			BusinessId: opt.Cluster.BusinessID,
+			CloudArea:  group.GetArea(),
+			User:       "",
+			Passwd:     passwd,
+			KeyInfo:    group.GetLaunchTemplate().GetKeyPair(),
+			Port: func() string {
+				exist := checkIfWhiteImageOsNames(&cloudprovider.ClusterGroupOption{
+					CommonOption: opt.CommonOption,
+					Cluster:      opt.Cluster,
+					Group:        opt.NodeGroup,
+				})
+				if exist {
+					return fmt.Sprintf("%v", utils.ConnectPort)
+				}
 
-			return ""
-		}())
+				return ""
+			}(),
+		})
 		// transfer host module
 		moduleID := getTransModuleInfo(opt.AsOption, opt.NodeGroup)
 		if moduleID != "" {

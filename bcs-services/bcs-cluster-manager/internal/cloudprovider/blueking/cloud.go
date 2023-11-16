@@ -20,6 +20,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var cloudInfoMgr sync.Once
@@ -71,8 +72,63 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster,
 	clusterCloudDefaultBasicSetting(cls, opt.Cloud, opt.ClusterVersion)
 	// cluster cloud node setting
 	clusterCloudDefaultNodeSetting(cls)
+	// cluster cloud default advanced setting
+	clusterCloudAdvancedSetting(cls)
+	// cluster cloud default networking setting
+	err := clusterCloudNetworkSetting(cls)
+	if err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func clusterCloudNetworkSetting(cls *proto.Cluster) error {
+	if cls == nil || cls.NetworkSettings == nil {
+		return nil
+	}
+
+	switch cls.NetworkSettings.ClusterIpType {
+	case utils.IPV4:
+		if cls.NetworkSettings.ClusterIPv4CIDR == "" || cls.NetworkSettings.ServiceIPv4CIDR == "" {
+			return fmt.Errorf("networkIpv4Type[%s] cidr empty", cls.NetworkSettings.ClusterIpType)
+		}
+
+		cls.NetworkSettings.CidrStep, _ = utils.ConvertCIDRToStep(cls.NetworkSettings.ClusterIPv4CIDR)
+	case utils.IPV6:
+		if cls.NetworkSettings.ClusterIPv6CIDR == "" || cls.NetworkSettings.ServiceIPv6CIDR == "" {
+			return fmt.Errorf("networkIpv6Type[%s] cidr empty", cls.NetworkSettings.ClusterIpType)
+		}
+
+		cls.NetworkSettings.CidrStep, _ = utils.ConvertCIDRToStep(cls.NetworkSettings.ClusterIPv6CIDR)
+	case utils.DualStack:
+		if cls.NetworkSettings.ClusterIPv4CIDR == "" || cls.NetworkSettings.ServiceIPv4CIDR == "" ||
+			cls.NetworkSettings.ClusterIPv6CIDR == "" || cls.NetworkSettings.ServiceIPv6CIDR == "" {
+			return fmt.Errorf("networkIpv6Type[%s] cidr empty", cls.NetworkSettings.ClusterIpType)
+		}
+
+		cls.NetworkSettings.CidrStep, _ = utils.ConvertCIDRToStep(cls.NetworkSettings.ClusterIPv4CIDR)
+	default:
+		return fmt.Errorf("not supported networkIpType[%s]", cls.NetworkSettings.ClusterIPv4CIDR)
+	}
+
+	return nil
+}
+
+func clusterCloudAdvancedSetting(cls *proto.Cluster) {
+	if cls == nil || cls.ClusterAdvanceSettings == nil {
+		return
+	}
+
+	if cls.ClusterAdvanceSettings.ContainerRuntime == "" {
+		cls.ClusterAdvanceSettings.ContainerRuntime = common.DockerContainerRuntime
+		cls.ClusterAdvanceSettings.RuntimeVersion = common.DockerRuntimeSelfVersion
+	}
+	if cls.ClusterAdvanceSettings.NetworkType == "" {
+		cls.ClusterAdvanceSettings.NetworkType = common.Flannel
+	}
+
+	return
 }
 
 func clusterCloudDefaultNodeSetting(cls *proto.Cluster) {

@@ -291,14 +291,9 @@ func (dao *appDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.App) err
 		Revision:   &table.CreatedRevision{Creator: kit.User},
 	}
 	eDecorator := dao.event.Eventf(kit)
-	if err = eDecorator.Fire(one); err != nil {
+	if err = eDecorator.FireWithTx(tx, one); err != nil {
 		logs.Errorf("fire delete app: %s event failed, err: %v, rid: %s", g.ID, err, kit.Rid)
-	}
-	eDecorator.Finalizer(err)
-
-	if err != nil {
-		logs.Errorf("delete app: %d failed, err: %v, rid: %v", g.ID, err, kit.Rid)
-		return err
+		return errors.New("fire event failed, " + err.Error())
 	}
 
 	return nil

@@ -1,11 +1,11 @@
 <template>
   <div class="package-list-comp">
     <div class="search-wrapper">
-      <div class="create-btn" v-bk-tooltips="'新建模板套餐'" @click="isCreatePackageDialogShow = true">
-        <Plus />
-      </div>
       <div class="search-input">
         <SearchInput v-model="searchStr" placeholder="搜索模板套餐" @search="handleSearch" />
+      </div>
+      <div class="create-btn" v-bk-tooltips="'新建模板套餐'" @click="isCreatePackageDialogShow = true">
+        <Plus />
       </div>
     </div>
     <div v-if="menuList.length > 0" class="package-list">
@@ -15,9 +15,7 @@
         :pkg="pkg"
         :current-pkg="currentPkg"
         @select="handleSelect"
-        @edit="handlePkgAction"
-        @clone="handlePkgAction"
-        @delete="handlePkgAction"
+        @open-slider="handlePkgAction"
       />
     </div>
     <div v-else class="exception-notice">
@@ -301,7 +299,6 @@ const clearSearch = () => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-right: 8px;
     width: 32px;
     height: 32px;
     font-size: 24px;

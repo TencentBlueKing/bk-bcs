@@ -32,10 +32,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/tracing"
 )
 
-type httpHandler func(ctx context.Context, r *http.Request) *HttpResponse
+type HttpHandler func(r *http.Request) (*http.Request, *HttpResponse)
 
 type httpWrapper struct {
-	handler       httpHandler
+	handler       HttpHandler
 	handlerName   string
 	option        *proxy.GitOpsOptions
 	argoSession   *session.ArgoSession
@@ -77,6 +77,7 @@ func (p *httpWrapper) setContext(rw http.ResponseWriter, r *http.Request) (conte
 	}
 	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID)
 	ctx = tracing.ContextWithRequestID(ctx, requestID)
+	rw.Header().Set(traceconst.RequestIDHeaderKey, requestID)
 
 	// 统一获取 User 信息，并存入上下文
 	user, err := proxy.GetJWTInfo(r, p.option.JWTDecoder)
@@ -102,6 +103,7 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if ctx == nil {
 		return
 	}
+	r = r.WithContext(ctx)
 	defer func() {
 		cost := time.Since(start)
 		blog.Infof("RequestID[%s] handle request '%s' cost time: %v", requestID, r.URL.Path, cost)
@@ -120,8 +122,7 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	resp := p.handler(ctx, r)
-	blog.V(5).Infof("RequestID[%s] handler '%s' cost time: %v", requestID, p.handlerName, time.Since(start))
+	req, resp := p.handler(r)
 	if resp == nil {
 		blog.Warnf("RequestID[%s] response should not be nil", requestID)
 		resp = &HttpResponse{
@@ -135,11 +136,11 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	switch resp.respType {
 	case reverseArgo:
-		p.argoSession.ServeHTTP(rw, r)
+		p.argoSession.ServeHTTP(rw, req)
 	case reverseSecret:
-		p.secretSession.ServeHTTP(rw, r)
+		p.secretSession.ServeHTTP(rw, req)
 	case returnError:
-		blog.Warnf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
+		blog.Errorf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
 		http.Error(rw, resp.err.Error(), resp.statusCode)
 	case returnGrpcError:
 		blog.Warnf("RequestID[%s] handler grpc request return code '%d': %s",
@@ -152,6 +153,7 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	case jsonResponse:
 		proxy.JSONResponse(rw, resp.obj)
 	}
+	go handleAudit(req, resp, start, time.Now())
 }
 
 type responseType int

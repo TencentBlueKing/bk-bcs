@@ -41,13 +41,13 @@
                 @change="deleteCellError(variable.name, col.prop)"
               />
               <bk-input v-else-if="col.prop === 'memo'" v-model="variable.memo" @change="change" />
-              <div v-else class="cell">
+              <div v-else>
                 <bk-overflow-title type="tips">
                   {{ getCellVal(variable, col.prop) }}
                 </bk-overflow-title>
               </div>
             </template>
-            <div v-else class="cell">
+            <div v-else>
               <bk-overflow-title type="tips">
                 {{ getCellVal(variable, col.prop) }}
               </bk-overflow-title>
@@ -64,7 +64,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import cloneDeep from 'lodash';
 import { Message } from 'bkui-vue';
 import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
@@ -90,7 +90,7 @@ const props = withDefaults(
 
 const emits = defineEmits(['change']);
 
-let variables = reactive<IVariableEditParams[]>([]);
+const variables = ref<IVariableEditParams[]>([]);
 const errorDetails = ref<IErrorDetail>({});
 
 const cols = computed(() => {
@@ -109,7 +109,7 @@ const cols = computed(() => {
 watch(
   () => props.list,
   (val) => {
-    variables = cloneDeep(val).value();
+    variables.value = cloneDeep(val).value();
   },
   { immediate: true },
 );
@@ -143,7 +143,7 @@ const deleteCellError = (name: string, key: string) => {
 
 const validate = () => {
   const errors: IErrorDetail = {};
-  variables.forEach((variable) => {
+  variables.value.forEach((variable) => {
     ['type', 'default_val'].forEach((key) => {
       if (variable[key as keyof typeof variable] === '') {
         if (errors[variable.name]) {
@@ -152,18 +152,33 @@ const validate = () => {
           errors[variable.name] = [key];
         }
       }
+      if (variable.type === 'number' && !/^\d*(\.\d+)?$/.test(variable.default_val)) {
+        if (errors[variable.name]) {
+          errors[variable.name].push(key);
+        } else {
+          errors[variable.name] = [key];
+        }
+      }
     });
+    if (variable.type === 'number' && !/^\d*(\.\d+)?$/.test(variable.default_val)) {
+      if (errors[variable.name]) {
+        errors[variable.name].push('default_val');
+      } else {
+        errors[variable.name] = ['default_val'];
+      }
+    }
   });
   errorDetails.value = errors;
   return Object.keys(errorDetails.value).length === 0;
 };
 
 const change = () => {
-  emits('change', variables);
+  validate();
+  emits('change', variables.value);
 };
 
 const handleValueChange = (type: string, value: string) => {
-  if (type === 'number' && !/^\d+$/.test(value)) {
+  if (type === 'number' && !/^\d*(\.\d+)?$/.test(value)) {
     Message({
       theme: 'error',
       message: `${value}不是数字类型`,
@@ -192,9 +207,11 @@ defineExpose({
       padding: 0;
       :deep(.bk-input) {
         height: 42px;
-        border: none;
         .bk-input--text {
           padding-left: 16px;
+        }
+        &:not(.is-focused) {
+          border: none;
         }
       }
     }

@@ -122,3 +122,12 @@ const (
 	// FileStateUnchange 不变
 	FileStateUnchange = "UNCHANGE"
 )
+
+const (
+	// MaxUploadTextFileSize 最大上传文件大小
+	MaxUploadTextFileSize = 5 * 1024 * 1024
+	// MaxUploadContentLength 最大内容长度
+	MaxUploadContentLength = 100 * 1024 * 1024
+	// MaxConcurrentUpload 限制上传文件并发数
+	MaxConcurrentUpload = 10
+)

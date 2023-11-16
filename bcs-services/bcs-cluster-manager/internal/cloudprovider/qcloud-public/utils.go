@@ -27,7 +27,7 @@ var (
 	cloudName = "qcloud-public"
 )
 
-// qcloud taskName
+// qcloud-public taskName
 const (
 	// createClusterTaskTemplate bk-sops add task template
 	createClusterTaskTemplate = "tke-create cluster: %s"
@@ -100,8 +100,8 @@ var (
 		StepMethod: fmt.Sprintf("%s-CheckCreateClusterNodeStatusTask", cloudName),
 		StepName:   "检测集群节点状态",
 	}
-	registerManageClusterKubeConfigStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-RegisterManageClusterKubeConfigTask", cloudName),
+	registerTkeClusterKubeConfigStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-RegisterTkeClusterKubeConfigTask", cloudName),
 		StepName:   "注册集群连接信息",
 	}
 	enableTkeClusterVpcCniStep = cloudprovider.StepInfo{
@@ -248,18 +248,9 @@ var (
 // CreateClusterTaskOption 创建集群构建step子任务
 type CreateClusterTaskOption struct {
 	Cluster      *proto.Cluster
-	Nodes        []string
+	WorkerNodes  []string
+	MasterNodes  []string
 	NodeTemplate *proto.NodeTemplate
-}
-
-// BuildShieldAlertStep 屏蔽告警任务
-func (cn *CreateClusterTaskOption) BuildShieldAlertStep(task *proto.Task) {
-	shieldStep := cloudprovider.InitTaskStep(createClusterShieldAlarmStep)
-	shieldStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
-	shieldStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(cn.Nodes, ",")
-
-	task.Steps[createClusterShieldAlarmStep.StepMethod] = shieldStep
-	task.StepSequence = append(task.StepSequence, createClusterShieldAlarmStep.StepMethod)
 }
 
 // BuildCreateClusterStep 创建集群任务
@@ -267,7 +258,8 @@ func (cn *CreateClusterTaskOption) BuildCreateClusterStep(task *proto.Task) {
 	createStep := cloudprovider.InitTaskStep(createTKEClusterStep)
 	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
 	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
-	createStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(cn.Nodes, ",")
+	createStep.Params[cloudprovider.WorkerNodeIPsKey.String()] = strings.Join(cn.WorkerNodes, ",")
+	createStep.Params[cloudprovider.MasterNodeIPsKey.String()] = strings.Join(cn.MasterNodes, ",")
 	if cn.NodeTemplate != nil {
 		createStep.Params[cloudprovider.NodeTemplateIDKey.String()] = cn.NodeTemplate.NodeTemplateID
 	}
@@ -288,10 +280,6 @@ func (cn *CreateClusterTaskOption) BuildCheckClusterStatusStep(task *proto.Task)
 
 // BuildCheckClusterNodesStatusStep 检测创建集群节点状态任务
 func (cn *CreateClusterTaskOption) BuildCheckClusterNodesStatusStep(task *proto.Task) {
-	if len(cn.Nodes) == 0 {
-		return
-	}
-
 	createStep := cloudprovider.InitTaskStep(checkCreateClusterNodeStatusStep)
 	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
 	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
@@ -302,17 +290,13 @@ func (cn *CreateClusterTaskOption) BuildCheckClusterNodesStatusStep(task *proto.
 
 // BuildRegisterClsKubeConfigStep 托管集群注册连接信息
 func (cn *CreateClusterTaskOption) BuildRegisterClsKubeConfigStep(task *proto.Task) {
-	if cloudprovider.IsInDependentCluster(cn.Cluster) {
-		return
-	}
-
-	registerStep := cloudprovider.InitTaskStep(registerManageClusterKubeConfigStep)
+	registerStep := cloudprovider.InitTaskStep(registerTkeClusterKubeConfigStep)
 	registerStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
 	registerStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
-	registerStep.Params[cloudprovider.IsExtranetKey.String()] = icommon.False
+	registerStep.Params[cloudprovider.IsExtranetKey.String()] = icommon.True
 
-	task.Steps[registerManageClusterKubeConfigStep.StepMethod] = registerStep
-	task.StepSequence = append(task.StepSequence, registerManageClusterKubeConfigStep.StepMethod)
+	task.Steps[registerTkeClusterKubeConfigStep.StepMethod] = registerStep
+	task.StepSequence = append(task.StepSequence, registerTkeClusterKubeConfigStep.StepMethod)
 }
 
 // BuildNodeAnnotationsStep set node annotations
@@ -320,12 +304,12 @@ func (cn *CreateClusterTaskOption) BuildNodeAnnotationsStep(task *proto.Task) {
 	if cn.NodeTemplate == nil || len(cn.NodeTemplate.Annotations) == 0 {
 		return
 	}
-	common.BuildNodeAnnotationsTaskStep(task, cn.Cluster.ClusterID, cn.Nodes, cn.NodeTemplate.Annotations)
+	common.BuildNodeAnnotationsTaskStep(task, cn.Cluster.ClusterID, cn.WorkerNodes, cn.NodeTemplate.Annotations)
 }
 
 // BuildNodeLabelsStep set common node labels
 func (cn *CreateClusterTaskOption) BuildNodeLabelsStep(task *proto.Task) {
-	common.BuildNodeLabelsTaskStep(task, cn.Cluster.ClusterID, cn.Nodes, nil)
+	common.BuildNodeLabelsTaskStep(task, cn.Cluster.ClusterID, cn.WorkerNodes, nil)
 }
 
 // BuildEnableVpcCniStep 开启vpc-cni网络特性
@@ -343,7 +327,7 @@ func (cn *CreateClusterTaskOption) BuildUpdateTaskStatusStep(task *proto.Task) {
 	updateStep := cloudprovider.InitTaskStep(updateCreateClusterDBInfoStep)
 	updateStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
 	updateStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
-	updateStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(cn.Nodes, ",")
+	updateStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(cn.WorkerNodes, ",")
 
 	task.Steps[updateCreateClusterDBInfoStep.StepMethod] = updateStep
 	task.StepSequence = append(task.StepSequence, updateCreateClusterDBInfoStep.StepMethod)
@@ -450,21 +434,6 @@ func (ic *ImportClusterTaskOption) BuildRegisterKubeConfigStep(task *proto.Task)
 
 	task.Steps[registerClusterKubeConfigStep.StepMethod] = registerKubeConfigStep
 	task.StepSequence = append(task.StepSequence, registerClusterKubeConfigStep.StepMethod)
-}
-
-// BuildRegisterClusterKubeConfigStep 托管集群注册连接信息
-func (ic *ImportClusterTaskOption) BuildRegisterClusterKubeConfigStep(task *proto.Task) {
-	if cloudprovider.IsInDependentCluster(ic.Cluster) {
-		return
-	}
-
-	registerStep := cloudprovider.InitTaskStep(registerManageClusterKubeConfigStep)
-	registerStep.Params[cloudprovider.ClusterIDKey.String()] = ic.Cluster.ClusterID
-	registerStep.Params[cloudprovider.CloudIDKey.String()] = ic.Cluster.Provider
-	registerStep.Params[cloudprovider.IsExtranetKey.String()] = icommon.False
-
-	task.Steps[registerManageClusterKubeConfigStep.StepMethod] = registerStep
-	task.StepSequence = append(task.StepSequence, registerManageClusterKubeConfigStep.StepMethod)
 }
 
 // DeleteClusterTaskOption 删除集群

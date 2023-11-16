@@ -136,9 +136,6 @@ func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	if req.BusinessID != "" {
 		p.BusinessID = req.BusinessID
 	}
-	if req.ProjectType != p.ProjectType {
-		p.ProjectType = req.ProjectType
-	}
 	// 更新bool型，判断是否为nil
 	if req.UseBKRes != nil && req.UseBKRes.GetValue() != p.UseBKRes {
 		p.UseBKRes = req.UseBKRes.GetValue()
@@ -151,30 +148,6 @@ func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	}
 	if req.IsOffline != nil && req.IsOffline.GetValue() != p.IsOffline {
 		p.IsOffline = req.IsOffline.GetValue()
-	}
-	if req.DeployType > 0 {
-		p.DeployType = ua.req.DeployType
-	}
-	if req.IsSecret != nil && req.IsSecret.GetValue() != p.IsSecret {
-		p.IsSecret = req.IsSecret.GetValue()
-	}
-	if ua.req.BGID != "" {
-		p.BGID = req.BGID
-	}
-	if ua.req.BGName != "" {
-		p.BGName = req.BGName
-	}
-	if ua.req.DeptID != "" {
-		p.DeptID = req.DeptID
-	}
-	if ua.req.DeptName != "" {
-		p.DeptName = req.DeptName
-	}
-	if ua.req.CenterID != "" {
-		p.CenterID = req.CenterID
-	}
-	if ua.req.CenterName != "" {
-		p.CenterName = req.CenterName
 	}
 	if ua.req.Creator != "" {
 		p.Creator = req.Creator

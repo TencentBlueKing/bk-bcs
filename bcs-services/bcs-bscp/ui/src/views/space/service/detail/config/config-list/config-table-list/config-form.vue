@@ -9,15 +9,18 @@
       />
     </bk-form-item>
     <bk-form-item label="配置文件路径" property="path" :required="true">
-      <bk-input
-        v-model="localVal.path"
-        placeholder="请输入绝对路径，下载路径为前缀+配置路径"
-        :disabled="!editable"
-        @change="change"
-      />
+      <template #label>
+        <span
+          v-bk-tooltips="{
+            content:'客户端拉取配置文件后存放路径为：临时目录/业务ID/服务名称/files/配置文件路径，除了配置文件路径其它参数都在客户端sidecar中配置',
+            placement: 'top'
+          }"
+          >配置文件路径</span>
+      </template>
+      <bk-input v-model="localVal.path" placeholder="请输入绝对路径" :disabled="!editable" @change="change" />
     </bk-form-item>
     <bk-form-item label="配置文件描述" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change" :resize="false" />
+      <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change" :resize="true" />
     </bk-form-item>
     <bk-form-item label="配置文件格式">
       <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">
@@ -70,7 +73,7 @@
                       :model-value="privilegeGroupsValue[index]"
                       @change="handleSelectPrivilege(index, $event)"
                     >
-                      <bk-checkbox size="small" :label="4">读</bk-checkbox>
+                      <bk-checkbox size="small" :label="4" :disabled="privilegeGroupsValue[0]">读</bk-checkbox>
                       <bk-checkbox size="small" :label="2">写</bk-checkbox>
                       <bk-checkbox size="small" :label="1">执行</bk-checkbox>
                     </bk-checkbox-group>
@@ -98,7 +101,8 @@
         :disabled="!editable"
         :multiple="false"
         :files="fileList"
-        :custom-request="handleFileUpload">
+        :custom-request="handleFileUpload"
+      >
         <template #file="{ file }">
           <div>
             <div class="file-wrapper">
@@ -115,7 +119,12 @@
         </template>
       </bk-upload>
     </bk-form-item>
-    <bk-form-item v-else label="配置内容">
+    <bk-form-item v-else>
+      <template #label
+        ><div class="config-content-label">
+          <span>配置内容</span
+          ><info v-bk-tooltips="{ content: configContentTip, placement: 'top' }" fill="#3a84ff" /></div
+      ></template>
       <ConfigContentEditor
         :content="stringContent"
         :editable="editable"
@@ -126,10 +135,10 @@
   </bk-form>
 </template>
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, getCurrentInstance } from 'vue';
 import SHA256 from 'crypto-js/sha256';
 import WordArray from 'crypto-js/lib-typedarrays';
-import { TextFill, Done, Error } from 'bkui-vue/lib/icon';
+import { TextFill, Done, Info, Error } from 'bkui-vue/lib/icon';
 import BkMessage from 'bkui-vue/lib/message';
 import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
 import { IVariableEditParams } from '../../../../../../../../types/variable';
@@ -169,7 +178,9 @@ const props = withDefaults(
 );
 
 const emits = defineEmits(['change', 'update:fileUploading']);
-
+const configContentTip = `配置文件内支持引用全局变量与定义新的BSCP变量，变量规则如下
+                          1.需是要go template语法， 例如 {{ .bk_bscp_appid }}
+                          2.变量名需以 “bk_bscp_” 或 “BK_BSCP_” 开头`;
 const localVal = ref({ ...props.config });
 const privilegeInputVal = ref('');
 const showPrivilegeErrorTips = ref(false);
@@ -212,20 +223,21 @@ const rules = {
     {
       validator: (value: string) => value.length <= 256,
       message: '最大长度256个字符',
+      trigger: 'change',
     },
     {
-      validator: (value: string) => /^\/([a-zA-Z0-9/\-.]+\/)*[a-zA-Z0-9/\-.]+$/.test(value),
+      validator: (value: string) => /^\/(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)?$/.test(value),
       message: '无效的路径,路径不符合Unix文件路径格式规范',
-      trigger: 'blur',
+      trigger: 'change',
     },
   ],
   memo: [
     {
       validator: (value: string) => {
         if (!value) return true;
-        return /^[\u4E00-\u9FA5a-zA-Z0-9_\- ]*[\u4E00-\u9FA5a-zA-Z0-9](?!.*[,])[\u4E00-\u9FA5a-zA-Z0-9_\- ]*$/.test(value);
+        return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value);
       },
-      message: '只允许包含中文、英文、数字、下划线、连字符、空格，并且必须以中文、英文、数字开头和结尾。',
+      message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
       trigger: 'change',
     },
   ],
@@ -370,8 +382,10 @@ const validate = async () => {
   }
   return true;
 };
+const instance = getCurrentInstance();
 
 const change = () => {
+  console.log('change', instance?.uid);
   const content = localVal.value.file_type === 'binary' ? fileContent.value : stringContent.value;
   emits('change', localVal.value, content);
 };
@@ -404,7 +418,7 @@ defineExpose({
     width: 32px;
     height: 32px;
     text-align: center;
-    background: #e1ecff;
+    background: #fafcfe;
     color: #3a84ff;
     border: 1px solid #3a84ff;
     cursor: pointer;
@@ -510,12 +524,27 @@ defineExpose({
     color: #ff5656;
   }
 }
+.config-content-label {
+  display: flex;
+  align-items: center;
+  span {
+    margin-right: 5px;
+  }
+}
 </style>
 <style lang="scss">
 .privilege-select-popover.bk-popover {
   padding: 0;
+  .bk-pop2-arrow {
+    border-left: 1px solid #dcdee5;
+    border-top: 1px solid #dcdee5;
+  }
 }
 .privilege-tips-wrap {
   border: 1px solid #dcdee5;
+  .bk-pop2-arrow {
+    border-right: 1px solid #dcdee5;
+    border-bottom: 1px solid #dcdee5;
+  }
 }
 </style>

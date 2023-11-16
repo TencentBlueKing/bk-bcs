@@ -1,0 +1,169 @@
+#!/bin/bash
+
+#######################################
+# Tencent is pleased to support the open source community by making Blueking Container Service available.
+# Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+# http://opensource.org/licenses/MIT
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#######################################
+
+set -euo pipefail
+trap "utils::on_ERR;" ERR
+HELM_VER=${HELM_VER:-"3.7.2"}
+
+SELF_DIR=$(dirname "$(readlink -f "$0")")
+ROOT_DIR="${SELF_DIR}/.."
+
+safe_source() {
+  local source_file=$1
+  if [[ -f ${source_file} ]]; then
+    #shellcheck source=/dev/null
+    source "${source_file}"
+  else
+    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    exit 1
+  fi
+}
+
+source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/functions/k8s.sh"
+  "${ROOT_DIR}/env/bcs.env")
+for file in "${source_files[@]}"; do
+  safe_source "$file"
+done
+
+#start configuration
+goversion=$(kubectl version -o yaml | yq '.serverVersion.goVersion' \
+  | awk -F'.' '{print $2}')
+if [ -z "${goversion}" ]; then
+  job_fail "get go version failed, configure etcd failed"
+fi
+
+tmp_dir="/tmp/backup/$(date +%s)"
+mkdir -p "${tmp_dir}"
+cp /etc/kubernetes/manifests/* "${tmp_dir}"/
+cp /etc/kubernetes/manifests/* "${ROOT_DIR}"/
+pod_files=(etcd.yaml kube-apiserver.yaml kube-controller-manager.yaml
+  kube-scheduler.yaml)
+
+for pod_file in "${pod_files[@]}"; do
+  if ((goversion <= 15)) || ((goversion >= 12)); then
+    if ! grep GODEBUG "${ROOT_DIR}/${pod_file}"; then
+      if [[ $(yq '.spec.containers[0].env' "${ROOT_DIR}/${pod_file}") != "null" ]]; then
+        env_length=$(yq '.spec.containers[0].env|to_entries|length' "${ROOT_DIR}/${pod_file}")
+        yq -i '.spec.containers[0].env['"${env_length}"']={"name":"GODEBUG", "value":"madvdontneed=1"}' "${ROOT_DIR}/${pod_file}"
+      else
+        yq -i '.spec.containers[0].env[0]={"name":"GODEBUG", "value":"madvdontneed=1"}' "${ROOT_DIR}/${pod_file}"
+      fi
+    fi
+  fi
+done
+
+if ! grep -v "^#" "${ROOT_DIR}"/kube-apiserver.yaml | grep max-mutating-requests-inflight; then
+  yq -i '.spec.containers[0].command += "--max-mutating-requests-inflight=1000"' \
+    "${ROOT_DIR}"/kube-apiserver.yaml
+else
+  if ! grep max-mutating-requests-inflight=1000 "${ROOT_DIR}"/kube-apiserver.yaml; then
+    element_index=$(yq '.spec.containers[0].command|to_entries' \
+      "${ROOT_DIR}"/kube-apiserver.yaml \
+      | yq '.[]|select (.value|test("max-mutating-requests-inflight")).key')
+    yq -i '.spec.containers[0].command['"${element_index}"']="--max-mutating-requests-inflight=1000"' "${ROOT_DIR}"/kube-apiserver.yaml
+  fi
+fi
+
+if ! grep -v "^#" "${ROOT_DIR}"/kube-apiserver.yaml | grep max-requests-inflight; then
+  yq -i '.spec.containers[0].command += "--max-requests-inflight=3000"' "${ROOT_DIR}"/kube-apiserver.yaml
+else
+  if ! grep max-requests-inflight=3000 "${ROOT_DIR}"/kube-apiserver.yaml; then
+    element_index=$(yq '.spec.containers[0].command|to_entries' "${ROOT_DIR}"/kube-apiserver.yaml | yq '.[]|select (.value|test("max-mutating-requests-inflight")).key')
+    yq -i '.spec.containers[0].command['"${element_index}"']="--max-requests-inflight=3000"' "${ROOT_DIR}"/kube-apiserver.yaml
+  fi
+fi
+
+if ! grep -v "^#" "${ROOT_DIR}"/kube-controller-manager.yaml | grep kube-api-qps; then
+  yq -i '.spec.containers[0].command += "--kube-api-qps=300"' "${ROOT_DIR}"/kube-controller-manager.yaml
+else
+  if ! grep kube-api-qps=300 "${ROOT_DIR}"/kube-controller-manager.yaml; then
+    element_index=$(yq '.spec.containers[0].command|to_entries' "${ROOT_DIR}"/kube-controller-manager.yaml | yq '.[]|select (.value|test("kube-api-qps")).key')
+    yq -i '.spec.containers[0].command['"${element_index}"']="--kube-api-qps=300"' "${ROOT_DIR}"/kube-controller-manager.yaml
+  fi
+fi
+
+if ! grep -v "^#" "${ROOT_DIR}"/kube-controller-manager.yaml | grep kube-api-burst; then
+  yq -i '.spec.containers[0].command += "--kube-api-burst=400"' "${ROOT_DIR}"/kube-controller-manager.yaml
+else
+  if ! grep kube-api-burst=400 "${ROOT_DIR}"/kube-controller-manager.yaml; then
+    element_index=$(yq '.spec.containers[0].command|to_entries' "${ROOT_DIR}"/kube-controller-manager.yaml | yq '.[]|select (.value|test("kube-api-burst")).key')
+    yq -i '.spec.containers[0].command['"${element_index}"']="--kube-api-burst=400"' "${ROOT_DIR}"/kube-controller-manager.yaml
+  fi
+fi
+
+if ! grep -v "^#" "${ROOT_DIR}"/kube-controller-manager.yaml | grep terminated-pod-gc-threshold; then
+  yq -i '.spec.containers[0].command += "--terminated-pod-gc-threshold=12500"' "${ROOT_DIR}"/kube-controller-manager.yaml
+else
+  if ! grep terminated-pod-gc-threshold=12500 "${ROOT_DIR}"/kube-controller-manager.yaml; then
+    element_index=$(yq '.spec.containers[0].command|to_entries' "${ROOT_DIR}"/kube-controller-manager.yaml | yq '.[]|select (.value|test("terminated-pod-gc-threshold")).key')
+    yq -i '.spec.containers[0].command['"${element_index}"']="--terminated-pod-gc-threshold=12500"' "${ROOT_DIR}"/kube-controller-manager.yaml
+  fi
+fi
+
+if ! grep -v "^#" "${ROOT_DIR}"/kube-scheduler.yaml | grep kube-api-qps; then
+  yq -i '.spec.containers[0].command += "--kube-api-qps=300"' "${ROOT_DIR}"/kube-scheduler.yaml
+else
+  if ! grep kube-api-qps=300 "${ROOT_DIR}"/kube-scheduler.yaml; then
+    element_index=$(yq '.spec.containers[0].command|to_entries' "${ROOT_DIR}"/kube-scheduler.yaml | yq '.[]|select (.value|test("kube-api-qps")).key')
+    yq -i '.spec.containers[0].command['"${element_index}"']="--kube-api-qps=300"' "${ROOT_DIR}"/kube-scheduler.yaml
+  fi
+fi
+
+if ! grep -v "^#" "${ROOT_DIR}"/kube-scheduler.yaml | grep kube-api-burst; then
+  yq -i '.spec.containers[0].command += "--kube-api-burst=400"' "${ROOT_DIR}"/kube-scheduler.yaml
+else
+  if ! grep kube-api-burst=400 "${ROOT_DIR}"/kube-scheduler.yaml; then
+    element_index=$(yq '.spec.containers[0].command|to_entries' "${ROOT_DIR}"/kube-scheduler.yaml | yq '.[]|select (.value|test("kube-api-burst")).key')
+    yq -i '.spec.containers[0].command['"${element_index}"']="--kube-api-burst=400"' "${ROOT_DIR}"/kube-scheduler.yaml
+  fi
+fi
+
+for pod_file in "${pod_files[@]}"; do
+  cp "${ROOT_DIR}/${pod_file}" /etc/kubernetes/manifests/
+done
+
+k8s::restart_kubelet
+sleep 30
+k8s::check_master
+
+if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
+  kubectl get cm -n kube-system kube-proxy -o yaml \
+    >"${tmp_dir}"/kube-proxy-cm.yaml
+  yq '.data.["config.conf"]' "${tmp_dir}"/kube-proxy-cm.yaml \
+    | yq '.ipvs.udpTimeout="15s"' \
+      >"${ROOT_DIR}"/config.conf
+  IFS='' read -rd output <"${ROOT_DIR}"/config.conf
+  output=$output yq e '.data."config.conf" = strenv(output)' \
+    "${tmp_dir}"/kube-proxy-cm.yaml >"${ROOT_DIR}"/kube-proxy-cm.yaml
+  kubectl -n kube-system patch cm kube-proxy \
+    --patch-file "${ROOT_DIR}"/kube-proxy-cm.yaml
+
+  if ! kubectl get ds -n kube-system kube-proxy -o yaml | grep madvdontneed; then
+    kubectl patch ds -n kube-system kube-proxy -p '[{"op": "add", "path": "/spec/template/spec/containers/0/env/-", "value":{"name":"GODEBUG", "value":"madvdontneed=1"}}]' --type json
+  else
+    if ! kubectl get ds -n kube-system kube-proxy -o yaml | grep madvdontneed=1; then
+      element_index=$(kubectl get ds -n kube-system kube-proxy -o json | jq '.spec.template.spec.containers[0].env|to_entries[]|select (.value.name|test("GODEBUG")).key')
+      kubectl patch ds -n kube-system kube-proxy -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/env/'"${element_index}"'", "value":{"name":"GODEBUG", "value":"madvdontneed=1"}}]' --type json
+    fi
+  fi
+
+  kubectl rollout restart ds -n kube-system kube-proxy
+  if ! kubectl rollout status ds -n kube-system kube-proxy --timeout 60s; then
+    utils::log "FATAL" "Update kube-proxy failed."
+  fi
+fi
+
+#coredns configuration
+
+utils::log "OK" "K8S configuration done!"

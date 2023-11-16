@@ -52,7 +52,7 @@
         v-cursor="{ active: !hasEditServicePerm }"
         :class="['submit-button', { 'bk-button-with-no-perm': !hasEditServicePerm }]"
         theme="primary"
-        :disabled="hasEditServicePerm && !dataChanged"
+        :disabled="hasEditServicePerm && submitButtonDisabled"
         :loading="pending"
         @click="handleSubmit"
       >
@@ -116,6 +116,7 @@ const scriptCiteData = ref({
   post_hook: getDefaultConfigScriptData(),
 });
 const scriptCiteDataLoading = ref(false);
+const submitButtonDisabled = ref(true);
 const formData = ref<{ pre: { id: number; versionId: number }; post: { id: number; versionId: number } }>({
   pre: {
     id: 0,
@@ -130,13 +131,6 @@ const pending = ref(false);
 
 // 查看模式
 const viewMode = computed(() => typeof versionData.value.id === 'number' && versionData.value.id !== 0);
-
-// 配置数据是否修改
-const dataChanged = computed(() => {
-  const { pre_hook, post_hook } = scriptCiteData.value;
-  const { pre, post } = formData.value;
-  return pre_hook.hook_id !== pre.id || post_hook.hook_id !== post.id;
-});
 
 watch(
   () => versionData.value.id,
@@ -163,7 +157,7 @@ const getScripts = async () => {
     versionId: item.published_revision_id,
     name: item.hook.spec.name,
     type: item.hook.spec.type,
-  }));
+  })).sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
   scriptsData.value = [{ id: 0, versionId: 0, name: '<不使用脚本>', type: '' }, ...list];
   scriptsLoading.value = false;
 };
@@ -205,12 +199,8 @@ const handleSelectScript = (id: number, type: string) => {
       formData.value.post.id = id;
     }
   }
-  if (id === 0) {
-    previewConfig.value.open = false;
-  }
-  if (previewConfig.value.open) {
-    handleOpenPreview(type);
-  }
+  submitButtonDisabled.value = false;
+  handleOpenPreview(type);
 };
 
 // 点击预览
@@ -250,6 +240,7 @@ const handleSubmit = async () => {
     console.error(e);
   } finally {
     pending.value = false;
+    submitButtonDisabled.value = true;
   }
 };
 </script>

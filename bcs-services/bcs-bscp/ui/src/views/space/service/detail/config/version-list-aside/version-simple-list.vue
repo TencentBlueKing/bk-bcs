@@ -1,21 +1,25 @@
 <template>
   <section class="version-container">
     <bk-loading :loading="versionListLoading">
+      <div class="version-search-wrapper">
+        <SearchInput
+          v-model="searchStr"
+          class="config-search-input"
+          placeholder="版本名称"/>
+      </div>
       <section class="versions-wrapper">
         <section
-          v-for="version in versionList"
+          v-for="version in versionsInView"
           :key="version.id"
           :class="['version-item', { active: versionData.id === version.id }]"
-          @click="handleSelectVersion(version)"
-        >
+          @click="handleSelectVersion(version)">
           <div :class="['dot', version.status.publish_status]"></div>
           <div class="version-name">{{ version.spec.name }}</div>
           <bk-popover
             v-if="version.status.publish_status !== 'editing'"
             theme="light config-version-actions-popover"
             placement="bottom-end"
-            :arrow="false"
-          >
+            :arrow="false">
             <Ellipsis class="action-more-icon" />
             <template #content>
               <div class="action-list">
@@ -25,60 +29,58 @@
             </template>
           </bk-popover>
         </section>
+        <TableEmpty v-if="searchStr && versionsInView.length === 0" :is-search-empty="true" @clear="searchStr = ''" />
       </section>
     </bk-loading>
-    <bk-pagination
-      class="list-pagination"
-      v-model="pagination.current"
-      small
-      align="right"
-      :show-limit="false"
-      :show-total-count="false"
-      :count="pagination.count"
-      :limit="pagination.limit"
-      @change="handlePageChange"
-    />
     <VersionDiff v-model:show="showDiffPanel" :current-version="diffVersion" />
   </section>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../store/config';
 import { Ellipsis } from 'bkui-vue/lib/icon';
 // import { InfoBox } from 'bkui-vue/lib';
 import { getConfigVersionList } from '../../../../../../api/config';
-import { GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config';
+import { GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
 import { IConfigVersion } from '../../../../../../../types/config';
+import SearchInput from '../../../../../../components/search-input.vue';
+import TableEmpty from '../../../../../../components/table/table-empty.vue';
 import VersionDiff from '../../config/components/version-diff/index.vue';
 
 const configStore = useConfigStore();
 const { versionData, refreshVersionListFlag } = storeToRefs(configStore);
+
+const route = useRoute()
+const router = useRouter()
 
 const props = defineProps<{
   bkBizId: string;
   appId: number;
 }>();
 
-const currentConfig: IConfigVersion = GET_UNNAMED_VERSION_DATE();
+const unNamedVersion: IConfigVersion = GET_UNNAMED_VERSION_DATA();
 const versionListLoading = ref(false);
 const versionList = ref<IConfigVersion[]>([]);
+const searchStr = ref('')
 const showDiffPanel = ref(false);
 const diffVersion = ref();
-const pagination = ref({
-  current: 1,
-  limit: 10,
-  count: 0,
+
+const versionsInView = computed(() => {
+  if (searchStr.value === '') {
+    return versionList.value;
+  }
+  return versionList.value.filter(item => item.spec.name.toLowerCase().includes(searchStr.value));
 });
 
 // 监听刷新版本列表标识，处理新增版本场景，默认选中新增的版本
 watch(refreshVersionListFlag, async (val) => {
   if (val) {
-    pagination.value.current = 1;
     await getVersionList();
     const versionDetail = versionList.value[1];
     if (versionDetail) {
-      handleSelectVersion(versionDetail);
+      versionData.value = versionDetail;
       refreshVersionListFlag.value = false;
     }
   }
@@ -92,24 +94,29 @@ watch(
 );
 
 onMounted(async () => {
-  getVersionList();
+  init();
 });
+
+const init = async () => {
+  await getVersionList()
+  if (route.params.versionId) {
+    const version = versionList.value.find(item => item.id === Number(route.params.versionId));
+    if (version) {
+      versionData.value = version;
+    }
+  }
+}
 
 const getVersionList = async () => {
   try {
     versionListLoading.value = true;
     const params = {
       // 未命名版本不在实际的版本列表里，需要特殊处理
-      start: pagination.value.current === 1 ? 0 : (pagination.value.current - 1) * pagination.value.limit - 1,
-      limit: pagination.value.current === 1 ? pagination.value.limit - 1 : pagination.value.limit,
+      start: 0,
+      all: true
     };
     const res = await getConfigVersionList(props.bkBizId, props.appId, params);
-    if (pagination.value.current === 1) {
-      versionList.value = [currentConfig, ...res.data.details];
-    } else {
-      versionList.value = res.data.details;
-    }
-    pagination.value.count = res.data.count + 1;
+    versionList.value = [unNamedVersion, ...res.data.details];
   } catch (e) {
     console.error(e);
   } finally {
@@ -119,12 +126,14 @@ const getVersionList = async () => {
 
 const handleSelectVersion = (version: IConfigVersion) => {
   versionData.value = version;
-};
-
-// @todo 切换页码时，组件会调用两次change事件，待确认
-const handlePageChange = (val: number) => {
-  pagination.value.current = val;
-  getVersionList();
+  const params: { spaceId: string, appId: number, versionId?: number } = {
+    spaceId: props.bkBizId,
+    appId: props.appId
+  }
+  if (version.id !== 0) {
+    params.versionId = version.id;
+  }
+  router.push({ name: 'service-config', params });
 };
 
 const handleDiffDialogShow = (version: IConfigVersion) => {
@@ -145,10 +154,16 @@ const handleDiffDialogShow = (version: IConfigVersion) => {
 
 <style lang="scss" scoped>
 .version-container {
-  padding: 16px 0;
   height: 100%;
 }
+.bk-nested-loading {
+  height: 100%;
+}
+.version-search-wrapper {
+  padding: 8px 16px;
+}
 .versions-wrapper {
+  height: calc(100% - 48px);
   overflow: auto;
 }
 .version-steps {

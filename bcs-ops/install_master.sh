@@ -100,6 +100,8 @@ else
   "${ROOT_DIR}"/system/config_envfile.sh -c clean
   K8S_CTRL_IP=$LAN_IP "${ROOT_DIR}"/system/config_envfile.sh -c init
   k8s::restart_kubelet
+  sleep 30
+  k8s::check_master
   if [[ ${ENABLE_APISERVER_HA} == "true" ]]; then
     [[ -z ${VIP} ]] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
     if [[ ${APISERVER_HA_MODE} == "kube-vip" ]]; then
@@ -108,4 +110,4 @@ else
   fi
 fi
 
-"${ROOT_DIR}"/k8s/install_k8s
+"${ROOT_DIR}"/k8s/optimize_k8s

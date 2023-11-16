@@ -63,6 +63,10 @@ func parseUpDown(s []*ansi.S, m map[*ansi.S]*ansi.S) []*ansi.S {
 		if s[i].Code == ansi.CUD || s[i].Code == ansi.CUU {
 			last = s[i]
 			cmdS := m[last]
+			if cmdS == nil {
+				// nil 的情况下继续
+				continue
+			}
 			cmd := strings.TrimLeft(string(cmdS.Code), "\b")
 			// 完整命令解析拆分字节流形式
 			lis := str2Struct(cmd)
@@ -79,6 +83,10 @@ func parseTab(s []*ansi.S, m map[*ansi.S]*ansi.S) []*ansi.S {
 	for _, v := range s {
 		if v.Code == "\t" {
 			outCmd := m[v]
+			// nil 的情况下继续
+			if outCmd == nil {
+				continue
+			}
 			outCmdStr := string(outCmd.Code)
 			switch {
 			// 情形一:有多个结果展示,但不补全

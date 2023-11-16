@@ -182,43 +182,7 @@ message Project {
     title: "businessID",
     description: "项目绑定的蓝鲸CMDB中业务ID信息"
   }];
-  bool isSecret = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "isSecret",
-    description: "是否为保密项目, 默认为false"
-  }];
-  uint32 projectType = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "type",
-    description: "项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品"
-  }];
-  uint32 deployType = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "deployType",
-    description: "业务部署类型, 保留字段, 1:物理机部署, 2:容器部署"
-  }];
-  string BGID = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "bgID",
-    description: "事业群ID, 保留字段, 默认为0"
-  }];
-  string BGName = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "bgName",
-    description: "事业群名称, 保留字段, 默认为空"
-  }];
-  string deptID = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "deptID", 
-    description: "部门ID, 保留字段, 默认为0"
-  }];
-  string deptName = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "deptName", 
-    description: "部门名称, 保留字段, 默认为空"
-  }];
-  string centerID = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "centerID", 
-    description: "中心ID, 保留字段, 默认为0"
-  }];
-  string centerName = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "centerName", 
-    description: "中心名称, 保留字段, 默认为空"
-  }];
-  string businessName = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string businessName = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "businessName", 
     description: "项目绑定的蓝鲸CMDB中业务名称"
   }];
@@ -372,43 +336,7 @@ message UpdateProjectRequest {
     title: "businessID", 
     description: "项目绑定的蓝鲸CMDB中业务ID信息"
   }];
-  google.protobuf.BoolValue isSecret = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "isSecret", 
-    description: "是否为保密项目, 默认为false"
-  }];
-  uint32 deployType = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "deployType", 
-    description: "业务部署类型, 保留字段, 1:物理机部署, 2:容器部署"
-  }];
-  uint32 projectType = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "type", 
-    description: "项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品"
-  }];
-  string BGID = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "bgID",
-    description: "事业群ID, 保留字段, 默认为0"
-  }];
-  string BGName = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "bgName", 
-    description: "事业群名称, 保留字段, 默认为空"
-  }];
-  string deptID = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "deptID", 
-    description: "部门ID, 保留字段, 默认为0"
-  }];
-  string deptName = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "deptName", 
-    description: "部门名称, 保留字段, 默认为空"
-  }];
-  string centerID = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "centerID", 
-    description: "中心ID, 保留字段, 默认为0"
-  }];
-  string centerName = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "centerName", 
-    description: "中心名称, 保留字段, 默认为空"
-  }];
-  string managers = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string managers = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "managers", 
     description: "项目管理员"
   }];

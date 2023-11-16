@@ -1575,6 +1575,53 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/projects": {
+      "get": {
+        "summary": "获取云项目列表",
+        "description": "获取云项目列表",
+        "operationId": "ClusterManager_ListCloudProjects",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudProjectsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/regions": {
       "get": {
         "summary": "查询cloud地域列表",
@@ -1952,6 +1999,60 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerUpdateCloudModuleFlagRequest"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/vpcs": {
+      "get": {
+        "summary": "获取云所属地域vpc列表",
+        "description": "获取云所属地域vpc列表",
+        "operationId": "ClusterManager_ListCloudVpcs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudVpcsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. 过滤查询指定vpc的信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -5826,6 +5927,19 @@
         "data"
       ]
     },
+    "clustermanagerAssistantCidr": {
+      "type": "object",
+      "properties": {
+        "cidr": {
+          "type": "string"
+        },
+        "cidrType": {
+          "type": "integer",
+          "format": "int32",
+          "title": "辅助CIDR类型（0：普通辅助CIDR，1：容器辅助CIDR），默认都是0。"
+        }
+      }
+    },
     "clustermanagerAutoScalingGroup": {
       "type": "object",
       "properties": {
@@ -6729,6 +6843,18 @@
       "description": "记录节点信息，用于节点列表展示",
       "title": "ClusterNode"
     },
+    "clustermanagerCloudProject": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "projectName": {
+          "type": "string"
+        }
+      }
+    },
     "clustermanagerCloudRegion": {
       "type": "object",
       "properties": {
@@ -6878,6 +7004,29 @@
         }
       },
       "title": "CloudVPCResp for web model"
+    },
+    "clustermanagerCloudVpc": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "vpcId": {
+          "type": "string"
+        },
+        "ipv4Cidr": {
+          "type": "string"
+        },
+        "ipv6Cidr": {
+          "type": "string"
+        },
+        "cidrs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerAssistantCidr"
+          }
+        }
+      }
     },
     "clustermanagerCluster": {
       "type": "object",
@@ -7099,6 +7248,11 @@
           "$ref": "#/definitions/clustermanagerModuleInfo",
           "description": "集群维度节点上下架时当前集群业务下转移模块信息",
           "title": "module"
+        },
+        "clusterConnectSetting": {
+          "$ref": "#/definitions/clustermanagerClusterConnectSetting",
+          "description": "集群开启内外网设，公有云必须设置此参数",
+          "title": "clusterConnectSetting"
         }
       },
       "description": "记录集群信息，用于维护集群状态",
@@ -7131,7 +7285,7 @@
         },
         "networkType": {
           "type": "string",
-          "description": "集群网络类型（包括GR(全局路由)和VPC-CNI两种模式，默认为GR. 也支持CiliumOverlay模式",
+          "description": "集群网络类型（包括GR(全局路由)和VPC-CNI两种模式，默认为GR.也支持CiliumOverlay模式（(flannel、calico、或者云上自研网络插件等)）",
           "title": "networkType"
         },
         "deletionProtection": {
@@ -7145,6 +7299,12 @@
           "format": "boolean",
           "description": "是否开启审计开关",
           "title": "auditEnabled"
+        },
+        "enableHa": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "自建集群是否开启高可用",
+          "title": "enableHa"
         }
       }
     },
@@ -7411,6 +7571,38 @@
           "title": "isAutoUpgradeClusterLevel"
         }
       }
+    },
+    "clustermanagerClusterConnectSetting": {
+      "type": "object",
+      "properties": {
+        "isExtranet": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "isExtranet集群内外网访问(true外网访问 false内网访问, 默认false)",
+          "title": "isExtranet"
+        },
+        "subnetId": {
+          "type": "string",
+          "description": "集群端口所在的子网ID(开启内网访问所需)",
+          "title": "subnetId"
+        },
+        "domain": {
+          "type": "string",
+          "description": "用户设置访问端点域名",
+          "title": "domain"
+        },
+        "securityGroup": {
+          "type": "string",
+          "description": "使用的安全组，只有外网访问需要传递（开启外网访问时必传）",
+          "title": "securityGroup"
+        },
+        "internet": {
+          "$ref": "#/definitions/clustermanagerInternetAccessible",
+          "description": "创建lb参数，只有外网访问需要传递（开启外网访问时必传）",
+          "title": "internet"
+        }
+      },
+      "title": "ClusterConnectSetting ApiServer内外网访问信息"
     },
     "clustermanagerClusterCredential": {
       "type": "object",
@@ -8518,7 +8710,7 @@
         "autoGenerateMasterNodes": {
           "type": "boolean",
           "format": "boolean",
-          "description": "创建集群是否使用已存在节点, 默认false; 为true时, 需要生成master instance",
+          "description": "创建集群Master节点来源, 默认false表示使用已有节点; 为true时, 需要生成master instance",
           "title": "autoGenerateMasterNodes"
         },
         "instances": {
@@ -8586,6 +8778,11 @@
           "$ref": "#/definitions/clustermanagerModuleInfo",
           "description": "集群维度节点上下架时当前集群业务下转移模块信息",
           "title": "module"
+        },
+        "clusterConnectSetting": {
+          "$ref": "#/definitions/clustermanagerClusterConnectSetting",
+          "description": "集群开启内外网设，公有云必须设置此参数",
+          "title": "clusterConnectSetting"
         }
       },
       "description": "创建集群请求，如果集群已经存在，直接报错。更新集群信息请使用Update接口",
@@ -11542,6 +11739,16 @@
           "$ref": "#/definitions/clustermanagerKeyInfo",
           "description": "节点私钥信息, 与密码2选一，2者均设置优先密钥",
           "title": "keyPair"
+        },
+        "dockerGraphPath": {
+          "type": "string",
+          "description": "节点运行时容器目录，BCS默认设置/data/bcs/service/docker",
+          "title": "dockerGraphPath"
+        },
+        "nodeRole": {
+          "type": "string",
+          "description": "节点角色, 取值:MASTER_ETCD, WORKER。MASTER_ETCD只有在创建 INDEPENDENT_CLUSTER 独立集群时需要指定",
+          "title": "nodeRole"
         }
       },
       "title": "InstanceTemplateConfig instance config info"
@@ -12139,6 +12346,42 @@
         "message"
       ]
     },
+    "clustermanagerListCloudProjectsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCloudProject"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询云项目列表返回",
+      "title": "ListCloudProjectsResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerListCloudRegionClusterResponse": {
       "type": "object",
       "properties": {
@@ -12346,6 +12589,42 @@
       },
       "description": "查询云VPC返回",
       "title": "ListCloudVPCResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListCloudVpcsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCloudVpc"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询云所属地域的vpc列表",
+      "title": "ListCloudVpcsResponse",
       "required": [
         "code",
         "message"
@@ -13222,6 +13501,21 @@
           "format": "int64",
           "description": "自动分配cidr步长设置(默认是生产环境4096、其他环境2048)",
           "title": "cidrStep"
+        },
+        "clusterIpType": {
+          "type": "string",
+          "description": "集群使用的网络类型(ipv4/ipv6/dual),目前默认是ipv4类型",
+          "title": "clusterIpType"
+        },
+        "clusterIPv6CIDR": {
+          "type": "string",
+          "description": "集群总IPv6地址池",
+          "title": "clusterIPv6CIDR"
+        },
+        "serviceIPv6CIDR": {
+          "type": "string",
+          "description": "集群service使用的IPv6地址池",
+          "title": "serviceIPv6CIDR"
         }
       }
     },
@@ -13238,6 +13532,12 @@
           "type": "string",
           "description": "申请vpc-cni网络subnet时region下的可用区",
           "title": "zone"
+        },
+        "ipCnt": {
+          "type": "integer",
+          "format": "int64",
+          "description": "申请vpc-cni网络subnet时的IP个数",
+          "title": "ipCnt"
         }
       }
     },
@@ -13840,8 +14140,32 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "initLoginUsername": {
+          "type": "string",
+          "description": "新实例初始设置username",
+          "title": "initLoginUsername"
+        },
+        "initLoginPassword": {
+          "type": "string",
+          "description": "新实例初始设置password,如果不设置系统自动生成",
+          "title": "initLoginPassword"
+        },
+        "keyPair": {
+          "$ref": "#/definitions/clustermanagerKeyInfo",
+          "description": "节点私钥信息, 与密码2选一，2者均设置优先密钥",
+          "title": "keyPair"
+        },
+        "taints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaint"
+          },
+          "description": "新实例初始化taints信息",
+          "title": "taints"
         }
-      }
+      },
+      "title": "集群节点通用配置"
     },
     "clustermanagerNodeStatus": {
       "type": "object",
@@ -14684,7 +15008,10 @@
       "type": "object",
       "properties": {
         "new": {
-          "$ref": "#/definitions/clustermanagerNewSubnet",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNewSubnet"
+          },
           "description": "VPC-CNI网络模式下申请subnet",
           "title": "new"
         },

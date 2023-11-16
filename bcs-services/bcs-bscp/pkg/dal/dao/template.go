@@ -17,6 +17,7 @@ import (
 	"fmt"
 
 	rawgen "gorm.io/gen"
+	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/gen"
@@ -51,6 +52,12 @@ type Template interface {
 	ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32) ([]*table.Template, error)
 	// ListAllIDs list all template ids.
 	ListAllIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error)
+	// BatchCreateWithTx batch create template instances with transaction.
+	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, templates []*table.Template) error
+	// BatchUpdateWithTx batch update template instances with transaction.
+	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, templates []*table.Template) error
+	// ListTemplateByTuple 按照多个字段in查询template 列表
+	ListTemplateByTuple(kit *kit.Kit, data [][]interface{}) ([]*table.Template, error)
 }
 
 var _ Template = new(templateDao)
@@ -59,6 +66,50 @@ type templateDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// ListTemplateByTuple 按照多个字段in查询template 列表
+func (dao *templateDao) ListTemplateByTuple(kit *kit.Kit, data [][]interface{}) ([]*table.Template, error) {
+	m := dao.genQ.Template
+	return dao.genQ.Template.WithContext(kit.Ctx).
+		Select(m.ID, m.BizID, m.TemplateSpaceID, m.Name, m.Path).
+		Where(m.WithContext(kit.Ctx).Columns(m.BizID, m.TemplateSpaceID, m.Name, m.Path).
+			In(field.Values(data))).
+		Find()
+}
+
+// BatchUpdateWithTx batch update template instances with transaction.
+func (dao *templateDao) BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, templates []*table.Template) error {
+	if len(templates) == 0 {
+		return nil
+	}
+	if err := tx.Template.WithContext(kit.Ctx).Save(templates...); err != nil {
+		return err
+	}
+	return nil
+}
+
+// BatchCreateWithTx batch create template instances with transaction.
+func (dao *templateDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, templates []*table.Template) error {
+	if len(templates) == 0 {
+		return nil
+	}
+	ids, err := dao.idGen.Batch(kit, table.TemplateTable, len(templates))
+	if err != nil {
+		return err
+	}
+
+	for i, item := range templates {
+		if err = item.ValidateCreate(); err != nil {
+			return err
+		}
+		item.ID = ids[i]
+	}
+	err = tx.Template.WithContext(kit.Ctx).Create(templates...)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Create one template instance.

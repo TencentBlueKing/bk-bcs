@@ -8,10 +8,10 @@
             <bk-input v-model="formData.name" @change="formChange" />
           </bk-form-item>
           <bk-form-item label="版本描述" property="memo">
-            <bk-input v-model="formData.memo" type="textarea" :maxlength="100" @change="formChange" :resize="false" />
+            <bk-input v-model="formData.memo" type="textarea" :maxlength="100" @change="formChange" :resize="true" />
           </bk-form-item>
           <bk-checkbox v-model="isPublish" :true-label="true" :false-label="false" @change="formChange">
-            同时上线版本
+            <span style="font-size: 12px;">同时上线版本</span>
           </bk-checkbox>
         </bk-form>
       </div>
@@ -30,7 +30,7 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import { assign } from 'lodash';
-import { GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config';
+import { GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
 import { createVersion } from '../../../../../../api/config';
 import useModalCloseConfirmation from '../../../../../../utils/hooks/use-modal-close-confirmation';
 import { IVariableEditParams } from '../../../../../../../types/variable';
@@ -76,6 +76,14 @@ const rules = {
       validator: (value: string) => value.length <= 100,
       message: '最大长度100个字符',
     },
+    {
+      validator: (value: string) => {
+        if (!value) return true;
+        return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value);
+      },
+      message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
+      trigger: 'change',
+    },
   ],
 };
 
@@ -110,16 +118,19 @@ const handleVariablesChange = (variables: IVariableEditParams[]) => {
   variableList.value = variables;
 };
 
-const handleOpenDiff = async () => {
-  await formRef.value.validate();
-  if (!tableRef.value.validate()) {
-    return;
-  }
-  emits('open-diff', variableList.value);
-};
+// const handleOpenDiff = async () => {
+//   await formRef.value.validate();
+//   if (!tableRef.value.validate()) {
+//     return;
+//   }
+//   emits('open-diff', variableList.value);
+// };
 
 const confirm = async () => {
+  if (!formRef.value.validate() || !tableRef.value.validate()) return;
   try {
+    await formRef.value.validate();
+    if (!tableRef.value.validate()) return;
     pending.value = true;
     const params = {
       name: formData.value.name,
@@ -128,7 +139,7 @@ const confirm = async () => {
     };
     const res = await createVersion(props.bkBizId, props.appId, params);
     // 创建接口未返回完整的版本详情数据，在前端拼接最新版本数据，加载完版本列表后再更新
-    const newVersionData = assign({}, GET_UNNAMED_VERSION_DATE(), {
+    const newVersionData = assign({}, GET_UNNAMED_VERSION_DATA(), {
       id: res.data.id,
       spec: { name: formData.value.name, memo: formData.value.memo },
     });
@@ -196,6 +207,11 @@ defineExpose({
   .bk-button {
     margin-right: 8px;
     min-width: 88px;
+  }
+}
+.form-wrapper {
+  &:deep(.bk-form-label){
+    font-size: 12px !important;
   }
 }
 </style>

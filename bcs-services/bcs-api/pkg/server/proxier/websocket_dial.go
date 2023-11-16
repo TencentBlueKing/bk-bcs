@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/proxy"
 	"k8s.io/client-go/transport"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/tunnel"
@@ -59,6 +60,7 @@ func (f *ReverseProxyDispatcher) lookupWsHandler(clusterId string, req *http.Req
 	}
 
 	responder := &responder{}
+	blog.Infof("lookupWsHandler, clusterId: %s, serverAddress: %s", clusterId, serverAddress)
 	proxyHandler := proxy.NewUpgradeAwareHandler(u, transport, true, false, responder)
 	proxyHandler.UseRequestLocation = true
 

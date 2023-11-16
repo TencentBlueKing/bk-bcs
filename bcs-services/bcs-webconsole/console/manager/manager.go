@@ -20,6 +20,7 @@ import (
 	"runtime/debug"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
@@ -173,6 +174,10 @@ func (c *ConsoleManager) auditCmd(outputMsg []byte) {
 		}
 	}()
 
+	// 判断文本内容是否为二进制
+	if !utf8.Valid(outputMsg) {
+		return
+	}
 	// 输入输出映射,用于查找历史命令
 	out, ss, err := ansi.Decode(outputMsg)
 	if err != nil {

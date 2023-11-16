@@ -212,9 +212,14 @@ func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClust
 		ClusterCIDR:          common.StringPtr(request.ClusterCIDR.ClusterCIDR),
 		MaxNodePodNum:        common.Uint64Ptr(request.ClusterCIDR.MaxNodePodNum),
 		MaxClusterServiceNum: common.Uint64Ptr(request.ClusterCIDR.MaxClusterServiceNum),
-	}
-	if request.ClusterCIDR.ServiceCIDR != "" {
-		req.ClusterCIDRSettings.ServiceCIDR = common.StringPtr(request.ClusterCIDR.ServiceCIDR)
+		EniSubnetIds:         common.StringPtrs(request.ClusterCIDR.EniSubnetIds),
+		ClaimExpiredSeconds:  common.Int64Ptr(int64(request.ClusterCIDR.ClaimExpiredSeconds)),
+		ServiceCIDR: func() *string {
+			if request.ClusterCIDR.ServiceCIDR != "" {
+				return common.StringPtr(request.ClusterCIDR.ServiceCIDR)
+			}
+			return nil
+		}(),
 	}
 
 	// cluster Basic config
@@ -232,7 +237,7 @@ func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClust
 		req.InstanceAdvancedSettings = generateInstanceAdvancedSetting(request.InstanceAdvanced)
 	}
 
-	// runInstances mode
+	// runInstances 新增节点 mode
 	if request.AddNodeMode {
 		if len(request.RunInstancesForNode) == 0 {
 			return nil, fmt.Errorf("CreateClusterRequest RunInstancesForNode is null")
@@ -245,6 +250,23 @@ func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClust
 			req.RunInstancesForNode = append(req.RunInstancesForNode, &tke.RunInstancesForNode{
 				NodeRole:         common.StringPtr(request.RunInstancesForNode[i].NodeRole),
 				RunInstancesPara: request.RunInstancesForNode[i].RunInstancesPara,
+				InstanceAdvancedSettingsOverrides: func() []*tke.InstanceAdvancedSettings {
+
+					instanceSettings := make([]*tke.InstanceAdvancedSettings, 0)
+
+					for cnt := range request.RunInstancesForNode[i].InstanceAdvancedSettingsOverrides {
+						instanceSettings = append(instanceSettings,
+							generateInstanceAdvancedSetting(request.RunInstancesForNode[i].InstanceAdvancedSettingsOverrides[cnt]))
+					}
+					return instanceSettings
+				}(),
+			})
+		}
+
+		for i := range request.Addons {
+			req.ExtensionAddons = append(req.ExtensionAddons, &tke.ExtensionAddon{
+				AddonName:  common.StringPtr(request.Addons[i].AddonName),
+				AddonParam: common.StringPtr(request.Addons[i].AddonParam),
 			})
 		}
 
@@ -295,6 +317,7 @@ func generateClusterBasic(basic *ClusterBasicSettings) *tke.ClusterBasicSettings
 		ClusterVersion: common.StringPtr(basic.ClusterVersion),
 		ClusterName:    common.StringPtr(basic.ClusterName),
 		VpcId:          common.StringPtr(basic.VpcID),
+		ProjectId:      common.Int64Ptr(basic.ProjectID),
 		AutoUpgradeClusterLevel: &tke.AutoUpgradeClusterLevel{
 			IsAutoUpgrade: common.BoolPtr(basic.IsAutoUpgradeClusterLevel),
 		},
@@ -342,6 +365,8 @@ func generateClusterAdvancedSet(request *ClusterAdvancedSettings) *tke.ClusterAd
 		RuntimeVersion:     common.StringPtr(request.RuntimeVersion),
 		DeletionProtection: common.BoolPtr(request.DeletionProtection),
 		AuditEnabled:       common.BoolPtr(request.AuditEnabled),
+		IsNonStaticIpMode:  common.BoolPtr(request.IsNonStaticIpMode),
+		VpcCniType:         common.StringPtr(request.VpcCniType),
 	}
 	if len(request.NetworkType) > 0 {
 		clusterAdvance.NetworkType = common.StringPtr(request.NetworkType)
@@ -445,6 +470,7 @@ func generateLoginSet(settings *LoginSettings) *tke.LoginSettings {
 
 	return &tke.LoginSettings{
 		Password: common.StringPtr(settings.Password),
+		KeyIds:   common.StringPtrs(settings.KeyIds),
 	}
 }
 

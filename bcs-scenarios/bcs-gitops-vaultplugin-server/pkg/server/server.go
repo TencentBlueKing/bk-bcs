@@ -24,11 +24,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/metric"
@@ -115,15 +117,24 @@ func (s *Server) initMetric(mux *http.ServeMux) {
 	mux.Handle("/metrics", promhttp.Handler())
 }
 
+func requestID(ctx context.Context) string {
+	return ctx.Value(traceconst.RequestIDHeaderKey).(string)
+}
+
 func (s *Server) initHTTPService() error {
 	router := mux.NewRouter()
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			startTime := time.Now()
+			requestID := r.Header.Get(traceconst.RequestIDHeaderKey)
+			if requestID == "" {
+				requestID = uuid.New().String()
+			}
+			r = r.WithContext(context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID))
 			next.ServeHTTP(w, r)
 			endTime := time.Now()
 			cost := endTime.Sub(startTime).Seconds()
-			blog.Infof("[%s] %s %.2f\n", r.Method, r.URL.Path, cost)
+			blog.Infof("RequestID[%s] [%s] %s %.2f\n", requestID, r.Method, r.URL.Path, cost)
 			metric.RequestTotal.WithLabelValues().Inc()
 			metric.RequestDuration.WithLabelValues().Observe(cost)
 		})

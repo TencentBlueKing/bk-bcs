@@ -144,7 +144,7 @@ func (t *TemplateVariableSpec) ValidateCreate() error {
 		return err
 	}
 
-	if err := validator.ValidateName(t.Name); err != nil {
+	if err := validator.ValidateVariableName(t.Name); err != nil {
 		return err
 	}
 
