@@ -21,24 +21,22 @@
     </bk-select>
     <div class="table-wrapper">
       <bk-loading :loading="boundAppsLoading">
+        <div class="refresh-header">
+          <span class="text">当前使用此套餐的服务</span>
+          <right-turn-line class="refresh-button" :class="{rotate:boundAppsLoading}"  @click="getBoundApps"/>
+        </div>
         <bk-table :border="['outer']" :data="boundApps" :thead="{isShow:false}">
-        <template #prepend>
-          <div class="table-head">
-            <span class="thead-text">当前使用此套餐的服务</span>
-            <right-turn-line class="refresh-button" :class="{rotate:boundAppsLoading}"  @click="getBoundApps"/>
-          </div>
-        </template>
-        <bk-table-column label="">
-          <template #default="{ row }">
-            <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
-              <div v-overflow-title class="name-text">{{ row.app_name }}</div>
-              <LinkToApp class="link-icon" :id="row.app_id" />
-            </div>
-          </template>
-        </bk-table-column>
-      </bk-table>
-      <bk-pagination class="table-pagination" small align="center" :show-limit="false" :show-total-count="false">
-      </bk-pagination>
+          <bk-table-column label="">
+            <template #default="{ row }">
+              <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
+                <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+                <LinkToApp class="link-icon" :id="row.app_id" />
+              </div>
+            </template>
+          </bk-table-column>
+        </bk-table>
+        <bk-pagination class="table-pagination" small align="center" :show-limit="false" :show-total-count="false">
+        </bk-pagination>
       </bk-loading>
     </div>
   </div>
@@ -177,17 +175,18 @@ const goToConfigPageImport = (id: number) => {
   .table-pagination {
     margin-top: 16px;
   }
-  .table-head {
+  .refresh-header {
     display: flex;
     align-items: center;
     padding: 0 16px;
     font-size: 12px;
     height: 41px;
-    border-bottom: 1px solid #DCDEE5;
+    border: 1px solid #DCDEE5;
+    border-bottom: none;
     &:hover {
       background-color: #f0f1f5;
     }
-    .thead-text {
+    .text {
       margin-right: 16px;
     }
     .refresh-button {
@@ -195,6 +194,9 @@ const goToConfigPageImport = (id: number) => {
       font-size: 16px;
       cursor: pointer;
     }
+  }
+  :deep(.bk-exception-img) {
+    height: 80px;
   }
 }
 .name-text {
