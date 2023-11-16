@@ -10,32 +10,9 @@
  * limitations under the License.
  */
 
-package validator
+package errf
 
-import (
-	"errors"
+const (
+	// AppNotExists means the app is not exist.
+	AppNotExists = "APP_NOT_EXISTS"
 )
-
-// ValidateMemo validate bscp resource memo's length and format.
-func ValidateMemo(memo string, required bool) error {
-	// check data is nil and required.
-	if required && len(memo) == 0 {
-		return errors.New("memo is required, can not be empty")
-	}
-
-	if required {
-		if len(memo) == 0 {
-			return errors.New("memo is required, can not be empty")
-		}
-	} else {
-		if len(memo) == 0 {
-			return nil
-		}
-	}
-
-	if len(memo) > 256 {
-		return errors.New("invalid memo, length should <= 256")
-	}
-
-	return nil
-}

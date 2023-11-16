@@ -317,7 +317,7 @@ func (dao *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
 
 	app, err := q.Where(m.ID.Eq(appID)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get app failed, err: %v", err)
+		return nil, err
 	}
 
 	return app, nil
