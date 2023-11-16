@@ -157,7 +157,7 @@ func (g *ResourceGetter) GetProjectInfo(ctx context.Context, projectId, projectC
 			if err != nil || projectResponse.Code != 0 {
 				blog.Errorf("get project from bcs project err. err:%v, message:%s, projectId:%s, projectCode:%s",
 					err, projectResponse.Message, projectId, projectCode)
-				return nil, err
+				return nil, fmt.Errorf("get project from bcs project err. err:%s", projectResponse.Message)
 			}
 			project = projectResponse.Data
 			g.cache.Set(projectId, project, 1*time.Hour)
@@ -213,7 +213,7 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context,
 			project, err := g.GetProjectInfo(ctx, cluster.ProjectID, "", pmCli)
 			if err != nil {
 				blog.Errorf("get project info err:%v", err)
-				return nil, err
+				continue
 			}
 			projectCode := ""
 			if project != nil {
@@ -451,17 +451,17 @@ func (g *ResourceGetter) GetK8sNamespaceList(ctx context.Context, clusterMeta *t
 			nsAnnotation := namespace.Data.Annotations
 			if projectCode, ok := nsAnnotation["io.tencent.bcs.projectcode"]; ok {
 				namespaceProjectCode = projectCode
+				project, err := g.GetProjectInfo(ctx, "", namespaceProjectCode, pmCli)
+				if err != nil {
+					blog.Errorf("get project info err:%v", err)
+				} else if project != nil {
+					namespaceBusinessID = project.BusinessID
+					namespaceProjectID = project.ProjectID
+				}
 			} else {
-				namespaceProjectCode = ""
-			}
-			project, err := g.GetProjectInfo(ctx, "", namespaceProjectCode, pmCli)
-			if err != nil {
-				blog.Errorf("get project info err:%v", err)
-				return namespaceList
-			}
-			if project != nil {
-				namespaceBusinessID = project.BusinessID
-				namespaceProjectID = project.ProjectID
+				namespaceProjectCode = clusterMeta.ProjectCode
+				namespaceBusinessID = clusterMeta.BusinessID
+				namespaceProjectID = clusterMeta.ProjectID
 			}
 		}
 		namespaceMeta := &types.NamespaceMeta{

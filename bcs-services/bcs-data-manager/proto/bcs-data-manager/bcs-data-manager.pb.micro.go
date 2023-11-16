@@ -129,6 +129,18 @@ func NewDataManagerEndpoints() []*api.Endpoint {
 			Body:    "*",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "DataManager.GetWorkloadRequestResult",
+			Path:    []string{"/datamanager/v1/request"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "DataManager.GetWorkloadOriginRequestResult",
+			Path:    []string{"/datamanager/v1/workload/request"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -149,6 +161,8 @@ type DataManagerService interface {
 	GetPowerTrading(ctx context.Context, in *GetPowerTradingDataRequest, opts ...client.CallOption) (*GetPowerTradingDataResponse, error)
 	GetCloudNativeWorkloadList(ctx context.Context, in *GetCloudNativeWorkloadListRequest, opts ...client.CallOption) (*GetCloudNativeWorkloadListResponse, error)
 	GetUserOperationDataList(ctx context.Context, in *GetUserOperationDataListRequest, opts ...client.CallOption) (*GetUserOperationDataListResponse, error)
+	GetWorkloadRequestResult(ctx context.Context, in *GetWorkloadRequestRecommendResultReq, opts ...client.CallOption) (*GetWorkloadRequestRecommendResultRsp, error)
+	GetWorkloadOriginRequestResult(ctx context.Context, in *GetWorkloadOriginRequestResultReq, opts ...client.CallOption) (*GetWorkloadOriginRequestResultRsp, error)
 }
 
 type dataManagerService struct {
@@ -303,6 +317,26 @@ func (c *dataManagerService) GetUserOperationDataList(ctx context.Context, in *G
 	return out, nil
 }
 
+func (c *dataManagerService) GetWorkloadRequestResult(ctx context.Context, in *GetWorkloadRequestRecommendResultReq, opts ...client.CallOption) (*GetWorkloadRequestRecommendResultRsp, error) {
+	req := c.c.NewRequest(c.name, "DataManager.GetWorkloadRequestResult", in)
+	out := new(GetWorkloadRequestRecommendResultRsp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataManagerService) GetWorkloadOriginRequestResult(ctx context.Context, in *GetWorkloadOriginRequestResultReq, opts ...client.CallOption) (*GetWorkloadOriginRequestResultRsp, error) {
+	req := c.c.NewRequest(c.name, "DataManager.GetWorkloadOriginRequestResult", in)
+	out := new(GetWorkloadOriginRequestResultRsp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for DataManager service
 
 type DataManagerHandler interface {
@@ -320,6 +354,8 @@ type DataManagerHandler interface {
 	GetPowerTrading(context.Context, *GetPowerTradingDataRequest, *GetPowerTradingDataResponse) error
 	GetCloudNativeWorkloadList(context.Context, *GetCloudNativeWorkloadListRequest, *GetCloudNativeWorkloadListResponse) error
 	GetUserOperationDataList(context.Context, *GetUserOperationDataListRequest, *GetUserOperationDataListResponse) error
+	GetWorkloadRequestResult(context.Context, *GetWorkloadRequestRecommendResultReq, *GetWorkloadRequestRecommendResultRsp) error
+	GetWorkloadOriginRequestResult(context.Context, *GetWorkloadOriginRequestResultReq, *GetWorkloadOriginRequestResultRsp) error
 }
 
 func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts ...server.HandlerOption) error {
@@ -338,6 +374,8 @@ func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts .
 		GetPowerTrading(ctx context.Context, in *GetPowerTradingDataRequest, out *GetPowerTradingDataResponse) error
 		GetCloudNativeWorkloadList(ctx context.Context, in *GetCloudNativeWorkloadListRequest, out *GetCloudNativeWorkloadListResponse) error
 		GetUserOperationDataList(ctx context.Context, in *GetUserOperationDataListRequest, out *GetUserOperationDataListResponse) error
+		GetWorkloadRequestResult(ctx context.Context, in *GetWorkloadRequestRecommendResultReq, out *GetWorkloadRequestRecommendResultRsp) error
+		GetWorkloadOriginRequestResult(ctx context.Context, in *GetWorkloadOriginRequestResultReq, out *GetWorkloadOriginRequestResultRsp) error
 	}
 	type DataManager struct {
 		dataManager
@@ -430,6 +468,18 @@ func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts .
 		Body:    "*",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "DataManager.GetWorkloadRequestResult",
+		Path:    []string{"/datamanager/v1/request"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "DataManager.GetWorkloadOriginRequestResult",
+		Path:    []string{"/datamanager/v1/workload/request"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&DataManager{h}, opts...))
 }
 
@@ -491,4 +541,12 @@ func (h *dataManagerHandler) GetCloudNativeWorkloadList(ctx context.Context, in 
 
 func (h *dataManagerHandler) GetUserOperationDataList(ctx context.Context, in *GetUserOperationDataListRequest, out *GetUserOperationDataListResponse) error {
 	return h.DataManagerHandler.GetUserOperationDataList(ctx, in, out)
+}
+
+func (h *dataManagerHandler) GetWorkloadRequestResult(ctx context.Context, in *GetWorkloadRequestRecommendResultReq, out *GetWorkloadRequestRecommendResultRsp) error {
+	return h.DataManagerHandler.GetWorkloadRequestResult(ctx, in, out)
+}
+
+func (h *dataManagerHandler) GetWorkloadOriginRequestResult(ctx context.Context, in *GetWorkloadOriginRequestResultReq, out *GetWorkloadOriginRequestResultRsp) error {
+	return h.DataManagerHandler.GetWorkloadOriginRequestResult(ctx, in, out)
 }

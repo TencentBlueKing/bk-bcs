@@ -152,3 +152,20 @@ func (s *ModelInterface) GetRawPodAutoscalerInfo(ctx context.Context, opts *type
 func (s *ModelInterface) GetCloudNativeWorkloadList(ctx context.Context, req *datamanager.GetCloudNativeWorkloadListRequest) (*datamanager.TEGMessage, error) {
 	return nil, ErrNotImplemented
 }
+
+// GetLatestWorkloadRequest is not implemented.
+func (s *ModelInterface) GetLatestWorkloadRequest(ctx context.Context,
+	req *datamanager.GetWorkloadRequestRecommendResultReq) (*datamanager.GetWorkloadRequestRecommendResultRsp, error) {
+	return nil, ErrNotImplemented
+}
+
+// CreateWorkloadOriginRequest is not implemented.
+func (s *ModelInterface) CreateWorkloadOriginRequest(ctx context.Context, result *types.WorkloadOriginRequestResult) error {
+	return ErrNotImplemented
+}
+
+// ListWorkloadOriginRequest is not implemented.
+func (s *ModelInterface) ListWorkloadOriginRequest(ctx context.Context,
+	req *datamanager.GetWorkloadOriginRequestResultReq) ([]*datamanager.WorkloadOriginRequestResult, error) {
+	return nil, ErrNotImplemented
+}

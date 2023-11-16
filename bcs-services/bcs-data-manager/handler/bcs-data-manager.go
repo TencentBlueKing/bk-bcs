@@ -501,3 +501,46 @@ func (e *BcsDataManager) GetUserOperationDataList(ctx context.Context,
 	prom.ReportAPIRequestMetric("GetUserOperationDataList", "grpc", prom.StatusOK, start)
 	return nil
 }
+
+
+func (e *BcsDataManager) GetWorkloadRequestResult(ctx context.Context, req *bcsdatamanager.GetWorkloadRequestRecommendResultReq,
+	rsp *bcsdatamanager.GetWorkloadRequestRecommendResultRsp) error {
+	blog.Infof("Received GetWorkloadRequestResult.Call request. cluster id: %s, namespace: %s, workloadType:%s"+
+		"workloadName:%s",
+		req.GetClusterID(), req.GetNamespace(), req.GetWorkloadType(), req.GetWorkloadName())
+	start := time.Now()
+	result, err := e.mongoModel.GetLatestWorkloadRequest(ctx, req)
+	if err != nil {
+		rsp.Message = fmt.Sprintf("get workloadRequestResult info error: %v", err)
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
+		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetWorkloadRequestResult", "grpc", prom.StatusErr, start)
+		return nil
+	}
+	rsp.Data = result.GetData()
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
+	prom.ReportAPIRequestMetric("GetWorkloadRequestResult", "grpc", prom.StatusOK, start)
+	return nil
+}
+
+func (e *BcsDataManager) GetWorkloadOriginRequestResult(ctx context.Context, req *bcsdatamanager.GetWorkloadOriginRequestResultReq,
+	rsp *bcsdatamanager.GetWorkloadOriginRequestResultRsp) error {
+	blog.Infof("Received GetWorkloadOriginRequestResult.Call request. projectID:%s, cluster id: %s, "+
+		"namespace: %s, workloadType:%s, workloadName:%s",
+		req.ProjectID, req.GetClusterID(), req.GetNamespace(), req.GetWorkloadType(), req.GetWorkloadName())
+	start := time.Now()
+	result, err := e.mongoModel.ListWorkloadOriginRequest(ctx, req)
+	if err != nil {
+		rsp.Message = fmt.Sprintf("GetWorkloadOriginRequestResult info error: %v", err)
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
+		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetWorkloadOriginRequestResult", "grpc", prom.StatusErr, start)
+		return nil
+	}
+	rsp.Data = result
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
+	prom.ReportAPIRequestMetric("GetWorkloadOriginRequestResult", "grpc", prom.StatusOK, start)
+	return nil
+}

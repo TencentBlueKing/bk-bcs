@@ -31,14 +31,15 @@ const (
 
 // extract type
 const (
-	ProjectType       = "project"
-	ClusterType       = "cluster"
-	NamespaceType     = "namespace"
-	WorkloadType      = "workload"
-	PublicType        = "public"
-	HPAType           = "HorizontalPodAutoscaler"
-	GPAType           = "GeneralPodAutoscaler"
-	PodAutoscalerType = "PodAutoscaler"
+	ProjectType            = "project"
+	ClusterType            = "cluster"
+	NamespaceType          = "namespace"
+	WorkloadType           = "workload"
+	PublicType             = "public"
+	HPAType                = "HorizontalPodAutoscaler"
+	GPAType                = "GeneralPodAutoscaler"
+	PodAutoscalerType      = "PodAutoscaler"
+	GetWorkloadRequestType = "getWorkloadRequest"
 )
 
 // extract dimension
@@ -54,13 +55,16 @@ const (
 // db table name
 const (
 	// DataTableNamePrefix db table prefix
-	DataTableNamePrefix    = "bcsdatamanager_"
-	ClusterTableName       = "cluster"
-	ProjectTableName       = "project"
-	NamespaceTableName     = "namespace"
-	WorkloadTableName      = "workload"
-	PublicTableName        = "public"
-	PodAutoscalerTableName = "podAutoscaler"
+	DataTableNamePrefix      = "bcsdatamanager_"
+	ClusterTableName         = "cluster"
+	ProjectTableName         = "project"
+	NamespaceTableName       = "namespace"
+	WorkloadTableName        = "workload"
+	PublicTableName          = "public"
+	PodAutoscalerTableName   = "podAutoscaler"
+	WorkloadRequestTableName = "request_workload"
+	PredictTableNamePrefix   = "bcs_predict_"
+	WorkloadInfoTableName    = "workload_info"
 )
 
 // cluster type
@@ -481,4 +485,42 @@ type MemoryMetrics struct {
 	MemoryLimit   int64
 	MemoryUsage   float64
 	MemoryUsed    int64
+}
+
+// BKBaseRequestRecommendResult define workload cpu/memory from bkbase
+type BKBaseRequestRecommendResult struct {
+	Metric           string    `json:"metric" bson:"metric"`
+	BCSClusterID     string    `json:"bcs_cluster_id" bson:"bcs_cluster_id"`
+	Namespace        string    `json:"namespace" bson:"namespace"`
+	WorkloadKind     string    `json:"workload_kind" bson:"workload_kind"`
+	WorkloadName     string    `json:"workload_name" bson:"workload_name"`
+	ContainerName    string    `json:"container_name" bson:"container_name"`
+	P90              float64   `json:"p90" bson:"p90"`
+	P99              float64   `json:"p99" bson:"p99"`
+	MaxVal           float64   `json:"max_val" bson:"max_val"`
+	TSCnt            int64     `json:"ts_cnt" bson:"ts_cnt"`
+	DTEventTime      string    `json:"dtEventTime" bson:"dt_event_time"`
+	DTEventTimeStamp int64     `json:"dtEventTimeStamp" bson:"dt_event_time_stamp"`
+	TheDate          int64     `json:"thedate" bson:"the_date"`
+	LocalTime        string    `json:"localTime" bson:"local_time"`
+	CreateAt         time.Time `json:"createAt" json:"create_at"`
+}
+
+// WorkloadOriginRequestContainer container request limit
+type WorkloadOriginRequestContainer struct {
+	Container string `json:"container" bson:"container"`
+	Request   string `json:"request" bson:"request"`
+	Limit     string `json:"limit" bson:"limit"`
+}
+
+// WorkloadOriginRequestResult struct
+type WorkloadOriginRequestResult struct {
+	CreateTime   time.Time                                        `json:"createTime" bson:"create_time"`
+	ProjectID    string                                           `json:"projectID" bson:"project_id"`
+	ClusterID    string                                           `json:"clusterID" bson:"cluster_id"`
+	Namespace    string                                           `json:"namespace" bson:"namespace"`
+	WorkloadType string                                           `json:"workloadType" bson:"workload_type"`
+	WorkloadName string                                           `json:"workloadName" bson:"workload_name"`
+	Cpu          []*bcsdatamanager.WorkloadOriginRequestContainer `json:"cpu" bson:"cpu"`
+	Memory       []*bcsdatamanager.WorkloadOriginRequestContainer `json:"memory" bson:"memory"`
 }

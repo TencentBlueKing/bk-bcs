@@ -71,4 +71,10 @@ type Server interface {
 		req *datamanager.GetCloudNativeWorkloadListRequest) (*datamanager.TEGMessage, error)
 	GetUserOperationDataList(ctx context.Context,
 		req *datamanager.GetUserOperationDataListRequest) ([]*structpb.Struct, int64, error)
+	GetLatestWorkloadRequest(ctx context.Context,
+		req *datamanager.GetWorkloadRequestRecommendResultReq) (*datamanager.GetWorkloadRequestRecommendResultRsp, error)
+
+	CreateWorkloadOriginRequest(ctx context.Context, result *types.WorkloadOriginRequestResult) error
+	ListWorkloadOriginRequest(ctx context.Context,
+		req *datamanager.GetWorkloadOriginRequestResultReq) ([]*datamanager.WorkloadOriginRequestResult, error)
 }

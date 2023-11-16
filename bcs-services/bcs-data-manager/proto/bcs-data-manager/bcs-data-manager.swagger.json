@@ -703,6 +703,76 @@
         ]
       }
     },
+    "/datamanager/v1/request": {
+      "get": {
+        "summary": "查询某个workload request推荐",
+        "description": "查询某个request推荐",
+        "operationId": "DataManager_GetWorkloadRequestResult",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetWorkloadRequestRecommendResultRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "namespace. 命名空间名字",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workloadType",
+            "description": "workloadType. 模块类型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workloadName",
+            "description": "workloadName. 模块名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 页面大小",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
     "/datamanager/v1/workload": {
       "get": {
         "summary": "查询workload",
@@ -773,6 +843,83 @@
             "required": false,
             "type": "string",
             "format": "int64"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v1/workload/request": {
+      "get": {
+        "summary": "查询某个workload request",
+        "description": "查询某个workload request",
+        "operationId": "DataManager_GetWorkloadOriginRequestResult",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetWorkloadOriginRequestResultRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "namespace. 命名空间名字",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workloadType",
+            "description": "workloadType. 模块类型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workloadName",
+            "description": "workloadName. 模块名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 页面大小",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. 项目id",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1756,6 +1903,68 @@
         "data"
       ]
     },
+    "datamanagerGetWorkloadOriginRequestResultRsp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadOriginRequestResult"
+          },
+          "description": "模块列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询模块request返回",
+      "title": "GetWorkloadOriginRequestResultRsp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetWorkloadRequestRecommendResultRsp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadRequestRecommendResult"
+          },
+          "description": "模块列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询模块request返回",
+      "title": "GetWorkloadRequestRecommendResultRsp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
     "datamanagerNamespace": {
       "type": "object",
       "properties": {
@@ -2572,6 +2781,147 @@
           "type": "string",
           "description": "内存限制量",
           "title": "memoryLimit"
+        }
+      }
+    },
+    "datamanagerWorkloadOriginRequestContainer": {
+      "type": "object",
+      "properties": {
+        "container": {
+          "type": "string",
+          "description": "容器名字",
+          "title": "container"
+        },
+        "request": {
+          "type": "string",
+          "description": "request",
+          "title": "request"
+        },
+        "limit": {
+          "type": "string",
+          "description": "limit",
+          "title": "limit"
+        }
+      }
+    },
+    "datamanagerWorkloadOriginRequestResult": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名字",
+          "title": "namespace"
+        },
+        "workloadType": {
+          "type": "string",
+          "description": "模块类型",
+          "title": "workloadType"
+        },
+        "workloadName": {
+          "type": "string",
+          "description": "模块名称",
+          "title": "workloadName"
+        },
+        "cpu": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadOriginRequestContainer"
+          },
+          "description": "cpu数据",
+          "title": "cpu"
+        },
+        "memory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadOriginRequestContainer"
+          },
+          "description": "memory数据",
+          "title": "memory"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        }
+      }
+    },
+    "datamanagerWorkloadRequestRecommendContainer": {
+      "type": "object",
+      "properties": {
+        "container": {
+          "type": "string",
+          "description": "容器名字",
+          "title": "container"
+        },
+        "maxVal": {
+          "type": "number",
+          "format": "double",
+          "description": "最大值",
+          "title": "maxVal"
+        },
+        "p90": {
+          "type": "number",
+          "format": "double",
+          "description": "p90",
+          "title": "p90"
+        },
+        "p99": {
+          "type": "number",
+          "format": "double",
+          "description": "p99",
+          "title": "p99"
+        }
+      }
+    },
+    "datamanagerWorkloadRequestRecommendResult": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名字",
+          "title": "namespace"
+        },
+        "workloadType": {
+          "type": "string",
+          "description": "模块类型",
+          "title": "workloadType"
+        },
+        "workloadName": {
+          "type": "string",
+          "description": "模块名称",
+          "title": "workloadName"
+        },
+        "cpu": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadRequestRecommendContainer"
+          },
+          "description": "cpu数据",
+          "title": "cpu"
+        },
+        "memory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadRequestRecommendContainer"
+          },
+          "description": "memory数据",
+          "title": "memory"
+        },
+        "dtEventTimeStamp": {
+          "type": "string",
+          "format": "int64",
+          "description": "dtEventTimeStamp",
+          "title": "dtEventTimeStamp"
         }
       }
     },
