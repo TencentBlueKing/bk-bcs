@@ -97,7 +97,7 @@ const handleDelete = async () => {
   emits('deleted', props.pkg.id);
   Message({
     theme: 'success',
-    message: '删除成功',
+    message: '删除配置模板套餐成功',
   });
   pending.value = false;
 };

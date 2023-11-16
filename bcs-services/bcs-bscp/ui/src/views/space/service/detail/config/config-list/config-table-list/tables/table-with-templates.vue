@@ -553,6 +553,10 @@ const handleDel = (config: IConfigTableItem) => {
 
 const handleDeleteConfigConfirm = async () => {
   await deleteServiceConfigItem(deleteConfig.value!.id, props.bkBizId, props.appId);
+  Message({
+    theme: 'success',
+    message: '删除配置文件成功',
+  });
   await getCommonConfigList();
   emits('deleteConfig');
   tableGroupsData.value = transListToTableData();
