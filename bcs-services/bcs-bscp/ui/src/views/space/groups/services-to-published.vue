@@ -2,11 +2,7 @@
   <bk-sideslider :title="`${name}-上线服务`" :width="640" :is-show="props.show" @closed="handleClose">
     <div class="services-content">
       <div class="search-area">
-        <bk-input placeholder="服务名称/服务版本">
-          <template #suffix>
-            <Search class="search-icon" />
-          </template>
-        </bk-input>
+        <SearchInput v-model="searchStr" placeholder="服务名称/服务版本" :width="320" @search="handleSearch" />
       </div>
       <bk-loading class="loading-wrapper" :loading="loading">
         <bk-table
@@ -37,10 +33,11 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { Search } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../store/global';
 import { IGroupBindService } from '../../../../types/group';
 import { getGroupReleasedApps } from '../../../api/group';
+import { ICommonQuery } from '../../../../types/index';
+import SearchInput from '../../../components/search-input.vue';
 
 const router = useRouter();
 
@@ -56,6 +53,7 @@ const emits = defineEmits(['update:show']);
 
 const loading = ref(true);
 const list = ref<IGroupBindService[]>([]);
+const searchStr = ref('')
 const pagination = ref({
   count: 0,
   limit: 10,
@@ -73,15 +71,24 @@ watch(
 
 const loadServicesList = async () => {
   loading.value = true;
-  const params = {
+  const params: ICommonQuery = {
     start: pagination.value.limit * (pagination.value.current - 1),
     limit: pagination.value.limit,
   };
+  if (searchStr.value) {
+    params.search_key = searchStr.value
+  }
   const res = await getGroupReleasedApps(spaceId.value, props.id, params);
   list.value = res.details;
   pagination.value.count = res.count;
   loading.value = false;
 };
+
+const handleSearch = () => {
+  pagination.value.current = 1
+  pagination.value.count = 0
+  loadServicesList()
+}
 
 const getHref = (service: IGroupBindService) => {
   const { href } = router.resolve({
@@ -110,17 +117,9 @@ const handleClose = () => {
   height: calc(100% - 48px);
 }
 .search-area {
+  display: flex;
+  justify-content: flex-end;
   margin-bottom: 16px;
-  text-align: right;
-  .bk-input {
-    width: 320px;
-  }
-  .search-icon {
-    padding-right: 10px;
-    color: #979ba5;
-    font-size: 14px;
-    background: #ffffff;
-  }
 }
 .link-btn {
   font-size: 12px;

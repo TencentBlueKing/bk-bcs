@@ -1,6 +1,6 @@
 import axios from 'axios';
 import BkMessage from 'bkui-vue/lib/message';
-import  pinia  from '../store/index';
+import pinia  from '../store/index';
 import useUserStore from '../store/user';
 import useGlobalStore from '../store/global';
 
@@ -37,14 +37,17 @@ http.interceptors.response.use(
           state.showLoginModal = true;
         });
         return;
-      } if (response.status === 403) {
+      } else if (response.status === 403) {
         globalStore.$patch((state) => {
           state.showPermApplyPage = true;
           state.applyPermUrl = response.data.error.data.apply_url;
           state.applyPermResource = response.data.error.data.resources;
         });
         return response.data.error;
+      } else if (response.status === 404) {
+        return Promise.reject(error);
       }
+
       if (response.data.error) {
         message = response.data.error.message;
       } else if (response.data.message) {
