@@ -143,7 +143,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 	var kvs []*pbkv.Kv
 
 	for _, detail := range details {
-		kvType, value, e := s.getKv(kt, req.BizId, req.AppId, detail.Spec.Version, req.Key)
+		kvType, value, e := s.getKv(kt, req.BizId, req.AppId, detail.Spec.Version, detail.Spec.Key)
 		if e != nil {
 			logs.Errorf("list kv failed, err: %v, rid: %s", e, kt.Rid)
 			return nil, e
