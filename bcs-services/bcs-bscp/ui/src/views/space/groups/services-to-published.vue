@@ -21,6 +21,9 @@
               }}</bk-link>
             </template>
           </bk-table-column>
+          <template #empty>
+            <table-empty :is-search-empty="isSearchEmpty" @clear="clearSearchStr" />
+          </template>
         </bk-table>
       </bk-loading>
     </div>
@@ -38,6 +41,7 @@ import { IGroupBindService } from '../../../../types/group';
 import { getGroupReleasedApps } from '../../../api/group';
 import { ICommonQuery } from '../../../../types/index';
 import SearchInput from '../../../components/search-input.vue';
+import tableEmpty from '../../../components/table/table-empty.vue';
 
 const router = useRouter();
 
@@ -53,7 +57,8 @@ const emits = defineEmits(['update:show']);
 
 const loading = ref(true);
 const list = ref<IGroupBindService[]>([]);
-const searchStr = ref('')
+const isSearchEmpty = ref(false);
+const searchStr = ref('');
 const pagination = ref({
   count: 0,
   limit: 10,
@@ -65,6 +70,7 @@ watch(
   (val) => {
     if (val) {
       loadServicesList();
+      isSearchEmpty.value = false;
     }
   },
 );
@@ -76,7 +82,7 @@ const loadServicesList = async () => {
     limit: pagination.value.limit,
   };
   if (searchStr.value) {
-    params.search_key = searchStr.value
+    params.search_key = searchStr.value;
   }
   const res = await getGroupReleasedApps(spaceId.value, props.id, params);
   list.value = res.details;
@@ -85,10 +91,17 @@ const loadServicesList = async () => {
 };
 
 const handleSearch = () => {
-  pagination.value.current = 1
-  pagination.value.count = 0
-  loadServicesList()
-}
+  isSearchEmpty.value = true;
+  pagination.value.current = 1;
+  pagination.value.count = 0;
+  loadServicesList();
+};
+
+const clearSearchStr = () => {
+  isSearchEmpty.value = false;
+  searchStr.value = '';
+  loadServicesList();
+};
 
 const getHref = (service: IGroupBindService) => {
   const { href } = router.resolve({
