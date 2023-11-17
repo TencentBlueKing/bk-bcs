@@ -122,30 +122,34 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column label="操作" width="128">
+          <bk-table-column label="操作" width="160">
             <template #default="{ row, index }">
               <template v-if="index === 0 && isCreateCredential">
                 <bk-button text theme="primary" @click="handleCreateCredential">创建</bk-button>
-                <bk-button text theme="primary" style="margin-left: 8px" @click="handleCancelCreateCredential"
-                  >取消</bk-button
-                >
+                <bk-button
+                  text
+                  theme="primary"
+                  style="margin-left: 8px"
+                  @click="handleCancelCreateCredential">
+                  取消
+                </bk-button>
               </template>
               <template v-if="row.spec">
                 <bk-button text theme="primary" @click="handleOpenAssociate(row)">
                   <span :class="{ redPoint: newCredentials[0] === row.id }">关联配置文件</span>
                 </bk-button>
-                <bk-button
-                  v-cursor="{ active: !hasManagePerm }"
-                  style="margin-left: 8px"
-                  text
-                  theme="primary"
-                  :class="{ 'bk-text-with-no-perm': !hasManagePerm }"
-                  :disabled="hasManagePerm && row.spec.enable"
-                  v-bk-tooltips="deleteTooltip(hasManagePerm && row.spec.enable)"
-                  @click="handleDeleteConfirm(row)"
-                >
-                  删除
-                </bk-button>
+                <div class="delete-btn" v-bk-tooltips="deleteTooltip(hasManagePerm && row.spec.enable)">
+                  <bk-button
+                    v-cursor="{ active: !hasManagePerm }"
+                    style="margin-left: 8px"
+                    text
+                    theme="primary"
+                    :class="{ 'bk-text-with-no-perm': !hasManagePerm }"
+                    :disabled="hasManagePerm && row.spec.enable"
+                    @click="handleDeleteConfirm(row)">
+                    删除
+                  </bk-button>
+                </div>
               </template>
             </template>
           </bk-table-column>
@@ -585,6 +589,9 @@ const goToIAM = () => {
     tbody td .cell {
       overflow: visible !important;
     }
+  }
+  .delete-btn {
+    display: inline-block;
   }
 }
 .credential-text {
