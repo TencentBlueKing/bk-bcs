@@ -23,6 +23,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"bscp.io/pkg/logs"
+	pberror "bscp.io/pkg/protocol/core/error"
 )
 
 var (
@@ -218,6 +219,15 @@ func BadRequest(err error) render.Renderer {
 func GRPCErr(err error) render.Renderer {
 	s := status.Convert(err)
 	code := grpcCodeMap[s.Code()]
+
+	for _, detail := range s.Details() {
+		switch v := detail.(type) {
+		case *pberror.Error:
+			code = v.Code
+		default:
+		}
+	}
+
 	if code == "" {
 		code = "INVALID_REQUEST"
 	}

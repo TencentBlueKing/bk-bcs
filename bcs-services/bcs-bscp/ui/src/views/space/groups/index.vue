@@ -89,22 +89,24 @@
             <bk-table-column label="操作" :width="120">
               <template #default="{ row }">
                 <div v-if="!row.IS_CATEORY_ROW" class="action-btns">
-                  <bk-button
-                    text
-                    theme="primary"
-                    :disabled="row.released_apps_num > 0"
-                    @click="openEditGroupDialog(row)"
-                    v-bk-tooltips="handleTooltip(row.released_apps_num, '编辑')"
-                    >编辑分组</bk-button
-                  >
-                  <bk-button
-                    text
-                    theme="primary"
-                    :disabled="row.released_apps_num > 0"
-                    @click="handleDeleteGroup(row)"
-                    v-bk-tooltips="handleTooltip(row.released_apps_num, '删除')"
-                    >删除</bk-button
-                  >
+                  <div v-bk-tooltips="handleTooltip(row.released_apps_num, '编辑')" class="btn-item">
+                    <bk-button
+                      text
+                      theme="primary"
+                      :disabled="row.released_apps_num > 0"
+                      @click="openEditGroupDialog(row)">
+                      编辑分组
+                    </bk-button>
+                  </div>
+                  <div v-bk-tooltips="handleTooltip(row.released_apps_num, '删除')" class="btn-item">
+                    <bk-button
+                      text
+                      theme="primary"
+                      :disabled="row.released_apps_num > 0"
+                      @click="handleDeleteGroup(row)">
+                      删除
+                    </bk-button>
+                  </div>
                 </div>
               </template>
             </bk-table-column>
@@ -158,6 +160,7 @@ import ServicesToPublished from './services-to-published.vue';
 import tableEmpty from '../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
 import { debounce } from 'lodash';
+import { Message } from 'bkui-vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -351,6 +354,10 @@ const handleDeleteGroup = (group: IGroupItem) => {
 
 const handleDeleteGroupConfirm = async () => {
   await deleteGroup(spaceId.value, deleteGroupItem.value!.id);
+  Message({
+    theme: 'success',
+    message: '删除分组成功',
+  });
   if (tableData.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current = pagination.value.current - 1;
   }
@@ -382,7 +389,7 @@ const handlePageLimitChange = (val: number) => {
 const handleTooltip = (flag: boolean, info: string) => {
   if (flag) {
     return {
-      content: `分组已上线,不能${info}`,
+      content: `分组已上线，不能${info}`,
       placement: 'top',
     };
   }
@@ -488,7 +495,10 @@ const goGroupDoc = () => window.open(BSCP_CONFIG.group_doc);
   }
 }
 .action-btns {
-  .bk-button:not(:last-of-type) {
+  .btn-item {
+    display: inline-block;
+  }
+  .btn-item:not(:last-of-type) {
     margin-right: 8px;
   }
 }

@@ -18,6 +18,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
@@ -27,6 +30,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbapp "bscp.io/pkg/protocol/core/app"
 	pbbase "bscp.io/pkg/protocol/core/base"
+	pberror "bscp.io/pkg/protocol/core/error"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/thirdparty/esb/cmdb"
 	"bscp.io/pkg/tools"
@@ -192,6 +196,14 @@ func (s *Service) GetAppByID(ctx context.Context, req *pbds.GetAppByIDReq) (*pba
 	app, err := s.dao.App().GetByID(grpcKit, req.GetAppId())
 	if err != nil {
 		logs.Errorf("get app by id failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			st := status.Newf(codes.NotFound, "app %d not found", req.AppId)
+			st, err = st.WithDetails(&pberror.Error{Code: errf.AppNotExists})
+			if err != nil {
+				return nil, err
+			}
+			return nil, st.Err()
+		}
 		return nil, errors.Wrapf(err, "query app by id %d", req.GetAppId())
 	}
 

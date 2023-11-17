@@ -18,7 +18,7 @@
         <AngleDoubleRightLine v-if="isAppsPanelOpen" class="arrow-icon" />
         <AngleDoubleLeftLine v-else class="arrow-icon" />
       </div>
-      <UsePackageApps @toggle-open="isAppsPanelOpen = $event" />
+      <UsePackageApps :tpl-counts="templateCounts" @toggle-open="isAppsPanelOpen = $event" />
     </div>
   </div>
 </template>
@@ -36,6 +36,7 @@ import ConfigWithoutPackageTable from './tables/config-without-package.vue';
 const { packageList, currentPkg } = storeToRefs(useTemplateStore());
 
 const isAppsPanelOpen = ref(true);
+const templateCounts = ref(0)
 
 // 当前选中的套餐菜单项是否为实际的套餐
 const isPackage = computed(() => typeof currentPkg.value === 'number');
@@ -65,9 +66,11 @@ const headerInfo = computed(() => {
       memo = pkgDetail.spec.memo;
       isPublic = pkgDetail.spec.public;
       primary_name = pkgDetail.spec.name;
+      templateCounts.value = pkgDetail.spec.template_ids.length
     }
   } else {
     name = PACKAGE_MENU_OTHER_TYPE_MAP[currentPkg.value as keyof typeof PACKAGE_MENU_OTHER_TYPE_MAP];
+    templateCounts.value = 0
   }
   return { name, memo, isPublic, primary_name };
 });

@@ -47,7 +47,7 @@ service Config {
     }
     rpc GetApp(GetAppReq) returns (pbapp.App) {
         option (google.api.http) = {
-            get : "/api/v1/config/get/app/app/app_id/{app_id}/biz_id/{biz_id}"
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}"
         };
     }
     rpc GetAppByName(GetAppByNameReq) returns (pbapp.App) {
@@ -2060,10 +2060,11 @@ message ListAppGroupsResp {
 }
 
 message ListGroupReleasedAppsReq {
-    uint32 biz_id   = 1;
-    uint32 group_id = 2;
-    uint32 start    = 3;
-    uint32 limit    = 4;
+    uint32 biz_id     = 1;
+    uint32 group_id   = 2;
+    string search_key = 3;
+    uint32 start      = 4;
+    uint32 limit      = 5;
 }
 
 message ListGroupReleasedAppsResp {

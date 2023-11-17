@@ -123,7 +123,7 @@ func BasicDetails(perm *IamPermission) []meta.BasicDetail {
 					result = append(result, meta.BasicDetail{
 						TypeName:     resourceType.TypeName,
 						ActionName:   action.Name,
-						ResourceName: i.Id,
+						ResourceName: i.Name,
 					})
 				}
 			}

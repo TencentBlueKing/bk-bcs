@@ -271,13 +271,14 @@ func (s *Service) ListGroupReleasedApps(ctx context.Context, req *pbcs.ListGroup
 		return nil, err
 	}
 
-	lReq := &pbds.ListGroupRleasesdAppsReq{
-		BizId:   req.BizId,
-		GroupId: req.GroupId,
-		Start:   req.Start,
-		Limit:   req.Limit,
+	lReq := &pbds.ListGroupReleasedAppsReq{
+		BizId:     req.BizId,
+		GroupId:   req.GroupId,
+		SearchKey: req.SearchKey,
+		Start:     req.Start,
+		Limit:     req.Limit,
 	}
-	lResp, err := s.client.DS.ListGroupRleasesdApps(grpcKit.RpcCtx(), lReq)
+	lResp, err := s.client.DS.ListGroupReleasedApps(grpcKit.RpcCtx(), lReq)
 	if err != nil {
 		logs.Errorf("list group released apps failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err

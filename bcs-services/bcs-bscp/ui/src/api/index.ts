@@ -52,7 +52,7 @@ export const getAppsConfigData = (biz_id: string, app_id: number[]) => http.post
  * @param app_id 服务ID
  * @returns
  */
-export const getAppDetail = (biz_id: string, app_id: number) => http.get(`config/get/app/app/app_id/${app_id}/biz_id/${biz_id}`).then(resp => resp.data);
+export const getAppDetail = (biz_id: string, app_id: number) => http.get(`config/biz/${biz_id}/apps/${app_id}`).then(resp => resp.data);
 
 /**
  * 删除服务
