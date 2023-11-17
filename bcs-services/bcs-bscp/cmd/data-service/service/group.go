@@ -403,25 +403,26 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbds.DeleteGroupReq) (*p
 	return new(pbbase.EmptyResp), nil
 }
 
-// ListGroupRleasesdApps list group's published apps and their release.
-func (s *Service) ListGroupRleasesdApps(ctx context.Context, req *pbds.ListGroupRleasesdAppsReq) (
-	*pbds.ListGroupRleasesdAppsResp, error) {
+// ListGroupReleasedApps list group's published apps and their release.
+func (s *Service) ListGroupReleasedApps(ctx context.Context, req *pbds.ListGroupReleasedAppsReq) (
+	*pbds.ListGroupReleasedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	resp, err := s.dao.Group().ListGroupRleasesdApps(kt, &types.ListGroupRleasesdAppsOption{
-		BizID:   req.BizId,
-		GroupID: req.GroupId,
-		Start:   req.Start,
-		Limit:   req.Limit,
+	resp, err := s.dao.Group().ListGroupReleasedApps(kt, &types.ListGroupReleasedAppsOption{
+		BizID:     req.BizId,
+		GroupID:   req.GroupId,
+		SearchKey: req.SearchKey,
+		Start:     req.Start,
+		Limit:     req.Limit,
 	})
 	if err != nil {
 		logs.Errorf("list groups published apps failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
-	data := make([]*pbds.ListGroupRleasesdAppsResp_ListGroupReleasedAppsData, len(resp.Details))
+	data := make([]*pbds.ListGroupReleasedAppsResp_ListGroupReleasedAppsData, len(resp.Details))
 	for idx, detail := range resp.Details {
-		data[idx] = &pbds.ListGroupRleasesdAppsResp_ListGroupReleasedAppsData{
+		data[idx] = &pbds.ListGroupReleasedAppsResp_ListGroupReleasedAppsData{
 			AppId:       detail.AppID,
 			AppName:     detail.AppName,
 			ReleaseId:   detail.ReleaseID,
@@ -430,7 +431,7 @@ func (s *Service) ListGroupRleasesdApps(ctx context.Context, req *pbds.ListGroup
 		}
 	}
 
-	return &pbds.ListGroupRleasesdAppsResp{
+	return &pbds.ListGroupReleasedAppsResp{
 		Count:   resp.Count,
 		Details: data,
 	}, nil

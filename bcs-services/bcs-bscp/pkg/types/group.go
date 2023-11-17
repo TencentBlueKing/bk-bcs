@@ -60,16 +60,17 @@ type ListGroupDetails struct {
 	Details []*table.Group `json:"details"`
 }
 
-// ListGroupRleasesdAppsOption defines options to list group's published apps and their release details.
-type ListGroupRleasesdAppsOption struct {
-	BizID   uint32 `json:"biz_id"`
-	GroupID uint32 `json:"group_id"`
-	Start   uint32 `json:"start"`
-	Limit   uint32 `json:"limit"`
+// ListGroupReleasedAppsOption defines options to list group's published apps and their release details.
+type ListGroupReleasedAppsOption struct {
+	BizID     uint32 `json:"biz_id"`
+	GroupID   uint32 `json:"group_id"`
+	SearchKey string `json:"search_key"`
+	Start     uint32 `json:"start"`
+	Limit     uint32 `json:"limit"`
 }
 
 // Validate the list group's published apps options
-func (opt *ListGroupRleasesdAppsOption) Validate() error {
+func (opt *ListGroupReleasedAppsOption) Validate() error {
 	if opt.BizID == 0 {
 		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
 	}
@@ -84,8 +85,8 @@ func (opt *ListGroupRleasesdAppsOption) Validate() error {
 	return nil
 }
 
-// ListGroupRleasesdAppsData defines the response detail data of requested ListGroupRleasesdAppsOption.
-type ListGroupRleasesdAppsData struct {
+// ListGroupReleasedAppsData defines the response detail data of requested ListGroupReleasedAppsOption.
+type ListGroupReleasedAppsData struct {
 	AppID       uint32 `gorm:"column:app_id" json:"app_id"`
 	AppName     string `gorm:"column:app_name" json:"app_name"`
 	ReleaseID   uint32 `gorm:"column:release_id" json:"release_id"`
@@ -93,8 +94,8 @@ type ListGroupRleasesdAppsData struct {
 	Edited      bool   `gorm:"column:edited" json:"edited"`
 }
 
-// ListGroupRleasesdAppsDetails defines the response details of requested ListGroupRleasesdAppsOption.
-type ListGroupRleasesdAppsDetails struct {
+// ListGroupReleasedAppsDetails defines the response details of requested ListGroupReleasedAppsOption.
+type ListGroupReleasedAppsDetails struct {
 	Count   uint32                       `json:"count"`
-	Details []*ListGroupRleasesdAppsData `json:"details"`
+	Details []*ListGroupReleasedAppsData `json:"details"`
 }

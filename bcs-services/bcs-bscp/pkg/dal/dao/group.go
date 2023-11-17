@@ -38,9 +38,9 @@ type Group interface {
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, group *table.Group) error
 	// ListAppGroups list all the groups of the app.
 	ListAppGroups(kit *kit.Kit, bizID, appID uint32) ([]*table.Group, error)
-	// ListGroupRleasesdApps list all the released apps of the group.
-	ListGroupRleasesdApps(kit *kit.Kit, opts *types.ListGroupRleasesdAppsOption) (
-		*types.ListGroupRleasesdAppsDetails, error)
+	// ListGroupReleasedApps list all the released apps of the group.
+	ListGroupReleasedApps(kit *kit.Kit, opts *types.ListGroupReleasedAppsOption) (
+		*types.ListGroupReleasedAppsDetails, error)
 }
 
 var _ Group = new(groupDao)
@@ -198,9 +198,9 @@ func (dao *groupDao) ListAppGroups(kit *kit.Kit, bizID, appID uint32) ([]*table.
 		Find()
 }
 
-// ListGroupRleasesdApps list group released apps and their latest release info.
-func (dao *groupDao) ListGroupRleasesdApps(kit *kit.Kit, opts *types.ListGroupRleasesdAppsOption) (
-	*types.ListGroupRleasesdAppsDetails, error) {
+// ListGroupReleasedApps list group released apps and their latest release info.
+func (dao *groupDao) ListGroupReleasedApps(kit *kit.Kit, opts *types.ListGroupReleasedAppsOption) (
+	*types.ListGroupReleasedAppsDetails, error) {
 	if opts == nil {
 		return nil, errf.New(errf.InvalidParameter, "list group released apps options null")
 	}
@@ -209,22 +209,36 @@ func (dao *groupDao) ListGroupRleasesdApps(kit *kit.Kit, opts *types.ListGroupRl
 	}
 
 	a := dao.genQ.App
+	aq := a.WithContext(kit.Ctx)
 	r := dao.genQ.Release
 	g := dao.genQ.ReleasedGroup
 
-	list := make([]*types.ListGroupRleasesdAppsData, 0)
+	list := make([]*types.ListGroupReleasedAppsData, 0)
 
-	count, err := a.WithContext(kit.Ctx).
-		Select(a.ID.As("app_id"), a.Name.As("app_name"), r.ID.As("release_id"), r.Name.As("release_name"), g.Edited).
-		Join(r, a.ID.EqCol(r.AppID)).Join(g, r.ID.EqCol(g.ReleaseID), a.ID.EqCol(g.AppID)).
-		Where(g.GroupID.Eq(opts.GroupID), a.BizID.Eq(opts.BizID), r.BizID.Eq(opts.BizID), g.BizID.Eq(opts.BizID)).
-		ScanByPage(&list, int(opts.Start), int(opts.Limit))
+	var count int64
+	var err error
+
+	if opts.SearchKey == "" {
+		count, err = a.WithContext(kit.Ctx).
+			Select(a.ID.As("app_id"), a.Name.As("app_name"), r.ID.As("release_id"), r.Name.As("release_name"), g.Edited).
+			Join(r, a.ID.EqCol(r.AppID)).Join(g, r.ID.EqCol(g.ReleaseID), a.ID.EqCol(g.AppID)).
+			Where(g.GroupID.Eq(opts.GroupID), a.BizID.Eq(opts.BizID), r.BizID.Eq(opts.BizID), g.BizID.Eq(opts.BizID)).
+			ScanByPage(&list, int(opts.Start), int(opts.Limit))
+	} else {
+		searcyKey := fmt.Sprintf("%%%s%%", opts.SearchKey)
+		count, err = a.WithContext(kit.Ctx).
+			Select(a.ID.As("app_id"), a.Name.As("app_name"), r.ID.As("release_id"), r.Name.As("release_name"), g.Edited).
+			Join(r, a.ID.EqCol(r.AppID)).Join(g, r.ID.EqCol(g.ReleaseID), a.ID.EqCol(g.AppID)).
+			Where(g.GroupID.Eq(opts.GroupID), a.BizID.Eq(opts.BizID), r.BizID.Eq(opts.BizID), g.BizID.Eq(opts.BizID)).
+			Where(aq.Where(a.Name.Like(searcyKey)).Or(r.Name.Like(searcyKey))).
+			ScanByPage(&list, int(opts.Start), int(opts.Limit))
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.ListGroupRleasesdAppsDetails{
+	return &types.ListGroupReleasedAppsDetails{
 		Count:   uint32(count),
 		Details: list,
 	}, nil
