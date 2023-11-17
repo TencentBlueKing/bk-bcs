@@ -25,6 +25,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { AngleDoubleRight } from 'bkui-vue/lib/icon';
+import BkMessage from 'bkui-vue/lib/message';
 import useServiceStore from '../../../../store/service';
 import useConfigStore from '../../../../store/config';
 import { GET_UNNAMED_VERSION_DATA } from '../../../../constants/config';
@@ -32,6 +33,7 @@ import { permissionCheck, getAppDetail } from '../../../../api';
 import ServiceSelector from './components/service-selector.vue';
 import DetailHeader from './components/detail-header.vue';
 import VersionListAside from './config/version-list-aside/index.vue';
+import { AxiosError } from 'axios';
 
 const route = useRoute();
 const router = useRouter();
@@ -98,7 +100,13 @@ const getAppData = async () => {
     });
     appDataLoading.value = false;
   } catch (e) {
-    console.error(e);
+    if ((e as AxiosError).response?.status === 404) {
+      router.push({ name: 'service-all' })
+      BkMessage({
+        theme: 'error',
+        message: '访问的服务不存在，请选择其它服务'
+      })
+    }
   }
 };
 
