@@ -11479,19 +11479,20 @@ func (x *CountGroupsReleasedAppsResp) GetData() []*CountGroupsReleasedAppsResp_C
 	return nil
 }
 
-type ListGroupRleasesdAppsReq struct {
+type ListGroupReleasedAppsReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BizId   uint32 `protobuf:"varint,1,opt,name=biz_id,json=bizId,proto3" json:"biz_id,omitempty"`
-	GroupId uint32 `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	Start   uint32 `protobuf:"varint,3,opt,name=start,proto3" json:"start,omitempty"`
-	Limit   uint32 `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	BizId     uint32 `protobuf:"varint,1,opt,name=biz_id,json=bizId,proto3" json:"biz_id,omitempty"`
+	GroupId   uint32 `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	SearchKey string `protobuf:"bytes,3,opt,name=search_key,json=searchKey,proto3" json:"search_key,omitempty"`
+	Start     uint32 `protobuf:"varint,4,opt,name=start,proto3" json:"start,omitempty"`
+	Limit     uint32 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
 }
 
-func (x *ListGroupRleasesdAppsReq) Reset() {
-	*x = ListGroupRleasesdAppsReq{}
+func (x *ListGroupReleasedAppsReq) Reset() {
+	*x = ListGroupReleasedAppsReq{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_data_service_proto_msgTypes[186]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11499,13 +11500,13 @@ func (x *ListGroupRleasesdAppsReq) Reset() {
 	}
 }
 
-func (x *ListGroupRleasesdAppsReq) String() string {
+func (x *ListGroupReleasedAppsReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListGroupRleasesdAppsReq) ProtoMessage() {}
+func (*ListGroupReleasedAppsReq) ProtoMessage() {}
 
-func (x *ListGroupRleasesdAppsReq) ProtoReflect() protoreflect.Message {
+func (x *ListGroupReleasedAppsReq) ProtoReflect() protoreflect.Message {
 	mi := &file_data_service_proto_msgTypes[186]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11517,50 +11518,57 @@ func (x *ListGroupRleasesdAppsReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListGroupRleasesdAppsReq.ProtoReflect.Descriptor instead.
-func (*ListGroupRleasesdAppsReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListGroupReleasedAppsReq.ProtoReflect.Descriptor instead.
+func (*ListGroupReleasedAppsReq) Descriptor() ([]byte, []int) {
 	return file_data_service_proto_rawDescGZIP(), []int{186}
 }
 
-func (x *ListGroupRleasesdAppsReq) GetBizId() uint32 {
+func (x *ListGroupReleasedAppsReq) GetBizId() uint32 {
 	if x != nil {
 		return x.BizId
 	}
 	return 0
 }
 
-func (x *ListGroupRleasesdAppsReq) GetGroupId() uint32 {
+func (x *ListGroupReleasedAppsReq) GetGroupId() uint32 {
 	if x != nil {
 		return x.GroupId
 	}
 	return 0
 }
 
-func (x *ListGroupRleasesdAppsReq) GetStart() uint32 {
+func (x *ListGroupReleasedAppsReq) GetSearchKey() string {
+	if x != nil {
+		return x.SearchKey
+	}
+	return ""
+}
+
+func (x *ListGroupReleasedAppsReq) GetStart() uint32 {
 	if x != nil {
 		return x.Start
 	}
 	return 0
 }
 
-func (x *ListGroupRleasesdAppsReq) GetLimit() uint32 {
+func (x *ListGroupReleasedAppsReq) GetLimit() uint32 {
 	if x != nil {
 		return x.Limit
 	}
 	return 0
 }
 
-type ListGroupRleasesdAppsResp struct {
+type ListGroupReleasedAppsResp struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	Count   uint32                                                 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
-	Details []*ListGroupRleasesdAppsResp_ListGroupReleasedAppsData `protobuf:"bytes,2,rep,name=details,proto3" json:"details,omitempty"`
+	Details []*ListGroupReleasedAppsResp_ListGroupReleasedAppsData `protobuf:"bytes,2,rep,name=details,proto3" json:"details,omitempty"`
 }
 
-func (x *ListGroupRleasesdAppsResp) Reset() {
-	*x = ListGroupRleasesdAppsResp{}
+func (x *ListGroupReleasedAppsResp) Reset() {
+	*x = ListGroupReleasedAppsResp{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_data_service_proto_msgTypes[187]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11568,13 +11576,13 @@ func (x *ListGroupRleasesdAppsResp) Reset() {
 	}
 }
 
-func (x *ListGroupRleasesdAppsResp) String() string {
+func (x *ListGroupReleasedAppsResp) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListGroupRleasesdAppsResp) ProtoMessage() {}
+func (*ListGroupReleasedAppsResp) ProtoMessage() {}
 
-func (x *ListGroupRleasesdAppsResp) ProtoReflect() protoreflect.Message {
+func (x *ListGroupReleasedAppsResp) ProtoReflect() protoreflect.Message {
 	mi := &file_data_service_proto_msgTypes[187]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11586,19 +11594,19 @@ func (x *ListGroupRleasesdAppsResp) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListGroupRleasesdAppsResp.ProtoReflect.Descriptor instead.
-func (*ListGroupRleasesdAppsResp) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListGroupReleasedAppsResp.ProtoReflect.Descriptor instead.
+func (*ListGroupReleasedAppsResp) Descriptor() ([]byte, []int) {
 	return file_data_service_proto_rawDescGZIP(), []int{187}
 }
 
-func (x *ListGroupRleasesdAppsResp) GetCount() uint32 {
+func (x *ListGroupReleasedAppsResp) GetCount() uint32 {
 	if x != nil {
 		return x.Count
 	}
 	return 0
 }
 
-func (x *ListGroupRleasesdAppsResp) GetDetails() []*ListGroupRleasesdAppsResp_ListGroupReleasedAppsData {
+func (x *ListGroupReleasedAppsResp) GetDetails() []*ListGroupReleasedAppsResp_ListGroupReleasedAppsData {
 	if x != nil {
 		return x.Details
 	}
@@ -13616,7 +13624,7 @@ func (x *CountGroupsReleasedAppsResp_CountGroupsReleasedAppsData) GetEdited() bo
 	return false
 }
 
-type ListGroupRleasesdAppsResp_ListGroupReleasedAppsData struct {
+type ListGroupReleasedAppsResp_ListGroupReleasedAppsData struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -13628,8 +13636,8 @@ type ListGroupRleasesdAppsResp_ListGroupReleasedAppsData struct {
 	Edited      bool   `protobuf:"varint,5,opt,name=edited,proto3" json:"edited,omitempty"`
 }
 
-func (x *ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) Reset() {
-	*x = ListGroupRleasesdAppsResp_ListGroupReleasedAppsData{}
+func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) Reset() {
+	*x = ListGroupReleasedAppsResp_ListGroupReleasedAppsData{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_data_service_proto_msgTypes[217]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -13637,13 +13645,13 @@ func (x *ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) Reset() {
 	}
 }
 
-func (x *ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) String() string {
+func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) ProtoMessage() {}
+func (*ListGroupReleasedAppsResp_ListGroupReleasedAppsData) ProtoMessage() {}
 
-func (x *ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) ProtoReflect() protoreflect.Message {
+func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) ProtoReflect() protoreflect.Message {
 	mi := &file_data_service_proto_msgTypes[217]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -13655,40 +13663,40 @@ func (x *ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) ProtoReflect() pro
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListGroupRleasesdAppsResp_ListGroupReleasedAppsData.ProtoReflect.Descriptor instead.
-func (*ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListGroupReleasedAppsResp_ListGroupReleasedAppsData.ProtoReflect.Descriptor instead.
+func (*ListGroupReleasedAppsResp_ListGroupReleasedAppsData) Descriptor() ([]byte, []int) {
 	return file_data_service_proto_rawDescGZIP(), []int{187, 0}
 }
 
-func (x *ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) GetAppId() uint32 {
+func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) GetAppId() uint32 {
 	if x != nil {
 		return x.AppId
 	}
 	return 0
 }
 
-func (x *ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) GetAppName() string {
+func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) GetAppName() string {
 	if x != nil {
 		return x.AppName
 	}
 	return ""
 }
 
-func (x *ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) GetReleaseId() uint32 {
+func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) GetReleaseId() uint32 {
 	if x != nil {
 		return x.ReleaseId
 	}
 	return 0
 }
 
-func (x *ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) GetReleaseName() string {
+func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) GetReleaseName() string {
 	if x != nil {
 		return x.ReleaseName
 	}
 	return ""
 }
 
-func (x *ListGroupRleasesdAppsResp_ListGroupReleasedAppsData) GetEdited() bool {
+func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) GetEdited() bool {
 	if x != nil {
 		return x.Edited
 	}
@@ -15378,20 +15386,22 @@ var file_data_service_proto_rawDesc = []byte{
 	0x70, 0x49, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01,
 	0x28, 0x0d, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x65, 0x64, 0x69,
 	0x74, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x65, 0x64, 0x69, 0x74, 0x65,
-	0x64, 0x22, 0x78, 0x0a, 0x18, 0x4c, 0x69, 0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x6c,
-	0x65, 0x61, 0x73, 0x65, 0x73, 0x64, 0x41, 0x70, 0x70, 0x73, 0x52, 0x65, 0x71, 0x12, 0x15, 0x0a,
-	0x06, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x62,
-	0x69, 0x7a, 0x49, 0x64, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x12,
-	0x14, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05,
-	0x73, 0x74, 0x61, 0x72, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x04,
+	0x64, 0x22, 0x97, 0x01, 0x0a, 0x18, 0x4c, 0x69, 0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52,
+	0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x41, 0x70, 0x70, 0x73, 0x52, 0x65, 0x71, 0x12, 0x15,
+	0x0a, 0x06, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05,
+	0x62, 0x69, 0x7a, 0x49, 0x64, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69,
+	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64,
+	0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x65, 0x61, 0x72, 0x63, 0x68, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x73, 0x65, 0x61, 0x72, 0x63, 0x68, 0x4b, 0x65, 0x79, 0x12,
+	0x14, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05,
+	0x73, 0x74, 0x61, 0x72, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x05,
 	0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x22, 0xb0, 0x02, 0x0a, 0x19,
-	0x4c, 0x69, 0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73,
+	0x4c, 0x69, 0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65,
 	0x64, 0x41, 0x70, 0x70, 0x73, 0x52, 0x65, 0x73, 0x70, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f, 0x75,
 	0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12,
 	0x53, 0x0a, 0x07, 0x64, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
 	0x32, 0x39, 0x2e, 0x70, 0x62, 0x64, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x47, 0x72, 0x6f, 0x75,
-	0x70, 0x52, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x64, 0x41, 0x70, 0x70, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x41, 0x70, 0x70, 0x73, 0x52, 0x65, 0x73,
 	0x70, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x6c, 0x65, 0x61,
 	0x73, 0x65, 0x64, 0x41, 0x70, 0x70, 0x73, 0x44, 0x61, 0x74, 0x61, 0x52, 0x07, 0x64, 0x65, 0x74,
 	0x61, 0x69, 0x6c, 0x73, 0x1a, 0xa7, 0x01, 0x0a, 0x19, 0x4c, 0x69, 0x73, 0x74, 0x47, 0x72, 0x6f,
@@ -16105,11 +16115,11 @@ var file_data_service_proto_rawDesc = []byte{
 	0x64, 0x41, 0x70, 0x70, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x21, 0x2e, 0x70, 0x62, 0x64, 0x73, 0x2e,
 	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x52, 0x65, 0x6c, 0x65, 0x61,
 	0x73, 0x65, 0x64, 0x41, 0x70, 0x70, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x12, 0x5a, 0x0a,
-	0x15, 0x4c, 0x69, 0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x6c, 0x65, 0x61, 0x73, 0x65,
-	0x73, 0x64, 0x41, 0x70, 0x70, 0x73, 0x12, 0x1e, 0x2e, 0x70, 0x62, 0x64, 0x73, 0x2e, 0x4c, 0x69,
-	0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x64, 0x41,
+	0x15, 0x4c, 0x69, 0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73,
+	0x65, 0x64, 0x41, 0x70, 0x70, 0x73, 0x12, 0x1e, 0x2e, 0x70, 0x62, 0x64, 0x73, 0x2e, 0x4c, 0x69,
+	0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x41,
 	0x70, 0x70, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x1f, 0x2e, 0x70, 0x62, 0x64, 0x73, 0x2e, 0x4c, 0x69,
-	0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x64, 0x41,
+	0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x41,
 	0x70, 0x70, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x12, 0x30, 0x0a, 0x07, 0x50, 0x75, 0x62,
 	0x6c, 0x69, 0x73, 0x68, 0x12, 0x10, 0x2e, 0x70, 0x62, 0x64, 0x73, 0x2e, 0x50, 0x75, 0x62, 0x6c,
 	0x69, 0x73, 0x68, 0x52, 0x65, 0x71, 0x1a, 0x11, 0x2e, 0x70, 0x62, 0x64, 0x73, 0x2e, 0x50, 0x75,
@@ -16383,8 +16393,8 @@ var file_data_service_proto_goTypes = []interface{}{
 	(*DeleteGroupReq)(nil),                                                  // 183: pbds.DeleteGroupReq
 	(*CountGroupsReleasedAppsReq)(nil),                                      // 184: pbds.CountGroupsReleasedAppsReq
 	(*CountGroupsReleasedAppsResp)(nil),                                     // 185: pbds.CountGroupsReleasedAppsResp
-	(*ListGroupRleasesdAppsReq)(nil),                                        // 186: pbds.ListGroupRleasesdAppsReq
-	(*ListGroupRleasesdAppsResp)(nil),                                       // 187: pbds.ListGroupRleasesdAppsResp
+	(*ListGroupReleasedAppsReq)(nil),                                        // 186: pbds.ListGroupReleasedAppsReq
+	(*ListGroupReleasedAppsResp)(nil),                                       // 187: pbds.ListGroupReleasedAppsResp
 	(*PublishReq)(nil),                                                      // 188: pbds.PublishReq
 	(*GenerateReleaseAndPublishReq)(nil),                                    // 189: pbds.GenerateReleaseAndPublishReq
 	(*PublishResp)(nil),                                                     // 190: pbds.PublishResp
@@ -16414,7 +16424,7 @@ var file_data_service_proto_goTypes = []interface{}{
 	(*BatchUpsertTemplatesReq_Item)(nil),                                    // 214: pbds.BatchUpsertTemplatesReq.Item
 	(*ListAppGroupsResp_ListAppGroupsData)(nil),                             // 215: pbds.ListAppGroupsResp.ListAppGroupsData
 	(*CountGroupsReleasedAppsResp_CountGroupsReleasedAppsData)(nil),         // 216: pbds.CountGroupsReleasedAppsResp.CountGroupsReleasedAppsData
-	(*ListGroupRleasesdAppsResp_ListGroupReleasedAppsData)(nil),             // 217: pbds.ListGroupRleasesdAppsResp.ListGroupReleasedAppsData
+	(*ListGroupReleasedAppsResp_ListGroupReleasedAppsData)(nil),             // 217: pbds.ListGroupReleasedAppsResp.ListGroupReleasedAppsData
 	(*BatchUpsertKvsReq_Kv)(nil),                                            // 218: pbds.BatchUpsertKvsReq.Kv
 	(*credential_scope.UpdateScopeSpec)(nil),                                // 219: pbcrs.UpdateScopeSpec
 	(*credential_scope.CredentialScopeAttachment)(nil),                      // 220: pbcrs.CredentialScopeAttachment
@@ -16630,7 +16640,7 @@ var file_data_service_proto_depIdxs = []int32{
 	285, // 130: pbds.UpdateGroupReq.spec:type_name -> pbgroup.GroupSpec
 	284, // 131: pbds.DeleteGroupReq.attachment:type_name -> pbgroup.GroupAttachment
 	216, // 132: pbds.CountGroupsReleasedAppsResp.data:type_name -> pbds.CountGroupsReleasedAppsResp.CountGroupsReleasedAppsData
-	217, // 133: pbds.ListGroupRleasesdAppsResp.details:type_name -> pbds.ListGroupRleasesdAppsResp.ListGroupReleasedAppsData
+	217, // 133: pbds.ListGroupReleasedAppsResp.details:type_name -> pbds.ListGroupReleasedAppsResp.ListGroupReleasedAppsData
 	287, // 134: pbds.PublishReq.labels:type_name -> google.protobuf.Struct
 	237, // 135: pbds.GenerateReleaseAndPublishReq.variables:type_name -> pbtv.TemplateVariableSpec
 	287, // 136: pbds.GenerateReleaseAndPublishReq.labels:type_name -> google.protobuf.Struct
@@ -16770,7 +16780,7 @@ var file_data_service_proto_depIdxs = []int32{
 	182, // 270: pbds.Data.UpdateGroup:input_type -> pbds.UpdateGroupReq
 	183, // 271: pbds.Data.DeleteGroup:input_type -> pbds.DeleteGroupReq
 	184, // 272: pbds.Data.CountGroupsReleasedApps:input_type -> pbds.CountGroupsReleasedAppsReq
-	186, // 273: pbds.Data.ListGroupRleasesdApps:input_type -> pbds.ListGroupRleasesdAppsReq
+	186, // 273: pbds.Data.ListGroupReleasedApps:input_type -> pbds.ListGroupReleasedAppsReq
 	188, // 274: pbds.Data.Publish:input_type -> pbds.PublishReq
 	189, // 275: pbds.Data.GenerateReleaseAndPublish:input_type -> pbds.GenerateReleaseAndPublishReq
 	7,   // 276: pbds.Data.CreateCredential:input_type -> pbds.CreateCredentialReq
@@ -16899,7 +16909,7 @@ var file_data_service_proto_depIdxs = []int32{
 	295, // 399: pbds.Data.UpdateGroup:output_type -> pbbase.EmptyResp
 	295, // 400: pbds.Data.DeleteGroup:output_type -> pbbase.EmptyResp
 	185, // 401: pbds.Data.CountGroupsReleasedApps:output_type -> pbds.CountGroupsReleasedAppsResp
-	187, // 402: pbds.Data.ListGroupRleasesdApps:output_type -> pbds.ListGroupRleasesdAppsResp
+	187, // 402: pbds.Data.ListGroupReleasedApps:output_type -> pbds.ListGroupReleasedAppsResp
 	190, // 403: pbds.Data.Publish:output_type -> pbds.PublishResp
 	190, // 404: pbds.Data.GenerateReleaseAndPublish:output_type -> pbds.PublishResp
 	13,  // 405: pbds.Data.CreateCredential:output_type -> pbds.CreateResp
@@ -19162,7 +19172,7 @@ func file_data_service_proto_init() {
 			}
 		}
 		file_data_service_proto_msgTypes[186].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListGroupRleasesdAppsReq); i {
+			switch v := v.(*ListGroupReleasedAppsReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -19174,7 +19184,7 @@ func file_data_service_proto_init() {
 			}
 		}
 		file_data_service_proto_msgTypes[187].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListGroupRleasesdAppsResp); i {
+			switch v := v.(*ListGroupReleasedAppsResp); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -19534,7 +19544,7 @@ func file_data_service_proto_init() {
 			}
 		}
 		file_data_service_proto_msgTypes[217].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListGroupRleasesdAppsResp_ListGroupReleasedAppsData); i {
+			switch v := v.(*ListGroupReleasedAppsResp_ListGroupReleasedAppsData); i {
 			case 0:
 				return &v.state
 			case 1:

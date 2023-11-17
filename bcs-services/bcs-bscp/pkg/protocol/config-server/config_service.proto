@@ -2060,10 +2060,11 @@ message ListAppGroupsResp {
 }
 
 message ListGroupReleasedAppsReq {
-    uint32 biz_id   = 1;
-    uint32 group_id = 2;
-    uint32 start    = 3;
-    uint32 limit    = 4;
+    uint32 biz_id     = 1;
+    uint32 group_id   = 2;
+    string search_key = 3;
+    uint32 start      = 4;
+    uint32 limit      = 5;
 }
 
 message ListGroupReleasedAppsResp {
