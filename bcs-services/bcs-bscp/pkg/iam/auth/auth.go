@@ -200,7 +200,7 @@ func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute)
 						Action:       action.Id,
 						ActionName:   action.Name,
 						ResourceId:   i.Id,
-						ResourceName: i.Id,
+						ResourceName: i.Name,
 					})
 				}
 			}
