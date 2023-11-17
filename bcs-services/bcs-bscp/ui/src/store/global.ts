@@ -4,6 +4,7 @@ import { defineStore } from 'pinia';
 import { ISpaceDetail, IPermissionResource, IPermissionQueryResourceItem } from '../../types/index';
 
 export default defineStore('global', () => {
+  const bscpVersion = ref(''); // 产品版本号
   const spaceId = ref(''); // 空间id
   const spaceList = ref<ISpaceDetail[]>([]);
   const showApplyPermDialog = ref(false); // 资源无权限申请弹窗
@@ -15,6 +16,7 @@ export default defineStore('global', () => {
   });
 
   return {
+    bscpVersion,
     spaceId,
     spaceList,
     showApplyPermDialog,
