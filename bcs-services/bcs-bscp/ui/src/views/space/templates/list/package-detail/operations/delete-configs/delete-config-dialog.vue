@@ -1,45 +1,21 @@
 <template>
-  <bk-dialog
-    ext-cls="delete-configs-dialog"
-    confirm-text="确认删除"
-    footer-align="center"
-    :width="400"
-    :show-header="false"
-    :is-show="props.show"
-    :esc-close="false"
-    :quick-close="false"
-    :is-loading="pending"
-    @confirm="handleConfirm"
-    @closed="close"
-  >
-    <template #header>
-      <div class="header-icon"><Warn /></div>
-    </template>
-    <div class="title-area">
-      <template v-if="props.configs.length > 1">
-        确认删除<span>{{ props.configs.length }}</span
-        >条配置文件?
-      </template>
-      <template v-else> 确认删除配置文件【{{ props.configs[0] ? props.configs[0].spec.name : '' }}】？ </template>
+  <DeleteConfirmDialog title="确认删除该配置文件？" :is-show="props.show" @confirm="handleConfirm" @close="close">
+    <div style="margin-bottom: 8px">
+      配置文件:
+      <span style="color: #313238; font-weight: 600">{{ props.configs[0] ? props.configs[0].spec.name : '' }}</span>
     </div>
-    <div class="tips">删除后不可找回，请谨慎操作。</div>
-    <template #footer>
-      <div class="actions-wrapper">
-        <bk-button theme="primary" :loading="pending" @click="handleConfirm">确认删除</bk-button>
-        <bk-button @click="close">取消</bk-button>
-      </div>
-    </template>
-  </bk-dialog>
+    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+  </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { Warn } from 'bkui-vue/lib/icon';
 import { Message } from 'bkui-vue';
 import useGlobalStore from '../../../../../../../store/global';
 import useTemplateStore from '../../../../../../../store/template';
 import { ITemplateConfigItem } from '../../../../../../../../types/template';
 import { deleteTemplate } from '../../../../../../../api/template';
+import DeleteConfirmDialog from '../../../../../../../components/delete-confirm-dialog.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { currentTemplateSpace } = storeToRefs(useTemplateStore());
@@ -75,47 +51,3 @@ const close = () => {
   emits('update:show', false);
 };
 </script>
-<style lang="scss" scoped>
-.header-icon {
-  line-height: 1;
-  font-size: 48px;
-  color: #ff9c01;
-  text-align: center;
-}
-.title-area {
-  margin: 8px 0;
-  font-size: 20px;
-  line-height: 32px;
-  color: #313238;
-  text-align: center;
-  .num {
-    color: #313238;
-  }
-}
-.tips {
-  color: #63656e;
-  font-size: 14px;
-  text-align: center;
-}
-.actions-wrapper {
-  padding-bottom: 20px;
-  .bk-button:not(:last-of-type) {
-    margin-right: 8px;
-  }
-}
-</style>
-<style lang="scss">
-.delete-configs-dialog.bk-modal-wrapper.bk-dialog-wrapper {
-  .bk-dialog-header {
-    padding-bottom: 0;
-  }
-  .bk-modal-footer {
-    // padding: 32px 0 48px;
-    background: #ffffff;
-    border-top: none;
-    .bk-button {
-      min-width: 88px;
-    }
-  }
-}
-</style>

@@ -443,6 +443,10 @@ const handelToggleEnable = async (credential: ICredentialItem) => {
           name: credential.spec.name,
         };
         await updateCredential(spaceId.value, params);
+        BkMessage({
+          theme: 'success',
+          message: '禁用成功',
+        });
         credential.spec.enable = false;
       },
     } as any);
@@ -485,6 +489,10 @@ const handleDelete = async () => {
     return;
   }
   await deleteCredential(spaceId.value, deleteCredentialInfo.value?.id as number);
+  BkMessage({
+    theme: 'success',
+    message: '删除服务密钥成功',
+  });
   if (credentialList.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current = pagination.value.current - 1;
   }
