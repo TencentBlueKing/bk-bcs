@@ -22,11 +22,13 @@ type server struct {
 	*ModelPowerTrading
 	*ModelUserOperationData
 	*ModelInterface
+	*ModelCloudNative
 }
 
 // NewServer new db server
 func NewServer(dbs map[string]*sqlx.DB, bkbaseConf *types.BkbaseConfig) *server {
 	return &server{
+		ModelCloudNative:       NewModelCloudNative(dbs, bkbaseConf),
 		ModelPowerTrading:      NewModelPowerTrading(dbs, bkbaseConf),
 		ModelUserOperationData: NewModelUserOperationData(dbs, bkbaseConf),
 		ModelInterface:         NewModelInterface(),

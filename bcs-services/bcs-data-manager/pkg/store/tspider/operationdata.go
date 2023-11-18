@@ -93,7 +93,7 @@ func (od *ModelUserOperationData) GetUserOperationDataList(ctx context.Context,
 	query, count := od.getBuilders(request, public.TableName)
 
 	// query for data
-	response, err := public.QueryxToStruct(query)
+	response, err := public.QueryxToStructpb(query)
 	if err != nil {
 		return nil, 0, err
 	}

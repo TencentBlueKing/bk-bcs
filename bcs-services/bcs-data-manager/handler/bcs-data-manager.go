@@ -451,7 +451,7 @@ func (e *BcsDataManager) GetCloudNativeWorkloadList(ctx context.Context,
 	blog.Infof("Received GetCloudNativeWorkload.Call request. PageSize: %d, CurrentPage: %d", req.GetPageSize(), req.GetCurrentPage())
 
 	start := time.Now()
-	result, err := e.mongoModel.GetCloudNativeWorkloadList(ctx, req)
+	result, err := e.tspiderModel.GetCloudNativeWorkloadList(ctx, req)
 	if err != nil {
 		rsp.Msg = fmt.Sprintf("Get cloud native workloads error, err: %s", err.Error())
 		rsp.Code = 500
