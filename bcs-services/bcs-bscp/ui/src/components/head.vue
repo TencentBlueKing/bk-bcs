@@ -253,7 +253,6 @@ Object.keys(modules).forEach((path) => {
   });
 });
 
-console.log(logList.value)
 if (logList.value.length > 0) {
   bscpVersion.value = logList.value[0].title
 }
