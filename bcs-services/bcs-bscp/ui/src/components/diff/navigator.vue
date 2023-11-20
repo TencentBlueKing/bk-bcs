@@ -55,7 +55,6 @@ watch(
 );
 
 watch([() => contentDiffNumber.value, () => props.permissionDiffNumber], () => {
-  console.log('contentLineChange', contentLineChange.value);
   getCurrentDiffIndex();
 });
 
