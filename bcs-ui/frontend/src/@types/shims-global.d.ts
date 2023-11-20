@@ -18,6 +18,7 @@ interface Window {
   $loginModal: any
   _project_code_: string
   _project_id_: string
+  readonly BK_STATIC_URL: string
 }
 
 declare const BK_BCS_WELCOME: string;
