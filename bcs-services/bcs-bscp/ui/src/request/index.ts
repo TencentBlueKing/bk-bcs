@@ -4,7 +4,6 @@ import pinia  from '../store/index';
 import useUserStore from '../store/user';
 import useGlobalStore from '../store/global';
 
-
 const http = axios.create({
   baseURL: `${(window as any).BK_BCS_BSCP_API}/api/v1`,
   withCredentials: true,
