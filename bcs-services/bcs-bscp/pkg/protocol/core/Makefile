@@ -23,6 +23,7 @@ all:
 	@cd app-template-variable && make
 	@cd kv && make
 	@cd error && make
+	@cd released-kv && make
 
 clean:
 	@cd base && make clean
@@ -49,3 +50,4 @@ clean:
 	@cd app-template-variable && make clean
 	@cd kv && make clean
 	@cd error && make clean
+	@cd released-kv && make clean

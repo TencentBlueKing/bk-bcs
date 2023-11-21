@@ -118,35 +118,132 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	// Note: need to change batch operator to query config item and it's commit.
-	// query app's all config items.
-	cfgItems, err := s.getAppConfigItems(grpcKit)
+	app, err := s.dao.App().GetByID(grpcKit, req.AppId)
 	if err != nil {
-		logs.Errorf("query app config item list failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("get app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
-	}
-
-	// get app template revisions which are template config items
-	tmplRevisions, err := s.getAppTmplRevisions(grpcKit)
-	if err != nil {
-		logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	// if no config item, return directly.
-	if len(cfgItems) == 0 && len(tmplRevisions) == 0 {
-		return nil, errors.New("app config items is empty")
 	}
 
 	if _, e := s.dao.Release().GetByName(grpcKit, req.BizId, req.AppId, req.ReleaseName); e == nil {
 		return nil, fmt.Errorf("release name %s already exists", req.ReleaseName)
 	}
 
-	groupIDs := make([]uint32, 0)
-
 	tx := s.dao.GenQuery().Begin()
 
-	if !req.All {
+	groupIDs, err := s.genReleaseAndPublishGroupID(grpcKit, tx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// create release.
+	release := &table.Release{
+		Spec: &table.ReleaseSpec{
+			Name: req.ReleaseName,
+			Memo: req.ReleaseMemo,
+		},
+		Attachment: &table.ReleaseAttachment{
+			BizID: req.BizId,
+			AppID: req.AppId,
+		},
+		Revision: &table.CreatedRevision{
+			Creator: grpcKit.User,
+		},
+	}
+	releaseID, err := s.dao.Release().CreateWithTx(grpcKit, tx, release)
+	if err != nil {
+		logs.Errorf("create release failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+	// create released hook.
+	if err = s.createReleasedHook(grpcKit, tx, req.BizId, req.AppId, releaseID); err != nil {
+		logs.Errorf("create released hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	switch app.Spec.ConfigType {
+	case table.File:
+
+		// Note: need to change batch operator to query config item and it's commit.
+		// query app's all config items.
+		cfgItems, e := s.getAppConfigItems(grpcKit)
+		if e != nil {
+			logs.Errorf("query app config item list failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return nil, e
+		}
+
+		// get app template revisions which are template config items
+		tmplRevisions, e := s.getAppTmplRevisions(grpcKit)
+		if e != nil {
+			logs.Errorf("get app template revisions failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return nil, e
+		}
+
+		// if no config item, return directly.
+		if len(cfgItems) == 0 && len(tmplRevisions) == 0 {
+			return nil, errors.New("app config items is empty")
+		}
+
+		// do template and non-template config item related operations for create release.
+		if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cfgItems); err != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
+			logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+	case table.KV:
+		if err = s.doKvOperations(grpcKit, tx, req.AppId, req.BizId, release.ID); err != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
+			logs.Errorf("do kv action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+	}
+
+	// publish with transaction.
+	kt := kit.FromGrpcContext(ctx)
+
+	opt := &types.PublishOption{
+		BizID:     req.BizId,
+		AppID:     req.AppId,
+		ReleaseID: releaseID,
+		All:       req.All,
+		Memo:      req.ReleaseMemo,
+		Groups:    groupIDs,
+		Revision: &table.CreatedRevision{
+			Creator: kt.User,
+		},
+	}
+	pshID, err := s.dao.Publish().PublishWithTx(kt, tx, opt)
+	if err != nil {
+		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	// commit transaction.
+	if err = tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	return &pbds.PublishResp{PublishedStrategyHistoryId: pshID}, nil
+}
+
+func (s *Service) genReleaseAndPublishGroupID(grpcKit *kit.Kit, tx *gen.QueryTx,
+	req *pbds.GenerateReleaseAndPublishReq) ([]uint32, error) {
+
+	groupIDs := make([]uint32, 0)
+
+	if req.All {
 		if req.GrayPublishMode == "" {
 			// !NOTE: Compatible with previous pipelined plugins version
 			req.GrayPublishMode = table.PublishByGroups.String()
@@ -184,75 +281,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		}
 	}
 
-	// create release.
-	release := &table.Release{
-		Spec: &table.ReleaseSpec{
-			Name: req.ReleaseName,
-			Memo: req.ReleaseMemo,
-		},
-		Attachment: &table.ReleaseAttachment{
-			BizID: req.BizId,
-			AppID: req.AppId,
-		},
-		Revision: &table.CreatedRevision{
-			Creator: grpcKit.User,
-		},
-	}
-	releaseID, err := s.dao.Release().CreateWithTx(grpcKit, tx, release)
-	if err != nil {
-		logs.Errorf("create release failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-		}
-		return nil, err
-	}
-	// create released hook.
-	if err = s.createReleasedHook(grpcKit, tx, req.BizId, req.AppId, releaseID); err != nil {
-		logs.Errorf("create released hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-		}
-		return nil, err
-	}
-
-	// do template and non-template config item related operations for create release.
-	if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cfgItems); err != nil {
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-		}
-		logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	// publish with transaction.
-	kt := kit.FromGrpcContext(ctx)
-
-	opt := &types.PublishOption{
-		BizID:     req.BizId,
-		AppID:     req.AppId,
-		ReleaseID: releaseID,
-		All:       req.All,
-		Memo:      req.ReleaseMemo,
-		Groups:    groupIDs,
-		Revision: &table.CreatedRevision{
-			Creator: kt.User,
-		},
-	}
-	pshID, err := s.dao.Publish().PublishWithTx(kt, tx, opt)
-	if err != nil {
-		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, kt.Rid)
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-		}
-		return nil, err
-	}
-
-	// commit transaction.
-	if err = tx.Commit(); err != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	return &pbds.PublishResp{PublishedStrategyHistoryId: pshID}, nil
+	return groupIDs, nil
 }
 
 func (s *Service) createGroupByLabels(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32,
