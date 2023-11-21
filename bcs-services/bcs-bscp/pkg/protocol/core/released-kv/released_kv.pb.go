@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// ReleasedConfigItem source resource reference: pkg/dal/table/released_kv.go
+// ReleasedKv source resource reference: pkg/dal/table/released_kv.go
 type ReleasedKv struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

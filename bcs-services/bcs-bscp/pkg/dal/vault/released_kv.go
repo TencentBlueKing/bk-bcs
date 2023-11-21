@@ -30,7 +30,7 @@ func (s *set) CreateRKv(kit *kit.Kit, opt *types.CreateReleasedKvOption) (int, e
 		"value":   opt.Value,
 	}
 	version, err := s.cli.KVv2(MountPath).Put(kit.Ctx,
-		fmt.Sprintf(KvReleasedPath, opt.BizID, opt.AppID, opt.ReleaseID, opt.Key), data)
+		fmt.Sprintf(releasedKvPath, opt.BizID, opt.AppID, opt.ReleaseID, opt.Key), data)
 	if err != nil {
 		return 0, err
 	}
@@ -45,7 +45,7 @@ func (s *set) GetRKv(kit *kit.Kit, opt *types.GetRKvOption) (kvType types.KvType
 		return
 	}
 
-	kv, err := s.cli.KVv2(MountPath).GetVersion(kit.Ctx, fmt.Sprintf(KvReleasedPath, opt.BizID, opt.AppID,
+	kv, err := s.cli.KVv2(MountPath).GetVersion(kit.Ctx, fmt.Sprintf(releasedKvPath, opt.BizID, opt.AppID,
 		opt.ReleasedID, opt.Key), opt.Version)
 	if err != nil {
 		return

@@ -259,11 +259,11 @@ func (dao *kvDao) ListAllKvByKey(kit *kit.Kit, appID uint32, bizID uint32, keys 
 // BatchCreateWithTx batch create content instances with transaction.
 func (dao *kvDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error {
 
-	// generate an config item id and update to config item.
+	// generate an kv id and update to kv.
 	if len(kvs) == 0 {
 		return nil
 	}
-	ids, err := dao.idGen.Batch(kit, table.ConfigItemTable, len(kvs))
+	ids, err := dao.idGen.Batch(kit, table.KvTable, len(kvs))
 	if err != nil {
 		return err
 	}
