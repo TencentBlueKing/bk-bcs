@@ -110,7 +110,7 @@ import MarkdownIt from 'markdown-it';
 
 const route = useRoute();
 const router = useRouter();
-const { spaceId, spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
+const { bscpVersion, spaceId, spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 const { userInfo } = storeToRefs(useUserStore());
 const templateStore = useTemplateStore();
 const md = new MarkdownIt({
@@ -252,6 +252,11 @@ Object.keys(modules).forEach((path) => {
     detail: md.render(modules[path]),
   });
 });
+
+console.log(logList.value)
+if (logList.value.length > 0) {
+  bscpVersion.value = logList.value[0].title
+}
 
 // 功能特性
 const featuresContent = ref('');

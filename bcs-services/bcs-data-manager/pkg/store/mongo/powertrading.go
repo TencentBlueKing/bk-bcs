@@ -41,24 +41,27 @@ func NewModelPowerTrading(db drivers.DB, bkbaseConf *types.BkbaseConfig) *ModelP
 
 	// create tables for powertrading
 	for _, item := range bkbaseConf.PowerTrading {
+		if item.MongoTable == "" {
+			continue
+		}
 		p := Public{
-			TableName: item.Table,
+			TableName: item.MongoTable,
 			Indexes:   make([]drivers.Index, 0),
 			DB:        db,
 		}
-		blog.Infof("add index/table %s/%s to tables", item.Index, item.Table)
+		blog.Infof("[mongo] add index/table ( %s/%s ) to tables", item.Index, item.MongoTable)
 		pt.Tables[item.Index] = &p
 	}
 	return &pt
 }
 
-// GetPowerTradingInfo get operation data ofr power trading
+// GetPowerTradingInfo get operation data for power trading
 func (pt *ModelPowerTrading) GetPowerTradingInfo(ctx context.Context, request *datamanager.GetPowerTradingDataRequest) ([]*any.Any, int64, error) {
 	var total int64
 	tableIndex := request.GetTable()
 	public, ok := pt.Tables[tableIndex]
 	if !ok {
-		return nil, total, fmt.Errorf("do not support table: %s", tableIndex)
+		return nil, total, fmt.Errorf("do not support table: %s with mongo store", tableIndex)
 	}
 
 	// time conditions

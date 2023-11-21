@@ -125,7 +125,7 @@ func (g *IngressConverter) getLoadBalancerByID(ns, regionIDPair, protocolLayer s
 		}
 	} else if len(strs) == 2 {
 		// region and id
-		obj, ok := g.lbIDCache.Get(regionIDPair)
+		obj, ok := g.lbIDCache.Get(strs[0] + ":" + strs[1])
 		if ok {
 			if lbObj, ok = obj.(*cloud.LoadBalanceObject); !ok {
 				return nil, fmt.Errorf("get obj from lb id cache is not LoadBalanceObject")

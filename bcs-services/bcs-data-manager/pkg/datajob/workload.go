@@ -16,6 +16,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 
@@ -45,6 +48,12 @@ type WorkloadMinutePolicy struct {
 	store        store.Server
 }
 
+// WorkloadRequestPolicy workload request
+type WorkloadRequestPolicy struct {
+	MetricGetter metric.Server
+	store        store.Server
+}
+
 // NewWorkloadDayPolicy init day policy
 func NewWorkloadDayPolicy(getter metric.Server, store store.Server) *WorkloadDayPolicy {
 	return &WorkloadDayPolicy{
@@ -64,6 +73,14 @@ func NewWorkloadHourPolicy(getter metric.Server, store store.Server) *WorkloadHo
 // NewWorkloadMinutePolicy init minute policy
 func NewWorkloadMinutePolicy(getter metric.Server, store store.Server) *WorkloadMinutePolicy {
 	return &WorkloadMinutePolicy{
+		MetricGetter: getter,
+		store:        store,
+	}
+}
+
+// NewWorkloadRequestPolicy init minute policy
+func NewWorkloadRequestPolicy(getter metric.Server, store store.Server) *WorkloadRequestPolicy {
+	return &WorkloadRequestPolicy{
 		MetricGetter: getter,
 		store:        store,
 	}
@@ -296,4 +313,166 @@ func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.
 	if err = p.store.InsertWorkloadInfo(ctx, workloadMetric, opts); err != nil {
 		blog.Errorf("insert workload info err:%v", err)
 	}
+}
+
+func (p *WorkloadRequestPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts,
+	clients *types.Clients) {
+	if opts.ClusterType != types.Kubernetes {
+		return
+	}
+	deployments, err := clients.K8sStorageCli.QueryK8SDeployment(opts.ClusterID, opts.Namespace)
+	if err != nil {
+		blog.Errorf("[handler] query %s %s deployment list error:%s", opts.ClusterID, opts.Namespace, err.Error())
+		return
+	}
+	for key := range deployments {
+		deploy := deployments[key]
+		go func(workload *storage.Deployment) {
+			cpu, memory := getWorkloadContainerRequest(workload.Data.Spec.Template.Spec)
+			workloadResult := &types.WorkloadOriginRequestResult{
+				ProjectID:    opts.ProjectID,
+				ClusterID:    opts.ClusterID,
+				Namespace:    opts.Namespace,
+				WorkloadType: workload.ResourceType,
+				WorkloadName: workload.ResourceName,
+				Cpu:          cpu,
+				Memory:       memory,
+				CreateTime:   time.Now(),
+			}
+			if err = p.store.CreateWorkloadOriginRequest(ctx, workloadResult); err != nil {
+				blog.Errorf("CreateWorkloadOriginRequest error:%s, clusterID:%s, namespace:%s, deploy:%s",
+					err.Error(), opts.ClusterID, opts.Namespace, workload.ResourceName)
+			}
+		}(deploy)
+	}
+	statefulsets, err := clients.K8sStorageCli.QueryK8SStatefulSet(opts.ClusterID, opts.Namespace)
+	if err != nil {
+		blog.Errorf("[handler] query %s %s statefulset list error:%s", opts.ClusterID, opts.Namespace, err.Error())
+		return
+	}
+	for key := range statefulsets {
+		statefulSet := statefulsets[key]
+		go func(workload *storage.StatefulSet) {
+			cpu, memory := getWorkloadContainerRequest(workload.Data.Spec.Template.Spec)
+			workloadResult := &types.WorkloadOriginRequestResult{
+				ClusterID:    opts.ClusterID,
+				Namespace:    opts.Namespace,
+				WorkloadType: workload.ResourceType,
+				WorkloadName: workload.ResourceName,
+				Cpu:          cpu,
+				Memory:       memory,
+				CreateTime:   time.Now(),
+			}
+			if err = p.store.CreateWorkloadOriginRequest(ctx, workloadResult); err != nil {
+				blog.Errorf("CreateWorkloadOriginRequest error:%s, clusterID:%s, namespace:%s, statefulset:%s",
+					err.Error(), opts.ClusterID, opts.Namespace, workload.ResourceName)
+			}
+		}(statefulSet)
+	}
+	daemonSets, err := clients.K8sStorageCli.QueryK8SDaemonSet(opts.ClusterID, opts.Namespace)
+	if err != nil {
+		blog.Errorf("[handler] query %s %s daemonSet list error:%s", opts.ClusterID, opts.Namespace, err.Error())
+		return
+	}
+	for key := range daemonSets {
+		daemonSet := daemonSets[key]
+		go func(workload *storage.DaemonSet) {
+			cpu, memory := getWorkloadContainerRequest(workload.Data.Spec.Template.Spec)
+			workloadResult := &types.WorkloadOriginRequestResult{
+				ClusterID:    opts.ClusterID,
+				Namespace:    opts.Namespace,
+				WorkloadType: workload.ResourceType,
+				WorkloadName: workload.ResourceName,
+				Cpu:          cpu,
+				Memory:       memory,
+				CreateTime:   time.Now(),
+			}
+			if err = p.store.CreateWorkloadOriginRequest(ctx, workloadResult); err != nil {
+				blog.Errorf("CreateWorkloadOriginRequest error:%s, clusterID:%s, namespace:%s, daemonset:%s",
+					err.Error(), opts.ClusterID, opts.Namespace, workload.ResourceName)
+			}
+		}(daemonSet)
+	}
+	gameDeploys, err := clients.K8sStorageCli.QueryK8SGameDeployment(opts.ClusterID, opts.Namespace)
+	if err != nil {
+		blog.Errorf("[handler] query %s %s gameDeploy list error:%s", opts.ClusterID, opts.Namespace, err.Error())
+		return
+	}
+	for key := range gameDeploys {
+		gameDeploy := gameDeploys[key]
+		go func(workload *storage.GameDeployment) {
+			cpu, memory := getWorkloadContainerRequest(workload.Data.Spec.Template.Spec)
+			workloadResult := &types.WorkloadOriginRequestResult{
+				ClusterID:    opts.ClusterID,
+				Namespace:    opts.Namespace,
+				WorkloadType: workload.ResourceType,
+				WorkloadName: workload.ResourceName,
+				Cpu:          cpu,
+				Memory:       memory,
+				CreateTime:   time.Now(),
+			}
+			if err = p.store.CreateWorkloadOriginRequest(ctx, workloadResult); err != nil {
+				blog.Errorf("CreateWorkloadOriginRequest error:%s, clusterID:%s, namespace:%s, gameDeploy:%s",
+					err.Error(), opts.ClusterID, opts.Namespace, workload.ResourceName)
+			}
+		}(gameDeploy)
+	}
+	gameStatefuls, err := clients.K8sStorageCli.QueryK8SGameStatefulSet(opts.ClusterID, opts.Namespace)
+	if err != nil {
+		blog.Errorf("[handler] query %s %s gameStatefuls list error:%s", opts.ClusterID, opts.Namespace, err.Error())
+		return
+	}
+	for key := range gameStatefuls {
+		gameStateful := gameStatefuls[key]
+		go func(workload *storage.GameStatefulSet) {
+			cpu, memory := getWorkloadContainerRequest(workload.Data.Spec.Template.Spec)
+			workloadResult := &types.WorkloadOriginRequestResult{
+				ClusterID:    opts.ClusterID,
+				Namespace:    opts.Namespace,
+				WorkloadType: workload.ResourceType,
+				WorkloadName: workload.ResourceName,
+				Cpu:          cpu,
+				Memory:       memory,
+				CreateTime:   time.Now(),
+			}
+			if err = p.store.CreateWorkloadOriginRequest(ctx, workloadResult); err != nil {
+				blog.Errorf("CreateWorkloadOriginRequest error:%s, clusterID:%s, namespace:%s, gameStateful:%s",
+					err.Error(), opts.ClusterID, opts.Namespace, workload.ResourceName)
+			}
+		}(gameStateful)
+	}
+}
+
+func getWorkloadContainerRequest(podSpec v1.PodSpec) ([]*bcsdatamanager.WorkloadOriginRequestContainer,
+	[]*bcsdatamanager.WorkloadOriginRequestContainer) {
+	cpu := make([]*bcsdatamanager.WorkloadOriginRequestContainer, 0)
+	memory := make([]*bcsdatamanager.WorkloadOriginRequestContainer, 0)
+	for _, container := range podSpec.Containers {
+		var cpuLimitStr, cpuRequestStr, memoryLimitStr, memoryRequestStr string
+		if cpuRequest, ok := container.Resources.Requests[v1.ResourceCPU]; ok {
+			cpuRequestStr = cpuRequest.String()
+		}
+		if cpuLimit, ok := container.Resources.Limits[v1.ResourceCPU]; ok {
+			cpuLimitStr = cpuLimit.String()
+		}
+		if memoryRequest, ok := container.Resources.Requests[v1.ResourceMemory]; ok {
+			memoryRequestStr = memoryRequest.String()
+		}
+		if memoryLimit, ok := container.Resources.Limits[v1.ResourceMemory]; ok {
+			memoryLimitStr = memoryLimit.String()
+		}
+		cpuContainer := &bcsdatamanager.WorkloadOriginRequestContainer{
+			Container: container.Name,
+			Request:   cpuRequestStr,
+			Limit:     cpuLimitStr,
+		}
+		memoryContainer := &bcsdatamanager.WorkloadOriginRequestContainer{
+			Container: container.Name,
+			Request:   memoryRequestStr,
+			Limit:     memoryLimitStr,
+		}
+		cpu = append(cpu, cpuContainer)
+		memory = append(memory, memoryContainer)
+	}
+	return cpu, memory
 }

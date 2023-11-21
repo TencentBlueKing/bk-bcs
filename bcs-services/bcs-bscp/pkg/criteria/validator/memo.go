@@ -14,18 +14,7 @@ package validator
 
 import (
 	"errors"
-	"regexp"
 )
-
-const (
-	// qualifiedMemoFmt bscp resource's memo format.
-	qualifiedMemoFmt string = "(" + qMemoFmt + qExtMemoFmt + "*)?" + qMemoFmt
-	qMemoFmt         string = "[\u4E00-\u9FA5A-Za-z0-9]"
-	qExtMemoFmt      string = "[\u4E00-\u9FA5A-Za-z0-9-_\\s]"
-)
-
-// qualifiedMemoRegexp bscp resource's memo regexp.
-var qualifiedMemoRegexp = regexp.MustCompile("^" + qualifiedMemoFmt + "$")
 
 // ValidateMemo validate bscp resource memo's length and format.
 func ValidateMemo(memo string, required bool) error {
@@ -46,11 +35,6 @@ func ValidateMemo(memo string, required bool) error {
 
 	if len(memo) > 256 {
 		return errors.New("invalid memo, length should <= 256")
-	}
-
-	if !qualifiedMemoRegexp.MatchString(memo) {
-		return errors.New("invalid memo, only allows include chinese、english、numbers、underscore (_)" +
-			"、hyphen (-)、space, and must start and end with an chinese、english、numbers")
 	}
 
 	return nil

@@ -59,6 +59,7 @@ bcs:
         text: CMDB
         placeholder: Please select the CMDB business you want to bind
         emptyMsg: Please contact the operator of the CMDB business
+  newVersion: 'Version updated, would you like to refresh the interface?'
 blueking:
   onCall: Contact BK Customer Service
   support: Support
@@ -338,6 +339,7 @@ generic:
     query: Search
     create: Create
     submit: SUBMIT
+    reload: Reload
   label:
     key: Key
     value: Value
@@ -403,7 +405,6 @@ generic:
     deleteFailed: Delete failed
     loading: Loading
     running: In operation
-    enabled: Activated
     undoing: Cancel
     updateFailed: Update failed
     updating: Updating
@@ -1488,7 +1489,9 @@ deploy:
     deleteChartVer: 'Delete {name} chart version'
     downloadChartVer: 'Download {name} chart version'
     confirmDeleteChart: 'Are you sure you want to delete {name}?'
-    deleteWarning: After deleting the Chart, the following Release will not be able to use this Chart for updates. Please proceed with caution.
+    deleteWarning: >-
+      After deleting the Chart, the following Release will not be able to use
+      this Chart for updates. Please proceed with caution.
     chartInstall: Chart Deploy
     showNotes: Show notes
     chartNSTips: >-
@@ -2419,7 +2422,6 @@ plugin:
     delete: 'Are you sure you want to delete metric {Name}?'
     _delete: Are you sure you want to delete metric?
   tools:
-    fileLogPath: File Path Log
     standardLog: Standard Log
     title: Cluster Tools
     appName: Application
@@ -2476,10 +2478,6 @@ plugin:
     uninstall: Uninstall
     confirmUninstall: Confirm Uninstall
     restart: Reopen
-    dataSourseInfo: Data Source Info
-    logSearch: Log query entrance
-    failed: Enable failure
-    OSLog: System Log
     enable: 'Enable cluster tools: '
     bklogconfig: Log collection rules
     create: Create

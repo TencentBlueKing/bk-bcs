@@ -48,6 +48,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/handler"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/controller"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
@@ -89,8 +91,10 @@ type Server struct {
 	// gitops revese proxy, including auth plugin
 	gitops proxy.GitOpsProxy
 	// gitops data storage
-	storage store.Store
-	secret  secretstore.SecretInterface
+	storage        store.Store
+	secret         secretstore.SecretInterface
+	db             dao.Interface
+	analysisClient analysis.AnalysisInterface
 
 	jwtClient *jwt.JWTClient
 	iamClient iam.PermClient
@@ -104,8 +108,9 @@ func (s *Server) Init() error {
 		Token:   s.option.AuditConfig.Token,
 	})
 	initializer := []func() error{
-		s.initSecret, s.initIamJWTClient, s.initStorage, s.initController,
-		s.initMicroService, s.initHTTPService, s.initLeaderElection,
+		s.initDB, s.initAnalysisClient, s.initSecret, s.initIamJWTClient,
+		s.initStorage, s.initController, s.initMicroService, s.initHTTPService,
+		s.initLeaderElection,
 	}
 	for _, init := range initializer {
 		if err := init(); err != nil {
@@ -118,7 +123,7 @@ func (s *Server) Init() error {
 // Run all service, blocking
 func (s *Server) Run() error {
 	runners := []func(){
-		s.startSignalHandler, s.startMicroService,
+		s.startSignalHandler, s.startAnalysis, s.startMicroService,
 		s.startHTTPService, s.startLeaderElection,
 	}
 	for _, run := range runners {
@@ -145,6 +150,26 @@ func (s *Server) stop() {
 	wg.Wait()
 }
 
+func (s *Server) initDB() error {
+	db, err := dao.NewDriver(s.option.DBConfig)
+	if err != nil {
+		return errors.Wrapf(err, "create db failed")
+	}
+	s.db = db
+	if err = db.Init(); err != nil {
+		return errors.Wrapf(err, "init db failed")
+	}
+	return nil
+}
+
+func (s *Server) initAnalysisClient() error {
+	s.analysisClient = analysis.NewAnalysisClient(s.db, s.option.MetricConfig)
+	if err := s.analysisClient.Init(); err != nil {
+		return errors.Wrapf(err, "init analysis client failed")
+	}
+	return nil
+}
+
 func (s *Server) initStorage() error {
 	opt := &store.Options{
 		Service:        s.option.GitOps.Service,
@@ -159,6 +184,7 @@ func (s *Server) initStorage() error {
 	if err = s.storage.Init(); err != nil {
 		return errors.Wrapf(err, "init gitops storage failed")
 	}
+
 	if err = s.storage.InitArgoDB(context.Background()); err != nil {
 		return errors.Wrapf(err, "init argo db failed")
 	}
@@ -375,6 +401,7 @@ func (s *Server) initGitOpsProxy(router *mux.Router) error {
 	opt := &proxy.GitOpsOptions{
 		Service:        s.option.GitOps.Service,
 		RepoServerUrl:  s.option.GitOps.RepoServer,
+		AppSetWebhook:  s.option.GitOps.AppsetControllerWebhook,
 		PublicProjects: s.option.PublicProjects,
 		PathPrefix:     common.GitOpsProxyURL,
 		JWTDecoder:     s.jwtClient,
@@ -542,6 +569,14 @@ func (s *Server) startTunnelClient(cxt context.Context) error {
 	client.Start()
 	blog.Infof("manager start tunnel client successufully")
 	return nil
+}
+
+func (s *Server) startAnalysis() {
+	if err := s.analysisClient.Start(s.cxt); err != nil {
+		blog.Fatalf("start analysis failed: %s", err.Error())
+	}
+	blog.Infof("analysis started")
+	return
 }
 
 func (s *Server) startSignalHandler() {

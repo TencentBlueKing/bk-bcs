@@ -76,6 +76,7 @@ import { IAppItem } from '../../../../../../types/app';
 import { IPermissionQueryResourceItem } from '../../../../../../types/index';
 import { deleteApp } from '../../../../../api';
 import { datetimeFormat } from '../../../../../utils/index';
+import { Message } from 'bkui-vue';
 
 const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 
@@ -141,6 +142,10 @@ const goToDetail = () => {
 
 const handleDeleteService = async () => {
   await deleteApp(props.service.id as number, props.service.biz_id);
+  Message({
+    message: '删除服务成功',
+    theme: 'success',
+  });
   emits('update');
   isShowDeleteDialog.value = false;
 };

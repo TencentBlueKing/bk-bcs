@@ -177,8 +177,8 @@ const store = new Vuex.Store<{
      */
     updateCurProject(state, project) {
       state.curProject = project || {};
-      sessionStorage.setItem('_project_code_', project.projectCode);
-      sessionStorage.setItem('_project_id_', project.projectID);
+      window._project_code_ = project.projectCode;
+      window._project_id_ =  project.projectID;
     },
     /**
      * 更新 store.cluster 中的 curCluster

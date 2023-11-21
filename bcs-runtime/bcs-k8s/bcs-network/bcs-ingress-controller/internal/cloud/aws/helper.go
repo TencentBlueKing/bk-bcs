@@ -31,9 +31,10 @@ import (
 
 // do ensure network lb listener, only support one target group
 // (network lb listener) --> (target group) --> backend1
-//                                         |--> backend2
-//                                         |--> backend3
-//                                         |--> ...
+//
+//		                    |--> backend2
+//	                	    |--> backend3
+//		                    |--> ...
 func (e *Elb) ensureNetworkLBListener(region string, listener *networkextensionv1.Listener) (string, error) {
 	// 1. ensure target group
 	targetGroup, err := e.ensureTargetGroup(region, listener)
@@ -51,9 +52,10 @@ func (e *Elb) ensureNetworkLBListener(region string, listener *networkextensionv
 
 // do create application lb listener, support multiple target groups
 // (application lb listener) --> rule1  --> tartget group1 --> backend1
-//                          |--> rule2 |--> tartget group2
-//                          |--> rule3
-//                          |--> ...
+//
+//	                       	|--> rule2 |--> tartget group2
+//		                    |--> rule3
+//		                    |--> ...
 //
 // domain and url is different in different rules
 func (e *Elb) ensureApplicationLBListener(region string, listener *networkextensionv1.Listener) (string, error) {
@@ -78,15 +80,10 @@ func (e *Elb) ensureApplicationLBListener(region string, listener *networkextens
 
 func (e *Elb) ensureTargetGroup(region string, listener *networkextensionv1.Listener) (string, error) {
 	// get lb information
-	lbs, err := e.sdkWrapper.DescribeLoadBalancers(region, &elbv2.DescribeLoadBalancersInput{LoadBalancerArns: []string{listener.Spec.LoadbalancerID}})
+	lb, err := e.sdkWrapper.getLbFromCache(region, listener.Spec.LoadbalancerID)
 	if err != nil {
-		return "", fmt.Errorf("DescribeLoadBalancers failed, %s", err.Error())
+		return "", err
 	}
-	if len(lbs.LoadBalancers) == 0 {
-		return "", fmt.Errorf("loadbalancer %s not found", listener.Spec.LoadbalancerID)
-	}
-	lb := lbs.LoadBalancers[0]
-
 	// 1. get target group by names
 	name := e.generateTargetGroupName(*lb.LoadBalancerName, listener.Spec.Protocol, listener.Spec.Port)
 	tg, err := e.sdkWrapper.DescribeTargetGroups(region, &elbv2.DescribeTargetGroupsInput{
@@ -286,14 +283,10 @@ func (e *Elb) compareRule(cloudRule *elbv2.DescribeRulesOutput, localRule []type
 // ensure all rules's backend are created, every backend is created by one target group
 func (e *Elb) ensureRuleTargetGroup(region string, listener *networkextensionv1.Listener) (map[string]string, error) {
 	// get lb information
-	lbs, err := e.sdkWrapper.DescribeLoadBalancers(region, &elbv2.DescribeLoadBalancersInput{LoadBalancerArns: []string{listener.Spec.LoadbalancerID}})
+	lb, err := e.sdkWrapper.getLbFromCache(region, listener.Spec.LoadbalancerID)
 	if err != nil {
-		return nil, fmt.Errorf("DescribeLoadBalancers failed, %s", err.Error())
+		return nil, err
 	}
-	if len(lbs.LoadBalancers) == 0 {
-		return nil, fmt.Errorf("loadbalancer %s not found", listener.Spec.LoadbalancerID)
-	}
-	lb := lbs.LoadBalancers[0]
 	ruleTgMap := make(map[string]string, 0)
 	for _, rule := range listener.Spec.Rules {
 		if rule.TargetGroup == nil {

@@ -69,5 +69,7 @@
       "partition": ${kafkaPartition},
       "username": "${kafkaUsername}",
       "password": "${kafkaPassword}"
-  }
+  },
+  "bkbaseConfigPath": "${bkbaseConfigPath}",
+  "tspiderConfigPath": "${tspiderConfigPath}"
 }

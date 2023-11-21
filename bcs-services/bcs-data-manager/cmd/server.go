@@ -35,8 +35,10 @@ import (
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/jmoiron/sqlx"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
 	microsvc "github.com/micro/go-micro/v2/service"
@@ -57,6 +59,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/requester"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	dmmongo "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store/mongo"
+	dmtspider "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store/tspider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/worker"
 	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
@@ -74,7 +77,8 @@ type Server struct {
 	handler       *handler.BcsDataManager
 	producer      *worker.Producer
 	consumer      *worker.Consumers
-	store         store.Server
+	mongoStore    store.Server
+	tspiderStore  store.Server
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
 	// extra module server, [pprof, metrics, swagger]
@@ -219,14 +223,38 @@ func (s *Server) initModel() error {
 	}
 	blog.Infof("init mongo db successfully")
 
+	// init tspiderConfig
+	tspiderConfig, err := s.opt.ParseTspiderConfig()
+	if err != nil {
+		blog.Errorf("init tspider config failed, err %s", err.Error())
+		return err
+	}
+	tspiderDBs := make(map[string]*sqlx.DB, 0)
+	for _, conf := range tspiderConfig {
+		dsn := conf.Connection
+		db, err := sqlx.Connect("mysql", dsn)
+		if err != nil {
+			blog.Errorf("init tspider db(%s) failed, err %s", dsn, err.Error())
+			return err
+		}
+
+		tspiderDBs[conf.StoreName] = db
+	}
+	blog.Infof("init tspider db successfully")
+
+	// init bkbaseConfig
 	bkbaseConfig, err := s.opt.ParseBkbaseConfig()
 	if err != nil {
 		blog.Errorf("init bkbase config failed, err %s", err.Error())
 		return err
 	}
+	blog.Infof("init bkbaseConfig successfully")
 
-	modelSet := dmmongo.NewServer(mongoDB, bkbaseConfig)
-	s.store = modelSet
+	// set server's mongo and tspider model
+	mongoModelSet := dmmongo.NewServer(mongoDB, bkbaseConfig)
+	s.mongoStore = mongoModelSet
+	spiderModelSet := dmtspider.NewServer(tspiderDBs, bkbaseConfig)
+	s.tspiderStore = spiderModelSet
 	blog.Infof("init store successfully")
 	return nil
 }
@@ -340,7 +368,7 @@ func (s *Server) initMicro() error {
 	microService.Init()
 
 	// create cluster manager server handler
-	s.handler = handler.NewBcsDataManager(s.store, s.resourceGetter)
+	s.handler = handler.NewBcsDataManager(s.mongoStore, s.tspiderStore, s.resourceGetter)
 	// Register handler
 	err := datamanager.RegisterDataManagerHandler(microService.Server(), s.handler)
 	if err != nil {
@@ -427,7 +455,7 @@ func (s *Server) initWorker() error {
 	// init consumer
 	handlerOpts := worker.HandlerOptions{ChanQueueNum: s.opt.HandleConfig.ChanQueueLen}
 	handlerClients := worker.HandleClients{
-		Store:            s.store,
+		Store:            s.mongoStore,
 		BcsMonitorClient: bcsMonitorCli,
 		K8sStorageCli:    k8sStorageCli,
 		MesosStorageCli:  mesosStorageCli,

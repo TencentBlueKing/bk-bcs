@@ -130,7 +130,7 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 	if err != nil {
 		return err
 	}
-	if oldOne.Spec.Name == constant.DefaultTmplSpaceName {
+	if oldOne.Spec.Name == constant.DefaultTmplSpaceCNName {
 		return fmt.Errorf("can't update default template space")
 	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
@@ -203,7 +203,7 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 	if err != nil {
 		return err
 	}
-	if oldOne.Spec.Name == constant.DefaultTmplSpaceName {
+	if oldOne.Spec.Name == constant.DefaultTmplSpaceCNName {
 		return fmt.Errorf("can't delete default template space")
 	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
@@ -243,14 +243,14 @@ func (dao *templateSpaceDao) GetAllBizs(kit *kit.Kit) ([]uint32, error) {
 // CreateDefault create default template space instance together with its default template set instance
 func (dao *templateSpaceDao) CreateDefault(kit *kit.Kit, bizID uint32) (uint32, error) {
 	// if the default template space already exists, return directly
-	if tmplSpace, err := dao.GetByUniqueKey(kit, bizID, constant.DefaultTmplSpaceName); err == nil {
+	if tmplSpace, err := dao.GetByUniqueKey(kit, bizID, constant.DefaultTmplSpaceCNName); err == nil {
 		return tmplSpace.ID, nil
 	}
 
 	g := &table.TemplateSpace{
 		ID: 0,
 		Spec: &table.TemplateSpaceSpec{
-			Name: constant.DefaultTmplSpaceName,
+			Name: constant.DefaultTmplSpaceCNName,
 			Memo: constant.DefaultTmplSpaceMemo,
 		},
 		Attachment: &table.TemplateSpaceAttachment{

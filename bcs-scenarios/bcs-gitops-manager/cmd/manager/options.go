@@ -27,11 +27,12 @@ const (
 
 // GitOps configuraiotn
 type GitOps struct {
-	Service        string `json:"service,omitempty"`
-	User           string `json:"user,omitempty"`
-	Pass           string `json:"pass,omitempty"`
-	AdminNamespace string `json:"adminnamespace,omitempty"`
-	RepoServer     string `json:"repoServer,omitempty"`
+	Service                 string `json:"service,omitempty"`
+	User                    string `json:"user,omitempty"`
+	Pass                    string `json:"pass,omitempty"`
+	AdminNamespace          string `json:"adminnamespace,omitempty"`
+	RepoServer              string `json:"repoServer,omitempty"`
+	AppsetControllerWebhook string `json:"appsetControllerWebhook,omitempty"`
 }
 
 // Options for bcs-gitops-manager
@@ -56,6 +57,8 @@ type Options struct {
 	Auth                 *common.AuthConfig              `json:"auth,omitempty"`
 	TraceConfig          *common.TraceConfig             `json:"traceConfig,omitempty"`
 	AuditConfig          *common.AuditConfig             `json:"auditConfig"`
+	DBConfig             *common.DBConfig                `json:"dbConfig"`
+	MetricConfig         *common.MetricConfig            `json:"metricConfig"`
 }
 
 // DefaultOptions for gitops-manager

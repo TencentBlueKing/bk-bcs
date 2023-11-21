@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: bcs-monitor-controller
+    release: po
+spec:
+  type: ClusterIP
+  ports:
+    - port: 18081
+      targetPort: metric-port
+      protocol: TCP
+      name: metric
+    - port: 18088
+      targetPort: api-port
+      protocol: TCP
+      name: api
+  selector:
+    app: bcs-monitor-controller

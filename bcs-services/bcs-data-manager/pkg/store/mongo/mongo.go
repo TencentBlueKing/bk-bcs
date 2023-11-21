@@ -28,6 +28,9 @@ type server struct {
 	*ModelPodAutoscaler
 	*ModelPowerTrading
 	*ModelCloudNative
+	*ModelOperationData
+	*ModelWorkloadRequest
+	*ModelWorkloadOriginRequest
 }
 
 // NewServer new db server
@@ -41,5 +44,8 @@ func NewServer(db drivers.DB, bkbaseConf *types.BkbaseConfig) store.Server {
 		ModelPodAutoscaler: NewModelPodAutoscaler(db),
 		ModelPowerTrading:  NewModelPowerTrading(db, bkbaseConf),
 		ModelCloudNative:   NewModelCloudNative(db, bkbaseConf),
+		ModelOperationData: NewModelOperationData(db, bkbaseConf),
+		ModelWorkloadRequest:       NewModelWorkloadRequest(db),
+		ModelWorkloadOriginRequest: NewModelWorkloadOriginRequest(db),
 	}
 }

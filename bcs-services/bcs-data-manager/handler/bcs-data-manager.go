@@ -29,14 +29,16 @@ import (
 
 // BcsDataManager for handler
 type BcsDataManager struct {
-	model          store.Server
+	mongoModel     store.Server
+	tspiderModel   store.Server
 	resourceGetter common.GetterInterface
 }
 
 // NewBcsDataManager create DataManager Handler
-func NewBcsDataManager(model store.Server, resourceGetter common.GetterInterface) *BcsDataManager {
+func NewBcsDataManager(mongoModel store.Server, tspiderModel store.Server, resourceGetter common.GetterInterface) *BcsDataManager {
 	return &BcsDataManager{
-		model:          model,
+		mongoModel:     mongoModel,
+		tspiderModel:   tspiderModel,
 		resourceGetter: resourceGetter,
 	}
 }
@@ -53,7 +55,7 @@ func (e *BcsDataManager) GetAllProjectList(ctx context.Context,
 		req.GetDimension(), req.Page, req.Size, time.Unix(req.GetStartTime(), 0),
 		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
-	result, total, err := e.model.GetProjectList(ctx, req)
+	result, total, err := e.mongoModel.GetProjectList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get project list error: %v", err)
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -102,7 +104,7 @@ func (e *BcsDataManager) GetProjectInfo(ctx context.Context,
 		}
 		req.Project = project.ProjectID
 	}
-	result, err := e.model.GetProjectInfo(ctx, req)
+	result, err := e.mongoModel.GetProjectInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get project info error: %v", err)
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -129,7 +131,7 @@ func (e *BcsDataManager) GetAllClusterList(ctx context.Context, req *bcsdatamana
 		req.GetDimension(), req.GetPage(), req.GetSize(), time.Unix(req.GetStartTime(), 0),
 		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
-	result, total, err := e.model.GetClusterInfoList(ctx, req)
+	result, total, err := e.mongoModel.GetClusterInfoList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get cluster list info error: %v", err)
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -183,7 +185,7 @@ func (e *BcsDataManager) GetClusterListByProject(ctx context.Context, req *bcsda
 		}
 		req.Project = project.ProjectID
 	}
-	result, total, err := e.model.GetClusterInfoList(ctx, req)
+	result, total, err := e.mongoModel.GetClusterInfoList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get cluster list info error: %v", err)
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -211,7 +213,7 @@ func (e *BcsDataManager) GetClusterInfo(ctx context.Context, req *bcsdatamanager
 	blog.Infof("Received GetClusterInfo.Call request. cluster id:%s, dimension: %s, startTime=%s, endTime=%s",
 		req.GetClusterID(), req.GetDimension(), time.Unix(req.GetStartTime(), 0),
 		time.Unix(req.GetEndTime(), 0))
-	result, err := e.model.GetClusterInfo(ctx, req)
+	result, err := e.mongoModel.GetClusterInfo(ctx, req)
 	start := time.Now()
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get cluster info error: %v", err)
@@ -241,7 +243,7 @@ func (e *BcsDataManager) GetNamespaceInfoList(ctx context.Context, req *bcsdatam
 		req.GetClusterID(), req.GetDimension(), req.GetPage(), req.GetSize(), time.Unix(req.GetStartTime(), 0),
 		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
-	result, total, err := e.model.GetNamespaceInfoList(ctx, req)
+	result, total, err := e.mongoModel.GetNamespaceInfoList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get namespace list info error: %v", err)
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -271,7 +273,7 @@ func (e *BcsDataManager) GetNamespaceInfo(ctx context.Context, req *bcsdatamanag
 		req.GetClusterID(), req.Namespace, req.Dimension, time.Unix(req.GetStartTime(), 0),
 		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
-	result, err := e.model.GetNamespaceInfo(ctx, req)
+	result, err := e.mongoModel.GetNamespaceInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get namespace info error: %v", err)
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -300,7 +302,7 @@ func (e *BcsDataManager) GetWorkloadInfoList(ctx context.Context, req *bcsdatama
 		req.GetClusterID(), req.GetNamespace(), req.GetDimension(), req.GetWorkloadType(), req.GetPage(), req.GetSize(),
 		time.Unix(req.GetStartTime(), 0), time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
-	result, total, err := e.model.GetWorkloadInfoList(ctx, req)
+	result, total, err := e.mongoModel.GetWorkloadInfoList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get workload list info error: %v", err)
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -330,7 +332,7 @@ func (e *BcsDataManager) GetWorkloadInfo(ctx context.Context, req *bcsdatamanage
 		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetWorkloadType(), req.GetWorkloadName(),
 		time.Unix(req.GetStartTime(), 0), time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
-	result, err := e.model.GetWorkloadInfo(ctx, req)
+	result, err := e.mongoModel.GetWorkloadInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get workload info error: %v", err)
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -359,7 +361,7 @@ func (e *BcsDataManager) GetPodAutoscalerList(ctx context.Context, req *bcsdatam
 		req.GetPodAutoscalerType(), req.GetPage(), req.GetSize(), time.Unix(req.GetStartTime(), 0),
 		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
-	result, total, err := e.model.GetPodAutoscalerList(ctx, req)
+	result, total, err := e.mongoModel.GetPodAutoscalerList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get workload info error: %v", err)
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -389,7 +391,7 @@ func (e *BcsDataManager) GetPodAutoscaler(ctx context.Context, req *bcsdatamanag
 		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetPodAutoscalerType(), req.GetPodAutoscalerName(),
 		time.Unix(req.GetStartTime(), 0), time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
-	result, err := e.model.GetPodAutoscalerInfo(ctx, req)
+	result, err := e.mongoModel.GetPodAutoscalerInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get podAutoscaler info error: %v", err)
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -415,7 +417,17 @@ func (e *BcsDataManager) GetPowerTrading(ctx context.Context, req *bcsdatamanage
 		req.GetTable(), req.GetStartTime(), req.GetEndTime(), req.GetParams())
 
 	start := time.Now()
-	result, total, err := e.model.GetPowerTradingInfo(ctx, req)
+
+	var storeDB store.Server
+	if req.GetPreferStorage() == store.TspiderStore {
+		// tspider store
+		storeDB = e.tspiderModel
+	} else {
+		// default store
+		storeDB = e.mongoModel
+	}
+
+	result, total, err := storeDB.GetPowerTradingInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get powerTrading info error: %v", err)
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -439,7 +451,7 @@ func (e *BcsDataManager) GetCloudNativeWorkloadList(ctx context.Context,
 	blog.Infof("Received GetCloudNativeWorkload.Call request. PageSize: %d, CurrentPage: %d", req.GetPageSize(), req.GetCurrentPage())
 
 	start := time.Now()
-	result, err := e.model.GetCloudNativeWorkloadList(ctx, req)
+	result, err := e.tspiderModel.GetCloudNativeWorkloadList(ctx, req)
 	if err != nil {
 		rsp.Msg = fmt.Sprintf("Get cloud native workloads error, err: %s", err.Error())
 		rsp.Code = 500
@@ -459,5 +471,76 @@ func (e *BcsDataManager) GetCloudNativeWorkloadList(ctx context.Context,
 	rsp.Data.CurrentPage = req.GetCurrentPage()
 	rsp.Data.Timestamp = time.Now().Format("2006-01-02 15:04:05")
 
+	return nil
+}
+
+// GetUserOperationDataList get bcs user operation data list
+// type: project/cluster/operation
+// startTime: unix timestamp
+// endTime: unix timestamp
+// page: min 1
+// size: min 1
+// projectCode is necessary
+func (e *BcsDataManager) GetUserOperationDataList(ctx context.Context,
+	req *bcsdatamanager.GetUserOperationDataListRequest, rsp *bcsdatamanager.GetUserOperationDataListResponse) error {
+
+	start := time.Now()
+	result, total, err := e.tspiderModel.GetUserOperationDataList(ctx, req)
+	if err != nil {
+		rsp.Message = fmt.Sprintf("get bcs user opration data error: %v", err)
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
+		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetUserOperationDataList", "grpc", prom.StatusErr, start)
+		return nil
+	}
+	rsp.Data = result
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
+	rsp.Total = uint32(total)
+
+	prom.ReportAPIRequestMetric("GetUserOperationDataList", "grpc", prom.StatusOK, start)
+	return nil
+}
+
+
+func (e *BcsDataManager) GetWorkloadRequestResult(ctx context.Context, req *bcsdatamanager.GetWorkloadRequestRecommendResultReq,
+	rsp *bcsdatamanager.GetWorkloadRequestRecommendResultRsp) error {
+	blog.Infof("Received GetWorkloadRequestResult.Call request. cluster id: %s, namespace: %s, workloadType:%s"+
+		"workloadName:%s",
+		req.GetClusterID(), req.GetNamespace(), req.GetWorkloadType(), req.GetWorkloadName())
+	start := time.Now()
+	result, err := e.mongoModel.GetLatestWorkloadRequest(ctx, req)
+	if err != nil {
+		rsp.Message = fmt.Sprintf("get workloadRequestResult info error: %v", err)
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
+		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetWorkloadRequestResult", "grpc", prom.StatusErr, start)
+		return nil
+	}
+	rsp.Data = result.GetData()
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
+	prom.ReportAPIRequestMetric("GetWorkloadRequestResult", "grpc", prom.StatusOK, start)
+	return nil
+}
+
+func (e *BcsDataManager) GetWorkloadOriginRequestResult(ctx context.Context, req *bcsdatamanager.GetWorkloadOriginRequestResultReq,
+	rsp *bcsdatamanager.GetWorkloadOriginRequestResultRsp) error {
+	blog.Infof("Received GetWorkloadOriginRequestResult.Call request. projectID:%s, cluster id: %s, "+
+		"namespace: %s, workloadType:%s, workloadName:%s",
+		req.ProjectID, req.GetClusterID(), req.GetNamespace(), req.GetWorkloadType(), req.GetWorkloadName())
+	start := time.Now()
+	result, err := e.mongoModel.ListWorkloadOriginRequest(ctx, req)
+	if err != nil {
+		rsp.Message = fmt.Sprintf("GetWorkloadOriginRequestResult info error: %v", err)
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
+		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetWorkloadOriginRequestResult", "grpc", prom.StatusErr, start)
+		return nil
+	}
+	rsp.Data = result
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
+	prom.ReportAPIRequestMetric("GetWorkloadOriginRequestResult", "grpc", prom.StatusOK, start)
 	return nil
 }

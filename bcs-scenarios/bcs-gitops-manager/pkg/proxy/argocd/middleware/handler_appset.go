@@ -19,9 +19,12 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/argoproj/argo-cd/v2/applicationset/generators"
+	"github.com/argoproj/argo-cd/v2/applicationset/services"
 	"github.com/argoproj/argo-cd/v2/applicationset/utils"
 	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -58,51 +61,56 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 	}
 	blog.Infof("RequestID[%s] check applicationset generator success", RequestID(ctx))
 
-	//repoClientSet := apiclient.NewRepoServerClientset(h.option.RepoServerUrl, 60,
-	//	apiclient.TLSConfiguration{
-	//		DisableTLS:       false,
-	//		StrictValidation: false,
-	//	})
-	//argoCDService, err := services.NewArgoCDService(h.option.Storage.GetArgoDB(),
-	//	true, repoClientSet, false)
+	repoClientSet := apiclient.NewRepoServerClientset(h.option.RepoServerUrl, 60,
+		apiclient.TLSConfiguration{
+			DisableTLS:       false,
+			StrictValidation: false,
+		})
+	argoCDService, err := services.NewArgoCDService(h.option.Storage.GetArgoDB(),
+		true, repoClientSet, false)
 	// this will render the Applications by ApplicationSet's generators
 	// refer to: https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
 	results := make([]*v1alpha1.Application, 0)
-	//for i := range appset.Spec.Generators {
-	//	generator := appset.Spec.Generators[i]
-	//	if generator.List == nil && generator.Git == nil && generator.Matrix == nil {
-	//		continue
-	//	}
-	//	var tsResult []generators.TransformResult
-	//	tsResult, err = generators.Transform(generator, map[string]generators.Generator{
-	//		"List": generators.NewListGenerator(),
-	//		//"Git":  generators.NewGitGenerator(argoCDService),
-	//		"Matrix": generators.NewMatrixGenerator(nestedGenerators),
-	//	}, appset.Spec.Template, appset, map[string]interface{}{})
-	//	if err != nil {
-	//		return nil, http.StatusBadRequest, errors.Wrapf(err, "transform generator[%d] failed", i)
-	//	}
-	//	for j := range tsResult {
-	//		ts := tsResult[j]
-	//		tmplApplication := getTempApplication(ts.Template)
-	//		if tmplApplication.Labels == nil {
-	//			tmplApplication.Labels = make(map[string]string)
-	//		}
-	//		for _, p := range ts.Params {
-	//			var app *v1alpha1.Application
-	//			app, err = render.RenderTemplateParams(tmplApplication, appset.Spec.SyncPolicy,
-	//				p, appset.Spec.GoTemplate)
-	//			if err != nil {
-	//				return nil, http.StatusBadRequest, errors.Wrap(err, "error generating application from params")
-	//			}
-	//			statusCode, err = h.CheckCreateApplication(ctx, app)
-	//			if err != nil {
-	//				return nil, statusCode, errors.Wrapf(err, "check create application failed")
-	//			}
-	//			results = append(results, app)
-	//		}
-	//	}
-	//}
+	for i := range appset.Spec.Generators {
+		generator := appset.Spec.Generators[i]
+		if generator.List == nil && generator.Git == nil && generator.Matrix == nil {
+			continue
+		}
+		var tsResult []generators.TransformResult
+		listGenerator := generators.NewListGenerator()
+		gitGenerator := generators.NewGitGenerator(argoCDService)
+		tsResult, err = generators.Transform(generator, map[string]generators.Generator{
+			"List": listGenerator,
+			"Git":  gitGenerator,
+			"Matrix": generators.NewMatrixGenerator(map[string]generators.Generator{
+				"List": listGenerator,
+				"Git":  gitGenerator,
+			}),
+		}, appset.Spec.Template, appset, map[string]interface{}{})
+		if err != nil {
+			return nil, http.StatusBadRequest, errors.Wrapf(err, "transform generator[%d] failed", i)
+		}
+		for j := range tsResult {
+			ts := tsResult[j]
+			tmplApplication := getTempApplication(ts.Template)
+			if tmplApplication.Labels == nil {
+				tmplApplication.Labels = make(map[string]string)
+			}
+			for _, p := range ts.Params {
+				var app *v1alpha1.Application
+				app, err = render.RenderTemplateParams(tmplApplication, appset.Spec.SyncPolicy,
+					p, appset.Spec.GoTemplate, nil)
+				if err != nil {
+					return nil, http.StatusBadRequest, errors.Wrap(err, "error generating application from params")
+				}
+				statusCode, err = h.CheckCreateApplication(ctx, app)
+				if err != nil {
+					return nil, statusCode, errors.Wrapf(err, "check create application failed")
+				}
+				results = append(results, app)
+			}
+		}
+	}
 	return results, 0, nil
 }
 

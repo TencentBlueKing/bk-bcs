@@ -89,13 +89,11 @@ type UserMgrConfig struct {
 	TKE            options.TKEOptions
 	PeerToken      string
 
-	IAMConfig     options.IAMConfig
-	ClusterConfig options.ClusterManagerConfig
-	EtcdConfig    registry.CMDOptions
+	IAMConfig  options.IAMConfig
+	EtcdConfig registry.CMDOptions
 
 	PermissionSwitch bool
 	CommunityEdition bool
-	PassConfig       options.PassCCConfig
 	BcsAPI           *options.BcsAPI
 
 	// Encrypt

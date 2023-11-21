@@ -5,7 +5,7 @@
   "author": "bkfe",
   "scripts": {
     "dev": "npm run i18n && bk-cli-service-webpack dev",
-    "build": "bk-cli-service-webpack build",
+    "build": "node ./scripts/generate-version.js && bk-cli-service-webpack build",
     "i18n": "node ./scripts/vue-i18n-extract.js",
     "lint": "eslint --fix --ext .js,.vue,.ts,.tsx src"
   },

@@ -17,6 +17,7 @@
 import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { bus } from '@/common/bus';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import PermDialog from '@/views/app/apply-perm.vue';
@@ -53,11 +54,35 @@ export default defineComponent({
       }
     };
 
+    // 校验资源是否更新
+    const resourceHash = ref('');
+    const validateResourceVersion = () => {
+      setTimeout(async () => {
+        const res = await fetch(`${window.BK_STATIC_URL}/static/static_version.txt`, { cache: 'no-store' });
+        const hash = await res.text();
+        if (resourceHash.value && (resourceHash.value !== hash)) {
+          $bkInfo({
+            type: 'warning',
+            clsName: 'custom-info-confirm',
+            title: $i18n.t('bcs.newVersion'),
+            defaultInfo: true,
+            okText: $i18n.t('generic.button.reload'),
+            confirmFn: () => {
+              window.location.reload();
+            },
+          });
+        }
+        resourceHash.value = hash;
+        validateResourceVersion();
+      }, 15000);
+    };
+
     onBeforeUnmount(() => {
       bus.$off('show-apply-perm-modal');
     });
 
     onMounted(async () => {
+      validateResourceVersion();
       validateAllowDomains();
 
       window.$loginModal = loginRef.value;

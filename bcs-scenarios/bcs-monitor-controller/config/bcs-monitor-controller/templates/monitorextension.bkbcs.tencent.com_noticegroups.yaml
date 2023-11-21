@@ -1,0 +1,208 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.0
+  creationTimestamp: null
+  name: noticegroups.monitorextension.bkbcs.tencent.com
+spec:
+  group: monitorextension.bkbcs.tencent.com
+  names:
+    kind: NoticeGroup
+    listKind: NoticeGroupList
+    plural: noticegroups
+    singular: noticegroup
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.syncStatus.state
+      name: status
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: NoticeGroup is the Schema for the noticegroups API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: NoticeGroupSpec defines the desired state of NoticeGroup
+            properties:
+              bizID:
+                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                  Important: Run "make" to regenerate code after modifying this file'
+                type: string
+              bizToken:
+                type: string
+              groups:
+                items:
+                  properties:
+                    action:
+                      additionalProperties:
+                        description: NoticeAction 执行通知
+                        properties:
+                          execute:
+                            description: NoticeType 通知方式
+                            properties:
+                              chatids:
+                                items:
+                                  type: string
+                                type: array
+                              type:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - type
+                            type: object
+                          execute_failed:
+                            description: NoticeType 通知方式
+                            properties:
+                              chatids:
+                                items:
+                                  type: string
+                                type: array
+                              type:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - type
+                            type: object
+                          execute_success:
+                            description: NoticeType 通知方式
+                            properties:
+                              chatids:
+                                items:
+                                  type: string
+                                type: array
+                              type:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - type
+                            type: object
+                        required:
+                        - execute
+                        - execute_failed
+                        - execute_success
+                        type: object
+                      type: object
+                    alert:
+                      additionalProperties:
+                        description: NoticeAlert 告警通知
+                        properties:
+                          fatal:
+                            description: NoticeType 通知方式
+                            properties:
+                              chatids:
+                                items:
+                                  type: string
+                                type: array
+                              type:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - type
+                            type: object
+                          remind:
+                            description: NoticeType 通知方式
+                            properties:
+                              chatids:
+                                items:
+                                  type: string
+                                type: array
+                              type:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - type
+                            type: object
+                          warning:
+                            description: NoticeType 通知方式
+                            properties:
+                              chatids:
+                                items:
+                                  type: string
+                                type: array
+                              type:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - type
+                            type: object
+                        required:
+                        - fatal
+                        - remind
+                        - warning
+                        type: object
+                      type: object
+                    name:
+                      type: string
+                    users:
+                      items:
+                        type: string
+                      type: array
+                  type: object
+                type: array
+              ignoreChange:
+                description: if true, controller will ignore resource's change
+                type: boolean
+              override:
+                description: 是否覆盖同名配置，默认为false
+                type: boolean
+              scenario:
+                type: string
+            required:
+            - bizID
+            - groups
+            type: object
+          status:
+            description: NoticeGroupStatus defines the observed state of NoticeGroup
+            properties:
+              syncStatus:
+                description: SyncStatus defines status info of syncing process
+                properties:
+                  app:
+                    type: string
+                  lastSyncTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  state:
+                    description: 'SyncState is state for syncing process of polaris
+                      service Syncing: syncing is in process Completed: syncing process
+                      is successfully finished Failed: syncing process failed'
+                    type: string
+                required:
+                - state
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

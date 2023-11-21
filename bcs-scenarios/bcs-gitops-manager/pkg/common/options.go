@@ -128,6 +128,21 @@ type AuditConfig struct {
 	Token      string `json:"token"`
 }
 
+// DBConfig defines the config of db
+type DBConfig struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Addr     string `json:"addr"`
+	Database string `json:"database"`
+	LimitQPS int64  `json:"limitQps"`
+}
+
+// MetricConfig defines the service monitor info
+type MetricConfig struct {
+	AppMetricNamespace string `json:"appMetricNamespace"`
+	AppMetricName      string `json:"appMetricName"`
+}
+
 // Complete unset item
 func (config *AuthConfig) Complete() error {
 	return nil

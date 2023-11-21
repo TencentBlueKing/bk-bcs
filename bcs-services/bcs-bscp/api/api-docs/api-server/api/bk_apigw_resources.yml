@@ -271,7 +271,7 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/get/app/app/app_id/{app_id}/biz_id/{biz_id}:
+  /api/v1/config/biz/{biz_id}/apps/{app_id}:
     get:
       operationId: get_app
       description: 获取应用详情
@@ -287,7 +287,7 @@ paths:
         backend:
           type: HTTP
           method: get
-          path: /api/v1/config/get/app/app/app_id/{app_id}/biz_id/{biz_id}
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}

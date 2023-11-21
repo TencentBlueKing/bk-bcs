@@ -1,8 +1,13 @@
 <template>
   <div class="use-package-apps">
-    <bk-select :value="''" :filterable="true" :input-search="false">
+    <bk-select :value="''" :disabled="tplCounts === 0" :filterable="true" :input-search="false">
       <template #trigger>
-        <div class="select-app-trigger">
+        <div
+            :class="['select-app-trigger', { disabled: tplCounts === 0 }]"
+            v-bk-tooltips="{
+              disabled: tplCounts > 0,
+              content: '该套餐中没有可用配置文件，无法被导入到服务配置中'
+            }">
           <Plus class="plus-icon" />
           新服务中使用
         </div>
@@ -15,24 +20,24 @@
       </bk-option>
     </bk-select>
     <div class="table-wrapper">
-      <bk-table :border="['outer']" :data="boundApps" :thead="{isShow:false}">
-        <template #prepend>
-          <div class="table-head">
-            <span class="thead-text">当前使用此套餐的服务</span>
-            <right-turn-line class="refresh-button" @click="getBoundApps"/>
-          </div>
-        </template>
-        <bk-table-column label="">
-          <template #default="{ row }">
-            <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
-              <div v-overflow-title class="name-text">{{ row.app_name }}</div>
-              <LinkToApp class="link-icon" :id="row.app_id" />
-            </div>
-          </template>
-        </bk-table-column>
-      </bk-table>
-      <bk-pagination class="table-pagination" small align="center" :show-limit="false" :show-total-count="false">
-      </bk-pagination>
+      <bk-loading :loading="boundAppsLoading">
+        <div class="refresh-header">
+          <span class="text">当前使用此套餐的服务</span>
+          <right-turn-line class="refresh-button" :class="{rotate:boundAppsLoading}"  @click="getBoundApps"/>
+        </div>
+        <bk-table :border="['outer']" :data="boundApps" :thead="{isShow:false}">
+          <bk-table-column label="">
+            <template #default="{ row }">
+              <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
+                <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+                <LinkToApp class="link-icon" :id="row.app_id" />
+              </div>
+            </template>
+          </bk-table-column>
+        </bk-table>
+        <bk-pagination class="table-pagination" small align="center" :show-limit="false" :show-total-count="false">
+        </bk-pagination>
+      </bk-loading>
     </div>
   </div>
 </template>
@@ -58,6 +63,10 @@ const { spaceId } = storeToRefs(useGlobalStore());
 // const { userInfo } = storeToRefs(useUserStore());
 const templateStore = useTemplateStore();
 const { currentTemplateSpace, currentPkg } = storeToRefs(templateStore);
+
+const props = defineProps<{
+  tplCounts: number;
+}>()
 
 const userApps = ref<IAppItem[]>([]);
 const userAppListLoading = ref(false);
@@ -108,14 +117,13 @@ const getBoundApps = async () => {
   );
   boundApps.value = res.details;
   boundAppsLoading.value = false;
-  emits('toggle-open', boundApps.value.length > 0);
 };
 
 const goToConfigPageImport = (id: number) => {
   const { href } = router.resolve({
     name: 'service-config',
     params: { appId: id },
-    query: { pkg_id: currentTemplateSpace.value },
+    query: { pkg_id: currentPkg.value },
   });
   window.open(href, '_blank');
 };
@@ -141,6 +149,11 @@ const goToConfigPageImport = (id: number) => {
   font-size: 14px;
   overflow: hidden;
   cursor: pointer;
+  &.disabled {
+    color: #dcdee5;
+    border-color: #dcdee5;
+    cursor: not-allowed;
+  }
   .plus-icon {
     font-size: 20px;
   }
@@ -162,17 +175,18 @@ const goToConfigPageImport = (id: number) => {
   .table-pagination {
     margin-top: 16px;
   }
-  .table-head {
+  .refresh-header {
     display: flex;
     align-items: center;
     padding: 0 16px;
     font-size: 12px;
     height: 41px;
-    border-bottom: 1px solid #DCDEE5;
+    border: 1px solid #DCDEE5;
+    border-bottom: none;
     &:hover {
       background-color: #f0f1f5;
     }
-    .thead-text {
+    .text {
       margin-right: 16px;
     }
     .refresh-button {
@@ -180,6 +194,9 @@ const goToConfigPageImport = (id: number) => {
       font-size: 16px;
       cursor: pointer;
     }
+  }
+  :deep(.bk-exception-img) {
+    height: 80px;
   }
 }
 .name-text {
@@ -190,5 +207,17 @@ const goToConfigPageImport = (id: number) => {
 .link-icon {
   flex-shrink: 0;
   margin-left: 10px;
+}
+.rotate {
+  animation: rotate 0.5s infinite linear;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

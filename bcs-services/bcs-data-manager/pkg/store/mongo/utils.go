@@ -59,6 +59,16 @@ const (
 	AscendingKey = 1
 	// DescendingKey key for mongoDB descending
 	DescendingKey = -1
+	// BCSClusterIDKey key for bcs cluster id
+	BCSClusterIDKey = "bcs_cluster_id"
+	// WorkloadKindKey key for workload type
+	WorkloadKindKey = "workload_kind"
+	// MetricKey key for metric
+	MetricKey = "metric"
+	// DTEventTimeKey for dtEventTime
+	DTEventTimeStampKey = "dt_event_time_stamp"
+	// ContainerNameKey key for container name
+	ContainerNameKey = "container_name"
 )
 
 const (

@@ -29,11 +29,12 @@ import (
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
-	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
+	"golang.org/x/exp/slices"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
@@ -51,7 +52,8 @@ type MiddlewareInterface interface {
 		action []string) (map[string]map[string]bool, error)
 	CheckProjectPermission(ctx context.Context, projectName string,
 		action iam.ActionID) (*v1alpha1.AppProject, int, error)
-	CheckProjectPermissionByID(ctx context.Context, projectID string, action iam.ActionID) (int, error)
+	CheckProjectPermissionByID(ctx context.Context, projectName, projectID string, action iam.ActionID) (int, error)
+	CheckBusinessPermission(ctx context.Context, bizID string, action iam.ActionID) (int, error)
 
 	CheckMultiClustersPermission(ctx context.Context, projectID string, clusterIDs []string,
 		actions []string) (map[string]map[string]bool, error)
@@ -63,6 +65,7 @@ type MiddlewareInterface interface {
 	CheckApplicationPermission(ctx context.Context, appName string,
 		action iam.ActionID) (*v1alpha1.Application, int, error)
 
+	ListProjectsWithoutAuth(ctx context.Context) (*v1alpha1.AppProjectList, int, error)
 	ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, int, error)
 	ListClusters(ctx context.Context, projectNames []string) (*v1alpha1.ClusterList, int, error)
 	ListRepositories(ctx context.Context, projectNames []string,
@@ -84,19 +87,23 @@ type handler struct {
 	option            *proxy.GitOpsOptions
 	argoSession       *session.ArgoSession
 	secretSession     *session.SecretSession
+	analysisClient    analysis.AnalysisInterface
+	monitorSession    *session.MonitorSession
 
 	tracer func(context.Context) error
 }
 
 // NewMiddlewareHandler create handler instance
 func NewMiddlewareHandler(option *proxy.GitOpsOptions, session *session.ArgoSession,
-	secretSession *session.SecretSession) MiddlewareInterface {
+	secretSession *session.SecretSession, monitorSession *session.MonitorSession) MiddlewareInterface {
 	return &handler{
 		option:            option,
 		argoSession:       session,
 		secretSession:     secretSession,
+		monitorSession:    monitorSession,
 		projectPermission: project.NewBCSProjectPermClient(option.IAMClient),
 		clusterPermission: cluster.NewBCSClusterPermClient(option.IAMClient),
+		analysisClient:    analysis.GetAnalysisClient(),
 	}
 }
 
@@ -120,11 +127,12 @@ func (h *handler) Init() error {
 func (h *handler) HttpWrapper(handler HttpHandler) http.Handler {
 	handlerName := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
 	hw := &httpWrapper{
-		handler:       handler,
-		handlerName:   handlerName,
-		option:        h.option,
-		argoSession:   h.argoSession,
-		secretSession: h.secretSession,
+		handler:        handler,
+		handlerName:    handlerName,
+		option:         h.option,
+		argoSession:    h.argoSession,
+		secretSession:  h.secretSession,
+		monitorSession: h.monitorSession,
 	}
 	blog.Infof("[Trace] request handler '%s' add to otel", handlerName)
 	return otelhttp.NewHandler(hw, handlerName)
@@ -173,8 +181,33 @@ func (h *handler) CheckProjectPermission(ctx context.Context, projectName string
 		return nil, http.StatusForbidden,
 			errors.Errorf("project '%s' got ID failed, not under control", projectName)
 	}
-	statusCode, err := h.CheckProjectPermissionByID(ctx, projectID, action)
+	var statusCode int
+	statusCode, err = h.CheckProjectPermissionByID(ctx, projectName, projectID, action)
 	return argoProject, statusCode, err
+}
+
+// CheckBusinessPermission 检查用户是否具备业务权限
+func (h *handler) CheckBusinessPermission(ctx context.Context, bizID string, action iam.ActionID) (int, error) {
+	if bizID == "" {
+		return http.StatusBadRequest, errors.Errorf("bizID cannot be empty")
+	}
+	projectList, statusCode, err := h.ListProjects(ctx)
+	if statusCode != http.StatusOK {
+		return statusCode, err
+	}
+
+	for _, proj := range projectList.Items {
+		projectBizID := common.GetBCSProjectBusinessKey(proj.Annotations)
+		if projectBizID == bizID {
+			statusCode, err = h.CheckProjectPermissionByID(ctx, proj.Name,
+				common.GetBCSProjectID(proj.Annotations), action)
+			// 只要拥有一个project的权限，则允许操作
+			if statusCode == http.StatusOK {
+				return http.StatusOK, nil
+			}
+		}
+	}
+	return http.StatusForbidden, errors.Errorf("businessID '%s' for action '%s' forbidden", bizID, action)
 }
 
 // CheckCreateApplication 检查创建某个应用是否具备权限
@@ -209,7 +242,8 @@ func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Appl
 			return http.StatusBadRequest, errors.Wrapf(err, "check repository permission failed")
 		}
 		if !repoBelong {
-			return http.StatusForbidden, errors.Errorf("repo '%s' not belong to project '%s'", repoUrl, projectName)
+			return http.StatusForbidden, errors.Errorf("repo '%s' not belong to project '%s'",
+				repoUrl, projectName)
 		}
 		blog.Infof("RequestID[%s] check source repo '%s' success", RequestID(ctx), repoUrl)
 	}
@@ -239,9 +273,10 @@ func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Appl
 }
 
 // CheckProjectPermissionByID 检查登录态用户对于项目的权限
-func (h *handler) CheckProjectPermissionByID(ctx context.Context, projectID string,
+func (h *handler) CheckProjectPermissionByID(ctx context.Context, projectName, projectID string,
 	action iam.ActionID) (int, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
+	h.analysisClient.UpdateActivityUser(projectName, user.GetUser())
 	var permit bool
 	var err error
 	switch action {
@@ -350,7 +385,7 @@ func (h *handler) CheckApplicationPermission(ctx context.Context, appName string
 	}
 	projectID := common.GetBCSProjectID(app.Annotations)
 	if projectID != "" {
-		statusCode, err := h.CheckProjectPermissionByID(ctx, projectID, action)
+		statusCode, err := h.CheckProjectPermissionByID(ctx, app.Spec.Project, projectID, action)
 		if err != nil {
 			return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", projectID)
 		}
@@ -362,6 +397,25 @@ func (h *handler) CheckApplicationPermission(ctx context.Context, appName string
 		return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", app.Spec.Project)
 	}
 	return app, http.StatusOK, nil
+}
+
+// ListProjectsWithoutAuth list all projects that argo controlled
+func (h *handler) ListProjectsWithoutAuth(ctx context.Context) (*v1alpha1.AppProjectList, int, error) {
+	projectList, err := h.option.Storage.ListProjects(ctx)
+	if err != nil {
+		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list projects failed")
+	}
+	result := make([]v1alpha1.AppProject, 0, len(projectList.Items))
+	for i := range projectList.Items {
+		appProj := projectList.Items[i]
+		projectID := common.GetBCSProjectID(appProj.Annotations)
+		if projectID == "" {
+			continue
+		}
+		result = append(result, appProj)
+	}
+	projectList.Items = result
+	return projectList, http.StatusOK, nil
 }
 
 // ListProjects 根据用户权限列出具备权限的 Projects
@@ -411,7 +465,7 @@ func (h *handler) ListClusters(ctx context.Context, projectNames []string) (
 	projectClusters := make(map[string][]string)
 	controlledClusters := make(map[string]v1alpha1.Cluster)
 	for _, cls := range clusterList.Items {
-		if !sliceutils.StringInSlice(cls.Project, projectNames) {
+		if !slices.Contains[string](projectNames, cls.Project) {
 			continue
 		}
 		controlProjectID := common.GetBCSProjectID(cls.Annotations)
@@ -451,21 +505,10 @@ func (h *handler) ListRepositories(ctx context.Context, projectNames []string,
 	}
 
 	// projectPermission pass, list all repositories in gitops storage
-	repositories, err := h.option.Storage.ListRepository(ctx)
+	repositories, err := h.option.Storage.ListRepository(ctx, projectNames)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list repository from storage failed")
 	}
-	// filter specified project
-	items := v1alpha1.Repositories{}
-	for _, repo := range repositories.Items {
-		if sliceutils.StringInSlice(repo.Project, projectNames) {
-			items = append(items, repo)
-		}
-	}
-	if len(items) == 0 {
-		return &v1alpha1.RepositoryList{}, http.StatusOK, nil
-	}
-	repositories.Items = items
 	return repositories, http.StatusOK, nil
 }
 

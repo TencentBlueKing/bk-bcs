@@ -703,6 +703,76 @@
         ]
       }
     },
+    "/datamanager/v1/request": {
+      "get": {
+        "summary": "查询某个workload request推荐",
+        "description": "查询某个request推荐",
+        "operationId": "DataManager_GetWorkloadRequestResult",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetWorkloadRequestRecommendResultRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "namespace. 命名空间名字",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workloadType",
+            "description": "workloadType. 模块类型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workloadName",
+            "description": "workloadName. 模块名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 页面大小",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
     "/datamanager/v1/workload": {
       "get": {
         "summary": "查询workload",
@@ -773,6 +843,83 @@
             "required": false,
             "type": "string",
             "format": "int64"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v1/workload/request": {
+      "get": {
+        "summary": "查询某个workload request",
+        "description": "查询某个workload request",
+        "operationId": "DataManager_GetWorkloadOriginRequestResult",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetWorkloadOriginRequestResultRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "namespace. 命名空间名字",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workloadType",
+            "description": "workloadType. 模块类型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workloadName",
+            "description": "workloadName. 模块名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 页面大小",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. 项目id",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -926,6 +1073,40 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/datamanagerGetPowerTradingDataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v2/useroperationdata": {
+      "post": {
+        "summary": "查询BCS用户运营数据",
+        "description": "查询BCS用户运营数据",
+        "operationId": "DataManager_GetUserOperationDataList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetUserOperationDataListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetUserOperationDataListRequest"
             }
           }
         ],
@@ -1494,6 +1675,11 @@
             "type": "string",
             "format": "int64"
           }
+        },
+        "preferStorage": {
+          "type": "string",
+          "description": "存储偏好，tspider或者mongodb",
+          "title": "preferStorage"
         }
       },
       "description": "查询集群列表请求",
@@ -1564,6 +1750,94 @@
         "data"
       ]
     },
+    "datamanagerGetUserOperationDataListRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "数据层级，支持project、cluster、namespace",
+          "title": "type"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目code，必须",
+          "title": "projectCode"
+        },
+        "clusterId": {
+          "type": "string",
+          "description": "集群Id，集群级、命名空间级必须",
+          "title": "clusterId"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间，命名空间级必须",
+          "title": "namespace"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "开始时间，unix时间戳，必须",
+          "title": "startTime"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "结束时间，unix时间戳，必须",
+          "title": "endTime"
+        },
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "description": "页码",
+          "title": "page"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "description": "查询限制数量",
+          "title": "size"
+        }
+      },
+      "description": "查询BCS用户运营数据请求",
+      "title": "GetUserOperationDataRequest"
+    },
+    "datamanagerGetUserOperationDataListResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "description": "运营数据列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询BCS用户运营数据返回",
+      "title": "GetUserOperationDataResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
     "datamanagerGetWorkloadInfoListResponse": {
       "type": "object",
       "properties": {
@@ -1623,6 +1897,68 @@
       },
       "description": "查询模块返回",
       "title": "GetWorkloadInfoResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetWorkloadOriginRequestResultRsp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadOriginRequestResult"
+          },
+          "description": "模块列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询模块request返回",
+      "title": "GetWorkloadOriginRequestResultRsp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetWorkloadRequestRecommendResultRsp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadRequestRecommendResult"
+          },
+          "description": "模块列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询模块request返回",
+      "title": "GetWorkloadRequestRecommendResultRsp",
       "required": [
         "code",
         "message",
@@ -2448,6 +2784,147 @@
         }
       }
     },
+    "datamanagerWorkloadOriginRequestContainer": {
+      "type": "object",
+      "properties": {
+        "container": {
+          "type": "string",
+          "description": "容器名字",
+          "title": "container"
+        },
+        "request": {
+          "type": "string",
+          "description": "request",
+          "title": "request"
+        },
+        "limit": {
+          "type": "string",
+          "description": "limit",
+          "title": "limit"
+        }
+      }
+    },
+    "datamanagerWorkloadOriginRequestResult": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名字",
+          "title": "namespace"
+        },
+        "workloadType": {
+          "type": "string",
+          "description": "模块类型",
+          "title": "workloadType"
+        },
+        "workloadName": {
+          "type": "string",
+          "description": "模块名称",
+          "title": "workloadName"
+        },
+        "cpu": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadOriginRequestContainer"
+          },
+          "description": "cpu数据",
+          "title": "cpu"
+        },
+        "memory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadOriginRequestContainer"
+          },
+          "description": "memory数据",
+          "title": "memory"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        }
+      }
+    },
+    "datamanagerWorkloadRequestRecommendContainer": {
+      "type": "object",
+      "properties": {
+        "container": {
+          "type": "string",
+          "description": "容器名字",
+          "title": "container"
+        },
+        "maxVal": {
+          "type": "number",
+          "format": "double",
+          "description": "最大值",
+          "title": "maxVal"
+        },
+        "p90": {
+          "type": "number",
+          "format": "double",
+          "description": "p90",
+          "title": "p90"
+        },
+        "p99": {
+          "type": "number",
+          "format": "double",
+          "description": "p99",
+          "title": "p99"
+        }
+      }
+    },
+    "datamanagerWorkloadRequestRecommendResult": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名字",
+          "title": "namespace"
+        },
+        "workloadType": {
+          "type": "string",
+          "description": "模块类型",
+          "title": "workloadType"
+        },
+        "workloadName": {
+          "type": "string",
+          "description": "模块名称",
+          "title": "workloadName"
+        },
+        "cpu": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadRequestRecommendContainer"
+          },
+          "description": "cpu数据",
+          "title": "cpu"
+        },
+        "memory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadRequestRecommendContainer"
+          },
+          "description": "memory数据",
+          "title": "memory"
+        },
+        "dtEventTimeStamp": {
+          "type": "string",
+          "format": "int64",
+          "description": "dtEventTimeStamp",
+          "title": "dtEventTimeStamp"
+        }
+      }
+    },
     "protobufAny": {
       "type": "object",
       "properties": {
@@ -2462,6 +2939,14 @@
         }
       },
       "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
     },
     "runtimeError": {
       "type": "object",

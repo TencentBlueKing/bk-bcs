@@ -1,19 +1,21 @@
 <template>
   <bk-dialog
-  :is-show="props.isShow"
-  :theme="'primary'"
-  :show-mask="true"
-  quick-close width="1105"
-  :show-footer="false"
-  dialog-type="show"
-  :scrollable="false"
-  @closed="emits('update:isShow', false)" ext-cls="version-dialog">
+    :is-show="props.isShow"
+    :theme="'primary'"
+    :show-mask="true"
+    quick-close width="1105"
+    :show-footer="false"
+    dialog-type="show"
+    :scrollable="false"
+    @closed="emits('update:isShow', false)" ext-cls="version-dialog">
     <div class="log-version">
       <div class="log-version-left">
         <ul class="left-list">
           <li
-class="left-list-item" v-for="(item, index) in props.logList" :class="{ 'item-active': index === active }"
-            :key="index" @click="active = index">
+            v-for="(item, index) in props.logList"
+            :class="['left-list-item', { 'item-active': index === active }]"
+            :key="index"
+            @click="active = index">
             <slot>
               <span class="item-title">{{ item.title }}</span>
               <span class="item-date">{{ item.date }}</span>

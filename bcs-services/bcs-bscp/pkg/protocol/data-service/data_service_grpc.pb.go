@@ -143,7 +143,7 @@ const (
 	Data_UpdateGroup_FullMethodName                       = "/pbds.Data/UpdateGroup"
 	Data_DeleteGroup_FullMethodName                       = "/pbds.Data/DeleteGroup"
 	Data_CountGroupsReleasedApps_FullMethodName           = "/pbds.Data/CountGroupsReleasedApps"
-	Data_ListGroupRleasesdApps_FullMethodName             = "/pbds.Data/ListGroupRleasesdApps"
+	Data_ListGroupReleasedApps_FullMethodName             = "/pbds.Data/ListGroupReleasedApps"
 	Data_Publish_FullMethodName                           = "/pbds.Data/Publish"
 	Data_GenerateReleaseAndPublish_FullMethodName         = "/pbds.Data/GenerateReleaseAndPublish"
 	Data_CreateCredential_FullMethodName                  = "/pbds.Data/CreateCredential"
@@ -300,7 +300,7 @@ type DataClient interface {
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// group current release related interface.
 	CountGroupsReleasedApps(ctx context.Context, in *CountGroupsReleasedAppsReq, opts ...grpc.CallOption) (*CountGroupsReleasedAppsResp, error)
-	ListGroupRleasesdApps(ctx context.Context, in *ListGroupRleasesdAppsReq, opts ...grpc.CallOption) (*ListGroupRleasesdAppsResp, error)
+	ListGroupReleasedApps(ctx context.Context, in *ListGroupReleasedAppsReq, opts ...grpc.CallOption) (*ListGroupReleasedAppsResp, error)
 	// publish related interface.
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error)
@@ -1359,9 +1359,9 @@ func (c *dataClient) CountGroupsReleasedApps(ctx context.Context, in *CountGroup
 	return out, nil
 }
 
-func (c *dataClient) ListGroupRleasesdApps(ctx context.Context, in *ListGroupRleasesdAppsReq, opts ...grpc.CallOption) (*ListGroupRleasesdAppsResp, error) {
-	out := new(ListGroupRleasesdAppsResp)
-	err := c.cc.Invoke(ctx, Data_ListGroupRleasesdApps_FullMethodName, in, out, opts...)
+func (c *dataClient) ListGroupReleasedApps(ctx context.Context, in *ListGroupReleasedAppsReq, opts ...grpc.CallOption) (*ListGroupReleasedAppsResp, error) {
+	out := new(ListGroupReleasedAppsResp)
+	err := c.cc.Invoke(ctx, Data_ListGroupReleasedApps_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1650,7 +1650,7 @@ type DataServer interface {
 	DeleteGroup(context.Context, *DeleteGroupReq) (*base.EmptyResp, error)
 	// group current release related interface.
 	CountGroupsReleasedApps(context.Context, *CountGroupsReleasedAppsReq) (*CountGroupsReleasedAppsResp, error)
-	ListGroupRleasesdApps(context.Context, *ListGroupRleasesdAppsReq) (*ListGroupRleasesdAppsResp, error)
+	ListGroupReleasedApps(context.Context, *ListGroupReleasedAppsReq) (*ListGroupReleasedAppsResp, error)
 	// publish related interface.
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
 	GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error)
@@ -2021,8 +2021,8 @@ func (UnimplementedDataServer) DeleteGroup(context.Context, *DeleteGroupReq) (*b
 func (UnimplementedDataServer) CountGroupsReleasedApps(context.Context, *CountGroupsReleasedAppsReq) (*CountGroupsReleasedAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CountGroupsReleasedApps not implemented")
 }
-func (UnimplementedDataServer) ListGroupRleasesdApps(context.Context, *ListGroupRleasesdAppsReq) (*ListGroupRleasesdAppsResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListGroupRleasesdApps not implemented")
+func (UnimplementedDataServer) ListGroupReleasedApps(context.Context, *ListGroupReleasedAppsReq) (*ListGroupReleasedAppsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListGroupReleasedApps not implemented")
 }
 func (UnimplementedDataServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
@@ -4136,20 +4136,20 @@ func _Data_CountGroupsReleasedApps_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Data_ListGroupRleasesdApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListGroupRleasesdAppsReq)
+func _Data_ListGroupReleasedApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListGroupReleasedAppsReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataServer).ListGroupRleasesdApps(ctx, in)
+		return srv.(DataServer).ListGroupReleasedApps(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Data_ListGroupRleasesdApps_FullMethodName,
+		FullMethod: Data_ListGroupReleasedApps_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).ListGroupRleasesdApps(ctx, req.(*ListGroupRleasesdAppsReq))
+		return srv.(DataServer).ListGroupReleasedApps(ctx, req.(*ListGroupReleasedAppsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4906,8 +4906,8 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_CountGroupsReleasedApps_Handler,
 		},
 		{
-			MethodName: "ListGroupRleasesdApps",
-			Handler:    _Data_ListGroupRleasesdApps_Handler,
+			MethodName: "ListGroupReleasedApps",
+			Handler:    _Data_ListGroupReleasedApps_Handler,
 		},
 		{
 			MethodName: "Publish",

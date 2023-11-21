@@ -274,8 +274,8 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchK
 		matchElement = append(matchElement, bson.E{Key: "$or", Value: bson.A{
 			bson.D{{"name", bson.D{{"$regex", searchKey}, {"$options", "i"}}}},
 			bson.D{{"projectCode", bson.D{{"$regex", searchKey}, {"$options", "i"}}}},
-			bson.D{{"projectID", fmt.Sprintf("\"%s\"", searchKey)}},
-			bson.D{{"businessID", fmt.Sprintf("\"%s\"", searchKey)}},
+			bson.D{{"projectID", bson.D{{"$regex", searchKey}, {"$options", "i"}}}},
+			bson.D{{"businessID", bson.D{{"$regex", searchKey}, {"$options", "i"}}}},
 		}})
 	}
 	matchPipline := bson.D{{"$match", matchElement}}

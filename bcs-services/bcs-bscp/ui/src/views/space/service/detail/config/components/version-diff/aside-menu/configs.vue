@@ -93,6 +93,7 @@ interface IConfigMenuItem {
   signature: string;
   template_revision_id: number;
   permission?: IPermissionType;
+  diffSignature?: string;
 }
 
 interface IPermissionType {
@@ -274,7 +275,7 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
       configs: configs.map((config) => {
         const { id, spec, commit_spec, revision, file_state } = config;
         const { name, file_type, permission } = spec;
-        const { origin_byte_size, byte_size, signature } = commit_spec.content;
+        const { origin_byte_size, byte_size, signature, origin_signature } = commit_spec.content;
         return {
           type: 'config',
           id,
@@ -283,9 +284,10 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
           file_state,
           update_at: revision.update_at,
           byte_size: unNamedVersion ? byte_size : origin_byte_size,
-          signature,
+          signature: unNamedVersion ? signature : origin_signature,
           template_revision_id: 0,
           permission,
+          diffSignature: signature,
         };
       }),
     },
@@ -383,13 +385,17 @@ const calcDiff = () => {
           base: baseItem.signature,
           basePermission: baseItem.permission,
           currentPermission: crtItem.permission,
+          currentContent: crtItem.diffSignature,
+          baseContent: baseItem.diffSignature,
         };
+        console.log(diffConfig);
         if (
           crtItem.template_revision_id !== baseItem.template_revision_id ||
           diffConfig.current !== diffConfig.base ||
           diffConfig.currentPermission?.privilege !== diffConfig.basePermission?.privilege ||
           diffConfig.currentPermission?.user !== diffConfig.basePermission?.user ||
-          diffConfig.currentPermission?.user_group !== diffConfig.basePermission?.user_group
+          diffConfig.currentPermission?.user_group !== diffConfig.basePermission?.user_group ||
+          diffConfig.currentContent !== diffConfig.baseContent
         ) {
           diffCount.value += 1;
           diffConfig.diff_type = isBaseVersionExist.value ? 'modify' : '';

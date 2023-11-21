@@ -31,10 +31,10 @@ import (
 func NewAuditWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 		startTime := time.Now()
-		_ = fn(ctx, req, rsp)
+		err := fn(ctx, req, rsp)
 		endTime := time.Now()
 		go addAudit(ctx, req, rsp, startTime, endTime)
-		return nil
+		return err
 	}
 }
 

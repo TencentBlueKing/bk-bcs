@@ -63,7 +63,7 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 	if err := ua.updateProject(p); err != nil {
 		return nil, errorx.NewDBErr(err.Error())
 	}
-	if req.GetBusinessID() != "" && oldProject.BusinessID == "" || oldProject.BusinessID == "0" {
+	if req.GetBusinessID() != "" && (oldProject.BusinessID == "" || oldProject.BusinessID == "0") {
 		// 开启容器服务
 		// 1. 在监控创建对应的容器项目空间
 		if err := bkmonitor.CreateSpace(p); err != nil {
@@ -117,15 +117,15 @@ func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	// 从 context 中获取 username
 	if authUser, err := middleware.GetUserFromContext(ua.ctx); err == nil {
 		p.Updater = authUser.GetUsername()
-		// 更新管理员，添加项目更新者，并且去重
-		var managers string
+		// 更新管理员，并且去重
 		if ua.req.GetManagers() != "" {
-			managers = stringx.JoinString(ua.req.GetManagers(), authUser.GetUsername())
-		} else {
-			managers = stringx.JoinString(p.Managers, authUser.GetUsername())
+			p.Managers = stringx.JoinString(ua.req.GetManagers())
 		}
-		managerList := stringx.RemoveDuplicateValues(stringx.SplitString(managers))
-		p.Managers = strings.Join(managerList, ",")
+		if ua.req.GetBusinessID() != "" && (p.BusinessID == "" || p.BusinessID == "0") {
+			// 更新请求为开启容器服务，增加当前用户为项目管理员
+			p.Managers = stringx.JoinString(p.Managers, authUser.GetUsername())
+		}
+		p.Managers = strings.Join(stringx.RemoveDuplicateValues(stringx.SplitString(p.Managers)), ",")
 	}
 
 	req := ua.req

@@ -197,7 +197,7 @@ service Data {
 
     // group current release related interface.
     rpc CountGroupsReleasedApps(CountGroupsReleasedAppsReq) returns (CountGroupsReleasedAppsResp) {}
-    rpc ListGroupRleasesdApps(ListGroupRleasesdAppsReq) returns (ListGroupRleasesdAppsResp) {}
+    rpc ListGroupReleasedApps(ListGroupReleasedAppsReq) returns (ListGroupReleasedAppsResp) {}
 
     // publish related interface.
     rpc Publish(PublishReq) returns (PublishResp) {}
@@ -1414,14 +1414,15 @@ message CountGroupsReleasedAppsResp {
     repeated CountGroupsReleasedAppsData data = 1;
 }
 
-message ListGroupRleasesdAppsReq {
-    uint32 biz_id   = 1;
-    uint32 group_id = 2;
-    uint32 start    = 3;
-    uint32 limit    = 4;
+message ListGroupReleasedAppsReq {
+    uint32 biz_id     = 1;
+    uint32 group_id   = 2;
+    string search_key = 3;
+    uint32 start      = 4;
+    uint32 limit      = 5;
 }
 
-message ListGroupRleasesdAppsResp {
+message ListGroupReleasedAppsResp {
     message ListGroupReleasedAppsData {
         uint32 app_id       = 1;
         string app_name     = 2;

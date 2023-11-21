@@ -6445,6 +6445,8 @@ func (m *GetPowerTradingDataRequest) validate(all bool) error {
 
 	// no validation rules for Sort
 
+	// no validation rules for PreferStorage
+
 	if len(errors) > 0 {
 		return GetPowerTradingDataRequestMultiError(errors)
 	}
@@ -7180,3 +7182,1663 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetCloudNativeWorkloadListResponseValidationError{}
+
+// Validate checks the field values on GetUserOperationDataListRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetUserOperationDataListRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetUserOperationDataListRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetUserOperationDataListRequestMultiError, or nil if none found.
+func (m *GetUserOperationDataListRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetUserOperationDataListRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Type
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterId
+
+	// no validation rules for Namespace
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
+
+	// no validation rules for Page
+
+	// no validation rules for Size
+
+	if len(errors) > 0 {
+		return GetUserOperationDataListRequestMultiError(errors)
+	}
+	return nil
+}
+
+// GetUserOperationDataListRequestMultiError is an error wrapping multiple
+// validation errors returned by GetUserOperationDataListRequest.ValidateAll()
+// if the designated constraints aren't met.
+type GetUserOperationDataListRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetUserOperationDataListRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetUserOperationDataListRequestMultiError) AllErrors() []error { return m }
+
+// GetUserOperationDataListRequestValidationError is the validation error
+// returned by GetUserOperationDataListRequest.Validate if the designated
+// constraints aren't met.
+type GetUserOperationDataListRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetUserOperationDataListRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetUserOperationDataListRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetUserOperationDataListRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetUserOperationDataListRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetUserOperationDataListRequestValidationError) ErrorName() string {
+	return "GetUserOperationDataListRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetUserOperationDataListRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetUserOperationDataListRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetUserOperationDataListRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetUserOperationDataListRequestValidationError{}
+
+// Validate checks the field values on GetUserOperationDataListResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetUserOperationDataListResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetUserOperationDataListResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetUserOperationDataListResponseMultiError, or nil if none found.
+func (m *GetUserOperationDataListResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetUserOperationDataListResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Total
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetUserOperationDataListResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetUserOperationDataListResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetUserOperationDataListResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetUserOperationDataListResponseMultiError(errors)
+	}
+	return nil
+}
+
+// GetUserOperationDataListResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// GetUserOperationDataListResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetUserOperationDataListResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetUserOperationDataListResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetUserOperationDataListResponseMultiError) AllErrors() []error { return m }
+
+// GetUserOperationDataListResponseValidationError is the validation error
+// returned by GetUserOperationDataListResponse.Validate if the designated
+// constraints aren't met.
+type GetUserOperationDataListResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetUserOperationDataListResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetUserOperationDataListResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetUserOperationDataListResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetUserOperationDataListResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetUserOperationDataListResponseValidationError) ErrorName() string {
+	return "GetUserOperationDataListResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetUserOperationDataListResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetUserOperationDataListResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetUserOperationDataListResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetUserOperationDataListResponseValidationError{}
+
+// Validate checks the field values on GetWorkloadRequestRecommendResultReq
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the first error encountered is returned, or nil if
+// there are no violations.
+func (m *GetWorkloadRequestRecommendResultReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetWorkloadRequestRecommendResultReq
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetWorkloadRequestRecommendResultReqMultiError, or nil if none found.
+func (m *GetWorkloadRequestRecommendResultReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetWorkloadRequestRecommendResultReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		err := GetWorkloadRequestRecommendResultReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		err := GetWorkloadRequestRecommendResultReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetWorkloadRequestRecommendResultReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := GetWorkloadRequestRecommendResultReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 100 {
+		err := GetWorkloadRequestRecommendResultReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetWorkloadRequestRecommendResultReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := GetWorkloadRequestRecommendResultReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetWorkloadType()) > 100 {
+		err := GetWorkloadRequestRecommendResultReqValidationError{
+			field:  "WorkloadType",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetWorkloadRequestRecommendResultReq_WorkloadType_Pattern.MatchString(m.GetWorkloadType()) {
+		err := GetWorkloadRequestRecommendResultReqValidationError{
+			field:  "WorkloadType",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetWorkloadName()) > 100 {
+		err := GetWorkloadRequestRecommendResultReqValidationError{
+			field:  "WorkloadName",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetWorkloadRequestRecommendResultReq_WorkloadName_Pattern.MatchString(m.GetWorkloadName()) {
+		err := GetWorkloadRequestRecommendResultReqValidationError{
+			field:  "WorkloadName",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetPage() < 0 {
+		err := GetWorkloadRequestRecommendResultReqValidationError{
+			field:  "Page",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetSize() > 10 {
+		err := GetWorkloadRequestRecommendResultReqValidationError{
+			field:  "Size",
+			reason: "value must be less than or equal to 10",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetWorkloadRequestRecommendResultReqMultiError(errors)
+	}
+	return nil
+}
+
+// GetWorkloadRequestRecommendResultReqMultiError is an error wrapping multiple
+// validation errors returned by
+// GetWorkloadRequestRecommendResultReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetWorkloadRequestRecommendResultReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetWorkloadRequestRecommendResultReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetWorkloadRequestRecommendResultReqMultiError) AllErrors() []error { return m }
+
+// GetWorkloadRequestRecommendResultReqValidationError is the validation error
+// returned by GetWorkloadRequestRecommendResultReq.Validate if the designated
+// constraints aren't met.
+type GetWorkloadRequestRecommendResultReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetWorkloadRequestRecommendResultReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetWorkloadRequestRecommendResultReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetWorkloadRequestRecommendResultReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetWorkloadRequestRecommendResultReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetWorkloadRequestRecommendResultReqValidationError) ErrorName() string {
+	return "GetWorkloadRequestRecommendResultReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetWorkloadRequestRecommendResultReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetWorkloadRequestRecommendResultReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetWorkloadRequestRecommendResultReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetWorkloadRequestRecommendResultReqValidationError{}
+
+var _GetWorkloadRequestRecommendResultReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetWorkloadRequestRecommendResultReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetWorkloadRequestRecommendResultReq_WorkloadType_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetWorkloadRequestRecommendResultReq_WorkloadName_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on GetWorkloadRequestRecommendResultRsp
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the first error encountered is returned, or nil if
+// there are no violations.
+func (m *GetWorkloadRequestRecommendResultRsp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetWorkloadRequestRecommendResultRsp
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetWorkloadRequestRecommendResultRspMultiError, or nil if none found.
+func (m *GetWorkloadRequestRecommendResultRsp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetWorkloadRequestRecommendResultRsp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetWorkloadRequestRecommendResultRspValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetWorkloadRequestRecommendResultRspValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetWorkloadRequestRecommendResultRspValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetWorkloadRequestRecommendResultRspMultiError(errors)
+	}
+	return nil
+}
+
+// GetWorkloadRequestRecommendResultRspMultiError is an error wrapping multiple
+// validation errors returned by
+// GetWorkloadRequestRecommendResultRsp.ValidateAll() if the designated
+// constraints aren't met.
+type GetWorkloadRequestRecommendResultRspMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetWorkloadRequestRecommendResultRspMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetWorkloadRequestRecommendResultRspMultiError) AllErrors() []error { return m }
+
+// GetWorkloadRequestRecommendResultRspValidationError is the validation error
+// returned by GetWorkloadRequestRecommendResultRsp.Validate if the designated
+// constraints aren't met.
+type GetWorkloadRequestRecommendResultRspValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetWorkloadRequestRecommendResultRspValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetWorkloadRequestRecommendResultRspValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetWorkloadRequestRecommendResultRspValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetWorkloadRequestRecommendResultRspValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetWorkloadRequestRecommendResultRspValidationError) ErrorName() string {
+	return "GetWorkloadRequestRecommendResultRspValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetWorkloadRequestRecommendResultRspValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetWorkloadRequestRecommendResultRsp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetWorkloadRequestRecommendResultRspValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetWorkloadRequestRecommendResultRspValidationError{}
+
+// Validate checks the field values on WorkloadRequestRecommendResult with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *WorkloadRequestRecommendResult) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on WorkloadRequestRecommendResult with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// WorkloadRequestRecommendResultMultiError, or nil if none found.
+func (m *WorkloadRequestRecommendResult) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *WorkloadRequestRecommendResult) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		err := WorkloadRequestRecommendResultValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		err := WorkloadRequestRecommendResultValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_WorkloadRequestRecommendResult_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := WorkloadRequestRecommendResultValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Namespace
+
+	// no validation rules for WorkloadType
+
+	// no validation rules for WorkloadName
+
+	for idx, item := range m.GetCpu() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, WorkloadRequestRecommendResultValidationError{
+						field:  fmt.Sprintf("Cpu[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, WorkloadRequestRecommendResultValidationError{
+						field:  fmt.Sprintf("Cpu[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return WorkloadRequestRecommendResultValidationError{
+					field:  fmt.Sprintf("Cpu[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetMemory() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, WorkloadRequestRecommendResultValidationError{
+						field:  fmt.Sprintf("Memory[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, WorkloadRequestRecommendResultValidationError{
+						field:  fmt.Sprintf("Memory[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return WorkloadRequestRecommendResultValidationError{
+					field:  fmt.Sprintf("Memory[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for DtEventTimeStamp
+
+	if len(errors) > 0 {
+		return WorkloadRequestRecommendResultMultiError(errors)
+	}
+	return nil
+}
+
+// WorkloadRequestRecommendResultMultiError is an error wrapping multiple
+// validation errors returned by WorkloadRequestRecommendResult.ValidateAll()
+// if the designated constraints aren't met.
+type WorkloadRequestRecommendResultMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m WorkloadRequestRecommendResultMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m WorkloadRequestRecommendResultMultiError) AllErrors() []error { return m }
+
+// WorkloadRequestRecommendResultValidationError is the validation error
+// returned by WorkloadRequestRecommendResult.Validate if the designated
+// constraints aren't met.
+type WorkloadRequestRecommendResultValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WorkloadRequestRecommendResultValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WorkloadRequestRecommendResultValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WorkloadRequestRecommendResultValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WorkloadRequestRecommendResultValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WorkloadRequestRecommendResultValidationError) ErrorName() string {
+	return "WorkloadRequestRecommendResultValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e WorkloadRequestRecommendResultValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWorkloadRequestRecommendResult.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WorkloadRequestRecommendResultValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WorkloadRequestRecommendResultValidationError{}
+
+var _WorkloadRequestRecommendResult_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on WorkloadRequestRecommendContainer with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *WorkloadRequestRecommendContainer) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on WorkloadRequestRecommendContainer
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// WorkloadRequestRecommendContainerMultiError, or nil if none found.
+func (m *WorkloadRequestRecommendContainer) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *WorkloadRequestRecommendContainer) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Container
+
+	// no validation rules for MaxVal
+
+	// no validation rules for P90
+
+	// no validation rules for P99
+
+	if len(errors) > 0 {
+		return WorkloadRequestRecommendContainerMultiError(errors)
+	}
+	return nil
+}
+
+// WorkloadRequestRecommendContainerMultiError is an error wrapping multiple
+// validation errors returned by
+// WorkloadRequestRecommendContainer.ValidateAll() if the designated
+// constraints aren't met.
+type WorkloadRequestRecommendContainerMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m WorkloadRequestRecommendContainerMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m WorkloadRequestRecommendContainerMultiError) AllErrors() []error { return m }
+
+// WorkloadRequestRecommendContainerValidationError is the validation error
+// returned by WorkloadRequestRecommendContainer.Validate if the designated
+// constraints aren't met.
+type WorkloadRequestRecommendContainerValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WorkloadRequestRecommendContainerValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WorkloadRequestRecommendContainerValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WorkloadRequestRecommendContainerValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WorkloadRequestRecommendContainerValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WorkloadRequestRecommendContainerValidationError) ErrorName() string {
+	return "WorkloadRequestRecommendContainerValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e WorkloadRequestRecommendContainerValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWorkloadRequestRecommendContainer.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WorkloadRequestRecommendContainerValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WorkloadRequestRecommendContainerValidationError{}
+
+// Validate checks the field values on GetWorkloadOriginRequestResultRsp with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetWorkloadOriginRequestResultRsp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetWorkloadOriginRequestResultRsp
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetWorkloadOriginRequestResultRspMultiError, or nil if none found.
+func (m *GetWorkloadOriginRequestResultRsp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetWorkloadOriginRequestResultRsp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetWorkloadOriginRequestResultRspValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetWorkloadOriginRequestResultRspValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetWorkloadOriginRequestResultRspValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetWorkloadOriginRequestResultRspMultiError(errors)
+	}
+	return nil
+}
+
+// GetWorkloadOriginRequestResultRspMultiError is an error wrapping multiple
+// validation errors returned by
+// GetWorkloadOriginRequestResultRsp.ValidateAll() if the designated
+// constraints aren't met.
+type GetWorkloadOriginRequestResultRspMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetWorkloadOriginRequestResultRspMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetWorkloadOriginRequestResultRspMultiError) AllErrors() []error { return m }
+
+// GetWorkloadOriginRequestResultRspValidationError is the validation error
+// returned by GetWorkloadOriginRequestResultRsp.Validate if the designated
+// constraints aren't met.
+type GetWorkloadOriginRequestResultRspValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetWorkloadOriginRequestResultRspValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetWorkloadOriginRequestResultRspValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetWorkloadOriginRequestResultRspValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetWorkloadOriginRequestResultRspValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetWorkloadOriginRequestResultRspValidationError) ErrorName() string {
+	return "GetWorkloadOriginRequestResultRspValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetWorkloadOriginRequestResultRspValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetWorkloadOriginRequestResultRsp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetWorkloadOriginRequestResultRspValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetWorkloadOriginRequestResultRspValidationError{}
+
+// Validate checks the field values on WorkloadOriginRequestContainer with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *WorkloadOriginRequestContainer) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on WorkloadOriginRequestContainer with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// WorkloadOriginRequestContainerMultiError, or nil if none found.
+func (m *WorkloadOriginRequestContainer) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *WorkloadOriginRequestContainer) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Container
+
+	// no validation rules for Request
+
+	// no validation rules for Limit
+
+	if len(errors) > 0 {
+		return WorkloadOriginRequestContainerMultiError(errors)
+	}
+	return nil
+}
+
+// WorkloadOriginRequestContainerMultiError is an error wrapping multiple
+// validation errors returned by WorkloadOriginRequestContainer.ValidateAll()
+// if the designated constraints aren't met.
+type WorkloadOriginRequestContainerMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m WorkloadOriginRequestContainerMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m WorkloadOriginRequestContainerMultiError) AllErrors() []error { return m }
+
+// WorkloadOriginRequestContainerValidationError is the validation error
+// returned by WorkloadOriginRequestContainer.Validate if the designated
+// constraints aren't met.
+type WorkloadOriginRequestContainerValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WorkloadOriginRequestContainerValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WorkloadOriginRequestContainerValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WorkloadOriginRequestContainerValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WorkloadOriginRequestContainerValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WorkloadOriginRequestContainerValidationError) ErrorName() string {
+	return "WorkloadOriginRequestContainerValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e WorkloadOriginRequestContainerValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWorkloadOriginRequestContainer.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WorkloadOriginRequestContainerValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WorkloadOriginRequestContainerValidationError{}
+
+// Validate checks the field values on WorkloadOriginRequestResult with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *WorkloadOriginRequestResult) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on WorkloadOriginRequestResult with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// WorkloadOriginRequestResultMultiError, or nil if none found.
+func (m *WorkloadOriginRequestResult) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *WorkloadOriginRequestResult) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		err := WorkloadOriginRequestResultValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		err := WorkloadOriginRequestResultValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_WorkloadOriginRequestResult_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := WorkloadOriginRequestResultValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Namespace
+
+	// no validation rules for WorkloadType
+
+	// no validation rules for WorkloadName
+
+	for idx, item := range m.GetCpu() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, WorkloadOriginRequestResultValidationError{
+						field:  fmt.Sprintf("Cpu[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, WorkloadOriginRequestResultValidationError{
+						field:  fmt.Sprintf("Cpu[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return WorkloadOriginRequestResultValidationError{
+					field:  fmt.Sprintf("Cpu[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetMemory() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, WorkloadOriginRequestResultValidationError{
+						field:  fmt.Sprintf("Memory[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, WorkloadOriginRequestResultValidationError{
+						field:  fmt.Sprintf("Memory[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return WorkloadOriginRequestResultValidationError{
+					field:  fmt.Sprintf("Memory[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for ProjectID
+
+	if len(errors) > 0 {
+		return WorkloadOriginRequestResultMultiError(errors)
+	}
+	return nil
+}
+
+// WorkloadOriginRequestResultMultiError is an error wrapping multiple
+// validation errors returned by WorkloadOriginRequestResult.ValidateAll() if
+// the designated constraints aren't met.
+type WorkloadOriginRequestResultMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m WorkloadOriginRequestResultMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m WorkloadOriginRequestResultMultiError) AllErrors() []error { return m }
+
+// WorkloadOriginRequestResultValidationError is the validation error returned
+// by WorkloadOriginRequestResult.Validate if the designated constraints
+// aren't met.
+type WorkloadOriginRequestResultValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WorkloadOriginRequestResultValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WorkloadOriginRequestResultValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WorkloadOriginRequestResultValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WorkloadOriginRequestResultValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WorkloadOriginRequestResultValidationError) ErrorName() string {
+	return "WorkloadOriginRequestResultValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e WorkloadOriginRequestResultValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWorkloadOriginRequestResult.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WorkloadOriginRequestResultValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WorkloadOriginRequestResultValidationError{}
+
+var _WorkloadOriginRequestResult_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on GetWorkloadOriginRequestResultReq with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetWorkloadOriginRequestResultReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetWorkloadOriginRequestResultReq
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetWorkloadOriginRequestResultReqMultiError, or nil if none found.
+func (m *GetWorkloadOriginRequestResultReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetWorkloadOriginRequestResultReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		err := GetWorkloadOriginRequestResultReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		err := GetWorkloadOriginRequestResultReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetWorkloadOriginRequestResultReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := GetWorkloadOriginRequestResultReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 100 {
+		err := GetWorkloadOriginRequestResultReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetWorkloadOriginRequestResultReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := GetWorkloadOriginRequestResultReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetWorkloadType()) > 100 {
+		err := GetWorkloadOriginRequestResultReqValidationError{
+			field:  "WorkloadType",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetWorkloadOriginRequestResultReq_WorkloadType_Pattern.MatchString(m.GetWorkloadType()) {
+		err := GetWorkloadOriginRequestResultReqValidationError{
+			field:  "WorkloadType",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetWorkloadName()) > 100 {
+		err := GetWorkloadOriginRequestResultReqValidationError{
+			field:  "WorkloadName",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetWorkloadOriginRequestResultReq_WorkloadName_Pattern.MatchString(m.GetWorkloadName()) {
+		err := GetWorkloadOriginRequestResultReqValidationError{
+			field:  "WorkloadName",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetPage() < 0 {
+		err := GetWorkloadOriginRequestResultReqValidationError{
+			field:  "Page",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetSize() > 10 {
+		err := GetWorkloadOriginRequestResultReqValidationError{
+			field:  "Size",
+			reason: "value must be less than or equal to 10",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for ProjectID
+
+	if len(errors) > 0 {
+		return GetWorkloadOriginRequestResultReqMultiError(errors)
+	}
+	return nil
+}
+
+// GetWorkloadOriginRequestResultReqMultiError is an error wrapping multiple
+// validation errors returned by
+// GetWorkloadOriginRequestResultReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetWorkloadOriginRequestResultReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetWorkloadOriginRequestResultReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetWorkloadOriginRequestResultReqMultiError) AllErrors() []error { return m }
+
+// GetWorkloadOriginRequestResultReqValidationError is the validation error
+// returned by GetWorkloadOriginRequestResultReq.Validate if the designated
+// constraints aren't met.
+type GetWorkloadOriginRequestResultReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetWorkloadOriginRequestResultReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetWorkloadOriginRequestResultReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetWorkloadOriginRequestResultReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetWorkloadOriginRequestResultReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetWorkloadOriginRequestResultReqValidationError) ErrorName() string {
+	return "GetWorkloadOriginRequestResultReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetWorkloadOriginRequestResultReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetWorkloadOriginRequestResultReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetWorkloadOriginRequestResultReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetWorkloadOriginRequestResultReqValidationError{}
+
+var _GetWorkloadOriginRequestResultReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetWorkloadOriginRequestResultReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetWorkloadOriginRequestResultReq_WorkloadType_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetWorkloadOriginRequestResultReq_WorkloadName_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")

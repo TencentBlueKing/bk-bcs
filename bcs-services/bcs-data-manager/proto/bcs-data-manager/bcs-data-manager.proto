@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/struct.proto";
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   info : {
@@ -136,6 +137,37 @@ service DataManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description: "查询云原生Workload可调度"
       summary: "查询云原生Workload可调度"
+    };
+  }
+  rpc GetUserOperationDataList(GetUserOperationDataListRequest) returns (GetUserOperationDataListResponse) {
+    option (google.api.http) = {
+      post: "/datamanager/v2/useroperationdata"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "查询BCS用户运营数据"
+      summary: "查询BCS用户运营数据"
+    };
+  }
+
+
+  rpc GetWorkloadRequestResult(GetWorkloadRequestRecommendResultReq) returns (GetWorkloadRequestRecommendResultRsp) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/request"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询某个request推荐"
+      summary : "查询某个workload request推荐"
+    };
+  }
+
+  rpc GetWorkloadOriginRequestResult(GetWorkloadOriginRequestResultReq) returns (GetWorkloadOriginRequestResultRsp) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/workload/request"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询某个workload request"
+      summary : "查询某个workload request"
     };
   }
 }
@@ -1756,6 +1788,12 @@ message GetPowerTradingDataRequest {
       title : "sort",
       description : "排序策略，1表示升序，-1表示降序"
     }];
+  string preferStorage = 6[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "preferStorage",
+      description : "存储偏好，tspider或者mongodb"
+    }
+  ];
 }
 
 message GetPowerTradingDataResponse {
@@ -1767,7 +1805,7 @@ message GetPowerTradingDataResponse {
     }
   };
   uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
-    title : "code", 
+    title : "code",
     description : "返回错误码"
   }];
   string message = 2 [
@@ -1903,7 +1941,7 @@ message GetCloudNativeWorkloadListRequest {
 
 message GetCloudNativeWorkloadListResponse {
   uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
-    title : "code", 
+    title : "code",
     description : "返回错误码"
   }];
   TEGMessage data = 2 [
@@ -1917,4 +1955,361 @@ message GetCloudNativeWorkloadListResponse {
       title : "msg",
       description : "返回错误信息"
     }];
+}
+
+message GetUserOperationDataListRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetUserOperationDataRequest"
+      description : "查询BCS用户运营数据请求"
+      required : []
+    }
+  };
+  string type = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "type",
+    description: "数据层级，支持project、cluster、namespace"
+  }];
+  string projectCode = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "projectCode",
+      description: "项目code，必须"
+    }
+  ];
+  string clusterId = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "clusterId",
+      description: "集群Id，集群级、命名空间级必须"
+    }
+  ];
+  string namespace = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "namespace",
+      description: "命名空间，命名空间级必须"
+    }
+  ];
+  int64 startTime = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，unix时间戳，必须"
+    }
+  ];
+  int64 endTime = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，unix时间戳，必须"
+    }
+  ];
+  uint32 page = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页码"
+    }
+  ];
+  uint32 size = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "查询限制数量"
+    }
+  ];
+}
+
+
+message GetUserOperationDataListResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetUserOperationDataResponse"
+      description : "查询BCS用户运营数据返回"
+      required : ["code", "message", "data"]
+    }
+  };
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  uint32 total = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "total",
+      description : "总数"
+    }];
+  repeated google.protobuf.Struct data = 4 [
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "运营数据列表信息"
+  }];
+}
+
+
+
+message GetWorkloadRequestRecommendResultReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetWorkloadRequestRecommendResultReq"
+      description : "查询workload request推荐值req"
+      required : []
+    }
+  };
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string =
+    {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string namespace = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "namespace",
+      description : "命名空间名字"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string workloadType = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "workloadType",
+      description : "模块类型"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string workloadName = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "workloadName",
+      description : "模块名称"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  uint32 page = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页数"
+    },
+    (validate.rules) .uint32.gte = 0
+  ];
+  uint32 size = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "页面大小"
+    },
+    (validate.rules) .uint32.lte = 10
+  ];
+}
+
+message GetWorkloadRequestRecommendResultRsp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetWorkloadRequestRecommendResultRsp"
+      description : "查询模块request返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  repeated WorkloadRequestRecommendResult data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "模块列表信息"
+    }];
+}
+
+message WorkloadRequestRecommendResult {
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string =
+    {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间名字"
+  }];
+  string workloadType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "workloadType",
+    description: "模块类型"
+  }];
+  string workloadName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "workloadName",
+    description: "模块名称"
+  }];
+  repeated WorkloadRequestRecommendContainer cpu = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "cpu",
+      description : "cpu数据"
+    }];
+  repeated WorkloadRequestRecommendContainer memory = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "memory",
+      description : "memory数据"
+    }];
+  int64 dtEventTimeStamp  = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dtEventTimeStamp",
+    description: "dtEventTimeStamp"
+  }];
+}
+
+message WorkloadRequestRecommendContainer {
+  string container = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "container",
+    description: "容器名字"
+  }];
+  double maxVal = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxVal",
+    description: "最大值"
+  }];
+  double p90 = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "p90",
+    description: "p90"
+  }];
+  double p99 = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "p99",
+    description: "p99"
+  }];
+}
+
+
+message GetWorkloadOriginRequestResultRsp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetWorkloadOriginRequestResultRsp"
+      description : "查询模块request返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  repeated WorkloadOriginRequestResult data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "模块列表信息"
+    }];
+}
+
+
+message WorkloadOriginRequestContainer {
+  string container = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "container",
+    description: "容器名字"
+  }];
+  string request = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request",
+    description: "request"
+  }];
+  string limit =3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "limit"
+  }];
+}
+
+
+message WorkloadOriginRequestResult {
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string =
+    {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间名字"
+  }];
+  string workloadType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "workloadType",
+    description: "模块类型"
+  }];
+  string workloadName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "workloadName",
+    description: "模块名称"
+  }];
+  repeated  WorkloadOriginRequestContainer cpu = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "cpu",
+      description : "cpu数据"
+    }];
+  repeated WorkloadOriginRequestContainer memory = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "memory",
+      description : "memory数据"
+    }];
+  string projectID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目id"
+  }];
+}
+
+
+message GetWorkloadOriginRequestResultReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetWorkloadRequestRecommendResultReq"
+      description : "查询workload request推荐值req"
+      required : []
+    }
+  };
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string =
+    {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string namespace = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "namespace",
+      description : "命名空间名字"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string workloadType = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "workloadType",
+      description : "模块类型"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string workloadName = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "workloadName",
+      description : "模块名称"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  uint32 page = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页数"
+    },
+    (validate.rules) .uint32.gte = 0
+  ];
+  uint32 size = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "页面大小"
+    },
+    (validate.rules) .uint32.lte = 10
+  ];
+  string projectID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目id"
+  }];
 }

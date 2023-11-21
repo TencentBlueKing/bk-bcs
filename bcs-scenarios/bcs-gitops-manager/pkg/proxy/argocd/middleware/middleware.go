@@ -35,11 +35,12 @@ import (
 type HttpHandler func(r *http.Request) (*http.Request, *HttpResponse)
 
 type httpWrapper struct {
-	handler       HttpHandler
-	handlerName   string
-	option        *proxy.GitOpsOptions
-	argoSession   *session.ArgoSession
-	secretSession *session.SecretSession
+	handler        HttpHandler
+	handlerName    string
+	option         *proxy.GitOpsOptions
+	argoSession    *session.ArgoSession
+	secretSession  *session.SecretSession
+	monitorSession *session.MonitorSession
 }
 
 // HttpResponse 定义了返回信息，根据返回信息 httpWrapper 做对应处理
@@ -139,6 +140,8 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		p.argoSession.ServeHTTP(rw, req)
 	case reverseSecret:
 		p.secretSession.ServeHTTP(rw, req)
+	case reverseMonitor:
+		p.monitorSession.ServeHTTP(rw, req)
 	case returnError:
 		blog.Errorf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
 		http.Error(rw, resp.err.Error(), resp.statusCode)
@@ -163,6 +166,8 @@ const (
 	reverseArgo responseType = iota
 	// reverseSecret 请求反向代理给 secret 服务
 	reverseSecret
+	// reverseMonitor 请求反向代理给Monitor-controller服务
+	reverseMonitor
 	// returnError 直接返回错误给客户端
 	returnError
 	// returnGrpcError 返回 grpc 的错误给客户端
@@ -186,6 +191,13 @@ func ReturnArgoReverse() *HttpResponse {
 func ReturnSecretReverse() *HttpResponse {
 	return &HttpResponse{
 		respType: reverseSecret,
+	}
+}
+
+// ReturnMonitorReverse will reverse to argocd
+func ReturnMonitorReverse() *HttpResponse {
+	return &HttpResponse{
+		respType: reverseMonitor,
 	}
 }
 

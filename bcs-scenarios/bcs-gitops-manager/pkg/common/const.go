@@ -44,6 +44,8 @@ const (
 	ProjectIDKey = "bkbcs.tencent.com/projectID"
 	// ProjectBusinessIDKey for bcs business indexer
 	ProjectBusinessIDKey = "bkbcs.tencent.com/businessID"
+	// ProjectBusinessName for bcs business name
+	ProjectBusinessName = "bkbcs.tencent.com/businessName"
 
 	// ClusterAliaName defines the alia's name for project
 	ClusterAliaName = "bkbcs.tencent.com/clusterAliaName"

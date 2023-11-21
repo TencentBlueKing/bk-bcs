@@ -32,13 +32,53 @@ import (
 // ArgoSession purpose: simple revese proxy for argocd according kubernetes service.
 // gitops proxy implements http.Handler interface.
 type ArgoSession struct {
-	option *proxy.GitOpsOptions
+	option       *proxy.GitOpsOptions
+	reverseProxy *httputil.ReverseProxy
 }
 
 // NewArgoSession create the session of argoCD
 func NewArgoSession(option *proxy.GitOpsOptions) *ArgoSession {
-	return &ArgoSession{
+	s := &ArgoSession{
 		option: option,
+	}
+	s.initReverseProxy()
+	return s
+}
+
+func (s *ArgoSession) initReverseProxy() {
+	s.reverseProxy = &httputil.ReverseProxy{
+		Director: func(request *http.Request) {
+			// setting login session token for pass through, for http 1.x
+			token := s.option.Storage.GetToken(request.Context())
+			request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			// for http 2
+			request.Header.Set("Token", token)
+		},
+		ErrorHandler: func(res http.ResponseWriter, request *http.Request, e error) {
+			requestID := request.Context().Value(traceconst.RequestIDHeaderKey).(string)
+			// backend real path with encoded format
+			realPath := strings.TrimPrefix(request.URL.RequestURI(), common.GitOpsProxyURL)
+			fullPath := fmt.Sprintf("https://%s%s", s.option.Service, realPath)
+			if !utils.IsContextCanceled(e) {
+				metric.ManagerArgoProxyFailed.WithLabelValues().Inc()
+				blog.Errorf("RequestID[%s] GitOps proxy %s failure, %s. header: %+v",
+					requestID, fullPath, e.Error(), request.Header)
+			}
+			res.WriteHeader(http.StatusInternalServerError)
+			res.Write([]byte("gitops proxy session failure, requestID=" + requestID)) // nolint
+		},
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
+		},
+		ModifyResponse: func(r *http.Response) error {
+			requestID := r.Request.Context().Value(traceconst.RequestIDHeaderKey).(string)
+			// backend real path with encoded format
+			realPath := strings.TrimPrefix(r.Request.URL.RequestURI(), common.GitOpsProxyURL)
+			fullPath := fmt.Sprintf("https://%s%s", s.option.Service, realPath)
+			blog.Infof("RequestID[%s] GitOps proxy %s response header details: %+v, status %s, code: %d",
+				requestID, fullPath, r.Header, r.Status, r.StatusCode)
+			return nil
+		},
 	}
 }
 
@@ -57,34 +97,8 @@ func (s *ArgoSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		rw.Write([]byte("URL conversion failure in manager")) // nolint
 		return
 	}
-	reverseProxy := httputil.ReverseProxy{
-		Director: func(request *http.Request) {
-			request.URL = newURL
-			// setting login session token for pass through, for http 1.x
-			token := s.option.Storage.GetToken(request.Context())
-			request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-			// for http 2
-			request.Header.Set("Token", token)
-		},
-		ErrorHandler: func(res http.ResponseWriter, request *http.Request, e error) {
-			if !utils.IsContextCanceled(e) {
-				metric.ManagerArgoProxyFailed.WithLabelValues().Inc()
-				blog.Errorf("RequestID[%s] GitOps proxy %s failure, %s. header: %+v",
-					requestID, fullPath, e.Error(), request.Header)
-			}
-			res.WriteHeader(http.StatusInternalServerError)
-			res.Write([]byte("gitops proxy session failure, requestID=" + requestID)) // nolint
-		},
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
-		},
-		ModifyResponse: func(r *http.Response) error {
-			blog.Infof("RequestID[%s] GitOps proxy %s response header details: %+v, status %s, code: %d",
-				requestID, fullPath, r.Header, r.Status, r.StatusCode)
-			return nil
-		},
-	}
+	req.URL = newURL
 	// all ready to serve
 	blog.Infof("RequestID[%s] GitOps serve %s %s", requestID, req.Method, fullPath)
-	reverseProxy.ServeHTTP(rw, req)
+	s.reverseProxy.ServeHTTP(rw, req)
 }

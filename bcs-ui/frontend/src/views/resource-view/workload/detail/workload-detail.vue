@@ -554,11 +554,29 @@ export default defineComponent({
       podLoading.value = true;
       if (isBatchReschedule.value) {
         await handleBatchReschedulePod();
+      } else if (['CronJob', 'Job'].includes(props.kind)) {
+        await handleDeletePod();
       } else {
         await handleReschedulePod();
       }
       await handleGetWorkloadPods();
       podLoading.value = false;
+    };
+
+    // 删除Pod
+    const handleDeletePod = async () => {
+      const { name, namespace } = curPodRowData.value[0].metadata;
+      const result = await $store.dispatch('dashboard/resourceDelete', {
+        $namespaceId: namespace,
+        $type: 'workloads',
+        $category: 'pods',
+        $clusterId: clusterId.value,
+        $name: name,
+      });
+      result && $bkMessage({
+        theme: 'success',
+        message: $i18n.t('generic.msg.success.delete'),
+      });
     };
 
     // 单个重新调度

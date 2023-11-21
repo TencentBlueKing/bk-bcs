@@ -86,6 +86,7 @@ func (f *policyFactory) initWorkloadMap() {
 	WorkloadMap[types.DimensionMinute] = NewWorkloadMinutePolicy(&metric.MetricGetter{}, f.store)
 	WorkloadMap[types.DimensionHour] = NewWorkloadHourPolicy(&metric.MetricGetter{}, f.store)
 	WorkloadMap[types.DimensionDay] = NewWorkloadDayPolicy(&metric.MetricGetter{}, f.store)
+	WorkloadMap[types.GetWorkloadRequestType] = NewWorkloadRequestPolicy(&metric.MetricGetter{}, f.store)
 }
 
 func (f *policyFactory) initPublicMap() {

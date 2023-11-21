@@ -1,5 +1,6 @@
 import http from '../request';
 import { IGroupCategoriesQuery, IGroupEditArg } from '../../types/group';
+import { ICommonQuery } from '../../types/index';
 
 /**
  * 获取分类列表
@@ -72,4 +73,4 @@ export const deleteGroup = (biz_id: string, group_id: number) => http.delete(`/c
  * @param params 查询参数
  * @returns
  */
-export const getGroupReleasedApps = (biz_id: string, group_id: number, params: { start: number; limit: number; }) => http.get(`/config/biz/${biz_id}/groups/${group_id}/released_apps`, { params }).then(res => res.data);
+export const getGroupReleasedApps = (biz_id: string, group_id: number, params: ICommonQuery) => http.get(`/config/biz/${biz_id}/groups/${group_id}/released_apps`, { params }).then(res => res.data);

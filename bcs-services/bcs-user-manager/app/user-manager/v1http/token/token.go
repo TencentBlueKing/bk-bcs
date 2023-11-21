@@ -264,6 +264,7 @@ func (t *TokenHandler) GetToken(request *restful.Request, response *restful.Resp
 func (t *TokenHandler) DeleteToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	token := request.PathParameter("token")
+	force := request.QueryParameter("force") // 是否强制删除
 
 	tokenInDB := t.tokenStore.GetTokenByCondition(&models.BcsUser{UserToken: token})
 	if tokenInDB == nil {
@@ -271,6 +272,12 @@ func (t *TokenHandler) DeleteToken(request *restful.Request, response *restful.R
 		blog.Errorf("failed to delete token, token [%s] not exists", token)
 		message := fmt.Sprintf("errcode: %d, delete user token failed", common.BcsErrApiInternalDbError)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
+		return
+	}
+
+	if tokenInDB.IsAdmin() && force != "true" {
+		message := fmt.Sprintf("errcode: %d, not allow to delete admin tokens", common.BcsErrApiBadRequest)
+		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
 
@@ -285,7 +292,7 @@ func (t *TokenHandler) DeleteToken(request *restful.Request, response *restful.R
 
 	_, err := t.cache.Del(context.TODO(), constant.TokenKeyPrefix+token)
 	if err != nil {
-		blog.Errorf("delete token failed")
+		blog.Errorf("delete token failed, %s", err.Error())
 		metrics.ReportRequestAPIMetrics("DeleteToken", request.Request.Method, metrics.ErrStatus, start)
 	}
 

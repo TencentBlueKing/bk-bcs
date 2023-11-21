@@ -169,17 +169,28 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 		return errors.Errorf("project '%s' not exist", proj)
 	}
 
-	repo := app.Spec.Source.RepoURL
-	var argoRepo *v1alpha1.Repository
-	argoRepo, err = s.argoStore.GetRepository(ctx, repo)
-	if err != nil {
-		return errors.Wrapf(err, "get repo '%s' failed", repo)
+	var repoBelong bool
+	var repoProj string
+	for i := range app.Spec.Sources {
+		appSource := app.Spec.Sources[i]
+		repoUrl := appSource.RepoURL
+		repoProj, repoBelong, err = s.checkRepositoryBelongProject(ctx, repoUrl, proj)
+		if err != nil {
+			return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
+		}
+		if !repoBelong {
+			return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
+		}
 	}
-	if argoRepo == nil {
-		return errors.Errorf("repo '%s' not exist", repo)
-	}
-	if argoRepo.Project != proj {
-		return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repo, argoRepo.Project, proj)
+	if app.Spec.Source != nil {
+		repoUrl := app.Spec.Source.RepoURL
+		repoProj, repoBelong, err = s.checkRepositoryBelongProject(ctx, repoUrl, proj)
+		if err != nil {
+			return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
+		}
+		if !repoBelong {
+			return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
+		}
 	}
 
 	cls := app.Spec.Destination.Server
@@ -198,4 +209,19 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 	}
 	blog.Infof("check application '%s' success", app.Name)
 	return nil
+}
+
+func (s *AdmissionWebhookServer) checkRepositoryBelongProject(ctx context.Context, repoUrl,
+	project string) (string, bool, error) {
+	repo, err := s.argoStore.GetRepository(ctx, repoUrl)
+	if err != nil {
+		return "", false, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
+	}
+	if repo == nil {
+		return "", false, fmt.Errorf("repo '%s' not found", repoUrl)
+	}
+	if repo.Project != project {
+		return "", false, nil
+	}
+	return repo.Project, true, nil
 }

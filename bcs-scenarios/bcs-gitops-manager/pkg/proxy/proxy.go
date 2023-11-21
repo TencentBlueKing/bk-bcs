@@ -38,6 +38,7 @@ type GitOpsOptions struct {
 	// backend gitops kubernetes service and port
 	Service        string
 	RepoServerUrl  string
+	AppSetWebhook  string
 	PublicProjects []string
 	// URL prefix like /gitopsmanager/proxy/
 	PathPrefix string
@@ -59,6 +60,12 @@ type TraceOption struct {
 
 // SecretOption defines the config of secret
 type SecretOption struct {
+	Address string
+	Port    string
+}
+
+// MonitorOption defines the config of secret
+type MonitorOption struct {
 	Address string
 	Port    string
 }

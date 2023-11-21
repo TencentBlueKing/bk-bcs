@@ -411,7 +411,8 @@ export default {
           values: this.editorOptions.content,
         }).catch(() => false);
         this.getCrdControllersByCluster();
-        this.getCrdcontrollerStatus(crdcontroller);
+        this.refreshList();
+        // this.getCrdcontrollerStatus(crdcontroller);
       } catch (e) {
         catchErrorHandler(e, this);
       } finally {
@@ -426,6 +427,59 @@ export default {
       this.editorOptions.originContent = '';
     },
 
+    async refreshList() {
+      const clusterId = this.searchScope;
+      const list = await addonsList({
+        $clusterId: clusterId,
+      }).catch(() => []);
+      const data = list.map(item => ({
+        ...item,
+        // 兼容旧数据
+        chart_name: item.chartName,
+        default_values: item.defaultValues,
+        description: item.description,
+        help_link: item.docsLink,
+        id: item.name,
+        cluster_id: clusterId,
+        message: item.message,
+        status: item.status,
+        logo: item.logo,
+        name: item.name,
+        supported_actions: item.supportedActions,
+        version: item.version,
+      }));
+        // 搜索
+      let results = data.filter((item) => {
+        if (this.crdKind === 'BcsLog') {
+          return item.chart_name === 'bk-log-collector';
+        }
+        return item.chart_name !== 'bk-log-collector';
+      });
+      if (this.searchKeyword.trim()) {
+        results = [];
+        const keyword = this.searchKeyword.trim();
+        const keyList = ['name'];
+        const list = data;
+
+        list.forEach((item) => {
+          item.isChecked = false;
+          for (const key of keyList) {
+            if (item[key].indexOf(keyword) > -1) {
+              results.push(item);
+              return true;
+            }
+          }
+        });
+      }
+      // results[0].status = 'pending'
+      this.crdControllerList = results;
+      const isPending = this.crdControllerList.some(item => this.pendingStatus.includes(item.status));
+      if (isPending) {
+        setTimeout(() => {
+          this.refreshList();
+        }, 5000);
+      }
+    },
     async getCrdControllersByCluster() {
       if (this.isPageLoading) {
         return false;
@@ -433,60 +487,16 @@ export default {
       if (!this.searchScope) {
         return false;
       }
-      const clusterId = this.searchScope;
 
       this.isPageLoading = true;
       try {
-        const list = await addonsList({
-          $clusterId: clusterId,
-        }).catch(() => []);
-        const data = list.map(item => ({
-          ...item,
-          // 兼容旧数据
-          chart_name: item.chartName,
-          default_values: item.defaultValues,
-          description: item.description,
-          help_link: item.docsLink,
-          id: item.name,
-          cluster_id: clusterId,
-          message: item.message,
-          status: item.status,
-          logo: item.logo,
-          name: item.name,
-          supported_actions: item.supportedActions,
-          version: item.version,
-        }));
-        // 搜索
-        let results = data.filter((item) => {
-          if (this.crdKind === 'BcsLog') {
-            return item.chart_name === 'bk-log-collector';
-          }
-          return item.chart_name !== 'bk-log-collector';
-        });
-        if (this.searchKeyword.trim()) {
-          results = [];
-          const keyword = this.searchKeyword.trim();
-          const keyList = ['name'];
-          const list = data;
-
-          list.forEach((item) => {
-            item.isChecked = false;
-            for (const key of keyList) {
-              if (item[key].indexOf(keyword) > -1) {
-                results.push(item);
-                return true;
-              }
-            }
-          });
-        }
-        // results[0].status = 'pending'
-        this.crdControllerList = results;
+        await this.refreshList();
         this.clearAllInterval();
-        this.crdControllerList.forEach((item) => {
-          if (this.pendingStatus.includes(item.status)) {
-            this.getCrdcontrollerStatus(item);
-          }
-        });
+        // this.crdControllerList.forEach((item) => {
+        //   if (this.pendingStatus.includes(item.status)) {
+        //     this.getCrdcontrollerStatus(item);
+        //   }
+        // });
       } catch (e) {
         catchErrorHandler(e, this);
       } finally {

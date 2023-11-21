@@ -69,7 +69,7 @@ type Store interface {
 
 	// Repository interface
 	GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error)
-	ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, error)
+	ListRepository(ctx context.Context, projNames []string) (*v1alpha1.RepositoryList, error)
 
 	GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error)
 	ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (*v1alpha1.ApplicationList, error)

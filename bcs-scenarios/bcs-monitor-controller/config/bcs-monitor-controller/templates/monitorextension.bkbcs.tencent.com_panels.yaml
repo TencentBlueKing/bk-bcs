@@ -1,0 +1,109 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.0
+  creationTimestamp: null
+  name: panels.monitorextension.bkbcs.tencent.com
+spec:
+  group: monitorextension.bkbcs.tencent.com
+  names:
+    kind: Panel
+    listKind: PanelList
+    plural: panels
+    singular: panel
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.syncStatus.state
+      name: status
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: Panel is the Schema for the panels API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: PanelSpec defines the desired state of Panel
+            properties:
+              bizID:
+                type: string
+              bizToken:
+                type: string
+              dashBoard:
+                items:
+                  properties:
+                    board:
+                      type: string
+                    configMap:
+                      type: string
+                    configMapNs:
+                      type: string
+                    render:
+                      type: boolean
+                    url:
+                      type: string
+                  required:
+                  - board
+                  type: object
+                type: array
+              ignoreChange:
+                description: if true, controller will ignore resource's change
+                type: boolean
+              override:
+                description: 是否覆盖同名配置，默认为false
+                type: boolean
+              scenario:
+                type: string
+            required:
+            - bizID
+            type: object
+          status:
+            description: PanelStatus defines the observed state of Panel
+            properties:
+              syncStatus:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                properties:
+                  app:
+                    type: string
+                  lastSyncTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  state:
+                    description: 'SyncState is state for syncing process of polaris
+                      service Syncing: syncing is in process Completed: syncing process
+                      is successfully finished Failed: syncing process failed'
+                    type: string
+                required:
+                - state
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

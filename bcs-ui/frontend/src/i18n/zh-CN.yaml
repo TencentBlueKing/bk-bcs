@@ -1,6 +1,7 @@
 bcs:
   title: 容器管理平台 | 腾讯蓝鲸智云
   name: 容器管理平台
+  newVersion: '有版本更新, 是否刷新界面'
   TKEx:
     title: TKEx-IEG 容器平台
     welcome: 欢迎使用 TKEx-IEG 容器平台
@@ -316,6 +317,7 @@ generic:
     query: 查询
     create: 创建
     submit: 提交
+    reload: 立即刷新
   label:
     key: 键
     value: 值
@@ -381,7 +383,6 @@ generic:
     deleteFailed: 删除失败
     loading: 加载中
     running: 运行中
-    enabled: 已启用
     undoing: 取消中
     updateFailed: 更新失败
     updating: 更新中
@@ -1209,7 +1210,7 @@ deploy:
     deleteChartVer: '删除 {name} Chart的版本'
     downloadChartVer: '下载 {name} Chart的版本'
     confirmDeleteChart: '确定删除 {name}'
-    deleteWarning: '删除 Chart 后，如下 Release 将不能使用该 Chart 进行更新，请谨慎操作'
+    deleteWarning: 删除 Chart 后，如下 Release 将不能使用该 Chart 进行更新，请谨慎操作
     chartInstall: Chart部署
     showNotes: 查看Notes
     chartNSTips: 如果Chart中已经配置命名空间，则会使用Chart中的命名空间，会导致不匹配等问题;建议Chart中不要配置命名空间
@@ -1939,7 +1940,6 @@ plugin:
     delete: '确定删除Metric {name}'
     _delete: 确定要删除Metric
   tools:
-    fileLogPath: 文件路径日志
     standardLog: 标准日志
     title: 组件库
     appName: 应用名称
@@ -1986,10 +1986,6 @@ plugin:
     uninstall: 卸载组件
     confirmUninstall: 确定卸载
     restart: 重新启用
-    dataSourseInfo: 数据源信息
-    logSearch: 日志查询入口
-    failed: 启用失败
-    OSLog: 系统日志
     enable: 启用组件：
     bklogconfig: 日志采集规则
     create: 新建规则

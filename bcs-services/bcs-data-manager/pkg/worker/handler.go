@@ -220,6 +220,13 @@ func (h *DataJobHandler) handleOneChan(jobChan chanx.UnboundedChan) {
 			continue
 		}
 		prom.ReportWaitingJobCount(value.Opts.ClusterID, jobChan.Len())
+		if value.Opts.ObjectType == types.NamespaceType && value.Opts.Dimension == types.DimensionHour {
+			newValue := value
+			newValue.Opts.Dimension = types.GetWorkloadRequestType
+			newValue.Opts.ObjectType = types.WorkloadType
+			blog.Infof("[handler] create one getWorkloadRequest type job")
+			h.handleOneJob(newValue)
+		}
 		if value.Opts.IsBKMonitor && h.ignoreBkMonitorCluster {
 			continue
 		}

@@ -15,10 +15,12 @@ package common
 /*
 import (
 	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/mock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestGetClusterIDList(t *testing.T) {
@@ -36,7 +38,7 @@ func TestGetNamespaceList(t *testing.T) {
 	cmCli := mock.NewMockCm()
 	storageCli := mock.NewMockStorage()
 	pmCli := mock.NewMockPmClient()
-	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag", pmCli)
+	getter := NewGetter(true, []string{""}, "stag", pmCli)
 	namespaceList, err := getter.GetNamespaceList(ctx, cmCli, storageCli, storageCli)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 4, len(namespaceList))

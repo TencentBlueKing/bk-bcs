@@ -61,7 +61,7 @@ import useGlobalStore from '../../../../../store/global';
 import useTemplateStore from '../../../../../store/template';
 import { ITemplateSpaceItem } from '../../../../../../types/template';
 import { ICommonQuery } from '../../../../../../types/index';
-import { getTemplateSpaceList, getTemplatesBySpaceId, deleteTemplateSpace } from '../../../../../api/template';
+import { getTemplateSpaceList, getTemplatesBySpaceId, deleteTemplateSpace, getTemplatePackageList } from '../../../../../api/template';
 import DeleteConfirmDialog from '../../../../../components/delete-confirm-dialog.vue';
 
 import Create from './create.vue';
@@ -130,7 +130,6 @@ const loadList = async () => {
   if (index > -1) {
     // 默认空间放到首位
     spaceList.value = res.details.splice(index, 1).concat(res.details);
-    spaceList.value[0].spec.name = '默认空间';
     spaceList.value[0].spec.memo = '空间可将业务下不同使用场景的配置模板文件隔离，每个空间内的配置文件路径+配置文件名称是唯一的，每个业务下会自动创建一个默认空间';
   } else {
     spaceList.value = res.details;
@@ -171,11 +170,23 @@ const handleDelete = async (space: ITemplateSpaceItem) => {
     limit: 1,
     all: true,
   };
+  const packageParams = {
+    start: 0,
+    all: true,
+  };
   const res = await getTemplatesBySpaceId(spaceId.value, space.id, params);
+  const packageRes = await getTemplatePackageList(spaceId.value, String(space.id), packageParams);
   if (res.count > 0) {
     InfoBox({
       title: `未能删除【${space.spec.name}】`,
       subTitle: '请先确认删除此空间下所有配置文件',
+      dialogType: 'confirm',
+      confirmText: '我知道了',
+    } as any);
+  } else if (packageRes.count > 0) {
+    InfoBox({
+      title: `未能删除【${space.spec.name}】`,
+      subTitle: '请先确认删除此空间下所有配置套餐',
       dialogType: 'confirm',
       confirmText: '我知道了',
     } as any);

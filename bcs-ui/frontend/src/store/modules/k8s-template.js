@@ -967,7 +967,10 @@ export default {
          * @return {Promise} promise 对象
          */
     getImageList(context, { projectId }) {
-      return http.get(`${DEVOPS_BCS_API_URL}/api/depot/available/images/${projectId}/`);
+      // todo 已经不在使用该接口
+      console.log(context, projectId);
+      return { data: [] };
+      // return http.get(`${DEVOPS_BCS_API_URL}/api/depot/available/images/${projectId}/`);
     },
 
     /**

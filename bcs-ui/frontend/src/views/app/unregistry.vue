@@ -51,6 +51,7 @@
         <bk-button
           theme="primary"
           :disabled="!enableBtn"
+          :loading="isLoading"
           @click="updateProject">{{ $t('bcs.registry.text') }}</bk-button>
       </div>
       <div class="form-item guide" v-if="$INTERNAL">
@@ -86,6 +87,7 @@ export default {
       kind: 'k8s',
       ccList: [],
       ccKey: '',
+      isLoading: false,
     };
   },
   computed: {
@@ -141,8 +143,8 @@ export default {
       this.kind = item.id;
     },
     /**
-             * 启用容器服务 更新项目
-             */
+     * 启用容器服务 更新项目
+     */
     async updateProject() {
       try {
         const { updateProject } = useProject();
