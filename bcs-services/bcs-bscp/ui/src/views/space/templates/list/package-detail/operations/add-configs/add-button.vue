@@ -22,7 +22,7 @@
   </bk-popover>
   <AddFromExistingConfigs v-model:show="silders.isAddOpen" :groups="packageGroups" @added="emits('refresh')" />
   <CreateNewConfig v-model:show="silders.isCreateOpen" @added="emits('refresh')" />
-  <ImportConfigs v-model:show="silders.isImportOpen" />
+  <ImportConfigs v-model:show="silders.isImportOpen"  @added="emits('refresh')"/>
 </template>
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';

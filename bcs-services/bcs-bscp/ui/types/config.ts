@@ -18,7 +18,7 @@ export interface IConfigVersion {
   status: {
     publish_status: string;
     released_groups: IReleasedGroup[];
-  }
+  };
 }
 
 // 单个配置详情
@@ -34,7 +34,7 @@ export interface IConfigItem {
       privilege: string;
       user: string;
       user_group: string;
-    }
+    };
   };
   commit_spec: {
     content: {
@@ -42,8 +42,8 @@ export interface IConfigItem {
       origin_byte_size: string;
       origin_signature: string;
       signature: string;
-    }
-  },
+    };
+  };
   attachment: {
     biz_id: number;
     app_id: number;
@@ -63,7 +63,7 @@ export interface IConfigDetail {
   content: {
     signature: string;
     byte_size: string;
-  }
+  };
 }
 
 // 配置文件编辑表单参数
@@ -113,10 +113,10 @@ export interface IReleasedGroup {
   mode: string;
   name: string;
   new_selector: {
-    labels_and: IGroupRuleItem[]
+    labels_and: IGroupRuleItem[];
   };
   old_selector: {
-    labels_and: IGroupRuleItem[]
+    labels_and: IGroupRuleItem[];
   };
   uid: string;
 }
@@ -128,7 +128,7 @@ export interface ITemplateBoundByAppData {
     template_id: number;
     template_revision_id: number;
     is_latest: boolean;
-  }[]
+  }[];
 }
 
 // 服务绑定下的模板配置文件按照套餐分组数据
@@ -172,11 +172,13 @@ export interface IConfigDiffSelected {
     privilege: string;
     user: string;
     user_group: string;
-  }
+  };
 }
 
 // 导入配置项
-export interface IConfigImport {
+export interface IConfigImportItem {
+  byte_size: number;
+  file_mode: string;
   name: string;
   path: string;
   file_type: string;
@@ -184,5 +186,6 @@ export interface IConfigImport {
   privilege: string;
   user: string;
   user_group: string;
-  isEdit?: boolean;
+  sign: string;
+  id: number;
 }
