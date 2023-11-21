@@ -370,7 +370,6 @@ type ConfigType string
 func (c ConfigType) Validate() error {
 	switch c {
 	case KV:
-		return errors.New("not support kv config type for now")
 	case File:
 	case Table:
 		return errors.New("not support table config type for now")

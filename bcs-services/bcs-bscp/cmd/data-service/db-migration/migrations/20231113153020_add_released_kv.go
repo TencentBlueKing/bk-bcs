@@ -23,28 +23,29 @@ import (
 func init() {
 	// add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
-		Version: "20231103103050",
-		Name:    "20231103103050_add_kv",
+		Version: "20231113153020",
+		Name:    "20231113153020_add_released_kv",
 		Mode:    migrator.GormMode,
-		Up:      mig20231103103050Up,
-		Down:    mig20231103103050Down,
+		Up:      mig20231113153020Up,
+		Down:    mig20231113153020Down,
 	})
 }
 
-// mig20231103103050Up for up migration
-func mig20231103103050Up(tx *gorm.DB) error {
+// mig20231113153020Up for up migration
+func mig20231113153020Up(tx *gorm.DB) error {
 
-	// Kvs : kv
-	type Kvs struct {
+	// ReleasedKvs :已生成版本的kv
+	type ReleasedKvs struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		Key     string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_appID_key,priority:1"`
-		Version uint   `gorm:"type:bigint(1) unsigned not null;"`
+		Key       string `gorm:"type:varchar(255) not null;uniqueIndex:relID_key,priority:1"`
+		Version   uint   `gorm:"type:bigint(1) unsigned not null;"`
+		ReleaseID uint   `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_ID,priority:3;uniqueIndex:relID_key,priority:2"` //nolint:lll
 
 		// Attachment is attachment info of the resource
-		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key,priority:2"`
-		APPID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key,priority:3"`
+		BizID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_ID,priority:1"`
+		AppID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_ID,priority:2"`
 
 		// Revision is revision info of the resource
 		Creator   string    `gorm:"type:varchar(64) not null"`
@@ -61,42 +62,24 @@ func mig20231103103050Up(tx *gorm.DB) error {
 		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
 	}
 
-	if err := tx.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").
-		AutoMigrate(&Kvs{}); err != nil {
+	if err := tx.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").AutoMigrate(
+		&ReleasedKvs{},
+	); err != nil {
 		return err
 	}
 
-	now := time.Now()
 	if result := tx.Create([]IDGenerators{
-		{Resource: "kvs", MaxID: 0, UpdatedAt: now},
+		{Resource: "released_kvs", MaxID: 0},
 	}); result.Error != nil {
 		return result.Error
 	}
 
 	return nil
+
 }
 
-// mig20231103103050Down for down migration
-func mig20231103103050Down(tx *gorm.DB) error {
-
-	// Kvs : kv
-	type Kvs struct {
-		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
-
-		// Spec is specifics of the resource defined with user
-		Key  string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_appID_key,priority:1"`
-		Type string `gorm:"type:varchar(255) not null;"`
-
-		// Attachment is attachment info of the resource
-		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key,priority:2"`
-		APPID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key,priority:3"`
-
-		// Revision is revision info of the resource
-		Creator   string    `gorm:"type:varchar(64) not null"`
-		Reviser   string    `gorm:"type:varchar(64) not null"`
-		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
-		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
-	}
+// mig20231113153020Down for down migration
+func mig20231113153020Down(tx *gorm.DB) error {
 
 	// IDGenerators : ID生成器
 	type IDGenerators struct {
@@ -106,14 +89,15 @@ func mig20231103103050Down(tx *gorm.DB) error {
 		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
 	}
 
-	if err := tx.Migrator().DropTable(Kvs{}); err != nil {
+	if err := tx.Migrator().
+		DropTable("released_kvs"); err != nil {
 		return err
 	}
 
 	var resources = []string{
-		"kvs",
+		"released_kvs",
 	}
-	if result := tx.Where("resource IN ?", resources).Delete(&IDGenerators{}); result.Error != nil {
+	if result := tx.Where("resource in ?", resources).Delete(&IDGenerators{}); result.Error != nil {
 		return result.Error
 	}
 

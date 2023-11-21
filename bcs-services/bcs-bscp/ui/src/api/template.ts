@@ -548,3 +548,30 @@ export const getAppPkgBindingRelations = (biz_id: string, app_id: number) => htt
 export const getTemplateVersionsNameByIds = (biz_id: string, template_ids: number[]) => http
   .post(`/config/biz/${biz_id}/template_revisions/list_names_by_template_ids`, { template_ids })
   .then(res => res.data);
+
+/**
+ * 导入配置文件压缩包
+ * @param biz_id 业务ID
+ * @param template_space_id 空间id
+ * @param fill 导入文件
+ * @returns
+ */
+export const importTemplateFile = (biz_id: string, template_space_id: number, fill: any) => http
+  .post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/import`, fill, {
+    headers: {
+      'Content-Type': 'application/zip',
+    },
+  })
+  .then(res => res.data);
+
+/**
+ * 模板批量新增
+ * @param biz_id 业务ID
+ * @param template_space_id 空间id
+ * @param configData 配置列表
+ * @returns
+ */
+export const importTemplateBatchAdd = (biz_id: string, template_space_id: number, configData: any) => http
+  .post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/batch_upsert_templates`, { items: configData })
+  .then(res => res.data);
+

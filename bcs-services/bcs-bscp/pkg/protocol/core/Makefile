@@ -22,6 +22,7 @@ all:
 	@cd template-variable && make
 	@cd app-template-variable && make
 	@cd kv && make
+	@cd released-kv && make
 
 clean:
 	@cd base && make clean
@@ -47,3 +48,5 @@ clean:
 	@cd template-variable && make clean
 	@cd app-template-variable && make clean
 	@cd kv && make clean
+	@cd released-kv && make clean
+
