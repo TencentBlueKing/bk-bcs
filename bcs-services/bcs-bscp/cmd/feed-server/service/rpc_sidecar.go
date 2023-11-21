@@ -153,7 +153,7 @@ func (s *Service) Watch(swm *pbfs.SideWatchMeta, fws pbfs.Upstream_WatchServer) 
 
 	var msg string
 	for _, one := range payload.Applications {
-		msg += fmt.Sprintf("biz: %d, app: %s, uid: %s, ", payload.BizID, one.App, one.Uid)
+		msg += fmt.Sprintf("biz: %d, app: %s, uid: %s, labels: %s, ", payload.BizID, one.App, one.Uid, one.Labels)
 	}
 
 	logs.Infof("received sidecar watch request, biz: %d, %s fingerprint: %s, rid: %s.", im.Meta.BizID, msg,
