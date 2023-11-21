@@ -13,13 +13,14 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"sync"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
 var vpcMgr sync.Once
@@ -27,7 +28,7 @@ var vpcMgr sync.Once
 func init() {
 	vpcMgr.Do(func() {
 		// init VPC manager
-		cloudprovider.InitVPCManager("google", &VPCManager{})
+		cloudprovider.InitVPCManager("aws", &VPCManager{})
 	})
 }
 
@@ -46,30 +47,35 @@ func (vm *VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption)
 		opt.Region = strings.Join(locationList[:2], "-")
 	}
 
-	client, err := NewComputeServiceClient(opt)
+	client, err := GetEc2Client(opt)
 	if err != nil {
 		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
 	}
-	subnets, err := client.ListSubnetworks(context.Background(), opt.Region)
+	output, err := client.DescribeSubnets(&ec2.DescribeSubnetsInput{})
 	if err != nil {
 		return nil, fmt.Errorf("list regions failed, err %s", err.Error())
 	}
 
 	result := make([]*proto.Subnet, 0)
-	for _, v := range subnets.Items {
-		networkInfo := strings.Split(v.Network, "/")
-		if vpcID != networkInfo[len(networkInfo)-1] {
-			continue
+	for _, v := range output.Subnets {
+		subnet := &proto.Subnet{
+			VpcID:      aws.StringValue(v.VpcId),
+			SubnetID:   aws.StringValue(v.SubnetId),
+			SubnetName: aws.StringValue(v.SubnetId),
+			CidrRange:  aws.StringValue(v.CidrBlock),
+			Zone:       aws.StringValue(v.AvailabilityZone),
 		}
-		regionInfo := strings.Split(v.Region, "/")
-		result = append(result, &proto.Subnet{
-			VpcID:         networkInfo[len(networkInfo)-1],
-			SubnetID:      v.Name,
-			SubnetName:    v.Name,
-			CidrRange:     v.IpCidrRange,
-			Ipv6CidrRange: v.Ipv6CidrRange,
-			Zone:          regionInfo[len(regionInfo)-1],
-		})
+
+		ipv6CidrBlocks := make([]string, 0)
+		for _, y := range v.Ipv6CidrBlockAssociationSet {
+			ipv6CidrBlocks = append(ipv6CidrBlocks, aws.StringValue(y.Ipv6CidrBlock))
+		}
+
+		if len(ipv6CidrBlocks) > 0 {
+			subnet.Ipv6CidrRange = strings.Join(ipv6CidrBlocks, ",")
+		}
+
+		result = append(result, subnet)
 	}
 	return result, nil
 }

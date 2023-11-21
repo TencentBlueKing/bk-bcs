@@ -21,14 +21,14 @@ func init() {
 	cloudprovider.InitNodeGroupManager("aws", &NodeGroup{})
 }
 
-// NodeGroup nodegroup management for blueking resource pool solution
+// NodeGroup management for blueking resource pool solution
 type NodeGroup struct {
 }
 
 // CreateNodeGroup create nodegroup by cloudprovider api, only create NodeGroup entity
-func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup,
-	opt *cloudprovider.CreateNodeGroupOption) (*proto.Task, error) {
-	return nil, nil
+func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (*proto.Task,
+	error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // DeleteNodeGroup delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
@@ -45,11 +45,12 @@ func (ng *NodeGroup) UpdateNodeGroup(
 }
 
 // GetNodesInGroup get all nodes belong to NodeGroup
-func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node, error) {
+func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node,
+	error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// GetNodesInGroupV2 get nodeGroup nodes by v2 version
+// GetNodesInGroupV2 get all nodes belong to NodeGroup
 func (ng *NodeGroup) GetNodesInGroupV2(group *proto.NodeGroup,
 	opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
