@@ -19,53 +19,10 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/hashicorp/go-multierror"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/logs"
-	pberror "bscp.io/pkg/protocol/core/error"
-)
-
-var (
-	// grpcCodeMap 蓝鲸 Code 映射
-	grpcCodeMap = map[codes.Code]string{
-		codes.Canceled:           "CANCELED",
-		codes.Unknown:            "UNKNOWN",
-		codes.InvalidArgument:    "INVALID_ARGUMENT",
-		codes.DeadlineExceeded:   "DEADLINE_EXCEEDED",
-		codes.NotFound:           "NOT_FOUND",
-		codes.AlreadyExists:      "ALREADY_EXISTS",
-		codes.PermissionDenied:   "PERMISSION_DENIED",
-		codes.ResourceExhausted:  "RESOURCE_EXHAUSTED",
-		codes.FailedPrecondition: "FAILED_PRECONDITION",
-		codes.Aborted:            "ABORTED",
-		codes.OutOfRange:         "OUT_OF_RANGE",
-		codes.Unimplemented:      "UNIMPLEMENTED",
-		codes.Internal:           "INTERNAL",
-		codes.Unavailable:        "UNAVAILABLE",
-		codes.DataLoss:           "DATA_LOSS",
-		codes.Unauthenticated:    "UNAUTHENTICATED",
-	}
-
-	// grpcCodeMap 蓝鲸 status 映射
-	grpcHttpStatusMap = map[codes.Code]int{
-		codes.Canceled:           http.StatusBadRequest,
-		codes.Unknown:            http.StatusBadRequest,
-		codes.InvalidArgument:    http.StatusBadRequest,
-		codes.DeadlineExceeded:   http.StatusBadRequest,
-		codes.NotFound:           http.StatusNotFound,
-		codes.AlreadyExists:      http.StatusBadRequest,
-		codes.PermissionDenied:   http.StatusForbidden,
-		codes.ResourceExhausted:  http.StatusBadRequest,
-		codes.FailedPrecondition: http.StatusBadRequest,
-		codes.Aborted:            http.StatusBadRequest,
-		codes.OutOfRange:         http.StatusBadRequest,
-		codes.Unimplemented:      http.StatusBadRequest,
-		codes.Internal:           http.StatusBadRequest,
-		codes.Unavailable:        http.StatusBadRequest,
-		codes.DataLoss:           http.StatusBadRequest,
-		codes.Unauthenticated:    http.StatusUnauthorized,
-	}
 )
 
 // BaseResp http response.
@@ -218,21 +175,14 @@ func BadRequest(err error) render.Renderer {
 // GRPCErr GRPC-Gateway 错误
 func GRPCErr(err error) render.Renderer {
 	s := status.Convert(err)
-	code := grpcCodeMap[s.Code()]
-
-	for _, detail := range s.Details() {
-		switch v := detail.(type) {
-		case *pberror.Error:
-			code = v.Code
-		default:
-		}
-	}
-
+	fmt.Printf("johny1  %#v, %v, %v, %v\n", s, s.Code(), s.Message(), s.String())
+	code := errf.BscpCodeMap[int32(s.Code())]
+	fmt.Printf("johny2 %v", code)
 	if code == "" {
 		code = "INVALID_REQUEST"
 	}
 
-	status := grpcHttpStatusMap[s.Code()]
+	status := errf.BscpStatusMap[int32(s.Code())]
 	if status == 0 {
 		status = http.StatusBadRequest
 	}

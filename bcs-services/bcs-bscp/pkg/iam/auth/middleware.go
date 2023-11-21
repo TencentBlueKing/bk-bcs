@@ -35,7 +35,6 @@ import (
 	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/kit"
 	pbas "bscp.io/pkg/protocol/auth-server"
-	pberror "bscp.io/pkg/protocol/core/error"
 	"bscp.io/pkg/rest"
 )
 
@@ -208,8 +207,7 @@ func (a authorizer) ContentVerified(next http.Handler) http.Handler {
 
 			space, err := a.authClient.QuerySpaceByAppID(r.Context(), &pbas.QuerySpaceByAppIDReq{AppId: appID})
 			if err != nil {
-				s := status.Convert(err)
-				render.Render(w, r, rest.BadRequest(errors.New(s.Message())))
+				render.Render(w, r, rest.BadRequest(err))
 				return
 			}
 			kt.AppID = appID
@@ -248,16 +246,7 @@ func (a authorizer) AppVerified(next http.Handler) http.Handler {
 
 		space, err := a.authClient.QuerySpaceByAppID(r.Context(), &pbas.QuerySpaceByAppIDReq{AppId: uint32(appID)})
 		if err != nil {
-			s := status.Convert(err)
-			for _, detail := range s.Details() {
-				switch detail.(type) {
-				case *pberror.Error:
-					render.Render(w, r, rest.GRPCErr(err))
-					return
-				default:
-				}
-			}
-			render.Render(w, r, rest.BadRequest(errors.New(s.Message())))
+			render.Render(w, r, rest.GRPCErr(err))
 			return
 		}
 

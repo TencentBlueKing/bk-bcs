@@ -50,6 +50,11 @@ func (e *ErrorF) Format() string {
 	return fmt.Sprintf("code: %d, message: %s", e.Code, e.Message)
 }
 
+// GRPCStatus implements interface{ GRPCStatus() *Status } , so that it can be recognized by grpc
+func (e *ErrorF) GRPCStatus() *status.Status {
+	return status.New(codes.Code(e.Code), e.Message)
+}
+
 // AssignResp used only to assign the values of the Code and Message
 // fields of ErrorF to the Code and Message fields of the response.
 // Node: resp must be a *struct.
