@@ -40,7 +40,7 @@ func mig20231113153020Up(tx *gorm.DB) error {
 
 		// Spec is specifics of the resource defined with user
 		Key       string `gorm:"type:varchar(255) not null;uniqueIndex:relID_key,priority:1"`
-		Version   string `gorm:"type:bigint(1) unsigned not null;"`
+		Version   uint   `gorm:"type:bigint(1) unsigned not null;"`
 		ReleaseID uint   `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_ID,priority:3;uniqueIndex:relID_key,priority:2"` //nolint:lll
 
 		// Attachment is attachment info of the resource
