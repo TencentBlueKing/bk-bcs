@@ -175,9 +175,7 @@ func BadRequest(err error) render.Renderer {
 // GRPCErr GRPC-Gateway 错误
 func GRPCErr(err error) render.Renderer {
 	s := status.Convert(err)
-	fmt.Printf("johny1  %#v, %v, %v, %v\n", s, s.Code(), s.Message(), s.String())
 	code := errf.BscpCodeMap[int32(s.Code())]
-	fmt.Printf("johny2 %v", code)
 	if code == "" {
 		code = "INVALID_REQUEST"
 	}
