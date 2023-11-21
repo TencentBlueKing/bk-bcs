@@ -30,8 +30,7 @@ const (
 	PermissionDenied int32 = 4030403
 )
 
-// Deprecated: 之前的错误码后续将统一改成蓝鲸规范错误码和bscp专用错误码，新代码使用新错误码规范
-// Note:
+// Note: 之前的错误码后续将统一改成蓝鲸规范错误码和bscp专用错误码，新代码使用新错误码规范
 // this scope's error code ranges at [4000000, 4089999], and works for all the scenario
 // except sidecar related scenario.
 const (
