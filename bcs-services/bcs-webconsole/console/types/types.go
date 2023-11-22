@@ -106,18 +106,45 @@ type CommandDelay struct {
 
 // DelayData 用户的延迟数据
 type DelayData struct {
-	ClusterId    string `json:"cluster_id"`
-	TimeDuration string `json:"time_duration"`
-	CreateTime   string `json:"create_time"`
-	SessionId    string `json:"session_id"`
-	PodName      string `json:"pod_name"`
-	CommandKey   string `json:"command_key"`
+	ClusterId   string `json:"cluster_id"`
+	TimeConsume string `json:"time_consume"`
+	CreateTime  string `json:"create_time"`
+	SessionId   string `json:"session_id"`
+	PodName     string `json:"pod_name"`
+	CommandKey  string `json:"command_key"`
 }
 
 // CommandDelayList 所有用户命令延时设置列表
 type CommandDelayList struct {
 	Username      string         `json:"username"`
 	CommandDelays []CommandDelay `json:"command_delays"`
+}
+
+// UserMeterRsp 用户统计列表返回
+type UserMeterRsp struct {
+	ClusterId          string        `json:"cluster_id"`
+	AverageTimeConsume string        `json:"average_time_consume"`
+	MaxTimeConsume     string        `json:"max_time_consume"`
+	MinTimeConsume     string        `json:"min_time_consume"`
+	UserConsumes       []UserConsume `json:"user_consumes"`
+}
+
+// UserMeters 用户统计列表
+type UserMeters struct {
+	ClusterId          string        `json:"cluster_id"`
+	AverageTimeConsume time.Duration `json:"average_time_consume"`
+	MaxTimeConsume     time.Duration `json:"max_time_consume"`
+	MinTimeConsume     time.Duration `json:"min_time_consume"`
+	UserConsumes       []UserConsume `json:"user_consumes"`
+}
+
+// UserConsume 用户统计耗时单条数据
+type UserConsume struct {
+	TimeConsume string `json:"time_consume"`
+	CreateTime  string `json:"create_time"`
+	SessionId   string `json:"session_id"`
+	PodName     string `json:"pod_name"`
+	CommandKey  string `json:"command_key"`
 }
 
 // GetConnIdleTimeout 获取空闲过期时间

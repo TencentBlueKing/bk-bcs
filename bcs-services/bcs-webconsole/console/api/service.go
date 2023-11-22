@@ -28,6 +28,7 @@ import (
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
@@ -377,9 +378,10 @@ func (s *service) SetUserDelaySwitch(c *gin.Context) {
 			return
 		}
 
-		// 只取第一个字符
-		if len(commandDelays[i].ConsoleKey) > 0 {
-			commandDelays[i].ConsoleKey = commandDelays[i].ConsoleKey[0:1]
+		// 只允许一个字符设置
+		if len(commandDelays[i].ConsoleKey) != 1 {
+			rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", errors.New("invalid console_key")))
+			return
 		}
 	}
 
@@ -402,7 +404,7 @@ func (s *service) GetUserDelaySwitch(c *gin.Context) {
 	username := c.Param("username")
 	result, err := storage.GetDefaultRedisSession().Client.HGet(c, types.ConsoleKey, username).Result()
 	if err != nil {
-		if strings.Contains(err.Error(), "nil") {
+		if errors.Is(err, redis.Nil) {
 			rest.APIError(c, i18n.GetMessage(c, "用户没有设置命令延时", err))
 			return
 		}
@@ -430,22 +432,81 @@ func (s *service) GetUserDelayMeter(c *gin.Context) {
 		return
 	}
 
-	// 返回筛选的结果
-	var rsp []types.DelayData
+	// 去重处理，键值为cluster_id
+	userMeterMap := make(map[string]types.UserMeters)
 	// 根据clusterId筛选
 	for i := range result {
-		// clusterId不为空的情况及用户没有设置该clusterId的情况不做数据展示
+		// clusterId不为空的情况并且用户没有设置该clusterId的情况不做数据展示
 		if clusterId != "" && !strings.Contains(result[i], clusterId) {
 			continue
 		}
 
+		// 解析Redis中数据， string -> delayData
 		var delayData types.DelayData
 		err = json.Unmarshal([]byte(result[i]), &delayData)
 		if err != nil {
 			rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
 			return
 		}
-		rsp = append(rsp, delayData)
+
+		// 解析消耗时间
+		timeConsume, err := time.ParseDuration(delayData.TimeConsume)
+		if err != nil {
+			// 有错误则不追加列表
+			continue
+		}
+		// 能取出数据，就追加
+		if value, ok := userMeterMap[delayData.ClusterId]; ok {
+			userMeter := types.UserConsume{
+				TimeConsume: delayData.TimeConsume,
+				CreateTime:  delayData.CreateTime,
+				SessionId:   delayData.SessionId,
+				PodName:     delayData.PodName,
+				CommandKey:  delayData.CommandKey,
+			}
+			value.UserConsumes = append(value.UserConsumes, userMeter)
+			// 统计数据
+			value.AverageTimeConsume += timeConsume
+			if value.MaxTimeConsume < timeConsume {
+				value.MaxTimeConsume = timeConsume
+			}
+			if value.MinTimeConsume > timeConsume {
+				value.MinTimeConsume = timeConsume
+			}
+			userMeterMap[delayData.ClusterId] = value
+		} else {
+			// 无法取出的情况则初始化值
+			userMeterMap[delayData.ClusterId] = types.UserMeters{
+				ClusterId:          delayData.ClusterId,
+				AverageTimeConsume: timeConsume,
+				MaxTimeConsume:     timeConsume,
+				MinTimeConsume:     timeConsume,
+				UserConsumes: []types.UserConsume{
+					{
+						TimeConsume: delayData.TimeConsume,
+						CreateTime:  delayData.CreateTime,
+						SessionId:   delayData.SessionId,
+						PodName:     delayData.PodName,
+						CommandKey:  delayData.CommandKey,
+					},
+				},
+			}
+		}
+	}
+
+	// 返回筛选的结果
+	var rsp []types.UserMeterRsp
+	for _, value := range userMeterMap {
+		// 求平均值
+		value.AverageTimeConsume /= time.Duration(len(value.UserConsumes))
+		userMeterRsp := types.UserMeterRsp{
+			ClusterId:          value.ClusterId,
+			AverageTimeConsume: value.AverageTimeConsume.String(),
+			MaxTimeConsume:     value.MaxTimeConsume.String(),
+			MinTimeConsume:     value.MinTimeConsume.String(),
+			UserConsumes:       value.UserConsumes,
+		}
+		rsp = append(rsp, userMeterRsp)
 	}
 	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), rsp)
 }
