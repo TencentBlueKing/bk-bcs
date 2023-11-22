@@ -24,6 +24,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -143,6 +144,12 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 	if len(uploadErr) > 0 {
 		msg = fmt.Sprintf("上传完成，失败 %d 个", len(uploadErr))
 	}
+	sort.Slice(nonExist, func(i, j int) bool {
+		return nonExist[i].Path < nonExist[j].Path
+	})
+	sort.Slice(exist, func(i, j int) bool {
+		return exist[i].Path < exist[j].Path
+	})
 	_ = render.Render(w, r, rest.OKRender(&types.TemplatesImportResp{
 		Exist:    exist,
 		NonExist: nonExist,
@@ -234,6 +241,12 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	if len(uploadErr) > 0 {
 		msg = fmt.Sprintf("上传完成，失败 %d 个", len(uploadErr))
 	}
+	sort.Slice(nonExist, func(i, j int) bool {
+		return nonExist[i].Path < nonExist[j].Path
+	})
+	sort.Slice(exist, func(i, j int) bool {
+		return exist[i].Path < exist[j].Path
+	})
 	_ = render.Render(w, r, rest.OKRender(&types.TemplatesImportResp{
 		Exist:    exist,
 		NonExist: nonExist,
@@ -319,6 +332,10 @@ func (c *configImport) uploadFile(kt *kit.Kit, filePath, rootDir string) (*types
 	lastSlashIndex := strings.LastIndex(fileDir, "/")
 	if lastSlashIndex >= 0 {
 		fileDir = fileDir[:lastSlashIndex]
+	}
+	// 默认根目录
+	if len(fileDir) == 0 {
+		fileDir = "/"
 	}
 	// 从池中获取一个缓冲区
 	fileBuffer := bufferPool.Get().(*bytes.Buffer)
