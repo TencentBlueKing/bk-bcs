@@ -66,33 +66,28 @@
         theme="primary"
         :loading="pending"
         :disabled="!importConfigList.length"
-        @click="isSelectPkgDialogShow = true"
+        @click="handleImport"
         >去上传</bk-button
       >
       <bk-button @click="close">取消</bk-button>
     </div>
   </bk-sideslider>
-  <SelectPackage v-model:show="isSelectPkgDialogShow" :pending="pending" @confirm="handleImport" />
 </template>
 <script lang="ts" setup>
 import { ref, watch, computed } from 'vue';
-import { storeToRefs } from 'pinia';
-import useGlobalStore from '../../../../../../../../store/global';
-import useTemplateStore from '../../../../../../../../store/template';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
 import { IConfigImportItem } from '../../../../../../../../../types/config';
-import { importTemplateFile, importTemplateBatchAdd, addTemplateToPackage } from '../../../../../../../../api/template';
-import ConfigTable from './config-table.vue';
-import SelectPackage from './select-package.vue';
+import { batchAdddConfigList, importNonTemplateConfigFile } from '../../../../../../../../api/config';
+import ConfigTable from '../../../../../../templates/list/package-detail/operations/add-configs/import-configs/config-table.vue';
 import { Message } from 'bkui-vue';
 import { Upload } from 'bkui-vue/lib/icon';
 const props = defineProps<{
   show: boolean;
+  bkBizId: string;
+  appId: number;
 }>();
 
-const emits = defineEmits(['update:show', 'added']);
-const { spaceId } = storeToRefs(useGlobalStore());
-const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+const emits = defineEmits(['update:show', 'upload']);
 const isShow = ref(false);
 const isTableChange = ref(false);
 const pending = ref(false);
@@ -100,7 +95,6 @@ const existConfigList = ref<IConfigImportItem[]>([]);
 const nonExistConfigList = ref<IConfigImportItem[]>([]);
 const loading = ref(false);
 const expandNonExistTable = ref(true);
-const isSelectPkgDialogShow = ref(false);
 const buttonRef = ref();
 
 watch(
@@ -117,11 +111,12 @@ const handleFileUpload = async (option: { file: File }) => {
   clearData();
   loading.value = true;
   try {
-    const res = await importTemplateFile(spaceId.value, currentTemplateSpace.value, option.file);
+    const res = await importNonTemplateConfigFile(props.bkBizId, props.appId, option.file);
+    console.log(res);
     existConfigList.value = res.exist;
     nonExistConfigList.value = res.non_exist;
     nonExistConfigList.value.forEach((item: IConfigImportItem) => {
-      item.privilege = '677';
+      item.privilege = '644';
       item.user = 'root';
       item.user_group = 'root';
     });
@@ -147,18 +142,13 @@ const close = () => {
   emits('update:show', false);
 };
 
-const handleImport = async (pkgIds: number[]) => {
+const handleImport = async () => {
   try {
-    const res = await importTemplateBatchAdd(spaceId.value, currentTemplateSpace.value, [
+    await batchAdddConfigList(props.bkBizId, props.appId, [
       ...existConfigList.value,
       ...nonExistConfigList.value,
     ]);
-    // 选择未指定套餐时,不需要调用添加接口
-    if (pkgIds.length > 1 || pkgIds[0] !== 0) {
-      await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, res.ids, pkgIds);
-    }
-    isSelectPkgDialogShow.value = false;
-    emits('added');
+    emits('upload');
     close();
     Message({
       theme: 'success',

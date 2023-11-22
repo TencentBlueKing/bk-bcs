@@ -20,7 +20,7 @@ const (
 	// SystemNameBSCPEn is bscp in iam's system english name.
 	SystemNameBSCPEn = "bscp"
 	// SystemNameBSCP is bscp in iam's system name.
-	SystemNameBSCP = "服务配置平台"
+	SystemNameBSCP = "服务配置中心"
 
 	// SystemIDCMDB is cmdb in iam's system id.
 	SystemIDCMDB = "bk_cmdb"

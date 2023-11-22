@@ -29,7 +29,11 @@
         <template v-if="!isLoading && isEmpty && !isSearchEmpty">
           <bk-exception class="exception-wrap-item" type="empty" :description="t('你尚未创建或加入任何服务')">
             <div class="exception-actions">
-              <bk-button text theme="primary" @click="isCreateServiceOpen = true">
+              <bk-button
+                text
+                theme="primary"
+                :class="{ 'bk-button-with-no-perm': props.permCheckLoading || !props.hasCreateServicePerm }"
+                @click="handleCreateServiceClick">
                 {{ t('立即创建') }}
               </bk-button>
               <span class="divider-middle"></span>
