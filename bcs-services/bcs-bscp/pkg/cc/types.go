@@ -37,6 +37,14 @@ const (
 	RedisClusterMode = "cluster"
 )
 
+// FeatureFlag 枚举类型
+type FeatureFlag string
+
+const (
+	// BizViewFlag 业务白名单
+	BizViewFlag FeatureFlag = "BizView"
+)
+
 // Service defines Setting related runtime.
 type Service struct {
 	Etcd Etcd `yaml:"etcd"`
@@ -436,6 +444,16 @@ func (s Sharding) validate() error {
 	}
 
 	return nil
+}
+
+// FeatureFlagOption feature flag option
+type FeatureFlagOption struct {
+	// 1. if set enabled to true, it means all biz enable this feature,
+	// only biz in list(blacklist) disable this feature
+	// 2. if set enabled to false, it means only biz in list(whitelist) enable this feature
+	Enabled bool `yaml:"enabled"`
+	// List can be white list or black list, depends on enabled
+	List []string `yaml:"list"`
 }
 
 // Database defines database related runtime.
