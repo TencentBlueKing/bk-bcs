@@ -78,21 +78,36 @@ const (
 
 // 蓝鲸错误码规范，粗粒度的错误分类
 const (
-	InvalidArgument    int32 = 10000
-	InvalidRequest     int32 = 10001
-	OutOfRange         int32 = 10002
+	// InvalidArgument 参数不符合参数格式
+	InvalidArgument int32 = 10000
+	// InvalidRequest 参数符合参数格式，但参数不符合业务规则
+	InvalidRequest int32 = 10001
+	// OutOfRange 客户端指定了无效范围
+	OutOfRange int32 = 10002
+	// FailedPrecondition 请求无法在当前系统状态下执行，例如删除非空目录
 	FailedPrecondition int32 = 10003
-	Unauthenticated    int32 = 10004
-	IamNoPermission    int32 = 10005
-	NoPermission       int32 = 10006
-	NotFound           int32 = 10007
-	AlreadyExists      int32 = 10008
-	Aborted            int32 = 10009
-	RatelimitExceed    int32 = 10010
-	ResourceExhausted  int32 = 10011
-	Internal           int32 = 10012
-	Unknown            int32 = 10013
-	NotImplemented     int32 = 10014
+	// Unauthenticated 未提供身份认证凭证
+	Unauthenticated int32 = 10004
+	// IamNoPermission 权限中心没有相关权限(有协议要求)
+	IamNoPermission int32 = 10005
+	// NoPermission 没有相关权限(非权限中心)
+	NoPermission int32 = 10006
+	// NotFound 资源不存在
+	NotFound int32 = 10007
+	// AlreadyExists 客户端尝试创建的资源已存在
+	AlreadyExists int32 = 10008
+	// Aborted 并发冲突，例如读取/修改/写入冲突
+	Aborted int32 = 10009
+	// RatelimitExceed 超过频率限制
+	RatelimitExceed int32 = 10010
+	// ResourceExhausted 资源配额不足
+	ResourceExhausted int32 = 10011
+	// Internal 出现内部服务器错误
+	Internal int32 = 10012
+	// Unknown 出现未知的服务器错误
+	Unknown int32 = 10013
+	// NotImplemented API方法未通过服务器实现
+	NotImplemented int32 = 10014
 )
 
 // bscp专用错误码，细粒度具体场景的错误码
