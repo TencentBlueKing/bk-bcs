@@ -440,16 +440,8 @@ func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamaut
 		perms[v.SpaceId] = webannotation.Perm{string(meta.FindBusinessResource): authResp[idx].Authorized}
 	}
 
-	// 设置业务白名单
-	wlist := []string{}
-	biz, ok := cc.ApiServer().FeatureFlags[cc.BizViewFlag]
-	if ok && !biz.Enabled {
-		wlist = biz.List
-	}
-
 	annotation := &webannotation.Annotation{
 		Perms: perms,
-		WList: wlist,
 	}
 	return annotation, nil
 }

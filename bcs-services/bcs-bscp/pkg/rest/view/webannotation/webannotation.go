@@ -33,7 +33,6 @@ type Perm map[string]bool
 // Annotation 注解类型
 type Annotation struct {
 	Perms map[string]Perm `json:"perms"`
-	WList []string        `json:"wlist,omitempty"`
 }
 
 // AnnotationFunc 函数类型

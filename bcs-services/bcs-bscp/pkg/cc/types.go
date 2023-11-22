@@ -37,12 +37,12 @@ const (
 	RedisClusterMode = "cluster"
 )
 
-// FeatureFlag 枚举类型
+// FeatureFlag 枚举类型, 常量使用全部大写表示
 type FeatureFlag string
 
 const (
 	// BizViewFlag 业务白名单
-	BizViewFlag FeatureFlag = "BizView"
+	BizViewFlag FeatureFlag = "BIZ_VIEW"
 )
 
 // Service defines Setting related runtime.
