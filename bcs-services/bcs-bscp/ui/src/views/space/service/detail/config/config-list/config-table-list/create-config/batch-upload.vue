@@ -1,5 +1,5 @@
 <template>
-  <bk-sideslider title="导入配置文件" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider title="批量上传配置文件" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="slider-content-container">
       <bk-form form-type="vertical">
         <bk-form-item label="上传配置包" required property="package">
@@ -67,7 +67,7 @@
         :loading="pending"
         :disabled="!importConfigList.length"
         @click="handleImport"
-        >去导入</bk-button
+        >去上传</bk-button
       >
       <bk-button @click="close">取消</bk-button>
     </div>
@@ -116,7 +116,7 @@ const handleFileUpload = async (option: { file: File }) => {
     existConfigList.value = res.exist;
     nonExistConfigList.value = res.non_exist;
     nonExistConfigList.value.forEach((item: IConfigImportItem) => {
-      item.privilege = '677';
+      item.privilege = '644';
       item.user = 'root';
       item.user_group = 'root';
     });
