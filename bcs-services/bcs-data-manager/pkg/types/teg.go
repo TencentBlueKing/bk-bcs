@@ -13,18 +13,54 @@
 // Package types xxx
 package types
 
+var (
+	// TegClusterId key for TEG workload
+	TegClusterId = "clusterId"
+	// TegNamespace key for TEG workload
+	TegNamespace = "namespace"
+	// TegWorkloadKind key for TEG workload
+	TegWorkloadKind = "workload_kind"
+	// TegWorkloadName key for TEG workload
+	TegWorkloadName = "workload_name"
+	// TegMaintainer key for TEG workload
+	TegMaintainer = "maintainer"
+	// TegBakMaintainer key for TEG workload
+	TegBakMaintainer = "bakMaintainer"
+	// TegBusinessSetId key for TEG workload
+	TegBusinessSetId = "businessSetId"
+	// TegBusinessId key for TEG workload
+	TegBusinessId = "businessId"
+	// TegBusinessModuleId key for TEG workload
+	TegBusinessModuleId = "businessModuleId"
+	// TegSchedulerStatus key for TEG workload
+	TegSchedulerStatus = "schedulerStatus"
+	// TegServiceStatus key for TEG workload
+	TegServiceStatus = "serviceStatus"
+
+	// TEGWorkloadColumns selected columns for workloads
+	TEGWorkloadColumns = []string{
+		TegClusterId, TegNamespace, TegWorkloadKind,
+		TegWorkloadName, TegMaintainer, TegBakMaintainer,
+		TegBusinessSetId, TegBusinessId, TegBusinessModuleId,
+		TegSchedulerStatus, TegServiceStatus,
+	}
+
+	// TEGWorkloadSortColumns columns for sort in order by
+	TEGWorkloadSortColumns = []string{TegClusterId, TegNamespace, TegWorkloadKind, TegWorkloadName}
+)
+
 // TEGWorkload type of teg workload
 type TEGWorkload struct {
-	ClusterId        string `json:"clusterId,omitempty"`
-	Namespace        string `json:"namespace,omitempty"`
-	WorkloadKind     string `json:"workloadKind,omitempty" bson:"workload_kind"`
-	WorkloadName     string `json:"workloadName,omitempty" bson:"workload_name"`
-	Maintainer       string `json:"maintainer,omitempty"`
-	BakMaintainer    string `json:"bakMaintainer,omitempty"`
-	BusinessSetId    int64  `json:"businessSetId,omitempty"`
-	BusinessId       int64  `json:"businessId,omitempty"`
-	BusinessModuleId int64  `json:"businessModuleId,omitempty"`
-	SchedulerStatus  int64  `json:"schedulerStatus,omitempty"`
-	ServiceStatus    int64  `json:"serviceStatus,omitempty"`
-	HpaStatus        int64  `json:"hpaStatus,omitempty"`
+	ClusterId        string `json:"clusterId,omitempty" db:"clusterId"`
+	Namespace        string `json:"namespace,omitempty" db:"namespace"`
+	WorkloadKind     string `json:"workloadKind,omitempty" bson:"workload_kind" db:"workload_kind"`
+	WorkloadName     string `json:"workloadName,omitempty" bson:"workload_name" db:"workload_name"`
+	Maintainer       string `json:"maintainer,omitempty" db:"maintainer"`
+	BakMaintainer    string `json:"bakMaintainer,omitempty" db:"bakMaintainer"`
+	BusinessSetId    int64  `json:"businessSetId,omitempty" db:"businessSetId"`
+	BusinessId       int64  `json:"businessId,omitempty" db:"businessId"`
+	BusinessModuleId int64  `json:"businessModuleId,omitempty" db:"businessModuleId"`
+	SchedulerStatus  int64  `json:"schedulerStatus,omitempty" db:"schedulerStatus"`
+	ServiceStatus    int64  `json:"serviceStatus,omitempty" db:"serviceStatus"`
+	HpaStatus        int64  `json:"hpaStatus,omitempty" db:"hpaStatus"`
 }

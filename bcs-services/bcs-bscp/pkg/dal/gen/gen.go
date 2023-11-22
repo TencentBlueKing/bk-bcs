@@ -40,6 +40,7 @@ var (
 	ReleasedConfigItem          *releasedConfigItem
 	ReleasedGroup               *releasedGroup
 	ReleasedHook                *releasedHook
+	ReleasedKv                  *releasedKv
 	ResourceLock                *resourceLock
 	Strategy                    *strategy
 	Template                    *template
@@ -74,6 +75,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	ReleasedConfigItem = &Q.ReleasedConfigItem
 	ReleasedGroup = &Q.ReleasedGroup
 	ReleasedHook = &Q.ReleasedHook
+	ReleasedKv = &Q.ReleasedKv
 	ResourceLock = &Q.ResourceLock
 	Strategy = &Q.Strategy
 	Template = &Q.Template
@@ -109,6 +111,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		ReleasedConfigItem:          newReleasedConfigItem(db, opts...),
 		ReleasedGroup:               newReleasedGroup(db, opts...),
 		ReleasedHook:                newReleasedHook(db, opts...),
+		ReleasedKv:                  newReleasedKv(db, opts...),
 		ResourceLock:                newResourceLock(db, opts...),
 		Strategy:                    newStrategy(db, opts...),
 		Template:                    newTemplate(db, opts...),
@@ -145,6 +148,7 @@ type Query struct {
 	ReleasedConfigItem          releasedConfigItem
 	ReleasedGroup               releasedGroup
 	ReleasedHook                releasedHook
+	ReleasedKv                  releasedKv
 	ResourceLock                resourceLock
 	Strategy                    strategy
 	Template                    template
@@ -182,6 +186,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		ReleasedConfigItem:          q.ReleasedConfigItem.clone(db),
 		ReleasedGroup:               q.ReleasedGroup.clone(db),
 		ReleasedHook:                q.ReleasedHook.clone(db),
+		ReleasedKv:                  q.ReleasedKv.clone(db),
 		ResourceLock:                q.ResourceLock.clone(db),
 		Strategy:                    q.Strategy.clone(db),
 		Template:                    q.Template.clone(db),
@@ -226,6 +231,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		ReleasedConfigItem:          q.ReleasedConfigItem.replaceDB(db),
 		ReleasedGroup:               q.ReleasedGroup.replaceDB(db),
 		ReleasedHook:                q.ReleasedHook.replaceDB(db),
+		ReleasedKv:                  q.ReleasedKv.replaceDB(db),
 		ResourceLock:                q.ResourceLock.replaceDB(db),
 		Strategy:                    q.Strategy.replaceDB(db),
 		Template:                    q.Template.replaceDB(db),
@@ -260,6 +266,7 @@ type queryCtx struct {
 	ReleasedConfigItem          IReleasedConfigItemDo
 	ReleasedGroup               IReleasedGroupDo
 	ReleasedHook                IReleasedHookDo
+	ReleasedKv                  IReleasedKvDo
 	ResourceLock                IResourceLockDo
 	Strategy                    IStrategyDo
 	Template                    ITemplateDo
@@ -294,6 +301,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		ReleasedConfigItem:          q.ReleasedConfigItem.WithContext(ctx),
 		ReleasedGroup:               q.ReleasedGroup.WithContext(ctx),
 		ReleasedHook:                q.ReleasedHook.WithContext(ctx),
+		ReleasedKv:                  q.ReleasedKv.WithContext(ctx),
 		ResourceLock:                q.ResourceLock.WithContext(ctx),
 		Strategy:                    q.Strategy.WithContext(ctx),
 		Template:                    q.Template.WithContext(ctx),

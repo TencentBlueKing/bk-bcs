@@ -21,10 +21,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	gocache "github.com/patrickmn/go-cache"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog/glog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 )
@@ -43,6 +46,10 @@ type SdkWrapper struct {
 	ratelimitbucketSize int64
 	// rate limiter for calling sdk
 	throttler throttle.RateLimiter
+
+	// key: genRegionArn(region, lbArn string) string
+	// value: types.LoadBalancer
+	lbCache *gocache.Cache
 }
 
 const (
@@ -70,6 +77,9 @@ var (
 	defaultBucketSize = 50
 	// wait seconds when cloud api is busy
 	waitPeriodLBDealing = 2
+
+	lbCacheExpire        = time.Hour * 24 * 30
+	lbCacheCleanInterval = time.Hour * 24
 )
 
 // NewSdkWrapper create a new aws sdk wrapper
@@ -81,6 +91,9 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 	}
 	sw.elbClientMap = make(map[string]*elbv2.Client)
 	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
+
+	// lbCache仅用于存放lb的一些固定信息，缓存时间可以设的比较久
+	sw.lbCache = gocache.New(lbCacheExpire, lbCacheCleanInterval)
 	return sw, nil
 }
 
@@ -136,6 +149,9 @@ func (sw *SdkWrapper) DescribeLoadBalancers(region string, input *elbv2.Describe
 	}
 	blog.V(3).Infof("DescribeLoadBalancers response: %s", common.ToJsonString(out))
 	mf(metrics.LibCallStatusOK)
+	for _, lb := range out.LoadBalancers {
+		sw.lbCache.SetDefault(genRegionArn(region, *lb.LoadBalancerArn), lb)
+	}
 	return out, nil
 }
 
@@ -791,4 +807,23 @@ func (sw *SdkWrapper) DescribeTargetHealth(region string, input *elbv2.DescribeT
 	blog.V(4).Infof("DescribeTargetHealth response: %s", common.ToJsonString(out))
 	mf(metrics.LibCallStatusOK)
 	return out, nil
+}
+
+func (sw *SdkWrapper) getLbFromCache(region, lbArn string) (types.LoadBalancer, error) {
+	var lb types.LoadBalancer
+	lbI, found := sw.lbCache.Get(genRegionArn(region, lbArn))
+	if !found {
+		lbs, err := sw.DescribeLoadBalancers(region,
+			&elbv2.DescribeLoadBalancersInput{LoadBalancerArns: []string{lbArn}})
+		if err != nil {
+			return lb, fmt.Errorf("DescribeLoadBalancers failed, %s", err.Error())
+		}
+		if len(lbs.LoadBalancers) == 0 {
+			return lb, cloud.ErrLoadbalancerNotFound
+		}
+		lb = lbs.LoadBalancers[0]
+	} else {
+		lb = lbI.(types.LoadBalancer)
+	}
+	return lb, nil
 }

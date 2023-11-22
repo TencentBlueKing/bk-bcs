@@ -148,11 +148,6 @@ func (s *ModelInterface) GetRawPodAutoscalerInfo(ctx context.Context, opts *type
 	return nil, ErrNotImplemented
 }
 
-// GetCloudNativeWorkloadList is not implemented.
-func (s *ModelInterface) GetCloudNativeWorkloadList(ctx context.Context, req *datamanager.GetCloudNativeWorkloadListRequest) (*datamanager.TEGMessage, error) {
-	return nil, ErrNotImplemented
-}
-
 // GetLatestWorkloadRequest is not implemented.
 func (s *ModelInterface) GetLatestWorkloadRequest(ctx context.Context,
 	req *datamanager.GetWorkloadRequestRecommendResultReq) (*datamanager.GetWorkloadRequestRecommendResultRsp, error) {

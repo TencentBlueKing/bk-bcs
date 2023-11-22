@@ -35,7 +35,7 @@
         <span
           class="flex items-center"
           v-bk-tooltips="{
-            content: option.businessID
+            content: option.businessID && (option.businessID !== '0') && option.kind
               ? `${$t('projects.project.name')}:
               ${option.name}<br/>${$t('projects.project.businessID')}: ${option.businessID}`
               : `${$t('projects.project.name')}: ${option.name}<br/>${$t('bcs.registry.toEnable')}`,

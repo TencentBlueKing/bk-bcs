@@ -100,7 +100,6 @@ func (sw *SdkWrapper) checkErrCode(err *terrors.TencentCloudSDKError, metricFunc
 		time.Sleep(time.Duration(waitPeriodLBDealing) * time.Second)
 	} else if err.Code == WrongStatusCode { // 通常是由于有多个请求同时操作LB（如同时创建/删除监听器）
 		blog.Warnf("clb is dealing another action, have a rest for %d second, err: %s", waitPeriodLBDealing, err.Error())
-		metricFunc(metrics.LibCallStatusLBLock)
 		time.Sleep(time.Duration(waitPeriodLBDealing) * time.Second)
 	}
 }

@@ -30,8 +30,8 @@ type Public struct {
 	DB        *sqlx.DB
 }
 
-// QueryxToStruct query data and return struct
-func (p *Public) QueryxToStruct(builder sq.SelectBuilder) ([]*structpb.Struct, error) {
+// QueryxToStructpb query data and return struct
+func (p *Public) QueryxToStructpb(builder sq.SelectBuilder) ([]*structpb.Struct, error) {
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		return nil, err
@@ -129,6 +129,23 @@ func (p *Public) QueryxToMap(builder sq.SelectBuilder) ([]map[string]interface{}
 	return response, nil
 }
 
+// QueryxToStruct query and map result into given obj
+func (p *Public) QueryxToStruct(builder sq.SelectBuilder, obj interface{}) error {
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+	if sql == "" {
+		return fmt.Errorf("sql should not be empty string")
+	}
+
+	if err := p.DB.Select(obj, sql, args...); err != nil {
+		blog.Errorf("select data to obj error, sql: %s, args: %v, err: %s", sql, args, err.Error())
+		return fmt.Errorf("select data to obj error, err: %s", err.Error())
+	}
+	return nil
+}
+
 // Countx count data and return total
 func (p *Public) Countx(builder sq.SelectBuilder) (int, error) {
 	sql, args, err := builder.ToSql()
@@ -142,8 +159,28 @@ func (p *Public) Countx(builder sq.SelectBuilder) (int, error) {
 	var count int
 	if err := p.DB.QueryRowx(sql, args...).Scan(&count); err != nil {
 		blog.Errorf("countx data error, sql:%s, args: %v, err:%s", sql, args, err.Error())
-		return 0, fmt.Errorf("Countx Error, err: %s", err.Error())
+		return 0, fmt.Errorf("countx Error, err: %s", err.Error())
 	}
 
 	return count, nil
+}
+
+// GetMax get Max dtEventTimeStamp
+func (p *Public) GetMax(table string, key string, value interface{}) error {
+	builder := sq.Select(fmt.Sprintf("max(%s)", key)).
+		From(table)
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+	if sql == "" {
+		return fmt.Errorf("sql should not be empty string")
+	}
+
+	if err := p.DB.QueryRowx(sql, args...).Scan(value); err != nil {
+		blog.Errorf("get max key(%s) error, sql:%s, args: %v, err:%s", key, sql, args, err.Error())
+		return fmt.Errorf("get max key(%s) error, err: %s", key, err.Error())
+	}
+	return nil
 }

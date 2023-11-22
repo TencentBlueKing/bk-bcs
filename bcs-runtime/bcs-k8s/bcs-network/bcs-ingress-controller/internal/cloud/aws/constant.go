@@ -12,6 +12,10 @@
 
 package aws
 
+import (
+	"fmt"
+)
+
 const (
 	// SystemNameInMetricAWS system name in metric for aws
 	SystemNameInMetricAWS = "aws"
@@ -31,3 +35,7 @@ const (
 	// ElbProtocolUDP elb udp protocol
 	ElbProtocolUDP = "UDP"
 )
+
+func genRegionArn(region, lbArn string) string {
+	return fmt.Sprintf("%s/%s", region, lbArn)
+}

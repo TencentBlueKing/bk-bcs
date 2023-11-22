@@ -66,6 +66,7 @@ type Set interface {
 	Credential() Credential
 	CredentialScope() CredentialScope
 	Kv() Kv
+	ReleasedKv() ReleasedKv
 }
 
 // NewDaoSet create the DAO set instance.
@@ -444,6 +445,15 @@ func (s *set) CredentialScope() CredentialScope {
 // Kv returns the kv DAO
 func (s *set) Kv() Kv {
 	return &kvDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// ReleasedKv returns the ReleasedKv scope's DAO
+func (s *set) ReleasedKv() ReleasedKv {
+	return &releasedKvDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,

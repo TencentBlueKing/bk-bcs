@@ -2,7 +2,7 @@
   <div class="biz-container app-container flex-col" v-bkloading="{ isLoading: loading }">
     <!-- 集群列表和项目信息加载完后再渲染视图 -->
     <template v-if="!loading">
-      <template v-if="curProject.kind">
+      <template v-if="curProject.kind && curProject.businessID && (curProject.businessID !== '0')">
         <!-- 页面公共导航 -->
         <ContentHeader
           :title="routeMeta.title"
@@ -130,7 +130,7 @@ export default defineComponent({
           $store.commit('updateCurCluster', cluster || clusterList[0]);
         }),
       ];
-      if (curProject.value?.kind) {
+      if (curProject.value?.kind && curProject.value?.businessID && (curProject.value?.businessID !== '0')) {
         list.push($store.dispatch('cluster/getBizMaintainers'));
       }
       await Promise.all(list).catch((err) => {

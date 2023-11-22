@@ -58,7 +58,7 @@ export default defineComponent({
     const resourceHash = ref('');
     const validateResourceVersion = () => {
       setTimeout(async () => {
-        const res = await fetch('/static/static_version.txt');
+        const res = await fetch(`${window.BK_STATIC_URL}/static/static_version.txt`, { cache: 'no-store' });
         const hash = await res.text();
         if (resourceHash.value && (resourceHash.value !== hash)) {
           $bkInfo({
@@ -74,7 +74,7 @@ export default defineComponent({
         }
         resourceHash.value = hash;
         validateResourceVersion();
-      }, 10000);
+      }, 15000);
     };
 
     onBeforeUnmount(() => {

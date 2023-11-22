@@ -164,13 +164,13 @@ export default defineComponent({
     const activeNav = computed(() => findCurrentNav(menus.value) || {});
     // 当前路由
     const route = computed(() => toRef(reactive($router), 'currentRoute').value);
-    // path上有项目Code且项目开启了容器服务时才显示左侧菜单
+    // 是否线上左侧菜单
     const needMenu = computed(() => {
       const { projectCode } = route.value.params;
       return !!projectCode
-        && route.value.fullPath.indexOf(projectCode) > -1
-        && !!curProject.value.kind
-        && !['404', 'token'].includes(route.value.name);
+        && route.value.fullPath.indexOf(projectCode) > -1 // 1.跟项目无关界面
+        && (!!curProject.value.kind && !!curProject.value.businessID && curProject.value.businessID !== '0')// 2. 当前项目未开启容器服务
+        && !['404', 'token'].includes(route.value.name);// 404 和 token特殊界面
     });
 
     // 导航自适应

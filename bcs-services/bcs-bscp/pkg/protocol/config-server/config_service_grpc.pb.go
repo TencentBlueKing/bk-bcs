@@ -41,6 +41,8 @@ const (
 	Config_ListReleasedConfigItems_FullMethodName           = "/pbcs.Config/ListReleasedConfigItems"
 	Config_ListConfigItemCount_FullMethodName               = "/pbcs.Config/ListConfigItemCount"
 	Config_ListConfigItemByTuple_FullMethodName             = "/pbcs.Config/ListConfigItemByTuple"
+	Config_GetReleasedKv_FullMethodName                     = "/pbcs.Config/GetReleasedKv"
+	Config_ListReleasedKvs_FullMethodName                   = "/pbcs.Config/ListReleasedKvs"
 	Config_UpdateConfigHook_FullMethodName                  = "/pbcs.Config/UpdateConfigHook"
 	Config_CreateRelease_FullMethodName                     = "/pbcs.Config/CreateRelease"
 	Config_ListReleases_FullMethodName                      = "/pbcs.Config/ListReleases"
@@ -168,6 +170,9 @@ type ConfigClient interface {
 	ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error)
 	ListConfigItemByTuple(ctx context.Context, in *ListConfigItemByTupleReq, opts ...grpc.CallOption) (*ListConfigItemByTupleResp, error)
+	// ReleasedConfigKv
+	GetReleasedKv(ctx context.Context, in *GetReleasedKvReq, opts ...grpc.CallOption) (*GetReleasedKvResp, error)
+	ListReleasedKvs(ctx context.Context, in *ListReleasedKvsReq, opts ...grpc.CallOption) (*ListReleasedKvsResp, error)
 	UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*UpdateConfigHookResp, error)
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
@@ -210,11 +215,11 @@ type ConfigClient interface {
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -435,6 +440,24 @@ func (c *configClient) ListConfigItemCount(ctx context.Context, in *ListConfigIt
 func (c *configClient) ListConfigItemByTuple(ctx context.Context, in *ListConfigItemByTupleReq, opts ...grpc.CallOption) (*ListConfigItemByTupleResp, error) {
 	out := new(ListConfigItemByTupleResp)
 	err := c.cc.Invoke(ctx, Config_ListConfigItemByTuple_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetReleasedKv(ctx context.Context, in *GetReleasedKvReq, opts ...grpc.CallOption) (*GetReleasedKvResp, error) {
+	out := new(GetReleasedKvResp)
+	err := c.cc.Invoke(ctx, Config_GetReleasedKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListReleasedKvs(ctx context.Context, in *ListReleasedKvsReq, opts ...grpc.CallOption) (*ListReleasedKvsResp, error) {
+	out := new(ListReleasedKvsResp)
+	err := c.cc.Invoke(ctx, Config_ListReleasedKvs_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1382,6 +1405,9 @@ type ConfigServer interface {
 	ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error)
 	ListConfigItemByTuple(context.Context, *ListConfigItemByTupleReq) (*ListConfigItemByTupleResp, error)
+	// ReleasedConfigKv
+	GetReleasedKv(context.Context, *GetReleasedKvReq) (*GetReleasedKvResp, error)
+	ListReleasedKvs(context.Context, *ListReleasedKvsReq) (*ListReleasedKvsResp, error)
 	UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*UpdateConfigHookResp, error)
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
@@ -1424,11 +1450,11 @@ type ConfigServer interface {
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1548,6 +1574,12 @@ func (UnimplementedConfigServer) ListConfigItemCount(context.Context, *ListConfi
 }
 func (UnimplementedConfigServer) ListConfigItemByTuple(context.Context, *ListConfigItemByTupleReq) (*ListConfigItemByTupleResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItemByTuple not implemented")
+}
+func (UnimplementedConfigServer) GetReleasedKv(context.Context, *GetReleasedKvReq) (*GetReleasedKvResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedKv not implemented")
+}
+func (UnimplementedConfigServer) ListReleasedKvs(context.Context, *ListReleasedKvsReq) (*ListReleasedKvsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedKvs not implemented")
 }
 func (UnimplementedConfigServer) UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*UpdateConfigHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateConfigHook not implemented")
@@ -2169,6 +2201,42 @@ func _Config_ListConfigItemByTuple_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListConfigItemByTuple(ctx, req.(*ListConfigItemByTupleReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetReleasedKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleasedKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetReleasedKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetReleasedKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetReleasedKv(ctx, req.(*GetReleasedKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListReleasedKvs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListReleasedKvsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListReleasedKvs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListReleasedKvs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListReleasedKvs(ctx, req.(*ListReleasedKvsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4083,6 +4151,14 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListConfigItemByTuple",
 			Handler:    _Config_ListConfigItemByTuple_Handler,
+		},
+		{
+			MethodName: "GetReleasedKv",
+			Handler:    _Config_GetReleasedKv_Handler,
+		},
+		{
+			MethodName: "ListReleasedKvs",
+			Handler:    _Config_ListReleasedKvs_Handler,
 		},
 		{
 			MethodName: "UpdateConfigHook",
