@@ -43,6 +43,15 @@ const (
 	defaultTerminalRows = 25  // defaultTerminalRows xxx
 )
 
+const (
+	// ConsoleKey 存Redis的延时命令Hash名称
+	ConsoleKey = "console_delay"
+	// DelayUser 用户延时统计数据列表的Redis key前缀
+	DelayUser = "delay_user_"
+	// DelayUserExpire 用户列表的数据设置过期，暂定24个小时
+	DelayUserExpire = time.Hour * 24
+)
+
 // APIResponse xxx
 type APIResponse struct {
 	Data      interface{} `json:"data,omitempty"`
@@ -86,6 +95,56 @@ type PodContext struct {
 	SessionTimeout  int64          `json:"session_timeout"`   // session 过期时间, 单位分钟
 	ConnIdleTimeout int64          `json:"conn_idle_timeout"` // 空闲时间, 单位分钟
 	SessionId       string         `json:"session_id"`        // session id
+}
+
+// CommandDelay 用户延时命令设置
+type CommandDelay struct {
+	ClusterId  string `json:"cluster_id"`
+	Enabled    bool   `json:"enabled"`
+	ConsoleKey string `json:"console_key"`
+}
+
+// DelayData 用户的延迟数据
+type DelayData struct {
+	ClusterId   string `json:"cluster_id"`
+	TimeConsume string `json:"time_consume"`
+	CreateTime  string `json:"create_time"`
+	SessionId   string `json:"session_id"`
+	PodName     string `json:"pod_name"`
+	CommandKey  string `json:"command_key"`
+}
+
+// CommandDelayList 所有用户命令延时设置列表
+type CommandDelayList struct {
+	Username      string         `json:"username"`
+	CommandDelays []CommandDelay `json:"command_delays"`
+}
+
+// UserMeterRsp 用户统计列表返回
+type UserMeterRsp struct {
+	ClusterId          string        `json:"cluster_id"`
+	AverageTimeConsume string        `json:"average_time_consume"`
+	MaxTimeConsume     string        `json:"max_time_consume"`
+	MinTimeConsume     string        `json:"min_time_consume"`
+	UserConsumes       []UserConsume `json:"user_consumes"`
+}
+
+// UserMeters 用户统计列表
+type UserMeters struct {
+	ClusterId          string        `json:"cluster_id"`
+	AverageTimeConsume time.Duration `json:"average_time_consume"`
+	MaxTimeConsume     time.Duration `json:"max_time_consume"`
+	MinTimeConsume     time.Duration `json:"min_time_consume"`
+	UserConsumes       []UserConsume `json:"user_consumes"`
+}
+
+// UserConsume 用户统计耗时单条数据
+type UserConsume struct {
+	TimeConsume string `json:"time_consume"`
+	CreateTime  string `json:"create_time"`
+	SessionId   string `json:"session_id"`
+	PodName     string `json:"pod_name"`
+	CommandKey  string `json:"command_key"`
 }
 
 // GetConnIdleTimeout 获取空闲过期时间
