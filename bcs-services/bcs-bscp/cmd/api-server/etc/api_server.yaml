@@ -51,7 +51,8 @@ repository:
       password:
 
 featureFlags:
-  BizView:
+  BIZ_VIEW:
+    enabled: false
     list:
       - "xx"
       - "xx"

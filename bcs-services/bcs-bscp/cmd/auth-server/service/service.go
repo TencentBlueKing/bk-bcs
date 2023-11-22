@@ -440,10 +440,7 @@ func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamaut
 		perms[v.SpaceId] = webannotation.Perm{string(meta.FindBusinessResource): authResp[idx].Authorized}
 	}
 
-	annotation := &webannotation.Annotation{
-		Perms: perms,
-	}
-	return annotation, nil
+	return &webannotation.Annotation{Perms: perms}, nil
 }
 
 func init() {
