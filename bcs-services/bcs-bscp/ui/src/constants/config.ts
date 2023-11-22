@@ -1,3 +1,14 @@
+// kv类型的配置项包含的子类型
+export const CONFIG_KV_TYPE = [
+  { id: 'string', name: 'String' },
+  { id: 'text', name: 'Text' },
+  { id: 'number', name: 'Number' },
+  { id: 'json', name: 'JSON' },
+  { id: 'xml', name: 'XML' },
+  { id: 'yaml', name: 'YAML' }
+]
+
+// 文件类型的配置项包含的子类型
 export const CONFIG_FILE_TYPE = [
   { id: 'text', name: '文本文件' },
   { id: 'binary', name: '二进制文件' },

@@ -1,5 +1,5 @@
 // 服务实例的pinia数据
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { defineStore, storeToRefs } from 'pinia';
 import useGlobalStore from './global';
 
@@ -7,6 +7,7 @@ interface IAppData {
   id: number | string;
   spec: {
     name: string;
+    config_type: string;
   };
 }
 const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
@@ -17,10 +18,13 @@ export default defineStore('service', () => {
     id: '',
     spec: {
       name: '',
+      config_type: 'file',
     },
   });
   const permCheckLoading = ref(false);
   const hasEditServicePerm = ref(false);
+
+  const isFileType = computed(() => appData.value.spec.config_type === 'file');
 
   const checkPermBeforeOperate = (perm: string) => {
     if (perm === 'update' && !hasEditServicePerm.value) {
@@ -49,5 +53,5 @@ export default defineStore('service', () => {
     user_group: 'root',
   });
 
-  return { appData, permCheckLoading, hasEditServicePerm, checkPermBeforeOperate, lastCreatePermission };
+  return { appData, permCheckLoading, hasEditServicePerm, isFileType, checkPermBeforeOperate, lastCreatePermission };
 });

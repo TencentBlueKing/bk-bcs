@@ -7,8 +7,7 @@
     width="122"
     :arrow="false"
     @after-show="isPopoverOpen = true"
-    @after-hidden="isPopoverOpen = false"
-  >
+    @after-hidden="isPopoverOpen = false">
     <div theme="primary" :class="['create-config-btn', { 'popover-open': isPopoverOpen }]">
       新增配置文件
       <AngleDown class="angle-icon" />
@@ -18,22 +17,20 @@
         <div
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleManualCreateSlideOpen"
-        >
+          @click="handleManualCreateSlideOpen">
           手动新增
         </div>
         <div
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleBatchUploadSlideOpen"
-        >
+          @click="handleBatchUploadSlideOpen">
           批量上传
         </div>
         <div
+          v-if="isFileType"
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleImportTemplateDialogOpen"
-        >
+          @click="handleImportTemplateDialogOpen">
           从配置模板导入
         </div>
       </div>
@@ -43,20 +40,17 @@
     v-model:show="isManualCreateSliderOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @confirm="emits('created')"
-  />
+    @confirm="emits('created')"/>
   <ImportFromTemplate
     v-model:show="isImportTemplatesDialogOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @imported="emits('imported')"
-  />
+    @imported="emits('imported')"/>
   <BatchUpload
     v-model:show="isBatchUploadSliderOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @upload="emits('uploaded')"
-  />
+    @upload="emits('uploaded')"/>
 </template>
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
@@ -71,7 +65,7 @@ import BatchUpload from './batch-upload.vue';
 const route = useRoute();
 
 const serviceStore = useServiceStore();
-const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
+const { permCheckLoading, hasEditServicePerm, isFileType } = storeToRefs(serviceStore);
 const { checkPermBeforeOperate } = serviceStore;
 
 const props = defineProps<{

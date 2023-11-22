@@ -5,6 +5,7 @@
       ref="selectorRef"
       class="service-selector"
       :popover-options="{ theme: 'light bk-select-popover service-selector-popover' }"
+      :popover-min-width="360"
       :filterable="true"
       :input-search="false"
       :clearable="false"
@@ -27,9 +28,8 @@
             }"
             :class="['service-option-item', { 'no-perm': !item.permissions.view }]"
             @click="handleOptionClick(item, $event)">
-            <div class="name-wrapper">
-              {{ item.spec.name }}
-            </div>
+            <div class="name-text">{{ item.spec.name }}</div>
+            <div class="type-tag">@todo</div>
           </div>
       </bk-option>
       <template #extension>
@@ -184,11 +184,30 @@ const handleAppChange = (id: number) => {
 }
 
 .service-option-item {
+  position: relative;
   flex: 1;
-  padding: 0 12px;
+  padding: 0 80px 0 12px;
   &.no-perm {
     background-color: #fafafa !important;
     color: #cccccc !important;
+  }
+  .name-text {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  .type-tag {
+    position: absolute;
+    top: 5px;
+    right: 16px;
+    width: 52px;
+    height: 22px;
+    line-height: 22px;
+    color: #63656e;
+    font-size: 12px;
+    text-align: center;
+    background: #f0f1f5;
+    border-radius: 2px;
   }
 }
 .selector-extensition {
