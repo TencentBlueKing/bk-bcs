@@ -71,6 +71,7 @@ func (z *ZipHandler) unpackZip(zr *zip.Reader, destPath string) error {
 }
 
 func (z *ZipHandler) unzipFile(f *zip.File, destPath string) error {
+	f.Name = gbkToUTF8(f.Name)
 	if f.FileInfo().IsDir() {
 		if err := os.MkdirAll(filepath.Join(destPath, f.Name), f.Mode().Perm()); err != nil {
 			return err

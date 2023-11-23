@@ -23,6 +23,9 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 var (
@@ -112,4 +115,11 @@ func sanitize(name string) string {
 	}
 
 	return name
+}
+
+// gbkToUTF8 将 GBK 编码转为 UTF-8 编码
+func gbkToUTF8(s string) string {
+	reader := transform.NewReader(strings.NewReader(s), simplifiedchinese.GBK.NewDecoder())
+	result, _ := io.ReadAll(reader)
+	return string(result)
 }
