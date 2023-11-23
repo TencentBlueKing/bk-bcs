@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -32,7 +33,7 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 	kt := kit.FromGrpcContext(ctx)
 
 	if _, err := s.dao.TemplateVariable().GetByUniqueKey(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
-		return nil, fmt.Errorf("template variable's same name %s already exists", req.Spec.Name)
+		return nil, errf.Newf(errf.AlreadyExists, "template variable's same name %s already exists", req.Spec.Name)
 	}
 
 	templateVariable := &table.TemplateVariable{

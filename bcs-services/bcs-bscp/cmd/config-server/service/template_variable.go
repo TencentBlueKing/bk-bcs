@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"bscp.io/pkg/criteria/constant"
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -40,7 +41,8 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbcs.CreateTe
 	}
 
 	if !strings.HasPrefix(strings.ToLower(req.Name), constant.TemplateVariablePrefix) {
-		return nil, fmt.Errorf("template variable name must start with %s", constant.TemplateVariablePrefix)
+		return nil, errf.Newf(errf.InvalidArgument, "template variable name must start with %s",
+			constant.TemplateVariablePrefix)
 	}
 
 	r := &pbds.CreateTemplateVariableReq{

@@ -13,10 +13,9 @@
 package dao
 
 import (
-	"fmt"
-
 	rawgen "gorm.io/gen"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -53,12 +52,12 @@ type templateVariableDao struct {
 // Create one template variable instance.
 func (dao *templateVariableDao) Create(kit *kit.Kit, g *table.TemplateVariable) (uint32, error) {
 	if err := g.ValidateCreate(); err != nil {
-		return 0, err
+		return 0, errf.New(errf.InvalidArgument, err.Error())
 	}
 
 	tmplSpaceID, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
-		return 0, err
+		return 0, errf.New(errf.InvalidArgument, err.Error())
 	}
 	g.ID = tmplSpaceID
 
@@ -76,7 +75,7 @@ func (dao *templateVariableDao) Create(kit *kit.Kit, g *table.TemplateVariable) 
 		return nil
 	}
 	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, err
+		return 0, errf.New(errf.Internal, err.Error())
 	}
 
 	return g.ID, nil
@@ -233,7 +232,7 @@ func (dao *templateVariableDao) GetByUniqueKey(kit *kit.Kit, bizID uint32, name 
 
 	templateVariable, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get template variable failed, err: %v", err)
+		return nil, errf.Newf(errf.Internal, "get template variable failed, err: %v", err)
 	}
 
 	return templateVariable, nil
