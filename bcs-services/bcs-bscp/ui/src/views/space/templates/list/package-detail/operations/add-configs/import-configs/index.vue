@@ -121,7 +121,7 @@ const handleFileUpload = async (option: { file: File }) => {
     existConfigList.value = res.exist;
     nonExistConfigList.value = res.non_exist;
     nonExistConfigList.value.forEach((item: IConfigImportItem) => {
-      item.privilege = '677';
+      item.privilege = '644';
       item.user = 'root';
       item.user_group = 'root';
     });

@@ -168,7 +168,6 @@ watch(
 );
 
 onMounted(() => {
-  isSearchEmpty.value = false;
   loadAppList();
 });
 

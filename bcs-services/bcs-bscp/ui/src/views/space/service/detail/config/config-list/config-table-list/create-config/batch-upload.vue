@@ -2,7 +2,7 @@
   <bk-sideslider title="批量上传配置文件" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="slider-content-container">
       <bk-form form-type="vertical">
-        <bk-form-item label="上传配置文件" required property="package">
+        <bk-form-item label="上传配置文件包" required property="package">
           <bk-upload
             v-show="!isTableChange"
             class="config-uploader"
