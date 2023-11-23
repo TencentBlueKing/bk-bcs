@@ -52,6 +52,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/replay"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/perf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
@@ -419,6 +420,12 @@ func (c *WebConsoleManager) Run() error {
 	uploader := record.GetGlobalUploader()
 	eg.Go(func() error {
 		return uploader.IntervalUpload(ctx)
+	})
+
+	// 定时上报用户延迟命令列表数据
+	performance := perf.GetGlobalPerformance()
+	eg.Go(func() error {
+		return performance.Run(ctx)
 	})
 
 	if c.multiCredConf != nil {

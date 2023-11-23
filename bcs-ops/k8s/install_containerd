@@ -53,7 +53,7 @@ _yum_containerd() {
   yum install -y -q yum-utils
   yum-config-manager --add-repo "${repo_file}"
   yum clean all
-  yum makecache fast
+  yum makecache fast || yum makecache
 
   local pkg_pat pkg_ver
   pkg_pat="${CONTAINERD_VER//-/.*}.*el"

@@ -1,8 +1,8 @@
 <template>
   <bk-dialog
-    title="导入至套餐"
+    title="上传至套餐"
     ext-cls="create-to-pkg-dialog"
-    confirm-text="导入"
+    confirm-text="确认"
     :width="640"
     :is-show="props.show"
     :esc-close="false"

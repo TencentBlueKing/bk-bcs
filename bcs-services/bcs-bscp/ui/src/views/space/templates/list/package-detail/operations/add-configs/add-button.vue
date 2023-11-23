@@ -16,7 +16,7 @@
           @click="handleOpenSlider('isAddOpen')">
           添加已有配置文件
         </div>
-        <div class="operation-item" @click="handleOpenSlider('isImportOpen')">导入配置文件</div>
+        <div class="operation-item" @click="handleOpenSlider('isImportOpen')">批量上传配置文件</div>
       </div>
     </template>
   </bk-popover>

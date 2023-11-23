@@ -25,6 +25,13 @@
         <div
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
+          @click="handleBatchUploadSlideOpen"
+        >
+          批量上传
+        </div>
+        <div
+          v-cursor="{ active: !hasEditServicePerm }"
+          :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
           @click="handleImportTemplateDialogOpen"
         >
           从配置模板导入
@@ -44,6 +51,12 @@
     :app-id="props.appId"
     @imported="emits('imported')"
   />
+  <BatchUpload
+    v-model:show="isBatchUploadSliderOpen"
+    :bk-biz-id="props.bkBizId"
+    :app-id="props.appId"
+    @upload="emits('uploaded')"
+  />
 </template>
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
@@ -53,6 +66,7 @@ import { storeToRefs } from 'pinia';
 import useServiceStore from '../../../../../../../../store/service';
 import ManualCreate from './manual-create.vue';
 import ImportFromTemplate from './import-from-templates.vue';
+import BatchUpload from './batch-upload.vue';
 
 const route = useRoute();
 
@@ -65,12 +79,13 @@ const props = defineProps<{
   appId: number;
 }>();
 
-const emits = defineEmits(['created', 'imported']);
+const emits = defineEmits(['created', 'imported', 'uploaded']);
 
 const buttonRef = ref();
 const isPopoverOpen = ref(false);
 const isManualCreateSliderOpen = ref(false);
 const isImportTemplatesDialogOpen = ref(false);
+const isBatchUploadSliderOpen = ref(false);
 
 onMounted(() => {
   if (route.query.pkg_id) {
@@ -92,6 +107,14 @@ const handleImportTemplateDialogOpen = () => {
     return;
   }
   isImportTemplatesDialogOpen.value = true;
+};
+
+const handleBatchUploadSlideOpen = () => {
+  buttonRef.value.hide();
+  if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+    return;
+  }
+  isBatchUploadSliderOpen.value = true;
 };
 
 // const handleImported = () => {};

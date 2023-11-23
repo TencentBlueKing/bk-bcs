@@ -50,7 +50,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 		s.UserPermRequestRedirect)
 
 	// html 页面
-	web.GET("/projects/:projectId/clusters/:clusterId/", metrics.RequestCollect("IndexPage"), s.IndexPageHandler)
+	web.GET("/projects/:projectId/clusters/:clusterId/*action", metrics.RequestCollect("IndexPage"), s.IndexPageHandler)
 	web.GET("/projects/:projectId/mgr/", metrics.RequestCollect("MgrPage"), s.MgrPageHandler)
 	web.GET("/portal/container/", metrics.RequestCollect("ContainerGatePage"), s.ContainerGatePageHandler)
 	web.GET("/portal/cluster/", metrics.RequestCollect("ClusterGatePage"), s.ClusterGatePageHandler)
@@ -144,6 +144,15 @@ func (s *service) PlayHandler(c *gin.Context) {
 
 // IndexPageHandler index 页面
 func (s *service) IndexPageHandler(c *gin.Context) {
+	// action 参数解析成url，取里面的参数
+	action := c.Param("action")
+	if action != "" && action != "/" {
+		rawQuery, errParse := url.Parse(action)
+		// url parse err为空的情况进行参数处理，不为空的则不处理
+		if errParse == nil {
+			c.Request.URL.RawQuery = rawQuery.RawQuery
+		}
+	}
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 	consoleQuery := new(podmanager.ConsoleQuery)

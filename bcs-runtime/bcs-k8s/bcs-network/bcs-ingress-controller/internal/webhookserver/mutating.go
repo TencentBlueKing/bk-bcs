@@ -397,10 +397,7 @@ func (s *Server) generateContainerEnvPatchByBinding(
 		envPatchOp = constant.PatchOperationAdd
 	}
 	for _, binding := range portBinding.Spec.PortBindingList {
-		var vipList []string
-		for _, lbObj := range binding.PoolItemLoadBalancers {
-			vipList = append(vipList, lbObj.IPs...)
-		}
+		vipList := genVipList(binding.PoolItemLoadBalancers)
 		envs = append(envs, k8scorev1.EnvVar{
 			Name:  constant.EnvVIPsPrefixForPortPoolPort + binding.Protocol + "_" + strconv.Itoa(binding.RsStartPort),
 			Value: getPortEnvValue(binding.StartPort, binding.EndPort, vipList),
@@ -473,15 +470,7 @@ func (s *Server) generateContainerEnvPatch(
 		envPatchOp = constant.PatchOperationAdd
 	}
 	for index, portEntry := range portEntryList {
-		var vipList []string
-		for _, lbObj := range portPoolItemStatusList[index].PoolItemLoadBalancers {
-			if len(lbObj.IPs) != 0 {
-				vipList = append(vipList, lbObj.IPs...)
-			}
-			if len(lbObj.DNSName) != 0 {
-				vipList = append(vipList, lbObj.DNSName)
-			}
-		}
+		vipList := genVipList(portPoolItemStatusList[index].PoolItemLoadBalancers)
 		for _, item := range portItemList[index] {
 			envs = append(envs, k8scorev1.EnvVar{
 				Name:  constant.EnvVIPsPrefixForPortPoolPort + item.Protocol + "_" + strconv.Itoa(portEntry.port),
@@ -534,4 +523,18 @@ func (s *Server) removePortBindingAnnotation(portBinding *networkextensionv1.Por
 	}
 
 	return nil
+}
+
+func genVipList(lbs []*networkextensionv1.IngressLoadBalancer) []string {
+	var vipList []string
+	for _, lbObj := range lbs {
+		if len(lbObj.IPs) != 0 {
+			vipList = append(vipList, lbObj.IPs...)
+		}
+		if len(lbObj.DNSName) != 0 {
+			vipList = append(vipList, lbObj.DNSName)
+		}
+	}
+
+	return vipList
 }

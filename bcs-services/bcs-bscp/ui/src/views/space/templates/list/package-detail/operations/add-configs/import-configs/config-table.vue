@@ -12,12 +12,12 @@
       <table class="table" v-show="expand">
         <thead>
           <tr>
-            <th class="th-cell name">配置项名称</th>
-            <th class="th-cell path">配置项路径</th>
-            <th class="th-cell type">配置项格式</th>
+            <th class="th-cell name">配置文件名称</th>
+            <th class="th-cell path">配置文件路径</th>
+            <th class="th-cell type">配置文件格式</th>
             <th class="th-cell memo">
               <div class="th-cell-edit">
-                <span>配置项描述</span>
+                <span>配置文件描述</span>
                 <bk-popover
                   ext-cls="popover-wrap"
                   theme="light"
@@ -29,7 +29,7 @@
                   <template #content>
                     <div class="pop-wrap">
                       <div class="pop-content">
-                        <div class="pop-title">批量设置配置项描述</div>
+                        <div class="pop-title">批量设置配置文件描述</div>
                         <bk-input v-model="batchSet.memo"></bk-input>
                       </div>
                       <div class="pop-footer">
@@ -493,7 +493,7 @@ const isContentChange = (id: number, key: string) => {
     width: 163px;
   }
   .type {
-    width: 87px;
+    width: 100px;
   }
   .memo {
     width: 182px;

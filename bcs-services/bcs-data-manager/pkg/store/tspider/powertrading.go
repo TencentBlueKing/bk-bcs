@@ -94,10 +94,18 @@ func (pt *ModelPowerTrading) GetPowerTradingInfo(ctx context.Context, request *d
 }
 
 func (pt *ModelPowerTrading) validate(request *datamanager.GetPowerTradingDataRequest) error {
+	// validate time range params
 	startTime, endTime := request.GetStartTime(), request.GetEndTime()
 	if startTime == "" || endTime == "" {
 		return fmt.Errorf("request params error: empty startTime or endTime")
 	}
+
+	// validate page info params
+	page, size := request.GetPage(), request.GetSize()
+	if (page == 0 && size != 0) || (page != 0 && size == 0) {
+		return fmt.Errorf("page and size should greater than 0 or both equal to 0, if both 0 return data will without page info")
+	}
+
 	return nil
 }
 
@@ -122,6 +130,14 @@ func (pt *ModelPowerTrading) getBuilders(
 	for k, v := range params {
 		queryBuilder = queryBuilder.Where(sq.Eq{k: v})
 		countBuilder = countBuilder.Where(sq.Eq{k: v})
+	}
+
+	// page info
+	page, size := request.GetPage(), request.GetSize()
+	if page > 0 && size > 0 {
+		limit := uint64(size)
+		offset := (uint64(page) - 1) * limit
+		queryBuilder = queryBuilder.Limit(limit).Offset(offset)
 	}
 
 	// sort by keys, ascending by value

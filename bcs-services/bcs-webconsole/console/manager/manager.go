@@ -15,6 +15,7 @@ package manager
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"runtime/debug"
@@ -30,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/perf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
@@ -42,11 +44,11 @@ type ConsoleManager struct {
 	ConnTime       time.Time // 连接时间
 	LastInputTime  time.Time // 更新ws时间
 	keyWaitingTime time.Time // 记录 webconsole key 响应时间
-	keyDec         byte      // 记录特定的key的 ascii 编码
 	podCtx         *types.PodContext
 	managerFuncs   []ManagerFunc
 	cmdParser      *audit.CmdParse
 	recorder       *record.ReplyRecorder
+	perf           *perf.Performance
 }
 
 // NewConsoleManager :
@@ -63,11 +65,6 @@ func NewConsoleManager(ctx context.Context, podCtx *types.PodContext,
 		cmdParser:      audit.NewCmdParse(),
 	}
 
-	// key from env
-	if len(key) > 0 {
-		mgr.keyDec = key[0]
-	}
-
 	// 初始化 terminal record
 	recorder, err := record.NewReplayRecord(ctx, mgr.podCtx, terminalSize)
 	if err != nil {
@@ -75,6 +72,7 @@ func NewConsoleManager(ctx context.Context, podCtx *types.PodContext,
 		return nil, err
 	}
 	mgr.recorder = recorder
+	mgr.perf = perf.GetGlobalPerformance()
 
 	return mgr, nil
 }
@@ -98,12 +96,7 @@ func (c *ConsoleManager) HandleInputMsg(msg []byte) ([]byte, error) {
 	now := time.Now()
 	// 更新ws时间
 	c.LastInputTime = now
-
-	// key 性能统计
-	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
-		c.keyWaitingTime = now
-		logger.Info("tracing key input", "key", msg)
-	}
+	c.keyWaitingTime = now
 
 	// 命令行解析与审计
 	_, ss, err := ansi.Decode(msg)
@@ -130,9 +123,9 @@ func (c *ConsoleManager) HandlePostOutputMsg(msg []byte) {
 	// replay 记录数据流
 	record.RecordOutputEvent(c.recorder, msg)
 
-	// key 性能统计
-	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
-		logger.Info("tracing key output", "key", msg, "waiting", time.Since(c.keyWaitingTime))
+	// 性能统计，按照用户设置的key统计
+	if len(msg) > 0 && c.perf.IsOpenDelay(c.podCtx.Username, c.podCtx.ClusterId, string(msg[0])) {
+		c.setUserDelayList(string(msg[0]))
 	}
 }
 
@@ -159,7 +152,6 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 					return err
 				}
 			}
-
 			// 定时写入文件
 			c.recorder.Flush()
 		}
@@ -221,4 +213,24 @@ func (c *ConsoleManager) handleIdleTimeout(ctx *gin.Context) error {
 		return errors.New(msg)
 	}
 	return nil
+}
+
+// 用户延时命令统计数据
+func (c *ConsoleManager) setUserDelayList(msg string) {
+	delayData := types.DelayData{
+		ClusterId:   c.podCtx.ClusterId,
+		TimeConsume: time.Since(c.keyWaitingTime).String(),
+		CreateTime:  time.Now().Format(time.DateTime),
+		SessionId:   c.podCtx.SessionId,
+		PodName:     c.podCtx.PodName,
+		CommandKey:  msg,
+	}
+	delayDataByte, err := json.Marshal(delayData)
+	if err != nil {
+		logger.Errorf("setUserDelayList json Marshal failed, err: %s", err.Error())
+		return
+	}
+
+	// 放在内存中
+	c.perf.SetUserDelayList(c.podCtx.Username, string(delayDataByte))
 }

@@ -18,8 +18,7 @@
           v-model="searchStr"
           :placeholder="t('服务名称')"
           :clearable="true"
-          @change="handleNameInputChange"
-          @enter="handleSearch"
+          @input="handleSearch"
           @clear="handleClearSearchStr"
         >
         </bk-input>
@@ -30,7 +29,11 @@
         <template v-if="!isLoading && isEmpty && !isSearchEmpty">
           <bk-exception class="exception-wrap-item" type="empty" :description="t('你尚未创建或加入任何服务')">
             <div class="exception-actions">
-              <bk-button text theme="primary" @click="isCreateServiceOpen = true">
+              <bk-button
+                text
+                theme="primary"
+                :class="{ 'bk-button-with-no-perm': props.permCheckLoading || !props.hasCreateServicePerm }"
+                @click="handleCreateServiceClick">
                 {{ t('立即创建') }}
               </bk-button>
               <span class="divider-middle"></span>
@@ -86,6 +89,7 @@ import Card from './card.vue';
 import CreateService from './create-service.vue';
 import EditService from './edit-service.vue';
 import tableEmpty from '../../../../../components/table/table-empty.vue';
+import { debounce } from 'lodash';
 
 const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 const { userInfo } = storeToRefs(useUserStore());
@@ -191,12 +195,6 @@ const loadAppList = async () => {
   }
 };
 
-const handleNameInputChange = (val: string) => {
-  if (!val) {
-    refreshSeviceList();
-  }
-};
-
 const handleCreateServiceClick = () => {
   if (props.hasCreateServicePerm) {
     isCreateServiceOpen.value = true;
@@ -242,10 +240,10 @@ const handleLimitChange = (limit: number) => {
   loadAppList();
 };
 
-const handleSearch = () => {
+const handleSearch = debounce(() => {
   isSearchEmpty.value = true;
   refreshSeviceList();
-};
+}, 300);
 const handleClearSearchStr = () => {
   searchStr.value = '';
   isSearchEmpty.value = false;
