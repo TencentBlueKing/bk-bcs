@@ -1680,6 +1680,18 @@
           "type": "string",
           "description": "存储偏好，tspider或者mongodb",
           "title": "preferStorage"
+        },
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "description": "页码",
+          "title": "page"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "description": "查询限制数量",
+          "title": "size"
         }
       },
       "description": "查询集群列表请求",
@@ -1712,6 +1724,18 @@
           },
           "description": "运营数据列表信息",
           "title": "data"
+        },
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "description": "页码",
+          "title": "page"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "description": "查询限制数量",
+          "title": "size"
         }
       },
       "description": "查询集群列表返回",

@@ -1777,21 +1777,33 @@ message GetPowerTradingDataRequest {
       description : "结束时间，yyyy-MM-dd HH:mm:ss格式"
     }
   ];
-  map<string, string> params = 4[
+  map<string, string> params = 4 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "params",
       description : "查询筛选条件"
     }
   ];
-  map<string, int64> sort = 5[
+  map<string, int64> sort = 5 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "sort",
       description : "排序策略，1表示升序，-1表示降序"
     }];
-  string preferStorage = 6[
+  string preferStorage = 6 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "preferStorage",
       description : "存储偏好，tspider或者mongodb"
+    }
+  ];
+  uint32 page = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页码"
+    }
+  ];
+  uint32 size = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "查询限制数量"
     }
   ];
 }
@@ -1823,6 +1835,18 @@ message GetPowerTradingDataResponse {
     title : "data",
     description : "运营数据列表信息"
   }];
+  uint32 page = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页码"
+    }
+  ];
+  uint32 size = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "查询限制数量"
+    }
+  ];
 }
 
 message TEGWorkload {
