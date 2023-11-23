@@ -56,7 +56,7 @@ _yum_docker() {
   yum-config-manager --add-repo "${repo_file}"
   yum clean all
   [[ ! -f /etc/yum.repos.d/tlinux-docker-ce.repo ]] || mv /etc/yum.repos.d/tlinux-docker-ce.repo /etc/yum.repos.d/tlinux-docker-ce.repo.bak
-  yum makecache fast
+  yum makecache fast || yum makecache
 
   local pkg_pat pkg_ver
   pkg_pat="$(sed -e 's/-ce-/\\\\.ce.*/g' -e 's/-/.*/g' \
@@ -141,10 +141,7 @@ render_docker() {
         "max-size": "100m",
         "max-file": "5"
     },
-    "storage-driver": "overlay2",
-    "storage-opts": [
-        "overlay2.override_kernel_check=true"
-    ]
+    "storage-driver": "overlay2"
 }
 EOF
   if [[ -n ${DOCKER_BRIDGE:-} ]]; then

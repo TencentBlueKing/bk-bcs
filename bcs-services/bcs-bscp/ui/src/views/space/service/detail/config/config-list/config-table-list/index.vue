@@ -8,6 +8,7 @@
             :app-id="props.appId"
             @created="refreshConfigList"
             @imported="refreshConfigList"
+            @uploaded="refreshConfigList"
           />
           <EditVariables ref="editVariablesRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
         </template>

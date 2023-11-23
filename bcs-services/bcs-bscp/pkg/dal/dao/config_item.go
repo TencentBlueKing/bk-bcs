@@ -72,7 +72,8 @@ type configItemDao struct {
 func (dao *configItemDao) ListConfigItemByTuple(kit *kit.Kit, data [][]interface{}) ([]*table.ConfigItem, error) {
 	m := dao.genQ.ConfigItem
 	return dao.genQ.ConfigItem.WithContext(kit.Ctx).
-		Select(m.ID, m.BizID, m.AppID, m.Name, m.Path, m.FileType).
+		Select(m.ID, m.BizID, m.AppID, m.Name, m.Path, m.FileType, m.User,
+			m.UserGroup, m.Privilege, m.Memo, m.FileMode).
 		Where(m.WithContext(kit.Ctx).Columns(m.BizID, m.AppID, m.Name, m.Path).
 			In(field.Values(data))).
 		Find()

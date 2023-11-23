@@ -80,7 +80,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 		return nil, err
 	}
 
-	kvType, err := s.getKvType(kt, req.Attachment.BizId, req.Attachment.AppId, kv.Spec.Version, kv.Spec.Key)
+	kvType, _, err := s.getKv(kt, req.Attachment.BizId, req.Attachment.AppId, kv.Spec.Version, kv.Spec.Key)
 	if err != nil {
 		logs.Errorf("get vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
 		return nil, err
@@ -143,28 +143,12 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 	var kvs []*pbkv.Kv
 
 	for _, detail := range details {
-
-		kvType, value, e := s.vault.GetKvByVersion(kt, &types.GetKvByVersion{
-			BizID:   detail.Attachment.BizID,
-			AppID:   detail.Attachment.AppID,
-			Key:     detail.Spec.Key,
-			Version: int(detail.Spec.Version),
-		})
+		kvType, value, e := s.getKv(kt, req.BizId, req.AppId, detail.Spec.Version, detail.Spec.Key)
 		if e != nil {
 			logs.Errorf("list kv failed, err: %v, rid: %s", e, kt.Rid)
 			return nil, e
 		}
-		kvs = append(kvs, &pbkv.Kv{
-			Id: detail.ID,
-			Spec: &pbkv.KvSpec{
-				Key:    detail.Spec.Key,
-				KvType: string(kvType),
-				Value:  value,
-			},
-			Attachment: pbkv.PbKvAttachment(detail.Attachment),
-			Revision:   pbbase.PbRevision(detail.Revision),
-		})
-
+		kvs = append(kvs, pbkv.PbKv(detail, kvType, value))
 	}
 
 	resp := &pbds.ListKvsResp{
@@ -278,7 +262,7 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 	return new(pbbase.EmptyResp), nil
 }
 
-func (s *Service) getKvType(kt *kit.Kit, bizID, appID, version uint32, key string) (types.KvType, error) {
+func (s *Service) getKv(kt *kit.Kit, bizID, appID, version uint32, key string) (types.KvType, string, error) {
 	opt := &types.GetKvByVersion{
 		BizID:   bizID,
 		AppID:   appID,
@@ -286,11 +270,7 @@ func (s *Service) getKvType(kt *kit.Kit, bizID, appID, version uint32, key strin
 		Version: int(version),
 	}
 
-	kvType, _, err := s.vault.GetKvByVersion(kt, opt)
-	if err != nil {
-		return "", err
-	}
-	return kvType, nil
+	return s.vault.GetKvByVersion(kt, opt)
 }
 
 // doBatchUpsertVault is used to perform bulk insertion or update of key-value data in Vault.
@@ -309,7 +289,7 @@ func (s *Service) doBatchUpsertVault(kt *kit.Kit, req *pbds.BatchUpsertKvsReq,
 		}
 
 		if editing, exists := editingKvMap[kv.KvSpec.Key]; exists {
-			kvType, err := s.getKvType(kt, req.BizId, req.AppId, editing.Spec.Version, kv.KvSpec.Key)
+			kvType, _, err := s.getKv(kt, req.BizId, req.AppId, editing.Spec.Version, kv.KvSpec.Key)
 			if err != nil {
 				return nil, err
 			}

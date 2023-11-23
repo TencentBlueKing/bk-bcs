@@ -143,8 +143,7 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   yq '.data.["config.conf"]' "${tmp_dir}"/kube-proxy-cm.yaml \
     | yq '.ipvs.udpTimeout="15s"' \
       >"${ROOT_DIR}"/config.conf
-  IFS='' read -rd output <"${ROOT_DIR}"/config.conf
-  output=$output yq e '.data."config.conf" = strenv(output)' \
+  output=$(cat "${ROOT_DIR}/config.conf") yq e '.data."config.conf" = strenv(output)' \
     "${tmp_dir}"/kube-proxy-cm.yaml >"${ROOT_DIR}"/kube-proxy-cm.yaml
   kubectl -n kube-system patch cm kube-proxy \
     --patch-file "${ROOT_DIR}"/kube-proxy-cm.yaml

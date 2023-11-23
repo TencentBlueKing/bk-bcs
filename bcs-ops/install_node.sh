@@ -101,6 +101,7 @@ init_bap_rule() {
   k8s::restart_kubelet
 }
 
+"${ROOT_DIR}"/system/check_host.sh -c all
 safe_source "${ROOT_DIR}/functions/utils.sh"
 safe_source "${ROOT_DIR}/functions/k8s.sh"
 
@@ -130,6 +131,7 @@ if systemctl is-active kubelet.service -q; then
 else
   kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
     || utils::log "FATAL" "${LAN_IP} failed to join cluster: ${K8S_CTRL_IP}"
+  systemctl enable --now kubelet
 fi
 
 

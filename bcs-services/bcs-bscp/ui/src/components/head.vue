@@ -10,7 +10,7 @@
       <div class="head-routes">
         <router-link
           v-for="nav in navList"
-          :class="['nav-item', { actived: route.meta.navModule === nav.module }]"
+          :class="['nav-item', { actived: isNavActived(nav.module) }]"
           :key="nav.id"
           :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }"
           @click="handleNavClick(nav.id)"
@@ -110,7 +110,7 @@ import MarkdownIt from 'markdown-it';
 
 const route = useRoute();
 const router = useRouter();
-const { bscpVersion, spaceId, spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
+const { bscpVersion, spaceId, spaceList, spaceFeatureFlags, showPermApplyPage, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 const { userInfo } = storeToRefs(useUserStore());
 const templateStore = useTemplateStore();
 const md = new MarkdownIt({
@@ -146,6 +146,10 @@ watch(
     immediate: true,
   },
 );
+
+const isNavActived = (name: string) => {
+  return spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === name
+}
 
 const handleNavClick = (navId: String) => {
   if (navId === 'service-all') {

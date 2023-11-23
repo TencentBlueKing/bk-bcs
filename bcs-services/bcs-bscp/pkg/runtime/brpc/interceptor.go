@@ -48,8 +48,14 @@ func LogUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		method := path.Base(info.FullMethod)
 
 		defer func() {
+			if err != nil {
+				klog.InfoS("grpc", "rid", kt.Rid, "system", "grpc", "span.kind", "grpc.service", "service", service,
+					"method", method, "grpc.duration", time.Since(st), "err", err)
+				return
+			}
+
 			klog.InfoS("grpc", "rid", kt.Rid, "system", "grpc", "span.kind", "grpc.service", "service", service,
-				"method", method, "grpc.duration", time.Since(st), "error", err)
+				"method", method, "grpc.duration", time.Since(st))
 		}()
 
 		resp, err = handler(ctx, req)

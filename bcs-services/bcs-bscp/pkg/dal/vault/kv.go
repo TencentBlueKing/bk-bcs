@@ -23,7 +23,9 @@ const (
 	// MountPath mount path
 	MountPath = "bk_bscp"
 	// kvPath kv path
-	kvPath = "biz/%d/apps/%d/kv/key/%s"
+	kvPath = "biz/%d/apps/%d/kvs/%s"
+	// releasedKvPath kv revision path
+	releasedKvPath = "biz/%d/apps/%d/releases/%d/kvs/%s"
 )
 
 // UpsertKv 创建｜更新kv
