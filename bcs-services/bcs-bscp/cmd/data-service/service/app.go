@@ -54,6 +54,10 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 		return nil, fmt.Errorf("app name %s already exists", req.Spec.Name)
 	}
 
+	if _, err := s.dao.App().GetByAlias(kt, req.BizId, req.Spec.Alias); err == nil {
+		return nil, fmt.Errorf("app alias %s already exists", req.Spec.Alias)
+	}
+
 	app := &table.App{
 		BizID: req.BizId,
 		Spec:  req.Spec.AppSpec(),
@@ -77,10 +81,28 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbase.EmptyResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	app := &table.App{
-		ID:    req.Id,
-		BizID: req.BizId,
-		Spec:  req.Spec.AppSpec(),
+	old, err := s.dao.App().GetByAlias(grpcKit, req.BizId, req.Spec.Alias)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("get app failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	if !errors.Is(gorm.ErrRecordNotFound, err) && old.ID != req.Id {
+		return nil, fmt.Errorf("app alias %s already exists", req.Spec.Alias)
+	}
+
+	app, err := s.dao.App().Get(grpcKit, req.BizId, req.Id)
+	if err != nil {
+		logs.Errorf("get app failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	if app.Spec.ConfigType == table.KV {
+		if err := s.checkUpdateAppDataType(grpcKit, req, app); err != nil {
+			return nil, err
+		}
+	}
+
+	app = &table.App{
+		Spec: req.Spec.AppSpec(),
 		Revision: &table.Revision{
 			Reviser: grpcKit.User,
 		},
@@ -91,6 +113,39 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbas
 	}
 
 	return new(pbbase.EmptyResp), nil
+}
+
+func (s *Service) checkUpdateAppDataType(kt *kit.Kit, req *pbds.UpdateAppReq, app *table.App) error {
+
+	if app.Spec.DataType == table.DataType(req.Spec.DataType) {
+		return nil
+	}
+
+	if req.Spec.DataType == "any" {
+		return nil
+	}
+
+	// 获取所有的kv
+	kvList, err := s.dao.Kv().ListAllByAppID(kt, app.ID, req.BizId)
+	if err != nil {
+		return err
+	}
+	if len(kvList) == 0 {
+		return nil
+	}
+
+	for _, kv := range kvList {
+		kvType, _, err := s.getKv(kt, req.BizId, kv.Attachment.AppID, kv.Spec.Version, kv.Spec.Key)
+		if err != nil {
+			return err
+		}
+
+		if string(kvType) != req.Spec.DataType {
+			return fmt.Errorf("the specified type does not match the actual configuration")
+		}
+	}
+
+	return nil
 }
 
 // DeleteApp delete application.

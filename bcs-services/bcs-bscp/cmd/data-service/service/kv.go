@@ -36,12 +36,20 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 		return nil, fmt.Errorf("kv same key %s already exists", req.Spec.Key)
 	}
 
+	app, err := s.dao.App().Get(kt, req.Attachment.BizId, req.Attachment.AppId)
+	if err != nil {
+		return nil, fmt.Errorf("get app fail,err : %v", req.Spec.Key)
+	}
+	if checkKVTypeMatch(table.DataType(req.Spec.KvType), app.Spec.DataType) {
+		return nil, fmt.Errorf("kv type does not match the data type defined in the application")
+	}
+
 	opt := &types.UpsertKvOption{
 		BizID:  req.Attachment.BizId,
 		AppID:  req.Attachment.AppId,
 		Key:    req.Spec.Key,
 		Value:  req.Spec.Value,
-		KvType: types.KvType(req.Spec.KvType),
+		KvType: table.DataType(req.Spec.KvType),
 	}
 	version, err := s.vault.UpsertKv(kt, opt)
 	if err != nil {
@@ -69,10 +77,25 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 
 }
 
+func checkKVTypeMatch(kvType, appKvType table.DataType) bool {
+	if appKvType == table.KvAny {
+		return true
+	}
+	return kvType == appKvType
+}
+
 // UpdateKv is used to update key-value data.
 func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
+
+	app, err := s.dao.App().Get(kt, req.Attachment.BizId, req.Attachment.AppId)
+	if err != nil {
+		return nil, fmt.Errorf("get app fail,err : %v", req.Spec.Key)
+	}
+	if checkKVTypeMatch(table.DataType(req.Spec.KvType), app.Spec.DataType) {
+		return nil, fmt.Errorf("kv type does not match the data type defined in the application")
+	}
 
 	kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
 	if err != nil {
@@ -262,7 +285,7 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 	return new(pbbase.EmptyResp), nil
 }
 
-func (s *Service) getKv(kt *kit.Kit, bizID, appID, version uint32, key string) (types.KvType, string, error) {
+func (s *Service) getKv(kt *kit.Kit, bizID, appID, version uint32, key string) (table.DataType, string, error) {
 	opt := &types.GetKvByVersion{
 		BizID:   bizID,
 		AppID:   appID,
@@ -295,7 +318,7 @@ func (s *Service) doBatchUpsertVault(kt *kit.Kit, req *pbds.BatchUpsertKvsReq,
 			}
 			opt.KvType = kvType
 		} else {
-			opt.KvType = types.KvType(kv.KvSpec.KvType)
+			opt.KvType = table.DataType(kv.KvSpec.KvType)
 		}
 
 		version, err := s.vault.UpsertKv(kt, opt)

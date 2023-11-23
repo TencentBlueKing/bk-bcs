@@ -15,6 +15,7 @@ package dao
 import (
 	"fmt"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -29,6 +30,8 @@ type ReleasedKv interface {
 	Get(kit *kit.Kit, bizID, appID, releasedID uint32, key string) (*table.ReleasedKv, error)
 	// List released kv with options.
 	List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table.ReleasedKv, int64, error)
+	// ListAllByReleaseIDs batch list released kvs by releaseIDs.
+	ListAllByReleaseIDs(kit *kit.Kit, releasedIDs []uint32, bizID uint32) ([]*table.ReleasedKv, error)
 }
 
 var _ ReleasedKv = new(releasedKvDao)
@@ -112,4 +115,13 @@ func (dao *releasedKvDao) List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table
 
 	return result, count, err
 
+}
+
+// ListAllByReleaseIDs batch list released kvs by releaseIDs.
+func (dao *releasedKvDao) ListAllByReleaseIDs(kit *kit.Kit, releasedIDs []uint32, bizID uint32) ([]*table.ReleasedKv, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
+	}
+	m := dao.genQ.ReleasedKv
+	return m.WithContext(kit.Ctx).Where(m.ReleaseID.In(releasedIDs...), m.BizID.Eq(bizID)).Find()
 }

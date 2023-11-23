@@ -13,96 +13,11 @@
 package types
 
 import (
-	"encoding/json"
-	"encoding/xml"
 	"errors"
-	"fmt"
 	"strconv"
-	"strings"
 
-	"gopkg.in/yaml.v3"
+	"bscp.io/pkg/dal/table"
 )
-
-// KvType is the type of kv
-type KvType string
-
-const (
-	// KvStr is the type for string kv
-	KvStr KvType = "string"
-	// KvNumber is the type for number kv
-	KvNumber KvType = "number"
-	// KvText is the type for text kv
-	KvText KvType = "text"
-	// KvJson is the type for json kv
-	KvJson KvType = "json"
-	// KvYAML is the type for yaml kv
-	KvYAML KvType = "yaml"
-	// KvXml is the type for xml kv
-	KvXml KvType = "xml"
-
-	// MaxValueLength max value length 1MB
-	MaxValueLength = 1 * 1024 * 1024
-)
-
-// ValidateValue the kvType and value match
-func (k KvType) ValidateValue(value string) error {
-
-	if value == "" {
-		return errors.New("kv value is null")
-	}
-
-	if len(value) > MaxValueLength {
-		return fmt.Errorf("the length of the value must not exceed %d MB", MaxValueLength)
-	}
-
-	switch k {
-	case KvStr:
-		if strings.Contains(value, "\n") {
-			return errors.New("newline characters are not allowed in string-type values")
-		}
-		return nil
-	case KvNumber:
-		if !isStringConvertibleToNumber(value) {
-			return fmt.Errorf("value is not a number")
-		}
-		return nil
-	case KvText:
-		return nil
-	case KvJson:
-		if !json.Valid([]byte(value)) {
-			return fmt.Errorf("value is not a json")
-		}
-		return nil
-	case KvYAML:
-		var data interface{}
-		if err := yaml.Unmarshal([]byte(value), &data); err != nil {
-			return fmt.Errorf("value is not a yaml, err: %v", err)
-		}
-		return nil
-	case KvXml:
-		var v interface{}
-		if err := xml.Unmarshal([]byte(value), &v); err != nil {
-			return err
-		}
-		return nil
-	default:
-		return errors.New("invalid key-value type")
-	}
-}
-
-// Validate checks if the KvType enumeration value is valid.
-func (k KvType) Validate() error {
-	switch k {
-	case KvStr:
-	case KvNumber:
-	case KvText:
-	case KvJson:
-	case KvYAML:
-	default:
-		return errors.New("invalid key-value type")
-	}
-	return nil
-}
 
 // isStringConvertibleToNumber checks if the given string can be converted to an integer or a floating-point number.
 func isStringConvertibleToNumber(s string) bool {
@@ -122,7 +37,7 @@ type UpsertKvOption struct {
 	AppID  uint32
 	Key    string
 	Value  string
-	KvType KvType
+	KvType table.DataType
 }
 
 // Validate is used to validate the effectiveness of the UpsertKvOption structure.

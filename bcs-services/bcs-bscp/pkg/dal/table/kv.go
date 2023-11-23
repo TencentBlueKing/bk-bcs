@@ -13,7 +13,14 @@
 package table
 
 import (
+	"encoding/json"
+	"encoding/xml"
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"bscp.io/pkg/criteria/validator"
 )
@@ -164,4 +171,62 @@ func (k *Kv) ValidateUpdate() error {
 	}
 
 	return nil
+}
+
+// ValidateValue the kvType and value match
+func (k DataType) ValidateValue(value string) error {
+
+	if value == "" {
+		return errors.New("kv value is null")
+	}
+
+	if len(value) > MaxValueLength {
+		return fmt.Errorf("the length of the value must not exceed %d MB", MaxValueLength)
+	}
+
+	switch k {
+	case KvStr:
+		if strings.Contains(value, "\n") {
+			return errors.New("newline characters are not allowed in string-type values")
+		}
+		return nil
+	case KvNumber:
+		if !isStringConvertibleToNumber(value) {
+			return fmt.Errorf("value is not a number")
+		}
+		return nil
+	case KvText:
+		return nil
+	case KvJson:
+		if !json.Valid([]byte(value)) {
+			return fmt.Errorf("value is not a json")
+		}
+		return nil
+	case KvYAML:
+		var data interface{}
+		if err := yaml.Unmarshal([]byte(value), &data); err != nil {
+			return fmt.Errorf("value is not a yaml, err: %v", err)
+		}
+		return nil
+	case KvXml:
+		var v interface{}
+		if err := xml.Unmarshal([]byte(value), &v); err != nil {
+			return err
+		}
+		return nil
+	default:
+		return errors.New("invalid key-value type")
+	}
+}
+
+// isStringConvertibleToNumber checks if the given string can be converted to an integer or a floating-point number.
+func isStringConvertibleToNumber(s string) bool {
+	_, err := strconv.Atoi(s)
+	if err == nil {
+		return true
+	}
+
+	_, err = strconv.ParseFloat(s, 64)
+	return err == nil
+
 }

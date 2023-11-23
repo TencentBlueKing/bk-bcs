@@ -14,6 +14,7 @@
 package vault
 
 import (
+	"bscp.io/pkg/dal/table"
 	vault "github.com/hashicorp/vault/api"
 
 	"bscp.io/pkg/cc"
@@ -30,15 +31,15 @@ type Set interface {
 	// UpsertKv 创建｜更新kv
 	UpsertKv(kit *kit.Kit, opt *types.UpsertKvOption) (int, error)
 	// GetLastKv 获取最新的kv
-	GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType types.KvType, value string, err error)
+	GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType table.DataType, value string, err error)
 	// GetKvByVersion 根据版本获取kv
-	GetKvByVersion(kit *kit.Kit, opt *types.GetKvByVersion) (kvType types.KvType, value string, err error)
+	GetKvByVersion(kit *kit.Kit, opt *types.GetKvByVersion) (kvType table.DataType, value string, err error)
 	// DeleteKv deletes specified key-value data from Vault.
 	DeleteKv(kit *kit.Kit, opt *types.DeleteKvOpt) error
 	// CreateRKv create released kv
 	CreateRKv(kit *kit.Kit, opt *types.CreateReleasedKvOption) (int, error)
 	// GetRKv get released kv
-	GetRKv(kit *kit.Kit, opt *types.GetRKvOption) (kvType types.KvType, value string, err error)
+	GetRKv(kit *kit.Kit, opt *types.GetRKvOption) (kvType table.DataType, value string, err error)
 }
 
 type set struct {

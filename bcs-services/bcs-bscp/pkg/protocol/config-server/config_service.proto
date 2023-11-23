@@ -798,6 +798,8 @@ message CreateAppReq {
     string memo             = 5;
     string reload_type      = 6;
     string reload_file_path = 7;
+    string alias            = 8;
+    string data_type        = 9; // data_type is enum type, source resource reference: pkg/dal/table/app.go
 }
 
 message CreateAppResp {
@@ -811,6 +813,8 @@ message UpdateAppReq {
     string memo             = 4;
     string reload_type      = 5;
     string reload_file_path = 6;
+    string alias            = 7;
+    string data_type        = 8;
 }
 
 message UpdateAppResp {}

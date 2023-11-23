@@ -133,9 +133,11 @@ type AppSpec struct {
 	ConfigType ConfigType `json:"config_type" gorm:"column:config_type"`
 	// Mode defines what mode of this app works at.
 	// Mode can not be updated once it is created.
-	Mode   AppMode `json:"mode" gorm:"column:mode"`
-	Memo   string  `json:"memo" gorm:"column:memo"`
-	Reload *Reload `json:"reload" gorm:"embedded"`
+	Mode     AppMode  `json:"mode" gorm:"column:mode"`
+	Memo     string   `json:"memo" gorm:"column:memo"`
+	Reload   *Reload  `json:"reload" gorm:"embedded"`
+	Alias    string   `json:"alias" gorm:"alias"`
+	DataType DataType `json:"data_type" gorm:"data_type"`
 }
 
 const (
@@ -192,7 +194,14 @@ func (as *AppSpec) ValidateCreate() error {
 		if err := as.Reload.ValidateCreate(); err != nil {
 			return err
 		}
-	case KV, Table:
+	case KV:
+		if err := as.Reload.IsEmpty(); err != nil {
+			return err
+		}
+		if err := as.DataType.ValidateApp(); err != nil {
+			return err
+		}
+	case Table:
 		if err := as.Reload.IsEmpty(); err != nil {
 			return err
 		}
@@ -232,7 +241,16 @@ func (as *AppSpec) ValidateUpdate(configType ConfigType) error {
 				return nil
 			}
 		}
-	case KV, Table:
+	case KV:
+		if as.Reload != nil {
+			if err := as.Reload.IsEmpty(); err != nil {
+				return nil
+			}
+		}
+		if err := as.DataType.ValidateApp(); err != nil {
+			return err
+		}
+	case Table:
 		if as.Reload != nil {
 			if err := as.Reload.IsEmpty(); err != nil {
 				return nil
@@ -414,4 +432,41 @@ type ArchivedApp struct {
 // TableName is the archived app's database table name.
 func (a *ArchivedApp) TableName() string {
 	return "archived_apps"
+}
+
+// DataType is the app's kv type
+type DataType string
+
+const (
+	// KvAny 任意类型
+	KvAny DataType = "any"
+	// KvStr is the type for string kv
+	KvStr DataType = "string"
+	// KvNumber is the type for number kv
+	KvNumber DataType = "number"
+	// KvText is the type for text kv
+	KvText DataType = "text"
+	// KvJson is the type for json kv
+	KvJson DataType = "json"
+	// KvYAML is the type for yaml kv
+	KvYAML DataType = "yaml"
+	// KvXml is the type for xml kv
+	KvXml DataType = "xml"
+
+	// MaxValueLength max value length 1MB
+	MaxValueLength = 1 * 1024 * 1024
+)
+
+func (k DataType) ValidateApp() error {
+	switch k {
+	case KvAny:
+	case KvStr:
+	case KvNumber:
+	case KvText:
+	case KvJson:
+	case KvYAML:
+	default:
+		return errors.New("invalid data-type")
+	}
+	return nil
 }
