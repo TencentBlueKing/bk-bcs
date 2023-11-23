@@ -215,7 +215,7 @@
                         <div class="checkbox-area">
                           <bk-checkbox-group
                             class="group-checkboxs"
-                            :model-value="privilegeGroupsValue(item.privilege)[index]"
+                            :model-value="privilegeGroupsValue(item.privilege)[i]"
                             @change="handleSelectPrivilege(i, $event, item)"
                           >
                             <bk-checkbox size="small" :label="4" :disabled="i === 0">读</bk-checkbox>
@@ -407,9 +407,8 @@ const handleDeleteConfig = (index: number) => {
 const handlePrivilegeInputBlur = (item: IConfigImportItem) => {
   const val = item.privilege;
   const own = parseInt(val[0], 10);
-  console.log(val, own);
   if (!/^[0-7]{3}$/.test(val) || own < 4) {
-    item.privilege = '677';
+    item.privilege = '644';
     Message({
       message: '只能输入三位 0~7 数字且文件own必须有读取权限',
       theme: 'error',
