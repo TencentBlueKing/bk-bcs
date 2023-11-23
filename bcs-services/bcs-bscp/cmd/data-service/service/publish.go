@@ -69,7 +69,7 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 			}
 		}
 		if publishMode == table.PublishByLabels {
-			groupID, err := s.createGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.Labels)
+			groupID, err := s.getOrCreateGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.GroupName, req.Labels)
 			if err != nil {
 				logs.Errorf("create group by labels failed, err: %v, rid: %s", err, grpcKit.Rid)
 				if rErr := tx.Rollback(); rErr != nil {
@@ -243,7 +243,7 @@ func (s *Service) genReleaseAndPublishGroupID(grpcKit *kit.Kit, tx *gen.QueryTx,
 
 	groupIDs := make([]uint32, 0)
 
-	if req.All {
+	if !req.All {
 		if req.GrayPublishMode == "" {
 			// !NOTE: Compatible with previous pipelined plugins version
 			req.GrayPublishMode = table.PublishByGroups.String()
@@ -269,7 +269,7 @@ func (s *Service) genReleaseAndPublishGroupID(grpcKit *kit.Kit, tx *gen.QueryTx,
 			}
 		}
 		if publishMode == table.PublishByLabels {
-			groupID, e := s.createGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.Labels)
+			groupID, e := s.getOrCreateGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.GroupName, req.Labels)
 			if e != nil {
 				logs.Errorf("create group by labels failed, err: %v, rid: %s", e, grpcKit.Rid)
 				if rErr := tx.Rollback(); rErr != nil {
@@ -284,10 +284,8 @@ func (s *Service) genReleaseAndPublishGroupID(grpcKit *kit.Kit, tx *gen.QueryTx,
 	return groupIDs, nil
 }
 
-func (s *Service) createGroupByLabels(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32,
+func (s *Service) getOrCreateGroupByLabels(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32, groupName string,
 	labels []*structpb.Struct) (uint32, error) {
-	timeStr := time.Now().Format("20060102150405.000")
-	timeStr = strings.ReplaceAll(timeStr, ".", "")
 	elements := make([]selector.Element, 0)
 	for _, label := range labels {
 		element, err := pbgroup.UnmarshalElement(label)
@@ -296,37 +294,65 @@ func (s *Service) createGroupByLabels(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, 
 		}
 		elements = append(elements, *element)
 	}
-	group := table.Group{
-		Spec: &table.GroupSpec{
-			Name:   fmt.Sprintf("g_%s", timeStr),
-			Public: false,
-			Mode:   table.Custom,
-			Selector: &selector.Selector{
-				LabelsAnd: elements,
-			},
-		},
-		Attachment: &table.GroupAttachment{
-			BizID: bizID,
-		},
-		Revision: &table.Revision{
-			Creator: grpcKit.User,
-			Reviser: grpcKit.User,
-		},
+	sel := &selector.Selector{
+		LabelsAnd: elements,
 	}
-	groupID, err := s.dao.Group().CreateWithTx(grpcKit, tx, &group)
+	groups, err := s.dao.Group().ListAppValidGroups(grpcKit, bizID, appID)
 	if err != nil {
 		return 0, err
 	}
-	if err := s.dao.GroupAppBind().BatchCreateWithTx(grpcKit, tx, []*table.GroupAppBind{
-		{
-			GroupID: groupID,
-			AppID:   appID,
-			BizID:   bizID,
-		},
-	}); err != nil {
-		return 0, err
+	exists := make([]*table.Group, 0)
+	for _, group := range groups {
+		if group.Spec.Selector.Equal(sel) {
+			exists = append(exists, group)
+		}
 	}
-	return groupID, nil
+	if len(exists) == 0 {
+		if groupName != "" {
+			// if group name is not empty, use it as group name.
+			_, err := s.dao.Group().GetByName(grpcKit, bizID, groupName)
+			// if group name already exists, return error.
+			if err == nil {
+				return 0, fmt.Errorf("group %s already exists", groupName)
+			} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return 0, err
+			}
+		} else {
+			// generate group name by time.
+			groupName = time.Now().Format("20060102150405.000")
+			groupName = fmt.Sprintf("g_%s", strings.ReplaceAll(groupName, ".", ""))
+		}
+		group := table.Group{
+			Spec: &table.GroupSpec{
+				Name:     groupName,
+				Public:   false,
+				Mode:     table.Custom,
+				Selector: sel,
+			},
+			Attachment: &table.GroupAttachment{
+				BizID: bizID,
+			},
+			Revision: &table.Revision{
+				Creator: grpcKit.User,
+				Reviser: grpcKit.User,
+			},
+		}
+		groupID, err := s.dao.Group().CreateWithTx(grpcKit, tx, &group)
+		if err != nil {
+			return 0, err
+		}
+		if err := s.dao.GroupAppBind().BatchCreateWithTx(grpcKit, tx, []*table.GroupAppBind{
+			{
+				GroupID: groupID,
+				AppID:   appID,
+				BizID:   bizID,
+			},
+		}); err != nil {
+			return 0, err
+		}
+		return groupID, nil
+	}
+	return exists[0].ID, nil
 }
 
 func (s *Service) createReleasedHook(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error {
