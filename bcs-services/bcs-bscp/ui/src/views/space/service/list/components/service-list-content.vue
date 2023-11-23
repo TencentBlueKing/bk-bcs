@@ -161,12 +161,14 @@ watch(
   () => [props.type, props.spaceId],
   () => {
     searchStr.value = '';
+    isSearchEmpty.value = false;
     pagination.value.limit = 50;
     refreshSeviceList();
   },
 );
 
 onMounted(() => {
+  isSearchEmpty.value = false;
   loadAppList();
 });
 
@@ -249,6 +251,8 @@ const handleClearSearchStr = () => {
   isSearchEmpty.value = false;
   refreshSeviceList();
 };
+
+
 </script>
 <style lang="scss" scoped>
 .service-list-content {
