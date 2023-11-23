@@ -2575,38 +2575,38 @@
           "title": "bakMaintainer"
         },
         "businessSetId": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "Business set identifier",
           "title": "businessSetId"
         },
         "businessId": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "Business identifier",
           "title": "businessId"
         },
         "businessModuleId": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "Business module identifier",
           "title": "businessModuleId"
         },
         "schedulerStatus": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "Scheduler status",
           "title": "schedulerStatus"
         },
         "serviceStatus": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "Service status",
           "title": "serviceStatus"
         },
         "hpaStatus": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "HPA status",
           "title": "hpaStatus"
         }

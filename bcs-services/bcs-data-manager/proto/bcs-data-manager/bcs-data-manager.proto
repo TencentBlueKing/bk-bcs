@@ -1857,47 +1857,47 @@ message TEGWorkload {
   string namespace = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "namespace",
       description: "Namespace"
-    }];
+  }];
   string workload_kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "workload_kind",
       description: "Workload kind"
-    }];
+  }];
   string workload_name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "workload_name",
       description: "Workload name"
-    }];
+  }];
   string maintainer = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "maintainer",
       description: "Maintainer"
-    }];
+  }];
   string bakMaintainer = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "bakMaintainer",
       description: "Backup maintainer"
-    }];
-  int64 businessSetId = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  }];
+  int32 businessSetId = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "businessSetId",
       description: "Business set identifier"
-    }];
-  int64 businessId = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  }];
+  int32 businessId = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "businessId",
       description: "Business identifier"
-    }];
-  int64 businessModuleId = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  }];
+  int32 businessModuleId = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "businessModuleId",
       description: "Business module identifier"
-    }];
-  int64 schedulerStatus = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  }];
+  int32 schedulerStatus = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "schedulerStatus",
       description: "Scheduler status"
-    }];
-  int64 serviceStatus = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  }];
+  int32 serviceStatus = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "serviceStatus",
       description: "Service status"
     }];
-    int64 hpaStatus = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  int32 hpaStatus = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "hpaStatus",
       description: "HPA status"
-    }];
+  }];
 }
 
 message TEGMessage {
