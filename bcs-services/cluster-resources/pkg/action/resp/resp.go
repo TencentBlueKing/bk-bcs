@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
 
 // BuildListAPIResp xxx
@@ -200,6 +201,30 @@ func BuildGetContainerAPIResp(
 		return nil, errorx.New(errcode.General, "container %s spec or status not found", containerName)
 	}
 
+	// 转换时间格式
+	startedAt := ""
+	state := mapx.GetMap(curContainerStatus, []string{"state"})
+	for i := range state {
+		if value, ok := state[i].(map[string]interface{}); ok {
+			startedAt, _ = timex.NormalizeDatetime(mapx.GetStr(value, "startedAt"))
+		}
+	}
+	// 转换时间格式lastState格式，lastState有好几种状态但是是单一的，无法确定key，只能遍历
+	lastState := mapx.GetMap(curContainerStatus, "lastState")
+	for i := range lastState {
+		if value, ok := lastState[i].(map[string]interface{}); ok {
+			lastStateStartedAt, _ := timex.NormalizeDatetime(mapx.GetStr(value, "startedAt"))
+			lastStateFinishedAt, _ := timex.NormalizeDatetime(mapx.GetStr(value, "finishedAt"))
+			// 有才赋值转换时间格式，没有直接原样返回
+			if lastStateStartedAt != "" {
+				lastState[i].(map[string]interface{})["startedAt"] = lastStateStartedAt
+			}
+			if lastStateFinishedAt != "" {
+				lastState[i].(map[string]interface{})["finishedAt"] = lastStateFinishedAt
+			}
+		}
+	}
+
 	// 各项容器数据组装
 	containerInfo := map[string]interface{}{
 		"hostName":      mapx.Get(podManifest, "spec.nodeName", "N/A"),
@@ -210,6 +235,9 @@ func BuildGetContainerAPIResp(
 		"image":         mapx.Get(curContainerStatus, "image", "N/A"),
 		"networkMode":   mapx.Get(podManifest, "spec.dnsPolicy", "N/A"),
 		"ports":         mapx.GetList(curContainerSpec, "ports"),
+		"startedAt":     startedAt,
+		"restartCnt":    mapx.GetInt64(curContainerStatus, "restartCount"),
+		"lastState":     lastState,
 		"resources":     mapx.Get(curContainerSpec, "resources", map[string]interface{}{}),
 		"command": map[string]interface{}{
 			"command": mapx.GetList(curContainerSpec, "command"),
@@ -279,13 +307,15 @@ func getContainerStatuses(containerStatus interface{}, containerType string) (co
 	if !ok {
 		return
 	}
-	status, reason, message := "", "", ""
+	status, reason, message, startedAt := "", "", "", ""
 	// state 有且只有一对键值：running / terminated / waiting
 	// https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#containerstate-v1-core
 	for k := range cs["state"].(map[string]interface{}) {
 		status = k
 		reason, _ = mapx.Get(cs, []string{"state", k, "reason"}, k).(string)
 		message, _ = mapx.Get(cs, []string{"state", k, "message"}, k).(string)
+		startedTime, _ := mapx.Get(cs, []string{"state", k, "startedAt"}, k).(string)
+		startedAt, _ = timex.NormalizeDatetime(startedTime)
 	}
 	containers = append(containers, map[string]interface{}{
 		"containerID":    extractContainerID(mapx.GetStr(cs, "containerID")),
@@ -295,6 +325,8 @@ func getContainerStatuses(containerStatus interface{}, containerType string) (co
 		"status":         status,
 		"reason":         reason,
 		"message":        message,
+		"restartCnt":     mapx.GetInt64(cs, "restartCount"),
+		"startedAt":      startedAt,
 	})
 	return containers
 }
