@@ -148,7 +148,9 @@ message ReleasedAppBoundTmplRevision {
     string origin_signature       = 19;
     uint64 origin_byte_size       = 20;
     string creator                = 21;
-    string create_at              = 22;
+    string reviser                = 22;
+    string create_at              = 23;
+    string update_at              = 24;
 }
 
 // Conflict is the conflict when app binds templates
