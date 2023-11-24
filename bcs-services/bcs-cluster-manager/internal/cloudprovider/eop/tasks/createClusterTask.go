@@ -163,6 +163,7 @@ func generateCreateECKReq(info *cloudprovider.CloudDependBasicInfo, vpcId, subne
 	var err error
 	compnents := make([]*api.Component, 0)
 	compnents = append(compnents, &api.Component{Name: "prometheus"}, &api.Component{Name: "node-local-dns"})
+	blog.Infof("----------- generateCreateECKReq k8s version is %s", info.Cluster.ClusterBasicSettings.Version)
 
 	req := &api.CreateClusterRequest{
 		Components: compnents,

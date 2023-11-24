@@ -14,6 +14,7 @@ package eop
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"sync"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -39,6 +40,8 @@ var availableVersions = []string{"1.19.16", "1.20.15", "1.25.6"}
 
 // CreateClusterValidate create cluster validate
 func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
+	blog.Infof("----------- CreateClusterValidate k8s version is %s", req.ClusterBasicSettings.Version)
+
 	if len(req.ClusterBasicSettings.Version) == 0 {
 		return fmt.Errorf("%s CreateClusterValidate lost kubernetes version in request", cloudName)
 	}

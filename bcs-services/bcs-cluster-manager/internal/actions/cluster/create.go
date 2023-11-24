@@ -172,6 +172,8 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		return cls, err
 	}
 
+	blog.Infof("----------- InitCloudClusterDefaultInfo k8s version is %s", cls.ClusterBasicSettings.Version)
+
 	// check cloud master nodes
 	err = ca.checkClusterMasterNodes(cls)
 	if err != nil {
