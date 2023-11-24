@@ -307,52 +307,54 @@ func (s *Service) getOrCreateGroupByLabels(grpcKit *kit.Kit, tx *gen.QueryTx, bi
 			exists = append(exists, group)
 		}
 	}
-	if len(exists) == 0 {
-		if groupName != "" {
-			// if group name is not empty, use it as group name.
-			_, err := s.dao.Group().GetByName(grpcKit, bizID, groupName)
-			// if group name already exists, return error.
-			if err == nil {
-				return 0, fmt.Errorf("group %s already exists", groupName)
-			} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-				return 0, err
-			}
-		} else {
-			// generate group name by time.
-			groupName = time.Now().Format("20060102150405.000")
-			groupName = fmt.Sprintf("g_%s", strings.ReplaceAll(groupName, ".", ""))
-		}
-		group := table.Group{
-			Spec: &table.GroupSpec{
-				Name:     groupName,
-				Public:   false,
-				Mode:     table.Custom,
-				Selector: sel,
-			},
-			Attachment: &table.GroupAttachment{
-				BizID: bizID,
-			},
-			Revision: &table.Revision{
-				Creator: grpcKit.User,
-				Reviser: grpcKit.User,
-			},
-		}
-		groupID, err := s.dao.Group().CreateWithTx(grpcKit, tx, &group)
-		if err != nil {
-			return 0, err
-		}
-		if err := s.dao.GroupAppBind().BatchCreateWithTx(grpcKit, tx, []*table.GroupAppBind{
-			{
-				GroupID: groupID,
-				AppID:   appID,
-				BizID:   bizID,
-			},
-		}); err != nil {
-			return 0, err
-		}
-		return groupID, nil
+	// if same labels group exists, return it's id.
+	if len(exists) > 0 {
+		return exists[0].ID, nil
 	}
-	return exists[0].ID, nil
+	// else create new one.
+	if groupName != "" {
+		// if group name is not empty, use it as group name.
+		_, err = s.dao.Group().GetByName(grpcKit, bizID, groupName)
+		// if group name already exists, return error.
+		if err == nil {
+			return 0, fmt.Errorf("group %s already exists", groupName)
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, err
+		}
+	} else {
+		// generate group name by time.
+		groupName = time.Now().Format("20060102150405.000")
+		groupName = fmt.Sprintf("g_%s", strings.ReplaceAll(groupName, ".", ""))
+	}
+	group := table.Group{
+		Spec: &table.GroupSpec{
+			Name:     groupName,
+			Public:   false,
+			Mode:     table.Custom,
+			Selector: sel,
+		},
+		Attachment: &table.GroupAttachment{
+			BizID: bizID,
+		},
+		Revision: &table.Revision{
+			Creator: grpcKit.User,
+			Reviser: grpcKit.User,
+		},
+	}
+	groupID, err := s.dao.Group().CreateWithTx(grpcKit, tx, &group)
+	if err != nil {
+		return 0, err
+	}
+	if err := s.dao.GroupAppBind().BatchCreateWithTx(grpcKit, tx, []*table.GroupAppBind{
+		{
+			GroupID: groupID,
+			AppID:   appID,
+			BizID:   bizID,
+		},
+	}); err != nil {
+		return 0, err
+	}
+	return groupID, nil
 }
 
 func (s *Service) createReleasedHook(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error {

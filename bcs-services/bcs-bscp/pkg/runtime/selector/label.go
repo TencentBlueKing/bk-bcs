@@ -92,6 +92,7 @@ func (e *Element) Validate() error {
 	return nil
 }
 
+// Equal compares two elements are equal or not.
 func (e *Element) Equal(other *Element) bool {
 	if e.Key != other.Key {
 		return false
