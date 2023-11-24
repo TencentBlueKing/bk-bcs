@@ -19,15 +19,15 @@
     </div>
     <bk-loading style="min-height: 200px" :loading="listLoading">
       <bk-table
+        class="config-table"
         :border="['outer']"
         :data="list"
-        @selection-change="handleSelectionChange"
         :row-class="getRowCls"
-        class="config-table"
         :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
         @page-value-change="refreshList"
+        @selection-change="handleSelectionChange"
       >
         <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
         <bk-table-column label="配置文件名称">
@@ -135,7 +135,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { onMounted, ref, watch, onBeforeUnmount } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Ellipsis, Search, Spinner } from 'bkui-vue/lib/icon';
@@ -183,7 +183,7 @@ const boundByAppsCountList = ref<ITemplateCitedCountDetailItem[]>([]);
 const searchStr = ref('');
 const pagination = ref({
   current: 1,
-  count: 100,
+  count: 0,
   limit: 10,
 });
 const isAddToPkgsDialogShow = ref(false);
@@ -210,11 +210,7 @@ onMounted(() => {
   loadConfigList();
 });
 
-onBeforeUnmount(() => {
-  batchUploadIds.value = [];
-});
-
-const loadConfigList = async (isBatchUpload?: boolean) => {
+const loadConfigList = async (isBatchUpload = false) => {
   listLoading.value = true;
   const params: ICommonQuery = {
     start: (pagination.value.current - 1) * pagination.value.limit,
@@ -231,7 +227,6 @@ const loadConfigList = async (isBatchUpload?: boolean) => {
   const res = await props.getConfigList(params);
   list.value = res.details;
   pagination.value.count = res.count;
-  console.log(pagination.value);
   listLoading.value = false;
   const ids = list.value.map(item => item.id);
   citeByPkgsList.value = [];
@@ -261,8 +256,8 @@ const loadBoundByAppsList = async (ids: number[]) => {
   boundByAppsCountLoading.value = false;
 };
 
-const refreshList = (current = 1, isBatchUpload?: boolean) => {
-  searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+const refreshList = (current = 1, isBatchUpload = false) => {
+  isSearchEmpty.value = searchStr.value !== '';
   pagination.value.current = current;
   loadConfigList(isBatchUpload);
 };

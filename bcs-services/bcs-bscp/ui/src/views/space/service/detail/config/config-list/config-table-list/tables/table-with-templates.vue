@@ -43,7 +43,6 @@
                       <tr
                         v-for="config in group.configs"
                         :key="config.id"
-                        class="config-row"
                         :class="getRowCls(config)"
                       >
                         <td>
@@ -203,8 +202,8 @@
   <DeleteConfirmDialog
     v-model:isShow="isDeletePkgDialogShow"
     title="确认移除该配置模板套餐？"
-    @confirm="handleDeletePkgConfirm"
     confirm-text="移除"
+    @confirm="handleDeletePkgConfirm"
   >
     <div style="margin-bottom: 8px">
       配置模板套餐: <span style="color: #313238">{{ deleteTemplatePkgName }}</span>
@@ -213,7 +212,7 @@
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue/lib';
 import { DownShape, Close } from 'bkui-vue/lib/icon';
@@ -346,22 +345,18 @@ onMounted(async () => {
   getAllConfigList();
 });
 
-onBeforeUnmount(() => {
-  batchUploadIds.value = [];
-});
-
 const getBindingId = async () => {
   const res = await getAppPkgBindingRelations(props.bkBizId, props.appId);
   bindingId.value = res.details.length === 1 ? res.details[0].id : 0;
 };
 
-const getAllConfigList = async (isBatchUpload?: boolean) => {
-  await Promise.all([getCommonConfigList(isBatchUpload!), getBoundTemplateList()]);
+const getAllConfigList = async (isBatchUpload = false) => {
+  await Promise.all([getCommonConfigList(isBatchUpload), getBoundTemplateList()]);
   tableGroupsData.value = transListToTableData();
 };
 
 // 获取非模板配置文件列表
-const getCommonConfigList = async (isBatchUpload?: boolean) => {
+const getCommonConfigList = async (isBatchUpload = false) => {
   commonConfigListLoading.value = true;
   try {
     const params: ICommonQuery = {
@@ -580,9 +575,9 @@ const handleDeleteConfigConfirm = async () => {
 // 设置新增行的标记class
 const getRowCls = (data: IConfigTableItem) => {
   if (batchUploadIds.value.includes(data.id)) {
-    return 'new-row-marked';
+    return 'new-row-marked config-row';
   }
-  return '';
+  return 'config-row';
 };
 defineExpose({
   refresh: getAllConfigList,

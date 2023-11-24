@@ -70,7 +70,7 @@ const searchStr = ref('');
 const useTemplate = ref(true);
 const editVariablesRef = ref();
 
-const refreshConfigList = (isBatchUpload?: boolean) => {
+const refreshConfigList = (isBatchUpload = false) => {
   tableRef.value.refresh(isBatchUpload);
   refreshVariable();
 };
