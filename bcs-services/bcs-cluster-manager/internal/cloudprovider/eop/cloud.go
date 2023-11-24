@@ -100,7 +100,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster, opt *cloud
 
 func clusterCloudDefaultBasicSetting(cls *cmproto.Cluster, cloud *cmproto.Cloud, version string) {
 	if version == "" {
-		cls.ClusterBasicSettings.Version = "1.25.6"
+		version = "1.20.15"
 	}
 
 	defaultOSImage := common.DefaultECKImageName
