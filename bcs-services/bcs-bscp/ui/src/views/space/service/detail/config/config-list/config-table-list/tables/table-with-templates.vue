@@ -422,7 +422,7 @@ const transListToTableData = () => {
 const transConfigsToTableItemData = (list: IConfigItem[]) => list.map((item: IConfigItem) => {
   const { id, spec, revision, file_state } = item;
   const { name, path, permission } = spec;
-  const { creator, reviser, update_at } = revision;
+  const { creator, reviser, update_at, create_at } = revision;
   return {
     id,
     name,
@@ -431,7 +431,7 @@ const transConfigsToTableItemData = (list: IConfigItem[]) => list.map((item: ICo
     path,
     creator,
     reviser,
-    update_at: datetimeFormat(update_at),
+    update_at: datetimeFormat(update_at || create_at),
     file_state,
     permission,
   };

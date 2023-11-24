@@ -79,6 +79,7 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
+
 	// 删除临时文件夹
 	defer func() { _ = os.RemoveAll(unpackTempDir) }()
 	folder, uploadErr, err := c.scanFolder(kt, unpackTempDir, unpackTempDir)
@@ -144,12 +145,8 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 	if len(uploadErr) > 0 {
 		msg = fmt.Sprintf("上传完成，失败 %d 个", len(uploadErr))
 	}
-	sort.Slice(nonExist, func(i, j int) bool {
-		return nonExist[i].Path < nonExist[j].Path
-	})
-	sort.Slice(exist, func(i, j int) bool {
-		return exist[i].Path < exist[j].Path
-	})
+	sortByPathName(exist)
+	sortByPathName(nonExist)
 	_ = render.Render(w, r, rest.OKRender(&types.TemplatesImportResp{
 		Exist:    exist,
 		NonExist: nonExist,
@@ -241,12 +238,8 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	if len(uploadErr) > 0 {
 		msg = fmt.Sprintf("上传完成，失败 %d 个", len(uploadErr))
 	}
-	sort.Slice(nonExist, func(i, j int) bool {
-		return nonExist[i].Path < nonExist[j].Path
-	})
-	sort.Slice(exist, func(i, j int) bool {
-		return exist[i].Path < exist[j].Path
-	})
+	sortByPathName(exist)
+	sortByPathName(nonExist)
 	_ = render.Render(w, r, rest.OKRender(&types.TemplatesImportResp{
 		Exist:    exist,
 		NonExist: nonExist,
@@ -385,4 +378,17 @@ func newConfigImportService(settings cc.Repository, authorizer auth.Authorizer,
 		cfgClient:  cfgClient,
 	}
 	return config, nil
+}
+
+// 使用sort包按照路径+名称排序
+func sortByPathName(myStructs []*types.TemplateItem) {
+	// 使用 sort 包按照路径+名称排序
+	sort.Slice(myStructs, func(i, j int) bool {
+		// 先按照路径排序
+		if myStructs[i].Path != myStructs[j].Path {
+			return myStructs[i].Path < myStructs[j].Path
+		}
+		// 如果路径相同，则按照名称排序
+		return myStructs[i].Name < myStructs[j].Name
+	})
 }

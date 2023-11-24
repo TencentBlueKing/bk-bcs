@@ -3,8 +3,8 @@
     class="exception-apply"
     type="403">
     <div class="tips-content">
-      <div class="title">产品内测中</div>
-      <div class="desc">如需体验，请联系 {{ helper }} 开通业务白名单</div>
+      <div class="title">产品仅供内部体验</div>
+      <div class="desc">如需体验，请联系 {{ helper }}</div>
     </div>
   </bk-exception>
 </template>
