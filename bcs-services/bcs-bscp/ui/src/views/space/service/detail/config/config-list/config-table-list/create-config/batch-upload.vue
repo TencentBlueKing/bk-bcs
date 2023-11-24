@@ -77,8 +77,10 @@
 import { ref, watch, computed } from 'vue';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
 import { IConfigImportItem } from '../../../../../../../../../types/config';
-import { batchAdddConfigList, importNonTemplateConfigFile } from '../../../../../../../../api/config';
+import { batchAddConfigList, importNonTemplateConfigFile } from '../../../../../../../../api/config';
 import ConfigTable from '../../../../../../templates/list/package-detail/operations/add-configs/import-configs/config-table.vue';
+import useServiceStore from '../../../../../../../../store/service';
+import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue';
 import { Upload } from 'bkui-vue/lib/icon';
 const props = defineProps<{
@@ -96,6 +98,7 @@ const nonExistConfigList = ref<IConfigImportItem[]>([]);
 const loading = ref(false);
 const expandNonExistTable = ref(true);
 const buttonRef = ref();
+const { batchUploadIds }  = storeToRefs(useServiceStore());
 
 watch(
   () => props.show,
@@ -144,10 +147,11 @@ const close = () => {
 
 const handleImport = async () => {
   try {
-    await batchAdddConfigList(props.bkBizId, props.appId, [
+    const res = await batchAddConfigList(props.bkBizId, props.appId, [
       ...existConfigList.value,
       ...nonExistConfigList.value,
     ]);
+    batchUploadIds.value = res.ids;
     emits('upload');
     close();
     Message({
