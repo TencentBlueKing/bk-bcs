@@ -15,11 +15,12 @@ package perf
 
 import (
 	"context"
-	"strings"
+	"encoding/json"
+	"errors"
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
@@ -29,8 +30,6 @@ var (
 	// performance 单例 Performance
 	performance *Performance
 	once        sync.Once
-	// 存放用户设置的命令延时数据
-	commandDelay = make(map[string]string, 0)
 )
 
 // GetGlobalPerformance : get global Performance
@@ -38,10 +37,10 @@ func GetGlobalPerformance() *Performance {
 	if performance == nil {
 		once.Do(func() {
 			performance = &Performance{
-				userDelayList: map[string][]string{},
-				lock:          sync.Mutex{},
+				lock:            sync.Mutex{},
+				meterDataChan:   make(chan *types.DelayData),
+				meterKeyChanMap: map[string]*meterKeyChan{},
 			}
-
 		})
 	}
 	return performance
@@ -49,80 +48,137 @@ func GetGlobalPerformance() *Performance {
 
 // Performance 性能统计列表临时存放map
 type Performance struct {
-	// 临时存放用户延时数据列表
-	userDelayList map[string][]string
-	lock          sync.Mutex
+	lock            sync.Mutex
+	meterDataChan   chan *types.DelayData
+	meterKeyChanMap map[string]*meterKeyChan
 }
 
-// IsOpenDelay 判断用户是否开启延时统计
-func (p *Performance) IsOpenDelay(username, clusterId, msg string) bool {
-	// 匹配子字符串，如果包含则表示开启了命令延时统计
-	msgPart := "\"cluster_id\":\"" + clusterId + "\",\"enabled\":true,\"console_key\":\"" + msg
-	return strings.Contains(commandDelay[username], msgPart)
-}
-
-// SetUserDelayList 设置用户列表数据
-func (p *Performance) SetUserDelayList(key string, s string) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	p.userDelayList[key] = append(p.userDelayList[key], s)
+// 存放用户设置的命令延时数据, 格式为 key={username}, value={cluster_id}:{console_key}, 其中 cluster_id 为空代表任意
+type meterKeyChan struct {
+	username string
+	c        chan string
 }
 
 // Run Performance 启动
 func (p *Performance) Run(ctx context.Context) error {
-
-	timer := time.NewTicker(time.Second * 5)
+	timer := time.NewTicker(time.Second * 2)
 	defer timer.Stop()
-
-	userSync := time.NewTicker(time.Second * 1)
-	defer userSync.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			// 获取退出信号, 全部上传
-			err := p.batchUploadUserDelay()
+			return nil
+
+		case m := <-p.meterDataChan:
+			value, err := json.Marshal(m)
 			if err != nil {
-				return err
+				logger.Errorf("meterData json Marshal failed, err: %s", err.Error())
+				continue
 			}
+			key := types.GetMeterDataKey(m.Username)
+
+			func() {
+				pCtx, pCancel := context.WithTimeout(context.Background(), time.Second*2)
+				defer pCancel()
+
+				if err := storage.GetDefaultRedisSession().Client.RPush(pCtx, key, value).Err(); err != nil {
+					logger.Errorf("redis list push failed, err: %s, key: %s", err.Error(), key)
+					return
+				}
+
+				// 只保留最后 100 条数据
+				if err := storage.GetDefaultRedisSession().Client.LTrim(pCtx, key, -100, -1).Err(); err != nil {
+					logger.Errorf("redis ltrim failed, err: %s, key: %s", err.Error(), key)
+					return
+				}
+
+				// 24小时过期
+				if err := storage.GetDefaultRedisSession().Client.Expire(ctx, key, time.Hour*24).Err(); err != nil {
+					logger.Errorf("redis expire failed, err: %s, key: %s", err.Error(), key)
+					return
+				}
+			}()
+
 		case <-timer.C:
-			err := p.batchUploadUserDelay()
-			if err != nil {
-				return err
-			}
-		case <-userSync.C:
 			// 定时写入用户设置延时开关数据
-			delayData, err := storage.GetDefaultRedisSession().Client.HGetAll(ctx, types.ConsoleKey).Result()
-			if err != nil {
-				blog.Errorf("failed to synchronize redis data, err: %s", err.Error())
-				return err
+			delayData, err := storage.GetDefaultRedisSession().Client.HGetAll(ctx, types.GetMeterKey()).Result()
+			if errors.Is(err, context.Canceled) {
+				return nil
 			}
-			commandDelay = delayData
+
+			if err != nil {
+				logger.Errorf("failed to synchronize redis data, err: %s", err.Error())
+				continue
+			}
+
+			for k, v := range delayData {
+				p.Broadcast(k, v)
+			}
 		}
 	}
 }
 
-// batchUploadUserDelay 批量上传
-func (p *Performance) batchUploadUserDelay() error {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	// 重置
-	for i, value := range p.userDelayList {
-		// 查看用户是否已经有统计数据在Redis中
-		listLen := storage.GetDefaultRedisSession().Client.LLen(context.Background(), types.DelayUser+i).Val()
-		// 往Redis追加数据
-		err := storage.GetDefaultRedisSession().Client.RPush(context.Background(), types.DelayUser+i, value).Err()
-		if err != nil {
-			blog.Errorf("redis list push failed, err: %s", err.Error())
-			return err
-		}
-		// 没有数据的情况下设置列表过期时间，暂定一天
-		if listLen == 0 {
-			// 列表设置过期时间
-			storage.GetDefaultRedisSession().Client.Expire(
-				context.Background(), types.DelayUser+i, types.DelayUserExpire)
+// PushMeter 写入数据, 设置2秒超时保护机制
+func (p *Performance) PushMeter(meters []*types.DelayData) int {
+	for idx, m := range meters {
+		select {
+		case p.meterDataChan <- m:
+		case <-time.After(2 * time.Second):
+			logger.Warnf("timeout to push meter data, raw data: %v", m)
+			return idx
 		}
 	}
-	p.userDelayList = map[string][]string{}
-	return nil
+
+	return len(meters)
+}
+
+// Subscribe 订阅 key 的变化
+func (p *Performance) Subscribe(sessionID string, username string) chan string {
+	st := time.Now()
+
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	outputC := &meterKeyChan{
+		username: username,
+		c:        make(chan string),
+	}
+	p.meterKeyChanMap[sessionID] = outputC
+
+	logger.Infof("perf subscribe success, sessionID=%s, username=%s, duration=%s", sessionID, username, time.Since(st))
+	return outputC.c
+}
+
+// UnSubscribe 取消订阅 key 的变化
+func (p *Performance) UnSubscribe(sessionID string) {
+	st := time.Now()
+
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	close(p.meterKeyChanMap[sessionID].c)
+	delete(p.meterKeyChanMap, sessionID)
+
+	logger.Infof("perf unsubscribe success, sessionID=%s, duration=%s", sessionID, time.Since(st))
+}
+
+// Broadcast 广播 key 配置
+func (p *Performance) Broadcast(username, key string) {
+	st := time.Now()
+
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	for _, v := range p.meterKeyChanMap {
+		if v.username != username {
+			continue
+		}
+
+		v.c <- key
+	}
+
+	duration := time.Since(st)
+	if duration > time.Millisecond*100 {
+		logger.Warnf("perf broadcast slow, username=%s, key=%s, duration=%s", username, key, duration)
+	}
 }

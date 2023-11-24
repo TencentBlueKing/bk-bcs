@@ -17,6 +17,7 @@ import (
 	"context"
 	"net/url"
 
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/google/shlex"
 	"github.com/pkg/errors"
 
@@ -144,6 +145,12 @@ func queryByClusterIdExternal(ctx context.Context,
 	case manager.ShellBash:
 		podCtx.Commands = manager.BashCommand
 	}
+
+	// 创建 .bash_history 文件
+	if err := historyMgr.createBashHistory(podCtx); err != nil {
+		logger.Warnf("create bash history fail: %s", err.Error())
+	}
+
 	return podCtx, nil
 }
 

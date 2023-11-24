@@ -36,7 +36,9 @@ func NewProvider(providerType string) (Provider, error) {
 		return newCosStorage()
 	case "bkrepo":
 		return newBkRepoStorage()
+	case "":
+		return nil, fmt.Errorf("repo provider is required")
 	default:
-		return nil, fmt.Errorf("%s is not supported", providerType)
+		return nil, fmt.Errorf("repo provider %s is not supported", providerType)
 	}
 }

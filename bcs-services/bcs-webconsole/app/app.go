@@ -298,12 +298,18 @@ func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
 	return etcdRegistry, nil
 }
 
-// checkVersion refer to https://github.com/urfave/cli/blob/main/help.go#L318 but use os.args check
-func checkVersion() bool {
+// checkHelp refer to https://github.com/urfave/cli/blob/main/help.go#L318 but use os.args check
+func checkHelp() bool {
 	if len(os.Args) < 2 {
 		return false
 	}
 	arg := os.Args[1]
+
+	// help 命令
+	if arg == "-h" {
+		return true
+	}
+	// version 命令
 	for _, name := range cli.VersionFlag.Names() {
 		if arg == "-"+name || arg == "--"+name {
 			return true
@@ -403,7 +409,7 @@ func buildCommands() []*cli.Command {
 
 // Run create a pid
 func (c *WebConsoleManager) Run() error {
-	if checkVersion() {
+	if checkHelp() {
 		return nil
 	}
 
@@ -411,6 +417,7 @@ func (c *WebConsoleManager) Run() error {
 
 	eg, ctx := errgroup.WithContext(c.ctx)
 
+	podmanager.InitHistoryMgr()
 	podCleanUpMgr := podmanager.NewCleanUpManager(ctx)
 	eg.Go(func() error {
 		return podCleanUpMgr.Run()

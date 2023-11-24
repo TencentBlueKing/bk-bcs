@@ -78,7 +78,7 @@ session不合法: "Invalid session"
 
 BCS Console 服务端连接断开，请重新登录: "The BCS Console server is disconnected, please login again"
 
-服务请求失败: "Service request failed"
+服务请求失败{}: "Service request failed: {{ .err }}"
 
 服务请求成功: "Service request successful"
 

@@ -15,7 +15,6 @@ package manager
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"runtime/debug"
@@ -48,7 +47,8 @@ type ConsoleManager struct {
 	managerFuncs   []ManagerFunc
 	cmdParser      *audit.CmdParse
 	recorder       *record.ReplyRecorder
-	perf           *perf.Performance
+	meterKey       string
+	meters         []*types.DelayData
 }
 
 // NewConsoleManager :
@@ -72,7 +72,6 @@ func NewConsoleManager(ctx context.Context, podCtx *types.PodContext,
 		return nil, err
 	}
 	mgr.recorder = recorder
-	mgr.perf = perf.GetGlobalPerformance()
 
 	return mgr, nil
 }
@@ -124,8 +123,18 @@ func (c *ConsoleManager) HandlePostOutputMsg(msg []byte) {
 	record.RecordOutputEvent(c.recorder, msg)
 
 	// 性能统计，按照用户设置的key统计
-	if len(msg) > 0 && c.perf.IsOpenDelay(c.podCtx.Username, c.podCtx.ClusterId, string(msg[0])) {
-		c.setUserDelayList(string(msg[0]))
+	if len(msg) > 0 && types.CommandDelayMatch(c.meterKey, msg[0]) {
+		m := &types.DelayData{
+			ClusterId:   c.podCtx.ClusterId,
+			TimeConsume: time.Since(c.keyWaitingTime).String(),
+			CreateTime:  time.Now().Format(time.RFC3339),
+			SessionId:   c.podCtx.SessionId,
+			PodName:     c.podCtx.PodName,
+			Username:    c.podCtx.Username,
+			CommandKey:  c.meterKey,
+		}
+		c.meters = append(c.meters, m)
+
 	}
 }
 
@@ -136,20 +145,36 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 
 	// 结束会话时,处理缓存/关闭文件
 	defer c.recorder.End()
+	p := perf.GetGlobalPerformance()
+	defer p.PushMeter(c.meters)
+
+	meterKeyChan := p.Subscribe(c.podCtx.SessionId, c.podCtx.Username)
+	defer p.UnSubscribe(c.podCtx.SessionId)
 
 	for {
 		select {
 		case <-c.ctx.Done():
 			logger.Infof("close %s ConsoleManager done", c.podCtx.PodName)
 			return nil
+
+		case k := <-meterKeyChan:
+			if k != c.meterKey {
+				logger.Infof("receive meter key=%s", k)
+				c.meterKey = k
+			}
+
 		case <-interval.C:
+			// 推送数据到 perf 队列
+			idx := p.PushMeter(c.meters)
+			c.meters = c.meters[idx:]
+
 			if err := c.handleIdleTimeout(ctx); err != nil {
 				return err
 			}
 			// 自定义函数
 			for _, managerFunc := range c.managerFuncs {
 				if err := managerFunc(c.podCtx); err != nil {
-					return err
+					logger.Errorf("handler manager func err: %s", err.Error())
 				}
 			}
 			// 定时写入文件
@@ -213,24 +238,4 @@ func (c *ConsoleManager) handleIdleTimeout(ctx *gin.Context) error {
 		return errors.New(msg)
 	}
 	return nil
-}
-
-// 用户延时命令统计数据
-func (c *ConsoleManager) setUserDelayList(msg string) {
-	delayData := types.DelayData{
-		ClusterId:   c.podCtx.ClusterId,
-		TimeConsume: time.Since(c.keyWaitingTime).String(),
-		CreateTime:  time.Now().Format(time.DateTime),
-		SessionId:   c.podCtx.SessionId,
-		PodName:     c.podCtx.PodName,
-		CommandKey:  msg,
-	}
-	delayDataByte, err := json.Marshal(delayData)
-	if err != nil {
-		logger.Errorf("setUserDelayList json Marshal failed, err: %s", err.Error())
-		return
-	}
-
-	// 放在内存中
-	c.perf.SetUserDelayList(c.podCtx.Username, string(delayDataByte))
 }

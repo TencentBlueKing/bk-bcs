@@ -36,7 +36,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/repository"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
@@ -150,12 +149,6 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	if err != nil {
 		rest.APIError(c, i18n.GetMessage(c, err.Error()))
 		return
-	}
-
-	// 创建.bash_history文件
-	errCreate := CreateBashHistory(podCtx)
-	if errCreate != nil {
-		logger.Warnf("create bash history fail: %s", errCreate.Error())
 	}
 
 	podCtx.ProjectId = authCtx.ProjectId
@@ -358,40 +351,20 @@ func (s *service) CheckDownloadHandler(c *gin.Context) {
 func (s *service) SetUserDelaySwitch(c *gin.Context) {
 	// 参数解析
 	username := c.Param("username")
-	var commandDelays []types.CommandDelay
+	var commandDelays types.CommandDelay
 	err := c.BindJSON(&commandDelays)
 	if err != nil {
 		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
 		return
 	}
 
-	// 参数判断
-	if len(commandDelays) == 0 {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", errors.New("data cannot be empty")))
+	if len(commandDelays.ConsoleKey) != 1 {
+		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", errors.New("invalid console_key")))
 		return
 	}
 
-	for i := range commandDelays {
-		// 空的参数报错
-		if commandDelays[i].ClusterId == "" || commandDelays[i].ConsoleKey == "" {
-			rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", errors.New("parameter required")))
-			return
-		}
-
-		// 只允许一个字符设置
-		if len(commandDelays[i].ConsoleKey) != 1 {
-			rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", errors.New("invalid console_key")))
-			return
-		}
-	}
-
-	command, err := json.Marshal(commandDelays)
-	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
-		return
-	}
-	// 将用户设置的延时命令开关放到redis上保存
-	err = storage.GetDefaultRedisSession().Client.HSet(c, types.ConsoleKey, username, string(command)).Err()
+	// 将用户设置的延时命令开关放到 redis 上保存
+	err = storage.GetDefaultRedisSession().Client.HSet(c, types.GetMeterKey(), username, commandDelays.HashValue()).Err()
 	if err != nil {
 		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
 		return
@@ -402,7 +375,7 @@ func (s *service) SetUserDelaySwitch(c *gin.Context) {
 // GetUserDelaySwitch 获取某个用户命令延时统计API
 func (s *service) GetUserDelaySwitch(c *gin.Context) {
 	username := c.Param("username")
-	result, err := storage.GetDefaultRedisSession().Client.HGet(c, types.ConsoleKey, username).Result()
+	result, err := storage.GetDefaultRedisSession().Client.HGet(c, types.GetMeterKey(), username).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			rest.APIError(c, i18n.GetMessage(c, "用户没有设置命令延时", err))
@@ -411,9 +384,9 @@ func (s *service) GetUserDelaySwitch(c *gin.Context) {
 		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
 		return
 	}
+
 	// 将用户设置的延时命令转成结构体数组输出
-	var commandDelay []types.CommandDelay
-	err = json.Unmarshal([]byte(result), &commandDelay)
+	commandDelay, err := types.MakeCommandDelay(result)
 	if err != nil {
 		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
 		return
@@ -425,8 +398,8 @@ func (s *service) GetUserDelaySwitch(c *gin.Context) {
 func (s *service) GetUserDelayMeter(c *gin.Context) {
 	username := c.Param("username")
 	clusterId := c.Query("clusterId")
-	result, err := storage.GetDefaultRedisSession().Client.LRange(c, types.DelayUser+username, 0, -1).
-		Result()
+	key := types.GetMeterDataKey(username)
+	result, err := storage.GetDefaultRedisSession().Client.LRange(c, key, 0, -1).Result()
 	if err != nil {
 		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
 		return
@@ -513,25 +486,21 @@ func (s *service) GetUserDelayMeter(c *gin.Context) {
 
 // GetDelayUsers 查看哪些用户开启命令延时情况 API
 func (s *service) GetDelayUsers(c *gin.Context) {
-	result, err := storage.GetDefaultRedisSession().Client.HGetAll(c, types.ConsoleKey).Result()
+	result, err := storage.GetDefaultRedisSession().Client.HGetAll(c, types.GetMeterKey()).Result()
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		rest.APIError(c, i18n.GetMessage(c, "服务请求失败{}", err))
 		return
 	}
 
 	// 以结构体数组的形式返回
-	var rsp []types.CommandDelayList
-	for key := range result {
-		var commandDelay []types.CommandDelay
-		err = json.Unmarshal([]byte(result[key]), &commandDelay)
+	rsp := map[string]*types.CommandDelay{}
+	for k, v := range result {
+		commandDelay, err := types.MakeCommandDelay(v)
 		if err != nil {
-			rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+			rest.APIError(c, i18n.GetMessage(c, "服务请求失败{}", err))
 			return
 		}
-		rsp = append(rsp, types.CommandDelayList{
-			Username:      key,
-			CommandDelays: commandDelay,
-		})
+		rsp[k] = commandDelay
 	}
 
 	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), rsp)
@@ -748,60 +717,4 @@ func makeWebSocketURL(sessionId, lang string, withScheme bool) string {
 // CreateClusterPortalSession 集群级别的 webconsole openapi
 func (s *service) CreateClusterPortalSession(c *gin.Context) {
 	rest.APIError(c, "Not implemented")
-}
-
-// getBashHistory直接读取存储在远程repo中的文件
-func getBashHistory(podName string) ([]byte, error) {
-	filename := podName + podmanager.HistoryFileName
-
-	// 使用系统对象存储
-	storage, err := repository.NewProvider(config.G.Repository.StorageType)
-	if err != nil {
-		return nil, err
-	}
-
-	// 5秒下载时间
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	// 下载对象储存文件
-	fileInput, err := storage.DownloadFile(ctx, podmanager.HistoryRepoDir+filename)
-	if err != nil {
-		return nil, err
-	}
-
-	// 读取.bash_history内容byte格式
-	output, err := io.ReadAll(fileInput)
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-// CreateBashHistory 创建.bash_history文件
-func CreateBashHistory(podCtx *types.PodContext) error {
-	// 往容器写文件
-	pe, err := podCtx.NewPodExec()
-	if err != nil {
-		return err
-	}
-	pe.Command = []string{"cp", "/dev/stdin", "/root/.bash_history"}
-	stdin := &bytes.Buffer{}
-	pe.Stderr = &bytes.Buffer{}
-	// 读取保存的.bash_history文件
-	historyFileByte, err := getBashHistory(podCtx.PodName)
-	if err != nil {
-		return err
-	}
-	_, err = stdin.Write(historyFileByte)
-	if err != nil {
-		return err
-	}
-	pe.Stdin = stdin
-	err = pe.Exec()
-	if err != nil {
-		return err
-	}
-	return nil
 }

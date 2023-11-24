@@ -14,7 +14,11 @@
 package types
 
 import (
+	"fmt"
+	"strings"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
 
 // WebConsoleMode webconsole 类型
@@ -41,15 +45,11 @@ const (
 const (
 	defaultTerminalCols = 211 // defaultTerminalCols DefaultRows 1080p页面测试得来
 	defaultTerminalRows = 25  // defaultTerminalRows xxx
-)
 
-const (
-	// ConsoleKey 存Redis的延时命令Hash名称
-	ConsoleKey = "console_delay"
-	// DelayUser 用户延时统计数据列表的Redis key前缀
-	DelayUser = "delay_user_"
-	// DelayUserExpire 用户列表的数据设置过期，暂定24个小时
-	DelayUserExpire = time.Hour * 24
+	// perfMeterKey 存Redis的延时命令Hash名称
+	perfMeterKey = "bcs::webconsole::meter_key"
+	// perfMeterData 用户延时统计数据列表的Redis key前缀
+	perfMeterData = "bcs::webconsole::meter_data"
 )
 
 // APIResponse xxx
@@ -99,9 +99,51 @@ type PodContext struct {
 
 // CommandDelay 用户延时命令设置
 type CommandDelay struct {
-	ClusterId  string `json:"cluster_id"`
 	Enabled    bool   `json:"enabled"`
 	ConsoleKey string `json:"console_key"`
+}
+
+// HashValue 使用 {enabled}:{key} 高效检索
+func (c *CommandDelay) HashValue() string {
+	e := "0"
+	if c.Enabled {
+		e = "1"
+	}
+
+	return fmt.Sprintf("%s:%s", e, c.ConsoleKey)
+}
+
+// CommandDelayMatch 是否开启匹配
+func CommandDelayMatch(key string, msg byte) bool {
+	return key == "1:"+string(msg)
+}
+
+// GetMeterKey meter 数据 key
+func GetMeterKey() string {
+	return fmt.Sprintf("%s::%s", perfMeterKey, config.G.Base.RunEnv)
+}
+
+// GetMeterDataKey meter 数据 key
+func GetMeterDataKey(username string) string {
+	return fmt.Sprintf("%s::%s::%s", perfMeterData, username, config.G.Base.RunEnv)
+}
+
+// MakeCommandDelay HashValue 转结构体
+func MakeCommandDelay(v string) (*CommandDelay, error) {
+	parts := strings.Split(v, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("not valid value: %s", v)
+	}
+	c := &CommandDelay{
+		ConsoleKey: parts[1],
+		Enabled:    false,
+	}
+
+	if parts[0] == "1" {
+		c.Enabled = true
+	}
+
+	return c, nil
 }
 
 // DelayData 用户的延迟数据
@@ -112,12 +154,7 @@ type DelayData struct {
 	SessionId   string `json:"session_id"`
 	PodName     string `json:"pod_name"`
 	CommandKey  string `json:"command_key"`
-}
-
-// CommandDelayList 所有用户命令延时设置列表
-type CommandDelayList struct {
-	Username      string         `json:"username"`
-	CommandDelays []CommandDelay `json:"command_delays"`
+	Username    string `json:"-"`
 }
 
 // UserMeterRsp 用户统计列表返回
