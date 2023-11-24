@@ -2132,6 +2132,7 @@ message PublishReq {
     bool                               default           = 7;
     repeated uint32                    groups            = 8;
     repeated google.protobuf.Struct    labels            = 9;
+    string                             group_name        = 10;
 }
 
 message GenerateReleaseAndPublishReq {
@@ -2144,6 +2145,7 @@ message GenerateReleaseAndPublishReq {
     string                             gray_publish_mode = 7;
     repeated string                    groups            = 8;
     repeated google.protobuf.Struct    labels            = 9;
+    string                             group_name        = 10;
 }
 
 message GenerateReleaseAndPublishResp {

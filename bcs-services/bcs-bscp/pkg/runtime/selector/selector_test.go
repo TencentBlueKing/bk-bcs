@@ -46,3 +46,87 @@ func TestMarshal(t *testing.T) {
 		return
 	}
 }
+
+func TestEqual(t *testing.T) {
+	s := &Selector{
+		MatchAll: false,
+		LabelsOr: []Element{
+			{Key: "biz", Op: new(EqualType), Value: "2001"},
+			{Key: "set", Op: new(InType), Value: []interface{}{"1", "2", "3"}},
+			{Key: "module", Op: new(GreaterThanType), Value: 1},
+			{Key: "num", Op: new(LessThanEqualType), Value: 1.234},
+			{Key: "game", Op: new(NotEqualType), Value: "stress"},
+		},
+	}
+
+	type expectResult struct {
+		other  *Selector
+		expect bool
+	}
+
+	var cases = []expectResult{
+		{
+			other: &Selector{
+				MatchAll: false,
+				LabelsOr: []Element{
+					{Key: "biz", Op: new(EqualType), Value: "2001"},
+					{Key: "module", Op: new(GreaterThanType), Value: 1},
+					{Key: "set", Op: new(InType), Value: []interface{}{"1", "2", "3"}},
+					{Key: "num", Op: new(LessThanEqualType), Value: 1.234},
+					{Key: "game", Op: new(NotEqualType), Value: "stress"},
+				},
+			},
+			expect: true,
+		},
+		{
+			// change order
+			other: &Selector{
+				MatchAll: false,
+				LabelsOr: []Element{
+					{Key: "biz", Op: new(EqualType), Value: "2001"},
+					{Key: "set", Op: new(InType), Value: []interface{}{"1", "2", "3"}},
+					{Key: "module", Op: new(GreaterThanType), Value: 1},
+					{Key: "num", Op: new(LessThanEqualType), Value: 1.234},
+					{Key: "game", Op: new(NotEqualType), Value: "stress"},
+				},
+			},
+			expect: true,
+		},
+		{
+			// delete element
+			other: &Selector{
+				MatchAll: false,
+				LabelsOr: []Element{
+					{Key: "biz", Op: new(EqualType), Value: "2001"},
+					{Key: "set", Op: new(InType), Value: []interface{}{"1", "2", "3"}},
+					{Key: "module", Op: new(GreaterThanType), Value: 1},
+					{Key: "num", Op: new(LessThanEqualType), Value: 1.234},
+				},
+			},
+			expect: false,
+		},
+		{
+			// add element
+			other: &Selector{
+				MatchAll: false,
+				LabelsOr: []Element{
+					{Key: "biz", Op: new(EqualType), Value: "2001"},
+					{Key: "set", Op: new(InType), Value: []interface{}{"1", "2", "3"}},
+					{Key: "module", Op: new(GreaterThanType), Value: 1},
+					{Key: "num", Op: new(LessThanEqualType), Value: 1.234},
+					{Key: "game", Op: new(NotEqualType), Value: "stress"},
+					{Key: "new", Op: new(NotEqualType), Value: "new"},
+				},
+			},
+			expect: false,
+		},
+	}
+
+	for idx, c := range cases {
+		if s.Equal(c.other) != c.expect {
+			t.Errorf("selector %d equal failed", idx)
+			return
+		}
+	}
+
+}
