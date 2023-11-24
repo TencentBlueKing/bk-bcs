@@ -177,6 +177,10 @@ func (as *AppSpec) ValidateCreate() error {
 		return err
 	}
 
+	if err := validator.ValidateAppName(as.Alias); err != nil {
+		return err
+	}
+
 	if err := as.ConfigType.Validate(); err != nil {
 		return err
 	}

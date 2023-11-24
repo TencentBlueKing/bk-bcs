@@ -102,7 +102,9 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbas
 	}
 
 	app = &table.App{
-		Spec: req.Spec.AppSpec(),
+		ID:    req.Id,
+		BizID: req.BizId,
+		Spec:  req.Spec.AppSpec(),
 		Revision: &table.Revision{
 			Reviser: grpcKit.User,
 		},
@@ -121,7 +123,7 @@ func (s *Service) checkUpdateAppDataType(kt *kit.Kit, req *pbds.UpdateAppReq, ap
 		return nil
 	}
 
-	if req.Spec.DataType == "any" {
+	if req.Spec.DataType == string(table.KvAny) {
 		return nil
 	}
 

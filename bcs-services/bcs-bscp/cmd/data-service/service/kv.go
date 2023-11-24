@@ -40,7 +40,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 	if err != nil {
 		return nil, fmt.Errorf("get app fail,err : %v", req.Spec.Key)
 	}
-	if checkKVTypeMatch(table.DataType(req.Spec.KvType), app.Spec.DataType) {
+	if !checkKVTypeMatch(table.DataType(req.Spec.KvType), app.Spec.DataType) {
 		return nil, fmt.Errorf("kv type does not match the data type defined in the application")
 	}
 

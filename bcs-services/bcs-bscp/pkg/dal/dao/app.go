@@ -345,7 +345,7 @@ func (dao *appDao) GetByAlias(kit *kit.Kit, bizID uint32, alias string) (*table.
 
 	app, err := q.Where(m.BizID.Eq(bizID), m.Alias_.Eq(alias)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get app failed, err: %v", err)
+		return nil, err
 	}
 
 	return app, nil
