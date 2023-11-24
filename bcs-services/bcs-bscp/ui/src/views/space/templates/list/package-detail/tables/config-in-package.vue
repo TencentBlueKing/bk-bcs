@@ -47,8 +47,12 @@ const handleMovedOut = () => {
   updateRefreshFlag();
 };
 
-const refreshConfigList = () => {
-  configTable.value.refreshList();
+const refreshConfigList = (isBatchUpload: boolean) => {
+  if (isBatchUpload) {
+    configTable.value.refreshList(1, isBatchUpload);
+  } else {
+    configTable.value.refreshList();
+  }
   updateRefreshFlag();
 };
 

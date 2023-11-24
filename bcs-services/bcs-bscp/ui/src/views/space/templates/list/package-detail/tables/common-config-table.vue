@@ -18,7 +18,17 @@
       </bk-input>
     </div>
     <bk-loading style="min-height: 200px" :loading="listLoading">
-      <bk-table :border="['outer']" :data="list" @selection-change="handleSelectionChange">
+      <bk-table
+        :border="['outer']"
+        :data="list"
+        @selection-change="handleSelectionChange"
+        :row-class="getRowCls"
+        class="config-table"
+        :remote-pagination="true"
+        :pagination="pagination"
+        @page-limit-change="handlePageLimitChange"
+        @page-value-change="refreshList"
+      >
         <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
         <bk-table-column label="配置文件名称">
           <template #default="{ row }">
@@ -125,7 +135,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Ellipsis, Search, Spinner } from 'bkui-vue/lib/icon';
@@ -150,7 +160,7 @@ const router = useRouter();
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const templateStore = useTemplateStore();
-const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView } =
+const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView, batchUploadIds } =
   storeToRefs(templateStore);
 
 const props = defineProps<{
@@ -173,8 +183,8 @@ const boundByAppsCountList = ref<ITemplateCitedCountDetailItem[]>([]);
 const searchStr = ref('');
 const pagination = ref({
   current: 1,
+  count: 100,
   limit: 10,
-  count: 0,
 });
 const isAddToPkgsDialogShow = ref(false);
 const isMoveOutFromPkgsDialogShow = ref(false);
@@ -200,12 +210,20 @@ onMounted(() => {
   loadConfigList();
 });
 
-const loadConfigList = async () => {
+onBeforeUnmount(() => {
+  batchUploadIds.value = [];
+});
+
+const loadConfigList = async (isBatchUpload?: boolean) => {
   listLoading.value = true;
   const params: ICommonQuery = {
     start: (pagination.value.current - 1) * pagination.value.limit,
     limit: pagination.value.limit,
   };
+  if (!isBatchUpload) batchUploadIds.value = [];
+  if (batchUploadIds.value.length > 0) {
+    params.ids = batchUploadIds.value.join(',');
+  }
   if (searchStr.value) {
     params.search_fields = 'name,path,memo,creator,reviser';
     params.search_value = searchStr.value;
@@ -213,6 +231,7 @@ const loadConfigList = async () => {
   const res = await props.getConfigList(params);
   list.value = res.details;
   pagination.value.count = res.count;
+  console.log(pagination.value);
   listLoading.value = false;
   const ids = list.value.map(item => item.id);
   citeByPkgsList.value = [];
@@ -242,10 +261,10 @@ const loadBoundByAppsList = async (ids: number[]) => {
   boundByAppsCountLoading.value = false;
 };
 
-const refreshList = (current = 1) => {
+const refreshList = (current = 1, isBatchUpload?: boolean) => {
   searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
   pagination.value.current = current;
-  loadConfigList();
+  loadConfigList(isBatchUpload);
 };
 
 // 模板移出或删除后刷新列表
@@ -253,6 +272,7 @@ const refreshListAfterDeleted = (num: number) => {
   if (num === list.value.length && pagination.value.current > 1) {
     pagination.value.current -= 1;
   }
+  batchUploadIds.value = [];
   refreshList();
 };
 
@@ -355,15 +375,28 @@ const goToCreateVersionManage = (id: number) => {
   goToVersionManage(id);
 };
 
-defineExpose({
-  refreshList,
-  refreshListAfterDeleted,
-});
+// 设置新增行的标记class
+const getRowCls = (data: ITemplateConfigItem) => {
+  if (batchUploadIds.value.includes(data.id)) {
+    return 'new-row-marked';
+  }
+  return '';
+};
+
+const handlePageLimitChange = (val: number) => {
+  pagination.value.limit = val;
+  refreshList();
+};
 
 const clearSearchStr = () => {
   searchStr.value = '';
   refreshList();
 };
+
+defineExpose({
+  refreshList,
+  refreshListAfterDeleted,
+});
 </script>
 <style lang="scss" scoped>
 .operate-area {
@@ -417,6 +450,13 @@ const clearSearchStr = () => {
   }
   .bk-button {
     margin-right: 8px;
+  }
+}
+.config-table {
+  :deep(.bk-table-body) {
+    tr.new-row-marked td {
+      background: #f2fff4 !important;
+    }
   }
 }
 </style>

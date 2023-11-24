@@ -23,6 +23,7 @@ export interface ICommonQuery {
   search_key?: string;
   search_fields?: string;
   search_value?: string;
+  ids?: string;
 }
 
 // 权限查询参数单个资源条目
