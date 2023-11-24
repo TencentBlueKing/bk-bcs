@@ -118,7 +118,8 @@ func (dao *releasedKvDao) List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table
 }
 
 // ListAllByReleaseIDs batch list released kvs by releaseIDs.
-func (dao *releasedKvDao) ListAllByReleaseIDs(kit *kit.Kit, releasedIDs []uint32, bizID uint32) ([]*table.ReleasedKv, error) {
+func (dao *releasedKvDao) ListAllByReleaseIDs(kit *kit.Kit, releasedIDs []uint32, bizID uint32) ([]*table.ReleasedKv,
+	error) {
 	if bizID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
 	}

@@ -14,22 +14,9 @@ package types
 
 import (
 	"errors"
-	"strconv"
 
 	"bscp.io/pkg/dal/table"
 )
-
-// isStringConvertibleToNumber checks if the given string can be converted to an integer or a floating-point number.
-func isStringConvertibleToNumber(s string) bool {
-	_, err := strconv.Atoi(s)
-	if err == nil {
-		return true
-	}
-
-	_, err = strconv.ParseFloat(s, 64)
-	return err == nil
-
-}
 
 // UpsertKvOption is used to define options for inserting or updating key-value data.
 type UpsertKvOption struct {

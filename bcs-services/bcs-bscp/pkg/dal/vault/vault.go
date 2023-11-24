@@ -14,10 +14,10 @@
 package vault
 
 import (
-	"bscp.io/pkg/dal/table"
 	vault "github.com/hashicorp/vault/api"
 
 	"bscp.io/pkg/cc"
+	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/types"
 )

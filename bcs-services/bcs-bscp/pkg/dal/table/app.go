@@ -452,11 +452,9 @@ const (
 	KvYAML DataType = "yaml"
 	// KvXml is the type for xml kv
 	KvXml DataType = "xml"
-
-	// MaxValueLength max value length 1MB
-	MaxValueLength = 1 * 1024 * 1024
 )
 
+// ValidateApp the kvType and value match
 func (k DataType) ValidateApp() error {
 	switch k {
 	case KvAny:

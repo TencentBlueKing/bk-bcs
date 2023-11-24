@@ -173,6 +173,11 @@ func (k *Kv) ValidateUpdate() error {
 	return nil
 }
 
+const (
+	// MaxValueLength max value length 1MB
+	MaxValueLength = 1 * 1024 * 1024
+)
+
 // ValidateValue the kvType and value match
 func (k DataType) ValidateValue(value string) error {
 
