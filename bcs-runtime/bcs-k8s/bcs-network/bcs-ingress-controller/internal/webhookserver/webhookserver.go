@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"k8s.io/client-go/tools/record"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
@@ -78,12 +79,14 @@ type Server struct {
 	conflictHandler  *conflicthandler.ConflictHandler
 	// if node's annotation have not related portpool namespace, will use NodePortBindingNs as default
 	nodePortBindingNs string
+	eventer           record.EventRecorder
 }
 
 // NewHookServer create new hook server object
 func NewHookServer(opt *ServerOption, k8sClient client.Client, lbClient cloud.LoadBalance, poolCache *portpoolcache.Cache,
 	eventWatcher eventer.WatchEventInterface, validater cloud.Validater, converter *generator.IngressConverter,
-	conflictHandler *conflicthandler.ConflictHandler, nodePortBindingNs string) (*Server, error) {
+	conflictHandler *conflicthandler.ConflictHandler, nodePortBindingNs string,
+	eventer record.EventRecorder) (*Server, error) {
 	pair, err := tls.LoadX509KeyPair(opt.ServerCertFile, opt.ServerKeyFile)
 	if err != nil {
 		return nil, fmt.Errorf("load x509 key pair cert %s, key %s failed, err %s",
@@ -103,6 +106,7 @@ func NewHookServer(opt *ServerOption, k8sClient client.Client, lbClient cloud.Lo
 		ingressConverter:  converter,
 		conflictHandler:   conflictHandler,
 		nodePortBindingNs: nodePortBindingNs,
+		eventer:           eventer,
 	}, nil
 }
 
@@ -378,6 +382,8 @@ func (s *Server) mutatingWebhook(ar v1.AdmissionReview) (response *v1.AdmissionR
 	patches, err := s.mutatingPod(pod)
 	if err != nil {
 		blog.Errorf("mutating pod '%s/%s' got an error: %s", pod.GetNamespace(), pod.GetName(), err.Error())
+		s.eventer.Eventf(pod, k8scorev1.EventTypeWarning, "AllocatePortFailed",
+			fmt.Sprintf("pod '%s/%s' allocate port failed: %s", pod.GetNamespace(), pod.GetName(), err.Error()))
 		return errResponse(errors.Wrapf(err, "mutating pod '%s/%s' failed",
 			pod.GetNamespace(), pod.GetNamespace()))
 	}
@@ -429,12 +435,12 @@ func (s *Server) mutatingNodeWebhook(ar v1.AdmissionReview) (response *v1.Admiss
 	// only hook create operation of pod
 	if req.Kind.Kind != "Node" {
 		blog.Warnf("kind %s is not Node", req.Kind.Kind)
-		return errResponse(fmt.Errorf("kind %s is not Node", req.Kind.Kind))
+		return &v1.AdmissionResponse{Allowed: true}
 	}
 	node := &k8scorev1.Node{}
 	if err := json.Unmarshal(req.Object.Raw, node); err != nil {
-		blog.Warnf("decode %s to node failed, err %s", string(req.Object.Raw), err.Error)
-		return errResponse(fmt.Errorf("decode %s to node failed, err %s", string(req.Object.Raw), err.Error()))
+		blog.Errorf("decode %s to node failed, err %s", string(req.Object.Raw), err.Error)
+		return &v1.AdmissionResponse{Allowed: true}
 	}
 	if len(node.Namespace) == 0 {
 		node.Namespace = req.Namespace
@@ -452,14 +458,16 @@ func (s *Server) mutatingNodeWebhook(ar v1.AdmissionReview) (response *v1.Admiss
 	patches, err := s.mutatingNode(node)
 	if err != nil {
 		blog.Errorf("mutating node '%s/%s' got an error: %s", node.GetNamespace(), node.GetName(), err.Error())
-		return errResponse(errors.Wrapf(err, "mutating node '%s/%s' failed",
-			node.GetNamespace(), node.GetNamespace()))
+		s.eventer.Eventf(node, k8scorev1.EventTypeWarning, constant.EventReasonAllocatePortFailed,
+			fmt.Sprintf("node '%s' allocate port failed: %s", node.GetName(), err.Error()))
+		return &v1.AdmissionResponse{Allowed: true}
 	}
 	patchesBytes, err := json.Marshal(patches)
 	if err != nil {
 		blog.Errorf("marshal node'%s/%s' patches failed: %s", node.GetNamespace(), node.GetName(), err.Error())
-		return errResponse(errors.Wrapf(err, "encoding patches for '%s/%s' failed",
-			node.GetNamespace(), node.GetNamespace()))
+		s.eventer.Eventf(node, k8scorev1.EventTypeWarning, constant.EventReasonAllocatePortFailed,
+			fmt.Sprintf("node '%s' patch port info failed: %s", node.GetName(), err.Error()))
+		return &v1.AdmissionResponse{Allowed: true}
 	}
 	return &v1.AdmissionResponse{
 		Allowed: true,

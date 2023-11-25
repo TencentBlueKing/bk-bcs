@@ -188,4 +188,7 @@ const (
 	KindPortBinding = "PortBinding"
 	// KindCRD of CRD
 	KindCRD = "CustomResourceDefinition"
+
+	// EventReasonAllocatePortFailed event reason when allocate port failed
+	EventReasonAllocatePortFailed = "AllocatePortFailed"
 )
