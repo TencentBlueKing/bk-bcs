@@ -17,12 +17,12 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 
 	"bscp.io/pkg/criteria/validator"
+	"bscp.io/pkg/tools"
 )
 
 // Kv defines a basic kv
@@ -196,7 +196,7 @@ func (k DataType) ValidateValue(value string) error {
 		}
 		return nil
 	case KvNumber:
-		if !isStringConvertibleToNumber(value) {
+		if !tools.IsNumber(value) {
 			return fmt.Errorf("value is not a number")
 		}
 		return nil
@@ -222,16 +222,4 @@ func (k DataType) ValidateValue(value string) error {
 	default:
 		return errors.New("invalid key-value type")
 	}
-}
-
-// isStringConvertibleToNumber checks if the given string can be converted to an integer or a floating-point number.
-func isStringConvertibleToNumber(s string) bool {
-	_, err := strconv.Atoi(s)
-	if err == nil {
-		return true
-	}
-
-	_, err = strconv.ParseFloat(s, 64)
-	return err == nil
-
 }
