@@ -3,13 +3,13 @@ import { IVariableEditParams } from './variable';
 
 export interface IServiceEditForm {
   name: string;
+  alias: string;
   config_type: string;
-  kv_type: string;
   reload_type: string,
   reload_file_path: string;
   mode: string;
-  deploy_type: string;
   memo: string;
+  data_type?: string;
 }
 
 // 版本下的脚本配置
