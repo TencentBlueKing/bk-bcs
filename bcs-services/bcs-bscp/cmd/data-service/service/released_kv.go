@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 
+	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
@@ -105,7 +106,7 @@ func (s *Service) ListReleasedKvs(ctx context.Context, req *pbds.ListReleasedKvR
 }
 
 func (s *Service) getReleasedKv(kt *kit.Kit, bizID, appID, version, releasedID uint32,
-	key string) (types.KvType, string, error) {
+	key string) (table.DataType, string, error) {
 
 	opt := &types.GetRKvOption{
 		BizID:      bizID,

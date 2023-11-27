@@ -47,6 +47,8 @@ type App interface {
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, app *table.App) error
 	// ListAppMetaForCache list app's basic meta info.
 	ListAppMetaForCache(kt *kit.Kit, bizID uint32, appID []uint32) (map[ /*appID*/ uint32]*types.AppCacheMeta, error)
+	// GetByAlias 通过Alisa 查询
+	GetByAlias(kit *kit.Kit, bizID uint32, alias string) (*table.App, error)
 }
 
 var _ App = new(appDao)
@@ -214,7 +216,7 @@ func (dao *appDao) Update(kit *kit.Kit, g *table.App) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.App.WithContext(kit.Ctx)
 		if _, err = q.Where(m.BizID.Eq(g.BizID), m.ID.Eq(g.ID)).
-			Select(m.Memo, m.Reviser).Updates(g); err != nil {
+			Select(m.Memo, m.Alias_, m.DataType, m.Reviser).Updates(g); err != nil {
 			return err
 		}
 
@@ -331,6 +333,19 @@ func (dao *appDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Ap
 	app, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 	if err != nil {
 		return nil, fmt.Errorf("get app failed, err: %v", err)
+	}
+
+	return app, nil
+}
+
+// GetByAlias 通过Alisa 查询
+func (dao *appDao) GetByAlias(kit *kit.Kit, bizID uint32, alias string) (*table.App, error) {
+	m := dao.genQ.App
+	q := dao.genQ.App.WithContext(kit.Ctx)
+
+	app, err := q.Where(m.BizID.Eq(bizID), m.Alias_.Eq(alias)).Take()
+	if err != nil {
+		return nil, err
 	}
 
 	return app, nil
