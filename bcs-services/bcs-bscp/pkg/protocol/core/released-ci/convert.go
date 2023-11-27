@@ -105,7 +105,7 @@ func PbReleasedConfigItem(rci *table.ReleasedConfigItem) *ReleasedConfigItem {
 		ConfigItemId: rci.ConfigItemID,
 		Spec:         pbci.PbConfigItemSpec(rci.ConfigItemSpec),
 		Attachment:   pbci.PbConfigItemAttachment(rci.Attachment),
-		Revision:     pbbase.PbCreatedRevision(rci.Revision),
+		Revision:     pbbase.PbRevision(rci.Revision),
 	}
 }
 

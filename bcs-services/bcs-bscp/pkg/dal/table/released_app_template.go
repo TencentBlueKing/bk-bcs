@@ -21,7 +21,7 @@ type ReleasedAppTemplate struct {
 	ID         uint32                         `json:"id" gorm:"primaryKey"`
 	Spec       *ReleasedAppTemplateSpec       `json:"spec" gorm:"embedded"`
 	Attachment *ReleasedAppTemplateAttachment `json:"attachment" gorm:"embedded"`
-	Revision   *CreatedRevision               `json:"revision" gorm:"embedded"`
+	Revision   *Revision                      `json:"revision" gorm:"embedded"`
 }
 
 // TableName is the ReleasedAppTemplate's database table name.
