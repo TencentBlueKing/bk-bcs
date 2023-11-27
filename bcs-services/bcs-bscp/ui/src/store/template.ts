@@ -22,6 +22,8 @@ export default defineStore('template', () => {
   const versionListPageShouldOpenEdit = ref(false);
   // 配置页面是否需要打开查看版本面板
   const versionListPageShouldOpenView = ref(false);
+  // 批量上传配置的ids
+  const batchUploadIds = ref<number[]>([]);
 
   return {
     templateSpaceList,
@@ -33,5 +35,6 @@ export default defineStore('template', () => {
     needRefreshMenuFlag,
     versionListPageShouldOpenEdit,
     versionListPageShouldOpenView,
+    batchUploadIds,
   };
 });

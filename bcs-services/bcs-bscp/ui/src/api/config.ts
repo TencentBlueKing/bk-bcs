@@ -336,6 +336,6 @@ export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill:
  * @param template_set_ids 模板套餐ID列表
  * @returns
  */
-export const batchAdddConfigList = (bizId: string, appId: number, list: any) => http.put(`/config/biz/${bizId}/apps/${appId}/config_items`, {
+export const batchAddConfigList = (bizId: string, appId: number, list: any) => http.put(`/config/biz/${bizId}/apps/${appId}/config_items`, {
   items: list,
-});
+}).then(res => res.data);
