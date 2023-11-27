@@ -166,6 +166,8 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	createClusterTask.BuildCheckClusterNodesStatusStep(task)
 	// step4: qcloud-public register cluster kubeConfig
 	createClusterTask.BuildRegisterClsKubeConfigStep(task)
+	// step5: qcloud-public import cluster nodes
+	createClusterTask.BuildImportClusterNodesStep(task)
 	// step5: install cluster watch component
 	common.BuildWatchComponentTaskStep(task, cls, "")
 	// step4: 若需要则设置节点注解
@@ -180,10 +182,10 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
 		ClusterId:  cls.ClusterID,
 		BusinessId: cls.BusinessID,
-		CloudArea:  cls.GetArea(),
-		User:       cls.GetNodeSettings().InitLoginUsername,
-		Passwd:     cls.GetNodeSettings().InitLoginPassword,
-		KeyInfo:    cls.GetNodeSettings().GetKeyPair(),
+		CloudArea:  cls.GetClusterBasicSettings().GetArea(),
+		User:       cls.GetNodeSettings().GetWorkerLogin().GetInitLoginUsername(),
+		Passwd:     cls.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword(),
+		KeyInfo:    cls.GetNodeSettings().GetWorkerLogin().GetKeyPair(),
 		Port: func() string {
 			exist := checkClusterOsNameInWhiteImages(cls, &opt.CommonOption)
 			if exist {
@@ -193,11 +195,10 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			return ""
 		}(),
 	})
+
 	// step7: transfer host module
-	moduleID := cls.GetModule().GetScaleOutModuleID()
-	if moduleID != "" {
-		common.BuildTransferHostModuleStep(task, cls.BusinessID, moduleID)
-	}
+	common.BuildTransferHostModuleStep(task, cls.BusinessID, cls.GetClusterBasicSettings().GetModule().
+		GetWorkerModuleID(), cls.GetClusterBasicSettings().GetModule().GetMasterModuleID())
 
 	// step8: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
@@ -524,6 +525,10 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		return nil, fmt.Errorf("BuildAddNodesToClusterTask TaskOptions is lost")
 	}
 
+	if opt.Login == nil || (opt.Login.GetInitLoginPassword() == "" && opt.Login.GetKeyPair().GetKeyID() == "") {
+		return nil, fmt.Errorf("BuildAddNodesToClusterTask login info empty")
+	}
+
 	// format node IPs
 	nodeIDs := make([]string, 0)
 	nodeIPs := make([]string, 0)
@@ -555,13 +560,6 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	taskName := fmt.Sprintf(tkeAddNodeTaskTemplate, cls.ClusterID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	// init instance passwd
-	passwd := utils.BuildInstancePwd()
-	if opt.InitPassword != "" {
-		passwd = opt.InitPassword
-	}
-	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
-
 	// setting all steps details
 	addNodesTask := &AddNodesToClusterTaskOption{
 		Cluster:      cls,
@@ -569,9 +567,9 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		NodeTemplate: opt.NodeTemplate,
 		NodeIPs:      nodeIPs,
 		NodeIDs:      nodeIDs,
-		PassWd:       passwd,
 		Operator:     opt.Operator,
 		NodeSchedule: opt.NodeSchedule,
+		Login:        opt.Login,
 	}
 	// step0: addNodesToTKECluster add node to cluster
 	addNodesTask.BuildAddNodesToClusterStep(task)
@@ -579,6 +577,11 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	addNodesTask.BuildCheckAddNodesStatusStep(task)
 	// step2: update DB node info by instanceIP
 	addNodesTask.BuildUpdateAddNodeDBInfoStep(task)
+
+	if cls.GetBusinessID() != "" && cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID() != "" {
+		common.BuildTransferHostModuleStep(task, cls.GetBusinessID(),
+			cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID(), "")
+	}
 
 	// step3: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
@@ -598,10 +601,9 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 			StepName: template.UserAfterInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
-				InstancePasswd: passwd,
-				NodeIPList:     strings.Join(nodeIPs, ","),
-				NodeOperator:   opt.Operator,
-				ShowSopsUrl:    true,
+				NodeIPList:   strings.Join(nodeIPs, ","),
+				NodeOperator: opt.Operator,
+				ShowSopsUrl:  true,
 			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
@@ -725,7 +727,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	// step3: update node DB info
 	removeNodesTask.BuildUpdateRemoveNodeDBInfoStep(task)
 	// step4: remove nodes from cmdb
-	common.BuildRemoveHostStep(task, cls.BusinessID, nodeIPs)
+	// common.BuildRemoveHostStep(task, cls.BusinessID, nodeIPs)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -1061,7 +1063,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	// step4: transfer host module
 	moduleID := cloudprovider.GetTransModuleInfo(opt.AsOption, opt.NodeGroup)
 	if moduleID != "" {
-		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID)
+		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID, "")
 	}
 
 	// step5: business define sops task 支持脚本和标准运维流程

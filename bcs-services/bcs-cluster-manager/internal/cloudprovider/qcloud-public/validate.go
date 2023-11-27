@@ -384,6 +384,11 @@ func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest, op
 		return fmt.Errorf("%s AddNodesToClusterValidate must be depent NodeGroup", cloudName)
 	}
 
+	if req.GetLogin() == nil || (req.GetLogin().GetInitLoginPassword() == "" &&
+		req.GetLogin().GetKeyPair().GetKeyID() == "") {
+		return fmt.Errorf("%s AddNodesToClusterValidate login info empty", cloudName)
+	}
+
 	return nil
 }
 

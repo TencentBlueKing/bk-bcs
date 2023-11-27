@@ -48,6 +48,7 @@ CleanClusterDBInfoTask: "清理集群数据"
 AddNodesShieldAlarmTask: "屏蔽机器告警"
 AddNodesToClusterTask: "添加节点"
 CheckAddNodesStatusTask: "检测节点状态"
+CheckClusterNodeStatusStep: "检测节点状态"
 UpdateAddNodeDBInfoTask: "更新节点数据"
 RemoveNodesFromClusterTask: "删除节点"
 UpdateRemoveNodeDBInfoTask: "清理节点数据"
@@ -69,6 +70,7 @@ DeleteAutoScalerTask: "删除CA组件"
 UpdateNodeGroupAutoScalingDBTask: "更新CA组件状态"
 GetExternalNodeScriptTask: "获取添加第三方节点脚本"
 RemoveExternalNodesFromClusterTask: "删除第三方节点"
+ReturnInstanceToResourcePoolTask: "回收节点"
 #
 installGseAgent: "安装 GSE Agent"
 #
@@ -91,6 +93,7 @@ watchjob: "安装集群watch组件"
 ensureAutoScaler: "安装/更新CA组件"
 installVcluster: "安装/更新vCluster组件"
 deleteVclu: "删除vCluster组件"
+bksopsjob: "系统初始化"
 #
 CreateCluster: "创建集群"
 CreateVirtualCluster: "创建虚拟集群"
@@ -128,6 +131,8 @@ Region: "集群地域信息"
 ClusterVPC: "集群vpc信息"
 BusinessID: "集群所属业务ID"
 NodeOperator: "集群上下架节点操作人"
+
+
 
 # kubelet参数
 cpu-manager-policy: "要使用的 CPU 管理器策略"

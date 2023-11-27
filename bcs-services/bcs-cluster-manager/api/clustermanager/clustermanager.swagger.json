@@ -1564,7 +1564,14 @@
           },
           {
             "name": "provider",
-            "description": "provider. 镜像提供方，可选值: PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像)",
+            "description": "provider. 镜像提供方，可选值:PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像), ALL所有镜像",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. 容器平台项目ID, 使用某个镜像的集群信息列表",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1652,6 +1659,90 @@
           {
             "name": "accountID",
             "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusterlevels/{level}/instancetypes": {
+      "get": {
+        "summary": "查询Node机型",
+        "description": "根据筛选条件查询Node机型列表",
+        "operationId": "ClusterManager_GetMasterSuggestedMachines",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetMasterSuggestedMachinesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "云地域信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "level",
+            "description": "集群等级(L100表示0-100个节点，L500表示0-500个节点，L1000表示500节点以上等)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. 私有网络ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "cpu",
+            "description": "cpu. CPU 核数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "memory",
+            "description": "memory. 内存大小，单位 GB",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "zones",
+            "description": "zones. 推荐机型处于该可用区，通过,隔开。若为空, 则对可用区无要求",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1770,6 +1861,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "injectCluster",
+            "description": "injectCluster. 是否注入子网所属集群信息",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -2050,6 +2149,67 @@
           {
             "name": "vpcID",
             "description": "vpcID. 过滤查询指定vpc的信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/vpcs/{vpcId}/cidrconflict": {
+      "get": {
+        "summary": "云vpc下cidr冲突检测",
+        "description": "云vpc下cidr冲突检测",
+        "operationId": "ClusterManager_CheckCidrConflictFromVpc",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCheckCidrConflictFromVpcResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "vpcId",
+            "description": "云vpc",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cidr",
+            "description": "cidr. 检测的cidr子网",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3268,6 +3428,47 @@
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clusters/{clusterID}/subnets": {
+      "post": {
+        "summary": "集群添加子网资源",
+        "description": "集群添加子网资源, 腾讯云VPC-CNI模式下添加子网",
+        "operationId": "ClusterManager_AddSubnetToCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerAddSubnetToClusterResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerAddSubnetToClusterReq"
+            }
           }
         ],
         "tags": [
@@ -5880,6 +6081,11 @@
           "format": "boolean",
           "description": "上架第三方节点需置为true, 且必须关联nodeGroupID",
           "title": "是否是第三方节点(IDC节点)"
+        },
+        "login": {
+          "$ref": "#/definitions/clustermanagerNodeLoginInfo",
+          "description": "上架节点重装系统时设置节点密码，不同云可兼容处理",
+          "title": "login"
         }
       },
       "description": "给指定的集群进行扩容，！注意！扩容的机器如果是腾讯云cvm默认会重装系统，不能使用竞价计费类型的机器",
@@ -5925,6 +6131,65 @@
       "required": [
         "code",
         "data"
+      ]
+    },
+    "clustermanagerAddSubnetToClusterReq": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "subnet": {
+          "$ref": "#/definitions/clustermanagerSubnetSource",
+          "description": "添加子网的资源",
+          "title": "subnet"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人",
+          "title": "operator"
+        }
+      },
+      "description": "集群添加子网请求",
+      "title": "AddSubnetToClusterReq",
+      "required": [
+        "clusterID",
+        "subnet"
+      ]
+    },
+    "clustermanagerAddSubnetToClusterResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属的集群权限",
+          "title": "web_annotations"
+        }
+      },
+      "description": "集群添加子网的返回",
+      "title": "AddSubnetToClusterResp",
+      "required": [
+        "code",
+        "message"
       ]
     },
     "clustermanagerAssistantCidr": {
@@ -6153,6 +6418,39 @@
           "type": "string"
         }
       }
+    },
+    "clustermanagerCheckCidrConflictFromVpcResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerConflictInfo",
+          "description": "冲突结果",
+          "title": "data"
+        }
+      },
+      "description": "云vpc冲突检测返回结果",
+      "title": "CheckCidrConflictFromVpcResponse",
+      "required": [
+        "code",
+        "message"
+      ]
     },
     "clustermanagerCheckNodesRequest": {
       "type": "object",
@@ -6680,7 +6978,7 @@
         },
         "moduleID": {
           "type": "string",
-          "description": "组件名称(KubeAPIServer，KubeController，Etcd，KubeScheduler，kubelet等)",
+          "description": "组件名称(KubeAPIServer，KubeController，Etcd，KubeScheduler，kubelet、runtime等)",
           "title": "moduleID"
         },
         "flagName": {
@@ -6746,6 +7044,11 @@
           "$ref": "#/definitions/clustermanagerNumberRange",
           "description": "若参数为数值类型，表示参数范围值",
           "title": "range"
+        },
+        "networkType": {
+          "type": "string",
+          "description": "当moduleID=runtime时, 该字段生效。集群IP类型，networkType: ipv4/ipv6/dual 表示版本支持的网络类型。通过字符[,]隔开若为空表示仅支持ipv4",
+          "title": "networkType"
         }
       },
       "description": "用于管理不同cloud的组件参数",
@@ -7238,21 +7541,6 @@
           "type": "string",
           "description": "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证",
           "title": "cloudAccountID"
-        },
-        "area": {
-          "$ref": "#/definitions/clustermanagerCloudArea",
-          "description": "集群维度的云区域信息(用户不指定, 则使用默认云区域)",
-          "title": "area"
-        },
-        "module": {
-          "$ref": "#/definitions/clustermanagerModuleInfo",
-          "description": "集群维度节点上下架时当前集群业务下转移模块信息",
-          "title": "module"
-        },
-        "clusterConnectSetting": {
-          "$ref": "#/definitions/clustermanagerClusterConnectSetting",
-          "description": "集群开启内外网设，公有云必须设置此参数",
-          "title": "clusterConnectSetting"
         }
       },
       "description": "记录集群信息，用于维护集群状态",
@@ -7305,6 +7593,11 @@
           "format": "boolean",
           "description": "自建集群是否开启高可用",
           "title": "enableHa"
+        },
+        "clusterConnectSetting": {
+          "$ref": "#/definitions/clustermanagerClusterConnectSetting",
+          "description": "集群开启内外网设，公有云必须设置此参数",
+          "title": "clusterConnectSetting"
         }
       }
     },
@@ -7569,6 +7862,16 @@
           "format": "boolean",
           "description": "是否开启自动变配集群等级，针对托管集群生效",
           "title": "isAutoUpgradeClusterLevel"
+        },
+        "area": {
+          "$ref": "#/definitions/clustermanagerCloudArea",
+          "description": "集群维度的云区域信息(用户不指定, 则使用默认云区域)",
+          "title": "area"
+        },
+        "module": {
+          "$ref": "#/definitions/clustermanagerClusterModule",
+          "description": "集群转移模块信息",
+          "title": "module"
         }
       }
     },
@@ -7647,6 +7950,17 @@
       "description": "bcs-kube-agent上报的集群信息",
       "title": "ClusterCredential"
     },
+    "clustermanagerClusterInfo": {
+      "type": "object",
+      "properties": {
+        "clusterName": {
+          "type": "string"
+        },
+        "clusterID": {
+          "type": "string"
+        }
+      }
+    },
     "clustermanagerClusterMgr": {
       "type": "object",
       "properties": {
@@ -7686,6 +8000,31 @@
       },
       "description": "用于记录集群层面固定、模板信息，帮助集群创建与维护.目前仅支持action(创建集群/删除集群/集群添加节点/集群删除节点)",
       "title": "ClusterMgr"
+    },
+    "clustermanagerClusterModule": {
+      "type": "object",
+      "properties": {
+        "masterModuleID": {
+          "type": "string",
+          "description": "CC模块ID,master节点转移模块",
+          "title": "masterModuleID"
+        },
+        "masterModuleName": {
+          "type": "string",
+          "description": "CC模块名称,master节点转移模块",
+          "title": "masterModuleName"
+        },
+        "workerModuleID": {
+          "type": "string",
+          "description": "CC模块ID,worker节点转移模块",
+          "title": "workerModuleID"
+        },
+        "workerModuleName": {
+          "type": "string",
+          "description": "CC模块名称,worker节点转移模块",
+          "title": "workerModuleName"
+        }
+      }
     },
     "clustermanagerClusterNode": {
       "type": "object",
@@ -7911,6 +8250,17 @@
       },
       "description": "通用返回",
       "title": "CommonResp"
+    },
+    "clustermanagerConflictInfo": {
+      "type": "object",
+      "properties": {
+        "cidrs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     },
     "clustermanagerConstantValue": {
       "type": "object",
@@ -8768,21 +9118,6 @@
           "type": "string",
           "description": "创建集群上架节点时的节点模板",
           "title": "nodeTemplateID"
-        },
-        "area": {
-          "$ref": "#/definitions/clustermanagerCloudArea",
-          "description": "集群维度的云区域信息(用户不指定, 则使用默认云区域)",
-          "title": "area"
-        },
-        "module": {
-          "$ref": "#/definitions/clustermanagerModuleInfo",
-          "description": "集群维度节点上下架时当前集群业务下转移模块信息",
-          "title": "module"
-        },
-        "clusterConnectSetting": {
-          "$ref": "#/definitions/clustermanagerClusterConnectSetting",
-          "description": "集群开启内外网设，公有云必须设置此参数",
-          "title": "clusterConnectSetting"
         }
       },
       "description": "创建集群请求，如果集群已经存在，直接报错。更新集群信息请使用Update接口",
@@ -10791,6 +11126,42 @@
         "message"
       ]
     },
+    "clustermanagerGetMasterSuggestedMachinesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerInstanceTemplateConfig"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "推荐机型列表返回",
+      "title": "GetMasterSuggestedMachinesResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerGetNodeGroupResponse": {
       "type": "object",
       "properties": {
@@ -11622,6 +11993,22 @@
     "clustermanagerInitFederationClusterResp": {
       "type": "object"
     },
+    "clustermanagerInstanceChargePrepaid": {
+      "type": "object",
+      "properties": {
+        "period": {
+          "type": "integer",
+          "format": "int64",
+          "description": "购买实例的时长，单位：月。取值范围：1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24, 36, 48, 60。",
+          "title": "period"
+        },
+        "renewFlag": {
+          "type": "string",
+          "description": "自动续费标识。取值范围：NOTIFY_AND_AUTO_RENEW：通知过期且自动续费; NOTIFY_AND_MANUAL_RENEW：通知过期不自动续费;DISABLE_NOTIFY_AND_MANUAL_RENEW：不通知过期不自动续费. 默认取值：NOTIFY_AND_MANUAL_RENEW。若该参数指定为NOTIFY_AND_AUTO_RENEW，在账户余额充足的情况下，实例到期后将按月自动续费。",
+          "title": "renewFlag"
+        }
+      }
+    },
     "clustermanagerInstanceTemplateConfig": {
       "type": "object",
       "properties": {
@@ -11749,6 +12136,16 @@
           "type": "string",
           "description": "节点角色, 取值:MASTER_ETCD, WORKER。MASTER_ETCD只有在创建 INDEPENDENT_CLUSTER 独立集群时需要指定",
           "title": "nodeRole"
+        },
+        "charge": {
+          "$ref": "#/definitions/clustermanagerInstanceChargePrepaid",
+          "description": "实例的计费模式。当instanceChargeType为包年包月时，设置续费策略",
+          "title": "charge"
+        },
+        "internetAccess": {
+          "$ref": "#/definitions/clustermanagerInternetAccessible",
+          "description": "公网信息设置，用户可选设置",
+          "title": "internetAccess"
         }
       },
       "title": "InstanceTemplateConfig instance config info"
@@ -14061,6 +14458,26 @@
         }
       }
     },
+    "clustermanagerNodeLoginInfo": {
+      "type": "object",
+      "properties": {
+        "initLoginUsername": {
+          "type": "string",
+          "description": "新实例初始设置username",
+          "title": "initLoginUsername"
+        },
+        "initLoginPassword": {
+          "type": "string",
+          "description": "新实例初始设置password,如果不设置系统自动生成",
+          "title": "initLoginPassword"
+        },
+        "keyPair": {
+          "$ref": "#/definitions/clustermanagerKeyInfo",
+          "description": "节点私钥信息, 与密码2选一，2者均设置优先密钥",
+          "title": "keyPair"
+        }
+      }
+    },
     "clustermanagerNodeOperationStatus": {
       "type": "object",
       "properties": {
@@ -14141,21 +14558,6 @@
             "type": "string"
           }
         },
-        "initLoginUsername": {
-          "type": "string",
-          "description": "新实例初始设置username",
-          "title": "initLoginUsername"
-        },
-        "initLoginPassword": {
-          "type": "string",
-          "description": "新实例初始设置password,如果不设置系统自动生成",
-          "title": "initLoginPassword"
-        },
-        "keyPair": {
-          "$ref": "#/definitions/clustermanagerKeyInfo",
-          "description": "节点私钥信息, 与密码2选一，2者均设置优先密钥",
-          "title": "keyPair"
-        },
         "taints": {
           "type": "array",
           "items": {
@@ -14163,6 +14565,32 @@
           },
           "description": "新实例初始化taints信息",
           "title": "taints"
+        },
+        "masterLogin": {
+          "$ref": "#/definitions/clustermanagerNodeLoginInfo",
+          "description": "master节点登陆信息",
+          "title": "masterLogin"
+        },
+        "workerLogin": {
+          "$ref": "#/definitions/clustermanagerNodeLoginInfo",
+          "description": "worker节点登陆信息",
+          "title": "workerLogin"
+        },
+        "masterSecurityGroups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "master节点安全组设置",
+          "title": "masterSecurityGroups"
+        },
+        "workerSecurityGroups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "worker节点安全组设置",
+          "title": "workerSecurityGroups"
         }
       },
       "title": "集群节点通用配置"
@@ -14526,6 +14954,14 @@
           "type": "string",
           "description": "镜像提供方，可选值: PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像)",
           "title": "provider"
+        },
+        "clusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterInfo"
+          },
+          "description": "镜像关联的集群信息",
+          "title": "clusters"
         }
       },
       "description": "操作系统镜像",
@@ -14999,6 +15435,11 @@
           "type": "string",
           "description": "子网所在可用区",
           "title": "zoneName"
+        },
+        "cluster": {
+          "$ref": "#/definitions/clustermanagerClusterInfo",
+          "description": "子网是否被集群使用",
+          "title": "cluster"
         }
       },
       "description": "子网信息",
@@ -17521,6 +17962,9 @@
         },
         "range": {
           "$ref": "#/definitions/clustermanagerNumberRange"
+        },
+        "networkType": {
+          "type": "string"
         }
       }
     },

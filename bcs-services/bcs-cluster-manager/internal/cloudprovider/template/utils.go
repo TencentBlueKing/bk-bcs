@@ -282,7 +282,7 @@ func getSelfBuilderClusterEnvs(cls *proto.Cluster) (string, error) {
 	case iutils.IPV4:
 		podCidr := getEnv(podCidrIpv4.String(), cls.GetNetworkSettings().GetClusterIPv4CIDR())
 		serviceCidr := getEnv(serviceCidrIpv4.String(), cls.GetNetworkSettings().GetServiceIPv4CIDR())
-		size, _ := iutils.GetMaskLenByNum(ipType, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
+		size, _ := iutils.GetMaskLenByNum(iutils.IPV4, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
 		ipv4Mask := getEnv(mask.String(), fmt.Sprintf("%v", size))
 		stack := getEnv(ipv6Status.String(), disable)
 
@@ -290,7 +290,7 @@ func getSelfBuilderClusterEnvs(cls *proto.Cluster) (string, error) {
 	case iutils.IPV6:
 		podCidr := getEnv(podCidripv6.String(), cls.GetNetworkSettings().GetClusterIPv6CIDR())
 		serviceCidr := getEnv(serviceCidrIpv6.String(), cls.GetNetworkSettings().GetServiceIPv6CIDR())
-		size, _ := iutils.GetMaskLenByNum(ipType, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
+		size, _ := iutils.GetMaskLenByNum(iutils.IPV6, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
 		ipv6Mask := getEnv(maskIpv6.String(), fmt.Sprintf("%v", size))
 		stack := getEnv(ipv6Status.String(), singleStack)
 
@@ -298,12 +298,12 @@ func getSelfBuilderClusterEnvs(cls *proto.Cluster) (string, error) {
 	case iutils.DualStack:
 		ipv4PodCidr := getEnv(podCidrIpv4.String(), cls.GetNetworkSettings().GetClusterIPv4CIDR())
 		ipv4ServiceCidr := getEnv(serviceCidrIpv4.String(), cls.GetNetworkSettings().GetServiceIPv4CIDR())
-		size, _ := iutils.GetMaskLenByNum(ipType, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
+		size, _ := iutils.GetMaskLenByNum(iutils.IPV4, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
 		ipv4Mask := getEnv(mask.String(), fmt.Sprintf("%v", size))
 
 		ipv6PodCidr := getEnv(podCidripv6.String(), cls.GetNetworkSettings().GetClusterIPv6CIDR())
 		ipv6ServiceCidr := getEnv(serviceCidrIpv6.String(), cls.GetNetworkSettings().GetServiceIPv6CIDR())
-		size, _ = iutils.GetMaskLenByNum(ipType, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
+		size, _ = iutils.GetMaskLenByNum(iutils.IPV6, float64(cls.GetNetworkSettings().GetMaxNodePodNum()))
 		ipv6Mask := getEnv(maskIpv6.String(), fmt.Sprintf("%v", size))
 
 		stack := getEnv(ipv6Status.String(), dualStack)

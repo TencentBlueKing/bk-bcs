@@ -32,6 +32,7 @@ import (
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // ImportClusterNodesTask call tkeInterface or kubeConfig import cluster nodes
@@ -222,12 +223,12 @@ func getClusterInstancesByKubeConfig(data *cloudprovider.CloudDependBasicInfo) (
 	masterIPs, nodeIPs := make([]types.NodeAddress, 0), make([]types.NodeAddress, 0)
 	for i := range nodeList.Items {
 		ip := getNodeIP(nodeList.Items[i])
-		_, ok := nodeList.Items[i].Labels[icommon.MasterRole]
+		ok := utils.IsMasterNode(nodeList.Items[i].Labels)
 		if ok {
 			masterIPs = append(masterIPs, ip)
-		} else {
-			nodeIPs = append(nodeIPs, ip)
+			continue
 		}
+		nodeIPs = append(nodeIPs, ip)
 	}
 	blog.Infof("get cluster[%s] masterIPs[%v] nodeIPs[%v]", data.Cluster.ClusterID, masterIPs, nodeIPs)
 	return masterIPs, nodeIPs, nil

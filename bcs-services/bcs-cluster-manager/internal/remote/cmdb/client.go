@@ -553,6 +553,7 @@ func (c *Client) GetBizInternalModule(ctx context.Context, bizID int) (*BizInter
 	}
 
 	language := i18n.LanguageFromCtx(ctx)
+	blog.Infof("cmdb client GetBizInternalModule language %s", language)
 
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/get_biz_internal_module/", c.server)

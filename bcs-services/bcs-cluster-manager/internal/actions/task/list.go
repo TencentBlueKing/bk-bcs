@@ -79,7 +79,7 @@ func (la *ListAction) listTask() error {
 		return err
 	}
 	for i := range tasks {
-		utils.HiddenTaskPassword(&tasks[i])
+		utils.HandleTaskStepData(la.ctx, &tasks[i])
 		// actions.FormatTaskTime(&tasks[i])
 
 		if len(la.req.NodeIP) > 0 {

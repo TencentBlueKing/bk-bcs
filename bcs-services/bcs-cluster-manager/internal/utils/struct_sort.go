@@ -87,3 +87,39 @@ func (n ClusterSlice) Less(i, j int) bool {
 func (n ClusterSlice) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }
+
+// InstanceTypeSlice instanceTypes slice
+type InstanceTypeSlice []*cmproto.InstanceType
+
+// Len xxx
+func (n InstanceTypeSlice) Len() int {
+	return len(n)
+}
+
+// Less xxx
+func (n InstanceTypeSlice) Less(i, j int) bool {
+	return n[i].UnitPrice < n[j].UnitPrice
+}
+
+// Swap xxx
+func (n InstanceTypeSlice) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
+}
+
+// SubnetSlice subnet slice
+type SubnetSlice []*cmproto.Subnet
+
+// Len xxx
+func (n SubnetSlice) Len() int {
+	return len(n)
+}
+
+// Less xxx
+func (n SubnetSlice) Less(i, j int) bool {
+	return n[i].AvailableIPAddressCount > n[j].AvailableIPAddressCount
+}
+
+// Swap xxx
+func (n SubnetSlice) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
+}

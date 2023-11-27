@@ -221,6 +221,7 @@ type DeviceInfo struct {
 	DeviceID     string
 	Provider     string
 	Labels       map[string]string
+	Annotations  map[string]string
 	Status       string
 	DevicePoolID string
 	Instance     string

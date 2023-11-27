@@ -817,7 +817,7 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 		return err
 	}
 
-	utils.HiddenTaskPassword(task)
+	utils.HandleTaskStepData(ua.ctx, task)
 
 	ua.task = task
 	ua.resp.Data = task

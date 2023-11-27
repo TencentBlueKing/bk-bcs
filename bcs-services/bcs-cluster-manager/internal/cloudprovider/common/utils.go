@@ -622,6 +622,9 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error {
 		h, ok := hostsMap[node.NodeIP]
 		if ok {
 			labels[utils.SubZoneIDLabelKey] = h.SubZoneID
+			labels[utils.AssetIDLabelKey] = h.BkAssetID
+			labels[utils.HostIDLabelKey] = fmt.Sprintf("%v", h.BKHostID)
+			labels[utils.AgentIDLabelKey] = h.BkAgentID
 			topo, ok1 := hostsTopo[int(h.BKHostID)]
 			if ok1 {
 				labels[utils.BusinessIDLabelKey] = fmt.Sprintf("%d", topo.BkBizID)

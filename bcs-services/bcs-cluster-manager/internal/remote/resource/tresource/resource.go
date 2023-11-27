@@ -696,6 +696,7 @@ func (rm *ResManClient) GetDeviceInfoByDeviceID(ctx context.Context, deviceID st
 		DeviceID:     deviceID,
 		Provider:     resp.Data.GetProvider(),
 		Labels:       resp.Data.GetLabels(),
+		Annotations:  resp.Data.GetAnnotations(),
 		Status:       resp.Data.GetStatus(),
 		DevicePoolID: resp.Data.GetDevicePoolID(),
 		Instance:     resp.Data.Info.GetInstance(),

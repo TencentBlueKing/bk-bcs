@@ -312,7 +312,7 @@ func (nm *NodeManager) getCloudInstanceType(info cloudprovider.InstanceInfo, opt
 
 	client, err := api.GetCVMClient(opt)
 	if err != nil {
-		blog.Errorf("create CVM client when transInstanceIDsToNodes failed, %s", err.Error())
+		blog.Errorf("create CVM client when getCloudInstanceType failed, %s", err.Error())
 		return nil, err
 	}
 
@@ -364,15 +364,11 @@ func (nm *NodeManager) getCloudInstanceType(info cloudprovider.InstanceInfo, opt
 	// filter result instanceTypes
 	result := make([]*proto.InstanceType, 0)
 	for _, item := range list {
-		if info.Cpu > 0 {
-			if item.Cpu != info.Cpu {
-				continue
-			}
+		if info.Cpu > 0 && item.Cpu != info.Cpu {
+			continue
 		}
-		if info.Memory > 0 {
-			if item.Memory != info.Memory {
-				continue
-			}
+		if info.Memory > 0 && item.Memory != info.Memory {
+			continue
 		}
 		result = append(result, item)
 	}

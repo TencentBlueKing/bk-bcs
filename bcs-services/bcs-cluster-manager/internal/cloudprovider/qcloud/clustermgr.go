@@ -639,7 +639,7 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 // ListProjects list cloud projects
 func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudProject, error) {
 	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
-		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		len(opt.Account.SecretKey) == 0 {
 		return nil, fmt.Errorf("qcloud ListProjects lost authoration")
 	}
 
@@ -662,6 +662,18 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 	}
 
 	return projects, nil
+}
+
+// AddSubnetsToCluster add subnets to cluster
+func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource,
+	opt *cloudprovider.AddSubnetsToClusterOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
+// GetMasterSuggestedMachines get master suggested machines
+func (c *Cluster) GetMasterSuggestedMachines(level, vpcId string,
+	opt *cloudprovider.GetMasterSuggestedMachinesOption) ([]*proto.InstanceTemplateConfig, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // CheckClusterEndpointStatus check cluster endpoint status

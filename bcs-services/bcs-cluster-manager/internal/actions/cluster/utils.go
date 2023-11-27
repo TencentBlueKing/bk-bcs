@@ -508,7 +508,8 @@ func transNodeStatus(cmNodeStatus string, k8sNode *corev1.Node) string {
 func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
 	nodes := make([]*corev1.Node, 0)
 	for _, v := range k8sNodes {
-		if _, ok := v.Labels[common.MasterRole]; ok == master {
+		ok := utils.IsMasterNode(v.Labels)
+		if ok == master {
 			nodes = append(nodes, v)
 		}
 	}
@@ -683,7 +684,19 @@ func asyncDeleteImportedClusterInfo(ctx context.Context, store store.ClusterMana
 }
 
 // IsSupportAutoScale support autoscale feat
-func IsSupportAutoScale(cls proto.Cluster) bool {
+func IsSupportAutoScale(store store.ClusterManagerModel, cls proto.Cluster) bool {
+	cloudId := cls.GetProvider()
+	if cloudId == "" {
+		return false
+	}
+	cloud, err := store.GetCloud(context.Background(), cloudId)
+	if err != nil || cloud == nil {
+		return false
+	}
+	if cloud.GetConfInfo().GetDisableNodeGroup() {
+		return false
+	}
+
 	if cls.ClusterType == common.ClusterTypeVirtual {
 		return false
 	}

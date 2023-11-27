@@ -58,6 +58,7 @@ const (
 	fieldHostName    = "bk_host_name" // 主机名称
 	fieldOsType      = "bk_os_type"   // 操作系统类型
 	fieldOsName      = "bk_os_name"   // 操作系统名称
+	fieldAssetId     = "bk_asset_id"  // 固资号ID
 
 	fieldDeviceType  = "bk_svr_device_cls_name"
 	fieldIDCCityName = "idc_city_name"
@@ -88,9 +89,10 @@ const (
 )
 
 var (
-	fieldHostDetailInfo = []string{fieldCloudID, fieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6, fieldHostID,
-		fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass, fieldHostCPU, fieldCpuModule, fieldHostMem,
-		fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack, fieldIDCName, fieldSubZoneID, fieldIspName, fieldAgentId}
+	fieldHostDetailInfo = []string{fieldCloudID, fieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6,
+		fieldHostID, fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass, fieldHostCPU, fieldCpuModule,
+		fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack, fieldIDCName, fieldSubZoneID,
+		fieldIspName, fieldAgentId, fieldAssetId}
 
 	fieldHostIPSelectorInfo = []string{fieldHostIP, fieldHostIPv6, fieldCloudID, fieldHostName, fieldOsType,
 		fieldOsName, fieldHostID, fieldOperator, fieldBakOperator, fieldAgentId}
@@ -198,6 +200,7 @@ type HostData struct {
 	Operator        string `json:"operator"`
 	BKBakOperator   string `json:"bk_bak_operator"`
 	BkAgentID       string `json:"bk_agent_id"`
+	BkAssetID       string `json:"bk_asset_id"`
 }
 
 // HostTopoRelationReq request

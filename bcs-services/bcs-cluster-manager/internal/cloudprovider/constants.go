@@ -202,6 +202,8 @@ var (
 	BKCloudIDKey ParamKey = "bkCloudID"
 	// BKModuleIDKey bk module id key
 	BKModuleIDKey ParamKey = "bkModuleID"
+	// BKMasterModuleIDKey bk master module id key
+	BKMasterModuleIDKey ParamKey = "bkMasterModuleID"
 
 	// DeleteModeKey xxx
 	DeleteModeKey ParamKey = "deleteMode"
@@ -215,6 +217,10 @@ var (
 	OriginNodeIPsKey ParamKey = "originNodeIPs"
 	// NodeIDsKey xxx
 	NodeIDsKey ParamKey = "nodeIDs"
+	// NodeLoginKey xxx
+	NodeLoginKey ParamKey = "nodeLogin"
+	// FailedTransVpcNodeIDsKey xxx
+	FailedTransVpcNodeIDsKey ParamKey = "failedNodeIDs"
 	// NodeNamesKey xxx
 	NodeNamesKey ParamKey = "nodeNames"
 	// DeviceIDsKey xxx
@@ -225,6 +231,8 @@ var (
 	MasterNodeIPsKey ParamKey = "masterIPs"
 	// WorkerNodeIPsKey nodes
 	WorkerNodeIPsKey ParamKey = "workerIPs"
+	// VpcKey vpcId
+	VpcKey ParamKey = "vpc"
 
 	// NamespaceKey xxx
 	NamespaceKey ParamKey = "namespace"
@@ -290,6 +298,9 @@ var (
 	BkSopsTaskUrlKey ParamKey = "taskUrl"
 	// ShowSopsUrlKey show bkSops url
 	ShowSopsUrlKey ParamKey = "showUrl"
+
+	// ConnectClusterKey connect cluster result
+	ConnectClusterKey ParamKey = "connectCluster"
 
 	// cluster kubeConfig parameters
 

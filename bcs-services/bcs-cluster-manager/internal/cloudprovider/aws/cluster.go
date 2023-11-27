@@ -14,6 +14,8 @@
 package aws
 
 import (
+	"context"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
@@ -110,4 +112,16 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
 	return false, cloudprovider.ErrCloudNotImplemented
+}
+
+// AddSubnetsToCluster add subnets to cluster
+func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource,
+	opt *cloudprovider.AddSubnetsToClusterOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
+// GetMasterSuggestedMachines get master suggested machines
+func (c *Cluster) GetMasterSuggestedMachines(level, vpcId string,
+	opt *cloudprovider.GetMasterSuggestedMachinesOption) ([]*proto.InstanceTemplateConfig, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }

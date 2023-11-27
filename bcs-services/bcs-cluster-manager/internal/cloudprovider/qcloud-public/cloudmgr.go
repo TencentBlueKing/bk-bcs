@@ -88,6 +88,10 @@ func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster,
 	}
 
 	// cluster connect setting
+	err = clusterCloudConnectSetting(cls)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -310,9 +314,6 @@ func clusterCloudDefaultAdvancedSetting(cls *cmproto.Cluster, cloud *cmproto.Clo
 
 	cls.ClusterAdvanceSettings.ContainerRuntime = runtimeInfo.ContainerRuntime
 	cls.ClusterAdvanceSettings.RuntimeVersion = runtimeInfo.RuntimeVersion
-	if cls.ClusterAdvanceSettings.ExtraArgs == nil {
-		cls.ClusterAdvanceSettings.ExtraArgs = common.DefaultClusterConfig
-	}
 
 	if !utils.StringInSlice(cls.ClusterAdvanceSettings.NetworkType,
 		[]string{common.GlobalRouter, common.VpcCni, common.CiliumOverlay}) {
@@ -344,6 +345,19 @@ func clusterCloudDefaultNodeSetting(cls *cmproto.Cluster, defaultNodeConfig bool
 		}
 		if cls.ClusterAdvanceSettings.ExtraArgs == nil && defaultNodeConfig {
 			cls.NodeSettings.ExtraArgs = common.DefaultNodeConfig
+		}
+
+		if cls.NodeSettings.GetMasterLogin() == nil && cls.NodeSettings.GetWorkerLogin() == nil {
+			return fmt.Errorf("master&node login info empty")
+		}
+
+		if cls.NodeSettings.GetMasterLogin() != nil && cls.NodeSettings.GetMasterLogin().GetKeyPair() != nil {
+			cls.NodeSettings.GetMasterLogin().GetKeyPair().KeySecret = utils.Base64Encode(
+				cls.NodeSettings.GetMasterLogin().GetKeyPair().GetKeySecret())
+		}
+		if cls.NodeSettings.GetWorkerLogin() != nil && cls.NodeSettings.GetWorkerLogin().GetKeyPair() != nil {
+			cls.NodeSettings.GetWorkerLogin().GetKeyPair().KeySecret = utils.Base64Encode(
+				cls.NodeSettings.GetWorkerLogin().GetKeyPair().GetKeySecret())
 		}
 	}
 
@@ -397,26 +411,27 @@ func clusterCloudNetworkSetting(cls *cmproto.Cluster) error {
 }
 
 func clusterCloudConnectSetting(cls *cmproto.Cluster) error {
-	if cls.GetClusterConnectSetting() == nil {
+	if cls.GetClusterAdvanceSettings().GetClusterConnectSetting() == nil {
 		return fmt.Errorf("initCloudCluster connect setting empty")
 	}
 
-	if cls.GetClusterConnectSetting().IsExtranet {
-		if len(cls.GetClusterConnectSetting().GetSecurityGroup()) == 0 {
+	if cls.GetClusterAdvanceSettings().GetClusterConnectSetting().IsExtranet {
+		if len(cls.GetClusterAdvanceSettings().GetClusterConnectSetting().GetSecurityGroup()) == 0 {
 			return fmt.Errorf("%s clusterCloudConnectSetting securityGroup empty", cloudName)
 		}
 
-		if cls.GetClusterConnectSetting().GetInternet() == nil {
-			cls.ClusterConnectSetting.Internet = &cmproto.InternetAccessible{
+		if cls.GetClusterAdvanceSettings().GetClusterConnectSetting().GetInternet() == nil {
+			cls.GetClusterAdvanceSettings().ClusterConnectSetting.Internet = &cmproto.InternetAccessible{
 				InternetChargeType:   api.InternetChargeTypeTrafficPostpaidByHour,
 				InternetMaxBandwidth: strconv.Itoa(200),
 			}
 		} else {
-			if cls.ClusterConnectSetting.Internet.InternetChargeType == "" {
-				cls.ClusterConnectSetting.Internet.InternetChargeType = api.InternetChargeTypeTrafficPostpaidByHour
+			if cls.GetClusterAdvanceSettings().ClusterConnectSetting.Internet.InternetChargeType == "" {
+				cls.GetClusterAdvanceSettings().ClusterConnectSetting.Internet.InternetChargeType =
+					api.InternetChargeTypeTrafficPostpaidByHour
 			}
-			if cls.ClusterConnectSetting.Internet.InternetMaxBandwidth == "" {
-				cls.ClusterConnectSetting.Internet.InternetMaxBandwidth = strconv.Itoa(200)
+			if cls.GetClusterAdvanceSettings().ClusterConnectSetting.Internet.InternetMaxBandwidth == "" {
+				cls.GetClusterAdvanceSettings().ClusterConnectSetting.Internet.InternetMaxBandwidth = strconv.Itoa(200)
 			}
 		}
 

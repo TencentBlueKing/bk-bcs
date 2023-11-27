@@ -19,6 +19,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -77,7 +78,7 @@ func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]
 }
 
 // ListSubnets list vpc subnets
-func (c *VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
+func (c *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
 	blog.Infof("ListSubnets input: vpcID/%s", vpcID)
 	vpcCli, err := api.NewVPCClient(opt)
 	if err != nil {
@@ -87,6 +88,10 @@ func (c *VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) 
 
 	filter := make([]*api.Filter, 0)
 	filter = append(filter, &api.Filter{Name: "vpc-id", Values: []string{vpcID}})
+	if len(zone) > 0 {
+		filter = append(filter, &api.Filter{Name: "zone", Values: []string{zone}})
+	}
+
 	subnets, err := vpcCli.DescribeSubnets(nil, filter)
 	if err != nil {
 		return nil, err
@@ -180,4 +185,10 @@ func (c *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*pro
 	}
 
 	return result, nil
+}
+
+// CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
+func (c *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
+	opt *cloudprovider.CommonOption) ([]string, error) {
+	return business.CheckConflictFromVpc(opt, vpcID, cidr)
 }

@@ -154,6 +154,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.AddSubnetToCluster",
+			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/subnets"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.CreateVirtualCluster",
 			Path:    []string{"/clustermanager/v1/vcluster"},
 			Method:  []string{"POST"},
@@ -667,6 +674,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.CheckCidrConflictFromVpc",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/vpcs/{vpcId}/cidrconflict"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ListCloudSubnets",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/subnets"},
 			Method:  []string{"GET"},
@@ -687,6 +700,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		&api.Endpoint{
 			Name:    "ClusterManager.ListCloudInstanceTypes",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/instancetypes"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetMasterSuggestedMachines",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusterlevels/{level}/instancetypes"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -881,6 +900,7 @@ type ClusterManagerService interface {
 	ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, opts ...client.CallOption) (*ListProjectClusterResp, error)
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
+	AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, opts ...client.CallOption) (*AddSubnetToClusterResp, error)
 	CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, opts ...client.CallOption) (*CreateVirtualClusterResp, error)
 	DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, opts ...client.CallOption) (*DeleteVirtualClusterResp, error)
 	UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, opts ...client.CallOption) (*UpdateVirtualClusterQuotaResp, error)
@@ -969,10 +989,12 @@ type ClusterManagerService interface {
 	GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error)
 	ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, opts ...client.CallOption) (*ListCloudRegionClusterResponse, error)
 	ListCloudVpcs(ctx context.Context, in *ListCloudVpcsRequest, opts ...client.CallOption) (*ListCloudVpcsResponse, error)
+	CheckCidrConflictFromVpc(ctx context.Context, in *CheckCidrConflictFromVpcRequest, opts ...client.CallOption) (*CheckCidrConflictFromVpcResponse, error)
 	ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...client.CallOption) (*ListCloudSubnetsResponse, error)
 	ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...client.CallOption) (*ListCloudSecurityGroupsResponse, error)
 	ListKeypairs(ctx context.Context, in *ListKeyPairsRequest, opts ...client.CallOption) (*ListKeyPairsResponse, error)
 	ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...client.CallOption) (*ListCloudInstanceTypeResponse, error)
+	GetMasterSuggestedMachines(ctx context.Context, in *GetMasterSuggestedMachinesRequest, opts ...client.CallOption) (*GetMasterSuggestedMachinesResponse, error)
 	ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, opts ...client.CallOption) (*ListCloudProjectsResponse, error)
 	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...client.CallOption) (*ListCloudOsImageResponse, error)
 	ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error)
@@ -1191,6 +1213,16 @@ func (c *clusterManagerService) ListCluster(ctx context.Context, in *ListCluster
 func (c *clusterManagerService) ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCommonCluster", in)
 	out := new(ListCommonClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, opts ...client.CallOption) (*AddSubnetToClusterResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.AddSubnetToCluster", in)
+	out := new(AddSubnetToClusterResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1968,6 +2000,16 @@ func (c *clusterManagerService) ListCloudVpcs(ctx context.Context, in *ListCloud
 	return out, nil
 }
 
+func (c *clusterManagerService) CheckCidrConflictFromVpc(ctx context.Context, in *CheckCidrConflictFromVpcRequest, opts ...client.CallOption) (*CheckCidrConflictFromVpcResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CheckCidrConflictFromVpc", in)
+	out := new(CheckCidrConflictFromVpcResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...client.CallOption) (*ListCloudSubnetsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudSubnets", in)
 	out := new(ListCloudSubnetsResponse)
@@ -2001,6 +2043,16 @@ func (c *clusterManagerService) ListKeypairs(ctx context.Context, in *ListKeyPai
 func (c *clusterManagerService) ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...client.CallOption) (*ListCloudInstanceTypeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudInstanceTypes", in)
 	out := new(ListCloudInstanceTypeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetMasterSuggestedMachines(ctx context.Context, in *GetMasterSuggestedMachinesRequest, opts ...client.CallOption) (*GetMasterSuggestedMachinesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetMasterSuggestedMachines", in)
+	out := new(GetMasterSuggestedMachinesResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2289,6 +2341,7 @@ type ClusterManagerHandler interface {
 	ListProjectCluster(context.Context, *ListProjectClusterReq, *ListProjectClusterResp) error
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
 	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
+	AddSubnetToCluster(context.Context, *AddSubnetToClusterReq, *AddSubnetToClusterResp) error
 	CreateVirtualCluster(context.Context, *CreateVirtualClusterReq, *CreateVirtualClusterResp) error
 	DeleteVirtualCluster(context.Context, *DeleteVirtualClusterReq, *DeleteVirtualClusterResp) error
 	UpdateVirtualClusterQuota(context.Context, *UpdateVirtualClusterQuotaReq, *UpdateVirtualClusterQuotaResp) error
@@ -2377,10 +2430,12 @@ type ClusterManagerHandler interface {
 	GetCloudRegionZones(context.Context, *GetCloudRegionZonesRequest, *GetCloudRegionZonesResponse) error
 	ListCloudRegionCluster(context.Context, *ListCloudRegionClusterRequest, *ListCloudRegionClusterResponse) error
 	ListCloudVpcs(context.Context, *ListCloudVpcsRequest, *ListCloudVpcsResponse) error
+	CheckCidrConflictFromVpc(context.Context, *CheckCidrConflictFromVpcRequest, *CheckCidrConflictFromVpcResponse) error
 	ListCloudSubnets(context.Context, *ListCloudSubnetsRequest, *ListCloudSubnetsResponse) error
 	ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest, *ListCloudSecurityGroupsResponse) error
 	ListKeypairs(context.Context, *ListKeyPairsRequest, *ListKeyPairsResponse) error
 	ListCloudInstanceTypes(context.Context, *ListCloudInstanceTypeRequest, *ListCloudInstanceTypeResponse) error
+	GetMasterSuggestedMachines(context.Context, *GetMasterSuggestedMachinesRequest, *GetMasterSuggestedMachinesResponse) error
 	ListCloudProjects(context.Context, *ListCloudProjectsRequest, *ListCloudProjectsResponse) error
 	ListCloudOsImage(context.Context, *ListCloudOsImageRequest, *ListCloudOsImageResponse) error
 	ListCloudInstances(context.Context, *ListCloudInstancesRequest, *ListCloudInstancesResponse) error
@@ -2443,6 +2498,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, out *ListProjectClusterResp) error
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
 		ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error
+		AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, out *AddSubnetToClusterResp) error
 		CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, out *CreateVirtualClusterResp) error
 		DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, out *DeleteVirtualClusterResp) error
 		UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, out *UpdateVirtualClusterQuotaResp) error
@@ -2520,10 +2576,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error
 		ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error
 		ListCloudVpcs(ctx context.Context, in *ListCloudVpcsRequest, out *ListCloudVpcsResponse) error
+		CheckCidrConflictFromVpc(ctx context.Context, in *CheckCidrConflictFromVpcRequest, out *CheckCidrConflictFromVpcResponse) error
 		ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, out *ListCloudSubnetsResponse) error
 		ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, out *ListCloudSecurityGroupsResponse) error
 		ListKeypairs(ctx context.Context, in *ListKeyPairsRequest, out *ListKeyPairsResponse) error
 		ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error
+		GetMasterSuggestedMachines(ctx context.Context, in *GetMasterSuggestedMachinesRequest, out *GetMasterSuggestedMachinesResponse) error
 		ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, out *ListCloudProjectsResponse) error
 		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
 		ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error
@@ -2664,6 +2722,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.ListCommonCluster",
 		Path:    []string{"/clustermanager/v1/sharedclusters"},
 		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.AddSubnetToCluster",
+		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/subnets"},
+		Method:  []string{"POST"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3180,6 +3245,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CheckCidrConflictFromVpc",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/vpcs/{vpcId}/cidrconflict"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListCloudSubnets",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/subnets"},
 		Method:  []string{"GET"},
@@ -3200,6 +3271,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListCloudInstanceTypes",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/instancetypes"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetMasterSuggestedMachines",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusterlevels/{level}/instancetypes"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -3443,6 +3520,10 @@ func (h *clusterManagerHandler) ListCluster(ctx context.Context, in *ListCluster
 
 func (h *clusterManagerHandler) ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error {
 	return h.ClusterManagerHandler.ListCommonCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, out *AddSubnetToClusterResp) error {
+	return h.ClusterManagerHandler.AddSubnetToCluster(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, out *CreateVirtualClusterResp) error {
@@ -3753,6 +3834,10 @@ func (h *clusterManagerHandler) ListCloudVpcs(ctx context.Context, in *ListCloud
 	return h.ClusterManagerHandler.ListCloudVpcs(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) CheckCidrConflictFromVpc(ctx context.Context, in *CheckCidrConflictFromVpcRequest, out *CheckCidrConflictFromVpcResponse) error {
+	return h.ClusterManagerHandler.CheckCidrConflictFromVpc(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, out *ListCloudSubnetsResponse) error {
 	return h.ClusterManagerHandler.ListCloudSubnets(ctx, in, out)
 }
@@ -3767,6 +3852,10 @@ func (h *clusterManagerHandler) ListKeypairs(ctx context.Context, in *ListKeyPai
 
 func (h *clusterManagerHandler) ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error {
 	return h.ClusterManagerHandler.ListCloudInstanceTypes(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetMasterSuggestedMachines(ctx context.Context, in *GetMasterSuggestedMachinesRequest, out *GetMasterSuggestedMachinesResponse) error {
+	return h.ClusterManagerHandler.GetMasterSuggestedMachines(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, out *ListCloudProjectsResponse) error {

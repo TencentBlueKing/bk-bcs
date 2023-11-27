@@ -283,7 +283,7 @@ type Object struct {
 
 // GetBizModuleTopoData get biz topo data
 func GetBizModuleTopoData(ctx context.Context, cli *Client, bizID int) (*BizInstanceTopoData, error) {
-	bizTopo, err := cli.ListTopology(ctx, bizID, false, true)
+	bizTopo, err := cli.ListTopology(ctx, bizID, false, false)
 	if err != nil {
 		return nil, err
 	}
