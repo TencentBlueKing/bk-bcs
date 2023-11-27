@@ -493,6 +493,8 @@ export const timeDelta = (start, end) => {
   if (!start || !end) return;
 
   const time = (new Date(end).getTime() - new Date(start).getTime()) / 1000;
+  if (time <= 0) return;
+
   const m = Math.floor(time / 60);
   const s = time - m * 60;
   return `${m ? `${m}m ` : ''}${s ? `${Math.ceil(s)}s ` : ''}`;
@@ -695,3 +697,54 @@ export const exitFullscreen = (element) => {
     element.msExitFullscreen();
   }
 };
+
+export function validateCIDR(cidr: string, isIPv6?: boolean) {
+  if (!cidr) return true;
+  let pattern = '';
+  if (isIPv6) {
+    pattern = '^([0-9a-f]{1,4}::?){1,7}[0-9a-f]{1,4}/[0-9]{1,3}$';
+  } else {
+    pattern = '^([0-9]{1,3}.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$';
+  }
+  const regex = new RegExp(pattern);
+  return regex.test(cidr);
+}
+
+export function countIPsInCIDR(cidr) {
+  if (!validateCIDR(cidr)) return;
+  const prefixLength = parseInt(cidr.split('/')[1]);
+  const hostBits = 32 - prefixLength;
+  const totalIPs = Math.pow(2, hostBits);
+  return totalIPs;
+}
+
+function ipToBin(ip) {
+  return ip.split('.').map(octet => parseInt(octet).toString(2)
+    .padStart(8, '0'))
+    .join('');
+}
+
+function cidrToNetAddr(cidr) {
+  const [ip, maskSize] = cidr.split('/');
+  const ipBin = ipToBin(ip);
+  const netAddrBin = ipBin.substring(0, Number(maskSize)).padEnd(32, '0');
+  return netAddrBin;
+}
+
+export function cidrContains(cidrA, cidrB) {
+  // 将CIDR网段转换为网络地址二进制形式
+  const netAddrA = cidrToNetAddr(cidrA);
+  const netAddrB = cidrToNetAddr(cidrB);
+
+  // 获取各自的子网掩码长度
+  const maskSizeA = Number(cidrA.split('/')[1]);
+  const maskSizeB = Number(cidrB.split('/')[1]);
+
+  // 确保cidrA的掩码长度更短（即网络范围更大）
+  if (maskSizeA > maskSizeB) {
+    return false; // 如果cidrA掩码长度更长表示它的网络小于等于cidrB的网络
+  }
+
+  // 比较cidrA网段的网络地址是否为cidrB网段的网络地址的子集
+  return netAddrB.startsWith(netAddrA);
+}

@@ -30,15 +30,24 @@
             v-for="cluster in item.list"
             :key="cluster.clusterID"
             :class="[
-              'px-[40px] cursor-pointer hover:bg-[#eaf3ff] hover:text-[#3a84ff]',
+              'px-[40px] hover:bg-[#eaf3ff]',
               {
-                'bg-[#eaf3ff] text-[#3a84ff]': selectable && localValue === cluster.clusterID
+                'bg-[#eaf3ff] text-[#3a84ff]': selectable && localValue === cluster.clusterID,
+                'hover:text-[#3a84ff] cursor-pointer': cluster.status === 'RUNNING',
+                'text-[#c4c6cc] cursor-not-allowed': cluster.status !== 'RUNNING'
               }
             ]"
-            @click="handleClick(cluster.clusterID)">
-            <div class="flex flex-col justify-center h-[50px]">
+            @click="handleClick(cluster)">
+            <div class="flex flex-col justify-center h-[50px]" v-bk-tooltips="{
+              content: $t('cluster.tips.clusterStatus', [CLUSTER_MAP[cluster.status || '']]),
+              disabled: cluster.status === 'RUNNING',
+              placement: 'right'
+            }">
               <span class="bcs-ellipsis" v-bk-overflow-tips>{{ cluster.clusterName }}</span>
-              <span class="mt-[8px] text-[#979BA5]">{{ cluster.clusterID }}</span>
+              <span
+                :class="['mt-[8px]', { 'text-[#979BA5]': cluster.status === 'RUNNING' }]">
+                {{ cluster.clusterID }}
+              </span>
             </div>
           </li>
         </ul>
@@ -52,6 +61,8 @@ import { PropType } from 'vue';
 
 import CollapseTitle from './collapse-title.vue';
 import useClusterSelector, { ClusterType } from './use-cluster-selector';
+
+import { CLUSTER_MAP } from '@/common/constant';
 
 const props = defineProps({
   value: {
@@ -84,9 +95,11 @@ const {
   handleClusterChange,
 } = useClusterSelector(emits, props.value, props.clusterType, props.updateStore);
 
-const handleClick = (clusterID) => {
-  handleClusterChange(clusterID);
+const handleClick = (cluster) => {
+  if (cluster.status !== 'RUNNING') return;
 
-  emits('click', clusterID);
+  handleClusterChange(cluster.clusterID);
+
+  emits('click', cluster.clusterID);
 };
 </script>

@@ -1,0 +1,526 @@
+<template>
+  <bk-form
+    class="k8s-form"
+    :label-width="160"
+    :model="networkConfig"
+    :rules="networkConfigRules"
+    ref="formRef">
+    <DescList size="middle" :title="$t('cluster.create.label.basicConfig')">
+      <bk-form-item :label="$t('cluster.create.label.region')" required>
+        <bcs-select
+          :value="region"
+          searchable
+          :clearable="false"
+          disabled>
+          <bcs-option
+            v-for="item in regionList"
+            :key="item.region"
+            :id="item.region"
+            :name="item.regionName">
+          </bcs-option>
+        </bcs-select>
+      </bk-form-item>
+      <bk-form-item
+        :label="$t('cluster.create.label.privateNet.text')"
+        property="vpcID"
+        error-display-type="normal"
+        required>
+        <bk-select
+          class="max-w-[600px]"
+          v-model="networkConfig.vpcID"
+          :loading="vpcLoading"
+          searchable
+          :clearable="false">
+          <!-- VPC可用容器网络IP数量最低限制 -->
+          <bk-option
+            v-for="item in vpcList"
+            :key="item.vpcId"
+            :id="item.vpcId"
+            :name="`${item.name}(${item.vpcId})`">
+            <div class="flex items-center place-content-between">
+              <span>
+                {{item.name}}
+                <span class="vpc-id">{{`(${item.vpcId})`}}</span>
+              </span>
+            </div>
+          </bk-option>
+          <template slot="extension">
+            <SelectExtension
+              :link-text="$t('管理私有网络')"
+              link="https://console.cloud.tencent.com/vpc/vpc"
+              @refresh="handleGetVPCList" />
+          </template>
+        </bk-select>
+      </bk-form-item>
+      <bk-form-item
+        :label="$t('cluster.create.label.defaultNetPlugin')"
+        :desc="{
+          allowHTML: true,
+          content: '#netPlugin',
+        }"
+        property="clusterAdvanceSettings.networkType"
+        error-display-type="normal"
+        required>
+        <bcs-select :clearable="false" searchable v-model="networkConfig.clusterAdvanceSettings.networkType">
+          <bcs-option id="GR" name="Global Route"></bcs-option>
+          <bcs-option id="VPC-CNI" name="VPC-CNI"></bcs-option>
+        </bcs-select>
+        <div id="netPlugin">
+          <div>{{ $t('Global Router: 腾讯云 TKE 基于 VPC 路由实现的容器网络插件，可设置独立平行于 VPC 的容器网段') }}</div>
+          <div>{{ $t('VPC-CNI：腾讯云 TKE 基于弹性网卡实现的容器网络插件，容器网络与云主机网络在同一个 VPC 内') }}</div>
+          <div>
+            {{ $t('详情请见') }}
+            <bk-link theme="primary" target="_blank" href="https://cloud.tencent.com/document/product/457/50353">
+              <span class="text-[12px]">{{ $t('容器网络概述') }}</span>
+            </bk-link>
+          </div>
+        </div>
+      </bk-form-item>
+      <bk-form-item
+        :label="$t('cluster.create.label.clusterIPType.text')"
+        property="networkSettings.clusterIpType"
+        error-display-type="normal"
+        required>
+        <bk-radio-group v-model="networkConfig.networkSettings.clusterIpType">
+          <bk-radio value="ipv4">
+            <span>IPv4</span>
+          </bk-radio>
+          <bk-radio value="ipv6" disabled>
+            <span v-bk-tooltips="$t('当前暂不支持')">IPv6</span>
+          </bk-radio>
+          <bk-radio value="dual" disabled>
+            <span v-bk-tooltips="$t('当前暂不支持')">{{ $t('IPv4/IPv6 双栈') }}</span>
+          </bk-radio>
+          <bk-radio value="dual-single" disabled>
+            <span v-bk-tooltips="$t('当前暂不支持')">{{ $t('IPv4 或 IPv6 单栈 (由平台自动分配)') }}</span>
+          </bk-radio>
+        </bk-radio-group>
+      </bk-form-item>
+    </DescList>
+    <DescList class="mt-[24px]" size="middle" :title="$t('cluster.create.label.netSetting')">
+      <bk-form-item
+        :label="$t('容器网段')"
+        :desc="{
+          allowHTML: true,
+          content: '#networkCIDR',
+        }"
+        property="networkSettings.clusterIPv4CIDR"
+        error-display-type="normal"
+        required
+        v-if="networkConfig.clusterAdvanceSettings.networkType === 'GR'">
+        <div class="flex items-center">
+          <div class="flex flex-1 max-w-[50%]">
+            <span class="prefix">CIDR</span>
+            <bk-input
+              class="ml-[-1px] flex-1"
+              :placeholder="$t('示例: 172.16.0.0/20')"
+              v-model.trim="networkConfig.networkSettings.clusterIPv4CIDR">
+            </bk-input>
+          </div>
+          <span
+            class="inline-flex items-center px-[16px] h-[24px] rounded-full bg-[#F0F1F5] text-[12px] ml-[16px]">
+            {{ $t('tke.tips.totalIpNum', [countsClusterIPv4CIDR || 0]) }}
+          </span>
+        </div>
+        <div id="networkCIDR">
+          <div>{{ $t('为保证集群有足够IP, 容器网段不能低于4096个IP') }}</div>
+          <div>{{ $t('腾讯云支持私有网络范围: ') }}</div>
+          <ul>
+            <li>- 10.0.0.0/8</li>
+            <li>- 172.16.0.0/16 ~ 172.31.0.0/16</li>
+            <li>- 192.168.0.0/16</li>
+          </ul>
+        </div>
+      </bk-form-item>
+      <bk-form-item
+        label="Service"
+        :desc="$t('Service IP数量一旦分配后将无法调整, 请谨慎评估后填写')"
+        property="serviceIP"
+        error-display-type="normal"
+        required>
+        <div class="flex items-center">
+          <template v-if="['ipv4', 'dual'].includes(networkConfig.networkSettings.clusterIpType)">
+            <div class="flex-1 flex max-w-[50%]" v-if="networkConfig.clusterAdvanceSettings.networkType === 'GR'">
+              <span class="prefix">{{ $t('tke.label.ipNum') }}</span>
+              <bcs-select
+                class="flex-1 ml-[-1px]"
+                :clearable="false"
+                searchable
+                v-model="networkConfig.networkSettings.maxServiceNum">
+                <bcs-option v-for="item in serviceIPList" :key="item" :id="item" :name="item"></bcs-option>
+              </bcs-select>
+            </div>
+            <template v-else-if="networkConfig.clusterAdvanceSettings.networkType === 'VPC-CNI'">
+              <div class="flex-1 flex max-w-[50%]">
+                <bk-input
+                  class="mr-[24px] flex-1"
+                  :placeholder="$t('示例: 172.16.0.0/20')"
+                  v-model.trim="networkConfig.networkSettings.serviceIPv4CIDR">
+                  <div
+                    slot="prepend"
+                    class="text-[12px] px-[12px] leading-[28px] whitespace-nowrap">
+                    CIDR
+                  </div>
+                </bk-input>
+              </div>
+              <span
+                class="inline-flex items-center px-[16px] h-[24px] rounded-full bg-[#F0F1F5] text-[12px] ml-[-8px]">
+                {{ $t('tke.tips.totalIpNum', [countIPsInCIDR(networkConfig.networkSettings.serviceIPv4CIDR) || 0]) }}
+              </span>
+            </template>
+          </template>
+        </div>
+      </bk-form-item>
+      <bk-form-item
+        label="Pod IP"
+        :desc="networkConfig.clusterAdvanceSettings.networkType === 'GR' ? $t('Pod IP数量 = 容器网段数量 - Service IP数量') : ''"
+        property="podIP"
+        error-display-type="normal"
+        required>
+        <template v-if="['ipv4', 'dual'].includes(networkConfig.networkSettings.clusterIpType)">
+          <div class="flex flex-1 max-w-[50%]" v-if="networkConfig.clusterAdvanceSettings.networkType === 'GR'">
+            <!-- GR模式时 pod ip = 网段总数 减去 service数量 -->
+            <span class="prefix">{{ $t('tke.label.ipNum') }}</span>
+            <bk-input
+              class="ml-[-1px] flex-1"
+              disabled
+              :value="maxPodNum">
+            </bk-input>
+          </div>
+          <VpcCni
+            :subnets="networkConfig.networkSettings.subnetSource.new"
+            :zone-list="zoneList"
+            @change="handleSetSubnetSourceNew"
+            v-else-if="networkConfig.clusterAdvanceSettings.networkType === 'VPC-CNI'" />
+        </template>
+      </bk-form-item>
+      <bk-form-item
+        :label="$t('cluster.create.label.maxNodePodNum')"
+        property="networkSettings.maxNodePodNum"
+        error-display-type="normal"
+        required
+        v-if="networkConfig.clusterAdvanceSettings.networkType === 'GR'">
+        <bcs-select
+          searchable
+          :clearable="false"
+          class="mr-[8px] max-w-[50%]"
+          v-model="networkConfig.networkSettings.maxNodePodNum">
+          <bcs-option v-for="item in nodePodNumList" :id="item" :key="item" :name="item"></bcs-option>
+        </bcs-select>
+      </bk-form-item>
+      <bk-form-item
+        :label="$t('tke.label.staticIpMode')"
+        v-else-if="networkConfig.clusterAdvanceSettings.networkType === 'VPC-CNI'"
+        required>
+        <bk-checkbox v-model="networkConfig.networkSettings.isStaticIpMode">
+          {{ $t('tke.label.enableStaticIpMode') }}
+        </bk-checkbox>
+      </bk-form-item>
+    </DescList>
+    <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] fixed bottom-0 left-0 w-full bcs-border-top">
+      <bk-button @click="preStep">{{ $t('generic.button.pre') }}</bk-button>
+      <bk-button
+        :loading="validating"
+        theme="primary"
+        class="ml10"
+        @click="nextStep">{{ $t('generic.button.next') }}</bk-button>
+      <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
+    </div>
+  </bk-form>
+</template>
+<script setup lang="ts">
+import { computed, PropType, ref, watch } from 'vue';
+
+import SelectExtension from './select-extension.vue';
+import { ICloudRegion, IZoneItem } from './types';
+import VpcCni from './vpc-cni.vue';
+
+import { cloudCidrconflict, cloudsZones, cloudVPC } from '@/api/modules/cluster-manager';
+import { countIPsInCIDR, validateCIDR } from '@/common/util';
+import DescList from '@/components/desc-list.vue';
+import $i18n from '@/i18n/i18n-setup';
+
+const props = defineProps({
+  region: {
+    type: String,
+    default: '',
+  },
+  cloudAccountID: {
+    type: String,
+    default: '',
+  },
+  cloudID: {
+    type: String,
+    default: '',
+  },
+  regionList: {
+    type: Array as PropType<ICloudRegion[]>,
+    default: () => [],
+  },
+});
+
+const emits = defineEmits(['next', 'cancel', 'pre', 'set-vpc-list', 'set-zone-list']);
+
+const nodePodNumList = ref([32, 64, 128]);
+const serviceIPList = ref([128, 256, 512, 1024, 2048, 4096]);
+
+// 网络配置
+const networkConfig = ref({
+  vpcID: '',
+  networkType: '', // overlay underlay
+  networkSettings: {
+    clusterIPv4CIDR: '',
+    serviceIPv4CIDR: '',
+    maxNodePodNum: 64, // 单节点pod数量上限
+    maxServiceNum: 128,
+    clusterIpType: 'ipv4', // ipv4/ipv6/dual
+    isStaticIpMode: true,
+    subnetSource: {
+      new: [],
+    },
+  },
+  clusterAdvanceSettings: {
+    networkType: 'GR',   // 网络插件
+  },
+});
+const countsClusterIPv4CIDR = computed(() => countIPsInCIDR(networkConfig.value.networkSettings.clusterIPv4CIDR) || 0);
+const maxPodNum = computed(() => {
+  const counts = countsClusterIPv4CIDR.value - networkConfig.value.networkSettings.maxServiceNum;
+  return counts >= 0 ? counts : 0;
+});
+watch(() => props.region, () => {
+  networkConfig.value.networkSettings.subnetSource.new = [];
+});
+watch(() => networkConfig.value.clusterAdvanceSettings.networkType, () => {
+  if (networkConfig.value.clusterAdvanceSettings.networkType === 'GR') {
+    networkConfig.value.networkSettings.maxServiceNum = 128;
+    networkConfig.value.networkSettings.serviceIPv4CIDR = '';
+    networkConfig.value.networkSettings.subnetSource.new = [];
+  } else if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
+    networkConfig.value.networkSettings.maxServiceNum = 0;
+    networkConfig.value.networkSettings.clusterIPv4CIDR = '';
+  }
+});
+const networkConfigRules = ref({
+  vpcID: [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+  ],
+  'clusterAdvanceSettings.networkType': [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+  ],
+  'networkSettings.clusterIpType': [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+  ],
+  'networkSettings.maxNodePodNum': [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+  ],
+  // 容器网段（GR网络插件模式）
+  'networkSettings.clusterIPv4CIDR': [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+    {
+      trigger: 'blur',
+      message: $i18n.t('generic.validate.cidr'),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'GR') {
+          return networkConfig.value.networkSettings.clusterIPv4CIDR
+              && validateCIDR(networkConfig.value.networkSettings.clusterIPv4CIDR);
+        }
+        return true;
+      },
+    },
+    {
+      trigger: 'blur',
+      message: $i18n.t('容器网段不能少于 4096 个 IP, 请重新输入'),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'GR') {
+          const counts = countIPsInCIDR(networkConfig.value.networkSettings.clusterIPv4CIDR) || 0;
+          return counts >= 4096;
+        }
+        return true;
+      },
+    },
+    {
+      trigger: 'blur',
+      message: $i18n.t('generic.validate.cidrConflict'),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'GR') {
+          return networkConfig.value.networkSettings.clusterIPv4CIDR
+              && await cidrConflict(networkConfig.value.networkSettings.clusterIPv4CIDR);
+        }
+        return true;
+      },
+    },
+  ],
+  // service IP
+  serviceIP: [
+    {
+      trigger: 'blur',
+      message: $i18n.t('generic.validate.required'),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'GR') {
+          return !!networkConfig.value.networkSettings.maxServiceNum;
+        }
+        return true;
+      },
+    },
+    {
+      trigger: 'blur',
+      message: $i18n.t('容器网段不能少于 128 个 IP, 请重新输入'),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
+          const counts = countIPsInCIDR(networkConfig.value.networkSettings.serviceIPv4CIDR) || 0;
+          return counts >= 128;
+        }
+        return true;
+      },
+    },
+    {
+      trigger: 'blur',
+      message: $i18n.t('generic.validate.cidr'),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
+          return networkConfig.value.networkSettings.serviceIPv4CIDR
+            && validateCIDR(networkConfig.value.networkSettings.serviceIPv4CIDR);
+        }
+        return true;
+      },
+    },
+    {
+      trigger: 'blur',
+      message: $i18n.t('generic.validate.cidrConflict'),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
+          return networkConfig.value.networkSettings.serviceIPv4CIDR
+            && await cidrConflict(networkConfig.value.networkSettings.serviceIPv4CIDR);
+        }
+        return true;
+      },
+    },
+  ],
+  // POD IP数量
+  podIP: [
+    {
+      trigger: 'blur',
+      message: $i18n.t('generic.validate.required'),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
+          const subnetSource = networkConfig.value.networkSettings.subnetSource.new as Array<{
+            ipCnt: number
+            zone: string
+          }>;
+          return subnetSource.length && subnetSource.every(item => item.ipCnt && item.zone);
+        }
+        return true;
+      },
+    },
+  ],
+});
+
+// vpc列表
+const vpcLoading = ref(false);
+const vpcList = ref<Array<{
+  name: string
+  vpcId: string
+}>>([]);
+const handleGetVPCList = async () => {
+  if (!props.region || !props.cloudAccountID) return;
+  vpcLoading.value = true;
+  vpcList.value = await cloudVPC({
+    $cloudId: props.cloudID,
+    accountID: props.cloudAccountID,
+    region: props.region,
+  }).catch(() => []);
+  emits('set-vpc-list', vpcList.value);
+  vpcLoading.value = false;
+};
+
+// 可用区
+const zoneList = ref<Array<IZoneItem>>([]);
+const zoneLoading = ref(false);
+const handleGetZoneList = async () => {
+  if (!props.region || !props.cloudAccountID) return;
+  zoneLoading.value = true;
+  const data = await cloudsZones({
+    $cloudId: props.cloudID,
+    accountID: props.cloudAccountID,
+    region: props.region,
+  }).catch(() => []);
+  zoneList.value = data.filter(item => item.zoneState === 'AVAILABLE');
+  emits('set-zone-list', zoneList.value);
+  zoneLoading.value = false;
+};
+
+// 设置vpc-cni子网
+const handleSetSubnetSourceNew = (data) => {
+  networkConfig.value.networkSettings.subnetSource.new = data;
+};
+
+// CIDR 冲突检测
+const cidrConflict = async (cidr) => {
+  if (!networkConfig.value.vpcID || !props.region || !props.cloudAccountID) return true;
+  const { cidrs = [] } =  await cloudCidrconflict({
+    $cloudId: props.cloudID,
+    $vpc: networkConfig.value.vpcID,
+    region: props.region,
+    accountID: props.cloudAccountID,
+    cidr,
+  }).catch(() => false);
+  return !cidrs.length;
+};
+
+watch([
+  () => props.region,
+  () => props.cloudAccountID,
+], () => {
+  networkConfig.value.vpcID = '';
+  handleGetVPCList();
+  handleGetZoneList();
+}, { immediate: true });
+
+// 校验
+const formRef = ref();
+const validate = async () => {
+  const result = await formRef.value?.validate().catch(() => false);
+  return result;
+};
+
+// 上一步
+const preStep = () => {
+  emits('pre');
+};
+// 下一步
+const validating = ref(false);
+const nextStep = async () => {
+  validating.value = true;
+  const result = await validate();
+  validating.value = false;
+  result && emits('next', {
+    ...networkConfig.value,
+    networkType: networkConfig.value.clusterAdvanceSettings.networkType === 'GR' ? 'overlay' : 'underlay',
+  });
+};
+// 取消
+const handleCancel = () => {
+  emits('cancel');
+};
+</script>

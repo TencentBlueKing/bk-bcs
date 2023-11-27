@@ -105,10 +105,11 @@ export function useSelectItemsNamespace() {
   const namespaceList = ref<any[]>([]);
 
   const getNamespaceData = async ({ clusterId }, initNsValue = true) => {
+    if (!clusterId) return;
     namespaceLoading.value = true;
     const data = await getNamespaceList({
       $clusterId: clusterId,
-    });
+    }).catch(() => []);
     // 过滤未创建成功的命名空间
     namespaceList.value = (data || []).filter(item => item.itsmTicketType !== 'CREATE');
     if (initNsValue) {

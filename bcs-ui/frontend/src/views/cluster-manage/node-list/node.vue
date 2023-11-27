@@ -1,6 +1,9 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="cluster-node bcs-content-wrapper pb-[20px]">
+  <div :class="[
+    'cluster-node bcs-content-wrapper',
+    { 'px-[24px] py-[16px]': !fromCluster }
+  ]">
     <bcs-alert type="info" class="cluster-node-tip">
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
@@ -119,7 +122,7 @@
           </bcs-button>
         </BcsCascade>
       </div>
-      <div class="right">
+      <div class="right flex-1 ml-[10px]">
         <ClusterSelect
           class="mr10 w-[254px]"
           v-model="localClusterId"
@@ -128,7 +131,7 @@
         />
         <bcs-search-select
           clearable
-          class="search-select bg-[#fff]"
+          class="bg-[#fff] flex-1"
           :data="searchSelectData"
           :show-condition="false"
           :show-popover-tag-change="false"
@@ -142,7 +145,7 @@
       </div>
     </div>
     <!-- 节点列表 -->
-    <div class="mt-[20px] px-[20px]" v-bkloading="{ isLoading: tableLoading }">
+    <div class="mt-[20px]" v-bkloading="{ isLoading: tableLoading }">
       <bcs-table
         :size="tableSetting.size"
         :data="curPageData"
@@ -510,7 +513,8 @@
       :is-show.sync="setLabelConf.isShow"
       :width="750"
       :before-close="handleBeforeClose"
-      quick-close>
+      quick-close
+      transfer>
       <template #header>
         <span>{{setLabelConf.title}}</span>
         <span class="sideslider-tips">{{$t('cluster.nodeList.msg.labelDesc')}}</span>
@@ -546,7 +550,8 @@
       :title="$t('cluster.nodeList.button.setTaint')"
       :width="750"
       :before-close="handleBeforeClose"
-      quick-close>
+      quick-close
+      transfer>
       <template #content>
         <TaintContent
           :cluster-id="localClusterId"
@@ -563,7 +568,8 @@
       :title="logSideDialogConf.title"
       :width="960"
       @hidden="closeLog"
-      :quick-close="true">
+      :quick-close="true"
+      transfer>
       <div slot="content">
         <div class="log-wrapper" v-bkloading="{ isLoading: logSideDialogConf.loading }">
           <TaskList :data="logSideDialogConf.taskData"></TaskList>
@@ -1840,7 +1846,7 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .cluster-node-tip {
-    margin: 20px;
+    margin-bottom: 20px;
     .num {
         font-weight: 700;
     }
@@ -1849,7 +1855,6 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
     .left {
         display: flex;
         align-items: center;
@@ -1859,9 +1864,6 @@ export default defineComponent({
     }
     .right {
         display: flex;
-        .search-select {
-            width: 500px;
-        }
     }
 }
 /deep/ .bk-dropdown-list {

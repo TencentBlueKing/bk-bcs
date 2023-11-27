@@ -1,11 +1,11 @@
 <template>
-  <bk-table :data="clusterList" size="medium">
+  <bk-table :data="clusterList" size="medium" :row-class-name="rowClassName" @row-click="handleRowClick">
     <bk-table-column :label="$t('cluster.labels.nameAndId')" :min-width="160" :show-overflow-tooltip="false">
       <template #default="{ row }">
         <bk-button
           :disabled="row.status !== 'RUNNING'"
           text
-          @click="handleGotoClusterDetail(row, 'overview')">
+          @click.stop="handleChangeActiveRow(row)">
           <span class="bcs-ellipsis" v-bk-overflow-tips>{{ row.name }}</span>
         </bk-button>
         <div :class="row.status === 'RUNNING' ? 'text-[#979BA5]' : 'text-[#dcdee5]'">
@@ -84,7 +84,7 @@
           <div
             :class=" row.status === 'RUNNING' ? 'cursor-pointer' : 'cursor-not-allowed'"
             v-else
-            @click="handleGotoClusterNode(row)">
+            @click.stop="handleGotoClusterNode(row)">
             <bk-button text :disabled="row.status !== 'RUNNING'">
               {{ clusterNodesMap[row.clusterID].length }}
             </bk-button>
@@ -95,11 +95,11 @@
     </bk-table-column>
     <bk-table-column :label="$t('cluster.labels.metric')" min-width="200">
       <template #default="{ row }">
-        <template v-if="overview[row.clusterID]">
+        <div class="flex items-center" v-if="overview[row.clusterID]">
           <RingCell
             :percent="overview[row.clusterID]['cpu_usage'] && overview[row.clusterID]['cpu_usage']['percent']"
             fill-color="#3762B8"
-            class="!mr-[10px]" />
+            class="!mr-[10px] !ml-[-2px]" />
           <RingCell
             :percent="overview[row.clusterID]['memory_usage'] && overview[row.clusterID]['memory_usage']['percent']"
             fill-color="#61B2C2"
@@ -108,24 +108,30 @@
             :percent="overview[row.clusterID]['disk_usage'] && overview[row.clusterID]['disk_usage']['percent']"
             fill-color="#B5E0AB"
             v-if="row.clusterType !== 'virtual'" />
-        </template>
+        </div>
         <span v-else>--</span>
       </template>
     </bk-table-column>
-    <bk-table-column :label="$t('generic.label.action')" width="200">
+    <bk-table-column :label="$t('generic.label.action')" prop="action" width="200">
       <template #default="{ row }">
         <!-- 进行中 -->
         <template v-if="['INITIALIZATION', 'DELETING'].includes(row.status)">
           <bk-button
             text
-            @click="handleShowClusterLog(row)">
+            @click.stop="handleShowClusterLog(row)">
             {{$t('generic.button.log')}}
           </bk-button>
         </template>
         <!-- 失败状态 -->
         <template v-else-if="['CREATE-FAILURE', 'DELETE-FAILURE'].includes(row.status)">
-          <bk-button class="mr-[10px]" text @click="handleRetry(row)">{{ $t('cluster.ca.nodePool.records.action.retry') }}</bk-button>
-          <bk-button class="mr-[10px]" text @click="handleShowClusterLog(row)">{{$t('generic.button.log')}}</bk-button>
+          <bk-button
+            class="mr-[10px]"
+            text
+            @click.stop="handleRetry(row)">{{ $t('cluster.ca.nodePool.records.action.retry') }}</bk-button>
+          <bk-button
+            class="mr-[10px]"
+            text
+            @click.stop="handleShowClusterLog(row)">{{$t('generic.button.log')}}</bk-button>
           <PopoverSelector offset="0, 10">
             <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
             <template #content>
@@ -144,7 +150,7 @@
                     }
                   }"
                   key="deleteCluster"
-                  @click="handleDeleteCluster(row)">
+                  @click.stop="handleDeleteCluster(row)">
                   {{ $t('generic.button.delete') }}
                 </li>
               </ul>
@@ -153,14 +159,14 @@
         </template>
         <!-- 正常状态 -->
         <template v-else-if="row.status === 'RUNNING'">
-          <bk-button text class="mr10" @click="handleGotoClusterOverview(row)">
+          <bk-button text class="mr10" @click.stop="handleGotoClusterOverview(row)">
             {{ $t('cluster.button.overview') }}
           </bk-button>
           <bk-button
             text
             class="mr10"
             v-if="row.clusterType === 'virtual'"
-            @click="handleGotoDashborad(row)">{{ $t('cluster.button.dashboard') }}</bk-button>
+            @click.stop="handleGotoDashborad(row)">{{ $t('cluster.button.dashboard') }}</bk-button>
           <bk-button
             text
             class="mr10"
@@ -177,25 +183,29 @@
             }"
             key="nodeList"
             v-if="row.clusterType !== 'virtual'"
-            @click="handleGotoClusterNode(row)">
+            @click.stop="handleGotoClusterNode(row)">
             {{ $t('cluster.detail.title.nodeList') }}
           </bk-button>
           <PopoverSelector offset="0, 10">
             <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
             <template #content>
               <ul class="bg-[#fff]">
-                <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(row, 'info')">{{ $t('generic.title.basicInfo1') }}</li>
+                <li
+                  class="bcs-dropdown-item"
+                  @click.stop="handleGotoClusterDetail(row, 'info')">{{ $t('generic.title.basicInfo1') }}</li>
                 <li
                   class="bcs-dropdown-item"
                   v-if="row.clusterType === 'virtual'"
-                  @click="handleGotoClusterDetail(row, 'quota')">
+                  @click.stop="handleGotoClusterDetail(row, 'quota')">
                   {{ $t('cluster.detail.title.quota') }}
                 </li>
                 <template v-else>
-                  <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(row, 'network')">{{ $t('cluster.detail.title.network') }}</li>
                   <li
                     class="bcs-dropdown-item"
-                    @click="handleGotoClusterDetail(row, 'master')">{{ $t('cluster.detail.title.master') }}</li>
+                    @click.stop="handleGotoClusterDetail(row, 'network')">{{ $t('cluster.detail.title.network') }}</li>
+                  <li
+                    class="bcs-dropdown-item"
+                    @click.stop="handleGotoClusterDetail(row, 'master')">{{ $t('cluster.detail.title.master') }}</li>
                   <li
                     class="bcs-dropdown-item"
                     v-if="clusterExtraInfo
@@ -213,12 +223,12 @@
                       }
                     }"
                     key="ca"
-                    @click="handleGotoClusterCA(row)">
+                    @click.stop="handleGotoClusterCA(row)">
                     {{ $t('cluster.detail.title.autoScaler') }}
                   </li>
                 </template>
-                <li class="bcs-dropdown-item" @click="handleGotoToken">KubeConfig</li>
-                <li class="bcs-dropdown-item" @click="handleGotoWebConsole(row)">WebConsole</li>
+                <li class="bcs-dropdown-item" @click.stop="handleGotoToken">KubeConfig</li>
+                <li class="bcs-dropdown-item" @click.stop="handleGotoWebConsole(row)">WebConsole</li>
                 <li
                   class="bcs-dropdown-item"
                   v-authority="{
@@ -234,7 +244,7 @@
                   }"
                   key="deletevCluster"
                   v-if="row.clusterType === 'virtual' || row.clusterCategory === 'importer'"
-                  @click="handleDeleteCluster(row)">
+                  @click.stop="handleDeleteCluster(row)">
                   {{ $t('generic.button.delete') }}
                 </li>
                 <li
@@ -260,7 +270,7 @@
                     placement: 'right'
                   }"
                   v-else
-                  @click="handleDeleteCluster(row)">
+                  @click.stop="handleDeleteCluster(row)">
                   {{ $t('generic.button.delete') }}
                 </li>
               </ul>
@@ -270,7 +280,7 @@
         <bk-button
           text
           v-else-if="deletable(row) && row.status !== 'DELETING'"
-          @click="handleDeleteCluster(row)">
+          @click.stop="handleDeleteCluster(row)">
           {{ $t('generic.button.delete') }}
         </bk-button>
       </template>
@@ -319,6 +329,10 @@ export default defineComponent({
     clusterNodesMap: {
       type: Object,
       default: () => ({}),
+    },
+    activeClusterId: {
+      type: String,
+      default: '',
     },
   },
   setup(props, ctx) {
@@ -412,6 +426,18 @@ export default defineComponent({
       });
     };
 
+    // 行点击事件
+    const handleRowClick = (row, e, col) => {
+      if (col.property === 'action' || row.status !== 'RUNNING') return;
+      handleChangeActiveRow(row);
+    };
+
+    // 当前active行
+    const handleChangeActiveRow = (row) => {
+      ctx.emit('active-row', row.clusterID);
+    };
+    const rowClassName = ({ row }) => (row.clusterID === props.activeClusterId ? 'cluster-list-row active-row' : 'cluster-list-row');
+
     return {
       CLUSTER_ENV,
       clusterEnvFilters,
@@ -430,7 +456,18 @@ export default defineComponent({
       handleGotoToken,
       handleGotoWebConsole,
       handleGotoDashborad,
+      handleChangeActiveRow,
+      rowClassName,
+      handleRowClick,
     };
   },
 });
 </script>
+<style lang="postcss" scoped>
+>>> .active-row {
+  background-color: #E1ECFF;
+}
+>>> .cluster-list-row {
+  cursor: pointer;
+}
+</style>

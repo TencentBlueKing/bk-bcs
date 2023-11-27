@@ -1,7 +1,7 @@
 <template>
   <div class="flex items-center">
     <template v-if="!isEdit">
-      <span>{{ value || '--' }}</span>
+      <span class="break-all">{{ value || '--' }}</span>
       <span
         class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
         @click="handleEdit">

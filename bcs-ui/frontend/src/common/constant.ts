@@ -227,3 +227,12 @@ export const ENCODE_LIST = [
     name: 'UTF-16LE-BOM',
   },
 ];
+
+export const CLUSTER_MAP = {
+  INITIALIZATION: $i18n.t('generic.status.initializing'),
+  DELETING: $i18n.t('generic.status.deleting'),
+  'CREATE-FAILURE': $i18n.t('generic.status.createFailed'),
+  'DELETE-FAILURE': $i18n.t('generic.status.deleteFailed'),
+  'IMPORT-FAILURE': $i18n.t('cluster.status.importFailed'),
+  RUNNING: $i18n.t('generic.status.ready'),
+};

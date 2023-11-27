@@ -1,6 +1,6 @@
 <template>
   <div>
-    <ContentHeader :title="$t('cluster.nodeTemplate.text')" hide-back>
+    <ContentHeader :title="$t('cluster.nodeTemplate.text')">
       <template #right>
         <a
           :href="PROJECT_CONFIG.nodeTemplate"

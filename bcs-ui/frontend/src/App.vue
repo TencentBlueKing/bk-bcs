@@ -56,6 +56,7 @@ export default defineComponent({
 
     // 校验资源是否更新
     const resourceHash = ref('');
+    const flag = ref(false);
     const validateResourceVersion = () => {
       setTimeout(async () => {
         const res = await fetch(`${window.BK_STATIC_URL}/static/static_version.txt`, { cache: 'no-store' });
@@ -71,9 +72,10 @@ export default defineComponent({
               window.location.reload();
             },
           });
+          flag.value = true;
         }
         resourceHash.value = hash;
-        validateResourceVersion();
+        !flag.value && validateResourceVersion();
       }, 15000);
     };
 

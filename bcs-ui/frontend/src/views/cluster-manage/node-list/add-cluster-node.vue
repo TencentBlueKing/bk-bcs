@@ -15,7 +15,11 @@
                 {{ $t('manualNode.title.source.existingServer') }}
               </span>
             </bk-radio>
-            <bk-radio value="nodePool">{{ $t('manualNode.title.source.addFromNodePool') }}</bk-radio>
+            <bk-radio
+              value="nodePool"
+              v-if="curCluster && curCluster.autoScale">
+              {{ $t('manualNode.title.source.addFromNodePool') }}
+            </bk-radio>
           </bk-radio-group>
         </bk-form-item>
         <template v-if="nodeSource === 'ip'">
@@ -177,6 +181,8 @@
       :vpc="{ vpcID: curCluster.vpcID }"
       :show-dialog="showIpSelector"
       :ip-list="ipList"
+      :validate-vpc-and-region="curCluster.provider !== 'bluekingCloud'"
+      :account-i-d="curCluster.cloudAccountID"
       @confirm="chooseServer"
       @cancel="showIpSelector = false">
     </IpSelector>
@@ -195,11 +201,11 @@ import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
 import IpSelector from '@/components/ip-selector/ip-selector.vue';
 import StatusIcon from '@/components/status-icon';
-import { useConfig } from '@/composables/use-app';
+import { ICluster, useConfig } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 
 export default defineComponent({
   components: { FormGroup, IpSelector, StatusIcon, ConfirmDialog, TemplateSelector },
@@ -229,7 +235,7 @@ export default defineComponent({
         validator: () => desiredSize.value > 0,
       }],
     });
-    const curCluster = computed(() => ($store.state as any).cluster.clusterList
+    const curCluster = computed<ICluster>(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === props.clusterId) || {});
     const isTkeCluster = computed(() => curCluster.value?.provider === 'tencentCloud');
     const isImportCluster = computed(() => curCluster.value.clusterCategory === 'importer');
@@ -253,6 +259,7 @@ export default defineComponent({
     const chooseServer = (data) => {
       ipList.value = data;
       showIpSelector.value = false;
+      formRef.value?.validate().catch(() => false);
     };
     const { addNode } = useNode();
     const checkList = computed(() => [
@@ -294,12 +301,10 @@ export default defineComponent({
 
       if (result) {
         $router.push({
-          name: 'clusterDetail',
-          params: {
-            clusterId: props.clusterId,
-          },
+          name: 'clusterMain',
           query: {
             active: 'node',
+            clusterId: props.clusterId,
           },
         });
       }
@@ -405,11 +410,9 @@ export default defineComponent({
                 message: $i18n.t('generic.msg.success.deliveryTask'),
               });
               $router.push({
-                name: 'clusterDetail',
-                params: {
-                  clusterId: props.clusterId,
-                },
+                name: 'clusterMain',
                 query: {
+                  clusterId: props.clusterId,
                   active: 'node',
                 },
               });
@@ -430,12 +433,10 @@ export default defineComponent({
         window.open(href);
       } else {
         const { href } = $router.resolve({
-          name: 'clusterDetail',
-          params: {
-            clusterId: props.clusterId,
-          },
+          name: 'clusterMain',
           query: {
             active: 'autoscaler',
+            clusterId: props.clusterId,
           },
         });
         window.open(href);
