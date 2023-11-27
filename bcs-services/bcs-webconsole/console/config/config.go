@@ -190,6 +190,9 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	if c.Auth.Host == "" {
 		c.Auth.Host = BK_IAM_HOST
 	}
+	if c.Auth.GatewayHost == "" {
+		c.Auth.GatewayHost = BK_IAM_GATEWAY_HOST
+	}
 	if c.Redis.Password == "" {
 		c.Redis.Password = REDIS_PASSWORD
 	}

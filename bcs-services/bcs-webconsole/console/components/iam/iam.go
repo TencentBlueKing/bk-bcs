@@ -20,7 +20,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
-	"time"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -30,9 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 )
 
 func newIAMClient() (iam.PermClient, error) {
@@ -45,8 +42,8 @@ func newIAMClient() (iam.PermClient, error) {
 	}
 
 	// 使用网关地址
-	if config.G.Auth.IsGatewWay {
-		opts.GateWayHost = config.G.Auth.Host
+	if config.G.Auth.GatewayHost != "" {
+		opts.GateWayHost = config.G.Auth.GatewayHost
 		opts.External = false
 	} else {
 		// 使用"外部" ingress 地址
@@ -243,49 +240,4 @@ func calcNamespaceID(clusterID string, name string) (string, error) {
 	}
 
 	return iamNsID, nil
-}
-
-// accessToken 返回
-type accessToken struct {
-	AccessToken string `json:"access_token"`
-}
-
-// GetAccessToken 获取 accessToken
-func GetAccessToken(ctx context.Context) (string, error) {
-	// 兼容逻辑, 如果不配置SSMHost, 不使用 access_token 鉴权
-	if config.G.Auth.SSMHost == "" {
-		return "", nil
-	}
-
-	cacheKey := "iam.GetAccessToken"
-	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
-		return cacheResult.(*accessToken).AccessToken, nil
-	}
-
-	url := fmt.Sprintf("%s/api/v1/auth/access-tokens", config.G.Auth.SSMHost)
-
-	jsonData := map[string]string{
-		"grant_type":  "client_credentials",
-		"id_provider": "client",
-	}
-
-	resp, err := components.GetClient().R().
-		SetContext(ctx).
-		SetHeader("X-BK-APP-CODE", config.G.Base.AppCode).
-		SetHeader("X-BK-APP-SECRET", config.G.Base.AppSecret).
-		SetBody(jsonData).
-		Post(url)
-
-	if err != nil {
-		return "", err
-	}
-
-	var token *accessToken
-	if err := components.UnmarshalBKResult(resp, &token); err != nil {
-		return "", err
-	}
-
-	storage.LocalCache.Slot.Set(cacheKey, token, time.Minute*5)
-
-	return token.AccessToken, nil
 }
