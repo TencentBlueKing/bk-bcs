@@ -4,7 +4,8 @@
     :is-show="props.show"
     :title="t('新建服务')"
     :before-close="handleBeforeClose"
-    @closed="close">
+    @closed="close"
+  >
     <div class="create-app-form">
       <SearviceForm ref="formCompRef" :form-data="serviceData" @change="handleChange" />
     </div>
@@ -40,12 +41,12 @@ const { spaceId } = storeToRefs(useGlobalStore());
 
 const serviceData = ref<IServiceEditForm>({
   name: '',
+  alias: '',
   config_type: 'file',
-  kv_type: '',
+  data_type: 'any',
   reload_type: 'file',
-  reload_file_path: '/bscp_test', // @todo 待确认
+  reload_file_path: '/data/reload.json',
   mode: 'normal',
-  deploy_type: 'common', // @todo 待和后台确认是否需要
   memo: '', // @todo 包含换行符后接口会报错
 });
 const formCompRef = ref();
@@ -59,12 +60,12 @@ watch(
       isFormChange.value = false;
       serviceData.value = {
         name: '',
+        alias: '',
         config_type: 'file',
-        kv_type: '',
+        data_type: 'any',
         reload_type: 'file',
-        reload_file_path: '/bscp_test',
+        reload_file_path: '/data/reload.json',
         mode: 'normal',
-        deploy_type: 'common',
         memo: '',
       };
     }
@@ -72,16 +73,20 @@ watch(
 );
 
 const handleChange = (val: IServiceEditForm) => {
-  isFormChange.value = true
-  serviceData.value = val
+  isFormChange.value = true;
+  serviceData.value = val;
 };
 
 const handleCreateConfirm = async () => {
   await formCompRef.value.validate();
-  debugger
   pending.value = false;
   try {
-    const resp = await createApp(spaceId.value, serviceData.value);
+    let resp: { id: number };
+    if (serviceData.value.config_type === 'file') {
+      resp = await createApp(spaceId.value, serviceData.value);
+    } else {
+      resp = await createApp(spaceId.value, { ...serviceData.value, reload_type: '', reload_file_path: '' });
+    }
     InfoBox({
       type: 'success',
       title: '服务新建成功',
