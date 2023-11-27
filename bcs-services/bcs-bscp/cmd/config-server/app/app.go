@@ -84,6 +84,7 @@ func (ds *configServer) prepare(opt *options.Option) error {
 	// init metrics
 	metrics.InitMetrics(net.JoinHostPort(cc.ConfigServer().Network.BindIP,
 		strconv.Itoa(int(cc.ConfigServer().Network.RpcPort))))
+	metrics.Register().MustRegister(metrics.BSCPServerHandledTotal)
 
 	etcdOpt, err := cc.ConfigServer().Service.Etcd.ToConfig()
 	if err != nil {
@@ -123,6 +124,7 @@ func (ds *configServer) listenAndServe() error {
 	opts := []grpc.ServerOption{grpc.MaxRecvMsgSize(math.MaxInt32),
 		grpc.ChainUnaryInterceptor(
 			brpc.LogUnaryServerInterceptor(),
+			brpc.GrpcServerHandledTotalInterceptor(),
 			grpcMetrics.UnaryServerInterceptor(),
 			grpc_recovery.UnaryServerInterceptor(recoveryOpt),
 		),
