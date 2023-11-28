@@ -46,7 +46,7 @@
           </bk-option>
           <template slot="extension">
             <SelectExtension
-              :link-text="$t('管理私有网络')"
+              :link-text="$t('tke.link.vpc')"
               link="https://console.cloud.tencent.com/vpc/vpc"
               @refresh="handleGetVPCList" />
           </template>
@@ -66,13 +66,14 @@
           <bcs-option id="VPC-CNI" name="VPC-CNI"></bcs-option>
         </bcs-select>
         <div id="netPlugin">
-          <div>{{ $t('Global Router: 腾讯云 TKE 基于 VPC 路由实现的容器网络插件，可设置独立平行于 VPC 的容器网段') }}</div>
-          <div>{{ $t('VPC-CNI：腾讯云 TKE 基于弹性网卡实现的容器网络插件，容器网络与云主机网络在同一个 VPC 内') }}</div>
+          <div>{{ $t('tke.tips.grDesc') }}</div>
+          <div>{{ $t('tke.tips.vpcCniDesc') }}</div>
           <div>
-            {{ $t('详情请见') }}
-            <bk-link theme="primary" target="_blank" href="https://cloud.tencent.com/document/product/457/50353">
-              <span class="text-[12px]">{{ $t('容器网络概述') }}</span>
-            </bk-link>
+            <i18n path="tke.button.goDetail">
+              <bk-link theme="primary" target="_blank" href="https://cloud.tencent.com/document/product/457/50353">
+                <span class="text-[12px]">{{ $t('tke.link.netOverview') }}</span>
+              </bk-link>
+            </i18n>
           </div>
         </div>
       </bk-form-item>
@@ -86,75 +87,126 @@
             <span>IPv4</span>
           </bk-radio>
           <bk-radio value="ipv6" disabled>
-            <span v-bk-tooltips="$t('当前暂不支持')">IPv6</span>
+            <span v-bk-tooltips="$t('tke.tips.notSupport')">IPv6</span>
           </bk-radio>
           <bk-radio value="dual" disabled>
-            <span v-bk-tooltips="$t('当前暂不支持')">{{ $t('IPv4/IPv6 双栈') }}</span>
+            <span v-bk-tooltips="$t('tke.tips.notSupport')">{{ $t('cluster.create.label.clusterIPType.dual') }}</span>
           </bk-radio>
           <bk-radio value="dual-single" disabled>
-            <span v-bk-tooltips="$t('当前暂不支持')">{{ $t('IPv4 或 IPv6 单栈 (由平台自动分配)') }}</span>
+            <span v-bk-tooltips="$t('tke.tips.notSupport')">
+              {{ $t('cluster.create.label.clusterIPType.dualSingle') }}
+            </span>
           </bk-radio>
         </bk-radio-group>
       </bk-form-item>
     </DescList>
     <DescList class="mt-[24px]" size="middle" :title="$t('cluster.create.label.netSetting')">
-      <bk-form-item
-        :label="$t('容器网段')"
-        :desc="{
-          allowHTML: true,
-          content: '#networkCIDR',
-        }"
-        property="networkSettings.clusterIPv4CIDR"
-        error-display-type="normal"
-        required
-        v-if="networkConfig.clusterAdvanceSettings.networkType === 'GR'">
-        <div class="flex items-center">
-          <div class="flex flex-1 max-w-[50%]">
-            <span class="prefix">CIDR</span>
-            <bk-input
-              class="ml-[-1px] flex-1"
-              :placeholder="$t('示例: 172.16.0.0/20')"
-              v-model.trim="networkConfig.networkSettings.clusterIPv4CIDR">
-            </bk-input>
-          </div>
-          <span
-            class="inline-flex items-center px-[16px] h-[24px] rounded-full bg-[#F0F1F5] text-[12px] ml-[16px]">
-            {{ $t('tke.tips.totalIpNum', [countsClusterIPv4CIDR || 0]) }}
-          </span>
-        </div>
-        <div id="networkCIDR">
-          <div>{{ $t('为保证集群有足够IP, 容器网段不能低于4096个IP') }}</div>
-          <div>{{ $t('腾讯云支持私有网络范围: ') }}</div>
-          <ul>
-            <li>- 10.0.0.0/8</li>
-            <li>- 172.16.0.0/16 ~ 172.31.0.0/16</li>
-            <li>- 192.168.0.0/16</li>
-          </ul>
-        </div>
-      </bk-form-item>
-      <bk-form-item
-        label="Service"
-        :desc="$t('Service IP数量一旦分配后将无法调整, 请谨慎评估后填写')"
-        property="serviceIP"
-        error-display-type="normal"
-        required>
-        <div class="flex items-center">
-          <template v-if="['ipv4', 'dual'].includes(networkConfig.networkSettings.clusterIpType)">
-            <div class="flex-1 flex max-w-[50%]" v-if="networkConfig.clusterAdvanceSettings.networkType === 'GR'">
-              <span class="prefix">{{ $t('tke.label.ipNum') }}</span>
-              <bcs-select
-                class="flex-1 ml-[-1px]"
-                :clearable="false"
-                searchable
-                v-model="networkConfig.networkSettings.maxServiceNum">
-                <bcs-option v-for="item in serviceIPList" :key="item" :id="item" :name="item"></bcs-option>
-              </bcs-select>
+      <!-- GR网络模式 -->
+      <template v-if="networkConfig.clusterAdvanceSettings.networkType === 'GR'">
+        <bk-form-item
+          :label="$t('tke.label.containerNet')"
+          :desc="{
+            allowHTML: true,
+            content: '#networkCIDR',
+          }"
+          property="networkSettings.clusterIPv4CIDR"
+          error-display-type="normal"
+          required>
+          <div class="flex items-center">
+            <div class="flex flex-1 max-w-[50%]">
+              <span class="prefix">CIDR</span>
+              <bk-input
+                class="ml-[-1px] flex-1"
+                :placeholder="$t('tke.placeholder.example', ['172.16.0.0/20'])"
+                v-model.trim="networkConfig.networkSettings.clusterIPv4CIDR">
+              </bk-input>
             </div>
-            <template v-else-if="networkConfig.clusterAdvanceSettings.networkType === 'VPC-CNI'">
+            <span
+              class="inline-flex items-center px-[16px] h-[24px] rounded-full bg-[#F0F1F5] text-[12px] ml-[16px]">
+              {{ $t('tke.tips.totalIpNum', [countsClusterIPv4CIDR || 0]) }}
+            </span>
+          </div>
+          <div id="networkCIDR">
+            <div>{{ $t('tke.validate.minIpNum', [4096]) }}</div>
+            <div>{{ $t('tke.tips.supportCidr') }}</div>
+            <ul>
+              <li>- 10.0.0.0/8</li>
+              <li>- 172.16.0.0/16 ~ 172.31.0.0/16</li>
+              <li>- 192.168.0.0/16</li>
+            </ul>
+          </div>
+        </bk-form-item>
+        <bk-form-item
+          label="Service IP"
+          :desc="$t('tke.tips.ipCannotBeAdjustedWhenCreated', ['Service'])"
+          property="serviceIP"
+          error-display-type="normal"
+          required
+          key="GR-Service">
+          <div class="flex items-center">
+            <template v-if="['ipv4', 'dual'].includes(networkConfig.networkSettings.clusterIpType)">
+              <div class="flex-1 flex max-w-[50%]">
+                <span class="prefix">{{ $t('tke.label.ipNum') }}</span>
+                <bcs-select
+                  class="flex-1 ml-[-1px]"
+                  :clearable="false"
+                  searchable
+                  v-model="networkConfig.networkSettings.maxServiceNum">
+                  <bcs-option v-for="item in serviceIPList" :key="item" :id="item" :name="item"></bcs-option>
+                </bcs-select>
+              </div>
+            </template>
+          </div>
+        </bk-form-item>
+        <bk-form-item
+          label="Pod IP"
+          :desc="$t('tke.tips.podIpCalcFormula')"
+          property="podIP"
+          error-display-type="normal"
+          required
+          key="GR-Pod">
+          <template v-if="['ipv4', 'dual'].includes(networkConfig.networkSettings.clusterIpType)">
+            <div class="flex flex-1 max-w-[50%]">
+              <!-- GR模式时 pod ip = 网段总数 减去 service数量 -->
+              <span class="prefix">{{ $t('tke.label.ipNum') }}</span>
+              <bk-input
+                class="ml-[-1px] flex-1"
+                disabled
+                :value="maxPodNum">
+              </bk-input>
+            </div>
+          </template>
+        </bk-form-item>
+        <bk-form-item
+          :label="$t('cluster.create.label.maxNodePodNum')"
+          :desc="$t('tke.tips.ipCannotBeAdjustedWhenCreated', [$t('cluster.create.label.maxNodePodNum')])"
+          property="networkSettings.maxNodePodNum"
+          error-display-type="normal"
+          required>
+          <bcs-select
+            searchable
+            :clearable="false"
+            class="mr-[8px] max-w-[50%]"
+            v-model="networkConfig.networkSettings.maxNodePodNum">
+            <bcs-option v-for="item in nodePodNumList" :id="item" :key="item" :name="item"></bcs-option>
+          </bcs-select>
+        </bk-form-item>
+      </template>
+      <!-- VPC-CNI模式 -->
+      <template v-else-if="networkConfig.clusterAdvanceSettings.networkType === 'VPC-CNI'">
+        <bk-form-item
+          label="Service"
+          :desc="$t('tke.tips.ipCannotBeAdjustedWhenCreated', ['Service'])"
+          property="serviceIP"
+          error-display-type="normal"
+          required
+          key="VPC-CNI-Service">
+          <div class="flex items-center">
+            <template v-if="['ipv4', 'dual'].includes(networkConfig.networkSettings.clusterIpType)">
               <div class="flex-1 flex max-w-[50%]">
                 <bk-input
                   class="mr-[24px] flex-1"
-                  :placeholder="$t('示例: 172.16.0.0/20')"
+                  :placeholder="$t('tke.placeholder.example', ['172.16.0.0/20'])"
                   v-model.trim="networkConfig.networkSettings.serviceIPv4CIDR">
                   <div
                     slot="prepend"
@@ -168,54 +220,42 @@
                 {{ $t('tke.tips.totalIpNum', [countIPsInCIDR(networkConfig.networkSettings.serviceIPv4CIDR) || 0]) }}
               </span>
             </template>
-          </template>
-        </div>
-      </bk-form-item>
-      <bk-form-item
-        label="Pod IP"
-        :desc="networkConfig.clusterAdvanceSettings.networkType === 'GR' ? $t('Pod IP数量 = 容器网段数量 - Service IP数量') : ''"
-        property="podIP"
-        error-display-type="normal"
-        required>
-        <template v-if="['ipv4', 'dual'].includes(networkConfig.networkSettings.clusterIpType)">
-          <div class="flex flex-1 max-w-[50%]" v-if="networkConfig.clusterAdvanceSettings.networkType === 'GR'">
-            <!-- GR模式时 pod ip = 网段总数 减去 service数量 -->
-            <span class="prefix">{{ $t('tke.label.ipNum') }}</span>
-            <bk-input
-              class="ml-[-1px] flex-1"
-              disabled
-              :value="maxPodNum">
-            </bk-input>
           </div>
-          <VpcCni
-            :subnets="networkConfig.networkSettings.subnetSource.new"
-            :zone-list="zoneList"
-            @change="handleSetSubnetSourceNew"
-            v-else-if="networkConfig.clusterAdvanceSettings.networkType === 'VPC-CNI'" />
-        </template>
-      </bk-form-item>
-      <bk-form-item
-        :label="$t('cluster.create.label.maxNodePodNum')"
-        property="networkSettings.maxNodePodNum"
-        error-display-type="normal"
-        required
-        v-if="networkConfig.clusterAdvanceSettings.networkType === 'GR'">
-        <bcs-select
-          searchable
-          :clearable="false"
-          class="mr-[8px] max-w-[50%]"
-          v-model="networkConfig.networkSettings.maxNodePodNum">
-          <bcs-option v-for="item in nodePodNumList" :id="item" :key="item" :name="item"></bcs-option>
-        </bcs-select>
-      </bk-form-item>
-      <bk-form-item
-        :label="$t('tke.label.staticIpMode')"
-        v-else-if="networkConfig.clusterAdvanceSettings.networkType === 'VPC-CNI'"
-        required>
-        <bk-checkbox v-model="networkConfig.networkSettings.isStaticIpMode">
-          {{ $t('tke.label.enableStaticIpMode') }}
-        </bk-checkbox>
-      </bk-form-item>
+        </bk-form-item>
+        <bk-form-item
+          label="Pod IP"
+          :desc="$t('tke.tips.vpcCniPodIp')"
+          property="podIP"
+          error-display-type="normal"
+          required
+          key="VPC-CNI-Pod-IP">
+          <template v-if="['ipv4', 'dual'].includes(networkConfig.networkSettings.clusterIpType)">
+            <VpcCni
+              :subnets="networkConfig.networkSettings.subnetSource.new"
+              :zone-list="zoneList"
+              @change="handleSetSubnetSourceNew" />
+          </template>
+        </bk-form-item>
+        <bk-form-item
+          :label="$t('tke.label.staticIpMode')"
+          :desc="{
+            allowHTML: true,
+            content: '#staticIpMode',
+          }"
+          key="staticIpMode">
+          <bk-checkbox v-model="networkConfig.networkSettings.isStaticIpMode">
+            {{ $t('tke.label.enableStaticIpMode') }}
+          </bk-checkbox>
+          <div id="staticIpMode">
+            <div>{{ $t('tke.tips.staticIpMode.p1') }}</div>
+            <i18n tag="div" path="tke.tips.staticIpMode.p2">
+              <bk-link theme="primary" target="_blank" href="https://cloud.tencent.com/document/product/457/34994">
+                <span class="text-[12px]">{{ $t('tke.link.staticIpMode') }}</span>
+              </bk-link>
+            </i18n>
+          </div>
+        </bk-form-item>
+      </template>
     </DescList>
     <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] fixed bottom-0 left-0 w-full bcs-border-top">
       <bk-button @click="preStep">{{ $t('generic.button.pre') }}</bk-button>
@@ -231,14 +271,14 @@
 <script setup lang="ts">
 import { computed, PropType, ref, watch } from 'vue';
 
-import SelectExtension from './select-extension.vue';
 import { ICloudRegion, IZoneItem } from './types';
 import VpcCni from './vpc-cni.vue';
 
 import { cloudCidrconflict, cloudsZones, cloudVPC } from '@/api/modules/cluster-manager';
-import { countIPsInCIDR, validateCIDR } from '@/common/util';
+import { cidrContains, countIPsInCIDR, validateCIDR } from '@/common/util';
 import DescList from '@/components/desc-list.vue';
 import $i18n from '@/i18n/i18n-setup';
+import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 
 const props = defineProps({
   region: {
@@ -274,7 +314,7 @@ const networkConfig = ref({
     maxNodePodNum: 64, // 单节点pod数量上限
     maxServiceNum: 128,
     clusterIpType: 'ipv4', // ipv4/ipv6/dual
-    isStaticIpMode: true,
+    isStaticIpMode: false,
     subnetSource: {
       new: [],
     },
@@ -350,11 +390,24 @@ const networkConfigRules = ref({
     },
     {
       trigger: 'blur',
-      message: $i18n.t('容器网段不能少于 4096 个 IP, 请重新输入'),
+      message: $i18n.t('tke.validate.minIpNum2', [4096]),
       async validator() {
         if (networkConfig.value.clusterAdvanceSettings.networkType === 'GR') {
           const counts = countIPsInCIDR(networkConfig.value.networkSettings.clusterIPv4CIDR) || 0;
           return counts >= 4096;
+        }
+        return true;
+      },
+    },
+    {
+      trigger: 'blur',
+      message: $i18n.t('tke.validate.supportCidrList', ['10.0.0.0/8, 172.16.0.0/16 ~ 172.31.0.0/16, 192.168.0.0/16']),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'GR') {
+          const cidr = networkConfig.value.networkSettings.clusterIPv4CIDR;
+          return cidrContains(cidr, '10.0.0.0/8')
+            || cidrContains(cidr, ['172.16.0.0/16', '172.31.0.0/16'])
+            || cidrContains(cidr, '192.168.0.0/16');
         }
         return true;
       },
@@ -385,7 +438,18 @@ const networkConfigRules = ref({
     },
     {
       trigger: 'blur',
-      message: $i18n.t('容器网段不能少于 128 个 IP, 请重新输入'),
+      message: $i18n.t('generic.validate.cidr'),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
+          return networkConfig.value.networkSettings.serviceIPv4CIDR
+            && validateCIDR(networkConfig.value.networkSettings.serviceIPv4CIDR);
+        }
+        return true;
+      },
+    },
+    {
+      trigger: 'blur',
+      message: $i18n.t('tke.validate.minIpNum2', [128]),
       async validator() {
         if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
           const counts = countIPsInCIDR(networkConfig.value.networkSettings.serviceIPv4CIDR) || 0;
@@ -396,11 +460,13 @@ const networkConfigRules = ref({
     },
     {
       trigger: 'blur',
-      message: $i18n.t('generic.validate.cidr'),
+      message: $i18n.t('tke.validate.supportCidrList', ['10.0.0.0/8, 172.16.0.0/16 ~ 172.31.0.0/16, 192.168.0.0/16']),
       async validator() {
         if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
-          return networkConfig.value.networkSettings.serviceIPv4CIDR
-            && validateCIDR(networkConfig.value.networkSettings.serviceIPv4CIDR);
+          const cidr = networkConfig.value.networkSettings.serviceIPv4CIDR;
+          return cidrContains(cidr, '10.0.0.0/8')
+            || cidrContains(cidr, ['172.16.0.0/16', '172.31.0.0/16'])
+            || cidrContains(cidr, '192.168.0.0/16');
         }
         return true;
       },

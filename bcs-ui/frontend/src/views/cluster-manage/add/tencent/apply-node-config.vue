@@ -20,7 +20,7 @@
             :key="zone.zoneID"
             :id="zone.zone"
             :name="zone.zoneName"
-            :disabled="enabledZoneList.length&& !enabledZoneList.includes(zone.zone)"
+            :disabled="!!enabledZoneList.length && !enabledZoneList.includes(zone.zone)"
             v-bk-tooltips="{
               content: $t('tke.tips.zone'),
               disabled: !enabledZoneList.length || enabledZoneList.includes(zone.zone),
@@ -43,7 +43,7 @@
             v-for="net in subnets"
             :key="net.subnetID"
             :id="net.subnetID"
-            :name="net.subnetName"
+            :name="`${net.subnetName}(${net.subnetID})`"
             :disabled="!net.availableIPAddressCount || !!Object.keys(net.cluster || {}).length">
             <div
               class="flex items-center justify-between"
@@ -54,7 +54,7 @@
                 disabled: net.availableIPAddressCount && !Object.keys(net.cluster || {}).length,
                 placement: 'left'
               }">
-              <span>{{ net.subnetName }}</span>
+              <span>{{ `${net.subnetName}(${net.subnetID})` }}</span>
               <span
                 :class="(!net.availableIPAddressCount || Object.keys(net.cluster || {}).length) ? '':'text-[#979BA5]'">
                 {{ `${$t('tke.label.availableIpNum')}: ${net.availableIPAddressCount}` }}
@@ -140,60 +140,22 @@
             class="text-[#ea3636] text-[12px] h-[24px] leading-[24px]"
             v-show="!instanceItem.instanceType">{{ $t('generic.validate.required') }}</span>
         </div>
-        <div class="flex items-center">
-          <span class="prefix">{{ $t('tke.label.systemDisk') }}</span>
-          <bcs-select :clearable="false" class="ml-[-1px] w-[140px]" v-model="instanceItem.systemDisk.diskType">
-            <bcs-option
-              v-for="diskItem in diskEnum"
-              :key="diskItem.id"
-              :id="diskItem.id"
-              :name="diskItem.name">
-            </bcs-option>
-          </bcs-select>
-          <bcs-select
-            class="w-[88px] bg-[#fff] ml10"
-            :clearable="false"
-            v-model="instanceItem.systemDisk.diskSize">
-            <bcs-option id="50" name="50"></bcs-option>
-            <bcs-option id="100" name="100"></bcs-option>
-          </bcs-select>
-          <span class="company">GB</span>
-        </div>
-        <div class="mt-[20px]">
-          <bk-checkbox v-model="showDataDisk">{{ $t('tke.button.purchaseDataDisk') }}</bk-checkbox>
-          <template v-if="showDataDisk">
-            <div
-              class="bg-[#F5F7FA] py-[16px] px-[24px] mt-[10px]"
-              v-for="item, index in instanceItem.cloudDataDisks"
-              :key="index">
-              <div class="flex items-center">
-                <span class="prefix">{{ $t('tke.label.dataDisk') }}</span>
-                <bcs-select :clearable="false" class="ml-[-1px] w-[140px] mr-[16px] bg-[#fff]" v-model="item.diskType">
-                  <bcs-option
-                    v-for="diskItem in diskEnum"
-                    :key="diskItem.id"
-                    :id="diskItem.id"
-                    :name="diskItem.name">
-                  </bcs-option>
-                </bcs-select>
-                <bcs-input class="max-w-[120px]" type="number" v-model="item.diskSize">
-                  <span slot="append" class="group-text !px-[4px]">GB</span>
-                </bcs-input>
-              </div>
-              <div class="flex items-center mt-[16px]">
-                <bk-checkbox v-model="item.autoFormatAndMount" class="mr-[8px]">
-                  {{ $t('tke.button.autoFormatAndMount') }}
-                </bk-checkbox>
-                <template v-if="item.autoFormatAndMount">
-                  <bcs-select :clearable="false" class="w-[80px] mr-[8px] bg-[#fff]" v-model="item.fileSystem">
-                    <bcs-option v-for="file in fileSystem" :key="file" :name="file" :id="file"></bcs-option>
-                  </bcs-select>
-                  <bk-input class="flex-1" v-model="item.mountTarget"></bk-input>
-                </template>
-              </div>
-            </div>
-          </template>
-        </div>
+        <!-- 系统盘 -->
+        <SystemDisk
+          :value="instanceItem.systemDisk"
+          @change="(v) => instanceItem.systemDisk = v" />
+        <!-- 数据盘 -->
+        <DataDisk
+          class="mt-[20px]"
+          :value="instanceItem.cloudDataDisks"
+          :disabled="disableDataDisk"
+          @change="(v) => instanceItem.cloudDataDisks = v" />
+        <!-- 带宽包 -->
+        <InternetAccess
+          :region="region"
+          :cloud-account-i-d="cloudAccountID"
+          :cloud-i-d="cloudID"
+          v-if="!disableInternetAccess" />
       </bk-form-item>
       <bk-form-item :label="$t('tke.label.count')">
         <bcs-input type="number" class="max-w-[120px]" :min="1" :max="5" v-model="instanceItem.applyNum"></bcs-input>
@@ -211,17 +173,28 @@
 import { merge } from 'lodash';
 import { computed, inject, PropType, ref, watch } from 'vue';
 
-import SelectExtension from './select-extension.vue';
 import { ClusterDataInjectKey, IInstanceItem, IInstanceType, ISubnet } from './types';
 
 import { cloudInstanceTypes, cloudSubnets } from '@/api/modules/cluster-manager';
 import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
+import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
+import DataDisk from '@/views/cluster-manage/add/form/data-disk.vue';
+import InternetAccess from '@/views/cluster-manage/add/form/internet-access.vue';
+import SystemDisk from '@/views/cluster-manage/add/form/system-disk.vue';
 
 const cloudID = 'tencentPublicCloud';
 
 const props = defineProps({
   region: {
+    type: String,
+    default: '',
+  },
+  cloudAccountID: {
+    type: String,
+    default: '',
+  },
+  cloudID: {
     type: String,
     default: '',
   },
@@ -244,6 +217,14 @@ const props = defineProps({
   nodeRole: {
     type: String,
     default: '',
+  },
+  disableDataDisk: {
+    type: Boolean,
+    default: true,
+  },
+  disableInternetAccess: {
+    type: Boolean,
+    default: true,
   },
 });
 const isEdit = computed(() => !!props.instance && !!Object.keys(props.instance).length);
@@ -366,26 +347,6 @@ const handleCheckInstanceType = (row) => {
   instanceItem.value.instanceType = row.nodeType;
 };
 
-// 磁盘类型
-const diskEnum = ref([
-  {
-    id: 'CLOUD_PREMIUM',
-    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.premium'),
-  },
-  {
-    id: 'CLOUD_SSD',
-    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
-  },
-  {
-    id: 'CLOUD_HSSD',
-    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hssd'),
-  },
-]);
-
-// 数据盘
-const showDataDisk = ref(true);
-const fileSystem = ref(['ext3', 'ext4', 'xfs']);
-
 // 取消
 const handleCancel = () => {
   emits('cancel');
@@ -432,8 +393,6 @@ watch(
 watch(() => instanceItem.value.zone, () => {
   instanceItem.value.subnetID = '';
   instanceItem.value.instanceType = '';
-  // cpu.value = '';
-  // mem.value = '';
   handleGetSubnets();
 });
 </script>

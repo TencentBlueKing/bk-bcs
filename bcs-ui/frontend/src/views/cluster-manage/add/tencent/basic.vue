@@ -183,7 +183,7 @@
                       theme="info"
                       radius="45px"
                       v-if="item.alias === 'TencentOS Server 3.1 (TK4)' && item.provider === 'PUBLIC_IMAGE'">
-                      {{ $t('推荐') }}
+                      {{ $t('tke.label.recommended') }}
                     </bcs-tag>
                   </span>
                   <span v-if="item.clusters.length" class="text-[#979BA5]">
@@ -233,7 +233,7 @@
               :disabled="!runtimeModuleParamsMap['containerd']"
             >
               <span v-bk-tooltips="{
-                content: $t('当前集群版本不支持'),
+                content: $t('tke.tips.notSupportInCurrentClusterVersion'),
                 disabled: runtimeModuleParamsMap['containerd']
               }">
                 containerd
@@ -244,7 +244,7 @@
               :disabled="!runtimeModuleParamsMap['docker']"
             >
               <span v-bk-tooltips="{
-                content: $t('当前集群版本不支持'),
+                content: $t('tke.tips.notSupportInCurrentClusterVersion'),
                 disabled: runtimeModuleParamsMap['docker']
               }">
                 docker
@@ -278,7 +278,7 @@ import { computed, onMounted, PropType, ref, watch } from 'vue';
 
 import KeyValue from '../../components/key-value.vue';
 
-import SelectExtension from './select-extension.vue';
+import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 import { ICloudProject, ICloudRegion, IImageGroup, IImageItem, INodeManCloud } from './types';
 
 import {
@@ -464,7 +464,7 @@ const handleGetProjects = async () => {
   }).catch(() => []);
   projectList.value.unshift({
     projectID: 0,
-    projectName: $i18n.t('默认项目'),
+    projectName: $i18n.t('tke.label.defaultProject'),
   });
   projectLoading.value = false;
 };

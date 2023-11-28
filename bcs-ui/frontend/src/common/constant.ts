@@ -236,3 +236,19 @@ export const CLUSTER_MAP = {
   'IMPORT-FAILURE': $i18n.t('cluster.status.importFailed'),
   RUNNING: $i18n.t('generic.status.ready'),
 };
+
+// 磁盘类型
+export const diskEnum = [
+  {
+    id: 'CLOUD_PREMIUM',
+    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.premium'),
+  },
+  {
+    id: 'CLOUD_SSD',
+    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
+  },
+  {
+    id: 'CLOUD_HSSD',
+    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hssd'),
+  },
+];

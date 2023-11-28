@@ -170,6 +170,8 @@ units:
     last15Days: 近15天
     last30Days: 近30天
     nDays: '{num}天'
+    nMonths: '{0} 月'
+    nYears: '{0} 年'
   suffix:
     seconds: 秒
     days: 天
@@ -530,7 +532,7 @@ cluster:
       article8: 集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本
   tips:
     highMetricData: 集群指标过载
-    createK8SCluster: '新建 K8S 原生集群'
+    createK8SCluster: 新建 K8S 原生集群
     clusterStatus: '集群状态: {0}'
   labels:
     nameAndId: 集群名称/ID
@@ -599,6 +601,7 @@ cluster:
       clusterIPType:
         text: 集群 IP 类型
         dual: IPv4/IPv6 双栈
+        dualSingle: IPv4 或 IPv6 单栈 (由平台自动分配)
       netSetting: 容器网络分配
       maxNodePodNum: 单节点 Pod 数量上限
       kubernetesProvider: Kubernetes 提供商
@@ -2551,6 +2554,7 @@ tke:
       qGPU: qGPU 共享场景
       privateImage: 自定义镜像说明
   label:
+    recommended: 推荐
     serviceIpNum: Service IP数量
     podIpNum: Pod IP数量
     podCidr: Pod 网段
@@ -2582,7 +2586,7 @@ tke:
       text: 控制面节点转移模块
       desc: 将控制面节点从蓝鲸配置平台的空闲机模块转移至指定的业务模块
     loginType:
-      text: 设置系统密码
+      text: 登录方式
       desc: 创建集群过程为保证环境的一致性会使用此密码或密钥重装系统
       password: 密码登录
       ssh: SSH 密钥登录
@@ -2599,9 +2603,9 @@ tke:
     chargeType:
       text: 计费模式
       prepaid: 包年包月
-      prepaidDesc: '{0}: 按秒计费按小时结算的弹性计费模式。此种计费方式适用于电商抢购等设备需求量瞬间大幅波动的场景'
+      prepaidDesc: '{0}: 以月/年为计费周期的云服务器计费模式。此种计费方式适合长期稳定的成熟业务'
       postpaid_by_hour: 按量计费
-      postpaid_by_hour_desc: '{0}: 以月/年为计费周期的云服务器计费模式。此种计费方式适合长期稳定的成熟业务'
+      postpaid_by_hour_desc: '{0}: 按秒计费按小时结算的弹性计费模式。此种计费方式适用于电商抢购等设备需求量瞬间大幅波动的场景'
     period: 购买时长
     autoRenewal:
       text: 自动续费
@@ -2616,6 +2620,16 @@ tke:
     count: 数量
     serviceCidr: Service 网段
     availableIpNum: 可用IP数量
+    defaultProject: 默认项目
+    containerNet: 容器网段
+    publicIPAssigned:
+      text: 分配免费公网IP
+      tips: 内部上云环境禁用公网IP，如需提供公网服务请使用腾讯云负载均衡（CLB）
+      chargeMode:
+        text: 计费方式
+        traffic_postpaid_by_hour: 按使用流量计费
+        bandwidth_prepaid: 按带宽计费
+      maxBandWidth: 购买宽带
   title:
     connectFailure:
       text: 集群创建成功，但连接集群 APIServer 失败
@@ -2632,13 +2646,23 @@ tke:
     purchaseDataDisk: 购买数据盘
     autoFormatAndMount: 格式化并挂载于
     addSubnets: 添加子网
+    goDetail: '详情请见 {0}'
   link:
     cloudToken: 管理云凭证
     cloudProject: 管理云项目
     nodeman: 前往管理
-    subnet: 前往子网
+    subnet: 管理子网
+    securityGroup: 管理安全组
+    vpc: 管理私有网络
+    netOverview: 容器网络概述
+    staticIpMode: 固定IP使用方法
+    cmdb: 管理配置平台
+    package: 管理带宽包
   validate:
     passwordNotSame: 两次输入的密码不一致
+    minIpNum: '为保证集群有足够IP, 容器网段不能低于 {0} 个IP'
+    supportCidrList: '仅支持 {0} 之间网段'
+    minIpNum2: '容器网段不能少于 {0} 个 IP, 请重新输入'
   configRec:
     l100:
       text: 节点数1~100
@@ -2660,3 +2684,16 @@ tke:
     subnetInUsed: '子网已被集群 {0} 使用'
     nodeNotInSubnetZone: '该服务器可用区为 {0}, 与VPC-CNI Pod IP可用区不一致, 请使用可用区在 {1} 的服务器'
     totalIpNum: '共 {0} 个IP'
+    notSupportInCurrentClusterVersion: 当前集群版本不支持
+    grDesc: 'Global Router: 腾讯云 TKE 基于 VPC 路由实现的容器网络插件，可设置独立平行于 VPC 的容器网段'
+    vpcCniDesc: VPC-CNI：腾讯云 TKE 基于弹性网卡实现的容器网络插件，容器网络与云主机网络在同一个 VPC 内
+    notSupport: 暂不支持
+    supportCidr: '腾讯云支持私有网络范围: '
+    ipCannotBeAdjustedWhenCreated: '{0} IP数量一旦分配后将无法调整, 请谨慎评估后填写'
+    podIpCalcFormula: Pod IP数量 = 容器网段数量 - Service IP数量
+    vpcCniPodIp: Pod IP从私有网络的主/辅网段自动分配
+    staticIpMode:
+      p1: 此选项只支持在集群创建时开启，集群创建后无法修改，请谨慎操作。
+      p2: 此选项适用于依赖容器固定IP的场景, 对IP无限制的业务不推荐您使用固定IP模式, 详情请参考 {0}
+  placeholder:
+    example: '示例: {0}'

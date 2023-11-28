@@ -295,22 +295,7 @@
                 @change="validateMaster" />
             </bk-form-item>
             <bk-form-item label="Kube-apiserver">
-              <div class="bcs-border text-[12px] w-[280px]">
-                <div class="h-[32px] bg-[#F5F7FA] px-[16px]">
-                  {{ $t('cluster.create.label.highAvailabilityScheme.text') }}
-                </div>
-                <div class="min-h-[42px] px-[16px] flex items-center">
-                  <span v-if="masterConfig.master.length >= 3">
-                    bcs-apiserver-proxy
-                    <i
-                      class="bk-icon icon-info-circle ml-[5px] text-[16px] text-[#979ba5]"
-                      v-bk-tooltips="$t('cluster.create.label.highAvailabilityScheme.bcsApiServerProxy')"></i>
-                  </span>
-                  <span class="text-[#979BA5] leading-[20px]" v-else>
-                    {{ $t('cluster.create.label.highAvailabilityScheme.notSupport') }}
-                  </span>
-                </div>
-              </div>
+              <KubeApiServer :enabled="masterConfig.master.length >= 3" />
             </bk-form-item>
           </bk-form>
         </bcs-tab-panel>
@@ -377,6 +362,7 @@ import KeyValue from '../components/key-value.vue';
 
 import IpSelector from './common/ip-selector.vue';
 import StepTabLabel from './common/step-tab-label.vue';
+import KubeApiServer from './form/kube-api-server.vue';
 import { ICloudRegion } from './tencent/types';
 
 import { cloudDetail, cloudRegionByAccount, cloudVersionModules, createCluster } from '@/api/modules/cluster-manager';

@@ -382,17 +382,19 @@
                     :key="item.KeyID"
                     :id="item.KeyID"
                     :name="item.KeyName" />
-                  <div slot="extension" class="flex items-center bg-[#FAFBFD]" style="border-top: 1px solid #DCDEE5;">
-                    <div class="flex-1 flex items-center justify-center cursor-pointer" @click="handleCreateKeyPair">
-                      <i class="bk-icon icon-plus-circle text-[14px] mr-[5px]"></i>{{ $t('cluster.ca.nodePool.create.loginType.ssh.button.create') }}
+                  <template #extension>
+                    <div slot="extension" class="flex items-center">
+                      <div class="flex-1 flex items-center justify-center cursor-pointer" @click="handleCreateKeyPair">
+                        <i class="bk-icon icon-plus-circle text-[14px] mr-[5px]"></i>{{ $t('cluster.ca.nodePool.create.loginType.ssh.button.create') }}
+                      </div>
+                      <span
+                        class="w-[48px] h-[16px] flex items-center justify-center cursor-pointer"
+                        style="border-left: 1px solid #DCDEE5;"
+                        @click="handleGetKeyPairs">
+                        <i class="bcs-icon bcs-icon-reset"></i>
+                      </span>
                     </div>
-                    <span
-                      class="w-[48px] h-[16px] flex items-center justify-center cursor-pointer"
-                      style="border-left: 1px solid #DCDEE5;"
-                      @click="handleGetKeyPairs">
-                      <i class="bcs-icon bcs-icon-reset"></i>
-                    </span>
-                  </div>
+                  </template>
                 </bcs-select>
               </bk-form-item>
               <bk-form-item
@@ -492,8 +494,8 @@ import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
+import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import { useCloud, useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 
 export default defineComponent({

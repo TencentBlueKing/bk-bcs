@@ -18,7 +18,8 @@
           v-for="zone in zoneList"
           :key="zone.zoneID"
           :id="zone.zone"
-          :name="zone.zoneName">
+          :name="zone.zoneName"
+          :disabled="disableZoneOption(zone, index)">
         </bcs-option>
       </bcs-select>
       <span class="prefix">{{ $t('tke.label.ipNum') }}</span>
@@ -92,6 +93,11 @@ watch(subnetSourceNew, () => {
   emits('change', subnetSourceNew.value);
 }, { deep: true });
 
+// 一个可用区只能选择一次
+const disableZoneOption = (zone, i) => {
+  const index = subnetSourceNew.value.findIndex(item => item.zone === zone.zone);
+  return index > -1 && index !== i;
+};
 // vpc-cni 模式ip数量
 const addSubnetSource = () => {
   subnetSourceNew.value.push({

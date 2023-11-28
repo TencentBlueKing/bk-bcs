@@ -236,3 +236,19 @@ export interface IInstanceType{
 }
 
 export const ClusterDataInjectKey: InjectionKey<Ref<Partial<IClusterData>>> = Symbol('cluster-data');
+
+export interface IDataDisk {
+  diskType: string
+  diskSize: string
+  autoFormatAndMount: boolean
+  mountTarget: string
+  fileSystem: string
+}
+
+export type InternetChargeType = 'TRAFFIC_POSTPAID_BY_HOUR' | 'BANDWIDTH_PREPAID' | 'BANDWIDTH_PACKAGE';
+export interface IInternetAccess {
+  publicIPAssigned: boolean
+  internetMaxBandwidth: string
+  internetChargeType: InternetChargeType
+  bandwidthPackageId: string
+}

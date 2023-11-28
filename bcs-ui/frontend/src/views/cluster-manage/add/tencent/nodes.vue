@@ -48,6 +48,8 @@
         :zone-list="zoneList"
         :security-groups="securityGroups"
         :instances="instanceConfigList"
+        :disable-data-disk="false"
+        :disable-internet-access="false"
         node-role="WORKER"
         v-bkloading="{ isLoading: instanceLoading }"
         ref="applyHostResourceRef"
@@ -70,51 +72,15 @@
       error-display-type="normal"
       required
       ref="loginTypeRef">
-      <div class="bk-button-group">
-        <bk-button
-          :class="[{ 'is-selected': loginType === 'password' }]"
-          @click="loginType = 'password'">
-          {{ $t('tke.label.loginType.password') }}
-        </bk-button>
-        <bk-button
-          :class="[{ 'is-selected': loginType === 'ssh' }]"
-          @click="loginType = 'ssh'">
-          {{ $t('tke.label.loginType.ssh') }}
-        </bk-button>
-      </div>
-      <div class="bg-[#F5F7FA] mt-[16px] max-w-[500px] py-[16px] pr-[16px]">
-        <template v-if="loginType === 'password'">
-          <bk-form-item :label="$t('tke.label.setPassword')" required>
-            <bcs-input
-              type="password"
-              autocomplete="new-password"
-              v-model="nodeConfig.nodeSettings.workerLogin.initLoginPassword">
-            </bcs-input>
-          </bk-form-item>
-          <bk-form-item :label="$t('tke.label.confirmPassword')" class="!mt-[16px]" required>
-            <bcs-input type="password" autocomplete="new-password" v-model="confirmPassword"></bcs-input>
-          </bk-form-item>
-        </template>
-        <template v-else-if="loginType === 'ssh'">
-          <bk-form-item :label="$t('tke.label.publicKey')" :label-width="100" required>
-            <bcs-select
-              class="bg-[#fff]"
-              :clearable="false"
-              searchable
-              v-model="nodeConfig.nodeSettings.workerLogin.keyPair.keyID">
-              <bcs-option
-                v-for="item in keyPairs"
-                :key="item.KeyID"
-                :id="item.KeyID"
-                :name="item.KeyName">
-              </bcs-option>
-            </bcs-select>
-          </bk-form-item>
-          <bk-form-item :label="$t('tke.label.secretKey')" :label-width="100" class="!mt-[16px]" required>
-            <bk-input type="textarea" v-model="nodeConfig.nodeSettings.workerLogin.keyPair.keySecret"></bk-input>
-          </bk-form-item>
-        </template>
-      </div>
+      <LoginType
+        :region="region"
+        :cloud-account-i-d="cloudAccountID"
+        :cloud-i-d="cloudID"
+        :confirm-pass="confirmPassword"
+        :value="nodeConfig.nodeSettings.workerLogin"
+        @change="handleLoginValueChange"
+        @type-change="(v) => loginType = v"
+        @pass-change="(v) => confirmPassword = v" />
     </bk-form-item>
     <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] fixed bottom-0 left-0 w-full bcs-border-top">
       <bk-button class="min-w-[88px]" @click="preStep">{{ $t('generic.button.pre') }}</bk-button>
@@ -133,10 +99,11 @@ import IpSelector from '../common/ip-selector.vue';
 
 import ApplyHostResource from './apply-host-resource.vue';
 import TopoSelector from './topo-selector.vue';
-import { ClusterDataInjectKey, ICloudRegion, IHostNode, IInstanceItem, IKeyItem, ISecurityGroup, IZoneItem } from './types';
+import { ClusterDataInjectKey, ICloudRegion, IHostNode, IInstanceItem, ISecurityGroup, IZoneItem } from './types';
 
-import { cloudKeyPairs, cloudSecurityGroups } from '@/api/modules/cluster-manager';
+import { cloudSecurityGroups } from '@/api/modules/cluster-manager';
 import $i18n from '@/i18n/i18n-setup';
+import LoginType from '@/views/cluster-manage/add/form/login-type.vue';
 import TemplateSelector from '@/views/cluster-manage/components/template-selector.vue';
 
 const props = defineProps({
@@ -249,16 +216,21 @@ const watchOnce = watch(() => props.masterLogin, () => {
   watchOnce();
 });
 
+// 登录方式
+const loginType = ref<'password'|'ssh'>('password');
 const confirmPassword = ref('');
+const handleLoginValueChange = (value) => {
+  nodeConfig.value.nodeSettings.workerLogin = value;
+};
 
-watch([
-  () => nodeConfig.value.nodeSettings.workerLogin.initLoginPassword,
-  () => confirmPassword.value,
-  () => nodeConfig.value.nodeSettings.workerLogin.keyPair.keyID,
-  () => nodeConfig.value.nodeSettings.workerLogin.keyPair.keySecret,
-], () => {
-  formRef.value?.$refs?.loginTypeRef?.validate();
-});
+// watch([
+//   () => nodeConfig.value.nodeSettings.workerLogin.initLoginPassword,
+//   () => confirmPassword.value,
+//   () => nodeConfig.value.nodeSettings.workerLogin.keyPair.keyID,
+//   () => nodeConfig.value.nodeSettings.workerLogin.keyPair.keySecret,
+// ], () => {
+//   formRef.value?.$refs?.loginTypeRef?.validate();
+// });
 // 动态 i18n 问题，这里使用computed
 const nodeConfigRules = computed(() => ({
   nodes: [{
@@ -361,21 +333,6 @@ watch(instances, () => {
   emits('instances-change', instances.value);
 });
 
-// 登录方式
-const loginType = ref<'password'|'ssh'>('password');
-watch(loginType, () => {
-  if (loginType.value === 'password') {
-    nodeConfig.value.nodeSettings.workerLogin.keyPair = {
-      keyID: '',
-      keySecret: '',
-      keyPublic: '',
-    };
-  } else if (loginType.value === 'ssh') {
-    nodeConfig.value.nodeSettings.workerLogin.initLoginPassword = '';
-    confirmPassword.value = '';
-  }
-});
-
 // 安全组
 const securityGroupLoading = ref(false);
 const securityGroups = ref<Array<ISecurityGroup>>([]);
@@ -390,26 +347,11 @@ const handleGetSecurityGroups = async () => {
   securityGroupLoading.value = false;
 };
 
-// 密钥
-const keyPairs = ref<Array<IKeyItem>>([]);
-const cloudKeyPairsLoading = ref(false);
-const handleGetCloudKeyPairs = async () => {
-  if (!props.region || !props.cloudAccountID) return;
-  cloudKeyPairsLoading.value = true;
-  keyPairs.value = await cloudKeyPairs({
-    $cloudId: props.cloudID,
-    accountID: props.cloudAccountID,
-    region: props.region,
-  }).catch(() => []);
-  cloudKeyPairsLoading.value = false;
-};
-
 watch([
   () => props.region,
   () => props.cloudAccountID,
 ], () => {
   handleGetSecurityGroups();
-  handleGetCloudKeyPairs();
 });
 
 // 校验master节点

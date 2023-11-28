@@ -60,7 +60,7 @@
         </bk-form-item>
       </template>
       <bk-form-item label="Kube-apiserver" v-if="curCluster.provider === 'bluekingCloud'">
-        <div>{{ enableHa ? $t('generic.status.support') : $t('generic.status.unSupport') }}</div>
+        <KubeApiServer :enabled="enableHa" />
       </bk-form-item>
     </template>
     <template v-else>
@@ -123,9 +123,11 @@ import $bkMessage from '@/common/bkmagic';
 import { copyText } from '@/common/util';
 import { useCluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
+import KubeApiServer from '@/views/cluster-manage/add/form/kube-api-server.vue';
 
 export default defineComponent({
   name: 'ClusterMaster',
+  components: { KubeApiServer },
   props: {
     clusterId: {
       type: String,

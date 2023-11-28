@@ -792,6 +792,7 @@ cluster:
       clusterIPType:
         text: Cluster ip type
         dual: IPv4/IPv6
+        dualSingle: ''
       netSetting: Network setting
       maxNodePodNum: Max pod num
       highAvailabilityScheme:
@@ -3194,12 +3195,12 @@ tke:
       text: Charge
       prepaid: Annual or Monthly Subscription
       postpaid_by_hour: Pay-As-You-Go Billing
-      prepaidDesc: >-
+      postpaid_by_hour_desc: >-
         {0}: Pay-As-You-Go Elastic billing mode, charged by the second and
         settled by the hour. This billing method is suitable for scenarios such
         as e-commerce flash sales where the demand for equipment experiences
         sudden and significant fluctuations.
-      postpaid_by_hour_desc: >-
+      prepaidDesc: >-
         {0}: A cloud server billing mode based on a monthly/yearly billing
         cycle. This billing method is suitable for long-term, stable, and mature
         business operations.
@@ -3230,6 +3231,9 @@ tke:
     serviceCidr: Service CIDR
     subnetID: Subnet ID
     subnetName: Subnet name
+    recommended: ''
+    defaultProject: ''
+    containerNet: ''
   title:
     connectFailure:
       text: >-
@@ -3254,13 +3258,20 @@ tke:
     purchaseDataDisk: Purchase Data Disk
     autoFormatAndMount: Format and Mount Automatically
     addSubnets: Add Subnets
+    goDetail: ''
   link:
     cloudToken: Manage Cloud Credentials
     cloudProject: Manage Cloud Project
     nodeman: Go to Manage
     subnet: Go to Subnet
+    securityGroup: ''
+    vpc: ''
+    netOverview: ''
   validate:
     passwordNotSame: The passwords entered do not match
+    minIpNum: ''
+    minIpNum2: ''
+    supportCidrList: ''
   configRec:
     l100:
       text: Node Count 1~100
@@ -3296,7 +3307,10 @@ tke:
       qGPU: qGPU Shared Scenarios
       privateImage: Custom Image Explanation
   tips:
-    nodeNotInSubnetZone: The availability zone of the server is {0}, which is inconsistent with the availability zone for the VPC-CNI Pod IP. Please use a server that is in the availability zone {1}.
+    nodeNotInSubnetZone: >-
+      The availability zone of the server is {0}, which is inconsistent with the
+      availability zone for the VPC-CNI Pod IP. Please use a server that is in
+      the availability zone {1}.
     noAvailableIp: No available IPs
     subnetInUsed: 'The subnet has been used by cluster {0}'
     zone: >-
@@ -3308,3 +3322,14 @@ tke:
       and the availability zone of the Pod IP must be consistent with the
       availability zone of the cluster nodes (including the control plane and
       Node nodes)
+    notSupportInCurrentClusterVersion: ''
+    grDesc: ''
+    vpcCniDesc: ''
+    notSupport: ''
+    totalIpNum: ''
+    supportCidr: ''
+    ipCannotBeAdjustedWhenCreated: ''
+    podIpCalcFormula: ''
+    vpcCniPodIp: ''
+  placeholder:
+    example: ''

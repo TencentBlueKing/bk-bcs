@@ -80,7 +80,11 @@
               {{ $t('tke.label.apiServerCLB.internet') }}
             </bk-radio>
             <div class="flex items-center flex-1 ml-[16px]">
-              <span class="prefix">{{ $t('tke.label.securityGroup.text') }}</span>
+              <span
+                class="prefix"
+                v-bk-tooltips="$t('tke.label.securityGroup.desc')">
+                <span class="bcs-border-tips">{{ $t('tke.label.securityGroup.text') }}</span>
+              </span>
               <bk-select
                 class="ml-[-1px] flex-1"
                 searchable
@@ -95,7 +99,7 @@
                 </bk-option>
                 <div slot="extension">
                   <SelectExtension
-                    :link-text="$t('管理安全组')"
+                    :link-text="$t('tke.link.securityGroup')"
                     link="https://console.cloud.tencent.com/vpc/security-group"
                     @refresh="handleGetSecurityGroups" />
                 </div>
@@ -161,7 +165,8 @@
           @instance-list-change="handleInstanceListChange"
           @common-config-change="handleCommonConfigChange"
           @level-change="handleLevelChange"
-          @delete-instance="handleDeleteInstance" />
+          @delete-instance="handleDeleteInstance"
+          @refresh-security-groups="handleGetSecurityGroups" />
       </template>
       <bk-form-item
         :label="$t('tke.label.masterModule.text')"
@@ -202,7 +207,7 @@
                 </bk-option>
                 <div slot="extension">
                   <SelectExtension
-                    :link-text="$t('管理安全组')"
+                    :link-text="$t('tke.link.securityGroup')"
                     link="https://console.cloud.tencent.com/vpc/security-group"
                     @refresh="handleGetSecurityGroups" />
                 </div>
@@ -222,51 +227,14 @@
         error-display-type="normal"
         required
         ref="loginTypeRef">
-        <div class="bk-button-group">
-          <bk-button
-            :class="[{ 'is-selected': loginType === 'password' }]"
-            @click="loginType = 'password'">
-            {{ $t('tke.label.loginType.password') }}
-          </bk-button>
-          <bk-button
-            :class="[{ 'is-selected': loginType === 'ssh' }]"
-            @click="loginType = 'ssh'">
-            {{ $t('tke.label.loginType.ssh') }}
-          </bk-button>
-        </div>
-        <div class="bg-[#F5F7FA] mt-[16px] max-w-[500px] py-[16px] pr-[16px]">
-          <template v-if="loginType === 'password'">
-            <bk-form-item :label="$t('tke.label.setPassword')" required>
-              <bcs-input
-                type="password"
-                autocomplete="new-password"
-                v-model="masterConfig.nodeSettings.masterLogin.initLoginPassword">
-              </bcs-input>
-            </bk-form-item>
-            <bk-form-item :label="$t('tke.label.confirmPassword')" class="!mt-[16px]" required>
-              <bcs-input type="password" autocomplete="new-password" v-model="confirmPassword"></bcs-input>
-            </bk-form-item>
-          </template>
-          <template v-else-if="loginType === 'ssh'">
-            <bk-form-item :label="$t('tke.label.publicKey')" :label-width="100" required>
-              <bcs-select
-                class="bg-[#fff]"
-                :clearable="false"
-                searchable
-                v-model="masterConfig.nodeSettings.masterLogin.keyPair.keyID">
-                <bcs-option
-                  v-for="item in keyPairs"
-                  :key="item.KeyID"
-                  :id="item.KeyID"
-                  :name="item.KeyName">
-                </bcs-option>
-              </bcs-select>
-            </bk-form-item>
-            <bk-form-item :label="$t('tke.label.secretKey')" :label-width="100" class="!mt-[16px]" required>
-              <bk-input type="textarea" v-model="masterConfig.nodeSettings.masterLogin.keyPair.keySecret"></bk-input>
-            </bk-form-item>
-          </template>
-        </div>
+        <LoginType
+          :region="region"
+          :cloud-account-i-d="cloudAccountID"
+          :cloud-i-d="cloudID"
+          :value="masterConfig.nodeSettings.masterLogin"
+          @change="handleLoginValueChange"
+          @type-change="(v) => loginType = v"
+          @pass-change="(v) => confirmPassword = v" />
       </bk-form-item>
     </template>
     <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] fixed bottom-0 left-0 w-full bcs-border-top">
@@ -283,13 +251,14 @@ import clusterScaleData from '../common/cluster-scale.json';
 import IpSelector from '../common/ip-selector.vue';
 
 import ApplyHostResource from './apply-host-resource.vue';
-import SelectExtension from './select-extension.vue';
 import TopoSelector from './topo-selector.vue';
-import { ClusterDataInjectKey, ICloudRegion, IHostNode, IInstanceItem, IKeyItem, IScale, ISecurityGroup, IZoneItem } from './types';
+import { ClusterDataInjectKey, ICloudRegion, IHostNode, IInstanceItem, IScale, ISecurityGroup, IZoneItem } from './types';
 
-import { cloudInstanceTypesByLevel, cloudKeyPairs, cloudSecurityGroups } from '@/api/modules/cluster-manager';
+import { cloudInstanceTypesByLevel, cloudSecurityGroups } from '@/api/modules/cluster-manager';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import $i18n from '@/i18n/i18n-setup';
+import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
+import LoginType from '@/views/cluster-manage/add/form/login-type.vue';
 
 const props = defineProps({
   region: {
@@ -390,16 +359,21 @@ const masterConfig = ref({
     },
   },
 });
-const confirmPassword = ref('');
 
-watch([
-  () => masterConfig.value.nodeSettings.masterLogin.initLoginPassword,
-  () => confirmPassword.value,
-  () => masterConfig.value.nodeSettings.masterLogin.keyPair.keyID,
-  () => masterConfig.value.nodeSettings.masterLogin.keyPair.keySecret,
-], () => {
-  formRef.value?.$refs?.loginTypeRef?.validate();
-});
+// 登录方式
+const loginType = ref<'password'|'ssh'>('password');
+const confirmPassword = ref('');
+const handleLoginValueChange = (value) => {
+  masterConfig.value.nodeSettings.masterLogin = value;
+};
+// watch([
+//   () => masterConfig.value.nodeSettings.masterLogin.initLoginPassword,
+//   () => confirmPassword.value,
+//   () => masterConfig.value.nodeSettings.masterLogin.keyPair.keyID,
+//   () => masterConfig.value.nodeSettings.masterLogin.keyPair.keySecret,
+// ], () => {
+//   formRef.value?.$refs?.loginTypeRef?.validate();
+// });
 // 动态 i18n 问题，这里使用computed
 const masterConfigRules = computed(() => ({
   'clusterBasicSettings.clusterLevel': [
@@ -572,21 +546,6 @@ const handleChangeClusterScale = (scale) => {
   masterConfig.value.clusterBasicSettings.clusterLevel = scale;
 };
 
-// 登录方式
-const loginType = ref<'password'|'ssh'>('password');
-watch(loginType, () => {
-  if (loginType.value === 'password') {
-    masterConfig.value.nodeSettings.masterLogin.keyPair = {
-      keyID: '',
-      keySecret: '',
-      keyPublic: '',
-    };
-  } else if (loginType.value === 'ssh') {
-    masterConfig.value.nodeSettings.masterLogin.initLoginPassword = '';
-    confirmPassword.value = '';
-  }
-});
-
 // 安全组
 const securityGroupLoading = ref(false);
 const securityGroups = ref<Array<ISecurityGroup>>([]);
@@ -601,26 +560,11 @@ const handleGetSecurityGroups = async () => {
   securityGroupLoading.value = false;
 };
 
-// 密钥
-const keyPairs = ref<Array<IKeyItem>>([]);
-const cloudKeyPairsLoading = ref(false);
-const handleGetCloudKeyPairs = async () => {
-  if (!props.region || !props.cloudAccountID) return;
-  cloudKeyPairsLoading.value = true;
-  keyPairs.value = await cloudKeyPairs({
-    $cloudId: props.cloudID,
-    accountID: props.cloudAccountID,
-    region: props.region,
-  }).catch(() => []);
-  cloudKeyPairsLoading.value = false;
-};
-
 watch([
   () => props.region,
   () => props.cloudAccountID,
 ], () => {
   handleGetSecurityGroups();
-  handleGetCloudKeyPairs();
 });
 
 watch([

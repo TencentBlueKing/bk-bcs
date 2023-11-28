@@ -2,6 +2,7 @@
   <div class="max-w-[750px]">
     <bk-form-item :label="$t('tke.label.region')">
       <bcs-select
+        class="max-w-[500px]"
         :value="region"
         searchable
         :clearable="false"
@@ -16,7 +17,7 @@
     </bk-form-item>
     <bk-form-item :label="$t('cluster.create.label.privateNet.text')">
       <bcs-select
-        class="max-w-[600px]"
+        class="max-w-[500px]"
         :value="vpcID"
         disabled>
         <bcs-option
@@ -34,7 +35,7 @@
       </bcs-select>
     </bk-form-item>
     <bk-form-item :label="$t('tke.label.system')">
-      <bcs-select disabled :value="os">
+      <bcs-select disabled :value="os" class="max-w-[500px]">
         <bcs-option-group v-for="group in imageListByGroup" :key="group.provider" :name="group.name">
           <template v-if="group.provider === 'PRIVATE_IMAGE'">
             <bcs-option
@@ -99,8 +100,8 @@
     </bk-form-item>
     <template v-if="instanceCommonConfig.instanceChargeType === 'PREPAID' && instanceCommonConfig.charge">
       <bk-form-item :label="$t('tke.label.period')">
-        <bcs-select :clearable="false" searchable v-model="instanceCommonConfig.charge.period">
-          <bcs-option v-for="item in periodList" :key="item" :id="item" :name="item"></bcs-option>
+        <bcs-select :clearable="false" searchable v-model="instanceCommonConfig.charge.period" class="max-w-[500px]">
+          <bcs-option v-for="item in periodList" :key="item.id" :id="item.id" :name="item.name"></bcs-option>
         </bcs-select>
       </bk-form-item>
       <bk-form-item :label="$t('tke.label.autoRenewal.text')">
@@ -173,18 +174,25 @@
       property="securityGroupIDs"
       error-display-type="normal"
       required>
-      <bcs-select
+      <bk-select
+        class="max-w-[500px]"
         searchable
         multiple
         :clearable="false"
         v-model="instanceCommonConfig.securityGroupIDs">
-        <bcs-option
+        <bk-option
           v-for="item in securityGroups"
           :key="item.securityGroupID"
           :id="item.securityGroupID"
           :name="item.securityGroupName">
-        </bcs-option>
-      </bcs-select>
+        </bk-option>
+        <template slot="extension">
+          <SelectExtension
+            :link-text="$t('tke.link.securityGroup')"
+            link="https://console.cloud.tencent.com/vpc/security-group"
+            @refresh="refreshSecurityGroups" />
+        </template>
+      </bk-select>
     </bk-form-item>
     <bcs-sideslider
       :is-show.sync="showNodeConfig"
@@ -198,6 +206,10 @@
         :zone-list="zoneList"
         :node-role="nodeRole"
         :instance="editInstanceItem"
+        :cloud-account-i-d="cloudAccountID"
+        :cloud-i-d="cloudID"
+        :disable-data-disk="disableDataDisk"
+        :disable-internet-access="disableInternetAccess"
         slot="content"
         @cancel="showNodeConfig = false"
         @confirm="handleNodeConfigConfirm" />
@@ -211,6 +223,7 @@ import ApplyNodeConfig from './apply-node-config.vue';
 import { ICloudRegion, IInstanceItem, ISecurityGroup, IZoneItem } from './types';
 
 import $i18n from '@/i18n/i18n-setup';
+import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 
 const props = defineProps({
   region: {
@@ -272,9 +285,17 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  disableDataDisk: {
+    type: Boolean,
+    default: true,
+  },
+  disableInternetAccess: {
+    type: Boolean,
+    default: true,
+  },
 });
 
-const emits = defineEmits(['instance-list-change', 'level-change', 'delete-instance', 'common-config-change']);
+const emits = defineEmits(['instance-list-change', 'level-change', 'delete-instance', 'common-config-change', 'refresh-security-groups']);
 
 const diskMap = ref({
   CLOUD_PREMIUM: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.premium'),
@@ -307,7 +328,16 @@ const handleLevelChange = (level) => {
   emits('level-change', level);
 };
 
-const periodList = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24, 36, 48, 60]);
+const periodList = ref([
+  ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(month => ({
+    id: month,
+    name: $i18n.t('units.time.nMonths', [month]),
+  })),
+  ...[1, 2, 3].map(year => ({
+    id: year * 12,
+    name: $i18n.t('units.time.nYears', [year]),
+  })),
+]);
 const showNodeConfig = ref(false);
 
 // 获取zone name
@@ -382,6 +412,10 @@ const handleNodeConfigConfirm = async (item: IInstanceItem) => {
   }
   handleLevelChange('');// 重置level
   showNodeConfig.value = false;
+};
+
+const refreshSecurityGroups = () => {
+  emits('refresh-security-groups');
 };
 </script>
 <style scoped lang="postcss">

@@ -59,23 +59,27 @@ export default defineComponent({
     const flag = ref(false);
     const validateResourceVersion = () => {
       setTimeout(async () => {
-        const res = await fetch(`${window.BK_STATIC_URL}/static/static_version.txt`, { cache: 'no-store' });
-        const hash = await res.text();
-        if (resourceHash.value && (resourceHash.value !== hash)) {
-          $bkInfo({
-            type: 'warning',
-            clsName: 'custom-info-confirm',
-            title: $i18n.t('bcs.newVersion'),
-            defaultInfo: true,
-            okText: $i18n.t('generic.button.reload'),
-            confirmFn: () => {
-              window.location.reload();
-            },
-          });
-          flag.value = true;
+        try {
+          const res = await fetch(`${window.BK_STATIC_URL}/static/static_version.txt`, { cache: 'no-store' });
+          const hash = await res.text();
+          if (resourceHash.value && (resourceHash.value !== hash)) {
+            $bkInfo({
+              type: 'warning',
+              clsName: 'custom-info-confirm',
+              title: $i18n.t('bcs.newVersion'),
+              defaultInfo: true,
+              okText: $i18n.t('generic.button.reload'),
+              confirmFn: () => {
+                window.location.reload();
+              },
+            });
+            flag.value = true;
+          }
+          resourceHash.value = hash;
+          !flag.value && validateResourceVersion();
+        } catch (err) {
+          console.log(err);
         }
-        resourceHash.value = hash;
-        !flag.value && validateResourceVersion();
       }, 15000);
     };
 

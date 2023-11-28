@@ -718,33 +718,37 @@ export function countIPsInCIDR(cidr) {
   return totalIPs;
 }
 
-function ipToBin(ip) {
-  return ip.split('.').map(octet => parseInt(octet).toString(2)
-    .padStart(8, '0'))
-    .join('');
-}
+const cidrToRange = (cidr: string): [string, string] => {
+  const [ip, subnet] = cidr.split('/');
+  const ipBinary = ipToBinary(ip);
+  const subnetMask = parseInt(subnet, 10);
+  const networkBinary = ipBinary.substring(0, subnetMask).padEnd(32, '0');
+  const broadcastBinary = networkBinary.substring(0, subnetMask).padEnd(32, '1');
 
-function cidrToNetAddr(cidr) {
-  const [ip, maskSize] = cidr.split('/');
-  const ipBin = ipToBin(ip);
-  const netAddrBin = ipBin.substring(0, Number(maskSize)).padEnd(32, '0');
-  return netAddrBin;
-}
+  return [binaryToIp(networkBinary), binaryToIp(broadcastBinary)];
+};
 
-export function cidrContains(cidrA, cidrB) {
-  // 将CIDR网段转换为网络地址二进制形式
-  const netAddrA = cidrToNetAddr(cidrA);
-  const netAddrB = cidrToNetAddr(cidrB);
+const ipToBinary = (ip: string) => ip.split('.').map(octet => parseInt(octet, 10).toString(2)
+  .padStart(8, '0'))
+  .join('');
 
-  // 获取各自的子网掩码长度
-  const maskSizeA = Number(cidrA.split('/')[1]);
-  const maskSizeB = Number(cidrB.split('/')[1]);
+const binaryToIp = binary => Array.from({ length: 4 }, (_, i) => parseInt(binary.substring(i * 8, (i + 1) * 8), 2).toString(10)).join('.');
 
-  // 确保cidrA的掩码长度更短（即网络范围更大）
-  if (maskSizeA > maskSizeB) {
-    return false; // 如果cidrA掩码长度更长表示它的网络小于等于cidrB的网络
-  }
+export const cidrContains = (cidrA: string, cidrB: string|string[]) => {
+  const [aStart, aEnd] = cidrToRange(cidrA);
+  const aStartBinary = parseInt(ipToBinary(aStart), 2);
+  const aEndBinary = parseInt(ipToBinary(aEnd), 2);
 
-  // 比较cidrA网段的网络地址是否为cidrB网段的网络地址的子集
-  return netAddrB.startsWith(netAddrA);
-}
+  const cidrBList = Array.isArray(cidrB) ? cidrB : [cidrB];
+  const cidrIpToBinary = cidrBList.reduce<number[]>((pre, cidr) => {
+    const range = cidrToRange(cidr);
+    range.forEach((ip) => {
+      pre.push(parseInt(ipToBinary(ip), 2));
+    });
+    return pre;
+  }, []).sort((a, b) => a - b);
+  const rangeStartBinary = cidrIpToBinary[0];
+  const rangeEndBinary = cidrIpToBinary[cidrIpToBinary.length - 1];
+
+  return aStartBinary >= rangeStartBinary && aEndBinary <= rangeEndBinary;
+};
