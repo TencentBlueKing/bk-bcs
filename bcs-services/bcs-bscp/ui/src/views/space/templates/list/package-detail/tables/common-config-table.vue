@@ -26,7 +26,7 @@
         :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-value-change="refreshList"
+        @page-value-change="refreshList($event,true)"
         @selection-change="handleSelectionChange"
       >
         <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
@@ -380,7 +380,7 @@ const getRowCls = (data: ITemplateConfigItem) => {
 
 const handlePageLimitChange = (val: number) => {
   pagination.value.limit = val;
-  refreshList();
+  refreshList(1, true);
 };
 
 const clearSearchStr = () => {
