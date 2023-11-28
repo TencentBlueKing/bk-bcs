@@ -10,6 +10,7 @@ base_conf:
 auth_conf:
   host: ""
   gateway_host: ""
+  use_gw: true
 logging:
   level: info
   file: ""
