@@ -26,7 +26,7 @@
         :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-value-change="refreshList"
+        @page-value-change="refreshList($event,true)"
         @selection-change="handleSelectionChange"
       >
         <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
@@ -224,6 +224,7 @@ const loadConfigList = async (isBatchUpload = false) => {
     params.search_fields = 'name,path,memo,creator,reviser';
     params.search_value = searchStr.value;
   }
+  console.log('params', params);
   const res = await props.getConfigList(params);
   list.value = res.details;
   pagination.value.count = res.count;
@@ -380,7 +381,7 @@ const getRowCls = (data: ITemplateConfigItem) => {
 
 const handlePageLimitChange = (val: number) => {
   pagination.value.limit = val;
-  refreshList();
+  refreshList(1, true);
 };
 
 const clearSearchStr = () => {
