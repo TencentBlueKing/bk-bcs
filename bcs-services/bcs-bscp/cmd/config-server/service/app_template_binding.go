@@ -431,7 +431,9 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 					OriginSignature:      r.OriginSignature,
 					OriginByteSize:       r.OriginByteSize,
 					Creator:              r.Creator,
+					Reviser:              r.Reviser,
 					CreateAt:             r.CreateAt,
+					UpdateAt:             r.UpdateAt,
 				})
 		}
 		details = append(details, group)
