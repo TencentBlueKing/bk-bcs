@@ -1,44 +1,28 @@
 <template>
-  <bk-sideslider width="400" quick-close :is-show="props.show" :title="t('服务属性')" :before-close="handleClose">
+  <bk-sideslider
+    width="640"
+    quick-close
+    :is-show="props.show"
+    :before-close="handleBeforeClose"
+    @closed="close">
     <template #header>
       <div class="service-edit-head">
-        <span class="title">{{ t('服务属性') }}</span>
+        <span class="title">{{ isViewMode ? t('服务属性') : t('编辑服务') }}</span>
+        <bk-button v-if="isViewMode" class="edit-entry-btn" theme="primary" @click="isViewMode = false">编辑</bk-button>
       </div>
     </template>
     <div class="service-edit-wrapper">
-      <bk-form ref="formRef" :model="formData" label-width="100" :rules="rules">
+      <bk-form v-if="isViewMode" label-width="100">
         <bk-form-item :label="t('服务名称')">{{ props.service.spec.name }}</bk-form-item>
-        <bk-form-item :label="t('所属业务')">{{ spaceName }}</bk-form-item>
-        <bk-form-item :label="t('服务描述')" property="memo" error-display-type="tooltips">
-          <div class="content-edit">
-            <template v-if="isMemoEdit">
-              <bk-input
-                ref="memoRef"
-                v-model="formData.memo"
-                type="textarea"
-                :show-word-limit="true"
-                :maxlength="255"
-                :rows="5"
-                @blur="handleUpdateMemo"
-                :resize="true"
-              >
-              </bk-input>
-            </template>
-            <template v-else>
-              {{ formData.memo || '--' }}
-              <i
-                :class="[
-                  'bk-bscp-icon icon-edit-small edit-icon',
-                  { 'no-edit-perm': !props.service.permissions.update },
-                ]"
-                @click="handleEditMemo"
-              />
-            </template>
-          </div>
+        <bk-form-item :label="t('服务别名')">@todo 待后台确定字段</bk-form-item>
+        <bk-form-item :label="t('服务描述')">
+          {{ props.service.spec.memo || '--' }}
         </bk-form-item>
-        <bk-form-item :label="t('接入方式')">
-          <!-- {{ props.service.spec.config_type }}-{{ props.service.spec.deploy_type }} -->
-          文件型
+        <bk-form-item :label="t('数据格式')">
+          {{ props.service.spec.config_type === 'file' ? '文件型' : '键值型' }}
+        </bk-form-item>
+        <bk-form-item v-if="props.service.spec.config_type !== 'file'" :label="t('数据类型')">
+          {{ kvType }}
         </bk-form-item>
         <bk-form-item :label="t('创建者')">
           {{ props.service.revision.creator }}
@@ -47,17 +31,33 @@
           {{ datetimeFormat(props.service.revision.create_at) }}
         </bk-form-item>
       </bk-form>
+      <SearviceForm v-else ref="formCompRef" :form-data="serviceData" @change="handleChange" />
+    </div>
+    <div v-if="!isViewMode" class="service-edit-footer">
+      <bk-button
+        v-cursor="{ active: !props.service.permissions.update }"
+        theme="primary"
+        :class="{ 'bk-button-with-no-perm': !props.service.permissions.update }"
+        :loading="pending"
+        @click="handleEditConfirm">
+        {{ t('保存') }}
+      </bk-button>
+      <bk-button @click="isViewMode = true">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../store/global';
 import { updateApp } from '../../../../../api/index';
 import { datetimeFormat } from '../../../../../utils/index';
 import { IAppItem } from '../../../../../../types/app';
+import { IServiceEditForm } from '../../../../../../types/service';
+import { CONFIG_KV_TYPE } from '../../../../../constants/config';
+import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
+import SearviceForm from './service-form.vue';
 
 const { spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 
@@ -70,47 +70,51 @@ const props = defineProps<{
 
 const emits = defineEmits(['update:show', 'editMemo']);
 
-const isMemoEdit = ref(false);
-const formData = ref({
-  memo: '',
+const isFormChange = ref(false);
+const isViewMode = ref(true);
+const serviceData = ref<IServiceEditForm>({
+  name: '',
+  config_type: 'file',
+  kv_type: '',
+  reload_type: 'file',
+  reload_file_path: '',
+  mode: '',
+  deploy_type: 'common',
+  memo: ''
 });
-const formRef = ref();
-const memoRef = ref();
+const pending = ref(false);
+const formCompRef = ref();
 
-const spaceName = computed(() => {
-  const space = spaceList.value.find(item => item.space_id === props.service.space_id);
-  return space?.space_name;
-});
-
-const rules = {
-  memo: [
-    {
-      validator: (value: string) => value.length <= 200,
-      message: '最大长度200个字符',
-      trigger: 'change',
-    },
-  ],
-};
+const kvType = computed(() => {
+  if (serviceData.value.kv_type) {
+    const type = CONFIG_KV_TYPE.find(item => item.id === serviceData.value.kv_type)
+    return type?.name
+  }
+  return
+})
 
 watch(
   () => props.show,
   (val) => {
     if (val) {
-      formData.value.memo = props.service.spec.memo;
+      isFormChange.value = false;
+      isViewMode.value = true;
+      const { spec } = props.service
+      const { name, memo, mode, config_type, reload, kv_type } = spec;
+      const { reload_type, file_reload_spec } = reload;
+      serviceData.value = {
+        name,
+        memo,
+        mode,
+        config_type,
+        kv_type,
+        reload_type,
+        reload_file_path: file_reload_spec.reload_file_path,
+        deploy_type: 'common' // @todo 待和后台确认是否需要
+      };
     }
   },
 );
-
-const handleEditMemo = () => {
-  if (props.service.permissions.update) {
-    isMemoEdit.value = true;
-    nextTick(() => {
-      memoRef.value.focus();
-    });
-  } else {
-    openPermApplyDialog();
-  }
-};
 
 const openPermApplyDialog = () => {
   permissionQuery.value = {
@@ -128,43 +132,53 @@ const openPermApplyDialog = () => {
   showApplyPermDialog.value = true;
 };
 
-const handleUpdateMemo = async () => {
-  await formRef.value.validate();
-  const { id, biz_id, spec } = props.service;
-  const { name, mode, config_type, reload } = spec;
+const handleChange = (val: IServiceEditForm) => {
+  isFormChange.value = true;
+  serviceData.value = val;
+}
+
+const handleEditConfirm = async () => {
+  if (!props.service.permissions.update) {
+    openPermApplyDialog();
+    return;
+  }
+  await formCompRef.value.validate();
+  const { id, biz_id } = props.service;
   const data = {
     id,
     biz_id,
-    name,
-    mode,
-    config_type,
-    reload_type: reload.reload_type,
-    reload_file_path: reload.file_reload_spec.reload_file_path,
-    deploy_type: 'common',
-    memo: formData.value.memo,
+    ...serviceData.value
   };
   await updateApp({ id, biz_id, data });
-  emits('editMemo', formData.value.memo);
-  isMemoEdit.value = false;
+  emits('editMemo', serviceData.value.memo);
 };
 
-const handleClose = () => {
+const handleBeforeClose = async () => {
+  if (!isViewMode.value && isFormChange.value) {
+    const result = await useModalCloseConfirmation();
+    return result;
+  }
+  return true;
+};
+
+const close = () => {
   emits('update:show', false);
 };
 </script>
 <style lang="scss" scoped>
 .service-edit-head {
   display: flex;
-  align-content: center;
+  align-items: center;
   justify-content: space-between;
   padding-right: 24px;
-  .credential-btn {
-    font-size: 12px;
-    color: #3a84ff;
+  width: 100%;
+  .edit-entry-btn {
+    min-width: 64px;
   }
 }
 .service-edit-wrapper {
   padding: 20px 24px;
+  height: calc(100vh - 101px);
   font-size: 12px;
   :deep(.bk-form-item) {
     margin-bottom: 16px;
@@ -201,6 +215,18 @@ const handleClose = () => {
     &:hover .edit-icon {
       display: block;
     }
+  }
+}
+.service-edit-footer {
+  padding: 8px 24px;
+  height: 48px;
+  width: 100%;
+  background: #fafbfd;
+  border-top: 1px solid #dcdee5;
+  box-shadow: none;
+  button {
+    margin-right: 8px;
+    min-width: 88px;
   }
 }
 </style>
