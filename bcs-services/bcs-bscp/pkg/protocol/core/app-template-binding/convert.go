@@ -229,7 +229,9 @@ func PbReleasedAppBoundTmplRevision(s *table.ReleasedAppTemplate) *ReleasedAppBo
 		OriginSignature:      s.Spec.OriginSignature,
 		OriginByteSize:       s.Spec.OriginByteSize,
 		Creator:              s.Revision.Creator,
+		Reviser:              s.Revision.Reviser,
 		CreateAt:             s.Revision.CreatedAt.Format(time.RFC3339),
+		UpdateAt:             s.Revision.UpdatedAt.Format(time.RFC3339),
 	}
 }
 

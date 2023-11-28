@@ -390,13 +390,13 @@ func (s *Service) uploadRenderedTmplContent(kt *kit.Kit, renderedContentMap map[
 }
 
 // uploadRenderedCIContent upload rendered config item content to repo.
-func (s *Service) uploadRenderedCIContent(kt *kit.Kit, renderedContentMap map[uint32][]byte,
+func (s *Service) uploadRenderedCIContent(kt *kit.Kit, ciRenderedContentMap map[uint32][]byte,
 	signatureMap map[uint32]string, ciMap map[uint32]*pbci.ConfigItem) error {
 	var hitError error
 	pipe := make(chan struct{}, 10)
 	wg := sync.WaitGroup{}
 
-	for configItemID := range renderedContentMap {
+	for configItemID := range ciRenderedContentMap {
 		wg.Add(1)
 
 		pipe <- struct{}{}
@@ -408,7 +408,7 @@ func (s *Service) uploadRenderedCIContent(kt *kit.Kit, renderedContentMap map[ui
 
 			ci := ciMap[configItemID]
 			k := kt.GetKitForRepoCfg()
-			_, err := s.repo.Upload(k, signatureMap[configItemID], bytes.NewReader(renderedContentMap[configItemID]))
+			_, err := s.repo.Upload(k, signatureMap[configItemID], bytes.NewReader(ciRenderedContentMap[configItemID]))
 			if err != nil {
 				hitError = fmt.Errorf("upload rendered config item content to repo failed, "+
 					"config item id: %d, name: %s, path: %s, error: %v",

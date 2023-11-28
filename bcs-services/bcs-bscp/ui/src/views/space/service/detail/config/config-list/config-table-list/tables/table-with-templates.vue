@@ -40,7 +40,11 @@
                 <div class="configs-list-wrapper">
                   <table class="config-list-table">
                     <tbody>
-                      <tr v-for="config in group.configs" :key="config.id" class="config-row">
+                      <tr
+                        v-for="config in group.configs"
+                        :key="config.id"
+                        :class="getRowCls(config)"
+                      >
                         <td>
                           <template v-if="group.id === 0">
                             <bk-button
@@ -190,16 +194,20 @@
     title="确认删除该配置文件？"
     @confirm="handleDeleteConfigConfirm"
   >
-    <div style="margin-bottom: 8px;">配置文件：<span style="color: #313238;">{{ deleteConfig?.name }}</span></div>
+    <div style="margin-bottom: 8px">
+      配置文件：<span style="color: #313238">{{ deleteConfig?.name }}</span>
+    </div>
     <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
   </DeleteConfirmDialog>
   <DeleteConfirmDialog
     v-model:isShow="isDeletePkgDialogShow"
     title="确认移除该配置模板套餐？"
-    @confirm="handleDeletePkgConfirm"
     confirm-text="移除"
+    @confirm="handleDeletePkgConfirm"
   >
-    <div style="margin-bottom: 8px;">配置模板套餐: <span style="color: #313238;">{{ deleteTemplatePkgName }}</span></div>
+    <div style="margin-bottom: 8px">
+      配置模板套餐: <span style="color: #313238">{{ deleteTemplatePkgName }}</span>
+    </div>
     <div>移除后本服务配置将不再引用该配置模板套餐，以后需要时可以重新从配置模板导入</div>
   </DeleteConfirmDialog>
 </template>
@@ -260,7 +268,7 @@ const configStore = useConfigStore();
 const serviceStore = useServiceStore();
 const { versionData, allConfigCount } = storeToRefs(configStore);
 const { checkPermBeforeOperate } = serviceStore;
-const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
+const { permCheckLoading, hasEditServicePerm, batchUploadIds } = storeToRefs(serviceStore);
 
 const props = defineProps<{
   bkBizId: string;
@@ -342,20 +350,21 @@ const getBindingId = async () => {
   bindingId.value = res.details.length === 1 ? res.details[0].id : 0;
 };
 
-const getAllConfigList = async () => {
-  await Promise.all([getCommonConfigList(), getBoundTemplateList()]);
+const getAllConfigList = async (isBatchUpload = false) => {
+  await Promise.all([getCommonConfigList(isBatchUpload), getBoundTemplateList()]);
   tableGroupsData.value = transListToTableData();
 };
 
 // 获取非模板配置文件列表
-const getCommonConfigList = async () => {
+const getCommonConfigList = async (isBatchUpload = false) => {
   commonConfigListLoading.value = true;
   try {
     const params: ICommonQuery = {
       start: 0,
       all: true,
     };
-
+    if (!isBatchUpload) batchUploadIds.value = [];
+    if (batchUploadIds.value.length > 0) params.ids = batchUploadIds.value.join(',');
     let res;
     if (isUnNamedVersion.value) {
       if (props.searchStr) {
@@ -563,6 +572,13 @@ const handleDeleteConfigConfirm = async () => {
   isDeleteConfigDialogShow.value = false;
 };
 
+// 设置新增行的标记class
+const getRowCls = (data: IConfigTableItem) => {
+  if (batchUploadIds.value.includes(data.id)) {
+    return 'new-row-marked config-row';
+  }
+  return 'config-row';
+};
 defineExpose({
   refresh: getAllConfigList,
 });
@@ -678,6 +694,9 @@ defineExpose({
       margin-right: 8px;
     }
   }
+}
+.new-row-marked td {
+  background: #f2fff4 !important;
 }
 </style>
 

@@ -92,7 +92,7 @@ const props = defineProps<{
 
 const emits = defineEmits(['update:show', 'added']);
 const { spaceId } = storeToRefs(useGlobalStore());
-const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+const { currentTemplateSpace, batchUploadIds } = storeToRefs(useTemplateStore());
 const isShow = ref(false);
 const isTableChange = ref(false);
 const pending = ref(false);
@@ -157,6 +157,7 @@ const handleImport = async (pkgIds: number[]) => {
     if (pkgIds.length > 1 || pkgIds[0] !== 0) {
       await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, res.ids, pkgIds);
     }
+    batchUploadIds.value = res.ids;
     isSelectPkgDialogShow.value = false;
     emits('added');
     close();

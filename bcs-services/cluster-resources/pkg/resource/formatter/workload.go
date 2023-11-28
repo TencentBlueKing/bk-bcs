@@ -114,6 +114,9 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 		podIPSet.Add(ip)
 	}
 
+	// 获取Readiness相关内容
+	ret["readinessGates"] = parseReadinessGates(manifest)
+
 	// 同时兼容 ipv4 / ipv6 集群
 	ret["podIPv4"], ret["podIPv6"] = "", ""
 	for _, ip := range podIPSet.ToSlice() {
@@ -159,6 +162,31 @@ func parseContainersResources(manifest map[string]interface{}, path string) (res
 		"requests": map[string]interface{}{"cpu": totalReqCPU.String(), "memory": totalReqMemory.String()},
 	}
 	return res
+}
+
+// 解析资源parseReadinessGates相关内容
+func parseReadinessGates(manifest map[string]interface{}) (resp map[string]interface{}) {
+	// 存放模板设置的readinessGates相关内容， conditionType value为key值
+	readinessGates := make(map[string]interface{}, 0)
+	// 获取模板设置的readinessGates相关conditionType
+	for _, item := range mapx.GetList(manifest, "spec.readinessGates") {
+		if value, ok := item.(map[string]interface{}); ok {
+			conditionTypeKey := mapx.GetStr(value, "conditionType")
+			readinessGates[conditionTypeKey] = "<none>"
+		}
+	}
+
+	// 获取status readinessGates相关内容
+	for _, item := range mapx.GetList(manifest, "status.conditions") {
+		if value, ok := item.(map[string]interface{}); ok {
+			typeValue := mapx.GetStr(value, "type")
+			// 如果Conditions的key值有内容，则赋值给readinessGates
+			if _, okTypeValue := readinessGates[typeValue]; okTypeValue {
+				readinessGates[typeValue] = mapx.GetStr(value, "status")
+			}
+		}
+	}
+	return readinessGates
 }
 
 // 工具方法/解析器
