@@ -39,7 +39,7 @@
       </bk-form>
       <span v-if="loading" style="color: #63656e">上传中...</span>
       <bk-loading :loading="loading">
-        <div class="tips" v-if="loading">
+        <div class="tips" v-if="!loading">
           共将导入 <span>{{ importConfigList.length }}</span> 个配置项，其中
           <span>{{ existConfigList.length }}</span> 个已存在,导入后将<span style="color: #ff9c01">覆盖原配置</span>
         </div>

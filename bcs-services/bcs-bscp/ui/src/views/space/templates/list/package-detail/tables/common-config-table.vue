@@ -224,7 +224,6 @@ const loadConfigList = async (isBatchUpload = false) => {
     params.search_fields = 'name,path,memo,creator,reviser';
     params.search_value = searchStr.value;
   }
-  console.log('params', params);
   const res = await props.getConfigList(params);
   list.value = res.details;
   pagination.value.count = res.count;
