@@ -22,7 +22,7 @@
           {{ props.service.spec.config_type === 'file' ? '文件型' : '键值型' }}
         </bk-form-item>
         <bk-form-item v-if="props.service.spec.config_type !== 'file'" :label="t('数据类型')">
-          {{ kvType }}
+          {{ 'fill' }}
         </bk-form-item>
         <bk-form-item :label="t('创建者')">
           {{ props.service.revision.creator }}
@@ -75,46 +75,45 @@ const isViewMode = ref(true);
 const serviceData = ref<IServiceEditForm>({
   name: '',
   config_type: 'file',
-  kv_type: '',
+  data_type: '',
   reload_type: 'file',
   reload_file_path: '',
   mode: '',
-  deploy_type: 'common',
-  memo: ''
+  memo: '',
+  alias: '',
 });
 const pending = ref(false);
 const formCompRef = ref();
 
-const kvType = computed(() => {
-  if (serviceData.value.kv_type) {
-    const type = CONFIG_KV_TYPE.find(item => item.id === serviceData.value.kv_type)
-    return type?.name
-  }
-  return
-})
+// const kvType = computed(() => {
+//   if (serviceData.value.data_type) {
+//     const type = CONFIG_KV_TYPE.find(item => item.id === serviceData.value.data_type);
+//     return type?.name;
+//   }
+//   return;
+// });
 
-watch(
-  () => props.show,
-  (val) => {
-    if (val) {
-      isFormChange.value = false;
-      isViewMode.value = true;
-      const { spec } = props.service
-      const { name, memo, mode, config_type, reload, kv_type } = spec;
-      const { reload_type, file_reload_spec } = reload;
-      serviceData.value = {
-        name,
-        memo,
-        mode,
-        config_type,
-        kv_type,
-        reload_type,
-        reload_file_path: file_reload_spec.reload_file_path,
-        deploy_type: 'common' // @todo 待和后台确认是否需要
-      };
-    }
-  },
-);
+// watch(
+//   () => props.show,
+//   (val) => {
+//     if (val) {
+//       isFormChange.value = false;
+//       isViewMode.value = true;
+//       const { spec } = props.service;
+//       const { name, memo, mode, config_type, reload, d } = spec;
+//       const { reload_type, file_reload_spec } = reload;
+//       serviceData.value = {
+//         name,
+//         memo,
+//         mode,
+//         config_type,
+//         data_type,
+//         reload_type,
+//         reload_file_path: file_reload_spec.reload_file_path,
+//       };
+//     }
+//   },
+// );
 
 const openPermApplyDialog = () => {
   permissionQuery.value = {
@@ -135,7 +134,7 @@ const openPermApplyDialog = () => {
 const handleChange = (val: IServiceEditForm) => {
   isFormChange.value = true;
   serviceData.value = val;
-}
+};
 
 const handleEditConfirm = async () => {
   if (!props.service.permissions.update) {
@@ -147,7 +146,7 @@ const handleEditConfirm = async () => {
   const data = {
     id,
     biz_id,
-    ...serviceData.value
+    ...serviceData.value,
   };
   await updateApp({ id, biz_id, data });
   emits('editMemo', serviceData.value.memo);
