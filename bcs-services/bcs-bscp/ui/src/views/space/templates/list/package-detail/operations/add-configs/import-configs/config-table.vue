@@ -461,7 +461,7 @@ const isContentChange = (id: number, key: string) => {
   overflow: auto;
 }
 .table {
-  width: 100%;
+  width: 880px;
   border-collapse: collapse;
   border: 1px solid #dcdee5;
   font-size: 12px;
