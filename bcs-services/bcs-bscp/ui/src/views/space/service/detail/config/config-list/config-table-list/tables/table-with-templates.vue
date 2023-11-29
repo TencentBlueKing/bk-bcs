@@ -34,7 +34,7 @@
               </div>
             </td>
           </tr>
-          <template v-if="group.expand">
+          <template v-if="group.expand && group.configs.length > 0">
             <tr class="config-groups-table-tr">
               <td colspan="8" class="config-groups-table-td">
                 <div class="configs-list-wrapper">
