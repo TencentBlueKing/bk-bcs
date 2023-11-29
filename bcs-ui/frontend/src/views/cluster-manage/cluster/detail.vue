@@ -13,7 +13,7 @@
       </span>
     </span>
     <div class="resize-line" ref="resizeRef" @mousedown="onMousedownEvent"></div>
-    <div class="h-[46px] flex items-center px-[24px] pt-[16px] pb-[8px] text-[12px]">
+    <div class="h-[56px] flex items-center px-[24px] pt-[16px] pb-[8px] text-[12px]">
       <span class="font-bold text-[14px] leading-[22px]">{{ curCluster.clusterName || '--' }}</span>
       <span class="ml-[14px] text-[#979BA5] leading-[22px]">{{ curCluster.clusterID }}</span>
       <bcs-divider direction="vertical"></bcs-divider>
@@ -290,7 +290,7 @@ defineExpose({
   }
   .fold {
     position: absolute;
-    top: 12px;
+    top: 16px;
     left: -16px;
     display: flex;
     align-items: center;
@@ -341,7 +341,7 @@ defineExpose({
     padding: 0;
   }
   .bk-tab-content {
-    height: calc(100vh - 140px);
+    height: calc(100vh - 150px);
     overflow-y: auto;
     overflow-x: hidden;
   }
