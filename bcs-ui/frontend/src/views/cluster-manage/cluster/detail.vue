@@ -13,6 +13,31 @@
       </span>
     </span>
     <div class="resize-line" ref="resizeRef" @mousedown="onMousedownEvent"></div>
+    <div class="h-[46px] flex items-center px-[24px] pt-[16px] pb-[8px] text-[12px]">
+      <span class="font-bold text-[14px] leading-[22px]">{{ curCluster.clusterName || '--' }}</span>
+      <span class="ml-[14px] text-[#979BA5] leading-[22px]">{{ curCluster.clusterID }}</span>
+      <bcs-divider direction="vertical"></bcs-divider>
+      <div class="h-[22px] inline-flex items-center">
+        <StatusIcon
+          :status-color-map="{
+            'CREATE-FAILURE': 'red',
+            'DELETE-FAILURE': 'red',
+            'IMPORT-FAILURE': 'red',
+            RUNNING: 'green'
+          }"
+          :status-text-map="{
+            INITIALIZATION: $t('generic.status.initializing'),
+            DELETING: $t('generic.status.deleting'),
+            'CREATE-FAILURE': $t('generic.status.createFailed'),
+            'DELETE-FAILURE': $t('generic.status.deleteFailed'),
+            'IMPORT-FAILURE': $t('cluster.status.importFailed'),
+            RUNNING: $t('generic.status.ready')
+          }"
+          :status="curCluster.status"
+          :pending="['INITIALIZATION', 'DELETING'].includes(curCluster.status)"
+          v-if="curCluster.status" />
+      </div>
+    </div>
     <bcs-tab
       :label-height="42"
       :active.sync="activeTabName"
@@ -69,9 +94,9 @@ import { computed, defineExpose, onMounted, ref, watch } from 'vue';
 import AutoScaler from '../autoscaler/autoscaler.vue';
 import Node from '../node-list/node.vue';
 
+import StatusIcon from '@/components/status-icon';
 import { useCluster } from '@/composables/use-app';
 import $router from '@/router';
-// import $store from '@/store';
 import Info from '@/views/cluster-manage/detail/basic-info.vue';
 import Master from '@/views/cluster-manage/detail/master.vue';
 import Network from '@/views/cluster-manage/detail/network.vue';
@@ -135,8 +160,15 @@ watch(
   ],
   () => {
     setTimeout(() => {
-      // 当前集群不支持autoscaler需要跳转回overview tab
-      if (!showAutoScaler.value && activeTabName.value === 'autoscaler') {
+      /**
+       * - 当前集群不支持autoscaler需要跳转回overview tab
+       * - 托管集群只有overview、basicInfo和quota三个tab详情
+       */
+      if (
+        (!showAutoScaler.value && activeTabName.value === 'autoscaler')
+        || (curCluster.value.clusterType === 'virtual' && !['overview', 'info', 'quota'].includes(activeTabName.value))
+        || (curCluster.value.clusterType !== 'virtual' && activeTabName.value === 'quota')
+      ) {
         activeTabName.value = 'overview';
       }
     });
@@ -258,7 +290,7 @@ defineExpose({
   }
   .fold {
     position: absolute;
-    top: 16px;
+    top: 12px;
     left: -16px;
     display: flex;
     align-items: center;
@@ -272,9 +304,10 @@ defineExpose({
       height: 32px;
       background: #FAFBFD;
       border: 1px solid #DCDEE5;
-      border-right: 0px;
       border-radius: 4px 0 0 4px;
       cursor: pointer;
+      position: relative;
+      right: -1px;
       &.active {
         background-color: #699DF4;
         border-color: #699DF4;
@@ -301,7 +334,6 @@ defineExpose({
 }
 
 >>> .cluster-detail-tab {
-  margin-top: 10px;
   .bk-tab-header {
     padding-left: 24px;
   }
@@ -309,7 +341,7 @@ defineExpose({
     padding: 0;
   }
   .bk-tab-content {
-    height: calc(100vh - 104px);
+    height: calc(100vh - 140px);
     overflow-y: auto;
     overflow-x: hidden;
   }

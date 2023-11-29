@@ -2624,7 +2624,6 @@ tke:
     containerNet: 容器网段
     publicIPAssigned:
       text: 分配免费公网IP
-      tips: 内部上云环境禁用公网IP，如需提供公网服务请使用腾讯云负载均衡（CLB）
       chargeMode:
         text: 计费方式
         traffic_postpaid_by_hour: 按使用流量计费
@@ -2694,6 +2693,6 @@ tke:
     vpcCniPodIp: Pod IP从私有网络的主/辅网段自动分配
     staticIpMode:
       p1: 此选项只支持在集群创建时开启，集群创建后无法修改，请谨慎操作。
-      p2: 此选项适用于依赖容器固定IP的场景, 对IP无限制的业务不推荐您使用固定IP模式, 详情请参考 {0}
+      p2: '此选项适用于依赖容器固定IP的场景, 对IP无限制的业务不推荐您使用固定IP模式, 详情请参考 {0}'
   placeholder:
     example: '示例: {0}'

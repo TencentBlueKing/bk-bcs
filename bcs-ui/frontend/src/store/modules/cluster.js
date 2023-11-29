@@ -1042,7 +1042,7 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-    async getBizMaintainers(context, params = {}, config = {}) {
+    async getBizMaintainers(context, params = {}, config = { cancelWhenRouteChange: false }) {
       const data = await projectBusiness(params, config).catch(() => ({
         maintainer: [],
       }));

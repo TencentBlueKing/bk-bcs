@@ -185,6 +185,8 @@ units:
     last15Days: Last 15 days
     last30Days: Last 30 days
     nDays: '{num} Day'
+    nMonths: ''
+    nYears: ''
   suffix:
     seconds: s
     days: Day
@@ -3234,6 +3236,13 @@ tke:
     recommended: ''
     defaultProject: ''
     containerNet: ''
+    publicIPAssigned:
+      text: ''
+      chargeMode:
+        text: ''
+        traffic_postpaid_by_hour: ''
+        bandwidth_prepaid: ''
+      maxBandWidth: ''
   title:
     connectFailure:
       text: >-
@@ -3267,6 +3276,9 @@ tke:
     securityGroup: ''
     vpc: ''
     netOverview: ''
+    package: ''
+    staticIpMode: ''
+    cmdb: ''
   validate:
     passwordNotSame: The passwords entered do not match
     minIpNum: ''
@@ -3331,5 +3343,8 @@ tke:
     ipCannotBeAdjustedWhenCreated: ''
     podIpCalcFormula: ''
     vpcCniPodIp: ''
+    staticIpMode:
+      p1: ''
+      p2: ''
   placeholder:
     example: ''

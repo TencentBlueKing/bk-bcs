@@ -165,12 +165,12 @@
             </div>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('cluster.ca.nodePool.label.nodeQuota')" align="right" width="120">
+        <bcs-table-column :label="$t('cluster.ca.nodePool.label.nodeQuota')" align="right" width="100">
           <template #default="{ row }">
             {{ row.autoScaling.maxSize }}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('cluster.ca.nodePool.label.nodeCounts')" align="right" width="120">
+        <bcs-table-column :label="$t('cluster.ca.nodePool.label.nodeCounts')" align="right" width="100">
           <template #default="{ row }">
             <bcs-button
               text
