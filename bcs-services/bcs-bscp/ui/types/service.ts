@@ -1,6 +1,17 @@
 import { IFileConfigContentSummary } from './config';
 import { IVariableEditParams } from './variable';
 
+export interface IServiceEditForm {
+  name: string;
+  alias: string;
+  config_type: string;
+  reload_type: string,
+  reload_file_path: string;
+  mode: string;
+  memo: string;
+  data_type?: string;
+}
+
 // 版本下的脚本配置
 export interface IDiffDetail {
   contentType: 'file'|'text';

@@ -35,6 +35,8 @@ func newApp(db *gorm.DB, opts ...gen.DOOption) app {
 	_app.Memo = field.NewString(tableName, "memo")
 	_app.ReloadType = field.NewString(tableName, "reload_type")
 	_app.ReloadFilePath = field.NewString(tableName, "reload_file_path")
+	_app.Alias_ = field.NewString(tableName, "alias")
+	_app.DataType = field.NewString(tableName, "data_type")
 	_app.Creator = field.NewString(tableName, "creator")
 	_app.Reviser = field.NewString(tableName, "reviser")
 	_app.CreatedAt = field.NewTime(tableName, "created_at")
@@ -57,6 +59,8 @@ type app struct {
 	Memo           field.String
 	ReloadType     field.String
 	ReloadFilePath field.String
+	Alias_         field.String
+	DataType       field.String
 	Creator        field.String
 	Reviser        field.String
 	CreatedAt      field.Time
@@ -85,6 +89,8 @@ func (a *app) updateTableName(table string) *app {
 	a.Memo = field.NewString(table, "memo")
 	a.ReloadType = field.NewString(table, "reload_type")
 	a.ReloadFilePath = field.NewString(table, "reload_file_path")
+	a.Alias_ = field.NewString(table, "alias")
+	a.DataType = field.NewString(table, "data_type")
 	a.Creator = field.NewString(table, "creator")
 	a.Reviser = field.NewString(table, "reviser")
 	a.CreatedAt = field.NewTime(table, "created_at")
@@ -113,7 +119,7 @@ func (a *app) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (a *app) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 12)
+	a.fieldMap = make(map[string]field.Expr, 14)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["biz_id"] = a.BizID
 	a.fieldMap["name"] = a.Name
@@ -122,6 +128,8 @@ func (a *app) fillFieldMap() {
 	a.fieldMap["memo"] = a.Memo
 	a.fieldMap["reload_type"] = a.ReloadType
 	a.fieldMap["reload_file_path"] = a.ReloadFilePath
+	a.fieldMap["alias"] = a.Alias_
+	a.fieldMap["data_type"] = a.DataType
 	a.fieldMap["creator"] = a.Creator
 	a.fieldMap["reviser"] = a.Reviser
 	a.fieldMap["created_at"] = a.CreatedAt

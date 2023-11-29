@@ -730,7 +730,7 @@ func (s *Service) genCreateReleasedKvMap(kt *kit.Kit, bizID, appID,
 	kvsMap := make(map[string]*types.CreateReleasedKvOption, len(kvs))
 	for _, kv := range kvs {
 
-		var kvType types.KvType
+		var kvType table.DataType
 		var value string
 
 		kvType, value, err = s.getKv(kt, bizID, appID, kv.Spec.Version, kv.Spec.Key)

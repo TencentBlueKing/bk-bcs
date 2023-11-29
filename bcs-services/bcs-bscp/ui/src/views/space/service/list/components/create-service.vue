@@ -7,33 +7,14 @@
     @closed="close"
   >
     <div class="create-app-form">
-      <bk-form form-type="vertical" ref="formRef" :model="formData" :rules="rules">
-        <bk-form-item :label="t('服务名称')" property="name" required>
-          <bk-input
-            placeholder="请输入2~32字符，只允许英文、数字、下划线、中划线且必须以英文、数字开头和结尾"
-            v-model="formData.name"
-            @change="isFormChange = true"
-          />
-        </bk-form-item>
-        <bk-form-item :label="t('服务描述')" property="memo">
-          <bk-input
-            placeholder="请输入"
-            type="textarea"
-            v-model="formData.memo"
-            @change="isFormChange = true"
-            :resize="true"
-          />
-        </bk-form-item>
-      </bk-form>
+      <SearviceForm ref="formCompRef" :form-data="serviceData" @change="handleChange" />
     </div>
-    <template #footer>
-      <div class="create-app-footer">
-        <bk-button theme="primary" :loading="pending" @click="handleCreateConfirm">
-          {{ t('提交') }}
-        </bk-button>
-        <bk-button @click="close">{{ t('取消') }}</bk-button>
-      </div>
-    </template>
+    <div class="create-app-footer">
+      <bk-button theme="primary" :loading="pending" @click="handleCreateConfirm">
+        {{ t('提交') }}
+      </bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
+    </div>
   </bk-sideslider>
 </template>
 <script setup lang="ts">
@@ -44,7 +25,9 @@ import { InfoBox } from 'bkui-vue/lib';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../store/global';
 import { createApp } from '../../../../../api';
+import { IServiceEditForm } from '../../../../../../types/service';
 import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
+import SearviceForm from './service-form.vue';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -56,42 +39,17 @@ const emits = defineEmits(['update:show', 'reload']);
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
-const formData = ref({
+const serviceData = ref<IServiceEditForm>({
   name: '',
+  alias: '',
   config_type: 'file',
+  data_type: 'any',
   reload_type: 'file',
-  reload_file_path: '/bscp_test', // @todo 待确认
+  reload_file_path: '/data/reload.json',
   mode: 'normal',
-  deploy_type: 'common',
   memo: '', // @todo 包含换行符后接口会报错
 });
-const rules = {
-  name: [
-    {
-      validator: (value: string) => value.length >= 2,
-      message: '最小长度2个字符',
-    },
-    {
-      validator: (value: string) => value.length <= 32,
-      message: '最大长度32个字符',
-    },
-    {
-      validator: (value: string) => /^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]?$/.test(value),
-      message: '服务名称由英文、数字、下划线、中划线组成且以英文、数字开头和结尾',
-    },
-  ],
-  memo: [
-    {
-      validator: (value: string) => {
-        if (!value) return true;
-        return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value);
-      },
-      message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
-      trigger: 'change',
-    },
-  ],
-};
-const formRef = ref();
+const formCompRef = ref();
 const pending = ref(false);
 const isFormChange = ref(false);
 
@@ -99,17 +57,36 @@ watch(
   () => props.show,
   (val) => {
     if (val) {
-      formData.value.name = '';
-      formData.value.memo = '';
+      isFormChange.value = false;
+      serviceData.value = {
+        name: '',
+        alias: '',
+        config_type: 'file',
+        data_type: 'any',
+        reload_type: 'file',
+        reload_file_path: '/data/reload.json',
+        mode: 'normal',
+        memo: '',
+      };
     }
   },
 );
 
+const handleChange = (val: IServiceEditForm) => {
+  isFormChange.value = true;
+  serviceData.value = val;
+};
+
 const handleCreateConfirm = async () => {
-  await formRef.value.validate();
+  await formCompRef.value.validate();
   pending.value = false;
   try {
-    const resp = await createApp(spaceId.value, formData.value);
+    let resp: { id: number };
+    if (serviceData.value.config_type === 'file') {
+      resp = await createApp(spaceId.value, serviceData.value);
+    } else {
+      resp = await createApp(spaceId.value, { ...serviceData.value, reload_type: '', reload_file_path: '' });
+    }
     InfoBox({
       type: 'success',
       title: '服务新建成功',
@@ -154,14 +131,15 @@ const close = () => {
 <style lang="scss" scoped>
 .create-app-form {
   padding: 20px 24px;
-  height: calc(100vh - 108px);
+  height: calc(100vh - 101px);
 }
 .create-app-footer {
   padding: 8px 24px;
   height: 48px;
   width: 100%;
   background: #fafbfd;
-  box-shadow: 0 -1px 0 0 #dcdee5;
+  border-top: 1px solid #dcdee5;
+  box-shadow: none;
   button {
     margin-right: 8px;
     min-width: 88px;

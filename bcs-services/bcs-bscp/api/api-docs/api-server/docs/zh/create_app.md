@@ -10,11 +10,13 @@
 |---------------------| ------------ | ------ | ---------------- |
 | biz_id              | uint32       | 是                                        | 业务ID     |
 | name                | string       | 是                                        | 应用名称。最大长度128个字符，仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾     |
-| config_type         | string       | 是                                        | 应用配置类型（枚举值：file，目前仅支持file类型）。应用配置类型限制了本应用下所有配置的类型，如果选择file类型，本应用下所有配置只能为file类型     |
-| mode                | string       | 是                                        | app的实例在消费配置时的模式（枚举值：normal、namespace），详情见下方描述。    | 
-| memo                | string       | 否                                        | 备注。最大长度256个字符，仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾    | 
+| config_type         | string       | 是                                        | 应用配置类型（枚举值：file、kv，目前仅支持file、kv类型）。应用配置类型限制了本应用下所有配置的类型，如果选择file类型，本应用下所有配置只能为file类型 |
+| mode                | string       | 是                                        | app的实例在消费配置时的模式（枚举值：normal、namespace），详情见下方描述。    |
+| memo                | string       | 否                                        | 备注。最大长度256个字符，仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾    |
 | reload_type         | string       | 选填，仅在 config_type 为 file 类型下使用    | sidecar通知app重新Reload配置的方式（枚举值：file，目前仅支持file类型）    |
-| reload_file_path    | string       | 选填，仅在 reload_type 为 file 类型下使用     | Reload文件绝对路径（绝对路径 + 文件名），最大长度为128字节   |
+| reload_file_path    | string       | 选填，仅在 reload_type 为 file 类型下使用     | Reload文件绝对路径（绝对路径 + 文件名），最大长度为128字节 |
+| alias            | string   | 必填                                      | 服务别名。最大长度128个字符，仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾 |
+| data_type | string | 选填，仅在config_type为kv 类型下生效 | 数据类型（枚举值：any、string、number、string、text、yaml、json、xml） |
 
 #### 参数说明：
 
@@ -45,7 +47,7 @@ app工作的工作模式决定了该app下的实例消费配置数据的方式�
 
 bscp sidecar 会将下载好的配置信息，写到用户指定的 reload 文件（reload_file_path）当中，应用程序通过这个 reload 文件来获取最新的配置信息。
 
-### 调用示例
+### 调用示例（config_item）
 
 ```json
 {
@@ -54,7 +56,22 @@ bscp sidecar 会将下载好的配置信息，写到用户指定的 reload 文�
   "mode": "normal",
   "memo": "my_first_app",
   "reload_type": "file",
-  "reload_file_path": "/data/reload.json"
+  "reload_file_path": "/data/reload.json",
+  "alias":"appAlias"
+}
+```
+
+### 调用示例（kv）
+
+```json
+{
+    "biz_id": "myapp",
+    "name": "kv",
+    "config_type": "kv",
+    "mode": "normal",
+    "memo": "",
+    "data_type":"any",
+    "alias":"appAlias"
 }
 ```
 
