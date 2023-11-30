@@ -341,6 +341,7 @@
       <bcs-table
         class="mt15"
         v-bkloading="{ isLoading: nodeListLoading }"
+        :max-height="nodeListLoading ? 200 : ''"
         :data="nodeCurPageData"
         :pagination="nodePagination"
         @page-change="nodePageChange"
@@ -646,7 +647,7 @@ import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
-import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
+import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';;
 
 export default defineComponent({
   name: 'AutoScaler',

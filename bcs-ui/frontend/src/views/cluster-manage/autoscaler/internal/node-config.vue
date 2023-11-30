@@ -46,7 +46,7 @@
               :disabled="isEdit"
               :clearable="false"
               selected-style="checkbox"
-              @change="handleSetDefaultInstance">
+              @change="handleSpecifiedZoneChange">
               <bcs-option
                 v-for="zone in zoneList"
                 :key="zone.zoneID"
@@ -506,7 +506,10 @@ export default defineComponent({
           if (exitIndex > -1) { // 过滤同类型机型
             if (pre[exitIndex]?.status === 'SOLD_OUT') {
               // 告罄
-              pre.splice(exitIndex, 1, instance);
+              pre.splice(exitIndex, 1, {
+                ...instance,
+                resourcePoolID: [instance.resourcePoolID],
+              });
             } else if (!pre[exitIndex]?.resourcePoolID?.includes(instance.resourcePoolID)) {
               // 合并 resourcePoolID 字段（选择同类型机型时需要给后端）
               pre[exitIndex]?.resourcePoolID?.push(instance.resourcePoolID);
@@ -550,7 +553,9 @@ export default defineComponent({
       Mem.value,
     ], () => {
       // 重置机型
-      handleSetDefaultInstance();
+      nodePoolConfig.value.launchTemplate.instanceType = '';
+      nodePoolConfig.value.launchTemplate.instanceType = instanceTypesList.value
+        .find(instance => instance.status === 'SELL')?.nodeType;
       // // 获取机型
       // handleGetInstanceTypes();
     });
@@ -571,13 +576,9 @@ export default defineComponent({
       nodePoolConfig.value.launchTemplate.instanceType = row.nodeType;
     };
     const { projectID, curProject } = useProject();
-    // 设置默认机型
-    const handleSetDefaultInstance = () => {
-      setTimeout(() => {
-        // 默认机型配置
-        nodePoolConfig.value.launchTemplate.instanceType = instanceTypesList.value
-          .find(instance => instance.status === 'SELL')?.nodeType || '';
-      });
+    // 指定可用区
+    const handleSpecifiedZoneChange = () => {
+      nodePoolConfig.value.launchTemplate.instanceType = '';
     };
     const handleGetInstanceTypes = async () => {
       instanceTypesLoading.value = true;
@@ -599,7 +600,6 @@ export default defineComponent({
         ...params,
       });
       instanceData.value = data.sort((pre, current) => pre.cpu - current.cpu);
-      handleSetDefaultInstance();
       instanceTypesLoading.value = false;
     };
     const {
@@ -682,7 +682,7 @@ export default defineComponent({
           mountTarget: '/data',
         }];
         const resourcePoolIDList = curInstanceItem.value?.resourcePoolID;
-        nodePoolConfig.value.extra.poolID = resourcePoolIDList?.join(',');
+        nodePoolConfig.value.extra.poolID = Array.isArray(resourcePoolIDList) ? resourcePoolIDList?.join(',') : resourcePoolIDList;
       } else {
         // 系统盘、数据盘、宽度大小要转换为字符串类型
         // eslint-disable-next-line max-len
@@ -779,7 +779,7 @@ export default defineComponent({
       zoneListLoading,
       zoneList,
       handleZoneChange,
-      handleSetDefaultInstance,
+      handleSpecifiedZoneChange,
       extraInfo,
       clusterAdvanceSettings,
       clusterOS,

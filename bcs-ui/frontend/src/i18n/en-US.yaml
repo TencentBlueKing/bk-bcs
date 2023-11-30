@@ -3374,9 +3374,16 @@ tkeCa:
       text: Resource Provider
       yunti: Cloud Ladder Resource Pool (Platform Provided)
       self: Self-built Resource Pool
-      desc: 'Resource providers are divided into cloud ladder resource pools and self-built resource pools. If there are idle resources under the business that cannot be reclaimed for other reasons, you can contact an assistant to add a self-built resource pool.'
+      desc: >-
+        Resource providers are divided into cloud ladder resource pools and
+        self-built resource pools. If there are idle resources under the
+        business that cannot be reclaimed for other reasons, you can contact an
+        assistant to add a self-built resource pool.
   tips:
     notSupportSelfPool: >-
       The business has not opened a self-built resource pool. If needed, you can
       contact an assistant to add one.
-    selfPoolInstanceDesc: 'For a self-built resource pool, it is not necessary to specify information about the system disk and data disk. At least one data disk of 100GB or more is required.'
+    selfPoolInstanceDesc: >-
+      For a self-built resource pool, it is not necessary to specify information
+      about the system disk and data disk. At least one data disk of 100GB or
+      more is required.
