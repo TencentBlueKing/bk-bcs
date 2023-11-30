@@ -372,6 +372,7 @@ const handleConfirmPop = (prop: string) => {
     });
   }
   if (prop === 'privilege') {
+    if (batchSet.value.isShowPrivilegeError) return;
     data.value.forEach((item) => {
       item.privilege = batchSet.value.privilege;
     });
