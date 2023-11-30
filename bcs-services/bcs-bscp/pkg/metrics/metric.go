@@ -90,6 +90,12 @@ var (
 		Help:    "Histogram of latencies for HTTP requests to bscp.",
 		Buckets: []float64{0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1},
 	}, []string{"handler", "method", "code"})
+
+	// BSCPServerHandledTotal 请求数
+	BSCPServerHandledTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "bscp_server_handled_total",
+		Help: "Total number of platform user operations",
+	}, []string{"service", "handler", "code", "biz", "username"})
 )
 
 // InitMetrics init metrics registerer and http handler
