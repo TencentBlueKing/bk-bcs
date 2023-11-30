@@ -85,7 +85,7 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // no
 	if err != nil {
 		blog.Errorf("ApplyExternalNodeMachinesTask[%s] applyInstanceFromResourcePool for NodeGroup %s step %s failed, %s",
 			taskID, nodeGroupID, stepName, err.Error())
-		retErr := fmt.Errorf("applyInstanceFromResourcePool failed, %s", err.Error())
+		retErr := fmt.Errorf("applyInstanceFromResourcePool failed: %s", err.Error())
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr

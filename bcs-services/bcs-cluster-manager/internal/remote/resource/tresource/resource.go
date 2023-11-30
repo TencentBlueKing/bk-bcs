@@ -255,8 +255,7 @@ func (rm *ResManClient) CheckOrderStatus(ctx context.Context, orderID string) (*
 			return loop.EndLoop
 		case OrderFailed.String():
 			blog.Errorf("CheckInstanceOrderStatus[%s] orderID[%s] failed: %v", traceID, orderID, err)
-			retErr := fmt.Errorf("CheckInstanceOrderStatus[%s] orderID[%s] err, status %v",
-				traceID, orderID, OrderFailed.String())
+			retErr := fmt.Errorf("DeviceRecorderID[%s] failed: %v", orderID, *resp.Data.Message)
 			return retErr
 		case OrderRequested.String():
 			blog.Infof("CheckInstanceOrderStatus[%s] orderID[%s] orderState: %s",
@@ -364,6 +363,8 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 	// trans device pool to instances type
 	targetTypes := make([]resource.InstanceType, 0)
 	for _, pool := range pools {
+		blog.Infof("GetInstanceTypesV2 pool[%v] detail: %v", pool.GetId(), pool)
+
 		// filter cpu & mem
 		if spec.Cpu != 0 && spec.Cpu != pool.GetBaseConfig().GetCpu() {
 			continue
@@ -373,18 +374,19 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 		}
 		// labels
 		labels := pool.GetLabels()
-
-		// bizIDs
-		bizIDs, ok := labels[AllowedBusinessIDs.String()]
-		if ok {
-			if len(spec.BizID) == 0 {
+		// bizID
+		blog.Infof("GetInstanceTypesV2 pool[%v] business[%v:%v]", pool.GetId(),
+			pool.GetBaseConfig().GetBusinessID(), spec.BizID)
+		if spec.BizID != "" && pool.GetBaseConfig().GetBusinessID() > 0 {
+			dstBiz, _ := strconv.Atoi(spec.BizID)
+			if int64(dstBiz) != pool.GetBaseConfig().GetBusinessID() {
 				continue
-			} else {
-				ids := strings.Split(bizIDs, ",")
-				if !utils.StringInSlice(spec.BizID, ids) {
-					continue
-				}
 			}
+		}
+
+		// resourceType: online && offline
+		if spec.ResourceType != "" && spec.ResourceType != labels[ResourceType.String()] {
+			continue
 		}
 
 		// available quota
@@ -393,7 +395,6 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 		if ok {
 			quota, _ = strconv.ParseUint(availableQuota, 10, 64)
 		}
-
 		// instanceType sell status
 		status := common.InstanceSell
 		if quota == 0 {
@@ -443,85 +444,6 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 	return targetTypes, nil
 }
 
-// GetInstanceTypesV1 get instance type v1 version
-func (rm *ResManClient) GetInstanceTypesV1(ctx context.Context, region string, spec resource.InstanceSpec) (
-	[]resource.InstanceType, error) {
-	traceID := utils.GetTraceIDFromContext(ctx)
-
-	var (
-		instanceTypes []*DeviceInstance
-		err           error
-	)
-	err = retry.Do(func() error {
-		cli, closeCon, errGet := rm.getResourceManagerClient()
-		if errGet != nil {
-			blog.Errorf("GetInstanceTypes[%s] GetResourceManagerClient failed: %v", traceID, errGet)
-			return errGet
-		}
-		defer func() {
-			if closeCon != nil {
-				closeCon()
-			}
-		}()
-
-		// ListDeviceInstances list devices instances
-		resp, errList := cli.ListDeviceInstances(ctx, &ListDeviceInstancesReq{
-			ProjectID: &spec.ProjectID,
-			Region:    &region,
-			Cpu: func() *uint32 {
-				if spec.Cpu == 0 {
-					return nil
-				}
-				return &spec.Cpu
-			}(),
-			Memory: func() *uint32 {
-				if spec.Mem == 0 {
-					return nil
-				}
-				return &spec.Mem
-			}(),
-		})
-		if errList != nil {
-			blog.Errorf("GetInstanceTypes[%s] ListDeviceInstances failed: %v", traceID, errList)
-			return errList
-		}
-		if *resp.Code != 0 || !*resp.Result {
-			blog.Errorf("GetInstanceTypes[%s] ListDeviceInstances failed: %v", traceID, resp.Message)
-			return errors.New(*resp.Message)
-		}
-		instanceTypes = resp.Data
-		return nil
-	}, retry.Attempts(3), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second*3))
-	if err != nil {
-		blog.Errorf("GetInstanceTypes[%s] failed: %v", traceID, err)
-		return nil, err
-	}
-	blog.Infof("GetInstanceTypes[%s] successful", traceID)
-
-	targetTypes := make([]resource.InstanceType, 0)
-	for _, insType := range instanceTypes {
-		status := common.InstanceSell
-		if *insType.Status != statusOnSale {
-			status = common.InstanceSoldOut
-		}
-		targetTypes = append(targetTypes, resource.InstanceType{
-			NodeType:       *insType.InstanceType,
-			TypeName:       *insType.Name,
-			NodeFamily:     "",
-			Cpu:            *insType.Cpu,
-			Memory:         *insType.Memory,
-			Gpu:            0,
-			Status:         status,
-			UnitPrice:      0,
-			Zones:          insType.Zone,
-			Provider:       *insType.Provider,
-			ResourcePoolID: "",
-		})
-	}
-
-	return targetTypes, nil
-}
-
 // GetInstanceTypes get region instance types
 func (rm *ResManClient) GetInstanceTypes(ctx context.Context, region string, spec resource.InstanceSpec) ( // nolint
 	[]resource.InstanceType, error) {
@@ -532,20 +454,7 @@ func (rm *ResManClient) GetInstanceTypes(ctx context.Context, region string, spe
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60) // nolint
 	defer cancel()
 
-	if spec.Version == "" {
-		spec.Version = "v1"
-	}
-
-	// v1 & v2 instanceTypes
-	switch spec.Version {
-	case "v1":
-		return rm.GetInstanceTypesV1(ctx, region, spec)
-	case "v2":
-		return rm.GetInstanceTypesV2(ctx, region, spec)
-	default:
-	}
-
-	return nil, fmt.Errorf("resourceManager client not support version[%s]", spec.Version)
+	return rm.GetInstanceTypesV2(ctx, region, spec)
 }
 
 // CreateResourcePool create resource pool for resource manager

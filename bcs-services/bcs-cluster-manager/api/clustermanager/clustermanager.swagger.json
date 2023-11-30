@@ -304,6 +304,54 @@
         ]
       }
     },
+    "/clustermanager/v1/autoscalingoption/{clusterID}/providers/{provider}": {
+      "put": {
+        "summary": "更新ClusterAutoscalingOption使用的资源池，主要应用于自研云便于产品记忆上次用户使用的资源池",
+        "description": "更新ClusterAutoscalingOption使用的资源池，主要应用于自研云便于产品记忆上次用户使用的资源池",
+        "operationId": "ClusterManager_UpdateAsOptionDeviceProvider",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateAsOptionDeviceProviderResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "BCS集群ID，关联的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "provider",
+            "description": "集群创建节点池使用的资源池类型(目前仅支持yunti、self资源池类型，默认为yunti资源池)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateAsOptionDeviceProviderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/autoscalingoption/{clusterID}/status": {
       "put": {
         "summary": "开启/关闭集群弹性扩缩容",
@@ -1441,13 +1489,6 @@
             "format": "int64"
           },
           {
-            "name": "projectID",
-            "description": "projectID. 项目ID, 主要是获取自建资源池",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "bizID",
             "description": "bizID. 业务ID, 主要是获取业务私有自建资源池",
             "in": "query",
@@ -1455,15 +1496,15 @@
             "type": "string"
           },
           {
-            "name": "version",
-            "description": "version. version版本标识内部使用的接口版本,稳定后可废弃",
+            "name": "provider",
+            "description": "provider. provider资源池提供方(yunti/self)",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "provider",
-            "description": "provider. provider资源池提供方(yunti/self)",
+            "name": "resourceType",
+            "description": "resourceType. 当provider为self时, resourceType资源类型(online/offline)",
             "in": "query",
             "required": false,
             "type": "string"
@@ -7819,6 +7860,11 @@
           "format": "int64",
           "description": "newPodScaleUpDelay，新pod建立多久之后才触发CA, 默认 0",
           "title": "newPodScaleUpDelay"
+        },
+        "devicePoolProvider": {
+          "type": "string",
+          "description": "devicePoolProvider资源池提供者, 主要应用于自研云产品化, 默认 yunti",
+          "title": "devicePoolProvider"
         }
       },
       "title": "ClusterAutoScalingOption cluster autoScaler module parameter"
@@ -8185,6 +8231,11 @@
           "type": "string",
           "description": "节点所属的扩容IP,主要是针对虚拟节点展示任务详情",
           "title": "taskID"
+        },
+        "failedReason": {
+          "type": "string",
+          "description": "上下架节点过程中失败原因",
+          "title": "failedReason"
         }
       },
       "description": "记录节点信息，用于节点列表展示",
@@ -14049,6 +14100,11 @@
           "type": "string",
           "description": "节点对应的任务ID, 仅在申请资源时追踪节点数据",
           "title": "taskID"
+        },
+        "failedReason": {
+          "type": "string",
+          "description": "上下架节点失败时原因",
+          "title": "failedReason"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",
@@ -14223,6 +14279,12 @@
           "$ref": "#/definitions/clustermanagerCloudArea",
           "description": "节点所在云区域信息(用户不指定, 则使用默认云区域)",
           "title": "area"
+        },
+        "extraInfo": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "节点组，对蓝鲸、腾讯云、AWS弹性伸缩能力封装",
@@ -15970,6 +16032,49 @@
         "message"
       ]
     },
+    "clustermanagerUpdateAsOptionDeviceProviderRequest": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "BCS集群ID，关联的集群ID",
+          "title": "clusterID"
+        },
+        "provider": {
+          "type": "string",
+          "description": "集群创建节点池使用的资源池类型(目前仅支持yunti、self资源池类型，默认为yunti资源池)",
+          "title": "provider"
+        }
+      },
+      "description": "更新AutoScalingOption本次使用的资源池信息",
+      "title": "UpdateAsOptionDeviceProviderRequest",
+      "required": [
+        "clusterID",
+        "provider"
+      ]
+    },
+    "clustermanagerUpdateAsOptionDeviceProviderResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      }
+    },
     "clustermanagerUpdateAutoScalingOptionRequest": {
       "type": "object",
       "properties": {
@@ -17289,6 +17394,12 @@
           "format": "boolean",
           "description": "onlyUpdateInfo仅更新数据,不执行流程",
           "title": "onlyUpdateInfo"
+        },
+        "extraInfo": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "更新NodeGroup请求",

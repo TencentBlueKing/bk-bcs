@@ -797,6 +797,16 @@ service ClusterManager {
       summary : "更新ClusterAutoScalingOption, 该接口为全量更新"
     };
   }
+  rpc UpdateAsOptionDeviceProvider(UpdateAsOptionDeviceProviderRequest) returns (UpdateAsOptionDeviceProviderResponse) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/autoscalingoption/{clusterID}/providers/{provider}"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新ClusterAutoscalingOption使用的资源池，主要应用于自研云便于产品记忆上次用户使用的资源池"
+      summary : "更新ClusterAutoscalingOption使用的资源池，主要应用于自研云便于产品记忆上次用户使用的资源池"
+    };
+  }
   rpc DeleteAutoScalingOption(DeleteAutoScalingOptionRequest) returns (DeleteAutoScalingOptionResponse) {
     option (google.api.http) = {
       delete : "/clustermanager/v1/autoscalingoption/{clusterID}"
@@ -1581,6 +1591,10 @@ message Node {
   string taskID = 21 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "taskID",
     description: "节点对应的任务ID, 仅在申请资源时追踪节点数据"
+  }];
+  string failedReason = 22 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "failedReason",
+    description: "上下架节点失败时原因"
   }];
 }
 
@@ -3214,6 +3228,10 @@ message NodeGroup {
     title: "area",
     description: "节点所在云区域信息(用户不指定, 则使用默认云区域)"
   }];
+  map<string, string> extraInfo = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extraInfo",
+    description: "节点池扩展信,存储资源池类型等信息"
+  }];
 }
 
 message CloudArea {
@@ -3769,6 +3787,10 @@ message ClusterAutoScalingOption {
     title: "newPodScaleUpDelay",
     description: "newPodScaleUpDelay，新pod建立多久之后才触发CA, 默认 0"
   },(validate.rules).uint32 = {gte: 0}];
+  string devicePoolProvider = 39 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "devicePoolProvider",
+    description: "devicePoolProvider资源池提供者, 主要应用于自研云产品化, 默认 yunti"
+  }];
 }
 
 // Taint for node taints
@@ -6914,6 +6936,10 @@ message ClusterNode {
     title: "taskID",
     description: "节点所属的扩容IP,主要是针对虚拟节点展示任务详情"
   }];
+  string failedReason = 30[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "failedReason",
+    description: "上下架节点过程中失败原因"
+  }];
 }
 
 message ListMastersInClusterRequest {
@@ -7849,6 +7875,10 @@ message UpdateNodeGroupRequest {
   bool onlyUpdateInfo = 19 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "onlyUpdateInfo",
     description: "onlyUpdateInfo仅更新数据,不执行流程"
+  }];
+  map<string, string> extraInfo = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extraInfo",
+    description: "节点池扩展息"
   }];
 }
 
@@ -9619,6 +9649,39 @@ message UpdateAutoScalingOptionResponse {
   }];
 }
 
+message UpdateAsOptionDeviceProviderRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateAsOptionDeviceProviderRequest"
+      description : "更新AutoScalingOption本次使用的资源池信息"
+      required: ["clusterID", "provider"]
+    }
+  };
+  string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "BCS集群ID，关联的集群ID"
+  }, (validate.rules).string = {max_len : 100}];
+  string provider = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "provider",
+    description: "集群创建节点池使用的资源池类型(目前仅支持yunti、self资源池类型，默认为yunti资源池)"
+  }];
+}
+
+message UpdateAsOptionDeviceProviderResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description : "返回结果"
+  }];
+}
+
 message SyncAutoScalingOptionRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -10293,22 +10356,18 @@ message ListCloudInstanceTypeRequest {
     title : "memory",
     description : "内存大小，单位 GB"
   }];
-  string projectID = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "projectID",
-    description : "项目ID, 主要是获取自建资源池"
-  }];
-  string bizID = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string bizID = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "bizID",
     description : "业务ID, 主要是获取业务私有自建资源池"
   }];
-  string version = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "version",
-    description : "version版本标识内部使用的接口版本,稳定后可废弃"
-  }];
-  string provider = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string provider = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "provider",
     description : "provider资源池提供方(yunti/self)"
   }];
+  string resourceType = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceType",
+    description : "当provider为self时, resourceType资源类型(online/offline)"
+  },(validate.rules).string = {in: ["", "online", "offline"]}];
 }
 
 message ListCloudInstanceTypeResponse {

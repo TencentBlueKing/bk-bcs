@@ -54,6 +54,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.GetAutoScalingOption",
 	"ClusterManager.ListAutoScalingOption",
 	"ClusterManager.SyncAutoScalingOption",
+	"ClusterManager.UpdateAsOptionDeviceProvider",
 
 	// nodeTemplate
 	"ClusterManager.CreateNodeTemplate",

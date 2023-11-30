@@ -447,6 +447,7 @@ func transNodeToClusterNode(model store.ClusterManagerModel, node *proto.Node) *
 		NodeGroupName: nodeGroupName,
 		InnerIPv6:     node.InnerIPv6,
 		TaskID:        node.TaskID,
+		ZoneName:      node.ZoneName,
 	}
 }
 
@@ -580,6 +581,9 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 				NodeGroupName: n.NodeGroupName,
 				Annotations:   node.Annotations,
 				ZoneName: func() string {
+					if n.ZoneName != "" {
+						return n.ZoneName
+					}
 					zoneName, ok := node.Labels[utils.ZoneTopologyFlag]
 					if ok {
 						return zoneName

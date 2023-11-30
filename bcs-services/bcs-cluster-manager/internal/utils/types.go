@@ -62,6 +62,8 @@ const (
 	HostIDLabelKey = "bkcmdb.tencent.com/bk-host-id"
 	// AgentIDLabelKey for host id
 	AgentIDLabelKey = "bkcmdb.tencent.com/bk-agent-id"
+	// CloudAreaLabelKey for host id
+	CloudAreaLabelKey = "bkcmdb.tencent.com/cloud-area-id"
 
 	// PrefixKubernetesIo for special label
 	PrefixKubernetesIo = "node.info.kubernetes.io"

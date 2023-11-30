@@ -99,7 +99,7 @@ func SetResourcePoolDeviceLabels(taskID, stepName string) error {
 		}
 
 		// device annotations
-		errLocal = setNodeDeviceLabels(ctx, clusterID, device)
+		errLocal = setNodeDeviceAnnotations(ctx, clusterID, device)
 		if errLocal != nil {
 			blog.Errorf("SetResourcePoolDeviceLabels[%s] setNodeDeviceLabels failed: %v", taskID, errLocal)
 		} else {

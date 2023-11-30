@@ -706,7 +706,7 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 	}
 
 	// cloud nodes addition features
-	la.handleNodes()
+	// la.handleNodes()
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }

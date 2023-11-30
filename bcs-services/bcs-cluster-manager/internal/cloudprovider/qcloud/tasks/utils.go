@@ -67,7 +67,31 @@ func updateClusterSystemID(clusterID string, systemID string) error {
 }
 
 // updateNodeStatusByNodeID set node status
-func updateNodeStatusByNodeID(idList []string, status string) error { // nolint
+func updateFailedNodeStatusByNodeID(insInfos map[string]business.InstanceInfo, status string) error { // nolint
+	if len(insInfos) == 0 {
+		return nil
+	}
+
+	for id, data := range insInfos {
+		node, err := cloudprovider.GetStorageModel().GetNode(context.Background(), id)
+		if err != nil {
+			continue
+		}
+		node.Status = status
+		if data.FailedReason != "" {
+			node.FailedReason = data.FailedReason
+		}
+		err = cloudprovider.GetStorageModel().UpdateNode(context.Background(), node)
+		if err != nil {
+			continue
+		}
+	}
+
+	return nil
+}
+
+// updateNodeStatusByNodeID set node status
+func updateNodeStatusByNodeID(idList []string, status, reason string) error { // nolint
 	if len(idList) == 0 {
 		return nil
 	}
@@ -78,6 +102,9 @@ func updateNodeStatusByNodeID(idList []string, status string) error { // nolint
 			continue
 		}
 		node.Status = status
+		if reason != "" {
+			node.FailedReason = reason
+		}
 		err = cloudprovider.GetStorageModel().UpdateNode(context.Background(), node)
 		if err != nil {
 			continue

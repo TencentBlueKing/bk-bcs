@@ -364,7 +364,7 @@ type ResourcePoolData struct {
 // Validate resourcePool data
 func (rpd ResourcePoolData) Validate() error {
 	if rpd.Provider == "" {
-		return fmt.Errorf("ResourcePoolData provider or poolOD empty")
+		return fmt.Errorf("ResourcePoolData provider or poolID empty")
 	}
 
 	return nil
@@ -505,15 +505,14 @@ type StepInfo struct {
 
 // InstanceInfo for get instance type
 type InstanceInfo struct {
-	Region     string
-	Zone       string
-	NodeFamily string
-	Cpu        uint32
-	Memory     uint32
-	ProjectID  string
-	BizID      string
-	Version    string
-	Provider   string
+	Region       string
+	Zone         string
+	NodeFamily   string
+	Cpu          uint32
+	Memory       uint32
+	BizID        string
+	Provider     string
+	ResourceType string
 }
 
 // MachineConfig instance config

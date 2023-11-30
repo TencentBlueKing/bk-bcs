@@ -823,3 +823,32 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 	return addSuccessNodes, addFailureNodes, nil
 }
+
+// GetFailedNodesReason get add nodes failed reason
+func GetFailedNodesReason(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	instanceIDs []string) (map[string]InstanceInfo, string, error) {
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
+	tkeCli, err := api.NewTkeClient(info.CmOption)
+	if err != nil {
+		blog.Errorf("GetFailedNodesReason[%s] failed: %v", taskId, err)
+		return nil, "", err
+	}
+
+	var (
+		insMapInfo   = make(map[string]InstanceInfo, 0)
+		allInsReason = make([]string, 0)
+	)
+	for i := range instanceIDs {
+		reason, _ := tkeCli.DescribeInstanceCreateProgress(info.Cluster.GetSystemID(), instanceIDs[i])
+		insMapInfo[instanceIDs[i]] = InstanceInfo{
+			NodeId:       instanceIDs[i],
+			FailedReason: reason,
+		}
+	}
+	for _, ins := range insMapInfo {
+		allInsReason = append(allInsReason, ins.GetNodeFailedReason())
+	}
+
+	return insMapInfo, strings.Join(allInsReason, ";"), nil
+}
