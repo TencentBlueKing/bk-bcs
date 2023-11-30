@@ -17,6 +17,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
@@ -39,10 +41,24 @@ func IntervalDeleteActivity(ctx context.Context) (err error) {
 		case <-ctx.Done():
 			return nil
 		case <-timer.C:
-			// 批量删除记录
-			err = sqlstore.BatchDeleteActivity()
+			// 未配置清理天数及清理资源类型则忽略
+			if config.GetGlobalConfig().Activity.Duration == "" ||
+				len(config.GetGlobalConfig().Activity.ResourceType) == 0 {
+				blog.Info("user not configured, ignoring")
+				continue
+			}
+			// 解析配置文件的配置时间，如1s、1m、1h
+			duration, err := time.ParseDuration(config.GetGlobalConfig().Activity.Duration)
 			if err != nil {
-				return err
+				blog.Errorf("ParseDuration failed: %v", err)
+				continue
+			}
+			// 当前时间减去配置的天数，如：30天前
+			createdAt := time.Now().Add(-duration)
+			// 批量删除记录
+			err = sqlstore.BatchDeleteActivity(config.GetGlobalConfig().Activity.ResourceType, createdAt)
+			if err != nil {
+				blog.Errorf("BatchDeleteActivity failed: %v", err)
 			}
 		}
 	}
