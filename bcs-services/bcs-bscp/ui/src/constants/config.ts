@@ -1,8 +1,8 @@
 // kv类型的配置项包含的子类型
 export const CONFIG_KV_TYPE = [
   { id: 'string', name: 'String' },
-  { id: 'text', name: 'Text' },
   { id: 'number', name: 'Number' },
+  { id: 'text', name: 'Text' },
   { id: 'json', name: 'JSON' },
   { id: 'xml', name: 'XML' },
   { id: 'yaml', name: 'YAML' },

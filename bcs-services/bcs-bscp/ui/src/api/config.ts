@@ -339,3 +339,48 @@ export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill:
 export const batchAdddConfigList = (bizId: string, appId: number, list: any) => http.put(`/config/biz/${bizId}/apps/${appId}/config_items`, {
   items: list,
 });
+
+/**
+ * 创建kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const createKv = (bizId: string, appId: number, kv: any) => http.post(`/config/biz/${bizId}/apps/${appId}/kvs`, kv);
+
+/**
+ * 获取kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const getKv = (bizId: string, appId: number) => http.get(`/config/biz/${bizId}/apps/${appId}/kvs`);
+
+/**
+ * 批量上传｜更新kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const batchUpsertKv = (bizId: string, appId: number, kvs: any) => http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, kvs);
+
+/**
+ * 更新kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const updateKv = (bizId: string, appId: number, key: string) => http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`);
+
+/**
+ * 删除kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const deleteKv = (bizId: string, appId: number, key: string) => http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`);

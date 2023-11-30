@@ -27,21 +27,32 @@
       />
     </div>
     <section class="config-list-table">
-      <TableWithTemplates
-        v-if="useTemplate"
+      <template v-if="isFileType">
+        <TableWithTemplates
+          v-if="useTemplate"
+          ref="tableRef"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :search-str="searchStr"
+          @clear-str="clearStr"
+          @delete-config="refreshVariable"
+        />
+        <TableWithPagination
+          v-else
+          ref="tableRef"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :search-str="searchStr"
+        />
+      </template>
+      <TableWithKv
+        v-else
         ref="tableRef"
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
         :search-str="searchStr"
         @clear-str="clearStr"
         @delete-config="refreshVariable"
-      />
-      <TableWithPagination
-        v-else
-        ref="tableRef"
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        :search-str="searchStr"
       />
     </section>
   </section>
@@ -50,15 +61,19 @@
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../store/config';
+import useServiceStore from '../../../../../../../store/service';
 import SearchInput from '../../../../../../../components/search-input.vue';
 import CreateConfig from './create-config/index.vue';
 import EditVariables from './variables/edit-variables.vue';
 import ViewVariables from './variables/view-variables.vue';
 import TableWithTemplates from './tables/table-with-templates.vue';
 import TableWithPagination from './tables/table-with-pagination.vue';
+import TableWithKv from './tables/table-with-kv.vue';
 
 const configStore = useConfigStore();
+const serviceStore = useServiceStore();
 const { versionData } = storeToRefs(configStore);
+const { isFileType } = storeToRefs(serviceStore);
 
 const props = defineProps<{
   bkBizId: string;
