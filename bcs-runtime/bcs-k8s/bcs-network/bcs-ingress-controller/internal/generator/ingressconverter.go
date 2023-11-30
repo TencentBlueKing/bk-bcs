@@ -30,6 +30,7 @@ import (
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8stypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
@@ -74,6 +75,8 @@ type IngressConverter struct {
 	isTCPUDPPortReuse bool
 	// cloud e.g. tencentcloud aws gcp
 	cloud string
+	// eventer send event
+	eventer record.EventRecorder
 
 	listenerHelper *listenercontroller.ListenerHelper
 }
@@ -81,7 +84,8 @@ type IngressConverter struct {
 // NewIngressConverter create ingress generator
 func NewIngressConverter(opt *IngressConverterOpt,
 	cli client.Client, ingressValidater cloud.Validater, lbClient cloud.LoadBalance,
-	listenerHelper *listenercontroller.ListenerHelper, lbIDCache, lbNameCache *gocache.Cache) (*IngressConverter,
+	listenerHelper *listenercontroller.ListenerHelper, lbIDCache, lbNameCache *gocache.Cache,
+	eventer record.EventRecorder) (*IngressConverter,
 	error) {
 	if opt == nil {
 		return nil, fmt.Errorf("option cannot be empty")
@@ -97,6 +101,7 @@ func NewIngressConverter(opt *IngressConverterOpt,
 		lbIDCache:      lbIDCache,
 		lbNameCache:    lbNameCache,
 		listenerHelper: listenerHelper,
+		eventer:        eventer,
 	}, nil
 }
 
@@ -305,7 +310,8 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	var generatedListeners []networkextensionv1.Listener
 	var generatedSegListeners []networkextensionv1.Listener
 	for i, rule := range ingress.Spec.Rules {
-		ruleConverter := NewRuleConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &rule)
+		ruleConverter := NewRuleConverter(g.cli, lbObjs, ingress, ingress.GetName(), ingress.GetNamespace(), &rule,
+			g.eventer)
 		ruleConverter.SetNamespaced(g.lbClient.IsNamespaced())
 		ruleConverter.SetTCPUDPPortReuse(g.isTCPUDPPortReuse)
 		listeners, inErr := ruleConverter.DoConvert()

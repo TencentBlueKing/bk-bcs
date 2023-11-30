@@ -189,6 +189,8 @@ const (
 	// KindCRD of CRD
 	KindCRD = "CustomResourceDefinition"
 
+	// EventIngressBindFailed Ingress bind failed event
+	EventIngressBindFailed = "IngressBindFailed"
 	// EventReasonAllocatePortFailed event reason when allocate port failed
 	EventReasonAllocatePortFailed = "AllocatePortFailed"
 )

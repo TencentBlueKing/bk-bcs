@@ -374,7 +374,7 @@ func (s *Server) mutatingWebhook(ar v1.AdmissionReview) (response *v1.AdmissionR
 	}
 	_, ok := pod.Annotations[constant.AnnotationForPortPool]
 	if !ok {
-		blog.Warnf("pod %s/%s has no portpool annotation", pod.GetName(), pod.GetNamespace())
+		blog.Infof("pod %s/%s has no portpool annotation", pod.GetName(), pod.GetNamespace())
 		return &v1.AdmissionResponse{Allowed: true}
 	}
 
