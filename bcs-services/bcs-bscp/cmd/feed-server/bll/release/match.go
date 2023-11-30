@@ -39,7 +39,10 @@ func (rs *ReleasedService) GetMatchedRelease(kt *kit.Kit, meta *types.AppInstanc
 		return 0, err
 	}
 
-	if am.ConfigType != table.File {
+	switch am.ConfigType {
+	case table.File:
+	case table.KV:
+	default:
 		// only support file app
 		return 0, errf.New(errf.InvalidParameter, "app's configure type is not file")
 	}

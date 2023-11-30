@@ -47,6 +47,7 @@ const (
 	credential          namespace = "credential"
 	appMeta             namespace = "app-meta"
 	appID               namespace = "app-id"
+	releasedKv          namespace = "released-kv"
 )
 
 type keyGenerator struct {
@@ -55,6 +56,7 @@ type keyGenerator struct {
 	credentialMatchedCITTLRange [2]int
 	credentialTTLRange          [2]int
 	releasedCITTLRange          [2]int
+	releasedKvTTLRange          [2]int
 	releasedHookTTLRange        [2]int
 	appMetaTTLRange             [2]int
 	appHasRITTLRange            [2]int
@@ -69,7 +71,7 @@ func (k keyGenerator) ReleasedGroup(bizID uint32, appID uint32) string {
 	}.String()
 }
 
-// ReleasedCITtlSec generate the current released config item's TTL seconds
+// ReleasedGroupTtlSec ReleasedCITtlSec generate the current released config item's TTL seconds
 func (k keyGenerator) ReleasedGroupTtlSec(withRange bool) int {
 
 	if withRange {
@@ -135,6 +137,26 @@ func (k keyGenerator) ReleasedCI(bizID uint32, releaseID uint32) string {
 	}.String()
 }
 
+// ReleasedKv generate a release's Kv cache key to save all the Kvs under
+// this release
+func (k keyGenerator) ReleasedKv(bizID uint32, releaseID uint32) string {
+	return element{
+		biz: bizID,
+		ns:  releasedKv,
+		key: strconv.FormatUint(uint64(releaseID), 10),
+	}.String()
+}
+
+// ReleasedKvValue generate a release's Kv cache key to save all the Kvs under
+// this release
+func (k keyGenerator) ReleasedKvValue(bizID uint32, releaseID uint32, key string) string {
+	return element{
+		biz: bizID,
+		ns:  releasedKv,
+		key: key,
+	}.String()
+}
+
 // ReleasedCITtlSec generate the current released config item's TTL seconds
 func (k keyGenerator) ReleasedCITtlSec(withRange bool) int {
 
@@ -146,6 +168,19 @@ func (k keyGenerator) ReleasedCITtlSec(withRange bool) int {
 	}
 
 	return k.releasedCITTLRange[1]
+}
+
+// ReleasedKvTtlSec generate the current released kv TTL seconds
+func (k keyGenerator) ReleasedKvTtlSec(withRange bool) int {
+
+	if withRange {
+		//nolint:gosec
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.releasedKvTTLRange[1]-k.releasedKvTTLRange[0]) + k.releasedKvTTLRange[0]
+		return seconds
+	}
+
+	return k.releasedKvTTLRange[1]
 }
 
 // ReleasedHook generate a release's hook cache key to save pre and post hook undert his release

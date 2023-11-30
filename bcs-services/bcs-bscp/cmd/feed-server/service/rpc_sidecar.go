@@ -24,6 +24,7 @@ import (
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	pbkv "bscp.io/pkg/protocol/core/kv"
 	pbfs "bscp.io/pkg/protocol/feed-server"
 	"bscp.io/pkg/runtime/jsoni"
 	sfs "bscp.io/pkg/sf-share"
@@ -320,4 +321,96 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	}
 
 	return &pbfs.GetDownloadURLResp{Url: downloadLink}, nil
+}
+
+// PullKvMeta pull an app's latest release metadata only when the app's configures is kv type.
+func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbfs.PullKvMetaResp, error) {
+	// check if the sidecar's version can be accepted.
+	if !sfs.IsAPIVersionMatch(req.ApiVersion) {
+		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
+	}
+
+	im, err := sfs.ParseFeedIncomingContext(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
+	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "do authorization failed, %s", err.Error())
+	}
+
+	if !authorized {
+		return nil, status.Error(codes.PermissionDenied, "no permission to access bscp server")
+	}
+
+	if req.AppMeta == nil {
+		return nil, status.Error(codes.InvalidArgument, "app meta is empty")
+	}
+
+	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.AppMeta.App)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
+	}
+	meta := &types.AppInstanceMeta{
+		BizID:  req.BizId,
+		App:    req.AppMeta.App,
+		AppID:  appID,
+		Uid:    req.AppMeta.Uid,
+		Labels: req.AppMeta.Labels,
+	}
+
+	cancel := im.Kit.CtxWithTimeoutMS(1500)
+	defer cancel()
+
+	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(im.Kit, meta)
+	if err != nil {
+		return nil, err
+	}
+
+	kvMetas := make([]*pbfs.KvMeta, 0, len(metas.Kvs))
+	for _, kv := range metas.Kvs {
+		kvMetas = append(kvMetas, &pbfs.KvMeta{
+			Key: kv.Key,
+			KvAttachment: &pbkv.KvAttachment{
+				BizId: kv.KvAttachment.BizId,
+				AppId: kv.KvAttachment.AppId,
+			},
+		})
+	}
+
+	resp := &pbfs.PullKvMetaResp{
+		ReleaseId: metas.ReleaseId,
+		KvMetas:   kvMetas,
+		PreHook:   metas.PreHook,
+		PostHook:  metas.PostHook,
+	}
+
+	return resp, nil
+}
+
+// GetKvValue get kv value
+func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbfs.GetKvValueResp, error) {
+
+	// check if the sidecar's version can be accepted.
+	if !sfs.IsAPIVersionMatch(req.ApiVersion) {
+		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
+	}
+
+	im, err := sfs.ParseFeedIncomingContext(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	rkv, err := s.bll.RKvCache().GetKvValue(im.Kit, req.BizId, req.AppId, req.ReleaseId, req.Key)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get rkv failed, %s", err.Error())
+	}
+
+	kv := &pbfs.GetKvValueResp{
+		KvType: rkv.KvType,
+		Value:  rkv.Value,
+	}
+
+	return kv, nil
 }

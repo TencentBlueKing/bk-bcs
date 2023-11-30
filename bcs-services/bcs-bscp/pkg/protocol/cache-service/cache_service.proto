@@ -202,6 +202,6 @@ message GetReleasedKvReq {
 message GetReleasedKvValueReq {
     uint32 biz_id     = 1;
     uint32 release_id = 2;
-    uint32 app_id     = 4;
-    string key        = 5;
+    uint32 app_id     = 3;
+    string key        = 4;
 }

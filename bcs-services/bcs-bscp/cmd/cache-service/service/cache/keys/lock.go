@@ -34,6 +34,16 @@ func (rk resKind) ReleasedCI(releaseID uint32) string {
 	return fmt.Sprintf("rci-%d", releaseID)
 }
 
+// ReleasedKV return the released kv resource kind
+func (rk resKind) ReleasedKV(releaseID uint32) string {
+	return fmt.Sprintf("rkv-%d", releaseID)
+}
+
+// RKvValue return the released kv resource kind
+func (rk resKind) RKvValue(releaseID uint32, key string) string {
+	return fmt.Sprintf("rkv-value-%d-%s", releaseID, key)
+}
+
 // ReleasedHook return the released hook's resource kind
 func (rk resKind) ReleasedHook(releaseID uint32) string {
 	return fmt.Sprintf("rhook-%d", releaseID)

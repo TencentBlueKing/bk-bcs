@@ -70,6 +70,7 @@ const (
 	amRes            = "app-meta"
 	instRes          = "instance"
 	releasedCIRes    = "release-ci"
+	releasedKvRes    = "release-kv"
 	releasedHookRes  = "release-hook"
 	strategyRes      = "strategy"
 	credentialRes    = "credential"

@@ -23,17 +23,20 @@ import (
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"bscp.io/cmd/cache-service/options"
 	"bscp.io/cmd/cache-service/service"
 	"bscp.io/cmd/cache-service/service/cache/client"
 	"bscp.io/pkg/cc"
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/uuid"
 	"bscp.io/pkg/dal/bedis"
 	"bscp.io/pkg/dal/dao"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	pbcs "bscp.io/pkg/protocol/cache-service"
+	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/runtime/brpc"
 	"bscp.io/pkg/runtime/ctl"
 	"bscp.io/pkg/runtime/ctl/cmd"
@@ -125,8 +128,34 @@ func (cs *cacheService) prepare(opt *options.Option) error {
 
 	cs.daoSet = set
 
+	tls := cc.CacheService().Network.TLS
+	opts := make([]grpc.DialOption, 0)
+	opts = append(opts, sd.LBRoundRobin())
+
+	if !tls.Enable() {
+		// dial without ssl
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		// dial with ssl.
+		tlsC, tErr := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,
+			tls.Password)
+		if tErr != nil {
+			return fmt.Errorf("init client set tls config failed, err: %v", tErr)
+		}
+
+		cred := credentials.NewTLS(tlsC)
+		opts = append(opts, grpc.WithTransportCredentials(cred))
+	}
+
+	dsConn, err := grpc.Dial(serviced.GrpcServiceDiscoveryName(cc.DataServiceName), opts...)
+	if err != nil {
+		logs.Errorf("dial data service failed, err: %v", err)
+		return errf.New(errf.Unknown, fmt.Sprintf("dial data service failed, err: %v", err))
+	}
+	db := pbds.NewDataClient(dsConn)
+
 	// init bscp control tool
-	cs.op, err = client.New(set, bds)
+	cs.op, err = client.New(set, bds, db)
 	if err != nil {
 		return fmt.Errorf("new cache client failed, err: %v", err)
 	}
