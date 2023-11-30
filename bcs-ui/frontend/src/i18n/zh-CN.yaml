@@ -2696,3 +2696,14 @@ tke:
       p2: '此选项适用于依赖容器固定IP的场景, 对IP无限制的业务不推荐您使用固定IP模式, 详情请参考 {0}'
   placeholder:
     example: '示例: {0}'
+tkeCa:
+  tips:
+    notSupportSelfPool: 该业务没有开通自建资源池，如有需求，可联系助手添加
+    selfPoolInstanceDesc: '自建资源池无需指定系统盘和数据盘相关信息, 提供至少一块大小为 100G 及以上的数据盘'
+  label:
+    poolManage: 资源池管理
+    provider:
+      text: 资源提供者
+      desc: '资源提供者分为云梯资源池和自建资源池, 如果业务下有空闲资源, 因其他原因不能回收, 可联系助手添加自建资源池'
+      yunti: 云梯资源池(平台提供)
+      self: 自建资源池

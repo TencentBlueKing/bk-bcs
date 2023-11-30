@@ -79,6 +79,7 @@ export const masterList = request('get', '/cluster/$clusterId/master');
 // CA
 export const clusterAutoScalingLogsV2 = request('get', '/operationlogs');
 export const cloudsZones = request('get', '/clouds/$cloudId/zones');
+export const updateClusterAutoScalingProviders = request('put', '/autoscalingoption/$clusterId/providers/$provider');
 
 // vCluster
 export const sharedclusters = request('get', '/sharedclusters');

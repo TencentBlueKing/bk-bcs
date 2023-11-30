@@ -287,7 +287,7 @@
           show-overflow-tooltip
           v-if="isColumnRender('zoneID')">
           <template #default="{ row }">
-            {{ row.zoneName || '--' }}
+            {{ row.zoneName || row.zoneID ||'--' }}
           </template>
         </bcs-table-column>
         <bcs-table-column
@@ -589,7 +589,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, set, watch } from 'vue';
+import { computed, defineComponent, onBeforeUnmount, onMounted, ref, set, watch } from 'vue';
 import { TranslateResult } from 'vue-i18n';
 
 import useTableAcrossCheck from '../../../composables/use-table-across-check';
@@ -999,15 +999,16 @@ export default defineComponent({
       if (!data) {
         pre.push({
           value: row.zoneID,
-          text: `${row.zoneName} (1)`,
+          text: `${row.zoneName || row.zoneID} (1)`,
+          // 兼容两种数据源
           id: row.zoneID,
-          name: `${row.zoneName} (1)`,
+          name: `${row.zoneName || row.zoneID} (1)`,
           count: 1,
         });
       } else {
         data.count += 1;
-        data.text = `${row.zoneName} (${data.count})`;
-        data.name = `${row.zoneName} (${data.count})`;
+        data.text = `${row.zoneName || row.zoneID} (${data.count})`;
+        data.name = `${row.zoneName || row.zoneID} (${data.count})`;
       }
       return pre;
     }, []));
@@ -1759,6 +1760,10 @@ export default defineComponent({
       if (tableData.value.length) {
         start();
       }
+    });
+    onBeforeUnmount(() => {
+      logIntervalStop();
+      stop();
     });
     return {
       showConfirmDialog,

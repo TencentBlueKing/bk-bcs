@@ -57,7 +57,7 @@
         </bk-form-item>
         <bk-form-item
           :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.title')"
-          :desc="isEdit ? $t('cluster.ca.nodePool.create.instanceTypeConfig.desc') : ''">
+          :desc="instanceDesc">
           <div class="mb15" style="display: flex;">
             <div class="prefix-select">
               <span :class="['prefix', { disabled: isEdit }]">CPU</span>
@@ -112,7 +112,7 @@
                   <bcs-radio
                     :value="nodePoolConfig.launchTemplate.instanceType === row.nodeType"
                     :disabled="row.status === 'SOLD_OUT' || isEdit">
-                    <span class="bcs-ellipsis">{{row.typeName}}</span>
+                    <span class="bcs-ellipsis">{{row.typeName || row.nodeType}}</span>
                   </bcs-radio>
                 </span>
               </template>
@@ -130,47 +130,14 @@
             </bcs-table-column>
           </bcs-table>
           <p class="text-[12px] text-[#ea3636]" v-if="!nodePoolConfig.launchTemplate.instanceType">{{ $t('generic.validate.required') }}</p>
-          <div class="mt25" style="display:flex;align-items:center;">
-            <div class="prefix-select">
-              <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.system')}}</span>
-              <bcs-select
-                v-model="nodePoolConfig.launchTemplate.systemDisk.diskType"
-                :disabled="isEdit"
-                :clearable="false"
-                class="min-width-150 bg-[#fff]">
-                <bcs-option
-                  v-for="diskItem in diskEnum"
-                  :key="diskItem.id"
-                  :id="diskItem.id"
-                  :name="diskItem.name">
-                </bcs-option>
-              </bcs-select>
-            </div>
-            <bcs-select
-              class="w-[88px] bg-[#fff] ml10"
-              :disabled="isEdit"
-              :clearable="false"
-              v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize">
-              <bcs-option id="50" name="50"></bcs-option>
-              <bcs-option id="100" name="100"></bcs-option>
-            </bcs-select>
-            <span :class="['company', { disabled: isEdit }]">GB</span>
-          </div>
-          <div class="mt20">
-            <bk-checkbox
-              disabled
-              :value="true"
-              @change="handleShowDataDisksChange">
-              {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.purchaseDataDisk')}}
-            </bk-checkbox>
-          </div>
-          <div class="panel" v-for="(disk, index) in nodePoolConfig.nodeTemplate.dataDisks" :key="index">
-            <div class="panel-item">
+          <!-- self资源池不支持数据盘、系统盘和公网IP -->
+          <template v-if="$route.query.provider !== 'self'">
+            <div class="mt25" style="display:flex;align-items:center;">
               <div class="prefix-select">
-                <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')}}</span>
+                <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.system')}}</span>
                 <bcs-select
+                  v-model="nodePoolConfig.launchTemplate.systemDisk.diskType"
                   :disabled="isEdit"
-                  v-model="disk.diskType"
                   :clearable="false"
                   class="min-width-150 bg-[#fff]">
                   <bcs-option
@@ -181,80 +148,116 @@
                   </bcs-option>
                 </bcs-select>
               </div>
-              <bk-input
-                class="max-width-130 ml10"
-                type="number"
+              <bcs-select
+                class="w-[88px] bg-[#fff] ml10"
                 :disabled="isEdit"
-                :min="50"
-                :max="16380"
-                v-model="disk.diskSize">
-              </bk-input>
+                :clearable="false"
+                v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize">
+                <bcs-option id="50" name="50"></bcs-option>
+                <bcs-option id="100" name="100"></bcs-option>
+              </bcs-select>
               <span :class="['company', { disabled: isEdit }]">GB</span>
             </div>
-            <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.dataDisks')}}</p>
-            <div class="panel-item mt10">
+            <div class="mt20">
               <bk-checkbox
-                :disabled="(isEdit || index === 0)"
-                v-model="disk.autoFormatAndMount">
-                {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.mountPath')}}
+                disabled
+                :value="true"
+                @change="handleShowDataDisksChange">
+                {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.purchaseDataDisk')}}
               </bk-checkbox>
-              <template v-if="disk.autoFormatAndMount">
-                <bcs-select
-                  class="min-width-80 ml10 bg-[#fff]"
+            </div>
+            <div class="panel" v-for="(disk, index) in nodePoolConfig.nodeTemplate.dataDisks" :key="index">
+              <div class="panel-item">
+                <div class="prefix-select">
+                  <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')}}</span>
+                  <bcs-select
+                    :disabled="isEdit"
+                    v-model="disk.diskType"
+                    :clearable="false"
+                    class="min-width-150 bg-[#fff]">
+                    <bcs-option
+                      v-for="diskItem in diskEnum"
+                      :key="diskItem.id"
+                      :id="diskItem.id"
+                      :name="diskItem.name">
+                    </bcs-option>
+                  </bcs-select>
+                </div>
+                <bk-input
+                  class="max-width-130 ml10"
+                  type="number"
+                  :disabled="isEdit"
+                  :min="50"
+                  :max="16380"
+                  v-model="disk.diskSize">
+                </bk-input>
+                <span :class="['company', { disabled: isEdit }]">GB</span>
+              </div>
+              <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.dataDisks')}}</p>
+              <div class="panel-item mt10">
+                <bk-checkbox
                   :disabled="(isEdit || index === 0)"
-                  v-model="disk.fileSystem"
-                  :clearable="false">
-                  <bcs-option
-                    v-for="fileSystem in getSchemaByProp('launchTemplate.dataDisks.fileSystem').enum"
-                    :key="fileSystem"
-                    :id="fileSystem"
-                    :name="fileSystem">
-                  </bcs-option>
-                </bcs-select>
-                <bcs-input class="ml10" :disabled="(isEdit || index === 0)" v-model="disk.mountTarget"></bcs-input>
-              </template>
+                  v-model="disk.autoFormatAndMount">
+                  {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.mountPath')}}
+                </bk-checkbox>
+                <template v-if="disk.autoFormatAndMount">
+                  <bcs-select
+                    class="min-width-80 ml10 bg-[#fff]"
+                    :disabled="(isEdit || index === 0)"
+                    v-model="disk.fileSystem"
+                    :clearable="false">
+                    <bcs-option
+                      v-for="fileSystem in getSchemaByProp('launchTemplate.dataDisks.fileSystem').enum"
+                      :key="fileSystem"
+                      :id="fileSystem"
+                      :name="fileSystem">
+                    </bcs-option>
+                  </bcs-select>
+                  <bcs-input class="ml10" :disabled="(isEdit || index === 0)" v-model="disk.mountTarget"></bcs-input>
+                </template>
+              </div>
+              <p class="error-tips" v-if="showRepeatMountTarget(index)">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.repeatPath')}}</p>
+              <span :class="['panel-delete', { disabled: isEdit || index === 0 }]" @click="handleDeleteDiskData(index)">
+                <i class="bk-icon icon-close3-shape"></i>
+              </span>
             </div>
-            <p class="error-tips" v-if="showRepeatMountTarget(index)">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.repeatPath')}}</p>
-            <span :class="['panel-delete', { disabled: isEdit || index === 0 }]" @click="handleDeleteDiskData(index)">
-              <i class="bk-icon icon-close3-shape"></i>
+            <div
+              :class="['add-panel-btn', { disabled: isEdit || nodePoolConfig.nodeTemplate.dataDisks.length > 4 }]"
+              v-bk-tooltips="{
+                content: $t('cluster.ca.nodePool.create.instanceTypeConfig.validate.maxDataDisks'),
+                disabled: nodePoolConfig.nodeTemplate.dataDisks.length <= 4
+              }"
+              @click="handleAddDiskData">
+              <i class="bk-icon left-icon icon-plus"></i>
+              <span>{{$t('cluster.ca.nodePool.create.instanceTypeConfig.button.addDataDisks')}}</span>
+            </div>
+            <span class="inline-flex mt15" v-bk-tooltips="$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.tips')">
+              <bk-checkbox
+                disabled
+                v-model="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
+                {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
+              </bk-checkbox>
             </span>
-          </div>
-          <div
-            :class="['add-panel-btn', { disabled: isEdit || nodePoolConfig.nodeTemplate.dataDisks.length > 4 }]"
-            v-bk-tooltips="{
-              content: $t('cluster.ca.nodePool.create.instanceTypeConfig.validate.maxDataDisks'),
-              disabled: nodePoolConfig.nodeTemplate.dataDisks.length <= 4
-            }"
-            @click="handleAddDiskData">
-            <i class="bk-icon left-icon icon-plus"></i>
-            <span>{{$t('cluster.ca.nodePool.create.instanceTypeConfig.button.addDataDisks')}}</span>
-          </div>
-          <span class="inline-flex mt15" v-bk-tooltips="$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.tips')">
-            <bk-checkbox
-              disabled
-              v-model="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
-              {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
-            </bk-checkbox>
-          </span>
-          <div class="panel" v-if="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
-            <div class="panel-item">
-              <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.text')}}</label>
-              <bk-radio-group v-model="nodePoolConfig.launchTemplate.internetAccess.internetChargeType">
-                <bk-radio :disabled="isEdit" value="TRAFFIC_POSTPAID_BY_HOUR">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.traffic_postpaid_by_hour')}}</bk-radio>
-                <bk-radio :disabled="isEdit" value="BANDWIDTH_PREPAID">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.bandwidth_prepaid')}}</bk-radio>
-              </bk-radio-group>
+            <div class="panel" v-if="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
+              <div class="panel-item">
+                <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.text')}}</label>
+                <bk-radio-group v-model="nodePoolConfig.launchTemplate.internetAccess.internetChargeType">
+                  <bk-radio :disabled="isEdit" value="TRAFFIC_POSTPAID_BY_HOUR">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.traffic_postpaid_by_hour')}}</bk-radio>
+                  <bk-radio :disabled="isEdit" value="BANDWIDTH_PREPAID">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.bandwidth_prepaid')}}</bk-radio>
+                </bk-radio-group>
+              </div>
+              <div class="panel-item mt10">
+                <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.maxBandWidth')}}</label>
+                <bk-input
+                  class="max-width-150"
+                  type="number"
+                  :disabled="isEdit"
+                  v-model="nodePoolConfig.launchTemplate.internetAccess.internetMaxBandwidth">
+                </bk-input>
+                <span :class="['company', { disabled: isEdit }]">Mbps</span>
+              </div>
             </div>
-            <div class="panel-item mt10">
-              <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.maxBandWidth')}}</label>
-              <bk-input
-                class="max-width-150"
-                type="number"
-                :disabled="isEdit"
-                v-model="nodePoolConfig.launchTemplate.internetAccess.internetMaxBandwidth">
-              </bk-input>
-              <span :class="['company', { disabled: isEdit }]">Mbps</span>
-            </div>
-          </div>
+          </template>
         </bk-form-item>
         <bk-form-item
           :label="$t('cluster.ca.nodePool.create.password.set')"
@@ -280,7 +283,8 @@
           :label="$t('cluster.ca.nodePool.create.securityGroup')"
           property="nodePoolConfig.launchTemplate.securityGroupIDs"
           error-display-type="normal"
-          required>
+          required
+          v-if="$route.query.provider !== 'self'">
           <bcs-select
             :loading="securityGroupsLoading"
             v-model="nodePoolConfig.launchTemplate.securityGroupIDs"
@@ -365,6 +369,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
+    const resourcePoolProvider = computed<'yunti'|'self'>(() => $router.currentRoute?.query?.provider || 'yunti');
     const { defaultValues, cluster, isEdit, schema } = toRefs(props);
     const nodeConfigRef = ref<any>(null);
     const formRef = ref<any>(null);
@@ -425,6 +430,7 @@ export default defineComponent({
         },
       },
       extra: {
+        poolID: '',
         provider: '', // 机型provider信息
       },
     });
@@ -482,38 +488,43 @@ export default defineComponent({
     };
 
     // 机型
+    const instanceDesc = computed(() => {
+      if (resourcePoolProvider.value === 'self') return $i18n.t('tkeCa.tips.selfPoolInstanceDesc');
+      return isEdit.value ? $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.desc') : '';
+    });
     const instanceTypesLoading = ref(false);
     const instanceData = ref<any[]>([]);
     const instanceTypesList = computed(() => {
       const zoneList: string[] = nodePoolConfig.value.autoScaling?.zones || [];
-      const cacheInstanceMap = {};
-      if (!zoneList.length) return instanceData.value
-        .filter((instance) => {
-        // todo 简单过滤同类型机型
-          if (!cacheInstanceMap[instance.nodeType]) {
-            cacheInstanceMap[instance.nodeType] = true;
-            return true;
-          }
-          return false;
-        })
-        .filter(instance => (!CPU.value || instance.cpu === CPU.value)
-        && (!Mem.value || instance.memory === Mem.value));;
-      // 先过滤可用区, 再过滤同类型机型
       return instanceData.value
-        .filter(instance => instance?.zones?.some(zone => zoneList.includes(zone)))
-        .filter((instance) => {
-        // todo 简单过滤同类型机型
-          if (!cacheInstanceMap[instance.nodeType]) {
-            cacheInstanceMap[instance.nodeType] = true;
-            return true;
+        .reduce<any[]>((pre, instance) => {
+        // 过滤可用区
+        if (!zoneList.length
+        || !instance?.zones?.length
+        || instance?.zones?.some(zone => !zone || zoneList.includes(zone))) {
+          const exitIndex = pre.findIndex(item => item.nodeType === instance.nodeType);
+          if (exitIndex > -1) { // 过滤同类型机型
+            if (pre[exitIndex]?.status === 'SOLD_OUT') {
+              // 告罄
+              pre.splice(exitIndex, 1, instance);
+            } else if (!pre[exitIndex]?.resourcePoolID?.includes(instance.resourcePoolID)) {
+              // 合并 resourcePoolID 字段（选择同类型机型时需要给后端）
+              pre[exitIndex]?.resourcePoolID?.push(instance.resourcePoolID);
+            }
+          } else { // 不存在同类型
+            pre.push({
+              ...instance,
+              resourcePoolID: [instance.resourcePoolID], // 改变 resourcePoolID 数据结构，同类型机型需要把每个 resourcePoolID 给后端
+            });
           }
-          return false;
-        })
+        }
+        return pre;
+      }, [])
         .filter(instance => (!CPU.value || instance.cpu === CPU.value)
         && (!Mem.value || instance.memory === Mem.value));
     });
     // eslint-disable-next-line max-len
-    const curInstanceItem = computed(() => instanceData.value.find(instance => instance.nodeType === nodePoolConfig.value.launchTemplate.instanceType) || {});
+    const curInstanceItem = computed(() => instanceTypesList.value.find(instance => instance.nodeType === nodePoolConfig.value.launchTemplate.instanceType) || {});
     const cpuList = computed(() => {
       const data = instanceData.value.reduce((pre, item) => {
         if (!pre.includes(item.cpu)) {
@@ -539,12 +550,12 @@ export default defineComponent({
       Mem.value,
     ], () => {
       // 重置机型
-      nodePoolConfig.value.launchTemplate.instanceType = '';
       handleSetDefaultInstance();
       // // 获取机型
       // handleGetInstanceTypes();
     });
     watch(curInstanceItem, () => {
+      // 资源池
       nodePoolConfig.value.extra.provider = curInstanceItem.value.provider;
       // nodePoolConfig.value.autoScaling.zones = [];
     });
@@ -559,31 +570,33 @@ export default defineComponent({
       if (row.status === 'SOLD_OUT' || isEdit.value) return;
       nodePoolConfig.value.launchTemplate.instanceType = row.nodeType;
     };
-    const { projectID } = useProject();
+    const { projectID, curProject } = useProject();
     // 设置默认机型
     const handleSetDefaultInstance = () => {
       setTimeout(() => {
         // 默认机型配置
-        if (!nodePoolConfig.value.launchTemplate.instanceType) {
-          nodePoolConfig.value.launchTemplate.instanceType = instanceTypesList.value
-            .find(instance => instance.status === 'SELL')?.nodeType;
-        }
+        nodePoolConfig.value.launchTemplate.instanceType = instanceTypesList.value
+          .find(instance => instance.status === 'SELL')?.nodeType || '';
       });
     };
     const handleGetInstanceTypes = async () => {
       instanceTypesLoading.value = true;
       // const cpu = nodePoolConfig.value.launchTemplate.CPU || undefined;
       // const memory =  nodePoolConfig.value.launchTemplate.Mem || undefined;
+      const params = resourcePoolProvider.value === 'self'
+        ? {
+          resourceType: 'online',
+          bizID: curProject.value?.businessID,
+        }
+        : {};
       const data = await $store.dispatch('clustermanager/cloudInstanceTypes', {
         $cloudID: cluster.value.provider,
         region: cluster.value.region,
         accountID: cluster.value.cloudAccountID,
-        provider: 'yunti', // todo self
-        // cpu,
-        // memory,
         projectID: projectID.value,
         version: 'v2',
-        // bizID: curProject.value?.businessID,
+        provider: resourcePoolProvider.value,
+        ...params,
       });
       instanceData.value = data.sort((pre, current) => pre.cpu - current.cpu);
       handleSetDefaultInstance();
@@ -654,20 +667,39 @@ export default defineComponent({
 
     // 操作
     const getNodePoolData = () => {
-      // 系统盘、数据盘、宽度大小要转换为字符串类型
-      // eslint-disable-next-line max-len
-      nodePoolConfig.value.launchTemplate.systemDisk.diskSize = String(nodePoolConfig.value.launchTemplate.systemDisk.diskSize);
-      nodePoolConfig.value.nodeTemplate.dataDisks = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => ({
-        ...item,
-        diskSize: String(item.diskSize),
-      }));
+      if (resourcePoolProvider.value === 'self') {
+        nodePoolConfig.value.launchTemplate.systemDisk = {
+          diskType: '',
+          diskSize: '',
+        };
+        nodePoolConfig.value.launchTemplate.securityGroupIDs = [];
+        nodePoolConfig.value.launchTemplate.dataDisks = [];
+        nodePoolConfig.value.nodeTemplate.dataDisks = [{
+          diskType: '',
+          diskSize: '',
+          fileSystem: 'ext4',
+          autoFormatAndMount: true,
+          mountTarget: '/data',
+        }];
+        const resourcePoolIDList = curInstanceItem.value?.resourcePoolID;
+        nodePoolConfig.value.extra.poolID = resourcePoolIDList?.join(',');
+      } else {
+        // 系统盘、数据盘、宽度大小要转换为字符串类型
+        // eslint-disable-next-line max-len
+        nodePoolConfig.value.launchTemplate.systemDisk.diskSize = String(nodePoolConfig.value.launchTemplate.systemDisk.diskSize);
+        nodePoolConfig.value.nodeTemplate.dataDisks = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => ({
+          ...item,
+          diskSize: String(item.diskSize),
+        }));
+
+        // 数据盘后端存了两个地方
+        nodePoolConfig.value.launchTemplate.dataDisks = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => ({
+          diskType: item.diskType,
+          diskSize: item.diskSize,
+        }));
+      }
       // eslint-disable-next-line max-len
       nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = String(nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth);
-      // 数据盘后端存了两个地方
-      nodePoolConfig.value.launchTemplate.dataDisks = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => ({
-        diskType: item.diskType,
-        diskSize: item.diskSize,
-      }));
       // CPU和mem信息从机型获取
       nodePoolConfig.value.launchTemplate.CPU = curInstanceItem.value.cpu;
       nodePoolConfig.value.launchTemplate.Mem = curInstanceItem.value.memory;
@@ -785,6 +817,7 @@ export default defineComponent({
       memList,
       clusterDetailLoading,
       instanceTypesList,
+      instanceDesc,
     };
   },
 });

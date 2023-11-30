@@ -185,8 +185,8 @@ units:
     last15Days: Last 15 days
     last30Days: Last 30 days
     nDays: '{num} Day'
-    nMonths: ''
-    nYears: ''
+    nMonths: '{0} Months'
+    nYears: '{0} Years'
   suffix:
     seconds: s
     days: Day
@@ -794,7 +794,7 @@ cluster:
       clusterIPType:
         text: Cluster ip type
         dual: IPv4/IPv6
-        dualSingle: ''
+        dualSingle: IPv4 or IPv6 single stack (automatically assigned by the platform)
       netSetting: Network setting
       maxNodePodNum: Max pod num
       highAvailabilityScheme:
@@ -3233,16 +3233,16 @@ tke:
     serviceCidr: Service CIDR
     subnetID: Subnet ID
     subnetName: Subnet name
-    recommended: ''
-    defaultProject: ''
-    containerNet: ''
+    recommended: Recommended
+    defaultProject: Default project
+    containerNet: Network
     publicIPAssigned:
-      text: ''
+      text: Public IP address
       chargeMode:
-        text: ''
-        traffic_postpaid_by_hour: ''
-        bandwidth_prepaid: ''
-      maxBandWidth: ''
+        text: Charge Mode
+        traffic_postpaid_by_hour: Charge by hour
+        bandwidth_prepaid: Charge by bandwidth
+      maxBandWidth: Max bandwidth
   title:
     connectFailure:
       text: >-
@@ -3267,23 +3267,27 @@ tke:
     purchaseDataDisk: Purchase Data Disk
     autoFormatAndMount: Format and Mount Automatically
     addSubnets: Add Subnets
-    goDetail: ''
+    goDetail: 'For details, please see {0}'
   link:
     cloudToken: Manage Cloud Credentials
     cloudProject: Manage Cloud Project
     nodeman: Go to Manage
     subnet: Go to Subnet
-    securityGroup: ''
-    vpc: ''
-    netOverview: ''
-    package: ''
-    staticIpMode: ''
-    cmdb: ''
+    securityGroup: Security group
+    vpc: VPC
+    netOverview: Manage network
+    package: Manage package
+    staticIpMode: Static IP
+    cmdb: Go to CMDB
   validate:
     passwordNotSame: The passwords entered do not match
-    minIpNum: ''
-    minIpNum2: ''
-    supportCidrList: ''
+    minIpNum: >-
+      To ensure that the cluster has enough IPs, the container network segment
+      must not have fewer than {0} IPs.
+    minIpNum2: >-
+      The container network segment must not have fewer than {0} IPs. Please
+      re-enter.
+    supportCidrList: 'Supports only network segments between {0}.'
   configRec:
     l100:
       text: Node Count 1~100
@@ -3334,17 +3338,45 @@ tke:
       and the availability zone of the Pod IP must be consistent with the
       availability zone of the cluster nodes (including the control plane and
       Node nodes)
-    notSupportInCurrentClusterVersion: ''
-    grDesc: ''
-    vpcCniDesc: ''
-    notSupport: ''
-    totalIpNum: ''
-    supportCidr: ''
-    ipCannotBeAdjustedWhenCreated: ''
-    podIpCalcFormula: ''
-    vpcCniPodIp: ''
+    notSupportInCurrentClusterVersion: Not supported in current cluster version
+    grDesc: >-
+      Global Router: A container networking plugin by Tencent Cloud TKE, based
+      on VPC routing allowing for container subnets independent and parallel to
+      the VPC
+    vpcCniDesc: >-
+      VPC-CNI: A container networking plugin by Tencent Cloud TKE, based on
+      elastic network interfaces, where container networking is within the same
+      VPC as the cloud server
+    notSupport: Not supported temporarily
+    supportCidr: 'Tencent Cloud supports private network range: '
+    ipCannotBeAdjustedWhenCreated: >-
+      Once {0} IP amount is allocated, it will not be adjustable, please
+      evaluate carefully before filling out
+    podIpCalcFormula: Pod IP quantity = Number of container subnets - Number of Service IPs
+    vpcCniPodIp: >-
+      Pod IP is automatically allocated from the primary/secondary subnets of
+      the private network
     staticIpMode:
-      p1: ''
-      p2: ''
+      p1: >-
+        This option is only supported when the cluster is created; it cannot be
+        changed after the cluster creation. Please handle with caution.
+      p2: >-
+        This option is suitable for scenarios that rely on containers with fixed
+        IP. It is not recommended to use fixed IP mode for services without IP
+        restrictions, for more details please refer to {0}
+    totalIpNum: 'Total {0} IPs'
   placeholder:
-    example: ''
+    example: 'Example: {0}'
+tkeCa:
+  label:
+    poolManage: Resource Pool Management
+    provider:
+      text: Resource Provider
+      yunti: Cloud Ladder Resource Pool (Platform Provided)
+      self: Self-built Resource Pool
+      desc: 'Resource providers are divided into cloud ladder resource pools and self-built resource pools. If there are idle resources under the business that cannot be reclaimed for other reasons, you can contact an assistant to add a self-built resource pool.'
+  tips:
+    notSupportSelfPool: >-
+      The business has not opened a self-built resource pool. If needed, you can
+      contact an assistant to add one.
+    selfPoolInstanceDesc: 'For a self-built resource pool, it is not necessary to specify information about the system disk and data disk. At least one data disk of 100GB or more is required.'

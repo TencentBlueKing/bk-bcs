@@ -143,8 +143,57 @@
         </LayoutGroup>
       </div>
     </section>
+    <!-- 资源池配置 -->
+    <section class="group-border-top">
+      <div class="group-header">
+        <div class="group-header-title">{{$t('tkeCa.label.poolManage')}}</div>
+      </div>
+      <bk-form class="bcs-form-content px-[24px] pb-[10px]" :label-width="210">
+        <bk-form-item :label="$t('tkeCa.label.provider.text')" :desc="$t('tkeCa.label.provider.desc')">
+          <template v-if="!isEditDevicePool">
+            <span class="break-all">
+              {{ (autoscalerData.devicePoolProvider || 'yunti') === 'yunti'
+                ? $t('tkeCa.label.provider.yunti') : $t('tkeCa.label.provider.self') }}
+            </span>
+            <span
+              class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
+              @click="isEditDevicePool = true">
+              <i class="bk-icon icon-edit-line"></i>
+            </span>
+          </template>
+          <template v-else>
+            <bcs-select
+              :clearable="false"
+              searchable
+              class="w-[200px]"
+              :value="autoscalerData.devicePoolProvider || 'yunti'"
+              @change="handleChangeDevicePool">
+              <bcs-option id="yunti" :name="$t('tkeCa.label.provider.yunti')"></bcs-option>
+              <bcs-option
+                id="self"
+                :name="$t('tkeCa.label.provider.self')"
+                :disabled="disableSelfDevicePool"
+                v-bk-tooltips="{
+                  content: $t('tkeCa.tips.notSupportSelfPool'),
+                  disabled: !disableSelfDevicePool,
+                  placement: 'left'
+                }">
+              </bcs-option>
+            </bcs-select>
+            <bcs-button
+              text
+              class="text-[12px] ml-[10px] h-[32px]"
+              @click="handleSaveDevicePoolChange">{{ $t('generic.button.save') }}</bcs-button>
+            <bcs-button
+              text
+              class="text-[12px] ml-[10px] h-[32px]"
+              @click="isEditDevicePool = false">{{ $t('generic.button.cancel') }}</bcs-button>
+          </template>
+        </bk-form-item>
+      </bk-form>
+    </section>
     <!-- 节点规格配置 -->
-    <section class="nodepool">
+    <section class="group-border-top">
       <div class="group-header">
         <div class="group-header-title">{{$t('cluster.ca.title.nodePoolManage')}}</div>
         <div class="flex">
@@ -187,6 +236,13 @@
         </bcs-table-column>
         <bcs-table-column :label="$t('cluster.ca.nodePool.label.system')" show-overflow-tooltip>
           <template #default>{{clusterOS}}</template>
+        </bcs-table-column>
+        <bcs-table-column :label="$t('tkeCa.label.provider.text')" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ (row.extraInfo && row.extraInfo.resourcePoolType ? row.extraInfo.resourcePoolType : 'yunti') === 'yunti'
+              ? $t('tkeCa.label.provider.yunti')
+              : $t('tkeCa.label.provider.self') }}
+          </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('cluster.ca.nodePool.label.status')">
           <template #default="{ row }">
@@ -408,9 +464,15 @@
                   </div>
                 </template>
               </bcs-table-column>
-              <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.stepMsg')" show-overflow-tooltip>
+              <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.stepMsg')">
                 <template #default="{ row: key }">
-                  {{ row.task.steps[key].message || '--' }}
+                  <bcs-popover
+                    :disabled="!row.task.steps[key].message || taskStatusColorMap[row.task.steps[key].status] === 'green'">
+                    <span class="select-all bcs-ellipsis">{{ row.task.steps[key].message || '--' }}</span>
+                    <template #content>
+                      {{ row.task.steps[key].message }}
+                    </template>
+                  </bcs-popover>
                 </template>
               </bcs-table-column>
               <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.startTime')" width="180" show-overflow-tooltip>
@@ -453,7 +515,16 @@
             {{row.task ? row.task.taskName : '--'}}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.eventMsg')" prop="message" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.eventMsg')" prop="message">
+          <template #default="{ row }">
+            <bcs-popover>
+              <span class="select-all bcs-ellipsis">{{ row.message || '--' }}</span>
+              <template #content>
+                {{ row.message }}
+              </template>
+            </bcs-popover>
+          </template>
+        </bcs-table-column>
         <bcs-table-column
           :label="$t('cluster.ca.nodePool.text')"
           prop="resourceID"
@@ -559,13 +630,14 @@ import useNode from '../node-list/use-node';
 
 import AutoScalerFormItem from './form-item.vue';
 
+import { updateClusterAutoScalingProviders } from '@/api/modules/cluster-manager';
 import { clusterOverview } from '@/api/modules/monitor';
 import $bkMessage from '@/common/bkmagic';
 import { formatBytes } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import LoadingIcon from '@/components/loading-icon.vue';
 import StatusIcon from '@/components/status-icon';
-import { useConfig } from '@/composables/use-app';
+import { ICluster, useConfig, useProject } from '@/composables/use-app';
 import useAutoCols from '@/composables/use-auto-cols';
 import useDebouncedRef from '@/composables/use-debounce';
 import useInterval from '@/composables/use-interval';
@@ -844,6 +916,53 @@ export default defineComponent({
       podsPriorityLoading.value = false;
     };
 
+    // 资源池设置
+    const isEditDevicePool = ref(false);
+    const disableSelfDevicePool = ref(true);
+    const newProvider = ref<'yunti'|'self'|''>('');
+    const handleChangeDevicePool = async (value) => {
+      newProvider.value = value;
+    };
+    const handleSaveDevicePoolChange = async () => {
+      if (!newProvider.value) {
+        isEditDevicePool.value = false;
+        return;
+      };
+      configLoading.value = true;
+      const result = await updateClusterAutoScalingProviders({
+        $clusterId: props.clusterId,
+        $provider: newProvider.value,
+      }).then(() => true)
+        .catch(() => false);
+      configLoading.value = false;
+      if (result) {
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('generic.msg.success.modify'),
+        });
+        isEditDevicePool.value = false;
+        handleGetAutoScalerConfig();
+      }
+    };
+    const { projectID, curProject } = useProject();
+    const curCluster = computed<ICluster>(() => ($store.state as any).cluster.clusterList
+      ?.find(item => item.clusterID === props.clusterId) || {});
+    // 判断是否支持self资源池
+    const getSelfDevicePool = async () => {
+      const data = await $store.dispatch('clustermanager/cloudInstanceTypes', {
+        $cloudID: curCluster.value.provider,
+        region: curCluster.value.region,
+        accountID: curCluster.value.cloudAccountID,
+        projectID: projectID.value,
+        version: 'v2',
+        provider: 'self',
+        resourceType: 'online',
+        bizID: curProject.value?.businessID,
+      });
+      disableSelfDevicePool.value = !data?.length;
+    };
+
+    // 节点池
     const statusTextMap = { // 节点规格状态
       RUNNING: $i18n.t('generic.status.ready'),
       CREATING: $i18n.t('generic.status.creating'),
@@ -1370,6 +1489,9 @@ export default defineComponent({
         params: {
           clusterId: props.clusterId,
         },
+        query: {
+          provider: autoscalerData.value.devicePoolProvider || 'yunti',
+        },
       }).catch((err) => {
         console.warn(err);
       });
@@ -1381,6 +1503,9 @@ export default defineComponent({
         params: {
           clusterId: props.clusterId,
           nodeGroupID: row.nodeGroupID,
+        },
+        query: {
+          provider: row.extraInfo?.resourcePoolType || 'yunti',
         },
       }).catch((err) => {
         console.warn(err);
@@ -1450,6 +1575,7 @@ export default defineComponent({
       handleGetNodePoolList();
       getClusterDetail(props.clusterId, true);
       handleGetClusterOverview();
+      getSelfDevicePool();
     });
     onBeforeUnmount(() => {
       stop();
@@ -1531,6 +1657,10 @@ export default defineComponent({
       handleFilterChange,
       autoscalerRef,
       cols,
+      isEditDevicePool,
+      disableSelfDevicePool,
+      handleChangeDevicePool,
+      handleSaveDevicePoolChange,
     };
   },
 });
@@ -1558,11 +1688,31 @@ export default defineComponent({
             color: #63656E;
         }
     }
-    .nodepool {
+    .group-border-top {
         border-top: 1px solid #DCDEE5;
     }
     .disabled {
         color: #C4C6CC;
+    }
+    >>> .bcs-form-content {
+      display: flex;
+      flex-wrap: wrap;
+      &-item {
+          margin-top: 0;
+          font-size: 12px;
+          width: 100%;
+      }
+      .bk-label {
+          font-size: 12px;
+          color: #979BA5;
+          text-align: left;
+      }
+      .bk-form-content {
+          font-size: 12px;
+          color: #313238;
+          display: flex;
+          align-items: center;
+      }
     }
 }
 .flex-between {

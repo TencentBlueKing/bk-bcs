@@ -15,7 +15,7 @@
     <div class="resize-line" ref="resizeRef" @mousedown="onMousedownEvent"></div>
     <div class="h-[56px] flex items-center px-[24px] pt-[16px] pb-[8px] text-[12px]">
       <span class="font-bold text-[14px] leading-[22px]">{{ curCluster.clusterName || '--' }}</span>
-      <span class="ml-[14px] text-[#979BA5] leading-[22px]">{{ curCluster.clusterID }}</span>
+      <span class="ml-[14px] text-[#979BA5] leading-[22px] select-all">{{ curCluster.clusterID }}</span>
       <bcs-divider direction="vertical"></bcs-divider>
       <div class="h-[22px] inline-flex items-center">
         <StatusIcon
