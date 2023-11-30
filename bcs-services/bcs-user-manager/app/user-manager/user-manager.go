@@ -14,6 +14,7 @@ package usermanager
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"embed"
 	"errors"
@@ -38,6 +39,7 @@ import (
 	"go-micro.dev/v4/registry"
 
 	i18n2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/job/activity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
@@ -91,6 +93,14 @@ func (u *UserManager) Start() error {
 	if err := SetupStore(u.config); err != nil {
 		return err
 	}
+
+	// 定时清理操作记录
+	go func() {
+		err := activity.IntervalDeleteActivity(context.Background())
+		if err != nil {
+			blog.Errorf("IntervalDeleteActivity failed: %v", err)
+		}
+	}()
 
 	// init usermanager role and cache permission
 	go permission.InitCache()

@@ -17,7 +17,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 // SearchActivities search activities
@@ -62,5 +65,40 @@ func CreateActivity(activity []*models.Activity) error {
 			return err
 		}
 	}
+	return nil
+}
+
+// BatchDeleteActivity 通过配置的天数，资源类型删除操作记录
+func BatchDeleteActivity() error {
+	// 未配置清理天数及清理资源类型则忽略
+	if config.GetGlobalConfig().Activity.Duration == "" || len(config.GetGlobalConfig().Activity.ResourceType) == 0 {
+		blog.Info("user not configured, ignoring")
+		return nil
+	}
+	// 解析配置文件的配置时间，如1s、1m、1h
+	duration, err := time.ParseDuration(config.GetGlobalConfig().Activity.Duration)
+	if err != nil {
+		return err
+	}
+	// stopFlag 循环删除的标志
+	stopFlag := true
+	// batchSize 一次删除的条数
+	batchSize := 1000
+	// 当前时间减去配置的天数，如：30天前
+	createdAt := time.Now().Add(-duration)
+	for stopFlag {
+		// 清理配置的天数之前的数据，资源类型为配置需要清理的类型
+		result := GCoreDB.Limit(batchSize).Where("resource_type in (?) and created_at < ?",
+			config.GetGlobalConfig().Activity.ResourceType, createdAt).Delete(&models.Activity{})
+		if result.Error != nil {
+			return err
+		}
+
+		// 删除的数据少于batchSize的时候说明数据没超过batchSize
+		if result.RowsAffected != int64(batchSize) {
+			stopFlag = false
+		}
+	}
+
 	return nil
 }
