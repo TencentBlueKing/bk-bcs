@@ -1,10 +1,5 @@
 <template>
-  <bk-sideslider
-    width="640"
-    quick-close
-    :is-show="props.show"
-    :before-close="handleBeforeClose"
-    @closed="close">
+  <bk-sideslider width="640" quick-close :is-show="props.show" :before-close="handleBeforeClose" @closed="close">
     <template #header>
       <div class="service-edit-head">
         <span class="title">{{ isViewMode ? t('服务属性') : t('编辑服务') }}</span>
@@ -14,7 +9,7 @@
     <div class="service-edit-wrapper">
       <bk-form v-if="isViewMode" label-width="100">
         <bk-form-item :label="t('服务名称')">{{ props.service.spec.name }}</bk-form-item>
-        <bk-form-item :label="t('服务别名')">{{ props.service.spec.alias}}</bk-form-item>
+        <bk-form-item :label="t('服务别名')">{{ props.service.spec.alias }}</bk-form-item>
         <bk-form-item :label="t('服务描述')">
           {{ props.service.spec.memo || '--' }}
         </bk-form-item>
@@ -31,7 +26,7 @@
           {{ datetimeFormat(props.service.revision.create_at) }}
         </bk-form-item>
       </bk-form>
-      <SearviceForm v-else ref="formCompRef" :form-data="serviceData" @change="handleChange" />
+      <SearviceForm v-else ref="formCompRef" :form-data="serviceData" @change="handleChange" :editable="true" />
     </div>
     <div v-if="!isViewMode" class="service-edit-footer">
       <bk-button
@@ -39,7 +34,8 @@
         theme="primary"
         :class="{ 'bk-button-with-no-perm': !props.service.permissions.update }"
         :loading="pending"
-        @click="handleEditConfirm">
+        @click="handleEditConfirm"
+      >
         {{ t('保存') }}
       </bk-button>
       <bk-button @click="isViewMode = true">{{ t('取消') }}</bk-button>
@@ -47,19 +43,21 @@
   </bk-sideslider>
 </template>
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../store/global';
 import { updateApp } from '../../../../../api/index';
+import { getKvList } from '../../../../../api/config';
 import { datetimeFormat } from '../../../../../utils/index';
 import { IAppItem } from '../../../../../../types/app';
 import { IServiceEditForm } from '../../../../../../types/service';
-import { CONFIG_KV_TYPE } from '../../../../../constants/config';
 import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
 import SearviceForm from './service-form.vue';
+import { IConfigKvType } from '../../../../../../types/config';
+import { InfoBox } from 'bkui-vue';
 
-const { spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
+const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 
 const { t } = useI18n();
 
@@ -84,14 +82,6 @@ const serviceData = ref<IServiceEditForm>({
 });
 const pending = ref(false);
 const formCompRef = ref();
-
-// const kvType = computed(() => {
-//   if (serviceData.value.data_type) {
-//     const type = CONFIG_KV_TYPE.find(item => item.id === serviceData.value.data_type);
-//     return type?.name;
-//   }
-//   return;
-// });
 
 watch(
   () => props.show,
@@ -142,13 +132,28 @@ const handleEditConfirm = async () => {
     openPermApplyDialog();
     return;
   }
+
   await formCompRef.value.validate();
   const { id, biz_id } = props.service;
+  if (serviceData.value.data_type !== 'any') {
+    const configList = await getKvList(String(biz_id), id as number, { all: true, start: 0 });
+    const res = configList.details.some((config: IConfigKvType) => config.spec.kv_type !== serviceData.value.data_type);
+    if (res) {
+      InfoBox({
+        title: '指定类型与实际配置不匹配，无法修改',
+        subTitle: '如需修改，请先修改服务下配置的类型',
+        dialogType: 'confirm',
+        confirmText: '我知道了',
+      });
+      return;
+    }
+  }
   const data = {
     id,
     biz_id,
     ...serviceData.value,
   };
+
   await updateApp({ id, biz_id, data });
   isViewMode.value = true;
 };
