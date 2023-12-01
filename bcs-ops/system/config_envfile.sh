@@ -101,6 +101,7 @@ init_env() {
   K8S_CSI=${K8S_CSI:-""}
   ## localpv
   LOCALPV_DIR=${LOCALPV_DIR:-${BK_HOME}/localpv}
+  LOCALPV_DST_DIR=${LOCALPV_DST_DIR:-"/mnt/blueking"}
   LOCALPV_COUNT=${LOCALPV_COUNT:-20}
   LOCALPV_reclaimPolicy=${LOCALPV_reclaimPolicy:-"Delete"}
 
@@ -294,6 +295,7 @@ $(
       "localpv")
         cat <<CSI_EOF
 LOCALPV_DIR="${LOCALPV_DIR}"
+LOCALPV_DST_DIR="${LOCALPV_DST_DIR}"
 LOCALPV_COUNT="${LOCALPV_COUNT}"
 LOCALPV_reclaimPolicy="${LOCALPV_reclaimPolicy}"
 CSI_EOF
