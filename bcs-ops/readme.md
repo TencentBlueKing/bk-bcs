@@ -14,7 +14,7 @@ Usage:
     [ -e --check ]
 ```
 
-## 预置检查（可选）
+## 预置检查
 
 机器执行`./bcs-ops --check all`，脚本将对这些 `check_kernel check_swap check_selinux check_firewalld check_yum_proxy check_http_proxy check_openssl check_hostname check_tools` 项目进行统一检查。您应当注意检查结果为 `[FATAL]` 项目，并在准备环境的过程中进行调整。
 
@@ -61,6 +61,14 @@ ip -6 route add fd00::/8 via <next hop> dev <interface> src <lan_ipv6>
 ```
 
 > 注意：`fe80::/10` link-local 地址不能用于 k8s 的 node-ip。
+
+也可以在执行脚本安装前直接手动设定
+```bash
+set -x
+LAN_IP=<YOUR LAN IP>
+LAN_IPv6<YOUR LAN ipv6> #if enable K8S_IPv6_STATUS=dualstack
+set +x
+```
 
 ## 安装示例
 目前仅支持 k8s `1.20.15` （默认）, `1.23.17` 和 `1.24.15` 版本。
