@@ -457,3 +457,11 @@ const (
 	// LangCookieName 语言版本 Cookie 名称
 	LangCookieName = "blueking_language"
 )
+
+// HeaderKey string
+const (
+	// ForwardedForHeaderKey is the header name of X-Forwarded-For.
+	ForwardedForHeaderKey = "X-Forwarded-For"
+	// UserAgentHeaderKey is the header name of User-Agent.
+	UserAgentHeaderKey = "Grpcgateway-User-Agent"
+)
