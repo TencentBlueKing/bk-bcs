@@ -13,6 +13,7 @@
           :current-version-id="currentVersion.id"
           :un-named-version-variables="props.unNamedVersionVariables"
           :selected-config="props.selectedConfig"
+          :selected-config-kv="props.selectedConfigKv"
           @selected="handleSelectDiffItem"
         />
         <div :class="['diff-content-area', { light: diffDetailData.contentType === 'file' }]">
@@ -82,6 +83,7 @@ const props = defineProps<{
   baseVersionId?: number; // 默认选中的基准版本id
   selectedConfig?: IConfigDiffSelected; // 默认选中的配置文件id
   versionDiffList?: IConfigVersion[];
+  selectedConfigKv?: number // 默认选中的文件id
 }>();
 
 const emits = defineEmits(['update:show', 'publish']);

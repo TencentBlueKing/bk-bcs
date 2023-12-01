@@ -9,7 +9,7 @@
           v-for="kvType in CONFIG_KV_TYPE"
           :key="kvType.id"
           :label="kvType.id"
-          :disabled="appData.spec.data_type !== 'any'"
+          :disabled="appData.spec.data_type !== 'any' || !editable"
           >{{ kvType.name }}</bk-radio
         >
       </bk-radio-group>
@@ -19,6 +19,7 @@
         v-if="localVal.kv_type === 'string' || localVal.kv_type === 'number'"
         v-model="localVal!.value"
         @change="change"
+        :disabled="!editable"
       />
       <KvConfigContentEditor
         v-else
@@ -33,7 +34,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { CONFIG_KV_TYPE } from '../../../../../../../constants/config';
 import KvConfigContentEditor from '../../components/kv-config-content-editor.vue';
 import { IConfigKvEditParams } from '../../../../../../../../types/config';
@@ -59,6 +60,9 @@ const props = withDefaults(
 );
 
 const formRef = ref();
+const localVal = ref({
+  ...props.config,
+});
 
 const rules = {
   value: [
@@ -74,15 +78,17 @@ const rules = {
   ],
 };
 
+// 编辑文件任意类型默认选中string
+onMounted(() => {
+  if (props.editable) {
+    localVal.value.kv_type = appData.value.spec.data_type! === 'any' ? 'string' : appData.value.spec.data_type!;
+  }
+});
+
 const validate = async () => {
   await formRef.value.validate();
   return true;
 };
-
-const localVal = ref({
-  ...props.config,
-  kv_type: appData.value.spec.data_type! === 'any' ? 'string' : appData.value.spec.data_type!,
-});
 
 
 const emits = defineEmits(['change']);

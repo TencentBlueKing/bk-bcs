@@ -349,13 +349,14 @@ export const batchAdddConfigList = (bizId: string, appId: number, list: any) => 
  */
 export const createKv = (bizId: string, appId: number, kv: any) => http.post(`/config/biz/${bizId}/apps/${appId}/kvs`, kv);
 
+
 /**
  * 获取kv
  * @param bizId 业务ID
  * @param appId 应用ID
  * @returns
  */
-export const getKv = (bizId: string, appId: number, query: ICommonQuery) => http.get(`/config/biz/${bizId}/apps/${appId}/kvs`, { params: query }).then(res => res.data);
+export const getKvList = (bizId: string, appId: number, query: ICommonQuery) => http.get(`/config/biz/${bizId}/apps/${appId}/kvs`, { params: query }).then(res => res.data);
 
 /**
  * 批量上传｜更新kv
@@ -383,3 +384,23 @@ export const updateKv = (bizId: string, appId: number, key: string, value: strin
  * @returns
  */
 export const deleteKv = (bizId: string, appId: number, key: string) => http.delete(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`);
+
+
+/**
+ * 获取已发布kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const getReleaseKv = (bizId: string, appId: number, releaseId: number, key: string) => http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs/${key}`).then(res => res.data);
+
+
+/**
+ * 获取已发布kv列表
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const getReleaseKvList = (bizId: string, appId: number, releaseId: number, query: ICommonQuery) => http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs`, { params: query }).then(res => res.data);

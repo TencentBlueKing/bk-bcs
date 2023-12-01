@@ -5,7 +5,7 @@ import { IConfigVersion } from '../../types/config';
 import { GET_UNNAMED_VERSION_DATA } from '../constants/config';
 
 export default defineStore('config', () => {
-  // 非套餐配置和模板配置文件总数量
+  // 非套餐配置和模板配置文件总数量 kv服务非套餐配置总数
   const allConfigCount = ref(0);
 
   // 当前选中版本, 用id为0表示未命名版本

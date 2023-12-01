@@ -43,6 +43,7 @@
               versionData.id === 0 ? '编辑' : '查看'
             }}</bk-button>
             <bk-button
+              v-if="versionData.status.publish_status !== 'editing'"
               text
               theme="primary"
               @click="handleDiff(row)"
@@ -59,6 +60,9 @@
           </div>
         </template>
       </bk-table-column>
+      <template #empty>
+        <TableEmpty :is-search-empty="isSearchEmpty" @clear="emits('clearStr')" style="width: 100%" />
+      </template>
     </bk-table>
   </bk-loading>
   <edit-config
@@ -66,22 +70,24 @@
     :config="(activeConfig as IConfigKVItem)"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
+    :editable="editable"
     @confirm="getListData"
   />
-  <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :current-config="diffConfig" />
+  <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config-kv="diffConfig" />
 </template>
 <script lang="ts" setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { InfoBox } from 'bkui-vue/lib';
 import useConfigStore from '../../../../../../../../store/config';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import { IConfigKVItem, IConfigKvType } from '../../../../../../../../../types/config';
-import { getKv, deleteKv } from '../../../../../../../../api/config';
+import { getKvList, deleteKv, getReleaseKvList } from '../../../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../../../utils/index';
 import StatusTag from './status-tag';
 import EditConfig from '../edit-config-kv.vue';
 import VersionDiff from '../../../components/version-diff/index.vue';
+import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 
 const configStore = useConfigStore();
 const { versionData } = storeToRefs(configStore);
@@ -92,12 +98,17 @@ const props = defineProps<{
   searchStr: string;
 }>();
 
+const emits = defineEmits(['clearStr']);
+
 const loading = ref(false);
 const configList = ref<IConfigKvType[]>([]);
+const configsCount = ref(0);
 const editPanelShow = ref(false);
+const editable = ref(false);
 const activeConfig = ref<IConfigKVItem>();
 const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
+const isSearchEmpty = ref(false);
 const pagination = ref({
   current: 1,
   count: 0,
@@ -118,6 +129,17 @@ watch(
   },
 );
 
+watch(
+  () => configsCount.value,
+  () => {
+    configStore.$patch((state) => {
+      state.allConfigCount = configsCount.value;
+    });
+  },
+);
+
+const isUnNamedVersion = computed(() => versionData.value.id === 0);
+
 onMounted(() => {
   getListData();
 });
@@ -132,9 +154,14 @@ const getListData = async () => {
     if (props.searchStr) {
       params.search_key = props.searchStr;
     }
-    const res = await getKv(props.bkBizId, props.appId, params);
-    console.log(res);
+    let res;
+    if (isUnNamedVersion.value) {
+      res = await getKvList(props.bkBizId, props.appId, params);
+    } else {
+      res = await getReleaseKvList(props.bkBizId, props.appId, versionData.value.id, params);
+    }
     configList.value = res.details;
+    configsCount.value = res.count;
     pagination.value.count = res.count;
   } catch (e) {
     console.error(e);
@@ -144,6 +171,7 @@ const getListData = async () => {
 };
 
 const handleEdit = (config: IConfigKvType) => {
+  editable.value = versionData.value.id === 0;
   activeConfig.value = config.spec;
   editPanelShow.value = true;
 };
