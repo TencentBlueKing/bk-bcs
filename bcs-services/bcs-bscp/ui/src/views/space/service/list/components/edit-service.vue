@@ -14,7 +14,7 @@
     <div class="service-edit-wrapper">
       <bk-form v-if="isViewMode" label-width="100">
         <bk-form-item :label="t('服务名称')">{{ props.service.spec.name }}</bk-form-item>
-        <bk-form-item :label="t('服务别名')">@todo 待后台确定字段</bk-form-item>
+        <bk-form-item :label="t('服务别名')">{{ props.service.spec.alias}}</bk-form-item>
         <bk-form-item :label="t('服务描述')">
           {{ props.service.spec.memo || '--' }}
         </bk-form-item>
@@ -22,7 +22,7 @@
           {{ props.service.spec.config_type === 'file' ? '文件型' : '键值型' }}
         </bk-form-item>
         <bk-form-item v-if="props.service.spec.config_type !== 'file'" :label="t('数据类型')">
-          {{ 'fill' }}
+          {{ props.service.spec.data_type }}
         </bk-form-item>
         <bk-form-item :label="t('创建者')">
           {{ props.service.revision.creator }}
@@ -68,19 +68,19 @@ const props = defineProps<{
   service: IAppItem;
 }>();
 
-const emits = defineEmits(['update:show', 'editMemo']);
+const emits = defineEmits(['update:show']);
 
 const isFormChange = ref(false);
 const isViewMode = ref(true);
 const serviceData = ref<IServiceEditForm>({
   name: '',
-  config_type: 'file',
-  data_type: '',
-  reload_type: 'file',
-  reload_file_path: '',
-  mode: '',
-  memo: '',
   alias: '',
+  config_type: 'file',
+  data_type: 'any',
+  reload_type: 'file',
+  reload_file_path: '/data/reload.json',
+  mode: 'normal',
+  memo: '',
 });
 const pending = ref(false);
 const formCompRef = ref();
@@ -93,27 +93,28 @@ const formCompRef = ref();
 //   return;
 // });
 
-// watch(
-//   () => props.show,
-//   (val) => {
-//     if (val) {
-//       isFormChange.value = false;
-//       isViewMode.value = true;
-//       const { spec } = props.service;
-//       const { name, memo, mode, config_type, reload, d } = spec;
-//       const { reload_type, file_reload_spec } = reload;
-//       serviceData.value = {
-//         name,
-//         memo,
-//         mode,
-//         config_type,
-//         data_type,
-//         reload_type,
-//         reload_file_path: file_reload_spec.reload_file_path,
-//       };
-//     }
-//   },
-// );
+watch(
+  () => props.show,
+  (val) => {
+    if (val) {
+      isFormChange.value = false;
+      isViewMode.value = true;
+      const { spec } = props.service;
+      const { name, memo, mode, config_type, reload, data_type, alias } = spec;
+      const { reload_type, file_reload_spec } = reload;
+      serviceData.value = {
+        name,
+        memo,
+        mode,
+        config_type,
+        data_type,
+        reload_type,
+        reload_file_path: file_reload_spec.reload_file_path,
+        alias,
+      };
+    }
+  },
+);
 
 const openPermApplyDialog = () => {
   permissionQuery.value = {
@@ -149,7 +150,7 @@ const handleEditConfirm = async () => {
     ...serviceData.value,
   };
   await updateApp({ id, biz_id, data });
-  emits('editMemo', serviceData.value.memo);
+  isViewMode.value = true;
 };
 
 const handleBeforeClose = async () => {

@@ -1,74 +1,64 @@
 <template>
   <bk-sideslider
     width="640"
-    title="新增配置文件"
+    title="编辑配置文件"
     :is-show="props.show"
     :before-close="handleBeforeClose"
     @closed="close"
   >
-    <ConfigForm
-      ref="formRef"
-      class="config-form-wrapper"
-      :config="configForm"
-      :content="content"
-      :editable="true"
-      :bk-biz-id="props.bkBizId"
-      :id="props.appId"
-      @change="handleFormChange"
-    />
+    <div class="config-container">
+      <ConfigForm
+        ref="formRef"
+        class="config-form-wrapper"
+        v-model:fileUploading="fileUploading"
+        :config="configForm as IConfigKVItem"
+        :content="content"
+        :editable="true"
+        :bk-biz-id="props.bkBizId"
+        :id="props.appId"
+        @change="handleChange"
+      />
+    </div>
+
     <section class="action-btns">
-      <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">保存</bk-button>
+      <bk-button theme="primary" :loading="pending" @click="handleSubmit"> 保存 </bk-button>
       <bk-button @click="close">取消</bk-button>
     </section>
   </bk-sideslider>
 </template>
-<script lang="ts" setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue';
 import { Message } from 'bkui-vue';
-import { IConfigKvEditParams } from '../../../../../../../../../types/config';
-import { createKv } from '../../../../../../../../api/config';
-import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
-import ConfigForm from '../config-form-kv.vue';
+import ConfigForm from './config-form-kv.vue';
+import { updateKv } from '../../../../../../../api/config';
+import { IConfigKVItem } from '../../../../../../../../types/config';
+import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
 
 const props = defineProps<{
-  show: boolean;
   bkBizId: string;
   appId: number;
+  config: IConfigKVItem;
+  show: Boolean;
 }>();
 
-
 const emits = defineEmits(['update:show', 'confirm']);
-const fileUploading = ref(false);
-const pending = ref(false);
+
+const configForm = ref<IConfigKVItem>();
 const content = ref('');
 const formRef = ref();
+const fileUploading = ref(false);
+const pending = ref(false);
 const isFormChange = ref(false);
-const configForm = ref({
-  key: '',
-  kv_type: '',
-  value: '',
-});
+
 watch(
   () => props.show,
   (val) => {
     if (val) {
-      configForm.value = {
-        key: '',
-        kv_type: '',
-        value: '',
-      };
-      content.value = '';
       isFormChange.value = false;
+      configForm.value = props.config;
     }
   },
 );
-
-
-const handleFormChange = (data: IConfigKvEditParams, configContent: string) => {
-  configForm.value = data;
-  content.value = configContent;
-  isFormChange.value = true;
-};
 
 const handleBeforeClose = async () => {
   if (isFormChange.value) {
@@ -78,17 +68,22 @@ const handleBeforeClose = async () => {
   return true;
 };
 
+const handleChange = (data: IConfigKVItem) => {
+  configForm.value = data;
+  isFormChange.value = true;
+};
+
 const handleSubmit = async () => {
   const isValid = await formRef.value.validate();
   if (!isValid) return;
   try {
     pending.value = true;
-    await createKv(props.bkBizId, props.appId, { ...configForm.value });
+    await updateKv(props.bkBizId, props.appId, configForm.value!.key, configForm.value!.value);
     emits('confirm');
     close();
     Message({
       theme: 'success',
-      message: '新建配置文件成功',
+      message: '编辑配置文件成功',
     });
   } catch (e) {
     console.log(e);
@@ -102,11 +97,15 @@ const close = () => {
 };
 </script>
 <style lang="scss" scoped>
-.config-form-wrapper {
-  padding: 20px 40px;
+.config-container {
   height: calc(100vh - 101px);
   overflow: auto;
+  .config-form-wrapper {
+    padding: 20px 40px;
+    height: 100%;
+  }
 }
+
 .action-btns {
   border-top: 1px solid #dcdee5;
   padding: 8px 24px;

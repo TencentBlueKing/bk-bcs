@@ -203,3 +203,19 @@ export interface IConfigKVItem {
   kv_type: string;
   value: string;
 }
+
+// 单个kv配置详情
+export interface IConfigKvType {
+  id: number;
+  spec: IConfigKVItem;
+  attachment: {
+    biz_id: number;
+    app_id: number;
+  };
+  revision: {
+    creator: string;
+    create_at: string;
+    reviser: string;
+    update_at: string;
+  };
+}

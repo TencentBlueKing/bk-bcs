@@ -9,7 +9,7 @@
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh($event)"
     >
-      <bk-table-column label="配置文件名称" prop="spec.name" :sort="true" :min-width="240" show-overflow-tooltip>
+      <bk-table-column label="配置文件名称" prop="spec.key" :sort="true" :min-width="240" show-overflow-tooltip>
         <template #default="{ row }">
           <bk-button
             v-if="row.spec"
@@ -18,16 +18,12 @@
             :disabled="row.file_state === 'DELETE'"
             @click="handleEdit(row)"
           >
-            {{ row.spec.name }}
+            {{ row.spec.key }}
           </bk-button>
         </template>
       </bk-table-column>
-      <bk-table-column label="配置预览" prop="spec.path" show-overflow-tooltip></bk-table-column>
-      <bk-table-column label="配置文件格式">
-        <template #default="{ row }">
-          {{ getConfigTypeName(row.spec?.file_type) }}
-        </template>
-      </bk-table-column>
+      <bk-table-column label="配置预览" prop="spec.value" show-overflow-tooltip></bk-table-column>
+      <bk-table-column label="配置文件格式" prop="spec.kv_type"></bk-table-column>
       <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
       <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
       <bk-table-column label="修改时间" :sort="true" :width="220">
@@ -47,7 +43,6 @@
               versionData.id === 0 ? '编辑' : '查看'
             }}</bk-button>
             <bk-button
-              v-if="versionData.status.publish_status !== 'editing'"
               text
               theme="primary"
               @click="handleDiff(row)"
@@ -68,7 +63,7 @@
   </bk-loading>
   <edit-config
     v-model:show="editPanelShow"
-    :config-id="activeConfig"
+    :config="(activeConfig as IConfigKVItem)"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     @confirm="getListData"
@@ -81,12 +76,11 @@ import { storeToRefs } from 'pinia';
 import { InfoBox } from 'bkui-vue/lib';
 import useConfigStore from '../../../../../../../../store/config';
 import { ICommonQuery } from '../../../../../../../../../types/index';
-import { IConfigItem } from '../../../../../../../../../types/config';
-import { getConfigList, deleteServiceConfigItem } from '../../../../../../../../api/config';
-import { getConfigTypeName } from '../../../../../../../../utils/config';
+import { IConfigKVItem, IConfigKvType } from '../../../../../../../../../types/config';
+import { getKv, deleteKv } from '../../../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../../../utils/index';
 import StatusTag from './status-tag';
-import EditConfig from '../edit-config.vue';
+import EditConfig from '../edit-config-kv.vue';
 import VersionDiff from '../../../components/version-diff/index.vue';
 
 const configStore = useConfigStore();
@@ -99,9 +93,9 @@ const props = defineProps<{
 }>();
 
 const loading = ref(false);
-const configList = ref<IConfigItem[]>([]);
+const configList = ref<IConfigKvType[]>([]);
 const editPanelShow = ref(false);
-const activeConfig = ref(0);
+const activeConfig = ref<IConfigKVItem>();
 const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
 const pagination = ref({
@@ -138,7 +132,8 @@ const getListData = async () => {
     if (props.searchStr) {
       params.search_key = props.searchStr;
     }
-    const res = await getConfigList(props.bkBizId, props.appId, params);
+    const res = await getKv(props.bkBizId, props.appId, params);
+    console.log(res);
     configList.value = res.details;
     pagination.value.count = res.count;
   } catch (e) {
@@ -148,24 +143,24 @@ const getListData = async () => {
   }
 };
 
-const handleEdit = (config: IConfigItem) => {
-  activeConfig.value = config.id;
+const handleEdit = (config: IConfigKvType) => {
+  activeConfig.value = config.spec;
   editPanelShow.value = true;
 };
 
-const handleDiff = (config: IConfigItem) => {
+const handleDiff = (config: IConfigKvType) => {
   diffConfig.value = config.id;
   isDiffPanelShow.value = true;
 };
 
-const handleDel = (config: IConfigItem) => {
+const handleDel = (config: IConfigKvType) => {
   InfoBox({
-    title: `确认是否删除配置文件【${config.spec.name}】?`,
+    title: `确认是否删除配置文件【${config.spec.key}】?`,
     infoType: 'danger',
     headerAlign: 'center' as const,
     footerAlign: 'center' as const,
     onConfirm: async () => {
-      await deleteServiceConfigItem(config.id, props.bkBizId, props.appId);
+      await deleteKv(props.bkBizId, props.appId, config.spec.key);
       if (configList.value.length === 1 && pagination.value.current > 1) {
         pagination.value.current -= 1;
       }
