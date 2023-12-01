@@ -33,7 +33,7 @@ require (
 	github.com/haproxytech/models v1.2.5-0.20191122125615-30d0235b81ec
 	github.com/json-iterator/go v1.1.10
 	github.com/lithammer/go-jump-consistent-hash v1.0.1
-	github.com/mattn/go-sqlite3 v1.14.0
+	github.com/mattn/go-sqlite3 v2.0.4-0.20200227082846-67986a7832dc+incompatible
 	github.com/mesos/mesos-go v0.0.10
 	github.com/mholt/caddy v0.11.1
 	github.com/miekg/dns v1.1.27
