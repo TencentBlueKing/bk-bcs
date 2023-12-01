@@ -28,11 +28,13 @@ import (
 	btyp "bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/dal/repository"
+	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbct "bscp.io/pkg/protocol/core/content"
 	pbhook "bscp.io/pkg/protocol/core/hook"
+	pbkv "bscp.io/pkg/protocol/core/kv"
 	"bscp.io/pkg/runtime/shutdown"
 	sfs "bscp.io/pkg/sf-share"
 	"bscp.io/pkg/types"
@@ -268,26 +270,56 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 		return
 	}
 
-	ciList, err := sch.lc.ReleasedCI.Get(kt, inst.BizID, releaseID)
-	if err != nil {
-		logs.Errorf("get %s [sn: %d] released[%d] CI failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
-			kt.Rid)
-		sch.retry.Add(cursorID, one)
-		return
-	}
-	preHook, postHook, err := sch.lc.ReleasedHook.Get(kt, inst.BizID, releaseID)
-	if err != nil {
-		logs.Errorf("get %s [sn: %d] released[%d] hook failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
-			kt.Rid)
-		sch.retry.Add(cursorID, one)
+	event := new(Event)
+
+	switch inst.ConfigType {
+	case table.KV:
+		sch.lc.ReleasedKv.Get(kt, inst.BizID, releaseID)
+
+		kvList, err := sch.lc.ReleasedKv.Get(kt, inst.BizID, releaseID)
+		if err != nil {
+			logs.Errorf("get %s [sn: %d] released[%d] Kv failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
+				kt.Rid)
+			sch.retry.Add(cursorID, one)
+			return
+		}
+		preHook, postHook, err := sch.lc.ReleasedHook.Get(kt, inst.BizID, releaseID)
+		if err != nil {
+			logs.Errorf("get %s [sn: %d] released[%d] hook failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
+				kt.Rid)
+			sch.retry.Add(cursorID, one)
+			return
+		}
+		if len(kvList) == 0 {
+			return
+		}
+		event = sch.buildEventForRkv(inst, kvList, preHook, postHook, releaseID, cursorID)
+
+	case table.File:
+		ciList, err := sch.lc.ReleasedCI.Get(kt, inst.BizID, releaseID)
+		if err != nil {
+			logs.Errorf("get %s [sn: %d] released[%d] CI failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
+				kt.Rid)
+			sch.retry.Add(cursorID, one)
+			return
+		}
+		preHook, postHook, err := sch.lc.ReleasedHook.Get(kt, inst.BizID, releaseID)
+		if err != nil {
+			logs.Errorf("get %s [sn: %d] released[%d] hook failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
+				kt.Rid)
+			sch.retry.Add(cursorID, one)
+			return
+		}
+		if len(ciList) == 0 {
+			return
+		}
+		event = sch.buildEvent(inst, ciList, preHook, postHook, releaseID, cursorID)
+
+	default:
+		logs.Errorf("Unsupported application type (%s), rid: %s", inst.Format(), err, kt.Rid)
 		return
 	}
 
-	if len(ciList) == 0 {
-		return
-	}
-
-	event := sch.buildEvent(inst, ciList, preHook, postHook, releaseID, cursorID)
 	if one.Receiver.Notify(event, inst.Uid, one.sn) {
 		logs.Warnf("notify app instance event failed, need retry, biz: %d, app: %d, uid: %s, sn: %d, rid: %s",
 			inst.BizID, inst.AppID, inst.Uid, one.sn, kt.Rid)
@@ -389,4 +421,51 @@ func (sch *Scheduler) watchRetry() {
 		logs.Infof("finished scheduler retry send event job, instance count: %d, rid: %s", instCount, kt.Rid)
 	}
 
+}
+
+func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.ReleaseKvCache,
+	pre *types.ReleasedHookCache, post *types.ReleasedHookCache, releaseID uint32, cursorID uint32) *Event {
+	uriD := sch.provider.URIDecorator(inst.BizID)
+	kvMeta := make([]*sfs.KvMetaV1, len(kvList))
+	for idx, one := range kvList {
+		kvMeta[idx] = &sfs.KvMetaV1{
+			ID:  one.ID,
+			Key: one.Key,
+			KvAttachment: &pbkv.KvAttachment{
+				BizId: one.Attachment.BizID,
+				AppId: one.Attachment.AppID,
+			},
+		}
+
+	}
+	var preHook, postHook *pbhook.HookSpec
+	if pre != nil {
+		preHook = &pbhook.HookSpec{
+			Type:    pre.Type.String(),
+			Content: pre.Content,
+		}
+	}
+	if post != nil {
+		postHook = &pbhook.HookSpec{
+			Type:    post.Type.String(),
+			Content: post.Content,
+		}
+	}
+
+	return &Event{
+		Change: &sfs.ReleaseEventMetaV1{
+			App:       inst.App,
+			AppID:     inst.AppID,
+			ReleaseID: releaseID,
+			KvMetas:   kvMeta,
+			Repository: &sfs.RepositoryV1{
+				Root: uriD.Root(),
+				Url:  uriD.Url(),
+			},
+			PreHook:  preHook,
+			PostHook: postHook,
+		},
+		Instance: inst,
+		CursorID: cursorID,
+	}
 }

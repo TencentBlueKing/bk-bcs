@@ -402,6 +402,17 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
+	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
+	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "do authorization failed, %s", err.Error())
+	}
+	if !authorized {
+		return nil, status.Error(codes.PermissionDenied, "no permission to access bscp server")
+	}
+
+	cancel := im.Kit.CtxWithTimeoutMS(1500)
+	defer cancel()
 	rkv, err := s.bll.RKvCache().GetKvValue(im.Kit, req.BizId, req.AppId, req.ReleaseId, req.Key)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "get rkv failed, %s", err.Error())

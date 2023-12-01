@@ -38,7 +38,7 @@ func newReleasedKv(mc *metric, cs *clientset.ClientSet) *ReleasedKv {
 	client := gcache.New(int(opt.ReleasedKvCacheSize)).
 		LRU().
 		EvictedFunc(kv.evictRecorder).
-		Expiration(time.Duration(opt.ReleasedCICacheTTLSec) * time.Second).
+		Expiration(time.Duration(opt.ReleasedKvCacheTTLSec) * time.Second).
 		Build()
 
 	kv.client = client
@@ -61,7 +61,7 @@ func (kv *ReleasedKv) GetKvValue(kt *kit.Kit, bizID, appID, releaseID uint32, ke
 
 	val, err := kv.client.GetIFPresent(releaseID)
 	if err == nil {
-		kv.mc.hitCounter.With(prm.Labels{"resource": "released_kv", "biz": tools.Itoa(bizID)}).Inc()
+		kv.mc.hitCounter.With(prm.Labels{"resource": "released_kv_value", "biz": tools.Itoa(bizID)}).Inc()
 
 		// hit from cache.
 		meta, yes := val.(*types.ReleaseKvValueCache)

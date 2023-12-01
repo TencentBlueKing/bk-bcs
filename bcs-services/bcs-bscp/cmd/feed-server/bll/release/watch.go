@@ -79,11 +79,12 @@ func (wh *watchHandler) subscribe() error {
 	for _, one := range wh.sidePayload.Applications {
 		spec := &eventc.SubscribeSpec{
 			InstSpec: &sfs.InstanceSpec{
-				BizID:  wh.sidePayload.BizID,
-				App:    one.App,
-				AppID:  one.AppID,
-				Uid:    one.Uid,
-				Labels: one.Labels,
+				BizID:      wh.sidePayload.BizID,
+				App:        one.App,
+				AppID:      one.AppID,
+				Uid:        one.Uid,
+				Labels:     one.Labels,
+				ConfigType: one.ConfigType,
 			},
 			Receiver: eventc.InitReceiver(wh.eventReceiver, wh.cancelCtx),
 		}
