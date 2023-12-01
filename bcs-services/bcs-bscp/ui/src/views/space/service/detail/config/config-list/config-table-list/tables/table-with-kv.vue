@@ -9,7 +9,7 @@
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh($event)"
     >
-      <bk-table-column label="配置文件名称" prop="spec.name" :sort="true" :min-width="240" show-overflow-tooltip>
+      <bk-table-column label="配置文件名称" prop="spec.key" :sort="true" :min-width="240" show-overflow-tooltip>
         <template #default="{ row }">
           <bk-button
             v-if="row.spec"
@@ -18,16 +18,12 @@
             :disabled="row.file_state === 'DELETE'"
             @click="handleEdit(row)"
           >
-            {{ row.spec.name }}
+            {{ row.spec.key }}
           </bk-button>
         </template>
       </bk-table-column>
-      <bk-table-column label="配置预览" prop="spec.path" show-overflow-tooltip></bk-table-column>
-      <bk-table-column label="配置文件格式">
-        <template #default="{ row }">
-          {{ getConfigTypeName(row.spec?.file_type) }}
-        </template>
-      </bk-table-column>
+      <bk-table-column label="配置预览" prop="spec.value" show-overflow-tooltip></bk-table-column>
+      <bk-table-column label="配置文件格式" prop="spec.kv_type"></bk-table-column>
       <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
       <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
       <bk-table-column label="修改时间" :sort="true" :width="220">
@@ -64,30 +60,34 @@
           </div>
         </template>
       </bk-table-column>
+      <template #empty>
+        <TableEmpty :is-search-empty="isSearchEmpty" @clear="emits('clearStr')" style="width: 100%" />
+      </template>
     </bk-table>
   </bk-loading>
   <edit-config
     v-model:show="editPanelShow"
-    :config-id="activeConfig"
+    :config="(activeConfig as IConfigKVItem)"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
+    :editable="editable"
     @confirm="getListData"
   />
-  <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :current-config="diffConfig" />
+  <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config-kv="diffConfig" />
 </template>
 <script lang="ts" setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { InfoBox } from 'bkui-vue/lib';
 import useConfigStore from '../../../../../../../../store/config';
 import { ICommonQuery } from '../../../../../../../../../types/index';
-import { IConfigItem } from '../../../../../../../../../types/config';
-import { getConfigList, deleteServiceConfigItem } from '../../../../../../../../api/config';
-import { getConfigTypeName } from '../../../../../../../../utils/config';
+import { IConfigKVItem, IConfigKvType } from '../../../../../../../../../types/config';
+import { getKvList, deleteKv, getReleaseKvList } from '../../../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../../../utils/index';
 import StatusTag from './status-tag';
-import EditConfig from '../edit-config.vue';
+import EditConfig from '../edit-config-kv.vue';
 import VersionDiff from '../../../components/version-diff/index.vue';
+import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 
 const configStore = useConfigStore();
 const { versionData } = storeToRefs(configStore);
@@ -98,12 +98,17 @@ const props = defineProps<{
   searchStr: string;
 }>();
 
+const emits = defineEmits(['clearStr']);
+
 const loading = ref(false);
-const configList = ref<IConfigItem[]>([]);
+const configList = ref<IConfigKvType[]>([]);
+const configsCount = ref(0);
 const editPanelShow = ref(false);
-const activeConfig = ref(0);
+const editable = ref(false);
+const activeConfig = ref<IConfigKVItem>();
 const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
+const isSearchEmpty = ref(false);
 const pagination = ref({
   current: 1,
   count: 0,
@@ -124,6 +129,17 @@ watch(
   },
 );
 
+watch(
+  () => configsCount.value,
+  () => {
+    configStore.$patch((state) => {
+      state.allConfigCount = configsCount.value;
+    });
+  },
+);
+
+const isUnNamedVersion = computed(() => versionData.value.id === 0);
+
 onMounted(() => {
   getListData();
 });
@@ -138,8 +154,14 @@ const getListData = async () => {
     if (props.searchStr) {
       params.search_key = props.searchStr;
     }
-    const res = await getConfigList(props.bkBizId, props.appId, params);
+    let res;
+    if (isUnNamedVersion.value) {
+      res = await getKvList(props.bkBizId, props.appId, params);
+    } else {
+      res = await getReleaseKvList(props.bkBizId, props.appId, versionData.value.id, params);
+    }
     configList.value = res.details;
+    configsCount.value = res.count;
     pagination.value.count = res.count;
   } catch (e) {
     console.error(e);
@@ -148,24 +170,25 @@ const getListData = async () => {
   }
 };
 
-const handleEdit = (config: IConfigItem) => {
-  activeConfig.value = config.id;
+const handleEdit = (config: IConfigKvType) => {
+  editable.value = versionData.value.id === 0;
+  activeConfig.value = config.spec;
   editPanelShow.value = true;
 };
 
-const handleDiff = (config: IConfigItem) => {
+const handleDiff = (config: IConfigKvType) => {
   diffConfig.value = config.id;
   isDiffPanelShow.value = true;
 };
 
-const handleDel = (config: IConfigItem) => {
+const handleDel = (config: IConfigKvType) => {
   InfoBox({
-    title: `确认是否删除配置文件【${config.spec.name}】?`,
+    title: `确认是否删除配置文件【${config.spec.key}】?`,
     infoType: 'danger',
     headerAlign: 'center' as const,
     footerAlign: 'center' as const,
     onConfirm: async () => {
-      await deleteServiceConfigItem(config.id, props.bkBizId, props.appId);
+      await deleteKv(props.bkBizId, props.appId, config.spec.key);
       if (configList.value.length === 1 && pagination.value.current > 1) {
         pagination.value.current -= 1;
       }

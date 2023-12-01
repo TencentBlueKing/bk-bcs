@@ -69,7 +69,6 @@
     <EditService
       v-model:show="isEditServiceOpen"
       :service="editingService"
-      @edit-memo="editingService.spec.memo = $event"
     />
   </div>
 </template>
@@ -119,6 +118,8 @@ const editingService = ref<IAppItem>({
       },
       reload_type: '',
     },
+    alias: '',
+    data_type: '',
   },
   revision: {
     creator: '',

@@ -388,7 +388,6 @@ const calcDiff = () => {
           currentContent: crtItem.diffSignature,
           baseContent: baseItem.diffSignature,
         };
-        console.log(diffConfig);
         if (
           crtItem.template_revision_id !== baseItem.template_revision_id ||
           diffConfig.current !== diffConfig.base ||

@@ -4,6 +4,7 @@
       <bk-input
         placeholder="需以英文、数字和下划线组成，不超过128字符"
         v-model="localData.name"
+        :disabled="editable"
         @change="handleChange"
       />
     </bk-form-item>
@@ -21,7 +22,7 @@
       />
     </bk-form-item>
     <bk-form-item :label="t('数据格式')" description="@todo 表单说明需要产品提供">
-      <bk-radio-group v-model="localData.config_type" @change="handleConfigTypeChange">
+      <bk-radio-group v-model="localData.config_type"  :disabled="editable" @change="handleConfigTypeChange">
         <bk-radio label="file">{{ t('文件型') }}</bk-radio>
         <bk-radio label="kv">{{ t('键值型') }}</bk-radio>
       </bk-radio-group>
@@ -52,6 +53,7 @@ const emits = defineEmits(['change']);
 
 const props = defineProps<{
   formData: IServiceEditForm;
+  editable?: boolean;
 }>();
 
 const rules = {

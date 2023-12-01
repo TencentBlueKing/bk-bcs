@@ -9,7 +9,6 @@
     <ConfigForm
       ref="formRef"
       class="config-form-wrapper"
-      v-model:fileUploading="fileUploading"
       :config="configForm"
       :content="content"
       :editable="true"
@@ -27,7 +26,7 @@
 import { ref, watch } from 'vue';
 import { Message } from 'bkui-vue';
 import { IConfigKvEditParams } from '../../../../../../../../../types/config';
-import { createKv, updateKv } from '../../../../../../../../api/config';
+import { createKv } from '../../../../../../../../api/config';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
 import ConfigForm from '../config-form-kv.vue';
 
@@ -80,8 +79,8 @@ const handleBeforeClose = async () => {
 };
 
 const handleSubmit = async () => {
-  // const isValid = await formRef.value.validate();
-  // if (!isValid) return;
+  const isValid = await formRef.value.validate();
+  if (!isValid) return;
   try {
     pending.value = true;
     await createKv(props.bkBizId, props.appId, { ...configForm.value });

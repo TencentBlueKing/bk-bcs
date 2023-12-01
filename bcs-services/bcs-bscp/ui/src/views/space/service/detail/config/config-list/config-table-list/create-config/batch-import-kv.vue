@@ -41,7 +41,7 @@ const props = defineProps<{
   bkBizId: string;
   appId: number;
 }>();
-const emits = defineEmits(['update:show', 'edited']);
+const emits = defineEmits(['update:show', 'confirm']);
 
 const editorRef = ref();
 const isFormChange = ref(false);
@@ -56,9 +56,10 @@ const handleClose = () => {
   emits('update:show', false);
 };
 const handleConfirm = async () => {
+  if (importType.value === 'file') return;
   await editorRef.value.handleImport();
   emits('update:show', false);
-  emits('edited');
+  emits('confirm');
 };
 </script>
 

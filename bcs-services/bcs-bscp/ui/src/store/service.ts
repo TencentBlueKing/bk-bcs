@@ -8,6 +8,7 @@ interface IAppData {
   spec: {
     name: string;
     config_type: string;
+    data_type?: string;
   };
 }
 const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
