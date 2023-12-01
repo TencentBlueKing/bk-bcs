@@ -15,11 +15,7 @@ package client
 
 import (
 	"context"
-	"time"
 
-	"github.com/bluele/gcache"
-
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/dal/bedis"
 	"bscp.io/pkg/dal/dao"
 	"bscp.io/pkg/dal/table"
@@ -52,17 +48,11 @@ func New(op dao.Set, bds bedis.Client, db pbds.DataClient) (Interface, error) {
 	}
 	rLock := lock.New(opt)
 
-	lc := gcache.New(int(cc.CacheService().CSLocalCache.ReleasedKvCacheSize)).
-		LRU().
-		Expiration(time.Duration(cc.CacheService().CSLocalCache.ReleasedKvCacheTTLSec) * time.Second).
-		Build()
-
 	return &client{
 		op:    op,
 		bds:   bds,
 		rLock: rLock,
 		mc:    initMetric(),
-		lc:    lc,
 		db:    db,
 	}, nil
 }
@@ -75,7 +65,6 @@ type client struct {
 	// rLock is the resource's lock
 	rLock lock.Interface
 	mc    *metric
-	lc    gcache.Cache
 }
 
 // RefreshAppCache refresh app related cache

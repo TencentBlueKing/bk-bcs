@@ -1015,23 +1015,3 @@ func (v *Vault) getConfigFromEnv() {
 	v.Token = os.Getenv(VaultTokenEnv)
 	v.Address = os.Getenv(VaultAddressEnv)
 }
-
-// CSLocalCache defines cache server's local cache related runtime.
-type CSLocalCache struct {
-	// ReleasedKvCacheSize defines how many released kvs can be cached.
-	ReleasedKvCacheSize uint `yaml:"releasedKvCacheSize"`
-	// ReleasedKvCacheTTLSec defines how long will this released kvs can be cached in seconds.
-	ReleasedKvCacheTTLSec uint `yaml:"releasedKvCacheTTLSec"`
-}
-
-// trySetDefault try set the cache server's local cache default runtime if it's not set by user.
-func (fc *CSLocalCache) trySetDefault() {
-
-	if fc.ReleasedKvCacheSize == 0 {
-		fc.ReleasedKvCacheSize = 100
-	}
-
-	if fc.ReleasedKvCacheTTLSec == 0 {
-		fc.ReleasedKvCacheTTLSec = 120
-	}
-}

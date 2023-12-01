@@ -14,7 +14,6 @@ package client
 
 import (
 	"fmt"
-	"reflect"
 	"time"
 
 	prm "github.com/prometheus/client_golang/prometheus"
@@ -78,47 +77,32 @@ func (c *client) GetReleasedKv(kt *kit.Kit, bizID uint32, releaseID uint32) (str
 // GetReleasedKvValue get rkv value from cache.
 func (c *client) GetReleasedKvValue(kt *kit.Kit, bizID, appID, releaseID uint32, key string) (string, error) {
 
-	kv, hit, err := c.getReleasedKvValueFromMCache(kt, bizID, releaseID, key)
+	start := time.Now()
+	r := &pbds.GetReleasedKvReq{
+		BizId:     bizID,
+		AppId:     appID,
+		ReleaseId: releaseID,
+		Key:       key,
+	}
+	rkv, err := c.db.GetReleasedKv(kt.RpcCtx(), r)
 	if err != nil {
-		return "", nil
+		logs.Errorf("get biz: %d release: %d Kv from db failed, err: %v, rid: %s", bizID, releaseID, err, kt.Rid)
+		return "", err
 	}
+	c.mc.refreshLagMS.With(prm.Labels{"rsc": releasedKvValueRes, "biz": tools.Itoa(bizID)}).Observe(tools.SinceMS(start))
 
-	if hit {
-		c.mc.hitCounter.With(prm.Labels{"rsc": releasedKvRes, "biz": tools.Itoa(bizID)}).Inc()
-		return kv, err
-	}
-
-	// do not find released kv in the cache, then try it get from db directly.
-	state := c.rLock.Acquire(keys.ResKind.RKvValue(releaseID, key))
-	if state.Acquired || (!state.Acquired && state.WithLimit) {
-
-		start := time.Now()
-		kv, err = c.refreshReleasedKvValueCache(kt, bizID, releaseID, key)
-		if err != nil {
-			state.Release(true)
-			return "", err
-		}
-		state.Release(false)
-
-		c.mc.refreshLagMS.With(prm.Labels{"rsc": releasedKvRes, "biz": tools.Itoa(bizID)}).Observe(tools.SinceMS(start))
-
-		return kv, nil
-	}
-
-	// released Kv cache has already been refreshed, try get from db directly.
-	kv, hit, err = c.getReleasedKvValueFromMCache(kt, bizID, releaseID, key)
+	js, err := jsoni.Marshal(&types.ReleaseKvValueCache{
+		ID:        rkv.Id,
+		ReleaseID: rkv.ReleaseId,
+		Key:       rkv.Spec.Key,
+		Value:     rkv.Spec.Value,
+		KvType:    rkv.Spec.KvType,
+	})
 	if err != nil {
 		return "", err
 	}
 
-	if !hit {
-		logs.Errorf("retry to get biz: %d, release: %d Kv cache failed, rid: %s", bizID, releaseID, kt.Rid)
-		return "", errf.New(errf.RecordNotFound, fmt.Sprintf("release %d Kv cache not found", releaseID))
-	}
-
-	c.mc.hitCounter.With(prm.Labels{"rsc": releasedKvRes, "biz": tools.Itoa(bizID)}).Inc()
-
-	return kv, nil
+	return string(js), nil
 }
 
 func (c *client) getReleasedKvFromCache(kt *kit.Kit, bizID, releaseID uint32) (string, bool, error) {
@@ -136,24 +120,6 @@ func (c *client) getReleasedKvFromCache(kt *kit.Kit, bizID, releaseID uint32) (s
 	}
 
 	return val, true, nil
-}
-
-func (c *client) getReleasedKvValueFromMCache(_ *kit.Kit, bizID uint32, releaseID uint32,
-	key string) (string, bool, error) {
-
-	val, err := c.lc.GetIFPresent(keys.Key.ReleasedKvValue(bizID, releaseID, key))
-	if err != nil {
-		return "", false, err
-	}
-
-	valStr, ok := val.(string)
-	if !ok {
-		return "", false, fmt.Errorf("unsupported rkv cache value type: %v", reflect.TypeOf(val).String())
-	}
-
-	c.mc.hitCounter.With(prm.Labels{"rsc": releasedKvRes, "biz": tools.Itoa(bizID)}).Inc()
-	return valStr, true, nil
-
 }
 
 // refreshReleasedKvCache get a release's all the kv and cached them.
@@ -197,43 +163,4 @@ func (c *client) refreshReleasedKvCache(kt *kit.Kit, bizID uint32, releaseID uin
 
 	// return the array string json.
 	return string(js), nil
-}
-
-// refreshReleasedKvCache get a release's all the kv and cached them.
-func (c *client) refreshReleasedKvValueCache(kt *kit.Kit, bizID, releaseID uint32, key string) (string, error) {
-	cancel := kt.CtxWithTimeoutMS(500)
-	defer cancel()
-
-	r := &pbds.GetReleasedKvReq{
-		BizId:     bizID,
-		ReleaseId: releaseID,
-		Key:       key,
-	}
-	rkv, err := c.db.GetReleasedKv(kt.RpcCtx(), r)
-	if err != nil {
-		logs.Errorf("get biz: %d release: %d Kv from db failed, err: %v, rid: %s", bizID, releaseID, err, kt.Rid)
-		return "", err
-	}
-
-	rkvKey := keys.Key.ReleasedKv(bizID, releaseID)
-
-	js, err := jsoni.Marshal(&types.ReleaseKvValueCache{
-		ID:        rkv.Id,
-		ReleaseID: rkv.ReleaseId,
-		Key:       rkv.Spec.Key,
-		Value:     rkv.Spec.Value,
-		KvType:    rkv.Spec.KvType,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	if err = c.lc.Set(rkvKey, string(js)); err != nil {
-		logs.Errorf("refresh biz: %d, release: %d Kv cache failed, err: %v, rid: %s", bizID, releaseID, err, kt.Rid)
-		return "", err
-	}
-
-	// return the string json.
-	return string(js), nil
-
 }

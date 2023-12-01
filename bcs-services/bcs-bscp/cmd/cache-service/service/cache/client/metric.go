@@ -66,13 +66,14 @@ type metric struct {
 }
 
 const (
-	aiRes            = "app-id"
-	amRes            = "app-meta"
-	instRes          = "instance"
-	releasedCIRes    = "release-ci"
-	releasedKvRes    = "release-kv"
-	releasedHookRes  = "release-hook"
-	strategyRes      = "strategy"
-	credentialRes    = "credential"
-	releasedGroupRes = "released-group"
+	aiRes              = "app-id"
+	amRes              = "app-meta"
+	instRes            = "instance"
+	releasedCIRes      = "release-ci"
+	releasedKvRes      = "release-kv"
+	releasedKvValueRes = "release-kv-value"
+	releasedHookRes    = "release-hook"
+	strategyRes        = "strategy"
+	credentialRes      = "credential"
+	releasedGroupRes   = "released-group"
 )

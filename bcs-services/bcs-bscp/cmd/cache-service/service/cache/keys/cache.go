@@ -147,16 +147,6 @@ func (k keyGenerator) ReleasedKv(bizID uint32, releaseID uint32) string {
 	}.String()
 }
 
-// ReleasedKvValue generate a release's Kv cache key to save all the Kvs under
-// this release
-func (k keyGenerator) ReleasedKvValue(bizID uint32, releaseID uint32, key string) string {
-	return element{
-		biz: bizID,
-		ns:  releasedKv,
-		key: key,
-	}.String()
-}
-
 // ReleasedCITtlSec generate the current released config item's TTL seconds
 func (k keyGenerator) ReleasedCITtlSec(withRange bool) int {
 

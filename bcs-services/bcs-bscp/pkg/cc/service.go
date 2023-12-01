@@ -173,7 +173,6 @@ type CacheServiceSetting struct {
 	Credential   Credential   `yaml:"credential"`
 	Sharding     Sharding     `yaml:"sharding"`
 	RedisCluster RedisCluster `yaml:"redisCluster"`
-	CSLocalCache CSLocalCache `yaml:"csLocalCache"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -193,7 +192,6 @@ func (s *CacheServiceSetting) trySetDefault() {
 	s.Log.trySetDefault()
 	s.Sharding.trySetDefault()
 	s.RedisCluster.trySetDefault()
-	s.CSLocalCache.trySetDefault()
 }
 
 // Validate CacheServiceSetting option.
@@ -220,13 +218,12 @@ func (s CacheServiceSetting) Validate() error {
 
 // ConfigServerSetting defines config server used setting options.
 type ConfigServerSetting struct {
-	Network      Network      `yaml:"network"`
-	Service      Service      `yaml:"service"`
-	Credential   Credential   `yaml:"credential"`
-	Log          LogOption    `yaml:"log"`
-	Repo         Repository   `yaml:"repository"`
-	Esb          Esb          `yaml:"esb"`
-	CSLocalCache CSLocalCache `yaml:"csLocalCache"`
+	Network    Network    `yaml:"network"`
+	Service    Service    `yaml:"service"`
+	Credential Credential `yaml:"credential"`
+	Log        LogOption  `yaml:"log"`
+	Repo       Repository `yaml:"repository"`
+	Esb        Esb        `yaml:"esb"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -244,7 +241,6 @@ func (s *ConfigServerSetting) trySetDefault() {
 	s.Network.trySetDefault()
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
-	s.CSLocalCache.trySetDefault()
 }
 
 // Validate ConfigServerSetting option.
