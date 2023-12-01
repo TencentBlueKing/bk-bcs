@@ -959,6 +959,10 @@ func (cm *ClusterManager) initMicro() error { // nolint
 			cm.disc.Stop()
 			return nil
 		}),
+		microsvc.AfterStop(func() error {
+			utils.GetAuditClient().Close()
+			return nil
+		}),
 		microsvc.WrapHandler(
 			utils.HandleLanguageWrapper,
 			utils.RequestLogWarpper,
