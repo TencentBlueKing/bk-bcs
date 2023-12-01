@@ -14,18 +14,12 @@
 package api
 
 import (
-	"archive/tar"
-	"bytes"
-	"context"
 	"encoding/json"
-	"io"
 	"net/url"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -154,6 +148,8 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	podCtx.ProjectId = authCtx.ProjectId
 	podCtx.Username = authCtx.Username
 	podCtx.Source = consoleQuery.Source
+	// 二次换取的 session 时间有效期24小时
+	podCtx.SessionTimeout = types.MaxSessionTimeout
 
 	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
@@ -168,183 +164,146 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	rest.APIOK(c, i18n.GetMessage(c, "获取session成功"), data)
 }
 
-// UploadHandler 上传文件
-// NOCC:golint/fnsize(设计如此:)
-// nolint
-func (s *service) UploadHandler(c *gin.Context) {
+// CreatePortalSession xxx
+func (s *service) CreatePortalSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
-	uploadPath := c.PostForm("upload_path")
-	sessionId := c.Param("sessionId")
-	data := types.APIResponse{RequestID: authCtx.RequestId}
-	if uploadPath == "" {
-		rest.APIError(c, i18n.GetMessage(c, "请先输入上传路径"))
+	if authCtx.BindSession == nil {
+		rest.APIError(c, i18n.GetMessage(c, "session_id不合法或已经过期"))
 		return
 	}
-	err := checkFileExists(uploadPath, sessionId)
+
+	podCtx := authCtx.BindSession
+	// 二次换取的 session 时间有效期24小时
+	podCtx.SessionTimeout = types.MaxSessionTimeout
+
+	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "目标路径不存在"))
-		return
-	}
-	err = checkPathIsDir(uploadPath, sessionId)
-	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "目标路径不存在"))
-		return
-	}
-	file, err := c.FormFile("file")
-	if err != nil {
-		logger.Errorf("get file from request failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "解析上传文件失败"))
+		rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
 		return
 	}
 
-	opened, err := file.Open()
-	if err != nil {
-		logger.Errorf("open file from request failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "解析上传文件失败"))
-		return
+	lang := c.Query("lang")
+	lang = strings.TrimSuffix(lang, "/")
+	data := map[string]string{
+		"session_id": sessionId,
+		"ws_url":     makeWebSocketURL(sessionId, lang, false),
 	}
-	defer opened.Close()
-
-	podCtx, err := sessions.NewStore().WebSocketScope().Get(c.Request.Context(), sessionId)
-	if err != nil {
-		logger.Errorf("get pod context by session %s failed, err: %s", sessionId, err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "获取pod信息失败"))
-		return
-	}
-	reader, writer := io.Pipe()
-	pe, err := podCtx.NewPodExec()
-	if err != nil {
-		logger.Errorf("new pod exec failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "执行上传命令失败"))
-		return
-	}
-	errChan := make(chan error, 1)
-	// nolint
-	go func(r io.Reader, pw *io.PipeWriter) {
-		tarWriter := tar.NewWriter(writer)
-		defer func() {
-			tarWriter.Close() // nolint
-			writer.Close()    // nolint
-			close(errChan)
-		}()
-		e := tarWriter.WriteHeader(&tar.Header{
-			Name: file.Filename,
-			Size: file.Size,
-			Mode: 0644,
-		})
-		if e != nil {
-			logger.Errorf("writer tar header failed, err: %s", e.Error())
-			errChan <- e
-			return
-		}
-		_, e = io.Copy(tarWriter, opened)
-		if e != nil {
-			logger.Errorf("writer tar from opened file failed, err: %s", e.Error())
-			errChan <- e
-			return
-		}
-		errChan <- nil
-	}(opened, writer)
-
-	pe.Stdin = reader
-	// 需要同时读取 stdout/stderr, 否则可能会 block 住
-	pe.Stdout = &bytes.Buffer{}
-	pe.Stderr = &bytes.Buffer{}
-
-	pe.Command = []string{"tar", "-xmf", "-", "-C", uploadPath}
-	pe.Tty = false
-
-	if err = pe.Exec(); err != nil {
-		logger.Errorf("pod exec failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "执行上传命令失败"))
-		return
-	}
-
-	err, ok := <-errChan
-	if ok && err != nil {
-		logger.Errorf("writer to tar failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "文件上传失败"))
-		return
-	}
-
-	rest.APIOK(c, i18n.GetMessage(c, "文件上传成功"), data)
+	rest.APIOK(c, i18n.GetMessage(c, "获取session成功"), data)
 }
 
-// DownloadHandler 下载文件
-func (s *service) DownloadHandler(c *gin.Context) {
-	downloadPath := c.Query("download_path")
-	sessionId := c.Param("sessionId")
-	reader, writer := io.Pipe()
-	errChan := make(chan error, 1)
-	go func() {
-		defer func() {
-			reader.Close() // nolint
-			writer.Close() // nolint
-			close(errChan)
-		}()
-		podCtx, err := sessions.NewStore().WebSocketScope().Get(c.Request.Context(), sessionId)
-		if err != nil {
-			errChan <- err
-			return
-		}
+// CreateContainerPortalSession 创建 webconsole url api
+func (s *service) CreateContainerPortalSession(c *gin.Context) {
+	authCtx := route.MustGetAuthContext(c)
 
-		pe, err := podCtx.NewPodExec()
-		if err != nil {
-			errChan <- err
-			return
-		}
-		pe.Stdout = writer
+	consoleQuery := new(podmanager.OpenQuery)
 
-		pe.Command = append([]string{"tar", "cf", "-"}, downloadPath)
-		pe.Stderr = &bytes.Buffer{}
-		pe.Tty = false
-		err = pe.Exec()
-		if err != nil {
-			errChan <- err
-			return
-		}
-		errChan <- nil
-	}()
-	tarReader := tar.NewReader(reader)
-	_, err := tarReader.Next()
+	err := c.BindJSON(consoleQuery)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "复制文件流失败"))
+		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
 		return
 	}
-	fileName := downloadPath[strings.LastIndex(downloadPath, "/")+1:]
-	c.Header("Access-Control-Expose-Headers", "Content-Disposition")
-	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Disposition", "attachment; filename="+fileName)
-	c.Header("X-File-Name", fileName)
-	c.Header("Content-Transfer-Encoding", "binary")
-	c.Header("Cache-Control", "no-cache")
-	io.Copy(c.Writer, tarReader)
+
+	if e := consoleQuery.Validate(); e != nil {
+		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", e))
+		return
+	}
+
+	// 自定义命令行
+	commands, err := consoleQuery.SplitCommand()
+	if err != nil {
+		rest.APIError(
+			c, i18n.GetMessage(c, "请求参数错误, command not valid{}", err))
+		return
+	}
+
+	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
+	if err != nil {
+		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
+		return
+	}
+
+	podCtx.ProjectId = authCtx.ProjectId
+	// bkapigw 校验, 使用 Operator 做用户标识
+	podCtx.Username = consoleQuery.Operator
+	// 设置临时 session 过期时间
+	podCtx.ConnIdleTimeout = consoleQuery.ConnIdleTimeout
+	podCtx.SessionTimeout = consoleQuery.SessionTimeout
+	podCtx.Viewers = consoleQuery.Viewers
+
+	if len(commands) > 0 {
+		podCtx.Commands = commands
+	}
+
+	sessionId, err := sessions.NewStore().OpenAPIScope().Set(c.Request.Context(), podCtx)
+	if err != nil {
+		rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
+		return
+	}
+
+	data := map[string]string{
+		"session_id":      sessionId,
+		"web_console_url": makeWebConsoleURL(sessionId, podCtx),
+	}
+
+	// 这里直接置换新的session_id
+	if consoleQuery.WSAcquire {
+		wsSessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
+		if err != nil {
+			rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
+			return
+		}
+
+		data["ws_url"] = makeWebSocketURL(wsSessionId, "", true)
+	}
+
+	rest.APIOK(c, i18n.GetMessage(c, "获取session成功"), data)
 }
 
-// CheckDownloadHandler 下载文件预检查
-func (s *service) CheckDownloadHandler(c *gin.Context) {
-	authCtx := route.MustGetAuthContext(c)
-	data := types.APIResponse{RequestID: authCtx.RequestId, Code: types.ApiErrorCode}
-	downloadPath := c.Query("download_path")
-	sessionId := c.Param("sessionId")
+// makeWebConsoleURL webconsole 页面访问地址
+func makeWebConsoleURL(sessionId string, podCtx *types.PodContext) string {
+	u := *config.G.Web.BaseURL
+	u.Path = path.Join(u.Path, "/portal/container/") + "/"
 
-	if err := checkFileExists(downloadPath, sessionId); err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "目标文件不存在"))
-		return
+	query := url.Values{}
+	query.Set("session_id", sessionId)
+	query.Set("container_name", podCtx.ContainerName)
+
+	u.RawQuery = query.Encode()
+
+	return u.String()
+}
+
+// makeWebSocketURL http 转换为 ws 协议链接
+func makeWebSocketURL(sessionId, lang string, withScheme bool) string {
+	u := *config.G.Web.BaseURL
+	u.Path = path.Join(u.Path, "/ws/sessions/", sessionId) + "/"
+
+	query := url.Values{}
+	if lang != "" {
+		query.Set("lang", lang)
 	}
 
-	if err := checkPathIsDir(downloadPath, sessionId); err == nil {
-		rest.APIError(c, i18n.GetMessage(c, "暂不支持文件夹下载"))
-		return
+	u.RawQuery = query.Encode()
+
+	// https 协议 转换为 wss
+	if u.Scheme == "https" {
+		u.Scheme = "wss"
+	} else {
+		u.Scheme = "ws"
 	}
 
-	if err := checkFileSize(downloadPath, sessionId, FileSizeLimits*FileSizeUnitMb); err != nil {
-		rest.APIError(c,
-			i18n.GetMessage(c, "文件不能超过{}MB", map[string]int{"fileLimit": FileSizeLimits}))
-		return
+	// 去掉前缀, web 使用
+	if !withScheme {
+		u.Scheme = ""
+		u.Host = ""
 	}
 
-	rest.APIOK(c, i18n.GetMessage(c, "文件可以下载"), data)
+	return u.String()
+}
+
+// CreateClusterPortalSession 集群级别的 webconsole openapi
+func (s *service) CreateClusterPortalSession(c *gin.Context) {
+	rest.APIError(c, "Not implemented")
 }
 
 // SetUserDelaySwitch 开启/关闭某个用户命令延时统计API
@@ -504,217 +463,4 @@ func (s *service) GetDelayUsers(c *gin.Context) {
 	}
 
 	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), rsp)
-}
-
-func checkPathIsDir(path, sessionID string) error {
-	podCtx, err := sessions.NewStore().WebSocketScope().Get(context.Background(), sessionID)
-	if err != nil {
-		return err
-	}
-
-	pe, err := podCtx.NewPodExec()
-	if err != nil {
-		return err
-	}
-	pe.Command = append([]string{"test", "-d"}, path)
-	pe.Stdout = &bytes.Buffer{}
-	pe.Stderr = &bytes.Buffer{}
-	pe.Tty = false
-	err = pe.Exec()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func checkFileExists(path, sessionID string) error {
-	podCtx, err := sessions.NewStore().WebSocketScope().Get(context.Background(), sessionID)
-	if err != nil {
-		return err
-	}
-
-	pe, err := podCtx.NewPodExec()
-	if err != nil {
-		return err
-	}
-	pe.Command = append([]string{"test", "-e"}, path)
-	pe.Stdout = &bytes.Buffer{}
-	pe.Stderr = &bytes.Buffer{}
-	pe.Tty = false
-	err = pe.Exec()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func checkFileSize(path, sessionID string, sizeLimit int) error {
-	podCtx, err := sessions.NewStore().WebSocketScope().Get(context.Background(), sessionID)
-	if err != nil {
-		return err
-	}
-
-	pe, err := podCtx.NewPodExec()
-	if err != nil {
-		return err
-	}
-	pe.Command = []string{"stat", "-c", "%s", path}
-	stdout := &bytes.Buffer{}
-	pe.Stdout = stdout
-	pe.Stderr = &bytes.Buffer{}
-	pe.Tty = false
-	err = pe.Exec()
-	if err != nil {
-		return err
-	}
-	// 解析文件大小, stdout 会返回 \r\n 或者 \n
-	sizeText := strings.TrimSuffix(stdout.String(), "\n")
-	sizeText = strings.TrimSuffix(sizeText, "\r")
-	size, err := strconv.Atoi(sizeText)
-	if err != nil {
-		return err
-	}
-	if size > sizeLimit {
-		return errors.Errorf("file size %d > %d", size, sizeLimit)
-	}
-	return nil
-}
-
-// CreatePortalSession xxx
-func (s *service) CreatePortalSession(c *gin.Context) {
-	authCtx := route.MustGetAuthContext(c)
-	if authCtx.BindSession == nil {
-		rest.APIError(c, i18n.GetMessage(c, "session_id不合法或已经过期"))
-		return
-	}
-
-	podCtx := authCtx.BindSession
-
-	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
-	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
-		return
-	}
-
-	lang := c.Query("lang")
-	lang = strings.TrimSuffix(lang, "/")
-	data := map[string]string{
-		"session_id": sessionId,
-		"ws_url":     makeWebSocketURL(sessionId, lang, false),
-	}
-	rest.APIOK(c, i18n.GetMessage(c, "获取session成功"), data)
-}
-
-// CreateContainerPortalSession 创建 webconsole url api
-func (s *service) CreateContainerPortalSession(c *gin.Context) {
-	authCtx := route.MustGetAuthContext(c)
-
-	consoleQuery := new(podmanager.OpenQuery)
-
-	err := c.BindJSON(consoleQuery)
-	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
-		return
-	}
-
-	if e := consoleQuery.Validate(); e != nil {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", e))
-		return
-	}
-
-	// 自定义命令行
-	commands, err := consoleQuery.SplitCommand()
-	if err != nil {
-		rest.APIError(
-			c, i18n.GetMessage(c, "请求参数错误, command not valid{}", err))
-		return
-	}
-
-	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
-	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
-		return
-	}
-
-	podCtx.ProjectId = authCtx.ProjectId
-	// bkapigw 校验, 使用 Operator 做用户标识
-	podCtx.Username = consoleQuery.Operator
-	podCtx.ConnIdleTimeout = consoleQuery.ConnIdleTimeout
-	podCtx.SessionTimeout = consoleQuery.SessionTimeout
-	podCtx.Viewers = consoleQuery.Viewers
-
-	if len(commands) > 0 {
-		podCtx.Commands = commands
-	}
-
-	sessionId, err := sessions.NewStore().OpenAPIScope().Set(c.Request.Context(), podCtx)
-	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
-		return
-	}
-
-	data := map[string]string{
-		"session_id":      sessionId,
-		"web_console_url": makeWebConsoleURL(sessionId, podCtx),
-	}
-
-	// 这里直接置换新的session_id
-	if consoleQuery.WSAcquire {
-		wsSessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
-		if err != nil {
-			rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
-			return
-		}
-
-		data["ws_url"] = makeWebSocketURL(wsSessionId, "", true)
-	}
-
-	rest.APIOK(c, i18n.GetMessage(c, "获取session成功"), data)
-}
-
-// makeWebConsoleURL webconsole 页面访问地址
-func makeWebConsoleURL(sessionId string, podCtx *types.PodContext) string {
-	u := *config.G.Web.BaseURL
-	u.Path = path.Join(u.Path, "/portal/container/") + "/"
-
-	query := url.Values{}
-	query.Set("session_id", sessionId)
-	query.Set("container_name", podCtx.ContainerName)
-
-	u.RawQuery = query.Encode()
-
-	return u.String()
-}
-
-// makeWebSocketURL http 转换为 ws 协议链接
-func makeWebSocketURL(sessionId, lang string, withScheme bool) string {
-	u := *config.G.Web.BaseURL
-	u.Path = path.Join(u.Path, "/ws/sessions/", sessionId) + "/"
-
-	query := url.Values{}
-	if lang != "" {
-		query.Set("lang", lang)
-	}
-
-	u.RawQuery = query.Encode()
-
-	// https 协议 转换为 wss
-	if u.Scheme == "https" {
-		u.Scheme = "wss"
-	} else {
-		u.Scheme = "ws"
-	}
-
-	// 去掉前缀, web 使用
-	if !withScheme {
-		u.Scheme = ""
-		u.Host = ""
-	}
-
-	return u.String()
-}
-
-// CreateClusterPortalSession 集群级别的 webconsole openapi
-func (s *service) CreateClusterPortalSession(c *gin.Context) {
-	rest.APIError(c, "Not implemented")
 }

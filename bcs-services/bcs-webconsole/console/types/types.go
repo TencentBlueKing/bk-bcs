@@ -54,10 +54,17 @@ const (
 
 // APIResponse xxx
 type APIResponse struct {
-	Data      interface{} `json:"data,omitempty"`
 	Code      int         `json:"code"`
 	Message   string      `json:"message"`
 	RequestID string      `json:"request_id"`
+	Data      interface{} `json:"data"`
+}
+
+// CheckPassed 检测是否OK，如下载文件大小等
+type CheckPassed struct {
+	Passed bool   `json:"passed"`
+	Reason string `json:"reason"`
+	Detail string `json:"detail"`
 }
 
 // AuditRecord 审计记录

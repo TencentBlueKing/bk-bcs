@@ -22,24 +22,25 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
 
-// Result 返回的标准结构
-type Result struct {
-	Code      int         `json:"code"`
-	Message   string      `json:"message"`
-	RequestId string      `json:"request_id"`
-	Data      interface{} `json:"data"`
-}
-
 // APIError 错误返回，兼容国际化
 func APIError(c *gin.Context, err string) {
 	requestId := route.MustGetAuthContext(c).RequestId
-	result := Result{Code: types.ApiErrorCode, Message: err, RequestId: requestId}
+	result := types.APIResponse{
+		Code:      types.ApiErrorCode,
+		Message:   err,
+		RequestID: requestId,
+	}
 	c.AbortWithStatusJSON(http.StatusBadRequest, result)
 }
 
 // APIOK 正常返回
 func APIOK(c *gin.Context, message string, data interface{}) {
 	requestId := route.MustGetAuthContext(c).RequestId
-	result := Result{Code: types.NoError, Message: message, RequestId: requestId, Data: data}
+	result := types.APIResponse{
+		Code:      types.NoError, // 固定Code 0
+		Message:   message,
+		RequestID: requestId,
+		Data:      data,
+	}
 	c.AbortWithStatusJSON(http.StatusOK, result)
 }
