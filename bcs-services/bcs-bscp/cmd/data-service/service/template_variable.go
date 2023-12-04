@@ -17,6 +17,8 @@ import (
 	"errors"
 	"fmt"
 
+	"gorm.io/gorm"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -26,7 +28,6 @@ import (
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
-	"gorm.io/gorm"
 )
 
 // CreateTemplateVariable create template variable.
@@ -63,7 +64,7 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 
 // ListTemplateVariables list template variable.
 func (s *Service) ListTemplateVariables(ctx context.Context, req *pbds.ListTemplateVariablesReq) (*pbds.
-	ListTemplateVariablesResp,
+ListTemplateVariablesResp,
 	error) {
 	kt := kit.FromGrpcContext(ctx)
 
