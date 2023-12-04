@@ -37,28 +37,28 @@ var (
 )
 
 var (
-	// ErrDBOpsFailedF is for db operation failed with extra err context
-	ErrDBOpsFailedF = func(err error) error {
-		return Errorf(err, Internal, "db operation failed")
+	// ErrDBOpsFailedF is for db operation failed with err cause
+	ErrDBOpsFailedF = func(cause error) *ErrorF {
+		return Errorf(Internal, "db operation failed")
 	}
-	// ErrInvalidArgF is for invalid argument with extra err context
-	ErrInvalidArgF = func(err error) error {
-		return Errorf(err, InvalidArgument, "invalid argument")
+	// ErrInvalidArgF is for invalid argument with err cause
+	ErrInvalidArgF = func(cause error) *ErrorF {
+		return Errorf(InvalidArgument, "invalid argument")
 	}
 	// ErrWithIDF is for id should not be set
-	ErrWithIDF = func() error {
-		return Errorf(nil, InvalidArgument, "id should not be set")
+	ErrWithIDF = func() *ErrorF {
+		return Errorf(InvalidArgument, "id should not be set")
 	}
 	// ErrNoSpecF is for spec not set
-	ErrNoSpecF = func() error {
-		return Errorf(nil, InvalidArgument, "spec not set")
+	ErrNoSpecF = func() *ErrorF {
+		return Errorf(InvalidArgument, "spec not set")
 	}
 	// ErrNoAttachmentF is for attachment not set
-	ErrNoAttachmentF = func() error {
-		return Errorf(nil, InvalidArgument, "attachment not set")
+	ErrNoAttachmentF = func() *ErrorF {
+		return Errorf(InvalidArgument, "attachment not set")
 	}
 	// ErrNoRevisionF is for revision not set
-	ErrNoRevisionF = func() error {
-		return Errorf(nil, InvalidArgument, "revision not set")
+	ErrNoRevisionF = func() *ErrorF {
+		return Errorf(InvalidArgument, "revision not set")
 	}
 )

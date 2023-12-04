@@ -171,7 +171,7 @@ func (t *TemplateVariableSpec) ValidateUpdate() error {
 // ValidateDefaultVal validate template variable default value.
 func (t *TemplateVariableSpec) ValidateDefaultVal() error {
 	if t.Type == NumberVar && !tools.IsNumber(t.DefaultVal) {
-		return errf.Errorf(nil, errf.InvalidArgument, "default_val %s is not a number type", t.DefaultVal)
+		return errf.Errorf(errf.InvalidArgument, "default_val %s is not a number type", t.DefaultVal)
 	}
 
 	return nil
@@ -207,7 +207,7 @@ func (t VariableType) Validate() error {
 	case StringVar:
 	case NumberVar:
 	default:
-		return errf.Errorf(nil, errf.InvalidArgument, "unsupported variable type: %s", t)
+		return errf.Errorf(errf.InvalidArgument, "unsupported variable type: %s", t)
 	}
 
 	return nil

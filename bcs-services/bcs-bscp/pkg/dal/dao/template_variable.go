@@ -52,12 +52,12 @@ type templateVariableDao struct {
 // Create one template variable instance.
 func (dao *templateVariableDao) Create(kit *kit.Kit, g *table.TemplateVariable) (uint32, error) {
 	if err := g.ValidateCreate(); err != nil {
-		return 0, errf.ErrInvalidArgF(err)
+		return 0, errf.ErrInvalidArgF(err).WithCause(err)
 	}
 
 	tmplSpaceID, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
-		return 0, errf.ErrDBOpsFailedF(err)
+		return 0, errf.ErrDBOpsFailedF(err).WithCause(err)
 	}
 	g.ID = tmplSpaceID
 

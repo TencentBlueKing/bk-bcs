@@ -2,7 +2,7 @@
 ## 错误使用原则
 1. 需要返回给普通用户看的错误，统一使用errf.Errorf方法返回错误，也统一为该方法对应的错误msg进行国际化，便于普通用户理解
 2. 系统内部常见错误，可直接定义成ErrorF错误对象，有自己特定的错误码和错误msg，便于复用
-3. 需要封装携带额外上下文信息，但不需要给普通用户看的错误，统一使用errors.Wrapf方法；不需额外携带上下文，则可直接返回err
+3. 需要封装携带额外上下文信息，但不需要给普通用户看的错误，可使用errors.Wrapf或fmt.Errorf("extra context, %w", err)等方法；不需额外携带上下文，则可直接返回err
 
 ## 使用原则详解
 ### 1. 需要返回给普通用户看的错误，统一使用errf.Errorf方法返回错误，也统一为该方法对应的错误msg进行国际化，便于普通用户理解
@@ -11,20 +11,11 @@
 // Errorf 返回自定义封装的bscp错误，包括错误码、错误信息
 // bcs-services/bcs-bscp/pkg/rest/response.go中的错误中间件方法GRPCErr会统一进行错误码转换处理
 // 需要返回给普通用户看的错误，统一使用该方法返回错误，国际化也以此方法作为提取依据，便于普通用户理解
-// 该方法会统一打印错误根因，便于研发排查问题
-// 优先使用最底层的bscp错误，越底层的错误越能看出问题根因
-func Errorf(err error, code int32, format string, args ...interface{}) error {
-	if err == nil {
-		err = fmt.Errorf(format, args...)
-	}
-	// 如果已经是bscp错误，直接返回底层的bscp错误
-	if _, ok := err.(BSCPErrI); ok {
-		return err
-	}
-	logs.ErrorDepthf(1, "bscp inner err cause: %v", err)
+func Errorf(code int32, format string, args ...interface{}) *ErrorF {
 	return &ErrorF{Code: code, Message: fmt.Sprintf(format, args...)}
 }
 ```
+
 #### 使用示例
 **config-server层** 
 - 调用位置示例
@@ -35,7 +26,7 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbcs.CreateTe
 	...
 
 	if !strings.HasPrefix(strings.ToLower(req.Name), constant.TemplateVariablePrefix) {
-		return nil, errf.Errorf(nil, errf.InvalidArgument, "template variable name must start with %s",
+		return nil, errf.Errorf(errf.InvalidArgument, "template variable name must start with %s",
 			constant.TemplateVariablePrefix)
 	}
 
@@ -73,7 +64,7 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 		return nil, errf.ErrDBOpsFailedF(err)
 	}
 	if err == nil {
-		return nil, errf.Errorf(nil, errf.AlreadyExists, "template variable's same name %s already exists",
+		return nil, errf.Errorf(errf.AlreadyExists, "template variable's same name %s already exists",
 			req.Spec.Name)
 	}
 
@@ -125,7 +116,7 @@ func (t VariableType) Validate() error {
 	case StringVar:
 	case NumberVar:
 	default:
-		return errf.Errorf(nil, errf.InvalidArgument, "unsupported variable type: %s", t)
+		return errf.Errorf(errf.InvalidArgument, "unsupported variable type: %s", t)
 	}
 
 	return nil
@@ -143,6 +134,7 @@ func (t VariableType) Validate() error {
     }
 }
 ```
+
 - 日志
 ```bash
 E1204 11:21:04.252386   83328 template_variable.go:210] bscp inner err cause: unsupported variable type: yaml 
@@ -154,16 +146,16 @@ E1204 11:21:04.252386   83328 template_variable.go:210] bscp inner err cause: un
 // ValidateVariableName validate bscp variable's length and format.
 func ValidateVariableName(name string) error {
 	if len(name) < 9 {
-		return errf.Errorf(nil, errf.InvalidArgument, "invalid name, "+
+		return errf.Errorf(errf.InvalidArgument, "invalid name, "+
 			"length should >= 9 and must start with prefix bk_bscp_ (ignore case)")
 	}
 
 	if len(name) > 128 {
-		return errf.Errorf(nil, errf.InvalidArgument, "invalid name, length should <= 128")
+		return errf.Errorf(errf.InvalidArgument, "invalid name, length should <= 128")
 	}
 
 	if !qualifiedVariableNameRegexp.MatchString(name) {
-		return errf.Errorf(nil, errf.InvalidArgument,
+		return errf.Errorf(errf.InvalidArgument,
 			"invalid name: %s, only allows to include english、numbers、underscore (_)"+
 				", and must start with prefix bk_bscp_ (ignore case)", name)
 	}
@@ -183,6 +175,7 @@ func ValidateVariableName(name string) error {
     }
 }
 ```
+
 - 日志
 ```bash
 E1204 11:31:31.625247   83328 name.go:80] bscp inner err cause: invalid name: BK_BSCP_AGE{}, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)
@@ -192,29 +185,29 @@ E1204 11:31:31.625247   83328 name.go:80] bscp inner err cause: invalid name: BK
 - 常见错误声明
 ```go
 var (
-	// ErrDBOpsFailedF is for db operation failed with extra err context
-	ErrDBOpsFailedF = func(err error) error {
-		return Errorf(err, Internal, "db operation failed")
+	// ErrDBOpsFailedF is for db operation failed with err cause
+	ErrDBOpsFailedF = func(cause error) *ErrorF {
+		return Errorf(Internal, "db operation failed")
 	}
-	// ErrInvalidArgF is for invalid argument with extra err context
-	ErrInvalidArgF = func(err error) error {
-		return Errorf(err, InvalidArgument, "invalid argument")
+	// ErrInvalidArgF is for invalid argument with err cause
+	ErrInvalidArgF = func(cause error) *ErrorF {
+		return Errorf(InvalidArgument, "invalid argument")
 	}
 	// ErrWithIDF is for id should not be set
-	ErrWithIDF = func() error {
-		return Errorf(nil, InvalidArgument, "id should not be set")
+	ErrWithIDF = func() *ErrorF {
+		return Errorf(InvalidArgument, "id should not be set")
 	}
 	// ErrNoSpecF is for spec not set
-	ErrNoSpecF = func() error {
-		return Errorf(nil, InvalidArgument, "spec not set")
+	ErrNoSpecF = func() *ErrorF {
+		return Errorf(InvalidArgument, "spec not set")
 	}
 	// ErrNoAttachmentF is for attachment not set
-	ErrNoAttachmentF = func() error {
-		return Errorf(nil, InvalidArgument, "attachment not set")
+	ErrNoAttachmentF = func() *ErrorF {
+		return Errorf(InvalidArgument, "attachment not set")
 	}
 	// ErrNoRevisionF is for revision not set
-	ErrNoRevisionF = func() error {
-		return Errorf(nil, InvalidArgument, "revision not set")
+	ErrNoRevisionF = func() *ErrorF {
+		return Errorf(InvalidArgument, "revision not set")
 	}
 )
 ```
@@ -228,10 +221,10 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 
 	_, err := s.dao.TemplateVariable().GetByUniqueKey(kt, req.Attachment.BizId, req.Spec.Name)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errf.ErrDBOpsFailedF(err)
+		return nil, errf.ErrDBOpsFailedF().WithCause(err)
 	}
 	if err == nil {
-		return nil, errf.Errorf(nil, errf.AlreadyExists, "template variable's same name %s already exists",
+		return nil, errf.Errorf(errf.AlreadyExists, "template variable's same name %s already exists",
 			req.Spec.Name)
 	}
 
@@ -275,23 +268,31 @@ func (t *TemplateVariable) ValidateCreate() error {
 }
 ```
 
-### 3. 需要封装携带额外上下文信息，但不需要给普通用户看的错误，可使用errors.Wrapf或fmt.Errorf("extra context, %w", err)方法；不需额外携带上下文，则可直接返回err
+### 3. 需要封装携带额外上下文信息，但不需要给普通用户看的错误，可使用errors.Wrapf或fmt.Errorf("extra context, %w", err)等方法；不需额外携带上下文，则可直接返回err
 - 调用示例（更多可全局搜索）
 ```go
-// Download download file from bkrepo
-func (c *bkrepoClient) Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, error) {
-	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign})
-	if err != nil {
-		return nil, 0, err
-	}
-	
-    ...
-	
-	if resp.StatusCode != 200 {
-		resp.Body.Close()
-		return nil, 0, errors.Errorf("download status %d != 200", resp.StatusCode)
+// Parse api-gateway request header to context kit and validate.
+func (p *jwtParser) Parse(ctx context.Context, header http.Header) (*kit.Kit, error) {
+	jwtToken := header.Get(constant.BKGWJWTTokenKey)
+	if len(jwtToken) == 0 {
+		return nil, errors.Errorf("jwt token header %s is required", constant.BKGWJWTTokenKey)
 	}
 
-	return resp.Body, resp.ContentLength, nil
+	token, err := p.parseToken(jwtToken)
+	if err != nil {
+		return nil, errors.Wrapf(err, "parse jwt token %s", jwtToken)
+	}
+
+	if err := token.validate(); err != nil {
+		return nil, errors.Wrapf(err, "validate jwt token %s", jwtToken)
+	}
+
+	...
+
+	if err := kt.Validate(); err != nil {
+		return nil, errors.Wrapf(err, "validate kit")
+	}
+
+	return kt, nil
 }
 ```

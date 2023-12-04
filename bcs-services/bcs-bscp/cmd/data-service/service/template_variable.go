@@ -37,11 +37,10 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 
 	_, err := s.dao.TemplateVariable().GetByUniqueKey(kt, req.Attachment.BizId, req.Spec.Name)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errf.ErrDBOpsFailedF(err)
+		return nil, errf.ErrDBOpsFailedF(err).WithCause(err)
 	}
 	if err == nil {
-		return nil, errf.Errorf(nil, errf.AlreadyExists, "template variable's same name %s already exists",
-			req.Spec.Name)
+		return nil, errf.Errorf(errf.AlreadyExists, "template variable's same name %s already exists", req.Spec.Name)
 	}
 
 	templateVariable := &table.TemplateVariable{

@@ -68,16 +68,16 @@ var qualifiedVariableNameRegexp = regexp.MustCompile(`^(?i)(bk_bscp_)\w*$`)
 // ValidateVariableName validate bscp variable's length and format.
 func ValidateVariableName(name string) error {
 	if len(name) < 9 {
-		return errf.Errorf(nil, errf.InvalidArgument, "invalid name, "+
+		return errf.Errorf(errf.InvalidArgument, "invalid name, "+
 			"length should >= 9 and must start with prefix bk_bscp_ (ignore case)")
 	}
 
 	if len(name) > 128 {
-		return errf.Errorf(nil, errf.InvalidArgument, "invalid name, length should <= 128")
+		return errf.Errorf(errf.InvalidArgument, "invalid name, length should <= 128")
 	}
 
 	if !qualifiedVariableNameRegexp.MatchString(name) {
-		return errf.Errorf(nil, errf.InvalidArgument,
+		return errf.Errorf(errf.InvalidArgument,
 			"invalid name: %s, only allows to include english、numbers、underscore (_)"+
 				", and must start with prefix bk_bscp_ (ignore case)", name)
 	}
