@@ -20,6 +20,7 @@ import (
 	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 	"github.com/thanos-io/thanos/pkg/component"
 	"github.com/thanos-io/thanos/pkg/extgrpc"
@@ -113,7 +114,11 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 		if err != nil {
 			return errors.Wrap(err, "building gRPC client")
 		}
-		endpoints = query.NewEndpointSet(kitLogger, opt.reg,
+
+		// 现在的模式 thanos_store_nodes_grpc_connections metric 会有大量的 external_labels 且无实际用途, 使用一个临时 reg drop 掉
+		_reg := prometheus.NewRegistry()
+
+		endpoints = query.NewEndpointSet(kitLogger, _reg,
 			func() (specs []*query.GRPCEndpointSpec) {
 				for _, addr := range gw.GetStoreAddrs() {
 					specs = append(specs, query.NewGRPCEndpointSpec(addr, true))
