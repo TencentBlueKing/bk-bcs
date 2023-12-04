@@ -63,9 +63,9 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 }
 
 // ListTemplateVariables list template variable.
-func (s *Service) ListTemplateVariables(ctx context.Context, req *pbds.ListTemplateVariablesReq) (*pbds.
-ListTemplateVariablesResp,
-	error) {
+func (s *Service) ListTemplateVariables(ctx context.Context, req *pbds.ListTemplateVariablesReq) (
+	*pbds.
+		ListTemplateVariablesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}

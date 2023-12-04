@@ -17,10 +17,11 @@ import (
 	"fmt"
 	"strings"
 
-	"bscp.io/pkg/logs"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"bscp.io/pkg/logs"
 )
 
 // ErrorF defines an error with error code and message.
