@@ -41,7 +41,7 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbcs.CreateTe
 	}
 
 	if !strings.HasPrefix(strings.ToLower(req.Name), constant.TemplateVariablePrefix) {
-		return nil, errf.Newf(errf.InvalidArgument, "template variable name must start with %s",
+		return nil, errf.Errorf(nil, errf.InvalidArgument, "template variable name must start with %s",
 			constant.TemplateVariablePrefix)
 	}
 

@@ -35,3 +35,30 @@ var (
 	// ErrFileContentNotFound is error when the file content not found in file provider.
 	ErrFileContentNotFound = errors.New("file content not found")
 )
+
+var (
+	// ErrDBOpsFailedF is for db operation failed with extra err context
+	ErrDBOpsFailedF = func(err error) error {
+		return Errorf(err, Internal, "db operation failed")
+	}
+	// ErrInvalidArgF is for invalid argument with extra err context
+	ErrInvalidArgF = func(err error) error {
+		return Errorf(err, InvalidArgument, "invalid argument")
+	}
+	// ErrWithIDF is for id should not be set
+	ErrWithIDF = func() error {
+		return Errorf(nil, InvalidArgument, "id should not be set")
+	}
+	// ErrNoSpecF is for spec not set
+	ErrNoSpecF = func() error {
+		return Errorf(nil, InvalidArgument, "spec not set")
+	}
+	// ErrNoAttachmentF is for attachment not set
+	ErrNoAttachmentF = func() error {
+		return Errorf(nil, InvalidArgument, "attachment not set")
+	}
+	// ErrNoRevisionF is for revision not set
+	ErrNoRevisionF = func() error {
+		return Errorf(nil, InvalidArgument, "revision not set")
+	}
+)

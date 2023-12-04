@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"bscp.io/pkg/criteria/errf"
@@ -25,6 +26,7 @@ import (
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
+	"gorm.io/gorm"
 )
 
 // CreateTemplateVariable create template variable.
@@ -32,8 +34,13 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 	error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if _, err := s.dao.TemplateVariable().GetByUniqueKey(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
-		return nil, errf.Newf(errf.AlreadyExists, "template variable's same name %s already exists", req.Spec.Name)
+	_, err := s.dao.TemplateVariable().GetByUniqueKey(kt, req.Attachment.BizId, req.Spec.Name)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errf.ErrDBOpsFailedF(err)
+	}
+	if err == nil {
+		return nil, errf.Errorf(nil, errf.AlreadyExists, "template variable's same name %s already exists",
+			req.Spec.Name)
 	}
 
 	templateVariable := &table.TemplateVariable{

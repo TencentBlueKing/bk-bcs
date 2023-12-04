@@ -52,12 +52,12 @@ type templateVariableDao struct {
 // Create one template variable instance.
 func (dao *templateVariableDao) Create(kit *kit.Kit, g *table.TemplateVariable) (uint32, error) {
 	if err := g.ValidateCreate(); err != nil {
-		return 0, errf.New(errf.InvalidArgument, err.Error())
+		return 0, errf.ErrInvalidArgF(err)
 	}
 
 	tmplSpaceID, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
-		return 0, errf.New(errf.InvalidArgument, err.Error())
+		return 0, errf.ErrDBOpsFailedF(err)
 	}
 	g.ID = tmplSpaceID
 
@@ -75,7 +75,7 @@ func (dao *templateVariableDao) Create(kit *kit.Kit, g *table.TemplateVariable) 
 		return nil
 	}
 	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, errf.New(errf.Internal, err.Error())
+		return 0, errf.ErrDBOpsFailedF(err)
 	}
 
 	return g.ID, nil
@@ -229,11 +229,5 @@ func (dao *templateVariableDao) GetByUniqueKey(kit *kit.Kit, bizID uint32, name 
 	error) {
 	m := dao.genQ.TemplateVariable
 	q := dao.genQ.TemplateVariable.WithContext(kit.Ctx)
-
-	templateVariable, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
-	if err != nil {
-		return nil, errf.Newf(errf.Internal, "get template variable failed, err: %v", err)
-	}
-
-	return templateVariable, nil
+	return q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 }

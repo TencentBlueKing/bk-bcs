@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"strings"
 
+	"bscp.io/pkg/logs"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -53,6 +54,33 @@ func (e *ErrorF) Format() string {
 // GRPCStatus implements interface{ GRPCStatus() *Status } , so that it can be recognized by grpc
 func (e *ErrorF) GRPCStatus() *status.Status {
 	return status.New(codes.Code(e.Code), e.Message)
+}
+
+// BSCPErrI is bscp error interface
+type BSCPErrI interface {
+	BSCPErr() *ErrorF
+}
+
+// BSCPErr implements BSCPErrI, so that it can be recognized by bscp itself
+func (e *ErrorF) BSCPErr() *ErrorF {
+	return e
+}
+
+// Errorf 返回自定义封装的bscp错误，包括错误码、错误信息
+// bcs-services/bcs-bscp/pkg/rest/response.go中的错误中间件方法GRPCErr会统一进行错误码转换处理
+// 需要返回给普通用户看的错误，统一使用该方法返回错误，国际化也以此方法作为提取依据，便于普通用户理解
+// 该方法会统一打印错误根因，便于研发排查问题
+// 优先使用最底层的bscp错误，越底层的错误越能看出问题根因
+func Errorf(err error, code int32, format string, args ...interface{}) error {
+	if err == nil {
+		err = fmt.Errorf(format, args...)
+	}
+	// 如果已经是bscp错误，直接返回底层的bscp错误
+	if _, ok := err.(BSCPErrI); ok {
+		return err
+	}
+	logs.ErrorDepthf(1, "bscp inner err cause: %v", err)
+	return &ErrorF{Code: code, Message: fmt.Sprintf(format, args...)}
 }
 
 // AssignResp used only to assign the values of the Code and Message

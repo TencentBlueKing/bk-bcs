@@ -14,8 +14,8 @@ package table
 
 import (
 	"errors"
-	"fmt"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/validator"
 	"bscp.io/pkg/tools"
 )
@@ -51,11 +51,11 @@ func (t *TemplateVariable) ResType() string {
 // ValidateCreate validate template variable is valid or not when create it.
 func (t *TemplateVariable) ValidateCreate() error {
 	if t.ID > 0 {
-		return errors.New("id should not be set")
+		return errf.ErrWithIDF()
 	}
 
 	if t.Spec == nil {
-		return errors.New("spec not set")
+		return errf.ErrNoSpecF()
 	}
 
 	if err := t.Spec.ValidateCreate(); err != nil {
@@ -63,7 +63,7 @@ func (t *TemplateVariable) ValidateCreate() error {
 	}
 
 	if t.Attachment == nil {
-		return errors.New("attachment not set")
+		return errf.ErrNoAttachmentF()
 	}
 
 	if err := t.Attachment.Validate(); err != nil {
@@ -71,7 +71,7 @@ func (t *TemplateVariable) ValidateCreate() error {
 	}
 
 	if t.Revision == nil {
-		return errors.New("revision not set")
+		return errf.ErrNoRevisionF()
 	}
 
 	if err := t.Revision.ValidateCreate(); err != nil {
@@ -171,7 +171,7 @@ func (t *TemplateVariableSpec) ValidateUpdate() error {
 // ValidateDefaultVal validate template variable default value.
 func (t *TemplateVariableSpec) ValidateDefaultVal() error {
 	if t.Type == NumberVar && !tools.IsNumber(t.DefaultVal) {
-		return fmt.Errorf("default_val %s is not a number type", t.DefaultVal)
+		return errf.Errorf(nil, errf.InvalidArgument, "default_val %s is not a number type", t.DefaultVal)
 	}
 
 	return nil
@@ -207,7 +207,7 @@ func (t VariableType) Validate() error {
 	case StringVar:
 	case NumberVar:
 	default:
-		return fmt.Errorf("unsupported variable type: %s", t)
+		return errf.Errorf(nil, errf.InvalidArgument, "unsupported variable type: %s", t)
 	}
 
 	return nil
