@@ -32,6 +32,13 @@ type ErrorF struct {
 	Message string `json:"message"`
 }
 
+// Errorf 返回自定义封装的bscp错误，包括错误码、错误信息
+// bcs-services/bcs-bscp/pkg/rest/response.go中的错误中间件方法GRPCErr会统一进行错误码转换处理
+// 需要返回给普通用户看的错误，统一使用该方法返回错误，国际化也以此方法作为提取依据，便于普通用户理解
+func Errorf(code int32, format string, args ...interface{}) *ErrorF {
+	return &ErrorF{Code: code, Message: fmt.Sprintf(format, args...)}
+}
+
 // Error implement the golang's basic error interface
 func (e *ErrorF) Error() string {
 	if e == nil || e.Code == OK {
@@ -41,20 +48,6 @@ func (e *ErrorF) Error() string {
 	// return with a json format string error, so that the upper service
 	// can use Wrap to decode it.
 	return fmt.Sprintf(`{"code": %d, "message": "%s"}`, e.Code, e.Message)
-}
-
-// Format the ErrorF error to a string format.
-func (e *ErrorF) Format() string {
-	if e == nil || e.Code == OK {
-		return ""
-	}
-
-	return fmt.Sprintf("code: %d, message: %s", e.Code, e.Message)
-}
-
-// GRPCStatus implements interface{ GRPCStatus() *Status } , so that it can be recognized by grpc
-func (e *ErrorF) GRPCStatus() *status.Status {
-	return status.New(codes.Code(e.Code), e.Message)
 }
 
 // WithCause 打印根因错误，有底层错误需要暴露时调用该方法，便于研发排查问题
@@ -71,11 +64,18 @@ func (e *ErrorF) WithCause(cause error) *ErrorF {
 	return e
 }
 
-// Errorf 返回自定义封装的bscp错误，包括错误码、错误信息
-// bcs-services/bcs-bscp/pkg/rest/response.go中的错误中间件方法GRPCErr会统一进行错误码转换处理
-// 需要返回给普通用户看的错误，统一使用该方法返回错误，国际化也以此方法作为提取依据，便于普通用户理解
-func Errorf(code int32, format string, args ...interface{}) *ErrorF {
-	return &ErrorF{Code: code, Message: fmt.Sprintf(format, args...)}
+// GRPCStatus implements interface{ GRPCStatus() *Status } , so that it can be recognized by grpc
+func (e *ErrorF) GRPCStatus() *status.Status {
+	return status.New(codes.Code(e.Code), e.Message)
+}
+
+// Format the ErrorF error to a string format.
+func (e *ErrorF) Format() string {
+	if e == nil || e.Code == OK {
+		return ""
+	}
+
+	return fmt.Sprintf("code: %d, message: %s", e.Code, e.Message)
 }
 
 // AssignResp used only to assign the values of the Code and Message

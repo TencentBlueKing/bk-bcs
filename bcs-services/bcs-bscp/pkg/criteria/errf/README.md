@@ -14,6 +14,36 @@
 func Errorf(code int32, format string, args ...interface{}) *ErrorF {
 	return &ErrorF{Code: code, Message: fmt.Sprintf(format, args...)}
 }
+
+// Error implement the golang's basic error interface
+func (e *ErrorF) Error() string {
+	if e == nil || e.Code == OK {
+		return "nil"
+	}
+
+	// return with a json format string error, so that the upper service
+	// can use Wrap to decode it.
+	return fmt.Sprintf(`{"code": %d, "message": "%s"}`, e.Code, e.Message)
+}
+
+// WithCause 打印根因错误，有底层错误需要暴露时调用该方法，便于研发排查问题
+func (e *ErrorF) WithCause(cause error) *ErrorF {
+	if cause == nil {
+		return e
+	}
+
+	logs.ErrorDepthf(1, "bscp inner err cause: %v", cause)
+	// 如果底层根因错误已经是bscp错误，直接使用该根因错误
+	if c, ok := cause.(*ErrorF); ok {
+		return c
+	}
+	return e
+}
+
+// GRPCStatus implements interface{ GRPCStatus() *Status } , so that it can be recognized by grpc
+func (e *ErrorF) GRPCStatus() *status.Status {
+	return status.New(codes.Code(e.Code), e.Message)
+}
 ```
 
 #### 使用示例
