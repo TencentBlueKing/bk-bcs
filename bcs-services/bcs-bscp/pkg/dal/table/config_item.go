@@ -211,7 +211,7 @@ func (ci ConfigItemSpec) ValidateCreate() error {
 	}
 
 	if err := ValidatePath(ci.Path, ci.FileMode); err != nil {
-		return err
+		return fmt.Errorf("%s err: %v", ci.Path, err)
 	}
 
 	if err := validator.ValidateMemo(ci.Memo, false); err != nil {
@@ -230,11 +230,11 @@ func ValidatePath(path string, fileMode FileMode) error {
 	switch fileMode {
 	case Windows:
 		if err := validator.ValidateWinFilePath(path); err != nil {
-			return err
+			return fmt.Errorf("%s err: %v", path, err)
 		}
 	case Unix:
 		if err := validator.ValidateUnixFilePath(path); err != nil {
-			return err
+			return fmt.Errorf("%s err: %v", path, err)
 		}
 	default:
 		return errors.New("unknown file mode " + string(fileMode))
