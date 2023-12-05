@@ -93,7 +93,7 @@ const handleSubmit = async () => {
       message: '编辑配置文件成功',
     });
   } catch (e) {
-    console.log(e);
+    console.error(e);
   } finally {
     pending.value = false;
   }

@@ -127,7 +127,6 @@ const handleManualCreateSlideOpen = () => {
   if (isFileType.value) {
     isManualCreateSliderOpen.value = true;
   } else {
-    console.log(111);
     isManualCreateKvSliderOpen.value = true;
   }
 };

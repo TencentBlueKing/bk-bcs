@@ -1,7 +1,7 @@
 <template>
   <div :class="['configs-menu', { 'search-opened': isOpenSearch }]">
     <div class="title-area">
-      <div class="title">配置文件</div>
+      <div class="title">配置项</div>
       <div class="title-extend">
         <bk-checkbox
           v-if="isBaseVersionExist"
@@ -43,14 +43,11 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { storeToRefs } from 'pinia';
 import { Search } from 'bkui-vue/lib/icon';
-import useServiceStore from '../../../../../../../../store/service';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import { IConfigKvType } from '../../../../../../../../../types/config';
 import { IVariableEditParams } from '../../../../../../../../../types/variable';
 import { getReleaseKvList } from '../../../../../../../../api/config';
-import { getReleasedAppVariables } from '../../../../../../../../api/variable';
 import SearchInput from '../../../../../../../../components/search-input.vue';
 import tableEmpty from '../../../../../../../../components/table/table-empty.vue';
 
@@ -83,7 +80,6 @@ const emits = defineEmits(['selected']);
 const route = useRoute();
 const bkBizId = ref(String(route.params.spaceId));
 const appId = ref(Number(route.params.appId));
-const { appData } = storeToRefs(useServiceStore());
 
 const diffCount = ref(0);
 const selected = ref(0);
@@ -107,9 +103,9 @@ watch(
   async () => {
     const base = await getConfigsOfVersion(props.baseVersionId);
     baseList.value = base.details;
-    baseVariables.value = await getVariableList(props.baseVersionId);
     aggregatedList.value = calcDiff();
     groupedConfigListOnShow.value = aggregatedList.value.slice();
+    groupedConfigListOnShow.value.sort((a, b) => a.key.charCodeAt(0) - b.key.charCodeAt(0));
     setDefaultSelected();
     isOnlyShowDiff.value && handleSearch();
   },
@@ -150,20 +146,12 @@ watch(
 
 onMounted(async () => {
   await getAllConfigList();
-  // 未命名版本变量取正在编辑中的变量列表
-  if (isUnNamedVersion(props.currentVersionId)) {
-    currentVariables.value = props.unNamedVersionVariables;
-  } else {
-    currentVariables.value = await getVariableList(props.currentVersionId);
-  }
-  baseVariables.value = await getVariableList(props.baseVersionId);
   aggregatedList.value = calcDiff();
   groupedConfigListOnShow.value = aggregatedList.value.slice();
+  groupedConfigListOnShow.value.sort((a, b) => a.key.charCodeAt(0) - b.key.charCodeAt(0));
   setDefaultSelected();
 });
 
-// 判断版本是否为未命名版本
-const isUnNamedVersion = (id: number) => id === 0;
 
 // 获取当前版本和基准版本的所有配置文件列表(非模板配置和套餐下模板)
 const getAllConfigList = async () => {
@@ -187,14 +175,6 @@ const getConfigsOfVersion = async (releaseId: number | undefined) => {
   return await getReleaseKvList(bkBizId.value, appId.value, releaseId, params);
 };
 
-// 获取版本下变量列表
-const getVariableList = async (id: number | undefined) => {
-  if (id === undefined || isUnNamedVersion(id)) {
-    return [];
-  }
-  const res = await getReleasedAppVariables(bkBizId.value, appData.value.id as number, id);
-  return res.details;
-};
 
 // 计算配置被修改、被删除、新增的差异
 const calcDiff = () => {

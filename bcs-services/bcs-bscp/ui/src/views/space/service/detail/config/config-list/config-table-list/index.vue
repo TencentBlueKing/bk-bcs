@@ -92,7 +92,7 @@ const editVariablesRef = ref();
 
 const refreshConfigList = () => {
   tableRef.value.refresh();
-  refreshVariable();
+  if (isFileType.value) refreshVariable();
 };
 
 const refreshVariable = () => {

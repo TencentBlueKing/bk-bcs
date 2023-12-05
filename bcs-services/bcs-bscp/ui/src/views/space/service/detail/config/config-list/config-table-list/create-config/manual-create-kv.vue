@@ -1,11 +1,5 @@
 <template>
-  <bk-sideslider
-    width="640"
-    title="新增配置项"
-    :is-show="props.show"
-    :before-close="handleBeforeClose"
-    @closed="close"
-  >
+  <bk-sideslider width="640" title="新增配置项" :is-show="props.show" :before-close="handleBeforeClose" @closed="close">
     <ConfigForm
       ref="formRef"
       class="config-form-wrapper"
@@ -16,7 +10,7 @@
       @change="handleFormChange"
     />
     <section class="action-btns">
-      <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">保存</bk-button>
+      <bk-button theme="primary" @click="handleSubmit">保存</bk-button>
       <bk-button @click="close">取消</bk-button>
     </section>
   </bk-sideslider>
@@ -35,10 +29,7 @@ const props = defineProps<{
   appId: number;
 }>();
 
-
 const emits = defineEmits(['update:show', 'confirm']);
-const fileUploading = ref(false);
-const pending = ref(false);
 const content = ref('');
 const formRef = ref();
 const isFormChange = ref(false);
@@ -62,7 +53,6 @@ watch(
   },
 );
 
-
 const handleFormChange = (data: IConfigKvEditParams, configContent: string) => {
   configForm.value = data;
   content.value = configContent;
@@ -81,18 +71,15 @@ const handleSubmit = async () => {
   const isValid = await formRef.value.validate();
   if (!isValid) return;
   try {
-    pending.value = true;
     await createKv(props.bkBizId, props.appId, { ...configForm.value });
     emits('confirm');
     close();
     Message({
       theme: 'success',
-      message: '新建配置文件成功',
+      message: '新建配置项成功',
     });
   } catch (e) {
     console.log(e);
-  } finally {
-    pending.value = false;
   }
 };
 

@@ -80,9 +80,9 @@ const rules = {
   ],
 };
 
-// 编辑文件任意类型默认选中string
+// 新建文件任意类型默认选中string
 onMounted(() => {
-  if (props.editable) {
+  if (!props.editable && !props.view) {
     localVal.value.kv_type = appData.value.spec.data_type! === 'any' ? 'string' : appData.value.spec.data_type!;
   }
 });
