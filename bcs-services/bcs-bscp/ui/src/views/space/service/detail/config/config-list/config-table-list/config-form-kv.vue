@@ -17,7 +17,7 @@
     <bk-form-item label="配置项值" property="value" :required="true">
       <bk-input
         v-if="localVal.kv_type === 'string' || localVal.kv_type === 'number'"
-        v-model="localVal!.value"
+        v-model.trim="localVal!.value"
         @change="change"
         :disabled="view"
       />
@@ -71,11 +71,11 @@ const rules = {
     {
       validator: (value: string) => {
         if (localVal.value.kv_type === 'number') {
-          return /^\d+$/.test(value);
+          return /^-?\d+(\.\d+)?$/.test(value);
         }
         return true;
       },
-      message: '配置值不为数字',
+      message: '配置项值不为数字',
     },
   ],
 };

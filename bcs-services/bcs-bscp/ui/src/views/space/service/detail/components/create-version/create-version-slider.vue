@@ -8,7 +8,7 @@
             <bk-input v-model="formData.name" @change="formChange" />
           </bk-form-item>
           <bk-form-item label="版本描述" property="memo">
-            <bk-input v-model="formData.memo" type="textarea" :maxlength="100" @change="formChange" :resize="true" />
+            <bk-input v-model="formData.memo" type="textarea" :maxlength="200" @change="formChange" :resize="true" />
           </bk-form-item>
           <bk-checkbox v-model="isPublish" :true-label="true" :false-label="false" @change="formChange">
             <span style="font-size: 12px;">同时上线版本</span>
