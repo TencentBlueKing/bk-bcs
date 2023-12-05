@@ -184,7 +184,7 @@
           v-for="item in securityGroups"
           :key="item.securityGroupID"
           :id="item.securityGroupID"
-          :name="item.securityGroupName">
+          :name="`${item.securityGroupName}(${item.securityGroupID})`">
         </bk-option>
         <template slot="extension">
           <SelectExtension

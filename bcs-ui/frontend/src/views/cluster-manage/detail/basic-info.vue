@@ -217,9 +217,12 @@ export default defineComponent({
     const clusterVersion = computed(() => clusterData.value?.clusterBasicSettings?.version || '--');
     const runtimeVersion = computed(() => clusterData.value?.clusterAdvanceSettings?.runtimeVersion || '--');
     const containerRuntime = computed(() => clusterData.value?.clusterAdvanceSettings?.containerRuntime || '--');
+    const providerMap = {
+      tencentPublicCloud: $i18n.t('provider.tencentPublicCloud'),
+    };
     const clusterProvider = computed(() => {
       if (clusterData.value.clusterType === 'virtual') return clusterData.value?.extraInfo?.provider;
-      return clusterData.value?.provider;
+      return providerMap[clusterData.value?.provider] || clusterData.value?.provider;
     });
     const clusterType = computed(() => getClusterTypeName(clusterData.value));
     // 修改集群信息
@@ -258,7 +261,7 @@ export default defineComponent({
     const region = computed(() => regionList.value
       .find(item => item.region === clusterData.value.region)?.regionName || clusterData.value.region);
     const getRegionList = async () => {
-      if (curCluster.value?.provider !== 'tencentCloud') return;
+      if (!['tencentCloud', 'tencentPublicCloud'].includes(curCluster.value?.provider || '')) return;
       regionList.value = await $store.dispatch('clustermanager/fetchCloudRegion', {
         $cloudId: curCluster.value?.provider,
       });

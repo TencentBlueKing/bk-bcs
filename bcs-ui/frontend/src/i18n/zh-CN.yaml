@@ -270,6 +270,7 @@ generic:
     search: 输入关键字，按Enter搜索
     searchDate: 选择日期
     command: 多个命令用空格分隔，例如/bin/bash &quot;-c&quot
+    searchIp: '输入IP搜索, 多个IP用逗号或空格隔开'
   button:
     confirm: 确定
     confirm1: 确认
@@ -857,7 +858,7 @@ cluster:
       validate:
         name: 名称不超过255个字符，仅支持中文、英文、数字、下划线，分隔符(-)及小数点
       label:
-        nameAndID: 节点池 ID (名称)
+        nameAndID: 节点池名称 (ID)
         nodeQuota: 节点配额
         nodeCounts: 节点数量
         system: 操作系统
@@ -2421,7 +2422,9 @@ manualNode:
     confirmText1: '此节点池已开启弹性伸缩, 请确认是否继续添加节点'
   tips:
     insufficientNode: '节点数量不足, 前往节点池修改'
-    desiredSize: '此节点池最多可添加 {0} 个节点；如有需要，请前往调整节点池配额'
+    desiredSize: >-
+      此节点池还可添加 {remaining}
+      个节点（配额：{maxSize}，已用：{used}），可前往节点池管理页面调整节点池配额（资源池可申请节点数：{total}）
 ca:
   internetAccess:
     label:
@@ -2707,3 +2710,5 @@ tkeCa:
       desc: '资源提供者分为云梯资源池和自建资源池, 如果业务下有空闲资源, 因其他原因不能回收, 可联系助手添加自建资源池'
       yunti: 云梯资源池(平台提供)
       self: 自建资源池
+provider:
+  tencentPublicCloud: 腾讯云公有云

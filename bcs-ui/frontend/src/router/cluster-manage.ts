@@ -196,7 +196,7 @@ export default [
   {
     path: 'clusters/:clusterId/nodes/add',
     name: 'addClusterNode',
-    props: true,
+    props: route => ({ ...route.query, ...route.params }),
     component: AddClusterNode,
     meta: {
       title: window.i18n.t('cluster.nodeList.create.text'),

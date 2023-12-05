@@ -291,6 +291,7 @@ generic:
     command: >-
       Multiple commands are separated by spaces, eg: / bin / bash &amp; quote; -
       C &amp; quote; &amp; quote
+    searchIp: Search ip
   button:
     confirm: Confirm
     confirm1: Confirm
@@ -1050,7 +1051,7 @@ cluster:
           The name does not exceed 255 characters, only supports Chinese,
           English, numbers, and scratch lines, separators (-) and decimal points
       label:
-        nameAndID: Node pool ID (name)
+        nameAndID: Node pool name (ID)
         nodeQuota: Node quota
         nodeCounts: Node count
         system: OS
@@ -2990,8 +2991,10 @@ manualNode:
   tips:
     insufficientNode: 'The number of nodes is insufficient, go to the node pool'
     desiredSize: >-
-      A maximum of {0} nodes can be added to the node pool. adjust the node pool
-      quota if necessary
+      This node pool can add {remaining} more nodes (Quota: {maxSize}, Used:
+      {used}). You can go to the node pool management page to adjust the node
+      pool quota (Total nodes that can be applied for from the resource pool:
+      {total}).
   button:
     gotoNodePool: Node pool
   msg:
@@ -3387,3 +3390,5 @@ tkeCa:
       For a self-built resource pool, it is not necessary to specify information
       about the system disk and data disk. At least one data disk of 100GB or
       more is required.
+provider:
+  tencentPublicCloud: TencentPublicCloud

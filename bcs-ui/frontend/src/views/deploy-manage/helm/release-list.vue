@@ -460,7 +460,7 @@
       </template>
       <template #content>
         <div class="max-h-[calc(100vh-60px)] overflow-hidden px-[24px] py-[20px]">
-          <ChartFileTree class="min-h-[calc(100vh-100px)]" :contents="manifest" />
+          <ChartFileTree class="h-[calc(100vh-100px)]" :contents="manifest" />
         </div>
       </template>
     </bcs-sideslider>

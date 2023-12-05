@@ -85,7 +85,8 @@
                     <div
                       v-bk-tooltips="{
                         disabled: (item.autoScaling.maxSize - item.autoScaling.desiredSize) > 0,
-                        content: $t('manualNode.tips.insufficientNode')
+                        content: $t('manualNode.tips.insufficientNode'),
+                        placement: 'right'
                       }">
                       {{ item.name }}
                     </div>
@@ -103,7 +104,8 @@
                     <div
                       v-bk-tooltips="{
                         disabled: (item.autoScaling.maxSize - item.autoScaling.desiredSize) > 0,
-                        content: $t('manualNode.tips.insufficientNode')
+                        content: $t('manualNode.tips.insufficientNode'),
+                        placement: 'right'
                       }">
                       {{ item.name }}
                     </div>
@@ -133,13 +135,16 @@
             <bcs-input
               type="number"
               class="w-[74px]"
-              :max="maxCount"
-              :min="1"
+              :max="nodesCounts.maxCount"
+              :min="0"
               :precision="0"
               v-model="desiredSize"></bcs-input>
-            <span class="text-[#979BA5] ml-[8px]">
-              {{ $t('manualNode.tips.desiredSize', [maxCount]) }}
-            </span>
+            <i18n path="manualNode.tips.desiredSize" tag="span" class="text-[#979BA5] ml-[8px]">
+              <span place="remaining" class="text-[#313238]">{{ nodesCounts.maxCount }}</span>
+              <span place="maxSize">{{ nodesCounts.maxSize }}</span>
+              <span place="used">{{ nodesCounts.desiredSize }}</span>
+              <span place="total">{{ nodesCounts.total }}</span>
+            </i18n>
           </bk-form-item>
         </template>
       </FormGroup>
@@ -189,7 +194,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onBeforeMount, ref } from 'vue';
+import { computed, defineComponent, onBeforeMount, PropType, ref } from 'vue';
 
 import TemplateSelector from '../components/template-selector.vue';
 
@@ -214,6 +219,14 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    source: {
+      type: String as PropType<'nodePool' | 'ip'>,
+      default: '',
+    },
+    nodePool: {
+      type: String,
+      default: '',
+    },
   },
   setup(props) {
     const tableKey = ref('');
@@ -232,7 +245,7 @@ export default defineComponent({
       desiredSize: [{
         message: $i18n.t('generic.validate.required'),
         trigger: 'blur',
-        validator: () => desiredSize.value > 0,
+        validator: () => !!desiredSize.value,
       }],
     });
     const curCluster = computed<ICluster>(() => ($store.state as any).cluster.clusterList
@@ -314,9 +327,20 @@ export default defineComponent({
     };
 
     // nodeGroups
-    const nodePoolID = ref('');
-    const desiredSize = ref(1);
-    const nodeSource = ref<'nodePool'|'ip'>(isImportCluster.value ? 'nodePool' : 'ip');
+    const nodePoolID = ref(props.nodePool);
+    const desiredSize = ref(0);
+    const nodeSource = ref<'nodePool'|'ip'>('ip');
+    const setDefaultNodeSource = () => {
+      if (isImportCluster.value) {
+        nodeSource.value = 'nodePool';
+      } else if (props.source) {
+        nodeSource.value = props.source;
+      } else if (curCluster.value.provider === 'tencentPublicCloud') {
+        nodeSource.value = 'nodePool';
+      } else {
+        nodeSource.value = 'ip';
+      }
+    };
     const handleNodeSourceChange = (value: 'nodePool'|'ip') => {
       if (value === 'nodePool') {
         handleGetNodeGroupList();
@@ -343,10 +367,15 @@ export default defineComponent({
       return groupData;
     });
     // 最大可添加节点数量
-    const maxCount = computed(() => {
+    const nodesCounts = computed(() => {
       const maxSize = curNodePool.value?.autoScaling?.maxSize || 0;
       const desiredSize = curNodePool.value?.autoScaling?.desiredSize || 0;
-      return maxSize - desiredSize;
+      return {
+        maxCount: maxSize - desiredSize,
+        maxSize,
+        desiredSize,
+        total: 1000,
+      };
     });
     const nodeGroupLoading = ref(false);
     const handleGetNodeGroupList = async () => {
@@ -370,7 +399,7 @@ export default defineComponent({
       const autoscalerData = await $store.dispatch('clustermanager/clusterAutoScaling', {
         $clusterId: props.clusterId,
         provider: _INTERNAL_.value ? 'selfProvisionCloud' : '',
-      });
+      }).catch(() => {});
       saving.value = false;
       if (!autoscalerData.module?.scaleOutModuleID || !autoscalerData.module?.scaleOutBizID) {
         $bkInfo({
@@ -402,7 +431,7 @@ export default defineComponent({
               desiredNode: Number(desiredSize.value) + Number(curNodePool.value?.autoScaling?.desiredSize || 0),
               manual: true,
               operator: user.value.username,
-            });
+            }).catch(() => false);
             saving.value = false;
             if (result) {
               $bkMessage({
@@ -444,6 +473,7 @@ export default defineComponent({
     };
 
     onBeforeMount(() => {
+      setDefaultNodeSource();
       if (nodeSource.value === 'nodePool') {
         handleGetNodeGroupList();
       }
@@ -467,7 +497,7 @@ export default defineComponent({
       nodePoolID,
       nodeGroupData,
       nodeGroupLoading,
-      maxCount,
+      nodesCounts,
       desiredSize,
       handleNodeSourceChange,
       handleRemoveIp,

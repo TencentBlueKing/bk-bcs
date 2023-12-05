@@ -17,7 +17,7 @@
       <bcs-option id="50" name="50"></bcs-option>
       <bcs-option id="100" name="100"></bcs-option>
     </bcs-select>
-    <span class="company">GB</span>
+    <span class="suffix ml-[-1px]">GB</span>
   </div>
 </template>
 <script setup lang="ts">
@@ -51,3 +51,32 @@ watch(systemDisk, () => {
   emits('change', systemDisk.value);
 });
 </script>
+<style lang="postcss" scoped>
+>>> .prefix {
+  display: inline-block;
+  height: 32px;
+  line-height: 32px;
+  background: #F0F1F5;
+  border: 1px solid #C4C6CC;
+  border-radius: 2px 0 0 2px;
+  padding: 0 8px;
+  font-size: 12px;
+  &.disabled {
+    border-color: #dcdee5;
+  }
+}
+.suffix{
+  font-size: 12px;
+  display: inline-block;
+  min-width: 30px;
+  padding: 0 4px 0 4px;
+  height: 32px;
+  border: 1px solid #C4C6CC;
+  text-align: center;
+  border-left: none;
+  background-color: #fafbfd;
+  &.disabled {
+    border-color: #dcdee5;
+  }
+}
+</style>
