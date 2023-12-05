@@ -21,6 +21,7 @@
       />
     </div>
     <Scripts
+      v-if="isFileType"
       :base-version-id="props.baseVersionId"
       :current-version-id="props.currentVersionId"
       :actived="selectedType === 'script'"
@@ -41,7 +42,7 @@ import Scripts from './scripts.vue';
 
 const serviceStore = storeToRefs(useServiceStore());
 
-const { appData } = serviceStore;
+const { appData, isFileType } = serviceStore;
 
 const props = defineProps<{
   baseVersionId: number;

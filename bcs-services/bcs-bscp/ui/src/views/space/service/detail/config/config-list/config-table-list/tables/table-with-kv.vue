@@ -23,7 +23,7 @@
           </bk-button>
         </template>
       </bk-table-column>
-      <bk-table-column label="配置项预览" prop="spec.value"></bk-table-column>
+      <bk-table-column label="配置项值预览" prop="spec.value"></bk-table-column>
       <bk-table-column label="配置项格式" prop="spec.kv_type"></bk-table-column>
       <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
       <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
