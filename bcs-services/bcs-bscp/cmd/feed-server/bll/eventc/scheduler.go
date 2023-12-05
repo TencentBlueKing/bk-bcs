@@ -263,10 +263,10 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 		Uid:    inst.Uid,
 		Labels: inst.Labels,
 	}
-	releaseID, err := sch.handler.GetMatchedRelease(kt, meta)
-	if err != nil {
+	releaseID, e := sch.handler.GetMatchedRelease(kt, meta)
+	if e != nil {
 		sch.retry.Add(cursorID, one)
-		logs.Errorf("get %s [sn: %d] matched strategy failed, err: %v, rid: %s", inst.Format(), one.sn, err, kt.Rid)
+		logs.Errorf("get %s [sn: %d] matched strategy failed, err: %v, rid: %s", inst.Format(), one.sn, e, kt.Rid)
 		return
 	}
 
@@ -274,8 +274,6 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 
 	switch inst.ConfigType {
 	case table.KV:
-		sch.lc.ReleasedKv.Get(kt, inst.BizID, releaseID)
-
 		kvList, err := sch.lc.ReleasedKv.Get(kt, inst.BizID, releaseID)
 		if err != nil {
 			logs.Errorf("get %s [sn: %d] released[%d] Kv failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
@@ -309,7 +307,7 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 		event = sch.buildEvent(inst, ciList, preHook, postHook, releaseID, cursorID)
 
 	default:
-		logs.Errorf("Unsupported application type (%s), rid: %s", inst.Format(), err, kt.Rid)
+		logs.Errorf("Unsupported application type (%s), rid: %s", inst.Format(), kt.Rid)
 		return
 	}
 
