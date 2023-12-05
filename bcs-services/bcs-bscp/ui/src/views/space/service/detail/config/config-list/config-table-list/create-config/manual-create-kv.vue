@@ -1,7 +1,7 @@
 <template>
   <bk-sideslider
     width="640"
-    title="新增配置文件"
+    title="新增配置项"
     :is-show="props.show"
     :before-close="handleBeforeClose"
     @closed="close"
@@ -11,7 +11,6 @@
       class="config-form-wrapper"
       :config="configForm"
       :content="content"
-      :editable="true"
       :bk-biz-id="props.bkBizId"
       :id="props.appId"
       @change="handleFormChange"

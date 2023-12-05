@@ -4,7 +4,7 @@
       <div class="editor-title">
         <div class="tips">
           <InfoLine class="info-icon" />
-          仅支持大小不超过 5M
+          仅支持大小不超过 1M
         </div>
         <div class="btns">
           <i

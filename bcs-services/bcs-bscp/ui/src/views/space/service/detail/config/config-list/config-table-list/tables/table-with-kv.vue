@@ -6,10 +6,11 @@
       :data="configList"
       :remote-pagination="true"
       :pagination="pagination"
+      show-overflow-tooltip
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh($event)"
     >
-      <bk-table-column label="配置文件名称" prop="spec.key" :sort="true" :min-width="240" show-overflow-tooltip>
+      <bk-table-column label="配置项名称" prop="spec.key" :sort="true" :min-width="240">
         <template #default="{ row }">
           <bk-button
             v-if="row.spec"
@@ -22,8 +23,8 @@
           </bk-button>
         </template>
       </bk-table-column>
-      <bk-table-column label="配置预览" prop="spec.value" show-overflow-tooltip></bk-table-column>
-      <bk-table-column label="配置文件格式" prop="spec.kv_type"></bk-table-column>
+      <bk-table-column label="配置项预览" prop="spec.value"></bk-table-column>
+      <bk-table-column label="配置项格式" prop="spec.kv_type"></bk-table-column>
       <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
       <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
       <bk-table-column label="修改时间" :sort="true" :width="220">
@@ -71,6 +72,7 @@
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     :editable="editable"
+    :view="!editable"
     @confirm="getListData"
   />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config-kv="diffConfig" />
@@ -183,7 +185,7 @@ const handleDiff = (config: IConfigKvType) => {
 
 const handleDel = (config: IConfigKvType) => {
   InfoBox({
-    title: `确认是否删除配置文件【${config.spec.key}】?`,
+    title: `确认是否删除配置项【${config.spec.key}】?`,
     infoType: 'danger',
     headerAlign: 'center' as const,
     footerAlign: 'center' as const,

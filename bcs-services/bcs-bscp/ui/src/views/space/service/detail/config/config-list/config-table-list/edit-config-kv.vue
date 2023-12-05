@@ -14,6 +14,7 @@
         :config="(configForm as IConfigKVItem)"
         :content="content"
         :editable="editable"
+        :view="view"
         :bk-biz-id="props.bkBizId"
         :id="props.appId"
         @change="handleChange"
@@ -43,6 +44,7 @@ const props = defineProps<{
   config: IConfigKVItem;
   show: boolean;
   editable: boolean;
+  view: boolean
 }>();
 
 const emits = defineEmits(['update:show', 'confirm']);
