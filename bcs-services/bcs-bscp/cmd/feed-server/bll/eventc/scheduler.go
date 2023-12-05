@@ -283,17 +283,10 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 			sch.retry.Add(cursorID, one)
 			return
 		}
-		preHook, postHook, err := sch.lc.ReleasedHook.Get(kt, inst.BizID, releaseID)
-		if err != nil {
-			logs.Errorf("get %s [sn: %d] released[%d] hook failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
-				kt.Rid)
-			sch.retry.Add(cursorID, one)
-			return
-		}
 		if len(kvList) == 0 {
 			return
 		}
-		event = sch.buildEventForRkv(inst, kvList, preHook, postHook, releaseID, cursorID)
+		event = sch.buildEventForRkv(inst, kvList, releaseID, cursorID)
 
 	case table.File:
 		ciList, err := sch.lc.ReleasedCI.Get(kt, inst.BizID, releaseID)
@@ -423,9 +416,9 @@ func (sch *Scheduler) watchRetry() {
 
 }
 
-func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.ReleaseKvCache,
-	pre *types.ReleasedHookCache, post *types.ReleasedHookCache, releaseID uint32, cursorID uint32) *Event {
-	uriD := sch.provider.URIDecorator(inst.BizID)
+func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.ReleaseKvCache, releaseID uint32,
+	cursorID uint32) *Event {
+
 	kvMeta := make([]*sfs.KvMetaV1, len(kvList))
 	for idx, one := range kvList {
 		kvMeta[idx] = &sfs.KvMetaV1{
@@ -436,20 +429,6 @@ func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.R
 				AppId: one.Attachment.AppID,
 			},
 		}
-
-	}
-	var preHook, postHook *pbhook.HookSpec
-	if pre != nil {
-		preHook = &pbhook.HookSpec{
-			Type:    pre.Type.String(),
-			Content: pre.Content,
-		}
-	}
-	if post != nil {
-		postHook = &pbhook.HookSpec{
-			Type:    post.Type.String(),
-			Content: post.Content,
-		}
 	}
 
 	return &Event{
@@ -458,12 +437,6 @@ func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.R
 			AppID:     inst.AppID,
 			ReleaseID: releaseID,
 			KvMetas:   kvMeta,
-			Repository: &sfs.RepositoryV1{
-				Root: uriD.Root(),
-				Url:  uriD.Url(),
-			},
-			PreHook:  preHook,
-			PostHook: postHook,
 		},
 		Instance: inst,
 		CursorID: cursorID,

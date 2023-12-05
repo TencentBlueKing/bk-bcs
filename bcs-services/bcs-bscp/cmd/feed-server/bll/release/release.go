@@ -150,27 +150,10 @@ func (rs *ReleasedService) ListAppLatestReleaseKvMeta(kt *kit.Kit, opts *types.A
 		return nil, err
 	}
 
-	pre, post, err := rs.cache.ReleasedHook.Get(kt, opts.BizID, releaseID)
-	if err != nil {
-		return nil, err
-	}
-
 	meta := &types.AppLatestReleaseKvMeta{
 		ReleaseId: releaseID,
 	}
 
-	if pre != nil {
-		meta.PreHook = &pbhook.HookSpec{
-			Type:    pre.Type.String(),
-			Content: pre.Content,
-		}
-	}
-	if post != nil {
-		meta.PostHook = &pbhook.HookSpec{
-			Type:    post.Type.String(),
-			Content: post.Content,
-		}
-	}
 	kvList := make([]*types.ReleasedKvMeta, len(rkv))
 	for idx, one := range rkv {
 

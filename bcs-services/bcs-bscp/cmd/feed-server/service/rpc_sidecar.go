@@ -383,8 +383,6 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 	resp := &pbfs.PullKvMetaResp{
 		ReleaseId: metas.ReleaseId,
 		KvMetas:   kvMetas,
-		PreHook:   metas.PreHook,
-		PostHook:  metas.PostHook,
 	}
 
 	return resp, nil

@@ -43,14 +43,14 @@ func (rs *ReleasedService) GetMatchedRelease(kt *kit.Kit, meta *types.AppInstanc
 	case table.File:
 	case table.KV:
 	default:
-		// only support file app
-		return 0, errf.New(errf.InvalidParameter, "app's configure type is not file")
+		return 0, errf.New(errf.InvalidParameter, "only supports File and KV configuration types.")
 	}
 
 	switch am.Mode {
 	case table.Namespace:
 		if len(meta.Namespace) == 0 {
-			return 0, errf.New(errf.InvalidParameter, "app works at namespace mode, but request namespace is empty")
+			return 0, errf.New(errf.InvalidParameter, "app works at namespace mode, "+
+				"but request namespace is empty")
 		}
 	case table.Normal:
 		if len(meta.Namespace) != 0 {

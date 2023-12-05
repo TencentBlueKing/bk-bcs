@@ -123,12 +123,11 @@ func (s SideWatchPayload) Validate() error {
 
 // SideAppMeta defines an app's metadata within the sidecar.
 type SideAppMeta struct {
-	AppID      uint32            `json:"appID"`
-	App        string            `json:"app"`
-	Namespace  string            `json:"namespace"`
-	ConfigType table.ConfigType  `json:"config_type"`
-	Uid        string            `json:"uid"`
-	Labels     map[string]string `json:"labels"`
+	AppID     uint32            `json:"appID"`
+	App       string            `json:"app"`
+	Namespace string            `json:"namespace"`
+	Uid       string            `json:"uid"`
+	Labels    map[string]string `json:"labels"`
 	// CurrentReleaseID is sidecar's current effected release id.
 	CurrentReleaseID uint32 `json:"currentReleaseID"`
 	// sidecar's current cursor id
@@ -149,10 +148,6 @@ func (s SideAppMeta) Validate() error {
 
 	if err := validator.ValidateUid(s.Uid); err != nil {
 		return fmt.Errorf("invalid sidecar's app uid, err: %v", err)
-	}
-
-	if err := s.ConfigType.Validate(); err != nil {
-		return fmt.Errorf("invalid sidecar's app config_type, err: %v", err)
 	}
 
 	return nil

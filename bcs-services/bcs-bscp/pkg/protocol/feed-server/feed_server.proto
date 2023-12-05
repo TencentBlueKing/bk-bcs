@@ -152,8 +152,6 @@ message PullKvMetaReq {
 message PullKvMetaResp {
     uint32 release_id = 1;
     repeated KvMeta kv_metas = 3;
-    pbhook.HookSpec pre_hook = 4;
-    pbhook.HookSpec post_hook = 5;
 }
 
 message KvMeta {
