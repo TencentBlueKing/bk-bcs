@@ -270,7 +270,7 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 		return
 	}
 
-	event := new(Event)
+	event := new(Event) //nolint:ineffassign
 
 	switch inst.ConfigType {
 	case table.KV:
