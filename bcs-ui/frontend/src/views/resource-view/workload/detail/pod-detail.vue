@@ -111,6 +111,8 @@
                 <StatusIcon :status="row.status"></StatusIcon>
               </template>
             </bk-table-column>
+            <bk-table-column :label="$t('container.label.startedAt')" prop="startedAt"></bk-table-column>
+            <bk-table-column :label="$t('container.label.restartCnt')" prop="restartCnt"></bk-table-column>
             <bk-table-column :label="$t('k8s.image')" prop="image"></bk-table-column>
             <bk-table-column
               :label="$t('generic.label.action')"

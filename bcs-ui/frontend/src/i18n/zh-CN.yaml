@@ -89,6 +89,10 @@ k8s:
     partition: 分区滚动更新
     podManagementPolicy: Pod 管理策略
   containerNetwork: 容器网络分配
+  deploy:
+    readyTips: >-
+      Pod实例Ready需要具备以下两个条件<br/>1. Pod中所有容器都已就绪<br/>2. Readiness Gates中所有状况都为
+      True 值
 nav:
   dashboard: 资源视图
   namespace: 命名空间
@@ -2712,3 +2716,11 @@ tkeCa:
       self: 自建资源池
 provider:
   tencentPublicCloud: 腾讯云公有云
+container:
+  label:
+    restartCnt: 重启次数
+    startedAt: 启动时间
+    lastState: 最后一次退出状态
+    finishedAt: 退出时间
+    exitCode: 退出码
+    reason: 原因
