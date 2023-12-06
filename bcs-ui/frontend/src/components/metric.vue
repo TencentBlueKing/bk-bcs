@@ -27,13 +27,13 @@
 <script lang="ts">
 import moment from 'moment';
 import { computed, defineComponent, onMounted, PropType, reactive, ref, toRef, toRefs, watch } from 'vue';
-import ECharts from 'vue-echarts/components/ECharts.vue';
 
 import defaultChartOption from '../views/resource-view/common/default-echarts-option';
 
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
+import ECharts from '@/components/echarts.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';

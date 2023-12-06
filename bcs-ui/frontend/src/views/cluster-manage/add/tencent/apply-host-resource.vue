@@ -421,7 +421,7 @@ const refreshSecurityGroups = () => {
 <style scoped lang="postcss">
 .node-config-label {
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
   width: 90px;
   margin-right: 4px;
   &::after {

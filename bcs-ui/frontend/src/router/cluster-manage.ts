@@ -139,7 +139,7 @@ export default [
     props: true,
     component: ClusterNodeOverview,
     meta: {
-      menuId: 'NODE',
+      menuId: 'CLUSTER',
       hideMenu: true,
     },
   },
@@ -150,7 +150,7 @@ export default [
     props: route => ({ ...route.params, kind: route.query.kind, crd: route.query.crd }),
     component: PodDetail,
     meta: {
-      menuId: 'NODE',
+      menuId: 'CLUSTER',
       hideMenu: true,
     },
   },
