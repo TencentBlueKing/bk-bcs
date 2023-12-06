@@ -16,13 +16,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbkv "bscp.io/pkg/protocol/core/kv"
+	pbrkv "bscp.io/pkg/protocol/core/released-kv"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/types"
 )
@@ -93,7 +96,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 	if err != nil {
 		return nil, fmt.Errorf("get app fail,err : %v", req.Spec.Key)
 	}
-	if checkKVTypeMatch(table.DataType(req.Spec.KvType), app.Spec.DataType) {
+	if !checkKVTypeMatch(table.DataType(req.Spec.KvType), app.Spec.DataType) {
 		return nil, fmt.Errorf("kv type does not match the data type defined in the application")
 	}
 
@@ -154,6 +157,14 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,
 	}
+	if len(req.KvType) > 0 {
+		ids, err := s.checkListKvType(kt, req)
+		if err != nil {
+			return nil, err
+		}
+		opt.KvType = true
+		opt.IDs = ids
+	}
 	if err := opt.Validate(po); err != nil {
 		return nil, err
 	}
@@ -164,15 +175,27 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 	}
 
 	var kvs []*pbkv.Kv
+	var kvReleased []*table.ReleasedKv
 
-	for _, detail := range details {
-		kvType, value, e := s.getKv(kt, req.BizId, req.AppId, detail.Spec.Version, detail.Spec.Key)
-		if e != nil {
-			logs.Errorf("list kv failed, err: %v, rid: %s", e, kt.Rid)
-			return nil, e
+	if req.WithStatus {
+		kvReleased, err = s.dao.ReleasedKv().GetReleasedLately(kt, req.BizId, req.AppId)
+		if err != nil {
+			logs.Errorf("get released rkv failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
 		}
-		kvs = append(kvs, pbkv.PbKv(detail, kvType, value))
+		kvs = pbrkv.PbKvState(details, kvReleased)
+	} else {
+		for _, kv := range details {
+			kvs = append(kvs, pbkv.PbKv(kv, "", "", ""))
+		}
 	}
+
+	kvs, err = s.setKvTypeAndValue(kt, details, kvs, kvReleased)
+	if err != nil {
+		return nil, err
+	}
+
+	kvs = sortKvs(kvs)
 
 	resp := &pbds.ListKvsResp{
 		Count:   uint32(count),
@@ -180,6 +203,99 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 	}
 	return resp, nil
 
+}
+
+func (s *Service) checkListKvType(kt *kit.Kit, req *pbds.ListKvsReq) ([]uint32, error) {
+	if len(req.KvType) == 0 {
+		return nil, nil
+	}
+
+	typeMap := make(map[string]string, len(req.KvType))
+	for _, one := range req.KvType {
+		typeMap[one] = one
+	}
+
+	allKv, err := s.dao.Kv().ListAllByAppID(kt, req.AppId, req.BizId)
+	if err != nil {
+		return nil, err
+	}
+	var ids []uint32
+	for _, kv := range allKv {
+		kyType, _, err := s.getKv(kt, req.BizId, req.AppId, kv.Spec.Version, kv.Spec.Key)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, ok := typeMap[string(kyType)]; ok {
+			ids = append(ids, kv.ID)
+		}
+	}
+	return ids, nil
+}
+
+func (s *Service) setKvTypeAndValue(kt *kit.Kit, details []*table.Kv, kvs []*pbkv.Kv,
+	kvRelease []*table.ReleasedKv) ([]*pbkv.Kv, error) {
+
+	kvMap := make(map[string]*table.Kv, len(details))
+	for _, detail := range details {
+		kvMap[detail.Spec.Key] = detail
+	}
+	releaseMap := make(map[string]*table.ReleasedKv, len(kvRelease))
+	for _, release := range kvRelease {
+		releaseMap[release.Spec.Key] = release
+	}
+
+	for _, one := range kvs {
+
+		if one.KvState == constant.KvStateDelete {
+
+			rkv, ok := releaseMap[one.Spec.Key]
+			if !ok {
+				return nil, errors.New("")
+			}
+			kvType, kvValue, err := s.getReleasedKv(kt, one.Attachment.BizId, one.Attachment.AppId, rkv.Spec.Version, rkv.ReleaseID, rkv.Spec.Key)
+			if err != nil {
+				return nil, err
+			}
+			one.Spec.KvType = string(kvType)
+			one.Spec.Value = kvValue
+		} else {
+			kv, ok := kvMap[one.Spec.Key]
+			if !ok {
+				return nil, errors.New("")
+			}
+			kvType, kvValue, err := s.getKv(kt, one.Attachment.BizId, one.Attachment.AppId, kv.Spec.Version, kv.Spec.Key)
+			if err != nil {
+				return nil, err
+			}
+
+			one.Spec.KvType = string(kvType)
+			one.Spec.Value = kvValue
+		}
+
+	}
+
+	return kvs, nil
+
+}
+
+func sortKvs(vars []*pbkv.Kv) []*pbkv.Kv {
+	// Define a custom sorting function that sorts by the name field in ascending order.
+	sortByName := func(i, j int) bool {
+		return vars[i].Spec.Key < vars[j].Spec.Key
+	}
+	sort.Slice(vars, sortByName)
+
+	// put the variables whose value is empty in front
+	var varsNoVal, varWithVal []*pbkv.Kv
+	for _, v := range vars {
+		if v.Spec.Key == "" {
+			varsNoVal = append(varsNoVal, v)
+		} else {
+			varWithVal = append(varWithVal, v)
+		}
+	}
+	return append(varsNoVal, varWithVal...)
 }
 
 // DeleteKv is used to delete key-value data.
@@ -385,4 +501,63 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 	}
 
 	return toUpdate, toCreate, nil
+}
+
+func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbbase.EmptyResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
+	if err != nil {
+		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
+	}
+
+	tx := s.dao.GenQuery().Begin()
+
+	rkv, err := s.dao.ReleasedKv().GetReleasedLatelyByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
+	if err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	kvType, kvValue, err := s.getReleasedKv(kt, req.Attachment.BizId, req.Attachment.AppId, rkv.Spec.Version, rkv.ReleaseID, req.Spec.Key)
+	if err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	opt := &types.UpsertKvOption{
+		BizID:  req.Attachment.BizId,
+		AppID:  req.Attachment.AppId,
+		Key:    req.Spec.Key,
+		Value:  kvValue,
+		KvType: kvType,
+	}
+
+	v, err := s.vault.UpsertKv(kt, opt)
+	if err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+	kv.Spec.Version = uint32(v)
+
+	if e := s.dao.Kv().UpdateWithTx(kt, tx, kv); e != nil {
+		logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
+	}
+
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
+	}
+
+	return new(pbbase.EmptyResp), nil
+
 }

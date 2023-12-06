@@ -157,6 +157,7 @@ const (
 	Data_ListKvs_FullMethodName                           = "/pbds.Data/ListKvs"
 	Data_DeleteKv_FullMethodName                          = "/pbds.Data/DeleteKv"
 	Data_BatchUpsertKvs_FullMethodName                    = "/pbds.Data/BatchUpsertKvs"
+	Data_UnDeleteKv_FullMethodName                        = "/pbds.Data/UnDeleteKv"
 	Data_ListInstances_FullMethodName                     = "/pbds.Data/ListInstances"
 	Data_FetchInstanceInfo_FullMethodName                 = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
@@ -318,6 +319,7 @@ type DataClient interface {
 	ListKvs(ctx context.Context, in *ListKvsReq, opts ...grpc.CallOption) (*ListKvsResp, error)
 	DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
 	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
@@ -1485,6 +1487,15 @@ func (c *dataClient) BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, 
 	return out, nil
 }
 
+func (c *dataClient) UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UnDeleteKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error) {
 	out := new(ListInstancesResp)
 	err := c.cc.Invoke(ctx, Data_ListInstances_FullMethodName, in, out, opts...)
@@ -1668,6 +1679,7 @@ type DataServer interface {
 	ListKvs(context.Context, *ListKvsReq) (*ListKvsResp, error)
 	DeleteKv(context.Context, *DeleteKvReq) (*base.EmptyResp, error)
 	BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*base.EmptyResp, error)
+	UnDeleteKv(context.Context, *UnDeleteKvReq) (*base.EmptyResp, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
 	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
@@ -2062,6 +2074,9 @@ func (UnimplementedDataServer) DeleteKv(context.Context, *DeleteKvReq) (*base.Em
 }
 func (UnimplementedDataServer) BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertKvs not implemented")
+}
+func (UnimplementedDataServer) UnDeleteKv(context.Context, *UnDeleteKvReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteKv not implemented")
 }
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
@@ -4388,6 +4403,24 @@ func _Data_BatchUpsertKvs_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_UnDeleteKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnDeleteKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UnDeleteKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UnDeleteKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UnDeleteKv(ctx, req.(*UnDeleteKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListInstancesReq)
 	if err := dec(in); err != nil {
@@ -4960,6 +4993,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BatchUpsertKvs",
 			Handler:    _Data_BatchUpsertKvs_Handler,
+		},
+		{
+			MethodName: "UnDeleteKv",
+			Handler:    _Data_UnDeleteKv_Handler,
 		},
 		{
 			MethodName: "ListInstances",

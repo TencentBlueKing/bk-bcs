@@ -219,6 +219,7 @@ service Data {
     rpc ListKvs(ListKvsReq) returns (ListKvsResp) {};
     rpc DeleteKv(DeleteKvReq) returns (pbbase.EmptyResp) {};
     rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (pbbase.EmptyResp) {};
+    rpc UnDeleteKv(UnDeleteKvReq) returns (pbbase.EmptyResp) {};
 
     // used iam pull resource callback.
     rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {}
@@ -1517,7 +1518,11 @@ message ListKvsReq {
     uint32 start           = 4;
     uint32 limit           = 5;
     bool   all             = 6;
-    string searchKey       = 7;
+    string search_key       = 7;
+    bool   with_status       = 8;
+    string search_fields     = 9;
+    string search_value      = 10;
+    repeated string kv_type  = 11;
 }
 
 message ListKvsResp {
@@ -1541,3 +1546,10 @@ message DeleteKvReq {
     repeated Kv         kvs         = 3;
     bool                replace_all = 4;
 }
+
+message UnDeleteKvReq {
+    uint32                        id         = 1;
+    pbkv.KvSpec                   spec       = 2;
+    pbkv.KvAttachment             attachment = 3;
+}
+
