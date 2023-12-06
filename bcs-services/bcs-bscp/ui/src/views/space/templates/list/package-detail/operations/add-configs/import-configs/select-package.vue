@@ -35,7 +35,7 @@
         <bk-table-column label="模板套餐" prop="template_set_name"></bk-table-column>
         <bk-table-column label="使用此套餐的服务">
           <template #default="{ row }">
-            <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
+            <div v-if="row.app_id" class="app-info" @click="goToConfigPage(row.app_id)">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
               <LinkToApp class="link-icon" :id="row.app_id" />
             </div>
@@ -158,11 +158,10 @@ const close = () => {
   emits('update:show', false);
 };
 
-const goToConfigPageImport = (id: number) => {
+const goToConfigPage = (id: number) => {
   const { href } = router.resolve({
     name: 'service-config',
     params: { appId: id },
-    query: { pkg_id: currentTemplateSpace.value },
   });
   window.open(href, '_blank');
 };
