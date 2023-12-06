@@ -136,7 +136,6 @@
           :show-condition="false"
           :show-popover-tag-change="false"
           :placeholder="$t('cluster.nodeList.placeholder.searchNode')"
-          selected-style="checkbox"
           default-focus
           v-model="searchSelectValue"
           @change="searchSelectChange"
@@ -705,10 +704,7 @@ export default defineComponent({
     };
     // 表格表头搜索项配置
     const filtersDataSource = computed(() => ({
-      status: Object.keys(nodeStatusMap).map(key => ({
-        text: nodeStatusMap[key],
-        value: key.toUpperCase(),
-      })),
+      status: status.value,
       nodeSource: [
         {
           text: $i18n.t('cluster.nodeList.label.source.add'),
@@ -740,10 +736,7 @@ export default defineComponent({
         name: $i18n.t('generic.label.status'),
         id: 'status',
         multiable: true,
-        children: Object.keys(nodeStatusMap).map(key => ({
-          id: key.toUpperCase(),
-          name: nodeStatusMap[key],
-        })),
+        children: status.value,
       },
       {
         name: $i18n.t('cluster.ca.nodePool.create.az.title'),
@@ -980,6 +973,18 @@ export default defineComponent({
     // 全量表格数据
     const tableData = ref<any[]>([]);
 
+    // 状态
+    const status = computed(() => tableData.value.reduce((pre, item) => {
+      if (!pre.find(data => data.id === item.status)) {
+        pre.push({
+          id: item.status,
+          name: nodeStatusMap[item.status?.toLocaleLowerCase()] || item.status,
+          text: nodeStatusMap[item.status?.toLocaleLowerCase()] || item.status,
+          value: item.status,
+        });
+      }
+      return pre;
+    }, []));
     // 节点池
     const nodeGroupList = computed(() => tableData.value.reduce<any[]>((pre, item) => {
       if (item.nodeGroupID && pre.every(data => data.id !== item.nodeGroupID)) {

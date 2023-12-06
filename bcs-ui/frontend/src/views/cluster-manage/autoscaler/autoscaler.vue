@@ -1269,6 +1269,7 @@ export default defineComponent({
     const handleNodeManageCancel = () => {
       currentOperateRow.value = {};
       nodeList.value = [];
+      handleClearSelection();
       stopNodeInterval();
       // 刷新节点规格
       handleGetNodePoolList();
