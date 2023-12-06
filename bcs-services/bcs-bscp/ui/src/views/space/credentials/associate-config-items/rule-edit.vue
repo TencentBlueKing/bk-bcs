@@ -145,6 +145,15 @@ const updateRuleParams = () => {
   });
   emits('change', params);
 };
+
+const handleRuleValidate = () => {
+  localRules.value.forEach((item) => {
+    item.isRight = testRule(item.content);
+  });
+  return localRules.value.some(item => !item.isRight);
+};
+
+defineExpose({ handleRuleValidate });
 </script>
 <style lang="scss" scoped>
 .title {
