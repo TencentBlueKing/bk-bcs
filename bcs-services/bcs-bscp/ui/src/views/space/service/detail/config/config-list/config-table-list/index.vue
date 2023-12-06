@@ -57,7 +57,6 @@
         :app-id="props.appId"
         :search-str="searchStr"
         @clear-str="clearStr"
-        @delete-config="refreshVariable"
       />
     </section>
   </section>

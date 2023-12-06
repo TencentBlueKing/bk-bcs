@@ -24,7 +24,7 @@
         </div>
       </bk-form-item>
       <bk-form-item label="上线说明" property="memo">
-        <bk-input v-model="localVal.memo" type="textarea" :maxlength="100" :resize="true"></bk-input>
+        <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :resize="true"></bk-input>
       </bk-form-item>
     </bk-form>
     <template #footer>
@@ -68,8 +68,8 @@ const formRef = ref();
 const rules = {
   memo: [
     {
-      validator: (value: string) => value.length <= 100,
-      message: '最大长度100个字符',
+      validator: (value: string) => value.length <= 200,
+      message: '最大长度200个字符',
     },
   ],
 };
