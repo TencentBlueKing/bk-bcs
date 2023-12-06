@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -143,8 +144,8 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbds.ListTemplatesReq)
 	if err != nil {
 		return nil, err
 	}
-
-	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, searcher, opt)
+	topIds, _ := tools.StrToUint32Slice(req.Ids)
+	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, searcher, opt, topIds)
 
 	if err != nil {
 		logs.Errorf("list templates failed, err: %v, rid: %s", err, kt.Rid)
@@ -603,7 +604,7 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 
 // ListTmplsOfTmplSet list templates of template set.
 // 获取到该套餐的template_ids字段，根据这批ID获取对应的详情，做逻辑分页和搜索
-func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfTmplSetReq) (
+func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfTmplSetReq) ( // nolint
 	*pbds.ListTmplsOfTmplSetResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -622,7 +623,6 @@ func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfT
 		logs.Errorf("list templates of template set failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-
 	templates, err := s.dao.Template().ListByIDs(kt, templateSets[0].Spec.TemplateIDs)
 	if err != nil {
 		logs.Errorf("list templates of template set failed, err: %v, rid: %s", err, kt.Rid)
@@ -653,6 +653,26 @@ func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfT
 		}
 		details = newDetails
 	}
+	topId, _ := tools.StrToUint32Slice(req.Ids)
+	sort.SliceStable(details, func(i, j int) bool {
+		// 检测模板id是否在topId中
+		iInTopID := tools.Contains(topId, details[i].Id)
+		jInTopID := tools.Contains(topId, details[j].Id)
+		// 两者都在则按照path+name排序
+		if iInTopID && jInTopID || len(topId) == 0 {
+			if details[i].GetSpec().GetPath() != details[j].GetSpec().GetPath() {
+				return details[i].GetSpec().GetPath() < details[j].GetSpec().GetPath()
+			}
+			return details[i].GetSpec().GetName() < details[j].GetSpec().GetName()
+		}
+		if iInTopID {
+			return true
+		}
+		if jInTopID {
+			return false
+		}
+		return i < j
+	})
 
 	// totalCnt is all data count
 	totalCnt := uint32(len(details))
