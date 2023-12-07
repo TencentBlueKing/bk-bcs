@@ -1265,6 +1265,9 @@ export default defineComponent({
       pageChange: nodePageChange,
       pageSizeChange: nodePageSizeChange,
     } = usePage(filterNodeList);
+    watch(searchIpData, () => {
+      nodePageChange(1);
+    });
     const showNodeManage = ref(false);
     const handleNodeManageCancel = () => {
       currentOperateRow.value = {};
