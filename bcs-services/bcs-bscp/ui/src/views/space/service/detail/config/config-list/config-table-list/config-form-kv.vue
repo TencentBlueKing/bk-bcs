@@ -3,7 +3,7 @@
     <bk-form-item label="配置项名称" property="key" :required="true">
       <bk-input v-model="localVal.key" :disabled="editable || view" @change="change" />
     </bk-form-item>
-    <bk-form-item label="数据类型" property="kv_type" :required="true">
+    <bk-form-item label="数据类型" property="kv_type" :required="true" :description="typeDescription">
       <bk-radio-group v-model="localVal.kv_type">
         <bk-radio
           v-for="kvType in CONFIG_KV_TYPE"
@@ -34,7 +34,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { CONFIG_KV_TYPE } from '../../../../../../../constants/config';
 import KvConfigContentEditor from '../../components/kv-config-content-editor.vue';
 import { IConfigKvEditParams } from '../../../../../../../../types/config';
@@ -64,6 +64,13 @@ const props = withDefaults(
 const formRef = ref();
 const localVal = ref({
   ...props.config,
+});
+
+const typeDescription = computed(() => {
+  if (appData.value.spec.data_type !== 'any' && !props.editable && !props.view) {
+    return `已限制该服务下所有配置项数据类型为${appData.value.spec.data_type}，如需其他数据类型，请调整服务属性下的数据类型`;
+  }
+  return '';
 });
 
 const rules = {

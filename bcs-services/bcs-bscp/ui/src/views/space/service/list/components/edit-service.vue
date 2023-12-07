@@ -8,16 +8,16 @@
     </template>
     <div class="service-edit-wrapper">
       <bk-form v-if="isViewMode" label-width="100">
-        <bk-form-item :label="t('服务名称')">{{ props.service.spec.name }}</bk-form-item>
-        <bk-form-item :label="t('服务别名')">{{ props.service.spec.alias }}</bk-form-item>
+        <bk-form-item :label="t('服务名称')">{{ serviceData.name }}</bk-form-item>
+        <bk-form-item :label="t('服务别名')">{{ serviceData.alias }}</bk-form-item>
         <bk-form-item :label="t('服务描述')">
-          {{ props.service.spec.memo || '--' }}
+          {{ serviceData.memo || '--' }}
         </bk-form-item>
         <bk-form-item :label="t('数据格式')">
-          {{ props.service.spec.config_type === 'file' ? '文件型' : '键值型' }}
+          {{ serviceData.config_type === 'file' ? '文件型' : '键值型' }}
         </bk-form-item>
-        <bk-form-item v-if="props.service.spec.config_type !== 'file'" :label="t('数据类型')">
-          {{ props.service.spec.data_type }}
+        <bk-form-item v-if="serviceData.config_type !== 'file'" :label="t('数据类型')">
+          {{ serviceData.data_type === 'any' ? '任意类型': serviceData.data_type}}
         </bk-form-item>
         <bk-form-item :label="t('创建者')">
           {{ props.service.revision.creator }}
@@ -66,7 +66,7 @@ const props = defineProps<{
   service: IAppItem;
 }>();
 
-const emits = defineEmits(['update:show']);
+const emits = defineEmits(['update:show', 'reload']);
 
 const isFormChange = ref(false);
 const isViewMode = ref(true);
@@ -140,8 +140,8 @@ const handleEditConfirm = async () => {
     const res = configList.details.some((config: IConfigKvType) => config.spec.kv_type !== serviceData.value.data_type);
     if (res) {
       InfoBox({
-        title: '指定类型与实际配置不匹配，无法修改',
-        subTitle: '如需修改，请先修改服务下配置的类型',
+        title: `调整服务数据类型${serviceData.value.data_type}失败`,
+        subTitle: `该服务下存在非${serviceData.value.data_type}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为${serviceData.value.data_type}`,
         dialogType: 'confirm',
         confirmText: '我知道了',
       });
@@ -155,6 +155,7 @@ const handleEditConfirm = async () => {
   };
 
   await updateApp({ id, biz_id, data });
+  emits('reload');
   isViewMode.value = true;
 };
 
