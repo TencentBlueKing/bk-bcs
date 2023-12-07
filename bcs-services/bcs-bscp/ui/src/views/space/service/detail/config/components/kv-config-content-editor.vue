@@ -4,7 +4,7 @@
       <div class="editor-title">
         <div class="tips">
           <InfoLine class="info-icon" />
-          仅支持大小不超过 1M
+          仅支持大小不超过 2M
         </div>
         <div v-if="editable" class="btns">
           <ReadFileContent

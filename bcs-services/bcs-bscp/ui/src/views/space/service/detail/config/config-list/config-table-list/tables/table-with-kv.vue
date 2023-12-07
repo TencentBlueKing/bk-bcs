@@ -71,7 +71,7 @@
   </bk-loading>
   <edit-config
     v-model:show="editPanelShow"
-    :config="activeConfig as IConfigKVItem"
+    :config="activeConfig as IConfigKvItem"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     :editable="editable"
@@ -96,7 +96,7 @@ import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../../store/config';
 import useServiceStore from '../../../../../../../../store/service';
 import { ICommonQuery } from '../../../../../../../../../types/index';
-import { IConfigKVItem, IConfigKvType } from '../../../../../../../../../types/config';
+import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
 import { getKvList, deleteKv, getReleaseKvList } from '../../../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../../../utils/index';
 import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
@@ -125,8 +125,8 @@ const configList = ref<IConfigKvType[]>([]);
 const configsCount = ref(0);
 const editPanelShow = ref(false);
 const editable = ref(false);
-const activeConfig = ref<IConfigKVItem>();
-const deleteConfig = ref<IConfigKVItem>();
+const activeConfig = ref<IConfigKvItem>();
+const deleteConfig = ref<IConfigKvItem>();
 const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
 const isSearchEmpty = ref(false);

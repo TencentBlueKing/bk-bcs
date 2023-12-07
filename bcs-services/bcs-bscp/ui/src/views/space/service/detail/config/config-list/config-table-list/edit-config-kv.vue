@@ -11,7 +11,7 @@
         ref="formRef"
         class="config-form-wrapper"
         v-model:fileUploading="fileUploading"
-        :config="(configForm as IConfigKVItem)"
+        :config="(configForm as IConfigKvItem)"
         :content="content"
         :editable="editable"
         :view="view"
@@ -35,13 +35,13 @@ import { ref, watch, computed } from 'vue';
 import { Message } from 'bkui-vue';
 import ConfigForm from './config-form-kv.vue';
 import { updateKv } from '../../../../../../../api/config';
-import { IConfigKVItem } from '../../../../../../../../types/config';
+import { IConfigKvItem } from '../../../../../../../../types/config';
 import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
 
 const props = defineProps<{
   bkBizId: string;
   appId: number;
-  config: IConfigKVItem;
+  config: IConfigKvItem;
   show: boolean;
   editable: boolean;
   view: boolean
@@ -49,7 +49,7 @@ const props = defineProps<{
 
 const emits = defineEmits(['update:show', 'confirm']);
 
-const configForm = ref<IConfigKVItem>();
+const configForm = ref<IConfigKvItem>();
 const content = ref('');
 const formRef = ref();
 const fileUploading = ref(false);
@@ -75,7 +75,7 @@ const handleBeforeClose = async () => {
   return true;
 };
 
-const handleChange = (data: IConfigKVItem) => {
+const handleChange = (data: IConfigKvItem) => {
   configForm.value = data;
   isFormChange.value = true;
 };
