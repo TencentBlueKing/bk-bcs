@@ -206,7 +206,8 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbcs.BatchUpsertKvsRe
 	return &pbcs.BatchUpsertKvsResp{}, nil
 }
 
-// UnDeleteKv reverses the deletion of a key-value pair by reverting the current kvType and value to the previous version.
+// UnDeleteKv reverses the deletion of a key-value pair by reverting the current kvType and value to the previous
+// version.
 func (s *Service) UnDeleteKv(ctx context.Context, req *pbcs.UnDeleteKvReq) (*pbcs.UnDeleteKvResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
