@@ -20,11 +20,14 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
+	"github.com/chonla/format"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
+	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -143,10 +146,9 @@ func getQueryURL(rawURL string) (string, error) {
 	return u.String(), nil
 }
 
-// QueryByPromQL unifyquery 查询, promql 语法
-// start, end, step 单位秒
-func QueryByPromQL(ctx context.Context, rawURL, bkBizID string, start, end, step int64,
-	labelMatchers []storepb.LabelMatcher, rawPromql string) ([]*prompb.TimeSeries, error) {
+// QueryByPromQLRaw unifyquery 查询, promql 语法
+func QueryByPromQLRaw(ctx context.Context, rawURL, bkBizID string, start, end, step int64,
+	labelMatchers []storepb.LabelMatcher, rawPromql string) (*BKUnifyQueryResult, error) {
 	url, err := getQueryURL(rawURL)
 	if err != nil {
 		return nil, err
@@ -186,13 +188,71 @@ func QueryByPromQL(ctx context.Context, rawURL, bkBizID string, start, end, step
 		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
 	}
 
-	// 部分接口，如 usermanager 返回的content-type不是json, 需要手动Unmarshal
 	result := new(BKUnifyQueryResult)
 	if err := json.Unmarshal(resp.Body(), result); err != nil {
 		return nil, err
 	}
+	return result, nil
+}
 
+// QueryByPromQL unifyquery 查询, promql 语法
+// start, end, step 单位秒
+func QueryByPromQL(ctx context.Context, rawURL, bkBizID string, start, end, step int64,
+	labelMatchers []storepb.LabelMatcher, rawPromql string) ([]*prompb.TimeSeries, error) {
+	result, err := QueryByPromQLRaw(ctx, rawURL, bkBizID, start, end, step, labelMatchers, rawPromql)
+	if err != nil {
+		return nil, err
+	}
 	return result.ToPromSeriesSet()
+}
+
+// QueryMultiValues unifyquery 查询, promql 语法
+func QueryMultiValues(ctx context.Context, rawURL, bkBizID string, start int64, promqlMap map[string]string,
+	params map[string]interface{}) (map[string]string, error) {
+	var (
+		wg  sync.WaitGroup
+		mtx sync.Mutex
+	)
+
+	defaultValue := ""
+
+	resultMap := map[string]string{}
+
+	// promql 数量已知, 不控制并发数量
+	for k, v := range promqlMap {
+		wg.Add(1)
+		go func(key, promql string) {
+			defer wg.Done()
+
+			promql = format.Sprintf(promql, params)
+			resutl, err := QueryByPromQLRaw(ctx, rawURL, bkBizID, start, start, 60, nil, promql)
+			mtx.Lock()
+			defer mtx.Unlock()
+
+			// 多个查询不报错, 有默认值
+			if err != nil {
+				klog.Warningf("query_multi_values %s error, %s", promql, err)
+				resultMap[key] = defaultValue
+			} else {
+				resultMap[key] = GetFirstValue(resutl.Series)
+			}
+		}(k, v)
+	}
+
+	wg.Wait()
+
+	return resultMap, nil
+}
+
+// GetFirstValue 获取第一个值
+func GetFirstValue(series []*Series) string {
+	if len(series) == 0 {
+		return ""
+	}
+	if len(series[0].Values) == 0 {
+		return ""
+	}
+	return strconv.FormatFloat(series[0].Values[0].Value, 'f', -1, 64)
 }
 
 // BaseResponse base response
