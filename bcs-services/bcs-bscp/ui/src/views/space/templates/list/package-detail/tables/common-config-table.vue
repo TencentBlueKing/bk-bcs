@@ -25,6 +25,7 @@
         :row-class="getRowCls"
         :remote-pagination="true"
         :pagination="pagination"
+        :is-selected-fn="isSelectedFn"
         @page-limit-change="handlePageLimitChange"
         @page-value-change="refreshList($event,true)"
         @selection-change="handleSelectionChange"
@@ -311,6 +312,13 @@ const handleSelectionChange = ({
   }
   emits('update:selectedConfigs', configs);
 };
+
+const isSelectedFn = ({
+  row,
+}: {
+  row: ITemplateConfigItem;
+}) => props.selectedConfigs.findIndex(item => item.id === row.id) > -1;
+
 
 const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem) => {
   isAddToPkgsDialogShow.value = true;
