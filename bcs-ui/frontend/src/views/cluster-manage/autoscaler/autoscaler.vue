@@ -1662,9 +1662,13 @@ export default defineComponent({
     });
     const searchIp = useDebouncedRef<string>('');
     watch(searchIp, () => {
-      handleGetRecordList();
+      reSearchRecordList();
     });
 
+    const reSearchRecordList = () => {
+      recordPagination.value.current = 1;
+      handleGetRecordList();
+    };
     const recordPageChange = (page) => {
       recordPagination.value.current = page;
       handleGetRecordList();
@@ -1675,7 +1679,7 @@ export default defineComponent({
       handleGetRecordList();
     };
     const handleTimeRangeChange = () => {
-      handleGetRecordList();
+      reSearchRecordList();
     };
     const handleShowRecord = (row) => {
       const end = new Date();
@@ -1752,6 +1756,7 @@ export default defineComponent({
       Object.keys(filters).forEach((key) => {
         filterValues.value[key] = filters[key];
       });
+      recordPagination.value.current = 1;
       recordLoading.value = true;
       await getRecordList();
       recordLoading.value = false;
