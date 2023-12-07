@@ -246,14 +246,13 @@ func (s *Service) setKvTypeAndValue(kt *kit.Kit, details []*table.Kv, kvs []*pbk
 	}
 
 	for _, one := range kvs {
-
 		if one.KvState == constant.KvStateDelete {
-
 			rkv, ok := releaseMap[one.Spec.Key]
 			if !ok {
-				return nil, errors.New("")
+				return nil, fmt.Errorf("no released key found for key %s, rid: %s", one.Spec.Key, kt.Rid)
 			}
-			kvType, kvValue, err := s.getReleasedKv(kt, one.Attachment.BizId, one.Attachment.AppId, rkv.Spec.Version, rkv.ReleaseID, rkv.Spec.Key)
+			kvType, kvValue, err := s.getReleasedKv(kt, one.Attachment.BizId, one.Attachment.AppId, rkv.Spec.Version,
+				rkv.ReleaseID, rkv.Spec.Key)
 			if err != nil {
 				return nil, err
 			}
@@ -262,9 +261,10 @@ func (s *Service) setKvTypeAndValue(kt *kit.Kit, details []*table.Kv, kvs []*pbk
 		} else {
 			kv, ok := kvMap[one.Spec.Key]
 			if !ok {
-				return nil, errors.New("")
+				return nil, fmt.Errorf("no key found for key %s, rid: %s", one.Spec.Key, kt.Rid)
 			}
-			kvType, kvValue, err := s.getKv(kt, one.Attachment.BizId, one.Attachment.AppId, kv.Spec.Version, kv.Spec.Key)
+			kvType, kvValue, err := s.getKv(kt, one.Attachment.BizId, one.Attachment.AppId, kv.Spec.Version,
+				kv.Spec.Key)
 			if err != nil {
 				return nil, err
 			}
@@ -523,7 +523,8 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbb
 		return nil, err
 	}
 
-	kvType, kvValue, err := s.getReleasedKv(kt, req.Attachment.BizId, req.Attachment.AppId, rkv.Spec.Version, rkv.ReleaseID, req.Spec.Key)
+	kvType, kvValue, err := s.getReleasedKv(kt, req.Attachment.BizId, req.Attachment.AppId, rkv.Spec.Version,
+		rkv.ReleaseID, req.Spec.Key)
 	if err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
