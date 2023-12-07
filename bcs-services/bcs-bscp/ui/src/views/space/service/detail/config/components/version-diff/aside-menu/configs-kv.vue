@@ -152,7 +152,6 @@ onMounted(async () => {
   setDefaultSelected();
 });
 
-
 // 获取当前版本和基准版本的所有配置文件列表(非模板配置和套餐下模板)
 const getAllConfigList = async () => {
   const [current, base] = await Promise.all([
@@ -174,7 +173,6 @@ const getConfigsOfVersion = async (releaseId: number | undefined) => {
   };
   return await getReleaseKvList(bkBizId.value, appId.value, releaseId, params);
 };
-
 
 // 计算配置被修改、被删除、新增的差异
 const calcDiff = () => {
@@ -253,10 +251,13 @@ const calcDiff = () => {
 
 // 设置默认选中的配置文件
 // 如果props有设置选中项，取props值
+// 如果选中项有值，保持上一次选中项
 // 否则取第一个非空分组的第一个配置文件
 const setDefaultSelected = () => {
   if (props.selectedConfig) {
     handleSelectItem(props.selectedConfig);
+  } else if (aggregatedList.value.find(item => item.id === selected.value)) {
+    handleSelectItem(selected.value);
   } else {
     if (aggregatedList.value[0]) {
       handleSelectItem(aggregatedList.value[0].id);
