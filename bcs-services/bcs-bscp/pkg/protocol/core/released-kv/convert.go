@@ -66,8 +66,9 @@ func PbKvState(kvs []*table.Kv, kvRelease []*table.ReleasedKv) []*pbkv.Kv {
 
 		result = append(result, pbkv.PbKv(kv, "", "", kvState))
 	}
-	for _, file := range releaseMap {
-		result = append(result, PbKv(file, constant.KvStateDelete))
+	for _, kv := range releaseMap {
+		kv.ID = 0
+		result = append(result, PbKv(kv, constant.KvStateDelete))
 	}
 	return sortKvsByState(result)
 }

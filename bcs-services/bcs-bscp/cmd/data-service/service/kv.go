@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gorm.io/gorm"
 	"sort"
 	"time"
 
@@ -91,14 +92,6 @@ func checkKVTypeMatch(kvType, appKvType table.DataType) bool {
 func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
-
-	app, err := s.dao.App().Get(kt, req.Attachment.BizId, req.Attachment.AppId)
-	if err != nil {
-		return nil, fmt.Errorf("get app fail,err : %v", req.Spec.Key)
-	}
-	if !checkKVTypeMatch(table.DataType(req.Spec.KvType), app.Spec.DataType) {
-		return nil, fmt.Errorf("kv type does not match the data type defined in the application")
-	}
 
 	kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
 	if err != nil {
@@ -503,32 +496,20 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 	return toUpdate, toCreate, nil
 }
 
+// UnDeleteKv Revert the deletion of the key-value pair by restoring it to the version before the last one.
 func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
 
-	kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
+	rkv, err := s.dao.ReleasedKv().GetReleasedLatelyByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
 	if err != nil {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
 		return nil, err
 	}
-
-	tx := s.dao.GenQuery().Begin()
-
-	rkv, err := s.dao.ReleasedKv().GetReleasedLatelyByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
-	if err != nil {
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
-		}
-		return nil, err
-	}
-
 	kvType, kvValue, err := s.getReleasedKv(kt, req.Attachment.BizId, req.Attachment.AppId, rkv.Spec.Version,
 		rkv.ReleaseID, req.Spec.Key)
 	if err != nil {
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
-		}
+		logs.Errorf("get vault kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
 		return nil, err
 	}
 
@@ -539,24 +520,40 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbb
 		Value:  kvValue,
 		KvType: kvType,
 	}
-
 	v, err := s.vault.UpsertKv(kt, opt)
 	if err != nil {
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
-		}
+		logs.Errorf("update vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
 		return nil, err
 	}
-	kv.Spec.Version = uint32(v)
 
-	if e := s.dao.Kv().UpdateWithTx(kt, tx, kv); e != nil {
-		logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
-		return nil, e
+	kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
+	if err != nil && !errors.Is(gorm.ErrRecordNotFound, err) {
+		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
 	}
-
-	if e := tx.Commit(); e != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
-		return nil, e
+	if errors.Is(gorm.ErrRecordNotFound, err) {
+		kv = &table.Kv{
+			Spec:       req.Spec.KvSpec(),
+			Attachment: req.Attachment.KvAttachment(),
+			Revision: &table.Revision{
+				Creator: kt.User,
+			},
+		}
+		kv.Spec.Version = uint32(v)
+		if _, e := s.dao.Kv().Create(kt, kv); e != nil {
+			logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
+			return nil, e
+		}
+	} else {
+		kv.Spec.Version = uint32(v)
+		kv.Revision = &table.Revision{
+			Reviser:   kt.User,
+			UpdatedAt: rkv.Revision.CreatedAt,
+		}
+		if e := s.dao.Kv().Update(kt, kv); e != nil {
+			logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
+			return nil, e
+		}
 	}
 
 	return new(pbbase.EmptyResp), nil
