@@ -144,7 +144,8 @@ func (dao *releasedKvDao) GetReleasedLately(kit *kit.Kit, bizID, appID uint32) (
 }
 
 // GetReleasedLatelyByKey get released kv lately by key
-func (dao *releasedKvDao) GetReleasedLatelyByKey(kit *kit.Kit, bizID, appID uint32, key string) (*table.ReleasedKv, error) {
+func (dao *releasedKvDao) GetReleasedLatelyByKey(kit *kit.Kit, bizID, appID uint32, key string) (*table.ReleasedKv,
+	error) {
 	m := dao.genQ.ReleasedKv
 	return m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Key.Eq(key)).Take()
 }
