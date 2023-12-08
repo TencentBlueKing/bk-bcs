@@ -410,6 +410,10 @@ cluster-manager:pre
 	cp ${BCS_SERVICES_PATH}/bcs-cluster-manager/api/clustermanager/clustermanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/swagger-ui/clustermanager.swagger.json
 	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go mod tidy && ${CGO_BUILD_FLAGS} go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
 
+cluster-reporter:
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-cluster-reporter/* ${PACKAGEPATH}/bcs-services/bcs-cluster-reporter/
+	cd ${BCS_SERVICES_PATH}/bcs-cluster-reporter && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-reporter/bcs-cluster-reporter ./main.go
+
 alert-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-alert-manager/*  ${PACKAGEPATH}/bcs-services/bcs-alert-manager
