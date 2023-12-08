@@ -22,13 +22,14 @@ type Deploy struct {
 
 // DeploySpec xxx
 type DeploySpec struct {
-	Replicas   DeployReplicas `structs:"replicas"`
-	NodeSelect NodeSelect     `structs:"nodeSelect"`
-	Affinity   Affinity       `structs:"affinity"`
-	Toleration Toleration     `structs:"toleration"`
-	Networking Networking     `structs:"networking"`
-	Security   PodSecurityCtx `structs:"security"`
-	Other      SpecOther      `structs:"other"`
+	Replicas       DeployReplicas `structs:"replicas"`
+	NodeSelect     NodeSelect     `structs:"nodeSelect"`
+	Affinity       Affinity       `structs:"affinity"`
+	Toleration     Toleration     `structs:"toleration"`
+	Networking     Networking     `structs:"networking"`
+	Security       PodSecurityCtx `structs:"security"`
+	ReadinessGates ReadinessGates `structs:"readinessGates"`
+	Other          SpecOther      `structs:"other"`
 }
 
 // DeployReplicas xxx
@@ -103,6 +104,7 @@ type STSSpec struct {
 	Toleration      Toleration         `structs:"toleration"`
 	Networking      Networking         `structs:"networking"`
 	Security        PodSecurityCtx     `structs:"security"`
+	ReadinessGates  ReadinessGates     `structs:"readinessGates"`
 	Other           SpecOther          `structs:"other"`
 }
 
@@ -200,10 +202,11 @@ type Po struct {
 
 // PoSpec xxx
 type PoSpec struct {
-	NodeSelect NodeSelect     `structs:"nodeSelect"`
-	Affinity   Affinity       `structs:"affinity"`
-	Toleration Toleration     `structs:"toleration"`
-	Networking Networking     `structs:"networking"`
-	Security   PodSecurityCtx `structs:"security"`
-	Other      SpecOther      `structs:"other"`
+	NodeSelect     NodeSelect     `structs:"nodeSelect"`
+	Affinity       Affinity       `structs:"affinity"`
+	Toleration     Toleration     `structs:"toleration"`
+	Networking     Networking     `structs:"networking"`
+	Security       PodSecurityCtx `structs:"security"`
+	ReadinessGates ReadinessGates `structs:"readinessGates"`
+	Other          SpecOther      `structs:"other"`
 }

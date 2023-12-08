@@ -225,10 +225,10 @@
                     this.downloadBtnLoading = true;
                     axios.get("{{ .settings.SITE_STATIC_URL }}/api/sessions/" + this.sessionID + "/download/check/?download_path=" + this.downloadPath + "&lang=" + this.lang)
                         .then((res) => {
-                            if (res.data.code === 0) {
+                            if (res.data.data.passed) {
                                 window.location.href = "{{ .settings.SITE_STATIC_URL }}/api/sessions/" + this.sessionID + "/download/?download_path=" + this.downloadPath
                             } else {
-                                this.$bkMessage({ theme: 'error', message: res.data.message })
+                                this.$bkMessage({ theme: 'error', message: res.data.data.reason })
                             }
                         })
                         .catch(() => {

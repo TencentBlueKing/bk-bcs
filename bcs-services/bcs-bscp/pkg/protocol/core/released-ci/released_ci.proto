@@ -17,5 +17,5 @@ message ReleasedConfigItem {
     uint32                      config_item_id = 5;
     pbci.ConfigItemSpec         spec           = 6;
     pbci.ConfigItemAttachment   attachment     = 7;
-    pbbase.CreatedRevision      revision       = 8;
+    pbbase.Revision             revision       = 8;
 }

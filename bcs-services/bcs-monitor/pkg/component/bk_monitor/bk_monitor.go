@@ -166,12 +166,16 @@ func QueryByPromQL(ctx context.Context, rawURL, bkBizID string, start, end, step
 		"end":    strconv.FormatInt(end, 10),
 	}
 
+	authInfo, err := component.GetBKAPIAuthorization()
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetBody(body).
+		SetHeader("X-Bkapi-Authorization", authInfo).
 		SetHeader("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%s", bkBizID)). // 支持空间参数
-		SetQueryParam("bk_app_code", config.G.Base.AppCode).
-		SetQueryParam("bk_app_secret", config.G.Base.AppSecret).
 		Post(url)
 
 	if err != nil {
@@ -222,10 +226,14 @@ func (c *GrayClusterList) initClusterMap() {
 func queryClusterList(ctx context.Context, host string) (*GrayClusterList, error) {
 	url := fmt.Sprintf("%s/get_bcs_gray_cluster_list", host)
 
+	authInfo, err := component.GetBKAPIAuthorization()
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
-		SetQueryParam("bk_app_code", config.G.Base.AppCode).
-		SetQueryParam("bk_app_secret", config.G.Base.AppSecret).
+		SetHeader("X-Bkapi-Authorization", authInfo).
 		Get(url)
 
 	if err != nil {
@@ -341,11 +349,15 @@ func GetMetricsList(ctx context.Context, host, clusterID, bizID string) ([]Metri
 		return cacheResult.([]MetricList), nil
 	}
 
+	authInfo, err := component.GetBKAPIAuthorization()
+	if err != nil {
+		return nil, err
+	}
+
 	url := fmt.Sprintf("%s/query_bcs_metrics", host)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
-		SetQueryParam("bk_app_code", config.G.Base.AppCode).
-		SetQueryParam("bk_app_secret", config.G.Base.AppSecret).
+		SetHeader("X-Bkapi-Authorization", authInfo).
 		SetQueryParam("cluster_ids", clusterID).
 		SetQueryString(fmt.Sprintf("bk_biz_ids=0&bk_biz_ids=%s", bizID)).
 		Get(url)

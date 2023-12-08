@@ -73,221 +73,226 @@
         </bk-form>
       </bcs-dialog>
     </Header>
-    <bcs-exception type="empty" v-if="!onsData.status && !loading">
-      <div>{{ isSharedOrVirtual ? $t('logCollector.msg.notEnable1') : $t('logCollector.msg.notEnable') }}</div>
-      <!-- shared 和 virtual集群不支持启用 -->
-      <bcs-button
-        theme="primary"
-        class="w-[88px] mt-[16px]"
-        v-if="!isSharedOrVirtual"
-        @click="confirmUpdate">
-        {{ $t('logCollector.action.enable') }}
-      </bcs-button>
-    </bcs-exception>
-    <bcs-exception
-      type="empty"
-      v-else-if="['failed-upgrade', 'failed-install','failed'].includes(onsData.status || '') && !loading">
-      <div>{{ $t('logCollector.msg.installFailed') }}</div>
-      <div class="text-[#979BA5] mt-[16px]" v-if="onsData.message">{{ onsData.message }}</div>
-      <bcs-button
-        theme="primary"
-        class="w-[88px] mt-[16px]"
-        @click="confirmUpdate">{{ $t('logCollector.action.reInstall') }}</bcs-button>
-    </bcs-exception>
-    <div class="pb-[16px] max-h-[calc(100vh-104px)] overflow-auto" :key="clusterId" v-else>
-      <bcs-alert type="info" closable>
-        <template #title>
-          <div class="flex items-center">
-            <span class="flex-1">
-              {{ $t('logCollector.msg.logCollector') }}
-            </span>
-            <bcs-button
-              text
-              class="text-[12px]"
-              @click="openLink(PROJECT_CONFIG.rule)">
-              {{ $t('generic.button.learnMore') }}
-            </bcs-button>
-          </div>
-        </template>
-      </bcs-alert>
-      <Row class="mt-[16px] px-[24px]">
-        <template #left>
-          <bcs-button theme="primary" icon="plus" @click="handleCreateRule">{{ $t('plugin.tools.create') }}</bcs-button>
-        </template>
-        <template #right>
-          <bcs-input
-            class="w-[320px]"
-            :placeholder="$t('logCollector.placeholder.search')"
-            right-icon="bk-icon icon-search"
-            v-model="searchValue"
-            clearable>
-          </bcs-input>
-        </template>
-      </Row>
-      <div class="mt-[16px] px-[24px]" v-bkloading="{ isLoading: ruleListLoading }">
-        <bcs-table
-          :data="curPageData"
-          :pagination="pagination"
-          @page-change="pageChange"
-          @page-limit-change="pageSizeChange"
-          v-if="!showEditStatus">
-          <bcs-table-column :label="$t('plugin.tools.ruleName')" prop="name" sortable>
-            <template #default="{ row }">
-              <div class="flex">
-                <!-- 是否旧规则 -->
-                <span
-                  class="inline-flex items-center justify-center w-[24px] relative
-                  h-[24px] bg-[#F0F1F5] rounded-sm text-[#979BA5] mr-[8px]"
-                  v-bk-tooltips="{
-                    content: $t('logCollector.tips.oldRuleHasNewRule', [
-                      row.new_rule_name,
-                      moment(row.new_rule_created_at).add(30, 'days').format('YYYY-MM-DD')
-                    ]),
-                    disabled: !row.new_rule_id
-                  }"
-                  v-if="row.old">
-                  {{ $t('logCollector.msg.oldRuleFlag') }}
-                  <!-- 是否转换过 -->
-                  <i
-                    class="absolute bottom-[0px] right-[-6px] text-[#87cfab] bcs-icon bcs-icon-check-circle-shape"
-                    v-if="row.new_rule_id">
-                  </i>
-                </span>
-                <bcs-button
-                  class="flex-1"
-                  :disabled="['PENDING', 'RUNNING'].includes(row.status)"
-                  text
-                  @click="handleGotoDetail(row)">
-                  <span class="bcs-ellipsis" v-bk-overflow-tips>{{ row.name }}</span>
-                </bcs-button>
-              </div>
-            </template>
-          </bcs-table-column>
-          <bcs-table-column :label="$t('k8s.namespace')" show-overflow-tooltip>
-            <template #default="{ row }">
-              {{ getNs(row) }}
-            </template>
-          </bcs-table-column>
-          <bcs-table-column :label="$t('generic.label.memo')" show-overflow-tooltip prop="description">
-            <template #default="{ row }">
-              {{ row.description || '--' }}
-            </template>
-          </bcs-table-column>
-          <bcs-table-column :label="$t('generic.label.updator')" prop="updator"></bcs-table-column>
-          <bcs-table-column
-            :label="$t('cluster.labels.updatedAt')"
-            sortable
-            prop="updated_at"
-            width="180"></bcs-table-column>
-          <bcs-table-column :label="$t('generic.label.status')" width="120">
-            <template #default="{ row }">
-              <StatusIcon
-                :status-color-map="statusColorMap"
-                :status-text-map="statusTextMap"
-                :status="row.status"
-                :pending="['PENDING', 'RUNNING'].includes(row.status)">
-                <span
-                  v-bk-tooltips="{
-                    content: row.message,
-                    disabled: !row.message || row.status !== 'FAILED',
-                    theme: 'bcs-tippy'
-                  }"
-                  :class="row.message && row.status === 'FAILED' ? 'border-dashed border-0 border-b' : ''">
-                  {{statusTextMap[row.status] || $t('generic.status.unknown1')}}
-                </span>
-              </StatusIcon>
-            </template>
-          </bcs-table-column>
-          <bcs-table-column :label="$t('generic.label.action')" width="280">
-            <template #default="{ row }">
-              <template v-if="row.status === 'TERMINATED'">
-                <bcs-button text class="text-[12px] mr-[10px]" @click="handleToggleRule(row)">
-                  {{ $t('logCollector.action.enable') }}
-                </bcs-button>
-                <bcs-button text class="text-[12px] mr-[10px]" @click="handleDeleteRule(row)">
-                  {{ $t('generic.button.delete') }}
-                </bcs-button>
-              </template>
-              <template v-if="row.status === 'SUCCESS'">
-                <bcs-button
-                  text
-                  class="text-[12px] mr-[10px]"
-                  v-if="row.entrypoint.file_log_url && row.rule.config.paths && row.rule.config.paths.length"
-                  @click="openLink(row.entrypoint.file_log_url)">
-                  {{ $t('logCollector.action.fileLog') }}
-                </bcs-button>
-                <bcs-button
-                  text
-                  class="text-[12px] mr-[10px]"
-                  v-if="row.entrypoint.std_log_url && row.rule.config.enable_stdout"
-                  @click="openLink(row.entrypoint.std_log_url)">
-                  {{ $t('logCollector.action.stdLog') }}
-                </bcs-button>
-              </template>
+    <div class="pb-[16px] max-h-[calc(100vh-104px)] overflow-auto" :key="clusterId">
+      <bcs-exception type="empty" v-if="!onsData.status && !loading">
+        <div>{{ isSharedOrVirtual ? $t('logCollector.msg.notEnable1') : $t('logCollector.msg.notEnable') }}</div>
+        <!-- shared 和 virtual集群不支持启用 -->
+        <bcs-button
+          theme="primary"
+          class="w-[88px] mt-[16px]"
+          v-if="!isSharedOrVirtual"
+          @click="confirmUpdate">
+          {{ $t('logCollector.action.enable') }}
+        </bcs-button>
+      </bcs-exception>
+      <bcs-exception
+        type="empty"
+        v-else-if="['failed-upgrade', 'failed-install','failed'].includes(onsData.status || '') && !loading">
+        <div>{{ $t('logCollector.msg.installFailed') }}</div>
+        <div class="text-[#979BA5] mt-[16px]" v-if="onsData.message">{{ onsData.message }}</div>
+        <bcs-button
+          theme="primary"
+          class="w-[88px] mt-[16px]"
+          @click="confirmUpdate">{{ $t('logCollector.action.reInstall') }}</bcs-button>
+      </bcs-exception>
+      <template v-else>
+        <bcs-alert type="info" closable>
+          <template #title>
+            <div class="flex items-center">
+              <span class="flex-1">
+                {{ $t('logCollector.msg.logCollector') }}
+              </span>
               <bcs-button
                 text
-                class="text-[12px] mr-[10px]"
-                :disabled="row.status !== 'FAILED'"
-                @click="handleRetryRule(row)"
-                v-if="row.status === 'FAILED'">
-                {{ $t('cluster.ca.nodePool.records.action.retry') }}
+                class="text-[12px]"
+                @click="openLink(PROJECT_CONFIG.rule)">
+                {{ $t('generic.button.learnMore') }}
               </bcs-button>
-              <!-- 旧规则不允许编辑 -->
-              <bcs-button
-                text
-                class="text-[12px] mr-[10px]"
-                v-if="row.old"
-                @click="handleCreateNewRule(row)">
-                {{ $t('logCollector.action.newRule') }}
-              </bcs-button>
-              <bcs-button
-                text
-                class="text-[12px] mr-[10px]"
-                :disabled="['PENDING', 'RUNNING'].includes(row.status)"
-                v-else-if="row.status !== 'TERMINATED'"
-                @click="handleEditRule(row)">
-                {{ $t('generic.button.edit') }}
-              </bcs-button>
-
-              <PopoverSelector
-                :disabled="['PENDING', 'RUNNING'].includes(row.status)"
-                v-if="row.status !== 'TERMINATED'">
-                <span :class="['bcs-icon-more-btn', { disabled: ['PENDING', 'RUNNING'].includes(row.status) }]">
-                  <i class="bcs-icon bcs-icon-more text-[18px] relative top-[1px]"></i>
-                </span>
-                <template #content>
-                  <li
-                    class="bcs-dropdown-item"
-                    v-if="['SUCCESS', 'TERMINATED'].includes(row.status) && !row.old"
-                    @click="handleToggleRule(row)">
-                    {{ row.status === 'TERMINATED'
-                      ? $t('logCollector.action.enable') : $t('logCollector.action.stop') }}
-                  </li>
-                  <li class="bcs-dropdown-item" @click="handleDeleteRule(row)">{{ $t('generic.button.delete') }}</li>
-                </template>
-              </PopoverSelector>
-            </template>
-          </bcs-table-column>
-          <template #empty>
-            <BcsEmptyTableStatus :type="searchValue.length ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
+            </div>
           </template>
-        </bcs-table>
-        <EditLogCollector
-          :cluster-id="clusterId"
-          :data="tableDataMatchSearch"
-          :status-color-map="statusColorMap"
-          :status-text-map="statusTextMap"
-          :id="curRow ? curRow.id : ''"
-          :edit="edit"
-          v-bkloading="{ isLoading: ruleListLoading }"
-          ref="editLogRef"
-          @show-list="handleShowList"
-          @delete="handleDeleteRule"
-          @refresh="handleGetLogCollectorRules"
-          @toggle-rule="handleToggleRule"
-          @update-create-id="handleUpdateCreatingID"
-          v-else />
-      </div>
+        </bcs-alert>
+        <Row class="mt-[16px] px-[24px]">
+          <template #left>
+            <bcs-button
+              theme="primary"
+              icon="plus"
+              @click="handleCreateRule">{{ $t('plugin.tools.create') }}</bcs-button>
+          </template>
+          <template #right>
+            <bcs-input
+              class="w-[320px]"
+              :placeholder="$t('logCollector.placeholder.search')"
+              right-icon="bk-icon icon-search"
+              v-model="searchValue"
+              clearable>
+            </bcs-input>
+          </template>
+        </Row>
+        <div class="mt-[16px] px-[24px]" v-bkloading="{ isLoading: ruleListLoading }">
+          <bcs-table
+            :data="curPageData"
+            :pagination="pagination"
+            @page-change="pageChange"
+            @page-limit-change="pageSizeChange"
+            v-if="!showEditStatus">
+            <bcs-table-column :label="$t('plugin.tools.ruleName')" prop="name" sortable>
+              <template #default="{ row }">
+                <div class="flex">
+                  <!-- 是否旧规则 -->
+                  <span
+                    class="inline-flex items-center justify-center w-[24px] relative
+                  h-[24px] bg-[#F0F1F5] rounded-sm text-[#979BA5] mr-[8px]"
+                    v-bk-tooltips="{
+                      content: $t('logCollector.tips.oldRuleHasNewRule', [
+                        row.new_rule_name,
+                        moment(row.new_rule_created_at).add(30, 'days').format('YYYY-MM-DD')
+                      ]),
+                      disabled: !row.new_rule_id
+                    }"
+                    v-if="row.old">
+                    {{ $t('logCollector.msg.oldRuleFlag') }}
+                    <!-- 是否转换过 -->
+                    <i
+                      class="absolute bottom-[0px] right-[-6px] text-[#87cfab] bcs-icon bcs-icon-check-circle-shape"
+                      v-if="row.new_rule_id">
+                    </i>
+                  </span>
+                  <bcs-button
+                    class="flex-1"
+                    :disabled="['PENDING', 'RUNNING'].includes(row.status)"
+                    text
+                    @click="handleGotoDetail(row)">
+                    <span class="bcs-ellipsis" v-bk-overflow-tips>{{ row.name }}</span>
+                  </bcs-button>
+                </div>
+              </template>
+            </bcs-table-column>
+            <bcs-table-column :label="$t('k8s.namespace')" show-overflow-tooltip>
+              <template #default="{ row }">
+                {{ getNs(row) }}
+              </template>
+            </bcs-table-column>
+            <bcs-table-column :label="$t('generic.label.memo')" show-overflow-tooltip prop="description">
+              <template #default="{ row }">
+                {{ row.description || '--' }}
+              </template>
+            </bcs-table-column>
+            <bcs-table-column :label="$t('generic.label.updator')" prop="updator"></bcs-table-column>
+            <bcs-table-column
+              :label="$t('cluster.labels.updatedAt')"
+              sortable
+              prop="updated_at"
+              width="180"></bcs-table-column>
+            <bcs-table-column :label="$t('generic.label.status')" width="120">
+              <template #default="{ row }">
+                <StatusIcon
+                  :status-color-map="statusColorMap"
+                  :status-text-map="statusTextMap"
+                  :status="row.status"
+                  :pending="['PENDING', 'RUNNING'].includes(row.status)">
+                  <span
+                    v-bk-tooltips="{
+                      content: row.message,
+                      disabled: !row.message || row.status !== 'FAILED',
+                      theme: 'bcs-tippy'
+                    }"
+                    :class="row.message && row.status === 'FAILED' ? 'border-dashed border-0 border-b' : ''">
+                    {{statusTextMap[row.status] || $t('generic.status.unknown1')}}
+                  </span>
+                </StatusIcon>
+              </template>
+            </bcs-table-column>
+            <bcs-table-column :label="$t('generic.label.action')" width="280">
+              <template #default="{ row }">
+                <template v-if="row.status === 'TERMINATED'">
+                  <bcs-button text class="text-[12px] mr-[10px]" @click="handleToggleRule(row)">
+                    {{ $t('logCollector.action.enable') }}
+                  </bcs-button>
+                  <bcs-button text class="text-[12px] mr-[10px]" @click="handleDeleteRule(row)">
+                    {{ $t('generic.button.delete') }}
+                  </bcs-button>
+                </template>
+                <template v-if="row.status === 'SUCCESS'">
+                  <bcs-button
+                    text
+                    class="text-[12px] mr-[10px]"
+                    v-if="row.entrypoint.file_log_url && row.rule.config.paths && row.rule.config.paths.length"
+                    @click="openLink(row.entrypoint.file_log_url)">
+                    {{ $t('logCollector.action.fileLog') }}
+                  </bcs-button>
+                  <bcs-button
+                    text
+                    class="text-[12px] mr-[10px]"
+                    v-if="row.entrypoint.std_log_url && row.rule.config.enable_stdout"
+                    @click="openLink(row.entrypoint.std_log_url)">
+                    {{ $t('logCollector.action.stdLog') }}
+                  </bcs-button>
+                </template>
+                <bcs-button
+                  text
+                  class="text-[12px] mr-[10px]"
+                  :disabled="row.status !== 'FAILED'"
+                  @click="handleRetryRule(row)"
+                  v-if="row.status === 'FAILED'">
+                  {{ $t('cluster.ca.nodePool.records.action.retry') }}
+                </bcs-button>
+                <!-- 旧规则不允许编辑 -->
+                <bcs-button
+                  text
+                  class="text-[12px] mr-[10px]"
+                  v-if="row.old"
+                  @click="handleCreateNewRule(row)">
+                  {{ $t('logCollector.action.newRule') }}
+                </bcs-button>
+                <bcs-button
+                  text
+                  class="text-[12px] mr-[10px]"
+                  :disabled="['PENDING', 'RUNNING'].includes(row.status)"
+                  v-else-if="row.status !== 'TERMINATED'"
+                  @click="handleEditRule(row)">
+                  {{ $t('generic.button.edit') }}
+                </bcs-button>
+
+                <PopoverSelector
+                  :disabled="['PENDING', 'RUNNING'].includes(row.status)"
+                  v-if="row.status !== 'TERMINATED'">
+                  <span :class="['bcs-icon-more-btn', { disabled: ['PENDING', 'RUNNING'].includes(row.status) }]">
+                    <i class="bcs-icon bcs-icon-more text-[18px] relative top-[1px]"></i>
+                  </span>
+                  <template #content>
+                    <li
+                      class="bcs-dropdown-item"
+                      v-if="['SUCCESS', 'TERMINATED'].includes(row.status) && !row.old"
+                      @click="handleToggleRule(row)">
+                      {{ row.status === 'TERMINATED'
+                        ? $t('logCollector.action.enable') : $t('logCollector.action.stop') }}
+                    </li>
+                    <li class="bcs-dropdown-item" @click="handleDeleteRule(row)">{{ $t('generic.button.delete') }}</li>
+                  </template>
+                </PopoverSelector>
+              </template>
+            </bcs-table-column>
+            <template #empty>
+              <BcsEmptyTableStatus :type="searchValue.length ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
+            </template>
+          </bcs-table>
+          <EditLogCollector
+            :cluster-id="clusterId"
+            :data="tableDataMatchSearch"
+            :status-color-map="statusColorMap"
+            :status-text-map="statusTextMap"
+            :id="curRow ? curRow.id : ''"
+            :edit="edit"
+            v-bkloading="{ isLoading: ruleListLoading }"
+            ref="editLogRef"
+            @show-list="handleShowList"
+            @delete="handleDeleteRule"
+            @refresh="handleGetLogCollectorRules"
+            @toggle-rule="handleToggleRule"
+            @update-create-id="handleUpdateCreatingID"
+            v-else />
+        </div>
+      </template>
     </div>
   </div>
 </template>

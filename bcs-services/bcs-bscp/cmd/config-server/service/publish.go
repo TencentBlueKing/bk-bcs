@@ -47,6 +47,7 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 		Default:         req.Default,
 		Groups:          req.Groups,
 		Labels:          req.Labels,
+		GroupName:       req.GroupName,
 	}
 	rp, err := s.client.DS.Publish(grpcKit.RpcCtx(), r)
 	if err != nil {
@@ -86,6 +87,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbcs.Gener
 		GrayPublishMode: req.GrayPublishMode,
 		Groups:          req.Groups,
 		Labels:          req.Labels,
+		GroupName:       req.GroupName,
 	}
 	rp, err := s.client.DS.GenerateReleaseAndPublish(grpcKit.RpcCtx(), r)
 	if err != nil {

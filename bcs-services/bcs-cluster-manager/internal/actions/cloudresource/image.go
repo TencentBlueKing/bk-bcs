@@ -97,13 +97,59 @@ func (la *ListCloudOsImageAction) listCloudImageOs() error {
 	}
 	cmOption.Region = la.req.Region
 
-	// get image os list
-	imageOsList, err := clsMgr.ListOsImage(la.req.Provider, cmOption)
+	var (
+		imageOsList []*cmproto.OsImage
+	)
+
+	switch la.req.Provider {
+	case common.AllImageProvider:
+		providers := []string{common.PublicImageProvider, common.MarketImageProvider, common.PrivateImageProvider}
+		for i := range providers {
+			images, errLocal := clsMgr.ListOsImage(providers[i], cmOption)
+			if errLocal != nil {
+				blog.Errorf("ListCloudOsImageAction listCloudImageOs[%s] failed: %v", providers[i], err)
+				continue
+			}
+
+			imageOsList = append(imageOsList, images...)
+		}
+	default:
+		// get image os list
+		imageOsList, err = clsMgr.ListOsImage(la.req.Provider, cmOption)
+	}
 	if err != nil {
 		return err
 	}
+
 	la.OsImageList = imageOsList
 	return nil
+}
+
+func (la *ListCloudOsImageAction) appendImageRelativeCluster() {
+	if la.req.ProjectID != "" {
+		clusters, err := actions.GetProjectClusters(la.ctx, la.model, la.req.ProjectID)
+		if err != nil {
+			blog.Errorf("ListCloudOsImageAction[%s] appendImageRelativeCluster failed: %v",
+				la.req.ProjectID, err)
+			return
+		}
+
+		for i := range la.OsImageList {
+			for _, cls := range clusters {
+				if cls.GetClusterBasicSettings().GetOS() == la.OsImageList[i].ImageID ||
+					cls.GetClusterBasicSettings().GetOS() == la.OsImageList[i].OsName {
+					if la.OsImageList[i].Clusters == nil {
+						la.OsImageList[i].Clusters = make([]*cmproto.ClusterInfo, 0)
+					}
+
+					la.OsImageList[i].Clusters = append(la.OsImageList[i].Clusters, &cmproto.ClusterInfo{
+						ClusterName: cls.ClusterName,
+						ClusterID:   cls.ClusterID,
+					})
+				}
+			}
+		}
+	}
 }
 
 // Handle handle list image os request
@@ -126,6 +172,7 @@ func (la *ListCloudOsImageAction) Handle(ctx context.Context,
 		la.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
+	la.appendImageRelativeCluster()
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }

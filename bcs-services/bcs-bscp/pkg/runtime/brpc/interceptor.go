@@ -17,6 +17,8 @@ import (
 	"context"
 	"path"
 	"runtime/debug"
+	"strconv"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -26,6 +28,7 @@ import (
 
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	"bscp.io/pkg/metrics"
 )
 
 // RecoveryHandlerFuncContext 异常日志输出
@@ -61,4 +64,27 @@ func LogUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		resp, err = handler(ctx, req)
 		return resp, err
 	}
+}
+
+// GrpcServerHandledTotalInterceptor count grpc operands
+func GrpcServerHandledTotalInterceptor() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (
+		resp interface{}, err error) {
+		kt := kit.FromGrpcContext(ctx)
+		serviceName, methodName := splitMethodName(info.FullMethod)
+		resp, err = handler(ctx, req)
+		st, _ := status.FromError(err)
+		metrics.BSCPServerHandledTotal.
+			WithLabelValues(serviceName, methodName, st.Code().String(), strconv.Itoa(int(kt.BizID)), kt.User).
+			Inc()
+		return resp, err
+	}
+}
+
+func splitMethodName(fullMethodName string) (string, string) {
+	fullMethodName = strings.TrimPrefix(fullMethodName, "/") // remove leading slash
+	if i := strings.Index(fullMethodName, "/"); i >= 0 {
+		return fullMethodName[:i], fullMethodName[i+1:]
+	}
+	return "unknown", "unknown"
 }

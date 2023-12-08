@@ -312,3 +312,30 @@ export const updateBoundTemplateVersion = (
 export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, template_set_ids: number[]) => http.delete(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}/template_sets`, {
   params: { template_set_ids: template_set_ids.join(',') },
 });
+
+/**
+ * 导入非模板配置文件压缩包
+ * @param biz_id 业务ID
+ * @param appId 应用ID
+ * @param fill 导入文件
+ * @returns
+ */
+export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill: any) => http
+  .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import`, fill, {
+    headers: {
+      'Content-Type': 'application/zip',
+    },
+  })
+  .then(res => res.data);
+
+/**
+ * 批量添加非模板配置列表
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param bindingId 模板和服务绑定关系ID
+ * @param template_set_ids 模板套餐ID列表
+ * @returns
+ */
+export const batchAddConfigList = (bizId: string, appId: number, list: any) => http.put(`/config/biz/${bizId}/apps/${appId}/config_items`, {
+  items: list,
+}).then(res => res.data);

@@ -65,12 +65,24 @@ func makeIAMRequest(username, actionID string) iam.Request {
 
 // makeIAMPolicy 生成查询策略
 func makeIAMPolicy(iamReq iam.Request) (map[string]interface{}, error) {
-	backendClient := iamBackendClient.NewIAMBackendClient(
-		config.GlobalConf.IAM.GatewayHost,
-		true,
-		bcsIAM.SystemIDBKBCS,
-		config.GlobalConf.App.Code, config.GlobalConf.App.Secret,
-	)
+	var backendClient iamBackendClient.IAMBackendClient
+
+	if config.GlobalConf.IAM.UseGWHost { // 网关模式
+		backendClient = iamBackendClient.NewIAMBackendClient(
+			config.GlobalConf.IAM.GatewayHost,
+			true,
+			bcsIAM.SystemIDBKBCS,
+			config.GlobalConf.App.Code, config.GlobalConf.App.Secret,
+		)
+	} else { // 非网关模式, 兼容老版本&混合部署需要
+		backendClient = iamBackendClient.NewIAMBackendClient(
+			config.GlobalConf.IAM.IAMHost,
+			false,
+			bcsIAM.SystemIDBKBCS,
+			config.GlobalConf.App.Code, config.GlobalConf.App.Secret,
+		)
+	}
+
 	policy, err := backendClient.PolicyQuery(iamReq)
 	if err != nil {
 		return nil, err

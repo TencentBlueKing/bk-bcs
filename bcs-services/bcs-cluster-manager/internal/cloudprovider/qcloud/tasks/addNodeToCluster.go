@@ -27,6 +27,197 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
+// ModifyInstancesVpcTask modify nodes vpc task
+func ModifyInstancesVpcTask(taskID string, stepName string) error {
+	start := time.Now()
+
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	// previous step successful when retry task
+	if step == nil {
+		blog.Infof("ModifyInstancesVpcTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		return nil
+	}
+	blog.Infof("ModifyInstancesVpcTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
+		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	// extract valid info
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	nodeIds := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIDsKey.String(), ",")
+	vpcId := step.Params[cloudprovider.VpcKey.String()]
+
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
+	if err != nil {
+		blog.Errorf("ModifyInstancesVpcTask[%s] GetClusterDependBasicInfo task %s step %s failed, %s",
+			taskID, taskID, stepName, err.Error())
+		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	if vpcId == "" {
+		vpcId = dependInfo.Cluster.GetVpcID()
+	}
+
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	err = business.ModifyInstancesVpcAttribute(ctx, vpcId, nodeIds, dependInfo.CmOption)
+	if err != nil {
+		blog.Errorf("ModifyInstancesVpcTask[%s]: ModifyInstancesVpcAttribute for nodes[%v] failed, %s",
+			taskID, nodeIds, err.Error())
+		retErr := fmt.Errorf("ModifyInstancesVpcAttribute err, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	// update step
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("ModifyInstancesVpcTask[%s] update to storage fatal", taskID, stepName)
+		return err
+	}
+	return nil
+}
+
+// CheckInstanceStateTask check instance operation state
+func CheckInstanceStateTask(taskID string, stepName string) error {
+	start := time.Now()
+
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	// previous step successful when retry task
+	if step == nil {
+		blog.Infof("CheckInstanceStateTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		return nil
+	}
+	blog.Infof("CheckInstanceStateTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
+		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	// extract valid info
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	nodeIds := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIDsKey.String(), ",")
+
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
+	if err != nil {
+		blog.Errorf("CheckInstanceStateTask[%s] GetClusterDependBasicInfo task %s step %s failed, %s",
+			taskID, taskID, stepName, err.Error())
+		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	instanceList, err := business.CheckCvmInstanceState(ctx, nodeIds,
+		&cloudprovider.ListNodesOption{Common: dependInfo.CmOption})
+	if err != nil {
+		blog.Errorf("CheckCvmInstanceState[%s]: CheckCvmInstanceState for nodes[%v] failed, %s",
+			taskID, nodeIds, err.Error())
+		retErr := fmt.Errorf("CheckCvmInstanceState err, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	if len(instanceList.SuccessNodes) == 0 {
+		blog.Errorf("CheckCvmInstanceState[%s] failed[%+v], successNodes empty",
+			taskID, nodeIds)
+		retErr := fmt.Errorf("CheckCvmInstanceState failed: successNodes empty")
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	successIds, failedIds := handleAddNodesData(ctx, clusterID, instanceList)
+
+	blog.Infof("CheckCvmInstanceState[%s] nodeIds[%v] success[%v] failed[%v]",
+		taskID, nodeIds, successIds, failedIds)
+
+	// handle task nodes
+	handleTaskData(state, failedIds)
+
+	// update step
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("CheckCvmInstanceState[%s] update to storage fatal", taskID, stepName)
+		return err
+	}
+	return nil
+}
+
+func handleTaskData(state *cloudprovider.TaskState, failedIds []string) {
+	// again inject nodeIds/nodeIps
+	nodeIds := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
+		cloudprovider.NodeIDsKey.String(), ",")
+
+	var (
+		availableNodeIds = make([]string, 0)
+		availableNodeIps = make([]string, 0)
+	)
+
+	for i := range nodeIds {
+		if utils.StringInSlice(nodeIds[i], failedIds) {
+			continue
+		}
+		availableNodeIds = append(availableNodeIds, nodeIds[i])
+	}
+
+	nodes := cloudprovider.GetNodesByInstanceIDs(availableNodeIds)
+	for i := range nodes {
+		availableNodeIps = append(availableNodeIps, nodes[i].GetInnerIP())
+	}
+
+	if state.Task.CommonParams == nil {
+		state.Task.CommonParams = make(map[string]string)
+	}
+
+	state.Task.NodeIPList = availableNodeIps
+	state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(availableNodeIds, ",")
+	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(availableNodeIps, ",")
+	state.Task.CommonParams[cloudprovider.FailedTransVpcNodeIDsKey.String()] = strings.Join(failedIds, ",")
+}
+
+func handleAddNodesData(ctx context.Context, clusterId string, nodes *business.InstanceList) ([]string, []string) {
+	var (
+		failedNodeIds  = make([]string, 0)
+		successNodeIds = make([]string, 0)
+	)
+
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
+	// update success nodes ip
+	for i := range nodes.SuccessNodes {
+		successNodeIds = append(successNodeIds, nodes.SuccessNodes[i].NodeId)
+		err := updateNodeIPByNodeID(ctx, clusterId, nodes.SuccessNodes[i])
+		if err != nil {
+			blog.Errorf("handleAddNodesData[%s] updateNodeIPByNodeID[%s][%s] failed: %v",
+				taskId, nodes.SuccessNodes[i].NodeId, nodes.SuccessNodes[i].NodeIp, err)
+			continue
+		}
+
+		blog.Infof("handleAddNodesData[%s] updateNodeIPByNodeID[%s][%s] successful",
+			taskId, nodes.SuccessNodes[i].NodeId, nodes.SuccessNodes[i].NodeIp)
+	}
+
+	// update failed nodes status
+	for i := range nodes.FailedNodes {
+		failedNodeIds = append(failedNodeIds, nodes.FailedNodes[i].NodeId)
+	}
+	reason := "node trans vpc failed"
+	_ = updateNodeStatusByNodeID(failedNodeIds, common.StatusAddNodesFailed, reason)
+
+	return successNodeIds, failedNodeIds
+}
+
 // AddNodesShieldAlarmTask shield nodes alarm
 func AddNodesShieldAlarmTask(taskID string, stepName string) error {
 	start := time.Now()
@@ -47,7 +238,8 @@ func AddNodesShieldAlarmTask(taskID string, stepName string) error {
 	// extract valid info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 
-	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
+	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
+		cloudprovider.NodeIPsKey.String(), ",")
 	if len(ipList) == 0 {
 		blog.Errorf("AddNodesShieldAlarmTask[%s]: get cluster IPList/clusterID empty", taskID)
 		retErr := fmt.Errorf("AddNodesShieldAlarmTask: get cluster IPList/clusterID empty")
@@ -111,8 +303,10 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	schedule, _ := strconv.ParseBool(scheduleStr)
 
 	// get nodes IDs and IPs
-	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
-	idList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIDsKey.String(), ",")
+	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
+		cloudprovider.NodeIPsKey.String(), ",")
+	idList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
+		cloudprovider.NodeIDsKey.String(), ",")
 	if len(idList) != len(ipList) {
 		blog.Errorf("AddNodesToClusterTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to "+
 			"InnerIP %d, fatal", taskID, taskID, stepName, // nolint
@@ -120,7 +314,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("NodeID & InnerIP params err"))
 		return fmt.Errorf("task %s parameter err", taskID)
 	}
-	idToIPMap := cloudprovider.GetIDToIPMap(idList, ipList)
+	idToIPMap := cloudprovider.GetNodeIdToIpMapByNodeIds(idList)
 
 	// cluster/cloud/nodeGroup/cloudCredential Info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
@@ -187,7 +381,10 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	state.Task.CommonParams[cloudprovider.SuccessNodeIDsKey.String()] = strings.Join(successNodes, ",")
 	state.Task.CommonParams[cloudprovider.FailedNodeIDsKey.String()] = strings.Join(failedNodes, ",")
 	// set failed node status
-	_ = updateNodeStatusByNodeID(failedNodes, common.StatusAddNodesFailed)
+	if len(failedNodes) > 0 {
+		reason := "call tke addNode failed"
+		_ = updateNodeStatusByNodeID(failedNodes, common.StatusAddNodesFailed, reason)
+	}
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -254,7 +451,10 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 		state.Task.CommonParams = make(map[string]string)
 	}
 	if len(addFailureNodes) > 0 {
+		insInfos, reason, _ := business.GetFailedNodesReason(ctx, dependInfo, addFailureNodes)
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(addFailureNodes, ",")
+		state.Task.CommonParams[cloudprovider.FailedClusterNodeReasonKey.String()] = reason
+		_ = updateFailedNodeStatusByNodeID(insInfos, common.StatusAddNodesFailed)
 	}
 	if len(addSuccessNodes) == 0 {
 		blog.Errorf("CheckAddNodesStatusTask[%s] AddSuccessNodes empty", taskID)
@@ -262,7 +462,14 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
+	nodeIPs := cloudprovider.GetInstanceIPsByID(ctx, addSuccessNodes)
 	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(addSuccessNodes, ",")
+	// state.Task.NodeIPList = nodeIPs
+	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
+	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(nodeIPs, ",")
+	blog.Infof("CheckAddNodesStatusTask[%s] successNodeIds[%v] successNodeIps[%v]",
+		taskID, addSuccessNodes, nodeIPs)
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -294,45 +501,10 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error { // nolint
 	passwd := state.Task.CommonParams[cloudprovider.PasswordKey.String()]
 	addSuccessNodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.SuccessClusterNodeIDsKey.String(), ",")
-	addFailedNodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
-		cloudprovider.FailedClusterNodeIDsKey.String(), ",")
-	failedNodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
-		cloudprovider.FailedNodeIDsKey.String(), ",")
-
-	// get nodes IDs and IPs
-	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
-	idList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIDsKey.String(), ",")
-	if len(idList) != len(ipList) {
-		blog.Errorf("UpdateNodeDBInfoTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to "+
-			"InnerIP %d, fatal", taskID, taskID, stepName,
-			len(idList), len(ipList))
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("NodeID & InnerIP params err"))
-		return fmt.Errorf("task %s parameter err", taskID)
-	}
-	nodeIDToIPMap := make(map[string]string, 0)
-	for i := 0; i < len(ipList); i++ {
-		nodeIDToIPMap[idList[i]] = ipList[i]
-	}
-
-	successInstances := addSuccessNodes
-	failedInstances := make([]string, 0)
-	if len(addFailedNodes) > 0 {
-		failedInstances = append(failedInstances, addFailedNodes...)
-	}
-	if len(failedNodes) > 0 {
-		failedInstances = append(failedInstances, failedNodes...)
-	}
-
-	// instanceIPs := make([]string, 0)
-	// for _, instanceID := range successInstances {
-	//	if ip, ok := nodeIDToIPMap[instanceID]; ok {
-	//		instanceIPs = append(instanceIPs, ip)
-	//	}
-	// }
 
 	// update nodes status in DB
-	for i := range successInstances {
-		node, errGet := cloudprovider.GetStorageModel().GetNode(context.Background(), successInstances[i])
+	for i := range addSuccessNodes {
+		node, errGet := cloudprovider.GetStorageModel().GetNode(context.Background(), addSuccessNodes[i])
 		if errGet != nil {
 			continue
 		}
@@ -344,20 +516,6 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error { // nolint
 		}
 	}
 	blog.Infof("UpdateNodeDBInfoTask[%s] step %s successful", taskID, stepName)
-
-	// update failed nodes status in DB
-	for i := range failedInstances {
-		node, errGet := cloudprovider.GetStorageModel().GetNode(context.Background(), failedInstances[i])
-		if errGet != nil {
-			continue
-		}
-		node.Passwd = passwd
-		node.Status = common.StatusAddNodesFailed
-		errGet = cloudprovider.GetStorageModel().UpdateNode(context.Background(), node)
-		if errGet != nil {
-			continue
-		}
-	}
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {

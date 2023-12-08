@@ -1,6 +1,9 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="cluster-node bcs-content-wrapper pb-[20px]">
+  <div :class="[
+    'cluster-node bcs-content-wrapper',
+    { 'px-[24px] py-[16px]': !fromCluster }
+  ]">
     <bcs-alert type="info" class="cluster-node-tip">
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
@@ -119,7 +122,7 @@
           </bcs-button>
         </BcsCascade>
       </div>
-      <div class="right">
+      <div class="right flex-1 ml-[10px]">
         <ClusterSelect
           class="mr10 w-[254px]"
           v-model="localClusterId"
@@ -128,12 +131,11 @@
         />
         <bcs-search-select
           clearable
-          class="search-select bg-[#fff]"
+          class="bg-[#fff] flex-1"
           :data="searchSelectData"
           :show-condition="false"
           :show-popover-tag-change="false"
           :placeholder="$t('cluster.nodeList.placeholder.searchNode')"
-          selected-style="checkbox"
           default-focus
           v-model="searchSelectValue"
           @change="searchSelectChange"
@@ -142,7 +144,7 @@
       </div>
     </div>
     <!-- 节点列表 -->
-    <div class="mt-[20px] px-[20px]" v-bkloading="{ isLoading: tableLoading }">
+    <div class="mt-[20px]" v-bkloading="{ isLoading: tableLoading }">
       <bcs-table
         :size="tableSetting.size"
         :data="curPageData"
@@ -284,7 +286,7 @@
           show-overflow-tooltip
           v-if="isColumnRender('zoneID')">
           <template #default="{ row }">
-            {{ row.zoneName || '--' }}
+            {{ row.zoneName || row.zoneID ||'--' }}
           </template>
         </bcs-table-column>
         <bcs-table-column
@@ -510,7 +512,8 @@
       :is-show.sync="setLabelConf.isShow"
       :width="750"
       :before-close="handleBeforeClose"
-      quick-close>
+      quick-close
+      transfer>
       <template #header>
         <span>{{setLabelConf.title}}</span>
         <span class="sideslider-tips">{{$t('cluster.nodeList.msg.labelDesc')}}</span>
@@ -546,7 +549,8 @@
       :title="$t('cluster.nodeList.button.setTaint')"
       :width="750"
       :before-close="handleBeforeClose"
-      quick-close>
+      quick-close
+      transfer>
       <template #content>
         <TaintContent
           :cluster-id="localClusterId"
@@ -563,7 +567,8 @@
       :title="logSideDialogConf.title"
       :width="960"
       @hidden="closeLog"
-      :quick-close="true">
+      :quick-close="true"
+      transfer>
       <div slot="content">
         <div class="log-wrapper" v-bkloading="{ isLoading: logSideDialogConf.loading }">
           <TaskList :data="logSideDialogConf.taskData"></TaskList>
@@ -583,7 +588,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, set, watch } from 'vue';
+import { computed, defineComponent, onBeforeUnmount, onMounted, ref, set, watch } from 'vue';
 import { TranslateResult } from 'vue-i18n';
 
 import useTableAcrossCheck from '../../../composables/use-table-across-check';
@@ -699,10 +704,7 @@ export default defineComponent({
     };
     // 表格表头搜索项配置
     const filtersDataSource = computed(() => ({
-      status: Object.keys(nodeStatusMap).map(key => ({
-        text: nodeStatusMap[key],
-        value: key.toUpperCase(),
-      })),
+      status: status.value,
       nodeSource: [
         {
           text: $i18n.t('cluster.nodeList.label.source.add'),
@@ -734,10 +736,7 @@ export default defineComponent({
         name: $i18n.t('generic.label.status'),
         id: 'status',
         multiable: true,
-        children: Object.keys(nodeStatusMap).map(key => ({
-          id: key.toUpperCase(),
-          name: nodeStatusMap[key],
-        })),
+        children: status.value,
       },
       {
         name: $i18n.t('cluster.ca.nodePool.create.az.title'),
@@ -974,6 +973,18 @@ export default defineComponent({
     // 全量表格数据
     const tableData = ref<any[]>([]);
 
+    // 状态
+    const status = computed(() => tableData.value.reduce((pre, item) => {
+      if (!pre.find(data => data.id === item.status)) {
+        pre.push({
+          id: item.status,
+          name: nodeStatusMap[item.status?.toLocaleLowerCase()] || item.status,
+          text: nodeStatusMap[item.status?.toLocaleLowerCase()] || item.status,
+          value: item.status,
+        });
+      }
+      return pre;
+    }, []));
     // 节点池
     const nodeGroupList = computed(() => tableData.value.reduce<any[]>((pre, item) => {
       if (item.nodeGroupID && pre.every(data => data.id !== item.nodeGroupID)) {
@@ -993,15 +1004,16 @@ export default defineComponent({
       if (!data) {
         pre.push({
           value: row.zoneID,
-          text: `${row.zoneName} (1)`,
+          text: `${row.zoneName || row.zoneID} (1)`,
+          // 兼容两种数据源
           id: row.zoneID,
-          name: `${row.zoneName} (1)`,
+          name: `${row.zoneName || row.zoneID} (1)`,
           count: 1,
         });
       } else {
         data.count += 1;
-        data.text = `${row.zoneName} (${data.count})`;
-        data.name = `${row.zoneName} (${data.count})`;
+        data.text = `${row.zoneName || row.zoneID} (${data.count})`;
+        data.name = `${row.zoneName || row.zoneID} (${data.count})`;
       }
       return pre;
     }, []));
@@ -1754,6 +1766,10 @@ export default defineComponent({
         start();
       }
     });
+    onBeforeUnmount(() => {
+      logIntervalStop();
+      stop();
+    });
     return {
       showConfirmDialog,
       copyList,
@@ -1840,7 +1856,7 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .cluster-node-tip {
-    margin: 20px;
+    margin-bottom: 20px;
     .num {
         font-weight: 700;
     }
@@ -1849,7 +1865,6 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
     .left {
         display: flex;
         align-items: center;
@@ -1859,9 +1874,6 @@ export default defineComponent({
     }
     .right {
         display: flex;
-        .search-select {
-            width: 500px;
-        }
     }
 }
 /deep/ .bk-dropdown-list {

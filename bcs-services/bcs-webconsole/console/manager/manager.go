@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/perf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
@@ -42,11 +43,12 @@ type ConsoleManager struct {
 	ConnTime       time.Time // 连接时间
 	LastInputTime  time.Time // 更新ws时间
 	keyWaitingTime time.Time // 记录 webconsole key 响应时间
-	keyDec         byte      // 记录特定的key的 ascii 编码
 	podCtx         *types.PodContext
 	managerFuncs   []ManagerFunc
 	cmdParser      *audit.CmdParse
 	recorder       *record.ReplyRecorder
+	meterKey       string
+	meters         []*types.DelayData
 }
 
 // NewConsoleManager :
@@ -61,11 +63,6 @@ func NewConsoleManager(ctx context.Context, podCtx *types.PodContext,
 		podCtx:         podCtx,
 		managerFuncs:   []ManagerFunc{},
 		cmdParser:      audit.NewCmdParse(),
-	}
-
-	// key from env
-	if len(key) > 0 {
-		mgr.keyDec = key[0]
 	}
 
 	// 初始化 terminal record
@@ -98,12 +95,7 @@ func (c *ConsoleManager) HandleInputMsg(msg []byte) ([]byte, error) {
 	now := time.Now()
 	// 更新ws时间
 	c.LastInputTime = now
-
-	// key 性能统计
-	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
-		c.keyWaitingTime = now
-		logger.Info("tracing key input", "key", msg)
-	}
+	c.keyWaitingTime = now
 
 	// 命令行解析与审计
 	_, ss, err := ansi.Decode(msg)
@@ -130,9 +122,19 @@ func (c *ConsoleManager) HandlePostOutputMsg(msg []byte) {
 	// replay 记录数据流
 	record.RecordOutputEvent(c.recorder, msg)
 
-	// key 性能统计
-	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
-		logger.Info("tracing key output", "key", msg, "waiting", time.Since(c.keyWaitingTime))
+	// 性能统计，按照用户设置的key统计
+	if len(msg) > 0 && types.CommandDelayMatch(c.meterKey, msg[0]) {
+		m := &types.DelayData{
+			ClusterId:   c.podCtx.ClusterId,
+			TimeConsume: time.Since(c.keyWaitingTime).String(),
+			CreateTime:  time.Now().Format(time.RFC3339),
+			SessionId:   c.podCtx.SessionId,
+			PodName:     c.podCtx.PodName,
+			Username:    c.podCtx.Username,
+			CommandKey:  c.meterKey,
+		}
+		c.meters = append(c.meters, m)
+
 	}
 }
 
@@ -143,23 +145,38 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 
 	// 结束会话时,处理缓存/关闭文件
 	defer c.recorder.End()
+	p := perf.GetGlobalPerformance()
+	defer p.PushMeter(c.meters)
+
+	meterKeyChan := p.Subscribe(c.podCtx.SessionId, c.podCtx.Username)
+	defer p.UnSubscribe(c.podCtx.SessionId)
 
 	for {
 		select {
 		case <-c.ctx.Done():
 			logger.Infof("close %s ConsoleManager done", c.podCtx.PodName)
 			return nil
+
+		case k := <-meterKeyChan:
+			if k != c.meterKey {
+				logger.Infof("receive meter key=%s", k)
+				c.meterKey = k
+			}
+
 		case <-interval.C:
+			// 推送数据到 perf 队列
+			idx := p.PushMeter(c.meters)
+			c.meters = c.meters[idx:]
+
 			if err := c.handleIdleTimeout(ctx); err != nil {
 				return err
 			}
 			// 自定义函数
 			for _, managerFunc := range c.managerFuncs {
 				if err := managerFunc(c.podCtx); err != nil {
-					return err
+					logger.Errorf("handler manager func err: %s", err.Error())
 				}
 			}
-
 			// 定时写入文件
 			c.recorder.Flush()
 		}

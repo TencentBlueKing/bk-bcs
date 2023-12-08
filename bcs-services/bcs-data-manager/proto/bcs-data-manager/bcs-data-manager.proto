@@ -1777,21 +1777,33 @@ message GetPowerTradingDataRequest {
       description : "结束时间，yyyy-MM-dd HH:mm:ss格式"
     }
   ];
-  map<string, string> params = 4[
+  map<string, string> params = 4 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "params",
       description : "查询筛选条件"
     }
   ];
-  map<string, int64> sort = 5[
+  map<string, int64> sort = 5 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "sort",
       description : "排序策略，1表示升序，-1表示降序"
     }];
-  string preferStorage = 6[
+  string preferStorage = 6 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "preferStorage",
       description : "存储偏好，tspider或者mongodb"
+    }
+  ];
+  uint32 page = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页码"
+    }
+  ];
+  uint32 size = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "查询限制数量"
     }
   ];
 }
@@ -1823,6 +1835,18 @@ message GetPowerTradingDataResponse {
     title : "data",
     description : "运营数据列表信息"
   }];
+  uint32 page = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页码"
+    }
+  ];
+  uint32 size = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "查询限制数量"
+    }
+  ];
 }
 
 message TEGWorkload {
@@ -1833,47 +1857,47 @@ message TEGWorkload {
   string namespace = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "namespace",
       description: "Namespace"
-    }];
+  }];
   string workload_kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "workload_kind",
       description: "Workload kind"
-    }];
+  }];
   string workload_name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "workload_name",
       description: "Workload name"
-    }];
+  }];
   string maintainer = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "maintainer",
       description: "Maintainer"
-    }];
+  }];
   string bakMaintainer = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "bakMaintainer",
       description: "Backup maintainer"
-    }];
-  int64 businessSetId = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  }];
+  int32 businessSetId = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "businessSetId",
       description: "Business set identifier"
-    }];
-  int64 businessId = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  }];
+  int32 businessId = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "businessId",
       description: "Business identifier"
-    }];
-  int64 businessModuleId = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  }];
+  int32 businessModuleId = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "businessModuleId",
       description: "Business module identifier"
-    }];
-  int64 schedulerStatus = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  }];
+  int32 schedulerStatus = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "schedulerStatus",
       description: "Scheduler status"
-    }];
-  int64 serviceStatus = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  }];
+  int32 serviceStatus = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "serviceStatus",
       description: "Service status"
     }];
-    int64 hpaStatus = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  int32 hpaStatus = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "hpaStatus",
       description: "HPA status"
-    }];
+  }];
 }
 
 message TEGMessage {

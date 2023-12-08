@@ -79,7 +79,8 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	if step == nil {
 		return nil
 	}
-
+	// get bkBizID
+	clusterIDString := step.Params[cloudprovider.ClusterIDKey.String()]
 	// get bkBizID
 	bkBizIDString := step.Params[cloudprovider.BKBizIDKey.String()]
 	// get bkCloudID
@@ -117,6 +118,13 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 		return nil
 	}
 
+	cls, err := cloudprovider.GetClusterByID(clusterIDString)
+	if err != nil {
+		blog.Errorf("InstallGSEAgentTask %s failed, invalid clusterIDString, err %s", taskID, err.Error())
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("invalid clusterIDString, err %s", err.Error()))
+		return nil
+	}
+
 	nodeManClient := nodeman.GetNodeManClient()
 	if nodeManClient == nil {
 		blog.Errorf("nodeman client is not init")
@@ -136,6 +144,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	// install gse agent
 	hosts := make([]nodeman.JobInstallHost, 0)
 	ips := strings.Split(nodeIPs, ",")
+
 	for _, v := range ips {
 		hosts = append(hosts, nodeman.JobInstallHost{
 			BKCloudID: bkCloudID,
@@ -157,13 +166,32 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 				return dPort
 			}(),
 			AuthType: func() nodeman.AuthType {
+				if cloudprovider.IsMasterIp(v, cls) {
+					if len(cls.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeySecret()) > 0 {
+						return nodeman.KeyAuthType
+					}
+					return nodeman.PasswordAuthType
+				}
+
 				if len(secret) > 0 {
 					return nodeman.KeyAuthType
 				}
 				return nodeman.PasswordAuthType
 			}(),
-			Password: passwd,
+			Password: func() string {
+				if cloudprovider.IsMasterIp(v, cls) {
+					return cls.GetNodeSettings().GetMasterLogin().GetInitLoginPassword()
+				}
+
+				return passwd
+			}(),
 			Key: func() string {
+				if cloudprovider.IsMasterIp(v, cls) &&
+					len(cls.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeySecret()) > 0 {
+					secretStr, _ := utils.Base64Decode(cls.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeySecret())
+					return secretStr
+				}
+
 				if len(secret) > 0 {
 					secretStr, _ := utils.Base64Decode(secret)
 					return secretStr

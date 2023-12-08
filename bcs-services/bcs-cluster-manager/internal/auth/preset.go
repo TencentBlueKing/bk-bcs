@@ -54,6 +54,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.GetAutoScalingOption",
 	"ClusterManager.ListAutoScalingOption",
 	"ClusterManager.SyncAutoScalingOption",
+	"ClusterManager.UpdateAsOptionDeviceProvider",
 
 	// nodeTemplate
 	"ClusterManager.CreateNodeTemplate",
@@ -106,6 +107,8 @@ var NoAuthMethod = []string{
 	"ClusterManager.GetTopologyHostIdsNodes",
 	"ClusterManager.GetHostsDetails",
 	"ClusterManager.VerifyCloudAccount",
+	"ClusterManager.CheckCidrConflictFromVpc",
+	"ClusterManager.GetMasterSuggestedMachines",
 }
 
 // ActionPermissions action 对应权限中心的权限
@@ -123,6 +126,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.CreateVirtualCluster":      cluster.CanCreateClusterOperation,
 	"ClusterManager.DeleteVirtualCluster":      cluster.CanDeleteClusterOperation,
 	"ClusterManager.UpdateVirtualClusterQuota": cluster.CanManageClusterOperation,
+	"ClusterManager.AddSubnetToCluster":        cluster.CanManageClusterOperation,
 
 	// node
 	"ClusterManager.AddNodesToCluster":           cluster.CanManageClusterOperation,

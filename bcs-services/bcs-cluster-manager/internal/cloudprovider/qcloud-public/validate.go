@@ -340,14 +340,6 @@ func (c *CloudValidate) ListInstanceTypeValidate(
 		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid region info", cloudName)
 	}
 
-	if options.GetEditionInfo().IsInnerEdition() {
-		if len(req.ProjectID) == 0 {
-			return fmt.Errorf("%s ListInstanceTypeValidate request lost valid info", cloudName)
-		}
-
-		return nil
-	}
-
 	if account == nil || len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
 		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid crendential info", cloudName)
 	}
@@ -382,6 +374,11 @@ func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest, op
 
 	if req.IsExternalNode && req.NodeGroupID == "" {
 		return fmt.Errorf("%s AddNodesToClusterValidate must be depent NodeGroup", cloudName)
+	}
+
+	if req.GetLogin() == nil || (req.GetLogin().GetInitLoginPassword() == "" &&
+		req.GetLogin().GetKeyPair().GetKeyID() == "") {
+		return fmt.Errorf("%s AddNodesToClusterValidate login info empty", cloudName)
 	}
 
 	return nil

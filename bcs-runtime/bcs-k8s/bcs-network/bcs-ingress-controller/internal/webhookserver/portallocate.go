@@ -29,18 +29,18 @@ func (s *Server) portAllocate(portEntryList []*portEntry) ([]*networkextensionv1
 	s.poolCache.Lock()
 	defer s.poolCache.Unlock()
 	for _, portEntry := range portEntryList {
-		poolKey := getPoolKey(portEntry.poolName, portEntry.poolNamespace)
+		poolKey := getPoolKey(portEntry.PoolName, portEntry.PoolNamespace)
 		var portPoolItemStatus *networkextensionv1.PortPoolItemStatus
 		var err error
 		// deal with TCP_UDP protocol
 		// for TCP_UDP protocol, one container port needs both TCP listener port and UDP listener port
-		if portEntry.protocol == constant.PortPoolPortProtocolTCPUDP {
+		if portEntry.Protocol == constant.PortPoolPortProtocolTCPUDP {
 			var cachePortItemMap map[string]portpoolcache.AllocatedPortItem
-			portPoolItemStatus, cachePortItemMap, err = s.poolCache.AllocateAllProtocolPortBinding(poolKey, portEntry.itemName)
+			portPoolItemStatus, cachePortItemMap, err = s.poolCache.AllocateAllProtocolPortBinding(poolKey, portEntry.ItemName)
 			if err != nil {
 				s.cleanAllocatedResource(portItemListArr)
 				return nil, nil, errors.Errorf("allocate protocol %s port from pool %s failed, err %s",
-					portEntry.protocol, poolKey, err.Error())
+					portEntry.Protocol, poolKey, err.Error())
 			}
 			var tmpPortItemList []portpoolcache.AllocatedPortItem
 			for _, cachePortItem := range cachePortItemMap {
@@ -51,12 +51,12 @@ func (s *Server) portAllocate(portEntryList []*portEntry) ([]*networkextensionv1
 		} else {
 			// deal with TCP protocol and UDP protocol
 			var cachePortItem portpoolcache.AllocatedPortItem
-			portPoolItemStatus, cachePortItem, err = s.poolCache.AllocatePortBinding(poolKey, portEntry.protocol,
-				portEntry.itemName)
+			portPoolItemStatus, cachePortItem, err = s.poolCache.AllocatePortBinding(poolKey, portEntry.Protocol,
+				portEntry.ItemName)
 			if err != nil {
 				s.cleanAllocatedResource(portItemListArr)
 				return nil, nil, errors.Errorf("allocate protocol %s port from pool %s failed, err %s",
-					portEntry.protocol, poolKey, err.Error())
+					portEntry.Protocol, poolKey, err.Error())
 			}
 			portItemListArr = append(portItemListArr, []portpoolcache.AllocatedPortItem{cachePortItem})
 			portPoolItemStatusList = append(portPoolItemStatusList, portPoolItemStatus)

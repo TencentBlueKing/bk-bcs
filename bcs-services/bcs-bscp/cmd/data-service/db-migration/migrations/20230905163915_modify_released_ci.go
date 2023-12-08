@@ -13,8 +13,6 @@
 package migrations
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 
 	"bscp.io/cmd/data-service/db-migration/migrator"
@@ -39,27 +37,12 @@ func mig20230905163915Up(tx *gorm.DB) error {
 		OriginSignature string `gorm:"type:varchar(64) not null"`
 		OriginByteSize  uint   `gorm:"type:bigint(1) unsigned not null"`
 
-		Reviser   string    `gorm:"type:varchar(64) not null"`
-		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
-
 		BizID     uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:1"`
 		AppID     uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:2"`
 		ReleaseID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:3"`
 	}
 
 	/*** 字段变更 ***/
-	// delete old column
-	if tx.Migrator().HasColumn(&ReleasedConfigItems{}, "Reviser") {
-		if err := tx.Migrator().DropColumn(&ReleasedConfigItems{}, "Reviser"); err != nil {
-			return err
-		}
-	}
-	if tx.Migrator().HasColumn(&ReleasedConfigItems{}, "UpdatedAt") {
-		if err := tx.Migrator().DropColumn(&ReleasedConfigItems{}, "UpdatedAt"); err != nil {
-			return err
-		}
-	}
-
 	// add new column
 	if !tx.Migrator().HasColumn(&ReleasedConfigItems{}, "OriginSignature") {
 		if err := tx.Migrator().AddColumn(&ReleasedConfigItems{}, "OriginSignature"); err != nil {

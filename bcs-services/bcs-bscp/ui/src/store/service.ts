@@ -49,5 +49,15 @@ export default defineStore('service', () => {
     user_group: 'root',
   });
 
-  return { appData, permCheckLoading, hasEditServicePerm, checkPermBeforeOperate, lastCreatePermission };
+  // 批量上传的ids
+  const batchUploadIds = ref<number[]>([]);
+
+  return {
+    appData,
+    permCheckLoading,
+    hasEditServicePerm,
+    checkPermBeforeOperate,
+    lastCreatePermission,
+    batchUploadIds,
+  };
 });

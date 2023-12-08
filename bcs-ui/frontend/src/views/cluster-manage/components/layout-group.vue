@@ -75,14 +75,14 @@ export default defineComponent({
     }
   }
   .content {
-    padding: 10px 28px;
+    padding: 10px 24px;
   }
   &.collapsible .title {
     cursor: pointer;
   }
   &.default {
     .title {
-      padding: 0 28px;
+      padding: 0 24px;
       height: 32px;
       font-size: 12px;
       .icon {

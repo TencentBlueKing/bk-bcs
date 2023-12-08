@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -40,9 +41,6 @@ import (
 const (
 	// EmptyCreator 无创建者
 	EmptyCreator = "--"
-
-	// LabelCreator 创建者标签
-	LabelCreator = "io.tencent.paas.creator"
 
 	// OpEQ 等于
 	OpEQ = "="
@@ -110,7 +108,7 @@ func (f *QueryFilter) ToConditions() []*operator.Condition {
 		// 使用全角符号代替 '.',区分字段分隔，无创建者的资源，creator字段为 null
 		conditions = append(conditions, operator.NewLeafCondition(
 			operator.Eq, map[string]interface{}{
-				"data.metadata.annotations." + mapx.ConvertPath(LabelCreator): creator}))
+				"data.metadata.annotations." + mapx.ConvertPath(constants.CreatorAnnoKey): creator}))
 	}
 
 	// name 过滤条件
@@ -161,7 +159,7 @@ func (f *QueryFilter) CreatorFilter(resources []*storage.Resource) []*storage.Re
 		creator = ""
 	}
 	for _, v := range resources {
-		if mapx.GetStr(v.Data, []string{"metadata", "annotations", mapx.ConvertPath(LabelCreator)}) == creator {
+		if mapx.GetStr(v.Data, []string{"metadata", "annotations", mapx.ConvertPath(constants.CreatorAnnoKey)}) == creator {
 			result = append(result, v)
 		}
 	}

@@ -318,7 +318,7 @@ func GetClusterExternalNodeScript(ctx context.Context, info *cloudprovider.Cloud
 // GenerateNTAddExistedInstanceReq 生成上架节点请求. 节点模板抽象理论上需要用户保证节点配置高度一致, 若用户配置了多盘挂载,
 // 则使用用户配置选项若没有配置节点模板 或者 节点模板没有配置多盘选项, 则需要自动进行多盘挂载
 func GenerateNTAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, nodeIDs, nodeIPs []string,
-	passwd, operator string, options *NodeAdvancedOptions) *api.AddExistedInstanceReq {
+	login *proto.NodeLoginInfo, operator string, options *NodeAdvancedOptions) *api.AddExistedInstanceReq {
 	req := &api.AddExistedInstanceReq{
 		ClusterID:   info.Cluster.SystemID,
 		InstanceIDs: nodeIDs,
@@ -328,7 +328,23 @@ func GenerateNTAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 			Operator: operator,
 			Render:   true,
 		}, options),
-		LoginSetting:        &api.LoginSettings{Password: passwd},
+		LoginSetting: func() *api.LoginSettings {
+			return &api.LoginSettings{
+				Password: func() string {
+					if len(login.GetInitLoginPassword()) > 0 {
+						return login.GetInitLoginPassword()
+					}
+					return ""
+				}(),
+				KeyIds: func() []string {
+					if len(login.GetKeyPair().GetKeyID()) > 0 {
+						return strings.Split(login.GetKeyPair().GetKeyID(), ",")
+					}
+
+					return nil
+				}(),
+			}
+		}(),
 		SkipValidateOptions: skipValidateOption(info.Cluster),
 	}
 
@@ -355,7 +371,7 @@ func GenerateNTAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 					}, options)
 					// has many data disk
 					if disk.DiskCount > 1 {
-						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.DefaultDataDisk}
+						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk("")}
 					}
 
 					req.InstanceAdvancedSettingsOverrides = append(req.InstanceAdvancedSettingsOverrides,
@@ -423,7 +439,7 @@ func GenerateInstanceAdvanceInfo(cluster *proto.Cluster,
 	}
 
 	// attention: nodetemplate datadisks && options datadisks is mutually exclusive
-	if len(options.Disks) > 0 {
+	if options != nil && len(options.Disks) > 0 {
 		for i, disk := range options.Disks {
 			diskSize, _ := strconv.Atoi(disk.DiskSize)
 			if disk.DiskPartition == "" && i < len(api.DefaultDiskPartition) {
@@ -472,7 +488,7 @@ func skipValidateOption(cls *proto.Cluster) []string {
 
 // GenerateNGAddExistedInstanceReq xxx
 func GenerateNGAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, nodeIDs, nodeIPs []string,
-	passwd, operator string, options *NodeAdvancedOptions) *api.AddExistedInstanceReq {
+	login *proto.NodeLoginInfo, operator string, options *NodeAdvancedOptions) *api.AddExistedInstanceReq {
 	req := &api.AddExistedInstanceReq{
 		ClusterID:   info.Cluster.SystemID,
 		InstanceIDs: nodeIDs,
@@ -482,7 +498,23 @@ func GenerateNGAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 			Operator: operator,
 			Render:   true,
 		}, options),
-		LoginSetting:        &api.LoginSettings{Password: passwd},
+		LoginSetting: func() *api.LoginSettings {
+			return &api.LoginSettings{
+				Password: func() string {
+					if len(login.GetInitLoginPassword()) > 0 {
+						return login.GetInitLoginPassword()
+					}
+					return ""
+				}(),
+				KeyIds: func() []string {
+					if len(login.GetKeyPair().GetKeyID()) > 0 {
+						return strings.Split(login.GetKeyPair().GetKeyID(), ",")
+					}
+
+					return nil
+				}(),
+			}
+		}(),
 		SkipValidateOptions: skipValidateOption(info.Cluster),
 	}
 
@@ -676,7 +708,7 @@ type AddExistedInstanceResult struct {
 
 // AddNodesToCluster add nodes to cluster and return nodes result
 func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, options *NodeAdvancedOptions,
-	nodeIDs []string, passwd string, isNodeGroup bool, idToIP map[string]string,
+	nodeIDs []string, login *proto.NodeLoginInfo, isNodeGroup bool, idToIP map[string]string,
 	operator string) (*AddExistedInstanceResult, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -700,9 +732,9 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 
 	// nodeGroup or nodeTemplate
 	if isNodeGroup {
-		addInstanceReq = GenerateNGAddExistedInstanceReq(info, nodeIDs, nodeIPs, passwd, operator, options)
+		addInstanceReq = GenerateNGAddExistedInstanceReq(info, nodeIDs, nodeIPs, login, operator, options)
 	} else {
-		addInstanceReq = GenerateNTAddExistedInstanceReq(info, nodeIDs, nodeIPs, passwd, operator, options)
+		addInstanceReq = GenerateNTAddExistedInstanceReq(info, nodeIDs, nodeIPs, login, operator, options)
 	}
 
 	blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster request[%+v]", taskID, *addInstanceReq)

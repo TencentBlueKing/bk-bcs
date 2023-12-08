@@ -101,11 +101,11 @@ const getAppData = async () => {
     appDataLoading.value = false;
   } catch (e) {
     if ((e as AxiosError).response?.status === 404) {
-      router.push({ name: 'service-all' })
+      router.push({ name: 'service-all' });
       BkMessage({
         theme: 'error',
-        message: '访问的服务不存在，请选择其它服务'
-      })
+        message: '访问的服务不存在，请选择其它服务',
+      });
     }
   }
 };

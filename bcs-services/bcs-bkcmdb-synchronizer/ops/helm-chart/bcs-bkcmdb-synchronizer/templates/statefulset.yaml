@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "bcs-bkcmdb-synchronizer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-bkcmdb-synchronizer.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  serviceName: {{ include "bcs-bkcmdb-synchronizer.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "bcs-bkcmdb-synchronizer.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+      {{- include "bcs-bkcmdb-synchronizer.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: {{ include "bcs-bkcmdb-synchronizer.fullname" . }}-server
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/data/bcs/bcs-bkcmdb-synchronizer/container-start.sh"]
+          args:
+            - --conf
+            - /data/bcs/bcs-bkcmdb-synchronizer/bcs-bkcmdb-synchronizer.json
+          env:
+            - name: BCS_CONFIG_TYPE
+              value: "{{ .Values.env.bk_bcs.config_type }}"
+            - name: localIp
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: synchronizer_env
+              value: "{{ .Values.env.synchronizer.env }}"
+            - name: synchronizer_replicas
+              value: "{{ .Values.replicaCount }}"
+            - name: synchronizer_bkBizID
+              value: "{{.Values.env.synchronizer.bkBizID }}"
+            - name: synchronizer_hostID
+              value: "{{.Values.env.synchronizer.hostID }}"
+            - name: synchronizer_whiteList
+              value: "{{.Values.env.synchronizer.whiteList}}"
+            - name: synchronizer_blackList
+              value: "{{.Values.env.synchronizer.blackList}}"
+            - name: client_clientCrtPwd
+              value: "{{ .Values.env.client.clientCrtPwd }}"
+            - name: client_clientCa
+              value: "{{ .Values.env.client.clientCa }}"
+            - name: client_clientCrt
+              value: "{{ .Values.env.client.clientCrt }}"
+            - name: client_clientKey
+              value: "{{ .Values.env.client.clientKey }}"
+            - name: bcslog_logDir
+              value: "{{ .Values.env.bcslog.logDir }}"
+            - name: bcslog_logMaxSize
+              value: "{{ .Values.env.bcslog.logMaxSize }}"
+            - name: bcslog_logMaxNum
+              value: "{{ .Values.env.bcslog.logMaxNum }}"
+            - name: bcslog_logToStdErr
+              value: "{{ .Values.env.bcslog.logToStdErr }}"
+            - name: bcslog_alsoLogToStdErr
+              value: "{{ .Values.env.bcslog.alsoLogToStdErr }}"
+            - name: bcslog_v
+              value: "{{ .Values.env.bcslog.v }}"
+            - name: bcslog_vmodule
+              value: "{{ .Values.env.bcslog.vmodule }}"
+            - name: bcslog_logBacktraceAt
+              value: "{{ .Values.env.bcslog.logBacktraceAt }}"
+            - name: bcsapi_httpAddr
+              value: "{{ .Values.env.bcsapi.httpAddr }}"
+            - name: bcsapi_grpcAddr
+              value: "{{ .Values.env.bcsapi.grpcAddr }}"
+            - name: bcsapi_bearerToken
+              value: "{{ .Values.env.bcsapi.bearerToken }}"
+            - name: bcsapi_projectToken
+              value: "{{ .Values.env.bcsapi.projectToken }}"
+            - name: bcsapi_projectUsername
+              value: "{{ .Values.env.bcsapi.projectUsername }}"
+            - name: rabbitmq_host
+              value: "{{ .Values.env.rabbitmq.host }}"
+            - name: rabbitmq_port
+              value: "{{ .Values.env.rabbitmq.port }}"
+            - name: rabbitmq_username
+              value: "{{ .Values.env.rabbitmq.username }}"
+            - name: rabbitmq_password
+              value: "{{ .Values.env.rabbitmq.password }}"
+            - name: rabbitmq_vhost
+              value: "{{ .Values.env.rabbitmq.vhost }}"
+            - name: rabbitmq_sourceExchange
+              value: "{{ .Values.env.rabbitmq.sourceExchange }}"
+            - name: cmdb_appCode
+              value: "{{ .Values.env.cmdb.appCode }}"
+            - name: cmdb_appSecret
+              value: "{{ .Values.env.cmdb.appSecret }}"
+            - name: cmdb_bkUsername
+              value: "{{ .Values.env.cmdb.bkUsername }}"
+            - name: cmdb_server
+              value: "{{ .Values.env.cmdb.server }}"
+            - name: cmdb_debug
+              value: "{{ .Values.env.cmdb.debug }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: bk-bcs-certs
+              mountPath: /data/bcs/cert/bcs
+            - name: bcs-etcd-certs
+              mountPath: /data/bcs/cert/etcd
+      volumes:
+        - name: bk-bcs-certs
+          secret:
+            defaultMode: 420
+            secretName: "{{ .Values.secretName }}"
+        - name: bcs-etcd-certs
+          secret:
+            defaultMode: 420
+            secretName: bcs-etcd-certs
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var (
@@ -41,11 +42,12 @@ var (
 )
 
 // BuildTransferHostModuleStep build common transfer module step
-func BuildTransferHostModuleStep(task *proto.Task, businessID string, moduleID string) {
+func BuildTransferHostModuleStep(task *proto.Task, businessID string, moduleID string, masterModuleID string) {
 	transStep := cloudprovider.InitTaskStep(transferHostModuleStep)
 
 	transStep.Params[cloudprovider.BKBizIDKey.String()] = businessID
 	transStep.Params[cloudprovider.BKModuleIDKey.String()] = moduleID
+	transStep.Params[cloudprovider.BKMasterModuleIDKey.String()] = masterModuleID
 
 	task.Steps[transferHostModuleStep.StepMethod] = transStep
 	task.StepSequence = append(task.StepSequence, transferHostModuleStep.StepMethod)
@@ -77,9 +79,15 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 	// get bkBizID
 	bkBizIDString := step.Params[cloudprovider.BKBizIDKey.String()]
 	// get nodeIPs
-	nodeIPs := state.Task.CommonParams[cloudprovider.NodeIPsKey.String()]
+	nodeIPs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
+		cloudprovider.NodeIPsKey.String(), ",")
 	// get moduleID
 	moduleIDString := step.Params[cloudprovider.BKModuleIDKey.String()]
+
+	// get moduleID
+	masterModuleIDString := step.Params[cloudprovider.BKMasterModuleIDKey.String()]
+	masterIPs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
+		cloudprovider.MasterNodeIPsKey.String(), ",")
 
 	if len(nodeIPs) == 0 {
 		blog.Warnf("TransferHostModule %s skip, cause of empty node", taskID)
@@ -100,51 +108,35 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 		return nil
 	}
 
-	nodeManClient := nodeman.GetNodeManClient()
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	if nodeManClient == nil {
-		blog.Errorf("TransferHostModule %s failed, nodeman client is not init", taskID)
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("nodeman client is not init"))
-		return nil
-	}
-	cmdbClient := cmdb.GetCmdbClient()
-	if cmdbClient == nil {
-		blog.Errorf("TransferHostModule %s failed, cmdb client is not init", taskID)
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("cmdb client is not init"))
-		return nil
+	// check exist master nodes, trans master nodes module if exist
+	if len(masterModuleIDString) != 0 && len(masterIPs) > 0 {
+		masterModuleID, _ := strconv.Atoi(masterModuleIDString)
+		err = transBizNodeModule(ctx, bkBizID, masterModuleID, masterIPs)
+		if err != nil {
+			blog.Errorf("TransferHostModule transBizNodeModule master[%v] failed: %v", masterIPs, err)
+		}
 	}
 
-	// get host id from host list
-	ips := strings.Split(nodeIPs, ",")
-	var hostIDs []int
+	// transfer nodes
+	err = transBizNodeModule(ctx, bkBizID, moduleID, func() []string {
+		filterNodeIps := make([]string, 0)
+		for i := range nodeIPs {
+			if utils.StringInSlice(nodeIPs[i], masterIPs) {
+				continue
+			}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Minute)
-	defer cancel()
+			filterNodeIps = append(filterNodeIps, nodeIPs[i])
+		}
 
-	err = loop.LoopDoFunc(ctx, func() error {
-		var errGet error
-		hostIDs, errGet = nodeManClient.GetHostIDByIPs(bkBizID, ips)
-		if errGet != nil {
-			blog.Errorf("TransferHostModule %v failed, list nodeman hosts err %s", bkBizID, errGet.Error())
-			return errGet
-		}
-		if len(hostIDs) == len(ips) {
-			return loop.EndLoop
-		}
-		blog.Infof("TransferHostModule %s can't get all host id, waiting", taskID)
-		return nil
-	}, loop.LoopInterval(3*time.Second))
+		return filterNodeIps
+	}())
 	if err != nil {
-		blog.Errorf("TransferHostModule %s get host id failed: %v", taskID, err)
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("get host id err %s", err.Error()))
-		return nil
-	}
-
-	if err = cmdbClient.TransferHostModule(bkBizID, hostIDs, []int{moduleID}, false); err != nil {
 		blog.Errorf("TransferHostModule %s failed, bkBizID %d, hosts %v, err %s",
-			taskID, bkBizID, hostIDs, err.Error())
+			taskID, bkBizID, nodeIPs, err.Error())
 		_ = state.UpdateStepFailure(start, stepName,
-			fmt.Errorf("TransferHostModule failed, bkBizID %d, hosts %v, err %s", bkBizID, hostIDs, err.Error()))
+			fmt.Errorf("TransferHostModule failed, bkBizID %d, hosts %v, err %s", bkBizID, nodeIPs, err.Error()))
 		return nil
 	}
 
@@ -152,6 +144,62 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 
 	// update step
 	_ = state.UpdateStepSucc(start, stepName)
+
+	return nil
+}
+
+func transBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	nodeManClient := nodeman.GetNodeManClient()
+	if nodeManClient == nil {
+		blog.Errorf("transBizNodeModule %s failed, nodeman client is not init", taskID)
+		return nil
+	}
+
+	cmdbClient := cmdb.GetCmdbClient()
+	if cmdbClient == nil {
+		blog.Errorf("transBizNodeModule %s failed, cmdb client is not init", taskID)
+		return nil
+	}
+
+	// get host id from host list
+	var hostIDs []int
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Minute)
+	defer cancel()
+
+	err := loop.LoopDoFunc(ctx, func() error {
+		var errGet error
+		hostIDs, errGet = nodeManClient.GetHostIDByIPs(biz, hostIPs)
+		if errGet != nil {
+			blog.Errorf("transBizNodeModule %v failed, list nodeman hosts err %s", biz, errGet.Error())
+			return errGet
+		}
+		if len(hostIDs) == len(hostIPs) {
+			return loop.EndLoop
+		}
+		blog.Infof("transBizNodeModule %s can't get all host id, waiting", taskID)
+		return nil
+	}, loop.LoopInterval(3*time.Second))
+	if err != nil {
+		blog.Errorf("transBizNodeModule %s get host id failed: %v", taskID, err)
+		return nil
+	}
+
+	err = cmdbClient.TransferHostToIdleModule(biz, hostIDs)
+	if err != nil {
+		blog.Errorf("transBizNodeModule %s failed, bkBizID %d, hosts %v, err %s",
+			taskID, biz, hostIDs, err.Error())
+		return nil
+	}
+
+	err = cmdbClient.TransferHostModule(biz, hostIDs, []int{module}, false)
+	if err != nil {
+		blog.Errorf("transBizNodeModule %s failed, bkBizID %d, hosts %v, err %s",
+			taskID, biz, hostIDs, err.Error())
+		return nil
+	}
 
 	return nil
 }

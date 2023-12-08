@@ -38,8 +38,12 @@ const getConfigList = (params: ICommonQuery) => {
   return getTemplatesBySpaceId(spaceId.value, currentTemplateSpace.value, params);
 };
 
-const refreshConfigList = () => {
-  configTable.value.refreshList();
+const refreshConfigList = (isBatchUpload = false) => {
+  if (isBatchUpload) {
+    configTable.value.refreshList(1, isBatchUpload);
+  } else {
+    configTable.value.refreshList();
+  }
   updateRefreshFlag();
 };
 

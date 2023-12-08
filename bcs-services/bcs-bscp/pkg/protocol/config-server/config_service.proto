@@ -887,7 +887,9 @@ message BatchUpsertConfigItemsReq {
     bool                replace_all = 4;
 }
 
-message BatchUpsertConfigItemsResp {}
+message BatchUpsertConfigItemsResp {
+    repeated uint32 ids      = 1;
+}
 
 message CreateConfigItemResp {
     uint32 id = 1;
@@ -948,8 +950,9 @@ message ListConfigItemsReq {
     string search_value  = 4;
     uint32 start         = 5;
     uint32 limit         = 6;
-    bool   all           = 7;
-    bool   with_status   = 8;
+    string ids           = 7;
+    bool   all           = 8;
+    bool   with_status   = 9;
 }
 
 message ListConfigItemsResp {
@@ -1382,7 +1385,8 @@ message ListTemplatesReq {
     string search_value      = 4;
     uint32 start             = 5;
     uint32 limit             = 6;
-    bool   all               = 7;
+    string ids               = 7;
+    bool   all               = 8;
 }
 
 message ListTemplatesResp {
@@ -1482,7 +1486,8 @@ message ListTmplsOfTmplSetReq {
     string search_value      = 5;
     uint32 start             = 6;
     uint32 limit             = 7;
-    bool   all               = 8;
+    string ids               = 8;
+    bool   all               = 9;
 }
 
 message ListTmplsOfTmplSetResp {
@@ -2132,6 +2137,7 @@ message PublishReq {
     bool                               default           = 7;
     repeated uint32                    groups            = 8;
     repeated google.protobuf.Struct    labels            = 9;
+    string                             group_name        = 10;
 }
 
 message GenerateReleaseAndPublishReq {
@@ -2144,6 +2150,7 @@ message GenerateReleaseAndPublishReq {
     string                             gray_publish_mode = 7;
     repeated string                    groups            = 8;
     repeated google.protobuf.Struct    labels            = 9;
+    string                             group_name        = 10;
 }
 
 message GenerateReleaseAndPublishResp {

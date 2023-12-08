@@ -4,7 +4,7 @@
       <slot>
         <i class="bcs-icon bcs-icon-arrows-left back" v-if="!hideBack" @click="goBack"></i>
         {{ title }}
-        <span class="desc ml10" v-if="desc">{{ desc }}</span>
+        <span class="desc ml-[4px]" v-if="desc">{{ desc }}</span>
       </slot>
     </div>
     <div class="content-header-doc">
@@ -87,8 +87,12 @@ export default defineComponent({
             color: #3a84ff;
         }
         .desc {
-            color: #c3cdd7;
+            display: inline-flex;
+            line-height: 22px;
+            background-color: #F0F1F5;
+            padding: 0 8px;
             font-size: 12px;
+            border-radius: 2px;
         }
     }
     &-tab {

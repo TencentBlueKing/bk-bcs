@@ -88,6 +88,7 @@ k8s:
   statefulset:
     partition: 分区滚动更新
     podManagementPolicy: Pod 管理策略
+  containerNetwork: 容器网络分配
 nav:
   dashboard: 资源视图
   namespace: 命名空间
@@ -169,6 +170,8 @@ units:
     last15Days: 近15天
     last30Days: 近30天
     nDays: '{num}天'
+    nMonths: '{0} 月'
+    nYears: '{0} 年'
   suffix:
     seconds: 秒
     days: 天
@@ -267,6 +270,7 @@ generic:
     search: 输入关键字，按Enter搜索
     searchDate: 选择日期
     command: 多个命令用空格分隔，例如/bin/bash &quot;-c&quot
+    searchIp: '输入IP搜索, 多个IP用逗号或空格隔开'
   button:
     confirm: 确定
     confirm1: 确认
@@ -332,7 +336,6 @@ generic:
     size: 大小
     totalCount: 总计
     version: 版本
-    business: 业务
     memo: 备注
     effect: 影响
     name: 名称
@@ -367,7 +370,10 @@ generic:
     delete: 删除
     start: 开始
     stop: 停止
+    basicConfig: 基本配置
   status:
+    support: 支持
+    unSupport: 不支持
     ready: 正常
     error: 异常
     initializing: 初始化中
@@ -406,13 +412,17 @@ generic:
     required: 必填项
     labelValueEmpty: 标签值不能为空
     labelKey: 仅支持字母，数字和字符(-_./)
+    label: 标签必须由字母数字字符、连字符、下划线或点组成
     required1: taints不能有空字段
     annotationValueEmpty: 注解值不能为空
     labelKey1: 仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾
     kindName: 名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     fileName: 文件名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     notRootName: 用户名不能为root
+    cidr: CIDR格式不正确
+    cidrConflict: CIDR冲突
   title:
+    createPublicCluster: 新建公有云集群
     curVersion: 当前版本
     basicInfo: 基础信息
     basicInfo1: 基本信息
@@ -487,9 +497,6 @@ cluster:
   tag:
     debug: 测试
     prod: 正式
-  mode:
-    list: 列表视图
-    card: 卡片视图
   env:
     debug: 测试环境
     prod: 正式环境
@@ -505,7 +512,7 @@ cluster:
     confirmDelete: 确认删除集群
     clusterInfo: 集群信息
     clusterConfig: 集群配置
-    StatusAndRecord: 状态和记录
+    operationRecord: 操作记录
     setClusterVar: 设置变量
   button:
     useSharedCluster: 使用共享集群
@@ -526,6 +533,8 @@ cluster:
       article8: 集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本
   tips:
     highMetricData: 集群指标过载
+    createK8SCluster: 新建 K8S 原生集群
+    clusterStatus: '集群状态: {0}'
   labels:
     nameAndId: 集群名称/ID
     name: 集群名称
@@ -537,10 +546,10 @@ cluster:
     Kubernetes: Kubernetes 提供商
     createdAt: 创建时间
     updatedAt: 更新时间
-    masterInfo: Master信息
+    masterInfo: 控制面主机信息
     hostName: 主机名称
     rack: 机架
-    networkType: 网络类型
+    networkType: 网络插件
     cidr: 容器网络
     cpuQuota: CPU 配额
     memQuota: 内存配额
@@ -550,6 +559,7 @@ cluster:
     cloudClusterID: 云集群ID
     importCategory: 添加方式
     maxPodNum: Pod IP数量上限
+    clusterLabel: 集群标签
   status:
     unknown: 未知集群状态
     importFailed: 导入失败
@@ -581,6 +591,23 @@ cluster:
         subTitle: 实现多云集群统一管理，降低业务管理成本
         desc: 目前支持腾讯云、亚马逊云、谷歌云、微软云四种云服务商集群创建
     label:
+      system: 操作系统
+      containerRuntime: 运行时组件
+      runtimeVersion: 运行时版本
+      basicConfig: 基本配置
+      privateNet:
+        text: 私有网络
+        customNet: 自定义网络
+      defaultNetPlugin: 默认网络插件
+      clusterIPType:
+        text: 集群 IP 类型
+        dual: IPv4/IPv6 双栈
+        dualSingle: IPv4 或 IPv6 单栈 (由平台自动分配)
+      netSetting: 容器网络分配
+      maxNodePodNum: 单节点 Pod 数量上限
+      kubernetesProvider: Kubernetes 提供商
+      kubernetesCommunity: Kubernetes 社区
+      clusterInfo: 集群信息
       clusterVersion: 集群版本
       desc: 描述
       desc1: 集群描述
@@ -668,6 +695,13 @@ cluster:
         text: 集群访问网络
         intranet: 内网访问
         extranet: 外网访问
+      highAvailabilityScheme:
+        text: 高可用方案
+        notSupport: 控制面节点数量不足 3 台将无法支持高可用
+        bcsApiServerProxy: >-
+          bcs-apiserver-proxy 以 daemonset 形式部署在 Kubernetes 集群中，利用 IPVS 通过虚拟
+          IP（VIP）实现集群内组件到 APIserver 的反向代理，并自动发现控制面节点 IP 以维护 IPVS
+          规则，确保部分控制面节点故障时集群正常运行。
     msg:
       managedClusterInfo: 创建托管集群必须添加至少一个节点，以运行必要的服务
       independentClusterInfo:
@@ -677,7 +711,8 @@ cluster:
       ipExitInNode: 当前IP已经被添加为节点
       ipExitInMaster: 当前IP已经被添加为Master
       name: 请输入集群名称，不超过64个字符
-      masterNum: 仅支持 3 台与 5 台
+      masterNum35: 仅支持3台或5台主机
+      masterNum135: 仅支持1台、3台或5台主机
       masterNum2: 仅支持奇数个服务器
       quota: CPU配额最少40核，内存配额最少40GiB
       regionDiff: '节点地域需要与集群地域保持一致，节点地域：{region1}，集群地域：{region2}'
@@ -711,6 +746,7 @@ cluster:
       autoScaler: 弹性扩缩容
       quota: 配额管理
       nodeList: 节点列表
+      controlConfig: 控制面配置
     label:
       tkeID: TKE集群ID
   ca:
@@ -822,7 +858,7 @@ cluster:
       validate:
         name: 名称不超过255个字符，仅支持中文、英文、数字、下划线，分隔符(-)及小数点
       label:
-        nameAndID: 节点池 ID (名称)
+        nameAndID: 节点池名称 (ID)
         nodeQuota: 节点配额
         nodeCounts: 节点数量
         system: 操作系统
@@ -2386,7 +2422,9 @@ manualNode:
     confirmText1: '此节点池已开启弹性伸缩, 请确认是否继续添加节点'
   tips:
     insufficientNode: '节点数量不足, 前往节点池修改'
-    desiredSize: '此节点池最多可添加 {0} 个节点；如有需要，请前往调整节点池配额'
+    desiredSize: >-
+      此节点池还可添加 {remaining}
+      个节点（配额：{maxSize}，已用：{used}），可前往节点池管理页面调整节点池配额（资源池可申请节点数：{total}）
 ca:
   internetAccess:
     label:
@@ -2469,7 +2507,7 @@ publicCloud:
     title: 腾讯云
     desc: >-
       腾讯云容器服务 (Tencent Kubernetes Engine,TKE) 基于原生 kubernetes
-      提供以容器未核心的、高度可扩展的高性能容器管理服务。
+      提供以容器为核心的、高度可扩展的高性能容器管理服务。
   amazon:
     title: 亚马逊云
     desc: >-
@@ -2508,3 +2546,169 @@ updateRecord:
     rollout: 回滚
     close: 关闭
     rolloutThisVersion: 回滚到此版本
+tke:
+  image:
+    desc:
+      public: '1. 推荐使用官方镜像，详情请见 {0}'
+      market: '2. 市场镜像是由第三方服务商提供的镜像，针对特定使用场景提供的镜像，例如{0}，经过腾讯云审核后发布，所有用户均可使用'
+      private: '3. 如需使用自定义镜像，请提交工单为账号添加自定义镜像白名单，使用详情请参考{0}'
+    link:
+      imageType: 镜像类型说明
+      qGPU: qGPU 共享场景
+      privateImage: 自定义镜像说明
+  label:
+    recommended: 推荐
+    serviceIpNum: Service IP数量
+    podIpNum: Pod IP数量
+    podCidr: Pod 网段
+    tencentCloud: 腾讯云
+    account: 云凭证
+    project:
+      text: 云项目
+      desc: 主要用于统计腾讯云项目下TKE集群使用的云服务器、负载均衡器等资源费用
+    nodemanArea: 管控区域
+    publicImage: 公共镜像
+    marketImage: 市场镜像
+    privateImage: 私有镜像
+    ipNum: IP数量
+    zone: 可用区
+    staticIpMode: 固定 Pod IP
+    enableStaticIpMode: 开启支持
+    apiServerCLB:
+      text: 集群APIServer CLB
+      desc: >-
+        用于蓝鲸容器管理平台连接集群APIServer，根据实际网络情况选择公网访问与内网访问，蓝鲸平台所在网络与被添加集群所在网络内网可连通优先选择内网访问，否则需要选择外网访问，选择不正确会导致添加集群失败
+      internet: 公网访问
+      intranet: 内网访问
+    port: 端口
+    securityGroup:
+      text: 安全组
+      desc: >-
+        用于控制访问被添加集群APIServer的白名单IP，安全组入站规则必须放通蓝鲸平台所在网络出口IP地址的TCP:443端口，否则会导致添加集群失败
+    masterModule:
+      text: 控制面节点转移模块
+      desc: 将控制面节点从蓝鲸配置平台的空闲机模块转移至指定的业务模块
+    loginType:
+      text: 登录方式
+      desc: 创建集群过程为保证环境的一致性会使用此密码或密钥重装系统
+      password: 密码登录
+      ssh: SSH 密钥登录
+    setPassword: 设置 root 密码
+    confirmPassword: 确认 root 密码
+    publicKey: 指定公钥
+    secretKey: 指定私钥
+    nodeModule:
+      text: Node 节点转移模板
+      desc: 将 Node 节点从蓝鲸配置平台的空闲机模块转移至指定的业务模块
+    region: 地域
+    system: 操作系统
+    configRec: 配置推荐
+    chargeType:
+      text: 计费模式
+      prepaid: 包年包月
+      prepaidDesc: '{0}: 以月/年为计费周期的云服务器计费模式。此种计费方式适合长期稳定的成熟业务'
+      postpaid_by_hour: 按量计费
+      postpaid_by_hour_desc: '{0}: 按秒计费按小时结算的弹性计费模式。此种计费方式适用于电商抢购等设备需求量瞬间大幅波动的场景'
+    period: 购买时长
+    autoRenewal:
+      text: 自动续费
+      desc: 账户余额足够时，设备到期后按月自动续费
+    nodeConfig: 节点配置
+    subnet: 子网
+    subnetID: 子网ID
+    subnetName: 子网名称
+    instanceType: 机型配置
+    systemDisk: 系统盘
+    dataDisk: 数据盘
+    count: 数量
+    serviceCidr: Service 网段
+    availableIpNum: 可用IP数量
+    defaultProject: 默认项目
+    containerNet: 容器网段
+    publicIPAssigned:
+      text: 分配免费公网IP
+      chargeMode:
+        text: 计费方式
+        traffic_postpaid_by_hour: 按使用流量计费
+        bandwidth_prepaid: 按带宽计费
+      maxBandWidth: 购买宽带
+  title:
+    connectFailure:
+      text: 集群创建成功，但连接集群 APIServer 失败
+      reason: 连接集群 APIServer 失败，一般是 CLB 安全组配置与网络连通性问题。
+      ref: '详情请参考：{0}'
+      refButton: 连接集群 APIServer 失败解决方案
+    addNodeConfig: 添加配置
+    modifyNodeConfig: 修改配置
+    addSubnets: 添加子网
+    noAvailableSubnets: 暂无可用子网，请前往腾讯云控制台创建子网，如使用VPC-CNI网络插件，子网可用区需与VPC-CNI网络插件的Pod IP可用区子网保持一致
+  button:
+    chargeTypeDiff: 模式对比
+    addNodeConfig: 添加配置
+    purchaseDataDisk: 购买数据盘
+    autoFormatAndMount: 格式化并挂载于
+    addSubnets: 添加子网
+    goDetail: '详情请见 {0}'
+  link:
+    cloudToken: 管理云凭证
+    cloudProject: 管理云项目
+    nodeman: 前往管理
+    subnet: 管理子网
+    securityGroup: 管理安全组
+    vpc: 管理私有网络
+    netOverview: 容器网络概述
+    staticIpMode: 固定IP使用方法
+    cmdb: 管理配置平台
+    package: 管理带宽包
+  validate:
+    passwordNotSame: 两次输入的密码不一致
+    minIpNum: '为保证集群有足够IP, 容器网段不能低于 {0} 个IP'
+    supportCidrList: '仅支持 {0} 之间网段'
+    minIpNum2: '容器网段不能少于 {0} 个 IP, 请重新输入'
+  configRec:
+    l100:
+      text: 节点数1~100
+      desc: 推荐：100GB 高性能云盘，服务器 3 台，8 核 16G 的任意机型
+    l500:
+      text: 节点数100~500
+      desc: 推荐：200GB SSD云硬盘，服务器 3 台，16 核 32G 的任意机型
+    l1000:
+      text: 节点数500以上
+      desc: 推荐：500GB SSD云硬盘，服务器 5 台，48 核 128G 的任意机型
+    custom:
+      text: 自定义配置
+      desc: 修改下方任意配置数据，即切换为自定义配置
+  tips:
+    zone: 'VPC-CNI网络插件的Pod IP没有使用此可用区, 请选择其他可用区'
+    imageUsedInCluster: 有集群正在使用
+    subnetZone: VPC-CNI网络插件的Pod IP绑定在集群节点上，Pod IP可用区必须与集群节点(包含控制面与Node节点)可用区保持一致
+    noAvailableIp: 无可用IP
+    subnetInUsed: '子网已被集群 {0} 使用'
+    nodeNotInSubnetZone: '该服务器可用区为 {0}, 与VPC-CNI Pod IP可用区不一致, 请使用可用区在 {1} 的服务器'
+    totalIpNum: '共 {0} 个IP'
+    notSupportInCurrentClusterVersion: 当前集群版本不支持
+    grDesc: 'Global Router: 腾讯云 TKE 基于 VPC 路由实现的容器网络插件，可设置独立平行于 VPC 的容器网段'
+    vpcCniDesc: VPC-CNI：腾讯云 TKE 基于弹性网卡实现的容器网络插件，容器网络与云主机网络在同一个 VPC 内
+    notSupport: 暂不支持
+    supportCidr: '腾讯云支持私有网络范围: '
+    ipCannotBeAdjustedWhenCreated: '{0} IP数量一旦分配后将无法调整, 请谨慎评估后填写'
+    podIpCalcFormula: Pod IP数量 = 容器网段数量 - Service IP数量
+    vpcCniPodIp: Pod IP从私有网络的主/辅网段自动分配
+    staticIpMode:
+      p1: 此选项只支持在集群创建时开启，集群创建后无法修改，请谨慎操作。
+      p2: '此选项适用于依赖容器固定IP的场景, 对IP无限制的业务不推荐您使用固定IP模式, 详情请参考 {0}'
+  placeholder:
+    example: '示例: {0}'
+tkeCa:
+  tips:
+    notSupportSelfPool: 该业务没有开通自建资源池，如有需求，可联系助手添加
+    selfPoolInstanceDesc: '自建资源池无需指定系统盘和数据盘相关信息, 提供至少一块大小为 100G 及以上的数据盘'
+  label:
+    poolManage: 资源池管理
+    provider:
+      text: 资源提供者
+      desc: '资源提供者分为云梯资源池和自建资源池, 如果业务下有空闲资源, 因其他原因不能回收, 可联系助手添加自建资源池'
+      yunti: 云梯资源池(平台提供)
+      self: 自建资源池
+provider:
+  tencentPublicCloud: 腾讯云公有云

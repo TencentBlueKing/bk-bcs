@@ -91,16 +91,16 @@ func (s *Server) getPortEntryListFromNode(annotationPorts []*annotationPort) ([]
 	var retPorts []*portEntry
 	for _, port := range annotationPorts {
 		tmpEntry := &portEntry{
-			poolNamespace: port.poolNamespace,
-			poolName:      port.poolName,
-			protocol:      port.protocol,
-			hostPort:      port.hostPort,
-			itemName:      port.itemName,
+			PoolNamespace: port.poolNamespace,
+			PoolName:      port.poolName,
+			Protocol:      port.protocol,
+			HostPort:      port.hostPort,
+			ItemName:      port.itemName,
 		}
 		if len(port.poolNamespace) == 0 {
 			// node's namespace is empty, use 'default'
 			// tmpEntry.poolNamespace = node.GetNamespace()
-			tmpEntry.poolNamespace = s.nodePortBindingNs
+			tmpEntry.PoolNamespace = s.nodePortBindingNs
 		}
 		if len(port.protocol) == 0 {
 			return nil, errors.New("empty protocol is invalid for node")
@@ -109,8 +109,8 @@ func (s *Server) getPortEntryListFromNode(annotationPorts []*annotationPort) ([]
 		if err != nil {
 			return nil, errors.New("only numeric port is valid for node")
 		}
-		tmpEntry.port = portNumber
-		tmpEntry.hostPort = true // node port always host port
+		tmpEntry.Port = portNumber
+		tmpEntry.HostPort = true // node port always host port
 
 		retPorts = append(retPorts, tmpEntry)
 	}

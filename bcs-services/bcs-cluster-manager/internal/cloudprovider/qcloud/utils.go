@@ -14,6 +14,7 @@ package qcloud
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"strconv"
 	"strings"
 
@@ -124,17 +125,25 @@ var (
 	}
 
 	// add node to cluster
+	modifyInstancesVpcStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-ModifyInstancesVpcTask", cloudName),
+		StepName:   "节点转vpc",
+	}
+	checkInstanceStateStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CheckInstanceStateTask", cloudName),
+		StepName:   "节点转vpc状态检测",
+	}
 	addNodesShieldAlarmStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-AddNodesShieldAlarmTask", cloudName),
 		StepName:   "屏蔽机器告警",
 	}
 	addNodesToClusterStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-AddNodesToClusterTask", cloudName),
-		StepName:   "添加节点",
+		StepName:   "集群上架节点",
 	}
 	checkAddNodesStatusStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-CheckAddNodesStatusTask", cloudName),
-		StepName:   "检测节点状态",
+		StepName:   "检测集群节点状态",
 	}
 	updateAddNodeDBInfoStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-UpdateAddNodeDBInfoTask", cloudName),
@@ -561,21 +570,52 @@ func (re *RemoveExternalNodesFromClusterTaskOption) BuildRemoveExternalNodesStep
 
 // AddNodesToClusterTaskOption 上架节点
 type AddNodesToClusterTaskOption struct {
-	Cluster      *proto.Cluster
-	Cloud        *proto.Cloud
-	NodeTemplate *proto.NodeTemplate
-	NodeIPs      []string
-	NodeIDs      []string
+	Cluster        *proto.Cluster
+	Cloud          *proto.Cloud
+	NodeTemplate   *proto.NodeTemplate
+	NodeIPs        []string
+	NodeIDs        []string
+	DiffVpcNodeIds []string
+
 	PassWd       string
 	Operator     string
 	NodeSchedule bool
+}
+
+// BuildModifyInstancesVpcStep 节点转移vpc任务
+func (ac *AddNodesToClusterTaskOption) BuildModifyInstancesVpcStep(task *proto.Task) {
+	if len(ac.DiffVpcNodeIds) == 0 {
+		return
+	}
+
+	modifyStep := cloudprovider.InitTaskStep(modifyInstancesVpcStep)
+	modifyStep.Params[cloudprovider.ClusterIDKey.String()] = ac.Cluster.ClusterID
+	modifyStep.Params[cloudprovider.CloudIDKey.String()] = ac.Cloud.CloudID
+	modifyStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(ac.DiffVpcNodeIds, ",")
+
+	task.Steps[modifyInstancesVpcStep.StepMethod] = modifyStep
+	task.StepSequence = append(task.StepSequence, modifyInstancesVpcStep.StepMethod)
+}
+
+// BuildCheckInstanceStateStep 节点转移vpc任务检测
+func (ac *AddNodesToClusterTaskOption) BuildCheckInstanceStateStep(task *proto.Task) {
+	if len(ac.DiffVpcNodeIds) == 0 {
+		return
+	}
+
+	checkStep := cloudprovider.InitTaskStep(checkInstanceStateStep)
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = ac.Cluster.ClusterID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = ac.Cloud.CloudID
+	checkStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(ac.DiffVpcNodeIds, ",")
+
+	task.Steps[checkInstanceStateStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, checkInstanceStateStep.StepMethod)
 }
 
 // BuildShieldAlertStep 屏蔽上架节点告警
 func (ac *AddNodesToClusterTaskOption) BuildShieldAlertStep(task *proto.Task) {
 	shieldStep := cloudprovider.InitTaskStep(addNodesShieldAlarmStep)
 	shieldStep.Params[cloudprovider.ClusterIDKey.String()] = ac.Cluster.ClusterID
-	shieldStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(ac.NodeIPs, ",")
 
 	task.Steps[addNodesShieldAlarmStep.StepMethod] = shieldStep
 	task.StepSequence = append(task.StepSequence, addNodesShieldAlarmStep.StepMethod)
@@ -591,8 +631,6 @@ func (ac *AddNodesToClusterTaskOption) BuildAddNodesToClusterStep(task *proto.Ta
 		templateID = ac.NodeTemplate.GetNodeTemplateID()
 	}
 	addStep.Params[cloudprovider.NodeTemplateIDKey.String()] = templateID
-	addStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(ac.NodeIPs, ",")
-	addStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(ac.NodeIDs, ",")
 	addStep.Params[cloudprovider.PasswordKey.String()] = ac.PassWd
 	addStep.Params[cloudprovider.OperatorKey.String()] = ac.Operator
 	addStep.Params[cloudprovider.NodeSchedule.String()] = strconv.FormatBool(ac.NodeSchedule)
@@ -607,8 +645,6 @@ func (ac *AddNodesToClusterTaskOption) BuildCheckAddNodesStatusStep(task *proto.
 
 	checkStep.Params[cloudprovider.ClusterIDKey.String()] = ac.Cluster.ClusterID
 	checkStep.Params[cloudprovider.CloudIDKey.String()] = ac.Cloud.CloudID
-	checkStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(ac.NodeIPs, ",")
-	checkStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(ac.NodeIDs, ",")
 
 	task.Steps[checkAddNodesStatusStep.StepMethod] = checkStep
 	task.StepSequence = append(task.StepSequence, checkAddNodesStatusStep.StepMethod)
@@ -620,8 +656,6 @@ func (ac *AddNodesToClusterTaskOption) BuildUpdateAddNodeDBInfoStep(task *proto.
 
 	updateStep.Params[cloudprovider.ClusterIDKey.String()] = ac.Cluster.ClusterID
 	updateStep.Params[cloudprovider.CloudIDKey.String()] = ac.Cloud.CloudID
-	updateStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(ac.NodeIPs, ",")
-	updateStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(ac.NodeIDs, ",")
 
 	task.Steps[updateAddNodeDBInfoStep.StepMethod] = updateStep
 	task.StepSequence = append(task.StepSequence, updateAddNodeDBInfoStep.StepMethod)
@@ -874,7 +908,9 @@ func (ud *UpdateDesiredNodesTaskOption) BuildGetExternalNodeScriptStep(task *pro
 
 // BuildNodeLabelsStep 设置节点标签
 func (ud *UpdateDesiredNodesTaskOption) BuildNodeLabelsStep(task *proto.Task) {
-	common.BuildNodeLabelsTaskStep(task, ud.Group.ClusterID, nil, nil)
+	common.BuildNodeLabelsTaskStep(task, ud.Group.ClusterID, nil, map[string]string{
+		utils.NodeGroupLabelKey: ud.Group.GetNodeGroupID(),
+	})
 }
 
 // BuildUnCordonNodesStep 设置节点可调度状态

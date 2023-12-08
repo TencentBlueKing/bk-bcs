@@ -24,6 +24,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -78,6 +79,7 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
+
 	// 删除临时文件夹
 	defer func() { _ = os.RemoveAll(unpackTempDir) }()
 	folder, uploadErr, err := c.scanFolder(kt, unpackTempDir, unpackTempDir)
@@ -112,6 +114,9 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 	exist := make([]*types.TemplateItem, 0)
 	nonExist := make([]*types.TemplateItem, 0)
 	for _, item := range folder {
+		if !strings.HasSuffix(item.Path, "/") {
+			item.Path += "/"
+		}
 		pathName := path.Join(item.Path, item.Name)
 		data, ok := templateItem[pathName]
 		if !ok {
@@ -143,6 +148,8 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 	if len(uploadErr) > 0 {
 		msg = fmt.Sprintf("上传完成，失败 %d 个", len(uploadErr))
 	}
+	sortByPathName(exist)
+	sortByPathName(nonExist)
 	_ = render.Render(w, r, rest.OKRender(&types.TemplatesImportResp{
 		Exist:    exist,
 		NonExist: nonExist,
@@ -203,6 +210,9 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	exist := make([]*types.TemplateItem, 0)
 	nonExist := make([]*types.TemplateItem, 0)
 	for _, item := range folder {
+		if !strings.HasSuffix(item.Path, "/") {
+			item.Path += "/"
+		}
 		pathName := path.Join(item.Path, item.Name)
 		config, ok := configItem[pathName]
 		if !ok {
@@ -234,6 +244,8 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	if len(uploadErr) > 0 {
 		msg = fmt.Sprintf("上传完成，失败 %d 个", len(uploadErr))
 	}
+	sortByPathName(exist)
+	sortByPathName(nonExist)
 	_ = render.Render(w, r, rest.OKRender(&types.TemplatesImportResp{
 		Exist:    exist,
 		NonExist: nonExist,
@@ -320,6 +332,10 @@ func (c *configImport) uploadFile(kt *kit.Kit, filePath, rootDir string) (*types
 	if lastSlashIndex >= 0 {
 		fileDir = fileDir[:lastSlashIndex]
 	}
+	// 默认根目录
+	if len(fileDir) == 0 {
+		fileDir = "/"
+	}
 	// 从池中获取一个缓冲区
 	fileBuffer := bufferPool.Get().(*bytes.Buffer)
 	defer func() {
@@ -368,4 +384,17 @@ func newConfigImportService(settings cc.Repository, authorizer auth.Authorizer,
 		cfgClient:  cfgClient,
 	}
 	return config, nil
+}
+
+// 使用sort包按照路径+名称排序
+func sortByPathName(myStructs []*types.TemplateItem) {
+	// 使用 sort 包按照路径+名称排序
+	sort.Slice(myStructs, func(i, j int) bool {
+		// 先按照路径排序
+		if myStructs[i].Path != myStructs[j].Path {
+			return myStructs[i].Path < myStructs[j].Path
+		}
+		// 如果路径相同，则按照名称排序
+		return myStructs[i].Name < myStructs[j].Name
+	})
 }

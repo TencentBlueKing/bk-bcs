@@ -1081,3 +1081,51 @@ type OSImage struct {
 	// 镜像id
 	ImageId *string `json:"ImageId,omitempty" name:"ImageId"`
 }
+
+// DescribeInstanceCreateProgressRequestParams Predefined struct for user
+type DescribeInstanceCreateProgressRequestParams struct {
+	// 集群Id
+	ClusterId *string `json:"ClusterId,omitempty" name:"ClusterId"`
+
+	// 节点实例Id
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+}
+
+// DescribeInstanceCreateProgressRequest request
+type DescribeInstanceCreateProgressRequest struct {
+	*tchttp.BaseRequest
+
+	// 集群Id
+	ClusterId *string `json:"ClusterId,omitempty" name:"ClusterId"`
+
+	// 节点实例Id
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+}
+
+// ToJsonString json string
+func (r *DescribeInstanceCreateProgressRequest) ToJsonString() string {
+	b, _ := json.Marshal(r)
+	return string(b)
+}
+
+// DescribeInstanceCreateProgressResponseParams Predefined struct for user
+type DescribeInstanceCreateProgressResponseParams struct {
+	// 创建进度
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	Progress []*Step `json:"Progress,omitempty" name:"Progress"`
+
+	// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+	RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+}
+
+// DescribeInstanceCreateProgressResponse response
+type DescribeInstanceCreateProgressResponse struct {
+	*tchttp.BaseResponse
+	Response *DescribeInstanceCreateProgressResponseParams `json:"Response"`
+}
+
+// ToJsonString to string
+func (r *DescribeInstanceCreateProgressResponse) ToJsonString() string {
+	b, _ := json.Marshal(r)
+	return string(b)
+}

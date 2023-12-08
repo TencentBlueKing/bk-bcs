@@ -1680,6 +1680,18 @@
           "type": "string",
           "description": "存储偏好，tspider或者mongodb",
           "title": "preferStorage"
+        },
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "description": "页码",
+          "title": "page"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "description": "查询限制数量",
+          "title": "size"
         }
       },
       "description": "查询集群列表请求",
@@ -1712,6 +1724,18 @@
           },
           "description": "运营数据列表信息",
           "title": "data"
+        },
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "description": "页码",
+          "title": "page"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "description": "查询限制数量",
+          "title": "size"
         }
       },
       "description": "查询集群列表返回",
@@ -2551,38 +2575,38 @@
           "title": "bakMaintainer"
         },
         "businessSetId": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "Business set identifier",
           "title": "businessSetId"
         },
         "businessId": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "Business identifier",
           "title": "businessId"
         },
         "businessModuleId": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "Business module identifier",
           "title": "businessModuleId"
         },
         "schedulerStatus": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "Scheduler status",
           "title": "schedulerStatus"
         },
         "serviceStatus": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "Service status",
           "title": "serviceStatus"
         },
         "hpaStatus": {
-          "type": "string",
-          "format": "int64",
+          "type": "integer",
+          "format": "int32",
           "description": "HPA status",
           "title": "hpaStatus"
         }

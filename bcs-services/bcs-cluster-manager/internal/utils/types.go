@@ -56,6 +56,18 @@ const (
 	RegionLabelKey = "topology.bkbcs.tencent.com/region"
 	// BusinessIDLabelKey for businessID label
 	BusinessIDLabelKey = "bkcmdb.tencent.com/bk-biz-id"
+	// AssetIDLabelKey for asset id
+	AssetIDLabelKey = "bkcmdb.tencent.com/bk-asset-id"
+	// HostIDLabelKey for host id
+	HostIDLabelKey = "bkcmdb.tencent.com/bk-host-id"
+	// AgentIDLabelKey for host id
+	AgentIDLabelKey = "bkcmdb.tencent.com/bk-agent-id"
+	// CloudAreaLabelKey for host id
+	CloudAreaLabelKey = "bkcmdb.tencent.com/cloud-area-id"
+
+	// PrefixKubernetesIo for special label
+	PrefixKubernetesIo = "node.info.kubernetes.io"
+
 	// SubZoneIDLabelKey for cc sub zone id
 	SubZoneIDLabelKey = "bkbcs.tencent.com/szoneID"
 	// RegionBcsLabelKey for device region label
@@ -64,6 +76,8 @@ const (
 	DrainDelayKey = "node.bkbcs.tencent.com/drain-delay"
 	// DeviceLabelFlag for device labels flag
 	DeviceLabelFlag = "bkbcs.tencent.com"
+	// DeviceLabelKubernetesIoKey for special device flag
+	DeviceLabelKubernetesIoKey = "node.info.kubernetes.io"
 
 	// RegionKubernetesFlag region
 	RegionKubernetesFlag = "failure-domain.beta.kubernetes.io/region"

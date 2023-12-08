@@ -341,7 +341,7 @@ import useSearch from '@/composables/use-search';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 import InputType from '@/views/cluster-manage/components/input-type.vue';
 import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 import Taints from '@/views/cluster-manage/components/new-taints.vue';

@@ -15,7 +15,11 @@
                 {{ $t('manualNode.title.source.existingServer') }}
               </span>
             </bk-radio>
-            <bk-radio value="nodePool">{{ $t('manualNode.title.source.addFromNodePool') }}</bk-radio>
+            <bk-radio
+              value="nodePool"
+              v-if="curCluster && curCluster.autoScale">
+              {{ $t('manualNode.title.source.addFromNodePool') }}
+            </bk-radio>
           </bk-radio-group>
         </bk-form-item>
         <template v-if="nodeSource === 'ip'">
@@ -81,7 +85,8 @@
                     <div
                       v-bk-tooltips="{
                         disabled: (item.autoScaling.maxSize - item.autoScaling.desiredSize) > 0,
-                        content: $t('manualNode.tips.insufficientNode')
+                        content: $t('manualNode.tips.insufficientNode'),
+                        placement: 'right'
                       }">
                       {{ item.name }}
                     </div>
@@ -99,7 +104,8 @@
                     <div
                       v-bk-tooltips="{
                         disabled: (item.autoScaling.maxSize - item.autoScaling.desiredSize) > 0,
-                        content: $t('manualNode.tips.insufficientNode')
+                        content: $t('manualNode.tips.insufficientNode'),
+                        placement: 'right'
                       }">
                       {{ item.name }}
                     </div>
@@ -129,13 +135,16 @@
             <bcs-input
               type="number"
               class="w-[74px]"
-              :max="maxCount"
-              :min="1"
+              :max="nodesCounts.maxCount"
+              :min="0"
               :precision="0"
               v-model="desiredSize"></bcs-input>
-            <span class="text-[#979BA5] ml-[8px]">
-              {{ $t('manualNode.tips.desiredSize', [maxCount]) }}
-            </span>
+            <i18n path="manualNode.tips.desiredSize" tag="span" class="text-[#979BA5] ml-[8px]">
+              <span place="remaining" class="text-[#313238]">{{ nodesCounts.maxCount }}</span>
+              <span place="maxSize">{{ nodesCounts.maxSize }}</span>
+              <span place="used">{{ nodesCounts.desiredSize }}</span>
+              <span place="total">{{ nodesCounts.total }}</span>
+            </i18n>
           </bk-form-item>
         </template>
       </FormGroup>
@@ -177,13 +186,15 @@
       :vpc="{ vpcID: curCluster.vpcID }"
       :show-dialog="showIpSelector"
       :ip-list="ipList"
+      :validate-vpc-and-region="curCluster.provider !== 'bluekingCloud'"
+      :account-i-d="curCluster.cloudAccountID"
       @confirm="chooseServer"
       @cancel="showIpSelector = false">
     </IpSelector>
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onBeforeMount, ref } from 'vue';
+import { computed, defineComponent, onBeforeMount, PropType, ref } from 'vue';
 
 import TemplateSelector from '../components/template-selector.vue';
 
@@ -195,16 +206,24 @@ import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
 import IpSelector from '@/components/ip-selector/ip-selector.vue';
 import StatusIcon from '@/components/status-icon';
-import { useConfig } from '@/composables/use-app';
+import { ICluster, useConfig } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 
 export default defineComponent({
   components: { FormGroup, IpSelector, StatusIcon, ConfirmDialog, TemplateSelector },
   props: {
     clusterId: {
+      type: String,
+      default: '',
+    },
+    source: {
+      type: String as PropType<'nodePool' | 'ip'>,
+      default: '',
+    },
+    nodePool: {
       type: String,
       default: '',
     },
@@ -226,10 +245,10 @@ export default defineComponent({
       desiredSize: [{
         message: $i18n.t('generic.validate.required'),
         trigger: 'blur',
-        validator: () => desiredSize.value > 0,
+        validator: () => !!desiredSize.value,
       }],
     });
-    const curCluster = computed(() => ($store.state as any).cluster.clusterList
+    const curCluster = computed<ICluster>(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === props.clusterId) || {});
     const isTkeCluster = computed(() => curCluster.value?.provider === 'tencentCloud');
     const isImportCluster = computed(() => curCluster.value.clusterCategory === 'importer');
@@ -253,6 +272,7 @@ export default defineComponent({
     const chooseServer = (data) => {
       ipList.value = data;
       showIpSelector.value = false;
+      formRef.value?.validate().catch(() => false);
     };
     const { addNode } = useNode();
     const checkList = computed(() => [
@@ -294,12 +314,10 @@ export default defineComponent({
 
       if (result) {
         $router.push({
-          name: 'clusterDetail',
-          params: {
-            clusterId: props.clusterId,
-          },
+          name: 'clusterMain',
           query: {
             active: 'node',
+            clusterId: props.clusterId,
           },
         });
       }
@@ -309,9 +327,20 @@ export default defineComponent({
     };
 
     // nodeGroups
-    const nodePoolID = ref('');
-    const desiredSize = ref(1);
-    const nodeSource = ref<'nodePool'|'ip'>(isImportCluster.value ? 'nodePool' : 'ip');
+    const nodePoolID = ref(props.nodePool);
+    const desiredSize = ref(0);
+    const nodeSource = ref<'nodePool'|'ip'>('ip');
+    const setDefaultNodeSource = () => {
+      if (isImportCluster.value) {
+        nodeSource.value = 'nodePool';
+      } else if (props.source) {
+        nodeSource.value = props.source;
+      } else if (curCluster.value.provider === 'tencentPublicCloud') {
+        nodeSource.value = 'nodePool';
+      } else {
+        nodeSource.value = 'ip';
+      }
+    };
     const handleNodeSourceChange = (value: 'nodePool'|'ip') => {
       if (value === 'nodePool') {
         handleGetNodeGroupList();
@@ -338,10 +367,15 @@ export default defineComponent({
       return groupData;
     });
     // 最大可添加节点数量
-    const maxCount = computed(() => {
+    const nodesCounts = computed(() => {
       const maxSize = curNodePool.value?.autoScaling?.maxSize || 0;
       const desiredSize = curNodePool.value?.autoScaling?.desiredSize || 0;
-      return maxSize - desiredSize;
+      return {
+        maxCount: maxSize - desiredSize,
+        maxSize,
+        desiredSize,
+        total: 1000,
+      };
     });
     const nodeGroupLoading = ref(false);
     const handleGetNodeGroupList = async () => {
@@ -365,7 +399,7 @@ export default defineComponent({
       const autoscalerData = await $store.dispatch('clustermanager/clusterAutoScaling', {
         $clusterId: props.clusterId,
         provider: _INTERNAL_.value ? 'selfProvisionCloud' : '',
-      });
+      }).catch(() => {});
       saving.value = false;
       if (!autoscalerData.module?.scaleOutModuleID || !autoscalerData.module?.scaleOutBizID) {
         $bkInfo({
@@ -397,7 +431,7 @@ export default defineComponent({
               desiredNode: Number(desiredSize.value) + Number(curNodePool.value?.autoScaling?.desiredSize || 0),
               manual: true,
               operator: user.value.username,
-            });
+            }).catch(() => false);
             saving.value = false;
             if (result) {
               $bkMessage({
@@ -405,11 +439,9 @@ export default defineComponent({
                 message: $i18n.t('generic.msg.success.deliveryTask'),
               });
               $router.push({
-                name: 'clusterDetail',
-                params: {
-                  clusterId: props.clusterId,
-                },
+                name: 'clusterMain',
                 query: {
+                  clusterId: props.clusterId,
                   active: 'node',
                 },
               });
@@ -430,12 +462,10 @@ export default defineComponent({
         window.open(href);
       } else {
         const { href } = $router.resolve({
-          name: 'clusterDetail',
-          params: {
-            clusterId: props.clusterId,
-          },
+          name: 'clusterMain',
           query: {
             active: 'autoscaler',
+            clusterId: props.clusterId,
           },
         });
         window.open(href);
@@ -443,6 +473,7 @@ export default defineComponent({
     };
 
     onBeforeMount(() => {
+      setDefaultNodeSource();
       if (nodeSource.value === 'nodePool') {
         handleGetNodeGroupList();
       }
@@ -466,7 +497,7 @@ export default defineComponent({
       nodePoolID,
       nodeGroupData,
       nodeGroupLoading,
-      maxCount,
+      nodesCounts,
       desiredSize,
       handleNodeSourceChange,
       handleRemoveIp,

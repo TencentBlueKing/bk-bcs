@@ -39,7 +39,8 @@ import (
 // as far as possible to keep every operation unit simple
 
 // generateClusterCIDRInfo cidr info
-func generateClusterCIDRInfo(info *cloudprovider.CloudDependBasicInfo) (*api.ClusterCIDRSettings, error) {
+func generateClusterCIDRInfo(ctx context.Context,
+	info *cloudprovider.CloudDependBasicInfo) (*api.ClusterCIDRSettings, error) {
 	cidrInfo := &api.ClusterCIDRSettings{
 		// 用于分配集群容器和服务 IP 的 CIDR，不得与 VPC CIDR 冲突，也不得与同 VPC 内其他集群 CIDR 冲突。
 		// 且网段范围必须在内网网段内，例如:10.1.0.0/14, 192.168.0.1/18,172.16.0.0/16。
@@ -58,7 +59,7 @@ func generateClusterCIDRInfo(info *cloudprovider.CloudDependBasicInfo) (*api.Clu
 		subnetIds := make([]string, 0)
 		if len(info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew()) > 0 {
 			// 各个可用区自动分配指定数量的子网
-			ids, err := business.AllocateClusterVpcCniSubnets(context.Background(), info.Cluster.ClusterID, info.Cluster.VpcID,
+			ids, err := business.AllocateClusterVpcCniSubnets(ctx, info.Cluster.ClusterID, info.Cluster.VpcID,
 				info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), info.CmOption)
 			if err != nil {
 				return nil, err
@@ -71,6 +72,8 @@ func generateClusterCIDRInfo(info *cloudprovider.CloudDependBasicInfo) (*api.Clu
 			subnetIds = append(subnetIds, info.Cluster.GetNetworkSettings().GetSubnetSource().GetExisted().GetIds()...)
 		}
 
+		// update cluster subnetIds
+		info.Cluster.NetworkSettings.EniSubnetIDs = subnetIds
 		cidrInfo.EniSubnetIds = subnetIds
 	}
 
@@ -221,19 +224,39 @@ func generateMasterExistedInstance(role string, instanceIDs []string, manyDisk b
 			InstanceIDs: instanceIDs,
 			LoginSettings: func() *api.LoginSettings {
 				return &api.LoginSettings{
-					Password: cls.GetNodeSettings().InitLoginPassword,
-					KeyIds:   strings.Split(cls.GetNodeSettings().GetKeyPair().KeyID, ","),
+					Password: func() string {
+						if len(cls.GetNodeSettings().GetMasterLogin().InitLoginPassword) > 0 {
+							return cls.GetNodeSettings().GetMasterLogin().GetInitLoginPassword()
+						}
+						return ""
+					}(),
+					KeyIds: func() []string {
+						if len(cls.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeyID()) > 0 {
+							return strings.Split(cls.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeyID(), ",")
+						}
+
+						return nil
+					}(),
 				}
 			}(),
-			InstanceAdvancedSettings: business.GenerateInstanceAdvanceInfo(cls, nil),
-			SecurityGroupIds:         nil,
+			InstanceAdvancedSettings: business.GenerateInstanceAdvanceInfo(cls,
+				&business.NodeAdvancedOptions{NodeScheduler: true}),
+			SecurityGroupIds: func() []*string {
+				if len(cls.GetNodeSettings().GetMasterSecurityGroups()) == 0 {
+					return nil
+				}
+
+				return common.StringPtrs(cls.GetNodeSettings().GetMasterSecurityGroups())
+			}(),
 		},
 	}
 
 	// instance advanced setting override
-	existedInstance.InstanceAdvancedSettingsOverride = business.GenerateInstanceAdvanceInfo(cls, nil)
+	existedInstance.InstanceAdvancedSettingsOverride = business.GenerateInstanceAdvanceInfo(cls,
+		&business.NodeAdvancedOptions{NodeScheduler: true})
 	if manyDisk {
-		existedInstance.InstanceAdvancedSettingsOverride.DataDisks = []api.DataDetailDisk{api.DefaultDataDisk}
+		existedInstance.InstanceAdvancedSettingsOverride.DataDisks =
+			[]api.DataDetailDisk{api.GetDefaultDataDisk(api.Ext4)}
 	}
 
 	return existedInstance
@@ -288,8 +311,19 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 			InstanceIDs: nodeIDs,
 			LoginSettings: func() *api.LoginSettings {
 				return &api.LoginSettings{
-					Password: info.Cluster.GetNodeSettings().InitLoginPassword,
-					KeyIds:   strings.Split(info.Cluster.GetNodeSettings().GetKeyPair().KeyID, ","),
+					Password: func() string {
+						if len(info.Cluster.GetNodeSettings().GetWorkerLogin().InitLoginPassword) > 0 {
+							return info.Cluster.GetNodeSettings().GetWorkerLogin().InitLoginPassword
+						}
+						return ""
+					}(),
+					KeyIds: func() []string {
+						if len(info.Cluster.GetNodeSettings().GetWorkerLogin().GetKeyPair().GetKeyID()) > 0 {
+							return strings.Split(info.Cluster.GetNodeSettings().GetWorkerLogin().GetKeyPair().GetKeyID(), ",")
+						}
+
+						return nil
+					}(),
 				}
 			}(),
 			InstanceAdvancedSettings: business.GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
@@ -298,7 +332,13 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 				Operator: operator,
 				Render:   true,
 			}, &business.NodeAdvancedOptions{NodeScheduler: true}),
-			SecurityGroupIds: nil,
+			SecurityGroupIds: func() []*string {
+				if len(info.Cluster.GetNodeSettings().GetWorkerSecurityGroups()) == 0 {
+					return nil
+				}
+
+				return common.StringPtrs(info.Cluster.GetNodeSettings().GetWorkerSecurityGroups())
+			}(),
 		},
 	}
 
@@ -312,7 +352,8 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 		}, &business.NodeAdvancedOptions{NodeScheduler: true})
 
 	if manyDisk {
-		existedInstance.InstanceAdvancedSettingsOverride.DataDisks = []api.DataDetailDisk{api.DefaultDataDisk}
+		existedInstance.InstanceAdvancedSettingsOverride.DataDisks =
+			[]api.DataDetailDisk{api.GetDefaultDataDisk(api.Ext4)}
 	}
 
 	return existedInstance
@@ -327,6 +368,7 @@ func disksToCVMDisks(disks []*proto.CloudDataDisk) []*cvm.DataDisk {
 	cvmDisks := make([]*cvm.DataDisk, 0)
 	for i := range disks {
 		size, _ := utils.StringToInt(disks[i].DiskSize)
+
 		cvmDisks = append(cvmDisks, &cvm.DataDisk{
 			DiskSize: common.Int64Ptr(int64(size)),
 			DiskType: common.StringPtr(disks[i].DiskType),
@@ -348,7 +390,24 @@ func generateNewRunInstance(info *cloudprovider.CloudDependBasicInfo, role strin
 		createInsRequest := cvm.NewRunInstancesRequest()
 
 		// 实例计费类型: 默认值 POSTPAID_BY_HOUR
-		createInsRequest.InstanceChargeType = common.StringPtr(templates[i].InstanceChargeType)
+		createInsRequest.InstanceChargeType = func() *string {
+			if templates[i].GetInstanceChargeType() == "" {
+				return common.StringPtr(api.POSTPAIDBYHOUR)
+			}
+
+			return common.StringPtr(templates[i].GetInstanceChargeType())
+		}()
+
+		createInsRequest.InstanceChargePrepaid = func() *cvm.InstanceChargePrepaid {
+			if templates[i].GetCharge() == nil || templates[i].GetCharge().GetPeriod() == 0 ||
+				templates[i].GetCharge().GetRenewFlag() == "" {
+				return nil
+			}
+			return &cvm.InstanceChargePrepaid{
+				Period:    common.Int64Ptr(int64(templates[i].GetCharge().GetPeriod())),
+				RenewFlag: common.StringPtr(templates[i].GetCharge().GetRenewFlag()),
+			}
+		}()
 
 		createInsRequest.Placement = &cvm.Placement{
 			Zone: common.StringPtr(templates[i].GetZone()),
@@ -372,37 +431,82 @@ func generateNewRunInstance(info *cloudprovider.CloudDependBasicInfo, role strin
 			DiskType: common.StringPtr(templates[i].GetSystemDisk().GetDiskType()),
 			DiskSize: common.Int64Ptr(int64(systemDiskSize)),
 		}
-		createInsRequest.DataDisks = disksToCVMDisks(info.Cluster.Template[i].CloudDataDisks)
+		createInsRequest.DataDisks = disksToCVMDisks(templates[i].GetCloudDataDisks())
 
 		createInsRequest.VirtualPrivateCloud = &cvm.VirtualPrivateCloud{
-			VpcId:    common.StringPtr(templates[i].VpcID),
+			VpcId: func() *string {
+				if len(templates[i].GetVpcID()) != 0 {
+					return common.StringPtr(templates[i].VpcID)
+				}
+
+				return common.StringPtr(info.Cluster.GetVpcID())
+			}(),
 			SubnetId: common.StringPtr(templates[i].SubnetID),
 		}
 
-		/* 公网带宽相关信息设置
-		createInsRequest.InternetAccessible = &cvm.InternetAccessible{
-			InternetChargeType:      nil,
-			InternetMaxBandwidthOut: nil,
-			PublicIpAssigned:        nil,
-			BandwidthPackageId:      nil,
-		}
-		*/
-		// createInsRequest.EnhancedService = nil
+		// 公网带宽相关信息设置
+		createInsRequest.InternetAccessible = func() *cvm.InternetAccessible {
+			if templates[i].GetInternetAccess() != nil {
 
+				internet := &cvm.InternetAccessible{
+					InternetChargeType: common.StringPtr(api.InternetChargeTypeTrafficPostpaidByHour),
+				}
+
+				if templates[i].GetInternetAccess().GetPublicIPAssigned() {
+					internet.PublicIpAssigned = common.BoolPtr(true)
+
+					bw, _ := strconv.Atoi(templates[i].GetInternetAccess().GetInternetMaxBandwidth())
+					internet.InternetMaxBandwidthOut = common.Int64Ptr(int64(bw))
+				}
+				if templates[i].GetInternetAccess().GetInternetChargeType() != "" {
+					internet.InternetChargeType = common.StringPtr(templates[i].GetInternetAccess().GetInternetChargeType())
+				}
+				if templates[i].GetInternetAccess().GetBandwidthPackageId() != "" {
+					internet.BandwidthPackageId = common.StringPtr(templates[i].GetInternetAccess().GetBandwidthPackageId())
+				}
+
+				return internet
+			}
+
+			return nil
+		}()
+		// createInsRequest.EnhancedService = nil
 		createInsRequest.InstanceCount = common.Int64Ptr(int64(templates[i].GetApplyNum()))
 		createInsRequest.LoginSettings = &cvm.LoginSettings{
 			Password: func() *string {
-				if len(info.Cluster.GetNodeSettings().GetInitLoginPassword()) > 0 {
-					return common.StringPtr(info.Cluster.GetNodeSettings().GetInitLoginPassword())
+				switch role {
+				case api.MASTER_ETCD.String():
+					if len(info.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword()) > 0 {
+						return common.StringPtr(info.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword())
+					}
+					return nil
+				case api.WORKER.String():
+					if len(info.Cluster.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword()) > 0 {
+						return common.StringPtr(info.Cluster.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword())
+					}
+					return nil
+				default:
 				}
 				return nil
 			}(),
 			KeyIds: func() []*string {
-				if len(info.Cluster.GetNodeSettings().GetKeyPair().GetKeyID()) > 0 {
-					keyIds := strings.Split(info.Cluster.GetNodeSettings().GetKeyPair().GetKeyID(), ",")
-					return common.StringPtrs(keyIds)
+				switch role {
+				case api.MASTER_ETCD.String():
+					if len(info.Cluster.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeyID()) > 0 {
+						keyIds := strings.Split(info.Cluster.GetNodeSettings().
+							GetMasterLogin().GetKeyPair().GetKeyID(), ",")
+						return common.StringPtrs(keyIds)
+					}
+					return nil
+				case api.WORKER.String():
+					if len(info.Cluster.GetNodeSettings().GetWorkerLogin().GetKeyPair().GetKeyID()) > 0 {
+						keyIds := strings.Split(info.Cluster.GetNodeSettings().
+							GetWorkerLogin().GetKeyPair().GetKeyID(), ",")
+						return common.StringPtrs(keyIds)
+					}
+					return nil
+				default:
 				}
-
 				return nil
 			}(),
 		}
@@ -426,6 +530,35 @@ func generateNewRunInstance(info *cloudprovider.CloudDependBasicInfo, role strin
 	return runInstance
 }
 
+// generateNewRunInstance run instances by instance template
+func generateNewInstanceForDisk(templates []*proto.InstanceTemplateConfig) []*api.InstanceDataDiskMountSetting {
+	diskMounts := make([]*api.InstanceDataDiskMountSetting, 0)
+
+	for i := range templates {
+		diskMounts = append(diskMounts, &api.InstanceDataDiskMountSetting{
+			InstanceType: common.StringPtr(templates[i].InstanceType),
+			DataDisks: func() []*api.DataDetailDisk {
+				localDisk := make([]*api.DataDetailDisk, 0)
+				for cnt := range templates[i].CloudDataDisks {
+					size, _ := strconv.Atoi(templates[i].CloudDataDisks[cnt].DiskSize)
+					localDisk = append(localDisk, &api.DataDetailDisk{
+						DiskType:           templates[i].CloudDataDisks[cnt].DiskType,
+						DiskSize:           int64(size),
+						FileSystem:         templates[i].CloudDataDisks[cnt].FileSystem,
+						MountTarget:        templates[i].CloudDataDisks[cnt].MountTarget,
+						AutoFormatAndMount: templates[i].CloudDataDisks[cnt].AutoFormatAndMount,
+					})
+				}
+
+				return localDisk
+			}(),
+			Zone: common.StringPtr(templates[i].Zone),
+		})
+	}
+
+	return diskMounts
+}
+
 // generateCreateClusterRequest 独立集群 or 托管集群
 func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	masterIps, workerIps []string, operator string) (*api.CreateClusterRequest, error) {
@@ -442,21 +575,20 @@ func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.Cloud
 		ClusterBasic:    generateClusterBasicInfo(info.Cluster),
 		ClusterAdvanced: generateClusterAdvancedInfo(info.Cluster),
 
-		/*
-			InstanceAdvanced: business.GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
-				Cluster:  info.Cluster,
-				IPList:   strings.Join(nodeIPs, ","),
-				Operator: operator,
-				Render:   true,
-			}, &business.NodeAdvancedOptions{NodeScheduler: true}),
-		*/
+		InstanceAdvanced: business.GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
+			Cluster:  info.Cluster,
+			IPList:   "",
+			Operator: operator,
+			Render:   true,
+		}, &business.NodeAdvancedOptions{NodeScheduler: true}),
 
-		ExistedInstancesForNode: make([]*api.ExistedInstancesForNode, 0),
-		RunInstancesForNode:     make([]*api.RunInstancesForNode, 0),
+		ExistedInstancesForNode:       make([]*api.ExistedInstancesForNode, 0),
+		RunInstancesForNode:           make([]*api.RunInstancesForNode, 0),
+		InstanceDataDiskMountSettings: nil,
 	}
 
 	// network info
-	cidr, err := generateClusterCIDRInfo(info)
+	cidr, err := generateClusterCIDRInfo(ctx, info)
 	if err != nil {
 		return nil, err
 	}
@@ -474,6 +606,12 @@ func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.Cloud
 
 			req.RunInstancesForNode = append(req.RunInstancesForNode,
 				generateNewRunInstance(info, api.WORKER.String(), workerNodesTpl, operator))
+
+			if req.InstanceDataDiskMountSettings == nil {
+				req.InstanceDataDiskMountSettings = make([]*api.InstanceDataDiskMountSetting, 0)
+			}
+
+			req.InstanceDataDiskMountSettings = generateNewInstanceForDisk(workerNodesTpl)
 
 			return req, nil
 		}
@@ -513,6 +651,12 @@ func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.Cloud
 			// worker nodes
 			req.RunInstancesForNode = append(req.RunInstancesForNode,
 				generateNewRunInstance(info, api.WORKER.String(), workerNodesTpl, operator))
+
+			if req.InstanceDataDiskMountSettings == nil {
+				req.InstanceDataDiskMountSettings = make([]*api.InstanceDataDiskMountSetting, 0)
+			}
+
+			req.InstanceDataDiskMountSettings = generateNewInstanceForDisk(workerNodesTpl)
 
 			return req, nil
 		}
@@ -621,7 +765,9 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	blog.Infof("createTkeCluster[%s] CreateTKECluster[%s] successful", taskID, info.Cluster.ClusterID)
 
 	// update cluster systemID
-	err = updateClusterSystemID(info.Cluster.ClusterID, systemId)
+	info.Cluster.SystemID = systemId
+
+	err = cloudprovider.GetStorageModel().UpdateCluster(ctx, info.Cluster)
 	if err != nil {
 		blog.Errorf("createTkeCluster[%s] updateClusterSystemID[%s] failed %s",
 			taskID, info.Cluster.ClusterID, err.Error())
@@ -653,10 +799,13 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+
+	// independent cluster use existed nodes
 	masterNodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params,
 		cloudprovider.MasterNodeIPsKey.String(), ",")
 	workerNodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params,
 		cloudprovider.WorkerNodeIPsKey.String(), ",")
+
 	nodeTemplateID := step.Params[cloudprovider.NodeTemplateIDKey.String()]
 	operator := state.Task.CommonParams[cloudprovider.OperatorKey.String()]
 
@@ -893,10 +1042,10 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 	}
 	// previous step successful when retry task
 	if step == nil {
-		blog.Infof("RegisterManageClusterKubeConfigTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		blog.Infof("RegisterTkeClusterKubeConfigTask[%s]: current step[%s] successful and skip", taskID, stepName)
 		return nil
 	}
-	blog.Infof("RegisterManageClusterKubeConfigTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
+	blog.Infof("RegisterTkeClusterKubeConfigTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// inject taskID
@@ -907,28 +1056,36 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 	nodeIpList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.NodeIPsKey.String(), ",")
 
+	// update connect cluster status when task retry
+	connect, ok := step.Params[cloudprovider.ConnectClusterKey.String()]
+	if ok && connect == icommon.True {
+		step.Params[cloudprovider.ConnectClusterKey.String()] = icommon.False
+	}
+
 	// handler logic
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
 	})
 	if err != nil {
-		blog.Errorf("RegisterManageClusterKubeConfigTask[%s] GetClusterDependBasicInfo in task %s step %s failed, %s",
+		blog.Errorf("RegisterTkeClusterKubeConfigTask[%s] GetClusterDependBasicInfo in task %s step %s failed, %s",
 			taskID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
+	// wait for cluster stable
+
 	var (
-		subnet = dependInfo.Cluster.GetClusterConnectSetting().GetSubnetId()
+		subnet = dependInfo.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetSubnetId()
 	)
 
 	// inter connect && subnet empty
-	if !dependInfo.Cluster.GetClusterConnectSetting().GetIsExtranet() && subnet == "" {
+	if !dependInfo.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet() && subnet == "" {
 		subnet, err = getRandomSubnetFromNodes(ctx, dependInfo, nodeIpList)
 		if err != nil {
-			blog.Errorf("RegisterManageClusterKubeConfigTask[%s] GetClusterDependBasicInfo in task %s step %s failed, %s",
+			blog.Errorf("RegisterTkeClusterKubeConfigTask[%s] GetClusterDependBasicInfo in task %s step %s failed, %s",
 				taskID, taskID, stepName, err.Error())
 			retErr := fmt.Errorf("getRandomSubnetFromNodes failed, %s", err.Error())
 			_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -938,65 +1095,80 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 
 	// open tke internal kubeconfig
 	err = registerTKEClusterEndpoint(ctx, dependInfo, api.ClusterEndpointConfig{
-		IsExtranet: dependInfo.Cluster.GetClusterConnectSetting().GetIsExtranet(),
+		IsExtranet: dependInfo.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet(),
 		SubnetId:   subnet,
 		SecurityGroup: func() string {
-			if !dependInfo.Cluster.GetClusterConnectSetting().GetIsExtranet() {
+			if !dependInfo.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet() {
 				return ""
 			}
 
-			return dependInfo.Cluster.GetClusterConnectSetting().GetSecurityGroup()
+			return dependInfo.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetSecurityGroup()
 		}(),
 		ExtensiveParameters: func() string {
-			if !dependInfo.Cluster.GetClusterConnectSetting().GetIsExtranet() {
+			if !dependInfo.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet() {
 				return ""
 			}
 
 			bandWidth, _ := strconv.Atoi(
-				dependInfo.Cluster.GetClusterConnectSetting().GetInternet().GetInternetMaxBandwidth())
+				dependInfo.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().
+					GetInternet().GetInternetMaxBandwidth())
 
 			internet := &business.InternetConnect{
 				InternetAccessible: struct {
 					InternetChargeType      string `json:"InternetChargeType"`
 					InternetMaxBandwidthOut int    `json:"InternetMaxBandwidthOut"`
 				}{
-					InternetChargeType:      dependInfo.Cluster.GetClusterConnectSetting().GetInternet().GetInternetChargeType(),
+					InternetChargeType: dependInfo.Cluster.GetClusterAdvanceSettings().
+						GetClusterConnectSetting().GetInternet().GetInternetChargeType(),
 					InternetMaxBandwidthOut: bandWidth,
 				},
 			}
 			internetBytes, _ := json.Marshal(internet)
+
+			blog.Infof("RegisterTkeClusterKubeConfigTask[%s] internet[%s]", taskID, string(internetBytes))
 			return string(internetBytes)
 		}(),
 	})
 	if err != nil {
-		blog.Errorf("RegisterManageClusterKubeConfigTask[%s] registerTKEClusterEndpoint failed: %s", taskID, err.Error())
+		blog.Errorf("RegisterTkeClusterKubeConfigTask[%s] registerTKEClusterEndpoint failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("registerTKEClusterEndpoint failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	blog.Infof("RegisterManageClusterKubeConfigTask[%s] registerTKEClusterEndpoint success", taskID)
+	blog.Infof("RegisterTkeClusterKubeConfigTask[%s] registerTKEClusterEndpoint success", taskID)
 
 	// 开启admin权限, 并生成kubeconfig
 	kube, err := openClusterAdminKubeConfig(ctx, dependInfo)
 	if err != nil {
-		blog.Errorf("RegisterManageClusterKubeConfigTask[%s] registerTKEClusterEndpoint failed: %s", taskID, err.Error())
+		blog.Errorf("RegisterTkeClusterKubeConfigTask[%s] registerTKEClusterEndpoint failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("registerTKEClusterEndpoint failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	blog.Infof("RegisterManageClusterKubeConfigTask[%s] openClusterAdminKubeConfig[%s] success", taskID, kube)
+	blog.Infof("RegisterTkeClusterKubeConfigTask[%s] openClusterAdminKubeConfig[%s] success", taskID, kube)
 
-	// import cluster credential
-	err = importClusterCredential(ctx, dependInfo,
-		dependInfo.Cluster.GetClusterConnectSetting().GetIsExtranet(), false, "", kube)
+	// check cluster connection
+	err = providerutils.CheckClusterConnect(ctx, kube)
 	if err != nil {
-		blog.Errorf("RegisterManageClusterKubeConfigTask[%s] importClusterCredential failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("importClusterCredential failed %s", err.Error())
+		blog.Errorf("RegisterTkeClusterKubeConfigTask[%s] checkClusterConnect "+
+			"by kubeConfig failed: %v", taskID, err)
+		retErr := fmt.Errorf("checkClusterConnect %v", err)
+		step.Params[cloudprovider.ConnectClusterKey.String()] = icommon.True
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
-	blog.Infof("RegisterManageClusterKubeConfigTask[%s] importClusterCredential success", taskID)
+	// import cluster credential
+	err = importClusterCredential(ctx, dependInfo,
+		dependInfo.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet(),
+		false, "", kube)
+	if err != nil {
+		blog.Errorf("RegisterTkeClusterKubeConfigTask[%s] importClusterCredential failed: %s", taskID, err.Error())
+		retErr := fmt.Errorf("importClusterCredential failed %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	blog.Infof("RegisterTkeClusterKubeConfigTask[%s] importClusterCredential success", taskID)
 
 	// dynamic inject paras
 	if state.Task.CommonParams == nil {
@@ -1006,7 +1178,7 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("RegisterManageClusterKubeConfigTask[%s:%s] update to storage fatal", taskID, stepName)
+		blog.Errorf("RegisterTkeClusterKubeConfigTask[%s:%s] update to storage fatal", taskID, stepName)
 		return err
 	}
 
@@ -1065,7 +1237,7 @@ func openClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDe
 	}
 
 	kube, err := tkeCli.GetTKEClusterKubeConfig(info.Cluster.SystemID,
-		info.Cluster.GetClusterConnectSetting().GetIsExtranet())
+		info.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet())
 	if err != nil {
 		blog.Errorf("openClusterAdminKubeConfig[%s] GetTKEClusterKubeConfig failed: %v", taskID, err)
 		return "", err
@@ -1108,6 +1280,18 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
+	// 后面会去除密码
+	bkBizID, _ := strconv.Atoi(dependInfo.Cluster.GetBusinessID())
+	if dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID() != "" {
+		bkModuleID, _ := strconv.Atoi(dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID())
+		dependInfo.Cluster.GetClusterBasicSettings().GetModule().MasterModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+	}
+	if dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID() != "" {
+		bkModuleID, _ := strconv.Atoi(dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID())
+		dependInfo.Cluster.GetClusterBasicSettings().GetModule().WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+	}
+	cloudprovider.UpdateCluster(dependInfo.Cluster)
 
 	// sync clusterData to pass-cc
 	providerutils.SyncClusterInfoToPassCC(taskID, dependInfo.Cluster)
