@@ -170,7 +170,7 @@ type ConfigClient interface {
 	ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error)
 	ListConfigItemByTuple(ctx context.Context, in *ListConfigItemByTupleReq, opts ...grpc.CallOption) (*ListConfigItemByTupleResp, error)
-	// ReleasedConfigKv
+	// ReleasedKv
 	GetReleasedKv(ctx context.Context, in *GetReleasedKvReq, opts ...grpc.CallOption) (*GetReleasedKvResp, error)
 	ListReleasedKvs(ctx context.Context, in *ListReleasedKvsReq, opts ...grpc.CallOption) (*ListReleasedKvsResp, error)
 	UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*UpdateConfigHookResp, error)
@@ -1405,7 +1405,7 @@ type ConfigServer interface {
 	ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error)
 	ListConfigItemByTuple(context.Context, *ListConfigItemByTupleReq) (*ListConfigItemByTupleResp, error)
-	// ReleasedConfigKv
+	// ReleasedKv
 	GetReleasedKv(context.Context, *GetReleasedKvReq) (*GetReleasedKvResp, error)
 	ListReleasedKvs(context.Context, *ListReleasedKvsReq) (*ListReleasedKvsResp, error)
 	UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*UpdateConfigHookResp, error)
