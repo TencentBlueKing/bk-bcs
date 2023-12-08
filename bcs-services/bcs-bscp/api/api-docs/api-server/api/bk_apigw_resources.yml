@@ -2305,3 +2305,53 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: [ ]
+
+  /api/v1/biz/{biz_id}/apps/{app_id}/kvs/import:
+    post:
+      operationId: import_kv
+      description: 导入kv
+      tags:
+        - 导入kv
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/biz/{biz_id}/apps/{app_id}/kvs/import
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+
+  /api/v1/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs/export:
+    get:
+      operationId: export_kv
+      description: 导出kv
+      tags:
+        - 导出版本kv
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs/export
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
