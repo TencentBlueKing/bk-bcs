@@ -198,7 +198,7 @@ export interface IConfigImportItem {
 }
 
 // kv类型
-export interface IConfigKVItem {
+export interface IConfigKvItem {
   key: string;
   kv_type: string;
   value: string;
@@ -207,7 +207,7 @@ export interface IConfigKVItem {
 // 单个kv配置详情
 export interface IConfigKvType {
   id: number;
-  spec: IConfigKVItem;
+  spec: IConfigKvItem;
   attachment: {
     biz_id: number;
     app_id: number;

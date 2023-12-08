@@ -14,6 +14,7 @@
       <div v-if="!props.loading" class="detail-area">
         <File
           v-if="props.diff.contentType === 'file'"
+          :downloadable="false"
           :current="props.diff.current.content as IFileConfigContentSummary"
           :base="props.diff.base.content as IFileConfigContentSummary"
           :id="props.id"

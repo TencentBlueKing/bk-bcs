@@ -115,18 +115,11 @@ watch(
   async (val) => {
     if (val) {
       getVersionList();
+      if (props.baseVersionId) {
+        selectedBaseVersion.value = props.baseVersionId;
+      }
     }
   },
-);
-
-watch(
-  () => props.baseVersionId,
-  (val) => {
-    if (val) {
-      selectedBaseVersion.value = val;
-    }
-  },
-  { immediate: true },
 );
 
 // 获取所有对比基准版本

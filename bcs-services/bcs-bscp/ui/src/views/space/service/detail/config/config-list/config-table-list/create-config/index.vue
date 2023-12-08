@@ -10,7 +10,7 @@
     @after-hidden="isPopoverOpen = false"
   >
     <div theme="primary" :class="['create-config-btn', { 'popover-open': isPopoverOpen }]">
-      新增配置文件
+      {{ isFileType ? '新建配置文件' : '新建配置项'}}
       <AngleDown class="angle-icon" />
     </div>
     <template #content>
@@ -127,7 +127,6 @@ const handleManualCreateSlideOpen = () => {
   if (isFileType.value) {
     isManualCreateSliderOpen.value = true;
   } else {
-    console.log(111);
     isManualCreateKvSliderOpen.value = true;
   }
 };

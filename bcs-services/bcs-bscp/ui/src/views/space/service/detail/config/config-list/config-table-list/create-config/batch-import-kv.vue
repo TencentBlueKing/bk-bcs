@@ -16,7 +16,7 @@
           <bk-radio label="text">文本导入</bk-radio>
           <bk-radio label="file">文件导入</bk-radio>
         </bk-radio-group>
-        <div class="tips">只支持string、number类型,其他类型请使用文件导入</div>
+        <div class="tips" v-if="importType === 'text'">只支持string、number类型,其他类型请使用文件导入</div>
       </bk-form-item>
       <bk-form-item label="配置文件内容" required>
         <KvContentEditor v-if="importType === 'text'" ref="editorRef" />

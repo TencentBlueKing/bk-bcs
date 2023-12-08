@@ -1,8 +1,8 @@
 <template>
-  <bk-sideslider title="导入配置文件" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider title="批量上传配置文件" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="slider-content-container">
       <bk-form form-type="vertical">
-        <bk-form-item label="上传配置包" required property="package">
+        <bk-form-item label="上传配置文件包" required property="package">
           <bk-upload
             v-show="!isTableChange"
             class="config-uploader"
@@ -67,7 +67,7 @@
         :loading="pending"
         :disabled="!importConfigList.length"
         @click="handleImport"
-        >去导入</bk-button
+        >去上传</bk-button
       >
       <bk-button @click="close">取消</bk-button>
     </div>
@@ -77,8 +77,10 @@
 import { ref, watch, computed } from 'vue';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
 import { IConfigImportItem } from '../../../../../../../../../types/config';
-import { batchAdddConfigList, importNonTemplateConfigFile } from '../../../../../../../../api/config';
+import { batchAddConfigList, importNonTemplateConfigFile } from '../../../../../../../../api/config';
 import ConfigTable from '../../../../../../templates/list/package-detail/operations/add-configs/import-configs/config-table.vue';
+import useServiceStore from '../../../../../../../../store/service';
+import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue';
 import { Upload } from 'bkui-vue/lib/icon';
 const props = defineProps<{
@@ -96,6 +98,7 @@ const nonExistConfigList = ref<IConfigImportItem[]>([]);
 const loading = ref(false);
 const expandNonExistTable = ref(true);
 const buttonRef = ref();
+const { batchUploadIds }  = storeToRefs(useServiceStore());
 
 watch(
   () => props.show,
@@ -116,7 +119,7 @@ const handleFileUpload = async (option: { file: File }) => {
     existConfigList.value = res.exist;
     nonExistConfigList.value = res.non_exist;
     nonExistConfigList.value.forEach((item: IConfigImportItem) => {
-      item.privilege = '677';
+      item.privilege = '644';
       item.user = 'root';
       item.user_group = 'root';
     });
@@ -144,10 +147,11 @@ const close = () => {
 
 const handleImport = async () => {
   try {
-    await batchAdddConfigList(props.bkBizId, props.appId, [
+    const res = await batchAddConfigList(props.bkBizId, props.appId, [
       ...existConfigList.value,
       ...nonExistConfigList.value,
     ]);
+    batchUploadIds.value = res.ids;
     emits('upload');
     close();
     Message({

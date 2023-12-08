@@ -87,10 +87,11 @@ const handleCreateConfirm = async () => {
     } else {
       resp = await createApp(spaceId.value, { ...serviceData.value, reload_type: '', reload_file_path: '' });
     }
+    emits('reload');
     InfoBox({
       type: 'success',
       title: '服务新建成功',
-      subTitle: '接下来你可以在服务下新增并使用配置文件',
+      subTitle: serviceData.value.config_type === 'file' ? '接下来你可以在服务下新增并使用配置文件' : '接下来你可以在服务下新增并使用配置项',
       headerAlign: 'center',
       footerAlign: 'center',
       confirmText: '新增配置文件',
@@ -103,9 +104,6 @@ const handleCreateConfirm = async () => {
             appId: resp.id,
           },
         });
-      },
-      onClosed() {
-        emits('reload');
       },
     } as any);
     close();

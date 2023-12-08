@@ -1,7 +1,14 @@
 <template>
   <section :class="['service-card', { 'no-view-perm': !props.service.permissions.view }]" @click="handleCardClick">
     <div class="card-content-wrapper">
-      <div class="card-head">{{ props.service.spec?.name }}</div>
+      <div class="card-head">
+        <div class="service-type">{{ props.service.spec.config_type === 'file' ? '文件型' : '键值型' }}</div>
+        <div class="service-name">
+          <bk-overflow-title type="tips">
+            {{ props.service.spec?.name }}
+          </bk-overflow-title>
+        </div>
+      </div>
       <span class="del-btn"><Del @click="handleDeleteItem" /></span>
       <div class="service-config">
         <div class="config-info">
@@ -9,7 +16,7 @@
           {{ props.service.config?.count }}个配置文件
         </div>
         <div class="time-info">
-          <span class="bk-bscp-icon icon-time-2"></span>
+          <span class="bk-bscp-icon icon-time-2"  v-bk-tooltips="{content: '最新上线', placement: 'top'}"></span>
           <template v-if="props.service.config && props.service.config.update_at">
             {{ datetimeFormat(props.service.config.update_at) }}
           </template>
@@ -215,7 +222,22 @@ const handleDeleteService = async () => {
     padding: 0 50px 0 16px;
     display: flex;
     align-items: center;
-
+    .service-type {
+      width: 52px;
+      height: 22px;
+      margin-right: 8px;
+      background: #f0f1f5;
+      border-radius: 2px;
+      color: #63656e;
+      text-align: center;
+      font-size: 12px;
+    }
+    .service-name {
+      width: calc(100% - 60px);
+    }
+    .service-name {
+      flex: 1;
+    }
     &::before {
       content: '';
       position: absolute;
@@ -236,9 +258,6 @@ const handleDeleteService = async () => {
     margin: 4px 0 12px 0;
     display: flex;
     align-items: end;
-    .config-info {
-      width: 85px;
-    }
     .time-info {
       padding-left: 10px;
     }
