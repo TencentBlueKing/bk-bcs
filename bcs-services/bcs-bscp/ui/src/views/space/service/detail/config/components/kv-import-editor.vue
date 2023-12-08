@@ -4,7 +4,7 @@
       <div class="editor-title">
         <div class="tips">
           <InfoLine class="info-icon" />
-          仅支持大小不超过 5M
+          仅支持大小不超过 2M
         </div>
         <div class="btns">
           <i
@@ -67,7 +67,7 @@ import BkMessage from 'bkui-vue/lib/message';
 import { InfoLine, FilliscreenLine, UnfullScreen, Search } from 'bkui-vue/lib/icon';
 import CodeEditor from '../../../../../../components/code-editor/index.vue';
 import SeparatorSelect from '../../../../variables/separator-select.vue';
-import { IConfigKVItem } from '../../../../../../../types/config';
+import { IConfigKvItem } from '../../../../../../../types/config';
 import { batchUpsertKv } from '../../../../../../api/config';
 
 interface errorLineItem {
@@ -79,7 +79,7 @@ const isOpenFullScreen = ref(false);
 const codeEditorRef = ref();
 const separatorShow = ref(false);
 const kvsContent = ref('');
-const kvs = ref<IConfigKVItem[]>([]);
+const kvs = ref<IConfigKvItem[]>([]);
 const separator = ref(' ');
 const shouldValidate = ref(false);
 const errorLine = ref<errorLineItem[]>([]);

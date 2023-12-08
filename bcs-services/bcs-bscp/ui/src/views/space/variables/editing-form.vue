@@ -26,7 +26,7 @@
       <bk-input v-model="localVal.default_val" @change="change" />
     </bk-form-item>
     <bk-form-item label="描述" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :maxlength="100" :rows="5" @change="change" :resize="true" />
+      <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :rows="5" @change="change" :resize="true" />
     </bk-form-item>
   </bk-form>
 </template>
@@ -84,6 +84,15 @@ const rules = {
       },
       message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
       trigger: 'change',
+    },
+  ],
+  default_val: [
+    {
+      validator: (value: string) => {
+        if (localVal.value.type === 'string') return true;
+        return /^-?\d+(\.\d+)?$/.test(value);
+      },
+      message: '无效默认值，类型为number值不为数字',
     },
   ],
 };

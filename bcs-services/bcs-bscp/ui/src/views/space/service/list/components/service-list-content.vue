@@ -72,6 +72,7 @@
     <EditService
       v-model:show="isEditServiceOpen"
       :service="editingService"
+      @reload="loadAppList"
     />
   </div>
 </template>

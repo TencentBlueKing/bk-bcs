@@ -1,8 +1,8 @@
 <template>
   <div class="version-diff-side">
-    <div class="config-list-apart">
+    <div class="config-list-apart" :class="{'config-list-kv':!isFileType}">
       <Configs
-        v-if="appData.spec.config_type === 'file'"
+        v-if="isFileType"
         :base-version-id="props.baseVersionId"
         :current-version-id="props.currentVersionId"
         :un-named-version-variables="props.unNamedVersionVariables"
@@ -14,13 +14,13 @@
         v-else
         :base-version-id="props.baseVersionId"
         :current-version-id="props.currentVersionId"
-        :un-named-version-variables="props.unNamedVersionVariables"
         :selected-config="props.selectedConfigKv"
         :actived="selectedType === 'config'"
         @selected="handleSelect($event, 'config')"
       />
     </div>
     <Scripts
+      v-if="isFileType"
       :base-version-id="props.baseVersionId"
       :current-version-id="props.currentVersionId"
       :actived="selectedType === 'script'"
@@ -41,7 +41,7 @@ import Scripts from './scripts.vue';
 
 const serviceStore = storeToRefs(useServiceStore());
 
-const { appData } = serviceStore;
+const { isFileType } = serviceStore;
 
 const props = defineProps<{
   baseVersionId: number;
@@ -68,6 +68,9 @@ const handleSelect = (data: IDiffDetail, type: string) => {
   .config-list-apart {
     height: calc(100% - 132px);
     background: #f0f1f5;
+  }
+  .config-list-kv {
+    height: 100%;
   }
   .scripts-menu {
     border-top: 1px solid #dcded5;

@@ -16,7 +16,7 @@
       />
     </section>
     <template v-if="!props.versionDetailView">
-      <div class="detail-header-tabs">
+      <div class="detail-header-tabs" v-if="isFileType">
         <BkTab type="unborder-card" v-model:active="activeTab" :label-height="41" @change="handleTabChange">
           <BkTabPanel v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label"></BkTabPanel>
         </BkTab>
@@ -54,6 +54,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { InfoLine } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../store/config';
+import useServiceStore from '../../../../../store/service';
 import { VERSION_STATUS_MAP } from '../../../../../constants/config';
 import { IConfigVersion } from '../../../../../../types/config';
 import { permissionCheck } from '../../../../../api/index';
@@ -65,7 +66,9 @@ const route = useRoute();
 const router = useRouter();
 
 const configStore = useConfigStore();
+const serviceStore = useServiceStore();
 const { versionData } = storeToRefs(configStore);
+const { isFileType } = storeToRefs(serviceStore);
 const permCheckLoading = ref(false);
 const perms = ref({
   create: false,
