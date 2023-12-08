@@ -2177,7 +2177,7 @@ dashboard:
     validate:
       emptyNs: 请选择命名空间
       name: 命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字
-      sharedClusterNs: 命名规则：ieg-项目英文名称-自定义名称
+      sharedClusterNs: '命名规则：{prefix}自定义名称'
       sharedQuota: 共享集群需设置MEN、CPU配额，且两者最小值不小于0
       setMinMaxMemCpu: 请设置MEN、CPU配额，且两者最小值不小于0
     status:

@@ -14,7 +14,7 @@
               required
               property="name"
               error-display-type="normal"
-              :desc="$t('dashboard.ns.validate.sharedClusterNs')">
+              :desc="$t('dashboard.ns.validate.sharedClusterNs', { prefix: nsPrefix })">
               <bk-input v-model="formData.name" class="w-[620px]" maxlength="30">
                 <div slot="prepend">
                   <div class="group-text">{{ nsPrefix }}</div>
@@ -133,7 +133,7 @@
     <div>
       <bcs-button
         theme="primary"
-        class="w-[88px] mr-[10px] ml-[20px]"
+        class="w-[88px] ml-[20px]"
         @click="handleCreated"
         :loading="isLoading">{{ $t('generic.button.create') }}</bcs-button>
       <bcs-button
@@ -305,7 +305,8 @@ export default defineComponent({
           });
           $router.back();
         };
-      });
+      })
+        .catch(() => false);
     };
 
     return {
