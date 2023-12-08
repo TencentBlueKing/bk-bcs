@@ -10,9 +10,14 @@
             @imported="refreshConfigList"
             @uploaded="refreshConfigList(true)"
           />
-          <EditVariables ref="editVariablesRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
+          <EditVariables v-if="isFileType" ref="editVariablesRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
         </template>
-        <ViewVariables v-else :bk-biz-id="props.bkBizId" :app-id="props.appId" :verision-id="versionData.id" />
+        <ViewVariables
+          v-else-if="isFileType"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :verision-id="versionData.id"
+        />
       </div>
       <div class="groups-info" v-if="versionData.status.released_groups.length > 0">
         <div v-for="group in versionData.status.released_groups" class="group-item" :key="group.id">
@@ -27,21 +32,31 @@
       />
     </div>
     <section class="config-list-table">
-      <TableWithTemplates
-        v-if="useTemplate"
-        ref="tableRef"
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        :search-str="searchStr"
-        @clear-str="clearStr"
-        @delete-config="refreshVariable"
-      />
-      <TableWithPagination
+      <template v-if="isFileType">
+        <TableWithTemplates
+          v-if="useTemplate"
+          ref="tableRef"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :search-str="searchStr"
+          @clear-str="clearStr"
+          @delete-config="refreshVariable"
+        />
+        <TableWithPagination
+          v-else
+          ref="tableRef"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :search-str="searchStr"
+        />
+      </template>
+      <TableWithKv
         v-else
         ref="tableRef"
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
         :search-str="searchStr"
+        @clear-str="clearStr"
       />
     </section>
   </section>
@@ -50,15 +65,19 @@
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../store/config';
+import useServiceStore from '../../../../../../../store/service';
 import SearchInput from '../../../../../../../components/search-input.vue';
 import CreateConfig from './create-config/index.vue';
 import EditVariables from './variables/edit-variables.vue';
 import ViewVariables from './variables/view-variables.vue';
 import TableWithTemplates from './tables/table-with-templates.vue';
 import TableWithPagination from './tables/table-with-pagination.vue';
+import TableWithKv from './tables/table-with-kv.vue';
 
 const configStore = useConfigStore();
+const serviceStore = useServiceStore();
 const { versionData } = storeToRefs(configStore);
+const { isFileType } = storeToRefs(serviceStore);
 
 const props = defineProps<{
   bkBizId: string;

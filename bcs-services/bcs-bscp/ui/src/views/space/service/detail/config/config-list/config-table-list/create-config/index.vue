@@ -10,7 +10,7 @@
     @after-hidden="isPopoverOpen = false"
   >
     <div theme="primary" :class="['create-config-btn', { 'popover-open': isPopoverOpen }]">
-      新增配置文件
+      {{ isFileType ? '新建配置文件' : '新建配置项'}}
       <AngleDown class="angle-icon" />
     </div>
     <template #content>
@@ -23,6 +23,7 @@
           手动新增
         </div>
         <div
+          v-if="isFileType"
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
           @click="handleBatchUploadSlideOpen"
@@ -30,17 +31,32 @@
           批量上传
         </div>
         <div
+          v-if="isFileType"
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
           @click="handleImportTemplateDialogOpen"
         >
           从配置模板导入
         </div>
+        <div
+          v-if="!isFileType"
+          v-cursor="{ active: !hasEditServicePerm }"
+          :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
+          @click="handleBatchImportDialogOpen"
+        >
+          批量导入
+        </div>
       </div>
     </template>
   </bk-popover>
   <ManualCreate
     v-model:show="isManualCreateSliderOpen"
+    :bk-biz-id="props.bkBizId"
+    :app-id="props.appId"
+    @confirm="emits('created')"
+  />
+  <ManualCreateKv
+    v-model:show="isManualCreateKvSliderOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     @confirm="emits('created')"
@@ -57,6 +73,12 @@
     :app-id="props.appId"
     @upload="emits('uploaded')"
   />
+  <BatchImportKv
+    v-model:show="isBatchUploadDialogOpen"
+    :bk-biz-id="props.bkBizId"
+    :app-id="props.appId"
+    @confirm="emits('created')"
+  />
 </template>
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
@@ -65,13 +87,15 @@ import { AngleDown } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
 import useServiceStore from '../../../../../../../../store/service';
 import ManualCreate from './manual-create.vue';
+import ManualCreateKv from './manual-create-kv.vue';
 import ImportFromTemplate from './import-from-templates.vue';
 import BatchUpload from './batch-upload.vue';
+import BatchImportKv from './batch-import-kv.vue';
 
 const route = useRoute();
 
 const serviceStore = useServiceStore();
-const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
+const { permCheckLoading, hasEditServicePerm, isFileType } = storeToRefs(serviceStore);
 const { checkPermBeforeOperate } = serviceStore;
 
 const props = defineProps<{
@@ -84,8 +108,10 @@ const emits = defineEmits(['created', 'imported', 'uploaded']);
 const buttonRef = ref();
 const isPopoverOpen = ref(false);
 const isManualCreateSliderOpen = ref(false);
+const isManualCreateKvSliderOpen = ref(false);
 const isImportTemplatesDialogOpen = ref(false);
 const isBatchUploadSliderOpen = ref(false);
+const isBatchUploadDialogOpen = ref(false);
 
 onMounted(() => {
   if (route.query.pkg_id) {
@@ -98,7 +124,11 @@ const handleManualCreateSlideOpen = () => {
   if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
     return;
   }
-  isManualCreateSliderOpen.value = true;
+  if (isFileType.value) {
+    isManualCreateSliderOpen.value = true;
+  } else {
+    isManualCreateKvSliderOpen.value = true;
+  }
 };
 
 const handleImportTemplateDialogOpen = () => {
@@ -117,6 +147,13 @@ const handleBatchUploadSlideOpen = () => {
   isBatchUploadSliderOpen.value = true;
 };
 
+const handleBatchImportDialogOpen = () => {
+  buttonRef.value.hide();
+  if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+    return;
+  }
+  isBatchUploadDialogOpen.value = true;
+};
 // const handleImported = () => {};
 </script>
 <style lang="scss" scoped>
