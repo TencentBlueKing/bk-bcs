@@ -537,6 +537,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.UpdateAsOptionDeviceProvider",
+			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/providers/{provider}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.DeleteAutoScalingOption",
 			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
 			Method:  []string{"DELETE"},
@@ -965,6 +972,7 @@ type ClusterManagerService interface {
 	//* ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, opts ...client.CallOption) (*CreateAutoScalingOptionResponse, error)
 	UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, opts ...client.CallOption) (*UpdateAutoScalingOptionResponse, error)
+	UpdateAsOptionDeviceProvider(ctx context.Context, in *UpdateAsOptionDeviceProviderRequest, opts ...client.CallOption) (*UpdateAsOptionDeviceProviderResponse, error)
 	DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, opts ...client.CallOption) (*DeleteAutoScalingOptionResponse, error)
 	GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, opts ...client.CallOption) (*GetAutoScalingOptionResponse, error)
 	ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, opts ...client.CallOption) (*ListAutoScalingOptionResponse, error)
@@ -1790,6 +1798,16 @@ func (c *clusterManagerService) UpdateAutoScalingOption(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *clusterManagerService) UpdateAsOptionDeviceProvider(ctx context.Context, in *UpdateAsOptionDeviceProviderRequest, opts ...client.CallOption) (*UpdateAsOptionDeviceProviderResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateAsOptionDeviceProvider", in)
+	out := new(UpdateAsOptionDeviceProviderResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, opts ...client.CallOption) (*DeleteAutoScalingOptionResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.DeleteAutoScalingOption", in)
 	out := new(DeleteAutoScalingOptionResponse)
@@ -2406,6 +2424,7 @@ type ClusterManagerHandler interface {
 	//* ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(context.Context, *CreateAutoScalingOptionRequest, *CreateAutoScalingOptionResponse) error
 	UpdateAutoScalingOption(context.Context, *UpdateAutoScalingOptionRequest, *UpdateAutoScalingOptionResponse) error
+	UpdateAsOptionDeviceProvider(context.Context, *UpdateAsOptionDeviceProviderRequest, *UpdateAsOptionDeviceProviderResponse) error
 	DeleteAutoScalingOption(context.Context, *DeleteAutoScalingOptionRequest, *DeleteAutoScalingOptionResponse) error
 	GetAutoScalingOption(context.Context, *GetAutoScalingOptionRequest, *GetAutoScalingOptionResponse) error
 	ListAutoScalingOption(context.Context, *ListAutoScalingOptionRequest, *ListAutoScalingOptionResponse) error
@@ -2555,6 +2574,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListTask(ctx context.Context, in *ListTaskRequest, out *ListTaskResponse) error
 		CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, out *CreateAutoScalingOptionResponse) error
 		UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, out *UpdateAutoScalingOptionResponse) error
+		UpdateAsOptionDeviceProvider(ctx context.Context, in *UpdateAsOptionDeviceProviderRequest, out *UpdateAsOptionDeviceProviderResponse) error
 		DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, out *DeleteAutoScalingOptionResponse) error
 		GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, out *GetAutoScalingOptionResponse) error
 		ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, out *ListAutoScalingOptionResponse) error
@@ -3103,6 +3123,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateAutoScalingOption",
 		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateAsOptionDeviceProvider",
+		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/providers/{provider}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
@@ -3748,6 +3775,10 @@ func (h *clusterManagerHandler) CreateAutoScalingOption(ctx context.Context, in 
 
 func (h *clusterManagerHandler) UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, out *UpdateAutoScalingOptionResponse) error {
 	return h.ClusterManagerHandler.UpdateAutoScalingOption(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateAsOptionDeviceProvider(ctx context.Context, in *UpdateAsOptionDeviceProviderRequest, out *UpdateAsOptionDeviceProviderResponse) error {
+	return h.ClusterManagerHandler.UpdateAsOptionDeviceProvider(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, out *DeleteAutoScalingOptionResponse) error {

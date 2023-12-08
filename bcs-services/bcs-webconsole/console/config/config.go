@@ -15,6 +15,7 @@ package config
 
 import (
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -192,6 +193,12 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	}
 	if c.Auth.GatewayHost == "" {
 		c.Auth.GatewayHost = BK_IAM_GATEWAY_HOST
+	}
+	// 为空以配置文件为准, 如果设置，以环境变量为准, false代表网关模式
+	if BK_IAM_EXTERNAL != "" {
+		if external, e := strconv.ParseBool(BK_IAM_EXTERNAL); e == nil {
+			c.Auth.UseGateway = !external
+		}
 	}
 	if c.Redis.Password == "" {
 		c.Redis.Password = REDIS_PASSWORD

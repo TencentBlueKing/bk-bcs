@@ -52,6 +52,34 @@ func SinceMS(start time.Time) float64 {
 	return float64(time.Since(start).Milliseconds())
 }
 
+// StrToUint32Slice the comma separated string goes to uint32 slice
+func StrToUint32Slice(str string) ([]uint32, error) {
+	strValues := strings.Split(str, ",")
+	// 创建一个切片用于存储uint32值
+	var uint32Slice []uint32
+	// 遍历拆分后的字符串切片
+	for _, strValue := range strValues {
+		// 使用strconv.Atoi将字符串转换为int
+		intValue, err := strconv.Atoi(strValue)
+		if err != nil {
+			return nil, err
+		}
+		// 将int值转换为uint32并添加到切片中
+		uint32Slice = append(uint32Slice, uint32(intValue))
+	}
+	return uint32Slice, nil
+}
+
+// Contains checks if a given value exists in a slice
+func Contains(slice []uint32, value uint32) bool {
+	for _, v := range slice {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
 // IsNumber check if the string is a number
 func IsNumber(s string) bool {
 	// Try to convert to an integer

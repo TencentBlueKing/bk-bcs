@@ -17,7 +17,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/independent"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
@@ -26,6 +28,11 @@ import (
 // DeleteNamespace implement for DeleteNamespace interface
 func (a *SharedNamespaceAction) DeleteNamespace(ctx context.Context,
 	req *proto.DeleteNamespaceRequest, resp *proto.DeleteNamespaceResponse) error {
+	// if itsm is not enable, delete namespace directly
+	if !config.GlobalConf.ITSM.Enable {
+		ia := independent.NewIndependentNamespaceAction(a.model)
+		return ia.DeleteNamespace(ctx, req, resp)
+	}
 	var username string
 	if authUser, err := middleware.GetUserFromContext(ctx); err == nil {
 		username = authUser.GetUsername()

@@ -139,6 +139,7 @@ export default function useNode() {
     const result = await cordonNodes({
       clusterID,
       nodes,
+      operator: user.value.username,
     }).catch(() => false);
     result && $bkMessage({
       theme: 'success',
@@ -156,6 +157,7 @@ export default function useNode() {
     const result = await uncordonNodes({
       clusterID,
       nodes,
+      operator: user.value.username,
     }).catch(() => false);
     result && $bkMessage({
       theme: 'success',
@@ -173,6 +175,7 @@ export default function useNode() {
     const data = await handleSchedulerNode({
       clusterID: clusterId,
       nodes,
+      operator: user.value.username,
     }).catch(() => null);
     if (data?.fail?.length) {
       $bkInfo({

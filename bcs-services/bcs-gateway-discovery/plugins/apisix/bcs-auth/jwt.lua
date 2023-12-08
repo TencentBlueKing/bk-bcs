@@ -88,7 +88,9 @@ local function conn_and_set(key, jwt_token, conf)
         error("failed to connect redis")
     end
 
-    local setok, err = red:set(key, jwt_token, "EX", conf.exp)
+    -- redis key 过期时间设置为 conf.exp-10 秒，防止 jwt exp 过期问题
+    local exp = conf.exp - 10
+    local setok, err = red:set(key, jwt_token, "EX", exp)
     if not setok then
         core.log.error("failed to set jwt_token, err: ", err)
         error("failed to set jwt_token")

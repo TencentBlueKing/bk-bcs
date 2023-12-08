@@ -4,26 +4,6 @@
       class="bcs-small-form grid grid-cols-2 grid-rows-[repeat(3,auto-fill] gap-[16px]"
       v-bkloading="{ isLoading }">
       <DescList class="row-span-3" :title="$t('cluster.title.clusterInfo')">
-        <template #title-right>
-          <StatusIcon
-            :status-color-map="{
-              'CREATE-FAILURE': 'red',
-              'DELETE-FAILURE': 'red',
-              'IMPORT-FAILURE': 'red',
-              RUNNING: 'green'
-            }"
-            :status-text-map="{
-              INITIALIZATION: $t('generic.status.initializing'),
-              DELETING: $t('generic.status.deleting'),
-              'CREATE-FAILURE': $t('generic.status.createFailed'),
-              'DELETE-FAILURE': $t('generic.status.deleteFailed'),
-              'IMPORT-FAILURE': $t('cluster.status.importFailed'),
-              RUNNING: $t('generic.status.ready')
-            }"
-            :status="clusterData.status"
-            :pending="['INITIALIZATION', 'DELETING'].includes(clusterData.status)"
-            v-if="clusterData.status" />
-        </template>
         <bk-form-item :label="$t('cluster.labels.Kubernetes')">
           {{ clusterProvider || '--' }}
         </bk-form-item>
@@ -167,7 +147,6 @@ import { CLUSTER_ENV } from '@/common/constant';
 import DescList from '@/components/desc-list.vue';
 import KeyValue from '@/components/key-value.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
-import StatusIcon from '@/components/status-icon';
 import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -176,7 +155,7 @@ import useVariable from '@/views/deploy-manage/variable/use-variable';
 
 export default defineComponent({
   name: 'ClusterInfo',
-  components: { StatusIcon, EditFormItem, LoadingIcon, KeyValue, DescList },
+  components: { EditFormItem, LoadingIcon, KeyValue, DescList },
   props: {
     clusterId: {
       type: String,
@@ -238,9 +217,12 @@ export default defineComponent({
     const clusterVersion = computed(() => clusterData.value?.clusterBasicSettings?.version || '--');
     const runtimeVersion = computed(() => clusterData.value?.clusterAdvanceSettings?.runtimeVersion || '--');
     const containerRuntime = computed(() => clusterData.value?.clusterAdvanceSettings?.containerRuntime || '--');
+    const providerMap = {
+      tencentPublicCloud: $i18n.t('provider.tencentPublicCloud'),
+    };
     const clusterProvider = computed(() => {
       if (clusterData.value.clusterType === 'virtual') return clusterData.value?.extraInfo?.provider;
-      return clusterData.value?.provider;
+      return providerMap[clusterData.value?.provider] || clusterData.value?.provider;
     });
     const clusterType = computed(() => getClusterTypeName(clusterData.value));
     // 修改集群信息
@@ -279,7 +261,7 @@ export default defineComponent({
     const region = computed(() => regionList.value
       .find(item => item.region === clusterData.value.region)?.regionName || clusterData.value.region);
     const getRegionList = async () => {
-      if (curCluster.value?.provider !== 'tencentCloud') return;
+      if (!['tencentCloud', 'tencentPublicCloud'].includes(curCluster.value?.provider || '')) return;
       regionList.value = await $store.dispatch('clustermanager/fetchCloudRegion', {
         $cloudId: curCluster.value?.provider,
       });

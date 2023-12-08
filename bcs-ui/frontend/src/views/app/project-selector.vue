@@ -14,6 +14,7 @@
       :remote-method="remoteSearch"
       allow-create
       ref="selectRef"
+      :allow-enter="false"
       @selected="handleProjectChange"
       @scroll-end="handleScrollToBottom">
       <bcs-option

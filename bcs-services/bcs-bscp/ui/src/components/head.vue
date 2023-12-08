@@ -1,7 +1,7 @@
 <template>
   <div class="header">
     <div class="head-left">
-      <div class="title-wrap" @click="router.push({name:'home'})">
+      <div class="title-wrap" @click="router.push({ name: 'service-all', params: { spaceId } })">
         <span class="logo">
           <img src="../assets/logo.svg" alt="" />
         </span>
@@ -102,8 +102,7 @@ import useGlobalStore from '../store/global';
 import useUserStore from '../store/user';
 import useTemplateStore from '../store/template';
 import { ISpaceDetail } from '../../types/index';
-import { loginOut } from '../api/index';
-import { getSpaceFeatureFlag } from '../api/index';
+import { loginOut, getSpaceFeatureFlag } from '../api/index';
 import type { IVersionLogItem } from '../../types/version-log';
 import VersionLog from './version-log.vue';
 import features from './features-dialog.vue';
@@ -148,9 +147,7 @@ watch(
   },
 );
 
-const isNavActived = (name: string) => {
-  return spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === name
-}
+const isNavActived = (name: string) => spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === name;
 
 const handleNavClick = (navId: String) => {
   if (navId === 'service-all') {
@@ -176,7 +173,7 @@ const handleSpaceSearch = (searchStr: string) => {
   }
 };
 
-const handleSelectSpace = async(id: string) => {
+const handleSelectSpace = async (id: string) => {
   const space = spaceList.value.find((item: ISpaceDetail) => item.space_id === id);
   if (space) {
     const res = await getSpaceFeatureFlag(id);
@@ -261,9 +258,9 @@ Object.keys(modules).forEach((path) => {
   });
 });
 
-console.log(logList.value)
+console.log(logList.value);
 if (logList.value.length > 0) {
-  bscpVersion.value = logList.value[0].title
+  bscpVersion.value = logList.value[0].title;
 }
 
 // 功能特性

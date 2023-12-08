@@ -138,6 +138,11 @@ type SELinuxOpt struct {
 	User  string `structs:"user"`
 }
 
+// ReadinessGates 就绪探针
+type ReadinessGates struct {
+	ReadinessGates []string `structs:"readinessGates"`
+}
+
 // SpecOther 额外配置
 type SpecOther struct {
 	RestartPolicy              string   `structs:"restartPolicy"`              // 重启策略，其中 CJ，Job 没有 Always

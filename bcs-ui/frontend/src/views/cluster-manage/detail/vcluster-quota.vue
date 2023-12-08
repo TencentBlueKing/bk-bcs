@@ -42,7 +42,7 @@ const quota = computed<{
     memoryLimits: '',
   };
   try {
-    data = JSON.parse(curCluster.value?.extraInfo?.namespaceInfo || {})?.quota;
+    data = JSON.parse(curCluster.value?.extraInfo?.namespaceInfo || {})?.quota || {};
   } catch (_) {
     data = {
       cpuLimits: '',

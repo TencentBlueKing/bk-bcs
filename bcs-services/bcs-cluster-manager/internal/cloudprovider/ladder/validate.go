@@ -111,7 +111,7 @@ func (c *CloudValidate) ListInstanceTypeValidate(
 		return fmt.Errorf("%s ListInstanceTypeValidate request is empty", cloudName)
 	}
 
-	if len(req.Region) == 0 || len(req.ProjectID) == 0 {
+	if len(req.Region) == 0 {
 		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid info", cloudName)
 	}
 

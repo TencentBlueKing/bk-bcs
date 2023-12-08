@@ -45,11 +45,7 @@ export interface IInstanceItem {
     'period': number // 数字月数
     'renewFlag': string // 是否续费
   } | null
-  'internetAccess': { // 外网设置：节点可存在此设置
-    'internetChargeType': string // 计费类型：TRAFFIC_POSTPAID_BY_HOUR 按量付费 / BANDWIDTH_POSTPAID_BY_HOUR 带宽按小时后付费 / BANDWIDTH_PREPAID 带宽预付费
-    'internetMaxBandwidth': string // 带宽大小
-    'publicIPAssigned': boolean // 是否分配公网IP
-  }
+  'internetAccess': IInternetAccess
 }
 
 export interface IClusterData {
@@ -249,6 +245,6 @@ export type InternetChargeType = 'TRAFFIC_POSTPAID_BY_HOUR' | 'BANDWIDTH_PREPAID
 export interface IInternetAccess {
   publicIPAssigned: boolean
   internetMaxBandwidth: string
-  internetChargeType: InternetChargeType
+  internetChargeType: InternetChargeType | string
   bandwidthPackageId: string
 }

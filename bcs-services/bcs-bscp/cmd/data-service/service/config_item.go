@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"path"
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	pbrci "bscp.io/pkg/protocol/core/released-ci"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/search"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -129,7 +131,7 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 
 // BatchUpsertConfigItems batch upsert config items.
 func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUpsertConfigItemsReq) (
-	*pbbase.EmptyResp, error) {
+	*pbds.BatchUpsertConfigItemsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	// 1. list all editing config items.
 	cis, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, req.AppId, req.BizId)
@@ -153,14 +155,16 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 	}
 	now := time.Now().UTC()
 	tx := s.dao.GenQuery().Begin()
-	if e := s.doBatchCreateConfigItems(grpcKit, tx, toCreate, now, req.BizId, req.AppId); e != nil {
+	createId, e := s.doBatchCreateConfigItems(grpcKit, tx, toCreate, now, req.BizId, req.AppId)
+	if e != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
 		return nil, e
 	}
-	if e := s.doBatchUpdateConfigItemSpec(grpcKit, tx, toUpdateSpec, now,
-		req.BizId, req.AppId, editingCIMap); e != nil {
+	updateId, e := s.doBatchUpdateConfigItemSpec(grpcKit, tx, toUpdateSpec, now,
+		req.BizId, req.AppId, editingCIMap)
+	if e != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
@@ -194,7 +198,9 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
 		return nil, e
 	}
-	return new(pbbase.EmptyResp), nil
+	// 返回创建和更新的ID
+	mergedID := append(createId, updateId...) // nolint
+	return &pbds.BatchUpsertConfigItemsResp{Ids: mergedID}, nil
 }
 
 func (s *Service) checkConfigItems(kt *kit.Kit, req *pbds.BatchUpsertConfigItemsReq,
@@ -245,7 +251,8 @@ func (s *Service) checkConfigItems(kt *kit.Kit, req *pbds.BatchUpsertConfigItems
 }
 
 func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
-	toCreate []*pbds.BatchUpsertConfigItemsReq_ConfigItem, now time.Time, bizID, appID uint32) error {
+	toCreate []*pbds.BatchUpsertConfigItemsReq_ConfigItem, now time.Time, bizID, appID uint32) ([]uint32, error) {
+	createId := []uint32{}
 	toCreateConfigItems := []*table.ConfigItem{}
 	for _, item := range toCreate {
 		ci := &table.ConfigItem{
@@ -262,7 +269,7 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.ConfigItem().BatchCreateWithTx(kt, tx, bizID, appID, toCreateConfigItems); err != nil {
 		logs.Errorf("batch create config items failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+		return createId, err
 	}
 	toCreateContent := []*table.Content{}
 	for i, item := range toCreate {
@@ -280,7 +287,7 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.Content().BatchCreateWithTx(kt, tx, toCreateContent); err != nil {
 		logs.Errorf("batch create config items failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+		return createId, err
 	}
 	toCreateCommit := []*table.Commit{}
 	for i := range toCreateContent {
@@ -301,15 +308,21 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.Commit().BatchCreateWithTx(kt, tx, toCreateCommit); err != nil {
 		logs.Errorf("batch create commits failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+		return createId, err
 	}
-	return nil
+
+	// 返回创建ID
+	for _, item := range toCreateConfigItems {
+		createId = append(createId, item.ID)
+	}
+
+	return createId, nil
 }
 
 func (s *Service) doBatchUpdateConfigItemSpec(kt *kit.Kit, tx *gen.QueryTx,
 	toUpdate []*pbds.BatchUpsertConfigItemsReq_ConfigItem, now time.Time, _, _ uint32,
-	ciMap map[string]*table.ConfigItem) error {
-
+	ciMap map[string]*table.ConfigItem) ([]uint32, error) {
+	updateId := []uint32{}
 	configItems := []*table.ConfigItem{}
 	for _, item := range toUpdate {
 		ci := &table.ConfigItem{
@@ -327,9 +340,14 @@ func (s *Service) doBatchUpdateConfigItemSpec(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.ConfigItem().BatchUpdateWithTx(kt, tx, configItems); err != nil {
 		logs.Errorf("batch update config items failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+		return updateId, err
 	}
-	return nil
+	// 返回编辑ID
+	for _, item := range configItems {
+		updateId = append(updateId, item.ID)
+	}
+
+	return updateId, nil
 }
 
 func (s *Service) doBatchUpdateConfigItemContent(kt *kit.Kit, tx *gen.QueryTx,
@@ -523,7 +541,7 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq)
 }
 
 // ListConfigItems list config items by query condition.
-func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItemsReq) (*pbds.ListConfigItemsResp,
+func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItemsReq) (*pbds.ListConfigItemsResp, // nolint
 	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
@@ -539,7 +557,6 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
-
 	configItems := make([]*pbci.ConfigItem, 0)
 	// if WithStatus is true, the config items includes the deleted ones and file state, else  without these data
 	if req.WithStatus {
@@ -598,6 +615,27 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 			end = uint32(len(configItems))
 		}
 	}
+	topId, _ := tools.StrToUint32Slice(req.Ids)
+	sort.SliceStable(configItems, func(i, j int) bool {
+		// 检测模板id是否在topId中
+		iInTopID := tools.Contains(topId, configItems[i].Id)
+		jInTopID := tools.Contains(topId, configItems[j].Id)
+		// 两者都在则先path排再name排
+		// 不管topID有没有都要先path排再name排
+		if iInTopID && jInTopID || len(topId) == 0 {
+			if configItems[i].GetSpec().GetPath() != configItems[j].GetSpec().GetPath() {
+				return configItems[i].GetSpec().GetPath() < configItems[j].GetSpec().GetPath()
+			}
+			return configItems[i].GetSpec().GetName() < configItems[j].GetSpec().GetName()
+		}
+		if iInTopID {
+			return true
+		}
+		if jInTopID {
+			return false
+		}
+		return i < j
+	})
 	resp := &pbds.ListConfigItemsResp{
 		Count:   uint32(len(configItems)),
 		Details: configItems[start:end],

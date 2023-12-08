@@ -197,6 +197,17 @@ func (c *Configuration) ReadFrom(content []byte) error {
 		c.Mongo.Password = MONGO_PASSWORD
 	}
 
+	// bklog
+	if c.BKLog.APIServer == "" {
+		c.BKLog.APIServer = BKLOG_API_SERVER
+	}
+	if c.BKLog.Entrypoint == "" {
+		c.BKLog.Entrypoint = BK_LOG_HOST
+	}
+	if c.BKLog.BKBaseEntrypoint == "" {
+		c.BKLog.BKBaseEntrypoint = BK_BASE_HOST
+	}
+
 	if err := c.init(); err != nil {
 		return err
 	}

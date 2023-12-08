@@ -132,6 +132,8 @@ var (
 	AvailableQuota PoolLabel = "availableQuota"
 	// InstanceSpecs instance specs
 	InstanceSpecs PoolLabel = "instanceSpecs"
+	// ResourceType resource type(online/offline)
+	ResourceType PoolLabel = "resourceType"
 )
 
 // String toString

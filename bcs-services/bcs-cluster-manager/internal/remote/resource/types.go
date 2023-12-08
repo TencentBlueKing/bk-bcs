@@ -12,6 +12,15 @@
 
 package resource
 
+const (
+	// ResourcePoolType pool type
+	ResourcePoolType = "resourcePoolType"
+	// DevicePoolIds pool id
+	DevicePoolIds = "devicePoolIds"
+	// SelfPool 自建资源池
+	SelfPool = "self"
+)
+
 // NodeType instance type
 type NodeType string
 
@@ -150,6 +159,7 @@ type DestroyInstanceResp struct {
 // OrderInstanceList order instanceInfo
 type OrderInstanceList struct {
 	OrderStatus bool
+	Message     string
 	InstanceIDs []string
 	InstanceIPs []string
 	ExtraIDs    []string
@@ -174,12 +184,11 @@ type InstanceType struct {
 
 // InstanceSpec size
 type InstanceSpec struct {
-	Version   string
-	ProjectID string
-	BizID     string
-	Provider  string
-	Cpu       uint32
-	Mem       uint32
+	BizID        string
+	Provider     string
+	Cpu          uint32
+	Mem          uint32
+	ResourceType string
 }
 
 // ResourcePoolInfo resource pool info

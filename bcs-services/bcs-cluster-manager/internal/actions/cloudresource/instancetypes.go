@@ -52,11 +52,6 @@ func (la *ListNodeTypeAction) validate() error {
 		return err
 	}
 
-	// version for inner self resource pool
-	if la.req.Version == "" {
-		la.req.Version = "v1"
-	}
-
 	validate, err := cloudprovider.GetCloudValidateMgr(la.cloud.CloudProvider)
 	if err != nil {
 		return err
@@ -120,15 +115,14 @@ func (la *ListNodeTypeAction) listCloudInstancetypes() error {
 
 	// get instance types list
 	insTypes, err := nodeMgr.ListNodeInstanceType(cloudprovider.InstanceInfo{
-		Region:     la.req.Region,
-		Zone:       la.req.Zone,
-		NodeFamily: la.req.NodeFamily,
-		Cpu:        la.req.Cpu,
-		Memory:     la.req.Memory,
-		ProjectID:  la.req.ProjectID,
-		BizID:      la.req.BizID,
-		Version:    la.req.Version,
-		Provider:   la.req.Provider,
+		Region:       la.req.Region,
+		Zone:         la.req.Zone,
+		NodeFamily:   la.req.NodeFamily,
+		Cpu:          la.req.Cpu,
+		Memory:       la.req.Memory,
+		BizID:        la.req.BizID,
+		Provider:     la.req.Provider,
+		ResourceType: la.req.ResourceType,
 	}, cmOption)
 	if err != nil {
 		return err

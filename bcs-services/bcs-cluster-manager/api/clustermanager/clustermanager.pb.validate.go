@@ -343,6 +343,8 @@ func (m *Node) Validate() error {
 
 	// no validation rules for TaskID
 
+	// no validation rules for FailedReason
+
 	return nil
 }
 
@@ -5561,6 +5563,8 @@ func (m *NodeGroup) Validate() error {
 		}
 	}
 
+	// no validation rules for ExtraInfo
+
 	return nil
 }
 
@@ -6768,6 +6772,8 @@ func (m *ClusterAutoScalingOption) Validate() error {
 			reason: "value must be greater than or equal to 0",
 		}
 	}
+
+	// no validation rules for DevicePoolProvider
 
 	return nil
 }
@@ -14752,6 +14758,8 @@ func (m *ClusterNode) Validate() error {
 
 	// no validation rules for TaskID
 
+	// no validation rules for FailedReason
+
 	return nil
 }
 
@@ -17626,6 +17634,8 @@ func (m *UpdateNodeGroupRequest) Validate() error {
 	}
 
 	// no validation rules for OnlyUpdateInfo
+
+	// no validation rules for ExtraInfo
 
 	return nil
 }
@@ -23348,6 +23358,157 @@ var _ interface {
 	ErrorName() string
 } = UpdateAutoScalingOptionResponseValidationError{}
 
+// Validate checks the field values on UpdateAsOptionDeviceProviderRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *UpdateAsOptionDeviceProviderRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
+		return UpdateAsOptionDeviceProviderRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	// no validation rules for Provider
+
+	return nil
+}
+
+// UpdateAsOptionDeviceProviderRequestValidationError is the validation error
+// returned by UpdateAsOptionDeviceProviderRequest.Validate if the designated
+// constraints aren't met.
+type UpdateAsOptionDeviceProviderRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateAsOptionDeviceProviderRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateAsOptionDeviceProviderRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateAsOptionDeviceProviderRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateAsOptionDeviceProviderRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateAsOptionDeviceProviderRequestValidationError) ErrorName() string {
+	return "UpdateAsOptionDeviceProviderRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateAsOptionDeviceProviderRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateAsOptionDeviceProviderRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateAsOptionDeviceProviderRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateAsOptionDeviceProviderRequestValidationError{}
+
+// Validate checks the field values on UpdateAsOptionDeviceProviderResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *UpdateAsOptionDeviceProviderResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	return nil
+}
+
+// UpdateAsOptionDeviceProviderResponseValidationError is the validation error
+// returned by UpdateAsOptionDeviceProviderResponse.Validate if the designated
+// constraints aren't met.
+type UpdateAsOptionDeviceProviderResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateAsOptionDeviceProviderResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateAsOptionDeviceProviderResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateAsOptionDeviceProviderResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateAsOptionDeviceProviderResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateAsOptionDeviceProviderResponseValidationError) ErrorName() string {
+	return "UpdateAsOptionDeviceProviderResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateAsOptionDeviceProviderResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateAsOptionDeviceProviderResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateAsOptionDeviceProviderResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateAsOptionDeviceProviderResponseValidationError{}
+
 // Validate checks the field values on SyncAutoScalingOptionRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -25395,13 +25556,16 @@ func (m *ListCloudInstanceTypeRequest) Validate() error {
 
 	// no validation rules for Memory
 
-	// no validation rules for ProjectID
-
 	// no validation rules for BizID
 
-	// no validation rules for Version
-
 	// no validation rules for Provider
+
+	if _, ok := _ListCloudInstanceTypeRequest_ResourceType_InLookup[m.GetResourceType()]; !ok {
+		return ListCloudInstanceTypeRequestValidationError{
+			field:  "ResourceType",
+			reason: "value must be in list [ online offline]",
+		}
+	}
 
 	return nil
 }
@@ -25462,6 +25626,12 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListCloudInstanceTypeRequestValidationError{}
+
+var _ListCloudInstanceTypeRequest_ResourceType_InLookup = map[string]struct{}{
+	"":        {},
+	"online":  {},
+	"offline": {},
+}
 
 // Validate checks the field values on ListCloudInstanceTypeResponse with the
 // rules defined in the proto definition for this message. If any rules are

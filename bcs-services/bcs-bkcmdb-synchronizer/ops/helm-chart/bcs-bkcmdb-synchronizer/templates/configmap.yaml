@@ -1,0 +1,11 @@
+{{- if .Values.configMap.create -}}
+apiVersion: v1
+data:
+  config.yaml: |
+    {{- toYaml $.Values.config | nindent 4 }}
+kind: ConfigMap
+metadata:
+  name: {{ include "bcs-bkcmdb-synchronizer.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "bcs-bkcmdb-synchronizer.labels" . | nindent 4 }}
+{{- end }}

@@ -143,8 +143,57 @@
         </LayoutGroup>
       </div>
     </section>
+    <!-- 资源池配置 -->
+    <section class="group-border-top">
+      <div class="group-header">
+        <div class="group-header-title">{{$t('tkeCa.label.poolManage')}}</div>
+      </div>
+      <bk-form class="bcs-form-content px-[24px] pb-[10px]" :label-width="210">
+        <bk-form-item :label="$t('tkeCa.label.provider.text')" :desc="$t('tkeCa.label.provider.desc')">
+          <template v-if="!isEditDevicePool">
+            <span class="break-all">
+              {{ (autoscalerData.devicePoolProvider || 'yunti') === 'yunti'
+                ? $t('tkeCa.label.provider.yunti') : $t('tkeCa.label.provider.self') }}
+            </span>
+            <span
+              class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
+              @click="isEditDevicePool = true">
+              <i class="bk-icon icon-edit-line"></i>
+            </span>
+          </template>
+          <template v-else>
+            <bcs-select
+              :clearable="false"
+              searchable
+              class="w-[200px]"
+              :value="autoscalerData.devicePoolProvider || 'yunti'"
+              @change="handleChangeDevicePool">
+              <bcs-option id="yunti" :name="$t('tkeCa.label.provider.yunti')"></bcs-option>
+              <bcs-option
+                id="self"
+                :name="$t('tkeCa.label.provider.self')"
+                :disabled="disableSelfDevicePool"
+                v-bk-tooltips="{
+                  content: $t('tkeCa.tips.notSupportSelfPool'),
+                  disabled: !disableSelfDevicePool,
+                  placement: 'left'
+                }">
+              </bcs-option>
+            </bcs-select>
+            <bcs-button
+              text
+              class="text-[12px] ml-[10px] h-[32px]"
+              @click="handleSaveDevicePoolChange">{{ $t('generic.button.save') }}</bcs-button>
+            <bcs-button
+              text
+              class="text-[12px] ml-[10px] h-[32px]"
+              @click="isEditDevicePool = false">{{ $t('generic.button.cancel') }}</bcs-button>
+          </template>
+        </bk-form-item>
+      </bk-form>
+    </section>
     <!-- 节点规格配置 -->
-    <section class="nodepool">
+    <section class="group-border-top">
       <div class="group-header">
         <div class="group-header-title">{{$t('cluster.ca.title.nodePoolManage')}}</div>
         <div class="flex">
@@ -161,16 +210,16 @@
         <bcs-table-column :label="$t('cluster.ca.nodePool.label.nameAndID')" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">
             <div class="bk-primary bk-button-normal bk-button-text" @click="handleGotoDetail(row)">
-              <span class="bcs-ellipsis">{{`${row.nodeGroupID}（${row.name}）`}}</span>
+              <span class="bcs-ellipsis">{{`${row.name}（${row.nodeGroupID}）`}}</span>
             </div>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('cluster.ca.nodePool.label.nodeQuota')" align="right" width="120">
+        <bcs-table-column :label="$t('cluster.ca.nodePool.label.nodeQuota')" align="right" width="100">
           <template #default="{ row }">
             {{ row.autoScaling.maxSize }}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('cluster.ca.nodePool.label.nodeCounts')" align="right" width="120">
+        <bcs-table-column :label="$t('cluster.ca.nodePool.label.nodeCounts')" align="right" width="100">
           <template #default="{ row }">
             <bcs-button
               text
@@ -187,6 +236,13 @@
         </bcs-table-column>
         <bcs-table-column :label="$t('cluster.ca.nodePool.label.system')" show-overflow-tooltip>
           <template #default>{{clusterOS}}</template>
+        </bcs-table-column>
+        <bcs-table-column :label="$t('tkeCa.label.provider.text')" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ (row.extraInfo && row.extraInfo.resourcePoolType ? row.extraInfo.resourcePoolType : 'yunti') === 'yunti'
+              ? $t('tkeCa.label.provider.yunti')
+              : $t('tkeCa.label.provider.self') }}
+          </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('cluster.ca.nodePool.label.status')">
           <template #default="{ row }">
@@ -219,6 +275,7 @@
                 <span class="more-icon"><i class="bcs-icon bcs-icon-more"></i></span>
                 <div slot="content">
                   <ul>
+                    <li class="dropdown-item" @click="handleAddNode(row)">{{$t('cluster.nodeList.create.text')}}</li>
                     <li
                       :class="['dropdown-item', {
                         disabled: (row.enableAutoscale && disabledAutoscaler)
@@ -239,7 +296,7 @@
                           ? $t('cluster.ca.tips.notEmptyNodes')
                           : $t('cluster.ca.tips.needMoreThanOneNodePoolOn'),
                         disabled: !(disabledDelete || !!row.autoScaling.desiredSize),
-                        placements: 'left'
+                        placement: 'left'
                       }"
                       @click="handleDeletePool(row)">{{$t('cluster.ca.nodePool.action.delete.text')}}</li>
                   </ul>
@@ -255,7 +312,7 @@
       theme="primary"
       header-position="left"
       :title="$t('cluster.ca.nodePool.nodes.title')"
-      :width="700"
+      :width="800"
       v-model="showNodeManage"
       @cancel="handleNodeManageCancel">
       <bcs-alert type="info" :title="$t('cluster.ca.nodePool.nodes.desc')"></bcs-alert>
@@ -282,19 +339,122 @@
           </span>
         </bcs-form-item>
       </bcs-form>
+      <Row class="mt-[10px]">
+        <template #left>
+          <bcs-button
+            theme="primary"
+            icon="plus"
+            class="mr10"
+            @click="handleAddNode(currentOperateRow)">
+            {{$t('cluster.nodeList.create.text')}}
+          </bcs-button>
+          <bcs-dropdown-menu
+            :disabled="!selections.length"
+            trigger="click"
+            @hide="showBatchMenu = false"
+            @show="showBatchMenu = true">
+            <template #dropdown-trigger>
+              <bcs-button>
+                <div class="h-[30px]">
+                  <span class="text-[14px]">{{$t('cluster.nodeList.button.batch')}}</span>
+                  <i :class="['bk-icon icon-angle-down', { 'icon-flip': showBatchMenu }]"></i>
+                </div>
+              </bcs-button>
+            </template>
+            <ul slot="dropdown-content">
+              <li class="bcs-dropdown-item" @click="handleBatchEnableNodes">{{$t('generic.button.uncordon.text')}}</li>
+              <li class="bcs-dropdown-item" @click="handleBatchStopNodes">{{$t('generic.button.cordon.text')}}</li>
+              <li
+                :class="['bcs-dropdown-item', { disabled: podDisabled }]"
+                v-bk-tooltips="{
+                  content: $t('generic.button.drain.tips'),
+                  disabled: !podDisabled,
+                  placement: 'right'
+                }"
+                @click="handleBatchPodScheduler">
+                {{$t('generic.button.drain.text')}}
+              </li>
+              <li
+                :class="['bcs-dropdown-item', { disabled: disableBatchDelete }]"
+                v-bk-tooltips="{
+                  content: $t('cluster.ca.nodePool.nodes.action.delete.tips'),
+                  disabled: !disableBatchDelete,
+                  placement: 'right'
+                }"
+                @click="handleBatchDeleteNodes">
+                {{$t('generic.button.delete')}}
+              </li>
+            </ul>
+          </bcs-dropdown-menu>
+        </template>
+        <template #right>
+          <bcs-input
+            right-icon="bk-icon icon-search"
+            clearable
+            class="w-[360px]"
+            :placeholder="$t('generic.placeholder.searchIp')"
+            v-model.trim="searchIpData">
+          </bcs-input>
+        </template>
+      </Row>
       <bcs-table
         class="mt15"
         v-bkloading="{ isLoading: nodeListLoading }"
+        :max-height="nodeListLoading ? 200 : ''"
         :data="nodeCurPageData"
         :pagination="nodePagination"
+        @filter-change="handleNodeFilterChange"
         @page-change="nodePageChange"
         @page-limit-change="nodePageSizeChange">
+        <template #prepend>
+          <transition name="fade">
+            <div class="flex items-center justify-center h-[30px] bg-[#ebecf0]" v-if="selectType !== CheckType.Uncheck">
+              <i18n path="cluster.nodeList.msg.selectedData">
+                <span place="num" class="font-bold">{{selections.length}}</span>
+              </i18n>
+              <bk-button
+                class="text-[12px] ml-[5px]"
+                text
+                v-if="selectType === CheckType.AcrossChecked"
+                @click="handleClearSelection">
+                {{ $t('cluster.nodeList.button.cancelSelectAll') }}
+              </bk-button>
+              <bk-button
+                class="text-[12px] ml-[5px]"
+                text
+                v-else
+                @click="handleSelectionAll">
+                <i18n path="cluster.nodeList.msg.selectedAllData">
+                  <span place="num" class="font-bold">{{nodePagination.count}}</span>
+                </i18n>
+              </bk-button>
+            </div>
+          </transition>
+        </template>
+        <bcs-table-column
+          :render-header="renderSelection"
+          width="70"
+          :resizable="false"
+          fixed="left">
+          <template #default="{ row }">
+            <bcs-checkbox
+              :checked="selections.some(item => item.innerIP === row.innerIP && item.nodeID === row.nodeID)"
+              :disabled="['INITIALIZATION', 'DELETING', 'APPLYING'].includes(row.status)"
+              @change="(value) => handleRowCheckChange(value, row)"
+            />
+          </template>
+        </bcs-table-column>
         <bcs-table-column :label="$t('cluster.ca.nodePool.nodes.label.name')" prop="innerIP">
           <template #default="{ row }">
             {{ row.innerIP || '--' }}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('generic.label.status')">
+        <bcs-table-column
+          :label="$t('generic.label.status')"
+          :filters="filtersStatus"
+          :filtered-value="filtersStatusValue"
+          column-key="status"
+          prop="status">
           <template #default="{ row }">
             <LoadingIcon v-if="['DELETING', 'INITIALIZATION', 'APPLYING'].includes(row.status)">
               {{ nodeStatusMap[row.status] }}
@@ -408,9 +568,15 @@
                   </div>
                 </template>
               </bcs-table-column>
-              <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.stepMsg')" show-overflow-tooltip>
+              <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.stepMsg')">
                 <template #default="{ row: key }">
-                  {{ row.task.steps[key].message || '--' }}
+                  <bcs-popover
+                    :disabled="!row.task.steps[key].message || taskStatusColorMap[row.task.steps[key].status] === 'green'">
+                    <span class="select-all bcs-ellipsis">{{ row.task.steps[key].message || '--' }}</span>
+                    <template #content>
+                      {{ row.task.steps[key].message }}
+                    </template>
+                  </bcs-popover>
                 </template>
               </bcs-table-column>
               <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.startTime')" width="180" show-overflow-tooltip>
@@ -453,7 +619,16 @@
             {{row.task ? row.task.taskName : '--'}}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.eventMsg')" prop="message" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.eventMsg')" prop="message">
+          <template #default="{ row }">
+            <bcs-popover>
+              <span class="select-all bcs-ellipsis">{{ row.message || '--' }}</span>
+              <template #content>
+                {{ row.message }}
+              </template>
+            </bcs-popover>
+          </template>
+        </bcs-table-column>
         <bcs-table-column
           :label="$t('cluster.ca.nodePool.text')"
           prop="resourceID"
@@ -559,17 +734,21 @@ import useNode from '../node-list/use-node';
 
 import AutoScalerFormItem from './form-item.vue';
 
+import { updateClusterAutoScalingProviders } from '@/api/modules/cluster-manager';
 import { clusterOverview } from '@/api/modules/monitor';
 import $bkMessage from '@/common/bkmagic';
 import { formatBytes } from '@/common/util';
+import { CheckType } from '@/components/across-check.vue';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import Row from '@/components/layout/Row.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import StatusIcon from '@/components/status-icon';
-import { useConfig } from '@/composables/use-app';
+import { ICluster, useConfig, useProject } from '@/composables/use-app';
 import useAutoCols from '@/composables/use-auto-cols';
 import useDebouncedRef from '@/composables/use-debounce';
 import useInterval from '@/composables/use-interval';
 import usePage from '@/composables/use-page';
+import useTableAcrossCheck from '@/composables/use-table-across-check';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -578,7 +757,7 @@ import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
 
 export default defineComponent({
   name: 'AutoScaler',
-  components: { StatusIcon, LoadingIcon, LayoutGroup, AutoScalerFormItem },
+  components: { StatusIcon, LoadingIcon, LayoutGroup, AutoScalerFormItem, Row },
   props: {
     clusterId: {
       type: String,
@@ -844,6 +1023,53 @@ export default defineComponent({
       podsPriorityLoading.value = false;
     };
 
+    // 资源池设置
+    const isEditDevicePool = ref(false);
+    const disableSelfDevicePool = ref(true);
+    const newProvider = ref<'yunti'|'self'|''>('');
+    const handleChangeDevicePool = async (value) => {
+      newProvider.value = value;
+    };
+    const handleSaveDevicePoolChange = async () => {
+      if (!newProvider.value) {
+        isEditDevicePool.value = false;
+        return;
+      };
+      configLoading.value = true;
+      const result = await updateClusterAutoScalingProviders({
+        $clusterId: props.clusterId,
+        $provider: newProvider.value,
+      }).then(() => true)
+        .catch(() => false);
+      configLoading.value = false;
+      if (result) {
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('generic.msg.success.modify'),
+        });
+        isEditDevicePool.value = false;
+        handleGetAutoScalerConfig();
+      }
+    };
+    const { projectID, curProject } = useProject();
+    const curCluster = computed<ICluster>(() => ($store.state as any).cluster.clusterList
+      ?.find(item => item.clusterID === props.clusterId) || {});
+    // 判断是否支持self资源池
+    const getSelfDevicePool = async () => {
+      const data = await $store.dispatch('clustermanager/cloudInstanceTypes', {
+        $cloudID: curCluster.value.provider,
+        region: curCluster.value.region,
+        accountID: curCluster.value.cloudAccountID,
+        projectID: projectID.value,
+        version: 'v2',
+        provider: 'self',
+        resourceType: 'online',
+        bizID: curProject.value?.businessID,
+      });
+      disableSelfDevicePool.value = !data?.length;
+    };
+
+    // 节点池
     const statusTextMap = { // 节点规格状态
       RUNNING: $i18n.t('generic.status.ready'),
       CREATING: $i18n.t('generic.status.creating'),
@@ -1014,16 +1240,36 @@ export default defineComponent({
     };
     const nodeListLoading = ref(false);
     const nodeList = ref<any[]>([]);
+    // 节点数量状态筛选
+    const filtersStatus = computed(() => nodeList.value.reduce((pre, node) => {
+      const exit = pre.find(item => item.value === node.status);
+      if (!exit) {
+        pre.push({
+          text: nodeStatusMap[node.status] || node.status,
+          value: node.status,
+        });
+      }
+      return pre;
+    }, []));
+    const filtersStatusValue = ref<string[]>([]);
+    const searchIpData = ref('');
+    const handleNodeFilterChange = (data) => {
+      filtersStatusValue.value = data?.status || [];
+    };
+    const filterNodeList = computed(() => nodeList.value
+      .filter(node => (!filtersStatusValue.value.length || filtersStatusValue.value.includes(node.status))
+          && (!searchIpData.value || searchIpData.value.split(',')?.includes(node.innerIP) || searchIpData.value.split(' ')?.includes(node.innerIP))));
     const {
       pagination: nodePagination,
       curPageData: nodeCurPageData,
       pageChange: nodePageChange,
       pageSizeChange: nodePageSizeChange,
-    } = usePage(nodeList);
+    } = usePage(filterNodeList);
     const showNodeManage = ref(false);
     const handleNodeManageCancel = () => {
       currentOperateRow.value = {};
       nodeList.value = [];
+      handleClearSelection();
       stopNodeInterval();
       // 刷新节点规格
       handleGetNodePoolList();
@@ -1082,7 +1328,12 @@ export default defineComponent({
         },
       });
     };
-    const { batchDeleteNodes } = useNode();
+    const {
+      batchDeleteNodes,
+      handleCordonNodes,
+      handleUncordonNodes,
+      schedulerNode,
+    } = useNode();
     const handleDeleteNodeGroupNode = async (row) => {
       if (nodeListLoading.value || (!row.unSchedulable && row.status !== 'APPLY-FAILURE')) return;
 
@@ -1142,6 +1393,158 @@ export default defineComponent({
         await getNodeList();
       }
       nodeListLoading.value = false;
+    };
+    // 节点批量操作
+    const showBatchMenu = ref(false);
+    const filterFailureTableData = computed(() => filterNodeList.value
+      .filter(item => !['INITIALIZATION', 'DELETING', 'APPLYING'].includes(item.status)));
+    const filterFailureCurTableData = computed(() => nodeCurPageData.value
+      .filter(item => !['INITIALIZATION', 'DELETING', 'APPLYING'].includes(item.status)));
+    const {
+      selectType,
+      selections,
+      handleResetCheckStatus,
+      renderSelection,
+      handleRowCheckChange,
+      handleSelectionAll,
+      handleClearSelection,
+    } = useTableAcrossCheck({
+      tableData: filterFailureTableData,
+      curPageData: filterFailureCurTableData,
+    });
+    // 添加节点
+    const handleAddNode = (row) => {
+      const { href } = $router.resolve({
+        name: 'addClusterNode',
+        params: {
+          clusterId: props.clusterId,
+        },
+        query: {
+          source: 'nodePool',
+          nodePool: row?.nodeGroupID,
+        },
+      });
+      window.open(href);
+    };
+    const podDisabled = computed(() => !selections.value.every(select => select.status === 'REMOVABLE'));
+    const disableBatchDelete = computed(() => selections.value.some(item => item.status === 'RUNNING'));
+    // 弹窗二次确认
+    const bkComfirmInfo = ({ title, subTitle, callback }) => {
+      $bkInfo({
+        type: 'warning',
+        clsName: 'custom-info-confirm',
+        subTitle,
+        title,
+        defaultInfo: true,
+        confirmFn: async () => {
+          await callback();
+        },
+      });
+    };
+    // 批量允许调度
+    const handleBatchEnableNodes = () => {
+      if (!selections.value.length) return;
+
+      bkComfirmInfo({
+        title: $i18n.t('generic.button.uncordon.title2'),
+        subTitle: $i18n.t('generic.button.uncordon.subTitle2', {
+          ip: selections.value[0].innerIP,
+          num: selections.value.length,
+        }),
+        callback: async () => {
+          const result = await handleUncordonNodes({
+            clusterID: props.clusterId,
+            nodes: selections.value.map(item => item.innerIP),
+          });
+          if (result) {
+            handleGetNodeList();
+            handleResetCheckStatus();
+          }
+        },
+      });
+    };
+    // 批量停止调度
+    const handleBatchStopNodes = () => {
+      if (!selections.value.length) return;
+
+      bkComfirmInfo({
+        title: $i18n.t('generic.button.cordon.title1'),
+        subTitle: $i18n.t('generic.button.cordon.subTitle2', {
+          ip: selections.value[0].innerIP,
+          num: selections.value.length,
+        }),
+        callback: async () => {
+          const result = await handleCordonNodes({
+            clusterID: props.clusterId,
+            nodes: selections.value.map(item => item.innerIP),
+          });
+          if (result) {
+            handleGetNodeList();
+            handleResetCheckStatus();
+          }
+        },
+      });
+    };
+      // 批量Pod驱逐
+    const handleBatchPodScheduler = () => {
+      if (!selections.value.length) return;
+
+      if (selections.value.length > 10) {
+        $bkMessage({
+          theme: 'warning',
+          message: $i18n.t('cluster.nodeList.validate.max10NodeDrain'),
+        });
+        return;
+      }
+      bkComfirmInfo({
+        title: $i18n.t('generic.button.drain.title'),
+        subTitle: $i18n.t('generic.button.drain.subTitle2', {
+          num: selections.value.length,
+          ip: selections.value[0].innerIP,
+        }),
+        callback: async () => {
+          await schedulerNode({
+            clusterId: props.clusterId,
+            nodes: selections.value.map(item => item.innerIP),
+          });
+        },
+      });
+    };
+    // 批量删除节点
+    const handleBatchDeleteNodes = () => {
+      if (disableBatchDelete.value) return;
+      bkComfirmInfo({
+        title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
+        subTitle: $i18n.t('cluster.nodeList.button.delete.subTitle', {
+          num: selections.value.length,
+          ip: selections.value[0].innerIP || selections.value[0].nodeID,
+        }),
+        callback: async () => {
+          const nodeIPs: string[] = [];
+          const virtualNodeIDs: string[] = [];
+          selections.value.forEach((row) => {
+            if (row.innerIP) {
+              nodeIPs.push(row.innerIP);
+            } else if (row.nodeID) {
+              virtualNodeIDs.push(row.nodeID);
+            }
+          });
+          const result = await batchDeleteNodes({
+            $clusterId: props.clusterId,
+            nodeIPs: nodeIPs.join(','),
+            virtualNodeIDs: virtualNodeIDs.join(','),
+            operator: user.value.username,
+          });
+          if (result) {
+            $bkMessage({
+              theme: 'success',
+              message: $i18n.t('generic.msg.success.ok'),
+            });
+            handleGetNodeList();
+            handleResetCheckStatus();
+          }
+        },
+      });
     };
 
     // 扩缩容记录
@@ -1259,9 +1662,13 @@ export default defineComponent({
     });
     const searchIp = useDebouncedRef<string>('');
     watch(searchIp, () => {
-      handleGetRecordList();
+      reSearchRecordList();
     });
 
+    const reSearchRecordList = () => {
+      recordPagination.value.current = 1;
+      handleGetRecordList();
+    };
     const recordPageChange = (page) => {
       recordPagination.value.current = page;
       handleGetRecordList();
@@ -1272,7 +1679,7 @@ export default defineComponent({
       handleGetRecordList();
     };
     const handleTimeRangeChange = () => {
-      handleGetRecordList();
+      reSearchRecordList();
     };
     const handleShowRecord = (row) => {
       const end = new Date();
@@ -1349,6 +1756,7 @@ export default defineComponent({
       Object.keys(filters).forEach((key) => {
         filterValues.value[key] = filters[key];
       });
+      recordPagination.value.current = 1;
       recordLoading.value = true;
       await getRecordList();
       recordLoading.value = false;
@@ -1370,6 +1778,9 @@ export default defineComponent({
         params: {
           clusterId: props.clusterId,
         },
+        query: {
+          provider: autoscalerData.value.devicePoolProvider || 'yunti',
+        },
       }).catch((err) => {
         console.warn(err);
       });
@@ -1381,6 +1792,9 @@ export default defineComponent({
         params: {
           clusterId: props.clusterId,
           nodeGroupID: row.nodeGroupID,
+        },
+        query: {
+          provider: row.extraInfo?.resourcePoolType || 'yunti',
         },
       }).catch((err) => {
         console.warn(err);
@@ -1450,6 +1864,7 @@ export default defineComponent({
       handleGetNodePoolList();
       getClusterDetail(props.clusterId, true);
       handleGetClusterOverview();
+      getSelfDevicePool();
     });
     onBeforeUnmount(() => {
       stop();
@@ -1531,6 +1946,30 @@ export default defineComponent({
       handleFilterChange,
       autoscalerRef,
       cols,
+      isEditDevicePool,
+      disableSelfDevicePool,
+      handleChangeDevicePool,
+      handleSaveDevicePoolChange,
+      showBatchMenu,
+      selectType,
+      selections,
+      handleResetCheckStatus,
+      renderSelection,
+      handleRowCheckChange,
+      handleSelectionAll,
+      handleClearSelection,
+      CheckType,
+      handleAddNode,
+      podDisabled,
+      disableBatchDelete,
+      handleBatchEnableNodes,
+      handleBatchStopNodes,
+      handleBatchPodScheduler,
+      handleBatchDeleteNodes,
+      filtersStatus,
+      filtersStatusValue,
+      handleNodeFilterChange,
+      searchIpData,
     };
   },
 });
@@ -1558,11 +1997,31 @@ export default defineComponent({
             color: #63656E;
         }
     }
-    .nodepool {
+    .group-border-top {
         border-top: 1px solid #DCDEE5;
     }
     .disabled {
         color: #C4C6CC;
+    }
+    >>> .bcs-form-content {
+      display: flex;
+      flex-wrap: wrap;
+      &-item {
+          margin-top: 0;
+          font-size: 12px;
+          width: 100%;
+      }
+      .bk-label {
+          font-size: 12px;
+          color: #979BA5;
+          text-align: left;
+      }
+      .bk-form-content {
+          font-size: 12px;
+          color: #313238;
+          display: flex;
+          align-items: center;
+      }
     }
 }
 .flex-between {

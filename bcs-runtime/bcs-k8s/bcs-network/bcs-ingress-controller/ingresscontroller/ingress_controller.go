@@ -176,6 +176,7 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			RequeueAfter: 5 * time.Second,
 		}, nil
 	}
+	ir.IngressEventer.Eventf(ingress, k8scorev1.EventTypeNormal, "EnsureSuccess", "Ensure success")
 
 	return ctrl.Result{}, nil
 }
@@ -235,7 +236,9 @@ func (ir IngressReconciler) patchWarningAnnotationForIngress(ingress *networkext
 			ingress.GetNamespace(), string(patchBytes))
 	}
 
-	ir.IngressEventer.Eventf(updateIngress, k8scorev1.EventTypeWarning, "ingress warning", attachWarning)
+	if len(warnings) > 0 {
+		ir.IngressEventer.Eventf(updateIngress, k8scorev1.EventTypeWarning, "ingress warning", attachWarning)
+	}
 	return nil
 }
 

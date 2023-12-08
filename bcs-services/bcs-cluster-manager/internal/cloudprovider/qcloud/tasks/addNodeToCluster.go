@@ -212,7 +212,8 @@ func handleAddNodesData(ctx context.Context, clusterId string, nodes *business.I
 	for i := range nodes.FailedNodes {
 		failedNodeIds = append(failedNodeIds, nodes.FailedNodes[i].NodeId)
 	}
-	_ = updateNodeStatusByNodeID(failedNodeIds, common.StatusAddNodesFailed)
+	reason := "node trans vpc failed"
+	_ = updateNodeStatusByNodeID(failedNodeIds, common.StatusAddNodesFailed, reason)
 
 	return successNodeIds, failedNodeIds
 }
@@ -381,7 +382,8 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	state.Task.CommonParams[cloudprovider.FailedNodeIDsKey.String()] = strings.Join(failedNodes, ",")
 	// set failed node status
 	if len(failedNodes) > 0 {
-		_ = updateNodeStatusByNodeID(failedNodes, common.StatusAddNodesFailed)
+		reason := "call tke addNode failed"
+		_ = updateNodeStatusByNodeID(failedNodes, common.StatusAddNodesFailed, reason)
 	}
 
 	// update step
@@ -449,8 +451,10 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 		state.Task.CommonParams = make(map[string]string)
 	}
 	if len(addFailureNodes) > 0 {
+		insInfos, reason, _ := business.GetFailedNodesReason(ctx, dependInfo, addFailureNodes)
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(addFailureNodes, ",")
-		_ = updateNodeStatusByNodeID(addFailureNodes, common.StatusAddNodesFailed)
+		state.Task.CommonParams[cloudprovider.FailedClusterNodeReasonKey.String()] = reason
+		_ = updateFailedNodeStatusByNodeID(insInfos, common.StatusAddNodesFailed)
 	}
 	if len(addSuccessNodes) == 0 {
 		blog.Errorf("CheckAddNodesStatusTask[%s] AddSuccessNodes empty", taskID)
@@ -461,7 +465,7 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 
 	nodeIPs := cloudprovider.GetInstanceIPsByID(ctx, addSuccessNodes)
 	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(addSuccessNodes, ",")
-	state.Task.NodeIPList = nodeIPs
+	// state.Task.NodeIPList = nodeIPs
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(nodeIPs, ",")
 	blog.Infof("CheckAddNodesStatusTask[%s] successNodeIds[%v] successNodeIps[%v]",

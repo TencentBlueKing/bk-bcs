@@ -42,11 +42,11 @@ func newIAMClient() (iam.PermClient, error) {
 	}
 
 	// 使用网关地址
-	if config.G.Auth.GatewayHost != "" {
+	if config.G.Auth.UseGateway {
 		opts.GateWayHost = config.G.Auth.GatewayHost
 		opts.External = false
 	} else {
-		// 使用"外部" ingress 地址
+		// 使用 "外部" 权限中心地址和ESB地址
 		opts.IAMHost = config.G.Auth.Host
 		opts.BkiIAMHost = config.G.Base.BKPaaSHost
 		opts.External = true

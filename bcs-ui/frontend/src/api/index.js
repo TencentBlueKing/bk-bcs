@@ -235,7 +235,7 @@ function handleReject(error, config) {
         type: 'key-value',
         details: {
           traceparent: error.response?.config?.headers?.Traceparent,
-          requestId: error.response?.headers?.['x-request-id'] || data?.requestID || '--',
+          requestId: error.response?.headers?.['x-request-id'] || data?.requestID || data?.request_id || '--',
           message: data.message,
         },
       });

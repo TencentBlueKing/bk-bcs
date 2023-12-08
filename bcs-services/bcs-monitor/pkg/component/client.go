@@ -177,7 +177,7 @@ func GetClient() *resty.Client {
 	return globalClient
 }
 
-// AuthInfo auth info
+// AuthInfo auth info, issue https://github.com/TencentBlueKing/blueking-apigateway/issues/325
 type AuthInfo struct {
 	BkAppCode   string `json:"bk_app_code"`
 	BkAppSecret string `json:"bk_app_secret"`

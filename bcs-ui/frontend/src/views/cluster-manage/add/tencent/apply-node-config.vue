@@ -93,7 +93,7 @@
           @page-change="pageChange"
           @page-limit-change="pageSizeChange"
           @row-click="handleCheckInstanceType">
-          <bcs-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="typeName" show-overflow-tooltip>
+          <bcs-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="typeName">
             <template #default="{ row }">
               <span
                 v-bk-tooltips="{
@@ -155,6 +155,8 @@
           :region="region"
           :cloud-account-i-d="cloudAccountID"
           :cloud-i-d="cloudID"
+          :value="instanceItem.internetAccess"
+          @change="(v) => instanceItem.internetAccess = v"
           v-if="!disableInternetAccess" />
       </bk-form-item>
       <bk-form-item :label="$t('tke.label.count')">
@@ -257,6 +259,12 @@ const initData = ref({
       mountTarget: '/data', // 挂载路径
     },
   ],
+  internetAccess: {
+    internetChargeType: '',
+    internetMaxBandwidth: '0',
+    publicIPAssigned: false,
+    bandwidthPackageId: '',
+  },
 });
 const instanceItem = ref(initData.value);
 const rules = ref({

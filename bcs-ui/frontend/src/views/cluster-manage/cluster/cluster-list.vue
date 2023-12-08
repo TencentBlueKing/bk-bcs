@@ -1,5 +1,9 @@
 <template>
-  <bk-table :data="clusterList" size="medium" :row-class-name="rowClassName" @row-click="handleRowClick">
+  <bk-table
+    :data="clusterList"
+    size="medium"
+    :row-class-name="rowClassName"
+    @row-click="handleRowClick">
     <bk-table-column :label="$t('cluster.labels.nameAndId')" :min-width="160" :show-overflow-tooltip="false">
       <template #default="{ row }">
         <bk-button
@@ -469,5 +473,9 @@ export default defineComponent({
 }
 >>> .cluster-list-row {
   cursor: pointer;
+}
+>>> .bk-table-body-wrapper {
+  max-height: calc(100vh - 176px);
+  overflow-y: auto;
 }
 </style>

@@ -77,6 +77,7 @@ export default function useProjects() {
     const { data, web_annotations, code, message } = await getProject(params, {
       needRes: true,
       globalError: false,
+      cancelWhenRouteChange: false,
     }).catch(() => ({}));
     if (!data) return {
       code,

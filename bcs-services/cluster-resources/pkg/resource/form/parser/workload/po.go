@@ -43,6 +43,7 @@ func ParsePoSpec(manifest map[string]interface{}, spec *model.PoSpec) {
 	ParseToleration(podSpec, &spec.Toleration)
 	ParseNetworking(podSpec, &spec.Networking)
 	ParsePodSecurityCtx(podSpec, &spec.Security)
+	ParseSpecReadinessGates(podSpec, &spec.ReadinessGates)
 	ParseSpecOther(podSpec, &spec.Other)
 }
 
@@ -247,6 +248,13 @@ func ParseNetworking(podSpec map[string]interface{}, networking *model.Networkin
 func ParsePodSecurityCtx(podSpec map[string]interface{}, security *model.PodSecurityCtx) {
 	if secCtx, _ := mapx.GetItems(podSpec, "securityContext"); secCtx != nil {
 		_ = mapstructure.Decode(secCtx, security)
+	}
+}
+
+// ParseSpecReadinessGates xxx
+func ParseSpecReadinessGates(podSpec map[string]interface{}, rg *model.ReadinessGates) {
+	for _, cond := range mapx.GetList(podSpec, "readinessGates") {
+		rg.ReadinessGates = append(rg.ReadinessGates, mapx.GetStr(cond.(map[string]interface{}), "conditionType"))
 	}
 }
 

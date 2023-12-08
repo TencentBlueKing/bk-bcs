@@ -332,9 +332,15 @@ type InstanceList struct {
 
 // InstanceInfo cvm id/ip
 type InstanceInfo struct {
-	NodeId string
-	NodeIp string
-	VpcId  string
+	NodeId       string
+	NodeIp       string
+	VpcId        string
+	FailedReason string
+}
+
+// GetNodeFailedReason failed reason
+func (ins InstanceInfo) GetNodeFailedReason() string {
+	return fmt.Sprintf("nodeID[%s]: %s", ins.NodeId, ins.FailedReason)
 }
 
 // CheckCvmInstanceState check cvm nodes state

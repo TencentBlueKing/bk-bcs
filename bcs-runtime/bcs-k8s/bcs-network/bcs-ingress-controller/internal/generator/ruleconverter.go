@@ -24,6 +24,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -48,15 +49,21 @@ type RuleConverter struct {
 	isNamespaced bool
 	// if true, allow tcp listener and udp listener use same port
 	isTCPUDPPortReuse bool
+	// eventer send event
+	eventer record.EventRecorder
+
+	ingress *networkextensionv1.Ingress
 }
 
 // NewRuleConverter create rule converter
 func NewRuleConverter(
 	cli client.Client,
 	lbs []*cloud.LoadBalanceObject,
+	ingress *networkextensionv1.Ingress,
 	ingressName string,
 	ingressNamespace string,
-	rule *networkextensionv1.IngressRule) *RuleConverter {
+	rule *networkextensionv1.IngressRule,
+	eventer record.EventRecorder) *RuleConverter {
 
 	return &RuleConverter{
 		cli:               cli,
@@ -66,6 +73,8 @@ func NewRuleConverter(
 		rule:              rule,
 		isNamespaced:      false,
 		isTCPUDPPortReuse: false,
+		eventer:           eventer,
+		ingress:           ingress,
 	}
 }
 
@@ -252,6 +261,8 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
+			rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+				fmt.Sprintf("service '%s/%s' not found", svcNamespace, svcRoute.ServiceName))
 			return nil, nil
 		}
 		return nil, fmt.Errorf("get Service %s/%s failed, err %s",
@@ -267,6 +278,8 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 	if svcPort == nil {
 		blog.Warnf("port %d is not found in service %s/%s",
 			svcRoute.ServicePort, svcRoute.ServiceName, svcNamespace)
+		rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+			fmt.Sprintf("port %d is not found in service %s/%s", svcRoute.ServicePort, svcRoute.ServiceName, svcNamespace))
 		return nil, nil
 	}
 
@@ -394,6 +407,10 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 			if found {
 				break
 			}
+		}
+		if !found {
+			rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+				fmt.Sprintf("port %s is not found in pod %s/%s", svcPort.TargetPort.String(), pod.Namespace, pod.Name))
 		}
 	}
 	return retBackends, nil

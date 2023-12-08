@@ -54,6 +54,21 @@ func (cm *ClusterManager) UpdateAutoScalingOption(ctx context.Context,
 	return nil
 }
 
+// UpdateAsOptionDeviceProvider implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateAsOptionDeviceProvider(ctx context.Context,
+	req *cmproto.UpdateAsOptionDeviceProviderRequest, resp *cmproto.UpdateAsOptionDeviceProviderResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := autoscalingoption.NewUpdateAsOptionDpAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateAsOptionDeviceProvider", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateAsOptionDeviceProvider, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // SyncAutoScalingOption implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) SyncAutoScalingOption(ctx context.Context,
 	req *cmproto.SyncAutoScalingOptionRequest, resp *cmproto.SyncAutoScalingOptionResponse) error {

@@ -21,6 +21,7 @@ import (
 
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/metrics"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
 )
@@ -54,4 +55,31 @@ func (p *proxy) CheckDefaultTmplSpace(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// HttpServerHandledTotal count http operands
+func (p *proxy) HttpServerHandledTotal(serviceName, handler string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			kt := kit.MustGetKit(r.Context())
+			var status string
+			if serviceName == "" {
+				serviceName = chi.RouteContext(r.Context()).RoutePattern()
+			}
+			if handler == "" {
+				handler = r.URL.String()
+			}
+			defer func() {
+				metrics.BSCPServerHandledTotal.
+					WithLabelValues(serviceName, handler, status, strconv.Itoa(int(kt.BizID)), kt.User).
+					Inc()
+			}()
+			next.ServeHTTP(w, r)
+			status = strconv.Itoa(w.(interface {
+				http.ResponseWriter
+				Status() int
+			}).Status())
+		}
+		return http.HandlerFunc(fn)
+	}
 }

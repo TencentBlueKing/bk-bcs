@@ -202,6 +202,7 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 		SearchValue:     req.SearchValue,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		Ids:             req.Ids,
 		All:             req.All,
 	}
 
@@ -392,6 +393,7 @@ func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbcs.ListTmplsOfT
 		SearchValue:     req.SearchValue,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		Ids:             req.Ids,
 		All:             req.All,
 	}
 
