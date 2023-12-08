@@ -131,3 +131,15 @@ const (
 	// MaxConcurrentUpload 限制上传文件并发数
 	MaxConcurrentUpload = 10
 )
+
+// kv状态，未命名版本服务配置项相比上一个版本的变化
+const (
+	// KvStateAdd 增加
+	KvStateAdd = "ADD"
+	// KvStateDelete 删除
+	KvStateDelete = "DELETE"
+	// KvStateRevise 修改
+	KvStateRevise = "REVISE"
+	// KvStateUnchange 不变
+	KvStateUnchange = "UNCHANGE"
+)

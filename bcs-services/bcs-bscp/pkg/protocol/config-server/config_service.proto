@@ -721,6 +721,11 @@ service Config {
             body : "*"
         };
     };
+    rpc UnDeleteKv(UnDeleteKvReq) returns (UnDeleteKvResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}"
+        };
+    };
 }
 
 message UpdateCredentialScopeReq {
@@ -2190,10 +2195,14 @@ message ListKvsReq {
     uint32 biz_id            = 1;
     uint32 app_id            = 2;
     bool   all               = 3;
-    string searchKey         = 4;
+    string search_key         = 4;
     string key               = 5;
     uint32 start             = 6;
     uint32 limit             = 7;
+    bool   with_status       = 8;
+    string search_fields     = 9;
+    string search_value      = 10;
+    repeated string kv_type  = 11;
 }
 
 message ListKvsResp {
@@ -2222,3 +2231,11 @@ message BatchUpsertKvsReq {
 }
 
 message BatchUpsertKvsResp {}
+
+message UnDeleteKvReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    string key           = 3;
+}
+
+message UnDeleteKvResp {}

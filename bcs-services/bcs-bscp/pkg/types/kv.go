@@ -136,6 +136,8 @@ type ListKvOption struct {
 	SearchKey string    `json:"search_key"`
 	All       bool      `json:"all"`
 	Page      *BasePage `json:"page"`
+	IDs       []uint32  `json:"ids"`
+	KvType    bool      `json:"kv_type"`
 }
 
 // Validate is used to validate the effectiveness of the ListKvOption structure.

@@ -16,13 +16,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
+	"gorm.io/gorm"
+
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbkv "bscp.io/pkg/protocol/core/kv"
+	pbrkv "bscp.io/pkg/protocol/core/released-kv"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/types"
 )
@@ -154,6 +159,14 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,
 	}
+	if len(req.KvType) > 0 {
+		ids, err := s.checkListKvType(kt, req)
+		if err != nil {
+			return nil, err
+		}
+		opt.KvType = true
+		opt.IDs = ids
+	}
 	if err := opt.Validate(po); err != nil {
 		return nil, err
 	}
@@ -164,15 +177,27 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 	}
 
 	var kvs []*pbkv.Kv
+	var kvReleased []*table.ReleasedKv
 
-	for _, detail := range details {
-		kvType, value, e := s.getKv(kt, req.BizId, req.AppId, detail.Spec.Version, detail.Spec.Key)
-		if e != nil {
-			logs.Errorf("list kv failed, err: %v, rid: %s", e, kt.Rid)
-			return nil, e
+	if req.WithStatus {
+		kvReleased, err = s.dao.ReleasedKv().GetReleasedLately(kt, req.BizId, req.AppId)
+		if err != nil {
+			logs.Errorf("get released rkv failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
 		}
-		kvs = append(kvs, pbkv.PbKv(detail, kvType, value))
+		kvs = pbrkv.PbKvState(details, kvReleased)
+	} else {
+		for _, kv := range details {
+			kvs = append(kvs, pbkv.PbKv(kv, "", "", ""))
+		}
 	}
+
+	kvs, err = s.setKvTypeAndValue(kt, details, kvs, kvReleased)
+	if err != nil {
+		return nil, err
+	}
+
+	kvs = sortKvs(kvs)
 
 	resp := &pbds.ListKvsResp{
 		Count:   uint32(count),
@@ -180,6 +205,99 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 	}
 	return resp, nil
 
+}
+
+func (s *Service) checkListKvType(kt *kit.Kit, req *pbds.ListKvsReq) ([]uint32, error) {
+	if len(req.KvType) == 0 {
+		return nil, nil
+	}
+
+	typeMap := make(map[string]string, len(req.KvType))
+	for _, one := range req.KvType {
+		typeMap[one] = one
+	}
+
+	allKv, err := s.dao.Kv().ListAllByAppID(kt, req.AppId, req.BizId)
+	if err != nil {
+		return nil, err
+	}
+	var ids []uint32
+	for _, kv := range allKv {
+		kyType, _, err := s.getKv(kt, req.BizId, req.AppId, kv.Spec.Version, kv.Spec.Key)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, ok := typeMap[string(kyType)]; ok {
+			ids = append(ids, kv.ID)
+		}
+	}
+	return ids, nil
+}
+
+func (s *Service) setKvTypeAndValue(kt *kit.Kit, details []*table.Kv, kvs []*pbkv.Kv,
+	kvRelease []*table.ReleasedKv) ([]*pbkv.Kv, error) {
+
+	kvMap := make(map[string]*table.Kv, len(details))
+	for _, detail := range details {
+		kvMap[detail.Spec.Key] = detail
+	}
+	releaseMap := make(map[string]*table.ReleasedKv, len(kvRelease))
+	for _, release := range kvRelease {
+		releaseMap[release.Spec.Key] = release
+	}
+
+	for _, one := range kvs {
+		if one.KvState == constant.KvStateDelete {
+			rkv, ok := releaseMap[one.Spec.Key]
+			if !ok {
+				return nil, fmt.Errorf("no released key found for key %s, rid: %s", one.Spec.Key, kt.Rid)
+			}
+			kvType, kvValue, err := s.getReleasedKv(kt, one.Attachment.BizId, one.Attachment.AppId, rkv.Spec.Version,
+				rkv.ReleaseID, rkv.Spec.Key)
+			if err != nil {
+				return nil, err
+			}
+			one.Spec.KvType = string(kvType)
+			one.Spec.Value = kvValue
+		} else {
+			kv, ok := kvMap[one.Spec.Key]
+			if !ok {
+				return nil, fmt.Errorf("no key found for key %s, rid: %s", one.Spec.Key, kt.Rid)
+			}
+			kvType, kvValue, err := s.getKv(kt, one.Attachment.BizId, one.Attachment.AppId, kv.Spec.Version,
+				kv.Spec.Key)
+			if err != nil {
+				return nil, err
+			}
+
+			one.Spec.KvType = string(kvType)
+			one.Spec.Value = kvValue
+		}
+
+	}
+
+	return kvs, nil
+
+}
+
+func sortKvs(vars []*pbkv.Kv) []*pbkv.Kv {
+	// Define a custom sorting function that sorts by the name field in ascending order.
+	sortByName := func(i, j int) bool {
+		return vars[i].Spec.Key < vars[j].Spec.Key
+	}
+	sort.Slice(vars, sortByName)
+
+	// put the variables whose value is empty in front
+	var varsNoVal, varWithVal []*pbkv.Kv
+	for _, v := range vars {
+		if v.Spec.Key == "" {
+			varsNoVal = append(varsNoVal, v)
+		} else {
+			varWithVal = append(varWithVal, v)
+		}
+	}
+	return append(varsNoVal, varWithVal...)
 }
 
 // DeleteKv is used to delete key-value data.
@@ -385,4 +503,68 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 	}
 
 	return toUpdate, toCreate, nil
+}
+
+// UnDeleteKv Revert the deletion of the key-value pair by restoring it to the version before the last one.
+func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbbase.EmptyResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	rkv, err := s.dao.ReleasedKv().GetReleasedLatelyByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
+	if err != nil {
+		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
+	}
+	kvType, kvValue, err := s.getReleasedKv(kt, req.Attachment.BizId, req.Attachment.AppId, rkv.Spec.Version,
+		rkv.ReleaseID, req.Spec.Key)
+	if err != nil {
+		logs.Errorf("get vault kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
+	}
+
+	opt := &types.UpsertKvOption{
+		BizID:  req.Attachment.BizId,
+		AppID:  req.Attachment.AppId,
+		Key:    req.Spec.Key,
+		Value:  kvValue,
+		KvType: kvType,
+	}
+	v, err := s.vault.UpsertKv(kt, opt)
+	if err != nil {
+		logs.Errorf("update vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
+	}
+
+	kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
+	if err != nil && !errors.Is(gorm.ErrRecordNotFound, err) {
+		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
+	}
+	if errors.Is(gorm.ErrRecordNotFound, err) {
+		kv = &table.Kv{
+			Spec:       req.Spec.KvSpec(),
+			Attachment: req.Attachment.KvAttachment(),
+			Revision: &table.Revision{
+				Creator: kt.User,
+			},
+		}
+		kv.Spec.Version = uint32(v)
+		if _, e := s.dao.Kv().Create(kt, kv); e != nil {
+			logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
+			return nil, e
+		}
+	} else {
+		kv.Spec.Version = uint32(v)
+		kv.Revision = &table.Revision{
+			Reviser:   kt.User,
+			UpdatedAt: rkv.Revision.CreatedAt,
+		}
+		if e := s.dao.Kv().Update(kt, kv); e != nil {
+			logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
+			return nil, e
+		}
+	}
+
+	return new(pbbase.EmptyResp), nil
+
 }

@@ -145,6 +145,7 @@ const (
 	Config_ListKvs_FullMethodName                           = "/pbcs.Config/ListKvs"
 	Config_DeleteKv_FullMethodName                          = "/pbcs.Config/DeleteKv"
 	Config_BatchUpsertKvs_FullMethodName                    = "/pbcs.Config/BatchUpsertKvs"
+	Config_UnDeleteKv_FullMethodName                        = "/pbcs.Config/UnDeleteKv"
 )
 
 // ConfigClient is the client API for Config service.
@@ -283,6 +284,7 @@ type ConfigClient interface {
 	ListKvs(ctx context.Context, in *ListKvsReq, opts ...grpc.CallOption) (*ListKvsResp, error)
 	DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc.CallOption) (*DeleteKvResp, error)
 	BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*BatchUpsertKvsResp, error)
+	UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*UnDeleteKvResp, error)
 }
 
 type configClient struct {
@@ -1382,6 +1384,15 @@ func (c *configClient) BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq
 	return out, nil
 }
 
+func (c *configClient) UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*UnDeleteKvResp, error) {
+	out := new(UnDeleteKvResp)
+	err := c.cc.Invoke(ctx, Config_UnDeleteKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConfigServer is the server API for Config service.
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
@@ -1518,6 +1529,7 @@ type ConfigServer interface {
 	ListKvs(context.Context, *ListKvsReq) (*ListKvsResp, error)
 	DeleteKv(context.Context, *DeleteKvReq) (*DeleteKvResp, error)
 	BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error)
+	UnDeleteKv(context.Context, *UnDeleteKvReq) (*UnDeleteKvResp, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -1886,6 +1898,9 @@ func (UnimplementedConfigServer) DeleteKv(context.Context, *DeleteKvReq) (*Delet
 }
 func (UnimplementedConfigServer) BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertKvs not implemented")
+}
+func (UnimplementedConfigServer) UnDeleteKv(context.Context, *UnDeleteKvReq) (*UnDeleteKvResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteKv not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -4077,6 +4092,24 @@ func _Config_BatchUpsertKvs_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_UnDeleteKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnDeleteKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UnDeleteKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UnDeleteKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UnDeleteKv(ctx, req.(*UnDeleteKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -4567,6 +4600,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BatchUpsertKvs",
 			Handler:    _Config_BatchUpsertKvs_Handler,
+		},
+		{
+			MethodName: "UnDeleteKv",
+			Handler:    _Config_UnDeleteKv_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

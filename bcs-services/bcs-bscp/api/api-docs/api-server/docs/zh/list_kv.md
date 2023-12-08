@@ -6,14 +6,17 @@
 
 #### 输入参数
 
-| 参数名称 | 参数类型 | 必选 | 描述             |
-| -------- | -------- | ---- | ---------------- |
-| biz_id   | uint32   | 是   | 业务ID           |
-| app_id   | uint32   | 是   | 服务ID           |
-| key      | string   | 否   | 配置键，模糊搜索 |
-| all      | bool     | 否   | 是否拉取全量数据 |
-| start    | uint32   | 否   | 分页起始值       |
-| limit    | uint32   | 否   | 分页大小         |
+| 参数名称        | 参数类型   | 必选 | 描述                                      |
+|-------------|--------| ---- |-----------------------------------------|
+| biz_id      | uint32 | 是   | 业务ID                                    |
+| app_id      | uint32 | 是   | 服务ID                                    |
+| key         | string | 否   | 配置键，模糊搜索                                |
+| all         | bool   | 否   | 是否拉取全量数据                                |
+| start       | uint32 | 否   | 分页起始值                                   |
+| limit       | uint32 | 否   | 分页大小                                    |
+| with_status | bool   | 否   | 是否返回kv配置项相对上个版本的状态，默认为否                 |
+| search_key  | string | 否   | key、更新人、创建人                             |
+| kv_type     | string | 否   | 枚举类型，[string、text、number、json、xml、yaml] |
 
 #### 调用示例
 
