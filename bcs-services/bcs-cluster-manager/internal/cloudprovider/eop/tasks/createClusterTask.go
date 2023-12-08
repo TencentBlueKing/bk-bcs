@@ -232,7 +232,7 @@ func generateLabels(cls *proto.Cluster) []*api.Label {
 }
 
 func generateWorkerNodes(cls *proto.Cluster, vpcId, subnetId uint32, groups []*proto.NodeGroup) (
-	[]*api.WorkerNode, error) {
+	*api.WorkerNode, error) {
 	workerNodes := make([]*api.WorkerNode, 0)
 	for _, ng := range groups {
 		if ng.AutoScaling == nil {
@@ -303,7 +303,8 @@ func generateWorkerNodes(cls *proto.Cluster, vpcId, subnetId uint32, groups []*p
 		})
 	}
 
-	return workerNodes, nil
+	// 适配天翼云接口变化
+	return workerNodes[0], nil
 }
 
 func generateMasterNodes(cls *proto.Cluster, vpcId, subnetId uint32) (*api.MasterNode, error) {

@@ -53,7 +53,7 @@ type CreateClusterRequest struct {
 	// 集群负载均衡器网络设置
 	SlbConfig *SlbConfig `json:"slbConfig"`
 	// 集群工作节点信息
-	WorkerNodes []*WorkerNode `json:"workerNodes"`
+	WorkerNodes *WorkerNode `json:"workerNodes"`
 }
 
 // SlbConfig configures LB network
