@@ -9,9 +9,10 @@ option go_package = "bscp.io/pkg/protocol/core/kv;pbkv";
 // Kv source resource reference: pkg/dal/table/kvs.go
 message Kv {
     uint32          id         = 1;
-    KvSpec          spec       = 2;
-    KvAttachment    attachment = 3;
-    pbbase.Revision revision   = 4;
+    string          kv_state   = 2;
+    KvSpec          spec       = 3;
+    KvAttachment    attachment = 4;
+    pbbase.Revision revision   = 5;
 }
 
 // KvSpec source resource reference: pkg/dal/table/kvs.go

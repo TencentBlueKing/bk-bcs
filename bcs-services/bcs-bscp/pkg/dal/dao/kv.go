@@ -127,11 +127,21 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 
 }
 
+// List kv with options.
 func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int64, error) {
 
 	m := dao.genQ.Kv
-	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).Or(m.Key.Eq(opt.Key)).
+	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).
 		Order(m.ID.Desc())
+
+	if opt.SearchKey != "" {
+		searchKey := "%" + opt.SearchKey + "%"
+		q = q.Where(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))
+	}
+
+	if opt.KvType {
+		q = q.Where(m.ID.In(opt.IDs...))
+	}
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
 		result, err := q.Find()

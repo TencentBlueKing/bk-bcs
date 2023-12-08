@@ -55,13 +55,14 @@ func (k *KvAttachment) KvAttachment() *table.KvAttachment {
 }
 
 // PbKv convert table kv to pb kv
-func PbKv(k *table.Kv, kvType table.DataType, value string) *Kv {
+func PbKv(k *table.Kv, kvType table.DataType, value, kvState string) *Kv {
 	if k == nil {
 		return nil
 	}
 
 	return &Kv{
 		Id:         k.ID,
+		KvState:    kvState,
 		Spec:       PbKvSpec(k.Spec, kvType, value),
 		Attachment: PbKvAttachment(k.Attachment),
 		Revision:   pbbase.PbRevision(k.Revision),
@@ -95,4 +96,21 @@ func PbKvAttachment(ka *table.KvAttachment) *KvAttachment {
 		BizId: ka.BizID,
 		AppId: ka.AppID,
 	}
+}
+
+// PbKvs convert table Kv to pb Kv
+func PbKvs(kvs []*table.ReleasedKv) []*Kv {
+	kvRevisions := make([]*Kv, len(kvs))
+
+	for idx, r := range kvRevisions {
+
+		kvRevisions[idx] = &Kv{
+			Id:         r.Id,
+			Spec:       r.Spec,
+			Attachment: r.Attachment,
+			Revision:   r.Revision,
+		}
+	}
+
+	return kvRevisions
 }
