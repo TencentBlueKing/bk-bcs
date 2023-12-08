@@ -61,6 +61,7 @@ import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Search, RightShape } from 'bkui-vue/lib/icon';
 import useServiceStore from '../../../../../../../../store/service';
+import { datetimeFormat } from '../../../../../../../../utils';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import {
   IConfigItem,
@@ -282,7 +283,7 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
           name,
           file_type,
           file_state,
-          update_at: revision.update_at,
+          update_at: datetimeFormat(revision.update_at || revision.create_at),
           byte_size: unNamedVersion ? byte_size : origin_byte_size,
           signature: unNamedVersion ? signature : origin_signature,
           template_revision_id: 0,
@@ -327,6 +328,7 @@ const getBoundTemplateList = async (id: number) => {
         origin_signature,
         signature,
         template_revision_id,
+        create_at,
       } = tpl;
       if (file_state !== 'DELETE') {
         group.configs.push({
@@ -335,7 +337,7 @@ const getBoundTemplateList = async (id: number) => {
           name,
           file_type,
           file_state,
-          update_at: '',
+          update_at: datetimeFormat(create_at),
           byte_size: unNamedVersion ? byte_size : origin_byte_size,
           signature: unNamedVersion ? signature : origin_signature,
           template_revision_id,

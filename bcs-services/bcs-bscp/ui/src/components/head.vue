@@ -1,7 +1,7 @@
 <template>
   <div class="header">
     <div class="head-left">
-      <div class="title-wrap" @click="router.push({name:'home'})">
+      <div class="title-wrap" @click="router.push({ name: 'service-all', params: { spaceId } })">
         <span class="logo">
           <img src="../assets/logo.svg" alt="" />
         </span>
@@ -10,7 +10,7 @@
       <div class="head-routes">
         <router-link
           v-for="nav in navList"
-          :class="['nav-item', { actived: route.meta.navModule === nav.module }]"
+          :class="['nav-item', { actived: isNavActived(nav.module) }]"
           :key="nav.id"
           :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }"
           @click="handleNavClick(nav.id)"
@@ -102,7 +102,7 @@ import useGlobalStore from '../store/global';
 import useUserStore from '../store/user';
 import useTemplateStore from '../store/template';
 import { ISpaceDetail } from '../../types/index';
-import { loginOut } from '../api/index';
+import { loginOut, getSpaceFeatureFlag } from '../api/index';
 import type { IVersionLogItem } from '../../types/version-log';
 import VersionLog from './version-log.vue';
 import features from './features-dialog.vue';
@@ -110,7 +110,7 @@ import MarkdownIt from 'markdown-it';
 
 const route = useRoute();
 const router = useRouter();
-const { bscpVersion, spaceId, spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
+const { bscpVersion, spaceId, spaceList, spaceFeatureFlags, showPermApplyPage, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 const { userInfo } = storeToRefs(useUserStore());
 const templateStore = useTemplateStore();
 const md = new MarkdownIt({
@@ -147,6 +147,8 @@ watch(
   },
 );
 
+const isNavActived = (name: string) => spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === name;
+
 const handleNavClick = (navId: String) => {
   if (navId === 'service-all') {
     const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
@@ -171,25 +173,28 @@ const handleSpaceSearch = (searchStr: string) => {
   }
 };
 
-const handleSelectSpace = (id: string) => {
+const handleSelectSpace = async (id: string) => {
   const space = spaceList.value.find((item: ISpaceDetail) => item.space_id === id);
   if (space) {
-    if (!space.permission) {
-      permissionQuery.value = {
-        resources: [
-          {
-            biz_id: id,
-            basic: {
-              type: 'biz',
-              action: 'find_business_resource',
-              resource_id: id,
+    const res = await getSpaceFeatureFlag(id);
+    if (res.BIZ_VIEW) {
+      if (!space.permission) {
+        permissionQuery.value = {
+          resources: [
+            {
+              biz_id: id,
+              basic: {
+                type: 'biz',
+                action: 'find_business_resource',
+                resource_id: id,
+              },
             },
-          },
-        ],
-      };
+          ],
+        };
 
-      showApplyPermDialog.value = true;
-      return;
+        showApplyPermDialog.value = true;
+        return;
+      }
     }
     templateStore.$patch((state) => {
       state.templateSpaceList = [];
@@ -254,7 +259,7 @@ Object.keys(modules).forEach((path) => {
 });
 
 if (logList.value.length > 0) {
-  bscpVersion.value = logList.value[0].title
+  bscpVersion.value = logList.value[0].title;
 }
 
 // 功能特性

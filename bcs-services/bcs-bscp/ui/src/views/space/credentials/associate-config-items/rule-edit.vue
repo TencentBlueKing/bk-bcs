@@ -110,7 +110,7 @@ const handleRevoke = (index: number) => {
   updateRuleParams();
 };
 
-const testRule = (rule: string) => /^[\w-]+\/(.*|\*)$/.test(rule);
+const testRule = (rule: string) => /\/([A-Za-z0-9]+[A-Za-z0-9-_.]*\/?)*$/.test(rule);
 
 const handleRuleContentChange = (index: number) => {
   const rule = localRules.value[index];
@@ -145,6 +145,15 @@ const updateRuleParams = () => {
   });
   emits('change', params);
 };
+
+const handleRuleValidate = () => {
+  localRules.value.forEach((item) => {
+    item.isRight = testRule(item.content);
+  });
+  return localRules.value.some(item => !item.isRight);
+};
+
+defineExpose({ handleRuleValidate });
 </script>
 <style lang="scss" scoped>
 .title {

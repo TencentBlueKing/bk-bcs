@@ -347,14 +347,14 @@ const handleCopyText = (text: string) => {
 
 // 创建密钥之前获取密钥名称
 const getCredentialName = async () => {
-  if (isCreateCredential.value) return;
+  if (isCreateCredential.value || !checkPermBeforeOperate()) return;
   isCreateCredential.value = true;
   tableData.value.unshift({});
 };
 
 // 创建密钥
 const handleCreateCredential = async () => {
-  if (!checkPermBeforeOperate() || !createCredentialName.value) {
+  if (!createCredentialName.value) {
     BkMessage({
       theme: 'error',
       message: '请输入密钥名称',
