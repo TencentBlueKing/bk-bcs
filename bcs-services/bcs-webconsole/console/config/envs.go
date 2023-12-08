@@ -23,6 +23,10 @@ var (
 	BK_PAAS_HOST = os.Getenv("BK_PAAS_HOST")
 	// BK_IAM_HOST iam host
 	BK_IAM_HOST = os.Getenv("BK_IAM_HOST")
+	// BK_IAM_GATEWAY_HOST iam gateway host
+	BK_IAM_GATEWAY_HOST = os.Getenv("BK_IAM_GATEWAY_HOST")
+	// BK_IAM_EXTERNAL set from global.bkIAM.external； 为空以配置文件为准, 如果设置，以环境变量为准, false代表网关模式
+	BK_IAM_EXTERNAL = os.Getenv("BK_IAM_EXTERNAL")
 	// REDIS_PASSWORD redis密码
 	REDIS_PASSWORD = os.Getenv("REDIS_PASSWORD")
 	// BCS_APIGW_TOKEN apigw token

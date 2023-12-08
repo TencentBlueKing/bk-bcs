@@ -52,6 +52,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/replay"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/perf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
@@ -297,12 +298,18 @@ func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
 	return etcdRegistry, nil
 }
 
-// checkVersion refer to https://github.com/urfave/cli/blob/main/help.go#L318 but use os.args check
-func checkVersion() bool {
+// checkHelp refer to https://github.com/urfave/cli/blob/main/help.go#L318 but use os.args check
+func checkHelp() bool {
 	if len(os.Args) < 2 {
 		return false
 	}
 	arg := os.Args[1]
+
+	// help 命令
+	if arg == "-h" {
+		return true
+	}
+	// version 命令
 	for _, name := range cli.VersionFlag.Names() {
 		if arg == "-"+name || arg == "--"+name {
 			return true
@@ -402,7 +409,7 @@ func buildCommands() []*cli.Command {
 
 // Run create a pid
 func (c *WebConsoleManager) Run() error {
-	if checkVersion() {
+	if checkHelp() {
 		return nil
 	}
 
@@ -410,6 +417,7 @@ func (c *WebConsoleManager) Run() error {
 
 	eg, ctx := errgroup.WithContext(c.ctx)
 
+	podmanager.InitHistoryMgr()
 	podCleanUpMgr := podmanager.NewCleanUpManager(ctx)
 	eg.Go(func() error {
 		return podCleanUpMgr.Run()
@@ -419,6 +427,12 @@ func (c *WebConsoleManager) Run() error {
 	uploader := record.GetGlobalUploader()
 	eg.Go(func() error {
 		return uploader.IntervalUpload(ctx)
+	})
+
+	// 定时上报用户延迟命令列表数据
+	performance := perf.GetGlobalPerformance()
+	eg.Go(func() error {
+		return performance.Run(ctx)
 	})
 
 	if c.multiCredConf != nil {

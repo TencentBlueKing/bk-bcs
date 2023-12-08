@@ -83,7 +83,7 @@ func ApplyCVMFromResourcePoolTask(taskID, stepName string) error { // nolint
 		blog.Errorf("ApplyCVMFromResourcePoolTask[%s] applyInstanceFromResourcePool for group %s orderID %s failed, %s",
 			taskID, nodeGroupID, orderID, err.Error())
 		state.Task.CommonParams[cloudprovider.DeviceRecordIDKey.String()] = orderID
-		retErr := fmt.Errorf("applyInstanceFromResourcePool[%s] failed, %s", orderID, err.Error())
+		retErr := fmt.Errorf("ApplyCVMFromResourcePoolTask failed: %s", err.Error())
 		if manual == common.True {
 			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
 		} else {
@@ -357,7 +357,7 @@ func CheckClusterNodeStatusTask(taskID, stepName string) error { // nolint
 			}
 		}
 		blog.Errorf("CheckClusterNodeStatusTask[%s] nodegroupId[%s] failed: %v", taskID, nodeGroupID, err)
-		retErr := fmt.Errorf("CheckClusterNodeStatusTask err, %v", err)
+		retErr := fmt.Errorf("CheckClusterNodeStatusTask err: %v", "add nodes timeOut")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -384,7 +384,9 @@ func CheckClusterNodeStatusTask(taskID, stepName string) error { // nolint
 		state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(success, ",")
 	}
 	if len(failed) > 0 {
+		_, reason, _ := business.GetFailedNodesReason(ctx, dependInfo, failed)
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(failed, ",")
+		state.Task.CommonParams[cloudprovider.FailedClusterNodeReasonKey.String()] = reason
 	}
 
 	// success ip list

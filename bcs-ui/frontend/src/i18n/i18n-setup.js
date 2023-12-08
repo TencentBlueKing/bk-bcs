@@ -37,7 +37,7 @@ const validateTranslation = (data, lang) => {
   Object.keys(data).forEach((key) => {
     if (typeof data[key] === 'object') {
       validateTranslation(data[key], lang);
-    } else if (!data[key]) {
+    } else if (!data[key] && process.env.NODE_ENV !== 'production') {
       console.warn(`un-translation '${key}', ${lang}`);
     }
   });

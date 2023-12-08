@@ -35,10 +35,57 @@ const (
 	InternetChargeTypeTrafficPostpaidByHour = "TRAFFIC_POSTPAID_BY_HOUR"
 )
 
+// InstanceChargeType
+const (
+	// PREPAID xxx
+	PREPAID = "PREPAID" // 预付费，即包年包月
+	// POSTPAIDBYHOUR xxx
+	POSTPAIDBYHOUR = "POSTPAID_BY_HOUR" // 按小时后付费
+)
+
 // Cluster Status
 const (
 	// ClusterStatusRunning running
 	ClusterStatusRunning = "Running"
 	// ClusterStatusAbnormal abnormal
 	ClusterStatusAbnormal = "Abnormal"
+)
+
+const (
+	// DiskCloudPremium 高性能云硬盘
+	DiskCloudPremium = "CLOUD_PREMIUM"
+	// DiskCloudSsd SSD云硬盘
+	DiskCloudSsd = "CLOUD_SSD"
+)
+
+// 实例的最新操作状态
+const (
+	// SUCCESS success
+	SUCCESS = "SUCCESS"
+	// OPERATING doing
+	OPERATING = "OPERATING"
+	// FAILED failed
+	FAILED = "FAILED"
+)
+
+// 实例状态
+const (
+	// PENDING 表示创建中
+	PENDING = "PENDING"
+	// LAUNCHFAILED 表示创建失败
+	LAUNCHFAILED = "LAUNCH_FAILED"
+	// RUNNING 表示运行中
+	RUNNING = "RUNNING"
+	// STOPPED 表示关机
+	STOPPED = "STOPPED"
+	// STARTING 表示开机中
+	STARTING = "STARTING"
+	// STOPPING 表示关机中
+	STOPPING = "STOPPING"
+	// REBOOTING 表示重启中
+	REBOOTING = "REBOOTING"
+	// SHUTDOWN 表示停止待销毁
+	SHUTDOWN = "SHUTDOWN"
+	// TERMINATING 表示销毁中
+	TERMINATING = "TERMINATING"
 )

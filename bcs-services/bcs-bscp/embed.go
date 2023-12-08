@@ -53,6 +53,7 @@ type IndexConfig struct {
 	CMDBHost  string
 	APIURL    string
 	SiteURL   string // vue 路由前缀
+	Helper    string
 	ProxyAPI  bool
 }
 
@@ -162,6 +163,7 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 			"BK_CC_HOST":      conf.CMDBHost,
 			"BK_BSCP_CONFIG":  bscpConfig,
 			"SITE_URL":        conf.SiteURL,
+			"HELPER":          conf.Helper,
 		}
 
 		// 本地开发模式 / 代理请求

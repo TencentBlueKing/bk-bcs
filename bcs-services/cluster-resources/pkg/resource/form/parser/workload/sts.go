@@ -43,6 +43,7 @@ func ParseSTSSpec(manifest map[string]interface{}, spec *model.STSSpec) {
 	ParseToleration(podSpec, &spec.Toleration)
 	ParseNetworking(podSpec, &spec.Networking)
 	ParsePodSecurityCtx(podSpec, &spec.Security)
+	ParseSpecReadinessGates(podSpec, &spec.ReadinessGates)
 	ParseSpecOther(podSpec, &spec.Other)
 }
 

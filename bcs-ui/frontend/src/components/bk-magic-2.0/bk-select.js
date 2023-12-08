@@ -70,11 +70,11 @@ export default {
     // item-selected -> change
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const that = this;
-    this.$props.value = this.$props.selected;
-    this.$props.idKey = this.$props.settingKey;
-    this.$props.multiple = this.$props.multiSelect;
-    this.$props.clearable = this.$props.allowClear;
-    this.$props.loading = this.$props.isLoading;
+    // this.$props.value = this.$props.selected;
+    // this.$props.idKey = this.$props.settingKey;
+    // this.$props.multiple = this.$props.multiSelect;
+    // this.$props.clearable = this.$props.allowClear;
+    // this.$props.loading = this.$props.isLoading;
 
     // change事件兼容
     this.$listeners.change = function (oldVal, newVal) {
@@ -93,7 +93,15 @@ export default {
 
     return h('bcs-select', {
       on: this.$listeners, // 透传事件
-      props: this.$props, // 透传props
+      props: {
+        value: this.$props.selected,
+        idKey: this.$props.settingKey,
+        multiple: this.$props.multiSelect,
+        clearable: this.$props.allowClear,
+        loading: this.$props.isLoading,
+        ...this.$props,
+        ...this.$attrs,
+      }, // 透传props
       scopedSlots: this.$scopedSlots, // 透传scopedSlots
       attrs: this.$attrs, // 透传属性，非props
     }, slots);

@@ -425,3 +425,95 @@ func (ua *SyncAction) Handle(
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
+
+// UpdateAsOptionDpAction update autoscalingOption provider pool
+type UpdateAsOptionDpAction struct {
+	ctx      context.Context
+	model    store.ClusterManagerModel
+	cluster  *cmproto.Cluster
+	asOption *cmproto.ClusterAutoScalingOption
+
+	req  *cmproto.UpdateAsOptionDeviceProviderRequest
+	resp *cmproto.UpdateAsOptionDeviceProviderResponse
+}
+
+// NewUpdateAsOptionDpAction create update action for cluster autoscaling option device pool
+func NewUpdateAsOptionDpAction(model store.ClusterManagerModel) *UpdateAsOptionDpAction {
+	return &UpdateAsOptionDpAction{
+		model: model,
+	}
+}
+
+func (ua *UpdateAsOptionDpAction) getRelativeResource() error {
+	// get relative cluster for information injection
+	asOption, err := ua.model.GetAutoScalingOption(ua.ctx, ua.req.ClusterID)
+	if err != nil {
+		blog.Errorf("find asOption %s failed when update autoScaling, err %s", ua.req.ClusterID, err.Error())
+		return err
+	}
+	ua.asOption = asOption
+
+	cluster, err := ua.model.GetCluster(ua.ctx, ua.req.ClusterID)
+	if err != nil {
+		blog.Errorf("can not get relative Cluster %s when update autoScaling", ua.req.ClusterID)
+		return fmt.Errorf("get relative cluster %s info err, %s", ua.req.ClusterID, err.Error())
+	}
+	ua.cluster = cluster
+
+	return nil
+}
+
+func (ua *UpdateAsOptionDpAction) updateClusterAsOptionDeviceProvider(option *cmproto.ClusterAutoScalingOption) error {
+	timeStr := time.Now().Format(time.RFC3339)
+	option.UpdateTime = timeStr
+	option.DevicePoolProvider = ua.req.GetProvider()
+	ua.asOption = option
+
+	return ua.model.UpdateAutoScalingOption(ua.ctx, option)
+}
+
+func (ua *UpdateAsOptionDpAction) setResp(code uint32, msg string) {
+	ua.resp.Code = code
+	ua.resp.Message = msg
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+func (ua *UpdateAsOptionDpAction) validate() error {
+	err := ua.req.Validate()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Handle handle cluster autoscaling option decide pool provider
+func (ua *UpdateAsOptionDpAction) Handle(ctx context.Context,
+	req *cmproto.UpdateAsOptionDeviceProviderRequest, resp *cmproto.UpdateAsOptionDeviceProviderResponse) {
+
+	if req == nil || resp == nil {
+		blog.Errorf("update ClusterAutoScalingOption DevicePool provider failed, req or resp is empty")
+		return
+	}
+	ua.ctx = ctx
+	ua.req = req
+	ua.resp = resp
+
+	if err := ua.validate(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	// getRelativeResource get autoScalingOption / cluster
+	if err := ua.getRelativeResource(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	if err := ua.updateClusterAsOptionDeviceProvider(ua.asOption); err != nil {
+		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		return
+	}
+
+	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}

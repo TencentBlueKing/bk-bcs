@@ -20,6 +20,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
+const (
+	// FSType file system type
+	FSType = "ext[234]|btrfs|xfs|zfs"
+	// MountPoint mount point
+	MountPoint = "/data"
+)
+
 // JSONTime format time in json marshal
 type JSONTime struct {
 	time.Time

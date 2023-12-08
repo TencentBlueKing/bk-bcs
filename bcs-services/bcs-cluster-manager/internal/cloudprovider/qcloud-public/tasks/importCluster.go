@@ -185,7 +185,16 @@ func registerTKEClusterEndpoint(ctx context.Context, data *cloudprovider.CloudDe
 	switch {
 	case endpointStatus.Created():
 		return nil
-	case endpointStatus.NotFound(), endpointStatus.Deleted():
+	case endpointStatus.NotFound(), endpointStatus.Deleted(), endpointStatus.CreateFailed():
+		if endpointStatus.CreateFailed() {
+			blog.Infof("taskID[%s] registerTKEClusterEndpoint inter[%v] endpointStatus[%s]",
+				taskID, config.IsExtranet, endpointStatus.Status())
+			err = tkeCli.DeleteClusterEndpoint(data.Cluster.SystemID, config.IsExtranet)
+			if err != nil {
+				return err
+			}
+		}
+
 		err = tkeCli.CreateClusterEndpoint(data.Cluster.SystemID, config)
 		if err != nil {
 			return err
@@ -234,6 +243,10 @@ func checkClusterEndpointStatus(ctx context.Context, data *cloudprovider.CloudDe
 			blog.Infof("taskID[%s] GetClusterEndpointStatus[%s] status[%s]",
 				taskID, data.Cluster.SystemID, status)
 			return loop.EndLoop
+		case status.CreateFailed():
+			blog.Infof("taskID[%s] GetClusterEndpointStatus[%s] status[%s]",
+				taskID, data.Cluster.SystemID, status)
+			return fmt.Errorf("GetClusterEndpointStatus[%s] status[%s]", data.Cluster.SystemID, status)
 		default:
 			return nil
 		}
@@ -356,7 +369,7 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) ([]string,
 		return nil, nil, err
 	}
 
-	return nil, nil, nil
+	return masterIPs, nodeIPs, nil
 }
 
 // InstanceInfo instance info

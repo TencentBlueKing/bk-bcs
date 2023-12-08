@@ -29,7 +29,7 @@
             :class="['service-option-item', { 'no-perm': !item.permissions.view }]"
             @click="handleOptionClick(item, $event)">
             <div class="name-text">{{ item.spec.name }}</div>
-            <div class="type-tag">@todo</div>
+            <div class="type-tag">{{ item.spec.config_type === 'file' ? '文件型': '键值型' }}</div>
           </div>
       </bk-option>
       <template #extension>

@@ -1,8 +1,8 @@
 <template>
-  <bk-sideslider title="导入配置文件" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider title="批量上传配置文件" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="slider-content-container">
       <bk-form form-type="vertical">
-        <bk-form-item label="上传配置包" required property="package">
+        <bk-form-item label="上传配置文件包" required property="package">
           <bk-upload
             v-show="!isTableChange"
             class="config-uploader"
@@ -39,7 +39,7 @@
       </bk-form>
       <span v-if="loading" style="color: #63656e">上传中...</span>
       <bk-loading :loading="loading">
-        <div class="tips" v-if="loading">
+        <div class="tips" v-if="!loading">
           共将导入 <span>{{ importConfigList.length }}</span> 个配置项，其中
           <span>{{ existConfigList.length }}</span> 个已存在,导入后将<span style="color: #ff9c01">覆盖原配置</span>
         </div>
@@ -67,7 +67,7 @@
         :loading="pending"
         :disabled="!importConfigList.length"
         @click="isSelectPkgDialogShow = true"
-        >去导入</bk-button
+        >去上传</bk-button
       >
       <bk-button @click="close">取消</bk-button>
     </div>
@@ -92,7 +92,7 @@ const props = defineProps<{
 
 const emits = defineEmits(['update:show', 'added']);
 const { spaceId } = storeToRefs(useGlobalStore());
-const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+const { currentTemplateSpace, batchUploadIds } = storeToRefs(useTemplateStore());
 const isShow = ref(false);
 const isTableChange = ref(false);
 const pending = ref(false);
@@ -121,7 +121,7 @@ const handleFileUpload = async (option: { file: File }) => {
     existConfigList.value = res.exist;
     nonExistConfigList.value = res.non_exist;
     nonExistConfigList.value.forEach((item: IConfigImportItem) => {
-      item.privilege = '677';
+      item.privilege = '644';
       item.user = 'root';
       item.user_group = 'root';
     });
@@ -157,6 +157,7 @@ const handleImport = async (pkgIds: number[]) => {
     if (pkgIds.length > 1 || pkgIds[0] !== 0) {
       await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, res.ids, pkgIds);
     }
+    batchUploadIds.value = res.ids;
     isSelectPkgDialogShow.value = false;
     emits('added');
     close();

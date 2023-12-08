@@ -52,7 +52,18 @@ export const cloudNodes = request('get', '/clouds/$cloudId/instances');
 export const cloudKeyPairs = request('get', '/clouds/$cloudId/keypairs');
 export const cloudAccountType = request('get', '/clouds/$cloudId/accounttype');
 export const cloudBwps = request('get', '/clouds/$cloudId/bwps');
+export const cloudVersionModules = request('get', '/clouds/$cloudId/versions/$version/modules/$module');// 查询云组件参数
 export const cloudConnect = request('get', '/clouds/$cloudId/clusters/$clusterID/connect');
+export const cloudProjects = request('get', '/clouds/$cloudId/projects');
+export const nodemanCloud = request('get', '/nodeman/cloud');
+export const cloudOsImage = request('get', '/clouds/$cloudId/osimage');
+export const cloudVPC = request('get', '/clouds/$cloudId/vpcs');
+export const cloudSecurityGroups = request('get', '/clouds/$cloudId/securitygroups');
+export const cloudSubnets = request('get', '/clouds/$cloudId/subnets');
+export const cloudInstanceTypes = request('get', '/clouds/$cloudId/instancetypes');
+export const cloudInstanceTypesByLevel = request('get', '/clouds/$cloudId/regions/$region/clusterlevels/$level/instancetypes');
+export const cloudCidrconflict = request('get', '/clouds/$cloudId/vpcs/$vpc/cidrconflict');
+export const addSubnets = request('post', '/clusters/$clusterId/subnets');
 
 // node 操作
 export const getK8sNodes = request('get', '/cluster/$clusterId/node');
@@ -68,6 +79,7 @@ export const masterList = request('get', '/cluster/$clusterId/master');
 // CA
 export const clusterAutoScalingLogsV2 = request('get', '/operationlogs');
 export const cloudsZones = request('get', '/clouds/$cloudId/zones');
+export const updateClusterAutoScalingProviders = request('put', '/autoscalingoption/$clusterId/providers/$provider');
 
 // vCluster
 export const sharedclusters = request('get', '/sharedclusters');

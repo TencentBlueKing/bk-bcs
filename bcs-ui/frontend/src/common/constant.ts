@@ -227,3 +227,28 @@ export const ENCODE_LIST = [
     name: 'UTF-16LE-BOM',
   },
 ];
+
+export const CLUSTER_MAP = {
+  INITIALIZATION: $i18n.t('generic.status.initializing'),
+  DELETING: $i18n.t('generic.status.deleting'),
+  'CREATE-FAILURE': $i18n.t('generic.status.createFailed'),
+  'DELETE-FAILURE': $i18n.t('generic.status.deleteFailed'),
+  'IMPORT-FAILURE': $i18n.t('cluster.status.importFailed'),
+  RUNNING: $i18n.t('generic.status.ready'),
+};
+
+// 磁盘类型
+export const diskEnum = [
+  {
+    id: 'CLOUD_PREMIUM',
+    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.premium'),
+  },
+  {
+    id: 'CLOUD_SSD',
+    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
+  },
+  {
+    id: 'CLOUD_HSSD',
+    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hssd'),
+  },
+];

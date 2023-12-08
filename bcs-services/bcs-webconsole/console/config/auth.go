@@ -14,14 +14,15 @@ package config
 
 // AuthConf :
 type AuthConf struct {
-	Host       string `yaml:"host"`       // api 地址 可以内部地址或者网关地址
-	IsGatewWay bool   `yaml:"is_gateway"` // 是否是网关地址
-	SSMHost    string `yaml:"ssm_host"`   // 获取 access_token 的地址
+	Host        string `yaml:"host"`         // bkiam 地址, 获取 global.bkIAM.iamHost
+	GatewayHost string `yaml:"gateway_host"` // 网关模式地址, 如果不为空，优先使用 gatway 模式; 获取 global.bkIAM.gateWayHost
+	UseGateway  bool   `yaml:"use_gw"`       // 是否启用网关
 }
 
-// Init : init default redis config
+// Init : init default auth config
 func (c *AuthConf) Init() {
 	// only for development
 	c.Host = ""
-	c.SSMHost = ""
+	c.GatewayHost = ""
+	c.UseGateway = true
 }

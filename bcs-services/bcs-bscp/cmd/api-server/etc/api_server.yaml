@@ -7,7 +7,7 @@ network:
   # defines tls related options.
   tls:
     # server should be accessed without verifying the TLS certificate.
-    insecureSkipVerify: 
+    insecureSkipVerify:
     # server requires TLS client certificate authentication.
     certFile:
     # server requires TLS client certificate authentication.
@@ -50,6 +50,13 @@ repository:
       # the password to decrypt the certificate.
       password:
 
+featureFlags:
+  BIZ_VIEW:
+    enabled: false
+    list:
+      - "xx"
+      - "xx"
+
 # defines service related settings.
 service:
   # defines etcd related settings
@@ -66,7 +73,7 @@ service:
     # defines tls related options.
     tls:
       # server should be accessed without verifying the TLS certificate.
-      insecureSkipVerify: 
+      insecureSkipVerify:
       # server requires TLS client certificate authentication.
       certFile:
       # server requires TLS client certificate authentication.

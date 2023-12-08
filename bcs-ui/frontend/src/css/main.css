@@ -10,7 +10,6 @@
 
   .bcs-icon-more-btn {
     position: relative;
-    top: 1px;
     font-size: 18px;
     font-weight: bold;
     width: 24px;
@@ -66,6 +65,10 @@
 
   .bcs-border-bottom {
     border-bottom: 1px solid #dfe0e5;
+  }
+
+  .bcs-border-top {
+    border-top: 1px solid #dfe0e5;
   }
 
   .bcs-border-tips {

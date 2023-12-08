@@ -16,6 +16,8 @@ import (
 	"context"
 	"fmt"
 
+	"golang.org/x/sync/errgroup"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
@@ -200,6 +202,7 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 		SearchValue:     req.SearchValue,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		Ids:             req.Ids,
 		All:             req.All,
 	}
 
@@ -390,6 +393,7 @@ func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbcs.ListTmplsOfT
 		SearchValue:     req.SearchValue,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		Ids:             req.Ids,
 		All:             req.All,
 	}
 
@@ -449,19 +453,27 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-
 	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
-
+	var g errgroup.Group
+	g.SetLimit(constant.MaxConcurrentUpload)
+	for _, item := range req.Items {
+		sign := item.Sign
+		g.Go(func() error {
+			// validate if file content uploaded.
+			if err := s.validateContentExist(grpcKit, req.BizId, sign); err != nil {
+				logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
+				return err
+			}
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
 	items := make([]*pbds.BatchUpsertTemplatesReq_Item, 0, len(req.Items))
 	for _, item := range req.Items {
-		// validate if file content uploaded.
-		if err := s.validateContentExist(grpcKit, req.BizId, item.Sign); err != nil {
-			logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-
 		items = append(items, &pbds.BatchUpsertTemplatesReq_Item{
 			Template: &pbtemplate.Template{
 				Id: item.Id,
@@ -498,7 +510,6 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 			},
 		})
 	}
-
 	in := &pbds.BatchUpsertTemplatesReq{Items: items}
 	data, err := s.client.DS.BatchUpsertTemplates(grpcKit.RpcCtx(), in)
 	if err != nil {

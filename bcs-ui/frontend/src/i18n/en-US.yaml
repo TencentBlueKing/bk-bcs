@@ -103,6 +103,7 @@ k8s:
   statefulset:
     partition: Partition rolling update
     podManagementPolicy: POD management strategy
+  containerNetwork: Container network
 nav:
   dashboard: Dashboard
   namespace: Namespaces
@@ -184,6 +185,8 @@ units:
     last15Days: Last 15 days
     last30Days: Last 30 days
     nDays: '{num} Day'
+    nMonths: '{0} Months'
+    nYears: '{0} Years'
   suffix:
     seconds: s
     days: Day
@@ -288,6 +291,7 @@ generic:
     command: >-
       Multiple commands are separated by spaces, eg: / bin / bash &amp; quote; -
       C &amp; quote; &amp; quote
+    searchIp: Search ip
   button:
     confirm: Confirm
     confirm1: Confirm
@@ -341,6 +345,7 @@ generic:
     submit: SUBMIT
     reload: Reload
   label:
+    basicConfig: Basic config
     key: Key
     value: Value
     status: Status
@@ -354,7 +359,6 @@ generic:
     size: Size
     totalCount: Total
     version: Version
-    business: Business
     memo: Remarks
     effect: Effect
     name: Name
@@ -390,6 +394,8 @@ generic:
     start: Start
     stop: Stop
   status:
+    support: Support
+    unSupport: Not support
     ready: Normal
     error: Error
     initializing: Initializing
@@ -442,6 +448,11 @@ generic:
       Only letters, numbers and characters (-) are supported and start with a
       letter
     notRootName: The username cannot be root.
+    cidr: The CIDR format is incorrect
+    label: >-
+      Tags must be made up of alphanumeric characters, hyphens, underscores, or
+      dots.
+    cidrConflict: CIDR conflict
   title:
     curVersion: Current
     basicInfo: Basic Information
@@ -450,6 +461,7 @@ generic:
     confirmDelete: Are you sure you want to delete?
     confirmDelete1: 'Are you sure you want to delete {name}?'
     setVar: 'Set variables: '
+    createPublicCluster: Create public cloud cluster
   subTitle:
     confirmConfig: 'Please confirm the following configuration:'
     deleteConfirm: 'This operation can''t be recalled, please confirm:'
@@ -529,9 +541,6 @@ cluster:
   tag:
     debug: Test
     prod: Prod
-  mode:
-    list: List view
-    card: Card view
   env:
     debug: Test env
     prod: Prod env
@@ -549,7 +558,7 @@ cluster:
     confirmDelete: Confirm the deletion cluster
     clusterInfo: Cluster Info
     clusterConfig: Cluster Config
-    StatusAndRecord: Status & Record
+    operationRecord: Operation Record
     setClusterVar: Set Variables
   button:
     useSharedCluster: Use shared cluster
@@ -581,12 +590,14 @@ cluster:
         it is not used to avoid unnecessary costs
   tips:
     highMetricData: Cluster indicator overload
+    createK8SCluster: Create K8S native cluster
+    clusterStatus: 'Cluster status: {0}'
   labels:
     nameAndId: Cluster name/ID
     name: Name
     status: Status
     env: Environment
-    nodeCounts: Number of cluster nodes
+    nodeCounts: Number of nodes
     metric: Cluster resources (CPU/MEM/DiskIO)
     clusterId: Cluster ID
     Kubernetes: Kubernetes provider
@@ -605,6 +616,7 @@ cluster:
     cloudClusterID: Cloud cluster id
     importCategory: Import category
     maxPodNum: Max pod number
+    clusterLabel: Label
   status:
     unknown: Unknown cluster status
     importFailed: Import failed
@@ -766,9 +778,38 @@ cluster:
       cloudToken: Cloud Token
       kubeConfig: Cluster KubeConfig
       network:
-        text: ''
-        intranet: ''
-        extranet: ''
+        text: Network
+        intranet: Intranet
+        extranet: Extranet
+      clusterInfo: Cluster info
+      kubernetesProvider: Kubernetes provider
+      kubernetesCommunity: Kubernetes community
+      system: System
+      containerRuntime: Runtime
+      runtimeVersion: Runtime version
+      basicConfig: Basic config
+      privateNet:
+        text: Private network
+        customNet: Custom network
+      defaultNetPlugin: Network plugin
+      clusterIPType:
+        text: Cluster ip type
+        dual: IPv4/IPv6
+        dualSingle: IPv4 or IPv6 single stack (automatically assigned by the platform)
+      netSetting: Network setting
+      maxNodePodNum: Max pod num
+      highAvailabilityScheme:
+        text: High availability
+        bcsApiServerProxy: >-
+          bcs-apiserver-proxy is deployed in a Kubernetes cluster as a
+          daemonset, utilizing IPVS via virtual IP (VIP) Implements the reverse
+          proxy of cluster components to APIserver, and automatically discovers
+          the IP addresses of control plane nodes to maintain IPVS Rues to
+          ensure the normal operation of the cluster when some control plane
+          nodes fail.
+        notSupport: >-
+          If the number of controller plane nodes is less than three, high
+          availability cannot be supported
     msg:
       managedClusterInfo: >-
         Create a custody cluster must add at least one node to run the necessary
@@ -782,7 +823,8 @@ cluster:
       ipExitInNode: The current IP has been added as a node
       ipExitInMaster: The current IP has been added as a master
       name: 'Please enter the cluster name, no more than 64 characters'
-      masterNum: Only support 3 and 5 units
+      masterNum35: Only 3 or 5 hosts are supported
+      masterNum135: 'Only 1, 3, or 5 hosts are supported'
       masterNum2: Only support the strange server
       quota: 'Minimum CPU quota of 40 cores, minimum memory quota of 40 GiB'
       regionDiff: >-
@@ -830,6 +872,7 @@ cluster:
       autoScaler: Autoscaler
       quota: Quota
       nodeList: Nodes
+      controlConfig: Control plane
     label:
       tkeID: TKE Cluster ID
   ca:
@@ -1008,7 +1051,7 @@ cluster:
           The name does not exceed 255 characters, only supports Chinese,
           English, numbers, and scratch lines, separators (-) and decimal points
       label:
-        nameAndID: Node pool ID (name)
+        nameAndID: Node pool name (ID)
         nodeQuota: Node quota
         nodeCounts: Node count
         system: OS
@@ -2658,7 +2701,7 @@ dashboard:
         Naming space names can only include lowercase letters, numbers, and
         joint characters (-), and even characters (-) must be connected in
         English or numbers later
-      sharedClusterNs: 'Name rule: IEG-Project English Name-Custom Name'
+      sharedClusterNs: 'Name rule: {prefix}Custom Name'
       sharedQuota: >-
         The shared cluster needs to set the MEM and CPU quotas, and the minimum
         value of the two is not less than 0
@@ -2948,8 +2991,10 @@ manualNode:
   tips:
     insufficientNode: 'The number of nodes is insufficient, go to the node pool'
     desiredSize: >-
-      A maximum of {0} nodes can be added to the node pool. adjust the node pool
-      quota if necessary
+      This node pool can add {remaining} more nodes (Quota: {maxSize}, Used:
+      {used}). You can go to the node pool management page to adjust the node
+      pool quota (Total nodes that can be applied for from the resource pool:
+      {total}).
   button:
     gotoNodePool: Node pool
   msg:
@@ -3098,3 +3143,252 @@ googleCA:
       of node instances, please go to the {0} page to set up.
   button:
     vpcRule: VPC Rule
+tke:
+  label:
+    tencentCloud: Tencent cloud
+    account: Account
+    project:
+      text: Project
+      desc: >-
+        Mainly used to calculate the costs of cloud servers, load balancers, and
+        other resources used by TKE clusters in Tencent Cloud projects.
+    nodemanArea: Area
+    publicImage: Public image
+    marketImage: Market image
+    privateImage: Private image
+    apiServerCLB:
+      text: CLB
+      internet: Internet
+      intranet: Intranet
+      desc: >-
+        Used to connect the cluster APIServer via the BlueKing container
+        management platform. Depending on the actual network situation, choose
+        between public network access and intranet access. If the network where
+        the BlueKing platform is located and the network where the cluster to be
+        added are both internally connected, you should prioritize intranet
+        access. Otherwise, you will need to choose public network access. An
+        incorrect choice will result in the failure to add the cluster.
+    masterModule:
+      text: Master cmdb module
+      desc: >-
+        Transfer the control plane nodes from the idle machine module of the
+        BlueKing configuration platform to the specified business module.
+    loginType:
+      text: Login type
+      password: Password
+      ssh: SSH
+      desc: >-
+        During the cluster creation process, to ensure environmental
+        consistency, this password or key will be used to reinstall the system.
+    setPassword: Set password
+    confirmPassword: Confirm password
+    publicKey: Public key
+    secretKey: Secret key
+    ipNum: Number of IPs
+    zone: Zone
+    staticIpMode: Static ip mode
+    enableStaticIpMode: Enable static ip mode
+    nodeModule:
+      text: Nodes cmdb module
+      desc: >-
+        Transfer the Node nodes from the idle machine module of the BlueKing
+        configuration platform to the specified business module.
+    region: Region
+    system: System
+    configRec: Recommendations
+    chargeType:
+      text: Charge
+      prepaid: Annual or Monthly Subscription
+      postpaid_by_hour: Pay-As-You-Go Billing
+      postpaid_by_hour_desc: >-
+        {0}: Pay-As-You-Go Elastic billing mode, charged by the second and
+        settled by the hour. This billing method is suitable for scenarios such
+        as e-commerce flash sales where the demand for equipment experiences
+        sudden and significant fluctuations.
+      prepaidDesc: >-
+        {0}: A cloud server billing mode based on a monthly/yearly billing
+        cycle. This billing method is suitable for long-term, stable, and mature
+        business operations.
+    period: Purchase Duration
+    autoRenewal:
+      text: Auto renewal
+      desc: >-
+        When the account balance is sufficient, the device will be automatically
+        renewed monthly upon expiration.
+    nodeConfig: Nodes config
+    subnet: Subnet
+    instanceType: Instance type
+    systemDisk: System disk
+    dataDisk: Data disk
+    count: Counts
+    securityGroup:
+      text: Security group
+      desc: >-
+        Used to control access to the added cluster APIServer's whitelist IP.
+        Security group inbound rules must allow traffic from the BlueKing
+        platform's network egress IP address on TCP port 443; otherwise, adding
+        the cluster will fail.
+    serviceIpNum: Service IP
+    podIpNum: Pod IP
+    podCidr: Pod CIDR
+    availableIpNum: Available number of IPs
+    port: Port
+    serviceCidr: Service CIDR
+    subnetID: Subnet ID
+    subnetName: Subnet name
+    recommended: Recommended
+    defaultProject: Default project
+    containerNet: Network
+    publicIPAssigned:
+      text: Public IP address
+      chargeMode:
+        text: Charge Mode
+        traffic_postpaid_by_hour: Charge by hour
+        bandwidth_prepaid: Charge by bandwidth
+      maxBandWidth: Max bandwidth
+  title:
+    connectFailure:
+      text: >-
+        Cluster created successfully, but failed to connect to the cluster
+        APIServer
+      reason: >-
+        Failed to connect to the cluster APIServer, generally due to CLB
+        security group configuration and network connectivity issues.
+      ref: 'For details, please refer to: {0}'
+      refButton: Solutions for Cluster APIServer Connection Failure
+    addNodeConfig: Add Configuration
+    modifyNodeConfig: Modify Configuration
+    addSubnets: Add Subnets
+    noAvailableSubnets: >-
+      No available subnets at the moment, please proceed to Tencent Cloud
+      Console to create subnets. If using VPC-CNI network plugin, the
+      availability zone of the subnet must be consistent with the availability
+      zone subnet of Pod IP of the VPC-CNI network plugin.
+  button:
+    chargeTypeDiff: Mode Comparison
+    addNodeConfig: Add Configuration
+    purchaseDataDisk: Purchase Data Disk
+    autoFormatAndMount: Format and Mount Automatically
+    addSubnets: Add Subnets
+    goDetail: 'For details, please see {0}'
+  link:
+    cloudToken: Manage Cloud Credentials
+    cloudProject: Manage Cloud Project
+    nodeman: Go to Manage
+    subnet: Go to Subnet
+    securityGroup: Security group
+    vpc: VPC
+    netOverview: Manage network
+    package: Manage package
+    staticIpMode: Static IP
+    cmdb: Go to CMDB
+  validate:
+    passwordNotSame: The passwords entered do not match
+    minIpNum: >-
+      To ensure that the cluster has enough IPs, the container network segment
+      must not have fewer than {0} IPs.
+    minIpNum2: >-
+      The container network segment must not have fewer than {0} IPs. Please
+      re-enter.
+    supportCidrList: 'Supports only network segments between {0}.'
+  configRec:
+    l100:
+      text: Node Count 1~100
+      desc: >-
+        Recommended: 100GB high-performance cloud disk, 3 servers, any model
+        with 8 cores and 16G
+    l500:
+      text: Node Count 100~500
+      desc: >-
+        Recommended: 200GB SSD cloud disk, 3 servers, any model with 16 cores
+        and 32G
+    l1000:
+      text: Node Count over 500
+      desc: >-
+        Recommended: 500GB SSD cloud disk, 5 servers, any model with 48 cores
+        and 128G
+    custom:
+      text: Custom Configuration
+      desc: Modify any configuration data below to switch to custom configuration
+  image:
+    desc:
+      public: '1. It is recommended to use official images, for details please see {0}'
+      market: >-
+        2. Marketplace images are provided by third-party vendors for specific
+        usage scenarios, such as {0}. They are released after Tencent Cloud is
+        review and are available to all users
+      private: >-
+        3. If you need to use a custom image, please submit a ticket to add your
+        account to the custom image whitelist. For details on usage, refer to
+        {0}
+    link:
+      imageType: Explanation of Image Types
+      qGPU: qGPU Shared Scenarios
+      privateImage: Custom Image Explanation
+  tips:
+    nodeNotInSubnetZone: >-
+      The availability zone of the server is {0}, which is inconsistent with the
+      availability zone for the VPC-CNI Pod IP. Please use a server that is in
+      the availability zone {1}.
+    noAvailableIp: No available IPs
+    subnetInUsed: 'The subnet has been used by cluster {0}'
+    zone: >-
+      The Pod IP of the VPC-CNI network plugin is not using this availability
+      zone, please choose another availability zone
+    imageUsedInCluster: A cluster is using this
+    subnetZone: >-
+      The Pod IP of the VPC-CNI network plugin is bound to the cluster nodes,
+      and the availability zone of the Pod IP must be consistent with the
+      availability zone of the cluster nodes (including the control plane and
+      Node nodes)
+    notSupportInCurrentClusterVersion: Not supported in current cluster version
+    grDesc: >-
+      Global Router: A container networking plugin by Tencent Cloud TKE, based
+      on VPC routing allowing for container subnets independent and parallel to
+      the VPC
+    vpcCniDesc: >-
+      VPC-CNI: A container networking plugin by Tencent Cloud TKE, based on
+      elastic network interfaces, where container networking is within the same
+      VPC as the cloud server
+    notSupport: Not supported temporarily
+    supportCidr: 'Tencent Cloud supports private network range: '
+    ipCannotBeAdjustedWhenCreated: >-
+      Once {0} IP amount is allocated, it will not be adjustable, please
+      evaluate carefully before filling out
+    podIpCalcFormula: Pod IP quantity = Number of container subnets - Number of Service IPs
+    vpcCniPodIp: >-
+      Pod IP is automatically allocated from the primary/secondary subnets of
+      the private network
+    staticIpMode:
+      p1: >-
+        This option is only supported when the cluster is created; it cannot be
+        changed after the cluster creation. Please handle with caution.
+      p2: >-
+        This option is suitable for scenarios that rely on containers with fixed
+        IP. It is not recommended to use fixed IP mode for services without IP
+        restrictions, for more details please refer to {0}
+    totalIpNum: 'Total {0} IPs'
+  placeholder:
+    example: 'Example: {0}'
+tkeCa:
+  label:
+    poolManage: Resource Pool Management
+    provider:
+      text: Resource Provider
+      yunti: Cloud Ladder Resource Pool (Platform Provided)
+      self: Self-built Resource Pool
+      desc: >-
+        Resource providers are divided into cloud ladder resource pools and
+        self-built resource pools. If there are idle resources under the
+        business that cannot be reclaimed for other reasons, you can contact an
+        assistant to add a self-built resource pool.
+  tips:
+    notSupportSelfPool: >-
+      The business has not opened a self-built resource pool. If needed, you can
+      contact an assistant to add one.
+    selfPoolInstanceDesc: >-
+      For a self-built resource pool, it is not necessary to specify information
+      about the system disk and data disk. At least one data disk of 100GB or
+      more is required.
+provider:
+  tencentPublicCloud: TencentPublicCloud

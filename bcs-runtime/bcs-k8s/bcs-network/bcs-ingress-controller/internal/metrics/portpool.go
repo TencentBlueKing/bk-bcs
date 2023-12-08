@@ -28,13 +28,34 @@ var (
 		Help:      "port bind latency for bcs ingress controller port-pool",
 		Buckets:   []float64{1, 5, 10, 30, 60, 120, 180, 300, 600, 1200},
 	}, []string{})
+
+	portAllocateFailedGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "bkbcs_ingressctrl",
+		Subsystem: "portpool",
+		Name:      "allocate_failed_gauge",
+		Help:      "port allocate failed gauge",
+	}, []string{"name", "namespace"})
 )
 
 func init() {
 	metrics.Registry.MustRegister(portBindLatency)
+	metrics.Registry.MustRegister(portAllocateFailedGauge)
 }
 
 // ReportPortBindMetric report port bind metrics
 func ReportPortBindMetric(started time.Time) {
 	portBindLatency.WithLabelValues().Observe(time.Since(started).Seconds())
+}
+
+// ReportPortAllocate report port allocate failed
+func ReportPortAllocate(name, namespace string, allocateSuccess bool) {
+	if allocateSuccess == false {
+		portAllocateFailedGauge.WithLabelValues(name, namespace).Set(1)
+	} else {
+		portAllocateFailedGauge.WithLabelValues(name, namespace).Set(0)
+	}
+}
+
+func CleanPortAllocateMetric(name, namespace string) {
+	portAllocateFailedGauge.Delete(prometheus.Labels{"name": name, "namespace": namespace})
 }

@@ -129,6 +129,31 @@ func (s *Selector) IsEmpty() bool {
 	return false
 }
 
+// Equal check if this selector is equal to another one.
+func (s *Selector) Equal(other *Selector) bool {
+	if s == nil && other == nil {
+		return true
+	}
+
+	if s == nil || other == nil {
+		return false
+	}
+
+	if s.MatchAll != other.MatchAll {
+		return false
+	}
+
+	if !s.LabelsOr.Equal(other.LabelsOr) {
+		return false
+	}
+
+	if !s.LabelsAnd.Equal(other.LabelsAnd) {
+		return false
+	}
+
+	return true
+}
+
 // MatchLabels matches strategy base on labels info.
 func (s *Selector) MatchLabels(labels map[string]string) (bool, error) {
 	if s.MatchAll {

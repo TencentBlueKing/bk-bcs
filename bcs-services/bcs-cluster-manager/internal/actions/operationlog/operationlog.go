@@ -15,17 +15,15 @@ package operationlog
 
 import (
 	"context"
-	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -242,7 +240,7 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 					}
 					delete(t.Steps[i].Params, k)
 				}
-				t.Steps[i].TaskName = translate(ua.ctx, t.Steps[i].TaskMethod, t.Steps[i].TaskName)
+				t.Steps[i].TaskName = autils.Translate(ua.ctx, t.Steps[i].TaskMethod, t.Steps[i].TaskName)
 				if t.Steps[i].Start != "" {
 					t.Steps[i].Start = utils.TransTimeFormat(t.Steps[i].Start)
 				}
@@ -255,11 +253,10 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 			t.Start = startTime
 			t.End = endTime
 
-			t.TaskName = translate(ua.ctx, t.TaskType, t.TaskName)
-			ua.resp.Data.Results[i].Message = translateMsg(ua.ctx, v.ResourceType, v.TaskType, v.Message, t)
+			t.TaskName = autils.Translate(ua.ctx, t.TaskType, t.TaskName)
+			ua.resp.Data.Results[i].Message = autils.TranslateMsg(ua.ctx, v.ResourceType, v.TaskType, v.Message, t)
 			ua.resp.Data.Results[i].Task = t
 		}
-
 	}
 	return nil
 }
@@ -292,80 +289,4 @@ func (ua *ListOperationLogsAction) Handle(
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-}
-
-// 处理任务名称
-func translate(ctx context.Context, taskType, taskName string) (content string) {
-	arr := strings.Split(taskType, "-")
-	if len(arr) > 1 {
-		content = i18n.T(ctx, arr[1])
-	} else {
-		content = i18n.T(ctx, taskType)
-	}
-	if len(content) == 0 || content == taskType {
-		return taskName
-	}
-	return content
-}
-
-// 处理任务返回的msg
-func translateMsg(ctx context.Context, resourceType, taskType, message string, t *cmproto.Task) string {
-	// 获取语言
-	lang := i18n.LanguageFromCtx(ctx)
-	if lang == "zh" {
-		return message
-	}
-	arr := strings.Split(taskType, "-")
-	if len(arr) > 1 {
-		taskType = arr[1]
-	}
-	if resourceType == "nodegroup" {
-		switch taskType {
-		case "SwitchNodeGroupAutoScaling":
-			msg, ok := getTranslateFormat(ctx, "{{.SwitchNodeGroupAutoScalingOpenMsg}}",
-				message, t.GetNodeGroupID())
-			if ok {
-				return msg
-			}
-			msg, ok = getTranslateFormat(ctx, "{{.SwitchNodeGroupAutoScalingCloseMsg}}",
-				message, t.GetNodeGroupID())
-			if ok {
-				return msg
-			}
-		case "UpdateNodeGroupDesiredNode":
-			msg, ok := getTranslateFormat(ctx, "{{.UpdateNodeGroupDesiredNodeMsg}}",
-				message,
-				t.GetClusterID(),
-				t.GetNodeGroupID(),
-				extractLastNumber(message))
-			if ok {
-				return msg
-			}
-		default:
-			key := fmt.Sprintf("{{.%sMsg}}", taskType)
-			msg, ok := getTranslateFormat(ctx, key,
-				message,
-				t.GetClusterID(),
-				t.GetNodeGroupID())
-			if ok {
-				return msg
-			}
-		}
-	}
-	return message
-}
-
-func getTranslateFormat(ctx context.Context, key, message string, values ...interface{}) (string, bool) {
-	msg := i18n.Tf(i18n.WithLanguage(context.Background(), "zh"), key, values...)
-	if msg == message {
-		return i18n.Tf(ctx, key, values...), true
-	}
-	return message, false
-}
-
-// 匹配以数字结尾的部分
-func extractLastNumber(input string) string {
-	re := regexp.MustCompile(`\d+$`)
-	match := re.FindString(input)
-	return match
 }

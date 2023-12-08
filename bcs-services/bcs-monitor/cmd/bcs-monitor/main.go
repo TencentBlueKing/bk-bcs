@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
@@ -24,6 +25,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/common/version"
 	"github.com/spf13/cobra"
 	"github.com/thanos-io/thanos/pkg/tracing/client"
@@ -88,7 +90,13 @@ func isPrintVersion() bool {
 func main() {
 	// metrics 配置
 	metrics := prometheus.NewRegistry()
-	metrics.MustRegister(version.NewCollector("bcs_monitor"))
+	metrics.MustRegister(
+		version.NewCollector("bcs_monitor"),
+		collectors.NewGoCollector(
+			collectors.WithGoCollectorRuntimeMetrics(collectors.GoRuntimeMetricsRule{Matcher: regexp.MustCompile("/.*")}),
+		),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+	)
 
 	prometheus.DefaultRegisterer = metrics
 

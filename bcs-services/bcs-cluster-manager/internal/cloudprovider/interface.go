@@ -13,6 +13,7 @@
 package cloudprovider
 
 import (
+	"context"
 	"sync"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -299,6 +300,11 @@ type ClusterManager interface {
 	ListProjects(opt *CommonOption) ([]*proto.CloudProject, error)
 	// CheckClusterEndpointStatus check cluster endpoint status
 	CheckClusterEndpointStatus(clusterID string, isExtranet bool, opt *CheckEndpointStatusOption) (bool, error)
+	// GetMasterSuggestedMachines get master suggested machines
+	GetMasterSuggestedMachines(level, vpcId string,
+		opt *GetMasterSuggestedMachinesOption) ([]*proto.InstanceTemplateConfig, error)
+	// AddSubnetsToCluster cluster add subnet
+	AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource, opt *AddSubnetsToClusterOption) error
 }
 
 // NodeGroupManager cloud interface for nodegroup management
@@ -361,13 +367,25 @@ type VPCManager interface {
 	// ListVpcs list cloud vpcs
 	ListVpcs(vpcID string, opt *CommonOption) ([]*proto.CloudVpc, error)
 	// ListSubnets list vpc's subnets
-	ListSubnets(vpcID string, opt *CommonOption) ([]*proto.Subnet, error)
+	ListSubnets(vpcID string, zone string, opt *CommonOption) ([]*proto.Subnet, error)
 	// ListSecurityGroups list security groups
 	ListSecurityGroups(opt *CommonOption) ([]*proto.SecurityGroup, error)
 	// GetCloudNetworkAccountType get cloud account type
 	GetCloudNetworkAccountType(opt *CommonOption) (*proto.CloudAccountType, error)
 	// ListBandwidthPacks list bandWidthPacks
 	ListBandwidthPacks(opt *CommonOption) ([]*proto.BandwidthPackageInfo, error)
+	// CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
+	CheckConflictInVpcCidr(vpcID string, cidr string, opt *CommonOption) ([]string, error)
+}
+
+// InstanceConfig get machine cpu/mem/disk config
+type InstanceConfig interface {
+	// GetCpuMemConfig for cpu/mem
+	GetCpuMemConfig(cpu, mem int) MachineConfig
+	// GetSystemDisk for system disk
+	GetSystemDisk() *proto.DataDisk
+	// GetDataDisk for data disk
+	GetDataDisk() *proto.CloudDataDisk
 }
 
 // TaskManager backgroup back management

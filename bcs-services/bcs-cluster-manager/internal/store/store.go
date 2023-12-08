@@ -52,6 +52,7 @@ type ClusterManagerModel interface {
 
 	CreateNode(ctx context.Context, node *types.Node) error
 	UpdateNode(ctx context.Context, node *types.Node) error
+	UpdateClusterNodeByNodeID(ctx context.Context, node *types.Node) error
 	DeleteNode(ctx context.Context, nodeID string) error
 	DeleteClusterNode(ctx context.Context, clusterID, nodeID string) error
 	DeleteClusterNodeByName(ctx context.Context, clusterID, nodeName string) error
@@ -107,6 +108,7 @@ type ClusterManagerModel interface {
 	UpdateCloud(ctx context.Context, cloud *types.Cloud) error
 	DeleteCloud(ctx context.Context, cloudID string) error
 	GetCloud(ctx context.Context, cloudID string) (*types.Cloud, error)
+	GetCloudByProvider(ctx context.Context, provider string) (*types.Cloud, error)
 	ListCloud(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Cloud, error)
 
 	// cloud vpc information storage manager

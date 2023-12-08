@@ -58,7 +58,8 @@ func NewCreateAction(model store.ClusterManagerModel, locker lock.DistributedLoc
 }
 
 func (ca *CreateAction) applyClusterCIDR(cls *cmproto.Cluster) error {
-	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 || len(cls.NetworkSettings.ClusterIPv6CIDR) > 0 {
+	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 ||
+		len(cls.NetworkSettings.ClusterIPv6CIDR) > 0 || len(cls.NetworkSettings.ServiceIPv4CIDR) > 0 {
 		return nil
 	}
 
@@ -148,8 +149,6 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		CreateTime:              createTime,
 		UpdateTime:              createTime,
 		Status:                  common.StatusInitialization,
-		Area:                    ca.req.Area,
-		Module:                  ca.req.Module,
 	}
 
 	// set cloud default values

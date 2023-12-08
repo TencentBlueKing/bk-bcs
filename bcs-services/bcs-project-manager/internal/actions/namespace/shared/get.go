@@ -21,9 +21,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/independent"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -34,6 +36,11 @@ import (
 // GetNamespace implement for GetNamespace interface
 func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 	req *proto.GetNamespaceRequest, resp *proto.GetNamespaceResponse) error {
+	// if itsm is not enable, get namespace directly
+	if !config.GlobalConf.ITSM.Enable {
+		ia := independent.NewIndependentNamespaceAction(a.model)
+		return ia.GetNamespace(ctx, req, resp)
+	}
 	projectCode := req.GetProjectCode()
 	clusterID := req.GetClusterID()
 	name := req.GetNamespace()

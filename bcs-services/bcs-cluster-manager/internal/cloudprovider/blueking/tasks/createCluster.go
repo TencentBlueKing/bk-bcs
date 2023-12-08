@@ -43,7 +43,10 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	nodeIps := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
 
+	// update nodes status
+	_ = cloudprovider.UpdateNodeListStatus(true, nodeIps, icommon.StatusRunning)
 	cluster, err := cloudprovider.UpdateClusterStatus(clusterID, icommon.StatusInitialization)
 	if err != nil {
 		blog.Errorf("UpdateCreateClusterDBInfoTask[%s]: update cluster systemID for %s failed",

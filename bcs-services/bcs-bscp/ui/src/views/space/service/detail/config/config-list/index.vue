@@ -5,7 +5,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import ConfigSimpleList from './config-simple-list/config-list-with-templates.vue';
+import ConfigSimpleList from './config-simple-list/index.vue';
 import ConfigTableList from './config-table-list/index.vue';
 
 const props = defineProps<{

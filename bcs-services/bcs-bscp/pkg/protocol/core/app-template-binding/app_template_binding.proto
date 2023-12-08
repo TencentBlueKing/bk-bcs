@@ -91,7 +91,10 @@ message ReleasedAppBoundTmplRevisionGroupBySet {
         string origin_signature       = 15;
         uint64 origin_byte_size       = 16;
         string creator                = 17;
-        string create_at              = 18;
+        string reviser                = 18;
+        string create_at              = 19;
+        string update_at              = 20;
+
     }
     uint32                            template_space_id   = 1;
     string                            template_space_name = 2;
@@ -148,7 +151,9 @@ message ReleasedAppBoundTmplRevision {
     string origin_signature       = 19;
     uint64 origin_byte_size       = 20;
     string creator                = 21;
-    string create_at              = 22;
+    string reviser                = 22;
+    string create_at              = 23;
+    string update_at              = 24;
 }
 
 // Conflict is the conflict when app binds templates

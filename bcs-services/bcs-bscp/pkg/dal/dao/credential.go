@@ -180,7 +180,8 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 
 	var conds []rawgen.Condition
 	if searchKey != "" {
-		conds = append(conds, q.Where(m.Memo.Regexp("(?i)"+searchKey)).Or(m.Reviser.Regexp("(?i)"+searchKey)).
+		searchVal := "%" + searchKey + "%"
+		conds = append(conds, q.Where(m.Memo.Like(searchVal)).Or(m.Reviser.Like(searchVal)).
 			Or(m.Name.Like(searchKey)))
 	}
 

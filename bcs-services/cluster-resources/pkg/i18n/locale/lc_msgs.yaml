@@ -58,8 +58,6 @@
   en: "failed to load template: %v"
 - msgID: 值不能为空
   en: "value required"
-- msgID: 键不能为空
-  en: "key required"
 - msgID: "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"
   en: "only lowercase letters, numbers and '-' are supported and must start and end with an alphanumeric"
 - msgID: 仅可包含数字字符与小数点
@@ -562,6 +560,8 @@
   en: "Affinity / Anit"
 - msgID: 污点/容忍
   en: Tolerations
+- msgID: 键不能为空
+  en: "key required"
 - msgID: 运算符
   en: Operator
 - msgID: 影响
@@ -604,6 +604,8 @@
   en: Aliases
 - msgID: 别名（多个值请以英文逗号分隔）
   en: "aliases (Multiple values should be separated by commas)"
+- msgID: 条件类型
+  en: ConditionType
 - msgID: 其他
   en: Other
 - msgID: 镜像拉取密钥

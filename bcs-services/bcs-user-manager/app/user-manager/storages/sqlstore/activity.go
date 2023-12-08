@@ -64,3 +64,26 @@ func CreateActivity(activity []*models.Activity) error {
 	}
 	return nil
 }
+
+// BatchDeleteActivity 通过配置的天数，资源类型删除操作记录
+func BatchDeleteActivity(resourceType []string, createdAt time.Time) error {
+	// stopFlag 循环删除的标志
+	stopFlag := true
+	// batchSize 一次删除的条数
+	batchSize := 1000
+	for stopFlag {
+		// 清理配置的天数之前的数据，资源类型为配置需要清理的类型
+		result := GCoreDB.Limit(batchSize).Where("resource_type in (?) and created_at < ?",
+			resourceType, createdAt).Delete(&models.Activity{})
+		if result.Error != nil {
+			return result.Error
+		}
+
+		// 删除的数据少于batchSize的时候说明数据没超过batchSize
+		if result.RowsAffected != int64(batchSize) {
+			stopFlag = false
+		}
+	}
+
+	return nil
+}

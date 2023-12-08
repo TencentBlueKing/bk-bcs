@@ -19,10 +19,11 @@ import PermissionDialog from './components/permission/apply-dialog.vue';
 
 const userStore = useUserStore();
 const globalStore = useGlobalStore();
+const { showLoginModal } = storeToRefs(userStore);
 const { showApplyPermDialog } = storeToRefs(globalStore);
 
 watch(
-  () => userStore.showLoginModal,
+  () => showLoginModal.value,
   (val) => {
     if (val) {
       const topWindow = isCrossOriginIFrame() ? window : window.top;

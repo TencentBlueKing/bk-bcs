@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -108,6 +109,12 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 				return ca.req.NodeGroupType
 			}
 			return common.Normal.String()
+		}(),
+		ExtraInfo: func() map[string]string {
+			extra := make(map[string]string, 0)
+			extra[resource.ResourcePoolType] = ca.req.GetExtra().GetProvider()
+			extra[resource.DevicePoolIds] = ca.req.GetExtra().GetPoolID()
+			return extra
 		}(),
 	}
 	// set default parameters

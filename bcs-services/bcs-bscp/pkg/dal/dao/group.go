@@ -24,6 +24,8 @@ import (
 
 // Group supplies all the group related operations.
 type Group interface {
+	// ListAppValidGroups list app valid groups.
+	ListAppValidGroups(kit *kit.Kit, bizID, appID uint32) ([]*table.Group, error)
 	// CreateWithTx Create one group instance with transaction.
 	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, group *table.Group) (uint32, error)
 	// UpdateWithTx Update one group instance with transaction.
@@ -50,6 +52,21 @@ type groupDao struct {
 	idGen    IDGenInterface
 	auditDao AuditDao
 	lock     LockDao
+}
+
+// ListAppValidGroups list app valid groups.
+func (dao *groupDao) ListAppValidGroups(kit *kit.Kit, bizID, appID uint32) (
+	[]*table.Group, error) {
+
+	if bizID == 0 || appID == 0 {
+		return nil, fmt.Errorf("bizID or appID can not be 0")
+	}
+
+	g := dao.genQ.Group
+	gq := dao.genQ.Group.WithContext(kit.Ctx)
+	gab := dao.genQ.GroupAppBind
+	subQuery := gab.WithContext(kit.Ctx).Select(gab.GroupID).Where(gab.BizID.Eq(bizID), gab.AppID.Eq(appID))
+	return gq.Where(g.BizID.Eq(bizID)).Where(gq.Where(g.Public.Is(true)).Or(gq.Columns(g.ID).In(subQuery))).Find()
 }
 
 // CreateWithTx Create one group instance with transaction.

@@ -251,12 +251,11 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) (
 
 	targetTypes, err := tresource.GetResourceManagerClient().GetInstanceTypes(context.Background(),
 		info.Region, resource.InstanceSpec{
-			ProjectID: info.ProjectID,
-			BizID:     info.BizID,
-			Version:   info.Version,
-			Cpu:       info.Cpu,
-			Mem:       info.Memory,
-			Provider:  info.Provider,
+			BizID:        info.BizID,
+			Cpu:          info.Cpu,
+			Mem:          info.Memory,
+			Provider:     info.Provider,
+			ResourceType: info.ResourceType,
 		})
 	if err != nil {
 		blog.Errorf("resourceManager ListNodeInstanceType failed: %v", err)

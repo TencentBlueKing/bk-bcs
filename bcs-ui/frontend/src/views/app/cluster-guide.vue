@@ -3,7 +3,11 @@
     <div class="flex justify-center text-[24px]">{{ $t('cluster.msg.emptyCluster') }}</div>
     <div class="mt-[16px] text-[14px] text-[#979BA5]">{{ $t('cluster.msg.emptyClusterGuide') }}</div>
     <div class="flex justify-center mt-[24px]">
-      <bk-button class="min-w-[116px]" theme="primary" @click="handleGotoResourceView">{{ $t('cluster.button.useSharedCluster') }}</bk-button>
+      <bk-button
+        class="min-w-[116px]"
+        theme="primary"
+        :disabled="!hasSharedCluster"
+        @click="handleGotoResourceView">{{ $t('cluster.button.useSharedCluster') }}</bk-button>
       <bk-button
         class="min-w-[116px]"
         v-authority="{
@@ -27,15 +31,17 @@
   </bcs-exception>
 </template>
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 
-import { useProject } from '@/composables/use-app';
+import { useCluster, useProject } from '@/composables/use-app';
 import $router from '@/router';
 
 export default defineComponent({
   name: 'ClusterGuide',
   setup() {
     const { curProject } = useProject();
+    const { clusterList } = useCluster();
+    const hasSharedCluster = computed(() => clusterList.value.some(item => item.is_shared));
     const handleGotoResourceView = () => {
       $router.push({ name: 'dashboardNamespace' });
     };
@@ -50,6 +56,7 @@ export default defineComponent({
       handleGotoResourceView,
       handleCreateCluster,
       handleGotoDoc,
+      hasSharedCluster,
       curProject,
     };
   },

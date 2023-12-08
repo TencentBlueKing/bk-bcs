@@ -27,6 +27,11 @@ func (es EndpointStatus) Created() bool {
 	return es == Created
 }
 
+// CreateFailed status
+func (es EndpointStatus) CreateFailed() bool {
+	return es == CreateFailed
+}
+
 // Creating status
 func (es EndpointStatus) Creating() bool {
 	return es == Creating
@@ -50,6 +55,8 @@ func (es EndpointStatus) Status() string {
 var (
 	// Created status
 	Created EndpointStatus = "Created"
+	// CreateFailed status
+	CreateFailed EndpointStatus = "CreateFailed"
 	// Creating status
 	Creating EndpointStatus = "Creating"
 	// NotFound status
@@ -327,12 +334,19 @@ type AddExistedInstanceRsp struct {
 	TimeoutInstanceIDs []string `json:"timeoutInstanceIDs"`
 }
 
-// DefaultDataDisk set disk ext4 type data when cvm has many disks
-var DefaultDataDisk = DataDetailDisk{
-	FileSystem:         "ext4",
-	MountTarget:        MountTarget,
-	AutoFormatAndMount: true,
-	DiskPartition:      "/dev/vdb",
+const (
+	// Ext4 fs type
+	Ext4 = "ext4"
+)
+
+// GetDefaultDataDisk set disk ext4 type data when cvm has many disks
+func GetDefaultDataDisk(fsType string) DataDetailDisk {
+	return DataDetailDisk{
+		FileSystem:         fsType,
+		MountTarget:        MountTarget,
+		AutoFormatAndMount: true,
+		DiskPartition:      "/dev/vdb",
+	}
 }
 
 // DefaultDiskPartition default disk partition

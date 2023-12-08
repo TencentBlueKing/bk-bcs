@@ -34,8 +34,8 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from 'vue';
 
-import autoscalerScriptsMd from '../cluster/autoscaler/autoscaler-scripts.md';
-import autoscalerScriptsMdEn from '../cluster/autoscaler/autoscaler-scripts-en.md';
+import autoscalerScriptsMd from '../autoscaler/autoscaler-scripts.md';
+import autoscalerScriptsMdEn from '../autoscaler/autoscaler-scripts-en.md';
 import postActionDescMd from '../node-template/postaction-desc.md';
 import postActionDescMdEn from '../node-template/postaction-desc-en.md';
 

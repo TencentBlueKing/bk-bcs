@@ -1,10 +1,5 @@
 <template>
-  <bk-sideslider
-    width="640"
-    quick-close
-    :is-show="props.show"
-    :before-close="handleBeforeClose"
-    @closed="close">
+  <bk-sideslider width="640" quick-close :is-show="props.show" :before-close="handleBeforeClose" @closed="close">
     <template #header>
       <div class="service-edit-head">
         <span class="title">{{ isViewMode ? t('服务属性') : t('编辑服务') }}</span>
@@ -13,16 +8,16 @@
     </template>
     <div class="service-edit-wrapper">
       <bk-form v-if="isViewMode" label-width="100">
-        <bk-form-item :label="t('服务名称')">{{ props.service.spec.name }}</bk-form-item>
-        <bk-form-item :label="t('服务别名')">@todo 待后台确定字段</bk-form-item>
+        <bk-form-item :label="t('服务名称')">{{ serviceData.name }}</bk-form-item>
+        <bk-form-item :label="t('服务别名')">{{ serviceData.alias }}</bk-form-item>
         <bk-form-item :label="t('服务描述')">
-          {{ props.service.spec.memo || '--' }}
+          {{ serviceData.memo || '--' }}
         </bk-form-item>
         <bk-form-item :label="t('数据格式')">
-          {{ props.service.spec.config_type === 'file' ? '文件型' : '键值型' }}
+          {{ serviceData.config_type === 'file' ? '文件型' : '键值型' }}
         </bk-form-item>
-        <bk-form-item v-if="props.service.spec.config_type !== 'file'" :label="t('数据类型')">
-          {{ kvType }}
+        <bk-form-item v-if="serviceData.config_type !== 'file'" :label="t('数据类型')">
+          {{ serviceData.data_type === 'any' ? '任意类型': serviceData.data_type}}
         </bk-form-item>
         <bk-form-item :label="t('创建者')">
           {{ props.service.revision.creator }}
@@ -31,7 +26,7 @@
           {{ datetimeFormat(props.service.revision.create_at) }}
         </bk-form-item>
       </bk-form>
-      <SearviceForm v-else ref="formCompRef" :form-data="serviceData" @change="handleChange" />
+      <SearviceForm v-else ref="formCompRef" :form-data="serviceData" @change="handleChange" :editable="true" />
     </div>
     <div v-if="!isViewMode" class="service-edit-footer">
       <bk-button
@@ -39,7 +34,8 @@
         theme="primary"
         :class="{ 'bk-button-with-no-perm': !props.service.permissions.update }"
         :loading="pending"
-        @click="handleEditConfirm">
+        @click="handleEditConfirm"
+      >
         {{ t('保存') }}
       </bk-button>
       <bk-button @click="isViewMode = true">{{ t('取消') }}</bk-button>
@@ -47,19 +43,21 @@
   </bk-sideslider>
 </template>
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../store/global';
 import { updateApp } from '../../../../../api/index';
+import { getKvList } from '../../../../../api/config';
 import { datetimeFormat } from '../../../../../utils/index';
 import { IAppItem } from '../../../../../../types/app';
 import { IServiceEditForm } from '../../../../../../types/service';
-import { CONFIG_KV_TYPE } from '../../../../../constants/config';
 import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
 import SearviceForm from './service-form.vue';
+import { IConfigKvType } from '../../../../../../types/config';
+import { InfoBox } from 'bkui-vue';
 
-const { spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
+const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 
 const { t } = useI18n();
 
@@ -68,30 +66,22 @@ const props = defineProps<{
   service: IAppItem;
 }>();
 
-const emits = defineEmits(['update:show', 'editMemo']);
+const emits = defineEmits(['update:show', 'reload']);
 
 const isFormChange = ref(false);
 const isViewMode = ref(true);
 const serviceData = ref<IServiceEditForm>({
   name: '',
+  alias: '',
   config_type: 'file',
-  kv_type: '',
+  data_type: 'any',
   reload_type: 'file',
-  reload_file_path: '',
-  mode: '',
-  deploy_type: 'common',
-  memo: ''
+  reload_file_path: '/data/reload.json',
+  mode: 'normal',
+  memo: '',
 });
 const pending = ref(false);
 const formCompRef = ref();
-
-const kvType = computed(() => {
-  if (serviceData.value.kv_type) {
-    const type = CONFIG_KV_TYPE.find(item => item.id === serviceData.value.kv_type)
-    return type?.name
-  }
-  return
-})
 
 watch(
   () => props.show,
@@ -99,18 +89,18 @@ watch(
     if (val) {
       isFormChange.value = false;
       isViewMode.value = true;
-      const { spec } = props.service
-      const { name, memo, mode, config_type, reload, kv_type } = spec;
+      const { spec } = props.service;
+      const { name, memo, mode, config_type, reload, data_type, alias } = spec;
       const { reload_type, file_reload_spec } = reload;
       serviceData.value = {
         name,
         memo,
         mode,
         config_type,
-        kv_type,
+        data_type,
         reload_type,
         reload_file_path: file_reload_spec.reload_file_path,
-        deploy_type: 'common' // @todo 待和后台确认是否需要
+        alias,
       };
     }
   },
@@ -135,22 +125,38 @@ const openPermApplyDialog = () => {
 const handleChange = (val: IServiceEditForm) => {
   isFormChange.value = true;
   serviceData.value = val;
-}
+};
 
 const handleEditConfirm = async () => {
   if (!props.service.permissions.update) {
     openPermApplyDialog();
     return;
   }
+
   await formCompRef.value.validate();
   const { id, biz_id } = props.service;
+  if (serviceData.value.data_type !== 'any') {
+    const configList = await getKvList(String(biz_id), id as number, { all: true, start: 0 });
+    const res = configList.details.some((config: IConfigKvType) => config.spec.kv_type !== serviceData.value.data_type);
+    if (res) {
+      InfoBox({
+        title: `调整服务数据类型${serviceData.value.data_type}失败`,
+        subTitle: `该服务下存在非${serviceData.value.data_type}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为${serviceData.value.data_type}`,
+        dialogType: 'confirm',
+        confirmText: '我知道了',
+      });
+      return;
+    }
+  }
   const data = {
     id,
     biz_id,
-    ...serviceData.value
+    ...serviceData.value,
   };
+
   await updateApp({ id, biz_id, data });
-  emits('editMemo', serviceData.value.memo);
+  emits('reload');
+  isViewMode.value = true;
 };
 
 const handleBeforeClose = async () => {

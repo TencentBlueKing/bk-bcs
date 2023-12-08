@@ -39,7 +39,7 @@ EOF
   yum install -y -q yum-utils
   yum-config-manager --add-repo "$ROOT_DIR/kubernetes.repo"
   yum clean all
-  yum makecache fast
+  yum makecache fast || yum makecache
 }
 
 #######################################
@@ -211,7 +211,6 @@ main() {
   utils::log "INFO" "check kubelet status"
   if kubelet --version; then
     utils::log "OK" "kubeadm install success"
-    systemctl enable --now kubelet
   else
     utils::log "ERROR" "Did kubelet get installed?"
   fi

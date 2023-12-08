@@ -13,8 +13,6 @@
 // Package manager xxx
 package manager
 
-import "os"
-
 const (
 	// LongDateTimeLayout xxx
 	LongDateTimeLayout = "20060102150405"
@@ -67,7 +65,4 @@ var (
 		"-c",
 		"export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/bash",
 	}
-
-	// key 记录 webconsole key 响应时间
-	key = os.Getenv("WEBCONSOLE_KEY")
 )

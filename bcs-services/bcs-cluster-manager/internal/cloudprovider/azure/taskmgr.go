@@ -477,7 +477,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	// transfer host module
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
-		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, group.NodeTemplate.Module.ScaleOutModuleID)
+		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID,
+			group.NodeTemplate.Module.ScaleOutModuleID, "")
 	}
 	common.BuildUnCordonNodesTaskStep(task, group.ClusterID, nil)
 

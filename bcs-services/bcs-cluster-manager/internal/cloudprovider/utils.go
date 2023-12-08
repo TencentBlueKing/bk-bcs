@@ -736,6 +736,18 @@ func GetIDToIPMap(nodeIDs, nodeIPs []string) map[string]string {
 	return idToIPMap
 }
 
+// GetNodeIdToIpMapByNodeIds get nodeId mapTo nodeIp
+func GetNodeIdToIpMapByNodeIds(nodeIds []string) map[string]string {
+	nodes := GetNodesByInstanceIDs(nodeIds)
+
+	idToIpmap := make(map[string]string, 0)
+	for i := range nodes {
+		idToIpmap[nodes[i].GetNodeID()] = nodes[i].GetInnerIP()
+	}
+
+	return idToIpmap
+}
+
 // IsExternalNodePool check group external nodePool
 func IsExternalNodePool(group *proto.NodeGroup) bool {
 	if group == nil {
@@ -847,7 +859,7 @@ func GetModuleName(bkBizID, bkModuleID int) string {
 	if cli == nil {
 		return ""
 	}
-	list, err := cli.ListTopology(context.Background(), bkBizID, false, true)
+	list, err := cli.ListTopology(context.Background(), bkBizID, false, false)
 	if err != nil {
 		blog.Errorf("list topology failed, err %s", err.Error())
 		return ""
@@ -866,6 +878,16 @@ func GetModuleName(bkBizID, bkModuleID int) string {
 		}
 	}
 	return name
+}
+
+// IsMasterIp check ip if is cluster master
+func IsMasterIp(ip string, cls *proto.Cluster) bool {
+	if cls == nil || cls.Master == nil {
+		return false
+	}
+
+	_, ok := cls.Master[ip]
+	return ok
 }
 
 // UpdateNodeGroupCloudAndModuleInfo update cloudID && moduleInfo

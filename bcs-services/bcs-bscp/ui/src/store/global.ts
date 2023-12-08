@@ -6,6 +6,7 @@ import { ISpaceDetail, IPermissionResource, IPermissionQueryResourceItem } from 
 export default defineStore('global', () => {
   const bscpVersion = ref(''); // 产品版本号
   const spaceId = ref(''); // 空间id
+  const spaceFeatureFlags = ref<{ [key: string]: boolean; }>({}); // 空间的配置开关
   const spaceList = ref<ISpaceDetail[]>([]);
   const showApplyPermDialog = ref(false); // 资源无权限申请弹窗
   const showPermApplyPage = ref(false); // 无业务查看权限时，申请页面
@@ -18,6 +19,7 @@ export default defineStore('global', () => {
   return {
     bscpVersion,
     spaceId,
+    spaceFeatureFlags,
     spaceList,
     showApplyPermDialog,
     showPermApplyPage,

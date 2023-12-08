@@ -19,6 +19,7 @@ interface Window {
   _project_code_: string
   _project_id_: string
   readonly BK_STATIC_URL: string
+  readonly BCS_NAMESPACE_PREFIX: string
 }
 
 declare const BK_BCS_WELCOME: string;

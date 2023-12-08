@@ -373,6 +373,8 @@ export default defineComponent({
     });
     const handleGetEventList = async () => {
       const clusterId = params.value.clusterId || curClusterId.value;
+      if (!clusterId) return;
+
       const cluster = clusterList.value.find(item => item.clusterID === clusterId);
       if (cluster?.is_shared && !params.value.namespace) return; // 共享集群没有命名空间时，不请求
       eventLoading.value = true;

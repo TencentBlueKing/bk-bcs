@@ -8,6 +8,7 @@ interface IAppData {
   spec: {
     name: string;
     config_type: string;
+    data_type?: string;
   };
 }
 const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
@@ -53,5 +54,16 @@ export default defineStore('service', () => {
     user_group: 'root',
   });
 
-  return { appData, permCheckLoading, hasEditServicePerm, isFileType, checkPermBeforeOperate, lastCreatePermission };
+  // 批量上传的ids
+  const batchUploadIds = ref<number[]>([]);
+
+  return {
+    appData,
+    permCheckLoading,
+    hasEditServicePerm,
+    checkPermBeforeOperate,
+    lastCreatePermission,
+    batchUploadIds,
+    isFileType,
+  };
 });

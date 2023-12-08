@@ -493,6 +493,8 @@ export const timeDelta = (start, end) => {
   if (!start || !end) return;
 
   const time = (new Date(end).getTime() - new Date(start).getTime()) / 1000;
+  if (time <= 0) return;
+
   const m = Math.floor(time / 60);
   const s = time - m * 60;
   return `${m ? `${m}m ` : ''}${s ? `${Math.ceil(s)}s ` : ''}`;
@@ -694,4 +696,59 @@ export const exitFullscreen = (element) => {
   } if (element.msExitFullscreen) {
     element.msExitFullscreen();
   }
+};
+
+export function validateCIDR(cidr: string, isIPv6?: boolean) {
+  if (!cidr) return true;
+  let pattern = '';
+  if (isIPv6) {
+    pattern = '^([0-9a-f]{1,4}::?){1,7}[0-9a-f]{1,4}/[0-9]{1,3}$';
+  } else {
+    pattern = '^([0-9]{1,3}.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$';
+  }
+  const regex = new RegExp(pattern);
+  return regex.test(cidr);
+}
+
+export function countIPsInCIDR(cidr) {
+  if (!validateCIDR(cidr)) return;
+  const prefixLength = parseInt(cidr.split('/')[1]);
+  const hostBits = 32 - prefixLength;
+  const totalIPs = Math.pow(2, hostBits);
+  return totalIPs;
+}
+
+const cidrToRange = (cidr: string): [string, string] => {
+  const [ip, subnet] = cidr.split('/');
+  const ipBinary = ipToBinary(ip);
+  const subnetMask = parseInt(subnet, 10);
+  const networkBinary = ipBinary.substring(0, subnetMask).padEnd(32, '0');
+  const broadcastBinary = networkBinary.substring(0, subnetMask).padEnd(32, '1');
+
+  return [binaryToIp(networkBinary), binaryToIp(broadcastBinary)];
+};
+
+const ipToBinary = (ip: string) => ip.split('.').map(octet => parseInt(octet, 10).toString(2)
+  .padStart(8, '0'))
+  .join('');
+
+const binaryToIp = binary => Array.from({ length: 4 }, (_, i) => parseInt(binary.substring(i * 8, (i + 1) * 8), 2).toString(10)).join('.');
+
+export const cidrContains = (cidrA: string, cidrB: string|string[]) => {
+  const [aStart, aEnd] = cidrToRange(cidrA);
+  const aStartBinary = parseInt(ipToBinary(aStart), 2);
+  const aEndBinary = parseInt(ipToBinary(aEnd), 2);
+
+  const cidrBList = Array.isArray(cidrB) ? cidrB : [cidrB];
+  const cidrIpToBinary = cidrBList.reduce<number[]>((pre, cidr) => {
+    const range = cidrToRange(cidr);
+    range.forEach((ip) => {
+      pre.push(parseInt(ipToBinary(ip), 2));
+    });
+    return pre;
+  }, []).sort((a, b) => a - b);
+  const rangeStartBinary = cidrIpToBinary[0];
+  const rangeEndBinary = cidrIpToBinary[cidrIpToBinary.length - 1];
+
+  return aStartBinary >= rangeStartBinary && aEndBinary <= rangeEndBinary;
 };

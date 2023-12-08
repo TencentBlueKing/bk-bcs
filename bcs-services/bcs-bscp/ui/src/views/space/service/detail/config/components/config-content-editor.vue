@@ -32,7 +32,7 @@
               @click="handleCloseFullScreen" />
         </div>
       </div>
-      <div class="editor-content">
+      <div class="editor-content" >
         <CodeEditor
           ref="codeEditorRef"
           :model-value="props.content"

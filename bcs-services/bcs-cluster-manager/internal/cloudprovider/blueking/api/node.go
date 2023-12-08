@@ -14,6 +14,7 @@
 package api
 
 import (
+	"context"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
@@ -23,12 +24,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
+const (
+	cloudProvider = "blueking"
+)
+
 var nodeMgr sync.Once
 
 func init() {
 	nodeMgr.Do(func() {
 		// init Node
-		cloudprovider.InitNodeManager("blueking", &NodeManager{})
+		cloudprovider.InitNodeManager(cloudProvider, &NodeManager{})
 	})
 }
 
@@ -55,7 +60,22 @@ func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) 
 // GetCloudRegions get regionInfo
 func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
 	// blueking cloud not need to implement interface
-	return nil, nil
+	cloud, err := cloudprovider.GetStorageModel().GetCloudByProvider(context.Background(), cloudProvider)
+	if err != nil {
+		return nil, err
+	}
+
+	regions := make([]*proto.RegionInfo, 0)
+
+	cloudRegions := cloud.GetOsManagement().GetRegions()
+	for region, name := range cloudRegions {
+		regions = append(regions, &proto.RegionInfo{
+			Region:     region,
+			RegionName: name,
+		})
+	}
+
+	return regions, nil
 }
 
 // GetZoneList get zoneList

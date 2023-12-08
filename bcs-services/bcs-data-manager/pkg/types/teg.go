@@ -57,10 +57,10 @@ type TEGWorkload struct {
 	WorkloadName     string `json:"workloadName,omitempty" bson:"workload_name" db:"workload_name"`
 	Maintainer       string `json:"maintainer,omitempty" db:"maintainer"`
 	BakMaintainer    string `json:"bakMaintainer,omitempty" db:"bakMaintainer"`
-	BusinessSetId    int64  `json:"businessSetId,omitempty" db:"businessSetId"`
-	BusinessId       int64  `json:"businessId,omitempty" db:"businessId"`
-	BusinessModuleId int64  `json:"businessModuleId,omitempty" db:"businessModuleId"`
-	SchedulerStatus  int64  `json:"schedulerStatus,omitempty" db:"schedulerStatus"`
-	ServiceStatus    int64  `json:"serviceStatus,omitempty" db:"serviceStatus"`
-	HpaStatus        int64  `json:"hpaStatus,omitempty" db:"hpaStatus"`
+	BusinessSetId    int32  `json:"businessSetId,omitempty" db:"businessSetId"`
+	BusinessId       int32  `json:"businessId,omitempty" db:"businessId"`
+	BusinessModuleId int32  `json:"businessModuleId,omitempty" db:"businessModuleId"`
+	SchedulerStatus  int32  `json:"schedulerStatus,omitempty" db:"schedulerStatus"`
+	ServiceStatus    int32  `json:"serviceStatus,omitempty" db:"serviceStatus"`
+	HpaStatus        int32  `json:"hpaStatus,omitempty" db:"hpaStatus"`
 }

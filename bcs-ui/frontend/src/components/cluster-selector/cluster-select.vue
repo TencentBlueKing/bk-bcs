@@ -29,10 +29,24 @@
         v-for="cluster in item.list"
         :key="cluster.clusterID"
         :id="cluster.clusterID"
-        :name="cluster.clusterName">
-        <div class="flex flex-col justify-center h-[50px] px-[12px]">
+        :name="cluster.clusterName"
+        :disabled="cluster.status !== 'RUNNING'">
+        <div
+          class="flex flex-col justify-center h-[50px] px-[12px]"
+          v-bk-tooltips="{
+            content: $t('cluster.tips.clusterStatus', [CLUSTER_MAP[cluster.status || '']]),
+            disabled: cluster.status === 'RUNNING',
+            placement: 'right'
+          }">
           <span class="leading-6 bcs-ellipsis" v-bk-overflow-tips>{{ cluster.clusterName }}</span>
-          <span class="leading-4 text-[#979BA5]">{{ cluster.clusterID }}</span>
+          <span
+            :class="[
+              'leading-4',
+              {
+                'text-[#979BA5]': cluster.status === 'RUNNING'
+              }]">
+            {{ cluster.clusterID }}
+          </span>
         </div>
       </bcs-option>
     </bcs-option-group>
@@ -43,6 +57,8 @@ import {  defineComponent, PropType, toRefs, watch } from 'vue';
 
 import CollapseTitle from './collapse-title.vue';
 import useClusterSelector, { ClusterType } from './use-cluster-selector';
+
+import { CLUSTER_MAP } from '@/common/constant';
 
 export default defineComponent({
   name: 'ClusterSelect',
@@ -99,6 +115,7 @@ export default defineComponent({
       localValue,
       collapseList,
       clusterData,
+      CLUSTER_MAP,
       handleToggleCollapse,
       remoteMethod,
       handleClusterChange,

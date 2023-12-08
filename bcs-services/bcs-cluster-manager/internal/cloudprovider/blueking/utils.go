@@ -51,7 +51,7 @@ var (
 	// delete cluster task steps
 	cleanClusterDBInfoStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName),
-		StepName:   "更新集群任务状态",
+		StepName:   "清理集群数据",
 	}
 
 	// add cluster nodes task steps
@@ -69,7 +69,8 @@ var (
 
 // CreateClusterTaskOption for build create cluster step
 type CreateClusterTaskOption struct {
-	Cluster *proto.Cluster
+	Cluster     *proto.Cluster
+	WorkerNodes []string
 }
 
 // BuildUpdateClusterDbInfoStep xxx
@@ -78,6 +79,9 @@ func (cn *CreateClusterTaskOption) BuildUpdateClusterDbInfoStep(task *proto.Task
 
 	updateStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
 	updateStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+	if len(cn.WorkerNodes) > 0 {
+		updateStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(cn.WorkerNodes, ",")
+	}
 
 	task.Steps[updateCreateClusterDBInfoStep.StepMethod] = updateStep
 	task.StepSequence = append(task.StepSequence, updateCreateClusterDBInfoStep.StepMethod)

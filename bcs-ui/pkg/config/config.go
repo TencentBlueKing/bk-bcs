@@ -123,6 +123,9 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	if c.BCS.JWTPubKey == "" {
 		c.BCS.JWTPubKey = BCS_APIGW_PUBLIC_KEY
 	}
+	if c.BCS.NamespacePrefix == "" {
+		c.BCS.NamespacePrefix = BCS_NAMESPACE_PREFIX
+	}
 
 	// iam env
 	if c.IAM.GatewayServer == "" {

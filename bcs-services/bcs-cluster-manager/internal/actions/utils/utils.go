@@ -104,13 +104,16 @@ func FormatTaskTime(t *proto.Task) {
 // Passwd flag
 var Passwd = []string{"password", "passwd"}
 
-// HiddenTaskPassword hidden passwd
-func HiddenTaskPassword(task *proto.Task) {
+// HandleTaskStepData handle task step data(hidden passwd, step name)
+func HandleTaskStepData(ctx context.Context, task *proto.Task) {
 	if task != nil && len(task.Steps) > 0 {
 		for i := range task.Steps {
+
+			task.Steps[i].TaskName = Translate(ctx, task.Steps[i].TaskMethod, task.Steps[i].TaskName)
+
 			for k := range task.Steps[i].Params {
-				if utils.StringInSlice(k,
-					[]string{cloudprovider.BkSopsTaskUrlKey.String(), cloudprovider.ShowSopsUrlKey.String()}) {
+				if utils.StringInSlice(k, []string{cloudprovider.BkSopsTaskUrlKey.String(),
+					cloudprovider.ShowSopsUrlKey.String(), cloudprovider.ConnectClusterKey.String()}) {
 					continue
 				}
 				delete(task.Steps[i].Params, k)

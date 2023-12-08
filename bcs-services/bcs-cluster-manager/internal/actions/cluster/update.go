@@ -24,6 +24,7 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -495,7 +496,6 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 		)
 		return err
 	}
-	reinstall := len(ua.req.InitLoginPassword) != 0
 
 	// check cloud CIDR && autoScale cluster cidr
 	available, err := clusterMgr.CheckClusterCidrAvailable(ua.cluster, &cloudprovider.CheckClusterCIDROption{
@@ -515,9 +515,7 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 	// default reinstall system when add node to cluster
 	task, err := clusterMgr.AddNodesToCluster(ua.cluster, ua.nodes, &cloudprovider.AddNodesOption{
 		CommonOption: *ua.option,
-		// input passwd not empty
-		Reinstall:    reinstall,
-		InitPassword: ua.req.InitLoginPassword,
+		Login:        ua.req.GetLogin(),
 		Cloud:        ua.cloud,
 		NodeTemplate: ua.nodeTemplate,
 		NodeGroupID:  ua.req.NodeGroupID,
@@ -547,10 +545,11 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 		return err
 	}
 
-	ua.task = task
+	utils.HandleTaskStepData(ua.ctx, task)
 	blog.Infof("add nodes %v to cluster %s with cloudprovider %s processing, task info: %v",
 		ua.req.Nodes, ua.req.ClusterID, ua.cloud.CloudProvider, task,
 	)
+	ua.task = task
 	ua.resp.Data = task
 	return ua.saveNodesToStorage(common.StatusInitialization)
 }
@@ -618,7 +617,8 @@ func (ua *AddNodesAction) checkNodeInCluster() error {
 	masterIPs := getAllMasterIPs(ua.model)
 
 	// check if nodes are already in cluster
-	nodeStatus := []string{common.StatusRunning, common.StatusInitialization, common.StatusDeleting}
+	nodeStatus := []string{common.StatusRunning, common.StatusInitialization,
+		common.StatusDeleting, common.StatusAddNodesFailed}
 	clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": ua.cluster.ClusterID})
 	statusCond := operator.NewLeafCondition(operator.In, operator.M{"status": nodeStatus})
 	cond := operator.NewBranchCondition(operator.And, clusterCond, statusCond)
@@ -745,8 +745,7 @@ func (ua *AddNodesAction) getClusterNodesByIPs(nodeMgr cloudprovider.NodeManager
 	} else {
 		// get cloud support CVM nodes
 		nodeList, err = nodeMgr.ListNodesByIP(ua.req.Nodes, &cloudprovider.ListNodesOption{
-			Common:       cmOption,
-			ClusterVPCID: ua.cluster.VpcID,
+			Common: cmOption,
 		})
 	}
 
@@ -784,13 +783,6 @@ func (ua *AddNodesAction) cloudCheckValidate() error {
 func (ua *AddNodesAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
-	}
-
-	// check instance init login passwd
-	// generate passwd if passwd empty
-	pwlen := len(ua.req.InitLoginPassword)
-	if pwlen != 0 && (pwlen < 8 || pwlen > 16) {
-		return fmt.Errorf("when setting initLoginPassword, its length must be in [8, 16]")
 	}
 
 	// get cluster basic info(project/cluster/cloud)

@@ -30,6 +30,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -126,11 +127,19 @@ func (n *nodePortBindingHandler) postPortBindingUpdate(portBinding *networkexten
 		blog.Warnf("%v", err)
 		return err
 	}
-	if err := n.patchNodeAnnotation(n.node, portBinding.Status.Status); err != nil {
-		return err
+
+	portBindingItemsBytes, err := json.Marshal(portBinding.Spec.PortBindingList)
+	if err != nil {
+		return fmt.Errorf("marshal node %s portbindingLisr failed, err:%w", n.node.GetName(), err)
+	}
+	if err = utils.PatchNodeAnnotation(n.ctx, n.k8sClient, n.node, map[string]interface{}{
+		constant.AnnotationForPortPoolBindingStatus: portBinding.Status.Status,
+		constant.AnnotationForPortPoolBindings:      string(portBindingItemsBytes),
+	}); err != nil {
+		return fmt.Errorf("patch annotataion to node %s failed, err: %w", n.node.GetName(), err)
 	}
 
-	if err := n.updateAllConfigMap(portBinding); err != nil {
+	if err = n.updateAllConfigMap(portBinding); err != nil {
 		return err
 	}
 
