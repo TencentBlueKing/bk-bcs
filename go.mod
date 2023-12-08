@@ -32,7 +32,6 @@ require (
 	github.com/haproxytech/client-native v0.0.0-00010101000000-000000000000
 	github.com/haproxytech/models v1.2.5-0.20191122125615-30d0235b81ec
 	github.com/json-iterator/go v1.1.10
-	github.com/lithammer/go-jump-consistent-hash v1.0.1
 	github.com/mattn/go-sqlite3 v2.0.4-0.20200227082846-67986a7832dc+incompatible
 	github.com/mesos/mesos-go v0.0.10
 	github.com/mholt/caddy v0.11.1
@@ -45,7 +44,6 @@ require (
 	github.com/prometheus/common v0.15.0
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/spf13/pflag v1.0.5
-	github.com/ugorji/go/codec v1.2.3
 	go4.org v0.0.0-20190313082347-94abd6928b1d
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
 	google.golang.org/grpc v1.33.1
@@ -116,7 +114,6 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/nxadm/tail v1.4.4 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
