@@ -17,7 +17,7 @@
               :desc="$t('dashboard.ns.validate.sharedClusterNs')">
               <bk-input v-model="formData.name" class="w-[620px]" maxlength="30">
                 <div slot="prepend">
-                  <div class="group-text">{{ 'ieg-' + projectCode + '-' }}</div>
+                  <div class="group-text">{{ nsPrefix }}</div>
                 </div>
               </bk-input>
             </bk-form-item>
@@ -45,7 +45,11 @@
                 </bk-form-item>
                 <span class="px-[5px]">=</span>
                 <bk-form-item>
-                  <bk-input :placeholder="$t('generic.label.value')" v-model="label.value" class="w-[300px]" @blur="validate"></bk-input>
+                  <bk-input
+                    :placeholder="$t('generic.label.value')"
+                    v-model="label.value"
+                    class="w-[300px]"
+                    @blur="validate"></bk-input>
                 </bk-form-item>
                 <i class="bk-icon icon-minus-line ml-[5px] cursor-pointer" @click="handleRemoveLabel(index)" />
               </bk-form>
@@ -132,7 +136,10 @@
         class="w-[88px] mr-[10px] ml-[20px]"
         @click="handleCreated"
         :loading="isLoading">{{ $t('generic.button.create') }}</bcs-button>
-      <bcs-button class="w-[88px]" :disabled="isLoading" @click="handleCancel">{{ $t('generic.button.cancel') }}</bcs-button>
+      <bcs-button
+        class="w-[88px]"
+        :disabled="isLoading"
+        @click="handleCancel">{{ $t('generic.button.cancel') }}</bcs-button>
     </div>
   </LayoutContent>
 </template>
@@ -267,11 +274,12 @@ export default defineComponent({
     const validate = () => {
       namespaceForm.value.validate();
     };
+    const nsPrefix = computed(() => `${window.BCS_NAMESPACE_PREFIX || 'ieg'}-${projectCode.value}-`);
     const handleCreated = () => {
       namespaceForm.value.validate().then(async () => {
         let { name } = formData.value;
         if (isSharedCluster.value) {
-          name = `ieg-${projectCode.value}-${name}`;
+          name = `${nsPrefix.value}${name}`;
         }
         isLoading.value = true;
         let quota: Record<string, string> | null = null;
@@ -301,6 +309,7 @@ export default defineComponent({
     };
 
     return {
+      nsPrefix,
       rules,
       formData,
       isLoading,
