@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"os"
 	"strings"
 	"time"
 
@@ -36,8 +37,8 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
-// NamespacePrefix namespace in shared cluster must be prefixed by ieg-[projectCode]
-var NamespacePrefix = "ieg-%s-"
+// NamespacePrefix namespace in shared cluster must be prefixed by it
+var NamespacePrefix = getNamespacePrefix()
 
 // CreateNamespace implement for CreateNamespace interface
 func (a *SharedNamespaceAction) CreateNamespace(ctx context.Context,
@@ -142,4 +143,12 @@ func (a *SharedNamespaceAction) validateCreate(ctx context.Context, req *proto.C
 		return err
 	}
 	return nil
+}
+
+func getNamespacePrefix() string {
+	if os.Getenv("BCS_NAMESPACE_PREFIX") == "" {
+		return "ieg-%s-"
+	} else {
+		return os.Getenv("BCS_NAMESPACE_PREFIX") + "-%s-"
+	}
 }
