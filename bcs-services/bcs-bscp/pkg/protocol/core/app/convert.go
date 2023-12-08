@@ -30,6 +30,8 @@ func (m *AppSpec) AppSpec() *table.AppSpec {
 		Mode:       table.AppMode(m.Mode),
 		Memo:       m.Memo,
 		Reload:     m.Reload.Reload(),
+		Alias:      m.Alias,
+		DataType:   table.DataType(m.DataType),
 	}
 }
 
@@ -45,6 +47,8 @@ func PbAppSpec(spec *table.AppSpec) *AppSpec { //nolint:revive
 		Mode:       string(spec.Mode),
 		Memo:       spec.Memo,
 		Reload:     PbReload(spec.Reload),
+		Alias:      spec.Alias,
+		DataType:   string(spec.DataType),
 	}
 }
 

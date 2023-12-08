@@ -58,6 +58,8 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 			ConfigType: req.ConfigType,
 			Mode:       req.Mode,
 			Memo:       req.Memo,
+			Alias:      req.Alias,
+			DataType:   req.DataType,
 			Reload: &pbapp.Reload{
 				ReloadType: req.ReloadType,
 				FileReloadSpec: &pbapp.FileReloadSpec{
@@ -104,8 +106,10 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 		Id:    req.Id,
 		BizId: req.BizId,
 		Spec: &pbapp.AppSpec{
-			Name: req.Name,
-			Memo: req.Memo,
+			Name:     req.Name,
+			Memo:     req.Memo,
+			Alias:    req.Alias,
+			DataType: req.DataType,
 			Reload: &pbapp.Reload{
 				ReloadType: req.ReloadType,
 				FileReloadSpec: &pbapp.FileReloadSpec{

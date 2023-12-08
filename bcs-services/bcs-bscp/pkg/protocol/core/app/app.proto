@@ -25,6 +25,8 @@ message AppSpec {
     string mode        = 4;  // mode is enum type.
     string memo        = 5;
     Reload reload      = 6;
+    string alias       = 7;
+    string data_type   = 8; // data_type is enum type.
 }
 
 // ReloadSpec source resource reference: pkg/dal/table/app.go

@@ -17,11 +17,10 @@ import (
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbkv "bscp.io/pkg/protocol/core/kv"
-	"bscp.io/pkg/types"
 )
 
 // PbRKv convert table ReleasedKv to pb ReleasedKv
-func PbRKv(k *table.ReleasedKv, kvType types.KvType, value string) *ReleasedKv {
+func PbRKv(k *table.ReleasedKv, kvType table.DataType, value string) *ReleasedKv {
 	if k == nil {
 		return nil
 	}

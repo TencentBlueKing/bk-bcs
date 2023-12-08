@@ -15,6 +15,7 @@ package vault
 import (
 	"fmt"
 
+	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/types"
 )
@@ -39,7 +40,7 @@ func (s *set) CreateRKv(kit *kit.Kit, opt *types.CreateReleasedKvOption) (int, e
 }
 
 // GetRKv Get Released kv by version
-func (s *set) GetRKv(kit *kit.Kit, opt *types.GetRKvOption) (kvType types.KvType, value string, err error) {
+func (s *set) GetRKv(kit *kit.Kit, opt *types.GetRKvOption) (kvType table.DataType, value string, err error) {
 
 	if err = opt.Validate(); err != nil {
 		return
@@ -56,7 +57,7 @@ func (s *set) GetRKv(kit *kit.Kit, opt *types.GetRKvOption) (kvType types.KvType
 		return "", "", fmt.Errorf("failed to get 'kv_type' as a string from kv.Data,"+
 			" err : %v", err)
 	}
-	kvType = types.KvType(kvTypeStr)
+	kvType = table.DataType(kvTypeStr)
 
 	value, ok = kv.Data["value"].(string)
 	if !ok {
