@@ -274,7 +274,7 @@ export default defineComponent({
     const validate = () => {
       namespaceForm.value.validate();
     };
-    const nsPrefix = computed(() => `${window.BCS_NAMESPACE_PREFIX || 'ieg'}-${projectCode.value}-`);
+    const nsPrefix = computed(() => `${window.BCS_NAMESPACE_PREFIX || 'bcs'}-${projectCode.value}-`);
     const handleCreated = () => {
       namespaceForm.value.validate().then(async () => {
         let { name } = formData.value;
