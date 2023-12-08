@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// package main is used as the entry of the suit-test tool
+// Package main is used as the entry of the suit-test tool
 package main
 
 import (

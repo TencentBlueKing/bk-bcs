@@ -16,6 +16,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+
+	"bscp.io/pkg/kit"
 )
 
 // AppTemplateVariable 未命名版本服务的模版变量
@@ -47,9 +49,9 @@ func (t *AppTemplateVariable) ResType() string {
 }
 
 // ValidateUpsert validate AppTemplateVariable is valid or not when create or update it.
-func (t *AppTemplateVariable) ValidateUpsert() error {
+func (t *AppTemplateVariable) ValidateUpsert(kit *kit.Kit) error {
 	if t.Spec != nil {
-		if err := t.Spec.ValidateUpsert(); err != nil {
+		if err := t.Spec.ValidateUpsert(kit); err != nil {
 			return err
 		}
 	}
@@ -123,9 +125,9 @@ func (u *AppVariables) Scan(value interface{}) error {
 }
 
 // ValidateUpsert validate AppTemplateVariable spec when it is created or updated.
-func (t *AppTemplateVariableSpec) ValidateUpsert() error {
+func (t *AppTemplateVariableSpec) ValidateUpsert(kit *kit.Kit) error {
 	for _, v := range t.Variables {
-		if err := v.ValidateCreate(); err != nil {
+		if err := v.ValidateCreate(kit); err != nil {
 			return err
 		}
 	}

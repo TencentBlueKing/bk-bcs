@@ -17,6 +17,7 @@ import (
 
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/validator"
+	"bscp.io/pkg/kit"
 	"bscp.io/pkg/tools"
 )
 
@@ -49,21 +50,21 @@ func (t *TemplateVariable) ResType() string {
 }
 
 // ValidateCreate validate template variable is valid or not when create it.
-func (t *TemplateVariable) ValidateCreate() error {
+func (t *TemplateVariable) ValidateCreate(kit *kit.Kit) error {
 	if t.ID > 0 {
-		return errf.ErrWithIDF()
+		return errf.ErrWithIDF(kit)
 	}
 
 	if t.Spec == nil {
-		return errf.ErrNoSpecF()
+		return errf.ErrNoSpecF(kit)
 	}
 
-	if err := t.Spec.ValidateCreate(); err != nil {
+	if err := t.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
 	if t.Attachment == nil {
-		return errf.ErrNoAttachmentF()
+		return errf.ErrNoAttachmentF(kit)
 	}
 
 	if err := t.Attachment.Validate(); err != nil {
@@ -71,7 +72,7 @@ func (t *TemplateVariable) ValidateCreate() error {
 	}
 
 	if t.Revision == nil {
-		return errf.ErrNoRevisionF()
+		return errf.ErrNoRevisionF(kit)
 	}
 
 	if err := t.Revision.ValidateCreate(); err != nil {
@@ -82,14 +83,14 @@ func (t *TemplateVariable) ValidateCreate() error {
 }
 
 // ValidateUpdate validate template variable is valid or not when update it.
-func (t *TemplateVariable) ValidateUpdate() error {
+func (t *TemplateVariable) ValidateUpdate(kit *kit.Kit) error {
 
 	if t.ID <= 0 {
 		return errors.New("id should be set")
 	}
 
 	if t.Spec != nil {
-		if err := t.Spec.ValidateUpdate(); err != nil {
+		if err := t.Spec.ValidateUpdate(kit); err != nil {
 			return err
 		}
 	}
@@ -139,16 +140,16 @@ type TemplateVariableSpec struct {
 }
 
 // ValidateCreate validate template variable spec when it is created.
-func (t *TemplateVariableSpec) ValidateCreate() error {
-	if err := t.ValidateDefaultVal(); err != nil {
+func (t *TemplateVariableSpec) ValidateCreate(kit *kit.Kit) error {
+	if err := t.ValidateDefaultVal(kit); err != nil {
 		return err
 	}
 
-	if err := validator.ValidateVariableName(t.Name); err != nil {
+	if err := validator.ValidateVariableName(kit, t.Name); err != nil {
 		return err
 	}
 
-	if err := t.Type.Validate(); err != nil {
+	if err := t.Type.Validate(kit); err != nil {
 		return err
 	}
 
@@ -156,8 +157,8 @@ func (t *TemplateVariableSpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate template variable spec when it is updated.
-func (t *TemplateVariableSpec) ValidateUpdate() error {
-	if err := t.ValidateDefaultVal(); err != nil {
+func (t *TemplateVariableSpec) ValidateUpdate(kit *kit.Kit) error {
+	if err := t.ValidateDefaultVal(kit); err != nil {
 		return err
 	}
 
@@ -169,9 +170,9 @@ func (t *TemplateVariableSpec) ValidateUpdate() error {
 }
 
 // ValidateDefaultVal validate template variable default value.
-func (t *TemplateVariableSpec) ValidateDefaultVal() error {
+func (t *TemplateVariableSpec) ValidateDefaultVal(kit *kit.Kit) error {
 	if t.Type == NumberVar && !tools.IsNumber(t.DefaultVal) {
-		return errf.Errorf(errf.InvalidArgument, "default_val %s is not a number type", t.DefaultVal)
+		return errf.Errorf(kit, errf.InvalidArgument, "default_val %s is not a number type", t.DefaultVal)
 	}
 
 	return nil
@@ -202,12 +203,12 @@ const (
 type VariableType string
 
 // Validate the file format is supported or not.
-func (t VariableType) Validate() error {
+func (t VariableType) Validate(kit *kit.Kit) error {
 	switch t {
 	case StringVar:
 	case NumberVar:
 	default:
-		return errf.Errorf(errf.InvalidArgument, "unsupported variable type: %s", t)
+		return errf.Errorf(kit, errf.InvalidArgument, "unsupported variable type: %s", t)
 	}
 
 	return nil

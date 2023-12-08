@@ -115,6 +115,10 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 			Ctx: r.Context(),
 			Rid: components.RequestIDValue(r.Context()),
 		}
+		k.Lang = r.Header.Get(constant.LangKey)
+		if k.Lang == "" {
+			k.Lang = constant.DefaultLanguage
+		}
 		multiErr := &multierror.Error{}
 
 		switch {

@@ -12,7 +12,11 @@
 
 package errf
 
-import "errors"
+import (
+	"errors"
+
+	"bscp.io/pkg/kit"
+)
 
 var (
 	// ErrCPSInconsistent is error when the number of cps to be queried is inconsistent with the
@@ -37,28 +41,28 @@ var (
 )
 
 var (
-	// ErrDBOpsFailedF is for db operation failed with err cause
-	ErrDBOpsFailedF = func(cause error) *ErrorF {
-		return Errorf(Internal, "db operation failed")
+	// ErrDBOpsFailedF is for db operation failed
+	ErrDBOpsFailedF = func(kit *kit.Kit) *ErrorF {
+		return Errorf(kit, Internal, "db operation failed")
 	}
-	// ErrInvalidArgF is for invalid argument with err cause
-	ErrInvalidArgF = func(cause error) *ErrorF {
-		return Errorf(InvalidArgument, "invalid argument")
+	// ErrInvalidArgF is for invalid argument
+	ErrInvalidArgF = func(kit *kit.Kit) *ErrorF {
+		return Errorf(kit, InvalidArgument, "invalid argument")
 	}
 	// ErrWithIDF is for id should not be set
-	ErrWithIDF = func() *ErrorF {
-		return Errorf(InvalidArgument, "id should not be set")
+	ErrWithIDF = func(kit *kit.Kit) *ErrorF {
+		return Errorf(kit, InvalidArgument, "id should not be set")
 	}
 	// ErrNoSpecF is for spec not set
-	ErrNoSpecF = func() *ErrorF {
-		return Errorf(InvalidArgument, "spec not set")
+	ErrNoSpecF = func(kit *kit.Kit) *ErrorF {
+		return Errorf(kit, InvalidArgument, "spec not set")
 	}
 	// ErrNoAttachmentF is for attachment not set
-	ErrNoAttachmentF = func() *ErrorF {
-		return Errorf(InvalidArgument, "attachment not set")
+	ErrNoAttachmentF = func(kit *kit.Kit) *ErrorF {
+		return Errorf(kit, InvalidArgument, "attachment not set")
 	}
 	// ErrNoRevisionF is for revision not set
-	ErrNoRevisionF = func() *ErrorF {
-		return Errorf(InvalidArgument, "revision not set")
+	ErrNoRevisionF = func(kit *kit.Kit) *ErrorF {
+		return Errorf(kit, InvalidArgument, "revision not set")
 	}
 )

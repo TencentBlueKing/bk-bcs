@@ -37,10 +37,10 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 
 	_, err := s.dao.TemplateVariable().GetByUniqueKey(kt, req.Attachment.BizId, req.Spec.Name)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errf.ErrDBOpsFailedF(err).WithCause(err)
+		return nil, errf.ErrDBOpsFailedF(kt).WithCause(err)
 	}
 	if err == nil {
-		return nil, errf.Errorf(errf.AlreadyExists, "template variable's same name %s already exists", req.Spec.Name)
+		return nil, errf.Errorf(kt, errf.AlreadyExists, "template variable name %s already exists", req.Spec.Name)
 	}
 
 	templateVariable := &table.TemplateVariable{
@@ -63,8 +63,7 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 
 // ListTemplateVariables list template variable.
 func (s *Service) ListTemplateVariables(ctx context.Context, req *pbds.ListTemplateVariablesReq) (
-	*pbds.
-		ListTemplateVariablesResp, error) {
+	*pbds.ListTemplateVariablesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}

@@ -51,13 +51,13 @@ type templateVariableDao struct {
 
 // Create one template variable instance.
 func (dao *templateVariableDao) Create(kit *kit.Kit, g *table.TemplateVariable) (uint32, error) {
-	if err := g.ValidateCreate(); err != nil {
-		return 0, errf.ErrInvalidArgF(err).WithCause(err)
+	if err := g.ValidateCreate(kit); err != nil {
+		return 0, errf.ErrInvalidArgF(kit).WithCause(err)
 	}
 
 	tmplSpaceID, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
-		return 0, errf.ErrDBOpsFailedF(err).WithCause(err)
+		return 0, errf.ErrDBOpsFailedF(kit).WithCause(err)
 	}
 	g.ID = tmplSpaceID
 
@@ -75,7 +75,7 @@ func (dao *templateVariableDao) Create(kit *kit.Kit, g *table.TemplateVariable) 
 		return nil
 	}
 	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, errf.ErrDBOpsFailedF(err)
+		return 0, errf.ErrDBOpsFailedF(kit).WithCause(err)
 	}
 
 	return g.ID, nil
@@ -83,7 +83,7 @@ func (dao *templateVariableDao) Create(kit *kit.Kit, g *table.TemplateVariable) 
 
 // Update one template variable instance.
 func (dao *templateVariableDao) Update(kit *kit.Kit, g *table.TemplateVariable) error {
-	if err := g.ValidateUpdate(); err != nil {
+	if err := g.ValidateUpdate(kit); err != nil {
 		return err
 	}
 
@@ -198,7 +198,7 @@ func (dao *templateVariableDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		return err
 	}
 	for i, v := range tmplVars {
-		if err := v.ValidateCreate(); err != nil {
+		if err := v.ValidateCreate(kit); err != nil {
 			return err
 		}
 		v.ID = ids[i]
@@ -214,10 +214,10 @@ func (dao *templateVariableDao) BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		return nil
 	}
 	for _, v := range tmplVars {
-		if err := v.ValidateUpdate(); err != nil {
+		if err := v.ValidateUpdate(kit); err != nil {
 			return err
 		}
-		if err := v.Spec.Type.Validate(); err != nil {
+		if err := v.Spec.Type.Validate(kit); err != nil {
 			return err
 		}
 	}

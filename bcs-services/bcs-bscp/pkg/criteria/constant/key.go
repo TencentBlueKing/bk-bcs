@@ -24,6 +24,9 @@ const (
 	// RidKeyGeneric for generic header key
 	RidKeyGeneric = "X-Request-Id"
 
+	// LangKey is language key
+	LangKey = "X-Bkapi-Language"
+
 	// UserKey is operator name header key.
 	UserKey = "X-Bkapi-User-Name"
 
@@ -78,6 +81,9 @@ const (
 	DefaultTmplSetName = "默认套餐"
 	// DefaultTmplSetMemo is default template set memo
 	DefaultTmplSetMemo = "当前空间下的所有模版"
+
+	// DefaultLanguage is default language
+	DefaultLanguage = "zh"
 )
 
 // Note:

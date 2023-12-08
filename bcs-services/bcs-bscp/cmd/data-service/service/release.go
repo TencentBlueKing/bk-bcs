@@ -173,7 +173,7 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		if v == nil {
 			continue
 		}
-		if err := v.TemplateVariableSpec().ValidateCreate(); err != nil {
+		if err := v.TemplateVariableSpec().ValidateCreate(kt); err != nil {
 			logs.Errorf("validate template variables failed, err: %v, rid: %s", err, kt.Rid)
 			return err
 		}

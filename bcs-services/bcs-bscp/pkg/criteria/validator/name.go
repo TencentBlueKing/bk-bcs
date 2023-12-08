@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/kit"
 )
 
 // reservedResNamePrefix internal reserved string prefix, case-insensitive.
@@ -66,18 +67,18 @@ func ValidateAppName(name string) error {
 var qualifiedVariableNameRegexp = regexp.MustCompile(`^(?i)(bk_bscp_)\w*$`)
 
 // ValidateVariableName validate bscp variable's length and format.
-func ValidateVariableName(name string) error {
+func ValidateVariableName(kit *kit.Kit, name string) error {
 	if len(name) < 9 {
-		return errf.Errorf(errf.InvalidArgument, "invalid name, "+
+		return errf.Errorf(kit, errf.InvalidArgument, "invalid name, "+
 			"length should >= 9 and must start with prefix bk_bscp_ (ignore case)")
 	}
 
 	if len(name) > 128 {
-		return errf.Errorf(errf.InvalidArgument, "invalid name, length should <= 128")
+		return errf.Errorf(kit, errf.InvalidArgument, "invalid name, length should <= 128")
 	}
 
 	if !qualifiedVariableNameRegexp.MatchString(name) {
-		return errf.Errorf(errf.InvalidArgument,
+		return errf.Errorf(kit, errf.InvalidArgument,
 			"invalid name: %s, only allows to include english、numbers、underscore (_)"+
 				", and must start with prefix bk_bscp_ (ignore case)", name)
 	}

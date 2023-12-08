@@ -42,7 +42,7 @@ type releasedAppTemplateVariableDao struct {
 // CreateWithTx create one app template variable instance with transaction.
 func (dao *releasedAppTemplateVariableDao) CreateWithTx(
 	kit *kit.Kit, tx *gen.QueryTx, g *table.ReleasedAppTemplateVariable) (uint32, error) {
-	if err := g.ValidateCreate(); err != nil {
+	if err := g.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
