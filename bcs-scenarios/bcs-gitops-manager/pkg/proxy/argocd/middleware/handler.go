@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"reflect"
 	"runtime"
+	"sort"
 	"strings"
 
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
@@ -34,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
@@ -95,7 +97,8 @@ type handler struct {
 
 // NewMiddlewareHandler create handler instance
 func NewMiddlewareHandler(option *proxy.GitOpsOptions, session *session.ArgoSession,
-	secretSession *session.SecretSession, monitorSession *session.MonitorSession) MiddlewareInterface {
+	secretSession *session.SecretSession,
+	monitorSession *session.MonitorSession) MiddlewareInterface {
 	return &handler{
 		option:            option,
 		argoSession:       session,
@@ -347,6 +350,9 @@ func (h *handler) CheckRepositoryPermission(ctx context.Context, repoName string
 	if repo == nil {
 		return nil, http.StatusNotFound, errors.Errorf("repository '%s' not found", repoName)
 	}
+	if slices.Contains[string](h.option.PublicProjects, repo.Project) {
+		return repo, http.StatusOK, nil
+	}
 	projectName := repo.Project
 	_, statusCode, err := h.CheckProjectPermission(ctx, projectName, action)
 	return repo, statusCode, err
@@ -519,5 +525,43 @@ func (h *handler) ListApplications(ctx context.Context, query *appclient.Applica
 	if err != nil {
 		return nil, errors.Wrapf(err, "list application swith project '%v' failed", query.Projects)
 	}
+	projectAppsMap := make(map[string][]v1alpha1.Application)
+	for i := range apps.Items {
+		item := apps.Items[i]
+		_, ok := projectAppsMap[item.Spec.Project]
+		if ok {
+			projectAppsMap[item.Spec.Project] = append(projectAppsMap[item.Spec.Project], item)
+		} else {
+			projectAppsMap[item.Spec.Project] = []v1alpha1.Application{item}
+		}
+	}
+	result := make([]v1alpha1.Application, 0, len(apps.Items))
+	for proj, projApps := range projectAppsMap {
+		var prefers []*dao.ResourcePreference
+		prefers, err = h.analysisClient.ListApplicationCollects(proj)
+		if err != nil {
+			return nil, errors.Wrapf(err, "list application collects for project '%s' failed", proj)
+		}
+		preferMap := make(map[string]struct{})
+		for _, prefer := range prefers {
+			preferMap[prefer.Name] = struct{}{}
+		}
+
+		for i := range projApps {
+			if _, ok := preferMap[projApps[i].Name]; !ok {
+				continue
+			}
+			if projApps[i].Annotations == nil {
+				projApps[i].Annotations = map[string]string{
+					common.ApplicationCollectAnnotation: "true",
+				}
+			} else {
+				projApps[i].Annotations[common.ApplicationCollectAnnotation] = "true"
+			}
+		}
+		sort.Sort(applicationSort(projApps))
+		result = append(result, projApps...)
+	}
+	apps.Items = result
 	return apps, nil
 }

@@ -87,8 +87,8 @@ func (d *driver) createTable(tableName string, obj interface{}) error {
 			AutoMigrate(obj); err != nil {
 			return errors.Wrapf(err, "create table '%s' failed", tableName)
 		}
+		blog.Infof("[DB] create table '%s' success.", tableName)
 	}
-	blog.Infof("[DB] create table '%s' success.", tableName)
 	return nil
 }
 
