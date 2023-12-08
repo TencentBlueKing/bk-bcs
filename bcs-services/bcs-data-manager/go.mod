@@ -7,6 +7,7 @@ go 1.17
 replace (
 	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220613112908-e4cf72cb3aed
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
+	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
@@ -60,6 +61,7 @@ require (
 	github.com/go-logr/logr v1.2.1 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
