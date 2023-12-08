@@ -141,5 +141,19 @@ func (p *proxy) routers() http.Handler {
 		r.Post("/", p.configImportService.ConfigFileImport)
 	})
 
+	// 导入kv
+	r.Route("/api/v1/biz/{biz_id}/apps/{app_id}/kvs/import", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Post("/", p.kvService.Import)
+	})
+
+	// 导出版本kv
+	r.Route("/api/v1/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs/export", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Get("/", p.kvService.Export)
+	})
+
 	return r
 }
