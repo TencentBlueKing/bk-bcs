@@ -9,6 +9,7 @@
             class="rule-input"
             placeholder="请填写"
             :disabled="rule.type === 'del'"
+            @input="handleInput(index)"
             @blur="handleRuleContentChange(index)"
           >
             <template #suffix>
@@ -110,7 +111,7 @@ const handleRevoke = (index: number) => {
   updateRuleParams();
 };
 
-const testRule = (rule: string) => {
+const validateRule = (rule: string) => {
   if (rule.length < 2) {
     return false;
   }
@@ -118,9 +119,17 @@ const testRule = (rule: string) => {
   return paths.length > 1 && paths.every(path => path.length > 0);
 };
 
+// 产品逻辑：没有检测到输入错误时：鼠标失焦后检测；如果检测到错误时：输入框只要有内容变化就要检测
+const handleInput = (index: number) => {
+  const rule = localRules.value[index];
+  if (!rule.isRight) {
+    rule.isRight = validateRule(rule.content);
+  }
+};
+
 const handleRuleContentChange = (index: number) => {
   const rule = localRules.value[index];
-  localRules.value[index].isRight = testRule(rule.content);
+  localRules.value[index].isRight = validateRule(rule.content);
   if (rule.id) {
     rule.type = rule.content === rule.original ? '' : 'modify';
   }
@@ -154,7 +163,7 @@ const updateRuleParams = () => {
 
 const handleRuleValidate = () => {
   localRules.value.forEach((item) => {
-    item.isRight = testRule(item.content);
+    item.isRight = validateRule(item.content);
   });
   return localRules.value.some(item => !item.isRight);
 };
@@ -219,6 +228,7 @@ defineExpose({ handleRuleValidate });
   }
 }
 .error-info {
+  margin: 4px 0 6px;
   height: 16px;
   color: #ea3636;
   font-size: 12px;
