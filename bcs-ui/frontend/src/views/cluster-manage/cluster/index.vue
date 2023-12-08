@@ -1,83 +1,51 @@
 <template>
   <div class="biz-content">
-    <Header>
-      {{$t('generic.label.clusterList')}}
-      <span class="ml-[5px] text-[12px] text-[#979ba5]">
-        {{`( ${$t('generic.label.business')}: ${curProject.businessName} )`}}
-      </span>
-      <span class="bk-text-button bk-default f12 ml5" @click="handleShowProjectConf">
-        <i class="bcs-icon bcs-icon-edit"></i>
-      </span>
-    </Header>
-    <div class="p-[20px] bcs-content-wrapper" v-bkloading="{ isLoading, color: '#fafbfd' }">
+    <div
+      class="px-[24px] py-[16px] h-full overflow-x-hidden"
+      v-bkloading="{ isLoading, color: '#fafbfd' }"
+      ref="contentRef">
       <template v-if="filterSharedClusterList.length">
-        <Row class="mb-[16px]">
-          <template #left>
-            <span
-              v-bk-tooltips="{
-                disabled: isMaintainer,
-                content: $t('bcs.msg.notDevOps')
-              }">
+        <div class="flex">
+          <div class="flex items-center place-content-between mb-[16px] flex-1">
+            <div class="flex items-center">
+              <span
+                v-bk-tooltips="{
+                  disabled: isMaintainer,
+                  content: $t('bcs.msg.notDevOps')
+                }">
+                <bk-button
+                  theme="primary"
+                  icon="plus"
+                  v-authority="{
+                    actionId: 'cluster_create',
+                    resourceName: curProject.project_name,
+                    permCtx: {
+                      resource_type: 'project',
+                      project_id: curProject.project_id
+                    }
+                  }"
+                  :disabled="!isMaintainer"
+                  @click="goCreateCluster">
+                  {{$t('cluster.button.addCluster')}}
+                </bk-button>
+              </span>
+              <ApplyHost :title="$t('cluster.button.applyMaster')" class="ml10" v-if="$INTERNAL" />
               <bk-button
-                theme="primary"
-                icon="plus"
-                v-authority="{
-                  actionId: 'cluster_create',
-                  resourceName: curProject.project_name,
-                  permCtx: {
-                    resource_type: 'project',
-                    project_id: curProject.project_id
-                  }
-                }"
-                :disabled="!isMaintainer"
-                @click="goCreateCluster">
-                {{$t('cluster.button.addCluster')}}
-              </bk-button>
-            </span>
-            <ApplyHost :title="$t('cluster.button.applyMaster')" class="ml10" v-if="$INTERNAL" />
-          </template>
-          <template #right>
+                class="ml-[10px]"
+                v-if="flagsMap['NODETEMPLATE']"
+                @click="goNodeTemplate">{{ $t('nav.nodeTemplate') }}</bk-button>
+            </div>
             <bk-input
               right-icon="bk-icon icon-search"
-              class="w-[360px]"
+              class="flex-1 ml-[10px] max-w-[360px]"
               :placeholder="$t('cluster.placeholder.searchCluster')"
-              v-model="searchValue"
+              v-model.trim="searchValue"
               clearable>
             </bk-input>
-            <div class="flex ml-[8px]">
-              <bcs-icon
-                :class="['bcs-icon-btn bcs-icon bcs-icon-lie', { active: activeType === 'list' }]"
-                type=""
-                v-bk-tooltips="$t('cluster.mode.list')"
-                @click="handleChangeType('list')" />
-              <bcs-icon
-                :class="['bcs-icon-btn bcs-icon bcs-icon-kuai ml-[-1px]', { active: activeType === 'card' }]"
-                type=""
-                v-bk-tooltips="$t('cluster.mode.card')"
-                @click="handleChangeType('card')" />
-            </div>
-          </template>
-        </Row>
-        <CardMode
-          :cluster-list="clusterList"
-          :overview="clusterOverviewMap"
-          :perms="webAnnotations.perms"
-          :search-value="searchValue"
-          :cluster-extra-info="clusterExtraInfo"
-          :status-text-map="statusTextMap"
-          :cluster-nodes-map="clusterNodesMap"
-          :cluster-current-task-data-map="clusterCurrentTaskDataMap"
-          @overview="goOverview"
-          @detail="goClusterDetail"
-          @node="goNodeInfo"
-          @autoscaler="goClusterAutoScaler"
-          @delete="handleDeleteCluster"
-          @log="handleShowLog"
-          @retry="handleRetry"
-          @create="goCreateCluster"
-          @kubeconfig="goClusterToken"
-          @webconsole="handleGotoConsole"
-          v-if="activeType === 'card'" />
+          </div>
+          <!-- flex左右布局空div -->
+          <div :style="{ width: activeClusterID ? detailWidth : 0 }"></div>
+        </div>
         <ListMode
           :cluster-list="clusterList"
           :overview="clusterOverviewMap"
@@ -85,6 +53,7 @@
           :search-value="searchValue"
           :cluster-extra-info="clusterExtraInfo"
           :cluster-nodes-map="clusterNodesMap"
+          :active-cluster-id="activeClusterID"
           @overview="goOverview"
           @detail="goClusterDetail"
           @node="goNodeInfo"
@@ -96,9 +65,17 @@
           @clear="searchValue = ''"
           @kubeconfig="goClusterToken"
           @webconsole="handleGotoConsole"
-          v-else />
+          @active-row="handleChangeDetail" />
       </template>
       <ClusterGuide v-else-if="!isLoading" />
+      <ClusterDetail
+        :max-width="detailPanelMaxWidth"
+        :key="activeClusterID"
+        :cluster-id="activeClusterID"
+        :active="activeTabName"
+        v-if="activeClusterID"
+        ref="clusterDetailRef"
+        @width-change="handleDetailWidthChange" />
     </div>
     <!-- 集群日志 -->
     <bcs-sideslider
@@ -132,25 +109,35 @@
       :confirm="confirmDeleteCluster" />
     <!-- 编辑项目集群信息 -->
     <ProjectConfig v-model="isProjectConfDialogShow" />
+    <bcs-dialog
+      v-model="showConnectCluster"
+      :show-footer="false"
+      width="588">
+      <ConnectCluster
+        :cluster="curRow"
+        @confirm="handleRetryTask"
+        @cancel="showConnectCluster = false" />
+    </bcs-dialog>
   </div>
 </template>
 
 <script lang="ts">
 /* eslint-disable camelcase */
-import { computed, defineComponent, onMounted, ref, set } from 'vue';
+import { throttle } from 'lodash';
+import { computed, defineComponent, onMounted, ref, set, watch } from 'vue';
 
 import ApplyHost from '../components/apply-host.vue';
 
-import CardMode from './cluster-card.vue';
 import ListMode from './cluster-list.vue';
+import ConnectCluster from './connect-cluster.vue';
+import ClusterDetail from './detail.vue';
 import { useClusterList, useClusterOperate, useClusterOverview, useTask, useVCluster } from './use-cluster';
 
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
-import Header from '@/components/layout/Header.vue';
-import Row from '@/components/layout/Row.vue';
-import { useCluster, useProject } from '@/composables/use-app';
+// import Header from '@/components/layout/Header.vue';
+import { ICluster, useAppData, useCluster, useProject } from '@/composables/use-app';
 import useSearch from '@/composables/use-search';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -167,13 +154,24 @@ export default defineComponent({
     ProjectConfig,
     ConfirmDialog,
     TaskList,
-    Header,
+    // Header,
     ClusterGuide,
-    Row,
     ListMode,
-    CardMode,
+    ClusterDetail,
+    ConnectCluster,
   },
-  setup() {
+  props: {
+    clusterId: {
+      type: String,
+      default: '',
+    },
+    active: {
+      type: String,
+      default: '',
+    },
+  },
+  setup(props) {
+    const { flagsMap } = useAppData();
     const { curProject, isMaintainer } = useProject();
 
     // 集群状态
@@ -184,11 +182,6 @@ export default defineComponent({
       'DELETE-FAILURE': $i18n.t('generic.status.deleteFailed'),
       'IMPORT-FAILURE': $i18n.t('cluster.status.importFailed'),
     };
-    // 切换展示模式
-    const activeType = computed<'card'|'list'>(() => $store.state.clusterViewType as any);
-    const handleChangeType = (type) => {
-      $store.commit('updateClusterViewType', type);
-    };
 
     // 集群列表
     const {
@@ -196,9 +189,8 @@ export default defineComponent({
       getClusterList,
       clusterExtraInfo,
       webAnnotations,
-      clusterCurrentTaskDataMap,
     } = useClusterList();
-    const filterSharedClusterList = computed(() => clusterData.value.filter(item => !item.is_shared));
+    const filterSharedClusterList = computed<ICluster[]>(() => clusterData.value.filter(item => !item.is_shared));
     const keys = ref(['name', 'clusterID']);
     const { searchValue, tableDataMatchSearch: clusterList } = useSearch(filterSharedClusterList, keys);
     const isLoading = ref(false);
@@ -222,49 +214,24 @@ export default defineComponent({
     // 跳转集群预览界面
     const goOverview = async (cluster) => {
       if (cluster.status !== 'RUNNING') return;
-      $router.push({
-        name: 'clusterOverview',
-        params: {
-          clusterId: cluster.cluster_id,
-        },
-      });
+      handleChangeDetail(cluster.clusterID, 'overview');
     };
     // 跳转集群信息界面
     const goClusterDetail = async ({ cluster, active }) => {
-      $router.push({
-        name: 'clusterDetail',
-        params: {
-          clusterId: cluster.cluster_id,
-        },
-        query: {
-          active,
-        },
-      });
+      handleChangeDetail(cluster.clusterID, active);
     };
     // 跳转添加节点界面
     const goNodeInfo = async (cluster) => {
-      $router.push({
-        name: 'clusterNode',
-        params: {
-          clusterId: cluster.cluster_id,
-        },
-      });
+      handleChangeDetail(cluster.clusterID, 'node');
     };
     // 跳转扩缩容界面
     const goClusterAutoScaler = (cluster) => {
-      $router.push({
-        name: 'clusterDetail',
-        params: {
-          clusterId: cluster.cluster_id,
-        },
-        query: {
-          active: 'autoscaler',
-        },
-      });
+      handleChangeDetail(cluster.clusterID, 'autoscaler');
     };
     // kubeconfig
     const goClusterToken = () => {
-      $router.push({ name: 'token' });
+      const { href } = $router.resolve({ name: 'token' });
+      window.open(href);
     };
     // webconsole
     const { handleGotoConsole } = useCluster();
@@ -378,8 +345,38 @@ export default defineComponent({
       clearTimeout(taskTimer.value);
     };
     // 失败重试
+    const showConnectCluster = ref(false);
+    const curRow = ref<ICluster>();
     const handleRetry = async (cluster) => {
       isLoading.value = true;
+      // 判断是否是外网连接失败
+      const { latestTask } = await taskList(cluster);
+      isLoading.value = false;
+      const steps = latestTask?.steps || {};
+      const connectClusterFailure = Object.keys(steps)
+        .some(step => steps?.[step]?.params?.connectCluster);
+
+      if (connectClusterFailure) {
+        curRow.value = cluster;
+        showConnectCluster.value = true;
+      } else {
+        retryTask(cluster);
+      }
+    };
+    // 重试任务
+    const handleRetryTask = async (cluster) => {
+      isLoading.value = true;
+      const result = await retryClusterTask(cluster);
+      if (result) {
+        await handleGetClusterList();
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('generic.msg.success.deliveryTask'),
+        });
+      }
+      isLoading.value = false;
+    };
+    const retryTask = (cluster) => {
       showLogDialog.value = false;
       if (['CREATE-FAILURE', 'DELETE-FAILURE'].includes(cluster.status)) {
         // 创建重试
@@ -389,16 +386,7 @@ export default defineComponent({
           clsName: 'custom-info-confirm default-info',
           subTitle: cluster.clusterName,
           confirmFn: async () => {
-            isLoading.value = true;
-            const result = await retryClusterTask(cluster);
-            if (result) {
-              await handleGetClusterList();
-              $bkMessage({
-                theme: 'success',
-                message: $i18n.t('generic.msg.success.deliveryTask'),
-              });
-            }
-            isLoading.value = false;
+            await handleRetryTask(cluster);
           },
         });
       } else {
@@ -407,13 +395,13 @@ export default defineComponent({
           message: $i18n.t('generic.status.unknown1'),
         });
       }
-      isLoading.value = false;
     };
 
     // 集群节点数
     const { getNodeList } = useNode();
     const clusterNodesMap = ref({});
     const handleGetClusterNodes = async () => {
+      clusterNodesMap.value = {};
       clusterList.value
         .filter(cluster => webAnnotations.value.perms[cluster.clusterID]?.cluster_manage && cluster.clusterType !== 'virtual')
         .forEach((item) => {
@@ -422,17 +410,66 @@ export default defineComponent({
           });
         });
     };
+    const throttleClusterNodesFunc = throttle(handleGetClusterNodes, 300);
+
+    // 当前详情tag
+    const activeTabName = computed<string>(() => props.active || 'overview');
+    // 当前active 集群id
+    const activeClusterID = ref(props.clusterId);
+    watch(clusterList, () => {
+      const activeCluster = clusterList.value.find(item => item.clusterID === activeClusterID.value);
+      if (['INITIALIZATION', 'DELETING'].includes(activeCluster?.status)) {
+        handleChangeDetail('');
+      }
+    });
+    // 切换详情页
+    const clusterDetailRef = ref();
+    const handleChangeDetail = async (clusterID: string, active = activeTabName.value) => {
+      document.body?.click?.();// 关闭popover
+      if (activeClusterID.value === clusterID && activeTabName.value === active) {
+        clusterDetailRef.value?.showDetailPanel();
+        return;
+      };
+
+      await $router.replace({ query: { clusterId: clusterID, active } });
+      activeClusterID.value = clusterID;
+      clusterDetailRef.value?.showDetailPanel();
+    };
+
+    // 详情面板最大宽度
+    const detailPanelMaxWidth = ref(1000);
+    const minTableWidth = ref(280);
+    const contentRef = ref();
+
+    // 详情宽度
+    const detailWidth = ref<string|number>('70%');
+    const handleDetailWidthChange = (width: string|number) => {
+      detailWidth.value = width;
+      if (width === 0) {
+        throttleClusterNodesFunc();
+      }
+    };
+
+    // 节点模板
+    const goNodeTemplate = () => {
+      $router.push({ name: 'nodeTemplate' });
+    };
 
     onMounted(async () => {
+      detailPanelMaxWidth.value = contentRef.value.clientWidth - minTableWidth.value;
       await handleGetClusterList();
       await handleGetClusterNodes();
     });
 
     return {
+      curRow,
+      showConnectCluster,
+      flagsMap,
+      activeTabName,
+      activeClusterID,
       isMaintainer,
       clusterNodesMap,
       searchValue,
-      activeType,
       isLoading,
       filterSharedClusterList,
       clusterList,
@@ -463,10 +500,16 @@ export default defineComponent({
       goClusterToken,
       clusterExtraInfo,
       webAnnotations,
-      handleChangeType,
       statusTextMap,
       handleGotoConsole,
-      clusterCurrentTaskDataMap,
+      contentRef,
+      detailPanelMaxWidth,
+      detailWidth,
+      handleChangeDetail,
+      handleDetailWidthChange,
+      goNodeTemplate,
+      clusterDetailRef,
+      handleRetryTask,
     };
   },
 });

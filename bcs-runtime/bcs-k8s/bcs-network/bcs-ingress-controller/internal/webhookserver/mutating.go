@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -44,12 +45,12 @@ type PatchOperation struct {
 
 // entry for allocate cloud loadbalancer port
 type portEntry struct {
-	poolNamespace string
-	poolName      string
-	protocol      string
-	port          int
-	hostPort      bool
-	itemName      string
+	PoolNamespace string `json:"poolNamespace,omitempty"`
+	PoolName      string `json:"poolName,omitempty"`
+	Protocol      string `json:"protocol,omitempty"`
+	Port          int    `json:"port,omitempty"`
+	HostPort      bool   `json:"hostPort,omitempty"`
+	ItemName      string `json:"itemName,omitempty"`
 }
 
 // combine container port info into port entry format
@@ -57,23 +58,23 @@ func getPortEntryListFromPod(pod *k8scorev1.Pod, annotationPorts []*annotationPo
 	var retPorts []*portEntry
 	for _, port := range annotationPorts {
 		tmpEntry := &portEntry{
-			poolNamespace: port.poolNamespace,
-			poolName:      port.poolName,
-			protocol:      port.protocol,
-			hostPort:      port.hostPort,
-			itemName:      port.itemName,
+			PoolNamespace: port.poolNamespace,
+			PoolName:      port.poolName,
+			Protocol:      port.protocol,
+			HostPort:      port.hostPort,
+			ItemName:      port.itemName,
 		}
 		if len(port.poolNamespace) == 0 {
-			tmpEntry.poolNamespace = pod.GetNamespace()
+			tmpEntry.PoolNamespace = pod.GetNamespace()
 		}
 		found := false
 		for _, container := range pod.Spec.Containers {
 			for _, containerPort := range container.Ports {
 				if port.portIntOrStr == containerPort.Name {
 					found = true
-					tmpEntry.port = int(containerPort.ContainerPort)
+					tmpEntry.Port = int(containerPort.ContainerPort)
 					if len(port.protocol) == 0 {
-						tmpEntry.protocol = string(containerPort.Protocol)
+						tmpEntry.Protocol = string(containerPort.Protocol)
 					}
 					break
 				}
@@ -83,9 +84,9 @@ func getPortEntryListFromPod(pod *k8scorev1.Pod, annotationPorts []*annotationPo
 				}
 				if int32(portNumber) == containerPort.ContainerPort {
 					found = true
-					tmpEntry.port = int(containerPort.ContainerPort)
+					tmpEntry.Port = int(containerPort.ContainerPort)
 					if len(port.protocol) == 0 {
-						tmpEntry.protocol = string(containerPort.Protocol)
+						tmpEntry.Protocol = string(containerPort.Protocol)
 					}
 					break
 				}
@@ -147,31 +148,40 @@ func (s *Server) checkExistedPortBinding(name, namespace string, portList []*por
 		return nil, errors.Errorf("portbinding %s/%s is deleting",
 			portBinding.GetName(), portBinding.GetNamespace())
 	}
-	rsPortMap := make(map[string]struct{})
+
+	portAnnotationChanged := false
+	rsPortMap := make(map[string]string)
 	for _, item := range portBinding.Spec.PortBindingList {
-		key := getPoolPortKey(item.PoolNamespace, item.PoolName, item.PoolItemName, item.Protocol, item.RsStartPort)
-		if _, ok := rsPortMap[key]; !ok {
-			rsPortMap[key] = struct{}{}
+		key := getPoolPortKey(item.PoolNamespace, item.PoolName, item.Protocol, item.RsStartPort)
+		rsPortMap[key] = item.PoolItemName
+	}
+	// 比较原有PortBinding(通过旧Pod创建)和新Pod注解（用户分配的端口）是否一致， 如果用户更新了分配端口/协议/item等，需要删除PortBinding重建。
+	for _, port := range portList {
+		key := getPoolPortKey(port.PoolNamespace, port.PoolName, port.Protocol, port.Port)
+		// 如果key不存在， 或item名称不一致（用户可能未指定item）
+		if itemName, ok := rsPortMap[key]; !ok || (port.ItemName != "" && port.ItemName != itemName) {
+			portAnnotationChanged = true
+			break
 		}
 	}
-	for _, port := range portList {
-		key := getPoolPortKey(port.poolNamespace, port.poolNamespace, port.itemName, port.protocol, port.port)
-		if _, ok := rsPortMap[key]; !ok {
-			blog.Warnf("port '%d' is not in portbinding '%s/%s', need to delete portbinding first",
-				port.port, portBinding.GetName(), portBinding.GetNamespace())
-			// 移除portBinding上的keepDuration注解，尽快删除
-			if err := s.removePortBindingAnnotation(portBinding); err != nil {
-				return nil, errors.Wrapf(err, "remove portbinding '%s/%s' annotations failed, err: %s",
-					portBinding.GetNamespace(), portBinding.GetName(), err.Error())
-			}
-			if err := s.k8sClient.Delete(context.Background(), portBinding, &client.DeleteOptions{}); err != nil {
-				return nil, errors.Wrapf(err, "delete portbinding '%s/%s' failed",
-					portBinding.GetName(), portBinding.GetNamespace())
-			}
-			blog.Warnf("portbinding '%s/%s' is deleted because of port '%+v' not in it",
-				portBinding.GetName(), portBinding.GetNamespace(), port)
-			return nil, nil
+	if len(portList) != len(portBinding.Spec.PortBindingList) {
+		portAnnotationChanged = true
+	}
+
+	if portAnnotationChanged {
+		blog.Warnf("pod '%s/%s' annotation '%s' changed, need to recreate PortBinding. PortBinding: %s, pod: %s ",
+			namespace, name, constant.AnnotationForPortPoolPorts, common.ToJsonString(portBinding.Spec.
+				PortBindingList), common.ToJsonString(portList))
+		// 移除portBinding上的keepDuration注解，尽快删除
+		if err := s.removePortBindingAnnotation(portBinding); err != nil {
+			return nil, errors.Wrapf(err, "remove portbinding '%s/%s' annotations failed, err: %s",
+				portBinding.GetNamespace(), portBinding.GetName(), err.Error())
 		}
+		if err := s.k8sClient.Delete(context.Background(), portBinding, &client.DeleteOptions{}); err != nil {
+			return nil, errors.Wrapf(err, "delete portbinding '%s/%s' failed",
+				portBinding.GetName(), portBinding.GetNamespace())
+		}
+		return nil, nil
 	}
 	return portBinding, nil
 }
@@ -332,7 +342,7 @@ func (s *Server) handleForPodCreateFailed(pod *k8scorev1.Pod, portItemListArr []
 // patch pod by port binding object
 func (s *Server) patchPodByBinding(
 	pod *k8scorev1.Pod, portBinding *networkextensionv1.PortBinding) ([]PatchOperation, error) {
-	blog.Infof("pod '%s' reused portbinding do port inject", pod.GetNamespace(), pod.GetName())
+	blog.Infof("pod '%s/%s' reused portbinding do port inject", pod.GetNamespace(), pod.GetName())
 
 	// patch annotations
 	var retPatches []PatchOperation
@@ -397,10 +407,7 @@ func (s *Server) generateContainerEnvPatchByBinding(
 		envPatchOp = constant.PatchOperationAdd
 	}
 	for _, binding := range portBinding.Spec.PortBindingList {
-		var vipList []string
-		for _, lbObj := range binding.PoolItemLoadBalancers {
-			vipList = append(vipList, lbObj.IPs...)
-		}
+		vipList := genVipList(binding.PoolItemLoadBalancers)
 		envs = append(envs, k8scorev1.EnvVar{
 			Name:  constant.EnvVIPsPrefixForPortPoolPort + binding.Protocol + "_" + strconv.Itoa(binding.RsStartPort),
 			Value: getPortEnvValue(binding.StartPort, binding.EndPort, vipList),
@@ -435,8 +442,8 @@ func (s *Server) generatePortsAnnotationPatch(annotations map[string]string,
 				Protocol:              item.Protocol,
 				StartPort:             item.StartPort,
 				EndPort:               item.EndPort,
-				RsStartPort:           portEntry.port,
-				HostPort:              portEntry.hostPort,
+				RsStartPort:           portEntry.Port,
+				HostPort:              portEntry.HostPort,
 				External:              portPoolItemStatusList[index].External,
 			}
 			generatedPortList = append(generatedPortList, tmpPort)
@@ -473,18 +480,10 @@ func (s *Server) generateContainerEnvPatch(
 		envPatchOp = constant.PatchOperationAdd
 	}
 	for index, portEntry := range portEntryList {
-		var vipList []string
-		for _, lbObj := range portPoolItemStatusList[index].PoolItemLoadBalancers {
-			if len(lbObj.IPs) != 0 {
-				vipList = append(vipList, lbObj.IPs...)
-			}
-			if len(lbObj.DNSName) != 0 {
-				vipList = append(vipList, lbObj.DNSName)
-			}
-		}
+		vipList := genVipList(portPoolItemStatusList[index].PoolItemLoadBalancers)
 		for _, item := range portItemList[index] {
 			envs = append(envs, k8scorev1.EnvVar{
-				Name:  constant.EnvVIPsPrefixForPortPoolPort + item.Protocol + "_" + strconv.Itoa(portEntry.port),
+				Name:  constant.EnvVIPsPrefixForPortPoolPort + item.Protocol + "_" + strconv.Itoa(portEntry.Port),
 				Value: getPortEnvValue(item.StartPort, item.EndPort, vipList),
 			})
 		}
@@ -534,4 +533,18 @@ func (s *Server) removePortBindingAnnotation(portBinding *networkextensionv1.Por
 	}
 
 	return nil
+}
+
+func genVipList(lbs []*networkextensionv1.IngressLoadBalancer) []string {
+	var vipList []string
+	for _, lbObj := range lbs {
+		if len(lbObj.IPs) != 0 {
+			vipList = append(vipList, lbObj.IPs...)
+		}
+		if len(lbObj.DNSName) != 0 {
+			vipList = append(vipList, lbObj.DNSName)
+		}
+	}
+
+	return vipList
 }

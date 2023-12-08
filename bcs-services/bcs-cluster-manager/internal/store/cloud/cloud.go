@@ -33,6 +33,7 @@ const (
 	//! we don't setting bson tag in proto file,
 	//! all struct key in mongo is lowcase in default
 	tableKey               = "cloudid"
+	providerkey            = "cloudprovider"
 	defaultCloudListLength = 1000
 )
 
@@ -146,6 +147,27 @@ func (m *ModelCloud) GetCloud(ctx context.Context, cloudID string) (*types.Cloud
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		tableKey: cloudID,
+	})
+	cloud := &types.Cloud{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, cloud); err != nil {
+		return nil, err
+	}
+
+	if cloud.CloudCredential != nil {
+		if err := util.DecryptCredentialData(nil, cloud.CloudCredential); err != nil {
+			return nil, err
+		}
+	}
+	return cloud, nil
+}
+
+// GetCloudByProvider get cloud by provider
+func (m *ModelCloud) GetCloudByProvider(ctx context.Context, provider string) (*types.Cloud, error) {
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		providerkey: provider,
 	})
 	cloud := &types.Cloud{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, cloud); err != nil {

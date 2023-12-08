@@ -33,7 +33,7 @@ const (
 	clusterExpireSeconds = 3600 * 24 * 7
 
 	// HistoryFileName .bash_history文件结尾
-	HistoryFileName = "-history.txt"
+	historyFileName = "-history.txt"
 	// HistoryRepoDir .bash_history repo远程存放的目录
-	HistoryRepoDir = "/bash-history/latest/"
+	historyRepoDir = "/bash-history/latest/"
 )

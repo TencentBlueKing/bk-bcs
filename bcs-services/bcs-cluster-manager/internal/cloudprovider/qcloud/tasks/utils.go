@@ -15,6 +15,7 @@ package tasks
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -66,7 +67,31 @@ func updateClusterSystemID(clusterID string, systemID string) error {
 }
 
 // updateNodeStatusByNodeID set node status
-func updateNodeStatusByNodeID(idList []string, status string) error { // nolint
+func updateFailedNodeStatusByNodeID(insInfos map[string]business.InstanceInfo, status string) error { // nolint
+	if len(insInfos) == 0 {
+		return nil
+	}
+
+	for id, data := range insInfos {
+		node, err := cloudprovider.GetStorageModel().GetNode(context.Background(), id)
+		if err != nil {
+			continue
+		}
+		node.Status = status
+		if data.FailedReason != "" {
+			node.FailedReason = data.FailedReason
+		}
+		err = cloudprovider.GetStorageModel().UpdateNode(context.Background(), node)
+		if err != nil {
+			continue
+		}
+	}
+
+	return nil
+}
+
+// updateNodeStatusByNodeID set node status
+func updateNodeStatusByNodeID(idList []string, status, reason string) error { // nolint
 	if len(idList) == 0 {
 		return nil
 	}
@@ -77,10 +102,41 @@ func updateNodeStatusByNodeID(idList []string, status string) error { // nolint
 			continue
 		}
 		node.Status = status
+		if reason != "" {
+			node.FailedReason = reason
+		}
 		err = cloudprovider.GetStorageModel().UpdateNode(context.Background(), node)
 		if err != nil {
 			continue
 		}
+	}
+
+	return nil
+}
+
+// updateNodeIPByNodeID set node innerIP
+func updateNodeIPByNodeID(ctx context.Context, clusterId string, n business.InstanceInfo) error { // nolint
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
+	if n.NodeId == "" || n.NodeIp == "" {
+		blog.Errorf("updateNodeIPByNodeID[%s] nodeId[%s] nodeIp[%s] empty", taskId, n.NodeId, n.NodeIp)
+		return fmt.Errorf("updateNodeIPByNodeID data[%s:%s] empty", n.NodeId, n.NodeIp)
+	}
+
+	blog.Infof("updateNodeIPByNodeID[%s] cluster[%s] nodeId[%s] nodeIp[%s] vpcId[%s]",
+		taskId, clusterId, n.NodeId, n.NodeIp, n.VpcId)
+
+	node, err := cloudprovider.GetStorageModel().GetClusterNode(context.Background(), clusterId, n.NodeId)
+	if err != nil {
+		blog.Errorf("updateNodeIPByNodeID[%s] failed: %v", taskId, err)
+		return err
+	}
+	node.InnerIP = n.NodeIp
+	node.VPC = n.VpcId
+	err = cloudprovider.GetStorageModel().UpdateClusterNodeByNodeID(context.Background(), node)
+	if err != nil {
+		blog.Errorf("updateNodeIPByNodeID[%s] failed: %v", taskId, err)
+		return err
 	}
 
 	return nil

@@ -1,15 +1,15 @@
 <template>
   <bk-loading :loading="loading">
     <bk-table
-      v-if="!loading"
       :border="['outer']"
       :data="configList"
       :remote-pagination="true"
       :pagination="pagination"
+      show-overflow-tooltip
       @page-limit-change="handlePageLimitChange"
-      @page-value-change="refresh($event)"
+      @page-value-change="refresh"
     >
-      <bk-table-column label="配置文件名称" prop="spec.key" :sort="true" :min-width="240" show-overflow-tooltip>
+      <bk-table-column label="配置项名称" prop="spec.key" :sort="true" :min-width="240">
         <template #default="{ row }">
           <bk-button
             v-if="row.spec"
@@ -22,8 +22,12 @@
           </bk-button>
         </template>
       </bk-table-column>
-      <bk-table-column label="配置预览" prop="spec.value" show-overflow-tooltip></bk-table-column>
-      <bk-table-column label="配置文件格式" prop="spec.kv_type"></bk-table-column>
+      <bk-table-column label="配置项值预览" prop="spec.value"></bk-table-column>
+      <bk-table-column
+        label="数据类型"
+        prop="spec.kv_type"
+        :filter="{ filterFn: handleFilter, list: filterList, checked:filterChecked }"
+      ></bk-table-column>
       <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
       <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
       <bk-table-column label="修改时间" :sort="true" :width="220">
@@ -67,30 +71,46 @@
   </bk-loading>
   <edit-config
     v-model:show="editPanelShow"
-    :config="(activeConfig as IConfigKVItem)"
+    :config="activeConfig as IConfigKvItem"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     :editable="editable"
+    :view="!editable"
     @confirm="getListData"
   />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config-kv="diffConfig" />
+  <DeleteConfirmDialog
+    v-model:isShow="isDeleteConfigDialogShow"
+    title="确认删除该配置文件？"
+    @confirm="handleDeleteConfigConfirm"
+  >
+    <div style="margin-bottom: 8px">
+      配置项：<span style="color: #313238">{{ deleteConfig?.key }}</span>
+    </div>
+    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+  </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
 import { ref, watch, onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { InfoBox } from 'bkui-vue/lib';
 import useConfigStore from '../../../../../../../../store/config';
+import useServiceStore from '../../../../../../../../store/service';
 import { ICommonQuery } from '../../../../../../../../../types/index';
-import { IConfigKVItem, IConfigKvType } from '../../../../../../../../../types/config';
+import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
 import { getKvList, deleteKv, getReleaseKvList } from '../../../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../../../utils/index';
+import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
 import StatusTag from './status-tag';
 import EditConfig from '../edit-config-kv.vue';
 import VersionDiff from '../../../components/version-diff/index.vue';
 import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
+import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
 
 const configStore = useConfigStore();
+const serviceStore = useServiceStore();
 const { versionData } = storeToRefs(configStore);
+const { checkPermBeforeOperate } = serviceStore;
+const { permCheckLoading } = storeToRefs(serviceStore);
 
 const props = defineProps<{
   bkBizId: string;
@@ -105,15 +125,23 @@ const configList = ref<IConfigKvType[]>([]);
 const configsCount = ref(0);
 const editPanelShow = ref(false);
 const editable = ref(false);
-const activeConfig = ref<IConfigKVItem>();
+const activeConfig = ref<IConfigKvItem>();
+const deleteConfig = ref<IConfigKvItem>();
 const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
 const isSearchEmpty = ref(false);
+const isDeleteConfigDialogShow = ref(false);
+const filterChecked = ref<string[]>();
 const pagination = ref({
   current: 1,
   count: 0,
   limit: 10,
 });
+const filterList = computed(() => CONFIG_KV_TYPE.map(item => ({
+  value: item.id,
+  text: item.name,
+})));
+
 
 watch(
   () => versionData.value.id,
@@ -152,6 +180,7 @@ const getListData = async () => {
       limit: pagination.value.limit,
     };
     if (props.searchStr) {
+      params.search_fields = 'key,kv_type,creator';
       params.search_key = props.searchStr;
     }
     let res;
@@ -182,19 +211,20 @@ const handleDiff = (config: IConfigKvType) => {
 };
 
 const handleDel = (config: IConfigKvType) => {
-  InfoBox({
-    title: `确认是否删除配置文件【${config.spec.key}】?`,
-    infoType: 'danger',
-    headerAlign: 'center' as const,
-    footerAlign: 'center' as const,
-    onConfirm: async () => {
-      await deleteKv(props.bkBizId, props.appId, config.spec.key);
-      if (configList.value.length === 1 && pagination.value.current > 1) {
-        pagination.value.current -= 1;
-      }
-      getListData();
-    },
-  } as any);
+  if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+    return;
+  }
+  isDeleteConfigDialogShow.value = true;
+  deleteConfig.value = config.spec;
+};
+
+const handleDeleteConfigConfirm = async () => {
+  await deleteKv(props.bkBizId, props.appId, deleteConfig.value!.key);
+  if (configList.value.length === 1 && pagination.value.current > 1) {
+    pagination.value.current -= 1;
+  }
+  getListData();
+  isDeleteConfigDialogShow.value = false;
 };
 
 const handlePageLimitChange = (limit: number) => {
@@ -205,6 +235,11 @@ const handlePageLimitChange = (limit: number) => {
 const refresh = (current = 1) => {
   pagination.value.current = current;
   getListData();
+};
+
+const handleFilter = (checked: string[]) => {
+  filterChecked.value = checked;
+  return true;
 };
 
 defineExpose({

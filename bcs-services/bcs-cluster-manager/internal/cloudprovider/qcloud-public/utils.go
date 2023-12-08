@@ -13,7 +13,9 @@
 package qcloud
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"strconv"
 	"strings"
 
@@ -299,6 +301,16 @@ func (cn *CreateClusterTaskOption) BuildRegisterClsKubeConfigStep(task *proto.Ta
 	task.StepSequence = append(task.StepSequence, registerTkeClusterKubeConfigStep.StepMethod)
 }
 
+// BuildImportClusterNodesStep 纳管集群节点
+func (cn *CreateClusterTaskOption) BuildImportClusterNodesStep(task *proto.Task) {
+	importNodesStep := cloudprovider.InitTaskStep(importClusterNodesStep)
+	importNodesStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	importNodesStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[importClusterNodesStep.StepMethod] = importNodesStep
+	task.StepSequence = append(task.StepSequence, importClusterNodesStep.StepMethod)
+}
+
 // BuildNodeAnnotationsStep set node annotations
 func (cn *CreateClusterTaskOption) BuildNodeAnnotationsStep(task *proto.Task) {
 	if cn.NodeTemplate == nil || len(cn.NodeTemplate.Annotations) == 0 {
@@ -535,19 +547,9 @@ type AddNodesToClusterTaskOption struct {
 	NodeTemplate *proto.NodeTemplate
 	NodeIPs      []string
 	NodeIDs      []string
-	PassWd       string
 	Operator     string
 	NodeSchedule bool
-}
-
-// BuildShieldAlertStep 屏蔽上架节点告警
-func (ac *AddNodesToClusterTaskOption) BuildShieldAlertStep(task *proto.Task) {
-	shieldStep := cloudprovider.InitTaskStep(addNodesShieldAlarmStep)
-	shieldStep.Params[cloudprovider.ClusterIDKey.String()] = ac.Cluster.ClusterID
-	shieldStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(ac.NodeIPs, ",")
-
-	task.Steps[addNodesShieldAlarmStep.StepMethod] = shieldStep
-	task.StepSequence = append(task.StepSequence, addNodesShieldAlarmStep.StepMethod)
+	Login        *proto.NodeLoginInfo
 }
 
 // BuildAddNodesToClusterStep 上架集群节点
@@ -560,9 +562,11 @@ func (ac *AddNodesToClusterTaskOption) BuildAddNodesToClusterStep(task *proto.Ta
 		templateID = ac.NodeTemplate.GetNodeTemplateID()
 	}
 	addStep.Params[cloudprovider.NodeTemplateIDKey.String()] = templateID
+
+	loginInfo, _ := json.Marshal(ac.Login)
+	addStep.Params[cloudprovider.NodeLoginKey.String()] = string(loginInfo)
 	addStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(ac.NodeIPs, ",")
 	addStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(ac.NodeIDs, ",")
-	addStep.Params[cloudprovider.PasswordKey.String()] = ac.PassWd
 	addStep.Params[cloudprovider.OperatorKey.String()] = ac.Operator
 	addStep.Params[cloudprovider.NodeSchedule.String()] = strconv.FormatBool(ac.NodeSchedule)
 
@@ -866,4 +870,104 @@ func (ud *UpdateDesiredNodesTaskOption) BuildCheckClusterNodeStatusStep(task *pr
 
 	task.Steps[checkClusterNodesStatusStep.StepMethod] = checkClusterNodeStatusStep
 	task.StepSequence = append(task.StepSequence, checkClusterNodesStatusStep.StepMethod)
+}
+
+// ClusterLevel for master level
+type ClusterLevel string
+
+var (
+	level100  ClusterLevel = "L100"
+	level500  ClusterLevel = "L500"
+	level1000 ClusterLevel = "L1000"
+)
+
+// GetCpuMemConfig for cpu/mem
+func (cl ClusterLevel) GetCpuMemConfig(cpu, mem int) cloudprovider.MachineConfig {
+	if cpu > 0 && mem > 0 {
+		return cloudprovider.MachineConfig{
+			Cpu: cpu,
+			Mem: mem,
+		}
+	}
+
+	switch cl {
+	case level100:
+		return cloudprovider.MachineConfig{
+			Cpu: 8,
+			Mem: 16,
+		}
+	case level500:
+		return cloudprovider.MachineConfig{
+			Cpu: 16,
+			Mem: 32,
+		}
+	case level1000:
+		return cloudprovider.MachineConfig{
+			Cpu: 48,
+			Mem: 128,
+		}
+	}
+
+	return cloudprovider.MachineConfig{
+		Cpu: 16,
+		Mem: 32,
+	}
+}
+
+// GetSystemDisk for system disk
+func (cl ClusterLevel) GetSystemDisk() *proto.DataDisk {
+	return &proto.DataDisk{
+		DiskType: api.DiskCloudPremium,
+		DiskSize: "100",
+	}
+}
+
+// GetMasterCnt for master count
+func (cl ClusterLevel) GetMasterCnt() int {
+	switch cl {
+	case level100, level500:
+		return 3
+	case level1000:
+		return 5
+	}
+
+	return 3
+}
+
+// GetDataDisk for data disk
+func (cl ClusterLevel) GetDataDisk() *proto.CloudDataDisk {
+	switch cl {
+	case level100:
+		return &proto.CloudDataDisk{
+			DiskType:           api.DiskCloudPremium,
+			DiskSize:           "100",
+			FileSystem:         "ext4",
+			AutoFormatAndMount: true,
+			MountTarget:        icommon.MountTarget,
+		}
+	case level500:
+		return &proto.CloudDataDisk{
+			DiskType:           api.DiskCloudSsd,
+			DiskSize:           "200",
+			FileSystem:         "ext4",
+			AutoFormatAndMount: true,
+			MountTarget:        icommon.MountTarget,
+		}
+	case level1000:
+		return &proto.CloudDataDisk{
+			DiskType:           api.DiskCloudSsd,
+			DiskSize:           "500",
+			FileSystem:         "ext4",
+			AutoFormatAndMount: true,
+			MountTarget:        icommon.MountTarget,
+		}
+	}
+
+	return &proto.CloudDataDisk{
+		DiskType:           api.DiskCloudSsd,
+		DiskSize:           "200",
+		FileSystem:         "ext4",
+		AutoFormatAndMount: true,
+		MountTarget:        icommon.MountTarget,
+	}
 }

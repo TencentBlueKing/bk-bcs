@@ -360,9 +360,11 @@ networkpolicy:pre
 cloud-network-agent:pre
 	cd ${BCS_NETWORK_PATH} && go mod tidy && make bcs-cloud-network-agent
 
-bkcmdb-synchronizer:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer
-	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer/bcs-bkcmdb-synchronizer ./bcs-services/bcs-bkcmdb-synchronizer/main.go
+bkcmdb-synchronizer:
+	mkdir -p ${PACKAGEPATH}/bcs-services
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bkcmdb-synchronizer ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-bkcmdb-synchronizer && make synchronizer
+	cp bcs-services/bcs-bkcmdb-synchronizer/bin/bcs-bkcmdb-synchronizer ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer/
 
 cloud-netservice:pre
 	cd ${BCS_NETWORK_PATH} && go mod tidy && make cloud-netservice

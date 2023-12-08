@@ -90,7 +90,7 @@ utils::log "OK" "Back Files >>> Done"
   && utils::log "OK" "Clean k8s-components iptables rules"
 
 utils::log "INFO" "cleaning remain kubelet mount path"
-df -h | awk '/^'"${BAK_DIR}"'\/kubelet/{print $NF}' | xargs -r umount
+df -h | awk '#'"${BAK_DIR}"'/kubelet#{print $NF}' | xargs -r umount
 
 utils::log "INFO" "cleaning remain virtual interface"
 clean_cni

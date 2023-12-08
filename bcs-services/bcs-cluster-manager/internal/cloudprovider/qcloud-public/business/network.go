@@ -29,7 +29,7 @@ import (
 )
 
 // GetVpcCIDRBlocks 获取vpc所属的cidr段
-func GetVpcCIDRBlocks(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPNet, error) {
+func GetVpcCIDRBlocks(opt *cloudprovider.CommonOption, vpcId string, assistantType int) ([]*net.IPNet, error) {
 	vpcCli, err := api.NewVPCClient(opt)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,12 @@ func GetVpcCIDRBlocks(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPN
 
 	cidrs := []string{*vpcSet[0].CidrBlock}
 	for _, v := range vpcSet[0].AssistantCidrSet {
-		if v.AssistantType != nil && *v.AssistantType == 0 && v.CidrBlock != nil {
+		if assistantType < 0 && v.AssistantType != nil && v.CidrBlock != nil {
+			cidrs = append(cidrs, *v.CidrBlock)
+			continue
+		}
+
+		if v.AssistantType != nil && int(*v.AssistantType) == assistantType && v.CidrBlock != nil {
 			cidrs = append(cidrs, *v.CidrBlock)
 		}
 	}
@@ -91,7 +96,7 @@ func GetAllocatedSubnetsByVpc(opt *cloudprovider.CommonOption, vpcId string) ([]
 
 // GetFreeIPNets return free globalrouter subnets
 func GetFreeIPNets(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPNet, error) {
-	allBlocks, err := GetVpcCIDRBlocks(opt, vpcId)
+	allBlocks, err := GetVpcCIDRBlocks(opt, vpcId, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -159,10 +164,19 @@ func AllocateClusterVpcCniSubnets(ctx context.Context, clusterId, vpcId string,
 	subnetIDs := make([]string, 0)
 
 	for i := range subnets {
-		mask, err := utils.GetMaskLenByNum(utils.IPV4, float64(subnets[i].Mask))
-		if err != nil {
-			blog.Errorf("AllocateClusterVpcCniSubnets[%s] failed: %v", taskID, err)
-			continue
+		mask := 0
+		if subnets[i].Mask > 0 {
+			mask = int(subnets[i].Mask)
+		} else if subnets[i].IpCnt > 0 {
+			lenMask, err := utils.GetMaskLenByNum(utils.IPV4, float64(subnets[i].IpCnt))
+			if err != nil {
+				blog.Errorf("AllocateClusterVpcCniSubnets[%s] failed: %v", taskID, err)
+				continue
+			}
+
+			mask = lenMask
+		} else {
+			mask = utils.DefaultMask
 		}
 
 		sub, err := AllocateSubnet(opt, vpcId, subnets[i].Zone, mask, clusterId, "")
@@ -171,9 +185,34 @@ func AllocateClusterVpcCniSubnets(ctx context.Context, clusterId, vpcId string,
 			continue
 		}
 
+		blog.Infof("AllocateClusterVpcCniSubnets[%s] vpc[%s] zone[%s] subnet[%s]",
+			taskID, vpcId, subnets[i].Zone, sub.ID)
 		subnetIDs = append(subnetIDs, sub.ID)
 		time.Sleep(time.Millisecond * 500)
 	}
 
+	blog.Infof("AllocateClusterVpcCniSubnets[%s] subnets[%v]", taskID, subnetIDs)
 	return subnetIDs, nil
+}
+
+// CheckConflictFromVpc check cidr conflict in vpc cidrs
+func CheckConflictFromVpc(opt *cloudprovider.CommonOption, vpcId, cidr string) ([]string, error) {
+	ipNets, err := GetVpcCIDRBlocks(opt, vpcId, -1)
+	if err != nil {
+		return nil, err
+	}
+
+	_, c, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return nil, err
+	}
+
+	conflictCidrs := make([]string, 0)
+	for i := range ipNets {
+		if cidrtree.CidrContains(ipNets[i], c) {
+			conflictCidrs = append(conflictCidrs, ipNets[i].String())
+		}
+	}
+
+	return conflictCidrs, nil
 }

@@ -10,6 +10,11 @@
       <bk-form-item class="!mt-[0px]" :label="$t('projects.project.intro')">
         <span class="text-[#313238] text-[12px]">{{ curProject.description || '--' }}</span>
       </bk-form-item>
+      <bk-form-item class="!mt-[0px]" :label="$t('projects.project.businessID')">
+        <span class="text-[#313238] text-[12px]">
+          {{ `${curProject.businessName}(${curProject.businessID})` }}
+        </span>
+      </bk-form-item>
     </bk-form>
   </BcsContent>
 </template>

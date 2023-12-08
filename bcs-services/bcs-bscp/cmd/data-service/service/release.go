@@ -263,12 +263,14 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		return e
 	}
 
-	if e := s.createReleasedRenderedTemplateCIs(kt, tx, releaseID, tmplRevisions, byteSizeMap, signatureMap); e != nil {
+	if e := s.createReleasedRenderedTemplateCIs(kt, tx, releaseID, tmplRevisions, renderedContentMap, byteSizeMap,
+		signatureMap); e != nil {
 		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", e, kt.Rid)
 		return e
 	}
 
-	if err = s.createReleasedRenderedCIs(kt, tx, releaseID, cis, ciByteSizeMap, ciSignatureMap); err != nil {
+	if err = s.createReleasedRenderedCIs(kt, tx, releaseID, cis, ciRenderedContentMap, ciByteSizeMap,
+		ciSignatureMap); err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
@@ -276,7 +278,7 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		return err
 	}
 
-	if e := s.createReleasedAppTemplates(kt, tx, releaseID, byteSizeMap, signatureMap); e != nil {
+	if e := s.createReleasedAppTemplates(kt, tx, releaseID, renderedContentMap, byteSizeMap, signatureMap); e != nil {
 		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", e, kt.Rid)
 		return e
 	}
@@ -333,9 +335,20 @@ func (s *Service) getRenderedVars(kt *kit.Kit, allVars []string, inputVarMap map
 
 // createReleasedRenderedTemplateCIs create released rendered templates config items.
 func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32,
-	tmplRevisions []*table.TemplateRevision, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
+	tmplRevisions []*table.TemplateRevision, renderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64,
+	signatureMap map[uint32]string) error {
 	releasedCIs := make([]*table.ReleasedConfigItem, len(tmplRevisions))
 	for idx, r := range tmplRevisions {
+		creator := r.Revision.Creator
+		reviser := creator
+		createdAt := r.Revision.CreatedAt
+		updatedAt := createdAt
+		// if rendered with variables, which means the template config item is new generated, update the user and time
+		if _, ok := renderedContentMap[r.ID]; ok {
+			reviser = kt.User
+			updatedAt = time.Now().UTC()
+		}
+
 		releasedCIs[idx] = &table.ReleasedConfigItem{
 			ReleaseID: releaseID,
 			CommitSpec: &table.ReleasedCommitSpec{
@@ -360,8 +373,11 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 				BizID: kt.BizID,
 				AppID: kt.AppID,
 			},
-			Revision: &table.CreatedRevision{
-				Creator: kt.User,
+			Revision: &table.Revision{
+				Creator:   creator,
+				Reviser:   reviser,
+				CreatedAt: createdAt,
+				UpdatedAt: updatedAt,
 			},
 		}
 	}
@@ -375,7 +391,7 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 
 // createReleasedRenderedCIs create released rendered config items
 func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32, cis []*pbci.ConfigItem,
-	byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
+	ciRenderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
 	releasedCIs := make([]*table.ReleasedConfigItem, 0)
 	if len(cis) == 0 {
 		return nil
@@ -388,6 +404,25 @@ func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releas
 			logs.Errorf("query config item latest commit failed, err: %v, rid: %s", e, kt.Rid)
 			return e
 		}
+
+		creator := ci.Revision.Creator
+		reviser := ci.Revision.Reviser
+		var createdAt, updatedAt time.Time
+		var err error
+		createdAt, err = time.Parse(time.RFC3339, ci.Revision.CreateAt)
+		if err != nil {
+			return fmt.Errorf("parse time from createAt string failed, err: %v", err)
+		}
+		updatedAt, err = time.Parse(time.RFC3339, ci.Revision.UpdateAt)
+		if err != nil {
+			return fmt.Errorf("parse time from UpdateAt string failed, err: %v", err)
+		}
+		// if rendered with variables, which means the config item is new generated, update the user and time
+		if _, ok := ciRenderedContentMap[ci.Id]; ok {
+			reviser = kt.User
+			updatedAt = time.Now().UTC()
+		}
+
 		releasedCIs = append(releasedCIs, &table.ReleasedConfigItem{
 			CommitID: commit.ID,
 			CommitSpec: &table.ReleasedCommitSpec{
@@ -417,8 +452,11 @@ func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releas
 				BizID: ci.Attachment.BizId,
 				AppID: ci.Attachment.AppId,
 			},
-			Revision: &table.CreatedRevision{
-				Creator: kt.User,
+			Revision: &table.Revision{
+				Creator:   creator,
+				Reviser:   reviser,
+				CreatedAt: createdAt,
+				UpdatedAt: updatedAt,
 			},
 		})
 	}
@@ -437,7 +475,7 @@ func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releas
 
 // createReleasedAppTemplates create released app templates.
 func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32,
-	byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
+	renderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
 	revisionsResp, err := s.ListAppBoundTmplRevisions(kt.Ctx, &pbds.ListAppBoundTmplRevisionsReq{
 		BizId: kt.BizID,
 		AppId: kt.AppID,
@@ -451,6 +489,20 @@ func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, relea
 
 	releasedATs := make([]*table.ReleasedAppTemplate, len(revisions))
 	for idx, r := range revisions {
+		creator := r.Creator
+		reviser := creator
+		var createdAt time.Time
+		createdAt, err = time.Parse(time.RFC3339, r.CreateAt)
+		if err != nil {
+			return fmt.Errorf("parse time from createAt string failed, err: %v", err)
+		}
+		updatedAt := createdAt
+		// if rendered with variables, which means the template config item is new generated, update the user and time
+		if _, ok := renderedContentMap[r.TemplateRevisionId]; ok {
+			reviser = kt.User
+			updatedAt = time.Now().UTC()
+		}
+
 		releasedATs[idx] = &table.ReleasedAppTemplate{
 			Spec: &table.ReleasedAppTemplateSpec{
 				ReleaseID:            releaseID,
@@ -479,8 +531,11 @@ func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, relea
 				BizID: kt.BizID,
 				AppID: kt.AppID,
 			},
-			Revision: &table.CreatedRevision{
-				Creator: kt.User,
+			Revision: &table.Revision{
+				Creator:   creator,
+				Reviser:   reviser,
+				CreatedAt: createdAt,
+				UpdatedAt: updatedAt,
 			},
 		}
 	}

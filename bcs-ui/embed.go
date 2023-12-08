@@ -181,6 +181,7 @@ func (e *EmbedWeb) IndexHandler() http.Handler {
 			"LOGIN_FULL":              config.G.FrontendConf.Host.LoginFullURL,
 			"BCS_API_HOST":            config.G.BCS.Host,
 			"BCS_DEBUG_API_HOST":      config.G.BCSDebugAPIHost(),
+			"BCS_NAMESPACE_PREFIX":    config.G.BCS.NamespacePrefix,
 			"BCS_CONFIG":              bcsConfig,
 		}
 

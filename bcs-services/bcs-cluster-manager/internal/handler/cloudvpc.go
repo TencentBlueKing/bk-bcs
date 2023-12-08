@@ -189,3 +189,37 @@ func (cm *ClusterManager) GetCloudBandwidthPackages(ctx context.Context,
 	blog.V(5).Infof("reqID: %s, action: GetCloudBandwidthPackages, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// CheckCidrConflictFromVpc implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) CheckCidrConflictFromVpc(ctx context.Context,
+	req *cmproto.CheckCidrConflictFromVpcRequest, resp *cmproto.CheckCidrConflictFromVpcResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	ca := cloudvpc.NewCheckCidrConflictAction(cm.model)
+	ca.Handle(ctx, req, resp)
+
+	metrics.ReportAPIRequestMetric("CheckCidrConflictFromVpc", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: CheckCidrConflictFromVpc, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data %v", reqID, req, resp.Code, resp.Message, resp.Data)
+	blog.V(5).Infof("reqID: %s, action: CheckCidrConflictFromVpc, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// GetMasterSuggestedMachines implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetMasterSuggestedMachines(ctx context.Context,
+	req *cmproto.GetMasterSuggestedMachinesRequest, resp *cmproto.GetMasterSuggestedMachinesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := cloudvpc.NewSuggestMasterMachinesAction(cm.model)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetMasterSuggestedMachines", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetMasterSuggestedMachines, req %v, resp %v", reqID, req, resp)
+	return nil
+}

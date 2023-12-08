@@ -53,7 +53,7 @@
         <!-- 项目选载 -->
         <ProjectSelector class="ml-auto w-[240px] mr-[18px]"></ProjectSelector>
         <!-- 语言切换 -->
-        <PopoverSelector class="mr-[8px]">
+        <PopoverSelector class="mr-[8px]" ref="langRef">
           <span class="header-icon text-[18px]">
             <i :class="curLang.icon"></i>
           </span>
@@ -123,7 +123,7 @@ import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, t
 
 import PopoverSelector from '../../components/popover-selector.vue';
 
-import menusData, { IMenu } from './menus';
+import useMenu, { IMenu } from './use-menu';
 
 import { releaseNote, switchLanguage } from '@/api/modules/project';
 import { setCookie } from '@/common/util';
@@ -143,17 +143,19 @@ export default defineComponent({
     PopoverSelector,
   },
   setup() {
-    const menus = ref<IMenu[]>(menusData);
+    const { menusData: menus } = useMenu();
     const langs = ref([
       {
         icon: 'bk-icon icon-english',
         name: 'English',
         id: 'en-US',
+        locale: 'en',
       },
       {
         icon: 'bk-icon icon-chinese',
         name: '中文',
         id: 'zh-CN',
+        locale: 'zh-CN', // cookie标识
       },
     ]);
     const curLang = computed(() => langs.value.find(item => item.id === $i18n.locale) || { id: 'zh-CN', icon: 'bk-icon icon-chinese' });
@@ -170,7 +172,8 @@ export default defineComponent({
       return !!projectCode
         && route.value.fullPath.indexOf(projectCode) > -1 // 1.跟项目无关界面
         && (!!curProject.value.kind && !!curProject.value.businessID && curProject.value.businessID !== '0')// 2. 当前项目未开启容器服务
-        && !['404', 'token'].includes(route.value.name);// 404 和 token特殊界面
+        && !['404', 'token'].includes(route.value.name)// 404 和 token特殊界面
+        && !route.value.meta?.hideMenu;
     });
 
     // 导航自适应
@@ -205,13 +208,14 @@ export default defineComponent({
       const name = item.route || item.children?.[0]?.route || '404';
       if (route.value.name === name) return;
 
+      $store.commit('updateCurSideMenu', item);
       $router.push({
         name,
         params: {
           projectCode: $store.getters.curProjectCode,
           clusterId: $store.getters.curClusterId,
         },
-      });
+      }).catch(err => console.warn(err));
     };
 
     // 左侧菜单折叠和收起
@@ -225,16 +229,15 @@ export default defineComponent({
     };
 
     // 切换语言
+    const langRef = ref();
     const handleChangeLang = async (item) => {
-      $i18n.locale = item.id;
-      // dev模式不生效问题
-      if (process.env.NODE_ENV === 'development') {
-        setCookie('blueking_language', item.id);
-      }
+      // $i18n.locale = item.id;// 后面 $router.go(0) 会重新加载界面，这里会导致一瞬间被切换了，然后界面再刷新
+      setCookie('blueking_language', item.locale);
+      langRef.value?.hide();
       await switchLanguage({
-        lang: item.id,
+        lang: item.locale,
       });
-      window.location.reload();
+      await $router.go(0);
     };
     // 帮助文档
     const handleGotoHelp  = () => {
@@ -276,6 +279,7 @@ export default defineComponent({
     });
 
     return {
+      langRef,
       navRef,
       navItemRefs,
       breakIndex,

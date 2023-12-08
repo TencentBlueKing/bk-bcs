@@ -64,6 +64,7 @@ func (as *apiServer) prepare(opt *options.Option) error {
 	// init metrics
 	metrics.InitMetrics(net.JoinHostPort(cc.ApiServer().Network.BindIP,
 		strconv.Itoa(int(cc.ApiServer().Network.HttpPort))))
+	metrics.Register().MustRegister(metrics.BSCPServerHandledTotal)
 
 	etcdOpt, err := cc.ApiServer().Service.Etcd.ToConfig()
 	if err != nil {

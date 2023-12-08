@@ -40,6 +40,22 @@ const (
 	clusterRoleBindingName = "bcs-system:cluster-manager"
 )
 
+// CheckClusterConnect check cluster connect by kubeConfig
+func CheckClusterConnect(ctx context.Context, kubeConfig string) error {
+	clientSet, err := clusterops.NewKubeClient(kubeConfig)
+	if err != nil {
+		return fmt.Errorf("CheckClusterConnect create clientset failed: %v", err)
+	}
+
+	version, err := clientSet.Discovery().ServerVersion()
+	if err != nil {
+		return fmt.Errorf("CheckClusterConnect serverVersion failed: %v", err)
+	}
+
+	blog.Infof("CheckClusterConnect %s", version.String())
+	return nil
+}
+
 // GenerateSATokenByKubeConfig generates a serviceAccountToken
 func GenerateSATokenByKubeConfig(ctx context.Context, kubeConfig string) (string, error) {
 	clientSet, err := clusterops.NewKubeClient(kubeConfig)

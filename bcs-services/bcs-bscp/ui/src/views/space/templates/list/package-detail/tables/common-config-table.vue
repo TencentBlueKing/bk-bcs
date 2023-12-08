@@ -18,7 +18,18 @@
       </bk-input>
     </div>
     <bk-loading style="min-height: 200px" :loading="listLoading">
-      <bk-table :border="['outer']" :data="list" @selection-change="handleSelectionChange">
+      <bk-table
+        class="config-table"
+        :border="['outer']"
+        :data="list"
+        :row-class="getRowCls"
+        :remote-pagination="true"
+        :pagination="pagination"
+        :is-selected-fn="isSelectedFn"
+        @page-limit-change="handlePageLimitChange"
+        @page-value-change="refreshList($event,true)"
+        @selection-change="handleSelectionChange"
+      >
         <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
         <bk-table-column label="配置文件名称">
           <template #default="{ row }">
@@ -150,7 +161,7 @@ const router = useRouter();
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const templateStore = useTemplateStore();
-const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView } =
+const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView, batchUploadIds } =
   storeToRefs(templateStore);
 
 const props = defineProps<{
@@ -173,8 +184,8 @@ const boundByAppsCountList = ref<ITemplateCitedCountDetailItem[]>([]);
 const searchStr = ref('');
 const pagination = ref({
   current: 1,
-  limit: 10,
   count: 0,
+  limit: 10,
 });
 const isAddToPkgsDialogShow = ref(false);
 const isMoveOutFromPkgsDialogShow = ref(false);
@@ -200,12 +211,16 @@ onMounted(() => {
   loadConfigList();
 });
 
-const loadConfigList = async () => {
+const loadConfigList = async (isBatchUpload = false) => {
   listLoading.value = true;
   const params: ICommonQuery = {
     start: (pagination.value.current - 1) * pagination.value.limit,
     limit: pagination.value.limit,
   };
+  if (!isBatchUpload) batchUploadIds.value = [];
+  if (batchUploadIds.value.length > 0) {
+    params.ids = batchUploadIds.value.join(',');
+  }
   if (searchStr.value) {
     params.search_fields = 'name,path,memo,creator,reviser';
     params.search_value = searchStr.value;
@@ -242,10 +257,10 @@ const loadBoundByAppsList = async (ids: number[]) => {
   boundByAppsCountLoading.value = false;
 };
 
-const refreshList = (current = 1) => {
-  searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+const refreshList = (current = 1, isBatchUpload = false) => {
+  isSearchEmpty.value = searchStr.value !== '';
   pagination.value.current = current;
-  loadConfigList();
+  loadConfigList(isBatchUpload);
 };
 
 // 模板移出或删除后刷新列表
@@ -253,6 +268,7 @@ const refreshListAfterDeleted = (num: number) => {
   if (num === list.value.length && pagination.value.current > 1) {
     pagination.value.current -= 1;
   }
+  batchUploadIds.value = [];
   refreshList();
 };
 
@@ -296,6 +312,13 @@ const handleSelectionChange = ({
   }
   emits('update:selectedConfigs', configs);
 };
+
+const isSelectedFn = ({
+  row,
+}: {
+  row: ITemplateConfigItem;
+}) => props.selectedConfigs.findIndex(item => item.id === row.id) > -1;
+
 
 const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem) => {
   isAddToPkgsDialogShow.value = true;
@@ -355,15 +378,28 @@ const goToCreateVersionManage = (id: number) => {
   goToVersionManage(id);
 };
 
-defineExpose({
-  refreshList,
-  refreshListAfterDeleted,
-});
+// 设置新增行的标记class
+const getRowCls = (data: ITemplateConfigItem) => {
+  if (batchUploadIds.value.includes(data.id)) {
+    return 'new-row-marked';
+  }
+  return '';
+};
+
+const handlePageLimitChange = (val: number) => {
+  pagination.value.limit = val;
+  refreshList(1, true);
+};
 
 const clearSearchStr = () => {
   searchStr.value = '';
   refreshList();
 };
+
+defineExpose({
+  refreshList,
+  refreshListAfterDeleted,
+});
 </script>
 <style lang="scss" scoped>
 .operate-area {
@@ -417,6 +453,13 @@ const clearSearchStr = () => {
   }
   .bk-button {
     margin-right: 8px;
+  }
+}
+.config-table {
+  :deep(.bk-table-body) {
+    tr.new-row-marked td {
+      background: #f2fff4 !important;
+    }
   }
 }
 </style>

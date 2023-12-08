@@ -80,6 +80,7 @@ func (ca *CreateAction) importCloudModuleFlagList() error {
 				}
 				return nil
 			}(),
+			NetworkType: ca.req.FlagList[i].GetNetworkType(),
 		})
 	}
 	ca.moduleFlagList = moduleFlagList

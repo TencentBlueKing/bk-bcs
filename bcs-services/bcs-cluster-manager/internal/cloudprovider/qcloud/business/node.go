@@ -13,11 +13,14 @@
 package business
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
@@ -27,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -318,4 +322,234 @@ func TransIPsToNodes(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto
 		}
 	}
 	return nodes, nil
+}
+
+// InstanceList cvm list
+type InstanceList struct {
+	SuccessNodes []InstanceInfo
+	FailedNodes  []InstanceInfo
+}
+
+// InstanceInfo cvm id/ip
+type InstanceInfo struct {
+	NodeId       string
+	NodeIp       string
+	VpcId        string
+	FailedReason string
+}
+
+// GetNodeFailedReason failed reason
+func (ins InstanceInfo) GetNodeFailedReason() string {
+	return fmt.Sprintf("nodeID[%s]: %s", ins.NodeId, ins.FailedReason)
+}
+
+// CheckCvmInstanceState check cvm nodes state
+func CheckCvmInstanceState(ctx context.Context, ids []string,
+	opt *cloudprovider.ListNodesOption) (*InstanceList, error) {
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
+	client, err := api.GetCVMClient(opt.Common)
+	if err != nil {
+		blog.Errorf("create CVM client when transInstanceIDsToNodes failed, %s", err.Error())
+		return nil, err
+	}
+
+	var (
+		instances = &InstanceList{
+			SuccessNodes: make([]InstanceInfo, 0),
+			FailedNodes:  make([]InstanceInfo, 0),
+		}
+	)
+
+	// wait check delete component status
+	timeContext, cancel := context.WithTimeout(ctx, time.Minute*10)
+	defer cancel()
+
+	// wait all nodes to be ready
+	err = loop.LoopDoFunc(timeContext, func() error {
+		cloudInstances, errLocal := client.GetInstancesById(ids)
+		if errLocal != nil {
+			blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), err.Error())
+			return nil
+		}
+
+		index := 0
+		running, failure := make([]InstanceInfo, 0), make([]InstanceInfo, 0)
+
+		for _, ins := range cloudInstances {
+			blog.Infof("CheckCvmInstanceState[%s] instance[%s] status[%s:%s]", taskId,
+				*ins.InstanceId, *ins.InstanceState, *ins.LatestOperationState)
+
+			switch *ins.LatestOperationState {
+			case api.SUCCESS:
+				running = append(running, InstanceInfo{
+					NodeId: *ins.InstanceId,
+					NodeIp: func() string {
+						if len(ins.PrivateIpAddresses) > 0 {
+							return *ins.PrivateIpAddresses[0]
+						}
+						return ""
+					}(),
+					VpcId: *ins.VirtualPrivateCloud.VpcId,
+				})
+				index++
+			case api.FAILED:
+				failure = append(failure, InstanceInfo{
+					NodeId: *ins.InstanceId,
+					NodeIp: func() string {
+						if len(ins.PrivateIpAddresses) > 0 {
+							return *ins.PrivateIpAddresses[0]
+						}
+						return ""
+					}(),
+					VpcId: *ins.VirtualPrivateCloud.VpcId,
+				})
+				index++
+			default:
+			}
+		}
+
+		if index == len(ids) {
+			instances.SuccessNodes = running
+			instances.FailedNodes = failure
+			return loop.EndLoop
+		}
+
+		return nil
+	}, loop.LoopInterval(30*time.Second))
+	// other error
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		blog.Errorf("CheckCvmInstanceState[%s] GetInstancesById failed: %v", taskId, err)
+		return nil, err
+	}
+	// timeout error
+	if errors.Is(err, context.DeadlineExceeded) {
+		blog.Errorf("CheckCvmInstanceState[%s] GetInstancesById timeout failed: %v", taskId, err)
+
+		cloudInstances, errLocal := client.GetInstancesById(ids)
+		if errLocal != nil {
+			blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), err.Error())
+			return nil, errLocal
+		}
+
+		running, failure := make([]InstanceInfo, 0), make([]InstanceInfo, 0)
+		for _, ins := range cloudInstances {
+			blog.Infof("CheckCvmInstanceState[%s] instance[%s] status[%s:%s]", taskId,
+				*ins.InstanceId, *ins.InstanceState, *ins.LatestOperationState)
+			switch *ins.LatestOperationState {
+			case api.SUCCESS:
+				running = append(running, InstanceInfo{
+					NodeId: *ins.InstanceId,
+					NodeIp: func() string {
+						if len(ins.PrivateIpAddresses) > 0 {
+							return *ins.PrivateIpAddresses[0]
+						}
+						return ""
+					}(),
+					VpcId: *ins.VirtualPrivateCloud.VpcId,
+				})
+			default:
+				failure = append(failure, InstanceInfo{
+					NodeId: *ins.InstanceId,
+					NodeIp: func() string {
+						if len(ins.PrivateIpAddresses) > 0 {
+							return *ins.PrivateIpAddresses[0]
+						}
+						return ""
+					}(),
+					VpcId: *ins.VirtualPrivateCloud.VpcId,
+				})
+			}
+		}
+		instances.SuccessNodes = running
+		instances.FailedNodes = failure
+	}
+	blog.Infof("CheckCvmInstanceState[%s] success[%v] failure[%v]",
+		taskId, instances.SuccessNodes, instances.FailedNodes)
+
+	return instances, nil
+}
+
+// ModifyInstancesVpcAttribute modify instance vpc attribute
+func ModifyInstancesVpcAttribute(ctx context.Context, vpcId string, ids []string,
+	opt *cloudprovider.CommonOption) error {
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
+	if vpcId == "" || len(ids) == 0 {
+		return fmt.Errorf("ModifyInstancesVpcAttribute[%s] vpcId/instanceIds empty", taskId)
+	}
+
+	zoneNodes, err := sortInstancesByZone(ids, opt)
+	if err != nil {
+		blog.Errorf("ModifyInstancesVpcAttribute[%s] sortInstancesByZone[%s][%v] failed: %v",
+			taskId, vpcId, ids, err)
+		return nil
+	}
+	blog.Infof("ModifyInstancesVpcAttribute[%s] selectZoneAvailableSubnet[%+v]", taskId, zoneNodes)
+
+	// check zone available subnets
+	zoneSubnetNum := make(map[string]int, 0)
+	for zone := range zoneNodes {
+		zoneSubnetNum[zone] = len(zoneNodes[zone])
+	}
+	zoneSubnets, err := selectZoneAvailableSubnet(vpcId, zoneSubnetNum, opt)
+	if err != nil {
+		blog.Errorf("ModifyInstancesVpcAttribute[%s] selectZoneAvailableSubnet failed: %v", taskId, err)
+		return err
+	}
+
+	blog.Infof("ModifyInstancesVpcAttribute[%s] selectZoneAvailableSubnet[%+v]", taskId, zoneSubnets)
+	// modify cvm vpc attribute
+	nodeClient, err := api.GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("ModifyInstancesVpcAttribute[%s] getCVMClient failed: %v", taskId, err)
+		return err
+	}
+
+	for zone := range zoneNodes {
+		subnetId, ok := zoneSubnets[zone]
+		if !ok {
+			blog.Errorf("ModifyInstancesVpcAttribute[%s] zone[%s] not exist subnet", taskId, zone)
+			continue
+		}
+
+		// get zone nodes instanceIds
+		instanceIds := make([]string, 0)
+		for i := range zoneNodes[zone] {
+			instanceIds = append(instanceIds, zoneNodes[zone][i].NodeID)
+		}
+
+		// modify instances vpc
+		err = nodeClient.ModifyInstancesVpcAttribute(vpcId, subnetId, instanceIds)
+		if err != nil {
+			blog.Errorf("ModifyInstancesVpcAttribute[%s][%s:%s] instances[%v] failed: %v",
+				taskId, vpcId, zone, instanceIds, err)
+			return err
+		}
+
+		blog.Infof("ModifyInstancesVpcAttribute[%s][%s:%s] instances successful",
+			taskId, vpcId, zone, instanceIds)
+	}
+
+	return nil
+}
+
+func sortInstancesByZone(ids []string, opt *cloudprovider.CommonOption) (map[string][]*proto.Node, error) {
+	nodes, err := ListNodesByInstanceID(ids, &cloudprovider.ListNodesOption{
+		Common: opt,
+	})
+	if err != nil {
+		blog.Errorf("sortInstancesByZone[%+v] failed: %v", ids, err)
+		return nil, err
+	}
+
+	zoneNodes := make(map[string][]*proto.Node)
+	for i := range nodes {
+		if zoneNodes[nodes[i].ZoneID] == nil {
+			zoneNodes[nodes[i].ZoneID] = make([]*proto.Node, 0)
+		}
+		zoneNodes[nodes[i].ZoneID] = append(zoneNodes[nodes[i].ZoneID], nodes[i])
+	}
+
+	return zoneNodes, nil
 }

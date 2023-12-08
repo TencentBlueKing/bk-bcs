@@ -8,11 +8,16 @@
             :app-id="props.appId"
             @created="refreshConfigList"
             @imported="refreshConfigList"
-            @uploaded="refreshConfigList"
+            @uploaded="refreshConfigList(true)"
           />
-          <EditVariables ref="editVariablesRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
+          <EditVariables v-if="isFileType" ref="editVariablesRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
         </template>
-        <ViewVariables v-else :bk-biz-id="props.bkBizId" :app-id="props.appId" :verision-id="versionData.id" />
+        <ViewVariables
+          v-else-if="isFileType"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :verision-id="versionData.id"
+        />
       </div>
       <div class="groups-info" v-if="versionData.status.released_groups.length > 0">
         <div v-for="group in versionData.status.released_groups" class="group-item" :key="group.id">
@@ -52,7 +57,6 @@
         :app-id="props.appId"
         :search-str="searchStr"
         @clear-str="clearStr"
-        @delete-config="refreshVariable"
       />
     </section>
   </section>
@@ -85,8 +89,8 @@ const searchStr = ref('');
 const useTemplate = ref(true);
 const editVariablesRef = ref();
 
-const refreshConfigList = () => {
-  tableRef.value.refresh();
+const refreshConfigList = (isBatchUpload = false) => {
+  tableRef.value.refresh(isBatchUpload);
   refreshVariable();
 };
 

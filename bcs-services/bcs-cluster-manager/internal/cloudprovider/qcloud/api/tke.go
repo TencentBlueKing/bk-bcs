@@ -434,6 +434,36 @@ func (cli *TkeClient) AddExistedInstancesToCluster(addReq *AddExistedInstanceReq
 	return result, nil
 }
 
+// DescribeInstanceCreateProgress describe instance create progress
+func (cli *TkeClient) DescribeInstanceCreateProgress(clusterId, instanceId string) (string, error) {
+	req := NewDescribeInstanceCreateProgressRequest()
+	req.ClusterId = common.StringPtr(clusterId)
+	req.InstanceId = common.StringPtr(instanceId)
+
+	resp, err := cli.tkeCommon.DescribeInstanceCreateProgress(req)
+	if err != nil {
+		blog.Errorf("DescribeInstanceCreateProgress[%s:%s] failed: %v", clusterId, instanceId, err)
+		return "", err
+	}
+
+	if resp == nil || resp.Response == nil {
+		return "", fmt.Errorf("response emtpy")
+	}
+
+	var (
+		failedReason string
+	)
+	for i := range resp.Response.Progress {
+		if resp.Response.Progress[i] != nil && resp.Response.Progress[i].Status != nil &&
+			*resp.Response.Progress[i].Status == FailedInstanceTke.String() {
+			failedReason = *resp.Response.Progress[i].Message
+			break
+		}
+	}
+
+	return failedReason, nil
+}
+
 // TKE network relative interface
 
 // EnableTKEVpcCniMode enable vpc-cni plugin: tke-route-eni开启的是策略路由模式，tke-direct-eni开启的是独立网卡模式

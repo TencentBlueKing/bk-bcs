@@ -50,7 +50,7 @@ main() {
   fi
 
   utils::log "INFO" "Removing kubeadm kubelet kubectl"
-  yum remove -y kubeadm kubelet kubectl
+  yum remove -y kubeadm kubelet kubectl cri-tools
   utils::log "OK" "kubeadm kubelet kubectl Remove success"
   return 0
 }

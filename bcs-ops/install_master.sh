@@ -41,6 +41,7 @@ safe_source() {
   return 0
 }
 
+"${ROOT_DIR}"/system/check_host.sh -c all
 safe_source "${ROOT_DIR}/functions/utils.sh"
 safe_source "${ROOT_DIR}/functions/k8s.sh"
 
@@ -62,6 +63,7 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   else
     kubeadm init --config="${ROOT_DIR}/kubeadm-config" -v 11 \
       || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
+	systemctl enable --now kubelet
   fi
   install -dv "$HOME/.kube"
   install -v -m 600 -o "$(id -u)" -g "$(id -g)" \
@@ -69,7 +71,6 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   "${ROOT_DIR}"/k8s/install_cni.sh
   "${ROOT_DIR}"/k8s/operate_metrics_server apply
   "${ROOT_DIR}"/k8s/install_helm
-  "${ROOT_DIR}"/k8s/render_k8s_joincmd
   if [[ ${ENABLE_APISERVER_HA} == "true" ]]; then
     [[ -z ${VIP} ]] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
     if [[ ${APISERVER_HA_MODE} == "kube-vip" ]]; then
@@ -110,4 +111,8 @@ else
   fi
 fi
 
+utils::log "INFO" "Reinforcing the configuration of k8s cluster"
 "${ROOT_DIR}"/k8s/optimize_k8s
+if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
+  "${ROOT_DIR}"/k8s/render_k8s_joincmd
+fi

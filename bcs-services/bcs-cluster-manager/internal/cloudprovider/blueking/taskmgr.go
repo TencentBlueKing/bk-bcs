@@ -133,7 +133,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	}
 
 	// step2: update cluster DB info and associated data
-	createClusterTask := &CreateClusterTaskOption{Cluster: cls}
+	createClusterTask := &CreateClusterTaskOption{Cluster: cls, WorkerNodes: opt.WorkerNodes}
 	createClusterTask.BuildUpdateClusterDbInfoStep(task)
 
 	// set current step

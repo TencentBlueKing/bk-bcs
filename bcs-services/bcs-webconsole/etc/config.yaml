@@ -9,8 +9,8 @@ base_conf:
   run_env: dev
 auth_conf:
   host: ""
-  is_gateway: false
-  ssm_host: ""
+  gateway_host: ""
+  use_gw: true
 logging:
   level: info
   file: ""
@@ -26,11 +26,6 @@ redis:
   port: 6379
   password: ""
   db: 0
-  max_pool_size: 100
-  max_conn_timeout: 6
-  idle_timeout: 600
-  read_timeout: 10
-  write_timeout: 10
 webconsole:
   admin_cluster_id: ""
   mode: internal

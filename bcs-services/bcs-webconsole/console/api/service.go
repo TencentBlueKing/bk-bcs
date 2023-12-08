@@ -14,19 +14,15 @@
 package api
 
 import (
-	"archive/tar"
-	"bytes"
-	"context"
-	"io"
+	"encoding/json"
 	"net/url"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
@@ -34,9 +30,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/repository"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
@@ -84,6 +80,16 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	api.POST("/api/sessions/:sessionId/upload/", metrics.RequestCollect("Upload"), s.UploadHandler)
 	api.GET("/api/sessions/:sessionId/download/", metrics.RequestCollect("Download"), s.DownloadHandler)
 	api.GET("/api/sessions/:sessionId/download/check/", metrics.RequestCollect("CheckDownload"), s.CheckDownloadHandler)
+
+	// 用户命令延时统计api
+	api.PUT("/api/command/delay/:username", metrics.RequestCollect("SetUserDelaySwitch"),
+		route.ManagersRequired(), s.SetUserDelaySwitch)
+	api.GET("/api/command/delay/:username", metrics.RequestCollect("GetUserDelaySwitch"),
+		route.ManagersRequired(), s.GetUserDelaySwitch)
+	api.GET("/api/command/delay/:username/meter", metrics.RequestCollect("GetUserDelayMeter"),
+		route.ManagersRequired(), s.GetUserDelayMeter)
+	api.GET("/api/command/delay", metrics.RequestCollect("GetDelayUsers"),
+		route.ManagersRequired(), s.GetDelayUsers)
 }
 
 // ListClusters 集群列表
@@ -139,15 +145,11 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	// 创建.bash_history文件
-	errCreate := CreateBashHistory(podCtx)
-	if errCreate != nil {
-		logger.Warnf("create bash history fail: %s", errCreate.Error())
-	}
-
 	podCtx.ProjectId = authCtx.ProjectId
 	podCtx.Username = authCtx.Username
 	podCtx.Source = consoleQuery.Source
+	// 二次换取的 session 时间有效期24小时
+	podCtx.SessionTimeout = types.MaxSessionTimeout
 
 	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
@@ -162,259 +164,6 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	rest.APIOK(c, i18n.GetMessage(c, "获取session成功"), data)
 }
 
-// UploadHandler 上传文件
-// NOCC:golint/fnsize(设计如此:)
-// nolint
-func (s *service) UploadHandler(c *gin.Context) {
-	authCtx := route.MustGetAuthContext(c)
-	uploadPath := c.PostForm("upload_path")
-	sessionId := c.Param("sessionId")
-	data := types.APIResponse{RequestID: authCtx.RequestId}
-	if uploadPath == "" {
-		rest.APIError(c, i18n.GetMessage(c, "请先输入上传路径"))
-		return
-	}
-	err := checkFileExists(uploadPath, sessionId)
-	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "目标路径不存在"))
-		return
-	}
-	err = checkPathIsDir(uploadPath, sessionId)
-	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "目标路径不存在"))
-		return
-	}
-	file, err := c.FormFile("file")
-	if err != nil {
-		logger.Errorf("get file from request failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "解析上传文件失败"))
-		return
-	}
-
-	opened, err := file.Open()
-	if err != nil {
-		logger.Errorf("open file from request failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "解析上传文件失败"))
-		return
-	}
-	defer opened.Close()
-
-	podCtx, err := sessions.NewStore().WebSocketScope().Get(c.Request.Context(), sessionId)
-	if err != nil {
-		logger.Errorf("get pod context by session %s failed, err: %s", sessionId, err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "获取pod信息失败"))
-		return
-	}
-	reader, writer := io.Pipe()
-	pe, err := podCtx.NewPodExec()
-	if err != nil {
-		logger.Errorf("new pod exec failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "执行上传命令失败"))
-		return
-	}
-	errChan := make(chan error, 1)
-	// nolint
-	go func(r io.Reader, pw *io.PipeWriter) {
-		tarWriter := tar.NewWriter(writer)
-		defer func() {
-			tarWriter.Close() // nolint
-			writer.Close()    // nolint
-			close(errChan)
-		}()
-		e := tarWriter.WriteHeader(&tar.Header{
-			Name: file.Filename,
-			Size: file.Size,
-			Mode: 0644,
-		})
-		if e != nil {
-			logger.Errorf("writer tar header failed, err: %s", e.Error())
-			errChan <- e
-			return
-		}
-		_, e = io.Copy(tarWriter, opened)
-		if e != nil {
-			logger.Errorf("writer tar from opened file failed, err: %s", e.Error())
-			errChan <- e
-			return
-		}
-		errChan <- nil
-	}(opened, writer)
-
-	pe.Stdin = reader
-	// 需要同时读取 stdout/stderr, 否则可能会 block 住
-	pe.Stdout = &bytes.Buffer{}
-	pe.Stderr = &bytes.Buffer{}
-
-	pe.Command = []string{"tar", "-xmf", "-", "-C", uploadPath}
-	pe.Tty = false
-
-	if err = pe.Exec(); err != nil {
-		logger.Errorf("pod exec failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "执行上传命令失败"))
-		return
-	}
-
-	err, ok := <-errChan
-	if ok && err != nil {
-		logger.Errorf("writer to tar failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "文件上传失败"))
-		return
-	}
-
-	rest.APIOK(c, i18n.GetMessage(c, "文件上传成功"), data)
-}
-
-// DownloadHandler 下载文件
-func (s *service) DownloadHandler(c *gin.Context) {
-	downloadPath := c.Query("download_path")
-	sessionId := c.Param("sessionId")
-	reader, writer := io.Pipe()
-	errChan := make(chan error, 1)
-	go func() {
-		defer func() {
-			reader.Close() // nolint
-			writer.Close() // nolint
-			close(errChan)
-		}()
-		podCtx, err := sessions.NewStore().WebSocketScope().Get(c.Request.Context(), sessionId)
-		if err != nil {
-			errChan <- err
-			return
-		}
-
-		pe, err := podCtx.NewPodExec()
-		if err != nil {
-			errChan <- err
-			return
-		}
-		pe.Stdout = writer
-
-		pe.Command = append([]string{"tar", "cf", "-"}, downloadPath)
-		pe.Stderr = &bytes.Buffer{}
-		pe.Tty = false
-		err = pe.Exec()
-		if err != nil {
-			errChan <- err
-			return
-		}
-		errChan <- nil
-	}()
-	tarReader := tar.NewReader(reader)
-	_, err := tarReader.Next()
-	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "复制文件流失败"))
-		return
-	}
-	fileName := downloadPath[strings.LastIndex(downloadPath, "/")+1:]
-	c.Header("Access-Control-Expose-Headers", "Content-Disposition")
-	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Disposition", "attachment; filename="+fileName)
-	c.Header("X-File-Name", fileName)
-	c.Header("Content-Transfer-Encoding", "binary")
-	c.Header("Cache-Control", "no-cache")
-	io.Copy(c.Writer, tarReader)
-}
-
-// CheckDownloadHandler 下载文件预检查
-func (s *service) CheckDownloadHandler(c *gin.Context) {
-	authCtx := route.MustGetAuthContext(c)
-	data := types.APIResponse{RequestID: authCtx.RequestId, Code: types.ApiErrorCode}
-	downloadPath := c.Query("download_path")
-	sessionId := c.Param("sessionId")
-
-	if err := checkFileExists(downloadPath, sessionId); err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "目标文件不存在"))
-		return
-	}
-
-	if err := checkPathIsDir(downloadPath, sessionId); err == nil {
-		rest.APIError(c, i18n.GetMessage(c, "暂不支持文件夹下载"))
-		return
-	}
-
-	if err := checkFileSize(downloadPath, sessionId, FileSizeLimits*FileSizeUnitMb); err != nil {
-		rest.APIError(c,
-			i18n.GetMessage(c, "文件不能超过{}MB", map[string]int{"fileLimit": FileSizeLimits}))
-		return
-	}
-
-	rest.APIOK(c, i18n.GetMessage(c, "文件可以下载"), data)
-}
-
-func checkPathIsDir(path, sessionID string) error {
-	podCtx, err := sessions.NewStore().WebSocketScope().Get(context.Background(), sessionID)
-	if err != nil {
-		return err
-	}
-
-	pe, err := podCtx.NewPodExec()
-	if err != nil {
-		return err
-	}
-	pe.Command = append([]string{"test", "-d"}, path)
-	pe.Stdout = &bytes.Buffer{}
-	pe.Stderr = &bytes.Buffer{}
-	pe.Tty = false
-	err = pe.Exec()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func checkFileExists(path, sessionID string) error {
-	podCtx, err := sessions.NewStore().WebSocketScope().Get(context.Background(), sessionID)
-	if err != nil {
-		return err
-	}
-
-	pe, err := podCtx.NewPodExec()
-	if err != nil {
-		return err
-	}
-	pe.Command = append([]string{"test", "-e"}, path)
-	pe.Stdout = &bytes.Buffer{}
-	pe.Stderr = &bytes.Buffer{}
-	pe.Tty = false
-	err = pe.Exec()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func checkFileSize(path, sessionID string, sizeLimit int) error {
-	podCtx, err := sessions.NewStore().WebSocketScope().Get(context.Background(), sessionID)
-	if err != nil {
-		return err
-	}
-
-	pe, err := podCtx.NewPodExec()
-	if err != nil {
-		return err
-	}
-	pe.Command = []string{"stat", "-c", "%s", path}
-	stdout := &bytes.Buffer{}
-	pe.Stdout = stdout
-	pe.Stderr = &bytes.Buffer{}
-	pe.Tty = false
-	err = pe.Exec()
-	if err != nil {
-		return err
-	}
-	// 解析文件大小, stdout 会返回 \r\n 或者 \n
-	sizeText := strings.TrimSuffix(stdout.String(), "\n")
-	sizeText = strings.TrimSuffix(sizeText, "\r")
-	size, err := strconv.Atoi(sizeText)
-	if err != nil {
-		return err
-	}
-	if size > sizeLimit {
-		return errors.Errorf("file size %d > %d", size, sizeLimit)
-	}
-	return nil
-}
-
 // CreatePortalSession xxx
 func (s *service) CreatePortalSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
@@ -424,6 +173,8 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 	}
 
 	podCtx := authCtx.BindSession
+	// 二次换取的 session 时间有效期24小时
+	podCtx.SessionTimeout = types.MaxSessionTimeout
 
 	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
@@ -474,6 +225,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	podCtx.ProjectId = authCtx.ProjectId
 	// bkapigw 校验, 使用 Operator 做用户标识
 	podCtx.Username = consoleQuery.Operator
+	// 设置临时 session 过期时间
 	podCtx.ConnIdleTimeout = consoleQuery.ConnIdleTimeout
 	podCtx.SessionTimeout = consoleQuery.SessionTimeout
 	podCtx.Viewers = consoleQuery.Viewers
@@ -554,58 +306,161 @@ func (s *service) CreateClusterPortalSession(c *gin.Context) {
 	rest.APIError(c, "Not implemented")
 }
 
-// getBashHistory直接读取存储在远程repo中的文件
-func getBashHistory(podName string) ([]byte, error) {
-	filename := podName + podmanager.HistoryFileName
-
-	// 使用系统对象存储
-	storage, err := repository.NewProvider(config.G.Repository.StorageType)
+// SetUserDelaySwitch 开启/关闭某个用户命令延时统计API
+func (s *service) SetUserDelaySwitch(c *gin.Context) {
+	// 参数解析
+	username := c.Param("username")
+	var commandDelays types.CommandDelay
+	err := c.BindJSON(&commandDelays)
 	if err != nil {
-		return nil, err
+		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
+		return
 	}
 
-	// 5秒下载时间
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	// 下载对象储存文件
-	fileInput, err := storage.DownloadFile(ctx, podmanager.HistoryRepoDir+filename)
-	if err != nil {
-		return nil, err
+	if len(commandDelays.ConsoleKey) != 1 {
+		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", errors.New("invalid console_key")))
+		return
 	}
 
-	// 读取.bash_history内容byte格式
-	output, err := io.ReadAll(fileInput)
+	// 将用户设置的延时命令开关放到 redis 上保存
+	err = storage.GetDefaultRedisSession().Client.HSet(c, types.GetMeterKey(), username, commandDelays.HashValue()).Err()
 	if err != nil {
-		return nil, err
+		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		return
 	}
-
-	return output, nil
+	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), nil)
 }
 
-// CreateBashHistory 创建.bash_history文件
-func CreateBashHistory(podCtx *types.PodContext) error {
-	// 往容器写文件
-	pe, err := podCtx.NewPodExec()
+// GetUserDelaySwitch 获取某个用户命令延时统计API
+func (s *service) GetUserDelaySwitch(c *gin.Context) {
+	username := c.Param("username")
+	result, err := storage.GetDefaultRedisSession().Client.HGet(c, types.GetMeterKey(), username).Result()
 	if err != nil {
-		return err
+		if errors.Is(err, redis.Nil) {
+			rest.APIError(c, i18n.GetMessage(c, "用户没有设置命令延时", err))
+			return
+		}
+		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		return
 	}
-	pe.Command = []string{"cp", "/dev/stdin", "/root/.bash_history"}
-	stdin := &bytes.Buffer{}
-	pe.Stderr = &bytes.Buffer{}
-	// 读取保存的.bash_history文件
-	historyFileByte, err := getBashHistory(podCtx.PodName)
+
+	// 将用户设置的延时命令转成结构体数组输出
+	commandDelay, err := types.MakeCommandDelay(result)
 	if err != nil {
-		return err
+		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		return
 	}
-	_, err = stdin.Write(historyFileByte)
+	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), commandDelay)
+}
+
+// GetUserDelayMeter 查看用户+集群(选填)命令延时情况 API
+func (s *service) GetUserDelayMeter(c *gin.Context) {
+	username := c.Param("username")
+	clusterId := c.Query("clusterId")
+	key := types.GetMeterDataKey(username)
+	result, err := storage.GetDefaultRedisSession().Client.LRange(c, key, 0, -1).Result()
 	if err != nil {
-		return err
+		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		return
 	}
-	pe.Stdin = stdin
-	err = pe.Exec()
+
+	// 去重处理，键值为cluster_id
+	userMeterMap := make(map[string]types.UserMeters)
+	// 根据clusterId筛选
+	for i := range result {
+		// clusterId不为空的情况并且用户没有设置该clusterId的情况不做数据展示
+		if clusterId != "" && !strings.Contains(result[i], clusterId) {
+			continue
+		}
+
+		// 解析Redis中数据， string -> delayData
+		var delayData types.DelayData
+		err = json.Unmarshal([]byte(result[i]), &delayData)
+		if err != nil {
+			rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+			return
+		}
+
+		// 解析消耗时间
+		timeConsume, err := time.ParseDuration(delayData.TimeConsume)
+		if err != nil {
+			// 有错误则不追加列表
+			continue
+		}
+		// 能取出数据，就追加
+		if value, ok := userMeterMap[delayData.ClusterId]; ok {
+			userMeter := types.UserConsume{
+				TimeConsume: delayData.TimeConsume,
+				CreateTime:  delayData.CreateTime,
+				SessionId:   delayData.SessionId,
+				PodName:     delayData.PodName,
+				CommandKey:  delayData.CommandKey,
+			}
+			value.UserConsumes = append(value.UserConsumes, userMeter)
+			// 统计数据
+			value.AverageTimeConsume += timeConsume
+			if value.MaxTimeConsume < timeConsume {
+				value.MaxTimeConsume = timeConsume
+			}
+			if value.MinTimeConsume > timeConsume {
+				value.MinTimeConsume = timeConsume
+			}
+			userMeterMap[delayData.ClusterId] = value
+		} else {
+			// 无法取出的情况则初始化值
+			userMeterMap[delayData.ClusterId] = types.UserMeters{
+				ClusterId:          delayData.ClusterId,
+				AverageTimeConsume: timeConsume,
+				MaxTimeConsume:     timeConsume,
+				MinTimeConsume:     timeConsume,
+				UserConsumes: []types.UserConsume{
+					{
+						TimeConsume: delayData.TimeConsume,
+						CreateTime:  delayData.CreateTime,
+						SessionId:   delayData.SessionId,
+						PodName:     delayData.PodName,
+						CommandKey:  delayData.CommandKey,
+					},
+				},
+			}
+		}
+	}
+
+	// 返回筛选的结果
+	var rsp []types.UserMeterRsp
+	for _, value := range userMeterMap {
+		// 求平均值
+		value.AverageTimeConsume /= time.Duration(len(value.UserConsumes))
+		userMeterRsp := types.UserMeterRsp{
+			ClusterId:          value.ClusterId,
+			AverageTimeConsume: value.AverageTimeConsume.String(),
+			MaxTimeConsume:     value.MaxTimeConsume.String(),
+			MinTimeConsume:     value.MinTimeConsume.String(),
+			UserConsumes:       value.UserConsumes,
+		}
+		rsp = append(rsp, userMeterRsp)
+	}
+	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), rsp)
+}
+
+// GetDelayUsers 查看哪些用户开启命令延时情况 API
+func (s *service) GetDelayUsers(c *gin.Context) {
+	result, err := storage.GetDefaultRedisSession().Client.HGetAll(c, types.GetMeterKey()).Result()
 	if err != nil {
-		return err
+		rest.APIError(c, i18n.GetMessage(c, "服务请求失败{}", err))
+		return
 	}
-	return nil
+
+	// 以结构体数组的形式返回
+	rsp := map[string]*types.CommandDelay{}
+	for k, v := range result {
+		commandDelay, err := types.MakeCommandDelay(v)
+		if err != nil {
+			rest.APIError(c, i18n.GetMessage(c, "服务请求失败{}", err))
+			return
+		}
+		rsp[k] = commandDelay
+	}
+
+	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), rsp)
 }

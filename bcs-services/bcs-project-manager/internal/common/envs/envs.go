@@ -26,4 +26,5 @@ var (
 	MongoPwd = stringx.GetEnv("mongoPwd", "")
 	// BCSGatewayToken bcs gateway token
 	BCSGatewayToken = stringx.GetEnv("gatewayToken", "")
+	BCSNamespacePrefix = stringx.GetEnv("BCS_NAMESPACE_PREFIX", "bcs")
 )

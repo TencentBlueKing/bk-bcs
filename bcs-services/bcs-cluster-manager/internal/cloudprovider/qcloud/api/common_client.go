@@ -482,3 +482,44 @@ func (c *Client) DescribeOSImagesWithContext(ctx context.Context, request *Descr
 	err = c.Send(request, response)
 	return
 }
+
+// NewDescribeInstanceCreateProgressRequest add node progress
+func NewDescribeInstanceCreateProgressRequest() (request *DescribeInstanceCreateProgressRequest) {
+	request = &DescribeInstanceCreateProgressRequest{
+		BaseRequest: &tchttp.BaseRequest{},
+	}
+	request.Init().WithApiInfo("tke", APIVersion, "DescribeInstanceCreateProgress")
+
+	return
+}
+
+// NewDescribeInstanceCreateProgressResponse add node progress
+func NewDescribeInstanceCreateProgressResponse() (response *DescribeInstanceCreateProgressResponse) {
+	response = &DescribeInstanceCreateProgressResponse{
+		BaseResponse: &tchttp.BaseResponse{},
+	}
+	return
+}
+
+// DescribeInstanceCreateProgress 获取节点创建进度
+func (c *Client) DescribeInstanceCreateProgress(request *DescribeInstanceCreateProgressRequest) (response *DescribeInstanceCreateProgressResponse, err error) {
+	return c.DescribeInstanceCreateProgressWithContext(context.Background(), request)
+}
+
+// DescribeInstanceCreateProgressWithContext  获取节点创建进度
+func (c *Client) DescribeInstanceCreateProgressWithContext(ctx context.Context,
+	request *DescribeInstanceCreateProgressRequest) (response *DescribeInstanceCreateProgressResponse, err error) {
+	if request == nil {
+		request = NewDescribeInstanceCreateProgressRequest()
+	}
+
+	if c.GetCredential() == nil {
+		return nil, errors.New("DescribeInstanceCreateProgress require credential")
+	}
+
+	request.SetContext(ctx)
+
+	response = NewDescribeInstanceCreateProgressResponse()
+	err = c.Send(request, response)
+	return
+}

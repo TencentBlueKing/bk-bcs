@@ -87,6 +87,8 @@ var (
 const (
 	// MasterRole label
 	MasterRole = "node-role.kubernetes.io/master"
+	// ControlPlanRole label
+	ControlPlanRole = "node-role.kubernetes.io/control-plane"
 )
 
 const (
@@ -396,6 +398,8 @@ const (
 	BcsErrClusterManagerCACleanNodesEmptyErr = bcscommon.BCSErrClusterManager + 40
 	// BcsErrClusterManagerCheckKubeConnErr cloud config error
 	BcsErrClusterManagerCheckKubeConnErr = bcscommon.BCSErrClusterManager + 41
+	// BcsErrClusterManagerClsMgrCloudErr cloud config error
+	BcsErrClusterManagerClsMgrCloudErr = bcscommon.BCSErrClusterManager + 42
 )
 
 // ClusterIDRange for generate clusterID range
@@ -424,6 +428,8 @@ const (
 	PrivateImageProvider = "PRIVATE_IMAGE"
 	// MarketImageProvider 市场镜像
 	MarketImageProvider = "MARKET_IMAGE"
+	// AllImageProvider 所有镜像
+	AllImageProvider = "ALL"
 )
 
 // Instance sell status

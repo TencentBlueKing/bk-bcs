@@ -61,6 +61,7 @@ import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Search, RightShape } from 'bkui-vue/lib/icon';
 import useServiceStore from '../../../../../../../../store/service';
+import { datetimeFormat } from '../../../../../../../../utils';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import {
   IConfigItem,
@@ -282,7 +283,7 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
           name,
           file_type,
           file_state,
-          update_at: revision.update_at,
+          update_at: datetimeFormat(revision.update_at || revision.create_at),
           byte_size: unNamedVersion ? byte_size : origin_byte_size,
           signature: unNamedVersion ? signature : origin_signature,
           template_revision_id: 0,
@@ -327,6 +328,7 @@ const getBoundTemplateList = async (id: number) => {
         origin_signature,
         signature,
         template_revision_id,
+        create_at,
       } = tpl;
       if (file_state !== 'DELETE') {
         group.configs.push({
@@ -335,7 +337,7 @@ const getBoundTemplateList = async (id: number) => {
           name,
           file_type,
           file_state,
-          update_at: '',
+          update_at: datetimeFormat(create_at),
           byte_size: unNamedVersion ? byte_size : origin_byte_size,
           signature: unNamedVersion ? signature : origin_signature,
           template_revision_id,
@@ -458,6 +460,7 @@ const calcDiff = () => {
 
 // 设置默认选中的配置文件
 // 如果props有设置选中项，取props值
+// 如果选中项有值，保持上一次选中项
 // 否则取第一个非空分组的第一个配置文件
 const setDefaultSelected = () => {
   if (props.selectedConfig.id) {
@@ -467,6 +470,14 @@ const setDefaultSelected = () => {
     }
     handleSelectItem(props.selectedConfig);
   } else {
+    const selectedGroup = aggregatedList.value.find(group => group.id === selected.value.pkgId);
+    if (selectedGroup) {
+      const selectedConfig = selectedGroup.configs.find(config => config.id === selected.value.id);
+      if (selectedConfig) {
+        handleSelectItem(selected.value);
+        return;
+      }
+    }
     const group = aggregatedList.value.find(group => group.configs.length > 0);
     if (group) {
       handleSelectItem({ pkgId: group.id, id: group.configs[0].id, version: group.configs[0].template_revision_id });

@@ -29,6 +29,8 @@ spec:
   securityContext:
     {{- include "workload.security" .spec.security | indent 4 }}
   {{- end }}
+  # readinessGates
+  {{- include "workload.readinessGates" .spec.readinessGates | indent 2 }}
   # other
   {{- include "workload.specOther" .spec.other | indent 2 }}
   {{- if .volume }}
@@ -188,6 +190,15 @@ fsGroup: {{ .fsGroup }}
 seLinuxOptions:
   {{- range $k, $v := .seLinuxOpt }}
   {{ $k | quote }}: {{ $v | quote }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
+{{- define "workload.readinessGates" -}}
+{{- if .readinessGates }}
+readinessGates:
+  {{- range .readinessGates }}
+  - conditionType: {{ . | quote }}
   {{- end }}
 {{- end }}
 {{- end }}

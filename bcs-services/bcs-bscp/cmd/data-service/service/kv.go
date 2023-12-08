@@ -94,6 +94,14 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 
 	kt := kit.FromGrpcContext(ctx)
 
+	app, err := s.dao.App().Get(kt, req.Attachment.BizId, req.Attachment.AppId)
+	if err != nil {
+		return nil, fmt.Errorf("get app fail,err : %v", req.Spec.Key)
+	}
+	if checkKVTypeMatch(table.DataType(req.Spec.KvType), app.Spec.DataType) {
+		return nil, fmt.Errorf("kv type does not match the data type defined in the application")
+	}
+
 	kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
 	if err != nil {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)

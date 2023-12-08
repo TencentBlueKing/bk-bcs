@@ -22,7 +22,7 @@ export interface ICluster {
   region: string
   clusterID: string
   clusterName: string
-  status: 'INITIALIZATION' | 'DELETING'
+  status: 'INITIALIZATION' | 'DELETING' | 'RUNNING'
   clusterCategory: string
   providerType: string
   networkSettings: {
@@ -32,6 +32,8 @@ export interface ICluster {
     multiClusterCIDR: number[]
     cidrStep: number
     serviceIPv4CIDR: string
+    isStaticIpMode: boolean
+    eniSubnetIDs: string[]
   }
   master: any
   provider: string
@@ -52,6 +54,10 @@ export interface ICluster {
   vpcID: string
   networkType: string
   cloudAccountID: string
+  labels: Record<string, string>
+
+  // 从clusterExtraInfo中merge过来的
+  autoScale: boolean
 }
 /**
  * 获取项目文档配置信息

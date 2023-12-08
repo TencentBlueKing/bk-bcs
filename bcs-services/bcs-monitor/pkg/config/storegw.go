@@ -20,3 +20,12 @@ type StoreConf struct {
 	Type   StoreProvider `yaml:"type"`
 	Config interface{}   `yaml:"config,omitempty"`
 }
+
+const (
+	// BKMONITOR 蓝鲸监控数据源
+	BKMONITOR StoreProvider = "BK_MONITOR"
+	// BCS_SYSTEM xxx
+	BCS_SYSTEM StoreProvider = "BCS_SYSTEM"
+	// PROMETHEUS prometheus 原生数据源
+	PROMETHEUS StoreProvider = "PROMETHEUS"
+)

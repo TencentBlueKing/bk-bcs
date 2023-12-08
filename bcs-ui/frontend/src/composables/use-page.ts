@@ -31,7 +31,7 @@ export interface IPageConfResult {
  * @param data 全量数据
  * @param options 配置数据
  */
-export default function usePageConf(data: Ref<any[]>, options: IOptions = {
+export default function usePageConf<T>(data: Ref<T[]>, options: IOptions = {
   current: 1,
   limit: $store.state.globalPageSize || 10,
 }): IPageConfResult {
@@ -40,7 +40,7 @@ export default function usePageConf(data: Ref<any[]>, options: IOptions = {
     limit: options.limit,
   });
 
-  const curPageData = computed(() => {
+  const curPageData = computed<T[]>(() => {
     const { limit, current } = pageConf;
     return data.value.slice(limit * (current - 1), limit * current);
   });

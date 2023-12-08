@@ -104,6 +104,7 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.CommunityEdition = op.CommunityEdition
 	userMgrConfig.BcsAPI = &op.BcsAPI
 	userMgrConfig.Encrypt = op.Encrypt
+	userMgrConfig.Activity = op.Activity
 
 	config.Tke = op.TKE
 	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretID))

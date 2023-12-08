@@ -706,7 +706,7 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 	}
 
 	// cloud nodes addition features
-	la.handleNodes()
+	// la.handleNodes()
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
@@ -927,7 +927,7 @@ func returnClusterExtraInfo(model store.ClusterManagerModel,
 		extraInfo[clusterList[i].ClusterID] = &cmproto.ExtraInfo{
 			CanDeleted:   true,
 			ProviderType: getCloudProviderEngine(model, clusterList[i]),
-			AutoScale:    IsSupportAutoScale(clusterList[i]),
+			AutoScale:    IsSupportAutoScale(model, clusterList[i]),
 		}
 	}
 

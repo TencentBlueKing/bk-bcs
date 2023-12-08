@@ -17,6 +17,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -64,4 +65,31 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	user := kit.User{Username: k.User}
 	render.Render(w, r, rest.OKRender(user))
+}
+
+// FeatureFlags map of feature flags
+type FeatureFlags map[cc.FeatureFlag]bool
+
+// FeatureFlagsHandler 特性开关接口
+func FeatureFlagsHandler(w http.ResponseWriter, r *http.Request) {
+	featureFlags := FeatureFlags{}
+
+	biz := r.URL.Query().Get("biz")
+	for k, v := range cc.ApiServer().FeatureFlags {
+		// 默认和开关开启保持一致
+		featureFlags[k] = v.Enabled
+
+		if biz == "" {
+			continue
+		}
+
+		// 默认未开启, 设置是白名单模式，否则取反
+		for _, w := range v.List {
+			if biz == w {
+				featureFlags[k] = !v.Enabled
+			}
+		}
+	}
+
+	render.Render(w, r, rest.OKRender(featureFlags))
 }

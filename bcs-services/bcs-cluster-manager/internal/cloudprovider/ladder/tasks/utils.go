@@ -35,16 +35,16 @@ func buildApplyInstanceRequest(group *proto.NodeGroup, operator string) *resourc
 
 		Region:             group.GetRegion(),
 		VpcID:              group.GetAutoScaling().GetVpcID(),
-		ZoneList:           group.GetAutoScaling().Zones,
-		SubnetList:         group.GetAutoScaling().SubnetIDs,
-		InstanceType:       group.GetLaunchTemplate().InstanceType,
-		CPU:                group.GetLaunchTemplate().CPU,
-		Memory:             group.GetLaunchTemplate().Mem,
-		Gpu:                group.GetLaunchTemplate().GPU,
-		InstanceChargeType: group.GetLaunchTemplate().InstanceChargeType,
+		ZoneList:           group.GetAutoScaling().GetZones(),
+		SubnetList:         group.GetAutoScaling().GetSubnetIDs(),
+		InstanceType:       group.GetLaunchTemplate().GetInstanceType(),
+		CPU:                group.GetLaunchTemplate().GetCPU(),
+		Memory:             group.GetLaunchTemplate().GetMem(),
+		Gpu:                group.GetLaunchTemplate().GetGPU(),
+		InstanceChargeType: group.GetLaunchTemplate().GetInstanceChargeType(),
 		SystemDisk: resource.DataDisk{
-			DiskType: group.GetLaunchTemplate().GetSystemDisk().DiskType,
-			DiskSize: group.GetLaunchTemplate().GetSystemDisk().DiskSize,
+			DiskType: group.GetLaunchTemplate().GetSystemDisk().GetDiskType(),
+			DiskSize: group.GetLaunchTemplate().GetSystemDisk().GetDiskSize(),
 		},
 		DataDisks: func() []resource.DataDisk {
 			if len(group.GetLaunchTemplate().GetDataDisks()) > 0 {

@@ -15,6 +15,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -115,7 +116,7 @@ func createResourcePool(ctx context.Context, data *cloudprovider.CloudDependBasi
 			if pool.ResourcePoolID == "" {
 				return nil
 			}
-			return []string{pool.ResourcePoolID}
+			return strings.Split(pool.ResourcePoolID, ",")
 		}(),
 		PoolID:   []string{pool.ResourcePoolID},
 		Operator: common.ClusterManager,

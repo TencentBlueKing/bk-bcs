@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
@@ -39,29 +40,32 @@ import (
 func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	req *proto.ListNamespacesRequest, resp *proto.ListNamespacesResponse) error {
 	var retDatas []*proto.NamespaceData
-	// list staging creating namespaces from db
-	stagings, err := a.model.ListNamespacesByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(),
-		[]string{nsm.ItsmTicketTypeCreate, nsm.ItsmTicketTypeUpdate, nsm.ItsmTicketTypeDelete})
-	if err != nil {
-		logging.Error("list staging namespaces failed, err: %s", err.Error())
-		return errorx.NewDBErr(err.Error())
-	}
-	// filter staging namespaces by its type, create as creating, update and delete as existing in cluster
 	existns := map[string]nsm.Namespace{}
-	creatings := []nsm.Namespace{}
-	for _, staging := range stagings {
-		switch staging.ItsmTicketType {
-		case nsm.ItsmTicketTypeCreate:
-			creatings = append(creatings, staging)
-		case nsm.ItsmTicketTypeUpdate:
-			existns[staging.Name] = staging
-		case nsm.ItsmTicketTypeDelete:
-			existns[staging.Name] = staging
+	// if itsm is not enable, list namespaces directly
+	if config.GlobalConf.ITSM.Enable {
+		// list staging creating namespaces from db
+		stagings, err := a.model.ListNamespacesByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(),
+			[]string{nsm.ItsmTicketTypeCreate, nsm.ItsmTicketTypeUpdate, nsm.ItsmTicketTypeDelete})
+		if err != nil {
+			logging.Error("list staging namespaces failed, err: %s", err.Error())
+			return errorx.NewDBErr(err.Error())
 		}
-	}
-	// list creating namespaces from db and insert into retDatas first
-	for _, namespace := range creatings {
-		retDatas = append(retDatas, loadListRetDataFromDB(namespace))
+		// filter staging namespaces by its type, create as creating, update and delete as existing in cluster
+		creatings := []nsm.Namespace{}
+		for _, staging := range stagings {
+			switch staging.ItsmTicketType {
+			case nsm.ItsmTicketTypeCreate:
+				creatings = append(creatings, staging)
+			case nsm.ItsmTicketTypeUpdate:
+				existns[staging.Name] = staging
+			case nsm.ItsmTicketTypeDelete:
+				existns[staging.Name] = staging
+			}
+		}
+		// list creating namespaces from db and insert into retDatas first
+		for _, namespace := range creatings {
+			retDatas = append(retDatas, loadListRetDataFromDB(namespace))
+		}
 	}
 	// list exists namespaces from cluster
 	client, err := clientset.GetClientGroup().Client(req.GetClusterID())

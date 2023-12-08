@@ -28,6 +28,13 @@ export const getSpaceList = () => http.get('auth/user/spaces').then((resp) => {
 });
 
 /**
+ * 获取业务的特性开关配置
+ * @param biz 业务ID
+ * @returns
+ */
+export const getSpaceFeatureFlag = (biz: string) => http.get(`feature_flags`, { params: { biz } }).then(resp => resp.data);
+
+/**
  * 获取服务列表
  * @param biz_id 业务ID
  * @param params 查询过滤条件

@@ -17,12 +17,12 @@ import (
 	"errors"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 // updateClusterSystemID set cluster systemID
@@ -98,17 +98,17 @@ func importClusterNodesToCM(ctx context.Context, workNodes []InstanceInfo, opt *
 			// no import node when found err
 			continue
 		}
+		n.ClusterID = opt.ClusterID
+		n.NodeTemplateID = opt.NodeTemplateID
+
+		ins, ok := ipToInstanceMap[n.InnerIP]
+		if ok && ins.InstanceStatus == api.RunningInstanceTke.String() {
+			n.Status = common.StatusRunning
+		} else {
+			n.Status = common.StatusAddNodesFailed
+		}
 
 		if node == nil {
-			n.ClusterID = opt.ClusterID
-			n.NodeTemplateID = opt.NodeTemplateID
-
-			ins, ok := ipToInstanceMap[n.InnerIP]
-			if ok && ins.InstanceStatus == api.RunningInstanceTke.String() {
-				n.Status = common.StatusRunning
-			} else {
-				n.Status = common.StatusAddNodesFailed
-			}
 			err = cloudprovider.GetStorageModel().CreateNode(ctx, n)
 			if err != nil {
 				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", n.InnerIP, err)

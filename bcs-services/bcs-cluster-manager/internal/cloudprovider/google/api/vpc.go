@@ -35,12 +35,12 @@ func init() {
 type VPCManager struct{}
 
 // ListVpcs list vpcs
-func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.CloudVpc, error) {
+func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.CloudVpc, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // ListSubnets list vpc subnets
-func (vm VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
+func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
 	locationList := strings.Split(opt.Region, "-")
 	if len(locationList) == 3 {
 		opt.Region = strings.Join(locationList[:2], "-")
@@ -75,16 +75,22 @@ func (vm VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) 
 }
 
 // ListSecurityGroups list security groups
-func (vm VPCManager) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*proto.SecurityGroup, error) {
+func (vm *VPCManager) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*proto.SecurityGroup, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // GetCloudNetworkAccountType 查询用户网络类型
-func (vm VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
+func (vm *VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // ListBandwidthPacks list bandWidthPacks
-func (vm VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*proto.BandwidthPackageInfo, error) {
+func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*proto.BandwidthPackageInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
+func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
+	opt *cloudprovider.CommonOption) ([]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

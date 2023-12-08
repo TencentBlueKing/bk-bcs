@@ -14,7 +14,11 @@
 package types
 
 import (
+	"fmt"
+	"strings"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
 
 // WebConsoleMode webconsole 类型
@@ -41,14 +45,26 @@ const (
 const (
 	defaultTerminalCols = 211 // defaultTerminalCols DefaultRows 1080p页面测试得来
 	defaultTerminalRows = 25  // defaultTerminalRows xxx
+
+	// perfMeterKey 存Redis的延时命令Hash名称
+	perfMeterKey = "bcs::webconsole::meter_key"
+	// perfMeterData 用户延时统计数据列表的Redis key前缀
+	perfMeterData = "bcs::webconsole::meter_data"
 )
 
 // APIResponse xxx
 type APIResponse struct {
-	Data      interface{} `json:"data,omitempty"`
 	Code      int         `json:"code"`
 	Message   string      `json:"message"`
 	RequestID string      `json:"request_id"`
+	Data      interface{} `json:"data"`
+}
+
+// CheckPassed 检测是否OK，如下载文件大小等
+type CheckPassed struct {
+	Passed bool   `json:"passed"`
+	Reason string `json:"reason"`
+	Detail string `json:"detail"`
 }
 
 // AuditRecord 审计记录
@@ -86,6 +102,93 @@ type PodContext struct {
 	SessionTimeout  int64          `json:"session_timeout"`   // session 过期时间, 单位分钟
 	ConnIdleTimeout int64          `json:"conn_idle_timeout"` // 空闲时间, 单位分钟
 	SessionId       string         `json:"session_id"`        // session id
+}
+
+// CommandDelay 用户延时命令设置
+type CommandDelay struct {
+	Enabled    bool   `json:"enabled"`
+	ConsoleKey string `json:"console_key"`
+}
+
+// HashValue 使用 {enabled}:{key} 高效检索
+func (c *CommandDelay) HashValue() string {
+	e := "0"
+	if c.Enabled {
+		e = "1"
+	}
+
+	return fmt.Sprintf("%s:%s", e, c.ConsoleKey)
+}
+
+// CommandDelayMatch 是否开启匹配
+func CommandDelayMatch(key string, msg byte) bool {
+	return key == "1:"+string(msg)
+}
+
+// GetMeterKey meter 数据 key
+func GetMeterKey() string {
+	return fmt.Sprintf("%s::%s", perfMeterKey, config.G.Base.RunEnv)
+}
+
+// GetMeterDataKey meter 数据 key
+func GetMeterDataKey(username string) string {
+	return fmt.Sprintf("%s::%s::%s", perfMeterData, username, config.G.Base.RunEnv)
+}
+
+// MakeCommandDelay HashValue 转结构体
+func MakeCommandDelay(v string) (*CommandDelay, error) {
+	parts := strings.Split(v, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("not valid value: %s", v)
+	}
+	c := &CommandDelay{
+		ConsoleKey: parts[1],
+		Enabled:    false,
+	}
+
+	if parts[0] == "1" {
+		c.Enabled = true
+	}
+
+	return c, nil
+}
+
+// DelayData 用户的延迟数据
+type DelayData struct {
+	ClusterId   string `json:"cluster_id"`
+	TimeConsume string `json:"time_consume"`
+	CreateTime  string `json:"create_time"`
+	SessionId   string `json:"session_id"`
+	PodName     string `json:"pod_name"`
+	CommandKey  string `json:"command_key"`
+	Username    string `json:"-"`
+}
+
+// UserMeterRsp 用户统计列表返回
+type UserMeterRsp struct {
+	ClusterId          string        `json:"cluster_id"`
+	AverageTimeConsume string        `json:"average_time_consume"`
+	MaxTimeConsume     string        `json:"max_time_consume"`
+	MinTimeConsume     string        `json:"min_time_consume"`
+	UserConsumes       []UserConsume `json:"user_consumes"`
+}
+
+// UserMeters 用户统计列表
+type UserMeters struct {
+	ClusterId          string        `json:"cluster_id"`
+	AverageTimeConsume time.Duration `json:"average_time_consume"`
+	MaxTimeConsume     time.Duration `json:"max_time_consume"`
+	MinTimeConsume     time.Duration `json:"min_time_consume"`
+	UserConsumes       []UserConsume `json:"user_consumes"`
+}
+
+// UserConsume 用户统计耗时单条数据
+type UserConsume struct {
+	TimeConsume string `json:"time_consume"`
+	CreateTime  string `json:"create_time"`
+	SessionId   string `json:"session_id"`
+	PodName     string `json:"pod_name"`
+	CommandKey  string `json:"command_key"`
 }
 
 // GetConnIdleTimeout 获取空闲过期时间
