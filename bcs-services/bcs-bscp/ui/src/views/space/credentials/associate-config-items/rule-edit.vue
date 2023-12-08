@@ -110,7 +110,13 @@ const handleRevoke = (index: number) => {
   updateRuleParams();
 };
 
-const testRule = (rule: string) => /\/([A-Za-z0-9]+[A-Za-z0-9-_.]*\/?)*$/.test(rule);
+const testRule = (rule: string) => {
+  if (rule.length < 2) {
+    return false;
+  }
+  const paths = rule.split('/');
+  return paths.length > 1 && paths.every(path => path.length > 0);
+};
 
 const handleRuleContentChange = (index: number) => {
   const rule = localRules.value[index];
