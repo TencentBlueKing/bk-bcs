@@ -29,6 +29,11 @@
           :base-variables="props.diff.base.variables"
           :base-permission="basePermission"
         />
+        <Kv
+          v-else
+          :current="props.diff.current.content as string"
+          :base="props.diff.base.content as string"
+        />
       </div>
     </bk-loading>
   </section>
@@ -39,6 +44,7 @@ import { IDiffDetail } from '../../../types/service';
 import { IFileConfigContentSummary } from '../../../types/config';
 import File from './file.vue';
 import Text from './text.vue';
+import Kv from './kv.vue';
 
 const props = defineProps<{
   panelName?: String;

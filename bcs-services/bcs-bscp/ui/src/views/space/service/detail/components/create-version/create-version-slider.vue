@@ -8,7 +8,7 @@
             <bk-input v-model="formData.name" @change="formChange" />
           </bk-form-item>
           <bk-form-item label="版本描述" property="memo">
-            <bk-input v-model="formData.memo" type="textarea" :maxlength="100" @change="formChange" :resize="true" />
+            <bk-input v-model="formData.memo" type="textarea" :maxlength="200" @change="formChange" :resize="true" />
           </bk-form-item>
           <bk-checkbox v-model="isPublish" :true-label="true" :false-label="false" @change="formChange">
             <span style="font-size: 12px;">同时上线版本</span>
@@ -73,16 +73,8 @@ const rules = {
   ],
   memo: [
     {
-      validator: (value: string) => value.length <= 100,
-      message: '最大长度100个字符',
-    },
-    {
-      validator: (value: string) => {
-        if (!value) return true;
-        return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value);
-      },
-      message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
-      trigger: 'change',
+      validator: (value: string) => value.length <= 200,
+      message: '最大长度200个字符',
     },
   ],
 };

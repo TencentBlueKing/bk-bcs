@@ -18,10 +18,12 @@ export interface IAppItem {
     memo: string;
     reload: {
       file_reload_spec: {
-        reload_file_path: string
+        reload_file_path: string;
       };
-      reload_type: string
-    }
+      reload_type: string;
+    };
+    alias: string;
+    data_type: string;
   };
   revision: {
     creator: string;
@@ -32,8 +34,8 @@ export interface IAppItem {
   config?: {
     count: number;
     update_at: string;
-  },
+  };
   permissions: {
     [key: string]: string;
-  }
+  };
 }
