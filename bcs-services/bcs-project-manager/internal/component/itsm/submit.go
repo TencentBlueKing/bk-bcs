@@ -152,7 +152,7 @@ func SubmitUpdateNamespaceTicket(username, projectCode, clusterID, namespace str
 		},
 		{
 			"key":   "OLD_MEMORY_LIMITS",
-			"value": oldCPULimits,
+			"value": oldMemoryLimits,
 		},
 	}
 	return CreateTicket(username, itsmConf.UpdateNamespaceServiceID, fields)

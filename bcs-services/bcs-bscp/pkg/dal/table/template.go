@@ -14,6 +14,7 @@ package table
 
 import (
 	"errors"
+	"fmt"
 
 	"bscp.io/pkg/criteria/validator"
 )
@@ -142,7 +143,7 @@ func (t *TemplateSpec) ValidateCreate() error {
 	}
 
 	if err := ValidatePath(t.Path, Unix); err != nil {
-		return err
+		return fmt.Errorf("%s err: %v", t.Path, err)
 	}
 
 	return nil

@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"math/rand"
 	"net"
 	"net/http"
@@ -51,6 +52,11 @@ const (
 const (
 	intel = "intel"
 	amd   = "amd"
+)
+
+var (
+	// DefaultMask default mask
+	DefaultMask = 24
 )
 
 // SplitAddrString split address string
@@ -484,4 +490,32 @@ func K8sTaintToTaint(taint []corev1.Taint) []*proto.Taint {
 		})
 	}
 	return taints
+}
+
+// AllocateMachinesToAZs alocate num machines ro num zones
+func AllocateMachinesToAZs(numMachines, numAZs int) [][]int {
+	if numAZs <= 0 {
+		return nil
+	}
+
+	allocation := make([][]int, numAZs)
+
+	for i := 0; i < numMachines; i++ {
+		azIndex := i % numAZs
+		machineID := i + 1
+		allocation[azIndex] = append(allocation[azIndex], machineID)
+	}
+
+	return allocation
+}
+
+// IsMasterNode check master node
+func IsMasterNode(labels map[string]string) bool {
+	_, ok1 := labels[icommon.MasterRole]
+	_, ok2 := labels[icommon.ControlPlanRole]
+	if ok1 || ok2 {
+		return true
+	}
+
+	return false
 }

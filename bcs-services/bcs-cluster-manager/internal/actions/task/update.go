@@ -183,7 +183,7 @@ func (ua *RetryAction) distributeTask() error {
 	}
 	blog.Infof("retry cluster[%s] task[%s] type %s successfully", ua.task.ClusterID, ua.task.TaskID, ua.task.TaskType)
 
-	utils.HiddenTaskPassword(ua.task)
+	utils.HandleTaskStepData(ua.ctx, ua.task)
 
 	ua.resp.Data = ua.task
 	return nil

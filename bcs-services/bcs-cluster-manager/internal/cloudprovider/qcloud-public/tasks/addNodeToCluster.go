@@ -14,17 +14,18 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // AddNodesToClusterTask add node to cluster
@@ -47,13 +48,17 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	// extract valid info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	initPasswd := step.Params[cloudprovider.PasswordKey.String()]
-	if len(initPasswd) == 0 {
-		initPasswd = utils.BuildInstancePwd()
-	}
 	operator := step.Params[cloudprovider.OperatorKey.String()]
 	nodeTemplateID := step.Params[cloudprovider.NodeTemplateIDKey.String()]
 	scheduleStr := step.Params[cloudprovider.NodeSchedule.String()]
+	loginStr := step.Params[cloudprovider.NodeLoginKey.String()]
+
+	var login = &proto.NodeLoginInfo{}
+	err = json.Unmarshal([]byte(loginStr), login)
+	if err != nil {
+		_ = state.UpdateStepFailure(start, stepName, err)
+		return fmt.Errorf("task %s parameter err: %v", taskID, err)
+	}
 
 	// parse node schedule status
 	schedule, _ := strconv.ParseBool(scheduleStr)
@@ -105,7 +110,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 
 	if len(notExistedInstance) > 0 {
 		result, err := business.AddNodesToCluster(ctx, dependInfo, &business.NodeAdvancedOptions{NodeScheduler: schedule}, // nolint
-			notExistedInstance, initPasswd, false, idToIPMap, operator)
+			notExistedInstance, login, false, idToIPMap, operator)
 		if err != nil {
 			blog.Errorf("AddNodesToClusterTask[%s] AddNodesToCluster failed: %v", taskID, err)
 			retErr := fmt.Errorf("AddNodesToCluster err, %s", err.Error())

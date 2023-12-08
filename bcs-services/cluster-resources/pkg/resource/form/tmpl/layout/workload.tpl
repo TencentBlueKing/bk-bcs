@@ -56,6 +56,14 @@
     prop: other
 {{- end }}
 
+{{- define "workload.readinessGates" }}
+- - group:
+      - [ "readinessGates" ]
+    prop: readinessGates
+    container:
+      grid-template-columns: "1fr auto"
+{{- end }}
+
 {{- define "workload.volume" }}
 - - group:
       - - group:

@@ -53,8 +53,8 @@ func getPoolKey(name, ns string) string {
 	return fmt.Sprintf("%s/%s", name, ns)
 }
 
-func getPoolPortKey(poolNs, poolName, protocol, itemName string, port int) string {
-	return fmt.Sprintf("%s/%s/%s/%s/%d", poolNs, poolName, itemName, protocol, port)
+func getPoolPortKey(poolNs, poolName, protocol string, port int) string {
+	return fmt.Sprintf("%s/%s/%s/%d", poolNs, poolName, protocol, port)
 }
 
 func parsePoolKey(key string) (string, string, error) {

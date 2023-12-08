@@ -177,7 +177,8 @@ func (plugin *AnalysisPlugin) handleProject(ctx context.Context,
 	result.Applications = make([]*AnalysisApplication, 0, len(apps.Items))
 	for i := range apps.Items {
 		result.Applications = append(result.Applications, &AnalysisApplication{
-			Name: apps.Items[i].Name,
+			Name:   apps.Items[i].Name,
+			Status: string(apps.Items[i].Status.Health.Status),
 		})
 	}
 
@@ -228,6 +229,10 @@ func (plugin *AnalysisPlugin) handleProject(ctx context.Context,
 	}
 	result.ActivityUsers = make([]*AnalysisActivityUser, 0, len(users))
 	for i := range users {
+		username := users[i].UserName
+		if username == proxy.AdminClientUser || username == proxy.AdminGitOpsUser {
+			continue
+		}
 		result.ActivityUsers = append(result.ActivityUsers, &AnalysisActivityUser{
 			UserName:         users[i].UserName,
 			OperateNum:       users[i].OperateNum,

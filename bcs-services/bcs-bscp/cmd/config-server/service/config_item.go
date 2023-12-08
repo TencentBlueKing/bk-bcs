@@ -152,11 +152,12 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 		Items:      items,
 		ReplaceAll: req.ReplaceAll,
 	}
-	if _, e := s.client.DS.BatchUpsertConfigItems(grpcKit.RpcCtx(), buReq); e != nil {
+	batchUpsertConfigResp, e := s.client.DS.BatchUpsertConfigItems(grpcKit.RpcCtx(), buReq)
+	if e != nil {
 		logs.Errorf("batch upsert config item failed, err: %v, rid: %s", e, grpcKit.Rid)
 		return nil, e
 	}
-
+	resp.Ids = batchUpsertConfigResp.Ids
 	return resp, nil
 }
 
@@ -392,7 +393,6 @@ func (s *Service) GetReleasedConfigItem(ctx context.Context, req *pbcs.GetReleas
 // ListConfigItems list config item with filter
 func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItemsReq) (
 	*pbcs.ListConfigItemsResp, error) {
-
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
@@ -412,6 +412,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		Start:        req.Start,
 		Limit:        req.Limit,
 		All:          req.All,
+		Ids:          req.Ids,
 		WithStatus:   req.WithStatus,
 	}
 	rp, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), r)

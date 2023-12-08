@@ -20,7 +20,7 @@ container_id或namespace/pod_name/container_name不能同时为空: "container_i
 
 BCS Console 已经{}分钟无操作: "BCS Console 已经{{ .time }}分钟无操作"
 
-BCS Console 使用已经超过{}小时，请重新登录 : "BCS Console 使用已经超过{{ .time }}小时，请重新登录"
+BCS Console 使用已经超过{}小时，请重新登录: "BCS Console 使用已经超过{{ .time }}小时，请重新登录"
 
 container_id不正确，请检查参数: "container_id不正确，请检查参数"
 
@@ -61,3 +61,9 @@ mgrGuideMessage: "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快�
 下载: "下载"
 
 语言: "zh"
+
+服务请求失败{}: "服务请求失败: {{ .err }}"
+
+服务请求成功: "服务请求成功"
+
+用户没有设置命令延时: "用户没有设置命令延时"

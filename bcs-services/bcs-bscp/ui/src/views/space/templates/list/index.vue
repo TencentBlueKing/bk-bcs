@@ -85,5 +85,6 @@ onMounted(() => {
 }
 .main-content-container > .bk-resize-layout-main {
   height: 100%;
+  overflow: auto;
 }
 </style>

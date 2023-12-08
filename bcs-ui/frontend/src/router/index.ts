@@ -32,7 +32,7 @@ import PluginManage from './plugin-manage';
 import ProjectManage from './project-manage';
 import ResourceView from './resource-view';
 
-import http from '@/api';
+import cancelRequest from '@/common/cancel-request';
 import $store from '@/store';
 import useMenu from '@/views/app/use-menu';
 
@@ -131,12 +131,6 @@ VueRouter.prototype.back = () => {
   } else {
     router.go(-1);
   }
-};
-
-const cancelRequest = async () => {
-  const allRequest = http.queue.get();
-  const requestQueue = allRequest.filter(request => request.cancelWhenRouteChange);
-  await http.cancel(requestQueue.map(request => request.requestId));
 };
 
 router.beforeEach(async (to, from, next) => {

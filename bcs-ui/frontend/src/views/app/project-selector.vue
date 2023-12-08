@@ -4,7 +4,7 @@
       class="project-select"
       :clearable="false"
       searchable
-      :value="projectName"
+      :value="displayName"
       :popover-min-width="320"
       enable-scroll-load
       :scroll-loading="{
@@ -14,6 +14,7 @@
       :remote-method="remoteSearch"
       allow-create
       ref="selectRef"
+      :allow-enter="false"
       @selected="handleProjectChange"
       @scroll-end="handleScrollToBottom">
       <bcs-option
@@ -33,7 +34,10 @@
           }
         }">
         <span
-          class="flex items-center"
+          :class="[
+            'flex items-center mx-[-16px] px-[16px]',
+            projectCode === option.projectCode ? 'bg-[#f4f6fa] text-[#3a84ff]' : ''
+          ]"
           v-bk-tooltips="{
             content: option.businessID && (option.businessID !== '0') && option.kind
               ? `${$t('projects.project.name')}:
@@ -76,6 +80,7 @@ import { computed, defineComponent, onBeforeMount, onMounted, ref, watch } from 
 
 import useProjects, { IProjectPerm } from '../project-manage/project/use-project';
 
+import cancelRequest from '@/common/cancel-request';
 import { IProject } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
 import $router from '@/router';
@@ -96,7 +101,8 @@ export default defineComponent({
 
     const projectList = ref<IProject[]>([]);
     const perms = ref<Record<string, IProjectPerm>>({});
-    const projectName = computed(() => $store.state.curProject?.name || $router.currentRoute?.params?.projectCode);
+    const projectCode = computed(() => $router.currentRoute?.params?.projectCode);
+    const displayName = computed(() => $store.state.curProject?.name || $router.currentRoute?.params?.projectCode);
     const projectCodeMap = computed(() => projectList.value.reduce((pre, item) => {
       pre[item.projectCode] = item;
       return pre;
@@ -159,7 +165,7 @@ export default defineComponent({
       showCreateDialog.value = true;
     };
     // 切换项目
-    const handleProjectChange = (projectCode) => {
+    const handleProjectChange = async (projectCode) => {
       const { currentRoute } = $router;
       if (projectCode === currentRoute.params?.projectCode) return;
 
@@ -177,6 +183,7 @@ export default defineComponent({
         // repo仓库界面不清楚query参数会导致始终是上一个项目的参数
         // query: currentRoute.query,
       });
+      await cancelRequest();
       window.location.href = href;
     };
     // 项目管理
@@ -203,7 +210,8 @@ export default defineComponent({
 
     return {
       perms,
-      projectName,
+      projectCode,
+      displayName,
       loading,
       selectRef,
       remoteSearch,

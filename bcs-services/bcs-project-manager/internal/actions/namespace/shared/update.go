@@ -21,8 +21,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/independent"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
@@ -32,6 +34,11 @@ import (
 // UpdateNamespace implement for UpdateNamespace interface
 func (a *SharedNamespaceAction) UpdateNamespace(ctx context.Context,
 	req *proto.UpdateNamespaceRequest, resp *proto.UpdateNamespaceResponse) error {
+	// if itsm is not enable, update namespace directly
+	if !config.GlobalConf.ITSM.Enable {
+		ia := independent.NewIndependentNamespaceAction(a.model)
+		return ia.UpdateNamespace(ctx, req, resp)
+	}
 	if err := quotautils.ValidateResourceQuota(req.Quota); err != nil {
 		return err
 	}

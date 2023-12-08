@@ -41,20 +41,26 @@ version() {
   echo "$PROGRAM version $VERSION"
 }
 
+_yum_bash-completion() {
+  if ! rpm -q bash-completion; then
+    yum install -y bash-completion \
+      || utils::log "FATAL" "fail to install bash-completion"
+  fi
+}
+
 check_completion() {
-  if ! type -a complete &>/dev/null; then
-    utils::log "INFO" "installing bash-completion"
-    if [[ -n ${BCS_OFFLINE:-} ]]; then
-      # ToDo helm image offline install
-      rpm_path="$(find "${ROOT_DIR}/version-${K8S_VER}/rpm/" -iname "bash-completion-*.rpm" -type f | head -1)"
-      if [[ -z $rpm_path ]]; then
-        utils::log "FATAL" "can't find bash-completion rpm in ${ROOT_DIR}/version-${K8S_VER}/rpm/"
-      fi
-      rpm -ivh "$rpm_path"
-    else
-      yum install -y bash-completion \
-        || utils::log "FATAL" "fail to install bash-completion"
-    fi
+  if [[ -n ${BCS_OFFLINE:-} ]]; then
+    true
+  else
+    case ${INSTALL_METHOD} in
+      "yum")
+        _yum_bash-completion
+        ;;
+      *)
+        utils::log "ERROR" \
+          "unkown ${INSTALL_METHOD} to exec download bash_completion"
+        ;;
+    esac
   fi
   touch ${RC_FILE}
   return 0
@@ -165,7 +171,7 @@ safe_source() {
 
 main() {
   local source_files
-  source_files=("${ROOT_DIR}/functions/utils.sh")
+  source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
   for file in "${source_files[@]}"; do
     safe_source "$file"
   done

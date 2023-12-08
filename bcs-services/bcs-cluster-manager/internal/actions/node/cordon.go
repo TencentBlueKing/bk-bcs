@@ -69,8 +69,9 @@ func (ua *UnCordonNodeAction) unCordonClusterNodes() error {
 
 	barrier := utils.NewRoutinePool(50)
 	defer barrier.Close()
-	barrier.Add(len(ua.req.Nodes))
+
 	for i := range ua.req.Nodes {
+		barrier.Add(1)
 		go func(node string) {
 			defer barrier.Done()
 			ctx, cancel := context.WithTimeout(context.Background(), clusterops.DefaultTimeout)
@@ -179,8 +180,9 @@ func (ua *CordonNodeAction) cordonClusterNodes() error {
 
 	barrier := utils.NewRoutinePool(50)
 	defer barrier.Close()
-	barrier.Add(len(ua.req.Nodes))
+
 	for i := range ua.req.Nodes {
+		barrier.Add(1)
 		go func(node string) {
 			defer barrier.Done()
 			ctx, cancel := context.WithTimeout(context.Background(), clusterops.DefaultTimeout)

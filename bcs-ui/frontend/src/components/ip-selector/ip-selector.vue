@@ -14,7 +14,7 @@
     @change="confirm"
     @close-dialog="cancel" />
 </template>
-<script setup lang="ts">
+<script lang="ts">
 import { computed, PropType, ref, watch } from 'vue';
 
 import {
@@ -27,6 +27,24 @@ import IpSelector from './ipv6-selector';
 import { cloudNodes, hostCheck, nodeAvailable, topologyHostsNodes  } from '@/api/modules/cluster-manager';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
+
+// 节点是否被占用Map
+let cacheNodeAvailableMap: Record<string, {
+  clusterID: string
+  clusterName: string
+  isExist: false
+}> = {};
+// 节点云上信息
+let cacheNodeListCloudDataMap: Record<string, {
+  region: string
+  innerIP: string
+  vpc: string
+  zone: string
+  zoneName: string
+}> = {};
+</script>
+<script setup lang="ts">
+
 
 interface IHostData {
   ip: string
@@ -64,6 +82,14 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  accountID: {
+    type: String,
+    default: '',
+  },
+  availableZoneList: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const selectorKey = ref('');
@@ -98,18 +124,7 @@ const getRegionName = (region) => {
 // 获取topo树当前页的主机列表
 const $biz = computed(() => $store.state.curProject.businessID);
 const $scope = 'biz';
-// 节点是否被占用Map
-let cacheNodeAvailableMap: Record<string, {
-  clusterID: string
-  clusterName: string
-  isExist: false
-}> = {};
-// 节点云上信息
-let cacheNodeListCloudDataMap: Record<string, {
-  region: string
-  innerIP: string
-  vpc: string
-}> = {};
+
 // 获取主机云和占有信息
 const handleGetHostAvailableAndCloudInfo = async (hostData: IHostData[]) => {
   const ipList = hostData.filter(item => !!item.ip).map(item => item.ip);
@@ -124,6 +139,7 @@ const handleGetHostAvailableAndCloudInfo = async (hostData: IHostData[]) => {
       $cloudId: props.cloudId,
       region: props.region,
       ipList: ipList.join(','),
+      accountID: props.accountID,
     });
     const cloudDataMap = cloudData.reduce((pre, item) => {
       if (item.innerIP) {
@@ -184,13 +200,15 @@ const disableHostMethod = (row: IHostData) => {
       tips = $i18n.t('generic.ipSelector.tips.ipRegionNotMatched', [getRegionName(props.region)]);
     } else if (cacheNodeListCloudDataMap[row.ip]?.vpc !== props.vpc?.vpcID) {
       tips = $i18n.t('generic.ipSelector.tips.ipVpcNotMatched', [cacheNodeListCloudDataMap[row.ip]?.vpc, props.vpc?.vpcID]);
+    } else if (!!props.availableZoneList?.length
+      && !props.availableZoneList.includes(cacheNodeListCloudDataMap[row.ip]?.zone)) {
+      tips = $i18n.t('tke.tips.nodeNotInSubnetZone', [cacheNodeListCloudDataMap[row.ip]?.zoneName, props.availableZoneList.join(',')]);
     }
   }
   return tips;
 };
 
 const confirm = ({ hostList }) => {
-  console.log(hostList);
   // 兼容以前数据
   const data = hostList.map(item => ({
     ...item,

@@ -13,6 +13,7 @@
 package blueking
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -228,6 +229,18 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster,
 	}
 
 	return true, nil
+}
+
+// AddSubnetsToCluster add subnets to cluster
+func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource,
+	opt *cloudprovider.AddSubnetsToClusterOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
+// GetMasterSuggestedMachines get master suggested machines
+func (c *Cluster) GetMasterSuggestedMachines(level, vpcId string,
+	opt *cloudprovider.GetMasterSuggestedMachinesOption) ([]*proto.InstanceTemplateConfig, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // EnableExternalNodeSupport enable cluster support external node

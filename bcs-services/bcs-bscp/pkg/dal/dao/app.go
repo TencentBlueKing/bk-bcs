@@ -74,7 +74,7 @@ func (dao *appDao) List(kit *kit.Kit, bizList []uint32, name, operator string, o
 	}
 	if name != "" {
 		// 按名称模糊搜索
-		conds = append(conds, m.Name.Regexp("(?i)"+name))
+		conds = append(conds, m.Name.Like("%"+name+"%"))
 	}
 
 	result, count, err := q.Where(conds...).FindByPage(opt.Offset(), opt.LimitInt())

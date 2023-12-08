@@ -329,10 +329,6 @@ func (c *CloudValidate) ListInstanceTypeValidate(
 	}
 
 	if options.GetEditionInfo().IsInnerEdition() {
-		if len(req.ProjectID) == 0 {
-			return fmt.Errorf("%s ListInstanceTypeValidate request lost valid info", cloudName)
-		}
-
 		return nil
 	}
 

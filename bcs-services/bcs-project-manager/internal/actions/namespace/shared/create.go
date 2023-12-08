@@ -24,8 +24,11 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/independent"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -41,6 +44,15 @@ func (a *SharedNamespaceAction) CreateNamespace(ctx context.Context,
 	req *proto.CreateNamespaceRequest, resp *proto.CreateNamespaceResponse) error {
 	if err := a.validateCreate(ctx, req); err != nil {
 		return err
+	}
+	// if itsm is not enable, create namespace directly
+	if !config.GlobalConf.ITSM.Enable {
+		ia := independent.NewIndependentNamespaceAction(a.model)
+		req.Annotations = append(req.Annotations, &proto.Annotation{
+			Key:   constant.AnnotationKeyProjectCode,
+			Value: req.GetProjectCode(),
+		})
+		return ia.CreateNamespace(ctx, req, resp)
 	}
 	var username string
 	if authUser, gErr := middleware.GetUserFromContext(ctx); gErr == nil {

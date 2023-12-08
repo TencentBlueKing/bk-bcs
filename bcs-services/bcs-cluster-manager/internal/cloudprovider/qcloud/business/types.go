@@ -111,3 +111,8 @@ func FilterNodesByDataDisk(instanceIDs []string, opt *cloudprovider.CommonOption
 
 	return filter, nil
 }
+
+type subnetIpNum struct {
+	subnetId string
+	cnt      uint64
+}

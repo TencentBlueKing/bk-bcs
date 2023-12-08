@@ -29,8 +29,9 @@ func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 		"editMode": mapx.Get(
 			manifest, []string{"metadata", "annotations", resCsts.EditModeAnnoKey}, resCsts.EditModeYaml,
 		),
-		"creator": mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}),
-		"updater": mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}),
+		"creator":   mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}),
+		"updater":   mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}),
+		"immutable": parseLabelsHelm(manifest),
 	}
 	return ret
 }
@@ -80,4 +81,10 @@ func FormatPodManifestRes(kind string, manifest map[string]interface{}) map[stri
 		newManifest = manifest
 	}
 	return newManifest
+}
+
+// 解析labels是否包含helm发布
+func parseLabelsHelm(manifest map[string]interface{}) bool {
+	labels := mapx.GetMap(manifest, "metadata.labels")
+	return mapx.GetStr(labels, []string{"app.kubernetes.io/managed-by"}) == "Helm"
 }

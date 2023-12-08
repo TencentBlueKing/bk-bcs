@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -146,4 +148,73 @@ func subnetFromVpcSubnet(info *vpc.Subnet) (n *cidrtree.Subnet) {
 	s.CreatedTime = *info.CreatedTime
 	s.AvaliableIP = *info.AvailableIpAddressCount
 	return s
+}
+
+func selectZoneAvailableSubnet(vpcId string, zoneIpCnt map[string]int,
+	opt *cloudprovider.CommonOption) (map[string]string, error) {
+	client, err := api.NewVPCClient(opt)
+	if err != nil {
+		blog.Errorf("create vpc client failed, %s", err.Error())
+		return nil, err
+	}
+
+	filter := make([]*api.Filter, 0)
+	filter = append(filter, &api.Filter{Name: "vpc-id", Values: []string{vpcId}})
+	cloudSubnets, err := client.DescribeSubnets(nil, filter)
+	if err != nil {
+		blog.Errorf("checkVpcAvailableSubnetCnt[%s] DescribeSubnets failed: %v", vpcId, err)
+		return nil, err
+	}
+
+	// pick available subnet
+	availableSubnet := make([]*api.Subnet, 0)
+	for i := range cloudSubnets {
+		match := utils.MatchSubnet(*cloudSubnets[i].SubnetName, opt.Region)
+		if match && *cloudSubnets[i].AvailableIPAddressCount > 0 {
+			availableSubnet = append(availableSubnet, cloudSubnets[i])
+		}
+	}
+
+	zoneSubnetMap := make(map[string][]subnetIpNum, 0)
+	for i := range availableSubnet {
+		if zoneSubnetMap[*availableSubnet[i].Zone] == nil {
+			zoneSubnetMap[*availableSubnet[i].Zone] = make([]subnetIpNum, 0)
+		}
+
+		zoneSubnetMap[*availableSubnet[i].Zone] = append(zoneSubnetMap[*availableSubnet[i].Zone], subnetIpNum{
+			subnetId: *availableSubnet[i].SubnetID,
+			cnt:      *availableSubnet[i].AvailableIPAddressCount,
+		})
+	}
+
+	var (
+		selectedZoneSubnet = make(map[string]string, 0)
+		errors             = utils.NewMultiError()
+	)
+
+	for zone, num := range zoneIpCnt {
+		subnets, ok := zoneSubnetMap[zone]
+		if !ok {
+			errors.Append(fmt.Errorf("zone[%s] noe exist subnets", zone))
+			continue
+		}
+
+		exist := false
+		for i := range subnets {
+			if subnets[i].cnt >= uint64(num) {
+				exist = true
+				selectedZoneSubnet[zone] = subnets[i].subnetId
+				break
+			}
+		}
+		if !exist {
+			errors.Append(fmt.Errorf("zone[%s] not exist num[%v] subnets", zone, num))
+		}
+	}
+
+	if errors.HasErrors() {
+		return nil, errors
+	}
+
+	return selectedZoneSubnet, nil
 }

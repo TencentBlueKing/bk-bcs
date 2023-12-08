@@ -468,7 +468,7 @@ export default {
       };
     }
     // this.getApplyHostStatus();
-    this.fetchDiskType();
+    // this.fetchDiskType();
   },
   beforeDestroy() {
     clearTimeout(this.timer) && (this.timer = null);
@@ -716,6 +716,7 @@ export default {
       this.applyDialogShow = true;
       this.isAreaLoading = true;
       this.getAreas();
+      this.fetchDiskType();
     },
 
     /**

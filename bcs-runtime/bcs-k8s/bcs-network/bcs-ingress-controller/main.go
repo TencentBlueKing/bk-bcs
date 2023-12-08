@@ -155,7 +155,8 @@ func main() {
 		DefaultRegion:     opts.Region,
 		IsTCPUDPPortReuse: opts.IsTCPUDPPortReuse,
 		Cloud:             opts.Cloud,
-	}, mgr.GetClient(), validater, lbClient, listenerHelper, lbIDCache, lbNameCache)
+	}, mgr.GetClient(), validater, lbClient, listenerHelper, lbIDCache, lbNameCache,
+		mgr.GetEventRecorderFor("bcs-ingress-controller"))
 	if err != nil {
 		blog.Errorf("create ingress converter failed, err %s", err.Error())
 		os.Exit(1)
@@ -233,7 +234,8 @@ func main() {
 		ServerKeyFile:  opts.ServerKeyFile,
 	}
 	webhookServer, err := webhookserver.NewHookServer(webhookServerOpts, mgr.GetClient(), lbClient, portPoolCache,
-		eventWatcher, validater, ingressConverter, conflictHandler, opts.NodePortBindingNs)
+		eventWatcher, validater, ingressConverter, conflictHandler, opts.NodePortBindingNs,
+		mgr.GetEventRecorderFor("bcs-ingress-controller"))
 	if err != nil {
 		blog.Errorf("create hook server failed, err %s", err.Error())
 		os.Exit(1)

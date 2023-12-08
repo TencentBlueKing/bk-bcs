@@ -20,7 +20,7 @@ import (
 )
 
 // reservedResNamePrefix internal reserved string prefix, case-insensitive.
-var reservedResNamePrefix = []string{"_bk", "bk_"}
+var reservedResNamePrefix = []string{"_bk"}
 
 // validResNamePrefix verify whether the resource naming takes up the reserved resource name prefix of bscp.
 func validResNamePrefix(name string) error {

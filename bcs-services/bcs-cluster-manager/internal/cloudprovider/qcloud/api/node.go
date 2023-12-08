@@ -359,86 +359,6 @@ func (nc *NodeClient) DescribeZoneInstanceConfigInfos(zone, instanceFamily, inst
 	return resp.Response.InstanceTypeQuotaSet, nil
 }
 
-/*
-// DescribeInstances describe instances (https://cloud.tencent.com/document/api/213/15728)
-func (nc *NodeClient) DescribeInstances(ins []string, filters []*Filter) (
-	[]*proto.Node, error) {
-	blog.Infof("DescribeInstances input: %s, %s", utils.ToJSONString(ins),
-		utils.ToJSONString(filters))
-
-	req := cvm.NewDescribeInstancesRequest()
-	req.InstanceIds = common.StringPtrs(ins)
-	req.Limit = common.Int64Ptr(limit)
-
-	req.Filters = make([]*cvm.Filter, 0)
-	for _, v := range filters {
-		req.Filters = append(req.Filters, &cvm.Filter{
-			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
-	}
-
-	got, total := 0, 0
-	first := true
-	nodes := make([]*proto.Node, 0)
-	zoneInfo, err := GetZoneInfoByRegion(client, opt.Region)
-	if err != nil {
-		blog.Errorf("cvm client GetZoneInfoByRegion failed: %v", err)
-		return nil, err
-	}
-	for got < total || first {
-		first = false
-		req.Offset = common.Int64Ptr(int64(got))
-		resp, err := client.DescribeInstances(req)
-		if err != nil {
-			blog.Errorf("DescribeInstances failed, err: %s", err.Error())
-			return nil, err
-		}
-		if resp == nil || resp.Response == nil {
-			blog.Errorf("DescribeInstances resp is nil")
-			return nil, fmt.Errorf("DescribeInstances resp is nil")
-		}
-		blog.Infof("DescribeInstances success, requestID: %s", *resp.Response.RequestId)
-		for _, v := range resp.Response.InstanceSet {
-			node := &proto.Node{NodeID: *v.InstanceId}
-			if v.InstanceType != nil {
-				node.InstanceType = *v.InstanceType
-			}
-			if v.CPU != nil {
-				node.CPU = uint32(*v.CPU)
-			}
-			if v.Memory != nil {
-				node.Mem = uint32(*v.Memory)
-			}
-			if v.InstanceState != nil {
-				node.Status = *v.InstanceState
-			}
-			if len(v.PrivateIpAddresses) > 0 {
-				node.InnerIP = *v.PrivateIpAddresses[0]
-			}
-			if v.GPUInfo != nil && v.GPUInfo.GPUCount != nil {
-				node.GPU = uint32(*v.GPUInfo.GPUCount)
-			}
-			if v.Placement != nil && v.Placement.Zone != nil {
-				node.ZoneID = *v.Placement.Zone
-				zone, ok := zoneInfo[*v.Placement.Zone]
-				if ok {
-					node.Zone = uint32(zone.ZoneID)
-				}
-			}
-			if v.VirtualPrivateCloud != nil && v.VirtualPrivateCloud.VpcId != nil {
-				node.VPC = *v.VirtualPrivateCloud.VpcId
-			}
-			if v.LoginSettings != nil && v.LoginSettings.Password != nil {
-				node.Passwd = *v.LoginSettings.Password
-			}
-			nodes = append(nodes, node)
-		}
-		got += len(resp.Response.InstanceSet)
-		total = int(*resp.Response.TotalCount)
-	}
-	return nodes, nil
-}
-*/
-
 // DescribeImages describe images: PRIVATE_IMAGE: 私有镜像; PUBLIC_IMAGE: 公共镜像 (腾讯云官方镜像)
 // https://cloud.tencent.com/document/api/213/15715
 func (nc *NodeClient) DescribeImages(imageType string) ([]*cvm.Image, error) {
@@ -551,4 +471,28 @@ func (nc *NodeClient) ListKeyPairs() ([]*cvm.KeyPair, error) {
 	blog.Infof("ListKeyPairs successful")
 
 	return keyPairs, nil
+}
+
+// ModifyInstancesVpcAttribute 修改实例vpc属性(vpc必须存在对应可用区的子网)
+func (nc *NodeClient) ModifyInstancesVpcAttribute(vpcId string, subnet string, instanceIds []string) error {
+	req := cvm.NewModifyInstancesVpcAttributeRequest()
+	req.InstanceIds = common.StringPtrs(instanceIds)
+	req.ReserveHostName = common.BoolPtr(true)
+	req.VirtualPrivateCloud = &cvm.VirtualPrivateCloud{
+		VpcId:    common.StringPtr(vpcId),
+		SubnetId: common.StringPtr(subnet),
+	}
+
+	resp, err := nc.client.ModifyInstancesVpcAttribute(req)
+	if err != nil {
+		blog.Errorf("ModifyInstancesVpcAttribute[%+v] failed: %v", instanceIds, err)
+		return err
+	}
+
+	if resp.Response == nil {
+		return fmt.Errorf("ModifyInstancesVpcAttribute[%+v] lost validate reponse", instanceIds)
+	}
+
+	blog.Infof("ModifyInstancesVpcAttribute[%+v] vpc[%s] subnet[%s] successful", instanceIds, vpcId, subnet)
+	return nil
 }

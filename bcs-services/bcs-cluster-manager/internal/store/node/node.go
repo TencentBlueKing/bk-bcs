@@ -120,6 +120,22 @@ func (m *ModelNode) UpdateNode(ctx context.Context, node *types.Node) error {
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": node})
 }
 
+// UpdateClusterNodeByNodeID update node
+func (m *ModelNode) UpdateClusterNodeByNodeID(ctx context.Context, node *types.Node) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		nodeIDKeyName:    node.NodeID,
+		nodeClusterIDKey: node.ClusterID,
+	})
+	oldNode := &types.Node{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, oldNode); err != nil {
+		return err
+	}
+	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": node})
+}
+
 // DeleteNode delete node
 func (m *ModelNode) DeleteNode(ctx context.Context, nodeID string) error {
 	if err := m.ensureTable(ctx); err != nil {

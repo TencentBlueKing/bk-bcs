@@ -48,6 +48,7 @@ func (p *proxy) routers() http.Handler {
 
 	// 用户信息
 	r.With(p.authorizer.UnifiedAuthentication).Get("/api/v1/auth/user/info", UserInfoHandler)
+	r.With(p.authorizer.UnifiedAuthentication).Get("/api/v1/feature_flags", FeatureFlagsHandler)
 	// 登入接口, 不带鉴权信息
 	r.Get("/api/v1/logout", p.LogoutHandler)
 
@@ -93,22 +94,29 @@ func (p *proxy) routers() http.Handler {
 	// repo 上传 API, 此处因兼容老版本而保留，后续统一使用新接口
 	r.Route("/api/v1/api/create/content/upload", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Put("/biz_id/{biz_id}/app_id/{app_id}",
-			p.repo.UploadFile)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified,
+			p.HttpServerHandledTotal("", "Upload")).
+			Put("/biz_id/{biz_id}/app_id/{app_id}",
+				p.repo.UploadFile)
+
 	})
 
 	// repo 下载 API, 此处因兼容老版本而保留，后续统一使用新接口
 	r.Route("/api/v1/api/get/content/download", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}",
-			p.repo.DownloadFile)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified,
+			p.HttpServerHandledTotal("", "Download")).
+			Get("/biz_id/{biz_id}/app_id/{app_id}",
+				p.repo.DownloadFile)
 	})
 
 	// repo 获取二进制元数据 API, 此处因兼容老版本而保留，后续统一使用新接口
 	r.Route("/api/v1/api/get/content/metadata", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}",
-			p.repo.FileMetadata)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified,
+			p.HttpServerHandledTotal("", "Metadata")).
+			Get("/biz_id/{biz_id}/app_id/{app_id}",
+				p.repo.FileMetadata)
 	})
 
 	// 新的内容上传、下载相关接口，后续统一使用这组新接口
@@ -119,17 +127,27 @@ func (p *proxy) routers() http.Handler {
 		r.Use(p.authorizer.BizVerified)
 		r.Use(p.authorizer.ContentVerified)
 		// 内容上传API
-		r.Put("/upload", p.repo.UploadFile)
+		r.Route("/upload", func(r chi.Router) {
+			r.Use(p.HttpServerHandledTotal("", "Upload"))
+			r.Put("/", p.repo.UploadFile)
+		})
 		// 内容下载API
-		r.Get("/download", p.repo.DownloadFile)
+		r.Route("/download", func(r chi.Router) {
+			r.Use(p.HttpServerHandledTotal("", "Download"))
+			r.Get("/", p.repo.DownloadFile)
+		})
 		// 获取二进制内容元数据API
-		r.Get("/metadata", p.repo.FileMetadata)
+		r.Route("/metadata", func(r chi.Router) {
+			r.Use(p.HttpServerHandledTotal("", "Metadata"))
+			r.Get("/", p.repo.FileMetadata)
+		})
 	})
 
 	// 导入模板压缩包
 	r.Route("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/import", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.authorizer.BizVerified)
+		r.Use(p.HttpServerHandledTotal("", "TemplateConfigFileImport"))
 		r.Post("/", p.configImportService.TemplateConfigFileImport)
 
 	})
@@ -138,6 +156,7 @@ func (p *proxy) routers() http.Handler {
 	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}/config_item/import", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.authorizer.BizVerified)
+		r.Use(p.HttpServerHandledTotal("", "ConfigFileImport"))
 		r.Post("/", p.configImportService.ConfigFileImport)
 	})
 

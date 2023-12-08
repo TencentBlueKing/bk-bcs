@@ -105,7 +105,7 @@ type InternetConnect struct {
 		InternetMaxBandwidthOut int    `json:"InternetMaxBandwidthOut"`
 	} `json:"InternetAccessible"`
 	// VipIsp xxx
-	VipIsp string `json:"VipIsp"`
+	VipIsp string `json:"VipIsp,omitempty"`
 	// BandwidthPackageId xxx
-	BandwidthPackageId string `json:"BandwidthPackageId"`
+	BandwidthPackageId string `json:"BandwidthPackageId,omitempty"`
 }

@@ -104,6 +104,9 @@ func (ua *UpdateAction) updateCloudModuleFlag(
 			destModuleFlag.Range.Max = flagInfo.Range.Max
 		}
 	}
+	if flagInfo.NetworkType != "" {
+		destModuleFlag.NetworkType = flagInfo.NetworkType
+	}
 
 	return ua.model.UpdateCloudModuleFlag(ua.ctx, destModuleFlag)
 }

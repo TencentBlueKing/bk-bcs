@@ -8,7 +8,7 @@
             :app-id="props.appId"
             @created="refreshConfigList"
             @imported="refreshConfigList"
-            @uploaded="refreshConfigList"
+            @uploaded="refreshConfigList(true)"
           />
           <EditVariables ref="editVariablesRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
         </template>
@@ -85,8 +85,8 @@ const searchStr = ref('');
 const useTemplate = ref(true);
 const editVariablesRef = ref();
 
-const refreshConfigList = () => {
-  tableRef.value.refresh();
+const refreshConfigList = (isBatchUpload = false) => {
+  tableRef.value.refresh(isBatchUpload);
   refreshVariable();
 };
 

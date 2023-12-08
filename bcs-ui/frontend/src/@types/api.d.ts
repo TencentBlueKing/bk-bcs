@@ -7,3 +7,22 @@ interface INodePool {
     desiredSize: number
   }
 }
+
+interface ICloudTemplateDetail {
+  cloudID: string
+  clusterManagement: {
+    availableVersion: string[]
+  }
+  osManagement: {
+    regions: Record<string, string>
+    availableVersion: string[]
+  }
+}
+
+interface IRuntimeModuleParams {
+  enable: boolean
+  flagName: string
+  defaultValue: string
+  flagValueList: string[]
+  networkType: string
+}

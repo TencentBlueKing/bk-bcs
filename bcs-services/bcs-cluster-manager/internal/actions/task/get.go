@@ -65,7 +65,7 @@ func (ga *GetAction) Handle(
 		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	utils.HiddenTaskPassword(task)
+	utils.HandleTaskStepData(ga.ctx, task)
 	// actions.FormatTaskTime(task)
 
 	resp.Data = task

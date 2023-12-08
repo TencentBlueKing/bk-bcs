@@ -8,7 +8,7 @@
   >
     <section class="associate-config-items">
       <div :class="['rules-wrapper', { 'edit-mode': isRuleEdit }]">
-        <RuleEdit v-if="isRuleEdit" :id="props.id" :rules="rules" @change="handleRuleChange" />
+        <RuleEdit v-if="isRuleEdit" :id="props.id" :rules="rules" @change="handleRuleChange" ref="ruleEdit"/>
         <RuleView v-else :rules="rules" @edit="isRuleEdit = true" />
       </div>
       <!-- <div class="results-wrapper">
@@ -62,7 +62,7 @@ const ruleChangeParams = ref<IRuleUpdateParams>({
 const isRuleEdit = ref(false);
 const isFormChange = ref(false);
 const pending = ref(false);
-
+const ruleEdit = ref();
 watch(
   () => props.show,
   (val) => {
@@ -97,6 +97,7 @@ const handleRuleChange = (val: IRuleUpdateParams) => {
 };
 
 const handleSave = async () => {
+  if (ruleEdit.value.handleRuleValidate()) return;
   pending.value = true;
   try {
     await updateCredentialScopes(spaceId.value, props.id, ruleChangeParams.value);

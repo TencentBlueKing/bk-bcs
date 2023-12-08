@@ -14,7 +14,6 @@ package api
 
 import (
 	"fmt"
-
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
@@ -142,7 +141,18 @@ func generateAddExistedInstancesReq(addReq *AddExistedInstanceReq) *tke.AddExist
 
 	if addReq.LoginSetting != nil {
 		req.LoginSettings = &tke.LoginSettings{
-			Password: common.StringPtr(addReq.LoginSetting.Password),
+			Password: func() *string {
+				if len(addReq.LoginSetting.Password) > 0 {
+					return common.StringPtr(addReq.LoginSetting.Password)
+				}
+				return nil
+			}(),
+			KeyIds: func() []*string {
+				if len(addReq.LoginSetting.KeyIds) > 0 {
+					return common.StringPtrs(addReq.LoginSetting.KeyIds)
+				}
+				return nil
+			}(),
 		}
 	}
 
@@ -213,7 +223,12 @@ func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClust
 		MaxNodePodNum:        common.Uint64Ptr(request.ClusterCIDR.MaxNodePodNum),
 		MaxClusterServiceNum: common.Uint64Ptr(request.ClusterCIDR.MaxClusterServiceNum),
 		EniSubnetIds:         common.StringPtrs(request.ClusterCIDR.EniSubnetIds),
-		ClaimExpiredSeconds:  common.Int64Ptr(int64(request.ClusterCIDR.ClaimExpiredSeconds)),
+		ClaimExpiredSeconds: func() *int64 {
+			if request.ClusterCIDR.ClaimExpiredSeconds <= 0 {
+				return common.Int64Ptr(300)
+			}
+			return common.Int64Ptr(int64(request.ClusterCIDR.ClaimExpiredSeconds))
+		}(),
 		ServiceCIDR: func() *string {
 			if request.ClusterCIDR.ServiceCIDR != "" {
 				return common.StringPtr(request.ClusterCIDR.ServiceCIDR)
@@ -261,6 +276,32 @@ func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClust
 					return instanceSettings
 				}(),
 			})
+		}
+
+		if len(request.InstanceDataDiskMountSettings) > 0 {
+			for i := range request.InstanceDataDiskMountSettings {
+				if req.InstanceDataDiskMountSettings == nil {
+					req.InstanceDataDiskMountSettings = make([]*tke.InstanceDataDiskMountSetting, 0)
+				}
+
+				req.InstanceDataDiskMountSettings = append(req.InstanceDataDiskMountSettings, &tke.InstanceDataDiskMountSetting{
+					InstanceType: request.InstanceDataDiskMountSettings[i].InstanceType,
+					DataDisks: func() []*tke.DataDisk {
+						disks := make([]*tke.DataDisk, 0)
+						for cnt := range request.InstanceDataDiskMountSettings[i].DataDisks {
+							disks = append(disks, &tke.DataDisk{
+								DiskType:           common.StringPtr(request.InstanceDataDiskMountSettings[i].DataDisks[cnt].DiskType),
+								FileSystem:         common.StringPtr(request.InstanceDataDiskMountSettings[i].DataDisks[cnt].FileSystem),
+								DiskSize:           common.Int64Ptr(request.InstanceDataDiskMountSettings[i].DataDisks[cnt].DiskSize),
+								AutoFormatAndMount: common.BoolPtr(request.InstanceDataDiskMountSettings[i].DataDisks[cnt].AutoFormatAndMount),
+								MountTarget:        common.StringPtr(request.InstanceDataDiskMountSettings[i].DataDisks[cnt].MountTarget),
+							})
+						}
+						return disks
+					}(),
+					Zone: request.InstanceDataDiskMountSettings[i].Zone,
+				})
+			}
 		}
 
 		for i := range request.Addons {
@@ -468,9 +509,23 @@ func generateLoginSet(settings *LoginSettings) *tke.LoginSettings {
 		return nil
 	}
 
+	if len(settings.KeyIds) == 0 && settings.Password == "" {
+		return nil
+	}
+
 	return &tke.LoginSettings{
-		Password: common.StringPtr(settings.Password),
-		KeyIds:   common.StringPtrs(settings.KeyIds),
+		Password: func() *string {
+			if len(settings.Password) > 0 {
+				return common.StringPtr(settings.Password)
+			}
+			return nil
+		}(),
+		KeyIds: func() []*string {
+			if len(settings.KeyIds) > 0 {
+				return common.StringPtrs(settings.KeyIds)
+			}
+			return nil
+		}(),
 	}
 }
 

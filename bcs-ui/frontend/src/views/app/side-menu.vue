@@ -37,10 +37,10 @@
 <script lang="ts">
 import { computed, defineComponent, reactive, ref, toRef, watch } from 'vue';
 
-import { IMenu } from './menus';
-import useMenu from './use-menu';
+import useMenu, { IMenu } from './use-menu';
 
 import { useProject } from '@/composables/use-app';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
 
@@ -58,19 +58,26 @@ export default defineComponent({
     const route = computed(() => toRef(reactive($router), 'currentRoute').value);
 
     // 设置当前菜单ID
-    watch(route, () => {
-      // 路由上配置了菜单ID或者路由名称与当前子菜单项路由名称一致
-      const menu = leafMenus.value
-        .find(item => item.route === route.value.name || item.id === route.value.meta?.menuId);
+    watch(
+      [
+        () => route.value,
+        () => $i18n.locale,
+      ],
+      () => {
+        // 路由上配置了菜单ID或者路由名称与当前子菜单项路由名称一致
+        const menu = leafMenus.value
+          .find(item => item.route === route.value.name || item.id === route.value.meta?.menuId);
 
-      if (!menu) {
-        console.warn(`current route ${route.value.name} has no matched menuId`);
-      } else {
-        activeMenu.value = menu || {};
-        activeNav.value = menu?.root || {};
-        $store.commit('updateCurSideMenu', activeMenu.value);
-      }
-    }, { immediate: true });
+        if (!menu) {
+          console.warn(`current route ${route.value.name} has no matched menuId`);
+        } else {
+          activeMenu.value = menu || {};
+          activeNav.value = menu?.root || {};
+          $store.commit('updateCurSideMenu', activeMenu.value);
+        }
+      },
+      { immediate: true },
+    );
 
     // 切换菜单
     const { projectCode } = useProject();

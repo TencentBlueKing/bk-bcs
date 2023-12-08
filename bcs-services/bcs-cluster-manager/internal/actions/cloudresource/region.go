@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 const (
@@ -57,7 +58,12 @@ func (ga *GetCloudRegionsAction) listCloudRegions() error {
 	}
 
 	regionList, err := nodeMgr.GetCloudRegions(&cloudprovider.CommonOption{
-		Account: ga.account.Account,
+		Account: func() *cmproto.Account {
+			if ga.account != nil {
+				return ga.account.Account
+			}
+			return nil
+		}(),
 		// Region trick data, cloud need underlying dependence
 		Region: defaultRegion,
 		CommonConf: cloudprovider.CloudConf{
@@ -68,6 +74,14 @@ func (ga *GetCloudRegionsAction) listCloudRegions() error {
 	})
 	if err != nil {
 		return err
+	}
+
+	// 获取语言
+	lang := i18n.LanguageFromCtx(ga.ctx)
+	if lang != utils.ZH {
+		for _, item := range regionList {
+			item.RegionName = item.Region
+		}
 	}
 
 	ga.regionList = regionList
@@ -96,9 +110,11 @@ func (ga *GetCloudRegionsAction) validate() error {
 	if err != nil {
 		return err
 	}
-	err = validate.ImportCloudAccountValidate(ga.account.Account)
-	if err != nil {
-		return err
+	if ga.account != nil {
+		err = validate.ImportCloudAccountValidate(ga.account.Account)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -109,13 +125,17 @@ func (ga *GetCloudRegionsAction) getRelativeData() error {
 	if err != nil {
 		return err
 	}
-	account, err := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID, false)
-	if err != nil {
-		return err
+	ga.cloud = cloud
+
+	if ga.req.GetAccountID() != "" {
+		account, errLocal := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID, false)
+		if errLocal != nil {
+			return errLocal
+		}
+
+		ga.account = account
 	}
 
-	ga.account = account
-	ga.cloud = cloud
 	return nil
 }
 
@@ -185,7 +205,7 @@ func (ga *GetCloudRegionZonesAction) listCloudRegionZones() error {
 	}
 	// 获取语言
 	lang := i18n.LanguageFromCtx(ga.ctx)
-	if lang != "zh" {
+	if lang != utils.ZH {
 		for _, item := range zoneList {
 			item.ZoneName = item.Zone
 		}

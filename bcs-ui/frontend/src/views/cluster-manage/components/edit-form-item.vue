@@ -1,7 +1,7 @@
 <template>
   <div class="flex items-center">
     <template v-if="!isEdit">
-      <span>{{ value || '--' }}</span>
+      <span class="break-all">{{ value || '--' }}</span>
       <span
         class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
         @click="handleEdit">
@@ -22,8 +22,6 @@
           @change="handleChange">
         </bcs-input>
       </Validate>
-      <!-- <bcs-button text class="text-[12px] ml-[10px] h-[32px]" @click="handleSave">{{ $t('generic.button.save') }}</bcs-button>
-      <bcs-button text class="text-[12px] ml-[10px] h-[32px]" @click="handleCancel">{{ $t('generic.button.cancel') }}</bcs-button> -->
     </template>
   </div>
 </template>

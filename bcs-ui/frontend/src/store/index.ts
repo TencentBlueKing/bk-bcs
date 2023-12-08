@@ -52,7 +52,7 @@ import storage from '@/store/modules/storage';
 import templateset from '@/store/modules/templateset';
 import token from '@/store/modules/token';
 import variable from '@/store/modules/variable';
-import { IMenu } from '@/views/app/menus';
+import { IMenu } from '@/views/app/use-menu';
 
 Vue.use(Vuex);
 // cookie 中 zh-cn / en
@@ -73,7 +73,6 @@ const store = new Vuex.Store<{
     username: string
   }
   openSideMenu: boolean
-  clusterViewType: 'card' | 'list'
   isEn: boolean
   crdInstanceList: any[]
   cluster: typeof cluster.state
@@ -127,7 +126,6 @@ const store = new Vuex.Store<{
     curNamespace: '',
     user: {},
     openSideMenu: true, // 菜单是否折叠
-    clusterViewType: 'card', // 集群展示模式 card 或者 list
     isEn: lang === 'en-US', // todo 废弃
     crdInstanceList: [], // todo 放入对应的module中
     globalPageSize: 10,
@@ -199,9 +197,6 @@ const store = new Vuex.Store<{
     },
     updateCurSideMenu(state, data) {
       state.curSideMenu = data;
-    },
-    updateClusterViewType(state, type) {
-      state.clusterViewType = type;
     },
     updateFeatureFlags(state, data) {
       state.featureFlags = data;

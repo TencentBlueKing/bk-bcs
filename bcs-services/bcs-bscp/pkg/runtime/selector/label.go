@@ -36,6 +36,27 @@ func (lb Label) Validate() error {
 	return nil
 }
 
+// Equal compares two labels are equal or not.
+func (lb Label) Equal(other Label) bool {
+	if len(lb) != len(other) {
+		return false
+	}
+	for _, one := range lb {
+		flag := false
+		for _, otherOne := range other {
+			if one.Equal(&otherOne) {
+				flag = true
+				break
+			}
+		}
+		if !flag {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Element defines the basic element of a label
 type Element struct {
 	Key   string      `json:"key"`
@@ -69,6 +90,43 @@ func (e *Element) Validate() error {
 	}
 
 	return nil
+}
+
+// Equal compares two elements are equal or not.
+func (e *Element) Equal(other *Element) bool {
+	if e.Key != other.Key {
+		return false
+	}
+
+	if e.Op.Name() != other.Op.Name() {
+		return false
+	}
+
+	switch e.Op.Name() {
+	case Equal, NotEqual, GreaterThan, GreaterThanEqual, LessThan, LessThanEqual, Regex, NotRegex:
+		if e.Value != other.Value {
+			return false
+		}
+	case In, NotIn:
+		if len(e.Value.([]interface{})) != len(other.Value.([]interface{})) {
+			return false
+		}
+		for _, v := range e.Value.([]interface{}) {
+			flag := false
+			for _, ov := range other.Value.([]interface{}) {
+				if v == ov {
+					flag = true
+					break
+				}
+			}
+			if !flag {
+				return false
+			}
+		}
+		return true
+	}
+
+	return true
 }
 
 type element struct {

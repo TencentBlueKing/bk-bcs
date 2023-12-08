@@ -273,7 +273,8 @@ func generateMasterExistedInstance(role, passwd string, instanceIDs []string, ma
 	// instance advanced setting override
 	existedInstance.InstanceAdvancedSettingsOverride = generateInstanceAdvanceInfo(cls, nil)
 	if manyDisk {
-		existedInstance.InstanceAdvancedSettingsOverride.DataDisks = []api.DataDetailDisk{api.DefaultDataDisk}
+		existedInstance.InstanceAdvancedSettingsOverride.DataDisks =
+			[]api.DataDetailDisk{api.GetDefaultDataDisk(api.Ext4)}
 	}
 
 	return existedInstance
@@ -346,7 +347,8 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 		}, &business.NodeAdvancedOptions{NodeScheduler: true})
 
 	if manyDisk {
-		existedInstance.InstanceAdvancedSettingsOverride.DataDisks = []api.DataDetailDisk{api.DefaultDataDisk}
+		existedInstance.InstanceAdvancedSettingsOverride.DataDisks =
+			[]api.DataDetailDisk{api.GetDefaultDataDisk(api.Ext4)}
 	}
 
 	return existedInstance

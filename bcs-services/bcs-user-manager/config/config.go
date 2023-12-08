@@ -98,6 +98,9 @@ type UserMgrConfig struct {
 
 	// Encrypt
 	Encrypt options.Encrypt
+
+	// 操作记录清理
+	Activity options.Activity
 }
 
 var (

@@ -63,6 +63,8 @@ func newtask() *Task {
 	task.works[cleanClusterDBInfoStep.StepMethod] = tasks.CleanClusterDBInfoTask
 
 	// add node to cluster
+	task.works[modifyInstancesVpcStep.StepMethod] = tasks.ModifyInstancesVpcTask
+	task.works[checkInstanceStateStep.StepMethod] = tasks.CheckInstanceStateTask
 	task.works[addNodesShieldAlarmStep.StepMethod] = tasks.AddNodesShieldAlarmTask
 	task.works[addNodesToClusterStep.StepMethod] = tasks.AddNodesToClusterTask
 	task.works[checkAddNodesStatusStep.StepMethod] = tasks.CheckAddNodesStatusTask
@@ -542,6 +544,22 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 	return task, nil
 }
 
+func sortNodesInfo(cls *proto.Cluster, nodes []*proto.Node) ([]string, []string, []string) {
+	var (
+		nodeIPs, nodeIds, vpcDiffNodeIds = make([]string, 0), make([]string, 0), make([]string, 0)
+	)
+
+	for i := range nodes {
+		nodeIPs = append(nodeIPs, nodes[i].InnerIP)
+		nodeIds = append(nodeIds, nodes[i].NodeID)
+		if nodes[i].GetVPC() != cls.GetVpcID() {
+			vpcDiffNodeIds = append(vpcDiffNodeIds, nodes[i].NodeID)
+		}
+	}
+
+	return nodeIPs, nodeIds, vpcDiffNodeIds
+}
+
 // BuildAddNodesToClusterTask build addNodes task
 // NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
 func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node, // nolint
@@ -566,12 +584,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	}
 
 	// format node IPs
-	nodeIDs := make([]string, 0)
-	nodeIPs := make([]string, 0)
-	for i := range nodes {
-		nodeIPs = append(nodeIPs, nodes[i].InnerIP)
-		nodeIDs = append(nodeIDs, nodes[i].NodeID)
-	}
+	nodeIPs, nodeIDs, vpcDiffNodeIds := sortNodesInfo(cls, nodes)
 
 	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
@@ -598,54 +611,68 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 
 	// init instance passwd
 	passwd := utils.BuildInstancePwd()
-	if opt.InitPassword != "" {
-		passwd = opt.InitPassword
+	if opt.Login != nil && opt.Login.GetInitLoginPassword() != "" {
+		passwd = opt.Login.GetInitLoginPassword()
 	}
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
 	// setting all steps details
 	addNodesTask := &AddNodesToClusterTaskOption{
-		Cluster:      cls,
-		Cloud:        opt.Cloud,
-		NodeTemplate: opt.NodeTemplate,
-		NodeIPs:      nodeIPs,
-		NodeIDs:      nodeIDs,
-		PassWd:       passwd,
-		Operator:     opt.Operator,
-		NodeSchedule: opt.NodeSchedule,
+		Cluster:        cls,
+		Cloud:          opt.Cloud,
+		NodeTemplate:   opt.NodeTemplate,
+		NodeIPs:        nodeIPs,
+		NodeIDs:        nodeIDs,
+		DiffVpcNodeIds: vpcDiffNodeIds,
+		PassWd:         passwd,
+		Operator:       opt.Operator,
+		NodeSchedule:   opt.NodeSchedule,
 	}
-	// step0: addNodes shield nodes alarm
+	// step1: modify nodes vpc if need
+	addNodesTask.BuildModifyInstancesVpcStep(task)
+	addNodesTask.BuildCheckInstanceStateStep(task)
+	// step2: addNodes shield nodes alarm
 	addNodesTask.BuildShieldAlertStep(task)
-	// step1: addNodesToTKECluster add node to cluster
+	// step3: addNodesToTKECluster add node to cluster
 	addNodesTask.BuildAddNodesToClusterStep(task)
-	// step2: check cluster add node status
+	// step4: check cluster add node status
 	addNodesTask.BuildCheckAddNodesStatusStep(task)
-	// step3: update DB node info by instanceIP
+	// step5: update DB node info by instanceIP
 	addNodesTask.BuildUpdateAddNodeDBInfoStep(task)
 
-	// postAction bk-sops task
+	// step6:  postAction bk-sops task
 	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.AddNodesToCluster != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.SystemInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
 				InstancePasswd: passwd,
-				NodeIPList:     strings.Join(nodeIPs, ","),
-				NodeOperator:   opt.Operator,
-				ModuleID:       cloudprovider.GetScaleOutModuleID(cls, nil, opt.NodeTemplate, false),
-				BusinessID:     cloudprovider.GetBusinessID(nil, opt.NodeTemplate, true),
+				NodeIPList: func() string {
+					if len(vpcDiffNodeIds) == 0 {
+						return strings.Join(nodeIPs, ",")
+					}
+					return ""
+				}(),
+				NodeOperator: opt.Operator,
+				ModuleID:     cloudprovider.GetScaleOutModuleID(cls, nil, opt.NodeTemplate, false),
+				BusinessID:   cloudprovider.GetBusinessID(nil, opt.NodeTemplate, true),
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.AddNodesToCluster, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
 		}
 	}
 
-	// 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
+	// step7: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
-			ClusterID:        cls.ClusterID,
-			Content:          opt.NodeTemplate.UserScript,
-			NodeIps:          strings.Join(nodeIPs, ","),
+			ClusterID: cls.ClusterID,
+			Content:   opt.NodeTemplate.UserScript,
+			NodeIps: func() string {
+				if len(vpcDiffNodeIds) == 0 {
+					return strings.Join(nodeIPs, ",")
+				}
+				return ""
+			}(),
 			Operator:         opt.Operator,
 			StepName:         common.PostInitStepJob,
 			AllowSkipJobTask: opt.NodeTemplate.AllowSkipScaleOutWhenFailed,
@@ -659,20 +686,25 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
 				InstancePasswd: passwd,
-				NodeIPList:     strings.Join(nodeIPs, ","),
-				NodeOperator:   opt.Operator,
-				ShowSopsUrl:    true,
+				NodeIPList: func() string {
+					if len(vpcDiffNodeIds) == 0 {
+						return strings.Join(nodeIPs, ",")
+					}
+					return ""
+				}(),
+				NodeOperator: opt.Operator,
+				ShowSopsUrl:  true,
 			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
 		}
 	}
 
-	// step4: 若需要则设置节点注解
+	// step8: 若需要则设置节点注解
 	addNodesTask.BuildNodeAnnotationsStep(task)
-	// step5: 设置平台公共标签
+	// step9: 设置平台公共标签
 	addNodesTask.BuildNodeLabelsStep(task)
-	// step6: 设置节点可调度状态
+	// step10: 设置节点可调度状态
 	addNodesTask.BuildUnCordonNodesStep(task)
 
 	// set current step
@@ -1192,7 +1224,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		// transfer host module
 		moduleID := getTransModuleInfo(opt.AsOption, opt.NodeGroup)
 		if moduleID != "" {
-			common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID)
+			common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID, "")
 		}
 	}
 

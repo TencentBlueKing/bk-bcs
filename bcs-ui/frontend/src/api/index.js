@@ -139,7 +139,7 @@ async function getPromise(method, url, data, userConfig = {}) {
       reject(httpError);
     }
   }).catch(codeError =>
-  // code 错误
+    // code 错误
     handleReject(codeError, config))
     .finally(() => {
       http.queue.delete(config.requestId);
@@ -235,7 +235,7 @@ function handleReject(error, config) {
         type: 'key-value',
         details: {
           traceparent: error.response?.config?.headers?.Traceparent,
-          requestId: error.response?.headers?.['x-request-id'] || '--',
+          requestId: error.response?.headers?.['x-request-id'] || data?.requestID || data?.request_id || '--',
           message: data.message,
         },
       });

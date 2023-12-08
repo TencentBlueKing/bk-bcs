@@ -73,15 +73,20 @@ func (t *DummyTransformer) ToManifest() (map[string]interface{}, error) {
 
 	username := t.ctx.Value(ctxkey.UsernameKey).(string)
 	creatorPaths := []string{"metadata", "annotations", resCsts.CreatorAnnoKey}
+	creatorLabelPaths := []string{"metadata", "labels", resCsts.CreatorAnnoKey}
 	updaterPaths := []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}
+	updaterLabelPaths := []string{"metadata", "labels", resCsts.UpdaterAnnoKey}
 	switch t.action {
 	// 若操作为创建，则保存资源的创建/编辑者信息
 	case resCsts.CreateAction:
 		_ = mapx.SetItems(t.manifest, creatorPaths, username)
+		_ = mapx.SetItems(t.manifest, creatorLabelPaths, username)
 		_ = mapx.SetItems(t.manifest, updaterPaths, username)
+		_ = mapx.SetItems(t.manifest, updaterLabelPaths, username)
 	// 若操作为更新，则更新资源的编辑者信息
 	case resCsts.UpdateAction:
 		_ = mapx.SetItems(t.manifest, updaterPaths, username)
+		_ = mapx.SetItems(t.manifest, updaterLabelPaths, username)
 	}
 
 	return t.manifest, nil

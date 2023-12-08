@@ -922,6 +922,24 @@ security:
           showTitle: true
 {{- end }}
 
+{{- define "workload.readinessGates" }}
+readinessGates:
+  title: Readiness Gates
+  type: object
+  properties:
+    readinessGates:
+      title: Readiness Gates
+      type: array
+      items:
+        type: string
+        title: {{ i18n "条件类型" .lang }}
+        ui:rules:
+          - maxLength128
+          - labelKeyRegex
+      ui:component:
+        name: bfArray
+{{- end }}
+
 {{- define "workload.specOther" }}
 other:
   title: {{ i18n "其他" .lang }}

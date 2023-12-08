@@ -30,9 +30,7 @@ func NewTagClient(opt *cloudprovider.CommonOption) (*TagClient, error) {
 	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
-	if len(opt.Region) == 0 {
-		return nil, cloudprovider.ErrCloudRegionLost
-	}
+
 	credential := common.NewCredential(opt.Account.SecretID, opt.Account.SecretKey)
 	cpf := profile.NewClientProfile()
 	if opt.CommonConf.CloudInternalEnable {

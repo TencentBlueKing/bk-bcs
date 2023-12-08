@@ -16,6 +16,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
+	"sort"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -667,7 +669,7 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 // ListProjects list cloud projects
 func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudProject, error) {
 	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
-		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		len(opt.Account.SecretKey) == 0 {
 		return nil, fmt.Errorf("qcloud ListProjects lost authoration")
 	}
 
@@ -690,6 +692,208 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 	}
 
 	return projects, nil
+}
+
+// AddSubnetsToCluster cluster add subnet
+func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource,
+	opt *cloudprovider.AddSubnetsToClusterOption) error {
+	if opt == nil || opt.Cluster == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 {
+		return fmt.Errorf("AddSubnetsToCluster lost cloud accoount")
+	}
+	if subnet == nil || (len(subnet.GetNew()) == 0 && len(subnet.Existed.GetIds()) == 0) {
+		return fmt.Errorf("AddSubnetsToCluster subnet data empty")
+	}
+
+	subnetIds := make([]string, 0)
+	if len(subnet.GetExisted().GetIds()) > 0 {
+		subnetIds = append(subnetIds, subnet.GetExisted().GetIds()...)
+	}
+
+	allocateSubnets, err := business.AllocateClusterVpcCniSubnets(ctx,
+		opt.Cluster.GetClusterID(), opt.Cluster.GetVpcID(), subnet.GetNew(), &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("AddSubnetsToCluster AllocateClusterVpcCniSubnets failed: %v", err)
+		return err
+	}
+	subnetIds = append(subnetIds, allocateSubnets...)
+
+	// add subnets to cluster
+	return addSubnetsToCluster(opt.Cluster, subnetIds, &opt.CommonOption)
+}
+
+func addSubnetsToCluster(cls *proto.Cluster, subnets []string, opt *cloudprovider.CommonOption) error {
+	client, err := api.NewTkeClient(opt)
+	if err != nil {
+		return err
+	}
+
+	err = client.AddVpcCniSubnets(&api.AddVpcCniSubnetsInput{
+		ClusterID: cls.GetSystemID(),
+		VpcID:     cls.GetVpcID(),
+		SubnetIDs: subnets,
+	})
+	if err != nil {
+		return err
+	}
+	if cls.GetNetworkSettings().GetEniSubnetIDs() == nil {
+		cls.GetNetworkSettings().EniSubnetIDs = make([]string, 0)
+	}
+	cls.GetNetworkSettings().EniSubnetIDs = append(cls.GetNetworkSettings().EniSubnetIDs, subnets...)
+
+	return cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cls)
+}
+
+// GetMasterSuggestedMachines get master suggested machines
+func (c *Cluster) GetMasterSuggestedMachines(level, vpcId string,
+	opt *cloudprovider.GetMasterSuggestedMachinesOption) ([]*proto.InstanceTemplateConfig, error) {
+	var (
+		clusterLevel     = ClusterLevel(level)
+		instanceTemplate = make([]*proto.InstanceTemplateConfig, 0)
+	)
+
+	machineConfig := clusterLevel.GetCpuMemConfig(opt.Cpu, opt.Mem)
+
+	mtZones, zoneInstanceTypes, err := getZoneMachineTypes(machineConfig.Cpu, machineConfig.Mem, opt.CommonOption)
+	if err != nil {
+		blog.Errorf("GetMasterSuggestedMachines getZoneMachineTypes failed: %v", err)
+		return nil, err
+	}
+	blog.Infof("GetMasterSuggestedMachines machineTypeZone: %v", mtZones)
+
+	snZones, zoneSubnetMap, err := getZoneSubnets(vpcId, opt.CommonOption)
+	if err != nil {
+		blog.Errorf("GetMasterSuggestedMachines getZoneSubnets failed: %v", err)
+		return nil, err
+	}
+	blog.Infof("GetMasterSuggestedMachines subnetZone: %v", snZones)
+
+	// 机型和子网zone求交集
+	existZones, _ := utils.SplitExistString(mtZones, snZones)
+	if len(existZones) == 0 {
+		return nil, fmt.Errorf("available subnet is empty")
+	}
+	blog.Infof("GetMasterSuggestedMachines machineTypeZone & subnetZone: %v", existZones)
+
+	// 过滤指定zone机型
+	filterZones := func() []string {
+		if len(opt.Zones) == 0 {
+			return existZones
+		}
+
+		exist, _ := utils.SplitExistString(existZones, opt.Zones)
+		return exist
+	}()
+	if len(filterZones) == 0 {
+		return nil, fmt.Errorf("available subnet is empty")
+	}
+	blog.Infof("GetMasterSuggestedMachines filterZone: %v", filterZones)
+
+	allocateMachines := utils.AllocateMachinesToAZs(clusterLevel.GetMasterCnt(), len(filterZones))
+
+	// machineCnt < zone || machineCnt > zone
+	for cnt := range allocateMachines {
+		if len(allocateMachines[cnt]) == 0 {
+			continue
+		}
+		zone := filterZones[cnt]
+		insCnt := len(allocateMachines[cnt])
+
+		instanceTemplate = append(instanceTemplate, &proto.InstanceTemplateConfig{
+			Zone: zone,
+			SubnetID: func() string {
+				subnets, ok := zoneSubnetMap[zone]
+				if ok && len(subnets) > 0 {
+					return subnets[0].SubnetID
+				}
+				return ""
+			}(),
+			ApplyNum:       uint32(insCnt),
+			CPU:            zoneInstanceTypes[zone][0].GetCpu(),
+			Mem:            zoneInstanceTypes[zone][0].GetMemory(),
+			GPU:            zoneInstanceTypes[zone][0].GetGpu(),
+			InstanceType:   zoneInstanceTypes[zone][0].NodeType,
+			SystemDisk:     clusterLevel.GetSystemDisk(),
+			CloudDataDisks: []*proto.CloudDataDisk{clusterLevel.GetDataDisk()},
+		})
+
+		blog.Infof("zone[%s] allocate[%v] instances", filterZones[cnt], insCnt)
+	}
+
+	return instanceTemplate, nil
+}
+
+func getZoneSubnets(vpcId string, opt cloudprovider.CommonOption) ([]string, map[string][]*proto.Subnet, error) {
+	var (
+		snZones = make([]string, 0)
+	)
+
+	vpcCli := &VPCManager{}
+	subnets, err := vpcCli.ListSubnets(vpcId, "", &opt)
+	if err != nil {
+		blog.Errorf("getZoneSubnets ListSubnets failed: %v", err)
+		return nil, nil, err
+	}
+
+	zoneSubnetMap := make(map[string][]*proto.Subnet, 0)
+	for i := range subnets {
+		// subnet default available when availableIpCount > 5
+		if subnets[i].AvailableIPAddressCount >= 5 {
+			if zoneSubnetMap[subnets[i].Zone] == nil {
+				zoneSubnetMap[subnets[i].Zone] = make([]*proto.Subnet, 0)
+			}
+			zoneSubnetMap[subnets[i].Zone] = append(zoneSubnetMap[subnets[i].Zone], subnets[i])
+		}
+	}
+
+	for zone := range zoneSubnetMap {
+		snZones = append(snZones, zone)
+	}
+	return snZones, zoneSubnetMap, nil
+}
+
+func getZoneMachineTypes(cpu, mem int, opt cloudprovider.CommonOption) ([]string, map[string][]*proto.InstanceType, error) {
+	var (
+		mtZones = make([]string, 0)
+	)
+
+	nodeCli := &NodeManager{}
+	instanceTypes, err := nodeCli.getCloudInstanceType(cloudprovider.InstanceInfo{
+		Cpu:    uint32(cpu),
+		Memory: uint32(mem),
+	}, &opt)
+	if err != nil {
+		blog.Errorf("getZoneMachineTypes getCloudInstanceType failed: %v", err)
+		return nil, nil, err
+	}
+
+	// 按照区域机型排序
+	zoneInstanceTypes := make(map[string][]*proto.InstanceType, 0)
+	for i := range instanceTypes {
+		if instanceTypes[i].GetStatus() == icommon.InstanceSoldOut {
+			continue
+		}
+
+		for j := range instanceTypes[i].Zones {
+			_, exist := zoneInstanceTypes[instanceTypes[i].Zones[j]]
+			if !exist {
+				if zoneInstanceTypes[instanceTypes[i].Zones[j]] == nil {
+					zoneInstanceTypes[instanceTypes[i].Zones[j]] = make([]*proto.InstanceType, 0)
+				}
+				zoneInstanceTypes[instanceTypes[i].Zones[j]] = append(zoneInstanceTypes[instanceTypes[i].Zones[j]], instanceTypes[i])
+				continue
+			}
+
+			zoneInstanceTypes[instanceTypes[i].Zones[j]] = append(zoneInstanceTypes[instanceTypes[i].Zones[j]], instanceTypes[i])
+		}
+	}
+	// 按照价格排序
+	for zone := range zoneInstanceTypes {
+		mtZones = append(mtZones, zone)
+		sort.Sort(utils.InstanceTypeSlice(zoneInstanceTypes[zone]))
+	}
+
+	return mtZones, zoneInstanceTypes, nil
 }
 
 // CheckClusterEndpointStatus check cluster endpoint status

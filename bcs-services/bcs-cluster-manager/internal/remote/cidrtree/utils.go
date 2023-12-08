@@ -74,7 +74,7 @@ func GetFreeIPNets(allBlocks, allExistingSubnets []*net.IPNet) []*net.IPNet {
 func filterSubnet(cidrBlock *net.IPNet, subnets []*net.IPNet) []*net.IPNet {
 	var filtered []*net.IPNet
 	for _, subnet := range subnets {
-		if cidrContains(cidrBlock, subnet) {
+		if CidrContains(cidrBlock, subnet) {
 			filtered = append(filtered, subnet)
 		}
 	}
@@ -85,15 +85,15 @@ func filterSubnet(cidrBlock *net.IPNet, subnets []*net.IPNet) []*net.IPNet {
 // nolint
 func inReserved(subnet *net.IPNet, reservedBlocks []*net.IPNet) bool {
 	for _, r := range reservedBlocks {
-		if cidrContains(r, subnet) {
+		if CidrContains(r, subnet) {
 			return true
 		}
 	}
 	return false
 }
 
-// cidr(a) contain cidr(b)
-func cidrContains(a, b *net.IPNet) bool {
+// CidrContains cidr(a) contain cidr(b)
+func CidrContains(a, b *net.IPNet) bool {
 	first, last := cidr.AddressRange(b)
 	if a.Contains(first) && a.Contains(last) {
 		return true

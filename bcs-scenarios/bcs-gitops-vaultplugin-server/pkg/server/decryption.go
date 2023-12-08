@@ -35,8 +35,8 @@ import (
 )
 
 type decryptionManifestRequest struct {
-	Application string   `json:"application"`
-	Manifests   []string `json:"manifests"`
+	Project   string   `json:"project"`
+	Manifests []string `json:"manifests"`
 }
 
 type decryptionManifestResponse struct {
@@ -51,27 +51,16 @@ func (s *Server) routerDecryptManifest(w http.ResponseWriter, r *http.Request) {
 			errors.Wrapf(err, "decryption manifest decode request body failed"))
 		return
 	}
-	if req.Manifests == nil || req.Application == "" {
+	if req.Manifests == nil || req.Project == "" {
 		s.responseError(r, w, http.StatusBadRequest,
-			errors.Errorf("request 'manifests' or 'application' required"))
+			errors.Errorf("request 'manifests' or 'project' required"))
 		return
 	}
-
-	argoApp, err := s.argoStore.GetApplication(r.Context(), req.Application)
-	if err != nil {
-		s.responseError(r, w, http.StatusInternalServerError,
-			errors.Wrapf(err, "get application '%s' failed", req.Application))
-		return
-	}
-	if argoApp == nil {
-		s.responseError(r, w, http.StatusBadRequest, errors.Errorf("application '%s' not exist", req.Application))
-		return
-	}
-	projectName := argoApp.Spec.Project
+	projectName := req.Project
 	secretKey, err := s.getSecretKeyForProject(r.Context(), projectName)
 	if err != nil {
 		s.responseError(r, w, http.StatusBadRequest,
-			errors.Errorf("get secret key for project '%s' failed", argoApp.Spec.Project))
+			errors.Errorf("get secret key for project '%s' failed", projectName))
 		return
 	}
 	res, err := s.decryptVaultSecret(r.Context(), projectName, secretKey, req.Manifests)

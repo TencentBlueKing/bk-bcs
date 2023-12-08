@@ -25,7 +25,12 @@ export default function useClusterSelector(
   };
   // 集群分类数据
   const clusterListByType = computed(() => clusterList.value
-    .filter(item => (item?.clusterID?.includes(keyword.value) || item?.clusterName?.includes(keyword.value)))
+    .filter((item) => {
+      const clusterID = item?.clusterID?.toLocaleLowerCase();
+      const clusterName = item?.clusterName?.toLocaleLowerCase();
+      const searchKey = keyword.value?.toLocaleLowerCase();
+      return (clusterID?.includes(searchKey) || clusterName?.includes(searchKey));
+    })
     .reduce<Array<{
     type: ClusterType
     list: Array<Partial<ICluster>>

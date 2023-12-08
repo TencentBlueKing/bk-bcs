@@ -6447,6 +6447,10 @@ func (m *GetPowerTradingDataRequest) validate(all bool) error {
 
 	// no validation rules for PreferStorage
 
+	// no validation rules for Page
+
+	// no validation rules for Size
+
 	if len(errors) > 0 {
 		return GetPowerTradingDataRequestMultiError(errors)
 	}
@@ -6587,6 +6591,10 @@ func (m *GetPowerTradingDataResponse) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for Page
+
+	// no validation rules for Size
 
 	if len(errors) > 0 {
 		return GetPowerTradingDataResponseMultiError(errors)

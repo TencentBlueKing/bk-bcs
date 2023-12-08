@@ -413,3 +413,18 @@ func (cm *ClusterManager) UpdateVirtualClusterQuota(ctx context.Context,
 	blog.Infof("reqID: %s, action: UpdateVirtualClusterQuota, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// AddSubnetToCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) AddSubnetToCluster(ctx context.Context,
+	req *cmproto.AddSubnetToClusterReq, resp *cmproto.AddSubnetToClusterResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := clusterac.NewAddSubnetToClusterAction(cm.model)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("AddSubnetToCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: AddSubnetToCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}

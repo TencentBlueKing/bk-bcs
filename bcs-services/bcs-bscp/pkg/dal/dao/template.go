@@ -22,6 +22,7 @@ import (
 
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
+	"bscp.io/pkg/dal/utils"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
@@ -36,8 +37,8 @@ type Template interface {
 	// Update one template's info.
 	Update(kit *kit.Kit, template *table.Template) error
 	// List templates with options.
-	List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) ([]*table.Template, int64,
-		error)
+	List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher,
+		opt *types.BasePage, topIds []uint32) ([]*table.Template, int64, error)
 	// Delete one template instance.
 	Delete(kit *kit.Kit, template *table.Template) error
 	// DeleteWithTx delete one template instance with transaction.
@@ -213,8 +214,8 @@ func (dao *templateDao) Update(kit *kit.Kit, g *table.Template) error {
 }
 
 // List templates with options.
-func (dao *templateDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) (
-	[]*table.Template, int64, error) {
+func (dao *templateDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher,
+	opt *types.BasePage, topIds []uint32) ([]*table.Template, int64, error) {
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
 
@@ -233,8 +234,13 @@ func (dao *templateDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, s sear
 			conds = append(conds, do)
 		}
 	}
+	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...)
+	if len(topIds) != 0 {
+		d = d.Order(utils.NewCustomExpr(`CASE WHEN id IN (?) THEN 0 ELSE 1 END,path,name ASC`, []interface{}{topIds}))
+	} else {
+		d = d.Order(m.Path, m.Name)
+	}
 
-	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...).Order(m.Name)
 	if opt.All {
 		result, err := d.Find()
 		if err != nil {

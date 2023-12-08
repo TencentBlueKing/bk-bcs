@@ -165,6 +165,7 @@ func (s *WebServer) subRouter() http.Handler {
 		APIURL:    config.G.Frontend.Host.BSCPAPIURL,
 		IAMHost:   config.G.Frontend.Host.BKIAMHost,
 		CMDBHost:  config.G.Frontend.Host.BKCMDBHost,
+		Helper:    config.G.Frontend.Helper,
 	}
 
 	if shouldProxyAPI {

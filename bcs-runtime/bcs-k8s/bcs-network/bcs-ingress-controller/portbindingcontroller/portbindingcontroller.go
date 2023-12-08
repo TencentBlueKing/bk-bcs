@@ -33,7 +33,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 	bcsnetcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
@@ -136,6 +138,7 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	var pbhandler iPortBindingHandler
 	switch portBindingType {
 	case networkextensionv1.PortBindingTypePod:
+		metrics.ReportPortAllocate(node.GetName(), node.GetNamespace(), true)
 		if !isPortBindingFound {
 			if pod.Status.Phase == k8scorev1.PodFailed {
 				blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, no need to handle it", pod.GetNamespace(),
@@ -163,6 +166,38 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 
 		pbhandler = newPodPortBindingHandler(pbr.ctx, pbr.k8sClient, pbr.eventer, pod)
 	case networkextensionv1.PortBindingTypeNode:
+		// 节点和Pod的webhook策略不通。为了避免节点加入失败，即使端口分配失败，也允许节点变更
+		// 所以这里需要检查节点对应注解是否合法
+		if _, ok := node.Annotations[constant.AnnotationForPortPoolBindings]; !ok {
+			err := fmt.Errorf("node %s has not port allocate annotation %s", node.GetName(),
+				constant.AnnotationForPortPoolPorts)
+			blog.Errorf(err.Error())
+			metrics.ReportPortAllocate(node.GetName(), node.GetNamespace(), false)
+
+			needPatch := true
+			if notReadyTimeStr, timeOk := node.Annotations[constant.
+				AnnotationForPortBindingNotReadyTimestamp]; timeOk && notReadyTimeStr != "" {
+				if notReadyTime, inErr := time.Parse(time.RFC3339Nano, notReadyTimeStr); inErr != nil {
+					blog.Warnf("parse not ready timestamp on node %s failed, err: %s", node.GetName(), inErr.Error())
+				} else {
+					// 距离上次刷新时间未超过10秒
+					if time.Now().Sub(notReadyTime) < time.Second*10 {
+						needPatch = false
+					}
+				}
+			}
+			if needPatch {
+				// 更新注解触发mutate逻辑
+				blog.Infof("patch node %s annotation %s", node.GetName(), constant.AnnotationForPortBindingNotReadyTimestamp)
+				if err = utils.PatchNodeAnnotation(pbr.ctx, pbr.k8sClient, node, map[string]interface{}{
+					constant.AnnotationForPortBindingNotReadyTimestamp: time.Now().Format(time.RFC3339Nano),
+				}); err != nil {
+					blog.Errorf(err.Error())
+				}
+			}
+			return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 10}, nil
+		}
+		metrics.ReportPortAllocate(node.GetName(), node.GetNamespace(), true)
 		if !isPortBindingFound {
 			return pbr.createPortBinding(portBindingType, node.GetNamespace(), node.GetName(), node.GetAnnotations())
 		}
@@ -294,6 +329,7 @@ func (pbr *PortBindingReconciler) cleanPortBinding(portBinding *networkextension
 					RequeueAfter: 3 * time.Second,
 				}, nil
 			}
+			metrics.CleanPortAllocateMetric(portBinding.GetName(), portBinding.GetNamespace())
 			pbr.poolCache.Lock()
 			defer pbr.poolCache.Unlock()
 			for _, portBindingItem := range portBinding.Spec.PortBindingList {

@@ -18,11 +18,11 @@ type RedisConf struct {
 	Port           int    `yaml:"port"`
 	Password       string `yaml:"password"`
 	DB             int    `yaml:"db"`
-	MaxPoolSize    int    `yaml:"max_pool_size"`
-	MaxConnTimeout int    `yaml:"max_conn_timeout"`
-	IdleTimeout    int    `yaml:"idle_timeout"`
-	ReadTimeout    int    `yaml:"read_timeout"`
-	WriteTimeout   int    `yaml:"write_timeout"`
+	MaxPoolSize    int    `yaml:"-"`
+	MaxConnTimeout int    `yaml:"-"`
+	IdleTimeout    int    `yaml:"-"`
+	ReadTimeout    int    `yaml:"-"`
+	WriteTimeout   int    `yaml:"-"`
 }
 
 // Init xxx

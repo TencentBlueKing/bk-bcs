@@ -34,7 +34,7 @@ export default {
       type: String,
       default: 'border-card',
       validator(val) {
-        return ['card', 'border-card', 'unborder-card', 'vertical-card', 'fill'].includes(val);
+        return ['card', 'border-card', 'unborder-card', 'vertical-card', 'fill', 'card-tab'].includes(val);
       },
     },
   },

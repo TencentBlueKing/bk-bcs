@@ -439,6 +439,8 @@ func (e *BcsDataManager) GetPowerTrading(ctx context.Context, req *bcsdatamanage
 	rsp.Message = bcsCommon.BcsSuccessStr
 	rsp.Code = bcsCommon.BcsSuccess
 	rsp.Total = uint32(total)
+	rsp.Page = req.GetPage()
+	rsp.Size = req.GetSize()
 	prom.ReportAPIRequestMetric("GetPowerTrading", "grpc", prom.StatusOK, start)
 	return nil
 }
@@ -501,7 +503,6 @@ func (e *BcsDataManager) GetUserOperationDataList(ctx context.Context,
 	prom.ReportAPIRequestMetric("GetUserOperationDataList", "grpc", prom.StatusOK, start)
 	return nil
 }
-
 
 func (e *BcsDataManager) GetWorkloadRequestResult(ctx context.Context, req *bcsdatamanager.GetWorkloadRequestRecommendResultReq,
 	rsp *bcsdatamanager.GetWorkloadRequestRecommendResultRsp) error {

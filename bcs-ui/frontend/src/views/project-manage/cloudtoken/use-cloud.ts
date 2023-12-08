@@ -10,7 +10,7 @@ import {
 } from '@/api/modules/cluster-manager';
 import $store from '@/store';
 
-export type CloudID = 'tencentCloud'|'gcpCloud';
+export type CloudID = 'tencentCloud'|'gcpCloud'|'tencentPublicCloud';
 
 export interface IGoogleAccount {
   gkeProjectID?: string

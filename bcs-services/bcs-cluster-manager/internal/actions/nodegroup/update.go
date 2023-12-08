@@ -102,6 +102,9 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 	if len(ua.req.ConsumerID) > 0 {
 		group.ConsumerID = ua.req.ConsumerID
 	}
+	if len(ua.req.GetExtraInfo()) > 0 {
+		group.ExtraInfo = ua.req.GetExtraInfo()
+	}
 
 	// autoscaling
 	ua.modifyNodeGroupAutoScaling(group)
@@ -817,7 +820,7 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 		return err
 	}
 
-	utils.HiddenTaskPassword(task)
+	utils.HandleTaskStepData(ua.ctx, task)
 
 	ua.task = task
 	ua.resp.Data = task

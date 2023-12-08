@@ -177,6 +177,18 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// AddSubnetsToCluster add subnets to cluster
+func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource,
+	opt *cloudprovider.AddSubnetsToClusterOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
+// GetMasterSuggestedMachines get master suggested machines
+func (c *Cluster) GetMasterSuggestedMachines(level, vpcId string,
+	opt *cloudprovider.GetMasterSuggestedMachinesOption) ([]*proto.InstanceTemplateConfig, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // CheckClusterEndpointStatus check cluster endpoint status
 func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {

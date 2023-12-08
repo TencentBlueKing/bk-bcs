@@ -85,7 +85,7 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // no
 	if err != nil {
 		blog.Errorf("ApplyExternalNodeMachinesTask[%s] applyInstanceFromResourcePool for NodeGroup %s step %s failed, %s",
 			taskID, nodeGroupID, stepName, err.Error())
-		retErr := fmt.Errorf("applyInstanceFromResourcePool failed, %s", err.Error())
+		retErr := fmt.Errorf("applyInstanceFromResourcePool failed: %s", err.Error())
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -136,10 +136,10 @@ func buildApplyIDCNodesRequest(group *proto.NodeGroup, operator string) *resourc
 		Memory:       group.GetLaunchTemplate().GetMem(),
 		Gpu:          group.GetLaunchTemplate().GetGPU(),
 		Region:       group.GetRegion(),
-		VpcID:        group.GetAutoScaling().VpcID,
-		ZoneList:     group.GetAutoScaling().Zones,
-		SubnetList:   group.GetAutoScaling().SubnetIDs,
-		InstanceType: group.GetLaunchTemplate().InstanceType,
+		VpcID:        group.GetAutoScaling().GetVpcID(),
+		ZoneList:     group.GetAutoScaling().GetZones(),
+		SubnetList:   group.GetAutoScaling().GetSubnetIDs(),
+		InstanceType: group.GetLaunchTemplate().GetInstanceType(),
 		PoolID:       group.GetConsumerID(),
 		Operator:     operator,
 		Selector:     group.GetLaunchTemplate().GetSelector(),

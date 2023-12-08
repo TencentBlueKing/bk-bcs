@@ -50,6 +50,7 @@ type UserManagerOptions struct {
 	TracingConf      TracingConf `json:"tracing_conf"`
 	BcsAPI           BcsAPI      `json:"bcs_api"`
 	Encrypt          Encrypt     `json:"encrypt" yaml:"encrypt"`
+	Activity         Activity    `json:"activity" yaml:"activity"`
 }
 
 // TracingConf tracing config
@@ -146,4 +147,11 @@ type Encrypt struct {
 type EncryptSecret struct {
 	Key    string `json:"key" yaml:"key"`
 	Secret string `json:"secret" yaml:"secret"`
+}
+
+// Activity 操作记录清理
+type Activity struct {
+	Duration     string   `json:"duration" yaml:"duration" usage:"cleaning time"`
+	Interval     string   `json:"interval" yaml:"interval" usage:"timed tasks"`
+	ResourceType []string `json:"resource_type" yaml:"resource_type"`
 }

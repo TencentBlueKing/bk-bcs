@@ -14,6 +14,7 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -29,7 +31,7 @@ var (
 	// resourcePool device label task: stepName and stepMethod
 	resourcePoolLabelStep = cloudprovider.StepInfo{
 		StepMethod: cloudprovider.ResourcePoolLabelAction,
-		StepName:   "资源池设备设置标签",
+		StepName:   "设置资源池设备信息",
 	}
 )
 
@@ -80,43 +82,29 @@ func SetResourcePoolDeviceLabels(taskID, stepName string) error {
 	ctx := utils.WithTraceIDForContext(context.Background(), taskID)
 
 	for i := range deviceList {
-		device, err := tresource.GetResourceManagerClient().GetDeviceInfoByDeviceID(ctx, deviceList[i])
-		if err != nil {
+		device, errLocal := tresource.GetResourceManagerClient().GetDeviceInfoByDeviceID(ctx, deviceList[i])
+		if errLocal != nil {
 			blog.Errorf("SetResourcePoolDeviceLabels[%s] GetDeviceInfoByDeviceID[%s] failed: %v",
-				taskID, deviceList[i], err)
+				taskID, deviceList[i], errLocal)
 			continue
 		}
 
-		if device.Labels == nil || len(device.Labels) == 0 {
-			blog.Errorf("SetResourcePoolDeviceLabels[%s] GetDeviceInfoByDeviceID[%s] labels empty",
-				taskID, deviceList[i])
-			continue
+		// device labels
+		errLocal = setNodeDeviceLabels(ctx, clusterID, device)
+		if errLocal != nil {
+			blog.Errorf("SetResourcePoolDeviceLabels[%s] setNodeDeviceLabels failed: %v", taskID, errLocal)
+		} else {
+			blog.Infof("SetResourcePoolDeviceLabels[%s] setNodeDeviceLabels[%s:%s] successful",
+				taskID, device.DeviceID, device.InnerIP)
 		}
 
-		specialLabels := func() map[string]string {
-			labels := make(map[string]string, 0)
-			for k, v := range device.Labels {
-				if strings.Contains(k, utils.DeviceLabelFlag) {
-					labels[k] = v
-				}
-			}
-			return labels
-		}()
-		if len(specialLabels) == 0 {
-			blog.Errorf("SetResourcePoolDeviceLabels[%s] specialLabels[%s] empty",
-				taskID, deviceList[i])
-			continue
-		}
-
-		err = UpdateClusterNodesLabels(ctx, NodeLabelsData{
-			ClusterID: clusterID,
-			NodeIPs:   []string{device.InnerIP},
-			Labels:    specialLabels,
-		})
-		if err != nil {
-			blog.Errorf("SetResourcePoolDeviceLabels[%s] UpdateClusterNodesLabels[%s] failed: %v",
-				taskID, device.InnerIP, err)
-			continue
+		// device annotations
+		errLocal = setNodeDeviceAnnotations(ctx, clusterID, device)
+		if errLocal != nil {
+			blog.Errorf("SetResourcePoolDeviceLabels[%s] setNodeDeviceLabels failed: %v", taskID, errLocal)
+		} else {
+			blog.Infof("SetResourcePoolDeviceLabels[%s] setNodeDeviceLabels[%s:%s] successful",
+				taskID, device.DeviceID, device.InnerIP)
 		}
 	}
 
@@ -125,5 +113,74 @@ func SetResourcePoolDeviceLabels(taskID, stepName string) error {
 		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
 		return err
 	}
+	return nil
+}
+
+func setNodeDeviceLabels(ctx context.Context, clusterID string, device *resource.DeviceInfo) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	if device == nil {
+		return fmt.Errorf("device info empty")
+	}
+
+	if device.Labels == nil || len(device.Labels) == 0 {
+		blog.Errorf("setNodeDeviceLabels[%s] device[%s] labels empty",
+			taskID, device.DeviceID)
+		return nil
+	}
+
+	specialLabels := func() map[string]string {
+		labels := make(map[string]string, 0)
+		for k, v := range device.Labels {
+			if strings.Contains(k, utils.DeviceLabelFlag) || strings.Contains(k, utils.DeviceLabelKubernetesIoKey) {
+				labels[k] = v
+			}
+		}
+		return labels
+	}()
+	if len(specialLabels) == 0 {
+		blog.Errorf("setNodeDeviceLabels[%s] specialLabels[%s] empty",
+			taskID, device.DeviceID)
+		return nil
+	}
+
+	err := UpdateClusterNodesLabels(ctx, NodeLabelsData{
+		ClusterID: clusterID,
+		NodeIPs:   []string{device.InnerIP},
+		Labels:    specialLabels,
+	})
+	if err != nil {
+		blog.Errorf("setNodeDeviceLabels[%s] UpdateClusterNodesLabels[%s:%s] failed: %v",
+			taskID, device.DeviceID, device.InnerIP, err)
+		return err
+	}
+
+	return nil
+}
+
+func setNodeDeviceAnnotations(ctx context.Context, clusterID string, device *resource.DeviceInfo) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	if device == nil {
+		return fmt.Errorf("device info empty")
+	}
+
+	if device.Annotations == nil || len(device.Annotations) == 0 {
+		blog.Errorf("setNodeDeviceAnnotations[%s] device[%s] annotations empty",
+			taskID, device.DeviceID)
+		return nil
+	}
+
+	err := updateClusterNodesAnnotations(ctx, NodeAnnotationsData{
+		clusterID:   clusterID,
+		nodeIPs:     []string{device.InnerIP},
+		annotations: device.Annotations,
+	})
+	if err != nil {
+		blog.Errorf("setNodeDeviceAnnotations[%s] updateClusterNodesAnnotations[%s:%s] failed: %v",
+			taskID, device.DeviceID, device.InnerIP, err)
+		return err
+	}
+
 	return nil
 }

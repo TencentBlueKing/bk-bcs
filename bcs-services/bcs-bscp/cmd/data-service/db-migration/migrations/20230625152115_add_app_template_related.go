@@ -89,7 +89,9 @@ func mig20230625152115Up(tx *gorm.DB) error { //nolint:funlen
 
 		// Revision is revision info of the resource
 		Creator   string    `gorm:"type:varchar(64) not null"`
+		Reviser   string    `gorm:"type:varchar(64) not null"`
 		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
+		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
 	}
 
 	// TemplateVariables : 用于模版变量的管理

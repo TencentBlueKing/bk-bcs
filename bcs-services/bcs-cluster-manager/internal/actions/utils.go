@@ -15,14 +15,18 @@ package actions
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	corev1 "k8s.io/api/core/v1"
-
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 // PermInfo for perm request
@@ -91,6 +95,46 @@ func GetAsOptionByClusterID(
 	}
 
 	return clsAsOption, nil
+}
+
+// GetProjectClusters get project cluster list
+func GetProjectClusters(ctx context.Context, model store.ClusterManagerModel, projectID string) (
+	[]proto.Cluster, error) {
+	condCluster := operator.NewLeafCondition(operator.Eq, operator.M{
+		"projectid": projectID,
+	})
+	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+
+	branchCond := operator.NewBranchCondition(operator.And, condCluster, condStatus)
+
+	clusterList, err := model.ListCluster(ctx, branchCond, &storeopt.ListOption{})
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		blog.Errorf("GetProjectClusters[%s] failed: %v", projectID, err)
+		return nil, err
+	}
+
+	return clusterList, nil
+}
+
+// GetCloudClusters get project cluster list
+func GetCloudClusters(ctx context.Context, model store.ClusterManagerModel, cloudID, accountID, vpcID string) (
+	[]proto.Cluster, error) {
+	condCluster := operator.NewLeafCondition(operator.Eq, operator.M{
+		"provider":  cloudID,
+		"cloudaccountid": accountID,
+		"vpcid":     vpcID,
+	})
+	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+
+	branchCond := operator.NewBranchCondition(operator.And, condCluster, condStatus)
+
+	clusterList, err := model.ListCluster(ctx, branchCond, &storeopt.ListOption{})
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		blog.Errorf("GetCloudClusters[%s] failed: %v", cloudID, err)
+		return nil, err
+	}
+
+	return clusterList, nil
 }
 
 // GetClusterInfoByClusterID get cluster info
