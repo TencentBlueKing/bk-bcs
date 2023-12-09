@@ -38,14 +38,20 @@ import { updateKv } from '../../../../../../../api/config';
 import { IConfigKvItem } from '../../../../../../../../types/config';
 import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
 
-const props = defineProps<{
+const props = withDefaults(
+  defineProps<{
   bkBizId: string;
   appId: number;
   config: IConfigKvItem;
   show: boolean;
   editable: boolean;
   view: boolean
-}>();
+}>(),
+  {
+    editable: false,
+    view: false,
+  },
+);
 
 const emits = defineEmits(['update:show', 'confirm']);
 

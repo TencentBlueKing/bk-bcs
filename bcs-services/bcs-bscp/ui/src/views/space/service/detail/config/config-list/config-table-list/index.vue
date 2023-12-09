@@ -90,8 +90,12 @@ const useTemplate = ref(true);
 const editVariablesRef = ref();
 
 const refreshConfigList = (isBatchUpload = false) => {
-  tableRef.value.refresh(isBatchUpload);
-  refreshVariable();
+  if (isFileType.value) {
+    tableRef.value.refresh(isBatchUpload);
+    refreshVariable();
+  } else {
+    tableRef.value.refresh();
+  }
 };
 
 const refreshVariable = () => {
