@@ -11,7 +11,7 @@ make init
 # 把 bin/protoc 加到路径中
 export PATH=`pwd`/bin/proto:$PATH
 
-# clang-format 请按系统自行安装
+# clang-format 请按系统自行安装 https://github.com/llvm/llvm-project/releases/
 # protobuf 格式会自动使用 clang-format 格式化, 使用 Google 风格, 最大宽度是 120 个字符, make 会自动执行格式, 也可以使用下面命令手动执行
 find pkg/protocol -type f -name "*.proto"|xargs clang-format -i --style="{BasedOnStyle: Google, ColumnLimit: 120}"
 
@@ -40,7 +40,7 @@ make build_ui
 ```json
 {
     "protoc": {
-        "path": "bin/proto/protoc",
+        "path": "${workspaceRoot}/bin/proto/protoc",
         "options": [
             "--proto_path=pkg/thirdparty/protobuf",
         ]
