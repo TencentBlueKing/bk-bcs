@@ -50,10 +50,6 @@ func (c *CloudVPCMgr) List(req types.ListCloudVPCReq) (types.ListCloudVPCResp, e
 			VPCName:     v.VpcName,
 			Available:   v.Available,
 			Extra:       v.Extra,
-			Creator:     v.Creator,
-			Updater:     v.Updater,
-			CreatTime:   v.CreatTime,
-			UpdateTime:  v.UpdateTime,
 		})
 	}
 

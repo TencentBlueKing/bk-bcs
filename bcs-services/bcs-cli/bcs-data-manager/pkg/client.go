@@ -18,11 +18,12 @@ import (
 	"crypto/tls"
 	"fmt"
 
-	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+
+	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 // Config describe the options Client need
@@ -38,9 +39,9 @@ type Config struct {
 // NewClientWithConfiguration new client with config
 func NewClientWithConfiguration(ctx context.Context) (datamanager.DataManagerClient, context.Context, error) {
 	return NewDataManagerCli(ctx, &Config{
-		APIServer: viper.GetString("config.apiserver"),
-		AuthToken: viper.GetString("config.bcs_token"),
-		Operator:  viper.GetString("config.operator"),
+		APIServer: viper.GetString("apiserver"),
+		AuthToken: viper.GetString("authtoken"),
+		Operator:  viper.GetString("operator"),
 	})
 }
 

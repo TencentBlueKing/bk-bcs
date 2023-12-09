@@ -8,33 +8,21 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package node
+package core
 
-import (
-	"errors"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+const (
+	// TFPlanName tfplan 名称
+	TFPlanName = "tfplan"
+	// SavedPlanSecretAnnotation 注解
+	SavedPlanSecretAnnotation = "savedPlan"
 )
 
-// Update 更新节点
-func (c *NodeMgr) Update(req types.UpdateNodeReq) error {
-	resp, err := c.client.UpdateNode(c.ctx, &clustermanager.UpdateNodeRequest{
-		InnerIPs:    req.InnerIPs,
-		Status:      req.Status,
-		NodeGroupID: req.NodeGroupID,
-		ClusterID:   req.ClusterID,
-		Updater:     "bcs",
-	})
-	if err != nil {
-		return err
-	}
-
-	if resp != nil && resp.Code != 0 {
-		return errors.New(resp.Message)
-	}
-
-	return nil
-}
+const (
+	// TFApplyName tfapply 名称
+	TFApplyName = "tfapply"
+	// SavedApplySecretAnnotation 注解
+	SavedApplySecretAnnotation = "savedApply"
+)

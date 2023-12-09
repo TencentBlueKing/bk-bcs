@@ -8,7 +8,30 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-package utils
+package pkg
+
+import (
+	"fmt"
+
+	clsapi "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+)
+
+var (
+	getTaskURL = "/bcsapi/v4/clustermanager/v1/task/%s"
+)
+
+// GetTask get task status by taskID
+func (c *ClusterMgrClient) GetTask(req *clsapi.GetTaskRequest) (
+	*clsapi.GetTaskResponse, error) {
+	if len(req.TaskID) == 0 {
+		return nil, fmt.Errorf("lost task ID")
+	}
+	totalURL := fmt.Sprintf(getTaskURL, req.TaskID)
+	resp := &clsapi.GetTaskResponse{}
+	if err := c.Get(totalURL, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}

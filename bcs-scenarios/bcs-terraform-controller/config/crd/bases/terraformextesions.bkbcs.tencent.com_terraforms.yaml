@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.6.0
+    controller-gen.kubebuilder.io/version: v0.9.0
   creationTimestamp: null
   name: terraforms.terraformextesions.bkbcs.tencent.com
 spec:
@@ -34,15 +33,17 @@ spec:
           metadata:
             type: object
           spec:
-            description: TerraformSpec defines the desired state of Terraform
+            description: TerraformSpec defines the desired state of Terraform. Terraform对象声明清单
             properties:
               approvePlan:
                 description: ApprovePlan specifies name of a plan wanted to approve.
-                  If its value is "auto", the controller will automatically approve
-                  every plan.
+                  一个计划的审批, 如果该字段为auto, 则自动执行. If its value is "auto", the controller
+                  will automatically approve every plan.
                 type: string
               backendConfigsFrom:
                 items:
+                  description: BackendConfigsReference specify where to store backend
+                    config. 用于terraform初始化时，定义一些配置文件
                   properties:
                     keys:
                       description: Keys is the data key where a specific value can
@@ -83,9 +84,39 @@ spec:
                 description: Create destroy plan and apply it to destroy terraform
                   resources upon deletion of this object. Defaults to false.
                 type: boolean
+              project:
+                description: Project bk project
+                type: string
+              repository:
+                description: GitRepository is used to define the git warehouse address
+                  of bcs argo cd. bcs argo cd git仓库地址
+                properties:
+                  pass:
+                    description: Pass storage password.密码; 若是公开仓库, 不需要用户名和密码
+                    type: string
+                  path:
+                    description: Path terraform execute path.执行路径
+                    type: string
+                  repo:
+                    description: Repo storage repo url.仓库url
+                    maxLength: 253
+                    minLength: 1
+                    type: string
+                  targetRevision:
+                    description: TargetRevision git commit or branch.
+                    type: string
+                  user:
+                    description: User storage user.用户名; 若是公开仓库, 不需要用户名和密码
+                    type: string
+                type: object
+              syncPolicy:
+                default: manual
+                description: 'SyncPolicy Synchronization strategy, divided into ''manual''
+                  and automatic synchronization 同步策略: manual / auto-sync'
+                type: string
               targets:
                 description: Targets specify the resource, module or collection of
-                  resources to target.
+                  resources to target. 按模块执行
                 items:
                   type: string
                 type: array
@@ -93,7 +124,7 @@ spec:
           status:
             description: TerraformStatus defines the observed state of Terraform
             properties:
-              LastAppliedAt:
+              lastAppliedAt:
                 description: LastAppliedAt is the time when the last drift was detected
                   and terraform apply was performed as a result
                 format: date-time
@@ -101,6 +132,10 @@ spec:
               lastAppliedRevision:
                 description: The last successfully applied revision. The revision
                   format for Git sources is <branch|tag>/<commit-sha>.
+                type: string
+              lastApplyError:
+                description: LastApplyError this is an error in terraform execution
+                  apply.terraform执行apply报错信息字段
                 type: string
               lastAttemptedRevision:
                 description: LastAttemptedRevision is the revision of the last reconciliation
@@ -111,6 +146,10 @@ spec:
                   performed
                 format: date-time
                 type: string
+              lastPlanError:
+                description: LastPlanError this is an error in terraform execution
+                  plan.terraform执行plan报错信息字段
+                type: string
               lastPlannedRevision:
                 description: LastPlannedRevision is the revision used by the last
                   planning process. The result could be either no plan change or a
@@ -120,7 +159,22 @@ spec:
                 description: ObservedGeneration is the last reconciled generation.
                 format: int64
                 type: integer
+              operationStatus:
+                description: OperationStatus operation Terraform detail
+                properties:
+                  finishAt:
+                    description: FinishAt operation Terraform finish time
+                    format: date-time
+                    type: string
+                  message:
+                    description: Message operation Terraform error message
+                    type: string
+                  phase:
+                    description: Phase operation Terraform status
+                    type: string
+                type: object
               plan:
+                description: PlanStatus status of plan
                 properties:
                   isDestroyPlan:
                     type: boolean
@@ -131,15 +185,12 @@ spec:
                   pending:
                     type: string
                 type: object
+              syncStatus:
+                description: SyncStatus terraform sync status.同步状态(OutOfSync/Synced)
+                type: string
             type: object
         type: object
     served: true
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

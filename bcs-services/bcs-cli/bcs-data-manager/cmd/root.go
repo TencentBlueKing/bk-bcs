@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const defaultCfgFile = "/etc/bcs/bcs-data-manager.yaml"
+const defaultCfgFile = "/etc/bcs/bcs.yaml"
 
 var (
 	cfgFile string

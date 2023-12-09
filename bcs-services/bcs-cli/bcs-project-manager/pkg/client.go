@@ -29,6 +29,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
+var apiGatewayPrefix = "/bcsapi/v4"
+
 // Config describe the options Client need
 type Config struct {
 	// APIServer for bcs-api-gateway address
@@ -51,16 +53,25 @@ func NewClientWithConfiguration(ctx context.Context) *ProjectManagerClient {
 	return &ProjectManagerClient{
 		ctx: ctx,
 		cfg: &Config{
-			APIServer: viper.GetString("bcs.apiserver"),
-			AuthToken: viper.GetString("bcs.token"),
-			Operator:  viper.GetString("bcs.operator"),
+			APIServer: viper.GetString("apiserver"),
+			AuthToken: viper.GetString("authtoken"),
+			Operator:  viper.GetString("operator"),
 		},
 		debug: viper.GetBool("debug"),
 	}
 }
 
+// NewClientWithConfiguration new client with config
+func NewClient(ctx context.Context, config *Config) *ProjectManagerClient {
+	return &ProjectManagerClient{
+		ctx:   ctx,
+		cfg:   config,
+		debug: viper.GetBool("debug"),
+	}
+}
+
 func (p *ProjectManagerClient) do(urls string, httpType string, query url.Values, body interface{}) ([]byte, error) {
-	urls = p.cfg.APIServer + urls
+	urls = p.cfg.APIServer + apiGatewayPrefix + urls
 	var req *http.Request
 	var err error
 	_, err = url.Parse(p.cfg.APIServer)

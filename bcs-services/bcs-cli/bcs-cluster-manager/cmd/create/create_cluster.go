@@ -19,11 +19,13 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/util/i18n"
 	"k8s.io/kubectl/pkg/util/templates"
 
-	clusterMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cluster"
+	clusterMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 )
 
@@ -74,7 +76,11 @@ func createCluster(cmd *cobra.Command, args []string) {
 		}
 
 		resp := &types.CreateVirtualClusterResp{}
-		err = clusterMgr.NewHttpClient(context.Background()).Post("/bcsapi/v4/clustermanager/v1/vcluster", req, resp)
+		err = clusterMgr.NewClusterMgrClient(&clusterMgr.Config{
+			APIServer: viper.GetString("apiserver"),
+			AuthToken: viper.GetString("authtoken"),
+			Operator:  viper.GetString("operator"),
+		}).Post("/bcsapi/v4/clustermanager/v1/vcluster", req, resp)
 		if err != nil {
 			klog.Fatalf("create virtual cluster failed: %v", err)
 		}
@@ -94,7 +100,7 @@ func createCluster(cmd *cobra.Command, args []string) {
 		klog.Fatalf("unmarshal json file failed: %v", err)
 	}
 
-	resp, err := clusterMgr.New(context.Background()).Create(req)
+	resp, err := cluster.New(context.Background()).Create(req)
 	if err != nil {
 		klog.Fatalf("create cluster failed: %v", err)
 	}

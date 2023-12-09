@@ -1,6 +1,7 @@
 
+IMG_VERSION = $(shell date +%y.%m.%d)
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= mirrors.tencent.com/huiwenzhang/bcs-terraform-controller:v${IMG_VERSION}
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.24.1
 
@@ -55,26 +56,34 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
+.PHONY: tidy
+tidy:
+	go mod tidy
+
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
 ##@ Build
 
+.PHONY: clean
+clean: ## clean bin path
+	rm -rf ./build/*
+
 .PHONY: build
-build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+build: clean tidy manifests generate ## Build manager binary.
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o ./build/bcs-terraform-controller main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
 
 .PHONY: docker-build
-docker-build: test ## Build docker image with the manager.
-	docker build -t ${IMG} .
+docker-build: build ## Build docker image with the manager.
+	docker build --platform=linux/amd64 -t ${IMG} .
 
 .PHONY: docker-push
-docker-push: ## Push docker image with the manager.
+docker-push: docker-build ## Push docker image with the manager.
 	docker push ${IMG}
 
 ##@ Deployment
@@ -103,7 +112,7 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 ##@ Build Dependencies
 
 ## Location to install dependencies to
-LOCALBIN ?= $(shell pwd)/bin
+LOCALBIN ?= $(shell pwd)/build
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 

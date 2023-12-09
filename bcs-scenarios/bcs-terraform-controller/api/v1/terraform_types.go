@@ -21,10 +21,59 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 const (
+	// TerraformFinalizer 标志
 	TerraformFinalizer = "finalizer.terraform.bkbcs.tencent.com"
+
+	// TerraformManualAnnotation 手动
+	TerraformManualAnnotation = "terraformextesions.sync.bkbcs.tencent.com"
+
+	// ManualSyncPolicy 手动策略
+	// 同步策略: manual / auto-sync
+	ManualSyncPolicy = "manual"
+
+	// AutoSyncPolicy 自动策略
+	// 同步策略: manual / auto-sync
+	AutoSyncPolicy = "auto-sync"
+
+	// OutOfSyncStatus 不同步
+	OutOfSyncStatus = "OutOfSync"
+
+	// SyncedStatus 已经同步
+	SyncedStatus = "Synced"
+
+	// PhaseSucceeded 成功
+	PhaseSucceeded = "Succeeded"
+
+	// PhaseError 失败(报错)
+	PhaseError = "Error"
 )
 
-// BackendConfigsReference specify where to store backend config
+// GitRepository is used to define the git warehouse address of bcs argo cd. bcs argo cd git仓库地址
+type GitRepository struct {
+	// Repo storage repo url.仓库url
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=253
+	// +required
+	Repo string `json:"repo,omitempty"`
+
+	// User storage user.用户名; 若是公开仓库, 不需要用户名和密码
+	// +optional
+	User string `json:"user,omitempty"`
+
+	// Pass storage password.密码; 若是公开仓库, 不需要用户名和密码
+	// +optional
+	Pass string `json:"pass,omitempty"`
+
+	// Path terraform execute path.执行路径
+	// +optional
+	Path string `json:"path,omitempty"`
+
+	// TargetRevision git commit or branch.
+	// +optional
+	TargetRevision string `json:"targetRevision,omitempty"`
+}
+
+// BackendConfigsReference specify where to store backend config. 用于terraform初始化时，定义一些配置文件
 type BackendConfigsReference struct {
 	// Kind of the values referent, valid values are ('Secret', 'ConfigMap').
 	// +kubebuilder:validation:Enum=Secret;ConfigMap
@@ -64,15 +113,21 @@ type PlanStatus struct {
 	IsDriftDetectionPlan bool `json:"isDriftDetectionPlan,omitempty"`
 }
 
-// TerraformSpec defines the desired state of Terraform
+// TerraformSpec defines the desired state of Terraform. Terraform对象声明清单
 type TerraformSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// ApprovePlan specifies name of a plan wanted to approve.
+	// ApprovePlan specifies name of a plan wanted to approve. 一个计划的审批, 如果该字段为auto, 则自动执行.
 	// If its value is "auto", the controller will automatically approve every plan.
 	// +optional
 	ApprovePlan string `json:"approvePlan,omitempty"`
+
+	// SyncPolicy Synchronization strategy, divided into 'manual' and automatic synchronization
+	// 同步策略: manual / auto-sync
+	// +kubebuilder:default:=manual
+	// +optional
+	SyncPolicy string `json:"syncPolicy,omitempty"`
 
 	// Destroy produces a destroy plan. Applying the plan will destroy all resources.
 	// +optional
@@ -87,9 +142,30 @@ type TerraformSpec struct {
 	// +optional
 	DestroyResourcesOnDeletion bool `json:"destroyResourcesOnDeletion,omitempty"`
 
-	// Targets specify the resource, module or collection of resources to target.
+	// Targets specify the resource, module or collection of resources to target. 按模块执行
 	// +optional
 	Targets []string `json:"targets,omitempty"`
+
+	// +optional
+	Repository GitRepository `json:"repository,omitempty"`
+
+	// Project bk project
+	Project string `json:"project,omitempty"`
+}
+
+// OperationStatus operation Terraform detail
+type OperationStatus struct {
+	// FinishAt operation Terraform finish time
+	// +optional
+	FinishAt *metav1.Time `json:"finishAt,omitempty"`
+
+	// Message operation Terraform error message
+	// +optional
+	Message string `json:"message,omitempty"`
+
+	// Phase operation Terraform status
+	// +optional
+	Phase string `json:"phase,omitempty"`
 }
 
 // TerraformStatus defines the observed state of Terraform
@@ -122,10 +198,25 @@ type TerraformStatus struct {
 	// LastAppliedAt is the time when the last drift was detected and
 	// terraform apply was performed as a result
 	// +optional
-	LastAppliedAt *metav1.Time `json:"LastAppliedAt,omitempty"`
+	LastAppliedAt *metav1.Time `json:"lastAppliedAt,omitempty"`
+
+	// LastPlanError this is an error in terraform execution plan.terraform执行plan报错信息字段
+	// +optional
+	LastPlanError string `json:"lastPlanError,omitempty"`
+
+	// LastApplyError this is an error in terraform execution apply.terraform执行apply报错信息字段
+	// +optional
+	LastApplyError string `json:"lastApplyError,omitempty"`
+
+	// SyncStatus terraform sync status.同步状态(OutOfSync/Synced)
+	// +optional
+	SyncStatus string `json:"syncStatus,omitempty"`
 
 	// +optional
 	Plan PlanStatus `json:"plan,omitempty"`
+
+	// OperationStatus operation Terraform detail
+	OperationStatus OperationStatus `json:"operationStatus,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -146,7 +237,8 @@ type Terraform struct {
 type TerraformList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Terraform `json:"items"`
+	// Items is a list of secret objects.
+	Items []Terraform `json:"items"`
 }
 
 func init() {

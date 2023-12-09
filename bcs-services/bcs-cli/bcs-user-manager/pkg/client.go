@@ -18,13 +18,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	netUrl "net/url"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
+
+var apiGatewayPrefix = "/bcsapi/v4/usermanager"
 
 // Config describe the options Client need
 type Config struct {
@@ -47,15 +49,15 @@ func NewClientWithConfiguration(ctx context.Context) *UserManagerClient {
 	return &UserManagerClient{
 		ctx: ctx,
 		cfg: &Config{
-			APIServer: viper.GetString("config.apiserver"),
-			AuthToken: viper.GetString("config.bcs_token"),
-			Operator:  viper.GetString("config.operator"),
+			APIServer: viper.GetString("apiserver"),
+			AuthToken: viper.GetString("authtoken"),
+			Operator:  viper.GetString("operator"),
 		},
 	}
 }
 
 func (c *UserManagerClient) do(url string, httpType string, query netUrl.Values, body interface{}) ([]byte, error) {
-	url = c.cfg.APIServer + url
+	url = c.cfg.APIServer + apiGatewayPrefix + url
 	var req *http.Request
 	var err error
 
@@ -90,7 +92,7 @@ func (c *UserManagerClient) do(url string, httpType string, query netUrl.Values,
 		return nil, errors.Wrapf(err, "http do request failed")
 	}
 	defer resp.Body.Close()
-	bs, err := ioutil.ReadAll(resp.Body)
+	bs, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrapf(err, "read response body failed")
 	}

@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	defaultCfgFile = "/etc/bcs/bcs-user-manager.yaml"
+	defaultCfgFile = "/etc/bcs/bcs.yaml"
 )
 
 var (

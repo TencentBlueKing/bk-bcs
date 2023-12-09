@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.6.0
+    controller-gen.kubebuilder.io/version: v0.9.0
   creationTimestamp: null
   name: terraforms.terraformextesions.bkbcs.tencent.com
 spec:
@@ -16,130 +15,182 @@ spec:
     singular: terraform
   scope: Namespaced
   versions:
-  - name: v1
-    schema:
-      openAPIV3Schema:
-        description: Terraform is the Schema for the terraforms API
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
+    - name: v1
+      schema:
+        openAPIV3Schema:
+          description: Terraform is the Schema for the terraforms API
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation
               of an object. Servers should convert recognized schemas to the latest
               internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this
               object represents. Servers may infer this from the endpoint the client
               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: TerraformSpec defines the desired state of Terraform
-            properties:
-              approvePlan:
-                description: ApprovePlan specifies name of a plan wanted to approve.
-                  If its value is "auto", the controller will automatically approve
-                  every plan.
-                type: string
-              backendConfigsFrom:
-                items:
-                  properties:
-                    keys:
-                      description: Keys is the data key where a specific value can
-                        be found at. Defaults to all keys.
-                      items:
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: TerraformSpec defines the desired state of Terraform. Terraform对象声明清单
+              properties:
+                approvePlan:
+                  description: ApprovePlan specifies name of a plan wanted to approve.
+                    一个计划的审批, 如果该字段为auto, 则自动执行. If its value is "auto", the controller
+                    will automatically approve every plan.
+                  type: string
+                backendConfigsFrom:
+                  items:
+                    description: BackendConfigsReference specify where to store backend
+                      config. 用于terraform初始化时，定义一些配置文件
+                    properties:
+                      keys:
+                        description: Keys is the data key where a specific value can
+                          be found at. Defaults to all keys.
+                        items:
+                          type: string
+                        type: array
+                      kind:
+                        description: Kind of the values referent, valid values are ('Secret',
+                          'ConfigMap').
+                        enum:
+                          - Secret
+                          - ConfigMap
                         type: string
-                      type: array
-                    kind:
-                      description: Kind of the values referent, valid values are ('Secret',
-                        'ConfigMap').
-                      enum:
-                      - Secret
-                      - ConfigMap
+                      name:
+                        description: Name of the configs referent. Should reside in
+                          the same namespace as the referring resource.
+                        maxLength: 253
+                        minLength: 1
+                        type: string
+                      optional:
+                        description: Optional marks this BackendConfigsReference as
+                          optional. When set, a not found error for the values reference
+                          is ignored, but any Key or transient error will still result
+                          in a reconciliation failure.
+                        type: boolean
+                    required:
+                      - kind
+                      - name
+                    type: object
+                  type: array
+                destroy:
+                  description: Destroy produces a destroy plan. Applying the plan will
+                    destroy all resources.
+                  type: boolean
+                destroyResourcesOnDeletion:
+                  default: false
+                  description: Create destroy plan and apply it to destroy terraform
+                    resources upon deletion of this object. Defaults to false.
+                  type: boolean
+                project:
+                  description: Project bk project
+                  type: string
+                repository:
+                  description: GitRepository is used to define the git warehouse address
+                    of bcs argo cd. bcs argo cd git仓库地址
+                  properties:
+                    pass:
+                      description: Pass storage password.密码; 若是公开仓库, 不需要用户名和密码
                       type: string
-                    name:
-                      description: Name of the configs referent. Should reside in
-                        the same namespace as the referring resource.
+                    path:
+                      description: Path terraform execute path.执行路径
+                      type: string
+                    repo:
+                      description: Repo storage repo url.仓库url
                       maxLength: 253
                       minLength: 1
                       type: string
-                    optional:
-                      description: Optional marks this BackendConfigsReference as
-                        optional. When set, a not found error for the values reference
-                        is ignored, but any Key or transient error will still result
-                        in a reconciliation failure.
-                      type: boolean
-                  required:
-                  - kind
-                  - name
+                    targetRevision:
+                      description: TargetRevision git commit or branch.
+                      type: string
+                    user:
+                      description: User storage user.用户名; 若是公开仓库, 不需要用户名和密码
+                      type: string
                   type: object
-                type: array
-              destroy:
-                description: Destroy produces a destroy plan. Applying the plan will
-                  destroy all resources.
-                type: boolean
-              destroyResourcesOnDeletion:
-                default: false
-                description: Create destroy plan and apply it to destroy terraform
-                  resources upon deletion of this object. Defaults to false.
-                type: boolean
-              targets:
-                description: Targets specify the resource, module or collection of
-                  resources to target.
-                items:
+                syncPolicy:
+                  default: manual
+                  description: 'SyncPolicy Synchronization strategy, divided into ''manual''
+                  and automatic synchronization 同步策略: manual / auto-sync'
                   type: string
-                type: array
-            type: object
-          status:
-            description: TerraformStatus defines the observed state of Terraform
-            properties:
-              LastAppliedAt:
-                description: LastAppliedAt is the time when the last drift was detected
-                  and terraform apply was performed as a result
-                format: date-time
-                type: string
-              lastAppliedRevision:
-                description: The last successfully applied revision. The revision
-                  format for Git sources is <branch|tag>/<commit-sha>.
-                type: string
-              lastAttemptedRevision:
-                description: LastAttemptedRevision is the revision of the last reconciliation
-                  attempt.
-                type: string
-              lastPlanAt:
-                description: LastPlanAt is the time when the last terraform plan was
-                  performed
-                format: date-time
-                type: string
-              lastPlannedRevision:
-                description: LastPlannedRevision is the revision used by the last
-                  planning process. The result could be either no plan change or a
-                  new plan generated.
-                type: string
-              observedGeneration:
-                description: ObservedGeneration is the last reconciled generation.
-                format: int64
-                type: integer
-              plan:
-                properties:
-                  isDestroyPlan:
-                    type: boolean
-                  isDriftDetectionPlan:
-                    type: boolean
-                  lastApplied:
+                targets:
+                  description: Targets specify the resource, module or collection of
+                    resources to target. 按模块执行
+                  items:
                     type: string
-                  pending:
-                    type: string
-                type: object
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
+                  type: array
+              type: object
+            status:
+              description: TerraformStatus defines the observed state of Terraform
+              properties:
+                lastAppliedAt:
+                  description: LastAppliedAt is the time when the last drift was detected
+                    and terraform apply was performed as a result
+                  format: date-time
+                  type: string
+                lastAppliedRevision:
+                  description: The last successfully applied revision. The revision
+                    format for Git sources is <branch|tag>/<commit-sha>.
+                  type: string
+                lastApplyError:
+                  description: LastApplyError this is an error in terraform execution
+                    apply.terraform执行apply报错信息字段
+                  type: string
+                lastAttemptedRevision:
+                  description: LastAttemptedRevision is the revision of the last reconciliation
+                    attempt.
+                  type: string
+                lastPlanAt:
+                  description: LastPlanAt is the time when the last terraform plan was
+                    performed
+                  format: date-time
+                  type: string
+                lastPlanError:
+                  description: LastPlanError this is an error in terraform execution
+                    plan.terraform执行plan报错信息字段
+                  type: string
+                lastPlannedRevision:
+                  description: LastPlannedRevision is the revision used by the last
+                    planning process. The result could be either no plan change or a
+                    new plan generated.
+                  type: string
+                observedGeneration:
+                  description: ObservedGeneration is the last reconciled generation.
+                  format: int64
+                  type: integer
+                operationStatus:
+                  description: OperationStatus operation Terraform detail
+                  properties:
+                    finishAt:
+                      description: FinishAt operation Terraform finish time
+                      format: date-time
+                      type: string
+                    message:
+                      description: Message operation Terraform error message
+                      type: string
+                    phase:
+                      description: Phase operation Terraform status
+                      type: string
+                  type: object
+                plan:
+                  description: PlanStatus status of plan
+                  properties:
+                    isDestroyPlan:
+                      type: boolean
+                    isDriftDetectionPlan:
+                      type: boolean
+                    lastApplied:
+                      type: string
+                    pending:
+                      type: string
+                  type: object
+                syncStatus:
+                  description: SyncStatus terraform sync status.同步状态(OutOfSync/Synced)
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

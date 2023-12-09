@@ -8,33 +8,15 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package node
+package option
 
-import (
-	"errors"
+const (
+	// TerraformBinPath  terraform 命令存放目录
+	TerraformBinPath = "/usr/local/bin/terraform"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	// RepositoryStorePath 代码存储路径
+	RepositoryStorePath = "/data/bcs/terraform/repository"
 )
-
-// Update 更新节点
-func (c *NodeMgr) Update(req types.UpdateNodeReq) error {
-	resp, err := c.client.UpdateNode(c.ctx, &clustermanager.UpdateNodeRequest{
-		InnerIPs:    req.InnerIPs,
-		Status:      req.Status,
-		NodeGroupID: req.NodeGroupID,
-		ClusterID:   req.ClusterID,
-		Updater:     "bcs",
-	})
-	if err != nil {
-		return err
-	}
-
-	if resp != nil && resp.Code != 0 {
-		return errors.New(resp.Message)
-	}
-
-	return nil
-}
