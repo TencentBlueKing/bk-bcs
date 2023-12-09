@@ -7,7 +7,7 @@ VERSION=$(shell protoc --version)
 OBJ:=$(patsubst %.proto, %.pb.go, $(PROTO))
 
 all:
-    ifeq ("$(VERSION)","libprotoc 22.0")
+    ifeq ("$(VERSION)","libprotoc 25.1")
 		@protoc --proto_path=. --proto_path=../../../../ --proto_path=../../../../pkg/thirdparty/protobuf/ --go_opt=paths=source_relative --go_out=. --go-grpc_opt=paths=source_relative --go-grpc_out=require_unimplemented_servers=false:. *.proto
     else
 		@echo "make pb failed, protoc version not 22.0"

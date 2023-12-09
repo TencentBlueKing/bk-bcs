@@ -9,7 +9,7 @@ GRPC:=$(patsubst %.proto, %_grpc.pb.go, $(PROTO))
 GW:=$(patsubst %.proto, %.pb.gw.go, $(PROTO))
 
 all:
-    ifeq ("$(VERSION)","libprotoc 22.0")
+    ifeq ("$(VERSION)","libprotoc 25.1")
 		@protoc --proto_path=. --proto_path=../../../ --proto_path=../../../pkg/thirdparty/protobuf/ --go_opt=paths=source_relative --go_out=. --go-grpc_opt=paths=source_relative --go-grpc_out=require_unimplemented_servers=false:. --grpc-gateway_opt=logtostderr=true --grpc-gateway_opt=paths=source_relative --grpc-gateway_out=. *.proto
     else
 		@echo "make pb failed, protoc version not 22.0"
