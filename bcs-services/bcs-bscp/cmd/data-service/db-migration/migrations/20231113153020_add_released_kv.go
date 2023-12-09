@@ -42,6 +42,7 @@ func mig20231113153020Up(tx *gorm.DB) error {
 		Key       string `gorm:"type:varchar(255) not null;uniqueIndex:relID_key,priority:1"`
 		Version   uint   `gorm:"type:bigint(1) unsigned not null;"`
 		ReleaseID uint   `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_ID,priority:3;uniqueIndex:relID_key,priority:2"` //nolint:lll
+		KvType    string `gorm:"type:varchar(64) not null"`
 
 		// Attachment is attachment info of the resource
 		BizID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_ID,priority:1"`

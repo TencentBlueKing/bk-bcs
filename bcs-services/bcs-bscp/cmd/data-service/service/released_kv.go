@@ -89,12 +89,12 @@ func (s *Service) ListReleasedKvs(ctx context.Context, req *pbds.ListReleasedKvR
 
 	var rkvs []*pbrkv.ReleasedKv
 	for _, detail := range details {
-		kvType, val, err := s.getReleasedKv(kt, req.BizId, req.AppId, detail.Spec.Version, detail.ReleaseID, detail.Spec.Key)
+		_, val, err := s.getReleasedKv(kt, req.BizId, req.AppId, detail.Spec.Version, detail.ReleaseID, detail.Spec.Key)
 		if err != nil {
 			logs.Errorf("get vault released kv failed, err: %v, rid: %s", err, kt.Rid)
 			return nil, err
 		}
-		rkvs = append(rkvs, pbrkv.PbRKv(detail, kvType, val))
+		rkvs = append(rkvs, pbrkv.PbRKv(detail, val))
 	}
 
 	resp := &pbds.ListReleasedKvResp{

@@ -100,7 +100,7 @@ func (dao *releasedKvDao) List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table
 	m := dao.genQ.ReleasedKv
 	q := dao.genQ.ReleasedKv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID),
 		m.ReleaseID.Eq(opt.ReleaseID)).Or(m.Key.Eq(opt.Key)).
-		Order(m.ID.Desc())
+		Order(m.Key)
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
 		result, err := q.Find()

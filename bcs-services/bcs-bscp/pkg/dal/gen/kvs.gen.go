@@ -29,6 +29,7 @@ func newKv(db *gorm.DB, opts ...gen.DOOption) kv {
 	_kv.ALL = field.NewAsterisk(tableName)
 	_kv.ID = field.NewUint32(tableName, "id")
 	_kv.Key = field.NewString(tableName, "key")
+	_kv.KvType = field.NewString(tableName, "kv_type")
 	_kv.Version = field.NewUint32(tableName, "version")
 	_kv.BizID = field.NewUint32(tableName, "biz_id")
 	_kv.AppID = field.NewUint32(tableName, "app_id")
@@ -48,6 +49,7 @@ type kv struct {
 	ALL       field.Asterisk
 	ID        field.Uint32
 	Key       field.String
+	KvType    field.String
 	Version   field.Uint32
 	BizID     field.Uint32
 	AppID     field.Uint32
@@ -73,6 +75,7 @@ func (k *kv) updateTableName(table string) *kv {
 	k.ALL = field.NewAsterisk(table)
 	k.ID = field.NewUint32(table, "id")
 	k.Key = field.NewString(table, "key")
+	k.KvType = field.NewString(table, "kv_type")
 	k.Version = field.NewUint32(table, "version")
 	k.BizID = field.NewUint32(table, "biz_id")
 	k.AppID = field.NewUint32(table, "app_id")
@@ -104,9 +107,10 @@ func (k *kv) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (k *kv) fillFieldMap() {
-	k.fieldMap = make(map[string]field.Expr, 9)
+	k.fieldMap = make(map[string]field.Expr, 10)
 	k.fieldMap["id"] = k.ID
 	k.fieldMap["key"] = k.Key
+	k.fieldMap["kv_type"] = k.KvType
 	k.fieldMap["version"] = k.Version
 	k.fieldMap["biz_id"] = k.BizID
 	k.fieldMap["app_id"] = k.AppID

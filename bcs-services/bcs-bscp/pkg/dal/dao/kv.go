@@ -132,15 +132,15 @@ func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int6
 
 	m := dao.genQ.Kv
 	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).
-		Order(m.ID.Desc())
+		Order(m.Key)
 
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
 		q = q.Where(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))
 	}
 
-	if opt.KvType {
-		q = q.Where(m.ID.In(opt.IDs...))
+	if len(opt.KvType) > 0 {
+		q = q.Where(m.KvType.In(opt.KvType...))
 	}
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {

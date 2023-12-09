@@ -94,23 +94,9 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 
 	kt := kit.FromGrpcContext(ctx)
 
-	app, err := s.dao.App().Get(kt, req.Attachment.BizId, req.Attachment.AppId)
-	if err != nil {
-		return nil, fmt.Errorf("get app fail,err : %v", req.Spec.Key)
-	}
-	if checkKVTypeMatch(table.DataType(req.Spec.KvType), app.Spec.DataType) {
-		return nil, fmt.Errorf("kv type does not match the data type defined in the application")
-	}
-
 	kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
 	if err != nil {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-		return nil, err
-	}
-
-	kvType, _, err := s.getKv(kt, req.Attachment.BizId, req.Attachment.AppId, kv.Spec.Version, kv.Spec.Key)
-	if err != nil {
-		logs.Errorf("get vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
 		return nil, err
 	}
 
@@ -119,7 +105,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 		AppID:  req.Attachment.AppId,
 		Key:    kv.Spec.Key,
 		Value:  req.Spec.Value,
-		KvType: kvType,
+		KvType: kv.Spec.KvType,
 	}
 	version, err := s.vault.UpsertKv(kt, opt)
 	if err != nil {
@@ -155,17 +141,10 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		SearchKey: req.SearchKey,
 		All:       req.All,
 		Page:      page,
+		KvType:    req.KvType,
 	}
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,
-	}
-	if len(req.KvType) > 0 {
-		ids, err := s.checkListKvType(kt, req)
-		if err != nil {
-			return nil, err
-		}
-		opt.KvType = true
-		opt.IDs = ids
 	}
 	if err := opt.Validate(po); err != nil {
 		return nil, err
@@ -188,7 +167,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		kvs = pbrkv.PbKvState(details, kvReleased)
 	} else {
 		for _, kv := range details {
-			kvs = append(kvs, pbkv.PbKv(kv, "", "", ""))
+			kvs = append(kvs, pbkv.PbKv(kv, "", ""))
 		}
 	}
 

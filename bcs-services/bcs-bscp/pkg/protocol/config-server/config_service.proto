@@ -723,7 +723,7 @@ service Config {
     };
     rpc UnDeleteKv(UnDeleteKvReq) returns (UnDeleteKvResp) {
         option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}"
+            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}/undelete"
         };
     };
 }
