@@ -186,34 +186,6 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 
 }
 
-func (s *Service) checkListKvType(kt *kit.Kit, req *pbds.ListKvsReq) ([]uint32, error) {
-	if len(req.KvType) == 0 {
-		return nil, nil
-	}
-
-	typeMap := make(map[string]string, len(req.KvType))
-	for _, one := range req.KvType {
-		typeMap[one] = one
-	}
-
-	allKv, err := s.dao.Kv().ListAllByAppID(kt, req.AppId, req.BizId)
-	if err != nil {
-		return nil, err
-	}
-	var ids []uint32
-	for _, kv := range allKv {
-		kyType, _, err := s.getKv(kt, req.BizId, req.AppId, kv.Spec.Version, kv.Spec.Key)
-		if err != nil {
-			return nil, err
-		}
-
-		if _, ok := typeMap[string(kyType)]; ok {
-			ids = append(ids, kv.ID)
-		}
-	}
-	return ids, nil
-}
-
 func (s *Service) setKvTypeAndValue(kt *kit.Kit, details []*table.Kv, kvs []*pbkv.Kv,
 	kvRelease []*table.ReleasedKv) ([]*pbkv.Kv, error) {
 
