@@ -18,12 +18,13 @@ import (
 	"crypto/tls"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
 // Config describe the options Client need
@@ -34,14 +35,16 @@ type Config struct {
 	AuthToken string
 	// Operator for the bk-repo operations
 	Operator string
+	// Debug flag for details tracing
+	Debug bool
 }
 
 // NewClientWithConfiguration new client with config
 func NewClientWithConfiguration(ctx context.Context) (clustermanager.ClusterManagerClient, context.Context, error) {
 	return NewBcsClusterCli(ctx, &Config{
-		APIServer: viper.GetString("config.apiserver"),
-		AuthToken: viper.GetString("config.bcs_token"),
-		Operator:  viper.GetString("config.operator"),
+		APIServer: viper.GetString("apiserver"),
+		AuthToken: viper.GetString("authtoken"),
+		Operator:  viper.GetString("operator"),
 	})
 }
 

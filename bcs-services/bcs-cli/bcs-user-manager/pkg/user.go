@@ -28,6 +28,7 @@ const (
 	getSaasUserUrl      = "/v1/users/saas/%s"
 	createSaasUserUrl   = "/v1/users/saas/%s"
 	refreshSaasTokenUrl = "/v1/users/saas/%s/refresh" // nolint
+	getUserInfo         = "/v1/users/info"
 
 	getPlainUserUrl      = "/v1/users/plain/%s"
 	createPlainUserUrl   = "/v1/users/plain/%s"
@@ -224,6 +225,34 @@ func (c *UserManagerClient) RefreshPlainToken(userName, expireTime string) (*Ref
 	resp := new(RefreshPlainTokenResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
 		return nil, errors.Wrapf(err, "refresh Plain user token unmarshal failed with response '%s'", string(bs))
+	}
+	return resp, nil
+}
+
+// UserInfo for username
+type UserInfo struct {
+	UserName string `json:"username,omitempty"`
+	URL      string `json:"avatar_url,omitempty"`
+}
+
+// UserInfoResponse defines the response of GetUserInfo
+type UserInfoResponse struct {
+	Result  bool      `json:"result"`
+	Code    int       `json:"code"`
+	Message string    `json:"message"`
+	Data    *UserInfo `json:"data"`
+}
+
+// GetUserInfo get user name from bcs-user-manager
+func (c *UserManagerClient) GetUserInfo() (*UserInfoResponse, error) {
+	data, err := c.do(getUserInfo, http.MethodGet, nil, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "validate user auth token failed: ")
+	}
+	resp := new(UserInfoResponse)
+	if err := json.Unmarshal(data, resp); err != nil {
+		return nil, errors.Wrapf(err, "Get UserInfo response ",
+			string(data))
 	}
 	return resp, nil
 }

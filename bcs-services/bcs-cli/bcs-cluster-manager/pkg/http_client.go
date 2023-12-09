@@ -14,43 +14,42 @@ package pkg
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/spf13/viper"
 )
 
-// HttpClient http client
-type HttpClient struct {
-	*http.Client
+// ClusterMgrClient http client
+type ClusterMgrClient struct {
+	cli    *http.Client
+	config *Config
 }
 
 // Get http client get function
-func (c *HttpClient) Get(url string, result interface{}) (err error) {
+func (c *ClusterMgrClient) Get(url string, result interface{}) error {
 	return c.do(http.MethodGet, url, nil, result)
 }
 
 // Post http client post function
-func (c *HttpClient) Post(url string, data, result interface{}) (err error) {
+func (c *ClusterMgrClient) Post(url string, data, result interface{}) error {
 	return c.do(http.MethodPost, url, data, result)
 }
 
 // Put http client put function
-func (c *HttpClient) Put(url string, data, result interface{}) (err error) {
+func (c *ClusterMgrClient) Put(url string, data, result interface{}) error {
 	return c.do(http.MethodPut, url, data, result)
 }
 
 // Delete http client delete function
-func (c *HttpClient) Delete(url string, result interface{}) (err error) {
+func (c *ClusterMgrClient) Delete(url string, result interface{}) error {
 	return c.do(http.MethodDelete, url, nil, result)
 }
 
-func (c *HttpClient) do(method, url string, data, result interface{}) (err error) {
+func (c *ClusterMgrClient) do(method, url string, data, result interface{}) error {
 	var byt []byte
+	var err error
 	if data != nil {
 		byt, err = json.Marshal(data)
 		if err != nil {
@@ -58,57 +57,45 @@ func (c *HttpClient) do(method, url string, data, result interface{}) (err error
 		}
 	}
 
-	baseURL := viper.GetString("config.apiserver")
-	req, err := http.NewRequest(method, "https://"+baseURL+url, bytes.NewBuffer(byt))
-	if err != nil {
-		return err
-	}
-
-	config := &Config{
-		APIServer: baseURL,
-		AuthToken: viper.GetString("config.bcs_token"),
-		Operator:  viper.GetString("config.operator"),
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	if len(config.AuthToken) != 0 {
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", config.AuthToken))
-	}
-
-	resp, err := c.Do(req)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error status code: %d", resp.StatusCode)
-	}
-
 	if result == nil {
-		return err
+		return fmt.Errorf("lost expected response")
+	}
+
+	totalURL := c.config.APIServer + url
+	req, err := http.NewRequest(method, totalURL, bytes.NewBuffer(byt))
+	if err != nil {
+		return fmt.Errorf("create http request failed, %s", err.Error())
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if len(c.config.AuthToken) != 0 {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.config.AuthToken))
+	}
+
+	resp, err := c.cli.Do(req)
+	if err != nil {
+		return fmt.Errorf("send http request failed, %s", err.Error())
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("http status code is not expected: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading http response body failed, %s", err.Error())
 	}
-
-	err = resp.Body.Close()
-	if err != nil {
-		return err
-	}
+	defer resp.Body.Close()
 
 	return json.Unmarshal(body, result)
 }
 
-// NewHttpClientWithConfiguration new http client with config
-func NewHttpClientWithConfiguration(ctx context.Context) *HttpClient {
-	return &HttpClient{
-		&http.Client{
+// NewClusterMgrClient new http client with config
+func NewClusterMgrClient(config *Config) *ClusterMgrClient {
+	return &ClusterMgrClient{
+		cli: &http.Client{
 			Transport: &http.Transport{
-				// NOCC:gas/tls(client工具)
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
 			},
 		},
+		config: config,
 	}
 }

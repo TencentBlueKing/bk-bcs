@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	cfgFile string
+	cfgFile = "/etc/bcs/bcs.yaml"
 	rootCmd = &cobra.Command{
 		Use:   "kubectl-bcs-project-manager",
 		Short: "kubectl-bcs-project-manager used to operate bcs-project-manager service",
@@ -76,7 +76,7 @@ func init() {
 	rootCmd.AddCommand(render.NewCmdRender())
 	rootCmd.AddCommand(delete2.NewCmdDelete())
 	rootCmd.PersistentFlags().StringVarP(
-		&cfgFile, "config", "c", "", "config file, optional")
+		&cfgFile, "config", "c", cfgFile, "config file, optional")
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "v", false, "Debug mode")
 	_ = viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 }

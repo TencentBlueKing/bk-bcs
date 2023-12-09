@@ -39,7 +39,7 @@ import (
 )
 
 const (
-	defaultCfgFile = "/etc/bcs/bcs-cluster-manager.yaml"
+	defaultCfgFile = "/etc/bcs/bcs.yaml"
 )
 
 var (

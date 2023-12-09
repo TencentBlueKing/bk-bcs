@@ -43,17 +43,10 @@ type (
 
 	// UpdateProjectRequest update project
 	UpdateProjectRequest struct {
-		BGID        string `json:"BGID"`
-		BGName      string `json:"BGName"`
 		BusinessID  string `json:"businessID"`
-		CenterID    string `json:"centerID"`
-		CenterName  string `json:"centerName"`
 		CreateTime  string `json:"createTime"`
 		Creator     string `json:"creator"`
-		DeptID      string `json:"deptID"`
-		DeptName    string `json:"deptName"`
 		Description string `json:"description"`
-		IsSecret    bool   `json:"isSecret"`
 		Kind        string `json:"kind"`
 		Managers    string `json:"managers"`
 		Name        string `json:"name"`

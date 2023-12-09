@@ -10,31 +10,28 @@
  * limitations under the License.
  */
 
-package node
+package pkg
 
 import (
-	"errors"
+	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	clsapi "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
-// Update 更新节点
-func (c *NodeMgr) Update(req types.UpdateNodeReq) error {
-	resp, err := c.client.UpdateNode(c.ctx, &clustermanager.UpdateNodeRequest{
-		InnerIPs:    req.InnerIPs,
-		Status:      req.Status,
-		NodeGroupID: req.NodeGroupID,
-		ClusterID:   req.ClusterID,
-		Updater:     "bcs",
-	})
-	if err != nil {
-		return err
-	}
+var (
+	getTaskURL = "/bcsapi/v4/clustermanager/v1/task/%s"
+)
 
-	if resp != nil && resp.Code != 0 {
-		return errors.New(resp.Message)
+// GetTask get task status by taskID
+func (c *ClusterMgrClient) GetTask(req *clsapi.GetTaskRequest) (
+	*clsapi.GetTaskResponse, error) {
+	if len(req.TaskID) == 0 {
+		return nil, fmt.Errorf("lost task ID")
 	}
-
-	return nil
+	totalURL := fmt.Sprintf(getTaskURL, req.TaskID)
+	resp := &clsapi.GetTaskResponse{}
+	if err := c.Get(totalURL, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
 }

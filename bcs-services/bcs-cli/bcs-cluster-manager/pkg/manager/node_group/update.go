@@ -15,9 +15,8 @@ package nodegroup
 import (
 	"errors"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
 // Update 更新节点池,更新成功返回nil
@@ -38,11 +37,8 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) error { // nolint
 	launchDataDisk := make([]*clustermanager.DataDisk, 0)
 	for _, v := range req.LaunchTemplate.DataDisks {
 		launchDataDisk = append(launchDataDisk, &clustermanager.DataDisk{
-			DiskType:           v.DiskType,
-			DiskSize:           v.DiskSize,
-			FileSystem:         v.FileSystem,
-			AutoFormatAndMount: v.AutoFormatAndMount,
-			MountTarget:        v.MountTarget,
+			DiskType: v.DiskType,
+			DiskSize: v.DiskSize,
 		})
 	}
 
@@ -60,11 +56,8 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) error { // nolint
 	nodeDataDisk := make([]*clustermanager.DataDisk, 0)
 	for _, v := range req.NodeTemplate.DataDisks {
 		nodeDataDisk = append(nodeDataDisk, &clustermanager.DataDisk{
-			DiskType:           v.DiskType,
-			DiskSize:           v.DiskSize,
-			FileSystem:         v.FileSystem,
-			AutoFormatAndMount: v.AutoFormatAndMount,
-			MountTarget:        v.MountTarget,
+			DiskType: v.DiskType,
+			DiskSize: v.DiskSize,
 		})
 	}
 
@@ -107,11 +100,11 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) error { // nolint
 
 	// 构建UpdateNodeGroupRequest请求并更新节点池
 	resp, err := c.client.UpdateNodeGroup(c.ctx, &clustermanager.UpdateNodeGroupRequest{
-		NodeGroupID:     req.NodeGroupID,
-		ClusterID:       req.ClusterID,
-		Name:            req.Name,
-		Region:          req.Region,
-		EnableAutoscale: req.EnableAutoscale,
+		NodeGroupID: req.NodeGroupID,
+		ClusterID:   req.ClusterID,
+		Name:        req.Name,
+		Region:      req.Region,
+		//EnableAutoscale: req.EnableAutoscale,
 		AutoScaling: &clustermanager.AutoScalingGroup{
 			AutoScalingID:         req.AutoScaling.AutoScalingID,
 			AutoScalingName:       req.AutoScaling.AutoScalingName,
@@ -138,11 +131,8 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) error { // nolint
 			InstanceType:          req.LaunchTemplate.InstanceType,
 			InstanceChargeType:    req.LaunchTemplate.InstanceChargeType,
 			SystemDisk: &clustermanager.DataDisk{
-				DiskType:           req.LaunchTemplate.SystemDisk.DiskType,
-				DiskSize:           req.LaunchTemplate.SystemDisk.DiskSize,
-				FileSystem:         req.LaunchTemplate.SystemDisk.FileSystem,
-				AutoFormatAndMount: req.LaunchTemplate.SystemDisk.AutoFormatAndMount,
-				MountTarget:        req.LaunchTemplate.SystemDisk.MountTarget,
+				DiskType: req.LaunchTemplate.SystemDisk.DiskType,
+				DiskSize: req.LaunchTemplate.SystemDisk.DiskSize,
 			},
 			DataDisks: launchDataDisk,
 			InternetAccess: &clustermanager.InternetAccessible{
@@ -161,16 +151,16 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) error { // nolint
 			UserData:          req.LaunchTemplate.UserData,
 		},
 		NodeTemplate: &clustermanager.NodeTemplate{
-			NodeTemplateID:     req.NodeTemplate.NodeTemplateID,
-			Name:               req.NodeTemplate.Name,
-			ProjectID:          req.NodeTemplate.ProjectID,
-			Labels:             req.NodeTemplate.Labels,
-			Taints:             taint,
-			DockerGraphPath:    req.NodeTemplate.DockerGraphPath,
-			MountTarget:        req.NodeTemplate.MountTarget,
-			UserScript:         req.NodeTemplate.UserScript,
-			UnSchedulable:      req.NodeTemplate.UnSchedulable,
-			DataDisks:          nodeDataDisk,
+			NodeTemplateID:  req.NodeTemplate.NodeTemplateID,
+			Name:            req.NodeTemplate.Name,
+			ProjectID:       req.NodeTemplate.ProjectID,
+			Labels:          req.NodeTemplate.Labels,
+			Taints:          taint,
+			DockerGraphPath: req.NodeTemplate.DockerGraphPath,
+			MountTarget:     req.NodeTemplate.MountTarget,
+			UserScript:      req.NodeTemplate.UserScript,
+			UnSchedulable:   req.NodeTemplate.UnSchedulable,
+			//DataDisks:          nodeDataDisk,
 			ExtraArgs:          req.NodeTemplate.ExtraArgs,
 			PreStartUserScript: req.NodeTemplate.PreStartUserScript,
 			BcsScaleOutAddons: &clustermanager.Action{
@@ -193,8 +183,8 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) error { // nolint
 				PostActions: req.NodeTemplate.ScaleInExtraAddons.PostActions,
 				Plugins:     inExtraPlugins,
 			},
-			NodeOS:     req.NodeTemplate.NodeOS,
-			ModuleID:   req.NodeTemplate.ModuleID,
+			NodeOS: req.NodeTemplate.NodeOS,
+			//ModuleID:   req.NodeTemplate.ModuleID,
 			Creator:    req.NodeTemplate.Creator,
 			Updater:    req.NodeTemplate.Updater,
 			CreateTime: req.NodeTemplate.CreateTime,

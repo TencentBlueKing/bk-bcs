@@ -17,11 +17,13 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/util/i18n"
 	"k8s.io/kubectl/pkg/util/templates"
 
-	clusterMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cluster"
+	clusterMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 )
 
@@ -50,7 +52,11 @@ func deleteCluster(cmd *cobra.Command, args []string) {
 		resp := &types.CreateVirtualClusterResp{}
 		url := fmt.Sprintf("/bcsapi/v4/clustermanager/v1/vcluster/%s?operator=bcs&onlyDeleteInfo=false", clusterID)
 
-		err := clusterMgr.NewHttpClient(context.Background()).Delete(url, resp)
+		err := clusterMgr.NewClusterMgrClient(&clusterMgr.Config{
+			APIServer: viper.GetString("apiserver"),
+			AuthToken: viper.GetString("authtoken"),
+			Operator:  viper.GetString("operator"),
+		}).Delete(url, resp)
 		if err != nil {
 			klog.Fatalf("delete virtual cluster failed: %v", err)
 		}
@@ -64,7 +70,7 @@ func deleteCluster(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	resp, err := clusterMgr.New(context.Background()).Delete(types.DeleteClusterReq{ClusterID: clusterID})
+	resp, err := cluster.New(context.Background()).Delete(types.DeleteClusterReq{ClusterID: clusterID})
 	if err != nil {
 		klog.Fatalf("delete cluster failed: %v", err)
 	}

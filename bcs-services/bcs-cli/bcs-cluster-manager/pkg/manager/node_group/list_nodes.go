@@ -15,9 +15,8 @@ package nodegroup
 import (
 	"errors"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
 // ListNodes 查询节点池节点列表
@@ -27,7 +26,7 @@ func (c *NodeGroupMgr) ListNodes(req types.ListNodesInGroupReq) (types.ListNodes
 		err  error
 	)
 
-	servResp, err := c.client.ListNodesInGroup(c.ctx, &clustermanager.ListNodesInGroupRequest{
+	servResp, err := c.client.ListNodesInGroup(c.ctx, &clustermanager.GetNodeGroupRequest{
 		NodeGroupID: req.NodeGroupID,
 	})
 
@@ -43,23 +42,22 @@ func (c *NodeGroupMgr) ListNodes(req types.ListNodesInGroupReq) (types.ListNodes
 
 	for _, v := range servResp.Data {
 		resp.Data = append(resp.Data, types.NodeGroupNode{
-			NodeID:        v.NodeID,
-			InnerIP:       v.InnerIP,
-			InstanceType:  v.InstanceType,
-			CPU:           v.CPU,
-			Mem:           v.Mem,
-			GPU:           v.CPU,
-			Status:        v.Status,
-			ZoneID:        v.ZoneID,
-			NodeGroupID:   v.NodeGroupID,
-			ClusterID:     v.ClusterID,
-			VPC:           v.VPC,
-			Region:        v.Region,
-			Passwd:        v.Passwd,
-			Zone:          v.Zone,
-			DeviceID:      v.DeviceID,
-			InstanceRole:  v.InstanceType,
-			UnSchedulable: v.UnSchedulable,
+			NodeID:       v.NodeID,
+			InnerIP:      v.InnerIP,
+			InstanceType: v.InstanceType,
+			CPU:          v.CPU,
+			Mem:          v.Mem,
+			GPU:          v.CPU,
+			Status:       v.Status,
+			ZoneID:       v.ZoneID,
+			NodeGroupID:  v.NodeGroupID,
+			ClusterID:    v.ClusterID,
+			VPC:          v.VPC,
+			Region:       v.Region,
+			Passwd:       v.Passwd,
+			Zone:         v.Zone,
+			DeviceID:     v.DeviceID,
+			InstanceRole: v.InstanceType,
 		})
 	}
 

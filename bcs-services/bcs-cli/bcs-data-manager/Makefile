@@ -14,4 +14,9 @@ LDFLAG=-ldflags "-X 'github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-man
 .PHONY: bin
 bin:
 	mkdir -p ./bin
-	go mod tidy -go=1.16 && go mod tidy -go=1.17 && go mod vendor && CGO_ENABLED=0 go build ${LDFLAG} -o bin/kubectl-bcs-data-manager ./main.go
+	go mod tidy && CGO_ENABLED=0 go build ${LDFLAG} -o bin/kubectl-bcs-data-manager ./main.go
+
+.PHONY: clean
+clean:
+	rm -rf ./bin
+	

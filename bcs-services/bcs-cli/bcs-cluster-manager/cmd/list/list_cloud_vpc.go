@@ -65,10 +65,6 @@ func listCloudVPC(cmd *cobra.Command, args []string) {
 			item.VPCName,
 			item.Available,
 			item.Extra,
-			item.Creator,
-			item.Updater,
-			item.CreatTime,
-			item.UpdateTime,
 		}
 	}
 

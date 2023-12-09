@@ -72,18 +72,16 @@ type GetVPCCidrResp struct {
 
 // CloudVPC 云私有网络信息
 type CloudVPC struct {
-	CloudID     string `json:"cloudID"`
-	Region      string `json:"region"`
-	RegionName  string `json:"regionName"`
-	NetworkType string `json:"networkType"`
-	VPCID       string `json:"vpcID"`
-	VPCName     string `json:"vpcName"`
-	Available   string `json:"available"`
-	Extra       string `json:"extra"`
-	Creator     string `json:"creator"`
-	Updater     string `json:"updater"`
-	CreatTime   string `json:"creatTime"`
-	UpdateTime  string `json:"updateTime"`
+	CloudID        string `json:"cloudID"`
+	Region         string `json:"region"`
+	RegionName     string `json:"regionName"`
+	NetworkType    string `json:"networkType"`
+	VPCID          string `json:"vpcID"`
+	VPCName        string `json:"vpcName"`
+	Available      string `json:"available"`
+	Extra          string `json:"extra"`
+	ReservedIPNum  uint32 `json:"reservedIPNum"`
+	AvailableIPNum uint32 `json:"availableIPNum"`
 }
 
 // CloudRegion 云区域信息
