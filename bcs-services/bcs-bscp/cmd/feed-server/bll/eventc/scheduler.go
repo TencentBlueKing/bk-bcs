@@ -28,11 +28,13 @@ import (
 	btyp "bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/dal/repository"
+	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbct "bscp.io/pkg/protocol/core/content"
 	pbhook "bscp.io/pkg/protocol/core/hook"
+	pbkv "bscp.io/pkg/protocol/core/kv"
 	"bscp.io/pkg/runtime/shutdown"
 	sfs "bscp.io/pkg/sf-share"
 	"bscp.io/pkg/types"
@@ -261,33 +263,54 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 		Uid:    inst.Uid,
 		Labels: inst.Labels,
 	}
-	releaseID, err := sch.handler.GetMatchedRelease(kt, meta)
-	if err != nil {
+	releaseID, e := sch.handler.GetMatchedRelease(kt, meta)
+	if e != nil {
 		sch.retry.Add(cursorID, one)
-		logs.Errorf("get %s [sn: %d] matched strategy failed, err: %v, rid: %s", inst.Format(), one.sn, err, kt.Rid)
+		logs.Errorf("get %s [sn: %d] matched strategy failed, err: %v, rid: %s", inst.Format(), one.sn, e, kt.Rid)
 		return
 	}
 
-	ciList, err := sch.lc.ReleasedCI.Get(kt, inst.BizID, releaseID)
-	if err != nil {
-		logs.Errorf("get %s [sn: %d] released[%d] CI failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
-			kt.Rid)
-		sch.retry.Add(cursorID, one)
-		return
-	}
-	preHook, postHook, err := sch.lc.ReleasedHook.Get(kt, inst.BizID, releaseID)
-	if err != nil {
-		logs.Errorf("get %s [sn: %d] released[%d] hook failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
-			kt.Rid)
-		sch.retry.Add(cursorID, one)
+	event := new(Event) //nolint:ineffassign
+
+	switch inst.ConfigType {
+	case table.KV:
+		kvList, err := sch.lc.ReleasedKv.Get(kt, inst.BizID, releaseID)
+		if err != nil {
+			logs.Errorf("get %s [sn: %d] released[%d] Kv failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
+				kt.Rid)
+			sch.retry.Add(cursorID, one)
+			return
+		}
+		if len(kvList) == 0 {
+			return
+		}
+		event = sch.buildEventForRkv(inst, kvList, releaseID, cursorID)
+
+	case table.File:
+		ciList, err := sch.lc.ReleasedCI.Get(kt, inst.BizID, releaseID)
+		if err != nil {
+			logs.Errorf("get %s [sn: %d] released[%d] CI failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
+				kt.Rid)
+			sch.retry.Add(cursorID, one)
+			return
+		}
+		preHook, postHook, err := sch.lc.ReleasedHook.Get(kt, inst.BizID, releaseID)
+		if err != nil {
+			logs.Errorf("get %s [sn: %d] released[%d] hook failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
+				kt.Rid)
+			sch.retry.Add(cursorID, one)
+			return
+		}
+		if len(ciList) == 0 {
+			return
+		}
+		event = sch.buildEvent(inst, ciList, preHook, postHook, releaseID, cursorID)
+
+	default:
+		logs.Errorf("Unsupported application type (%s), rid: %s", inst.Format(), kt.Rid)
 		return
 	}
 
-	if len(ciList) == 0 {
-		return
-	}
-
-	event := sch.buildEvent(inst, ciList, preHook, postHook, releaseID, cursorID)
 	if one.Receiver.Notify(event, inst.Uid, one.sn) {
 		logs.Warnf("notify app instance event failed, need retry, biz: %d, app: %d, uid: %s, sn: %d, rid: %s",
 			inst.BizID, inst.AppID, inst.Uid, one.sn, kt.Rid)
@@ -389,4 +412,31 @@ func (sch *Scheduler) watchRetry() {
 		logs.Infof("finished scheduler retry send event job, instance count: %d, rid: %s", instCount, kt.Rid)
 	}
 
+}
+
+func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.ReleaseKvCache, releaseID uint32,
+	cursorID uint32) *Event {
+
+	kvMeta := make([]*sfs.KvMetaV1, len(kvList))
+	for idx, one := range kvList {
+		kvMeta[idx] = &sfs.KvMetaV1{
+			ID:  one.ID,
+			Key: one.Key,
+			KvAttachment: &pbkv.KvAttachment{
+				BizId: one.Attachment.BizID,
+				AppId: one.Attachment.AppID,
+			},
+		}
+	}
+
+	return &Event{
+		Change: &sfs.ReleaseEventMetaV1{
+			App:       inst.App,
+			AppID:     inst.AppID,
+			ReleaseID: releaseID,
+			KvMetas:   kvMeta,
+		},
+		Instance: inst,
+		CursorID: cursorID,
+	}
 }
