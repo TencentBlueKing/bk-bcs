@@ -61,7 +61,7 @@ const formRef = ref();
 const fileUploading = ref(false);
 const pending = ref(false);
 const isFormChange = ref(false);
-const sliderTitle = computed(() => (props.editable ? '编辑配置文件' : '查看配置文件'));
+const sliderTitle = computed(() => (props.editable ? '编辑配置项' : '查看配置项'));
 
 watch(
   () => props.show,

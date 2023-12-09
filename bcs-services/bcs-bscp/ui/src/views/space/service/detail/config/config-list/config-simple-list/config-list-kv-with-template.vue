@@ -3,7 +3,7 @@
     <SearchInput
       v-model="searchStr"
       class="config-search-input"
-      placeholder="配置文件名/创建人/修改人"
+      placeholder="配置项名/创建人/修改人"
       @search="getListData"
     />
     <bk-loading class="loading-wrapper" :loading="loading">
