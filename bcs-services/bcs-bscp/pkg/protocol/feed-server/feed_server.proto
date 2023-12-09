@@ -6,7 +6,6 @@ import "pkg/protocol/core/base/base.proto";
 import "pkg/protocol/core/commit/commit.proto";
 import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/hook/hook.proto";
-import "pkg/protocol/core/kv/kvs.proto";
 
 option go_package = "bscp.io/pkg/protocol/feed-server;pbfs";
 
