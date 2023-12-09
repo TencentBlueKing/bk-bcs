@@ -39,7 +39,6 @@
         <CodeEditor
           ref="codeEditorRef"
           :model-value="props.content"
-          :variables="props.variables"
           :editable="editable"
           :language="languages"
           @update:model-value="emits('change', $event)"

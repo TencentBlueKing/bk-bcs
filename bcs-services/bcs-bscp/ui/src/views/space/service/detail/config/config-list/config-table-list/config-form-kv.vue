@@ -26,7 +26,6 @@
         :languages="localVal.kv_type"
         :content="localVal.value"
         :editable="!view"
-        :variables="props.variables"
         @change="handleStringContentChange"
       />
     </bk-form-item>
@@ -38,9 +37,9 @@ import { ref, onMounted, computed } from 'vue';
 import { CONFIG_KV_TYPE } from '../../../../../../../constants/config';
 import KvConfigContentEditor from '../../components/kv-config-content-editor.vue';
 import { IConfigKvEditParams } from '../../../../../../../../types/config';
-import { IVariableEditParams } from '../../../../../../../../types/variable';
 import useServiceStore from '../../../../../../../store/service';
 import { storeToRefs } from 'pinia';
+import { validateJSON, validateXML, validateYAML } from '../../../../../../../utils/kv-validate';
 
 const serviceStore = useServiceStore();
 const { appData } = storeToRefs(serviceStore);
@@ -48,9 +47,8 @@ const { appData } = storeToRefs(serviceStore);
 const props = withDefaults(
   defineProps<{
     config: IConfigKvEditParams;
-    editable: boolean;
-    view: boolean;
-    variables?: IVariableEditParams[];
+    editable?: boolean;
+    view?: boolean;
     bkBizId: string;
     id: number; // 服务ID或者模板空间ID
     isTpl?: boolean; // 是否未模板配置文件，非模板配置文件和模板配置文件的上传、下载接口参数有差异
@@ -96,6 +94,14 @@ onMounted(() => {
 
 const validate = async () => {
   await formRef.value.validate();
+  switch (localVal.value.kv_type) {
+    case 'json':
+      return validateJSON(localVal.value.value);
+    case 'xml':
+      return validateXML(localVal.value.value);
+    case 'yaml':
+      return validateYAML(localVal.value.value);
+  }
   return true;
 };
 
