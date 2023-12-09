@@ -21,6 +21,7 @@ import (
 	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbhook "bscp.io/pkg/protocol/core/hook"
+	pbkv "bscp.io/pkg/protocol/core/kv"
 )
 
 // AppInstanceMeta defines an app instance's metadata information.
@@ -104,4 +105,19 @@ type ListFileAppLatestReleaseMetaResp struct {
 	Code    int32                 `json:"code,omitempty"`
 	Message string                `json:"message,omitempty"`
 	Data    *AppLatestReleaseMeta `json:"data,omitempty"`
+}
+
+// AppLatestReleaseKvMeta an app's latest release metadata.
+type AppLatestReleaseKvMeta struct {
+	// ReleaseId the app's latest release's id.
+	ReleaseId uint32            `json:"release_id,omitempty"`
+	Kvs       []*ReleasedKvMeta `json:"kvs,omitempty"`
+	PreHook   *pbhook.HookSpec  `json:"pre_hook,omitempty"`
+	PostHook  *pbhook.HookSpec  `json:"post_hook,omitempty"`
+}
+
+// ReleasedKvMeta defines a release's released kv metadata
+type ReleasedKvMeta struct {
+	Key          string             `json:"key,omitempty"`
+	KvAttachment *pbkv.KvAttachment `json:"kv_attachment,omitempty"`
 }

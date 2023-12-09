@@ -74,6 +74,41 @@ func (s *Service) GetReleasedCI(ctx context.Context, req *pbcs.GetReleasedCIReq)
 	}, nil
 }
 
+// GetReleasedKv get released kv from cache.
+func (s *Service) GetReleasedKv(ctx context.Context, req *pbcs.GetReleasedKvReq) (*pbcs.JsonRawResp, error) {
+	if req.BizId <= 0 || req.ReleaseId <= 0 {
+		return nil, errf.New(errf.InvalidParameter, "invalid biz id or release id")
+	}
+
+	kt := kit.FromGrpcContext(ctx)
+	kv, err := s.op.GetReleasedKv(kt, req.BizId, req.ReleaseId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.JsonRawResp{
+		JsonRaw: kv,
+	}, nil
+}
+
+// GetReleasedKvValue GetReleasedKv get released kv from local cache.
+func (s *Service) GetReleasedKvValue(ctx context.Context, req *pbcs.GetReleasedKvValueReq) (*pbcs.JsonRawResp, error) {
+
+	if req.BizId <= 0 || req.ReleaseId <= 0 || req.Key == "" {
+		return nil, errf.New(errf.InvalidParameter, "invalid biz id or release or key id")
+	}
+
+	kt := kit.FromGrpcContext(ctx)
+	kv, err := s.op.GetReleasedKvValue(kt, req.BizId, req.AppId, req.ReleaseId, req.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.JsonRawResp{
+		JsonRaw: kv,
+	}, nil
+}
+
 // GetReleasedHook get released hook from cache.
 func (s *Service) GetReleasedHook(ctx context.Context, req *pbcs.GetReleasedHookReq) (*pbcs.JsonRawResp, error) {
 	if req.BizId <= 0 || req.ReleaseId <= 0 {

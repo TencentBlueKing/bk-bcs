@@ -140,8 +140,12 @@ func (c *consumer) refreshAllCache(kt *kit.Kit, events []*table.Event) error {
 		return err
 	}
 
-	// step3: refresh released config item cache.
+	// step3: refresh rci and rkv cache.
 	err = c.cacheReleasedCI(kt, releaseBizID)
+	if err != nil {
+		return err
+	}
+	err = c.cacheReleasedKv(kt, releaseBizID)
 	if err != nil {
 		return err
 	}
@@ -309,6 +313,64 @@ func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 	}
 
 	logs.Infof("event cache released ci success detail: biz[release_id]: %v , rid: %s", reminder, kt.Rid)
+
+	return nil
+}
+
+// cacheReleasedKv cache the all publish related release's kvs.
+func (c *consumer) cacheReleasedKv(kt *kit.Kit, releaseBizID map[uint32]uint32) error {
+	reminder := make(map[uint32][]uint32, 0)
+	for rlID, bizID := range releaseBizID {
+		// remove useless revision info
+		reminder[bizID] = append(reminder[bizID], rlID)
+	}
+
+	for bizID, releaseIDs := range reminder {
+		releasedKv, err := c.op.ReleasedKv().ListAllByReleaseIDs(kt, releaseIDs, bizID)
+		if err != nil {
+			logs.Errorf("list released kv failed, bizID: %d, releaseIDs: %v, err: %v, rid: %s", bizID,
+				releaseIDs, err, kt.Rid)
+			return err
+		}
+
+		if len(releasedKv) == 0 {
+			logs.Infof("list released kv with bizID: %d, releaseIDs: %v, but got nothing, skip caching, rid: %s",
+				bizID, releaseIDs, kt.Rid)
+			return nil
+		}
+
+		kvList := make(map[string][]*table.ReleasedKv)
+		for _, one := range releasedKv {
+			// remove useless revision info
+			one.Revision = nil
+			key := keys.Key.ReleasedKv(one.Attachment.BizID, one.ReleaseID)
+			kvList[key] = append(kvList[key], one)
+		}
+
+		kv := make(map[string]string)
+		var js []byte
+		for k, list := range kvList {
+			if len(list) == 0 {
+				continue
+			}
+			js, err = json.Marshal(types.ReleaseKvCaches(list))
+			if err != nil {
+				logs.Errorf("marshal kv list failed, skip, list: %+v, err: %v, rid: %s", list, err, kt.Rid)
+				continue
+			}
+			kv[k] = string(js)
+		}
+
+		err = c.bds.SetWithTxnPipe(kt.Ctx, kv, keys.Key.ReleasedKvTtlSec(false))
+		if err != nil {
+			logs.Errorf("create released kv cache failed, bizID: %d, releaseIDs: %v,err: %v, rid: %s", bizID,
+				releaseIDs, err, kt.Rid)
+			logs.V(5).Infof("create released kv cache failed, kv: %#v", kv)
+			return err
+		}
+	}
+
+	logs.Infof("event cache released kv success detail: biz[release_id]: %v , rid: %s", reminder, kt.Rid)
 
 	return nil
 }

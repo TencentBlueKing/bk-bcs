@@ -30,6 +30,7 @@ import (
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	pbhook "bscp.io/pkg/protocol/core/hook"
+	pbkv "bscp.io/pkg/protocol/core/kv"
 )
 
 // New initialize the release service instance.
@@ -131,6 +132,41 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 		}
 	}
 	meta.ConfigItems = ciList
+
+	return meta, nil
+}
+
+// ListAppLatestReleaseKvMeta list a app's latest release metadata
+func (rs *ReleasedService) ListAppLatestReleaseKvMeta(kt *kit.Kit, opts *types.AppInstanceMeta) (
+	*types.AppLatestReleaseKvMeta, error) {
+
+	releaseID, err := rs.GetMatchedRelease(kt, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	rkv, err := rs.cache.ReleasedKv.Get(kt, opts.BizID, releaseID)
+	if err != nil {
+		return nil, err
+	}
+
+	meta := &types.AppLatestReleaseKvMeta{
+		ReleaseId: releaseID,
+	}
+
+	kvList := make([]*types.ReleasedKvMeta, len(rkv))
+	for idx, one := range rkv {
+
+		kvList[idx] = &types.ReleasedKvMeta{
+			Key: one.Key,
+			KvAttachment: &pbkv.KvAttachment{
+				BizId: one.Attachment.BizID,
+				AppId: one.Attachment.AppID,
+			},
+		}
+
+	}
+	meta.Kvs = kvList
 
 	return meta, nil
 }

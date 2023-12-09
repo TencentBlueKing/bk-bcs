@@ -36,8 +36,9 @@ type Kv struct {
 
 // KvSpec is kv specific which is defined by user.
 type KvSpec struct {
-	Key     string `json:"key" gorm:"column:key"`
-	Version uint32 `json:"version" gorm:"column:version"`
+	Key     string   `json:"key" gorm:"column:key"`
+	KvType  DataType `json:"kv_type" gorm:"column:kv_type"`
+	Version uint32   `json:"version" gorm:"column:version"`
 }
 
 // KvAttachment is a kv attachment
@@ -106,7 +107,27 @@ func (k KvSpec) ValidateCreate() error {
 		return err
 	}
 
+	if err := k.KvType.ValidateCreateKv(); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+// ValidateCreateKv the kvType and value match
+func (k DataType) ValidateCreateKv() error {
+
+	switch k {
+	case KvStr:
+	case KvNumber:
+	case KvText:
+	case KvJson:
+	case KvYAML:
+	default:
+		return errors.New("invalid data-type")
+	}
+	return nil
+
 }
 
 // Validate whether kv attachment is valid or not.

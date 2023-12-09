@@ -102,3 +102,8 @@ func (b *BLL) Auth() *auth.AuthService {
 func (b *BLL) AppCache() *lcache.App {
 	return b.cache.App
 }
+
+// RKvCache return the ReleasedKv cache instance.
+func (b *BLL) RKvCache() *lcache.ReleasedKv {
+	return b.cache.ReleasedKv
+}

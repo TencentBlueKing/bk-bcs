@@ -74,6 +74,24 @@ service Cache {
     // only stress test use.
     rpc BenchAppMeta(BenchAppMetaReq) returns (BenchAppMetaResp) {}
     rpc BenchReleasedCI(BenchReleasedCIReq) returns (BenchReleasedCIResp) {}
+
+    rpc GetReleasedKv(GetReleasedKvReq) returns (JsonRawResp) {
+        // response data is a json array raw of RKV(released kv)
+        // reference pkg/dal/table/released_kv.go/ReleasedKv
+        option (google.api.http) = {
+            post: "/api/v1/cache/kv/released/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
+    rpc GetReleasedKvValue(GetReleasedKvValueReq) returns (JsonRawResp) {
+        // response data is a json array raw of RKV value(released kv value)
+        // reference pkg/dal/table/released_kv.go/ReleasedKvValue
+        option (google.api.http) = {
+            post: "/api/v1/cache/kv/released/biz_id/{biz_id}/apps/{app_id}/key/{key}"
+            body: "*"
+        };
+    }
 }
 
 message JsonRawResp {
@@ -173,4 +191,17 @@ message ListCredentialMatchedCIReq {
 message GetCredentialReq {
     uint32 biz_id     = 1;
     string credential = 2;
+}
+
+message GetReleasedKvReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+}
+
+message GetReleasedKvValueReq {
+    uint32 biz_id     = 1;
+    uint32 release_id = 2;
+    uint32 app_id     = 3;
+    string key        = 4;
 }
