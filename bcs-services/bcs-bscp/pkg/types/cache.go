@@ -63,6 +63,14 @@ type ReleaseCICache struct {
 	Attachment     *table.ConfigItemAttachment `json:"am"`
 }
 
+// ReleaseKvCache is the release kv info which will be stored in cache.
+type ReleaseKvCache struct {
+	ID         uint32              `json:"id"`
+	ReleaseID  uint32              `json:"reid"`
+	Key        string              `json:"key"`
+	Attachment *table.KvAttachment `json:"am"`
+}
+
 // ReleasedHooksCache is the released hooks info which will be stored in cache.
 type ReleasedHooksCache struct {
 	AppID    uint32             `db:"app_id" json:"app_id"`
@@ -149,4 +157,32 @@ func ReleaseCICaches(rs []*table.ReleasedConfigItem) []*ReleaseCICache {
 	}
 
 	return list
+}
+
+// ReleaseKvCaches convert ReleasedConfigItem to ReleaseKvCache.
+func ReleaseKvCaches(rs []*table.ReleasedKv) []*ReleaseKvCache {
+	list := make([]*ReleaseKvCache, len(rs))
+
+	for index, one := range rs {
+		list[index] = &ReleaseKvCache{
+			ID:        one.ID,
+			ReleaseID: one.ReleaseID,
+			Key:       one.Spec.Key,
+			Attachment: &table.KvAttachment{
+				BizID: one.Attachment.BizID,
+				AppID: one.Attachment.AppID,
+			},
+		}
+	}
+
+	return list
+}
+
+// ReleaseKvValueCache is the release kv value info which will be stored in cache.
+type ReleaseKvValueCache struct {
+	ID        uint32 `json:"id"`
+	ReleaseID uint32 `json:"reid"`
+	Key       string `json:"key"`
+	Value     string `json:"value"`
+	KvType    string `json:"kv_type"`
 }

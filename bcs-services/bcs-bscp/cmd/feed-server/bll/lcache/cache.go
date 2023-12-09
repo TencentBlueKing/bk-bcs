@@ -30,6 +30,7 @@ func NewLocalCache(cs *clientset.ClientSet) (*Cache, error) {
 	return &Cache{
 		App:           newApp(mc, cs),
 		ReleasedCI:    newReleasedCI(mc, cs),
+		ReleasedKv:    newReleasedKv(mc, cs),
 		ReleasedGroup: newReleasedGroup(mc, cs),
 		ReleasedHook:  newReleasedHook(mc, cs),
 		Credential:    newCredential(mc, cs),
@@ -41,6 +42,7 @@ func NewLocalCache(cs *clientset.ClientSet) (*Cache, error) {
 type Cache struct {
 	App           *App
 	ReleasedCI    *ReleasedCI
+	ReleasedKv    *ReleasedKv
 	ReleasedGroup *ReleasedGroup
 	Credential    *Credential
 	ReleasedHook  *ReleasedHook

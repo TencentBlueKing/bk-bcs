@@ -23,7 +23,7 @@ import (
 )
 
 // PbRKv convert table ReleasedKv to pb ReleasedKv
-func PbRKv(k *table.ReleasedKv, kvType table.DataType, value string) *ReleasedKv {
+func PbRKv(k *table.ReleasedKv, value string) *ReleasedKv {
 	if k == nil {
 		return nil
 	}
@@ -31,7 +31,7 @@ func PbRKv(k *table.ReleasedKv, kvType table.DataType, value string) *ReleasedKv
 	return &ReleasedKv{
 		Id:         k.ID,
 		ReleaseId:  k.ReleaseID,
-		Spec:       pbkv.PbKvSpec(k.Spec, kvType, value),
+		Spec:       pbkv.PbKvSpec(k.Spec, value),
 		Attachment: pbkv.PbKvAttachment(k.Attachment),
 		Revision:   pbbase.PbRevision(k.Revision),
 	}
@@ -64,7 +64,7 @@ func PbKvState(kvs []*table.Kv, kvRelease []*table.ReleasedKv) []*pbkv.Kv {
 			kvState = constant.KvStateAdd
 		}
 
-		result = append(result, pbkv.PbKv(kv, "", "", kvState))
+		result = append(result, pbkv.PbKv(kv, "", kvState))
 	}
 	for _, kv := range releaseMap {
 		kv.ID = 0
@@ -108,7 +108,7 @@ func PbKv(rkv *table.ReleasedKv, kvState string) *pbkv.Kv {
 	return &pbkv.Kv{
 		Id:         rkv.ID,
 		KvState:    kvState,
-		Spec:       pbkv.PbKvSpec(rkv.Spec, "", ""),
+		Spec:       pbkv.PbKvSpec(rkv.Spec, ""),
 		Attachment: pbkv.PbKvAttachment(rkv.Attachment),
 		Revision: &pbbase.Revision{
 			Creator:  rkv.Revision.Creator,

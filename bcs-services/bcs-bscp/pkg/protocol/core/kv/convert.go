@@ -38,7 +38,8 @@ func (k *KvSpec) KvSpec() *table.KvSpec {
 	}
 
 	return &table.KvSpec{
-		Key: k.Key,
+		Key:    k.Key,
+		KvType: table.DataType(k.KvType),
 	}
 }
 
@@ -55,7 +56,7 @@ func (k *KvAttachment) KvAttachment() *table.KvAttachment {
 }
 
 // PbKv convert table kv to pb kv
-func PbKv(k *table.Kv, kvType table.DataType, value, kvState string) *Kv {
+func PbKv(k *table.Kv, value, kvState string) *Kv {
 	if k == nil {
 		return nil
 	}
@@ -63,7 +64,7 @@ func PbKv(k *table.Kv, kvType table.DataType, value, kvState string) *Kv {
 	return &Kv{
 		Id:         k.ID,
 		KvState:    kvState,
-		Spec:       PbKvSpec(k.Spec, kvType, value),
+		Spec:       PbKvSpec(k.Spec, value),
 		Attachment: PbKvAttachment(k.Attachment),
 		Revision:   pbbase.PbRevision(k.Revision),
 	}
@@ -72,14 +73,14 @@ func PbKv(k *table.Kv, kvType table.DataType, value, kvState string) *Kv {
 // PbKvSpec convert table KvSpec to pb KvSpec
 //
 //nolint:revive
-func PbKvSpec(spec *table.KvSpec, kvType table.DataType, value string) *KvSpec {
+func PbKvSpec(spec *table.KvSpec, value string) *KvSpec {
 	if spec == nil {
 		return nil
 	}
 
 	return &KvSpec{
 		Key:    spec.Key,
-		KvType: string(kvType),
+		KvType: string(spec.KvType),
 		Value:  value,
 	}
 }

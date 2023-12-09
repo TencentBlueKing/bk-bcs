@@ -35,10 +35,12 @@ type Interface interface {
 	ListAppReleasedGroups(kt *kit.Kit, bizID uint32, appID uint32) (string, error)
 	GetCredential(kt *kit.Kit, bizID uint32, credential string) (string, error)
 	RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error
+	GetReleasedKv(kt *kit.Kit, bizID uint32, releaseID uint32) (string, error)
+	GetReleasedKvValue(kt *kit.Kit, bizID, appID, releaseID uint32, key string) (string, error)
 }
 
 // New initialize a cache client.
-func New(op dao.Set, bds bedis.Client) (Interface, error) {
+func New(op dao.Set, bds bedis.Client, db pbds.DataClient) (Interface, error) {
 
 	opt := lock.Option{
 		QPS:   2000,
@@ -51,6 +53,7 @@ func New(op dao.Set, bds bedis.Client) (Interface, error) {
 		bds:   bds,
 		rLock: rLock,
 		mc:    initMetric(),
+		db:    db,
 	}, nil
 }
 

@@ -77,13 +77,19 @@ type watchHandler struct {
 func (wh *watchHandler) subscribe() error {
 
 	for _, one := range wh.sidePayload.Applications {
+
+		meta, err := wh.cache.App.GetMeta(wh.im.Kit, wh.sidePayload.BizID, one.AppID)
+		if err != nil {
+			return fmt.Errorf("get app(%d) meta failed, err: %v", one.AppID, err)
+		}
 		spec := &eventc.SubscribeSpec{
 			InstSpec: &sfs.InstanceSpec{
-				BizID:  wh.sidePayload.BizID,
-				App:    one.App,
-				AppID:  one.AppID,
-				Uid:    one.Uid,
-				Labels: one.Labels,
+				BizID:      wh.sidePayload.BizID,
+				App:        one.App,
+				AppID:      one.AppID,
+				Uid:        one.Uid,
+				Labels:     one.Labels,
+				ConfigType: meta.ConfigType,
 			},
 			Receiver: eventc.InitReceiver(wh.eventReceiver, wh.cancelCtx),
 		}
