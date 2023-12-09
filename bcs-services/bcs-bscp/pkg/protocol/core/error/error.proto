@@ -6,5 +6,5 @@ option go_package = "bscp.io/pkg/protocol/core/error;pberror";
 
 // Error bscp common error.
 message Error {
-    string code = 1;
+  string code = 1;
 }

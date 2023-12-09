@@ -5,7 +5,7 @@ GITHASH   = $(shell git rev-parse HEAD)
 VERSION   = $(shell echo ${ENV_BK_BSCP_VERSION})
 DEBUG     = $(shell echo ${ENV_BK_BSCP_ENABLE_DEBUG})
 PREFIX   ?= $(shell pwd)
-export GOBIN=${PREFIX}/.bin
+export GOBIN=${PREFIX}/bin/proto
 # protoc v4.22.0
 export PROTOC_VERSION=22.0
 GOBUILD=CGO_ENABLED=0 go build -trimpath
@@ -32,13 +32,13 @@ default: all
 .PHONY: init
 init:
 	@echo Download protoc
-	@mkdir -p ${PREFIX}/.bin
-	@cd ${PREFIX}/.bin && \
+	@mkdir -p ${PREFIX}/bin/proto
+	@cd ${PREFIX}/bin/proto && \
 		rm -rf protoc-*.zip* && \
 		wget -q https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip && \
 		unzip -o protoc-${PROTOC_VERSION}-linux-x86_64.zip && \
 		mv -f bin/protoc . && \
-		rm -rf protoc-*.zip* readme.txt bin
+		rm -rf protoc-*.zip* readme.txt bin include
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
 	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.15.2
@@ -72,6 +72,8 @@ api: pre
 	@echo -e "\e[34;1mPackaging API Docs Done\n\033[0m"
 
 pb:
+	@echo -e "\e[34;1mFormat proto...\033[0m"
+	@find pkg/protocol -type f -name "*.proto"|xargs clang-format -i --style="{BasedOnStyle: Google, ColumnLimit: 120}"
 	@echo -e "\e[34;1mMake Protocol...\033[0m"
 	@cd pkg/protocol && make clean && make
 	@echo -e "\e[34;1mMake Protocol Done\n\033[0m"

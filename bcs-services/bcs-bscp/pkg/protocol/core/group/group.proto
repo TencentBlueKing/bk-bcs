@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/struct.proto";
-import "bscp.io/pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/base/base.proto";
 
 package pbgroup;
 
@@ -9,23 +9,23 @@ option go_package = "bscp.io/pkg/protocol/core/group;pbgroup";
 
 // Group source resource reference: pkg/dal/table/group.go
 message Group {
-    uint32 id                       = 1;
-    GroupSpec spec                  = 2;
-    GroupAttachment attachment      = 3;
-    pbbase.Revision revision = 4;
+  uint32 id = 1;
+  GroupSpec spec = 2;
+  GroupAttachment attachment = 3;
+  pbbase.Revision revision = 4;
 }
 
 // GroupSpec source resource reference: pkg/dal/table/group.go
 message GroupSpec {
-    string name                     = 1;
-    bool public                     = 2;
-    repeated uint32 bind_apps       = 3;
-    string mode                     = 4;
-    google.protobuf.Struct selector = 5;
-    string uid                      = 6;
+  string name = 1;
+  bool public = 2;
+  repeated uint32 bind_apps = 3;
+  string mode = 4;
+  google.protobuf.Struct selector = 5;
+  string uid = 6;
 }
 
 // GroupAttachment source resource reference: pkg/dal/table/group.go
 message GroupAttachment {
-    uint32 biz_id                   = 1;
+  uint32 biz_id = 1;
 }

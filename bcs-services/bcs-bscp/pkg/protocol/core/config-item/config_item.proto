@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
-import "bscp.io/pkg/protocol/core/commit/commit.proto";
+import "pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/commit/commit.proto";
 
 package pbci;
 
@@ -9,41 +9,41 @@ option go_package = "bscp.io/pkg/protocol/core/config-item;pbci";
 
 // ConfigItem source resource reference: pkg/dal/table/config_item.go
 message ConfigItem {
-    uint32               id             = 1;
-    uint32               config_item_id = 2;
-    string               file_state     = 3;
-    ConfigItemSpec       spec           = 4;
-    pbcommit.CommitSpec  commit_spec    = 5;
-    ConfigItemAttachment attachment     = 6;
-    pbbase.Revision      revision       = 7;
+  uint32 id = 1;
+  uint32 config_item_id = 2;
+  string file_state = 3;
+  ConfigItemSpec spec = 4;
+  pbcommit.CommitSpec commit_spec = 5;
+  ConfigItemAttachment attachment = 6;
+  pbbase.Revision revision = 7;
 }
 
 // ConfigItemSpec source resource reference: pkg/dal/table/config_item.go
 message ConfigItemSpec {
-    string         name       = 1;
-    string         path       = 2;
-    string         file_type  = 3;  // file_type is enum type
-    string         file_mode  = 4;  // file_mode is enum type
-    string         memo       = 5;
-    FilePermission permission = 6;
+  string name = 1;
+  string path = 2;
+  string file_type = 3;  // file_type is enum type
+  string file_mode = 4;  // file_mode is enum type
+  string memo = 5;
+  FilePermission permission = 6;
 }
 
 // ConfigItemAttachment source resource reference: pkg/dal/table/config_item.go
 message ConfigItemAttachment {
-    uint32 biz_id = 1;
-    uint32 app_id = 2;
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
 }
 
 // FilePermission source resource reference: pkg/dal/table/config_item.go
 message FilePermission {
-    string user       = 1;
-    string user_group = 2;
-    string privilege  = 3;
+  string user = 1;
+  string user_group = 2;
+  string privilege = 3;
 }
 
 // ListConfigItemCounts source resource reference: pkg/dal/table/config_item.go
 message ListConfigItemCounts {
-    uint32 app_id    = 1;
-    uint32 count     = 2;
-    string update_at = 3;
+  uint32 app_id = 1;
+  uint32 count = 2;
+  string update_at = 3;
 }
