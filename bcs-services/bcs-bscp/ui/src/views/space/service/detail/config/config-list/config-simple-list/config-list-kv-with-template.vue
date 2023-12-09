@@ -7,21 +7,11 @@
       @search="getListData"
     />
     <bk-loading class="loading-wrapper" :loading="loading">
-          <div
-            v-for="config in configList"
-            :class="['config-item']"
-            :key="config.id"
-            @click="handleConfigClick(config)"
-          >
-            <div class="config-name">{{ config.spec.key }}</div>
-            <div class="config-type">{{config.spec.kv_type }}</div>
-          </div>
-          <bk-exception
-            v-if="configList.length === 0"
-            scene="part"
-            type="empty"
-            description="暂无配置文件"
-          ></bk-exception>
+      <div v-for="config in configList" :class="['config-item']" :key="config.id" @click="handleConfigClick(config)">
+        <div class="config-name">{{ config.spec.key }}</div>
+        <div class="config-type">{{ config.spec.kv_type }}</div>
+      </div>
+      <bk-exception v-if="configList.length === 0" scene="part" type="empty" description="暂无配置文件"></bk-exception>
     </bk-loading>
     <EditConfig
       v-model:show="isShowEdit"
@@ -39,13 +29,9 @@ import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../store/config';
 import { IConfigKvType, IConfigKvItem } from '../../../../../../../../types/config';
 import { ICommonQuery } from '../../../../../../../../types/index';
-import {
-  getKvList,
-  getReleaseKvList,
-} from '../../../../../../../api/config';
+import { getKvList, getReleaseKvList } from '../../../../../../../api/config';
 import SearchInput from '../../../../../../../components/search-input.vue';
 import EditConfig from '../config-table-list/edit-config-kv.vue';
-
 
 const store = useConfigStore();
 const { versionData } = storeToRefs(store);
@@ -75,7 +61,6 @@ const isUnNamedVersion = computed(() => versionData.value.id === 0);
 onMounted(() => {
   getListData();
 });
-
 
 // 获取配置文件列表
 const getListData = async () => {

@@ -13,11 +13,11 @@
           :disabled="changeViewPending"
           @change="handleChangeView"
         >
-          按规则分类查看
+          按标签分类查看
         </bk-checkbox>
         <bk-input
           class="search-group-input"
-          placeholder="分组名称/分组规则"
+          placeholder="分组名称/标签选择器"
           @input="handleSearch"
           v-model.trim="searchInfo"
           @clear="handleSearch"
