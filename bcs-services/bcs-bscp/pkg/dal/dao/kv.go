@@ -46,6 +46,8 @@ type Kv interface {
 	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error
 	// ListAllByAppID list all Kv by appID
 	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32) ([]*table.Kv, error)
+	// GetCount bizID config count
+	GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error)
 }
 
 var _ Kv = new(kvDao)
@@ -131,8 +133,7 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int64, error) {
 
 	m := dao.genQ.Kv
-	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).
-		Order(m.Key)
+	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).Order(m.Key)
 
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
@@ -311,4 +312,23 @@ func (dao *kvDao) ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32) ([]*t
 	}
 	m := dao.genQ.Kv
 	return dao.genQ.Kv.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Find()
+}
+
+// GetCount get bizID config count
+func (dao *kvDao) GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error) {
+
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "config item biz id can not be 0")
+	}
+
+	configItem := make([]*table.ListConfigItemCounts, 0)
+
+	m := dao.genQ.Kv
+	q := dao.genQ.Kv.WithContext(kit.Ctx)
+	if err := q.Select(m.AppID, m.ID.Count().As("count"), m.UpdatedAt.Max().As("updated_at")).
+		Where(m.BizID.Eq(bizID), m.AppID.In(appId...)).Group(m.AppID).Scan(&configItem); err != nil {
+		return nil, err
+	}
+
+	return configItem, nil
 }

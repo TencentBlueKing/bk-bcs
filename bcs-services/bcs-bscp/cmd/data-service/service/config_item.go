@@ -673,14 +673,37 @@ func (s *Service) ListConfigItemCount(ctx context.Context, req *pbds.ListConfigI
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	details, err := s.dao.ConfigItem().GetCount(grpcKit, req.BizId, req.AppId)
+	appIDMap := make(map[uint32]uint32, len(req.AppId))
+	for _, id := range req.AppId {
+		appIDMap[id] = id
+	}
+
+	count, err := s.dao.ConfigItem().GetCount(grpcKit, req.BizId, req.AppId)
 	if err != nil {
-		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
+	var appIds = []uint32{}
+	for _, detail := range count {
+		if _, ok := appIDMap[detail.AppId]; ok {
+			delete(appIDMap, detail.AppId)
+		}
+	}
+	if len(appIDMap) > 0 {
+		for _, appID := range appIDMap {
+			appIds = append(appIds, appID)
+		}
+		kvDetails, err := s.dao.Kv().GetCount(grpcKit, req.BizId, appIds)
+		if err != nil {
+			logs.Errorf("list kv failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+		count = append(count, kvDetails...)
+	}
+
 	resp := &pbds.ListConfigItemCountResp{
-		Details: pbci.PbConfigItemCounts(details, req.AppId),
+		Details: pbci.PbConfigItemCounts(count, req.AppId),
 	}
 
 	return resp, nil

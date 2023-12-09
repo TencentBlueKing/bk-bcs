@@ -14,6 +14,7 @@
 package pbrkv
 
 import (
+	"fmt"
 	"time"
 
 	"bscp.io/pkg/criteria/constant"
@@ -117,4 +118,31 @@ func PbKv(rkv *table.ReleasedKv, kvState string) *pbkv.Kv {
 			UpdateAt: rkv.Revision.CreatedAt.Format(time.RFC3339),
 		},
 	}
+}
+
+// RKvs convert pb kvs to table Rkvs
+func RKvs(kvs []*pbkv.Kv, versionMap map[string]int, releaseID uint32) ([]*table.ReleasedKv, error) {
+
+	var rkvs []*table.ReleasedKv
+
+	for _, kv := range kvs {
+
+		createdAt, err := time.Parse(time.RFC3339, kv.Revision.CreateAt)
+		if err != nil {
+			return nil, fmt.Errorf("parse time from createAt string failed, err: %v", err)
+		}
+
+		rkv := &table.ReleasedKv{
+			ReleaseID:  releaseID,
+			Spec:       kv.Spec.KvSpec(),
+			Attachment: kv.Attachment.KvAttachment(),
+			Revision: &table.Revision{
+				CreatedAt: createdAt,
+			},
+		}
+		rkv.Spec.Version = uint32(versionMap[kv.Spec.Key])
+		rkvs = append(rkvs, rkv)
+	}
+
+	return rkvs, nil
 }

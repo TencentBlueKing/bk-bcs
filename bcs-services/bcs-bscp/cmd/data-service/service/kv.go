@@ -436,6 +436,7 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 				Spec: &table.KvSpec{
 					Key:     kv.KvSpec.Key,
 					Version: uint32(version),
+					KvType:  table.DataType(kv.KvSpec.KvType),
 				},
 				Attachment: &table.KvAttachment{
 					BizID: req.BizId,
