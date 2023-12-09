@@ -72,7 +72,7 @@ const versionsInView = computed(() => {
   if (searchStr.value === '') {
     return versionList.value;
   }
-  return versionList.value.filter(item => item.spec.name.toLowerCase().includes(searchStr.value));
+  return versionList.value.filter(item => item.spec.name.toLowerCase().includes(searchStr.value.toLocaleLowerCase()));
 });
 
 // 监听刷新版本列表标识，处理新增版本场景，默认选中新增的版本
