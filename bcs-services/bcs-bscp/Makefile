@@ -158,5 +158,4 @@ docker:
 .PHONY: i18n
 i18n:
 	@go generate ./pkg/i18n/translations/translations.go
-	@cp ./pkg/i18n/translations/locales/en/out.gotext.json ./pkg/i18n/translations/locales/en/messages.gotext.json
 	@cp ./pkg/i18n/translations/locales/zh/out.gotext.json ./pkg/i18n/translations/locales/zh/messages.gotext.json
