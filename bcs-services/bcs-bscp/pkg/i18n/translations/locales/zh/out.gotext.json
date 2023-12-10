@@ -17,6 +17,36 @@
             ]
         },
         {
+            "id": "app {AppId} not found",
+            "message": "app {AppId} not found",
+            "translation": "ID为{AppId}的服务不存在",
+            "placeholders": [
+                {
+                    "id": "AppId",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "req.AppId"
+                }
+            ]
+        },
+        {
+            "id": "same template variable name {Name} already exists",
+            "message": "same template variable name {Name} already exists",
+            "translation": "同名的模版变量名称{Name}已存在",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Name"
+                }
+            ]
+        },
+        {
             "id": "db operation failed",
             "message": "db operation failed",
             "translation": "db操作失败"

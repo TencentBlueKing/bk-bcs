@@ -39,48 +39,52 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
-	"attachment not set":                  5,
-	"db operation failed":                 1,
-	"default_val %s is not a number type": 10,
-	"id should not be set":                3,
-	"invalid argument":                    2,
-	"invalid name, length should <= 128":  8,
-	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                         7,
-	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)": 9,
-	"revision not set": 6,
-	"spec not set":     4,
+	"app %d not found":                    1,
+	"attachment not set":                  7,
+	"db operation failed":                 3,
+	"default_val %s is not a number type": 12,
+	"id should not be set":                5,
+	"invalid argument":                    4,
+	"invalid name, length should <= 128":  10,
+	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                         9,
+	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)": 11,
+	"revision not set": 8,
+	"same template variable name %s already exists": 2,
+	"spec not set": 6,
 	"template variable name must start with %s": 0,
-	"unsupported variable type: %s":             11,
+	"unsupported variable type: %s":             13,
 }
 
-var enIndex = []uint32{ // 13 elements
-	0x00000000, 0x0000002d, 0x00000041, 0x00000052,
-	0x00000067, 0x00000074, 0x00000087, 0x00000098,
-	0x000000eb, 0x0000010e, 0x00000190, 0x000001b7,
-	0x000001d8,
-} // Size: 76 bytes
+var enIndex = []uint32{ // 15 elements
+	0x00000000, 0x0000002d, 0x00000041, 0x00000072,
+	0x00000086, 0x00000097, 0x000000ac, 0x000000b9,
+	0x000000cc, 0x000000dd, 0x00000130, 0x00000153,
+	0x000001d5, 0x000001fc, 0x0000021d,
+} // Size: 84 bytes
 
-const enData string = "" + // Size: 472 bytes
-	"\x02template variable name must start with %[1]s\x02db operation failed" +
-	"\x02invalid argument\x02id should not be set\x02spec not set\x02attachme" +
-	"nt not set\x02revision not set\x02invalid name, length should >= 9 and m" +
-	"ust start with prefix bk_bscp_ (ignore case)\x02invalid name, length sho" +
-	"uld <= 128\x02invalid name: %[1]s, only allows to include english、number" +
-	"s、underscore (_), and must start with prefix bk_bscp_ (ignore case)\x02d" +
-	"efault_val %[1]s is not a number type\x02unsupported variable type: %[1]" +
-	"s"
+const enData string = "" + // Size: 541 bytes
+	"\x02template variable name must start with %[1]s\x02app %[1]d not found" +
+	"\x02same template variable name %[1]s already exists\x02db operation fai" +
+	"led\x02invalid argument\x02id should not be set\x02spec not set\x02attac" +
+	"hment not set\x02revision not set\x02invalid name, length should >= 9 an" +
+	"d must start with prefix bk_bscp_ (ignore case)\x02invalid name, length " +
+	"should <= 128\x02invalid name: %[1]s, only allows to include english、num" +
+	"bers、underscore (_), and must start with prefix bk_bscp_ (ignore case)" +
+	"\x02default_val %[1]s is not a number type\x02unsupported variable type:" +
+	" %[1]s"
 
-var zhIndex = []uint32{ // 13 elements
-	0x00000000, 0x0000002a, 0x00000039, 0x00000046,
-	0x0000005b, 0x0000006f, 0x00000089, 0x000000a1,
-	0x000000f5, 0x00000116, 0x00000191, 0x000001b6,
-	0x000001d7,
-} // Size: 76 bytes
+var zhIndex = []uint32{ // 15 elements
+	0x00000000, 0x0000002a, 0x00000047, 0x00000071,
+	0x00000080, 0x0000008d, 0x000000a2, 0x000000b6,
+	0x000000d0, 0x000000e8, 0x0000013c, 0x0000015d,
+	0x000001d8, 0x000001fd, 0x0000021e,
+} // Size: 84 bytes
 
-const zhData string = "" + // Size: 471 bytes
-	"\x02模版变量名必须以%[1]s前缀开头\x02db操作失败\x02无效参数\x02id不应该被设置\x02spec没有被设置\x02atta" +
-	"chment没有被设置\x02revision没有被设置\x02无效名称，长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无" +
-	"效名称，长度应该<=128\x02无效名称：%[1]s，只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）" +
-	"\x02default_val %[1]s 不是数字类型\x02不支持的变量类型：%[1]s"
+const zhData string = "" + // Size: 542 bytes
+	"\x02模版变量名必须以%[1]s前缀开头\x02ID为%[1]d的服务不存在\x02同名的模版变量名称%[1]s已存在\x02db操作失败" +
+	"\x02无效参数\x02id不应该被设置\x02spec没有被设置\x02attachment没有被设置\x02revision没有被设置" +
+	"\x02无效名称，长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称，长度应该<=128\x02无效名称：%[1]s，" +
+	"只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）\x02default_val %[1]s 不是数字类型" +
+	"\x02不支持的变量类型：%[1]s"
 
-	// Total table size 1095 bytes (1KiB); checksum: 92F0C6D2
+	// Total table size 1251 bytes (1KiB); checksum: AF1E32E6

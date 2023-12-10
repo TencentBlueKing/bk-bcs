@@ -40,7 +40,7 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 		return nil, errf.ErrDBOpsFailedF(kt).WithCause(err)
 	}
 	if err == nil {
-		return nil, errf.Errorf(kt, errf.AlreadyExists, "template variable name %s already exists", req.Spec.Name)
+		return nil, errf.Errorf(kt, errf.AlreadyExists, "same template variable name %s already exists", req.Spec.Name)
 	}
 
 	templateVariable := &table.TemplateVariable{

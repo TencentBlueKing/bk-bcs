@@ -19,6 +19,40 @@
             "fuzzy": true
         },
         {
+            "id": "app {AppId} not found",
+            "message": "app {AppId} not found",
+            "translation": "app {AppId} not found",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "AppId",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "req.AppId"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "same template variable name {Name} already exists",
+            "message": "same template variable name {Name} already exists",
+            "translation": "same template variable name {Name} already exists",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Name"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "db operation failed",
             "message": "db operation failed",
             "translation": "db operation failed",
