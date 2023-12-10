@@ -5,7 +5,8 @@ GITHASH   = $(shell git rev-parse HEAD)
 VERSION   = $(shell echo ${ENV_BK_BSCP_VERSION})
 DEBUG     = $(shell echo ${ENV_BK_BSCP_ENABLE_DEBUG})
 PREFIX   ?= $(shell pwd)
-export GOBIN=${PREFIX}/bin/proto
+GOBIN     = ${PREFIX}/bin/proto
+PATH     := ${PREFIX}/bin/proto:${PATH}
 # protoc v4.22.0
 export PROTOC_VERSION=25.1
 GOBUILD=CGO_ENABLED=0 go build -trimpath
