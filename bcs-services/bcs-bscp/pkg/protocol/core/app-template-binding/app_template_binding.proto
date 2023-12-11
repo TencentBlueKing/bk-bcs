@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/base/base.proto";
 
 package pbatb;
 
@@ -8,158 +8,156 @@ option go_package = "bscp.io/pkg/protocol/core/app-template-binding;pbatb";
 
 // AppTemplateBinding source resource reference: pkg/dal/table/app_template_binding.go
 message AppTemplateBinding {
-    uint32                       id         = 1;
-    AppTemplateBindingSpec       spec       = 2;
-    AppTemplateBindingAttachment attachment = 3;
-    pbbase.Revision              revision   = 4;
+  uint32 id = 1;
+  AppTemplateBindingSpec spec = 2;
+  AppTemplateBindingAttachment attachment = 3;
+  pbbase.Revision revision = 4;
 }
 
 // AppTemplateBindingSpec source resource reference: pkg/dal/table/app_template_binding.go
 message AppTemplateBindingSpec {
-    repeated uint32          template_space_ids    = 1;
-    repeated uint32          template_set_ids      = 2;
-    repeated uint32          template_ids          = 3;
-    repeated uint32          template_revision_ids = 4;
-    repeated uint32          latest_template_ids   = 5;
-    repeated TemplateBinding bindings              = 6;
+  repeated uint32 template_space_ids = 1;
+  repeated uint32 template_set_ids = 2;
+  repeated uint32 template_ids = 3;
+  repeated uint32 template_revision_ids = 4;
+  repeated uint32 latest_template_ids = 5;
+  repeated TemplateBinding bindings = 6;
 }
 
 // TemplateBinding source resource reference: pkg/dal/table/app_template_binding.go
 message TemplateBinding {
-    uint32                           template_set_id    = 1;
-    repeated TemplateRevisionBinding template_revisions = 2;
+  uint32 template_set_id = 1;
+  repeated TemplateRevisionBinding template_revisions = 2;
 }
 
 message TemplateRevisionBinding {
-    uint32 template_id          = 1;
-    uint32 template_revision_id = 2;
-    bool   is_latest            = 3;
+  uint32 template_id = 1;
+  uint32 template_revision_id = 2;
+  bool is_latest = 3;
 }
-
 
 // AppTemplateBindingAttachment source resource reference: pkg/dal/table/app_template_binding.go
 message AppTemplateBindingAttachment {
-    uint32 biz_id = 1;
-    uint32 app_id = 2;
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
 }
 
 // AppBoundTmplRevisionGroupBySet is app bound template revision group by template set
 message AppBoundTmplRevisionGroupBySet {
-    message template_revision_detail {
-        uint32 template_id            = 1;
-        string name                   = 2;
-        string path                   = 3;
-        uint32 template_revision_id   = 4;
-        bool   is_latest              = 5;
-        string template_revision_name = 6;
-        string template_revision_memo = 7;
-        string file_type              = 8;
-        string file_mode              = 9;
-        string user                   = 10;
-        string user_group             = 11;
-        string privilege              = 12;
-        string signature              = 13;
-        uint64 byte_size              = 14;
-        string creator                = 15;
-        string create_at              = 16;
-        string file_state             = 17;
-    }
-    uint32                            template_space_id   = 1;
-    string                            template_space_name = 2;
-    uint32                            template_set_id     = 3;
-    string                            template_set_name   = 4;
-    repeated template_revision_detail template_revisions  = 5;
+  message template_revision_detail {
+    uint32 template_id = 1;
+    string name = 2;
+    string path = 3;
+    uint32 template_revision_id = 4;
+    bool is_latest = 5;
+    string template_revision_name = 6;
+    string template_revision_memo = 7;
+    string file_type = 8;
+    string file_mode = 9;
+    string user = 10;
+    string user_group = 11;
+    string privilege = 12;
+    string signature = 13;
+    uint64 byte_size = 14;
+    string creator = 15;
+    string create_at = 16;
+    string file_state = 17;
+  }
+  uint32 template_space_id = 1;
+  string template_space_name = 2;
+  uint32 template_set_id = 3;
+  string template_set_name = 4;
+  repeated template_revision_detail template_revisions = 5;
 }
 
 // ReleasedAppBoundTmplRevisionGroupBySet is released app bound template revision group by template set
 message ReleasedAppBoundTmplRevisionGroupBySet {
-    message template_revision_detail {
-        uint32 template_id            = 1;
-        string name                   = 2;
-        string path                   = 3;
-        uint32 template_revision_id   = 4;
-        bool   is_latest              = 5;
-        string template_revision_name = 6;
-        string template_revision_memo = 7;
-        string file_type              = 8;
-        string file_mode              = 9;
-        string user                   = 10;
-        string user_group             = 11;
-        string privilege              = 12;
-        string signature              = 13;
-        uint64 byte_size              = 14;
-        string origin_signature       = 15;
-        uint64 origin_byte_size       = 16;
-        string creator                = 17;
-        string reviser                = 18;
-        string create_at              = 19;
-        string update_at              = 20;
-
-    }
-    uint32                            template_space_id   = 1;
-    string                            template_space_name = 2;
-    uint32                            template_set_id     = 3;
-    string                            template_set_name   = 4;
-    repeated template_revision_detail template_revisions  = 5;
+  message template_revision_detail {
+    uint32 template_id = 1;
+    string name = 2;
+    string path = 3;
+    uint32 template_revision_id = 4;
+    bool is_latest = 5;
+    string template_revision_name = 6;
+    string template_revision_memo = 7;
+    string file_type = 8;
+    string file_mode = 9;
+    string user = 10;
+    string user_group = 11;
+    string privilege = 12;
+    string signature = 13;
+    uint64 byte_size = 14;
+    string origin_signature = 15;
+    uint64 origin_byte_size = 16;
+    string creator = 17;
+    string reviser = 18;
+    string create_at = 19;
+    string update_at = 20;
+  }
+  uint32 template_space_id = 1;
+  string template_space_name = 2;
+  uint32 template_set_id = 3;
+  string template_set_name = 4;
+  repeated template_revision_detail template_revisions = 5;
 }
 
 // AppBoundTmplRevision is app bound template revision
 message AppBoundTmplRevision {
-    uint32 template_space_id      = 1;
-    string template_space_name    = 2;
-    uint32 template_set_id        = 3;
-    string template_set_name      = 4;
-    uint32 template_id            = 5;
-    string name                   = 6;
-    string path                   = 7;
-    uint32 template_revision_id   = 8;
-    bool   is_latest              = 9;
-    string template_revision_name = 10;
-    string template_revision_memo = 11;
-    string file_type              = 12;
-    string file_mode              = 13;
-    string user                   = 14;
-    string user_group             = 15;
-    string privilege              = 16;
-    string signature              = 17;
-    uint64 byte_size              = 18;
-    string creator                = 19;
-    string create_at              = 20;
-    string file_state             = 21;
+  uint32 template_space_id = 1;
+  string template_space_name = 2;
+  uint32 template_set_id = 3;
+  string template_set_name = 4;
+  uint32 template_id = 5;
+  string name = 6;
+  string path = 7;
+  uint32 template_revision_id = 8;
+  bool is_latest = 9;
+  string template_revision_name = 10;
+  string template_revision_memo = 11;
+  string file_type = 12;
+  string file_mode = 13;
+  string user = 14;
+  string user_group = 15;
+  string privilege = 16;
+  string signature = 17;
+  uint64 byte_size = 18;
+  string creator = 19;
+  string create_at = 20;
+  string file_state = 21;
 }
 
 // ReleasedAppBoundTmplRevision is released app bound template revision
 message ReleasedAppBoundTmplRevision {
-    uint32 template_space_id      = 1;
-    string template_space_name    = 2;
-    uint32 template_set_id        = 3;
-    string template_set_name      = 4;
-    uint32 template_id            = 5;
-    string name                   = 6;
-    string path                   = 7;
-    uint32 template_revision_id   = 8;
-    bool   is_latest              = 9;
-    string template_revision_name = 10;
-    string template_revision_memo = 11;
-    string file_type              = 12;
-    string file_mode              = 13;
-    string user                   = 14;
-    string user_group             = 15;
-    string privilege              = 16;
-    string signature              = 17;
-    uint64 byte_size              = 18;
-    string origin_signature       = 19;
-    uint64 origin_byte_size       = 20;
-    string creator                = 21;
-    string reviser                = 22;
-    string create_at              = 23;
-    string update_at              = 24;
+  uint32 template_space_id = 1;
+  string template_space_name = 2;
+  uint32 template_set_id = 3;
+  string template_set_name = 4;
+  uint32 template_id = 5;
+  string name = 6;
+  string path = 7;
+  uint32 template_revision_id = 8;
+  bool is_latest = 9;
+  string template_revision_name = 10;
+  string template_revision_memo = 11;
+  string file_type = 12;
+  string file_mode = 13;
+  string user = 14;
+  string user_group = 15;
+  string privilege = 16;
+  string signature = 17;
+  uint64 byte_size = 18;
+  string origin_signature = 19;
+  uint64 origin_byte_size = 20;
+  string creator = 21;
+  string reviser = 22;
+  string create_at = 23;
+  string update_at = 24;
 }
 
 // Conflict is the conflict when app binds templates
 message Conflict {
-    uint32 template_set_id   = 1;
-    string template_set_name = 2;
-    uint32 template_id       = 3;
-    string template_name     = 4;
+  uint32 template_set_id = 1;
+  string template_set_name = 2;
+  uint32 template_id = 3;
+  string template_name = 4;
 }

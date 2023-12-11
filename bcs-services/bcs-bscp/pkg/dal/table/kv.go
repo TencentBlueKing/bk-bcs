@@ -123,6 +123,7 @@ func (k DataType) ValidateCreateKv() error {
 	case KvText:
 	case KvJson:
 	case KvYAML:
+	case KvXml:
 	default:
 		return errors.New("invalid data-type")
 	}

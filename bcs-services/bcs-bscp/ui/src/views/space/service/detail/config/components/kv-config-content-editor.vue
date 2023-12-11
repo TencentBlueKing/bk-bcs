@@ -7,14 +7,6 @@
           仅支持大小不超过 2M
         </div>
         <div v-if="editable" class="btns">
-          <ReadFileContent
-            v-bk-tooltips="{
-              content: '上传',
-              placement: 'top',
-              distance: 20,
-            }"
-            @completed="handleFileReadComplete"
-          />
           <FilliscreenLine
             v-if="!isOpenFullScreen"
             v-bk-tooltips="{
@@ -39,7 +31,6 @@
         <CodeEditor
           ref="codeEditorRef"
           :model-value="props.content"
-          :variables="props.variables"
           :editable="editable"
           :language="languages"
           @update:model-value="emits('change', $event)"
@@ -52,7 +43,6 @@
 import { ref, onBeforeUnmount } from 'vue';
 import BkMessage from 'bkui-vue/lib/message';
 import { InfoLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon';
-import ReadFileContent from './read-file-content.vue';
 import CodeEditor from '../../../../../../components/code-editor/index.vue';
 
 const props = withDefaults(
@@ -76,9 +66,6 @@ onBeforeUnmount(() => {
   codeEditorRef.value.destroy();
 });
 
-const handleFileReadComplete = (content: string) => {
-  emits('change', content);
-};
 
 // 打开全屏
 const handleOpenFullScreen = () => {

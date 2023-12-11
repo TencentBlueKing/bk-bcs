@@ -10,7 +10,6 @@
       <ConfigForm
         ref="formRef"
         class="config-form-wrapper"
-        v-model:fileUploading="fileUploading"
         :config="(configForm as IConfigKvItem)"
         :content="content"
         :editable="editable"
@@ -38,24 +37,29 @@ import { updateKv } from '../../../../../../../api/config';
 import { IConfigKvItem } from '../../../../../../../../types/config';
 import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
 
-const props = defineProps<{
+const props = withDefaults(
+  defineProps<{
   bkBizId: string;
   appId: number;
   config: IConfigKvItem;
   show: boolean;
   editable: boolean;
   view: boolean
-}>();
+}>(),
+  {
+    editable: false,
+    view: false,
+  },
+);
 
 const emits = defineEmits(['update:show', 'confirm']);
 
 const configForm = ref<IConfigKvItem>();
 const content = ref('');
 const formRef = ref();
-const fileUploading = ref(false);
 const pending = ref(false);
 const isFormChange = ref(false);
-const sliderTitle = computed(() => (props.editable ? '编辑配置文件' : '查看配置文件'));
+const sliderTitle = computed(() => (props.editable ? '编辑配置项' : '查看配置项'));
 
 watch(
   () => props.show,

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/base/base.proto";
 
 package pbapp;
 
@@ -8,34 +8,34 @@ option go_package = "bscp.io/pkg/protocol/core/app;pbapp";
 
 // App source resource reference: pkg/dal/table/app.go
 message App {
-    uint32 id                = 1;
-    uint32 biz_id            = 2;  // Deprecated: use space instead
-    string space_id          = 3;
-    string space_type_id     = 4;
-    string space_name        = 5;
-    string space_type_name   = 6;
-    AppSpec spec             = 7;
-    pbbase.Revision revision = 8;
+  uint32 id = 1;
+  uint32 biz_id = 2;  // Deprecated: use space instead
+  string space_id = 3;
+  string space_type_id = 4;
+  string space_name = 5;
+  string space_type_name = 6;
+  AppSpec spec = 7;
+  pbbase.Revision revision = 8;
 }
 
 // AppSpec source resource reference: pkg/dal/table/app.go
 message AppSpec {
-    string name        = 1;
-    string config_type = 2;  // config_type is enum type
-    string mode        = 4;  // mode is enum type.
-    string memo        = 5;
-    Reload reload      = 6;
-    string alias       = 7;
-    string data_type   = 8; // data_type is enum type.
+  string name = 1;
+  string config_type = 2;  // config_type is enum type
+  string mode = 4;         // mode is enum type.
+  string memo = 5;
+  Reload reload = 6;
+  string alias = 7;
+  string data_type = 8;  // data_type is enum type.
 }
 
 // ReloadSpec source resource reference: pkg/dal/table/app.go
 message Reload {
-    string reload_type              = 1;  // reload_type is enum type
-    FileReloadSpec file_reload_spec = 2;
+  string reload_type = 1;  // reload_type is enum type
+  FileReloadSpec file_reload_spec = 2;
 }
 
 // FileReloadSpec source resource reference: pkg/dal/table/app.go
 message FileReloadSpec {
-    string reload_file_path = 1;
+  string reload_file_path = 1;
 }

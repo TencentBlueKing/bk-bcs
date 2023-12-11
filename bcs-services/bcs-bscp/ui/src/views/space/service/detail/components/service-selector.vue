@@ -12,9 +12,10 @@
       :loading="loading"
       @change="handleAppChange">
       <template #trigger>
-        <div class="selector-trigger">
+        <div :class="['selector-trigger', props.noBorderMode ? 'no-border' : '']">
           <input readonly :value="appData.spec.name" />
-          <AngleDown class="arrow-icon" />
+          <AngleUpFill v-if="props.noBorderMode" class="arrow-icon arrow-fill" />
+          <AngleDown v-else class="arrow-icon arrow-line" />
         </div>
       </template>
       <bk-option
@@ -47,7 +48,7 @@
 import { ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { AngleDown } from 'bkui-vue/lib/icon';
+import { AngleDown, AngleUpFill } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../../../store/global';
 import useServiceStore from '../../../../../store/service';
 import { IAppItem } from '../../../../../../types/app';
@@ -63,6 +64,7 @@ const bizId = route.params.spaceId as string;
 
 const props = defineProps<{
   value: number;
+  noBorderMode?: Boolean;
 }>();
 
 defineEmits(['change']);
@@ -168,6 +170,13 @@ const handleAppChange = (id: number) => {
     white-space: nowrap;
     cursor: pointer;
   }
+  &.no-border {
+    border: none;
+    box-shadow: none !important;
+    & > input {
+      background-color: #f5f7fa;
+    }
+  }
   .arrow-icon {
     display: inline-flex;
     align-items: center;
@@ -178,8 +187,10 @@ const handleAppChange = (id: number) => {
     width: 20px;
     height: 100%;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-size: 20px;
     color: #979ba5;
+    &.arrow-line {
+      font-size: 20px;
+    }
   }
 }
 

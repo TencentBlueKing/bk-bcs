@@ -18,7 +18,7 @@ const props = defineProps<{
 <style lang="scss" scoped>
   .version-list-aside {
     position: relative;
-    height: calc(100% - 52px);
+    height: 100%;
     background: #fafbfd;
   }
 </style>

@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
-import "bscp.io/pkg/protocol/core/content/content.proto";
+import "pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/content/content.proto";
 
 package pbcommit;
 
@@ -9,29 +9,29 @@ option go_package = "bscp.io/pkg/protocol/core/commit;pbcommit";
 
 // Commit source resource reference: pkg/dal/table/commit.go
 message Commit {
-    uint32                 id         = 1;
-    CommitSpec             spec       = 2;
-    CommitAttachment       attachment = 3;
-    pbbase.CreatedRevision revision   = 4;
+  uint32 id = 1;
+  CommitSpec spec = 2;
+  CommitAttachment attachment = 3;
+  pbbase.CreatedRevision revision = 4;
 }
 
 // CommitSpec source resource reference: pkg/dal/table/commit.go
 message CommitSpec {
-    uint32                content_id = 1;
-    pbcontent.ContentSpec content    = 2;
-    string                memo       = 3;
+  uint32 content_id = 1;
+  pbcontent.ContentSpec content = 2;
+  string memo = 3;
 }
 
 // ReleasedCommitSpec source resource reference: pkg/dal/table/commit.go
 message ReleasedCommitSpec {
-    uint32                        content_id = 1;
-    pbcontent.ReleasedContentSpec content    = 2;
-    string                        memo       = 3;
+  uint32 content_id = 1;
+  pbcontent.ReleasedContentSpec content = 2;
+  string memo = 3;
 }
 
 // CommitAttachment source resource reference: pkg/dal/table/commit.go
 message CommitAttachment {
-    uint32 biz_id         = 1;
-    uint32 app_id         = 2;
-    uint32 config_item_id = 3;
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 config_item_id = 3;
 }

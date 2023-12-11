@@ -27,7 +27,7 @@
         <span v-if="group.rules && group.rules.length > 0" class="split-line">|</span>
         <div class="rules">
           <div v-for="(rule, index) in group.rules" :key="index">
-            <template v-if="index > 0"> ； </template>
+            <template v-if="index > 0"> & </template>
             <rule-tag class="tag-item" :rule="rule" />
           </div>
         </div>

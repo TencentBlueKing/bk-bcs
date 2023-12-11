@@ -5,13 +5,13 @@ package pbevent;
 option go_package = "bscp.io/pkg/protocol/core/event;pbevent";
 
 message EventSpec {
-    string resource     = 1;  // enum type
-    uint32 resource_id  = 2;
-    string resource_uid = 3;
-    string op_type      = 4;  // enum type
+  string resource = 1;  // enum type
+  uint32 resource_id = 2;
+  string resource_uid = 3;
+  string op_type = 4;  // enum type
 }
 
 message EventAttachment {
-    uint32 biz_id = 1;
-    uint32 app_id = 2;
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
 }

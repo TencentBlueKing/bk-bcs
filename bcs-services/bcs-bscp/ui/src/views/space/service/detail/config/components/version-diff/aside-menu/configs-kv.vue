@@ -9,7 +9,7 @@
           class="view-diff-checkbox"
           @change="handleSearch"
         >
-          只查看差异文件({{ diffCount }})
+          只查看差异项({{ diffCount }})
         </bk-checkbox>
         <div :class="['search-trigger', { actived: isOpenSearch }]" @click="isOpenSearch = !isOpenSearch">
           <Search />
@@ -17,7 +17,7 @@
       </div>
     </div>
     <div v-if="isOpenSearch" class="search-wrapper">
-      <SearchInput v-model="searchStr" placeholder="搜索配置文件名称" @search="handleSearch" />
+      <SearchInput v-model="searchStr" placeholder="搜索配置项名称" @search="handleSearch" />
     </div>
     <div class="groups-wrapper">
       <div
@@ -104,8 +104,8 @@ watch(
     const base = await getConfigsOfVersion(props.baseVersionId);
     baseList.value = base.details;
     aggregatedList.value = calcDiff();
+    aggregatedList.value.sort((a, b) => a.key.charCodeAt(0) - b.key.charCodeAt(0));
     groupedConfigListOnShow.value = aggregatedList.value.slice();
-    groupedConfigListOnShow.value.sort((a, b) => a.key.charCodeAt(0) - b.key.charCodeAt(0));
     setDefaultSelected();
     isOnlyShowDiff.value && handleSearch();
   },
@@ -147,8 +147,8 @@ watch(
 onMounted(async () => {
   await getAllConfigList();
   aggregatedList.value = calcDiff();
+  aggregatedList.value.sort((a, b) => a.key.charCodeAt(0) - b.key.charCodeAt(0));
   groupedConfigListOnShow.value = aggregatedList.value.slice();
-  groupedConfigListOnShow.value.sort((a, b) => a.key.charCodeAt(0) - b.key.charCodeAt(0));
   setDefaultSelected();
 });
 

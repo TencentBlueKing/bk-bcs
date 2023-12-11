@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
-import "bscp.io/pkg/protocol/core/event/event.proto";
-import "bscp.io/pkg/protocol/core/base/base.proto";
-import "bscp.io/pkg/protocol/core/app/app.proto";
+import "pkg/protocol/core/released-ci/released_ci.proto";
+import "pkg/protocol/core/event/event.proto";
+import "pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/app/app.proto";
 import "google/api/annotations.proto";
 
 package pbcs;
@@ -11,197 +11,197 @@ package pbcs;
 option go_package = "bscp.io/pkg/protocol/cache-service;pbcs";
 
 service Cache {
-    rpc GetAppID(GetAppIDReq) returns (GetAppIDResp) {
-        option (google.api.http) = {
-            get: "/api/v1/cache/biz/{biz_id}/apps/{app_name}/app_id"
-        };
-    }
-    rpc GetAppMeta(GetAppMetaReq) returns (JsonRawResp) {
-        // response data reference pkg/types/cache.go/AppCacheMeta
-        option (google.api.http) = {
-            post: "/api/v1/cache/app/app/meta/biz_id/{biz_id}"
-            body: "*"
-        };
-    }
+  rpc GetAppID(GetAppIDReq) returns (GetAppIDResp) {
+    option (google.api.http) = {
+      get: "/api/v1/cache/biz/{biz_id}/apps/{app_name}/app_id"
+    };
+  }
+  rpc GetAppMeta(GetAppMetaReq) returns (JsonRawResp) {
+    // response data reference pkg/types/cache.go/AppCacheMeta
+    option (google.api.http) = {
+      post: "/api/v1/cache/app/app/meta/biz_id/{biz_id}"
+      body: "*"
+    };
+  }
 
-    rpc GetReleasedCI(GetReleasedCIReq) returns (JsonRawResp) {
-        // response data is a json array raw of RCI(released config item)
-        // reference pkg/dal/table/released_ci.go/ReleasedConfigItem
-        option (google.api.http) = {
-            post: "/api/v1/cache/ci/released/biz_id/{biz_id}"
-            body: "*"
-        };
-    }
+  rpc GetReleasedCI(GetReleasedCIReq) returns (JsonRawResp) {
+    // response data is a json array raw of RCI(released config item)
+    // reference pkg/dal/table/released_ci.go/ReleasedConfigItem
+    option (google.api.http) = {
+      post: "/api/v1/cache/ci/released/biz_id/{biz_id}"
+      body: "*"
+    };
+  }
 
-    rpc GetReleasedHook(GetReleasedHookReq) returns (JsonRawResp) {
-        // response data is a json array raw of released hook
-        // reference pkg/dal/table/released_ci.go/ReleasedConfigItem
-        option (google.api.http) = {
-            post: "/api/v1/cache/hook/released/biz_id/{biz_id}"
-            body: "*"
-        };
-    }
+  rpc GetReleasedHook(GetReleasedHookReq) returns (JsonRawResp) {
+    // response data is a json array raw of released hook
+    // reference pkg/dal/table/released_ci.go/ReleasedConfigItem
+    option (google.api.http) = {
+      post: "/api/v1/cache/hook/released/biz_id/{biz_id}"
+      body: "*"
+    };
+  }
 
-    rpc ListAppReleasedGroups(ListAppReleasedGroupsReq) returns(JsonRawResp) {
-        option (google.api.http) = {
-            get: "/api/v1/cache/biz/{biz_id}/apps/{app_id}/released_groups"
-        };
-    }
+  rpc ListAppReleasedGroups(ListAppReleasedGroupsReq) returns (JsonRawResp) {
+    option (google.api.http) = {
+      get: "/api/v1/cache/biz/{biz_id}/apps/{app_id}/released_groups"
+    };
+  }
 
-    rpc GetCurrentCursorReminder(pbbase.EmptyReq) returns (CurrentCursorReminderResp) {
-        // get the current consumed event's id, which is the cursor reminder's resource id.
-        option (google.api.http) = {
-            post: "/api/v1/cache/list/event/reminder/current"
-            body: "*"
-        };
-    }
+  rpc GetCurrentCursorReminder(pbbase.EmptyReq) returns (CurrentCursorReminderResp) {
+    // get the current consumed event's id, which is the cursor reminder's resource id.
+    option (google.api.http) = {
+      post: "/api/v1/cache/list/event/reminder/current"
+      body: "*"
+    };
+  }
 
-    rpc ListEventsMeta(ListEventsReq) returns (ListEventsResp) {
-        // list event's meta with filter
-        option (google.api.http) = {
-            post: "/api/v1/cache/list/event/event/meta"
-            body: "*"
-        };
-    }
+  rpc ListEventsMeta(ListEventsReq) returns (ListEventsResp) {
+    // list event's meta with filter
+    option (google.api.http) = {
+      post: "/api/v1/cache/list/event/event/meta"
+      body: "*"
+    };
+  }
 
-    rpc GetCredential(GetCredentialReq) returns (JsonRawResp) {
-        // get credential with filter
-        option (google.api.http) = {
-            get: "/api/v1/cache/biz/{biz_id}/credential/{credential}"
-        };
-    }
+  rpc GetCredential(GetCredentialReq) returns (JsonRawResp) {
+    // get credential with filter
+    option (google.api.http) = {
+      get: "/api/v1/cache/biz/{biz_id}/credential/{credential}"
+    };
+  }
 
-    // only stress test use.
-    rpc BenchAppMeta(BenchAppMetaReq) returns (BenchAppMetaResp) {}
-    rpc BenchReleasedCI(BenchReleasedCIReq) returns (BenchReleasedCIResp) {}
+  // only stress test use.
+  rpc BenchAppMeta(BenchAppMetaReq) returns (BenchAppMetaResp) {}
+  rpc BenchReleasedCI(BenchReleasedCIReq) returns (BenchReleasedCIResp) {}
 
-    rpc GetReleasedKv(GetReleasedKvReq) returns (JsonRawResp) {
-        // response data is a json array raw of RKV(released kv)
-        // reference pkg/dal/table/released_kv.go/ReleasedKv
-        option (google.api.http) = {
-            post: "/api/v1/cache/kv/released/biz_id/{biz_id}"
-            body: "*"
-        };
-    }
+  rpc GetReleasedKv(GetReleasedKvReq) returns (JsonRawResp) {
+    // response data is a json array raw of RKV(released kv)
+    // reference pkg/dal/table/released_kv.go/ReleasedKv
+    option (google.api.http) = {
+      post: "/api/v1/cache/kv/released/biz_id/{biz_id}"
+      body: "*"
+    };
+  }
 
-    rpc GetReleasedKvValue(GetReleasedKvValueReq) returns (JsonRawResp) {
-        // response data is a json array raw of RKV value(released kv value)
-        // reference pkg/dal/table/released_kv.go/ReleasedKvValue
-        option (google.api.http) = {
-            post: "/api/v1/cache/kv/released/biz_id/{biz_id}/apps/{app_id}/key/{key}"
-            body: "*"
-        };
-    }
+  rpc GetReleasedKvValue(GetReleasedKvValueReq) returns (JsonRawResp) {
+    // response data is a json array raw of RKV value(released kv value)
+    // reference pkg/dal/table/released_kv.go/ReleasedKvValue
+    option (google.api.http) = {
+      post: "/api/v1/cache/kv/released/biz_id/{biz_id}/apps/{app_id}/key/{key}"
+      body: "*"
+    };
+  }
 }
 
 message JsonRawResp {
-    string json_raw = 1;
+  string json_raw = 1;
 }
 
 message GetAppIDReq {
-    uint32 biz_id   = 1;
-    string app_name = 2;
+  uint32 biz_id = 1;
+  string app_name = 2;
 }
 
 message GetAppIDResp {
-    uint32 app_id = 2;
+  uint32 app_id = 2;
 }
 
 message GetAppMetaReq {
-    uint32 biz_id = 1;
-    uint32 app_id = 2;
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
 }
 
 message GetReleasedCIReq {
-    uint32 biz_id     = 1;
-    uint32 release_id = 2;
+  uint32 biz_id = 1;
+  uint32 release_id = 2;
 }
 
 message GetReleasedHookReq {
-    uint32 biz_id     = 1;
-    uint32 release_id = 2;
+  uint32 biz_id = 1;
+  uint32 release_id = 2;
 }
 
 message ListAppReleasedGroupsReq {
-    uint32 biz_id = 1;
-    uint32 app_id = 2;
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
 }
 
 message JsonArrayRawResp {
-    repeated string json_raw = 1;
+  repeated string json_raw = 1;
 }
 
 message BenchAppMetaReq {
-    uint32          biz_id  = 1;
-    repeated uint32 app_ids = 2;
+  uint32 biz_id = 1;
+  repeated uint32 app_ids = 2;
 }
 
 message BenchAppMetaResp {
-    map<uint32, AppMeta> meta = 1;
+  map<uint32, AppMeta> meta = 1;
 }
 
 message AppMeta {
-    string       name   = 1;
-    string       cft    = 2;
-    string       dpt    = 3;
-    string       mod    = 4;
-    pbapp.Reload reload = 5;
+  string name = 1;
+  string cft = 2;
+  string dpt = 3;
+  string mod = 4;
+  pbapp.Reload reload = 5;
 }
 
 message AppCRIMeta {
-    string uid        = 1;
-    uint32 release_id = 2;
+  string uid = 1;
+  uint32 release_id = 2;
 }
 
 message BenchReleasedCIReq {
-    uint32 biz_id     = 1;
-    uint32 release_id = 2;
+  uint32 biz_id = 1;
+  uint32 release_id = 2;
 }
 
 message BenchReleasedCIResp {
-    repeated pbrci.ReleasedConfigItem meta = 1;
+  repeated pbrci.ReleasedConfigItem meta = 1;
 }
 
 // the current consumed event's cursor which is also event's id.
 message CurrentCursorReminderResp {
-    uint32 cursor = 1;
+  uint32 cursor = 1;
 }
 
 message ListEventsReq {
-    uint32          startCursor = 1;
-    // max page limit is 200
-    pbbase.BasePage page        = 2;
+  uint32 startCursor = 1;
+  // max page limit is 200
+  pbbase.BasePage page = 2;
 }
 
 message ListEventsResp {
-    repeated EventMeta list = 1;
+  repeated EventMeta list = 1;
 }
 
 message EventMeta {
-    uint32                  id         = 1;
-    pbevent.EventSpec       spec       = 2;
-    pbevent.EventAttachment attachment = 3;
+  uint32 id = 1;
+  pbevent.EventSpec spec = 2;
+  pbevent.EventAttachment attachment = 3;
 }
 
 message ListCredentialMatchedCIReq {
-    uint32 biz_id     = 1;
-    string credential = 2;
+  uint32 biz_id = 1;
+  string credential = 2;
 }
 
 message GetCredentialReq {
-    uint32 biz_id     = 1;
-    string credential = 2;
+  uint32 biz_id = 1;
+  string credential = 2;
 }
 
 message GetReleasedKvReq {
-    uint32 biz_id     = 1;
-    uint32 app_id     = 2;
-    uint32 release_id = 3;
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
 }
 
 message GetReleasedKvValueReq {
-    uint32 biz_id     = 1;
-    uint32 release_id = 2;
-    uint32 app_id     = 3;
-    string key        = 4;
+  uint32 biz_id = 1;
+  uint32 release_id = 2;
+  uint32 app_id = 3;
+  string key = 4;
 }

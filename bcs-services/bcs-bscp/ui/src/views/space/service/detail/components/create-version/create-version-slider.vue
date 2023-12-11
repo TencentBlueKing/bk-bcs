@@ -15,7 +15,7 @@
           </bk-checkbox>
         </bk-form>
       </div>
-      <div class="variable-form">
+      <div class="variable-form" v-if="isFileType">
         <div v-bkloading="{ loading }" class="section-title">服务变量赋值</div>
         <ResetDefaultValue class="reset-default-btn" :list="initialVariables" @reset="handleResetDefault" />
         <VariablesTable ref="tableRef" :list="variableList" :editable="true" @change="handleVariablesChange" />
@@ -35,6 +35,8 @@ import { createVersion } from '../../../../../../api/config';
 import useModalCloseConfirmation from '../../../../../../utils/hooks/use-modal-close-confirmation';
 import { IVariableEditParams } from '../../../../../../../types/variable';
 import { getUnReleasedAppVariables } from '../../../../../../api/variable';
+import useServiceStore from '../../../../../../store/service';
+import { storeToRefs } from 'pinia';
 import VariablesTable from '../../config/config-list/config-table-list/variables/variables-table.vue';
 import ResetDefaultValue from '../../config/config-list/config-table-list/variables/reset-default-value.vue';
 
@@ -46,6 +48,9 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits(['update:show', 'created', 'open-diff']);
+
+const serviceStore = useServiceStore();
+const { isFileType } = storeToRefs(serviceStore);
 
 const formData = ref({
   name: '',
@@ -119,10 +124,9 @@ const handleVariablesChange = (variables: IVariableEditParams[]) => {
 // };
 
 const confirm = async () => {
-  if (!formRef.value.validate() || !tableRef.value.validate()) return;
+  if (!formRef.value.validate() || (isFileType.value && !tableRef.value.validate())) return;
   try {
     await formRef.value.validate();
-    if (!tableRef.value.validate()) return;
     pending.value = true;
     const params = {
       name: formData.value.name,

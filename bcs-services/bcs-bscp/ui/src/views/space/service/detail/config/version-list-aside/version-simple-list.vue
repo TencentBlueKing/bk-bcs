@@ -1,5 +1,8 @@
 <template>
   <section class="version-container">
+    <div class="service-selector-wrapper">
+      <ServiceSelector :value="props.appId" />
+    </div>
     <bk-loading :loading="versionListLoading">
       <div class="version-search-wrapper">
         <SearchInput
@@ -42,10 +45,10 @@ import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../store/config';
 import { Ellipsis } from 'bkui-vue/lib/icon';
-// import { InfoBox } from 'bkui-vue/lib';
 import { getConfigVersionList } from '../../../../../../api/config';
 import { GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
 import { IConfigVersion } from '../../../../../../../types/config';
+import ServiceSelector from '../../components/service-selector.vue';
 import SearchInput from '../../../../../../components/search-input.vue';
 import TableEmpty from '../../../../../../components/table/table-empty.vue';
 import VersionDiff from '../../config/components/version-diff/index.vue';
@@ -72,7 +75,7 @@ const versionsInView = computed(() => {
   if (searchStr.value === '') {
     return versionList.value;
   }
-  return versionList.value.filter(item => item.spec.name.toLowerCase().includes(searchStr.value));
+  return versionList.value.filter(item => item.spec.name.toLowerCase().includes(searchStr.value.toLocaleLowerCase()));
 });
 
 // 监听刷新版本列表标识，处理新增版本场景，默认选中新增的版本
@@ -157,8 +160,13 @@ const handleDiffDialogShow = (version: IConfigVersion) => {
 .version-container {
   height: 100%;
 }
+.service-selector-wrapper {
+  padding: 10px 8px 9px;
+  width: 280px;
+  border-bottom: 1px solid #eaebf0;
+}
 .bk-nested-loading {
-  height: 100%;
+  height: calc(100% - 52px);
 }
 .version-search-wrapper {
   padding: 8px 16px;
