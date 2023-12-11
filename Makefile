@@ -80,7 +80,7 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 
 bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	netservice sd-prometheus storage \
-	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager \
+	user-manager cluster-manager cluster-reporter tools alert-manager k8s-watch kube-agent data-manager \
 	helm-manager project-manager nodegroup-manager
 
 bcs-scenarios: kourse gitops
@@ -411,6 +411,7 @@ cluster-manager:pre
 	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go mod tidy && ${CGO_BUILD_FLAGS} go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
 
 cluster-reporter:
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cluster-reporter
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-cluster-reporter/* ${PACKAGEPATH}/bcs-services/bcs-cluster-reporter/
 	cd ${BCS_SERVICES_PATH}/bcs-cluster-reporter && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-reporter/bcs-cluster-reporter ./main.go
 
