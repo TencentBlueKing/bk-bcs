@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/validator"
@@ -40,6 +41,9 @@ const (
 	// PublishRelease means this app instance matched release has been changed because
 	// of new publish has been fired.
 	PublishRelease FeedMessageType = 2
+
+	// Unknown is Unknown operator
+	Unknown = "unknown"
 )
 
 // FeedMessageType defines message types to sidecar delivered form feed server.
@@ -53,7 +57,7 @@ func (sm FeedMessageType) String() string {
 	case PublishRelease:
 		return "PublishRelease"
 	default:
-		return "Unknown"
+		return Unknown
 	}
 }
 
@@ -66,6 +70,12 @@ const (
 	SidecarOffline MessagingType = 1
 	// Heartbeat means the sidecar is online, to tell feed server this sidecar is live.
 	Heartbeat MessagingType = 2
+	// VersionChangeMessage the version change event was reported. Procedure
+	VersionChangeMessage MessagingType = 3
+	// PullStatus the current pull status is reported
+	PullStatus MessagingType = 4
+	// ClientInfo report basic information about the client when the client first connects to the client
+	ClientInfo MessagingType = 5
 )
 
 // Validate the messaging type is valid or not.
@@ -73,6 +83,9 @@ func (sm MessagingType) Validate() error {
 	switch sm {
 	case SidecarOffline:
 	case Heartbeat:
+	case VersionChangeMessage:
+	case PullStatus:
+	case ClientInfo:
 	default:
 		return fmt.Errorf("unknown %d sidecar message type", sm)
 	}
@@ -87,8 +100,14 @@ func (sm MessagingType) String() string {
 		return "SidecarOffline"
 	case Heartbeat:
 		return "Heartbeat"
+	case VersionChangeMessage:
+		return "VersionChange"
+	case PullStatus:
+		return "PullStatus"
+	case ClientInfo:
+		return "ClientInfo"
 	default:
-		return "Unknown"
+		return Unknown
 	}
 }
 
@@ -132,6 +151,8 @@ type SideAppMeta struct {
 	CurrentReleaseID uint32 `json:"currentReleaseID"`
 	// sidecar's current cursor id
 	CurrentCursorID uint32 `json:"currentCursorID"`
+	// TargetReleaseID is sidecar's target release id
+	TargetReleaseID uint32 `json:"targetReleaseID"`
 }
 
 // Validate the sidecar's app meta is valid or not.
@@ -454,10 +475,11 @@ func (o *OfflinePayload) Encode() ([]byte, error) {
 
 // HeartbeatPayload defines sdk heartbeat to send payload to feed server.
 type HeartbeatPayload struct {
-	// FingerPrint sdk instance fingerprint, reference: pkg/dal/sf-share/fingerprint.go
-	FingerPrint string `json:"fingerprint"`
+	BasicData BasicData `json:"basicData"`
 	// Applications sdk instance bind app meta info,include app,namespace,uid,labels and app current release id.
 	Applications []SideAppMeta `json:"applications"`
+	// ResourceUsage 资源相关信息：例如 cpu、内存等
+	ResourceUsage
 }
 
 // MessagingType return the payload related sidecar message type.
@@ -480,4 +502,262 @@ type KvMetaV1 struct {
 	ID           uint32             `json:"id"`
 	Key          string             `json:"key"`
 	KvAttachment *pbkv.KvAttachment `json:"kv_attachment"`
+}
+
+// ClientMode define the client mode structure
+type ClientMode uint32
+
+const (
+	// Pull xxx
+	Pull ClientMode = 1
+	// Watch xxx
+	Watch ClientMode = 2
+)
+
+// Validate the client mode is valid or not.
+func (cm ClientMode) Validate() error {
+	switch cm {
+	case Pull:
+	case Watch:
+	default:
+		return fmt.Errorf("unknown %d sidecar client mode", cm)
+	}
+
+	return nil
+}
+
+// String return the corresponding string type
+func (cm ClientMode) String() string {
+	switch cm {
+	case Pull:
+		return "Pull"
+	case Watch:
+		return "Watch"
+	default:
+		return Unknown
+	}
+}
+
+// Labels 标签
+type Labels map[string]string
+
+// String return the corresponding string type
+func (l Labels) String() string {
+	marshal, err := jsoni.Marshal(l)
+	if err != nil {
+		return ""
+	}
+	return string(marshal)
+}
+
+// BasicData 上报时基础数据
+type BasicData struct {
+	FingerPrint string `json:"fingerprint"`
+	// BizID xxx
+	BizID uint32 `json:"bizID"`
+	// Labels xxx
+	Labels Labels `json:"labels"`
+	// ClientMode 客户端模式 pull、watch
+	ClientMode ClientMode `json:"clientMode"`
+}
+
+// Validate the instance spec is valid or not
+func (bd BasicData) Validate() error {
+	if bd.BizID <= 0 {
+		return errors.New("invalid biz id")
+	}
+
+	if len(bd.FingerPrint) == 0 {
+		return errors.New("invalid fingerPrint")
+	}
+
+	return nil
+}
+
+// ResourceUsage Resource utilization rate
+type ResourceUsage struct {
+	MaxCPUUsage     float64 `json:"maxCPUUsage"`
+	CurrentCPUUsage float64 `json:"currentCPUUsage"`
+	MaxMemUsage     uint64  `json:"maxMemUsage"`
+	CurrentMemUsage uint64  `json:"currentMemUsage"`
+}
+
+// FailedReason define the failure cause structure
+type FailedReason uint32
+
+const (
+	// PreHookFailed pre hook failed
+	PreHookFailed FailedReason = 1
+	// PostHookFailed post hook failed
+	PostHookFailed FailedReason = 2
+	// DownloadFailed download failed
+	DownloadFailed FailedReason = 3
+	// AlreadyExistFailed already exist failed
+	AlreadyExistFailed FailedReason = 4
+)
+
+// Validate the failed reason is valid or not.
+func (fr FailedReason) Validate() error {
+	switch fr {
+	case PreHookFailed:
+	case PostHookFailed:
+	case DownloadFailed:
+	case AlreadyExistFailed:
+	default:
+		return fmt.Errorf("unknown %d sidecar failed reason", fr)
+	}
+
+	return nil
+}
+
+// String return the corresponding string type
+func (fr FailedReason) String() string {
+	switch fr {
+	case PreHookFailed:
+		return "PreHookFailed"
+	case PostHookFailed:
+		return "PostHookFailed"
+	case DownloadFailed:
+		return "DownloadFailed"
+	case AlreadyExistFailed:
+		return "AlreadyExistFailed"
+	default:
+		return Unknown
+	}
+}
+
+// ReleaseChangeStatus define the version change status structure
+type ReleaseChangeStatus uint32
+
+const (
+	// Success xxx
+	Success ReleaseChangeStatus = 1
+	// Failed xxx
+	Failed ReleaseChangeStatus = 2
+	// Processing xxx
+	Processing ReleaseChangeStatus = 3
+)
+
+// Validate the version change status is valid or not.
+func (rs ReleaseChangeStatus) Validate() error {
+	switch rs {
+	case Success:
+	case Failed:
+	case Processing:
+	default:
+		return fmt.Errorf("unknown %d sidecar version change status", rs)
+	}
+
+	return nil
+}
+
+// String return the corresponding string type
+func (rs ReleaseChangeStatus) String() string {
+	switch rs {
+	case Success:
+		return "Success"
+	case Failed:
+		return "Failed"
+	case Processing:
+		return "Processing"
+	default:
+		return Unknown
+	}
+}
+
+// VersionChangePayload defines sdk version change to send payload to feed server.
+type VersionChangePayload struct {
+	// BasicData 基础信息：例如客户端唯一标识、bizID、客户端模式
+	BasicData BasicData `json:"basicData"`
+	// SideAppMeta app相关信息：例如 appName、appID、currentReleaseID等
+	SideAppMeta SideAppMeta `json:"sideAppMeta"`
+	// ResourceUsage 资源相关信息：例如 cpu、内存等
+	ResourceUsage ResourceUsage `json:"resourceUsage"`
+	// ClientVersion client version/sdk version
+	ClientVersion string `json:"clientVersion"`
+	// IP client ip
+	IP string `json:"ip"`
+	// HeartbeatTime 心跳时间
+	HeartbeatTime time.Time `json:"heartbeatTime"`
+	// Annotations Additional info (Platform information such as cluster ID, agent ID, host ID, etc.)
+	Annotations any `json:"annotations"`
+	// TotalSeconds total time required for version changes
+	TotalSeconds float64 `json:"totalSeconds"`
+	// TotalFileNum pull the number of config files (example: 17/20)
+	TotalFileNum int `json:"totalFileNum"`
+	// TotalFileSize pull the total size of the config file
+	TotalFileSize       uint64              `json:"totalFileSize"`
+	StartTime           time.Time           `json:"startTime"`
+	EndTime             time.Time           `json:"endTime"`
+	FailedReason        FailedReason        `json:"failedReason"`
+	ReleaseChangeStatus ReleaseChangeStatus `json:"releaseChangeStatus"`
+	FailedDetailReason  string              `json:"failedDetailReason"`
+}
+
+// MessagingType return the payload related sidecar message type.
+func (v *VersionChangePayload) MessagingType() MessagingType {
+	return VersionChangeMessage
+}
+
+// Encode the VersionChangePayload to bytes.
+func (v *VersionChangePayload) Encode() ([]byte, error) {
+	if v == nil {
+		return nil, errors.New("VersionChangePayload is nil, can not be encoded")
+	}
+
+	return jsoni.Marshal(v)
+}
+
+// PullStatusPayload defines sdk pull status to send payload to feed server.
+type PullStatusPayload struct {
+	// BasicData 例如：bizID 、 fingerprint等
+	BasicData BasicData `json:"basicData"`
+	// SideAppMeta sdk instance bind app meta info,include app,namespace,uid,labels and app current release id.
+	SideAppMeta SideAppMeta `json:"sideAppMeta"`
+	// ReleaseChangeStatus 版本变更状态
+	ReleaseChangeStatus ReleaseChangeStatus `json:"releaseChangeStatus"`
+}
+
+// MessagingType return the payload related sidecar message type.
+func (p *PullStatusPayload) MessagingType() MessagingType {
+	return PullStatus
+}
+
+// Encode the PullStatusPayload to bytes.
+func (p *PullStatusPayload) Encode() ([]byte, error) {
+	if p == nil {
+		return nil, errors.New("PullStatusPayload is nil, can not be encoded")
+	}
+
+	return jsoni.Marshal(p)
+}
+
+// ClientInfoPayload defines sdk client info to send payload to feed server.
+type ClientInfoPayload struct {
+	// BasicData 基础信息：例如客户端唯一标识、bizID、客户端模式
+	BasicData
+	// Applications app相关信息：例如 appName、appID、currentReleaseID等
+	Applications []SideAppMeta `json:"applications"`
+	// ClientVersion client version/sdk version
+	ClientVersion string `json:"clientVersion"`
+	// IP client ip
+	IP string `json:"ip"`
+	// HeartbeatTime 心跳时间
+	HeartbeatTime time.Time `json:"heartbeatTime"`
+	// Annotations Additional info (Platform information such as cluster ID, agent ID, host ID, etc.)
+	Annotations any `json:"annotations"`
+}
+
+// MessagingType return the payload related sidecar message type.
+func (c *ClientInfoPayload) MessagingType() MessagingType {
+	return ClientInfo
+}
+
+// Encode the ClientInfoPayload to bytes.
+func (c *ClientInfoPayload) Encode() ([]byte, error) {
+	if c == nil {
+		return nil, errors.New("ClientInfoPayload is nil, can not be encoded")
+	}
+
+	return jsoni.Marshal(c)
 }
