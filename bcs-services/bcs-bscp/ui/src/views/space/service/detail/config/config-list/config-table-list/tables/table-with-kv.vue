@@ -5,6 +5,7 @@
       :data="configList"
       :remote-pagination="true"
       :pagination="pagination"
+      :key="versionData.id"
       show-overflow-tooltip
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"

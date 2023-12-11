@@ -9,7 +9,7 @@
           <th class="user">创建人</th>
           <th class="user">修改人</th>
           <th class="datetime">修改时间</th>
-          <th class="status">变更状态</th>
+          <th class="status" v-show="versionData.id === 0">变更状态</th>
           <th class="operation">操作</th>
         </tr>
       </thead>
@@ -45,7 +45,7 @@
                         :key="config.id"
                         :class="getRowCls(config)"
                       >
-                        <td>
+                        <td class="name">
                           <template v-if="group.id === 0">
                             <bk-button
                               v-if="isUnNamedVersion"
@@ -78,12 +78,12 @@
                             {{ config.name }}
                           </bk-button>
                         </td>
-                        <td>{{ config.versionName }}</td>
-                        <td>{{ config.path }}</td>
+                        <td class="version">{{ config.versionName }}</td>
+                        <td class="path">{{ config.path }}</td>
                         <td class="user">{{ config.creator }}</td>
                         <td class="user">{{ config.reviser }}</td>
                         <td class="datetime">{{ config.update_at }}</td>
-                        <td class="status"><StatusTag :status="config.file_state" /></td>
+                        <td class="status" v-show="versionData.id === 0"><StatusTag :status="config.file_state"/></td>
                         <td class="operation">
                           <div class="config-actions">
                             <!-- 非套餐配置文件 -->
@@ -645,6 +645,15 @@ defineExpose({
         font-size: 14px;
       }
     }
+  }
+  .name {
+    width: 331px;
+  }
+  .version {
+    width: 100%;
+  };
+  .path {
+    width: 331px;
   }
   .user {
     width: 120px;
