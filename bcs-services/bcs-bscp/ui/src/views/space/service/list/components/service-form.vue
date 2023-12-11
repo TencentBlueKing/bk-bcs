@@ -72,8 +72,8 @@ const rules = {
       message: '最大长度32个字符',
     },
     {
-      validator: (value: string) => /^[a-zA-Z0-9\u4e00-\u9fa5][a-zA-Z0-9_\-\u4e00-\u9fa5]*[a-zA-Z0-9\u4e00-\u9fa5]$/.test(value),
-      message: '服务名称由中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾',
+      validator: (value: string) => /^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]?$/.test(value),
+      message: '服务名称由英文、数字、下划线、中划线组成且以英文、数字开头和结尾',
     },
   ],
   alias: [
@@ -86,8 +86,8 @@ const rules = {
       message: '最大长度128个字符',
     },
     {
-      validator: (value: string) => /^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]?$/.test(value),
-      message: '服务别名由英文、数字、下划线、中划线组成且以英文、数字开头和结尾',
+      validator: (value: string) => /^[a-zA-Z0-9\u4e00-\u9fa5][a-zA-Z0-9_\-\u4e00-\u9fa5]*[a-zA-Z0-9\u4e00-\u9fa5]$/.test(value),
+      message: '服务别名由中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾',
     },
   ],
 };
