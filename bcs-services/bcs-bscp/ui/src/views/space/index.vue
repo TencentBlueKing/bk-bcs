@@ -6,7 +6,7 @@
   </template>
 </template>
 <script setup lang="ts">
-import { watch, ref } from 'vue';
+import { watch, ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../store/global';
@@ -27,12 +27,20 @@ const getFeatureFlagsData = async() => {
   loading.value = false;
 }
 
+const setLastAccessedSpace = (val: string) => {
+  localStorage.setItem('lastAccessedSpace', val);
+}
+
 watch(
   () => route.params.spaceId,
   (val) => {
-    spaceId.value = val as string;
-    getFeatureFlagsData();
+    if (val) {
+      spaceId.value = val as string;
+      setLastAccessedSpace(val as string);
+      getFeatureFlagsData();
+    }
   },
   { immediate: true },
 );
+
 </script>
