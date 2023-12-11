@@ -149,7 +149,7 @@ func (l *ListenerChecker) deletePortPoolUnusedListener(listenerList *networkexte
 		ownerKind, kok := listener.Labels[networkextensionv1.LabelKeyForOwnerKind]
 		ownerName, nok := listener.Labels[networkextensionv1.LabelKeyForOwnerName]
 		if !kok || !nok {
-			blog.Warnf("listener '%s/%s' has no owner labels")
+			blog.Warnf("listener '%s/%s' has no owner labels", listener.GetNamespace(), listener.GetName())
 			continue
 		}
 

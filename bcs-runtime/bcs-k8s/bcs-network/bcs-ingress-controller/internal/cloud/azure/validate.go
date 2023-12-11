@@ -93,7 +93,7 @@ func (a *AlbValidater) validateIngressRule(rule *networkextensionv1.IngressRule)
 			}
 		}
 	default:
-		return false, fmt.Sprintf("invalid protocol %s, available [http, https, tcp, udp]", rule.Protocol)
+		return false, fmt.Sprintf("invalid protocol %s, available [HTTP, HTTPS, TCP, UDP]", rule.Protocol)
 	}
 	return true, ""
 }
