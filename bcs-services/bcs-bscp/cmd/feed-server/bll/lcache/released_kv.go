@@ -154,10 +154,7 @@ func (kv *ReleasedKv) Get(kt *kit.Kit, bizID uint32, releaseID uint32) ([]*types
 		return nil, err
 	}
 
-	maxRKVSizeKB := 10
-
-	if len(resp.JsonRaw) <= maxRKVSizeKB {
-		// only cache the released kv which is less than maxRKVSizeKB
+	if len(resp.JsonRaw) <= maxRCISizeKB {
 		err = kv.client.Set(cacheKey, rkv)
 		if err != nil {
 			logs.Errorf("refresh biz: %d, release: %d KV cache failed, err: %v, rid: %s", bizID, releaseID, err, kt.Rid)
