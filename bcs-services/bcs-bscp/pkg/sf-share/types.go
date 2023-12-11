@@ -200,7 +200,7 @@ type InstanceSpec struct {
 	App        string            `json:"app"`
 	Uid        string            `json:"uid"`
 	Labels     map[string]string `json:"labels"`
-	ConfigType table.ConfigType  `json:"config_type"`
+	ConfigType table.ConfigType  `json:"configType"`
 }
 
 // Validate the instance spec is valid or not
