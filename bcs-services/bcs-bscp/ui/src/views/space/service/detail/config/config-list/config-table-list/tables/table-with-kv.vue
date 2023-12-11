@@ -1,11 +1,13 @@
 <template>
   <bk-loading :loading="loading">
     <bk-table
+      class="config-table"
       :border="['outer']"
       :data="configList"
       :remote-pagination="true"
       :pagination="pagination"
       :key="versionData.id"
+      :row-class="getRowCls"
       show-overflow-tooltip
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"
@@ -16,7 +18,7 @@
             v-if="row.spec"
             text
             theme="primary"
-            :disabled="row.file_state === 'DELETE'"
+            :disabled="row.kv_state === 'DELETE'"
             @click="handleEdit(row)"
           >
             {{ row.spec.key }}
@@ -44,24 +46,20 @@
       <bk-table-column label="操作" fixed="right">
         <template #default="{ row }">
           <div class="operate-action-btns">
-            <bk-button :disabled="row.file_state === 'DELETE'" text theme="primary" @click="handleEdit(row)">{{
-              versionData.id === 0 ? '编辑' : '查看'
-            }}</bk-button>
-            <bk-button
-              v-if="versionData.status.publish_status !== 'editing'"
-              text
-              theme="primary"
-              @click="handleDiff(row)"
-              >对比</bk-button
-            >
-            <bk-button
-              v-if="versionData.id === 0"
-              text
-              theme="primary"
-              :disabled="row.file_state === 'DELETE'"
-              @click="handleDel(row)"
-              >删除</bk-button
-            >
+            <bk-button v-if="row.kv_state === 'DELETE'" text theme="primary" @click="handleUndelete(row)">恢复</bk-button>
+            <template v-else>
+              <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEdit(row)">{{
+                versionData.id === 0 ? '编辑' : '查看'
+              }}</bk-button>
+              <bk-button
+                v-if="versionData.status.publish_status !== 'editing'"
+                text
+                theme="primary"
+                @click="handleDiff(row)"
+                >对比</bk-button
+              >
+              <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">删除</bk-button>
+            </template>
           </div>
         </template>
       </bk-table-column>
@@ -98,7 +96,7 @@ import useConfigStore from '../../../../../../../../store/config';
 import useServiceStore from '../../../../../../../../store/service';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
-import { getKvList, deleteKv, getReleaseKvList } from '../../../../../../../../api/config';
+import { getKvList, deleteKv, getReleaseKvList, undeleteKv } from '../../../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../../../utils/index';
 import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
 import StatusTag from './status-tag';
@@ -144,7 +142,6 @@ const filterList = computed(() => CONFIG_KV_TYPE.map(item => ({
   value: item.id,
   text: item.name,
 })));
-
 
 watch(
   () => versionData.value.id,
@@ -244,8 +241,15 @@ const handleDeleteConfigConfirm = async () => {
     theme: 'success',
     message: '删除配置项成功',
   });
-  getListData();
+  refresh();
   isDeleteConfigDialogShow.value = false;
+};
+
+// 撤销删除
+const handleUndelete = async (config: IConfigKvType) => {
+  await undeleteKv(props.bkBizId, props.appId, config.spec.key);
+  Message({ theme: 'success', message: '恢复配置项成功' });
+  refresh();
 };
 
 const handlePageLimitChange = (limit: number) => {
@@ -263,6 +267,11 @@ const handleFilter = (checked: string[]) => {
   return true;
 };
 
+// 判断当前行是否是删除行
+const getRowCls = (config: IConfigKvType) => {
+  if (config.kv_state === 'DELETE') return 'delete-row';
+};
+
 defineExpose({
   refresh,
 });
@@ -271,6 +280,16 @@ defineExpose({
 .operate-action-btns {
   .bk-button:not(:last-of-type) {
     margin-right: 8px;
+  }
+}
+.config-table {
+  :deep(.bk-table-body) {
+    tr.delete-row td {
+      background: #fafbfd !important;
+      .cell {
+        color: #c4c6cc !important;
+      }
+    }
   }
 }
 </style>

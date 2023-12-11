@@ -40,11 +40,7 @@
                 <div class="configs-list-wrapper">
                   <table class="config-list-table">
                     <tbody>
-                      <tr
-                        v-for="config in group.configs"
-                        :key="config.id"
-                        :class="getRowCls(config)"
-                      >
+                      <tr v-for="config in group.configs" :key="config.id" :class="getRowCls(config)">
                         <td class="name">
                           <template v-if="group.id === 0">
                             <bk-button
@@ -83,7 +79,7 @@
                         <td class="user">{{ config.creator }}</td>
                         <td class="user">{{ config.reviser }}</td>
                         <td class="datetime">{{ config.update_at }}</td>
-                        <td class="status" v-show="versionData.id === 0"><StatusTag :status="config.file_state"/></td>
+                        <td class="status" v-show="versionData.id === 0"><StatusTag :status="config.file_state" /></td>
                         <td class="operation">
                           <div class="config-actions">
                             <!-- 非套餐配置文件 -->
@@ -577,6 +573,9 @@ const getRowCls = (data: IConfigTableItem) => {
   if (batchUploadIds.value.includes(data.id)) {
     return 'new-row-marked config-row';
   }
+  if (data.file_state === 'DELETE') {
+    return 'delete-row config-row';
+  }
   return 'config-row';
 };
 defineExpose({
@@ -651,7 +650,7 @@ defineExpose({
   }
   .version {
     width: 100%;
-  };
+  }
   .path {
     width: 331px;
   }
@@ -706,6 +705,10 @@ defineExpose({
 }
 .new-row-marked td {
   background: #f2fff4 !important;
+}
+.delete-row td {
+  background: #fafbfd !important;
+  color: #c4c6cc !important;
 }
 </style>
 
