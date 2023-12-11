@@ -390,7 +390,6 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 
 // GetKvValue get kv value
 func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbfs.GetKvValueResp, error) {
-
 	// check if the sidecar's version can be accepted.
 	if !sfs.IsAPIVersionMatch(req.ApiVersion) {
 		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
@@ -409,9 +408,27 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 		return nil, status.Error(codes.PermissionDenied, "no permission to access bscp server")
 	}
 
+	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.AppMeta.App)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
+	}
+	meta := &types.AppInstanceMeta{
+		BizID:  req.BizId,
+		App:    req.AppMeta.App,
+		AppID:  appID,
+		Uid:    req.AppMeta.Uid,
+		Labels: req.AppMeta.Labels,
+	}
+
 	cancel := im.Kit.CtxWithTimeoutMS(1500)
 	defer cancel()
-	rkv, err := s.bll.RKvCache().GetKvValue(im.Kit, req.BizId, req.AppId, req.ReleaseId, req.Key)
+
+	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(im.Kit, meta)
+	if err != nil {
+		return nil, err
+	}
+
+	rkv, err := s.bll.RKvCache().GetKvValue(im.Kit, req.BizId, appID, metas.ReleaseId, req.Key)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "get rkv failed, %s", err.Error())
 	}
