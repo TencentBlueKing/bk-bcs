@@ -187,7 +187,7 @@ type ReleaseEventMetaV1 struct {
 	App        string              `json:"app"`
 	ReleaseID  uint32              `json:"releaseID"`
 	CIMetas    []*ConfigItemMetaV1 `json:"ciMetas"`
-	KvMetas    []*KvMetaV1         `json:"kv_metas"`
+	KvMetas    []*KvMetaV1         `json:"kvMetas"`
 	Repository *RepositoryV1       `json:"repository"`
 	PreHook    *pbhook.HookSpec    `json:"preHook"`
 	PostHook   *pbhook.HookSpec    `json:"postHook"`
