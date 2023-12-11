@@ -94,7 +94,7 @@ const handleCreateConfirm = async () => {
       subTitle: serviceData.value.config_type === 'file' ? '接下来你可以在服务下新增并使用配置文件' : '接下来你可以在服务下新增并使用配置项',
       headerAlign: 'center',
       footerAlign: 'center',
-      confirmText: '新增配置项',
+      confirmText: serviceData.value.config_type === 'file' ? '新增配置文件' : '新增配置项',
       cancelText: '稍后再说',
       onConfirm() {
         router.push({

@@ -13,7 +13,7 @@
       <div class="service-config">
         <div class="config-info">
           <span class="bk-bscp-icon icon-configuration-line"></span>
-          {{ props.service.config?.count }}个配置文件
+          {{ props.service.config?.count }}个配置{{ props.service.spec.config_type === 'file' ? '文件' : '项' }}
         </div>
         <div class="time-info">
           <span class="bk-bscp-icon icon-time-2"  v-bk-tooltips="{content: '最新上线', placement: 'top'}"></span>
