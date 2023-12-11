@@ -24,6 +24,7 @@ const (
 	Upstream_Messaging_FullMethodName       = "/pbfs.Upstream/Messaging"
 	Upstream_PullAppFileMeta_FullMethodName = "/pbfs.Upstream/PullAppFileMeta"
 	Upstream_GetDownloadURL_FullMethodName  = "/pbfs.Upstream/GetDownloadURL"
+	Upstream_PullKvMeta_FullMethodName      = "/pbfs.Upstream/PullKvMeta"
 	Upstream_GetKvValue_FullMethodName      = "/pbfs.Upstream/GetKvValue"
 )
 
@@ -37,6 +38,7 @@ type UpstreamClient interface {
 	Messaging(ctx context.Context, in *MessagingMeta, opts ...grpc.CallOption) (*MessagingResp, error)
 	PullAppFileMeta(ctx context.Context, in *PullAppFileMetaReq, opts ...grpc.CallOption) (*PullAppFileMetaResp, error)
 	GetDownloadURL(ctx context.Context, in *GetDownloadURLReq, opts ...grpc.CallOption) (*GetDownloadURLResp, error)
+	PullKvMeta(ctx context.Context, in *PullKvMetaReq, opts ...grpc.CallOption) (*PullKvMetaResp, error)
 	GetKvValue(ctx context.Context, in *GetKvValueReq, opts ...grpc.CallOption) (*GetKvValueResp, error)
 }
 
@@ -116,6 +118,15 @@ func (c *upstreamClient) GetDownloadURL(ctx context.Context, in *GetDownloadURLR
 	return out, nil
 }
 
+func (c *upstreamClient) PullKvMeta(ctx context.Context, in *PullKvMetaReq, opts ...grpc.CallOption) (*PullKvMetaResp, error) {
+	out := new(PullKvMetaResp)
+	err := c.cc.Invoke(ctx, Upstream_PullKvMeta_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *upstreamClient) GetKvValue(ctx context.Context, in *GetKvValueReq, opts ...grpc.CallOption) (*GetKvValueResp, error) {
 	out := new(GetKvValueResp)
 	err := c.cc.Invoke(ctx, Upstream_GetKvValue_FullMethodName, in, out, opts...)
@@ -135,6 +146,7 @@ type UpstreamServer interface {
 	Messaging(context.Context, *MessagingMeta) (*MessagingResp, error)
 	PullAppFileMeta(context.Context, *PullAppFileMetaReq) (*PullAppFileMetaResp, error)
 	GetDownloadURL(context.Context, *GetDownloadURLReq) (*GetDownloadURLResp, error)
+	PullKvMeta(context.Context, *PullKvMetaReq) (*PullKvMetaResp, error)
 	GetKvValue(context.Context, *GetKvValueReq) (*GetKvValueResp, error)
 }
 
@@ -156,6 +168,9 @@ func (UnimplementedUpstreamServer) PullAppFileMeta(context.Context, *PullAppFile
 }
 func (UnimplementedUpstreamServer) GetDownloadURL(context.Context, *GetDownloadURLReq) (*GetDownloadURLResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDownloadURL not implemented")
+}
+func (UnimplementedUpstreamServer) PullKvMeta(context.Context, *PullKvMetaReq) (*PullKvMetaResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PullKvMeta not implemented")
 }
 func (UnimplementedUpstreamServer) GetKvValue(context.Context, *GetKvValueReq) (*GetKvValueResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetKvValue not implemented")
@@ -265,6 +280,24 @@ func _Upstream_GetDownloadURL_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Upstream_PullKvMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PullKvMetaReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UpstreamServer).PullKvMeta(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Upstream_PullKvMeta_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UpstreamServer).PullKvMeta(ctx, req.(*PullKvMetaReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Upstream_GetKvValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetKvValueReq)
 	if err := dec(in); err != nil {
@@ -305,6 +338,10 @@ var Upstream_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDownloadURL",
 			Handler:    _Upstream_GetDownloadURL_Handler,
+		},
+		{
+			MethodName: "PullKvMeta",
+			Handler:    _Upstream_PullKvMeta_Handler,
 		},
 		{
 			MethodName: "GetKvValue",

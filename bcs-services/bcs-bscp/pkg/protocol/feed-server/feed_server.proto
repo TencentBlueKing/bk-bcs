@@ -6,6 +6,7 @@ import "pkg/protocol/core/base/base.proto";
 import "pkg/protocol/core/commit/commit.proto";
 import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/hook/hook.proto";
+import "pkg/protocol/core/kv/kvs.proto";
 
 option go_package = "bscp.io/pkg/protocol/feed-server;pbfs";
 
@@ -16,6 +17,7 @@ service Upstream {
   rpc Messaging(MessagingMeta) returns (MessagingResp) {}
   rpc PullAppFileMeta(PullAppFileMetaReq) returns (PullAppFileMetaResp) {}
   rpc GetDownloadURL(GetDownloadURLReq) returns (GetDownloadURLResp) {}
+  rpc PullKvMeta(PullKvMetaReq) returns (PullKvMetaResp) {}
   rpc GetKvValue(GetKvValueReq) returns (GetKvValueResp) {}
 }
 
@@ -135,6 +137,27 @@ message MessagingMeta {
 // MessagingResp defines response from upstream server to sdk,
 // which is empty.
 message MessagingResp {}
+
+message PullKvMetaReq {
+  // version defines message's protocol version from sidecar
+  pbbase.Versioning api_version = 1;
+  // payload is the message's details information which is a json raw bytes.
+  // refer to sfs.SideWatchPayload.
+  uint32 biz_id = 2;
+  AppMeta app_meta = 3;
+  string token = 4;
+  string key = 5;
+}
+
+message PullKvMetaResp {
+  uint32 release_id = 1;
+  repeated KvMeta kv_metas = 3;
+}
+
+message KvMeta {
+  string key = 1;
+  pbkv.KvAttachment kv_attachment = 5;
+}
 
 message GetKvValueReq {
   // version defines message's protocol version from sidecar
