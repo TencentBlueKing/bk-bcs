@@ -224,13 +224,13 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 		return nil, status.Error(codes.InvalidArgument, "app meta is empty")
 	}
 
-	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.AppMeta.App)
+	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.GetAppMeta().App)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
 	}
 	meta := &types.AppInstanceMeta{
 		BizID:  req.BizId,
-		App:    req.AppMeta.App,
+		App:    req.GetAppMeta().App,
 		AppID:  appID,
 		Uid:    req.AppMeta.Uid,
 		Labels: req.AppMeta.Labels,
@@ -350,13 +350,13 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 		return nil, status.Error(codes.InvalidArgument, "app meta is empty")
 	}
 
-	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.AppMeta.App)
+	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.GetAppMeta().App)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
 	}
 	meta := &types.AppInstanceMeta{
 		BizID:  req.BizId,
-		App:    req.AppMeta.App,
+		App:    req.GetAppMeta().App,
 		AppID:  appID,
 		Uid:    req.AppMeta.Uid,
 		Labels: req.AppMeta.Labels,
@@ -400,6 +400,11 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
+
+	if req.GetAppMeta() == nil {
+		return nil, status.Error(codes.InvalidArgument, "app_meta is required")
+	}
+
 	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
 	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
 	if err != nil {
@@ -409,13 +414,13 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 		return nil, status.Error(codes.PermissionDenied, "no permission to access bscp server")
 	}
 
-	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.AppMeta.App)
+	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.GetAppMeta().App)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
 	}
 	meta := &types.AppInstanceMeta{
 		BizID:  req.BizId,
-		App:    req.AppMeta.App,
+		App:    req.GetAppMeta().App,
 		AppID:  appID,
 		Uid:    req.AppMeta.Uid,
 		Labels: req.AppMeta.Labels,
@@ -430,7 +435,7 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 	}
 
 	// validate can file be downloaded by credential.
-	match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.AppMeta.App, req.Token, req.Key, "")
+	match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.GetAppMeta().App, req.Token, req.Key, "")
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
 	}
