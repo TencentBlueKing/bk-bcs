@@ -90,3 +90,7 @@
 .icon-separator:before {
 	content: "\e111";
 }
+
+.icon-resources:before {
+	content: "\e112";
+}

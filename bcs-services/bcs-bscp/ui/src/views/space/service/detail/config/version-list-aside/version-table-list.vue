@@ -40,7 +40,18 @@
           </bk-table-column>
           <bk-table-column label="已上线分组" show-overflow-tooltip>
             <template #default="{ row }">
-              {{ getGroupNames(row) }}
+              <template v-if="row.status">
+                <div
+                  class="released-groups"
+                  v-bk-tooltips="{
+                    disabled: row.status.publish_status !== 'partial_released',
+                    placement: 'bottom-end',
+                    theme: 'light',
+                    content: getReleasedGroupsPopoverContent(row.status.released_groups, false)
+                  }">
+                  {{ getGroupNames(row) }}
+                </div>
+              </template>
             </template>
           </bk-table-column>
           <bk-table-column label="创建人">
@@ -94,14 +105,13 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router'
-import { Search } from 'bkui-vue/lib/icon';
-// import { InfoBox } from 'bkui-vue/lib';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../store/config';
 import { getConfigVersionList } from '../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../utils/index';
 import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
 import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../../types/config';
+import getReleasedGroupsPopoverContent from '../components/get-released-groups-popover-content';
 import ServiceSelector from '../../components/service-selector.vue';
 import SearchInput from '../../../../../../components/search-input.vue';
 import VersionDiff from '../../config/components/version-diff/index.vue';
@@ -175,7 +185,15 @@ const getRowCls = (data: IConfigVersion) => {
   return '';
 };
 
-const getGroupNames = (data: IConfigVersion) => (data.status?.released_groups.length ? data.status.released_groups.map(item => item.name).join('; ') : '--');
+const getGroupNames = (data: IConfigVersion) => {
+  const status = data.status?.publish_status
+  if (status === 'partial_released') {
+    return data.status.released_groups.map(item => item.name).join('; ');
+  } else if (status === 'full_released') {
+    return '全部实例';
+  }
+  return '--'
+}
 
 const handleTabChange = (tab: string) => {
   currentTab.value = tab;
