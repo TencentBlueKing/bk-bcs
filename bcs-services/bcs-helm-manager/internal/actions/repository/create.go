@@ -213,3 +213,135 @@ func (c *CreateRepositoryAction) setResp(err common.HelmManagerError, message st
 	c.resp.Result = err.OK()
 	c.resp.Data = r
 }
+
+// NewCreatePersonalRepositoryAction return a new CreatePersonalRepositoryAction instance
+func NewCreatePersonalRepositoryAction(model store.HelmManagerModel, platform repo.Platform,
+	repo options.RepoConfig) *CreatePersonalRepositoryAction {
+	return &CreatePersonalRepositoryAction{
+		repo:     repo,
+		model:    model,
+		platform: platform,
+	}
+}
+
+// CreatePersonalRepositoryAction provides the action to do create personal repository
+type CreatePersonalRepositoryAction struct {
+	ctx context.Context
+
+	model    store.HelmManagerModel
+	platform repo.Platform
+	repo     options.RepoConfig
+
+	req  *helmmanager.CreatePersonalRepoReq
+	resp *helmmanager.CreatePersonalRepoResp
+}
+
+// Handle the creating process
+func (c *CreatePersonalRepositoryAction) Handle(ctx context.Context,
+	req *helmmanager.CreatePersonalRepoReq, resp *helmmanager.CreatePersonalRepoResp) error {
+
+	if req == nil || resp == nil {
+		blog.Errorf("create repository failed, req or resp is empty")
+		return common.ErrHelmManagerReqOrRespEmpty.GenError()
+	}
+	c.ctx = ctx
+	c.req = req
+	c.resp = resp
+
+	if err := c.req.Validate(); err != nil {
+		blog.Errorf("create personal repository failed, invalid request, %s, param: %v", err.Error(), c.req)
+		c.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error(), nil)
+		return nil
+	}
+
+	// 获取username
+	username := auth.GetUserFromCtx(ctx)
+	return c.create(&helmmanager.Repository{
+		ProjectCode: common.GetStringP(contextx.GetProjectCodeFromCtx(ctx)),
+		Name:        &username,
+		DisplayName: common.GetStringP(common.PersonalRepoDefaultDisplayName),
+		Type:        common.GetStringP("HELM"),
+		CreateBy:    &username,
+	})
+}
+
+func (c *CreatePersonalRepositoryAction) create(data *helmmanager.Repository) error {
+	blog.Infof("try to create repository, project: %s, type: %s, name: %s",
+		data.GetProjectCode(), data.GetType(), data.GetName())
+
+	r := &entity.Repository{}
+	r.LoadFromProto(data)
+	r.Personal = true
+
+	// check repo exist in store
+	dbRepo, err := c.model.GetRepository(c.ctx, data.GetProjectCode(), data.GetName())
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return err
+	}
+	if dbRepo != nil {
+		c.setResp(common.ErrHelmManagerSuccess, "ok", dbRepo.Transfer2Proto(c.ctx))
+		return nil
+	}
+
+	projectHandler := c.platform.User(repo.User{
+		Name:     data.GetCreateBy(),
+		Password: data.GetPassword(),
+	}).Project(data.GetProjectCode())
+	if err := projectHandler.Ensure(c.ctx); err != nil {
+		blog.Errorf("create repository failed, ensure project failed, %s, param: %v", err.Error(), r)
+		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
+		return nil
+	}
+
+	if err := c.createRepository2Repo(projectHandler, r); err != nil {
+		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
+		blog.Errorf("create repository failed, create to repo failed, %s, project: %s, type: %s, name: %s",
+			err.Error(), data.GetProjectCode(), data.GetType(), data.GetName())
+		return nil
+	}
+
+	if err := c.model.CreateRepository(c.ctx, r); err != nil {
+		blog.Errorf("create repository failed, create repository in model failed, %s, param: %v", err.Error(), r)
+		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
+		return nil
+	}
+
+	c.setResp(common.ErrHelmManagerSuccess, "ok", r.Transfer2Proto(c.ctx))
+	blog.Infof("create repository successfully, project: %s, type: %s, name: %s", r.ProjectID, r.Type, r.Name)
+	return nil
+}
+
+func (c *CreatePersonalRepositoryAction) createRepository2Repo(
+	projectHandler repo.ProjectHandler, data *entity.Repository) error {
+
+	handler := projectHandler.Repository(repo.GetRepositoryType(data.Type), data.Name)
+
+	repoURL, err := handler.Create(c.ctx, &repo.Repository{
+		Remote:         data.Remote,
+		RemoteURL:      data.RemoteURL,
+		RemoteUsername: data.RemoteUsername,
+		RemotePassword: data.RemotePassword,
+	})
+	if err != nil {
+		return err
+	}
+
+	u, p, err := handler.CreateUser(c.ctx)
+	if err != nil {
+		return err
+	}
+	data.Username = u
+	data.Password = p
+	data.RepoURL = repoURL
+
+	return nil
+}
+
+func (c *CreatePersonalRepositoryAction) setResp(err common.HelmManagerError, message string, r *helmmanager.Repository) {
+	code := err.Int32()
+	msg := err.ErrorMessage(message)
+	c.resp.Code = &code
+	c.resp.Message = &msg
+	c.resp.Result = err.OK()
+	c.resp.Data = r
+}

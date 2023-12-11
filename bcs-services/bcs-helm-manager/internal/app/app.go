@@ -22,7 +22,6 @@ import (
 	_ "net/http/pprof" // pprof
 	"os"
 	"os/signal"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -71,7 +70,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo/bkrepo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/envx"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/grpcGateway"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/wrapper"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -346,7 +344,8 @@ func (hm *HelmManager) initDiscovery() error {
 	return nil
 }
 
-func (hm *HelmManager) initMicro() error {
+// NOCC:golint/fnsize(设计如此：无法拆分代码行数)
+func (hm *HelmManager) initMicro() error { // nolint
 	// server listen ip
 	ipv4 := hm.opt.Address
 	ipv6 := hm.opt.IPv6Address
@@ -405,10 +404,11 @@ func (hm *HelmManager) initMicro() error {
 		}),
 		microSvc.WrapHandler(
 			wrapper.RequestLogWarpper,
+			wrapper.ResponseWrapper,
 			authWrapper.AuthenticationFunc,
 			wrapper.ParseProjectIDWrapper,
 			authWrapper.AuthorizationFunc,
-			wrapper.ResponseWrapper,
+			wrapper.NewAuditWrapper,
 		),
 	)
 	svc.Init()
@@ -434,7 +434,6 @@ func (hm *HelmManager) initMicro() error {
 
 // init grpc gatewasy
 func (hm *HelmManager) initHTTPService() error {
-	router := mux.NewRouter()
 	rmMux := ggRuntime.NewServeMux(
 		ggRuntime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
 		ggRuntime.WithOutgoingHeaderMatcher(runtimex.CustomHeaderMatcher),
@@ -472,17 +471,15 @@ func (hm *HelmManager) initHTTPService() error {
 		blog.Errorf("register addons http service failed, err %s", err.Error())
 		return fmt.Errorf("register addons http service failed, err %s", err.Error())
 	}
+
+	router := mux.NewRouter()
 	router.Handle("/{uri:.*}", rmMux)
 
-	// add swagger
-	mux := http.NewServeMux()
-	if len(hm.opt.Swagger.Dir) != 0 {
-		blog.Info("swagger doc is enabled")
-		mux.HandleFunc("/helmmanager/swagger/", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, path.Join(hm.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/helmmanager/swagger/")))
-		})
-	}
-	mux.Handle("/", router)
+	smux := http.NewServeMux()
+	smux.Handle("/helmmanager/v1/", router)
+	smux.Handle("/helmmanager/swagger/", handler.NewSwaggerRouter(hm.opt))
+	smux.Handle("/helmmanager/api/", handler.NewAPIRouter(handler.NewHelmManager(
+		hm.model, hm.platform, hm.opt, hm.releaseHandler)))
 	blog.Info("register grpc service handler to path /")
 
 	// server address
@@ -490,8 +487,7 @@ func (hm *HelmManager) initHTTPService() error {
 	if len(hm.opt.IPv6Address) > 0 {
 		addresses = append(addresses, hm.opt.IPv6Address)
 	}
-	hm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.HTTPPort)), "",
-		grpcGateway.GRPCHandlerFunc(grpc.NewServer(), mux))
+	hm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.HTTPPort)), "", smux)
 	go func() {
 		var err error
 		blog.Infof("start http gateway server on address %+v", addresses)

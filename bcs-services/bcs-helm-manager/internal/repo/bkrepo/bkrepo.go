@@ -140,6 +140,11 @@ func (rh *repositoryHandler) Chart(chartName string) repo.ChartHandler {
 	}
 }
 
+// UploadChart 上传自定义版本chart
+func (rh *repositoryHandler) UploadChart(ctx context.Context, option repo.UploadOption) error {
+	return rh.uploadChart(ctx, option)
+}
+
 // CreateUser 针对当前的repository, 创建一个管理员账号, 并返回账号的username和password
 func (rh *repositoryHandler) CreateUser(ctx context.Context) (string, string, error) {
 	return rh.createUser(ctx)
@@ -167,11 +172,6 @@ func (ch *chartHandler) Detail(ctx context.Context, version string) (*repo.Chart
 // Download 返回该chart指定version的源文件信息
 func (ch *chartHandler) Download(ctx context.Context, version string) ([]byte, error) {
 	return ch.downloadChartVersion(ctx, version)
-}
-
-// Upload 上传自定义版本chart
-func (ch *chartHandler) Upload(ctx context.Context, option repo.UploadOption) error {
-	return ch.uploadChart(ctx, option)
 }
 
 // Delete delete chart

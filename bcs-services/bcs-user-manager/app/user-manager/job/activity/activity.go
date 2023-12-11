@@ -25,6 +25,9 @@ import (
 
 // IntervalDeleteActivity 定时清理操作记录
 func IntervalDeleteActivity(ctx context.Context) (err error) {
+	if !config.GetGlobalConfig().Activity.Enable {
+		return nil
+	}
 	// 间隔时间，默认一天
 	intervalTime := time.Hour * 24
 	if config.GetGlobalConfig().Activity.Interval != "" {

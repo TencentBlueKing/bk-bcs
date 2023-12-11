@@ -28,6 +28,7 @@ type Repository struct {
 	ProjectID   string `json:"projectID" bson:"projectID"`
 	Name        string `json:"name" bson:"name"`
 	DisplayName string `json:"displayName" bson:"displayName"`
+	Personal    bool   `json:"personal" bson:"personal"`
 	Public      bool   `json:"public" bson:"public"`
 	Type        string `json:"type" bson:"type"`
 	RepoURL     string `json:"repoURL" bson:"repoURL"`

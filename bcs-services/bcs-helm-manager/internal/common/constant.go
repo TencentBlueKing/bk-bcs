@@ -31,6 +31,8 @@ const (
 	PublicRepoDisplayName = "公共仓库"
 	// ProjectRepoDefaultDisplayName default display name
 	ProjectRepoDefaultDisplayName = "项目仓库"
+	// PersonalRepoDefaultDisplayName default display name
+	PersonalRepoDefaultDisplayName = "个人仓库"
 )
 
 // ReleaseStatus

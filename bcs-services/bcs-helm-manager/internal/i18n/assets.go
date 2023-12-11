@@ -10,18 +10,14 @@
  * limitations under the License.
  */
 
-package addons
+// Package i18n xxx
+package i18n
 
 import (
-	"errors"
-	"time"
+	"embed"
 )
 
-var errorAddonsNotFound = errors.New("addons not found")
-
-// DefaultArgs is the default args for helm install
-var defaultArgs = []string{"--wait=true", "--create-namespace=true"}
-
-const (
-	releaseDefaultTimeout = time.Hour
-)
+// Assets I18n files storage path.
+//
+//go:embed locale/*
+var Assets embed.FS

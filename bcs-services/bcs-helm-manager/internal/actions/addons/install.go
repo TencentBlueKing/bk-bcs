@@ -80,7 +80,7 @@ func (i *InstallAddonsAction) Handle(ctx context.Context,
 	}
 
 	// 对于非 chart 类型的 addons，直接返回成功
-	if addons.ChartName == "" {
+	if addons.ChartName == "db-privilege" {
 		i.setResp(common.ErrHelmManagerSuccess, "ok")
 		return nil
 	}

@@ -18,6 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
@@ -88,9 +89,22 @@ func (l *ListRepositoryAction) list() error {
 }
 
 func (l *ListRepositoryAction) getCondition() *operator.Condition {
-	cond := make(operator.M)
-	cond.Update(entity.FieldKeyProjectID, contextx.GetProjectCodeFromCtx(l.ctx))
-	return operator.NewLeafCondition(operator.Eq, cond)
+	// get project repo
+	projectCond := make(operator.M)
+	projectCond.Update(entity.FieldKeyProjectID, contextx.GetProjectCodeFromCtx(l.ctx))
+	projectCond.Update(entity.FieldKeyPersonal, false)
+	projectCond2 := make(operator.M)
+	projectCond2.Update(entity.FieldKeyProjectID, contextx.GetProjectCodeFromCtx(l.ctx))
+	projectCond2.Update(entity.FieldKeyPersonal, nil)
+
+	// get personal repo
+	personalCond := make(operator.M)
+	personalCond.Update(entity.FieldKeyProjectID, contextx.GetProjectCodeFromCtx(l.ctx))
+	personalCond.Update(entity.FieldKeyPersonal, true)
+	personalCond.Update(entity.FieldKeyCreateBy, auth.GetUserFromCtx(l.ctx))
+	return operator.NewBranchCondition(operator.Or, operator.NewLeafCondition(operator.Eq, projectCond),
+		operator.NewLeafCondition(operator.Eq, projectCond2),
+		operator.NewLeafCondition(operator.Eq, personalCond))
 }
 
 func (l *ListRepositoryAction) getOption() *utils.ListOption {
