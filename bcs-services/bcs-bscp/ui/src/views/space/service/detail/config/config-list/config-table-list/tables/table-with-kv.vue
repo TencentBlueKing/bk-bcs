@@ -33,7 +33,7 @@
       ></bk-table-column>
       <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
       <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
-      <bk-table-column label="修改时间" :sort="true" :width="220">
+      <bk-table-column label="修改时间" :sort="{sortFn:(_a:any,_b:any,type:string) => updateSortType = type}" :width="220">
         <template #default="{ row }">
           <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
         </template>
@@ -133,6 +133,7 @@ const diffConfig = ref(0);
 const isSearchEmpty = ref(false);
 const isDeleteConfigDialogShow = ref(false);
 const filterChecked = ref<string[]>([]);
+const updateSortType = ref('');
 const pagination = ref({
   current: 1,
   count: 0,
@@ -151,7 +152,7 @@ watch(
 );
 
 watch(
-  () => props.searchStr,
+  [() => props.searchStr, () => updateSortType.value],
   () => {
     refresh();
   },
@@ -176,6 +177,7 @@ watch(
   { deep: true },
 );
 
+
 const isUnNamedVersion = computed(() => versionData.value.id === 0);
 
 onMounted(() => {
@@ -196,6 +198,9 @@ const getListData = async () => {
     }
     if (filterChecked.value!.length > 0) {
       params.kv_type = filterChecked.value;
+    }
+    if (updateSortType.value) {
+      params.sort_order = updateSortType.value;
     }
     let res;
     if (isUnNamedVersion.value) {
