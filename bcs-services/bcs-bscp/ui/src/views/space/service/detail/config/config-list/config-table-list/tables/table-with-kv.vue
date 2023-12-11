@@ -9,7 +9,7 @@
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"
     >
-      <bk-table-column label="配置项名称" prop="spec.key" :sort="true" :min-width="240">
+      <bk-table-column label="配置项名称" prop="spec.key" :min-width="240">
         <template #default="{ row }">
           <bk-button
             v-if="row.spec"
@@ -26,7 +26,7 @@
       <bk-table-column
         label="数据类型"
         prop="spec.kv_type"
-        :filter="{ filterFn: handleFilter, list: filterList, checked:filterChecked }"
+        :filter="{ filterFn: handleFilter, list: filterList }"
       ></bk-table-column>
       <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
       <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
@@ -37,7 +37,7 @@
       </bk-table-column>
       <bk-table-column v-if="versionData.id === 0" label="变更状态">
         <template #default="{ row }">
-          <StatusTag :status="row.file_state" />
+          <StatusTag :status="row.kv_state" />
         </template>
       </bk-table-column>
       <bk-table-column label="操作" fixed="right">
@@ -81,7 +81,7 @@
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config-kv="diffConfig" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
-    title="确认删除该配置文件？"
+    title="确认删除该配置项？"
     @confirm="handleDeleteConfigConfirm"
   >
     <div style="margin-bottom: 8px">
@@ -91,7 +91,7 @@
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, computed, toRaw } from 'vue';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../../store/config';
 import useServiceStore from '../../../../../../../../store/service';
@@ -105,6 +105,8 @@ import EditConfig from '../edit-config-kv.vue';
 import VersionDiff from '../../../components/version-diff/index.vue';
 import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
+import { Message } from 'bkui-vue';
+import { isEqual } from 'lodash';
 
 const configStore = useConfigStore();
 const serviceStore = useServiceStore();
@@ -131,7 +133,7 @@ const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
 const isSearchEmpty = ref(false);
 const isDeleteConfigDialogShow = ref(false);
-const filterChecked = ref<string[]>();
+const filterChecked = ref<string[]>([]);
 const pagination = ref({
   current: 1,
   count: 0,
@@ -166,6 +168,16 @@ watch(
   },
 );
 
+watch(
+  () => filterChecked.value,
+  (newVal, oldVal) => {
+    if (!isEqual(toRaw(newVal), toRaw(oldVal))) {
+      getListData();
+    }
+  },
+  { deep: true },
+);
+
 const isUnNamedVersion = computed(() => versionData.value.id === 0);
 
 onMounted(() => {
@@ -178,10 +190,14 @@ const getListData = async () => {
     const params: ICommonQuery = {
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit,
+      with_status: true,
     };
     if (props.searchStr) {
-      params.search_fields = 'key,kv_type,creator';
+      params.search_fields = 'key,revister,creator';
       params.search_key = props.searchStr;
+    }
+    if (filterChecked.value!.length > 0) {
+      params.kv_type = filterChecked.value;
     }
     let res;
     if (isUnNamedVersion.value) {
@@ -223,6 +239,10 @@ const handleDeleteConfigConfirm = async () => {
   if (configList.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current -= 1;
   }
+  Message({
+    theme: 'success',
+    message: '删除配置项成功',
+  });
   getListData();
   isDeleteConfigDialogShow.value = false;
 };

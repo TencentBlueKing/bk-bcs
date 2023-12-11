@@ -25,6 +25,12 @@
         <bk-form-item :label="t('创建时间')">
           {{ datetimeFormat(props.service.revision.create_at) }}
         </bk-form-item>
+        <bk-form-item :label="t('更新者')">
+          {{ props.service.revision.reviser }}
+        </bk-form-item>
+        <bk-form-item :label="t('更新时间')">
+          {{ datetimeFormat(props.service.revision.update_at) }}
+        </bk-form-item>
       </bk-form>
       <SearviceForm v-else ref="formCompRef" :form-data="serviceData" @change="handleChange" :editable="true" />
     </div>
@@ -140,6 +146,7 @@ const handleEditConfirm = async () => {
     const res = configList.details.some((config: IConfigKvType) => config.spec.kv_type !== serviceData.value.data_type);
     if (res) {
       InfoBox({
+        infoType: 'danger',
         title: `调整服务数据类型${serviceData.value.data_type}失败`,
         subTitle: `该服务下存在非${serviceData.value.data_type}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为${serviceData.value.data_type}`,
         dialogType: 'confirm',

@@ -208,6 +208,7 @@ export interface IConfigKvItem {
 export interface IConfigKvType {
   id: number;
   spec: IConfigKvItem;
+  kv_state: string;
   attachment: {
     biz_id: number;
     app_id: number;
