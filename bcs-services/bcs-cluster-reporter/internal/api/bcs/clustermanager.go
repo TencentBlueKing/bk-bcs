@@ -13,6 +13,7 @@
 package bcs
 
 import (
+	"crypto/tls"
 	"net/http"
 )
 
@@ -47,7 +48,13 @@ func (t *BcsTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	header.Set("Authorization", "Bearer "+t.token)
 	req.Header = header
 
-	return http.DefaultTransport.RoundTrip(req)
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true, // 设置为 true 来禁用证书验证
+		},
+	}
+
+	return tr.RoundTrip(req)
 }
 
 var (

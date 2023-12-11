@@ -169,6 +169,13 @@ func (p *Plugin) Check() {
 			}
 
 			getter := k8s.GetRestClientGetterByConfig(config)
+			//getter := &genericclioptions.ConfigFlags{
+			//	APIServer:   &config.Host,
+			//	BearerToken: &config.BearerToken,
+			//	Username:    &config.Username,
+			//	Password:    &config.Password,
+			//	Insecure:    &config.Insecure,
+			//}
 
 			// 获取配置文件中的component列表(有可能不是helm方式部署的)
 			var clusterComponent []Component
@@ -432,7 +439,6 @@ func GetResourceGaugeVecSet(
 	unstr := &unstructured.Unstructured{Object: objectMap}
 
 	kind := unstr.GetKind()
-	klog.Infof(kind)
 	switch strings.ToLower(kind) {
 	case "deployment":
 		deploy := &v1.Deployment{}
