@@ -25,8 +25,11 @@ import (
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	pbbase "bscp.io/pkg/protocol/core/base"
 	pbci "bscp.io/pkg/protocol/core/config-item"
+	pbkv "bscp.io/pkg/protocol/core/kv"
 	pbrelease "bscp.io/pkg/protocol/core/release"
+	pbrkv "bscp.io/pkg/protocol/core/released-kv"
 	pbtv "bscp.io/pkg/protocol/core/template-variable"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/tools"
@@ -733,37 +736,20 @@ func (s *Service) queryPublishStatus(gcrs []*table.ReleasedGroup, releaseID uint
 // doKvOperations do kv related operations for create release.
 func (s *Service) doKvOperations(kt *kit.Kit, tx *gen.QueryTx, appID, bizID, releaseID uint32) error {
 
-	rkvMap, err := s.genCreateReleasedKvMap(kt, bizID, appID, releaseID)
+	kvs, err := s.genCreateKv(kt, bizID, appID)
 	if err != nil {
 		return err
 	}
 
-	versionMap, err := s.doBatchReleasedVault(kt, rkvMap)
+	versionMap, err := s.doBatchReleasedVault(kt, kvs, releaseID)
 	if err != nil {
 		return err
 	}
 
-	var rkvs []*table.ReleasedKv
-	for k, i := range versionMap {
-		rkvs = append(rkvs, &table.ReleasedKv{
-			ReleaseID: releaseID,
-			Spec: &table.KvSpec{
-				Key:     k,
-				Version: uint32(i),
-			},
-			Attachment: &table.KvAttachment{
-				BizID: bizID,
-				AppID: appID,
-			},
-			Revision: &table.Revision{
-				Creator:   kt.User,
-				Reviser:   kt.User,
-				CreatedAt: time.Now().UTC(),
-				UpdatedAt: time.Now().UTC(),
-			},
-		})
+	rkvs, err := pbrkv.RKvs(kvs, versionMap, releaseID)
+	if err != nil {
+		return err
 	}
-
 	if err = s.dao.ReleasedKv().BulkCreateWithTx(kt, tx, rkvs); err != nil {
 		logs.Errorf("bulk create released kv failed, err: %v, rid: %s", err, kt.Rid)
 		return err
@@ -773,51 +759,50 @@ func (s *Service) doKvOperations(kt *kit.Kit, tx *gen.QueryTx, appID, bizID, rel
 
 }
 
-func (s *Service) genCreateReleasedKvMap(kt *kit.Kit, bizID, appID,
-	releaseID uint32) (map[string]*types.CreateReleasedKvOption, error) {
+func (s *Service) genCreateKv(kt *kit.Kit, bizID, appID uint32) ([]*pbkv.Kv, error) {
 
-	kvs, err := s.dao.Kv().ListAllByAppID(kt, appID, bizID)
+	details, err := s.dao.Kv().ListAllByAppID(kt, appID, bizID)
 	if err != nil {
 		logs.Errorf("list kv failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
-	kvsMap := make(map[string]*types.CreateReleasedKvOption, len(kvs))
-	for _, kv := range kvs {
-
-		var kvType table.DataType
+	var kvs []*pbkv.Kv
+	for _, detail := range details {
 		var value string
-
-		kvType, value, err = s.getKv(kt, bizID, appID, kv.Spec.Version, kv.Spec.Key)
+		_, value, err = s.getKv(kt, bizID, appID, detail.Spec.Version, detail.Spec.Key)
 		if err != nil {
 			logs.Errorf("get vault kv failed, err: %v, rid: %s", err, kt.Rid)
 			return nil, err
 		}
-
-		kvsMap[kv.Spec.Key] = &types.CreateReleasedKvOption{
-			BizID:     bizID,
-			AppID:     appID,
-			ReleaseID: releaseID,
-			Key:       kv.Spec.Key,
-			Value:     value,
-			KvType:    kvType,
-		}
+		kvs = append(kvs, &pbkv.Kv{
+			Spec:       pbkv.PbKvSpec(detail.Spec, value),
+			Attachment: pbkv.PbKvAttachment(detail.Attachment),
+			Revision:   pbbase.PbRevision(detail.Revision),
+		})
 	}
 
-	return kvsMap, nil
+	return kvs, nil
 }
 
-func (s *Service) doBatchReleasedVault(kt *kit.Kit, kvs map[string]*types.CreateReleasedKvOption) (map[string]int,
-	error) {
+func (s *Service) doBatchReleasedVault(kt *kit.Kit, kvs []*pbkv.Kv, releaseId uint32) (map[string]int, error) {
 
 	versionMap := make(map[string]int, len(kvs))
-	for _, kv := range kvs {
-		version, err := s.vault.CreateRKv(kt, kv)
+	for _, rkv := range kvs {
+		opt := &types.CreateReleasedKvOption{
+			BizID:     rkv.Attachment.BizId,
+			AppID:     rkv.Attachment.AppId,
+			ReleaseID: releaseId,
+			Key:       rkv.Spec.Key,
+			Value:     rkv.Spec.Value,
+			KvType:    table.DataType(rkv.Spec.KvType),
+		}
+		version, err := s.vault.CreateRKv(kt, opt)
 		if err != nil {
 			logs.Errorf("create vault kv failed, err: %v, rid: %s", err, kt.Rid)
 			return nil, err
 		}
-		versionMap[kv.Key] = version
+		versionMap[rkv.Spec.Key] = version
 	}
 
 	return versionMap, nil
