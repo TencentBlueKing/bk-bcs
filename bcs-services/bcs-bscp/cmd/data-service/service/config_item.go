@@ -686,9 +686,7 @@ func (s *Service) ListConfigItemCount(ctx context.Context, req *pbds.ListConfigI
 
 	var appIds = []uint32{}
 	for _, detail := range count {
-		if _, ok := appIDMap[detail.AppId]; ok {
-			delete(appIDMap, detail.AppId)
-		}
+		delete(appIDMap, detail.AppId)
 	}
 	if len(appIDMap) > 0 {
 		for _, appID := range appIDMap {
