@@ -42,10 +42,16 @@
         <div class="error-info"><span v-if="!rule.isRight">输入的规则有误，请重新确认</span></div>
       </div>
       <div class="tips">
-        <div>填写格式为“服务名称/配置路径”，支持通配符，常用方法：</div>
-        <div>关联myservice服务下所有的配置(包含子目录):myservice/**</div>
-        <div>关联myservice服务/etc目录下所有的配置(不含子目录):myservice/etc/*</div>
-        <div>关联myservice服务/etc/nginx/nginx.conf文件:myservice/etc/nginx/nginx.conf</div>
+        <div>- [文件型]关联myservice服务下所有的配置(包含子目录)</div>
+        <div>&nbsp;&nbsp;myservice/**</div>
+        <div>- [文件型]关联myservice服务/etc目录下所有的配置(不含子目录)</div>
+        <div>&nbsp;&nbsp;myservice/etc/*</div>
+        <div>- [文件型]关联myservice服务/etc/nginx/nginx.conf文件</div>
+        <div>&nbsp;&nbsp;myservice/etc/nginx/nginx.conf</div>
+        <div>- [键值型]关联myservice服务下所有配置项</div>
+        <div>&nbsp;&nbsp;myservice/*</div>
+        <div>- [键值型]关联myservice服务下所有以demo_开头的配置项</div>
+        <div>&nbsp;&nbsp;myservice/demo_*</div>
       </div>
     </div>
     <!-- <div class="preview-btn">预览匹配结果</div> -->
@@ -68,6 +74,7 @@ const RULE_TYPE_MAP: { [key: string]: string } = {
 };
 
 const localRules = ref<IRuleEditing[]>([]);
+
 
 const transformRulesToEditing = (rules: ICredentialRule[]) => {
   const rulesEditing: IRuleEditing[] = [];

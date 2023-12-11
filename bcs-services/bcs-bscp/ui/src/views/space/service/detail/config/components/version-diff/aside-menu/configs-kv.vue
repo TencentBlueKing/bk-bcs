@@ -31,9 +31,10 @@
         {{ config.key }}
       </div>
       <tableEmpty
-        v-if="(isOnlyShowDiff || searchStr) && groupedConfigListOnShow.length === 0"
+        v-if="groupedConfigListOnShow.length === 0"
         class="empty-tips"
-        :is-search-empty="true"
+        :is-search-empty="isSearchEmpty"
+        empty-title="没有差异配置项"
         @clear="clearStr"
       >
       </tableEmpty>
@@ -82,7 +83,7 @@ const bkBizId = ref(String(route.params.spaceId));
 const appId = ref(Number(route.params.appId));
 
 const diffCount = ref(0);
-const selected = ref(0);
+const selected = ref();
 const currentList = ref<IConfigKvType[]>([]);
 const currentVariables = ref<IVariableEditParams[]>([]);
 const baseList = ref<IConfigKvType[]>([]);
@@ -93,6 +94,7 @@ const groupedConfigListOnShow = ref<IConfigDiffItem[]>([]);
 const isOnlyShowDiff = ref(false); // 只显示差异项
 const isOpenSearch = ref(false);
 const searchStr = ref('');
+const isSearchEmpty = ref(false);
 
 // 是否实际选择了对比的基准版本，为了区分的未命名版本id为0的情况
 const isBaseVersionExist = computed(() => typeof props.baseVersionId === 'number');
@@ -144,6 +146,13 @@ watch(
   },
 );
 
+watch(
+  () => searchStr.value,
+  (val) => {
+    isSearchEmpty.value = !!val;
+  },
+);
+
 onMounted(async () => {
   await getAllConfigList();
   aggregatedList.value = calcDiff();
@@ -192,7 +201,7 @@ const calcDiff = () => {
         list.push({
           diff_type: isBaseVersionExist.value ? 'modify' : '',
           key: baseItem.spec.key,
-          id: baseItem.id,
+          id: currentItem.id,
           baseContent: baseItem.spec.value,
           currentContent: currentItem.spec.value,
           baseType: baseItem.spec.kv_type,
@@ -202,7 +211,7 @@ const calcDiff = () => {
         list.push({
           diff_type: '',
           key: baseItem.spec.key,
-          id: baseItem.id,
+          id: currentItem.id,
           baseContent: baseItem.spec.value,
           currentContent: currentItem.spec.value,
           baseType: baseItem.spec.kv_type,
@@ -320,7 +329,6 @@ const getConfigDiffDetail = async (config: IConfigDiffItem) => {
 // 清空筛选条件
 const clearStr = () => {
   searchStr.value = '';
-  isOnlyShowDiff.value = false;
   handleSearch();
 };
 </script>
