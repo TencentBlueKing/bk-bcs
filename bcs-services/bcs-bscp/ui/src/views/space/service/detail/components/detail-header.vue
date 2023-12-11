@@ -22,6 +22,24 @@
         </BkTab>
       </div>
       <section class="version-operations">
+        <div
+          v-if="isShowReleasedGroups"
+          v-bk-tooltips="{
+            disabled: versionData.status.publish_status !== 'partial_released',
+            placement: 'bottom-end',
+            theme: 'light',
+            content: getReleasedGroupsPopoverContent(versionData.status.released_groups)
+          }"
+          class="released-groups">
+          <i class="bk-bscp-icon icon-resources"></i>
+          <div class="groups-tag">
+            <div class="first-group-name">{{ firstReleasedGroupName }}</div>
+            <div v-if="versionData.status.publish_status === 'partial_released'" class="remaining-count">
+              ;
+              <span class="count">+{{ versionData.status.released_groups.length - 1 }}</span>
+            </div>
+          </div>
+        </div>
         <CreateVersion
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
@@ -49,7 +67,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { InfoLine } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
@@ -58,6 +76,7 @@ import useServiceStore from '../../../../../store/service';
 import { VERSION_STATUS_MAP } from '../../../../../constants/config';
 import { IConfigVersion } from '../../../../../../types/config';
 import { permissionCheck } from '../../../../../api/index';
+import getReleasedGroupsPopoverContent from '../config/components/get-released-groups-popover-content';
 import PublishVersion from './publish-version/index.vue';
 import CreateVersion from './create-version/index.vue';
 import ModifyGroupPublish from './modify-group-publish.vue';
@@ -92,6 +111,17 @@ const getDefaultTab = () => {
 };
 const activeTab = ref(getDefaultTab());
 const publishVersionRef = ref();
+
+const isShowReleasedGroups = computed(() => {
+  return versionData.value.status?.released_groups.length > 0;
+});
+
+const firstReleasedGroupName = computed(() => {
+  if (isShowReleasedGroups.value) {
+    return versionData.value.status.publish_status === 'partial_released' ? versionData.value.status.released_groups[0].name : '全部实例';
+  }
+  return ''
+})
 
 watch(
   () => route.name,
@@ -232,7 +262,34 @@ const handleTabChange = (val: string) => {
     position: absolute;
     top: 5px;
     right: 24px;
+    display: flex;
+    align-items: center;
     z-index: 10;
+    .released-groups {
+      display: flex;
+      align-items: center;
+      padding: 5px 8px;
+      background: #F0F1F5;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .icon-resources {
+      margin-right: 4px;
+      font-size: 14px;
+      color: #979BA5;
+    }
+    .groups-tag {
+      display: flex;
+      align-items: center;
+      line-height: 22px;
+      font-size: 12px;
+      color: #63656e;
+      .count {
+        padding: 4px;
+        background: #FAFBFD;
+        border-radius: 2px;
+      }
+    }
   }
 }
 </style>

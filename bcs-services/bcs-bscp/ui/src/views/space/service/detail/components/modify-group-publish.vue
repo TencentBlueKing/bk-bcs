@@ -200,6 +200,9 @@ const handlePanelClose = () => {
 };
 </script>
 <style lang="scss" scoped>
+.trigger-button {
+  margin-left: 8px;
+}
 .header-wrapper {
   display: flex;
   align-items: center;
