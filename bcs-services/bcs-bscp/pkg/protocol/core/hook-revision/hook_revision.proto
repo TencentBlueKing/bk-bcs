@@ -2,30 +2,28 @@ syntax = "proto3";
 
 package pbhr;
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/base/base.proto";
 
 option go_package = "bscp.io/pkg/protocol/core/hook-revision;pbhr";
 
-
 // HookRevision source resource reference: pkg/dal/table/hook_revision.go
 message HookRevision {
-    uint32 id = 1;
-    HookRevisionSpec spec = 2;
-    HookRevisionAttachment attachment = 3;
-    pbbase.Revision revision = 4;
+  uint32 id = 1;
+  HookRevisionSpec spec = 2;
+  HookRevisionAttachment attachment = 3;
+  pbbase.Revision revision = 4;
 }
-
 
 // HookRevisionAttachment source resource reference: pkg/dal/table/hook_revision.go
 message HookRevisionSpec {
-    string name         = 1;
-    string content      = 2;
-    string state        = 3;
-    string memo         = 4;
+  string name = 1;
+  string content = 2;
+  string state = 3;
+  string memo = 4;
 }
 
 // HookRevisionAttachment source resource reference: pkg/dal/table/hook_revision.go
 message HookRevisionAttachment {
-    uint32 biz_id = 1;
-    uint32 hook_id = 2;
+  uint32 biz_id = 1;
+  uint32 hook_id = 2;
 }

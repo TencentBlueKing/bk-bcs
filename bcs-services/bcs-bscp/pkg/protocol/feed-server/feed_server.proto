@@ -2,136 +2,136 @@ syntax = "proto3";
 
 package pbfs;
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
-import "bscp.io/pkg/protocol/core/commit/commit.proto";
-import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
-import "bscp.io/pkg/protocol/core/hook/hook.proto";
-import "bscp.io/pkg/protocol/core/kv/kvs.proto";
+import "pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/commit/commit.proto";
+import "pkg/protocol/core/config-item/config_item.proto";
+import "pkg/protocol/core/hook/hook.proto";
+import "pkg/protocol/core/kv/kvs.proto";
 
 option go_package = "bscp.io/pkg/protocol/feed-server;pbfs";
 
 service Upstream {
-    // APIs for sidecar.
-    rpc Handshake(HandshakeMessage) returns (HandshakeResp) {}
-    rpc Watch(SideWatchMeta) returns (stream FeedWatchMessage) {}
-    rpc Messaging(MessagingMeta) returns (MessagingResp) {}
-    rpc PullAppFileMeta(PullAppFileMetaReq) returns (PullAppFileMetaResp) {}
-    rpc GetDownloadURL(GetDownloadURLReq) returns (GetDownloadURLResp) {}
-    rpc PullKvMeta (PullKvMetaReq) returns (PullKvMetaResp) {}
-    rpc GetKvValue (GetKvValueReq) returns (GetKvValueResp) {}
+  // APIs for sidecar.
+  rpc Handshake(HandshakeMessage) returns (HandshakeResp) {}
+  rpc Watch(SideWatchMeta) returns (stream FeedWatchMessage) {}
+  rpc Messaging(MessagingMeta) returns (MessagingResp) {}
+  rpc PullAppFileMeta(PullAppFileMetaReq) returns (PullAppFileMetaResp) {}
+  rpc GetDownloadURL(GetDownloadURLReq) returns (GetDownloadURLResp) {}
+  rpc PullKvMeta(PullKvMetaReq) returns (PullKvMetaResp) {}
+  rpc GetKvValue(GetKvValueReq) returns (GetKvValueResp) {}
 }
 
 // HandshakeMessage defines the handshake message from sidecar to feed server.
 message HandshakeMessage {
-    pbbase.Versioning api_version = 1;
-    SidecarSpec spec              = 2;
+  pbbase.Versioning api_version = 1;
+  SidecarSpec spec = 2;
 }
 
 // SidecarSpec defines a sidecar's specifics.
 message SidecarSpec {
-    uint32 biz_id = 1;
-    // version is sidecar's version
-    pbbase.Versioning version     = 2;
+  uint32 biz_id = 1;
+  // version is sidecar's version
+  pbbase.Versioning version = 2;
 }
 
 // SidecarMeta define a sidecar's basic metadata information.
 message SidecarAppMeta {
-    uint32 app_id = 1;
-    string uid    = 2;
+  uint32 app_id = 1;
+  string uid = 2;
 }
 
 // HandshakeResp defines handshake resp.
 message HandshakeResp {
-    pbbase.Versioning api_version = 1;
-    // payload is the message's details information which is a json raw bytes.
-    bytes payload = 2;
+  pbbase.Versioning api_version = 1;
+  // payload is the message's details information which is a json raw bytes.
+  bytes payload = 2;
 }
 
 // SideWatchMeta defines watch messages send from sidecar to feed server.
 message SideWatchMeta {
-    // version defines message's protocol version from sidecar
-    pbbase.Versioning api_version = 1;
-    // payload is the message's details information which is a json raw bytes.
-    // refer to sfs.SideWatchPayload.
-    bytes payload = 2;
+  // version defines message's protocol version from sidecar
+  pbbase.Versioning api_version = 1;
+  // payload is the message's details information which is a json raw bytes.
+  // refer to sfs.SideWatchPayload.
+  bytes payload = 2;
 }
 
 message PullAppFileMetaReq {
-    // version defines message's protocol version from sidecar
-    pbbase.Versioning api_version = 1;
-    // payload is the message's details information which is a json raw bytes.
-    // refer to sfs.SideWatchPayload.
-    uint32 biz_id = 2;
-    AppMeta app_meta = 3;
-    string token = 4;
-    string key = 5;
+  // version defines message's protocol version from sidecar
+  pbbase.Versioning api_version = 1;
+  // payload is the message's details information which is a json raw bytes.
+  // refer to sfs.SideWatchPayload.
+  uint32 biz_id = 2;
+  AppMeta app_meta = 3;
+  string token = 4;
+  string key = 5;
 }
 
 message AppMeta {
-    string app                 = 1;
-    string uid                 = 2;
-    map<string, string> labels = 3;
+  string app = 1;
+  string uid = 2;
+  map<string, string> labels = 3;
 }
 
 message PullAppFileMetaResp {
-    uint32 release_id = 1;
-    Repository repository = 2;
-    repeated FileMeta file_metas = 3;
-    pbhook.HookSpec pre_hook = 4;
-    pbhook.HookSpec post_hook = 5;
+  uint32 release_id = 1;
+  Repository repository = 2;
+  repeated FileMeta file_metas = 3;
+  pbhook.HookSpec pre_hook = 4;
+  pbhook.HookSpec post_hook = 5;
 }
 
 message GetDownloadURLReq {
-    // version defines message's protocol version from sidecar
-    pbbase.Versioning api_version = 1;
-    uint32 biz_id = 2;
-    FileMeta file_meta = 3;
-    string token = 4;
+  // version defines message's protocol version from sidecar
+  pbbase.Versioning api_version = 1;
+  uint32 biz_id = 2;
+  FileMeta file_meta = 3;
+  string token = 4;
 }
 
 message GetDownloadURLResp {
-    string url = 1;
+  string url = 1;
 }
 
 message Repository {
-    string root = 1;
+  string root = 1;
 }
 
 message FileMeta {
-    uint32 id = 1;
-    uint32 commit_id = 2;
-    pbcommit.CommitSpec commit_spec = 3;
-    pbci.ConfigItemSpec config_item_spec = 4;
-    pbci.ConfigItemAttachment config_item_attachment = 5;
-    RepositorySpec repository_spec = 6;
+  uint32 id = 1;
+  uint32 commit_id = 2;
+  pbcommit.CommitSpec commit_spec = 3;
+  pbci.ConfigItemSpec config_item_spec = 4;
+  pbci.ConfigItemAttachment config_item_attachment = 5;
+  RepositorySpec repository_spec = 6;
 }
 
 message RepositorySpec {
-    string path = 1;
+  string path = 1;
 }
 
 // FeedWatchMessage defines watch messages send from feed server to sdk.
 message FeedWatchMessage {
-    // version defines message's protocol version from feed server
-    pbbase.Versioning api_version = 1;
-    // rid is the message's request id
-    string rid = 2;
-    // type is an enum type, it's an substitute of sfs.FeedMessageType.
-    uint32 type = 3;
-    // payload is the message's details information which is a json raw bytes.
-    bytes payload = 4;
+  // version defines message's protocol version from feed server
+  pbbase.Versioning api_version = 1;
+  // rid is the message's request id
+  string rid = 2;
+  // type is an enum type, it's an substitute of sfs.FeedMessageType.
+  uint32 type = 3;
+  // payload is the message's details information which is a json raw bytes.
+  bytes payload = 4;
 }
 
 // MessagingMeta defines the message metadata send from sdk to upstream server.
 message MessagingMeta {
-    // version defines message's protocol version from feed server
-    pbbase.Versioning api_version = 1;
-    // rid is the message's request id
-    string rid = 2;
-    // type is an enum type, it's an substitute of scs.MessagingType.
-    uint32 type = 3;
-    // payload is the message's details information which is a json raw bytes.
-    bytes payload = 4;
+  // version defines message's protocol version from feed server
+  pbbase.Versioning api_version = 1;
+  // rid is the message's request id
+  string rid = 2;
+  // type is an enum type, it's an substitute of scs.MessagingType.
+  uint32 type = 3;
+  // payload is the message's details information which is a json raw bytes.
+  bytes payload = 4;
 }
 
 // MessagingResp defines response from upstream server to sdk,
@@ -139,37 +139,37 @@ message MessagingMeta {
 message MessagingResp {}
 
 message PullKvMetaReq {
-    // version defines message's protocol version from sidecar
-    pbbase.Versioning api_version = 1;
-    // payload is the message's details information which is a json raw bytes.
-    // refer to sfs.SideWatchPayload.
-    uint32 biz_id = 2;
-    AppMeta app_meta = 3;
-    string token = 4;
-    string key = 5;
+  // version defines message's protocol version from sidecar
+  pbbase.Versioning api_version = 1;
+  // payload is the message's details information which is a json raw bytes.
+  // refer to sfs.SideWatchPayload.
+  uint32 biz_id = 2;
+  AppMeta app_meta = 3;
+  string token = 4;
+  string key = 5;
 }
 
 message PullKvMetaResp {
-    uint32 release_id = 1;
-    repeated KvMeta kv_metas = 3;
+  uint32 release_id = 1;
+  repeated KvMeta kv_metas = 3;
 }
 
 message KvMeta {
-    string key = 1;
-    pbkv.KvAttachment kv_attachment = 5;
+  string key = 1;
+  pbkv.KvAttachment kv_attachment = 5;
 }
 
 message GetKvValueReq {
-    // version defines message's protocol version from sidecar
-    pbbase.Versioning api_version = 1;
-    uint32 biz_id = 3;
-    uint32 app_id = 4;
-    uint32 release_id = 5;
-    string key = 6;
-    string token = 7;
+  // version defines message's protocol version from sidecar
+  pbbase.Versioning api_version = 1;
+  uint32 biz_id = 3;
+  uint32 app_id = 4;
+  uint32 release_id = 5;
+  string key = 6;
+  string token = 7;
 }
 
 message GetKvValueResp {
-    string kv_type = 1;
-    string value = 2;
+  string kv_type = 1;
+  string value = 2;
 }

@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
-import "bscp.io/pkg/protocol/core/kv/kvs.proto";
+import "pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/kv/kvs.proto";
 
 package pbrkv;
 
@@ -9,9 +9,9 @@ option go_package = "bscp.io/pkg/protocol/core/released-kv;pbrkv";
 
 // ReleasedKv source resource reference: pkg/dal/table/released_kv.go
 message ReleasedKv {
-    uint32                      id             = 1;
-    uint32                      release_id     = 2;
-    pbkv.KvSpec                 spec           = 3;
-    pbkv.KvAttachment           attachment     = 4;
-    pbbase.Revision             revision       = 5;
+  uint32 id = 1;
+  uint32 release_id = 2;
+  pbkv.KvSpec spec = 3;
+  pbkv.KvAttachment attachment = 4;
+  pbbase.Revision revision = 5;
 }
