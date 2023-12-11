@@ -254,7 +254,7 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 			return nil, status.Errorf(codes.Aborted, "get app meta failed, %s", err.Error())
 		}
 		if match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, app.Name, req.Token,
-			ci.ConfigItemSpec); err != nil || !match {
+			ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name); err != nil || !match {
 			logs.Errorf("no permission to access config item %d, err: %v", ci.RciId, err)
 			return nil, status.Errorf(codes.PermissionDenied, "no permission to access config item %d", ci.RciId)
 		}
@@ -300,7 +300,8 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	}
 
 	// validate can file be downloaded by credential.
-	match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, app.Name, req.Token, req.FileMeta.ConfigItemSpec)
+	match, err := s.bll.Auth().CanMatchCI(
+		im.Kit, req.BizId, app.Name, req.Token, req.FileMeta.ConfigItemSpec.Path, req.FileMeta.ConfigItemSpec.Name)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
 	}
@@ -426,6 +427,16 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(im.Kit, meta)
 	if err != nil {
 		return nil, err
+	}
+
+	// validate can file be downloaded by credential.
+	match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.AppMeta.App, req.Token, req.Key, "")
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
+	}
+
+	if !match {
+		return nil, status.Error(codes.PermissionDenied, "no permission get value")
 	}
 
 	rkv, err := s.bll.RKvCache().GetKvValue(im.Kit, req.BizId, appID, metas.ReleaseId, req.Key)
