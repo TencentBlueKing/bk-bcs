@@ -191,31 +191,6 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 	var kvs []*pbkv.Kv
 	var kvReleased []*table.ReleasedKv
 
-	//if req.WithStatus {
-	//
-	//	var releasedLatelyDetails []*types.GetReleasedLatelyDetail
-	//	var rkvKeys []string
-	//	for _, kv := range details {
-	//		rkvKeys = append(rkvKeys, kv.Spec.Key)
-	//	}
-	//
-	//	releasedLatelyDetails, err = s.dao.ReleasedKv().GetReleasedLately(kt, req.BizId, req.AppId, 44, rkvKeys)
-	//	if err != nil {
-	//		logs.Errorf("get released rkv failed, err: %v, rid: %s", err, kt.Rid)
-	//		return nil, err
-	//	}
-	//
-	//	for _, detail := range releasedLatelyDetails {
-	//		kvReleased = append(kvReleased, detail.ReleasedKv)
-	//	}
-	//
-	//	kvs = pbrkv.PbKvState2(details, releasedLatelyDetails)
-	//} else {
-	//	for _, kv := range details {
-	//		kvs = append(kvs, pbkv.PbKv(kv, "", ""))
-	//	}
-	//}
-
 	kvReleased, err = s.dao.ReleasedKv().GetReleasedLately(kt, req.BizId, req.AppId)
 	if err != nil {
 		logs.Errorf("get released rkv failed, err: %v, rid: %s", err, kt.Rid)
