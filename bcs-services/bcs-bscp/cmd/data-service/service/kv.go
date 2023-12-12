@@ -352,8 +352,6 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 		return nil, err
 	}
 
-	// 如果 添加、 删除
-
 	toUpdate, toCreate, err := s.checkKvs(kt, req, editingKvMap, versionMap)
 	if err != nil {
 		return nil, err
@@ -505,60 +503,41 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbb
 
 	kt := kit.FromGrpcContext(ctx)
 
-	rkv, err := s.dao.ReleasedKv().GetReleasedLatelyByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
+	kvs, err := s.dao.Kv().ListAllKvByKey(kt, req.Attachment.AppId, req.Attachment.BizId, []string{req.Spec.Key}, nil)
 	if err != nil {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-		return nil, err
-	}
-	kvType, kvValue, err := s.getReleasedKv(kt, req.Attachment.BizId, req.Attachment.AppId, rkv.Spec.Version,
-		rkv.ReleaseID, req.Spec.Key)
-	if err != nil {
-		logs.Errorf("get vault kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-		return nil, err
 	}
 
-	opt := &types.UpsertKvOption{
-		BizID:  req.Attachment.BizId,
-		AppID:  req.Attachment.AppId,
-		Key:    req.Spec.Key,
-		Value:  kvValue,
-		KvType: kvType,
-	}
-	v, err := s.vault.UpsertKv(kt, opt)
-	if err != nil {
-		logs.Errorf("update vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-		return nil, err
+	tx := s.dao.GenQuery().Begin()
+	for _, kv := range kvs {
+		switch kv.KvState {
+		case table.KvStateDelete:
+			kv.KvState = table.KvStateUnchange
+			err = s.dao.Kv().UpdateWithTx(kt, tx, kv)
+			if err != nil {
+				if rErr := tx.Rollback(); rErr != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+				}
+				logs.Errorf("delete vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+				return nil, err
+			}
+
+		default:
+			err := s.dao.Kv().DeleteWithTx(kt, tx, kv)
+			if err != nil {
+				if rErr := tx.Rollback(); rErr != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+				}
+				logs.Errorf("delete vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+				return nil, err
+			}
+
+		}
 	}
 
-	kv, err := s.dao.Kv().GetByKey(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
-	if err != nil && !errors.Is(gorm.ErrRecordNotFound, err) {
-		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-		return nil, err
-	}
-	if errors.Is(gorm.ErrRecordNotFound, err) {
-		kv = &table.Kv{
-			Spec:       req.Spec.KvSpec(),
-			Attachment: req.Attachment.KvAttachment(),
-			Revision: &table.Revision{
-				Creator: kt.User,
-			},
-		}
-		kv.Spec.Version = uint32(v)
-		if _, e := s.dao.Kv().Create(kt, kv); e != nil {
-			logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
-			return nil, e
-		}
-	} else {
-		kv.Spec.Version = uint32(v)
-		kv.Spec.KvType = rkv.Spec.KvType
-		kv.Revision = &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: rkv.Revision.CreatedAt,
-		}
-		if e := s.dao.Kv().Update(kt, kv); e != nil {
-			logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
-			return nil, e
-		}
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	return new(pbbase.EmptyResp), nil
