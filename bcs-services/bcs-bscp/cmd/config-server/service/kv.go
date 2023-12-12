@@ -103,13 +103,15 @@ func (s *Service) ListKvs(ctx context.Context, req *pbcs.ListKvsReq) (*pbcs.List
 	}
 
 	r := &pbds.ListKvsReq{
-		BizId:     req.BizId,
-		AppId:     req.AppId,
-		Key:       req.Key,
-		Start:     req.Start,
-		Limit:     req.Limit,
-		All:       req.All,
-		SearchKey: req.SearchKey,
+		BizId:      req.BizId,
+		AppId:      req.AppId,
+		Key:        req.Key,
+		Start:      req.Start,
+		Limit:      req.Limit,
+		All:        req.All,
+		SearchKey:  req.SearchKey,
+		WithStatus: req.WithStatus,
+		KvType:     req.KvType,
 	}
 	if !req.All {
 		if req.Limit == 0 {
@@ -202,4 +204,33 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbcs.BatchUpsertKvsRe
 	}
 
 	return &pbcs.BatchUpsertKvsResp{}, nil
+}
+
+// UnDeleteKv reverses the deletion of a key-value pair by reverting the current kvType and value to the previous
+// version.
+func (s *Service) UnDeleteKv(ctx context.Context, req *pbcs.UnDeleteKvReq) (*pbcs.UnDeleteKvResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.UnDeleteKvReq{
+		Spec: &pbkv.KvSpec{
+			Key: req.Key,
+		},
+		Attachment: &pbkv.KvAttachment{
+			BizId: req.BizId,
+			AppId: req.AppId,
+		},
+	}
+	if _, err := s.client.DS.UnDeleteKv(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("delete kv failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return &pbcs.UnDeleteKvResp{}, nil
 }

@@ -468,15 +468,15 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 				}
 
 				workloadID = (int64)((*bkWorkloads)[0].(map[string]interface{})["id"].(float64))
-				labels := (*bkWorkloads)[0].(map[string]interface{})["labels"].(map[string]string)
+				labels := (*bkWorkloads)[0].(map[string]interface{})["labels"].(map[string]interface{})
 				if creator, creatorOk := labels["io.tencent.paas.creator"]; creatorOk && (creator != "") {
-					operator = append(operator, creator)
+					operator = append(operator, creator.(string))
 				} else if creator, creatorOk = labels["io．tencent．paas．creator"]; creatorOk && (creator != "") {
-					operator = append(operator, creator)
+					operator = append(operator, creator.(string))
 				} else if updater, updaterOk := labels["io.tencent.paas.updater"]; updaterOk && (updater != "") {
-					operator = append(operator, updater)
+					operator = append(operator, updater.(string))
 				} else if updater, updaterOk = labels["io．tencent．paas．updator"]; updaterOk && (updater != "") {
-					operator = append(operator, updater)
+					operator = append(operator, updater.(string))
 				}
 			default:
 				return errors.New(fmt.Sprintf("kind %s is not supported", rsOwnerRef.Kind))
@@ -519,15 +519,15 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 			}
 
 			workloadID = (int64)((*bkWorkloads)[0].(map[string]interface{})["id"].(float64))
-			labels := (*bkWorkloads)[0].(map[string]interface{})["labels"].(map[string]string)
+			labels := (*bkWorkloads)[0].(map[string]interface{})["labels"].(map[string]interface{})
 			if creator, creatorOk := labels["io.tencent.paas.creator"]; creatorOk && (creator != "") {
-				operator = append(operator, creator)
+				operator = append(operator, creator.(string))
 			} else if creator, creatorOk = labels["io．tencent．paas．creator"]; creatorOk && (creator != "") {
-				operator = append(operator, creator)
+				operator = append(operator, creator.(string))
 			} else if updater, updaterOk := labels["io.tencent.paas.updater"]; updaterOk && (updater != "") {
-				operator = append(operator, updater)
+				operator = append(operator, updater.(string))
 			} else if updater, updaterOk = labels["io．tencent．paas．updator"]; updaterOk && (updater != "") {
-				operator = append(operator, updater)
+				operator = append(operator, updater.(string))
 			}
 		} else {
 			return errors.New(fmt.Sprintf("kind %s is not supported", ownerRef.Kind))

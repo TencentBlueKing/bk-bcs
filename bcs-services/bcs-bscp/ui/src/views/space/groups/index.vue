@@ -13,11 +13,11 @@
           :disabled="changeViewPending"
           @change="handleChangeView"
         >
-          按规则分类查看
+          按标签分类查看
         </bk-checkbox>
         <bk-input
           class="search-group-input"
-          placeholder="分组名称/分组规则"
+          placeholder="分组名称/标签选择器"
           @input="handleSearch"
           v-model.trim="searchInfo"
           @clear="handleSearch"
@@ -141,7 +141,7 @@
     @confirm="handleDeleteGroupConfirm"
   >
     <div style="margin-bottom: 8px">
-      配置模板套餐: <span style="color: #313238; font-weight: 600">{{ deleteGroupItem?.name }}</span>
+      分组名称: <span style="color: #313238; font-weight: 600">{{ deleteGroupItem?.name }}</span>
     </div>
     <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
   </DeleteConfirmDialog>
@@ -194,7 +194,7 @@ const editingGroup = ref<IGroupItem>({
 const isPublishedSliderShow = ref(false);
 const isSearchEmpty = ref(false);
 const headInfo =
-  '分组由 1 个或多个标签组成，服务配置版本选择分组上线结合客户端配置的标签用于灰度发布、A/B Test等运营场景，详情参考文档：';
+  '分组由 1 个或多个标签选择器组成，服务配置版本选择分组上线结合客户端配置的标签用于灰度发布、A/B Test等运营场景，详情参考文档：';
 
 watch(
   () => spaceId.value,

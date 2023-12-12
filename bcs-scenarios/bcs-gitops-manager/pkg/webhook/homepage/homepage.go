@@ -26,7 +26,7 @@ import (
 	"gopkg.in/go-playground/webhooks.v5/gitlab"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
 // Recorder defines the recorder of home page
@@ -101,13 +101,13 @@ func (r *Recorder) RecordEvent(ctx context.Context, req *http.Request) error {
 func (r *Recorder) PrintHomePageInfo(ctx context.Context, hpInfo *homePageInfo) {
 	if len(hpInfo.Added)+len(hpInfo.Removed)+len(hpInfo.Modified) == 0 {
 		blog.Warnf("RequestID[%s] repo '%s' commit '%s' with user '%s' not changed files",
-			utils.RequestID(ctx), hpInfo.Url, hpInfo.CommitID, hpInfo.BcsUsername)
+			middleware.RequestID(ctx), hpInfo.Url, hpInfo.CommitID, hpInfo.BcsUsername)
 		return
 	}
 	bs, err := hpInfo.Build()
 	if err != nil {
 		blog.Errorf("RequestID[%s] build homepage info for '%s' failed: %s",
-			utils.RequestID(ctx), hpInfo.Url, err.Error())
+			middleware.RequestID(ctx), hpInfo.Url, err.Error())
 	} else {
 		blog.Infof("%s", string(bs))
 	}

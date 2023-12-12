@@ -9,6 +9,7 @@
             class="rule-input"
             placeholder="请填写"
             :disabled="rule.type === 'del'"
+            @input="handleInput(index)"
             @blur="handleRuleContentChange(index)"
           >
             <template #suffix>
@@ -41,10 +42,16 @@
         <div class="error-info"><span v-if="!rule.isRight">输入的规则有误，请重新确认</span></div>
       </div>
       <div class="tips">
-        <div>填写格式为“服务名称/配置路径”，支持通配符，常用方法：</div>
-        <div>关联myservice服务下所有的配置(包含子目录):myservice/**</div>
-        <div>关联myservice服务/etc目录下所有的配置(不含子目录):myservice/etc/*</div>
-        <div>关联myservice服务/etc/nginx/nginx.conf文件:myservice/etc/nginx/nginx.conf</div>
+        <div>- [文件型]关联myservice服务下所有的配置(包含子目录)</div>
+        <div>&nbsp;&nbsp;myservice/**</div>
+        <div>- [文件型]关联myservice服务/etc目录下所有的配置(不含子目录)</div>
+        <div>&nbsp;&nbsp;myservice/etc/*</div>
+        <div>- [文件型]关联myservice服务/etc/nginx/nginx.conf文件</div>
+        <div>&nbsp;&nbsp;myservice/etc/nginx/nginx.conf</div>
+        <div>- [键值型]关联myservice服务下所有配置项</div>
+        <div>&nbsp;&nbsp;myservice/*</div>
+        <div>- [键值型]关联myservice服务下所有以demo_开头的配置项</div>
+        <div>&nbsp;&nbsp;myservice/demo_*</div>
       </div>
     </div>
     <!-- <div class="preview-btn">预览匹配结果</div> -->
@@ -67,6 +74,7 @@ const RULE_TYPE_MAP: { [key: string]: string } = {
 };
 
 const localRules = ref<IRuleEditing[]>([]);
+
 
 const transformRulesToEditing = (rules: ICredentialRule[]) => {
   const rulesEditing: IRuleEditing[] = [];
@@ -110,11 +118,25 @@ const handleRevoke = (index: number) => {
   updateRuleParams();
 };
 
-const testRule = (rule: string) => /\/([A-Za-z0-9]+[A-Za-z0-9-_.]*\/?)*$/.test(rule);
+const validateRule = (rule: string) => {
+  if (rule.length < 2) {
+    return false;
+  }
+  const paths = rule.split('/');
+  return paths.length > 1 && paths.every(path => path.length > 0);
+};
+
+// 产品逻辑：没有检测到输入错误时：鼠标失焦后检测；如果检测到错误时：输入框只要有内容变化就要检测
+const handleInput = (index: number) => {
+  const rule = localRules.value[index];
+  if (!rule.isRight) {
+    rule.isRight = validateRule(rule.content);
+  }
+};
 
 const handleRuleContentChange = (index: number) => {
   const rule = localRules.value[index];
-  localRules.value[index].isRight = testRule(rule.content);
+  localRules.value[index].isRight = validateRule(rule.content);
   if (rule.id) {
     rule.type = rule.content === rule.original ? '' : 'modify';
   }
@@ -148,7 +170,7 @@ const updateRuleParams = () => {
 
 const handleRuleValidate = () => {
   localRules.value.forEach((item) => {
-    item.isRight = testRule(item.content);
+    item.isRight = validateRule(item.content);
   });
   return localRules.value.some(item => !item.isRight);
 };
@@ -213,6 +235,7 @@ defineExpose({ handleRuleValidate });
   }
 }
 .error-info {
+  margin: 4px 0 6px;
   height: 16px;
   color: #ea3636;
   font-size: 12px;

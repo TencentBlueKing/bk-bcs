@@ -7,15 +7,15 @@ package pbvs;
 option go_package = "bscp.io/pkg/protocol/vault-server;pbvs";
 
 service Vault {
-    // Ping verifies if the grpc connection is still alive.
-    rpc Ping(PingMsg) returns (PingMsg) {
-        option (google.api.http) = {
-            post: "/ping"
-            body: "*"
-        };
-    }
+  // Ping verifies if the grpc connection is still alive.
+  rpc Ping(PingMsg) returns (PingMsg) {
+    option (google.api.http) = {
+      post: "/ping"
+      body: "*"
+    };
+  }
 }
 
 message PingMsg {
-    string data = 1;
+  string data = 1;
 }

@@ -2701,7 +2701,7 @@ dashboard:
         Naming space names can only include lowercase letters, numbers, and
         joint characters (-), and even characters (-) must be connected in
         English or numbers later
-      sharedClusterNs: 'Name rule: IEG-Project English Name-Custom Name'
+      sharedClusterNs: 'Name rule: {prefix}Custom Name'
       sharedQuota: >-
         The shared cluster needs to set the MEM and CPU quotas, and the minimum
         value of the two is not less than 0

@@ -2,27 +2,28 @@ syntax = "proto3";
 
 package pbkv;
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/base/base.proto";
 
 option go_package = "bscp.io/pkg/protocol/core/kv;pbkv";
 
 // Kv source resource reference: pkg/dal/table/kvs.go
 message Kv {
-    uint32          id         = 1;
-    KvSpec          spec       = 2;
-    KvAttachment    attachment = 3;
-    pbbase.Revision revision   = 4;
+  uint32 id = 1;
+  string kv_state = 2;
+  KvSpec spec = 3;
+  KvAttachment attachment = 4;
+  pbbase.Revision revision = 5;
 }
 
 // KvSpec source resource reference: pkg/dal/table/kvs.go
 message KvSpec {
-    string key     = 1;
-    string kv_type = 2;
-    string value   = 3;
+  string key = 1;
+  string kv_type = 2;
+  string value = 3;
 }
 
 // KvAttachment source resource reference: pkg/dal/table/kvs.go
 message KvAttachment {
-    uint32 biz_id = 1;
-    uint32 app_id = 2;
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
 }

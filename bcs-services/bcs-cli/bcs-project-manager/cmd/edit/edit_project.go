@@ -127,22 +127,12 @@ func editProject() *cobra.Command { // nolint
 			isOffline := new(wrappers.BoolValue)
 			isOffline.Value = projectInfo.GetIsOffline()
 
-			isSecret := new(wrappers.BoolValue)
-			isSecret.Value = projectInfo.GetIsSecret()
-
 			// 保证只修改描述和业务ID
 			updateData := &pkg.UpdateProjectRequest{
-				BGID:        projectInfo.GetBGID(),
-				BGName:      projectInfo.GetBGName(),
 				BusinessID:  editBefore.BusinessID,
-				CenterID:    projectInfo.GetCenterID(),
-				CenterName:  projectInfo.GetCenterName(),
 				CreateTime:  projectInfo.GetCreateTime(),
 				Creator:     projectInfo.GetCreator(),
-				DeptID:      projectInfo.GetDeptID(),
-				DeptName:    projectInfo.GetDeptName(),
 				Description: editBefore.Description,
-				IsSecret:    projectInfo.GetIsSecret(),
 				Kind:        projectInfo.GetKind(),
 				Managers:    projectInfo.GetManagers(),
 				Name:        projectInfo.GetName(),

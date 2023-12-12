@@ -79,6 +79,13 @@ export interface IConfigEditParams {
   privilege?: string;
 }
 
+// kv配置文件编辑表单参数
+export interface IConfigKvEditParams {
+  key: string,
+  kv_type: string,
+  value: string,
+}
+
 // 文件配置概览内容
 export interface IFileConfigContentSummary {
   id?: number;
@@ -188,4 +195,28 @@ export interface IConfigImportItem {
   user_group: string;
   sign: string;
   id: number;
+}
+
+// kv类型
+export interface IConfigKvItem {
+  key: string;
+  kv_type: string;
+  value: string;
+}
+
+// 单个kv配置详情
+export interface IConfigKvType {
+  id: number;
+  spec: IConfigKvItem;
+  kv_state: string;
+  attachment: {
+    biz_id: number;
+    app_id: number;
+  };
+  revision: {
+    creator: string;
+    create_at: string;
+    reviser: string;
+    update_at: string;
+  };
 }

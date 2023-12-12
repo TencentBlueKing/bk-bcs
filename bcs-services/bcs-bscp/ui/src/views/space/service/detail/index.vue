@@ -2,9 +2,6 @@
   <div class="service-detail-page">
     <div :class="['page-detail-content', { 'version-detail-view': versionDetailView }]">
       <div class="version-list-area">
-        <div class="service-list-wrapper">
-          <ServiceSelector :value="appId" />
-        </div>
         <VersionListAside :version-detail-view="versionDetailView" :bk-biz-id="bkBizId" :app-id="appId" />
         <div :class="['view-change-trigger', { extend: versionDetailView }]" @click="handleToggleView">
           <AngleDoubleRight class="arrow-icon" />
@@ -12,7 +9,11 @@
         </div>
       </div>
       <div class="config-setting-area">
-        <detail-header :bk-biz-id="bkBizId" :app-id="appId" :version-detail-view="versionDetailView"></detail-header>
+        <detail-header
+          :class="{'version-detail-header': versionDetailView}"
+          :bk-biz-id="bkBizId"
+          :app-id="appId"
+          :version-detail-view="versionDetailView" />
         <div class="setting-content-container">
           <router-view v-if="!appDataLoading" :bk-biz-id="bkBizId" :app-id="appId"></router-view>
         </div>
@@ -30,7 +31,6 @@ import useServiceStore from '../../../../store/service';
 import useConfigStore from '../../../../store/config';
 import { GET_UNNAMED_VERSION_DATA } from '../../../../constants/config';
 import { permissionCheck, getAppDetail } from '../../../../api';
-import ServiceSelector from './components/service-selector.vue';
 import DetailHeader from './components/detail-header.vue';
 import VersionListAside from './config/version-list-aside/index.vue';
 import { AxiosError } from 'axios';
@@ -144,17 +144,18 @@ const handleToggleView = () => {
   width: 280px;
   height: 100%;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
-  z-index: 1;
-  transition: width 0.3 ease-in-out;
-  .service-list-wrapper {
-    padding: 10px 8px 9px;
-    width: 280px;
-    border-bottom: 1px solid #eaebf0;
-  }
+  z-index: 10;
+  // transition: width 0.1s ease-in-out;
 }
 .config-setting-area {
   height: 100%;
   width: calc(100% - 280px);
+  .service-detail-header {
+    &.version-detail-header {
+      background: #fafbfd;
+      box-shadow: none;
+    }
+  }
   .setting-content-container {
     height: calc(100% - 41px);
   }

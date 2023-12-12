@@ -1,109 +1,119 @@
 <template>
   <section class="version-detail-table">
-    <div class="head-operate-wrapper">
-      <div class="type-tabs">
-        <div :class="['tab-item', { active: currentTab === 'avaliable' }]" @click="handleTabChange('avaliable')">
-          可用版本
-        </div>
-        <div class="split-line"></div>
-        <div :class="['tab-item', { active: currentTab === 'deprecate' }]" @click="handleTabChange('deprecate')">
-          废弃版本
-        </div>
-      </div>
-      <bk-input
-        v-model="searchStr"
-        class="version-search-input"
-        placeholder="版本名称/版本说明/修改人"
-        :clearable="true"
-        @change="handleSearchInputChange"
-        @enter="handleSearch"
-        @clear="handleClearSearchStr"
-      >
-        <template #suffix>
-          <Search class="search-input-icon" />
-        </template>
-      </bk-input>
+    <div class="service-selector-wrapper">
+      <ServiceSelector :value="props.appId" :no-border-mode="true" />
     </div>
-    <bk-loading :loading="listLoading">
-      <bk-table
-        :border="['outer']"
-        :data="versionList"
-        :row-class="getRowCls"
-        :remote-pagination="true"
-        :pagination="pagination"
-        @row-click="handleSelectVersion"
-        @page-limit-change="handlePageLimitChange"
-        @page-value-change="refreshVersionList($event)"
-      >
-        <bk-table-column label="版本" prop="spec.name" show-overflow-tooltip></bk-table-column>
-        <bk-table-column label="版本描述" prop="spec.memo" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{ row.spec?.memo || '--' }}
-          </template>
-        </bk-table-column>
-        <bk-table-column label="已上线分组" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{ getGroupNames(row) }}
-          </template>
-        </bk-table-column>
-        <bk-table-column label="创建人">
-          <template #default="{ row }">
-            {{ row.revision?.creator || '--' }}
-          </template>
-        </bk-table-column>
-        <bk-table-column label="生成时间" width="220">
-          <template #default="{ row }">
-            <span v-if="row.revision">{{
-              row.revision.create_at ? datetimeFormat(row.revision.create_at) : '--'
-            }}</span>
-          </template>
-        </bk-table-column>
-        <bk-table-column label="状态">
-          <template #default="{ row }">
-            <template v-if="row.status">
-              <template v-if="!VERSION_STATUS_MAP[row.status.publish_status as keyof typeof VERSION_STATUS_MAP]">
-                --
-              </template>
-              <div v-else :class="['status-tag', row.status.publish_status]">
-                {{ VERSION_STATUS_MAP[row.status.publish_status as keyof typeof VERSION_STATUS_MAP] }}
-              </div>
+    <div class="content-container">
+      <div class="head-operate-wrapper">
+        <div class="type-tabs">
+          <div :class="['tab-item', { active: currentTab === 'avaliable' }]" @click="handleTabChange('avaliable')">
+            可用版本
+          </div>
+          <div class="split-line"></div>
+          <div :class="['tab-item', { active: currentTab === 'deprecate' }]" @click="handleTabChange('deprecate')">
+            废弃版本
+          </div>
+        </div>
+        <SearchInput
+          v-model="searchStr"
+          class="version-search-input"
+          placeholder="版本名称/版本说明/修改人"
+          :width="320"
+          @search="handleSearch"/>
+      </div>
+      <bk-loading :loading="listLoading">
+        <bk-table
+          :border="['outer']"
+          :data="versionList"
+          :row-class="getRowCls"
+          :remote-pagination="true"
+          :pagination="pagination"
+          @row-click="handleSelectVersion"
+          @page-limit-change="handlePageLimitChange"
+          @page-value-change="refreshVersionList($event)"
+        >
+          <bk-table-column label="版本" prop="spec.name" show-overflow-tooltip></bk-table-column>
+          <bk-table-column label="版本描述" prop="spec.memo" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ row.spec?.memo || '--' }}
             </template>
+          </bk-table-column>
+          <bk-table-column label="已上线分组" show-overflow-tooltip>
+            <template #default="{ row }">
+              <template v-if="row.status">
+                <div
+                  class="released-groups"
+                  v-bk-tooltips="{
+                    disabled: row.status.publish_status !== 'partial_released',
+                    placement: 'bottom-end',
+                    theme: 'light',
+                    content: getReleasedGroupsPopoverContent(row.status.released_groups, false)
+                  }">
+                  {{ getGroupNames(row) }}
+                </div>
+              </template>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="创建人">
+            <template #default="{ row }">
+              {{ row.revision?.creator || '--' }}
+            </template>
+          </bk-table-column>
+          <bk-table-column label="生成时间" width="220">
+            <template #default="{ row }">
+              <span v-if="row.revision">{{
+                row.revision.create_at ? datetimeFormat(row.revision.create_at) : '--'
+              }}</span>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="状态">
+            <template #default="{ row }">
+              <template v-if="row.status">
+                <template v-if="!VERSION_STATUS_MAP[row.status.publish_status as keyof typeof VERSION_STATUS_MAP]">
+                  --
+                </template>
+                <div v-else :class="['status-tag', row.status.publish_status]">
+                  {{ VERSION_STATUS_MAP[row.status.publish_status as keyof typeof VERSION_STATUS_MAP] }}
+                </div>
+              </template>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="操作">
+            <template #default="{ row }">
+              <bk-button
+                v-if="row.status?.publish_status !== 'editing'"
+                style="margin-right: 16px"
+                text
+                theme="primary"
+                @click.stop="handleOpenDiff(row)"
+              >
+                版本对比
+              </bk-button>
+              <template v-else>--</template>
+              <!-- <bk-button text theme="primary" @click.stop="handleDeprecate(row.id)">废弃</bk-button> -->
+            </template>
+          </bk-table-column>
+          <template #empty>
+            <tableEmpty :is-search-empty="isSearchEmpty" @clear="handleClearSearchStr"></tableEmpty>
           </template>
-        </bk-table-column>
-        <bk-table-column label="操作">
-          <template #default="{ row }">
-            <bk-button
-              v-if="row.status?.publish_status !== 'editing'"
-              style="margin-right: 16px"
-              text
-              theme="primary"
-              @click.stop="handleOpenDiff(row)"
-            >
-              版本对比
-            </bk-button>
-            <template v-else>--</template>
-            <!-- <bk-button text theme="primary" @click.stop="handleDeprecate(row.id)">废弃</bk-button> -->
-          </template>
-        </bk-table-column>
-        <template #empty>
-          <tableEmpty :is-search-empty="isSearchEmpty" @clear="handleClearSearchStr"></tableEmpty>
-        </template>
-      </bk-table>
-    </bk-loading>
+        </bk-table>
+      </bk-loading>
+    </div>
     <VersionDiff v-model:show="showDiffPanel" :current-version="diffVersion" />
   </section>
 </template>
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router'
-import { Search } from 'bkui-vue/lib/icon';
-// import { InfoBox } from 'bkui-vue/lib';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../store/config';
 import { getConfigVersionList } from '../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../utils/index';
 import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
 import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../../types/config';
+import getReleasedGroupsPopoverContent from '../components/get-released-groups-popover-content';
+import ServiceSelector from '../../components/service-selector.vue';
+import SearchInput from '../../../../../../components/search-input.vue';
 import VersionDiff from '../../config/components/version-diff/index.vue';
 import tableEmpty from '../../../../../../components/table/table-empty.vue';
 
@@ -134,6 +144,10 @@ const isSearchEmpty = ref(false);
 
 // 可用版本非搜索查看视图
 const isAvaliableView = computed(() => currentTab.value === 'avaliable' && searchStr.value === '');
+
+watch(() => props.appId, () => {
+  getVersionList();
+});
 
 onMounted(async () => {
   getVersionList();
@@ -171,7 +185,15 @@ const getRowCls = (data: IConfigVersion) => {
   return '';
 };
 
-const getGroupNames = (data: IConfigVersion) => (data.status?.released_groups.length ? data.status.released_groups.map(item => item.name).join('; ') : '--');
+const getGroupNames = (data: IConfigVersion) => {
+  const status = data.status?.publish_status
+  if (status === 'partial_released') {
+    return data.status.released_groups.map(item => item.name).join('; ');
+  } else if (status === 'full_released') {
+    return '全部实例';
+  }
+  return '--'
+}
 
 const handleTabChange = (tab: string) => {
   currentTab.value = tab;
@@ -241,9 +263,23 @@ const handleClearSearchStr = () => {
 </script>
 <style lang="scss" scoped>
 .version-detail-table {
-  padding: 24px;
   height: 100%;
   background: #ffffff;
+}
+.service-selector-wrapper {
+  padding: 10px 24px;
+  border-bottom: 1px solid #eaebf0;
+  :deep(.service-selector) {
+    width: 264px;
+  }
+  // padding: 10px 8px 9px;
+  // width: 280px;
+  // border-bottom: 1px solid #eaebf0;
+}
+.content-container {
+  padding: 12px 24px;
+  height: calc(100% - 53px);
+  overflow: auto;
 }
 .head-operate-wrapper {
   display: flex;
@@ -275,13 +311,6 @@ const handleClearSearchStr = () => {
     height: 14px;
     background: #dcdee5;
   }
-}
-.version-search-input {
-  width: 320px;
-}
-.search-input-icon {
-  padding-right: 10px;
-  color: #979ba5;
 }
 .bk-table {
   :deep(.bk-table-body) {

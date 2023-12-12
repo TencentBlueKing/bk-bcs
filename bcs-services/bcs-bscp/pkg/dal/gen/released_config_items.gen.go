@@ -47,7 +47,9 @@ func newReleasedConfigItem(db *gorm.DB, opts ...gen.DOOption) releasedConfigItem
 	_releasedConfigItem.BizID = field.NewUint32(tableName, "biz_id")
 	_releasedConfigItem.AppID = field.NewUint32(tableName, "app_id")
 	_releasedConfigItem.Creator = field.NewString(tableName, "creator")
+	_releasedConfigItem.Reviser = field.NewString(tableName, "reviser")
 	_releasedConfigItem.CreatedAt = field.NewTime(tableName, "created_at")
+	_releasedConfigItem.UpdatedAt = field.NewTime(tableName, "updated_at")
 
 	_releasedConfigItem.fillFieldMap()
 
@@ -78,7 +80,9 @@ type releasedConfigItem struct {
 	BizID           field.Uint32
 	AppID           field.Uint32
 	Creator         field.String
+	Reviser         field.String
 	CreatedAt       field.Time
+	UpdatedAt       field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -115,7 +119,9 @@ func (r *releasedConfigItem) updateTableName(table string) *releasedConfigItem {
 	r.BizID = field.NewUint32(table, "biz_id")
 	r.AppID = field.NewUint32(table, "app_id")
 	r.Creator = field.NewString(table, "creator")
+	r.Reviser = field.NewString(table, "reviser")
 	r.CreatedAt = field.NewTime(table, "created_at")
+	r.UpdatedAt = field.NewTime(table, "updated_at")
 
 	r.fillFieldMap()
 
@@ -144,7 +150,7 @@ func (r *releasedConfigItem) GetFieldByName(fieldName string) (field.OrderExpr, 
 }
 
 func (r *releasedConfigItem) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 21)
+	r.fieldMap = make(map[string]field.Expr, 23)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["release_id"] = r.ReleaseID
 	r.fieldMap["commit_id"] = r.CommitID
@@ -165,7 +171,9 @@ func (r *releasedConfigItem) fillFieldMap() {
 	r.fieldMap["biz_id"] = r.BizID
 	r.fieldMap["app_id"] = r.AppID
 	r.fieldMap["creator"] = r.Creator
+	r.fieldMap["reviser"] = r.Reviser
 	r.fieldMap["created_at"] = r.CreatedAt
+	r.fieldMap["updated_at"] = r.UpdatedAt
 }
 
 func (r releasedConfigItem) clone(db *gorm.DB) releasedConfigItem {

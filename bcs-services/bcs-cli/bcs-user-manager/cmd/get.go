@@ -248,7 +248,7 @@ func getTokenCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			printer.PrintGetTokenCmdResult(flagOutput, resp)
+			printer.PrintGetTokenInfoCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -280,7 +280,7 @@ func getTokenByUserAndClusterIDCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			printer.PrintGetTokenInfoCmdResult(flagOutput, resp)
+			printer.PrintGetTokenByUserAndClusterIDCmdResult(flagOutput, resp)
 		},
 	}
 

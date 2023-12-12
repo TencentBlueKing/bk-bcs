@@ -63,6 +63,32 @@ func ValidateAppName(name string) error {
 	return nil
 }
 
+// qualifiedAppAliasRegexp bscp app's alias regexp.
+var qualifiedAppAliasRegexp = regexp.MustCompile(`^[a-zA-Z0-9\p{Han}][\w\p{Han}\-]*[a-zA-Z0-9\p{Han}]$`)
+
+// ValidateAppAlias validate bscp app Alias length and format.
+func ValidateAppAlias(alias string) error {
+	if len(alias) < 1 {
+		return errors.New("invalid name, length should >= 1")
+	}
+
+	if len(alias) > 128 {
+		return errors.New("invalid name, length should <= 128")
+	}
+
+	if err := validResNamePrefix(alias); err != nil {
+		return err
+	}
+
+	if !qualifiedAppAliasRegexp.MatchString(alias) {
+		return fmt.Errorf("invalid name: %s, only allows to include Chinese, English, numbers, underscore (_), "+
+			"hyphen (-), and must start and end with Chinese, English, or a number", alias)
+
+	}
+
+	return nil
+}
+
 // qualifiedVariableNameRegexp bscp variable's name regexp.
 var qualifiedVariableNameRegexp = regexp.MustCompile(`^(?i)(bk_bscp_)\w*$`)
 

@@ -129,7 +129,9 @@ func (h *Handler) Handle(review v1beta1.AdmissionReview) *v1beta1.AdmissionRespo
 	if !findGvk {
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
-	if req.Operation != v1beta1.Create {
+
+	//只处理创建和更新
+	if req.Operation != v1beta1.Create && req.Operation != v1beta1.Update {
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
 	//含有特定annotations 也过滤

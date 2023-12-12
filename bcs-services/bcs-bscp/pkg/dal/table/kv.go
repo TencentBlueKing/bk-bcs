@@ -13,9 +13,16 @@
 package table
 
 import (
+	"encoding/json"
+	"encoding/xml"
 	"errors"
+	"fmt"
+	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"bscp.io/pkg/criteria/validator"
+	"bscp.io/pkg/tools"
 )
 
 // Kv defines a basic kv
@@ -29,8 +36,9 @@ type Kv struct {
 
 // KvSpec is kv specific which is defined by user.
 type KvSpec struct {
-	Key     string `json:"key" gorm:"column:key"`
-	Version uint32 `json:"version" gorm:"column:version"`
+	Key     string   `json:"key" gorm:"column:key"`
+	KvType  DataType `json:"kv_type" gorm:"column:kv_type"`
+	Version uint32   `json:"version" gorm:"column:version"`
 }
 
 // KvAttachment is a kv attachment
@@ -99,7 +107,28 @@ func (k KvSpec) ValidateCreate() error {
 		return err
 	}
 
+	if err := k.KvType.ValidateCreateKv(); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+// ValidateCreateKv the kvType and value match
+func (k DataType) ValidateCreateKv() error {
+
+	switch k {
+	case KvStr:
+	case KvNumber:
+	case KvText:
+	case KvJson:
+	case KvYAML:
+	case KvXml:
+	default:
+		return errors.New("invalid data-type")
+	}
+	return nil
+
 }
 
 // Validate whether kv attachment is valid or not.
@@ -164,4 +193,55 @@ func (k *Kv) ValidateUpdate() error {
 	}
 
 	return nil
+}
+
+const (
+	// MaxValueLength max value length 1MB
+	MaxValueLength = 1 * 1024 * 1024
+)
+
+// ValidateValue the kvType and value match
+func (k DataType) ValidateValue(value string) error {
+
+	if value == "" {
+		return errors.New("kv value is null")
+	}
+
+	if len(value) > MaxValueLength {
+		return fmt.Errorf("the length of the value must not exceed %d MB", MaxValueLength)
+	}
+
+	switch k {
+	case KvStr:
+		if strings.Contains(value, "\n") {
+			return errors.New("newline characters are not allowed in string-type values")
+		}
+		return nil
+	case KvNumber:
+		if !tools.IsNumber(value) {
+			return fmt.Errorf("value is not a number")
+		}
+		return nil
+	case KvText:
+		return nil
+	case KvJson:
+		if !json.Valid([]byte(value)) {
+			return fmt.Errorf("value is not a json")
+		}
+		return nil
+	case KvYAML:
+		var data interface{}
+		if err := yaml.Unmarshal([]byte(value), &data); err != nil {
+			return fmt.Errorf("value is not a yaml, err: %v", err)
+		}
+		return nil
+	case KvXml:
+		var v interface{}
+		if err := xml.Unmarshal([]byte(value), &v); err != nil {
+			return err
+		}
+		return nil
+	default:
+		return errors.New("invalid key-value type")
+	}
 }

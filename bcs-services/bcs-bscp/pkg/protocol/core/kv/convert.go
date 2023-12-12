@@ -16,7 +16,6 @@ package pbkv
 import (
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
-	"bscp.io/pkg/types"
 )
 
 // Kv convert pb Kv to table Kv
@@ -39,7 +38,8 @@ func (k *KvSpec) KvSpec() *table.KvSpec {
 	}
 
 	return &table.KvSpec{
-		Key: k.Key,
+		Key:    k.Key,
+		KvType: table.DataType(k.KvType),
 	}
 }
 
@@ -56,14 +56,15 @@ func (k *KvAttachment) KvAttachment() *table.KvAttachment {
 }
 
 // PbKv convert table kv to pb kv
-func PbKv(k *table.Kv, kvType types.KvType, value string) *Kv {
+func PbKv(k *table.Kv, value, kvState string) *Kv {
 	if k == nil {
 		return nil
 	}
 
 	return &Kv{
 		Id:         k.ID,
-		Spec:       PbKvSpec(k.Spec, kvType, value),
+		KvState:    kvState,
+		Spec:       PbKvSpec(k.Spec, value),
 		Attachment: PbKvAttachment(k.Attachment),
 		Revision:   pbbase.PbRevision(k.Revision),
 	}
@@ -72,14 +73,14 @@ func PbKv(k *table.Kv, kvType types.KvType, value string) *Kv {
 // PbKvSpec convert table KvSpec to pb KvSpec
 //
 //nolint:revive
-func PbKvSpec(spec *table.KvSpec, kvType types.KvType, value string) *KvSpec {
+func PbKvSpec(spec *table.KvSpec, value string) *KvSpec {
 	if spec == nil {
 		return nil
 	}
 
 	return &KvSpec{
 		Key:    spec.Key,
-		KvType: string(kvType),
+		KvType: string(spec.KvType),
 		Value:  value,
 	}
 }
@@ -96,4 +97,21 @@ func PbKvAttachment(ka *table.KvAttachment) *KvAttachment {
 		BizId: ka.BizID,
 		AppId: ka.AppID,
 	}
+}
+
+// PbKvs convert table Kv to pb Kv
+func PbKvs(kvs []*table.ReleasedKv) []*Kv {
+	kvRevisions := make([]*Kv, len(kvs))
+
+	for idx, r := range kvRevisions {
+
+		kvRevisions[idx] = &Kv{
+			Id:         r.Id,
+			Spec:       r.Spec,
+			Attachment: r.Attachment,
+			Revision:   r.Revision,
+		}
+	}
+
+	return kvRevisions
 }

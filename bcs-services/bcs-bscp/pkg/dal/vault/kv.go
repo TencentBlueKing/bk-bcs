@@ -15,6 +15,7 @@ package vault
 import (
 	"fmt"
 
+	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/types"
 )
@@ -49,7 +50,7 @@ func (s *set) UpsertKv(kit *kit.Kit, opt *types.UpsertKvOption) (int, error) {
 }
 
 // GetLastKv 获取最新的kv
-func (s *set) GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType types.KvType, value string, err error) {
+func (s *set) GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType table.DataType, value string, err error) {
 
 	if err = opt.Validate(); err != nil {
 		return
@@ -65,7 +66,7 @@ func (s *set) GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType types.KvT
 		return "", "", fmt.Errorf("failed to get 'kv_type' as a string from kv.Data,"+
 			" err : %v", err)
 	}
-	kvType = types.KvType(kvTypeStr)
+	kvType = table.DataType(kvTypeStr)
 
 	value, ok = kv.Data["value"].(string)
 	if !ok {
@@ -76,7 +77,7 @@ func (s *set) GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType types.KvT
 }
 
 // GetKvByVersion 根据版本获取kv
-func (s *set) GetKvByVersion(kit *kit.Kit, opt *types.GetKvByVersion) (kvType types.KvType, value string, err error) {
+func (s *set) GetKvByVersion(kit *kit.Kit, opt *types.GetKvByVersion) (kvType table.DataType, value string, err error) {
 
 	if err = opt.Validate(); err != nil {
 		return
@@ -92,7 +93,7 @@ func (s *set) GetKvByVersion(kit *kit.Kit, opt *types.GetKvByVersion) (kvType ty
 		return "", "", fmt.Errorf("failed to get 'kv_type' as a string from kv.Data,"+
 			" err : %v", err)
 	}
-	kvType = types.KvType(kvTypeStr)
+	kvType = table.DataType(kvTypeStr)
 
 	value, ok = kv.Data["value"].(string)
 	if !ok {

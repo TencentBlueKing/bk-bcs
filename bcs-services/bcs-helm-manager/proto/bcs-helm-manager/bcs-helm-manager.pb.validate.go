@@ -1012,6 +1012,287 @@ var _ interface {
 	ErrorName() string
 } = CreateRepositoryRespValidationError{}
 
+// Validate checks the field values on CreatePersonalRepoReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreatePersonalRepoReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreatePersonalRepoReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreatePersonalRepoReqMultiError, or nil if none found.
+func (m *CreatePersonalRepoReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreatePersonalRepoReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := CreatePersonalRepoReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CreatePersonalRepoReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreatePersonalRepoReqMultiError is an error wrapping multiple validation
+// errors returned by CreatePersonalRepoReq.ValidateAll() if the designated
+// constraints aren't met.
+type CreatePersonalRepoReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreatePersonalRepoReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreatePersonalRepoReqMultiError) AllErrors() []error { return m }
+
+// CreatePersonalRepoReqValidationError is the validation error returned by
+// CreatePersonalRepoReq.Validate if the designated constraints aren't met.
+type CreatePersonalRepoReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreatePersonalRepoReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreatePersonalRepoReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreatePersonalRepoReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreatePersonalRepoReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreatePersonalRepoReqValidationError) ErrorName() string {
+	return "CreatePersonalRepoReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreatePersonalRepoReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreatePersonalRepoReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreatePersonalRepoReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreatePersonalRepoReqValidationError{}
+
+// Validate checks the field values on CreatePersonalRepoResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreatePersonalRepoResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreatePersonalRepoResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreatePersonalRepoRespMultiError, or nil if none found.
+func (m *CreatePersonalRepoResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreatePersonalRepoResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreatePersonalRepoRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreatePersonalRepoRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreatePersonalRepoRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreatePersonalRepoRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreatePersonalRepoRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreatePersonalRepoRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreatePersonalRepoRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreatePersonalRepoRespMultiError is an error wrapping multiple validation
+// errors returned by CreatePersonalRepoResp.ValidateAll() if the designated
+// constraints aren't met.
+type CreatePersonalRepoRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreatePersonalRepoRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreatePersonalRepoRespMultiError) AllErrors() []error { return m }
+
+// CreatePersonalRepoRespValidationError is the validation error returned by
+// CreatePersonalRepoResp.Validate if the designated constraints aren't met.
+type CreatePersonalRepoRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreatePersonalRepoRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreatePersonalRepoRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreatePersonalRepoRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreatePersonalRepoRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreatePersonalRepoRespValidationError) ErrorName() string {
+	return "CreatePersonalRepoRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreatePersonalRepoRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreatePersonalRepoResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreatePersonalRepoRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreatePersonalRepoRespValidationError{}
+
 // Validate checks the field values on UpdateRepositoryReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

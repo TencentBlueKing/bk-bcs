@@ -46,9 +46,10 @@
         </div>
       </div>
       <tableEmpty
-        v-if="(isOnlyShowDiff || searchStr) && groupedConfigListOnShow.length === 0"
+        v-if="groupedConfigListOnShow.length === 0"
         class="empty-tips"
-        :is-search-empty="true"
+        :is-search-empty="isSearchEmpty"
+        empty-title="没有差异配置项"
         @clear="clearStr"
       >
       </tableEmpty>
@@ -61,7 +62,7 @@ import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Search, RightShape } from 'bkui-vue/lib/icon';
 import useServiceStore from '../../../../../../../../store/service';
-import { datetimeFormat } from '../../../../../../../../utils';
+import { datetimeFormat, byteUnitConverse } from '../../../../../../../../utils';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import {
   IConfigItem,
@@ -79,7 +80,7 @@ import {
   getBoundTemplatesByAppVersion,
 } from '../../../../../../../../api/config';
 import { getReleasedAppVariables } from '../../../../../../../../api/variable';
-import { byteUnitConverse } from '../../../../../../../../utils';
+
 import SearchInput from '../../../../../../../../components/search-input.vue';
 import tableEmpty from '../../../../../../../../components/table/table-empty.vue';
 
@@ -155,6 +156,7 @@ const groupedConfigListOnShow = ref<IDiffGroupData[]>([]);
 const isOnlyShowDiff = ref(false); // 只显示差异项
 const isOpenSearch = ref(false);
 const searchStr = ref('');
+const isSearchEmpty = ref(false);
 
 // 是否实际选择了对比的基准版本，为了区分的未命名版本id为0的情况
 const isBaseVersionExist = computed(() => typeof props.baseVersionId === 'number');
@@ -209,6 +211,13 @@ watch(
         current: { content: '', variables: '' },
       });
     }
+  },
+);
+
+watch(
+  () => searchStr.value,
+  (val) => {
+    isSearchEmpty.value = !!val;
   },
 );
 
@@ -460,6 +469,7 @@ const calcDiff = () => {
 
 // 设置默认选中的配置文件
 // 如果props有设置选中项，取props值
+// 如果选中项有值，保持上一次选中项
 // 否则取第一个非空分组的第一个配置文件
 const setDefaultSelected = () => {
   if (props.selectedConfig.id) {
@@ -469,6 +479,14 @@ const setDefaultSelected = () => {
     }
     handleSelectItem(props.selectedConfig);
   } else {
+    const selectedGroup = aggregatedList.value.find(group => group.id === selected.value.pkgId);
+    if (selectedGroup) {
+      const selectedConfig = selectedGroup.configs.find(config => config.id === selected.value.id);
+      if (selectedConfig) {
+        handleSelectItem(selected.value);
+        return;
+      }
+    }
     const group = aggregatedList.value.find(group => group.configs.length > 0);
     if (group) {
       handleSelectItem({ pkgId: group.id, id: group.configs[0].id, version: group.configs[0].template_revision_id });

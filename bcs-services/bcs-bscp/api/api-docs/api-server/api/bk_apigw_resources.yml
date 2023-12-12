@@ -2305,3 +2305,26 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: [ ]
+    post:
+      operationId: undelete_kv
+      description: 撤销删除kv
+      tags:
+        - kv管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]

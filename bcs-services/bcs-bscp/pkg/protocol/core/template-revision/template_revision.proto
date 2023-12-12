@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
-import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
-import "bscp.io/pkg/protocol/core/content/content.proto";
+import "pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/config-item/config_item.proto";
+import "pkg/protocol/core/content/content.proto";
 
 package pbtr;
 
@@ -10,40 +10,40 @@ option go_package = "bscp.io/pkg/protocol/core/template-revision;pbtr";
 
 // Template source resource reference: pkg/dal/table/template_revision.go
 message TemplateRevision {
-    uint32                     id         = 1;
-    TemplateRevisionSpec       spec       = 2;
-    TemplateRevisionAttachment attachment = 3;
-    pbbase.CreatedRevision     revision   = 4;
+  uint32 id = 1;
+  TemplateRevisionSpec spec = 2;
+  TemplateRevisionAttachment attachment = 3;
+  pbbase.CreatedRevision revision = 4;
 }
 
 // TemplateRevisionSpec source resource reference: pkg/dal/table/template_revision.go
 message TemplateRevisionSpec {
-    string                revision_name = 1;
-    string                revision_memo = 2;
-    string                name          = 3;
-    string                path          = 4;
-    string                file_type     = 5; // file_type is enum type
-    string                file_mode     = 6; // file_mode is enum type
-    pbci.FilePermission   permission    = 7;
-    pbcontent.ContentSpec content_spec  = 8;
+  string revision_name = 1;
+  string revision_memo = 2;
+  string name = 3;
+  string path = 4;
+  string file_type = 5;  // file_type is enum type
+  string file_mode = 6;  // file_mode is enum type
+  pbci.FilePermission permission = 7;
+  pbcontent.ContentSpec content_spec = 8;
 }
 
 // TemplateRevisionAttachment source resource reference: pkg/dal/table/template_revision.go
 message TemplateRevisionAttachment {
-    uint32 biz_id            = 1;
-    uint32 template_space_id = 2;
-    uint32 template_id       = 3;
+  uint32 biz_id = 1;
+  uint32 template_space_id = 2;
+  uint32 template_id = 3;
 }
 
 // TemplateRevisionNamesDetail is template revision names Detail.
 message TemplateRevisionNamesDetail {
-    message revision_names {
-        uint32 template_revision_id   = 1;
-        string template_revision_name = 2;
-        string template_revision_memo = 3;
-    }
-    uint32                  template_id                 = 1;
-    string                  template_name               = 2;
-    uint32                  latest_template_revision_id = 3;
-    repeated revision_names template_revisions          = 4;
+  message revision_names {
+    uint32 template_revision_id = 1;
+    string template_revision_name = 2;
+    string template_revision_memo = 3;
+  }
+  uint32 template_id = 1;
+  string template_name = 2;
+  uint32 latest_template_revision_id = 3;
+  repeated revision_names template_revisions = 4;
 }

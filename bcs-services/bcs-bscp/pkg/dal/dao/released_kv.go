@@ -15,6 +15,7 @@ package dao
 import (
 	"fmt"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -29,6 +30,12 @@ type ReleasedKv interface {
 	Get(kit *kit.Kit, bizID, appID, releasedID uint32, key string) (*table.ReleasedKv, error)
 	// List released kv with options.
 	List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table.ReleasedKv, int64, error)
+	// ListAllByReleaseIDs batch list released kvs by releaseIDs.
+	ListAllByReleaseIDs(kit *kit.Kit, releasedIDs []uint32, bizID uint32) ([]*table.ReleasedKv, error)
+	// GetReleasedLately get released kv lately
+	GetReleasedLately(kit *kit.Kit, bizID, appID uint32) ([]*table.ReleasedKv, error)
+	// GetReleasedLatelyByKey get released kv lately by key
+	GetReleasedLatelyByKey(kit *kit.Kit, bizID, appID uint32, key string) (*table.ReleasedKv, error)
 }
 
 var _ ReleasedKv = new(releasedKvDao)
@@ -93,7 +100,7 @@ func (dao *releasedKvDao) List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table
 	m := dao.genQ.ReleasedKv
 	q := dao.genQ.ReleasedKv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID),
 		m.ReleaseID.Eq(opt.ReleaseID)).Or(m.Key.Eq(opt.Key)).
-		Order(m.ID.Desc())
+		Order(m.Key)
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
 		result, err := q.Find()
@@ -112,4 +119,33 @@ func (dao *releasedKvDao) List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table
 
 	return result, count, err
 
+}
+
+// ListAllByReleaseIDs batch list released kvs by releaseIDs.
+func (dao *releasedKvDao) ListAllByReleaseIDs(kit *kit.Kit, releasedIDs []uint32, bizID uint32) ([]*table.ReleasedKv,
+	error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
+	}
+	m := dao.genQ.ReleasedKv
+	return m.WithContext(kit.Ctx).Where(m.ReleaseID.In(releasedIDs...), m.BizID.Eq(bizID)).Find()
+}
+
+// GetReleasedLately get released kv lately
+func (dao *releasedKvDao) GetReleasedLately(kit *kit.Kit, bizID, appID uint32) ([]*table.ReleasedKv, error) {
+
+	m := dao.genQ.ReleasedKv
+	q := dao.genQ.ReleasedKv.WithContext(kit.Ctx)
+
+	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID))
+	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Order(m.ReleaseID.Desc()).Limit(1).Select(m.ReleaseID)
+	return query.Where(q.Columns(m.ReleaseID).Eq(subQuery)).Find()
+
+}
+
+// GetReleasedLatelyByKey get released kv lately by key
+func (dao *releasedKvDao) GetReleasedLatelyByKey(kit *kit.Kit, bizID, appID uint32, key string) (*table.ReleasedKv,
+	error) {
+	m := dao.genQ.ReleasedKv
+	return m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Key.Eq(key)).Take()
 }

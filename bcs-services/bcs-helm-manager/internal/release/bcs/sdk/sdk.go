@@ -554,8 +554,8 @@ func parseArgs4Install(install *action.Install, args []string, valueOpts *values
 	// 兼容更新时传入 history-max 参数，不作使用
 	var _maxHistory int
 
-	f.BoolVar(&install.DisableHooks, "no-hooks", false,
-		"prevent hooks from running during install")
+	f.BoolVar(&install.CreateNamespace, "create-namespace", false, "create the release namespace if not present")
+	f.BoolVar(&install.DisableHooks, "no-hooks", false, "prevent hooks from running during install")
 	f.BoolVar(&install.Replace, "replace", false,
 		"re-use the given name, only if that name is a deleted release which remains in the history. "+
 			"This is unsafe in production")
@@ -603,8 +603,12 @@ func parseArgs4Upgrade(upgrade *action.Upgrade, args []string, valueOpts *values
 	}
 	f := pflag.NewFlagSet("upgrade", pflag.ContinueOnError)
 
+	// 兼容更新时传入 create-namespace 参数，不作使用
+	var _createNamespace bool
+
 	f.BoolVarP(&upgrade.Install, "install", "i", true,
 		"if a release by this name doesn't already exist, run an install")
+	f.BoolVar(&_createNamespace, "create-namespace", false, "create the release namespace if not present")
 	f.BoolVar(&upgrade.Devel, "devel", false,
 		"use development versions, too. Equivalent to version '>0.0.0-0'. If --version is set, this is ignored")
 	f.BoolVar(&upgrade.Recreate, "recreate-pods", false,

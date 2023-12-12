@@ -27,6 +27,7 @@ import (
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	pbhook "bscp.io/pkg/protocol/core/hook"
+	pbkv "bscp.io/pkg/protocol/core/kv"
 	pbfs "bscp.io/pkg/protocol/feed-server"
 	"bscp.io/pkg/runtime/jsoni"
 )
@@ -186,6 +187,7 @@ type ReleaseEventMetaV1 struct {
 	App        string              `json:"app"`
 	ReleaseID  uint32              `json:"releaseID"`
 	CIMetas    []*ConfigItemMetaV1 `json:"ciMetas"`
+	KvMetas    []*KvMetaV1         `json:"kvMetas"`
 	Repository *RepositoryV1       `json:"repository"`
 	PreHook    *pbhook.HookSpec    `json:"preHook"`
 	PostHook   *pbhook.HookSpec    `json:"postHook"`
@@ -193,11 +195,12 @@ type ReleaseEventMetaV1 struct {
 
 // InstanceSpec defines the specifics for an app instance to watch the event.
 type InstanceSpec struct {
-	BizID  uint32            `json:"bizID"`
-	AppID  uint32            `json:"appID"`
-	App    string            `json:"app"`
-	Uid    string            `json:"uid"`
-	Labels map[string]string `json:"labels"`
+	BizID      uint32            `json:"bizID"`
+	AppID      uint32            `json:"appID"`
+	App        string            `json:"app"`
+	Uid        string            `json:"uid"`
+	Labels     map[string]string `json:"labels"`
+	ConfigType table.ConfigType  `json:"configType"`
 }
 
 // Validate the instance spec is valid or not
@@ -469,4 +472,12 @@ func (h *HeartbeatPayload) Encode() ([]byte, error) {
 	}
 
 	return jsoni.Marshal(h)
+}
+
+// KvMetaV1 defines the released kv metadata.
+type KvMetaV1 struct {
+	// ID is released configuration item identity id.
+	ID           uint32             `json:"id"`
+	Key          string             `json:"key"`
+	KvAttachment *pbkv.KvAttachment `json:"kv_attachment"`
 }

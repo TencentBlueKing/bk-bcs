@@ -12,15 +12,23 @@
       <template #label>
         <span
           v-bk-tooltips="{
-            content:'客户端拉取配置文件后存放路径为：临时目录/业务ID/服务名称/files/配置文件路径，除了配置文件路径其它参数都在客户端sidecar中配置',
-            placement: 'top'
+            content:
+              '客户端拉取配置文件后存放路径为：临时目录/业务ID/服务名称/files/配置文件路径，除了配置文件路径其它参数都在客户端sidecar中配置',
+            placement: 'top',
           }"
           >配置文件路径</span>
       </template>
       <bk-input v-model="localVal.path" placeholder="请输入绝对路径" :disabled="!editable" @change="change" />
     </bk-form-item>
     <bk-form-item label="配置文件描述" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change" :resize="true" />
+      <bk-input
+        v-model="localVal.memo"
+        type="textarea"
+        :maxlength="200"
+        :disabled="!editable"
+        @change="change"
+        :resize="true"
+      />
     </bk-form-item>
     <bk-form-item label="配置文件格式">
       <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">

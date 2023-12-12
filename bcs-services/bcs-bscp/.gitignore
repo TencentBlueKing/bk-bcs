@@ -1,7 +1,7 @@
 bscp-ui
 bcs-bscp
 *dev*
-.bin
+bin
 .codecc
 .idea
 .vscode

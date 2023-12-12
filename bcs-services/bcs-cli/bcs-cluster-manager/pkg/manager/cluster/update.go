@@ -35,7 +35,6 @@ func (c *ClusterMgr) Update(req types.UpdateClusterReq) error {
 		ClusterName: req.ClusterName,
 		Environment: req.Environment,
 		Provider:    req.Provider,
-		Description: req.Description,
 		ClusterBasicSettings: &clustermanager.ClusterBasicSetting{
 			Version: req.ClusterBasicSettings.Version,
 		},

@@ -21,7 +21,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics/query"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/testing"
@@ -58,7 +58,7 @@ func main() {
 				}
 
 				// 部分接口，如 usermanager 返回的content-type不是json, 需要手动Unmarshal
-				result := new(metrics.ClusterOverviewMetric)
+				result := new(query.ClusterOverviewMetric)
 				if err := component.UnmarshalBKResult(resp, result); err != nil {
 					atomic.AddInt64(&errCount, 1)
 					atomic.AddInt64(&unmarshalErrCount, 1)

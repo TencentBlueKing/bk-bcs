@@ -15,6 +15,7 @@ package i18n
 
 import (
 	"context"
+	"net/http"
 	"strings"
 
 	"github.com/micro/go-micro/v2/metadata"
@@ -38,6 +39,18 @@ func GetLangFromCookies(md metadata.Metadata) string {
 		if lang, ok := langMap[strings.ToLower(v)]; ok {
 			return lang
 		}
+	}
+	return DefaultLang
+}
+
+// GetLangFromReqCookies 从 Cookies 中获取语言版本
+func GetLangFromReqCookies(req *http.Request) string {
+	cookie, err := req.Cookie(common.LangCookieName)
+	if err != nil {
+		return DefaultLang
+	}
+	if lang, ok := langMap[strings.ToLower(cookie.Value)]; ok {
+		return lang
 	}
 	return DefaultLang
 }

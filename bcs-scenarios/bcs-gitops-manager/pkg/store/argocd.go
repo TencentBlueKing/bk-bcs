@@ -33,6 +33,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	argoutil "github.com/argoproj/argo-cd/v2/util/argo"
+	utilargo "github.com/argoproj/argo-cd/v2/util/argo"
 	"github.com/argoproj/argo-cd/v2/util/argo/normalizers"
 	"github.com/argoproj/argo-cd/v2/util/db"
 	settings_util "github.com/argoproj/argo-cd/v2/util/settings"
@@ -242,11 +243,11 @@ func (cd *argo) CreateCluster(ctx context.Context, cls *v1alpha1.Cluster) error 
 
 // GetClusterFromDB get cluster info from ArgoDB which will return the token
 func (cd *argo) GetClusterFromDB(ctx context.Context, serverUrl string) (*v1alpha1.Cluster, error) {
-	cluster, err := cd.argoDB.GetCluster(ctx, serverUrl)
+	argoCluster, err := cd.argoDB.GetCluster(ctx, serverUrl)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get cluster '%s' failed", serverUrl)
 	}
-	return cluster, nil
+	return argoCluster, nil
 }
 
 // DeleteCluster delete cluster by clusterID
@@ -374,6 +375,7 @@ func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repos
 	return repos, nil
 }
 
+// ListRepository list repository with project names
 func (cd *argo) ListRepository(ctx context.Context, projNames []string) (*v1alpha1.RepositoryList, error) {
 	repos, err := cd.repoClient.List(ctx, &repository.RepoQuery{})
 	if err != nil {
@@ -432,6 +434,17 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 	return result, nil
 }
 
+// GetApplicationResourceTree returns the resource tree of application
+func (cd *argo) GetApplicationResourceTree(ctx context.Context, name string) (*v1alpha1.ApplicationTree, error) {
+	resp, err := cd.appClient.ResourceTree(ctx, &applicationpkg.ResourcesQuery{
+		ApplicationName: &name,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "get application '%s' resource tree failed", name)
+	}
+	return resp, nil
+}
+
 // GetApplicationManifests returns the manifests result of application
 func (cd *argo) GetApplicationManifests(ctx context.Context, name, revision string) (*apiclient.ManifestResponse, error) {
 	resp, err := cd.appClient.GetManifests(ctx, &appclient.ApplicationManifestQuery{
@@ -444,10 +457,10 @@ func (cd *argo) GetApplicationManifests(ctx context.Context, name, revision stri
 	return resp, nil
 }
 
-// GetApplicationManifestsFromRepoServer returns the manifests result of application which not
+// GetApplicationManifestsFromRepoServerWithMultiSources returns the manifests result of application which not
 // created. This function will direct call reposerver of argocd
-func (cd *argo) GetApplicationManifestsFromRepoServer(ctx context.Context,
-	application *v1alpha1.Application) (*apiclient.ManifestResponse, error) {
+func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx context.Context,
+	application *v1alpha1.Application) ([]*apiclient.ManifestResponse, error) {
 	repoUrl := application.Spec.Source.RepoURL
 	repo, err := cd.argoDB.GetRepository(ctx, repoUrl)
 	if err != nil {
@@ -467,21 +480,36 @@ func (cd *argo) GetApplicationManifestsFromRepoServer(ctx context.Context,
 	}
 	defer repoCloser.Close()
 
-	revision := application.Spec.Source.TargetRevision
-	if revision == "" {
-		revision = "HEAD"
-	}
-	resp, err := repoClient.GenerateManifest(ctx, &apiclient.ManifestRequest{
-		Repo:              repo,
-		Revision:          revision,
-		Namespace:         application.Spec.Destination.Namespace,
-		AppName:           application.Name,
-		ApplicationSource: application.Spec.Source,
-	})
+	// Store the map of all sources having ref field into a map for applications with sources field
+	refSources, err := utilargo.GetRefSources(context.Background(), application.Spec, cd.argoDB)
 	if err != nil {
-		return nil, errors.Wrapf(err, "generate manifests failed")
+		return nil, errors.Wrapf(err, "failed to get ref sources")
 	}
-	return resp, nil
+	sources := make([]v1alpha1.ApplicationSource, 0)
+	if application.Spec.HasMultipleSources() {
+		sources = append(sources, application.Spec.Sources...)
+	} else {
+		sources = append(sources, *application.Spec.Source)
+	}
+
+	result := make([]*apiclient.ManifestResponse, 0)
+	for i := range sources {
+		var resp *apiclient.ManifestResponse
+		resp, err = repoClient.GenerateManifest(ctx, &apiclient.ManifestRequest{
+			Repo:               repo,
+			Revision:           sources[i].TargetRevision,
+			Namespace:          application.Spec.Destination.Namespace,
+			AppName:            application.Name,
+			RefSources:         refSources,
+			HasMultipleSources: application.Spec.HasMultipleSources(),
+			ApplicationSource:  &sources[i],
+		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "generate manifests failed")
+		}
+		result = append(result, resp)
+	}
+	return result, nil
 }
 
 // ListApplications interface
@@ -538,56 +566,122 @@ func (cd *argo) GetToken(ctx context.Context) string {
 	return cd.token
 }
 
+// ApplicationResource defines the source of application, it same to ResourceStatus
+type ApplicationResource struct {
+	ResourceName string `json:"resourceName"`
+	Kind         string `json:"kind"`
+	Namespace    string `json:"namespace"`
+	Group        string `json:"group"`
+	Version      string `json:"version"`
+}
+
+// ApplicationDeleteResourceResult defines the resource deletion result
+type ApplicationDeleteResourceResult struct {
+	Succeeded  bool   `json:"succeeded"`
+	ErrMessage string `json:"errMessage"`
+}
+
+func buildResourceKeyWithResourceStatus(resource *v1alpha1.ResourceStatus) string {
+	return strings.Join([]string{resource.Kind, resource.Namespace, resource.Group,
+		resource.Version, resource.Name}, "/")
+}
+
+func buildResourceKeyWithCustomResource(resource *ApplicationResource) string {
+	return strings.Join([]string{resource.Kind, resource.Namespace, resource.Group,
+		resource.Version, resource.ResourceName}, "/")
+}
+
 // DeleteApplicationResource will delete all resources for application
-func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application) error {
-	server := application.Spec.Destination.Server
-	errs := make([]string, 0)
-	requestID := ctx.Value(traceconst.RequestIDHeaderKey).(string)
+func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application,
+	resources []*ApplicationResource) []ApplicationDeleteResourceResult {
+	var result []ApplicationDeleteResourceResult
+	if len(resources) == 0 {
+		result = make([]ApplicationDeleteResourceResult, 0, len(application.Status.Resources))
+		for _, resource := range application.Status.Resources {
+			if err := cd.deleteApplicationResource(ctx, application, &resource); err != nil {
+				result = append(result, ApplicationDeleteResourceResult{
+					Succeeded:  false,
+					ErrMessage: err.Error(),
+				})
+			} else {
+				result = append(result, ApplicationDeleteResourceResult{
+					Succeeded: true,
+				})
+			}
+		}
+		return result
+	}
+	result = make([]ApplicationDeleteResourceResult, 0, len(resources))
+	resourceMap := make(map[string]*v1alpha1.ResourceStatus)
 	for _, resource := range application.Status.Resources {
-		_, err := cd.appClient.DeleteResource(ctx, &appclient.ApplicationResourceDeleteRequest{
-			Name:         &application.Name,
-			Kind:         &resource.Kind,
-			Namespace:    &resource.Namespace,
-			Group:        &resource.Group,
-			Version:      &resource.Version,
-			ResourceName: &resource.Name,
-		})
-		if err != nil {
-			if resource.Status != v1alpha1.SyncStatusCodeSynced {
-				blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
-					"with status '%s', noneed care: %s",
-					requestID, resource.Group, resource.Kind, resource.Name,
-					server, application.Name, resource.Status, err.Error())
-				continue
-			}
-			if utils.IsArgoResourceNotFound(err) {
-				blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
-					"got 'Not Found': %s",
-					requestID, resource.Group, resource.Kind, resource.Name,
-					server, application.Name, err.Error())
-				continue
-			}
-			if utils.IsArgoNotFoundAsPartOf(err) {
-				blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
-					"got 'not found as part of': %s",
-					requestID, resource.Group, resource.Kind, resource.Name,
-					server, application.Name, err.Error())
-				continue
-			}
-			if !utils.IsContextCanceled(err) {
-				metric.ManagerArgoOperateFailed.WithLabelValues("DeleteApplicationResource").Inc()
-			}
-			errs = append(errs, fmt.Sprintf("argocd delete resource '%s/%s/%s' failed for cluster '%s': %s",
-				resource.Group, resource.Kind, resource.Name, server, err.Error()))
+		resourceMap[buildResourceKeyWithResourceStatus(&resource)] = &resource
+	}
+	for _, appResource := range resources {
+		key := buildResourceKeyWithCustomResource(appResource)
+		resource, ok := resourceMap[key]
+		if !ok {
+			result = append(result, ApplicationDeleteResourceResult{
+				Succeeded:  false,
+				ErrMessage: fmt.Sprintf("resource '%s' not belong to application '%s'", key, application.Name),
+			})
+			continue
+		}
+		if err := cd.deleteApplicationResource(ctx, application, resource); err != nil {
+			result = append(result, ApplicationDeleteResourceResult{
+				Succeeded:  false,
+				ErrMessage: fmt.Sprintf("resource '%s' delete failed: %s", key, err.Error()),
+			})
 		} else {
-			blog.Infof("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' success",
-				requestID, resource.Group, resource.Kind, resource.Name, server, application.Name)
+			result = append(result, ApplicationDeleteResourceResult{
+				Succeeded: true,
+			})
 		}
 	}
-	if len(errs) != 0 {
-		return errors.Errorf("delete application '%s' sub resource failed: %s",
-			application.Name, strings.Join(errs, ","))
+	return result
+}
+
+func (cd *argo) deleteApplicationResource(ctx context.Context, application *v1alpha1.Application,
+	resource *v1alpha1.ResourceStatus) error {
+	server := application.Spec.Destination.Server
+	requestID := ctx.Value(traceconst.RequestIDHeaderKey).(string)
+	_, err := cd.appClient.DeleteResource(ctx, &appclient.ApplicationResourceDeleteRequest{
+		Name:         &application.Name,
+		Kind:         &resource.Kind,
+		Namespace:    &resource.Namespace,
+		Group:        &resource.Group,
+		Version:      &resource.Version,
+		ResourceName: &resource.Name,
+	})
+	if err != nil {
+		if resource.Status != v1alpha1.SyncStatusCodeSynced {
+			blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
+				"with status '%s', noneed care: %s",
+				requestID, resource.Group, resource.Kind, resource.Name,
+				server, application.Name, resource.Status, err.Error())
+			return nil
+		}
+		if utils.IsArgoResourceNotFound(err) {
+			blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
+				"got 'Not Found': %s",
+				requestID, resource.Group, resource.Kind, resource.Name,
+				server, application.Name, err.Error())
+			return nil
+		}
+		if utils.IsArgoNotFoundAsPartOf(err) {
+			blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
+				"got 'not found as part of': %s",
+				requestID, resource.Group, resource.Kind, resource.Name,
+				server, application.Name, err.Error())
+			return nil
+		}
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("DeleteApplicationResource").Inc()
+		}
+		return errors.Wrapf(err, "argocd delete resource '%s/%s/%s' failed for cluster '%s'",
+			resource.Group, resource.Kind, resource.Name, server)
 	}
+	blog.Infof("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' success",
+		requestID, resource.Group, resource.Kind, resource.Name, server, application.Name)
 	return nil
 }
 

@@ -128,6 +128,7 @@ const versionListByGroup = computed(() => {
 // 判断是否需要对比上线版本
 const handleDiffOrPublish = () => {
   if (versionListByGroup.value.length) {
+    baseVersionId.value = versionListByGroup.value[0].id;
     isDiffSliderShow.value = true;
     return;
   }

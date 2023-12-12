@@ -8,14 +8,14 @@
             <bk-input v-model="formData.name" @change="formChange" />
           </bk-form-item>
           <bk-form-item label="版本描述" property="memo">
-            <bk-input v-model="formData.memo" type="textarea" :maxlength="100" @change="formChange" :resize="true" />
+            <bk-input v-model="formData.memo" type="textarea" :maxlength="200" @change="formChange" :resize="true" />
           </bk-form-item>
           <bk-checkbox v-model="isPublish" :true-label="true" :false-label="false" @change="formChange">
             <span style="font-size: 12px;">同时上线版本</span>
           </bk-checkbox>
         </bk-form>
       </div>
-      <div class="variable-form">
+      <div class="variable-form" v-if="isFileType">
         <div v-bkloading="{ loading }" class="section-title">服务变量赋值</div>
         <ResetDefaultValue class="reset-default-btn" :list="initialVariables" @reset="handleResetDefault" />
         <VariablesTable ref="tableRef" :list="variableList" :editable="true" @change="handleVariablesChange" />
@@ -35,6 +35,8 @@ import { createVersion } from '../../../../../../api/config';
 import useModalCloseConfirmation from '../../../../../../utils/hooks/use-modal-close-confirmation';
 import { IVariableEditParams } from '../../../../../../../types/variable';
 import { getUnReleasedAppVariables } from '../../../../../../api/variable';
+import useServiceStore from '../../../../../../store/service';
+import { storeToRefs } from 'pinia';
 import VariablesTable from '../../config/config-list/config-table-list/variables/variables-table.vue';
 import ResetDefaultValue from '../../config/config-list/config-table-list/variables/reset-default-value.vue';
 
@@ -46,6 +48,9 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits(['update:show', 'created', 'open-diff']);
+
+const serviceStore = useServiceStore();
+const { isFileType } = storeToRefs(serviceStore);
 
 const formData = ref({
   name: '',
@@ -73,16 +78,8 @@ const rules = {
   ],
   memo: [
     {
-      validator: (value: string) => value.length <= 100,
-      message: '最大长度100个字符',
-    },
-    {
-      validator: (value: string) => {
-        if (!value) return true;
-        return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value);
-      },
-      message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
-      trigger: 'change',
+      validator: (value: string) => value.length <= 200,
+      message: '最大长度200个字符',
     },
   ],
 };
@@ -127,10 +124,9 @@ const handleVariablesChange = (variables: IVariableEditParams[]) => {
 // };
 
 const confirm = async () => {
-  if (!formRef.value.validate() || !tableRef.value.validate()) return;
+  if (!formRef.value.validate() || (isFileType.value && !tableRef.value.validate())) return;
   try {
     await formRef.value.validate();
-    if (!tableRef.value.validate()) return;
     pending.value = true;
     const params = {
       name: formData.value.name,

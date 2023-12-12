@@ -20,11 +20,12 @@ import (
 
 // BCSConf :
 type BCSConf struct {
-	Host         string         `yaml:"host"`
-	Token        string         `yaml:"token"`
-	Verify       bool           `yaml:"verify"`
-	JWTPubKey    string         `yaml:"jwt_public_key"`
-	JWTPubKeyObj *rsa.PublicKey `yaml:"-"`
+	Host            string         `yaml:"host"`
+	Token           string         `yaml:"token"`
+	Verify          bool           `yaml:"verify"`
+	NamespacePrefix string         `yaml:"namespace_prefix"`
+	JWTPubKey       string         `yaml:"jwt_public_key"`
+	JWTPubKeyObj    *rsa.PublicKey `yaml:"-"`
 }
 
 // Init :

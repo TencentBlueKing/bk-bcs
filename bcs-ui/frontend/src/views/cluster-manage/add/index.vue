@@ -105,7 +105,7 @@ export default defineComponent({
         subTitle: $i18n.t('cluster.create.type.cloudProvider.subTitle'),
         desc: $i18n.t('cluster.create.type.cloudProvider.desc'),
         type: 'cloud',
-        disabled: _INTERNAL_.value,
+        disabled: true,
         children: [
           {
             icon: 'bcs-icon-color-tencentcloud',

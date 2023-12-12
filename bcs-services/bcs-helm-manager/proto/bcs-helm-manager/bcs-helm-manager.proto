@@ -59,6 +59,16 @@ service HelmManager {
             summary: "创建仓库"
         };
     }
+    rpc CreatePersonalRepo(CreatePersonalRepoReq) returns (CreatePersonalRepoResp) {
+        option (google.api.http) = {
+            post: "/helmmanager/v1/projects/{projectCode}/repos/personal"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "创建个人仓库"
+            summary: "创建个人仓库"
+        };
+    }
     rpc UpdateRepository(UpdateRepositoryReq) returns (UpdateRepositoryResp) {
         option (google.api.http) = {
             put: "/helmmanager/v1/projects/{projectCode}/repos/{name}"
@@ -160,16 +170,6 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "下载指定版本的chart"
             summary: "下载chart"
-        };
-    }
-    rpc UploadChart(UploadChartReq) returns (UploadChartResp) {
-        option (google.api.http) = {
-            post: "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/version/{version}/upload"
-            body: "*"
-        };
-        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "上传自定义版本的chart"
-            summary: "上传chart"
         };
     }
     rpc GetChartRelease(GetChartReleaseReq) returns (GetChartReleaseResp) {
@@ -537,6 +537,54 @@ message CreateRepositoryResp {
         json_schema : {
             title : "CreateRepositoryResp"
             description : "创建仓库的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional Repository data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "创建的仓库信息"
+    }];
+    optional string requestID = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "requestID",
+        description: "requestID"
+    }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
+}
+
+message CreatePersonalRepoReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "CreatePersonalRepoReq",
+            description: "创建个人仓库的参数"
+        }
+    };
+
+    optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectCode",
+        description: "项目代码"
+    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+}
+
+message CreatePersonalRepoResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "CreatePersonalRepoResp"
+            description : "创建个人仓库的返回"
         }
     };
 

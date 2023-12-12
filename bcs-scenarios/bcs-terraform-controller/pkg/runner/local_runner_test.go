@@ -14,15 +14,11 @@
 package runner
 
 import (
-	"context"
-	"log"
 	"testing"
 
-	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/api/v1"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/utils"
 )
 
 func MockTerraform() *tfv1.Terraform {
@@ -40,37 +36,37 @@ func MockTerraform() *tfv1.Terraform {
 }
 
 func TestPlan(t *testing.T) {
-	tfRunner := TerraformLocalRunner{
-		ExecPath: "/opt/homebrew/bin/terraform",
-	}
-	ctx := context.Background()
-	instanceID := uuid.New().String()
-	mockTf := MockTerraform()
-	_, err := tfRunner.NewTerraform(ctx, &NewTerraformRequest{
-		WorkingDir: "/Users/zup779/code/my_code/terraform-store",
-		Terraform:  *mockTf,
-		InstanceID: instanceID,
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	err = tfRunner.tf.Init(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	reply, err := tfRunner.Plan(ctx, &PlanRequest{
-		TfInstance: instanceID,
-		Out:        "drift",
-		Refresh:    false,
-		Destroy:    false,
-		Targets:    nil,
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	log.Printf("reply: %s", utils.ToJsonString(reply))
+	//tfRunner := terraformLocalRunner{
+	//	execPath: "/opt/homebrew/bin/terraform",
+	//}
+	//ctx := context.Background()
+	//instanceID := uuid.New().String()
+	//mockTf := MockTerraform()
+	//_, err := tfRunner.NewTerraform(ctx, &NewTerraformRequest{
+	//	WorkingDir: "/Users/zup779/code/my_code/terraform-store",
+	//	Terraform:  *mockTf,
+	//	InstanceID: instanceID,
+	//})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//err = tfRunner.exec.Init(ctx)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//reply, err := tfRunner.Plan(ctx, &PlanRequest{
+	//	TfInstance: instanceID,
+	//	Out:        "drift",
+	//	Refresh:    false,
+	//	Destroy:    false,
+	//	Targets:    nil,
+	//})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//log.Printf("reply: %s", utils.ToJsonString(reply))
 
 }

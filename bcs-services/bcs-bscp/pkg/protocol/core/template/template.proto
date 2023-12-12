@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/base/base.proto";
 
 package pbtemplate;
 
@@ -8,21 +8,21 @@ option go_package = "bscp.io/pkg/protocol/core/template;pbtemplate";
 
 // Template source resource reference: pkg/dal/table/template.go
 message Template {
-    uint32             id         = 1;
-    TemplateSpec       spec       = 2;
-    TemplateAttachment attachment = 3;
-    pbbase.Revision    revision   = 4;
+  uint32 id = 1;
+  TemplateSpec spec = 2;
+  TemplateAttachment attachment = 3;
+  pbbase.Revision revision = 4;
 }
 
 // TemplateSpec source resource reference: pkg/dal/table/template.go
 message TemplateSpec {
-    string          name             = 1;
-    string          path             = 2;
-    string          memo             = 3;
+  string name = 1;
+  string path = 2;
+  string memo = 3;
 }
 
 // TemplateAttachment source resource reference: pkg/dal/table/template.go
 message TemplateAttachment {
-    uint32 biz_id            = 1;
-    uint32 template_space_id = 2;
+  uint32 biz_id = 1;
+  uint32 template_space_id = 2;
 }

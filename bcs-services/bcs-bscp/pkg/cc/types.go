@@ -773,6 +773,11 @@ type FSLocalCache struct {
 	// ReleasedCICacheTTLSec defines how long will this released configuration items can be cached in seconds.
 	ReleasedCICacheTTLSec uint `yaml:"releasedCICacheTTLSec"`
 
+	// ReleasedKvCacheSize defines how many released kvs can be cached.
+	ReleasedKvCacheSize uint `yaml:"releasedKvCacheSize"`
+	// ReleasedKvCacheTTLSec defines how long will this released kvs can be cached in seconds.
+	ReleasedKvCacheTTLSec uint `yaml:"releasedKvCacheTTLSec"`
+
 	// PublishedStrategyCacheSize defines how many published strategies can be cached.
 	PublishedStrategyCacheSize uint `yaml:"publishedStrategyCacheSize"`
 	// PublishedStrategyCacheTTLSec defines how long will this published strategy can be cached in seconds.
@@ -838,6 +843,14 @@ func (fc *FSLocalCache) trySetDefault() {
 
 	if fc.ReleasedCICacheTTLSec == 0 {
 		fc.ReleasedCICacheTTLSec = 120
+	}
+
+	if fc.ReleasedKvCacheSize == 0 {
+		fc.ReleasedKvCacheSize = 100
+	}
+
+	if fc.ReleasedKvCacheTTLSec == 0 {
+		fc.ReleasedKvCacheTTLSec = 120
 	}
 
 	if fc.PublishedStrategyCacheSize == 0 {
@@ -1019,5 +1032,4 @@ func (v *Vault) getConfigFromEnv() {
 
 	v.Token = os.Getenv(VaultTokenEnv)
 	v.Address = os.Getenv(VaultAddressEnv)
-
 }

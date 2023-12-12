@@ -26,6 +26,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/independent"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
@@ -36,8 +37,8 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
-// NamespacePrefix namespace in shared cluster must be prefixed by ieg-[projectCode]
-var NamespacePrefix = "ieg-%s-"
+// NamespacePrefix namespace in shared cluster must be prefixed by it
+var NamespacePrefix = envs.BCSNamespacePrefix + "-%s-"
 
 // CreateNamespace implement for CreateNamespace interface
 func (a *SharedNamespaceAction) CreateNamespace(ctx context.Context,
@@ -114,7 +115,8 @@ func (a *SharedNamespaceAction) CreateNamespace(ctx context.Context,
 func (a *SharedNamespaceAction) validateCreate(ctx context.Context, req *proto.CreateNamespaceRequest) error {
 	// check is namespace name valid
 	if !strings.HasPrefix(req.Name, fmt.Sprintf(NamespacePrefix, req.ProjectCode)) {
-		return errorx.NewReadableErr(errorx.ParamErr, "共享集群命名空间必须以 ieg-[projectCode] 开头")
+		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("共享集群命名空间必须以 %s-[projectCode]- 开头",
+			envs.BCSNamespacePrefix))
 	}
 	// check is namespace name exists
 	stagings, _ := a.model.ListNamespacesByItsmTicketType(ctx,

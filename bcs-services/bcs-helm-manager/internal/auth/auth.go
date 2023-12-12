@@ -178,7 +178,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 
 	resourceID.ProjectID = contextx.GetProjectIDFromCtx(ctx)
 
-	allow, url, resources, err := callIAM(username, action, *resourceID)
+	allow, url, resources, err := CallIAM(username, action, *resourceID)
 	if err != nil {
 		return false, err
 	}
@@ -193,7 +193,8 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	return allow, nil
 }
 
-func callIAM(username, action string, resourceID options.CredentialScope) (bool, string,
+// CallIAM call iam
+func CallIAM(username, action string, resourceID options.CredentialScope) (bool, string,
 	[]authutils.ResourceAction, error) {
 	// related actions
 	switch action {

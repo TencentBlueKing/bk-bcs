@@ -6,51 +6,49 @@ option go_package = "bscp.io/pkg/protocol/core/base;pbbase";
 
 // Revision source resource reference: pkg/dal/table/table.go
 message Revision {
-    string creator   = 1;
-    string reviser   = 2;
-    string create_at = 3;
-    string update_at = 4;
+  string creator = 1;
+  string reviser = 2;
+  string create_at = 3;
+  string update_at = 4;
 }
 
 // CreatedRevision source resource reference: pkg/dal/table/table.go
 message CreatedRevision {
-    string creator   = 1;
-    string create_at = 2;
+  string creator = 1;
+  string create_at = 2;
 }
 
 // BasePage source resource reference: pkg/types/page.go
 message BasePage {
-    bool count   = 1;
-    uint32 start = 2;
-    uint32 limit = 3;
-    string sort  = 4;
-    // direction is enum type.
-    string order = 5;
+  bool count = 1;
+  uint32 start = 2;
+  uint32 limit = 3;
+  string sort = 4;
+  // direction is enum type.
+  string order = 5;
 }
 
-message EmptyReq {
-}
+message EmptyReq {}
 
-message EmptyResp {
-}
+message EmptyResp {}
 
 message BaseResp {
-    int32 code     = 1;
-    string message = 2;
+  int32 code = 1;
+  string message = 2;
 }
 
 // Versioning defines the version control related info.
 message Versioning {
-    // Major version when you make incompatible API changes.
-    uint32 Major = 1;
-    // Minor version when you add functionality in a backwards compatible manner.
-    uint32 Minor = 2;
-    // Patch version when you make backwards compatible bug fixes.
-    uint32 Patch = 3;
+  // Major version when you make incompatible API changes.
+  uint32 Major = 1;
+  // Minor version when you add functionality in a backwards compatible manner.
+  uint32 Minor = 2;
+  // Patch version when you make backwards compatible bug fixes.
+  uint32 Patch = 3;
 }
 
 // 参数错误
 message InvalidArgument {
-    string field   = 1;
-    string message = 2;
+  string field = 1;
+  string message = 2;
 }

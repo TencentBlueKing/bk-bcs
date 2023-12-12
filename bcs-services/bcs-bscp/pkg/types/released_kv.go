@@ -12,7 +12,11 @@
 
 package types
 
-import "errors"
+import (
+	"errors"
+
+	"bscp.io/pkg/dal/table"
+)
 
 // CreateReleasedKvOption defines options to create released kv.
 type CreateReleasedKvOption struct {
@@ -21,7 +25,7 @@ type CreateReleasedKvOption struct {
 	ReleaseID uint32
 	Key       string
 	Value     string
-	KvType    KvType
+	KvType    table.DataType
 }
 
 // Validate is used to validate the effectiveness of the CreateReleasedKvOption structure.

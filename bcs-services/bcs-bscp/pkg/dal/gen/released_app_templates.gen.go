@@ -52,7 +52,9 @@ func newReleasedAppTemplate(db *gorm.DB, opts ...gen.DOOption) releasedAppTempla
 	_releasedAppTemplate.BizID = field.NewUint32(tableName, "biz_id")
 	_releasedAppTemplate.AppID = field.NewUint32(tableName, "app_id")
 	_releasedAppTemplate.Creator = field.NewString(tableName, "creator")
+	_releasedAppTemplate.Reviser = field.NewString(tableName, "reviser")
 	_releasedAppTemplate.CreatedAt = field.NewTime(tableName, "created_at")
+	_releasedAppTemplate.UpdatedAt = field.NewTime(tableName, "updated_at")
 
 	_releasedAppTemplate.fillFieldMap()
 
@@ -88,7 +90,9 @@ type releasedAppTemplate struct {
 	BizID                field.Uint32
 	AppID                field.Uint32
 	Creator              field.String
+	Reviser              field.String
 	CreatedAt            field.Time
+	UpdatedAt            field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -130,7 +134,9 @@ func (r *releasedAppTemplate) updateTableName(table string) *releasedAppTemplate
 	r.BizID = field.NewUint32(table, "biz_id")
 	r.AppID = field.NewUint32(table, "app_id")
 	r.Creator = field.NewString(table, "creator")
+	r.Reviser = field.NewString(table, "reviser")
 	r.CreatedAt = field.NewTime(table, "created_at")
+	r.UpdatedAt = field.NewTime(table, "updated_at")
 
 	r.fillFieldMap()
 
@@ -159,7 +165,7 @@ func (r *releasedAppTemplate) GetFieldByName(fieldName string) (field.OrderExpr,
 }
 
 func (r *releasedAppTemplate) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 26)
+	r.fieldMap = make(map[string]field.Expr, 28)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["release_id"] = r.ReleaseID
 	r.fieldMap["template_space_id"] = r.TemplateSpaceID
@@ -185,7 +191,9 @@ func (r *releasedAppTemplate) fillFieldMap() {
 	r.fieldMap["biz_id"] = r.BizID
 	r.fieldMap["app_id"] = r.AppID
 	r.fieldMap["creator"] = r.Creator
+	r.fieldMap["reviser"] = r.Reviser
 	r.fieldMap["created_at"] = r.CreatedAt
+	r.fieldMap["updated_at"] = r.UpdatedAt
 }
 
 func (r releasedAppTemplate) clone(db *gorm.DB) releasedAppTemplate {
