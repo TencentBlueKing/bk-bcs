@@ -56,14 +56,14 @@ func (k *KvAttachment) KvAttachment() *table.KvAttachment {
 }
 
 // PbKv convert table kv to pb kv
-func PbKv(k *table.Kv, value, kvState string) *Kv {
+func PbKv(k *table.Kv, value string) *Kv {
 	if k == nil {
 		return nil
 	}
 
 	return &Kv{
 		Id:         k.ID,
-		KvState:    kvState,
+		KvState:    string(k.KvState),
 		Spec:       PbKvSpec(k.Spec, value),
 		Attachment: PbKvAttachment(k.Attachment),
 		Revision:   pbbase.PbRevision(k.Revision),

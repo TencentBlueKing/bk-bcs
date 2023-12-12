@@ -750,6 +750,36 @@ func (s *Service) doKvOperations(kt *kit.Kit, tx *gen.QueryTx, appID, bizID, rel
 	if err != nil {
 		return err
 	}
+
+	allKv, err := s.dao.Kv().ListAllByAppID(kt, appID, bizID)
+	if err != nil {
+		return err
+	}
+	var deleteKv []uint32
+	var updateKv []*table.Kv
+
+	for _, kv := range allKv {
+		if kv.KvState == table.KvStateAdd {
+			kv.KvState = table.KvStateUnchange
+			updateKv = append(updateKv, kv)
+		}
+		if kv.KvState == table.KvStateDelete {
+			deleteKv = append(deleteKv, kv.ID)
+		}
+	}
+
+	if len(updateKv) > 0 {
+		if err = s.dao.Kv().BatchUpdateWithTx(kt, tx, updateKv); err != nil {
+			return nil
+		}
+	}
+
+	if len(deleteKv) > 0 {
+		if err = s.dao.Kv().BatchDeleteWithTx(kt, tx, deleteKv, appID, bizID); err != nil {
+			return nil
+		}
+	}
+
 	if err = s.dao.ReleasedKv().BulkCreateWithTx(kt, tx, rkvs); err != nil {
 		logs.Errorf("bulk create released kv failed, err: %v, rid: %s", err, kt.Rid)
 		return err

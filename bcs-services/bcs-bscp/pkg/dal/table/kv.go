@@ -29,6 +29,7 @@ import (
 type Kv struct {
 	// ID is an auto-increased value, which is a unique identity of a kv.
 	ID         uint32        `json:"id" gorm:"primaryKey"`
+	KvState    KvState       `json:"kv_state" gorm:"column:kv_state"`
 	Spec       *KvSpec       `json:"spec" gorm:"embedded"`
 	Attachment *KvAttachment `json:"attachment" gorm:"embedded"`
 	Revision   *Revision     `json:"revision" gorm:"embedded"`
@@ -244,4 +245,36 @@ func (k DataType) ValidateValue(value string) error {
 	default:
 		return errors.New("invalid key-value type")
 	}
+}
+
+// KvState ....
+type KvState string
+
+const (
+	// KvStateAdd 增加
+	KvStateAdd KvState = "ADD"
+	// KvStateDelete 删除
+	KvStateDelete KvState = "DELETE"
+	// KvStateRevise 修改
+	KvStateRevise KvState = "REVISE"
+	// KvStateUnchange 不变
+	KvStateUnchange KvState = "UNCHANGE"
+)
+
+// ValidateCreateKv the kvType and value match
+func (k KvState) ValidateCreateKv() error {
+
+	//switch k {
+	//case KvState:
+	//case KvNumber:
+	//case KvText:
+	//case KvJson:
+	//case KvYAML:
+	//case KvXml:
+	//default:
+	//	return errors.New("invalid data-type")
+	//}
+	//return nil
+	return nil
+
 }

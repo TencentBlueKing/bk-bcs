@@ -28,6 +28,7 @@ func newKv(db *gorm.DB, opts ...gen.DOOption) kv {
 	tableName := _kv.kvDo.TableName()
 	_kv.ALL = field.NewAsterisk(tableName)
 	_kv.ID = field.NewUint32(tableName, "id")
+	_kv.KvState = field.NewString(tableName, "kv_state")
 	_kv.Key = field.NewString(tableName, "key")
 	_kv.KvType = field.NewString(tableName, "kv_type")
 	_kv.Version = field.NewUint32(tableName, "version")
@@ -48,6 +49,7 @@ type kv struct {
 
 	ALL       field.Asterisk
 	ID        field.Uint32
+	KvState   field.String
 	Key       field.String
 	KvType    field.String
 	Version   field.Uint32
@@ -74,6 +76,7 @@ func (k kv) As(alias string) *kv {
 func (k *kv) updateTableName(table string) *kv {
 	k.ALL = field.NewAsterisk(table)
 	k.ID = field.NewUint32(table, "id")
+	k.KvState = field.NewString(table, "kv_state")
 	k.Key = field.NewString(table, "key")
 	k.KvType = field.NewString(table, "kv_type")
 	k.Version = field.NewUint32(table, "version")
@@ -107,8 +110,9 @@ func (k *kv) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (k *kv) fillFieldMap() {
-	k.fieldMap = make(map[string]field.Expr, 10)
+	k.fieldMap = make(map[string]field.Expr, 11)
 	k.fieldMap["id"] = k.ID
+	k.fieldMap["kv_state"] = k.KvState
 	k.fieldMap["key"] = k.Key
 	k.fieldMap["kv_type"] = k.KvType
 	k.fieldMap["version"] = k.Version
