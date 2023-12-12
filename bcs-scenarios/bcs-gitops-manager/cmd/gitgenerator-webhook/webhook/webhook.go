@@ -59,10 +59,11 @@ func NewAdmissionWebhookServer(cfg *options.Config) *AdmissionWebhookServer {
 // Init will init the argocd client
 func (s *AdmissionWebhookServer) Init() error {
 	s.argoStore = store.NewStore(&store.Options{
-		Service: s.cfg.ArgoService,
-		User:    s.cfg.ArgoUser,
-		Pass:    s.cfg.ArgoPass,
-		Cache:   false,
+		Service:      s.cfg.ArgoService,
+		User:         s.cfg.ArgoUser,
+		Pass:         s.cfg.ArgoPass,
+		Cache:        false,
+		CacheHistory: false,
 	})
 	if err := s.argoStore.Init(); err != nil {
 		return errors.Wrapf(err, "init argocd stroe failed")

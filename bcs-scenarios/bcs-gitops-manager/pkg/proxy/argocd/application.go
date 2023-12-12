@@ -28,6 +28,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
@@ -39,6 +40,7 @@ import (
 // AppPlugin for internal project authorization
 type AppPlugin struct {
 	*mux.Router
+	db             dao.Interface
 	storage        store.Store
 	middleware     mw.MiddlewareInterface
 	analysisClient analysis.AnalysisInterface
@@ -91,7 +93,7 @@ func (plugin *AppPlugin) Init() error {
 	plugin.Path("/diff").Methods("POST").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationDiff))
 
-	// Put,Patch,Delete with preifx /api/v1/applications/{name}
+	// Put,Patch,Delete with prefix /api/v1/applications/{name}
 	appRouter := plugin.PathPrefix("/{name}").Subrouter()
 
 	// 自定义接口
@@ -105,6 +107,8 @@ func (plugin *AppPlugin) Init() error {
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationCleanHandler))
 	appRouter.Path("/delete_resources").Methods("DELETE").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationDeleteResourcesHandler))
+	appRouter.Path("/history_state").Methods("GET").
+		Handler(plugin.middleware.HttpWrapper(plugin.applicationHistoryState))
 
 	appRouter.PathPrefix("").Methods("PUT", "POST", "DELETE", "PATCH").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationEditHandler))

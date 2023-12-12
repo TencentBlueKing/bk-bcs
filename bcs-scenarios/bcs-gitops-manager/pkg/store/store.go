@@ -36,6 +36,7 @@ type Options struct {
 	User           string // storage user
 	Pass           string // storage pass
 	Cache          bool   // init cache for performance
+	CacheHistory   bool
 	AdminNamespace string
 
 	// RepoServerUrl this parameter must be passed in only
