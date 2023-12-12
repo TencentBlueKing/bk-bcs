@@ -42,7 +42,7 @@ func mig20231103103050Up(tx *gorm.DB) error {
 		Key     string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_appID_key_kvState,priority:1"`
 		Version uint   `gorm:"type:bigint(1) unsigned not null;"`
 		KvType  string `gorm:"type:varchar(64) not null"`
-		KvState string `json:"type:varchar(64) not null;uniqueIndex:idx_bizID_appID_key_kvState,priority:2"`
+		KvState string `gorm:"type:varchar(64) not null;uniqueIndex:idx_bizID_appID_key_kvState,priority:2"`
 
 		// Attachment is attachment info of the resource
 		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key_kvState,priority:3"`
