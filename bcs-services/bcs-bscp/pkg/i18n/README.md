@@ -10,7 +10,8 @@
 3. 执行`make i18n`，从源码中提取要翻译的message以及合并message并更新到pkg/i18n目录下的对应文件中
 4. 将pkg/i18n/translations/locales/zh/messages.gotext.json文件中未翻译的内容进行补充，补充完后再次执行`make i18n`，<br>
    这次不会有翻译缺失提示，所有message均有了对应翻译，out.gotext.json和catalog.go文件也都被更新，重新编译部署项目后生效
-5. http请求的header中，通过X-Bkapi-Language指定对应的语言，当前可以是zh（中文）或en（英文），不指定默认使用zh，从而获取对应语言的message
+5. 可以通过http请求的cookie或header指定对应语言，优先级为cookie>header，cookie名为blueking_language，header键为X-Bkapi-Language，<br>
+   当前可以是zh（中文）或en（英文），不指定默认使用zh，从而获取对应语言的message
 
 ## 使用方式详解
 
@@ -207,7 +208,9 @@ zh: Missing entry for "unsupported variable type: {VariableType}".
 再次执行`make i18n` ，这时所有message均有了对应翻译，out.gotext.json和catalog.go文件也都被更新 <br>
 重新编译部署项目后生效
 
-### 5. http请求的header中，通过X-Bkapi-Language指定对应的语言，当前可以是zh（中文）或en（英文），不指定默认使用zh，从而获取对应语言的message
+### 5. 可以通过http请求的cookie或header指定对应语言，优先级为cookie>header，cookie名为blueking_language，header键为X-Bkapi-Language，<br>
+
+### 当前可以是zh（中文）或en（英文），不指定默认使用zh，从而获取对应语言的message
 
 翻译后的请求结果错误示例
 
