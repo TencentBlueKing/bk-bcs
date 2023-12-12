@@ -13,7 +13,6 @@ replace (
 	github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager => github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager v0.0.0-20220329091816-5b868e90d386
 	github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server => ../bcs-webhook-server
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
-	// NOCC:horus-dependency-security(已replace)
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/mholt/caddy => github.com/caddyserver/caddy v0.11.1
@@ -66,7 +65,6 @@ require (
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5 // indirect
-	// NOCC:horus-dependency-security(已replace)
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/emicklei/go-restful v2.15.0+incompatible // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.1.0 // indirect
