@@ -38,6 +38,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/syncer"
 )
 
+const (
+	FullSynchronizationTicker = 100000
+)
+
 // Synchronizer the synchronizer
 type Synchronizer struct {
 	Syncer                   *syncer.Syncer
@@ -213,7 +217,7 @@ func (s *Synchronizer) Run() {
 		return
 	}
 
-	ticker := time.NewTicker(8 * time.Hour)
+	ticker := time.NewTicker(FullSynchronizationTicker * time.Hour)
 	defer ticker.Stop()
 	for ; true; <-ticker.C {
 		blog.Infof("start sync at %s", time.Now().Format("2006-01-02 15:04:05"))
