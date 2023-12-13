@@ -151,7 +151,10 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		All:       req.All,
 		Page:      page,
 		KvType:    req.KvType,
+		SortOrder: req.SortOrder,
+		SortField: req.SortField,
 	}
+	opt.TrySetDefault()
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,
 	}

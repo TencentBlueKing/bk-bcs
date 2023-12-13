@@ -467,6 +467,7 @@ func (k DataType) ValidateApp() error {
 	case KvText:
 	case KvJson:
 	case KvYAML:
+	case KvXml:
 	default:
 		return errors.New("invalid data-type")
 	}

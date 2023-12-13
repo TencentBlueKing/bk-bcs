@@ -89,9 +89,8 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 }
 
 // UpdateApp update app with options
-func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.UpdateAppResp, error) {
+func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbapp.App, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateAppResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -118,13 +117,13 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 			},
 		},
 	}
-	_, err = s.client.DS.UpdateApp(grpcKit.RpcCtx(), r)
+	app, err := s.client.DS.UpdateApp(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("update app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return resp, nil
+	return app, nil
 }
 
 // DeleteApp delete app with options

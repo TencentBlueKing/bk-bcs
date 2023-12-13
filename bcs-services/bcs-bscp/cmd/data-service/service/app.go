@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -75,7 +76,7 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 }
 
 // UpdateApp update application.
-func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbase.EmptyResp, error) {
+func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbapp.App, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	old, err := s.dao.App().GetByAlias(grpcKit, req.BizId, req.Spec.Alias)
@@ -103,7 +104,8 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbas
 		BizID: req.BizId,
 		Spec:  req.Spec.AppSpec(),
 		Revision: &table.Revision{
-			Reviser: grpcKit.User,
+			Reviser:   grpcKit.User,
+			UpdatedAt: time.Now().UTC(),
 		},
 	}
 	if err := s.dao.App().Update(grpcKit, app); err != nil {
@@ -111,7 +113,7 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbas
 		return nil, err
 	}
 
-	return new(pbbase.EmptyResp), nil
+	return pbapp.PbApp(app), nil
 }
 
 func (s *Service) checkUpdateAppDataType(kt *kit.Kit, req *pbds.UpdateAppReq, app *table.App) error {
