@@ -44,6 +44,8 @@ init:
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
 	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.18.1
 	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.18.1
+	@echo Download gotext
+	go install golang.org/x/text/cmd/gotext@v0.14.0
 
 .PHONY: tidy
 tidy:
@@ -156,3 +158,7 @@ build_ui:
 docker:
 	@docker build -t bk-bscp-hyper:latest .
 
+.PHONY: i18n
+i18n:
+	@go generate ./pkg/i18n/translations/translations.go
+	@cp ./pkg/i18n/translations/locales/zh/out.gotext.json ./pkg/i18n/translations/locales/zh/messages.gotext.json

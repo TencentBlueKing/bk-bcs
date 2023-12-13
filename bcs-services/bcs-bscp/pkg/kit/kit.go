@@ -39,6 +39,7 @@ func New() *Kit {
 
 var (
 	lowRidKey         = strings.ToLower(constant.RidKey)
+	lowLangKey        = strings.ToLower(constant.LangKey)
 	lowUserKey        = strings.ToLower(constant.UserKey)
 	lowACKey          = strings.ToLower(constant.AppCodeKey)
 	lowSpaceIDKey     = strings.ToLower(constant.SpaceIDKey)
@@ -59,6 +60,13 @@ func FromGrpcContext(ctx context.Context) *Kit {
 		kit.Rid = rid[0]
 	} else {
 		kit.Rid = "bscp-" + uuid.UUID()
+	}
+
+	lang := md[lowLangKey]
+	if len(lang) != 0 {
+		kit.Lang = lang[0]
+	} else {
+		kit.Lang = constant.DefaultLanguage
 	}
 
 	user := md[lowUserKey]
@@ -124,6 +132,9 @@ type Kit struct {
 	// Rid is request id.
 	Rid string
 
+	// Lang is request language
+	Lang string
+
 	// AppCode is app code.
 	AppCode     string
 	AppID       uint32 // 对应的应用ID
@@ -131,6 +142,7 @@ type Kit struct {
 	SpaceID     string // 应用对应的SpaceID
 	SpaceTypeID string // 应用对应的SpaceTypeID
 	TmplSpaceID uint32 // 配置模版对应的TemplateSpaceID
+
 }
 
 // Clone clones a Kit
@@ -139,6 +151,7 @@ func (c *Kit) Clone() *Kit {
 		Ctx:         c.Ctx,
 		User:        c.User,
 		Rid:         c.Rid,
+		Lang:        c.Lang,
 		AppCode:     c.AppCode,
 		AppID:       c.AppID,
 		BizID:       c.BizID,
@@ -172,6 +185,7 @@ func (c *Kit) ContextWithRid() context.Context {
 func (c *Kit) RPCMetaData() metadata.MD {
 	m := map[string]string{
 		constant.RidKey:         c.Rid,
+		constant.LangKey:        c.Lang,
 		constant.UserKey:        c.User,
 		constant.AppCodeKey:     c.AppCode,
 		constant.SpaceIDKey:     c.SpaceID,

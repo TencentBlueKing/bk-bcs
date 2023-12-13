@@ -1,0 +1,135 @@
+{
+    "language": "zh",
+    "messages": [
+        {
+            "id": "template variable name must start with {TemplateVariablePrefix}",
+            "message": "template variable name must start with {TemplateVariablePrefix}",
+            "translation": "模版变量名必须以{TemplateVariablePrefix}前缀开头",
+            "placeholders": [
+                {
+                    "id": "TemplateVariablePrefix",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "constant.TemplateVariablePrefix"
+                }
+            ]
+        },
+        {
+            "id": "app {AppId} not found",
+            "message": "app {AppId} not found",
+            "translation": "ID为{AppId}的服务不存在",
+            "placeholders": [
+                {
+                    "id": "AppId",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "req.AppId"
+                }
+            ]
+        },
+        {
+            "id": "same template variable name {Name} already exists",
+            "message": "same template variable name {Name} already exists",
+            "translation": "同名的模版变量名称{Name}已存在",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Name"
+                }
+            ]
+        },
+        {
+            "id": "db operation failed",
+            "message": "db operation failed",
+            "translation": "db操作失败"
+        },
+        {
+            "id": "invalid argument",
+            "message": "invalid argument",
+            "translation": "无效参数"
+        },
+        {
+            "id": "id should not be set",
+            "message": "id should not be set",
+            "translation": "id不应该被设置"
+        },
+        {
+            "id": "spec not set",
+            "message": "spec not set",
+            "translation": "spec没有被设置"
+        },
+        {
+            "id": "attachment not set",
+            "message": "attachment not set",
+            "translation": "attachment没有被设置"
+        },
+        {
+            "id": "revision not set",
+            "message": "revision not set",
+            "translation": "revision没有被设置"
+        },
+        {
+            "id": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
+            "message": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
+            "translation": "无效名称，长度应该\u003e=9且必须以bk_bscp_前缀开头（忽略大小写）"
+        },
+        {
+            "id": "invalid name, length should \u003c= 128",
+            "message": "invalid name, length should \u003c= 128",
+            "translation": "无效名称，长度应该\u003c=128"
+        },
+        {
+            "id": "invalid name: {Name}, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)",
+            "message": "invalid name: {Name}, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)",
+            "translation": "无效名称：{Name}，只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ]
+        },
+        {
+            "id": "default_val {DefaultVal} is not a number type",
+            "message": "default_val {DefaultVal} is not a number type",
+            "translation": "default_val {DefaultVal} 不是数字类型",
+            "placeholders": [
+                {
+                    "id": "DefaultVal",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "t.DefaultVal"
+                }
+            ]
+        },
+        {
+            "id": "unsupported variable type: {VariableType}",
+            "message": "unsupported variable type: {VariableType}",
+            "translation": "不支持的变量类型：{VariableType}",
+            "placeholders": [
+                {
+                    "id": "VariableType",
+                    "string": "%[1]s",
+                    "type": "bscp.io/pkg/dal/table.VariableType",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "t"
+                }
+            ]
+        }
+    ]
+}
