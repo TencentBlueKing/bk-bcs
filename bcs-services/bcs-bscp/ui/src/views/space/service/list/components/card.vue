@@ -245,11 +245,11 @@ const handleDeleteService = async () => {
       }
     }
     .service-name {
-      width: calc(100% - 60px);
-      flex: 1;
+      width: 190px;
     }
   }
   .service-alias {
+    width: 190px;
     margin: 0px 60px 0px 32px;
     color: #63656e;
     font-family: MicrosoftYaHei;
