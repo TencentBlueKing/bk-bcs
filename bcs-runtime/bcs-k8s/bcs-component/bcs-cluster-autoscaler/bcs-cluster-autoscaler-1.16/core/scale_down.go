@@ -1259,25 +1259,7 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToMarkToBeDeleted,
 			Err: errors.ToAutoscalerError(errors.ApiCallError, err)}
 	}
-
-	var podsToDrain []*apiv1.Pod
 	var err error
-	if sd.evictLatest {
-		podsToDrain, err = getLatestPodsToDrain(sd, node)
-		if err != nil {
-			return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: err}
-		}
-	} else {
-		podsToDrain = pods
-	}
-
-	if hasGameServer(podsToDrain) {
-		sd.context.Recorder.Eventf(node, apiv1.EventTypeWarning, "ScaleDownFailed",
-			"failed to evict pods: have gameserver pod")
-		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods,
-			Err: errors.ToAutoscalerError(errors.ApiCallError,
-				fmt.Errorf("failed to evict pods: have gameserver pod"))}
-	}
 
 	sd.nodeDeletionTracker.StartDeletion(nodeGroup.Id())
 	defer sd.nodeDeletionTracker.EndDeletion(nodeGroup.Id())
@@ -1298,6 +1280,16 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 			}
 		}
 	}()
+
+	var podsToDrain []*apiv1.Pod
+	if sd.evictLatest {
+		podsToDrain, err = getLatestPodsToDrain(sd, node)
+		if err != nil {
+			return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: err}
+		}
+	} else {
+		podsToDrain = pods
+	}
 
 	sd.context.Recorder.Eventf(node, apiv1.EventTypeNormal, "ScaleDown", "marked the node as toBeDeleted/unschedulable")
 

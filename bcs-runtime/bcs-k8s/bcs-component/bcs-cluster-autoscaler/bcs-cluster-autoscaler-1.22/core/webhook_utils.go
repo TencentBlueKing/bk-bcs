@@ -422,13 +422,13 @@ func simpleGetPodsToMove(nodeInfo *schedulerframework.NodeInfo) ([]*corev1.Pod, 
 	daemonsetPods := make([]*corev1.Pod, 0)
 	for _, podInfo := range nodeInfo.Pods {
 		pod := podInfo.Pod
-		if _, found := pod.ObjectMeta.Annotations[types.ConfigMirrorAnnotationKey]; found {
+		if pod.Annotations != nil && pod.Annotations[types.ConfigMirrorAnnotationKey] != "" {
 			continue
 		}
 		if pod.DeletionTimestamp != nil {
 			continue
 		}
-		if controllerRef := metav1.GetControllerOf(pod); controllerRef.Kind == "DaemonSet" {
+		if controllerRef := metav1.GetControllerOf(pod); controllerRef != nil && controllerRef.Kind == "DaemonSet" {
 			daemonsetPods = append(daemonsetPods, pod)
 			continue
 		}
