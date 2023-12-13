@@ -15,6 +15,8 @@ package dao
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
@@ -28,20 +30,16 @@ type Kv interface {
 	Create(kit *kit.Kit, kv *table.Kv) (uint32, error)
 	// Update one kv's info
 	Update(kit *kit.Kit, kv *table.Kv) error
-	// UpdateWithTx one kv's info
-	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
 	// List kv with options.
 	List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int64, error)
-	// ListAllKvByKey list all by key
+	// ListAllKvByKey lists all key-value pairs based on keys
 	ListAllKvByKey(kit *kit.Kit, appID uint32, bizID uint32, keys []string, kvState []string) ([]*table.Kv, error)
 	// Delete ..
 	Delete(kit *kit.Kit, kv *table.Kv) error
 	// DeleteWithTx delete kv instance with transaction.
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
-	// GetByKey get kv by key.
-	GetByKey(kit *kit.Kit, bizID, appID uint32, key string) (*table.Kv, error)
 	// GetByKvState get kv by KvState.
-	GetByKvState(kit *kit.Kit, bizID, appID uint32, key string, KvState []string) (*table.Kv, error)
+	GetByKvState(kit *kit.Kit, bizID, appID uint32, key string, kvState []string) (*table.Kv, error)
 	// GetByID get kv by id.
 	GetByID(kit *kit.Kit, bizID, appID, id uint32) (*table.Kv, error)
 	// BatchCreateWithTx batch create content instances with transaction.
@@ -49,14 +47,14 @@ type Kv interface {
 	// BatchUpdateWithTx batch create content instances with transaction.
 	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error
 	// ListAllByAppID list all Kv by appID
-	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32) ([]*table.Kv, error)
+	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32, KvState []string) ([]*table.Kv, error)
 	// GetCount bizID config count
 	GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error)
-
-	BatchUpdateKvState(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error
-
-	// BatchDeleteWithTx batch kv instances with transaction.
-	BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32, bizID, appID uint32) error
+	// UpdateSelectedKVStates updates the states of selected kv pairs using a transaction
+	UpdateSelectedKVStates(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32, targetKVStates []string,
+		newKVStates table.KvState) error
+	// DeleteByStateWithTx deletes kv pairs with a specific state using a transaction
+	DeleteByStateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
 }
 
 var _ Kv = new(kvDao)
@@ -103,39 +101,7 @@ func (dao *kvDao) Create(kit *kit.Kit, kv *table.Kv) (uint32, error) {
 	return id, nil
 }
 
-func (dao *kvDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error {
-
-	if err := kv.ValidateUpdate(); err != nil {
-		return err
-	}
-
-	// 更新操作, 获取当前记录做审计
-	m := tx.Kv
-	q := tx.Kv.WithContext(kit.Ctx)
-	oldOne, err := q.Where(m.ID.Eq(kv.ID), m.BizID.Eq(kv.Attachment.BizID)).Take()
-	if err != nil {
-		return err
-	}
-	ad := dao.auditDao.DecoratorV2(kit, kv.Attachment.BizID).PrepareUpdate(kv, oldOne)
-	if err = ad.Do(tx.Query); err != nil {
-		return err
-	}
-
-	q = tx.Kv.WithContext(kit.Ctx)
-	if _, err = q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).
-		Select(m.Version, m.UpdatedAt,
-			m.Reviser, m.KvState).Updates(kv); err != nil {
-		return err
-	}
-
-	if err := ad.Do(tx.Query); err != nil {
-		return err
-	}
-
-	return nil
-
-}
-
+// Update one kv's info
 func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 
 	if err := kv.ValidateUpdate(); err != nil {
@@ -205,6 +171,7 @@ func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int6
 
 }
 
+// Delete ..
 func (dao *kvDao) Delete(kit *kit.Kit, kv *table.Kv) error {
 
 	// 参数校验
@@ -240,6 +207,8 @@ func (dao *kvDao) Delete(kit *kit.Kit, kv *table.Kv) error {
 	return nil
 
 }
+
+// DeleteWithTx delete kv instance with transaction.
 func (dao *kvDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error {
 	// 参数校验
 	if err := kv.ValidateDelete(); err != nil {
@@ -268,25 +237,52 @@ func (dao *kvDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) erro
 
 }
 
-// GetByKey get kv by key.
-func (dao *kvDao) GetByKey(kit *kit.Kit, bizID, appID uint32, key string) (*table.Kv, error) {
-	m := dao.genQ.Kv
-	q := dao.genQ.Kv.WithContext(kit.Ctx)
+// DeleteByStateWithTx deletes kv pairs with a specific state using a transaction
+func (dao *kvDao) DeleteByStateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error {
+	// 参数校验
 
-	kv, err := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Key.Eq(key)).Take()
-	if err != nil {
-		return nil, err
+	if kv.Attachment.BizID <= 0 {
+		return errors.New("biz id should be set")
 	}
 
-	return kv, nil
+	if kv.Attachment.AppID <= 0 {
+		return errors.New("app id should be set")
+	}
+
+	if kv.KvState == "" {
+		return errors.New("KvState should be set")
+	}
+
+	// 删除操作, 获取当前记录做审计
+	m := tx.Kv
+	q := tx.Kv.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.BizID.Eq(kv.Attachment.BizID), m.AppID.Eq(kv.Attachment.AppID),
+		m.KvState.Eq(string(kv.KvState))).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, kv.Attachment.BizID).PrepareDelete(oldOne)
+
+	_, err = q.Where(m.BizID.Eq(kv.Attachment.BizID), m.AppID.Eq(kv.Attachment.AppID),
+		m.KvState.Eq(string(kv.KvState))).Delete(kv)
+	if err != nil {
+		return err
+	}
+
+	if e := ad.Do(tx.Query); e != nil {
+		return e
+	}
+
+	return nil
+
 }
 
 // GetByKvState get kv by KvState.
-func (dao *kvDao) GetByKvState(kit *kit.Kit, bizID, appID uint32, key string, KvState []string) (*table.Kv, error) {
+func (dao *kvDao) GetByKvState(kit *kit.Kit, bizID, appID uint32, key string, kvState []string) (*table.Kv, error) {
 	m := dao.genQ.Kv
 	q := dao.genQ.Kv.WithContext(kit.Ctx)
 
-	kv, err := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Key.Eq(key), m.KvState.In(KvState...)).
+	kv, err := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Key.Eq(key), m.KvState.In(kvState...)).
 		Take()
 	if err != nil {
 		return nil, err
@@ -308,8 +304,9 @@ func (dao *kvDao) GetByID(kit *kit.Kit, bizID, appID, id uint32) (*table.Kv, err
 	return kv, nil
 }
 
-// ListAllKvByKey list all kv key
-func (dao *kvDao) ListAllKvByKey(kit *kit.Kit, appID uint32, bizID uint32, keys []string, kvState []string) ([]*table.Kv, error) {
+// ListAllKvByKey lists all key-value pairs based on keys
+func (dao *kvDao) ListAllKvByKey(kit *kit.Kit, appID uint32, bizID uint32, keys []string,
+	kvState []string) ([]*table.Kv, error) {
 
 	if appID == 0 {
 		return nil, fmt.Errorf("appID can not be 0")
@@ -363,8 +360,36 @@ func (dao *kvDao) BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.
 	return nil
 }
 
+// UpdateSelectedKVStates 批量更新kv状态
+func (dao *kvDao) UpdateSelectedKVStates(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32,
+	targetKVStates []string, newKVStates table.KvState) error {
+
+	if bizID <= 0 {
+		return errors.New("biz id should be set")
+	}
+
+	if appID <= 0 {
+		return errors.New("app id should be set")
+	}
+	if len(targetKVStates) == 0 {
+		return nil
+	}
+	if newKVStates == "" {
+		return errors.New("newKVStates cannot be empty")
+	}
+
+	m := tx.Kv
+
+	if _, err := tx.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
+		m.KvState.In(targetKVStates...)).Select(m.KvState).Update(m.KvState, newKVStates); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ListAllByAppID list all Kv by appID
-func (dao *kvDao) ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32) ([]*table.Kv, error) {
+func (dao *kvDao) ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32, kvState []string) ([]*table.Kv, error) {
 	if appID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "appID can not be 0")
 	}
@@ -372,10 +397,10 @@ func (dao *kvDao) ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32) ([]*t
 		return nil, errf.New(errf.InvalidParameter, "bizID can not be 0")
 	}
 	m := dao.genQ.Kv
-	return dao.genQ.Kv.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Find()
+	return dao.genQ.Kv.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID), m.KvState.In(kvState...)).Find()
 }
 
-// GetCount get bizID config count
+// GetCount get bizID kv count
 func (dao *kvDao) GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error) {
 
 	if bizID == 0 {
@@ -384,40 +409,18 @@ func (dao *kvDao) GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table
 
 	configItem := make([]*table.ListConfigItemCounts, 0)
 
+	kvState := []string{
+		string(table.KvStateAdd),
+		string(table.KvStateRevise),
+		string(table.KvStateUnchange),
+	}
 	m := dao.genQ.Kv
 	q := dao.genQ.Kv.WithContext(kit.Ctx)
 	if err := q.Select(m.AppID, m.ID.Count().As("count"), m.UpdatedAt.Max().As("updated_at")).
-		Where(m.BizID.Eq(bizID), m.AppID.In(appId...)).Group(m.AppID).Scan(&configItem); err != nil {
+		Where(m.BizID.Eq(bizID), m.AppID.In(appId...),
+			m.KvState.In(kvState...)).Group(m.AppID).Scan(&configItem); err != nil {
 		return nil, err
 	}
 
 	return configItem, nil
-}
-
-func (dao *kvDao) UpdateKvState(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error {
-	if len(kvs) == 0 {
-		return nil
-	}
-	if err := tx.Kv.WithContext(kit.Ctx).Save(kvs...); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (dao *kvDao) BatchUpdateKvState(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error {
-	if len(kvs) == 0 {
-		return nil
-	}
-	if err := tx.Kv.WithContext(kit.Ctx).Save(kvs...); err != nil {
-		return err
-	}
-	return nil
-}
-
-// BatchDeleteWithTx batch kv instances with transaction.
-func (dao *kvDao) BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32, bizID, appID uint32) error {
-	m := dao.genQ.Kv
-	q := tx.Kv.WithContext(kit.Ctx)
-	_, err := q.Where(m.ID.In(ids...), m.BizID.Eq(bizID), m.AppID.Eq(appID)).Delete()
-	return err
 }

@@ -713,7 +713,7 @@ service Config {
   };
   rpc DeleteKv(DeleteKvReq) returns (DeleteKvResp) {
     option (google.api.http) = {
-      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}"
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{id}"
     };
   };
   rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {
@@ -2210,7 +2210,7 @@ message ListKvsResp {
 message DeleteKvReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
-  string key = 4;
+  uint32 id = 3;
 }
 
 message DeleteKvResp {}

@@ -75,6 +75,11 @@ func (k Kv) ValidateCreate() error {
 		return errors.New("id should not be set")
 	}
 
+	if k.KvState != KvStateAdd {
+		return errors.New("KvState is not set to Add")
+
+	}
+
 	if k.Spec == nil {
 		return errors.New("spec not set")
 	}
@@ -153,7 +158,7 @@ func (a KvAttachment) ValidateCreate() error {
 // ValidateDelete validate the kv's info when delete it.
 func (k *Kv) ValidateDelete() error {
 	if k.ID <= 0 {
-		return errors.New("credential id should be set")
+		return errors.New("kv id should be set")
 	}
 
 	if k.Attachment.BizID <= 0 {
@@ -260,21 +265,3 @@ const (
 	// KvStateUnchange 不变
 	KvStateUnchange KvState = "UNCHANGE"
 )
-
-// ValidateCreateKv the kvType and value match
-func (k KvState) ValidateCreateKv() error {
-
-	//switch k {
-	//case KvState:
-	//case KvNumber:
-	//case KvText:
-	//case KvJson:
-	//case KvYAML:
-	//case KvXml:
-	//default:
-	//	return errors.New("invalid data-type")
-	//}
-	//return nil
-	return nil
-
-}

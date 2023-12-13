@@ -20,7 +20,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -35,7 +34,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 
 	kt := kit.FromGrpcContext(ctx)
 
-	kv2, err := s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key,
+	_, err := s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key,
 		[]string{string(table.KvStateAdd), string(table.KvStateUnchange), string(table.KvStateRevise)})
 	if err != nil && !errors.Is(gorm.ErrRecordNotFound, err) {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
@@ -45,7 +44,6 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
 		return nil, fmt.Errorf("kv same key %s already exists", req.Spec.Key)
 	}
-	fmt.Println(kv2)
 
 	app, err := s.dao.App().Get(kt, req.Attachment.BizId, req.Attachment.AppId)
 	if err != nil {
@@ -120,14 +118,8 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 		return nil, err
 	}
 
-	if kv.KvState != table.KvStateRevise {
-		ok, err := s.shouldUpdateKvStatus(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key)
-		if err != nil {
-			return nil, err
-		}
-		if ok {
-			kv.KvState = table.KvStateRevise
-		}
+	if kv.KvState == table.KvStateUnchange {
+		kv.KvState = table.KvStateRevise
 	}
 
 	kv.Revision = &table.Revision{
@@ -142,22 +134,6 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 	}
 
 	return new(pbbase.EmptyResp), nil
-
-}
-
-// shouldUpdateKvStatus 是否需要修改状态
-func (s *Service) shouldUpdateKvStatus(kt *kit.Kit, bizID, appID uint32, key string) (bool, error) {
-
-	_, err := s.dao.ReleasedKv().GetReleasedLatelyByKey(kt, bizID, appID, key)
-	if err != nil && !errors.Is(gorm.ErrRecordNotFound, err) {
-		return false, err
-	}
-
-	if errors.Is(gorm.ErrRecordNotFound, err) {
-		return false, nil
-	}
-
-	return true, nil
 
 }
 
@@ -188,16 +164,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		return nil, err
 	}
 
-	var kvs []*pbkv.Kv
-	var kvReleased []*table.ReleasedKv
-
-	kvReleased, err = s.dao.ReleasedKv().GetReleasedLately(kt, req.BizId, req.AppId)
-	if err != nil {
-		logs.Errorf("get released rkv failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	kvs, err = s.setKvTypeAndValue(kt, details, kvs, kvReleased)
+	kvs, err := s.setKvTypeAndValue(kt, details)
 	if err != nil {
 		return nil, err
 	}
@@ -210,48 +177,16 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 
 }
 
-func (s *Service) setKvTypeAndValue(kt *kit.Kit, details []*table.Kv, _ []*pbkv.Kv,
-	kvRelease []*table.ReleasedKv) ([]*pbkv.Kv, error) {
-
-	kvMap := make(map[string]*table.Kv, len(details))
-	for _, detail := range details {
-		kvMap[detail.Spec.Key] = detail
-	}
-	releaseMap := make(map[string]*table.ReleasedKv, len(kvRelease))
-	for _, release := range kvRelease {
-		releaseMap[release.Spec.Key] = release
-	}
+func (s *Service) setKvTypeAndValue(kt *kit.Kit, details []*table.Kv) ([]*pbkv.Kv, error) {
 
 	kvs := make([]*pbkv.Kv, 0)
 
 	for _, one := range details {
-		if one.KvState == constant.KvStateDelete {
-			rkv, ok := releaseMap[one.Spec.Key]
-			if !ok {
-				return nil, fmt.Errorf("no released key found for key %s, rid: %s", one.Spec.Key, kt.Rid)
-			}
-			_, kvValue, err := s.getReleasedKv(kt, one.Attachment.BizID, one.Attachment.AppID, rkv.Spec.Version,
-				rkv.ReleaseID, rkv.Spec.Key)
-			if err != nil {
-				return nil, err
-			}
-
-			kvs = append(kvs, pbkv.PbKv(one, kvValue))
-
-		} else {
-			kv, ok := kvMap[one.Spec.Key]
-			if !ok {
-				return nil, fmt.Errorf("no key found for key %s, rid: %s", one.Spec.Key, kt.Rid)
-			}
-			_, kvValue, err := s.getKv(kt, one.Attachment.BizID, one.Attachment.AppID, kv.Spec.Version,
-				kv.Spec.Key)
-			if err != nil {
-				return nil, err
-			}
-
-			kvs = append(kvs, pbkv.PbKv(one, kvValue))
-
+		_, kvValue, err := s.getKv(kt, one.Attachment.BizID, one.Attachment.AppID, one.Spec.Version, one.Spec.Key)
+		if err != nil {
+			return nil, err
 		}
+		kvs = append(kvs, pbkv.PbKv(one, kvValue))
 	}
 
 	return kvs, nil
@@ -263,53 +198,24 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbds.DeleteKvReq) (*pbbase.
 
 	kt := kit.FromGrpcContext(ctx)
 
-	kvs, err := s.dao.Kv().ListAllKvByKey(kt, req.Attachment.AppId, req.Attachment.BizId, []string{req.Spec.Key}, nil)
+	kv, err := s.dao.Kv().GetByID(kt, req.Attachment.BizId, req.Attachment.AppId, req.Id)
 	if err != nil {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
 	}
 
-	tx := s.dao.GenQuery().Begin()
-
-	for _, kv := range kvs {
-
-		switch kv.KvState {
-		case table.KvStateAdd:
-			if e := s.dao.Kv().DeleteWithTx(kt, tx, kv); e != nil {
-				logs.Errorf("delete kv failed, err: %v, rid: %s", e, kt.Rid)
-				return nil, e
-			}
-
-			opt := &types.DeleteKvOpt{
-				BizID: kv.Attachment.BizID,
-				AppID: kv.Attachment.AppID,
-				Key:   kv.Spec.Key,
-			}
-			if e := s.vault.DeleteKv(kt, opt); e != nil {
-				logs.Errorf("delete vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-				if rErr := tx.Rollback(); rErr != nil {
-					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
-				}
-				return nil, e
-			}
-
-		case table.KvStateRevise, table.KvStateUnchange:
-			kv.KvState = table.KvStateDelete
-			err = s.dao.Kv().UpdateWithTx(kt, tx, kv)
-			if err != nil {
-				if rErr := tx.Rollback(); rErr != nil {
-					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
-				}
-				logs.Errorf("delete vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-				return nil, err
-			}
-
+	if kv.KvState == table.KvStateAdd {
+		if e := s.dao.Kv().Delete(kt, kv); e != nil {
+			logs.Errorf("delete kv failed, err: %v, rid: %s", e, kt.Rid)
+			return nil, e
 		}
-
-	}
-
-	if e := tx.Commit(); e != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
-		return nil, e
+	} else {
+		kv.KvState = table.KvStateDelete
+		kv.Revision.Reviser = kt.User
+		if e := s.dao.Kv().Update(kt, kv); e != nil {
+			logs.Errorf("delete kv failed, err: %v, rid: %s", e, kt.Rid)
+			return nil, e
+		}
 	}
 
 	return new(pbbase.EmptyResp), nil
@@ -336,7 +242,6 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 	}
 
 	newKvMap := make(map[string]*pbds.BatchUpsertKvsReq_Kv)
-
 	for _, kv := range req.Kvs {
 		newKvMap[kv.KvSpec.Key] = kv
 	}
@@ -449,31 +354,24 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 
 		if editing, exists = editingKvMap[kv.KvSpec.Key]; exists {
 			if editing.KvState == table.KvStateUnchange {
-				ok, err := s.shouldUpdateKvStatus(kt, editing.Attachment.BizID, editing.Attachment.AppID, editing.Spec.Key)
-				if err != nil {
-					return nil, nil, err
-				}
-				if ok {
-					editing.KvState = table.KvStateRevise
-				}
-
-				toUpdate = append(toUpdate, &table.Kv{
-					ID: editing.ID,
-					Spec: &table.KvSpec{
-						Key:     kv.KvSpec.Key,
-						Version: uint32(version),
-					},
-					Attachment: &table.KvAttachment{
-						BizID: req.BizId,
-						AppID: req.AppId,
-					},
-					Revision: editing.Revision,
-				})
+				editing.KvState = table.KvStateRevise
 			}
+			toUpdate = append(toUpdate, &table.Kv{
+				ID: editing.ID,
+				Spec: &table.KvSpec{
+					Key:     kv.KvSpec.Key,
+					Version: uint32(version),
+				},
+				Attachment: &table.KvAttachment{
+					BizID: req.BizId,
+					AppID: req.AppId,
+				},
+				Revision: editing.Revision,
+			})
 
 		} else {
-			// 创建
 			toCreate = append(toCreate, &table.Kv{
+				KvState: table.KvStateAdd,
 				Spec: &table.KvSpec{
 					Key:     kv.KvSpec.Key,
 					Version: uint32(version),
@@ -503,36 +401,37 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbb
 
 	kt := kit.FromGrpcContext(ctx)
 
-	kvs, err := s.dao.Kv().ListAllKvByKey(kt, req.Attachment.AppId, req.Attachment.BizId, []string{req.Spec.Key}, nil)
-	if err != nil {
+	kvState := []string{
+		string(table.KvStateAdd),
+		string(table.KvStateUnchange),
+		string(table.KvStateRevise),
+	}
+	kv, err := s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key, kvState)
+	if err != nil && !errors.Is(gorm.ErrRecordNotFound, err) {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
 	}
 
 	tx := s.dao.GenQuery().Begin()
-	for _, kv := range kvs {
-		switch kv.KvState {
-		case table.KvStateDelete:
-			kv.KvState = table.KvStateUnchange
-			err = s.dao.Kv().UpdateWithTx(kt, tx, kv)
-			if err != nil {
-				if rErr := tx.Rollback(); rErr != nil {
-					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
-				}
-				logs.Errorf("delete vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-				return nil, err
+	if !errors.Is(gorm.ErrRecordNotFound, err) {
+		if e := s.dao.Kv().DeleteWithTx(kt, tx, kv); e != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
-
-		default:
-			err := s.dao.Kv().DeleteWithTx(kt, tx, kv)
-			if err != nil {
-				if rErr := tx.Rollback(); rErr != nil {
-					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
-				}
-				logs.Errorf("delete vault kv (%d) data failed: err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-				return nil, err
-			}
-
+			logs.Errorf("delete kv (%d) failed, err: %v, rid: %s", req.Spec.Key, e, kt.Rid)
 		}
+	}
+
+	kvState = []string{
+		string(table.KvStateDelete),
+	}
+	if err = s.dao.Kv().UpdateSelectedKVStates(kt, tx, req.Attachment.BizId, req.Attachment.AppId, kvState,
+		table.KvStateUnchange); err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		logs.Errorf("undelete kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+
 	}
 
 	if e := tx.Commit(); e != nil {

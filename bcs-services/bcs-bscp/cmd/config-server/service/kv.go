@@ -148,9 +148,7 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbcs.DeleteKvReq) (*pbcs.De
 	}
 
 	r := &pbds.DeleteKvReq{
-		Spec: &pbkv.KvSpec{
-			Key: req.Key,
-		},
+		Id: req.Id,
 		Attachment: &pbkv.KvAttachment{
 			BizId: req.BizId,
 			AppId: req.AppId,
