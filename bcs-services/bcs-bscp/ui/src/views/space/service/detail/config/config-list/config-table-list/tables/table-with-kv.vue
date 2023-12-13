@@ -145,15 +145,16 @@ const filterList = computed(() => CONFIG_KV_TYPE.map(item => ({
 })));
 
 watch(
-  () => versionData.value.id,
+  [() => versionData.value.id, () => updateSortType.value],
   () => {
-    getListData();
+    refresh();
   },
 );
 
 watch(
-  [() => props.searchStr, () => updateSortType.value],
+  () => props.searchStr,
   () => {
+    props.searchStr ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
     refresh();
   },
 );
@@ -199,7 +200,8 @@ const getListData = async () => {
     if (filterChecked.value!.length > 0) {
       params.kv_type = filterChecked.value;
     }
-    if (updateSortType.value) {
+    if (updateSortType.value !== 'null') {
+      params.sort_field = 'update_at';
       params.sort_order = updateSortType.value;
     }
     let res;
