@@ -95,13 +95,8 @@ const showContent = computed({
 const rules = {
   name: [
     {
-      validator: (value: string) => /^[A-Za-z\u4e00-\u9fa5][^/]*$/.test(value),
-      message: '必须以大小写字母、中文开头,不能包含/',
-      trigger: 'blur',
-    },
-    {
-      validator: (value: string) => value.length <= 256,
-      message: '不能超过256个字符',
+      validator: (value: string) => value.length <= 64,
+      message: '不能超过64个字符',
       trigger: 'change',
     },
   ],
