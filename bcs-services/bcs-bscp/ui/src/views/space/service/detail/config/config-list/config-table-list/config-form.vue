@@ -204,8 +204,8 @@ const rules = {
       message: '最大长度64个字符',
     },
     {
-      validator: (value: string) => /^[a-zA-Z0-9_\-.]+$/.test(value),
-      message: '请使用英文、数字、下划线、中划线或点',
+      validator: (value: string) => /^[\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*$/.test(value),
+      message: '请使用中文、英文、数字、下划线、中划线或点',
     },
   ],
   privilege: [
@@ -229,12 +229,12 @@ const rules = {
   ],
   path: [
     {
-      validator: (value: string) => value.length <= 256,
-      message: '最大长度256个字符',
+      validator: (value: string) => value.length <= 1024,
+      message: '最大长度1024个字符',
       trigger: 'change',
     },
     {
-      validator: (value: string) => /^\/(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)?$/.test(value),
+      validator: (value: string) => /^\/([\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*\/?)*$/.test(value),
       message: '无效的路径,路径不符合Unix文件路径格式规范',
       trigger: 'change',
     },
