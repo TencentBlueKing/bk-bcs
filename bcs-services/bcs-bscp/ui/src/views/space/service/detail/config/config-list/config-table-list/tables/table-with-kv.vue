@@ -145,15 +145,16 @@ const filterList = computed(() => CONFIG_KV_TYPE.map(item => ({
 })));
 
 watch(
-  () => versionData.value.id,
+  [() => versionData.value.id, () => updateSortType.value],
   () => {
-    getListData();
+    refresh();
   },
 );
 
 watch(
-  [() => props.searchStr, () => updateSortType.value],
+  () => props.searchStr,
   () => {
+    props.searchStr ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
     refresh();
   },
 );
