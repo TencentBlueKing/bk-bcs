@@ -19,6 +19,7 @@ const (
 	FieldKeyClusterID   = "clusterID"
 	FieldKeyName        = "name"
 	FieldKeyDisplayName = "displayName"
+	FieldKeyPersonal    = "personal"
 	FieldKeyPublic      = "public"
 	FieldKeyNamespace   = "namespace"
 	FieldKeyType        = "type"

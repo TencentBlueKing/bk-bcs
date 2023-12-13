@@ -159,6 +159,7 @@ func (s *Server) initDB() error {
 	if err = db.Init(); err != nil {
 		return errors.Wrapf(err, "init db failed")
 	}
+	blog.Infof("init db success.")
 	return nil
 }
 
@@ -167,6 +168,7 @@ func (s *Server) initAnalysisClient() error {
 	if err := s.analysisClient.Init(); err != nil {
 		return errors.Wrapf(err, "init analysis client failed")
 	}
+	blog.Infof("init analysis client success.")
 	return nil
 }
 
@@ -189,6 +191,7 @@ func (s *Server) initStorage() error {
 		return errors.Wrapf(err, "init argo db failed")
 	}
 	s.stops = append(s.stops, s.storage.Stop)
+	blog.Infof("init storage success.")
 	return nil
 }
 
@@ -225,6 +228,7 @@ func (s *Server) initIamJWTClient() error {
 		return errors.Wrapf(err, "manager init jwt client failed")
 	}
 	s.jwtClient = jwtClient
+	blog.Infof("init iam/jwt client success")
 	return nil
 }
 
@@ -407,6 +411,7 @@ func (s *Server) initGitOpsProxy(router *mux.Router) error {
 		JWTDecoder:     s.jwtClient,
 		IAMClient:      s.iamClient,
 		Storage:        s.storage,
+		DB:             s.db,
 		SecretOption: &proxy.SecretOption{
 			Address: s.option.SecretServer.Address,
 			Port:    s.option.SecretServer.Port,
@@ -479,6 +484,7 @@ func (s *Server) initController() error {
 		return err
 	}
 	s.stops = append(s.stops, utils.StopFunc(s.projectCtl.Stop))
+	blog.Infof("init controller success")
 	return nil
 }
 

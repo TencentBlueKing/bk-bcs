@@ -28,6 +28,15 @@ func (hm *HelmManager) CreateRepository(ctx context.Context,
 	return action.Handle(ctx, req, resp)
 }
 
+// CreatePersonalRepo provide the actions to create a personal repository
+func (hm *HelmManager) CreatePersonalRepo(ctx context.Context,
+	req *helmmanager.CreatePersonalRepoReq, resp *helmmanager.CreatePersonalRepoResp) error {
+
+	defer recorder(ctx, "CreatePersonalRepo", req, resp)()
+	action := actionRepository.NewCreatePersonalRepositoryAction(hm.model, hm.platform, hm.opt.Repo)
+	return action.Handle(ctx, req, resp)
+}
+
 // UpdateRepository provide the actions to update a repository
 func (hm *HelmManager) UpdateRepository(ctx context.Context,
 	req *helmmanager.UpdateRepositoryReq, resp *helmmanager.UpdateRepositoryResp) error {

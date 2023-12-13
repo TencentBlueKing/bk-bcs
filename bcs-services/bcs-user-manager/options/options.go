@@ -151,6 +151,7 @@ type EncryptSecret struct {
 
 // Activity 操作记录清理
 type Activity struct {
+	Enable       bool     `json:"enable" yaml:"enable"`
 	Duration     string   `json:"duration" yaml:"duration" usage:"cleaning time"`
 	Interval     string   `json:"interval" yaml:"interval" usage:"timed tasks"`
 	ResourceType []string `json:"resource_type" yaml:"resource_type"`

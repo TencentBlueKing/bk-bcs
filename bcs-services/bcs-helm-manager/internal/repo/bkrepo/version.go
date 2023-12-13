@@ -17,12 +17,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"os"
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
-	"github.com/chartmuseum/helm-push/pkg/helm"
 	"helm.sh/helm/v3/pkg/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -33,8 +30,6 @@ const (
 	chartVersionListHelmURI = "/repository/api/version/page"
 	// chartVersionDownloadHelmURI
 	chartVersionDownloadHelmURI = "/repository/api/version/download"
-	// 超时
-	timeOut = 5
 )
 
 // listChartVersion
@@ -210,54 +205,6 @@ func (ch *chartHandler) downloadChartVersion(ctx context.Context, version string
 	default:
 		return nil, fmt.Errorf("unknown repo type %d", ch.repoType)
 	}
-}
-
-// uploadChart
-func (ch *chartHandler) uploadChart(_ context.Context, option repo.UploadOption) error {
-	chartPackagePath := option.ChartPath
-	// 自定义版本
-	if option.Version != "" {
-		chart, err := helm.GetChartByName(option.ChartPath)
-		if err != nil {
-			return fmt.Errorf("failed get chart by name, %s", err)
-		}
-		// 设置自定义版本
-		chart.SetVersion(option.Version)
-		tmp, err := os.MkdirTemp("", "helm-push-")
-		if err != nil {
-			return fmt.Errorf("error creates a new temporary directory in the "+
-				"directory dir, %s", err)
-		}
-		defer func(path string) {
-			err = os.RemoveAll(path)
-			if err != nil {
-				blog.Errorf("failed to remove temporary directory, %s: %s",
-					path, err.Error())
-			}
-		}(tmp)
-		chartPackagePath, err = helm.CreateChartPackage(chart, tmp)
-		if err != nil {
-			return fmt.Errorf("error creates a new package in directory, %s", err)
-		}
-	}
-	cmClient, err := cm.NewClient(
-		cm.URL(ch.getRepoURL()),
-		cm.Username(ch.user.Name),
-		cm.Password(ch.user.Password),
-		cm.Timeout(timeOut),
-	)
-	if err != nil {
-		return fmt.Errorf("creates a new client fail, %s", err)
-	}
-	// 上传chart
-	chartPackage, err := cmClient.UploadChartPackage(chartPackagePath, option.Force)
-	if err != nil {
-		return fmt.Errorf("uploads a chart package fail, %s", err)
-	}
-	if chartPackage.StatusCode != 201 {
-		return fmt.Errorf("uploads a chart package fail, %s", chartPackage.Status)
-	}
-	return nil
 }
 
 // downloadOCIChartVersionOrigin

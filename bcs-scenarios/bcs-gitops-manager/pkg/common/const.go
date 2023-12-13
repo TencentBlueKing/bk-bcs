@@ -47,6 +47,9 @@ const (
 	// ProjectBusinessName for bcs business name
 	ProjectBusinessName = "bkbcs.tencent.com/businessName"
 
+	// ApplicationCollectAnnotation defines the application whether collected
+	ApplicationCollectAnnotation = "bkbcs.tencent.com/application_collect"
+
 	// ClusterAliaName defines the alia's name for project
 	ClusterAliaName = "bkbcs.tencent.com/clusterAliaName"
 	// ClusterEnv defines the cluster env

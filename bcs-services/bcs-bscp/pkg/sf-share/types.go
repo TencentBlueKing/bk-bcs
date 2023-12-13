@@ -187,7 +187,7 @@ type ReleaseEventMetaV1 struct {
 	App        string              `json:"app"`
 	ReleaseID  uint32              `json:"releaseID"`
 	CIMetas    []*ConfigItemMetaV1 `json:"ciMetas"`
-	KvMetas    []*KvMetaV1         `json:"kv_metas"`
+	KvMetas    []*KvMetaV1         `json:"kvMetas"`
 	Repository *RepositoryV1       `json:"repository"`
 	PreHook    *pbhook.HookSpec    `json:"preHook"`
 	PostHook   *pbhook.HookSpec    `json:"postHook"`
@@ -200,7 +200,7 @@ type InstanceSpec struct {
 	App        string            `json:"app"`
 	Uid        string            `json:"uid"`
 	Labels     map[string]string `json:"labels"`
-	ConfigType table.ConfigType  `json:"config_type"`
+	ConfigType table.ConfigType  `json:"configType"`
 }
 
 // Validate the instance spec is valid or not

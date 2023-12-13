@@ -44,7 +44,7 @@ type appTemplateVariableDao struct {
 
 // Upsert create or update one template variable instance.
 func (dao *appTemplateVariableDao) Upsert(kit *kit.Kit, g *table.AppTemplateVariable) error {
-	if err := g.ValidateUpsert(); err != nil {
+	if err := g.ValidateUpsert(kit); err != nil {
 		return err
 	}
 
@@ -89,7 +89,7 @@ func (dao *appTemplateVariableDao) Upsert(kit *kit.Kit, g *table.AppTemplateVari
 
 // UpsertWithTx create or update one template variable instance with transaction.
 func (dao *appTemplateVariableDao) UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.AppTemplateVariable) error {
-	if err := g.ValidateUpsert(); err != nil {
+	if err := g.ValidateUpsert(kit); err != nil {
 		return err
 	}
 

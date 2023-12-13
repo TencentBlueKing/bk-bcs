@@ -20,7 +20,7 @@ import (
 var errorAddonsNotFound = errors.New("addons not found")
 
 // DefaultArgs is the default args for helm install
-var defaultArgs = []string{"--wait=true"}
+var defaultArgs = []string{"--wait=true", "--create-namespace=true"}
 
 const (
 	releaseDefaultTimeout = time.Hour

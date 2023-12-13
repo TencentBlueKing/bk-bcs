@@ -13,10 +13,9 @@
 package dao
 
 import (
-	"fmt"
-
 	rawgen "gorm.io/gen"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -52,13 +51,13 @@ type templateVariableDao struct {
 
 // Create one template variable instance.
 func (dao *templateVariableDao) Create(kit *kit.Kit, g *table.TemplateVariable) (uint32, error) {
-	if err := g.ValidateCreate(); err != nil {
-		return 0, err
+	if err := g.ValidateCreate(kit); err != nil {
+		return 0, errf.ErrInvalidArgF(kit).WithCause(err)
 	}
 
 	tmplSpaceID, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
-		return 0, err
+		return 0, errf.ErrDBOpsFailedF(kit).WithCause(err)
 	}
 	g.ID = tmplSpaceID
 
@@ -76,7 +75,7 @@ func (dao *templateVariableDao) Create(kit *kit.Kit, g *table.TemplateVariable) 
 		return nil
 	}
 	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, err
+		return 0, errf.ErrDBOpsFailedF(kit).WithCause(err)
 	}
 
 	return g.ID, nil
@@ -84,7 +83,7 @@ func (dao *templateVariableDao) Create(kit *kit.Kit, g *table.TemplateVariable) 
 
 // Update one template variable instance.
 func (dao *templateVariableDao) Update(kit *kit.Kit, g *table.TemplateVariable) error {
-	if err := g.ValidateUpdate(); err != nil {
+	if err := g.ValidateUpdate(kit); err != nil {
 		return err
 	}
 
@@ -199,7 +198,7 @@ func (dao *templateVariableDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		return err
 	}
 	for i, v := range tmplVars {
-		if err := v.ValidateCreate(); err != nil {
+		if err := v.ValidateCreate(kit); err != nil {
 			return err
 		}
 		v.ID = ids[i]
@@ -215,10 +214,10 @@ func (dao *templateVariableDao) BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		return nil
 	}
 	for _, v := range tmplVars {
-		if err := v.ValidateUpdate(); err != nil {
+		if err := v.ValidateUpdate(kit); err != nil {
 			return err
 		}
-		if err := v.Spec.Type.Validate(); err != nil {
+		if err := v.Spec.Type.Validate(kit); err != nil {
 			return err
 		}
 	}
@@ -230,11 +229,5 @@ func (dao *templateVariableDao) GetByUniqueKey(kit *kit.Kit, bizID uint32, name 
 	error) {
 	m := dao.genQ.TemplateVariable
 	q := dao.genQ.TemplateVariable.WithContext(kit.Ctx)
-
-	templateVariable, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
-	if err != nil {
-		return nil, fmt.Errorf("get template variable failed, err: %v", err)
-	}
-
-	return templateVariable, nil
+	return q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 }

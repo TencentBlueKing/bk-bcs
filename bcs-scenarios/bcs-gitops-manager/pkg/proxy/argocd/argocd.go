@@ -72,7 +72,7 @@ func (ops *ArgocdProxy) Stop() {
 func (ops *ArgocdProxy) initArgoPathHandler() error {
 	argoSession := session.NewArgoSession(ops.option)
 	secretSession := session.NewSecretSession(ops.option.SecretOption)
-	monitorSession := session.NewMonitorSession(nil) // todo
+	monitorSession := session.NewMonitorSession(nil)
 	middleware := mw.NewMiddlewareHandler(ops.option, argoSession, secretSession, monitorSession)
 	if err := middleware.Init(); err != nil {
 		return errors.Wrapf(err, "middleware init failed")

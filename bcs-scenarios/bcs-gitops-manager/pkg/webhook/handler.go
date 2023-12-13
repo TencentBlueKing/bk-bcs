@@ -23,7 +23,7 @@ import (
 	"go-micro.dev/v4/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
 )
 
@@ -33,21 +33,21 @@ func (s *Server) TGitWebhook(ctx context.Context, req *pb.TGitWebhookRequest, re
 	_, span := s.tracer.Start(ctx, "tgit")
 	defer span.End()
 
-	blog.Infof("RequestID[%s] tgit received webhook", utils.RequestID(ctx))
+	blog.Infof("RequestID[%s] tgit received webhook", middleware.RequestID(ctx))
 	result, err := s.tgitHandler.Transfer(ctx, req.Data)
 	if err != nil {
 		blog.Errorf("RequestID[%s] tagit handle transfer failed with body '%s': %s",
-			utils.RequestID(ctx), string(req.Data), err.Error())
+			middleware.RequestID(ctx), string(req.Data), err.Error())
 		return err
 	}
 	var respBody []byte
 	respBody, err = s.sendToGitops(ctx, result)
 	if err != nil {
 		blog.Errorf("RequestID[%s] tgit send to gitops with body '%s' failed: %s",
-			utils.RequestID(ctx), string(result), err.Error())
+			middleware.RequestID(ctx), string(result), err.Error())
 		return err
 	}
-	blog.V(5).Infof("RequestID[%s] tgit webhook response: %s", utils.RequestID(ctx), string(respBody))
+	blog.V(5).Infof("RequestID[%s] tgit webhook response: %s", middleware.RequestID(ctx), string(respBody))
 	return nil
 }
 
@@ -56,14 +56,14 @@ func (s *Server) GeneralWebhook(ctx context.Context, req *pb.GeneralWebhookReque
 	_, span := s.tracer.Start(ctx, "general")
 	defer span.End()
 
-	blog.Infof("RequestID[%s] general received webhook", utils.RequestID(ctx))
+	blog.Infof("RequestID[%s] general received webhook", middleware.RequestID(ctx))
 	respBody, err := s.sendToGitops(ctx, req.Data)
 	if err != nil {
 		blog.Errorf("RequestID[%s] general send to gitops with body '%s' failed: %s",
-			utils.RequestID(ctx), string(req.Data), err.Error())
+			middleware.RequestID(ctx), string(req.Data), err.Error())
 		return err
 	}
-	blog.V(5).Infof("RequestID[%s] general webhook response: %s", utils.RequestID(ctx), string(respBody))
+	blog.V(5).Infof("RequestID[%s] general webhook response: %s", middleware.RequestID(ctx), string(respBody))
 	return nil
 }
 

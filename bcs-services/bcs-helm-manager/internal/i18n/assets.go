@@ -10,9 +10,14 @@
  * limitations under the License.
  */
 
-package errf
+// Package i18n xxx
+package i18n
 
-const (
-	// AppNotExists means the app is not exist.
-	AppNotExists = "APP_NOT_EXISTS"
+import (
+	"embed"
 )
+
+// Assets I18n files storage path.
+//
+//go:embed locale/*
+var Assets embed.FS

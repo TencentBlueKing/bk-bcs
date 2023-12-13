@@ -162,11 +162,10 @@ message KvMeta {
 message GetKvValueReq {
   // version defines message's protocol version from sidecar
   pbbase.Versioning api_version = 1;
-  uint32 biz_id = 3;
-  uint32 app_id = 4;
-  uint32 release_id = 5;
-  string key = 6;
-  string token = 7;
+  uint32 biz_id = 2;
+  AppMeta app_meta = 3;
+  string token = 4;
+  string key = 5;
 }
 
 message GetKvValueResp {

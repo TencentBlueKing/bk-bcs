@@ -13,8 +13,6 @@
 package i18n
 
 import (
-	"os"
-
 	"gopkg.in/yaml.v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -31,7 +29,7 @@ var i18nMsgMap map[string]map[string]string
 // InitMsgMap 服务启动时初始化 i18n 配置
 func InitMsgMap() error {
 	// 读取国际化配置文件
-	yamlFile, err := os.ReadFile(common.LocalizeFilePath)
+	yamlFile, err := Assets.ReadFile(common.LocalizeFileName)
 	if err != nil {
 		return err
 	}

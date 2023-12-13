@@ -59,7 +59,7 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 	if err = h.checkApplicationSetGenerator(ctx, appset); err != nil {
 		return nil, http.StatusBadRequest, errors.Wrapf(err, "check applicationset generator failed")
 	}
-	blog.Infof("RequestID[%s] check applicationset generator success", RequestID(ctx))
+	blog.Infof("RequestID[%s] check application set generator success", RequestID(ctx))
 
 	repoClientSet := apiclient.NewRepoServerClientset(h.option.RepoServerUrl, 60,
 		apiclient.TLSConfiguration{

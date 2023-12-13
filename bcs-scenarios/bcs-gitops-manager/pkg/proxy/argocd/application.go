@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/resources"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils/jsonq"
 )
@@ -84,6 +85,7 @@ func (plugin *AppPlugin) Init() error {
 	plugin.Path("").Methods("GET").Queries("projects", "{projects}").
 		Handler(plugin.middleware.HttpWrapper(plugin.listApplicationsHandler))
 
+	// 自定义接口
 	plugin.Path("/dry-run").Methods("POST").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationDryRun))
 	plugin.Path("/diff").Methods("POST").
@@ -91,12 +93,19 @@ func (plugin *AppPlugin) Init() error {
 
 	// Put,Patch,Delete with preifx /api/v1/applications/{name}
 	appRouter := plugin.PathPrefix("/{name}").Subrouter()
+
+	// 自定义接口
 	appRouter.Path("/collect").Methods("PUT").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationCollect))
 	appRouter.Path("/collect").Methods("DELETE").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationCancelCollect))
+	appRouter.Path("/pod_resources").Methods("GET").
+		Handler(plugin.middleware.HttpWrapper(plugin.applicationPodResources))
 	appRouter.Path("/clean").Methods("DELETE").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationCleanHandler))
+	appRouter.Path("/delete_resources").Methods("DELETE").
+		Handler(plugin.middleware.HttpWrapper(plugin.applicationDeleteResourcesHandler))
+
 	appRouter.PathPrefix("").Methods("PUT", "POST", "DELETE", "PATCH").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationEditHandler))
 	// GET with prefix /api/v1/applications/{name}
@@ -141,7 +150,8 @@ func (plugin *AppPlugin) createApplicationHandler(r *http.Request) (*http.Reques
 func (plugin *AppPlugin) listApplicationsHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projects := r.URL.Query()["projects"]
 	if len(projects) == 0 {
-		return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("query param 'projects' cannot be empty"))
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("query param 'projects' cannot be empty"))
 	}
 	for i := range projects {
 		projectName := projects[i]
@@ -163,12 +173,13 @@ func (plugin *AppPlugin) listApplicationsHandler(r *http.Request) (*http.Request
 	}
 	bs, err := jsonq.ReserveField(appList, strings.Split(fields, ","))
 	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "parse by query 'fields' failed"))
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			errors.Wrapf(err, "parse by query 'fields' failed"))
 	}
 	return r, mw.ReturnDirectResponse(string(bs))
 }
 
-// Put,Patch,Delete with preifx /api/v1/applications/{name}
+// Put,Patch,Delete with prefix /api/v1/applications/{name}
 func (plugin *AppPlugin) applicationEditHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appName := mux.Vars(r)["name"]
 	if appName == "" {
@@ -214,10 +225,71 @@ func (plugin *AppPlugin) applicationCleanHandler(r *http.Request) (*http.Request
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
 	r = middleware.SetAuditMessage(r, app, middleware.ApplicationClean)
-	if err = plugin.storage.DeleteApplicationResource(r.Context(), app); err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+	results := plugin.storage.DeleteApplicationResource(r.Context(), app, nil)
+	errs := make([]string, 0)
+	for i := range results {
+		res := results[i]
+		if !res.Succeeded {
+			errs = append(errs, res.ErrMessage)
+		}
+	}
+	if len(errs) != 0 {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError,
+			errors.Errorf("clean application resources failed: %v", errs))
 	}
 	return r, mw.ReturnJSONResponse("clean application subresource success")
+}
+
+// ApplicationDeleteResourceRequest defines the request that delete resources of application
+type ApplicationDeleteResourceRequest struct {
+	Resources []*store.ApplicationResource `json:"resources"`
+}
+
+// ApplicationDeleteResourceResponse defines the response that delete resources of application
+type ApplicationDeleteResourceResponse struct {
+	Code      int32                                   `json:"code"`
+	Message   string                                  `json:"message"`
+	RequestID string                                  `json:"requestID"`
+	Data      []store.ApplicationDeleteResourceResult `json:"data"`
+}
+
+func (plugin *AppPlugin) applicationDeleteResourcesHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	appName := mux.Vars(r)["name"]
+	if appName == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request application name cannot be empty"))
+	}
+	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectEdit)
+	if statusCode != http.StatusOK {
+		return r, mw.ReturnErrorResponse(statusCode, err)
+	}
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "read body failed"))
+	}
+	req := new(ApplicationDeleteResourceRequest)
+	if err = json.Unmarshal(body, req); err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			errors.Wrapf(err, "unmarshal request body failed"))
+	}
+	if len(req.Resources) == 0 {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			errors.Errorf("request body 'resources' cannot be empty"))
+	}
+	for i, resource := range req.Resources {
+		if resource.ResourceName == "" || resource.Kind == "" || resource.Namespace == "" ||
+			resource.Group == "" || resource.Version == "" {
+			return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("request 'resources[%d] "+
+				"have param empty, 'resourceName/kind/namespace/group/version' cannot be empty'", i))
+		}
+	}
+	r = middleware.SetAuditMessage(r, app, middleware.ApplicationDeleteResources)
+	results := plugin.storage.DeleteApplicationResource(r.Context(), app, req.Resources)
+	return r, mw.ReturnJSONResponse(&ApplicationDeleteResourceResponse{
+		Code:      0,
+		RequestID: mw.RequestID(r.Context()),
+		Data:      results,
+	})
 }
 
 // GET with prefix /api/v1/applications/{name}
@@ -264,4 +336,33 @@ func (plugin *AppPlugin) applicationCancelCollect(r *http.Request) (*http.Reques
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
 	return r, mw.ReturnJSONResponse("success")
+}
+
+func (plugin *AppPlugin) applicationPodResources(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	appName := mux.Vars(r)["name"]
+	if appName == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request application name cannot be empty"))
+	}
+	argoApp, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectView)
+	if statusCode != http.StatusOK {
+		return r, mw.ReturnErrorResponse(statusCode, err)
+	}
+	podQuery := resources.PodQuery{
+		Storage: plugin.storage,
+	}
+	pods, err := podQuery.Query(r.Context(), argoApp)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+	}
+
+	fields := r.URL.Query().Get("fields")
+	if fields == "" {
+		return r, mw.ReturnJSONResponse(pods)
+	}
+	bs, err := jsonq.ReserveField(pods, strings.Split(fields, ","))
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "parse by query 'fields' failed"))
+	}
+	return r, mw.ReturnDirectResponse(string(bs))
 }

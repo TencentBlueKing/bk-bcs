@@ -41,6 +41,7 @@ type ApplicationSetPlugin struct {
 
 // Init will init the path that http need served
 func (plugin *ApplicationSetPlugin) Init() error {
+	// 自定义接口
 	plugin.Path("/generate").Methods(http.MethodPost).Handler(plugin.middleware.HttpWrapper(plugin.Generate))
 
 	plugin.Path("").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.List))
