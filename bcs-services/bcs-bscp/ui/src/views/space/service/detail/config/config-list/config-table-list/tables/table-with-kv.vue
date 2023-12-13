@@ -200,7 +200,8 @@ const getListData = async () => {
     if (filterChecked.value!.length > 0) {
       params.kv_type = filterChecked.value;
     }
-    if (updateSortType.value) {
+    if (updateSortType.value !== 'null') {
+      params.sort_field = 'update_at';
       params.sort_order = updateSortType.value;
     }
     let res;
