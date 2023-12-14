@@ -178,6 +178,7 @@ func (s *Server) initStorage() error {
 		User:           s.option.GitOps.User,
 		Pass:           s.option.GitOps.Pass,
 		Cache:          true,
+		CacheHistory:   true,
 		AdminNamespace: s.option.GitOps.AdminNamespace,
 		RepoServerUrl:  s.option.GitOps.RepoServer,
 	}

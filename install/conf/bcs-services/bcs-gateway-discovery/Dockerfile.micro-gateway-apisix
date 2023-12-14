@@ -1,4 +1,4 @@
-FROM bk-micro-gateway-apisix:0.1.77
+FROM bk-micro-gateway-apisix:v1.12.7
 
 #install apisix plugin
 COPY ./apisix/ /usr/local/apisix/apisix/plugins/

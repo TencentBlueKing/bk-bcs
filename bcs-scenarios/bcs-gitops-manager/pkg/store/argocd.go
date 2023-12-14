@@ -56,6 +56,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/argoconn"
@@ -78,6 +79,7 @@ type argo struct {
 	repoClient    repositorypkg.RepositoryServiceClient
 	projectClient projectpkg.ProjectServiceClient
 	clusterClient clusterpkg.ClusterServiceClient
+	historyStore  *appHistoryStore
 
 	cacheSynced      atomic.Bool
 	cacheApplication *sync.Map
@@ -86,7 +88,7 @@ type argo struct {
 // Init control interface
 func (cd *argo) Init() error {
 	initializer := []func() error{
-		cd.initToken, cd.initBasicClient,
+		cd.initToken, cd.initBasicClient, cd.initAppHistoryStore,
 	}
 	if cd.option.Cache {
 		initializer = append(initializer, cd.initCache)
@@ -555,7 +557,7 @@ func (cd *argo) ListApplications(ctx context.Context, query *appclient.Applicati
 			if query.Selector != nil && (*query.Selector != "" && !selector.Matches(labels.Set(v.Labels))) {
 				continue
 			}
-			result.Items = append(result.Items, *v)
+			result.Items = append(result.Items, *v.DeepCopy())
 		}
 	}
 	return result, nil
@@ -713,6 +715,19 @@ func (cd *argo) ListApplicationSets(ctx context.Context, query *appsetpkg.Applic
 		return nil, errors.Wrapf(err, "argocd list applicationsets by project '%v' failed", *query)
 	}
 	return appsets, nil
+}
+
+func (cd *argo) initAppHistoryStore() error {
+	if !cd.option.CacheHistory {
+		return nil
+	}
+	cd.historyStore = &appHistoryStore{
+		num:       10,
+		appClient: cd.appClient,
+		db:        dao.GlobalDB(),
+	}
+	cd.historyStore.init()
+	return nil
 }
 
 func (cd *argo) initToken() error {
@@ -887,6 +902,7 @@ func (cd *argo) handleApplicationWatch() error {
 			switch event.Type {
 			case watch.Added, watch.Modified:
 				cd.storeApplication(&application)
+				cd.historyStore.enqueue(application)
 			case watch.Deleted:
 				cd.deleteApplication(&application)
 			}

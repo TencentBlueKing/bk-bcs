@@ -12,7 +12,9 @@
 
 package utils
 
-import "strings"
+import (
+	"strings"
+)
 
 // MultiError aggregate error
 type MultiError struct {
