@@ -155,7 +155,7 @@ func (m *ModelCloud) GetCloud(ctx context.Context, cloudID string) (*types.Cloud
 
 	if cloud.CloudCredential != nil {
 		if err := util.DecryptCredentialData(nil, cloud.CloudCredential); err != nil {
-			return nil, err
+			return cloud, util.ErrDecryptCloudCredential
 		}
 	}
 	return cloud, nil
