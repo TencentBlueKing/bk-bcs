@@ -23,10 +23,10 @@ import (
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 	"github.com/tidwall/gjson"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 const (

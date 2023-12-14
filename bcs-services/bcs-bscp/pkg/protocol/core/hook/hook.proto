@@ -4,7 +4,7 @@ package pbhook;
 
 import "pkg/protocol/core/base/base.proto";
 
-option go_package = "bscp.io/pkg/protocol/core/hook;pbhook";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook;pbhook";
 
 // Hook source resource reference: pkg/dal/table/hook.go
 message Hook {

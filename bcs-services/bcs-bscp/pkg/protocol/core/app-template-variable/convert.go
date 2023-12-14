@@ -14,9 +14,9 @@
 package pbatv
 
 import (
-	"bscp.io/pkg/dal/table"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	pbtv "bscp.io/pkg/protocol/core/template-variable"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbtv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
 )
 
 // AppTemplateVariable convert pb AppTemplateVariable to table AppTemplateVariable

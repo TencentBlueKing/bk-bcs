@@ -17,9 +17,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // AppTemplateVariable supplies all the app template variable related operations.
@@ -44,7 +44,7 @@ type appTemplateVariableDao struct {
 
 // Upsert create or update one template variable instance.
 func (dao *appTemplateVariableDao) Upsert(kit *kit.Kit, g *table.AppTemplateVariable) error {
-	if err := g.ValidateUpsert(); err != nil {
+	if err := g.ValidateUpsert(kit); err != nil {
 		return err
 	}
 
@@ -89,7 +89,7 @@ func (dao *appTemplateVariableDao) Upsert(kit *kit.Kit, g *table.AppTemplateVari
 
 // UpsertWithTx create or update one template variable instance with transaction.
 func (dao *appTemplateVariableDao) UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.AppTemplateVariable) error {
-	if err := g.ValidateUpsert(); err != nil {
+	if err := g.ValidateUpsert(kit); err != nil {
 		return err
 	}
 

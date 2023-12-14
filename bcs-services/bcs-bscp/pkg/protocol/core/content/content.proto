@@ -4,7 +4,7 @@ import "pkg/protocol/core/base/base.proto";
 
 package pbcontent;
 
-option go_package = "bscp.io/pkg/protocol/core/content;pbcontent";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content;pbcontent";
 
 // Content source resource reference: pkg/dal/table/content.go
 message Content {

@@ -20,18 +20,18 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 
-	iamauth "bscp.io/pkg/iam/auth"
-	"bscp.io/pkg/iam/client"
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/iam/sys"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbas "bscp.io/pkg/protocol/auth-server"
-	pbcs "bscp.io/pkg/protocol/config-server"
-	pbapp "bscp.io/pkg/protocol/core/app"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/rest/view/webannotation"
-	"bscp.io/pkg/space"
+	iamauth "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbas "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbapp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest/view/webannotation"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/space"
 )
 
 // CreateApp create app with options
@@ -89,9 +89,8 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 }
 
 // UpdateApp update app with options
-func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.UpdateAppResp, error) {
+func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbapp.App, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateAppResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -118,13 +117,13 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 			},
 		},
 	}
-	_, err = s.client.DS.UpdateApp(grpcKit.RpcCtx(), r)
+	app, err := s.client.DS.UpdateApp(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("update app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return resp, nil
+	return app, nil
 }
 
 // DeleteApp delete app with options

@@ -19,10 +19,10 @@ import (
 	"github.com/TencentBlueKing/iam-go-sdk"
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/iam/client"
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/iam/sys"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
 )
 
 // bizIDAssembleSymbol used to assemble biz_id and resource id's symbol, used in app id generation.

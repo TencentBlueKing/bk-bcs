@@ -23,9 +23,9 @@ import (
 
 	etcd3 "go.etcd.io/etcd/client/v3"
 
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/tools"
-	"bscp.io/pkg/version"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version"
 )
 
 const (

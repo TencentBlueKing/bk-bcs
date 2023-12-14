@@ -18,10 +18,10 @@ import (
 	"log"
 	"sync"
 
-	"bscp.io/pkg/criteria/uuid"
-	"bscp.io/pkg/dal/table"
-	pbcs "bscp.io/pkg/protocol/config-server"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 var (

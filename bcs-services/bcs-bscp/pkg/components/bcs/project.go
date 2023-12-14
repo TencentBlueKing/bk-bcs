@@ -19,8 +19,8 @@ import (
 	"strings"
 	"time"
 
-	"bscp.io/pkg/components"
-	"bscp.io/pkg/config"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/components"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/config"
 )
 
 // Project 项目信息

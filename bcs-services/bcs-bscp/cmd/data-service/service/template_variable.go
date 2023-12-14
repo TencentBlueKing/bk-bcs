@@ -14,16 +14,20 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	pbtv "bscp.io/pkg/protocol/core/template-variable"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/search"
-	"bscp.io/pkg/types"
+	"gorm.io/gorm"
+
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbtv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateTemplateVariable create template variable.
@@ -31,8 +35,12 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 	error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if _, err := s.dao.TemplateVariable().GetByUniqueKey(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
-		return nil, fmt.Errorf("template variable's same name %s already exists", req.Spec.Name)
+	_, err := s.dao.TemplateVariable().GetByUniqueKey(kt, req.Attachment.BizId, req.Spec.Name)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errf.ErrDBOpsFailedF(kt).WithCause(err)
+	}
+	if err == nil {
+		return nil, errf.Errorf(kt, errf.AlreadyExists, "same template variable name %s already exists", req.Spec.Name)
 	}
 
 	templateVariable := &table.TemplateVariable{
@@ -54,9 +62,8 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 }
 
 // ListTemplateVariables list template variable.
-func (s *Service) ListTemplateVariables(ctx context.Context, req *pbds.ListTemplateVariablesReq) (*pbds.
-	ListTemplateVariablesResp,
-	error) {
+func (s *Service) ListTemplateVariables(ctx context.Context, req *pbds.ListTemplateVariablesReq) (
+	*pbds.ListTemplateVariablesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}

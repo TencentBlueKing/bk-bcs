@@ -14,7 +14,7 @@
 package main
 
 import (
-	"bscp.io/cmd/data-service/cmd"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/cmd"
 )
 
 func main() {

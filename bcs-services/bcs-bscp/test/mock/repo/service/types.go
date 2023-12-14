@@ -20,9 +20,9 @@ import (
 	"strconv"
 	"strings"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 )
 
 // BaseResp defines repo base response struct.

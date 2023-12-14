@@ -26,11 +26,11 @@ import (
 	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
 
-	"bscp.io/cmd/ui/service"
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/config"
-	"bscp.io/pkg/tools"
-	"bscp.io/pkg/version"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/ui/service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/config"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version"
 )
 
 const (

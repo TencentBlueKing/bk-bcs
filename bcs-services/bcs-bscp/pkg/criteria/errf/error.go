@@ -20,14 +20,32 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/i18n/localizer"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // ErrorF defines an error with error code and message.
 type ErrorF struct {
+	// Kit is bscp kit
+	Kit *kit.Kit
 	// Code is bscp errCode
 	Code int32 `json:"code"`
 	// Message is error detail
 	Message string `json:"message"`
+}
+
+// Errorf 返回自定义封装的bscp错误，包括错误码、错误信息
+// bcs-services/bcs-bscp/pkg/rest/response.go中的错误中间件方法GRPCErr会统一进行错误码转换处理
+// 需要返回给普通用户看的错误，统一使用该方法返回错误，且对错误信息进行国际化处理，便于普通用户理解
+func Errorf(kit *kit.Kit, code int32, format string, args ...interface{}) *ErrorF {
+	return &ErrorF{
+		Kit:  kit,
+		Code: code,
+		// 错误信息国际化
+		Message: localizer.Get(kit.Lang).Translate(format, args...),
+	}
 }
 
 // Error implement the golang's basic error interface
@@ -39,6 +57,27 @@ func (e *ErrorF) Error() string {
 	// return with a json format string error, so that the upper service
 	// can use Wrap to decode it.
 	return fmt.Sprintf(`{"code": %d, "message": "%s"}`, e.Code, e.Message)
+}
+
+// WithCause 打印根因错误，有底层错误需要暴露时调用该方法，便于研发排查问题
+func (e *ErrorF) WithCause(cause error) *ErrorF {
+	if cause == nil {
+		return e
+	}
+
+	// 如果底层根因错误已经是bscp错误，直接使用该根因错误
+	if c, ok := cause.(*ErrorF); ok {
+		return c
+	}
+	// 打印其他错误根因日志
+	logs.ErrorDepthf(1, "bscp inner err cause: %v, rid: %s", cause, e.Kit.Rid)
+
+	return e
+}
+
+// GRPCStatus implements interface{ GRPCStatus() *Status } , so that it can be recognized by grpc
+func (e *ErrorF) GRPCStatus() *status.Status {
+	return status.New(codes.Code(e.Code), e.Message)
 }
 
 // Format the ErrorF error to a string format.

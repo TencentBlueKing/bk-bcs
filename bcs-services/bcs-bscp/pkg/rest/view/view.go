@@ -19,8 +19,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/rest"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 )
 
 // GenericFunc View函数类型, 使用view.GenericFunc(customHandler)

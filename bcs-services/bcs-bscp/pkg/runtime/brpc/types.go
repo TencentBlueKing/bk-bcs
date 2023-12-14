@@ -17,8 +17,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/serviced"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 )
 
 // PoolOption defines the gRPC client pool related options.

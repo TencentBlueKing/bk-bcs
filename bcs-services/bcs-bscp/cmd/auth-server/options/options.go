@@ -18,8 +18,8 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/runtime/flags"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/flags"
 )
 
 // Option defines the app's runtime flag options.

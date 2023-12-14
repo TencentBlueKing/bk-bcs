@@ -15,10 +15,10 @@ package service
 import (
 	"context"
 
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbcs "bscp.io/pkg/protocol/cache-service"
-	pbrci "bscp.io/pkg/protocol/core/released-ci"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	pbrci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
 )
 
 // Node: the interface of this file is only used for internal basic interface stress testing.

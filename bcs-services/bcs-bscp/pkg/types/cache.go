@@ -15,8 +15,8 @@ package types
 import (
 	"time"
 
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/runtime/selector"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
 )
 
 // AppCacheMeta defines app's basic meta info

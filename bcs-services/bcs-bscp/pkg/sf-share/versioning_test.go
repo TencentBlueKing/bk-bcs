@@ -15,7 +15,7 @@ package sfs
 import (
 	"testing"
 
-	pbbase "bscp.io/pkg/protocol/core/base"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 )
 
 func TestIsAPIVersionMatch(t *testing.T) {

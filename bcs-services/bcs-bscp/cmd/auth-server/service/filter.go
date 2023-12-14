@@ -20,15 +20,15 @@ import (
 	"strings"
 	"time"
 
-	"bscp.io/cmd/auth-server/types"
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/criteria/uuid"
-	"bscp.io/pkg/iam/client"
-	"bscp.io/pkg/iam/sys"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/rest"
-	"bscp.io/pkg/runtime/shutdown"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
 )
 
 // moduleType auth logic module type.

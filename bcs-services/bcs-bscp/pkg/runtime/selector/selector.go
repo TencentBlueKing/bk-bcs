@@ -21,9 +21,9 @@ import (
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/criteria/validator"
-	"bscp.io/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 )
 
 // Selector defines a group's working scope.
