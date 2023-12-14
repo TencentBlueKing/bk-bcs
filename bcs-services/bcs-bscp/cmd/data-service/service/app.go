@@ -113,6 +113,13 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbapp
 		return nil, err
 	}
 
+	app, err = s.dao.App().Get(grpcKit, req.BizId, req.Id)
+	if err != nil {
+		logs.Errorf("updating the app was successful, but retrieving the app failed, err: %v, rid: %s",
+			err, grpcKit.Rid)
+		return nil, err
+	}
+
 	return pbapp.PbApp(app), nil
 }
 

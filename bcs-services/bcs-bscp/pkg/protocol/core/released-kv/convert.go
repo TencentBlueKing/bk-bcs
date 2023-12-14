@@ -55,7 +55,9 @@ func RKvs(kvs []*pbkv.Kv, versionMap map[string]int, releaseID uint32) ([]*table
 			Attachment: kv.Attachment.KvAttachment(),
 			Revision: &table.Revision{
 				Creator:   kv.Revision.Reviser,
+				Reviser:   kv.Revision.Reviser,
 				CreatedAt: createdAt,
+				UpdatedAt: createdAt,
 			},
 		}
 		rkv.Spec.Version = uint32(versionMap[kv.Spec.Key])
