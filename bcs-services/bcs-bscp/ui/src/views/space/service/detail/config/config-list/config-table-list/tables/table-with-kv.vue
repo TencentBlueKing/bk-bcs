@@ -127,7 +127,7 @@ const configsCount = ref(0);
 const editPanelShow = ref(false);
 const editable = ref(false);
 const activeConfig = ref<IConfigKvItem>();
-const deleteConfig = ref<IConfigKvItem>();
+const deleteConfig = ref();
 const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
 const isSearchEmpty = ref(false);
@@ -236,11 +236,11 @@ const handleDel = (config: IConfigKvType) => {
     return;
   }
   isDeleteConfigDialogShow.value = true;
-  deleteConfig.value = config.spec;
+  deleteConfig.value = config.id;
 };
 
 const handleDeleteConfigConfirm = async () => {
-  await deleteKv(props.bkBizId, props.appId, deleteConfig.value!.key);
+  await deleteKv(props.bkBizId, props.appId, deleteConfig.value);
   if (configList.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current -= 1;
   }

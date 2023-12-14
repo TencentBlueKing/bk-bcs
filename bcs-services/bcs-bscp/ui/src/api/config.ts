@@ -381,10 +381,10 @@ export const updateKv = (bizId: string, appId: number, key: string, value: strin
  * 删除kv
  * @param bizId 业务ID
  * @param appId 应用ID
- * @param key 配置键
+ * @param configId 配置项ID
  * @returns
  */
-export const deleteKv = (bizId: string, appId: number, key: string) => http.delete(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`);
+export const deleteKv = (bizId: string, appId: number, configId: number) => http.delete(`/config/biz/${bizId}/apps/${appId}/kvs/${configId}`);
 
 
 /**
