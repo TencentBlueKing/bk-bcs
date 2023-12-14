@@ -23,10 +23,11 @@
           </section>
         </template>
         <select-group
-          :group-type="groupType"
+          :release-type="releaseType"
           :groups="groups"
+          :version-status="versionData.status.publish_status"
           @open-preview-version-diff="openPreviewVersionDiff"
-          @group-type-change="groupType = $event"
+          @release-type-change="releaseType = $event"
           @change="groups = $event"
         />
         <template #footer>
@@ -44,7 +45,7 @@
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
       :release-id="versionData.id"
-      :group-type="groupType"
+      :release-type="releaseType"
       :groups="groups"
       @confirm="handleConfirm"
     />
@@ -99,7 +100,7 @@ const versionList = ref<IConfigVersion[]>([]);
 const isSelectGroupPanelOpen = ref(false);
 const isDiffSliderShow = ref(false);
 const isConfirmDialogShow = ref(false);
-const groupType = ref('select');
+const releaseType = ref('select');
 const groups = ref<IGroupToPublish[]>([]);
 const baseVersionId = ref(0);
 
@@ -183,7 +184,7 @@ const handleConfirm = () => {
 };
 
 const handlePanelClose = () => {
-  groupType.value = 'select';
+  releaseType.value = 'select';
   isSelectGroupPanelOpen.value = false;
   groups.value = [];
 };

@@ -2,9 +2,7 @@
   <section :class="['service-card', { 'no-view-perm': !props.service.permissions.view }]" @click="handleCardClick">
     <div class="card-content-wrapper">
       <div class="card-head">
-        <div class="service-type" v-bk-tooltips="{ content: isFileType ? '文件型' : '键值型' }">
-          <i :class="['bk-bscp-icon', isFileType ? 'icon-help-fill' : 'icon-help']"></i>
-        </div>
+        <bk-tag class="type-tag">{{ isFileType ? '文件型' : '键值型' }}</bk-tag>
         <div class="service-name">
           <bk-overflow-title type="tips">
             {{ props.service.spec?.name }}
@@ -219,40 +217,29 @@ const handleDeleteService = async () => {
     }
   }
   .card-head {
-    margin-top: 12px;
-    height: 22px;
-    font-weight: Bold;
-    font-size: 14px;
+    position: relative;
+    padding-top: 22px;
     color: #313238;
     line-height: 22px;
-    text-align: left;
-    padding: 0 50px 0 0px;
-    display: flex;
-    align-items: center;
-    .service-type {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 24px;
-      height: 24px;
-      margin-right: 8px;
-      background: #699df4;
-      border-radius: 2px;
-      color: #63656e;
-      font-size: 16px;
-      i {
-        color: #fff;
-      }
+    .type-tag {
+      position: absolute;
+      top: 0;
+      left: 0;
+      margin: 0;
     }
     .service-name {
-      width: 190px;
+      margin-top: 4px;
+      padding: 0 20px;
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 22px;
     }
   }
   .service-alias {
-    width: 190px;
-    margin: 0px 60px 0px 32px;
+    padding: 0 20px;
+    font-size: 12px;
+    line-height: 20px;
     color: #63656e;
-    font-family: MicrosoftYaHei;
   }
   .service-config {
     height: 28px;

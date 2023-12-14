@@ -52,7 +52,7 @@ const props = defineProps<{
   bkBizId: string;
   appId: number;
   releaseId: number | null;
-  groupType: string;
+  releaseType: string;
   groups: IGroupToPublish[];
 }>();
 
@@ -96,7 +96,7 @@ const handleConfirm = async () => {
     pending.value = true;
     await formRef.value.validate();
     const params = { ...localVal.value };
-    if (props.groupType === 'all') {
+    if (props.releaseType === 'all') {
       params.groups = [];
       params.all = true;
     }

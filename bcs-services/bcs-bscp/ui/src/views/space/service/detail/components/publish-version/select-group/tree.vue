@@ -107,14 +107,16 @@ const categorizingData = (groupList: IGroupToPublish[]) => {
   allGroupNode.value = nodeItemList;
 };
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   groupListLoading: boolean;
   groupList: IGroupToPublish[];
   versionListLoading: boolean;
   versionList: IConfigVersion[];
-  disabled: number[]; // 调整分组上线时，【选择分组上线】已选择分组不可取消，【排除分组上线】已选择分组不可勾选
+  disabled?: number[]; // 调整分组上线时，【选择分组上线】已选择分组不可取消
   value: IGroupToPublish[];
-}>();
+}>(), {
+  disabled: () => [],
+});
 
 const emits = defineEmits(['change']);
 

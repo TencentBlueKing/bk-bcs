@@ -41,16 +41,15 @@
           <bk-table-column label="已上线分组" show-overflow-tooltip>
             <template #default="{ row }">
               <template v-if="row.status">
-                <div
-                  class="released-groups"
-                  v-bk-tooltips="{
-                    disabled: row.status.publish_status !== 'partial_released',
-                    placement: 'bottom-end',
-                    theme: 'light',
-                    content: getReleasedGroupsPopoverContent(row.status.released_groups, false)
-                  }">
-                  {{ getGroupNames(row) }}
-                </div>
+                <template v-if="row.status.publish_status !== 'partial_released'">{{ getGroupNames(row) }}</template>
+                <ReleasedGroupViewer
+                  v-else
+                  :bk-biz-id="props.bkBizId"
+                  :app-id="props.appId"
+                  :groups="row.status.released_groups"
+                  :is-default-group="isVersionInDefaultGroup(row.status.released_groups)">
+                  <div>{{ getGroupNames(row) }}</div>
+                </ReleasedGroupViewer>
               </template>
             </template>
           </bk-table-column>
@@ -73,7 +72,7 @@
                   --
                 </template>
                 <div v-else :class="['status-tag', row.status.publish_status]">
-                  {{ VERSION_STATUS_MAP[row.status.publish_status as keyof typeof VERSION_STATUS_MAP] }}
+                  {{ row.status.publish_status === 'not_released' ? '未上线' : '已上线' }}
                 </div>
               </template>
             </template>
@@ -110,12 +109,12 @@ import useConfigStore from '../../../../../../store/config';
 import { getConfigVersionList } from '../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../utils/index';
 import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
-import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../../types/config';
-import getReleasedGroupsPopoverContent from '../components/get-released-groups-popover-content';
+import { IConfigVersion, IConfigVersionQueryParams, IReleasedGroup } from '../../../../../../../types/config';
 import ServiceSelector from '../../components/service-selector.vue';
 import SearchInput from '../../../../../../components/search-input.vue';
 import VersionDiff from '../../config/components/version-diff/index.vue';
 import tableEmpty from '../../../../../../components/table/table-empty.vue';
+import ReleasedGroupViewer from '../components/released-group-viewer.vue';
 
 const configStore = useConfigStore();
 const { versionData } = storeToRefs(configStore);
@@ -194,6 +193,10 @@ const getGroupNames = (data: IConfigVersion) => {
   }
   return '--'
 }
+
+const isVersionInDefaultGroup = (groups: IReleasedGroup[]) => {
+  return groups.findIndex(item => item.id === 0) > -1;
+};
 
 const handleTabChange = (tab: string) => {
   currentTab.value = tab;

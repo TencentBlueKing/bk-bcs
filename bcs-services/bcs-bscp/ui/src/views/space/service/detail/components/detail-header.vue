@@ -2,7 +2,7 @@
   <div class="service-detail-header">
     <section class="summary-wrapper">
       <div :class="['status-tag', versionData.status.publish_status]">
-        {{ VERSION_STATUS_MAP[versionData.status.publish_status as keyof typeof VERSION_STATUS_MAP] || '编辑中' }}
+        {{ statusName }}
       </div>
       <div class="version-name" :title="versionData.spec.name">{{ versionData.spec.name }}</div>
       <InfoLine
@@ -22,24 +22,26 @@
         </BkTab>
       </div>
       <section class="version-operations">
-        <div
+        <ReleasedGroupViewer
           v-if="isShowReleasedGroups"
-          v-bk-tooltips="{
-            disabled: versionData.status.publish_status !== 'partial_released',
-            placement: 'bottom-end',
-            theme: 'light',
-            content: getReleasedGroupsPopoverContent(versionData.status.released_groups)
-          }"
-          class="released-groups">
-          <i class="bk-bscp-icon icon-resources"></i>
-          <div class="groups-tag">
-            <div class="first-group-name">{{ firstReleasedGroupName }}</div>
-            <div v-if="versionData.status.publish_status === 'partial_released'" class="remaining-count">
-              ;
-              <span class="count">+{{ versionData.status.released_groups.length - 1 }}</span>
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :groups="versionData.status.released_groups"
+          :is-default-group="hasDefaultGroup"
+          :disabled="versionData.status.publish_status === 'full_released'">
+          <div class="released-groups">
+            <i class="bk-bscp-icon icon-resources"></i>
+            <div class="groups-tag">
+              <div class="first-group-name">{{ firstReleasedGroupName }}</div>
+              <div
+                v-if="versionData.status.publish_status === 'partial_released' && versionData.status.released_groups.length > 1"
+                class="remaining-count">
+                ;
+                <span class="count">+{{ versionData.status.released_groups.length - 1 }}</span>
+              </div>
             </div>
-          </div>
         </div>
+        </ReleasedGroupViewer>
         <CreateVersion
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
@@ -73,10 +75,9 @@ import { InfoLine } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../store/config';
 import useServiceStore from '../../../../../store/service';
-import { VERSION_STATUS_MAP } from '../../../../../constants/config';
 import { IConfigVersion } from '../../../../../../types/config';
 import { permissionCheck } from '../../../../../api/index';
-import getReleasedGroupsPopoverContent from '../config/components/get-released-groups-popover-content';
+import ReleasedGroupViewer from '../config/components/released-group-viewer.vue';
 import PublishVersion from './publish-version/index.vue';
 import CreateVersion from './create-version/index.vue';
 import ModifyGroupPublish from './modify-group-publish.vue';
@@ -112,16 +113,37 @@ const getDefaultTab = () => {
 const activeTab = ref(getDefaultTab());
 const publishVersionRef = ref();
 
-const isShowReleasedGroups = computed(() => {
-  return versionData.value.status?.released_groups.length > 0;
+const statusName = computed(() => {
+  const status = versionData.value.status.publish_status;
+  if (status === 'editing') {
+    return '编辑中';
+  } else if (status === 'not_released') {
+    return '未上线';
+  } else {
+    return '已上线';
+  }
 });
 
+// 是否需要展示版本分组信息
+const isShowReleasedGroups = computed(() => {
+  return ['partial_released', 'full_released'].includes(versionData.value.status.publish_status);
+});
+
+// 当前版本是否上线到默认分组
+const hasDefaultGroup = computed(() => {
+  return versionData.value.status.released_groups.findIndex(item => item.id === 0) > -1;
+});
+
+// 第一个分组名称
 const firstReleasedGroupName = computed(() => {
   if (isShowReleasedGroups.value) {
-    return versionData.value.status.publish_status === 'partial_released' ? versionData.value.status.released_groups[0].name : '全部实例';
+    if (versionData.value.status.publish_status === 'full_released') {
+      return '全部实例';
+    } else {
+      return hasDefaultGroup.value ? '默认分组' : versionData.value.status.released_groups[0].name;
+    }
   }
-  return ''
-})
+});
 
 watch(
   () => route.name,
