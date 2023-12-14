@@ -26,8 +26,8 @@ export interface ICommonQuery {
   ids?: string;
   with_status?: boolean;
   kv_type?: string[]
-  sort_order?: string
-  sort_field?: string
+  order?: string
+  sort?: string
 }
 
 // 权限查询参数单个资源条目
