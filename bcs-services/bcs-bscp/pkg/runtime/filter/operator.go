@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"strings"
 
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 var opFactory map[OpFactory]Operator

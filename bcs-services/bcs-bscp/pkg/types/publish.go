@@ -15,8 +15,8 @@ package types
 import (
 	"fmt"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 // PublishOption defines options to publish a strategy

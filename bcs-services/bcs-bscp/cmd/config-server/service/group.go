@@ -15,13 +15,13 @@ package service
 import (
 	"context"
 
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbcs "bscp.io/pkg/protocol/config-server"
-	pbapp "bscp.io/pkg/protocol/core/app"
-	pbgroup "bscp.io/pkg/protocol/core/group"
-	pbds "bscp.io/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbapp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	pbgroup "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 )
 
 // CreateGroup create a group

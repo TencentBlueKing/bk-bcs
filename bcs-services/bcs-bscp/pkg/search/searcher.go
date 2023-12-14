@@ -19,7 +19,7 @@ import (
 
 	"gorm.io/gen/field"
 
-	"bscp.io/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 )
 
 // TableName is table name which support search.

@@ -24,8 +24,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"k8s.io/klog/v2"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/uuid"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
 )
 
 // New initial a kit with rid and context.

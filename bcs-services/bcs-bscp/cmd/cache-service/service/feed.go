@@ -16,11 +16,11 @@ import (
 	"context"
 	"errors"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/kit"
-	pbcs "bscp.io/pkg/protocol/cache-service"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // GetAppID get app id by app name.

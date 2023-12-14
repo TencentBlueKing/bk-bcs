@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"time"
 
-	"bscp.io/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // App defines an application's detail information

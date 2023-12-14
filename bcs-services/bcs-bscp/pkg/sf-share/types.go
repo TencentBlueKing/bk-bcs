@@ -19,17 +19,17 @@ import (
 	"os"
 	"strings"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/criteria/validator"
-	"bscp.io/pkg/dal/table"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	pbcommit "bscp.io/pkg/protocol/core/commit"
-	pbci "bscp.io/pkg/protocol/core/config-item"
-	pbcontent "bscp.io/pkg/protocol/core/content"
-	pbhook "bscp.io/pkg/protocol/core/hook"
-	pbkv "bscp.io/pkg/protocol/core/kv"
-	pbfs "bscp.io/pkg/protocol/feed-server"
-	"bscp.io/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbcommit "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
+	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	pbhook "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
+	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	pbfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 )
 
 const (

@@ -1,6 +1,6 @@
 ### 描述
 该接口提供版本：v1.0.0+
- 
+
 
 更新策略集。
 
@@ -13,8 +13,8 @@
 | release_id         | uint32       | 否     | 版本ID     |
 | as_default         | bool       | 否     | 是否作为兜底策略，如果是兜底策略，不能设置 scope 或 namespace，默认不是兜底策略。一个策略集下只能有一个兜底策略，即as_default的策略只能有一个为true    |
 | name         | string       | 否     | 策略名称。最大长度128个字符，仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾    |
-| scope         | object       | 看情况     | 发布范围，该策略所属策略集是 normal 类型，该值必填，namespace模式下不能填    | 
-| memo         | string       | 否     | 备注。最大长度256个字符，仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾    | 
+| scope         | object       | 看情况     | 发布范围，该策略所属策略集是 normal 类型，该值必填，namespace模式下不能填    |
+| memo         | string       | 否     | 备注。最大长度256个字符，仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾    |
 
 #### scope:
 | 参数名称     | 参数类型     | 必选   | 描述             |
@@ -28,7 +28,7 @@
 | name         | string       | 否     | 策略名称。最大长度128个字符，仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾    |
 | release_id         | uint32       | 否     | 版本ID     |
 | selector         | object       | 否     | 发布范围, 该对象的json序列化后的字符串大小不能超过1KB     |
-| memo         | string       | 否     | 备注。最大长度256个字符，仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾    | 
+| memo         | string       | 否     | 备注。最大长度256个字符，仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾    |
 
 #### selector:
 | 参数名称     | 参数类型     | 必选   | 描述             |
@@ -51,14 +51,14 @@
 {
     "labels_or": [
         {
-	    "key": "bscp.io/ns/biz",
+	    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/biz",
             "op": "eq",
             "value": "lol"
 	},
 	{
-	    "key": "bscp.io/ns/group_id",
+	    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/group_id",
             "op": "in",
-            "value": ["1", "2", "3"]        
+            "value": ["1", "2", "3"]
 	}
     ]
 }
@@ -73,15 +73,15 @@
 	"selector": {
 	    "labels_or": [
 	        {
-		    "key": "bscp.io/ns/biz",
+		    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/biz",
 		    "op": "eq",
 		    "value": "lol"
 	        },
 	        {
-		    "key": "bscp.io/ns/group_id",
+		    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/group_id",
 		    "op": "in",
 		    "value": ["1", "2", "3"]
-		}  
+		}
 	    ]
         },
         "sub_strategy": {
@@ -90,15 +90,15 @@
             "selector": {
 	        "labels_or": [
 	        {
-		    "key": "bscp.io/ns/biz",
+		    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/biz",
 		    "op": "eq",
 		    "value": "lol"
 	        },
 	        {
-		    "key": "bscp.io/ns/group_id",
+		    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/group_id",
 		    "op": "in",
 		    "value": ["1", "2", "3"]
-		}  
+		}
 	        ]},
             "memo": "my_sub_strategy"
         }

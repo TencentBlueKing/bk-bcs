@@ -22,17 +22,17 @@ import (
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 	"github.com/pkg/errors"
 
-	"bscp.io/cmd/auth-server/options"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/iam/client"
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/iam/sdk/auth"
-	"bscp.io/pkg/iam/sys"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbas "bscp.io/pkg/protocol/auth-server"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/space"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/options"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sdk/auth"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbas "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/space"
 )
 
 // Auth related operate.

@@ -22,11 +22,11 @@ import (
 	"strconv"
 	"time"
 
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/shutdown"
-	"bscp.io/pkg/tools"
-	"bscp.io/test/mock/repo/options"
-	"bscp.io/test/mock/repo/service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/options"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/service"
 )
 
 type repoMock struct {

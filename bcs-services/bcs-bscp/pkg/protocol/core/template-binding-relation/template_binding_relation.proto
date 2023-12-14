@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pbtbr;
 
-option go_package = "bscp.io/pkg/protocol/core/template-binding-relation;pbtbr";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-binding-relation;pbtbr";
 
 // TemplateBoundCounts is template bound counts.
 message TemplateBoundCounts {

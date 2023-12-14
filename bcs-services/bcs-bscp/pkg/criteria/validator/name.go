@@ -18,8 +18,8 @@ import (
 	"regexp"
 	"strings"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // reservedResNamePrefix internal reserved string prefix, case-insensitive.

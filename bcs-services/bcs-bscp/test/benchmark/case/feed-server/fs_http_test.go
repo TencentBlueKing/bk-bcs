@@ -26,13 +26,13 @@ import (
 	_ "github.com/go-sql-driver/mysql" // import mysql drive, used to create conn.
 	"github.com/jmoiron/sqlx"
 
-	"bscp.io/cmd/feed-server/bll/types"
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/criteria/uuid"
-	"bscp.io/test/benchmark/run"
-	"bscp.io/test/client/feed"
-	"bscp.io/test/util"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/benchmark/run"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/client/feed"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/util"
 )
 
 var (

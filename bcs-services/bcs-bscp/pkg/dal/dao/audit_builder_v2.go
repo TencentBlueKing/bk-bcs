@@ -18,10 +18,10 @@ import (
 	"fmt"
 	"time"
 
-	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // AuditDo audit traction action

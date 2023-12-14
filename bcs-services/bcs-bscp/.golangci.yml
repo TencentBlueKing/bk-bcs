@@ -57,12 +57,12 @@ linters-settings:
   govet:
     check-shadowing: true
   goimports:
-    local-prefixes: bscp.io
+    local-prefixes: github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp
   gci:
     sections:
       - standard
       - default
-      - prefix(bscp.io)
+      - prefix(github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp)
   gocritic:
     settings:
       ifElseChain:

@@ -20,12 +20,12 @@ import (
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Event defines all the event related operations.
@@ -288,7 +288,7 @@ func (dao *eventDao) LatestCursor(kit *kit.Kit) (uint32, error) {
 	return cursor, nil
 }
 
-const eventUser = "bscp.io"
+const eventUser = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp"
 
 // RecordCursor is used to record the cursor which describe where
 // the event has already been consumed with event id.

@@ -17,14 +17,14 @@ package bll
 import (
 	"fmt"
 
-	"bscp.io/cmd/feed-server/bll/auth"
-	clientset "bscp.io/cmd/feed-server/bll/client-set"
-	"bscp.io/cmd/feed-server/bll/eventc"
-	"bscp.io/cmd/feed-server/bll/lcache"
-	"bscp.io/cmd/feed-server/bll/observer"
-	"bscp.io/cmd/feed-server/bll/release"
-	iamauth "bscp.io/pkg/iam/auth"
-	"bscp.io/pkg/serviced"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/auth"
+	clientset "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/eventc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/lcache"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/observer"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/release"
+	iamauth "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 )
 
 // New create a new BLL instance.

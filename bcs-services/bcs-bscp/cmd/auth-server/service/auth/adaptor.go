@@ -18,10 +18,10 @@ import (
 
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/iam/client"
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/iam/sys"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
 )
 
 // AdaptAuthOptions convert bscp auth resource to iam action id and resources

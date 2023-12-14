@@ -19,14 +19,14 @@ import (
 	"net/http"
 	"strconv"
 
-	"bscp.io/cmd/api-server/options"
-	"bscp.io/cmd/api-server/service"
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/metrics"
-	"bscp.io/pkg/runtime/shutdown"
-	"bscp.io/pkg/serviced"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/api-server/options"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/api-server/service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Run start the api server

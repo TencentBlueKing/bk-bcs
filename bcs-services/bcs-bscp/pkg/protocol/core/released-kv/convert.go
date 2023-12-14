@@ -17,9 +17,9 @@ import (
 	"fmt"
 	"time"
 
-	"bscp.io/pkg/dal/table"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	pbkv "bscp.io/pkg/protocol/core/kv"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 )
 
 // PbRKv convert table ReleasedKv to pb ReleasedKv

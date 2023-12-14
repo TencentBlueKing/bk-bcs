@@ -5,7 +5,7 @@ import "pkg/protocol/core/template-variable/template_variable.proto";
 
 package pbatv;
 
-option go_package = "bscp.io/pkg/protocol/core/app-template-variable;pbatv";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-variable;pbatv";
 
 // AppTemplateVariable source resource reference: pkg/dal/table/app_template_variable.go
 message AppTemplateVariable {

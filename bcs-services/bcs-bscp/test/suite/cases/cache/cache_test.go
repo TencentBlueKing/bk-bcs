@@ -18,18 +18,18 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/uuid"
-	"bscp.io/pkg/dal/table"
-	pbcache "bscp.io/pkg/protocol/cache-service"
-	pbconfig "bscp.io/pkg/protocol/config-server"
-	pbapp "bscp.io/pkg/protocol/core/app"
-	pbci "bscp.io/pkg/protocol/core/config-item"
-	pbcontent "bscp.io/pkg/protocol/core/content"
-	"bscp.io/pkg/tools"
-	"bscp.io/test/client"
-	"bscp.io/test/suite"
-	"bscp.io/test/suite/cases"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbcache "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	pbconfig "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbapp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/suite"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/suite/cases"
 )
 
 func TestCache(t *testing.T) {

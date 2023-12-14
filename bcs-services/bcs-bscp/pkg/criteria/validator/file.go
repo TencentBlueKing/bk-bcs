@@ -19,7 +19,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"bscp.io/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 )
 
 // qualifiedUnixFilePathRegexp unix file path validate regexp.

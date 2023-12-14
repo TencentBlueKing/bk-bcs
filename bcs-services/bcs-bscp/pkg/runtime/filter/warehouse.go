@@ -21,8 +21,8 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // isNumericOrTime test if a value is a standard time

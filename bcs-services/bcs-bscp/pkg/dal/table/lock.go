@@ -15,7 +15,7 @@ package table
 import (
 	"errors"
 
-	"bscp.io/pkg/criteria/enumor"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
 )
 
 // ResLockColumns defines all the ResourceLock table's columns.

@@ -15,10 +15,10 @@ package cmd
 import (
 	"errors"
 
-	"bscp.io/cmd/cache-service/service/cache/client"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/service/cache/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // WithRefreshCache init and returns the refreshing cache command.

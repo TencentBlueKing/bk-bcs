@@ -14,8 +14,8 @@
 package pbas
 
 import (
-	"bscp.io/pkg/iam/client"
-	"bscp.io/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 )
 
 // UserInfo convert pb UserInfo to meta type UserInfo

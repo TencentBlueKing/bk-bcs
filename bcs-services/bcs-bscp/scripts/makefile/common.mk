@@ -6,7 +6,7 @@ OUTPUT_DIR ?= $(LOCALBUILD)
 BUILDTIME = $(shell date +%Y-%m-%dT%T%z)
 
 # version for command line
-LDVersionFLAG ?= "-X bscp.io/pkg/version.BUILDTIME=${BUILDTIME}"
+LDVersionFLAG ?= "-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME}"
 
 BINDIR = ${OUTPUT_DIR}/$(SERVER)
 BIN    = $(BINDIR)/$(SERVER)

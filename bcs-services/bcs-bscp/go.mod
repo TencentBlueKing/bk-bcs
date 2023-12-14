@@ -1,4 +1,4 @@
-module bscp.io
+module github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp
 
 go 1.20
 

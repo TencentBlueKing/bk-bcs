@@ -4,7 +4,7 @@ import "pkg/protocol/core/base/base.proto";
 
 package pbts;
 
-option go_package = "bscp.io/pkg/protocol/core/template-space;pbts";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-space;pbts";
 
 // TemplateSpace source resource reference: pkg/dal/table/template_space.go
 message TemplateSpace {
