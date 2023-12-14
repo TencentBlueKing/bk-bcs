@@ -18,10 +18,10 @@ import (
 
 	"gorm.io/gorm"
 
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/types"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Validator supplies all the validate operations.

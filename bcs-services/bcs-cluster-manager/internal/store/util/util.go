@@ -15,10 +15,16 @@ package util
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
+)
+
+var (
+	// ErrDecryptCloudCredential decrypt cloud error
+	ErrDecryptCloudCredential = errors.New("decrypt credential error")
 )
 
 const (

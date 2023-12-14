@@ -7,8 +7,8 @@
 package pbcs
 
 import (
-	base "bscp.io/pkg/protocol/core/base"
 	context "context"
+	base "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

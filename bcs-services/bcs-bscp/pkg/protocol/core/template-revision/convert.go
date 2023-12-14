@@ -14,10 +14,10 @@
 package pbtr
 
 import (
-	"bscp.io/pkg/dal/table"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	pbci "bscp.io/pkg/protocol/core/config-item"
-	pbcontent "bscp.io/pkg/protocol/core/content"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
 )
 
 // TemplateRevision convert pb TemplateRevision to table TemplateRevision

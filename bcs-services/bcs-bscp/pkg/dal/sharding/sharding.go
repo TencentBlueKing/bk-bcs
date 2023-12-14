@@ -26,9 +26,9 @@ import (
 	"gorm.io/sharding"
 	"k8s.io/klog/v2"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/criteria/uuid"
-	"bscp.io/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 )
 
 // InitSharding initialize a sharding management instance.

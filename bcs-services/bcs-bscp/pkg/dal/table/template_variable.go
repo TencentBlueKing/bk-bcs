@@ -15,10 +15,10 @@ package table
 import (
 	"errors"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/criteria/validator"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // TemplateVariable 模版变量

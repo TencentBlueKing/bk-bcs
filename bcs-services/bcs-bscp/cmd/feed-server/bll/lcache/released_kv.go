@@ -20,14 +20,14 @@ import (
 	"github.com/bluele/gcache"
 	prm "github.com/prometheus/client_golang/prometheus"
 
-	clientset "bscp.io/cmd/feed-server/bll/client-set"
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbcs "bscp.io/pkg/protocol/cache-service"
-	"bscp.io/pkg/runtime/jsoni"
-	"bscp.io/pkg/tools"
-	"bscp.io/pkg/types"
+	clientset "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // newReleasedKv create released kv cache instance.

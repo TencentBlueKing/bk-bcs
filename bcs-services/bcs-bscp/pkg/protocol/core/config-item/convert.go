@@ -16,8 +16,8 @@ package pbci
 import (
 	"time"
 
-	"bscp.io/pkg/dal/table"
-	pbbase "bscp.io/pkg/protocol/core/base"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 )
 
 // ConfigItemSpec convert pb ConfigItemSpec to table ConfigItemSpec

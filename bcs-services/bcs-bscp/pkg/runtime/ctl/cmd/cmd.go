@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"bscp.io/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // Command is the control tools command definition.

@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/iam/client"
-	"bscp.io/pkg/iam/sdk/operator"
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sdk/operator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // calculatePolicy calculate if a user have the authority to do operations with

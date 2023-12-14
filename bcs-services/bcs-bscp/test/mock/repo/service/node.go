@@ -22,10 +22,10 @@ import (
 	"strconv"
 	"strings"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/runtime/jsoni"
-	"bscp.io/pkg/thirdparty/repo"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/repo"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 const (

@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc/status"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // BaseResp http response.

@@ -17,12 +17,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/uuid"
-	pbcs "bscp.io/pkg/protocol/config-server"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	"bscp.io/pkg/runtime/filter"
-	"bscp.io/pkg/runtime/selector"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/filter"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 

@@ -13,11 +13,11 @@
 package dao
 
 import (
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // ReleasedGroup supplies all the group related operations.

@@ -13,7 +13,7 @@ import (
 	"io"
 	"net/http"
 
-	"bscp.io/pkg/protocol/core/base"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -10447,14 +10447,14 @@ func request_Config_DeleteKv_0(ctx context.Context, marshaler runtime.Marshaler,
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
 	}
 
-	val, ok = pathParams["key"]
+	val, ok = pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
 
-	protoReq.Key, err = runtime.String(val)
+	protoReq.Id, err = runtime.Uint32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 
 	msg, err := client.DeleteKv(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -10493,14 +10493,14 @@ func local_request_Config_DeleteKv_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
 	}
 
-	val, ok = pathParams["key"]
+	val, ok = pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
 
-	protoReq.Key, err = runtime.String(val)
+	protoReq.Id, err = runtime.Uint32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 
 	msg, err := server.DeleteKv(ctx, &protoReq)
@@ -13677,7 +13677,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/DeleteKv", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/DeleteKv", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -16409,7 +16409,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/DeleteKv", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/DeleteKv", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -16711,7 +16711,7 @@ var (
 
 	pattern_Config_ListKvs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "kvs"}, ""))
 
-	pattern_Config_DeleteKv_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "kvs", "key"}, ""))
+	pattern_Config_DeleteKv_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "kvs", "id"}, ""))
 
 	pattern_Config_BatchUpsertKvs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "kvs"}, ""))
 

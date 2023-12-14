@@ -16,9 +16,9 @@ import (
 	"fmt"
 	"os"
 
-	"bscp.io/pkg/logs"
-	"bscp.io/test/mock/repo/app"
-	"bscp.io/test/mock/repo/options"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/app"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/options"
 )
 
 func main() {

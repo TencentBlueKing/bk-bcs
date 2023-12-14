@@ -19,8 +19,8 @@ import (
 	"reflect"
 	"strings"
 
-	pbcs "bscp.io/pkg/protocol/config-server"
-	"bscp.io/pkg/rest"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 )
 
 // Content content client

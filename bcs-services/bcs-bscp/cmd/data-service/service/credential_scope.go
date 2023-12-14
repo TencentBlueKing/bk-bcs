@@ -16,12 +16,12 @@ import (
 	"context"
 	"time"
 
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbcrs "bscp.io/pkg/protocol/core/credential-scope"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/credential"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcrs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/credential-scope"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/credential"
 )
 
 // ListCredentialScopes  get credential scopes

@@ -14,8 +14,8 @@
 package pbrg
 
 import (
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // ReleasedGroup convert pb ReleasedGroup to table ReleasedGroup

@@ -17,13 +17,13 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	hr "bscp.io/pkg/protocol/core/hook-revision"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	hr "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateHookRevision create hook revision with option

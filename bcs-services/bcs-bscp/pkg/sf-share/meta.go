@@ -19,9 +19,9 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 )
 
 // SidecarMetaHeader defines the metadata stored at the request header

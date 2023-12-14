@@ -7,7 +7,6 @@ go 1.17
 replace (
 	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220613112908-e4cf72cb3aed
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
-	// NOCC:horus-dependency-security(已replace)
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
@@ -52,7 +51,6 @@ require (
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	// NOCC:horus-dependency-security(已replace)
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/elazarl/goproxy v0.0.0-20210110162100-a92cc753f88e // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect

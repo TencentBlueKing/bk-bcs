@@ -22,14 +22,14 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"gorm.io/gorm"
 
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbgroup "bscp.io/pkg/protocol/core/group"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/selector"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbgroup "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Publish exec publish strategy.

@@ -19,15 +19,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/dal/dao"
-	"bscp.io/pkg/dal/repository"
-	"bscp.io/pkg/dal/vault"
-	"bscp.io/pkg/metrics"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/serviced"
-	"bscp.io/pkg/thirdparty/esb/client"
-	"bscp.io/pkg/tmplprocess"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/vault"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tmplprocess"
 )
 
 // Service do all the data service's work

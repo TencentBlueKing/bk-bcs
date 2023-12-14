@@ -17,7 +17,7 @@ import (
 
 	prm "github.com/prometheus/client_golang/prometheus"
 
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 func newRetryList(mc *metric) *retryList {

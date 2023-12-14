@@ -127,13 +127,13 @@ const configsCount = ref(0);
 const editPanelShow = ref(false);
 const editable = ref(false);
 const activeConfig = ref<IConfigKvItem>();
-const deleteConfig = ref<IConfigKvItem>();
+const deleteConfig = ref();
 const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
 const isSearchEmpty = ref(false);
 const isDeleteConfigDialogShow = ref(false);
 const filterChecked = ref<string[]>([]);
-const updateSortType = ref('');
+const updateSortType = ref('null');
 const pagination = ref({
   current: 1,
   count: 0,
@@ -145,15 +145,16 @@ const filterList = computed(() => CONFIG_KV_TYPE.map(item => ({
 })));
 
 watch(
-  () => versionData.value.id,
+  [() => versionData.value.id, () => updateSortType.value],
   () => {
-    getListData();
+    refresh();
   },
 );
 
 watch(
-  [() => props.searchStr, () => updateSortType.value],
+  () => props.searchStr,
   () => {
+    props.searchStr ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
     refresh();
   },
 );
@@ -199,8 +200,9 @@ const getListData = async () => {
     if (filterChecked.value!.length > 0) {
       params.kv_type = filterChecked.value;
     }
-    if (updateSortType.value) {
-      params.sort_order = updateSortType.value;
+    if (updateSortType.value !== 'null') {
+      params.sort = 'updated_at';
+      params.order = updateSortType.value.toUpperCase();
     }
     let res;
     if (isUnNamedVersion.value) {
@@ -234,11 +236,11 @@ const handleDel = (config: IConfigKvType) => {
     return;
   }
   isDeleteConfigDialogShow.value = true;
-  deleteConfig.value = config.spec;
+  deleteConfig.value = config.id;
 };
 
 const handleDeleteConfigConfirm = async () => {
-  await deleteKv(props.bkBizId, props.appId, deleteConfig.value!.key);
+  await deleteKv(props.bkBizId, props.appId, deleteConfig.value);
   if (configList.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current -= 1;
   }

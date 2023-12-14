@@ -16,16 +16,16 @@ import (
 	"fmt"
 	"strconv"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
-	"bscp.io/pkg/iam/client"
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/iam/sys"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/tools"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/orm"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/sharding"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // IAM only used to iam to pull resource callback.

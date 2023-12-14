@@ -16,15 +16,15 @@ import (
 	"context"
 	"fmt"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbcs "bscp.io/pkg/protocol/config-server"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	pbts "bscp.io/pkg/protocol/core/template-space"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbts "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-space"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // CreateTemplateSpace create a template space
