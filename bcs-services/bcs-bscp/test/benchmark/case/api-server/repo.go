@@ -25,7 +25,7 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // dd if=/dev/urandom of=/tmp/100Mib.bin bs=1M count=100

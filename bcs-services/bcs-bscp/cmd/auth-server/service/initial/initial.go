@@ -16,11 +16,11 @@ package initial
 import (
 	"context"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/iam/sys"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbas "bscp.io/pkg/protocol/auth-server"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbas "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server"
 )
 
 // Initial iam init related operate.

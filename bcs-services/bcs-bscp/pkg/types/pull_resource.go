@@ -13,7 +13,7 @@
 package types
 
 import (
-	"bscp.io/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 )
 
 // ListInstancesOption list instance options.

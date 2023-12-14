@@ -17,7 +17,7 @@ import (
 	"reflect"
 	"testing"
 
-	"bscp.io/pkg/criteria/enumor"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
 )
 
 func TestMergeNamedColumns(t *testing.T) {

@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 
-	"bscp.io/pkg/config"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/config"
 )
 
 // LoadSettings load service's configuration

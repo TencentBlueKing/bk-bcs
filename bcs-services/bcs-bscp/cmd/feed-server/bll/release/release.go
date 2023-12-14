@@ -19,18 +19,18 @@ import (
 
 	"golang.org/x/time/rate"
 
-	clientset "bscp.io/cmd/feed-server/bll/client-set"
-	"bscp.io/cmd/feed-server/bll/eventc"
-	"bscp.io/cmd/feed-server/bll/lcache"
-	"bscp.io/cmd/feed-server/bll/types"
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/dal/repository"
-	"bscp.io/pkg/kit"
-	pbcommit "bscp.io/pkg/protocol/core/commit"
-	pbci "bscp.io/pkg/protocol/core/config-item"
-	pbcontent "bscp.io/pkg/protocol/core/content"
-	pbhook "bscp.io/pkg/protocol/core/hook"
-	pbkv "bscp.io/pkg/protocol/core/kv"
+	clientset "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/eventc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/lcache"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	pbcommit "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
+	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	pbhook "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
+	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 )
 
 // New initialize the release service instance.

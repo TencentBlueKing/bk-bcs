@@ -20,8 +20,8 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/uuid"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
 )
 
 // NewVas create a vas instance.

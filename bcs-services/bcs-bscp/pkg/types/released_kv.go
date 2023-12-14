@@ -15,7 +15,7 @@ package types
 import (
 	"errors"
 
-	"bscp.io/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 // CreateReleasedKvOption defines options to create released kv.

@@ -27,14 +27,14 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 	"k8s.io/klog/v2"
 
-	bscp "bscp.io"
-	_ "bscp.io/docs" // 文档自动注册到 swagger
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/config"
-	"bscp.io/pkg/iam/auth"
-	"bscp.io/pkg/metrics"
-	"bscp.io/pkg/runtime/handler"
-	"bscp.io/pkg/serviced"
+	bscp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp"
+	_ "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/docs" // 文档自动注册到 swagger
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/config"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 )
 
 // WebServer :

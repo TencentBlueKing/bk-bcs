@@ -16,9 +16,9 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/criteria/validator"
-	"bscp.io/pkg/runtime/selector"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
 )
 
 // GroupColumns defines Group's columns

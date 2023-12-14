@@ -26,7 +26,7 @@ import "google/protobuf/struct.proto";
 
 package pbcs;
 
-option go_package = "bscp.io/pkg/protocol/config-server;pbcs";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server;pbcs";
 
 service Config {
   rpc CreateApp(CreateAppReq) returns (CreateAppResp) {

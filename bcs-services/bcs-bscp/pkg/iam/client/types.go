@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"sync"
 
-	"bscp.io/pkg/iam/sdk/operator"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sdk/operator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 const (

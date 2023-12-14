@@ -12,7 +12,7 @@
 
 package sys
 
-import "bscp.io/pkg/iam/client"
+import "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
 
 // GenerateStaticInstanceSelections return need register instance selection.
 func GenerateStaticInstanceSelections() []client.InstanceSelection {

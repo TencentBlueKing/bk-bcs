@@ -20,9 +20,9 @@ import (
 	"gorm.io/gorm"
 
 	// run the init function to add migrations
-	_ "bscp.io/cmd/data-service/db-migration/migrations"
-	"bscp.io/cmd/data-service/db-migration/migrator"
-	"bscp.io/pkg/cc"
+	_ "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrations"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 )
 
 // cmd for migration

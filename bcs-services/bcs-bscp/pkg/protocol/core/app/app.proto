@@ -4,7 +4,7 @@ import "pkg/protocol/core/base/base.proto";
 
 package pbapp;
 
-option go_package = "bscp.io/pkg/protocol/core/app;pbapp";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app;pbapp";
 
 // App source resource reference: pkg/dal/table/app.go
 message App {

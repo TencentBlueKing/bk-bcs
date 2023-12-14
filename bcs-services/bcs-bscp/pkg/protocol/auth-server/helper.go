@@ -18,9 +18,9 @@ import (
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 
-	"bscp.io/cmd/auth-server/types"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
 )
 
 // Validate InitAuthCenterReq.

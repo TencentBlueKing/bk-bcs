@@ -21,8 +21,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/components"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/components"
 )
 
 type bkLoginResult struct {

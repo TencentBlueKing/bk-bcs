@@ -18,10 +18,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"bscp.io/pkg/components"
-	"bscp.io/pkg/config"
-	"bscp.io/pkg/thirdparty/esb/cmdb"
-	"bscp.io/pkg/thirdparty/esb/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/components"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/config"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/cmdb"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/types"
 )
 
 // SearchBusiness 组件化的函数

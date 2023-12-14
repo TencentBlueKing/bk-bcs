@@ -15,7 +15,7 @@ package types
 import (
 	"errors"
 
-	"bscp.io/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 // UpsertKvOption is used to define options for inserting or updating key-value data.

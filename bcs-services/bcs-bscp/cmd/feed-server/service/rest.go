@@ -17,10 +17,10 @@ import (
 
 	"github.com/go-chi/render"
 
-	"bscp.io/cmd/feed-server/bll/types"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // ListFileAppLatestReleaseMetaRest list an app's latest release metadata only when the app's configures is file type.

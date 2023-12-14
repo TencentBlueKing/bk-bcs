@@ -23,10 +23,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/thirdparty/repo"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/repo"
 )
 
 const (

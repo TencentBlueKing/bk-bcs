@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strings"
 
-	"bscp.io/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // HookRevision 脚本版本

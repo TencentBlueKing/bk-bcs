@@ -133,7 +133,7 @@ const diffConfig = ref(0);
 const isSearchEmpty = ref(false);
 const isDeleteConfigDialogShow = ref(false);
 const filterChecked = ref<string[]>([]);
-const updateSortType = ref('');
+const updateSortType = ref('null');
 const pagination = ref({
   current: 1,
   count: 0,
@@ -201,8 +201,8 @@ const getListData = async () => {
       params.kv_type = filterChecked.value;
     }
     if (updateSortType.value !== 'null') {
-      params.sort_field = 'update_at';
-      params.sort_order = updateSortType.value;
+      params.sort = 'updated_at';
+      params.order = updateSortType.value.toUpperCase();
     }
     let res;
     if (isUnNamedVersion.value) {

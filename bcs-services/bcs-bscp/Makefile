@@ -15,15 +15,15 @@ GOBUILD=CGO_ENABLED=0 go build -trimpath
 # output directory for release package and version for command line
 ifeq ("$(VERSION)", "")
 	export OUTPUT_DIR = ${PRO_DIR}/build/bk-bscp
-	export LDVersionFLAG = "-X bscp.io/pkg/version.BUILDTIME=${BUILDTIME} \
-    	-X bscp.io/pkg/version.GITHASH=${GITHASH} \
-		-X bscp.io/pkg/version.DEBUG=${DEBUG}"
+	export LDVersionFLAG = "-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
+    	-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH} \
+		-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.DEBUG=${DEBUG}"
 else
 	export OUTPUT_DIR = ${PRO_DIR}/build/bk-bscp-${VERSION}
-	export LDVersionFLAG = "-X bscp.io/pkg/version.VERSION=${VERSION} \
-    	-X bscp.io/pkg/version.BUILDTIME=${BUILDTIME} \
-    	-X bscp.io/pkg/version.GITHASH=${GITHASH} \
-    	-X bscp.io/pkg/version.DEBUG=${DEBUG}"
+	export LDVersionFLAG = "-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.VERSION=${VERSION} \
+    	-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
+    	-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH} \
+    	-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.DEBUG=${DEBUG}"
 endif
 
 include ./scripts/makefile/uname.mk
