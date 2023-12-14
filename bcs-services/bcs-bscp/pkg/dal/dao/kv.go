@@ -392,8 +392,11 @@ func (dao *kvDao) UpdateSelectedKVStates(kit *kit.Kit, tx *gen.QueryTx, bizID, a
 
 	m := tx.Kv
 
-	if _, err := tx.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
-		m.KvState.In(targetKVStates...)).Select(m.KvState).Update(m.KvState, newKVStates); err != nil {
+	if _, err := tx.Kv.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.KvState.In(targetKVStates...)).
+		Select(m.KvState).
+		Omit(m.UpdatedAt).
+		Update(m.KvState, newKVStates); err != nil {
 		return err
 	}
 
