@@ -6,7 +6,7 @@ import "pkg/protocol/core/content/content.proto";
 
 package pbtr;
 
-option go_package = "bscp.io/pkg/protocol/core/template-revision;pbtr";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-revision;pbtr";
 
 // Template source resource reference: pkg/dal/table/template_revision.go
 message TemplateRevision {

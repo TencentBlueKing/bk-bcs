@@ -18,7 +18,7 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/dal/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/types"
 )
 
 // AppTemplateBinding 未命名版本服务的模版绑定

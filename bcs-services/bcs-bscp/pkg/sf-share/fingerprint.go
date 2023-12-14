@@ -22,8 +22,8 @@ import (
 	"strings"
 	"time"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 var (

@@ -16,7 +16,7 @@ package cc
 import (
 	"sync"
 
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 var runtimeOnce sync.Once

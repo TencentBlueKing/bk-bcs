@@ -20,13 +20,13 @@ import (
 	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
 
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/table"
-	dtypes "bscp.io/pkg/dal/types"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/search"
-	"bscp.io/pkg/tools"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	dtypes "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // TemplateSet supplies all the template set related operations.

@@ -18,10 +18,10 @@ import (
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/iam/client"
-	"bscp.io/pkg/iam/sys"
-	pbbase "bscp.io/pkg/protocol/core/base"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 )
 
 const (

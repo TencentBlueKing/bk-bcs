@@ -16,9 +16,9 @@ import (
 	"errors"
 	"time"
 
-	"bscp.io/pkg/rest"
-	"bscp.io/pkg/rest/client"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Client struct of api client

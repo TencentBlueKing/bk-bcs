@@ -16,7 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	prm "github.com/prometheus/client_golang/prometheus"
 
-	"bscp.io/pkg/metrics"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
 )
 
 func initMetric(name string) *metric {

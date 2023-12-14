@@ -18,9 +18,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"bscp.io/pkg/criteria/constant"
-	sfs "bscp.io/pkg/sf-share"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	sfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // checkSidecarReleaseFile check sidecar release whether right, and download file dir and content is right.

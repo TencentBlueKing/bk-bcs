@@ -13,9 +13,9 @@
 package types
 
 import (
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/runtime/filter"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/filter"
 )
 
 // ListConfigItemsOption defines options to list config item.

@@ -15,10 +15,10 @@ package service
 import (
 	"context"
 
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CountGroupsReleasedApps count each group's published apps.

@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"strings"
 
-	"bscp.io/pkg/config"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/config"
 )
 
 // nolint:typecheck

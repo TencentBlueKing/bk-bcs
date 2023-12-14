@@ -124,7 +124,7 @@
                 {
                     "id": "VariableType",
                     "string": "%[1]s",
-                    "type": "bscp.io/pkg/dal/table.VariableType",
+                    "type": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.VariableType",
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "t"

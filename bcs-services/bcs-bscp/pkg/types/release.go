@@ -13,8 +13,8 @@
 package types
 
 import (
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 // ListReleasesOption defines options to list release.

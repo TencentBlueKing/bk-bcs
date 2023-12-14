@@ -24,9 +24,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	pbcs "bscp.io/pkg/protocol/cache-service"
-	"bscp.io/test/benchmark/run"
-	"bscp.io/test/util"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/benchmark/run"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/util"
 )
 
 const (

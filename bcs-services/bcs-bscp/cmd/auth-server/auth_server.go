@@ -13,7 +13,7 @@
 // Package main This is the entry point for the authentication server, providing authentication services.
 package main
 
-import "bscp.io/cmd/auth-server/cmd"
+import "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/cmd"
 
 func main() {
 	cmd.Execute()

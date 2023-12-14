@@ -7,27 +7,27 @@
 package pbcs
 
 import (
-	app "bscp.io/pkg/protocol/core/app"
-	app_template_binding "bscp.io/pkg/protocol/core/app-template-binding"
-	app_template_variable "bscp.io/pkg/protocol/core/app-template-variable"
-	base "bscp.io/pkg/protocol/core/base"
-	config_item "bscp.io/pkg/protocol/core/config-item"
-	content "bscp.io/pkg/protocol/core/content"
-	credential "bscp.io/pkg/protocol/core/credential"
-	credential_scope "bscp.io/pkg/protocol/core/credential-scope"
-	group "bscp.io/pkg/protocol/core/group"
-	hook "bscp.io/pkg/protocol/core/hook"
-	hook_revision "bscp.io/pkg/protocol/core/hook-revision"
-	kv "bscp.io/pkg/protocol/core/kv"
-	release "bscp.io/pkg/protocol/core/release"
-	released_ci "bscp.io/pkg/protocol/core/released-ci"
-	released_kv "bscp.io/pkg/protocol/core/released-kv"
-	template "bscp.io/pkg/protocol/core/template"
-	template_binding_relation "bscp.io/pkg/protocol/core/template-binding-relation"
-	template_revision "bscp.io/pkg/protocol/core/template-revision"
-	template_set "bscp.io/pkg/protocol/core/template-set"
-	template_space "bscp.io/pkg/protocol/core/template-space"
-	template_variable "bscp.io/pkg/protocol/core/template-variable"
+	app "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	app_template_binding "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding"
+	app_template_variable "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-variable"
+	base "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	config_item "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	content "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	credential "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/credential"
+	credential_scope "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/credential-scope"
+	group "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group"
+	hook "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
+	hook_revision "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
+	kv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	release "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
+	released_ci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
+	released_kv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
+	template "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template"
+	template_binding_relation "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-binding-relation"
+	template_revision "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-revision"
+	template_set "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-set"
+	template_space "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-space"
+	template_variable "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -19528,8 +19528,11 @@ var file_config_service_proto_rawDesc = []byte{
 	0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62,
 	0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x61, 0x70, 0x70, 0x73, 0x2f, 0x7b, 0x61, 0x70, 0x70,
 	0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x6b, 0x76, 0x73, 0x2f, 0x7b, 0x6b, 0x65, 0x79, 0x7d, 0x2f, 0x75,
-	0x6e, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x42, 0x29, 0x5a, 0x27, 0x62, 0x73, 0x63, 0x70, 0x2e,
-	0x69, 0x6f, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2f,
+	0x6e, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x42, 0x59, 0x5a, 0x57, 0x67, 0x69, 0x74, 0x68, 0x75,
+	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x54, 0x65, 0x6e, 0x63, 0x65, 0x6e, 0x74, 0x42, 0x6c, 0x75,
+	0x65, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x62, 0x6b, 0x2d, 0x62, 0x63, 0x73, 0x2f, 0x62, 0x63, 0x73,
+	0x2d, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x62, 0x63, 0x73, 0x2d, 0x62, 0x73,
+	0x63, 0x70, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2f,
 	0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2d, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x3b, 0x70, 0x62,
 	0x63, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }

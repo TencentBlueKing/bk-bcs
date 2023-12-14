@@ -27,7 +27,7 @@ import "google/protobuf/struct.proto";
 
 package pbds;
 
-option go_package = "bscp.io/pkg/protocol/data-service;pbds";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service;pbds";
 
 service Data {
   // app related interface.

@@ -14,9 +14,9 @@
 package auth
 
 import (
-	"bscp.io/cmd/feed-server/bll/lcache"
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/lcache"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // New initialize the auth service instance.

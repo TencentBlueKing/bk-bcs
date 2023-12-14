@@ -20,11 +20,11 @@ import (
 	"github.com/go-chi/render"
 	"k8s.io/klog/v2"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/dal/repository"
-	"bscp.io/pkg/iam/auth"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/rest"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 )
 
 // repoService is http handler for repo services.

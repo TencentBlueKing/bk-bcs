@@ -14,8 +14,8 @@
 package pbcrs
 
 import (
-	"bscp.io/pkg/dal/table"
-	pbbase "bscp.io/pkg/protocol/core/base"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 )
 
 // CredentialAttachment convert pb CredentialAttachment to table CredentialScopeAttachment

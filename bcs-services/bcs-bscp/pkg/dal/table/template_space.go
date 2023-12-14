@@ -15,7 +15,7 @@ package table
 import (
 	"errors"
 
-	"bscp.io/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // TemplateSpace 模版空间

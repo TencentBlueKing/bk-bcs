@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"bscp.io/pkg/criteria/enumor"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
 )
 
 // Columns defines the column's details prepared for
