@@ -19,11 +19,6 @@
           :verision-id="versionData.id"
         />
       </div>
-      <div class="groups-info" v-if="versionData.status.released_groups.length > 0">
-        <div v-for="group in versionData.status.released_groups" class="group-item" :key="group.id">
-          {{ group.name }}
-        </div>
-      </div>
       <SearchInput
         v-model="searchStr"
         class="config-search-input"
@@ -125,24 +120,6 @@ defineExpose({
     align-items: center;
     :deep(.create-config-btn) {
       margin-right: 8px;
-    }
-  }
-  .groups-info {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-left: 24px;
-    .group-item {
-      padding: 0 8px;
-      line-height: 22px;
-      color: #63656e;
-      font-size: 12px;
-      background: #f0f1f5;
-      border-radius: 2px;
-      margin-bottom: 2px;
-      &:not(:last-of-type) {
-        margin-right: 8px;
-      }
     }
   }
   .config-search-input {

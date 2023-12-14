@@ -1,28 +1,29 @@
 <template>
-  <div class="select-group-wrapper">
+  <div v-bkloading="{ loading: groupListLoading, opacity: 1 }" class="select-group-wrapper">
     <div class="group-tree-area">
-      <bk-loading style="height: 100%" :loading="groupListLoading">
         <Group
           v-if="!groupListLoading"
+          ref="groupRef"
           :group-list="groupList"
           :group-list-loading="groupListLoading"
           :version-list="versionList"
           :version-list-loading="versionListLoading"
+          :version-status="props.versionStatus"
           :disabled="props.disabled"
-          :group-type="groupType"
+          :release-type="releaseType"
           :value="props.groups"
-          @group-type-change="emits('groupTypeChange', $event)"
+          @release-type-change="emits('releaseTypeChange', $event)"
           @change="emits('change', $event)"
         />
-      </bk-loading>
     </div>
     <div class="preview-area">
       <Preview
         :group-list="groupList"
         :group-list-loading="groupListLoading"
-        :group-type="groupType"
+        :release-type="releaseType"
         :version-list="versionList"
         :version-list-loading="versionListLoading"
+        :is-default-group-released="isDefaultGroupReleased"
         :disabled="props.disabled"
         :value="props.groups"
         @diff="emits('openPreviewVersionDiff', $event)"
@@ -34,6 +35,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
+import { Message } from 'bkui-vue';
 import useGlobalStore from '../../../../../../../store/global';
 import useServiceStore from '../../../../../../../store/service';
 import { IConfigVersion } from '../../../../../../../../types/config';
@@ -48,20 +50,23 @@ const { appData } = storeToRefs(useServiceStore());
 
 const props = withDefaults(
   defineProps<{
-    groupType?: string;
+    releaseType?: string;
     groups: IGroupToPublish[];
+    versionStatus: string;
     disabled?: number[];
   }>(),
   {
-    groupType: 'select',
+    releaseType: 'select',
   },
 );
-const emits = defineEmits(['openPreviewVersionDiff', 'groupTypeChange', 'change']);
+const emits = defineEmits(['openPreviewVersionDiff', 'releaseTypeChange', 'change']);
 
 const groupListLoading = ref(true);
 const groupList = ref<IGroupToPublish[]>([]);
+const isDefaultGroupReleased = ref(false); // 默认分组是否已上线
 const versionListLoading = ref(true);
 const versionList = ref<IConfigVersion[]>([]);
+const groupRef = ref();
 
 onMounted(() => {
   getAllGroupData();
@@ -78,6 +83,10 @@ const getAllGroupData = async () => {
     const rules = selector.labels_and || selector.labels_or || [];
     return { id: group_id, name: group_name, release_id, release_name, rules };
   });
+  const defaultGroup = groupList.value.find(group => group.id === 0 );
+  if (defaultGroup) {
+    isDefaultGroupReleased.value = defaultGroup.release_id > 0
+  }
   groupListLoading.value = false;
 };
 
@@ -89,10 +98,28 @@ const getAllVersionData = async () => {
     limit: 1000,
   };
   const res = await getConfigVersionList(spaceId.value, Number(appData.value.id), params);
-  // 只需要已上线的分组
-  versionList.value = res.data.details.filter((item: IConfigVersion) => item.status.publish_status !== 'not_released');
+  // 只需要已上线版本，且版本中不包含默认分组
+  versionList.value = res.data.details.filter((item: IConfigVersion) => {
+    const { publish_status, released_groups } = item.status;
+    return publish_status !== 'not_released' && released_groups.findIndex(group => group.id === 0) === -1;
+  });
   versionListLoading.value = false;
 };
+
+const validate = () => {
+  if (props.releaseType === 'exclude' && groupRef.value.selectedGroup.length === 0) {
+    Message({
+      theme: 'error',
+      message: '请至少选择一个排除分组实例'
+    })
+    return false;
+  }
+  return true;
+};
+
+defineExpose({
+  validate
+});
 </script>
 <style lang="scss" scoped>
 .select-group-wrapper {
