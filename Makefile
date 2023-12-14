@@ -46,7 +46,8 @@ export PACKAGEPATH=./build/bcs.${VERSION}
 export SCENARIOSPACKAGE=${WORKSPACE}/${PACKAGEPATH}/bcs-scenarios
 
 # bscp 应用自定义
-export BSCP_LDFLAG=-ldflags "-X bscp.io/pkg/version.BUILDTIME=${BUILDTIME} -X bscp.io/pkg/version.GITHASH=${GITHASH}"
+export BSCP_LDFLAG=-ldflags "-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
+	-X  github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH}"
 
 # tongsuo related environment variables
 export TONGSUO_PATH?=$(WORKSPACE)/build/bcs.${VERSION}/tongsuo
