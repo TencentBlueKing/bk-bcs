@@ -71,6 +71,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 		Attachment: req.Attachment.KvAttachment(),
 		Revision: &table.Revision{
 			Creator: kt.User,
+			Reviser: kt.User,
 		},
 	}
 	kv.Spec.Version = uint32(version)
@@ -142,7 +143,15 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 
 	kt := kit.FromGrpcContext(ctx)
 
-	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	if len(req.Sort) == 0 {
+		req.Sort = "key"
+	}
+	page := &types.BasePage{
+		Start: req.Start,
+		Limit: uint(req.Limit),
+		Sort:  req.Sort,
+		Order: types.Order(req.Order),
+	}
 	opt := &types.ListKvOption{
 		BizID:     req.BizId,
 		AppID:     req.AppId,
@@ -151,10 +160,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		All:       req.All,
 		Page:      page,
 		KvType:    req.KvType,
-		SortOrder: req.SortOrder,
-		SortField: req.SortField,
 	}
-	opt.TrySetDefault()
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,
 	}

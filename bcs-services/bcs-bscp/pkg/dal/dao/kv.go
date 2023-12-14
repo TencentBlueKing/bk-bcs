@@ -142,12 +142,11 @@ func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int6
 
 	m := dao.genQ.Kv
 
-	orderCol, ok := m.GetFieldByName(opt.SortField)
+	orderCol, ok := m.GetFieldByName(opt.Page.Sort)
 	if !ok {
 		return nil, 0, errors.New("user doesn't contains orderColStr")
 	}
-
-	if opt.SortOrder == "desc" {
+	if opt.Page.Order == types.Descending {
 		orderCol.Desc()
 	}
 
@@ -160,6 +159,9 @@ func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int6
 
 	if len(opt.KvType) > 0 {
 		q = q.Where(m.KvType.In(opt.KvType...))
+	}
+	if len(opt.Key) > 0 {
+		q = q.Where(m.Key.In(opt.Key...))
 	}
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
@@ -390,8 +392,11 @@ func (dao *kvDao) UpdateSelectedKVStates(kit *kit.Kit, tx *gen.QueryTx, bizID, a
 
 	m := tx.Kv
 
-	if _, err := tx.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
-		m.KvState.In(targetKVStates...)).Select(m.KvState).Update(m.KvState, newKVStates); err != nil {
+	if _, err := tx.Kv.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.KvState.In(targetKVStates...)).
+		Select(m.KvState).
+		Omit(m.UpdatedAt).
+		Update(m.KvState, newKVStates); err != nil {
 		return err
 	}
 
