@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -104,8 +103,7 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbapp
 		BizID: req.BizId,
 		Spec:  req.Spec.AppSpec(),
 		Revision: &table.Revision{
-			Reviser:   grpcKit.User,
-			UpdatedAt: time.Now().UTC(),
+			Reviser: grpcKit.User,
 		},
 	}
 	if err = s.dao.App().Update(grpcKit, app); err != nil {
