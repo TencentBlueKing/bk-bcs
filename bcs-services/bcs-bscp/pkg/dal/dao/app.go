@@ -216,7 +216,7 @@ func (dao *appDao) Update(kit *kit.Kit, g *table.App) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.App.WithContext(kit.Ctx)
 		if _, err = q.Where(m.BizID.Eq(g.BizID), m.ID.Eq(g.ID)).
-			Select(m.Memo, m.Alias_, m.DataType, m.Reviser).Updates(g); err != nil {
+			Select(m.Memo, m.Alias_, m.DataType, m.Reviser, m.UpdatedAt).Updates(g); err != nil {
 			return err
 		}
 

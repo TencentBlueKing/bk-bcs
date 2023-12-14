@@ -169,7 +169,7 @@ const (
 type DataClient interface {
 	// app related interface.
 	CreateApp(ctx context.Context, in *CreateAppReq, opts ...grpc.CallOption) (*CreateResp, error)
-	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*app.App, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error)
 	GetAppByID(ctx context.Context, in *GetAppByIDReq, opts ...grpc.CallOption) (*app.App, error)
@@ -344,8 +344,8 @@ func (c *dataClient) CreateApp(ctx context.Context, in *CreateAppReq, opts ...gr
 	return out, nil
 }
 
-func (c *dataClient) UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
-	out := new(base.EmptyResp)
+func (c *dataClient) UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*app.App, error) {
+	out := new(app.App)
 	err := c.cc.Invoke(ctx, Data_UpdateApp_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1529,7 +1529,7 @@ func (c *dataClient) Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOpt
 type DataServer interface {
 	// app related interface.
 	CreateApp(context.Context, *CreateAppReq) (*CreateResp, error)
-	UpdateApp(context.Context, *UpdateAppReq) (*base.EmptyResp, error)
+	UpdateApp(context.Context, *UpdateAppReq) (*app.App, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*base.EmptyResp, error)
 	GetApp(context.Context, *GetAppReq) (*app.App, error)
 	GetAppByID(context.Context, *GetAppByIDReq) (*app.App, error)
@@ -1694,7 +1694,7 @@ type UnimplementedDataServer struct {
 func (UnimplementedDataServer) CreateApp(context.Context, *CreateAppReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateApp not implemented")
 }
-func (UnimplementedDataServer) UpdateApp(context.Context, *UpdateAppReq) (*base.EmptyResp, error) {
+func (UnimplementedDataServer) UpdateApp(context.Context, *UpdateAppReq) (*app.App, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateApp not implemented")
 }
 func (UnimplementedDataServer) DeleteApp(context.Context, *DeleteAppReq) (*base.EmptyResp, error) {

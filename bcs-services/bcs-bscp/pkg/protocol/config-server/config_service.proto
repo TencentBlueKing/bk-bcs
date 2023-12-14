@@ -35,7 +35,7 @@ service Config {
       body: "*"
     };
   }
-  rpc UpdateApp(UpdateAppReq) returns (UpdateAppResp) {
+  rpc UpdateApp(UpdateAppReq) returns (pbapp.App) {
     option (google.api.http) = {
       put: "/api/v1/config/update/app/app/app_id/{id}/biz_id/{biz_id}"
       body: "*"
@@ -713,7 +713,7 @@ service Config {
   };
   rpc DeleteKv(DeleteKvReq) returns (DeleteKvResp) {
     option (google.api.http) = {
-      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}"
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{id}"
     };
   };
   rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {
@@ -822,8 +822,6 @@ message UpdateAppReq {
   string alias = 7;
   string data_type = 8;
 }
-
-message UpdateAppResp {}
 
 message DeleteAppReq {
   uint32 id = 1;
@@ -2200,6 +2198,8 @@ message ListKvsReq {
   string search_fields = 9;
   string search_value = 10;
   repeated string kv_type = 11;
+  string sort_field = 12;
+  string sort_order = 13;
 }
 
 message ListKvsResp {
@@ -2210,7 +2210,7 @@ message ListKvsResp {
 message DeleteKvReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
-  string key = 4;
+  uint32 id = 3;
 }
 
 message DeleteKvResp {}

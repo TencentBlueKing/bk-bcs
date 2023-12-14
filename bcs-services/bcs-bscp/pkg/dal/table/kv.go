@@ -29,6 +29,7 @@ import (
 type Kv struct {
 	// ID is an auto-increased value, which is a unique identity of a kv.
 	ID         uint32        `json:"id" gorm:"primaryKey"`
+	KvState    KvState       `json:"kv_state" gorm:"column:kv_state"`
 	Spec       *KvSpec       `json:"spec" gorm:"embedded"`
 	Attachment *KvAttachment `json:"attachment" gorm:"embedded"`
 	Revision   *Revision     `json:"revision" gorm:"embedded"`
@@ -72,6 +73,11 @@ func (k Kv) ValidateCreate() error {
 
 	if k.ID > 0 {
 		return errors.New("id should not be set")
+	}
+
+	if k.KvState != KvStateAdd {
+		return errors.New("KvState is not set to Add")
+
 	}
 
 	if k.Spec == nil {
@@ -152,7 +158,7 @@ func (a KvAttachment) ValidateCreate() error {
 // ValidateDelete validate the kv's info when delete it.
 func (k *Kv) ValidateDelete() error {
 	if k.ID <= 0 {
-		return errors.New("credential id should be set")
+		return errors.New("kv id should be set")
 	}
 
 	if k.Attachment.BizID <= 0 {
@@ -245,3 +251,17 @@ func (k DataType) ValidateValue(value string) error {
 		return errors.New("invalid key-value type")
 	}
 }
+
+// KvState ....
+type KvState string
+
+const (
+	// KvStateAdd 增加
+	KvStateAdd KvState = "ADD"
+	// KvStateDelete 删除
+	KvStateDelete KvState = "DELETE"
+	// KvStateRevise 修改
+	KvStateRevise KvState = "REVISE"
+	// KvStateUnchange 不变
+	KvStateUnchange KvState = "UNCHANGE"
+)

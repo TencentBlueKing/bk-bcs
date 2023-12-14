@@ -750,8 +750,14 @@ func (s *Service) doKvOperations(kt *kit.Kit, tx *gen.QueryTx, appID, bizID, rel
 	if err != nil {
 		return err
 	}
+
 	if err = s.dao.ReleasedKv().BulkCreateWithTx(kt, tx, rkvs); err != nil {
 		logs.Errorf("bulk create released kv failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	if err = s.cleanUpKV(kt, tx, bizID, appID); err != nil {
+		logs.Errorf("clean failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
 
@@ -761,7 +767,13 @@ func (s *Service) doKvOperations(kt *kit.Kit, tx *gen.QueryTx, appID, bizID, rel
 
 func (s *Service) genCreateKv(kt *kit.Kit, bizID, appID uint32) ([]*pbkv.Kv, error) {
 
-	details, err := s.dao.Kv().ListAllByAppID(kt, appID, bizID)
+	kvState := []string{
+		string(table.KvStateAdd),
+		string(table.KvStateRevise),
+		string(table.KvStateUnchange),
+		string(table.KvStateDelete),
+	}
+	details, err := s.dao.Kv().ListAllByAppID(kt, appID, bizID, kvState)
 	if err != nil {
 		logs.Errorf("list kv failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -807,4 +819,39 @@ func (s *Service) doBatchReleasedVault(kt *kit.Kit, kvs []*pbkv.Kv, releaseId ui
 
 	return versionMap, nil
 
+}
+
+// cleanUpKV 创建版本后更新kv 状态
+func (s *Service) cleanUpKV(kt *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) error {
+
+	result, err := s.dao.Kv().ListAllByAppID(kt, appID, bizID, []string{string(table.KvStateDelete)})
+	if err != nil {
+		logs.Errorf("delete kv failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	if len(result) > 0 {
+		deleteKv := &table.Kv{
+			KvState: table.KvStateDelete,
+			Attachment: &table.KvAttachment{
+				BizID: bizID,
+				AppID: appID,
+			},
+		}
+		if e := s.dao.Kv().DeleteByStateWithTx(kt, tx, deleteKv); e != nil {
+			logs.Errorf("delete kv failed, err: %v, rid: %s", e, kt.Rid)
+			return e
+		}
+	}
+
+	targetKVStates := []string{
+		string(table.KvStateAdd),
+		string(table.KvStateRevise),
+	}
+	if e := s.dao.Kv().UpdateSelectedKVStates(kt, tx, bizID, appID, targetKVStates, table.KvStateUnchange); e != nil {
+		logs.Errorf("delete kv failed, err: %v, rid: %s", e, kt.Rid)
+		return e
+	}
+
+	return nil
 }

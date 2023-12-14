@@ -112,6 +112,8 @@ func (s *Service) ListKvs(ctx context.Context, req *pbcs.ListKvsReq) (*pbcs.List
 		SearchKey:  req.SearchKey,
 		WithStatus: req.WithStatus,
 		KvType:     req.KvType,
+		SortField:  req.SortField,
+		SortOrder:  req.SortOrder,
 	}
 	if !req.All {
 		if req.Limit == 0 {
@@ -148,9 +150,7 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbcs.DeleteKvReq) (*pbcs.De
 	}
 
 	r := &pbds.DeleteKvReq{
-		Spec: &pbkv.KvSpec{
-			Key: req.Key,
-		},
+		Id: req.Id,
 		Attachment: &pbkv.KvAttachment{
 			BizId: req.BizId,
 			AppId: req.AppId,

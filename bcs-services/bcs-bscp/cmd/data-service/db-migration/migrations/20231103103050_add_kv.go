@@ -39,13 +39,14 @@ func mig20231103103050Up(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		Key     string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_appID_key,priority:1"`
+		Key     string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_appID_key_kvState,priority:1"`
 		Version uint   `gorm:"type:bigint(1) unsigned not null;"`
 		KvType  string `gorm:"type:varchar(64) not null"`
+		KvState string `gorm:"type:varchar(64) not null;uniqueIndex:idx_bizID_appID_key_kvState,priority:2"`
 
 		// Attachment is attachment info of the resource
-		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key,priority:2"`
-		APPID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key,priority:3"`
+		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key_kvState,priority:3"`
+		APPID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key_kvState,priority:4"`
 
 		// Revision is revision info of the resource
 		Creator   string    `gorm:"type:varchar(64) not null"`
@@ -85,13 +86,14 @@ func mig20231103103050Down(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		Key    string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_appID_key,priority:1"`
-		Type   string `gorm:"type:varchar(255) not null;"`
-		KvType string `gorm:"type:varchar(64) not null"`
+		Key     string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_appID_key_state,priority:1"`
+		Version uint   `gorm:"type:bigint(1) unsigned not null;"`
+		KvType  string `gorm:"type:varchar(64) not null"`
+		KvState string `gorm:"type:varchar(64) not null;uniqueIndex:idx_bizID_appID_key_state,priority:2"`
 
 		// Attachment is attachment info of the resource
-		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key,priority:2"`
-		APPID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key,priority:3"`
+		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key_state,priority:3"`
+		APPID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_key_state,priority:4"`
 
 		// Revision is revision info of the resource
 		Creator   string    `gorm:"type:varchar(64) not null"`
