@@ -70,7 +70,7 @@ const handleBeforeClose = async () => {
 const handleSubmit = async () => {
   const isValid = await formRef.value.validate();
   if (!isValid) return;
-  if (configForm.value.kv_type === 'number') configForm.value.value = `${parseFloat(configForm.value.value)}`;
+  if (configForm.value.kv_type === 'number') configForm.value.value = configForm.value.value.replace(/^0+(?=\d|$)/, '');
   try {
     await createKv(props.bkBizId, props.appId, { ...configForm.value });
     emits('confirm');
