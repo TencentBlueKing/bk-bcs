@@ -94,8 +94,8 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbapp
 		return nil, err
 	}
 	if app.Spec.ConfigType == table.KV {
-		if err := s.checkUpdateAppDataType(grpcKit, req, app); err != nil {
-			return nil, err
+		if e := s.checkUpdateAppDataType(grpcKit, req, app); e != nil {
+			return nil, e
 		}
 	}
 
@@ -108,7 +108,7 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbapp
 			UpdatedAt: time.Now().UTC(),
 		},
 	}
-	if err := s.dao.App().Update(grpcKit, app); err != nil {
+	if err = s.dao.App().Update(grpcKit, app); err != nil {
 		logs.Errorf("update app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
