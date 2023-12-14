@@ -46,6 +46,7 @@ version() {
 
 # default env value in function `init_env`
 init_env() {
+  trap "utils::on_ERR;" ERR
   # host
   BK_HOME=${BK_HOME:-"/data/bcs"}
   K8S_IPv6_STATUS=${K8S_IPv6_STATUS:-"Disable"}
@@ -94,7 +95,7 @@ init_env() {
   local kubectl_extra_args
   kubectl_extra_args="allowed-unsafe-sysctls: 'net.ipv4.tcp_tw_reuse'"
   K8S_EXTRA_ARGS=${K8S_EXTRA_ARGS:-${kubectl_extra_args}}
-  ## if BCS_CP_WORKER==0, then untaint master
+  ## if BCS_CP_WORKER==1, means single master cluster, then untaint master
   BCS_CP_WORKER=${BCS_CP_WORKER:-0}
 
   # csi
@@ -266,6 +267,7 @@ $(
   )
 K8S_CNI="${K8S_CNI}"
 K8S_EXTRA_ARGS="${K8S_EXTRA_ARGS}"
+## if BCS_CP_WORKER==1, means single master cluster, then untaint master
 BCS_CP_WORKER="${BCS_CP_WORKER}"
 
 # csi
