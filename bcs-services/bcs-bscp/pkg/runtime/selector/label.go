@@ -19,7 +19,7 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	"bscp.io/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // Label defines the basic label elements

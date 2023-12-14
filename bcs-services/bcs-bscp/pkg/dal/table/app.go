@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"time"
 
-	"bscp.io/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // App defines an application's detail information
@@ -467,6 +467,7 @@ func (k DataType) ValidateApp() error {
 	case KvText:
 	case KvJson:
 	case KvYAML:
+	case KvXml:
 	default:
 		return errors.New("invalid data-type")
 	}

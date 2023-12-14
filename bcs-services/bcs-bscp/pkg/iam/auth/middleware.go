@@ -29,14 +29,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"bscp.io/pkg/components"
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/repository"
-	"bscp.io/pkg/kit"
-	pbas "bscp.io/pkg/protocol/auth-server"
-	pberror "bscp.io/pkg/protocol/core/error"
-	"bscp.io/pkg/rest"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/components"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	pbas "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 )
 
 // initKitWithBKJWT 蓝鲸网关鉴权
@@ -116,6 +115,7 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 			Ctx: r.Context(),
 			Rid: components.RequestIDValue(r.Context()),
 		}
+		k.Lang = getLang(r)
 		multiErr := &multierror.Error{}
 
 		switch {
@@ -137,6 +137,20 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
+}
+
+// getLang get language, priority: cookie > header
+func getLang(r *http.Request) string {
+	c, err := r.Cookie("blueking_language")
+	if err == nil {
+		return c.Value
+	}
+
+	lang := r.Header.Get(constant.LangKey)
+	if lang == "" {
+		lang = constant.DefaultLanguage
+	}
+	return lang
 }
 
 // WebAuthentication HTTP 前端鉴权, 异常跳转302到登入页面
@@ -208,8 +222,7 @@ func (a authorizer) ContentVerified(next http.Handler) http.Handler {
 
 			space, err := a.authClient.QuerySpaceByAppID(r.Context(), &pbas.QuerySpaceByAppIDReq{AppId: appID})
 			if err != nil {
-				s := status.Convert(err)
-				render.Render(w, r, rest.BadRequest(errors.New(s.Message())))
+				render.Render(w, r, rest.BadRequest(err))
 				return
 			}
 			kt.AppID = appID
@@ -248,16 +261,7 @@ func (a authorizer) AppVerified(next http.Handler) http.Handler {
 
 		space, err := a.authClient.QuerySpaceByAppID(r.Context(), &pbas.QuerySpaceByAppIDReq{AppId: uint32(appID)})
 		if err != nil {
-			s := status.Convert(err)
-			for _, detail := range s.Details() {
-				switch detail.(type) {
-				case *pberror.Error:
-					render.Render(w, r, rest.GRPCErr(err))
-					return
-				default:
-				}
-			}
-			render.Render(w, r, rest.BadRequest(errors.New(s.Message())))
+			render.Render(w, r, rest.GRPCErr(err))
 			return
 		}
 

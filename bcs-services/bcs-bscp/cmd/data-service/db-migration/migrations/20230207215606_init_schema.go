@@ -18,7 +18,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"bscp.io/cmd/data-service/db-migration/migrator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrator"
 )
 
 const mig20230207215606 = "20230207215606_init_schema"

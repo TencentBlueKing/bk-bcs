@@ -16,9 +16,9 @@ package pbgroup
 import (
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 
-	"bscp.io/pkg/dal/table"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	"bscp.io/pkg/runtime/selector"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
 )
 
 // Group convert pb Group to table Group

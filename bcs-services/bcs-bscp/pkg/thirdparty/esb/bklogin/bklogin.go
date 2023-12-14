@@ -19,8 +19,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/rest"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 )
 
 // Client is an esb client to request bkLogin.

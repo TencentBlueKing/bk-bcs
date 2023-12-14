@@ -16,7 +16,7 @@ package main
 import (
 	"gorm.io/gen"
 
-	"bscp.io/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 func main() {

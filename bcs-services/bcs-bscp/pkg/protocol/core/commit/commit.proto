@@ -5,7 +5,7 @@ import "pkg/protocol/core/content/content.proto";
 
 package pbcommit;
 
-option go_package = "bscp.io/pkg/protocol/core/commit;pbcommit";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit;pbcommit";
 
 // Commit source resource reference: pkg/dal/table/commit.go
 message Commit {

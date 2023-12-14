@@ -16,8 +16,8 @@ import (
 	"context"
 	"sync"
 
-	"bscp.io/pkg/logs"
-	pbbase "bscp.io/pkg/protocol/core/base"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 )
 
 // bizsOfTS are bizs which already have default template spaces

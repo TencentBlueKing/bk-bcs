@@ -19,8 +19,8 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"bscp.io/pkg/iam/auth"
-	"bscp.io/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 var (

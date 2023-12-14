@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"sync"
 
-	"bscp.io/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 )
 
 const (

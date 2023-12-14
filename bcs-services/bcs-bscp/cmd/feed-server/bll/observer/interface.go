@@ -15,7 +15,7 @@ package observer
 import (
 	"time"
 
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Interface defines all the observer support operations.

@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"time"
 
-	"bscp.io/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 )
 
 const (

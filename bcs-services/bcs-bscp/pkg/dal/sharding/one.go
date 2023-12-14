@@ -22,8 +22,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // One represent one mysql sharding instance.

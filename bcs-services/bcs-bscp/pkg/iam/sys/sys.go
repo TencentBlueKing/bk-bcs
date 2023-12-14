@@ -16,9 +16,9 @@ package sys
 import (
 	"context"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/iam/client"
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // Sys iam system related operate.

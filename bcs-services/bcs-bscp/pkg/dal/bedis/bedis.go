@@ -24,10 +24,10 @@ import (
 	"github.com/go-redis/redis/v8"
 	"golang.org/x/time/rate"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // ExpireMode defines the mode that how a key is to expire.

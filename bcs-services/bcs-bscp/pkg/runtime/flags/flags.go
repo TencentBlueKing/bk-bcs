@@ -18,7 +18,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"bscp.io/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 )
 
 // wordSepNormalizeFunc changes all flags that contain "_" separators

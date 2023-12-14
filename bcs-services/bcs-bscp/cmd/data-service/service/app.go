@@ -16,26 +16,24 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbapp "bscp.io/pkg/protocol/core/app"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	pberror "bscp.io/pkg/protocol/core/error"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/thirdparty/esb/cmdb"
-	"bscp.io/pkg/tools"
-	"bscp.io/pkg/types"
-	"bscp.io/pkg/version"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbapp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/cmdb"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version"
 )
 
 // CreateApp create application.
@@ -78,7 +76,7 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 }
 
 // UpdateApp update application.
-func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbase.EmptyResp, error) {
+func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbapp.App, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	old, err := s.dao.App().GetByAlias(grpcKit, req.BizId, req.Spec.Alias)
@@ -106,7 +104,8 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbas
 		BizID: req.BizId,
 		Spec:  req.Spec.AppSpec(),
 		Revision: &table.Revision{
-			Reviser: grpcKit.User,
+			Reviser:   grpcKit.User,
+			UpdatedAt: time.Now().UTC(),
 		},
 	}
 	if err := s.dao.App().Update(grpcKit, app); err != nil {
@@ -114,7 +113,7 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbas
 		return nil, err
 	}
 
-	return new(pbbase.EmptyResp), nil
+	return pbapp.PbApp(app), nil
 }
 
 func (s *Service) checkUpdateAppDataType(kt *kit.Kit, req *pbds.UpdateAppReq, app *table.App) error {
@@ -128,7 +127,13 @@ func (s *Service) checkUpdateAppDataType(kt *kit.Kit, req *pbds.UpdateAppReq, ap
 	}
 
 	// 获取所有的kv
-	kvList, err := s.dao.Kv().ListAllByAppID(kt, app.ID, req.BizId)
+	kvState := []string{
+		string(table.KvStateAdd),
+		string(table.KvStateRevise),
+		string(table.KvStateUnchange),
+		string(table.KvStateDelete),
+	}
+	kvList, err := s.dao.Kv().ListAllByAppID(kt, app.ID, req.BizId, kvState)
 	if err != nil {
 		return err
 	}
@@ -254,12 +259,7 @@ func (s *Service) GetAppByID(ctx context.Context, req *pbds.GetAppByIDReq) (*pba
 	if err != nil {
 		logs.Errorf("get app by id failed, err: %v, rid: %s", err, grpcKit.Rid)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			st := status.Newf(codes.NotFound, "app %d not found", req.AppId)
-			st, err = st.WithDetails(&pberror.Error{Code: errf.AppNotExists})
-			if err != nil {
-				return nil, err
-			}
-			return nil, st.Err()
+			return nil, errf.Errorf(grpcKit, errf.AppNotExists, "app %d not found", req.AppId)
 		}
 		return nil, errors.Wrapf(err, "query app by id %d", req.GetAppId())
 	}

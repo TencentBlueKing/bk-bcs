@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // RearrangeSQLDataWithOption parse a *struct into a sql expression, and

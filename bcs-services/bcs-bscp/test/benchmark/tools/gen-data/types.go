@@ -18,9 +18,9 @@ import (
 	"net/http"
 	"time"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/uuid"
-	"bscp.io/pkg/runtime/selector"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )

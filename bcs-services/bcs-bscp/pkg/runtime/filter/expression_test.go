@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"bscp.io/pkg/criteria/enumor"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
 )
 
 func TestUnmarshal(t *testing.T) {

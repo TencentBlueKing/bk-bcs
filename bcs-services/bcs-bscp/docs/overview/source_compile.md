@@ -22,7 +22,7 @@ go env -w GO111MODULE="on"
 
 ```shell
 cd $GOPATH/src
-git clone https://github.com/Tencent/bk-bscp.git bscp.io
+git clone https://github.com/Tencent/bk-bscp.git github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp
 ```
 
 
@@ -32,7 +32,7 @@ git clone https://github.com/Tencent/bk-bscp.git bscp.io
 **进入源码根目录：**
 
 ```shell
-cd $GOPATH/src/bscp.io
+cd $GOPATH/src/github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp
 ```
 
 ### 3.1 编译共有三种模式
@@ -97,7 +97,7 @@ make package
 ├── CHANGELOG.md 													# 变更文档
 ├── VERSION																# 当前编译包版本说明
 ├── api																		# API-Gateway相关接口文档，会在部署文档进行介绍
-│   ├── api-server												
+│   ├── api-server
 │   └── feed-server
 ├── bin																		# BSCP各服务二进制文件
 │   ├── bk-bscp-apiserver

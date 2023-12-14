@@ -4,7 +4,7 @@ import "pkg/protocol/core/base/base.proto";
 
 package pbtv;
 
-option go_package = "bscp.io/pkg/protocol/core/template-variable;pbtv";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable;pbtv";
 
 // TemplateVariable source resource reference: pkg/dal/table/template_variable.go
 message TemplateVariable {

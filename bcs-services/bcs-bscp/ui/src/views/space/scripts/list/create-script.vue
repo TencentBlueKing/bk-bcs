@@ -95,24 +95,15 @@ const showContent = computed({
 const rules = {
   name: [
     {
-      validator: (value: string) => /^[A-Za-z\u4e00-\u9fa5][^/]*$/.test(value),
-      message: '必须以大小写字母、中文开头,不能包含/',
-      trigger: 'blur',
-    },
-    {
-      validator: (value: string) => value.length <= 256,
-      message: '不能超过256个字符',
+      validator: (value: string) => value.length <= 64,
+      message: '不能超过64个字符',
       trigger: 'change',
     },
   ],
   memo: [
     {
-      validator: (value: string) => {
-        if (!value) return true;
-        return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value);
-      },
-      message: '无效备注，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
-      trigger: 'change',
+      validator: (value: string) => value.length <= 200,
+      message: '最大长度200个字符',
     },
   ],
 };

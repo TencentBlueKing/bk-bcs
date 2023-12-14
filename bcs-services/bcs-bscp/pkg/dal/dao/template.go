@@ -20,12 +20,12 @@ import (
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/dal/utils"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/search"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Template supplies all the template related operations.

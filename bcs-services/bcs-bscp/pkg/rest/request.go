@@ -30,10 +30,10 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/rest/client"
-	"bscp.io/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 )
 
 // VerbType http request verb type

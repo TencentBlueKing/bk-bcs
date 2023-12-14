@@ -16,12 +16,12 @@ package types
 import (
 	"net/http"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/criteria/validator"
-	pbcommit "bscp.io/pkg/protocol/core/commit"
-	pbci "bscp.io/pkg/protocol/core/config-item"
-	pbhook "bscp.io/pkg/protocol/core/hook"
-	pbkv "bscp.io/pkg/protocol/core/kv"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	pbcommit "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
+	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbhook "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
+	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 )
 
 // AppInstanceMeta defines an app instance's metadata information.

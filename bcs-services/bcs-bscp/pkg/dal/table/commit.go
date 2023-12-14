@@ -15,8 +15,8 @@ package table
 import (
 	"errors"
 
-	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // CommitsColumns defines all the commits' columns.

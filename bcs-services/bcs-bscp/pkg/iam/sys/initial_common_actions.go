@@ -12,7 +12,7 @@
 
 package sys
 
-import "bscp.io/pkg/iam/client"
+import "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
 
 // GenerateCommonActions generate all the common actions registered to IAM.
 func GenerateCommonActions() []client.CommonAction {

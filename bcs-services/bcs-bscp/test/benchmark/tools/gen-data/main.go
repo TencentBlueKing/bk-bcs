@@ -19,8 +19,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"bscp.io/test/client/api"
-	"bscp.io/test/util"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/client/api"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/util"
 )
 
 /*

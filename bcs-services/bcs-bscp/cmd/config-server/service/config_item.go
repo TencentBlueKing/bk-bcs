@@ -16,16 +16,16 @@ import (
 	"context"
 	"fmt"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbcs "bscp.io/pkg/protocol/config-server"
-	pbcommit "bscp.io/pkg/protocol/core/commit"
-	pbci "bscp.io/pkg/protocol/core/config-item"
-	pbcontent "bscp.io/pkg/protocol/core/content"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/version"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbcommit "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
+	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version"
 )
 
 // CreateConfigItem create config item with option

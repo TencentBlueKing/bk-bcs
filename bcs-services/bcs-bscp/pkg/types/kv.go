@@ -15,7 +15,7 @@ package types
 import (
 	"errors"
 
-	"bscp.io/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 // UpsertKvOption is used to define options for inserting or updating key-value data.
@@ -138,6 +138,8 @@ type ListKvOption struct {
 	Page      *BasePage `json:"page"`
 	IDs       []uint32  `json:"ids"`
 	KvType    []string  `json:"kv_type"`
+	SortField string    `json:"sort_field"`
+	SortOrder string    `json:"sort_order"`
 }
 
 // Validate is used to validate the effectiveness of the ListKvOption structure.
@@ -158,4 +160,16 @@ func (opt *ListKvOption) Validate(po *PageOption) error {
 	}
 
 	return nil
+}
+
+// TrySetDefault tries to set default option values.
+func (opt *ListKvOption) TrySetDefault() {
+
+	if opt.SortField == "" {
+		opt.SortField = "key"
+	}
+
+	if opt.SortOrder == "" {
+		opt.SortOrder = "asc"
+	}
 }

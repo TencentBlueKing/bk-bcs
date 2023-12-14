@@ -19,9 +19,9 @@ import (
 	"strings"
 	"time"
 
-	"bscp.io/pkg/criteria/uuid"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	"bscp.io/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 )
 
 // RandName generate rand resource name.

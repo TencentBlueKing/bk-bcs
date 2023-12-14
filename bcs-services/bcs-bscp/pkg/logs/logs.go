@@ -21,8 +21,8 @@ import (
 	"github.com/go-redis/redis/v8"
 	"google.golang.org/grpc/grpclog"
 
-	"bscp.io/pkg/logs/glog"
-	"bscp.io/pkg/version"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs/glog"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version"
 )
 
 // GlogWriter serves as a bridge between the standard log package and the glog package.

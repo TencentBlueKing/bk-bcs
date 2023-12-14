@@ -12,7 +12,7 @@
 
 package types
 
-import "bscp.io/pkg/dal/types"
+import "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/types"
 
 // TmplBoundUnnamedAppDetail defines struct of template bound unnamed app detail.
 type TmplBoundUnnamedAppDetail struct {
