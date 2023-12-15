@@ -63,6 +63,6 @@ func Get(lang string) *Localizer {
 // Translate acts as a wrapper to call message.Printer's Sprintf method.
 // it returns the appropriate translation for the given message and language.
 // it is concurrency safe.
-func (l *Localizer) Translate(key message.Reference, args ...interface{}) string {
+func (l *Localizer) Translate(key message.Reference, args ...any) string {
 	return l.printer.Sprintf(key, args...)
 }

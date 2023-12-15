@@ -42,24 +42,26 @@ var messageKeyToIndex = map[string]int{
 	"获取session失败: %s": 2,
 	"获取session成功":     3,
 	"获取集群成功":          1,
+	"请求参数错误: %s":      4,
 	"项目不正确":           0,
 }
 
-var enIndex = []uint32{ // 5 elements
+var enIndex = []uint32{ // 6 elements
 	0x00000000, 0x00000015, 0x0000002d, 0x00000047,
-	0x0000005e,
-} // Size: 44 bytes
+	0x0000005e, 0x0000005e,
+} // Size: 48 bytes
 
 const enData string = "" + // Size: 94 bytes
 	"\x02Project_id Incorrect\x02Get Clusters successful\x02Get session faile" +
 	"d: %[1]s\x02Get session successful"
 
-var zh_HansIndex = []uint32{ // 5 elements
+var zh_HansIndex = []uint32{ // 6 elements
 	0x00000000, 0x00000010, 0x00000023, 0x0000003e,
-	0x00000052,
-} // Size: 44 bytes
+	0x00000052, 0x0000006c,
+} // Size: 48 bytes
 
-const zh_HansData string = "" + // Size: 82 bytes
-	"\x02项目不正确\x02获取集群成功\x02获取session失败: %[1]s\x02获取session成功"
+const zh_HansData string = "" + // Size: 108 bytes
+	"\x02项目不正确\x02获取集群成功\x02获取session失败: %[1]s\x02获取session成功\x02请求参数错误: %[1]" +
+	"s"
 
-	// Total table size 264 bytes (0KiB); checksum: 35E4E0EE
+	// Total table size 298 bytes (0KiB); checksum: 2C901CFD

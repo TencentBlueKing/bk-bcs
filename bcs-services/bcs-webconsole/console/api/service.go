@@ -178,7 +178,7 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 
 	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
+		rest.APIError(c, i18n.T(c, "获取session失败: %s", err))
 		return
 	}
 
@@ -199,12 +199,13 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 
 	err := c.BindJSON(consoleQuery)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
+		rest.APIError(c, i18n.T(c, "请求参数错误: %s", err))
 		return
 	}
 
-	if e := consoleQuery.Validate(); e != nil {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", e))
+	err = consoleQuery.Validate()
+	if err != nil {
+		rest.APIError(c, i18n.T(c, "请求参数错误: %s", err))
 		return
 	}
 

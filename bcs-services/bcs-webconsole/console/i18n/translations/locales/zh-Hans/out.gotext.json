@@ -16,17 +16,18 @@
             "fuzzy": true
         },
         {
-            "id": "获取session失败: {Arg_1}",
-            "message": "获取session失败: {Arg_1}",
-            "translation": "获取session失败: {Arg_1}",
+            "id": "获取session失败: {Err}",
+            "message": "获取session失败: {Err}",
+            "translation": "获取session失败: {Err}",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "Arg_1",
+                    "id": "Err",
                     "string": "%[1]s",
-                    "type": "",
-                    "underlyingType": "string",
-                    "argNum": 1
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
                 }
             ],
             "fuzzy": true
@@ -36,6 +37,23 @@
             "message": "获取session成功",
             "translation": "获取session成功",
             "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "请求参数错误: {Err}",
+            "message": "请求参数错误: {Err}",
+            "translation": "请求参数错误: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
             "fuzzy": true
         }
     ]
