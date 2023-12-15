@@ -19,7 +19,6 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/pkg/errors"
 	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n/localizer"
 )
@@ -134,7 +133,7 @@ func Localize() gin.HandlerFunc {
 }
 
 // T 国际化消息
-func T(ctx *gin.Context, key message.Reference, args ...interface{}) string {
+func T(ctx *gin.Context, format string, args ...any) string {
 	lang := getLangHandler(ctx, defaultLang)
-	return localizer.Get(lang).Translate(key, args...)
+	return localizer.Get(lang).Translate(format, args...)
 }
