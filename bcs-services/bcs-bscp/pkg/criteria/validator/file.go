@@ -23,7 +23,7 @@ import (
 )
 
 // qualifiedUnixFilePathRegexp unix file path validate regexp.
-var qualifiedUnixFilePathRegexp = regexp.MustCompile(`^\/([A-Za-z0-9_]+[A-Za-z0-9-_.]*\/?)*$`)
+var qualifiedUnixFilePathRegexp = regexp.MustCompile("^/([\u4e00-\u9fa5A-Za-z0-9-_#%,@^+=\\[\\]\\{\\}]+[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]*/?)*$")
 
 // ValidateUnixFilePath validate unix os file path.
 func ValidateUnixFilePath(path string) error {
@@ -31,8 +31,8 @@ func ValidateUnixFilePath(path string) error {
 		return errors.New("invalid path, length should >= 1")
 	}
 
-	if len(path) > 256 {
-		return errors.New("invalid path, length should <= 256")
+	if len(path) > 1024 {
+		return errors.New("invalid path, length should <= 1024")
 	}
 
 	if !qualifiedUnixFilePathRegexp.MatchString(path) {

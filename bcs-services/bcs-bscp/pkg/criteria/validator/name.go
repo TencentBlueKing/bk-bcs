@@ -177,7 +177,7 @@ func ValidateReleaseName(name string) error {
 }
 
 const (
-	qualifiedCfgItemNameFmt string = "^[A-Za-z0-9-_.]+$"
+	qualifiedCfgItemNameFmt string = "^[\u4e00-\u9fa5A-Za-z0-9-_#%,@^+=\\[\\]\\{\\}]+[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]*$"
 )
 
 // qualifiedCfgItemNameRegexp config item name regexp.
