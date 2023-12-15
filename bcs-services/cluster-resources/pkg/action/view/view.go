@@ -19,27 +19,43 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/mitchellh/hashstructure/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/sync/errgroup"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
 	projectAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/project"
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 // SystemViews 系统预置视图
 var SystemViews = []string{"默认视图", "Default view"}
+
+const (
+	// cacheKeyPrefix 资源缓存前缀
+	cacheKeyPrefix = "view"
+	// cacheTTL 资源缓存时间
+	cacheTTL = 5 * time.Minute
+)
 
 // ViewAction provides the action to manager view
 // nolint
@@ -174,13 +190,12 @@ func (v *ViewAction) Create(ctx context.Context, req *clusterRes.CreateViewConfi
 	}
 
 	view := &entity.View{
-		Name:        name,
-		ProjectCode: p.Code,
-		ClusterID:   req.GetClusterID(),
-		Namespace:   req.GetNamespace(),
-		Filter:      protoFilterToFilter(req.GetFilter()),
-		Scope:       entity.ViewScopePrivate,
-		CreateBy:    ctxkey.GetUsernameFromCtx(ctx),
+		Name:              name,
+		ProjectCode:       p.Code,
+		ClusterNamespaces: protoClusterNamespacesToEntity(req.GetClusterNamespaces()),
+		Filter:            protoFilterToFilter(req.GetFilter()),
+		Scope:             entity.ViewScopePrivate,
+		CreateBy:          ctxkey.GetUsernameFromCtx(ctx),
 	}
 	id, err := v.model.CreateView(ctx, view)
 	if err != nil {
@@ -244,10 +259,9 @@ func (v *ViewAction) Update(ctx context.Context, req *clusterRes.UpdateViewConfi
 	}
 
 	updateView := entity.M{
-		"name":      name,
-		"clusterID": req.GetClusterID(),
-		"namespace": req.GetNamespace(),
-		"filter":    protoFilterToFilter(req.GetFilter()),
+		"name":              name,
+		"clusterNamespaces": protoClusterNamespacesToEntity(req.GetClusterNamespaces()),
+		"filter":            protoFilterToFilter(req.GetFilter()),
 	}
 	if err := v.model.UpdateView(ctx, req.GetId(), updateView); err != nil {
 		return err
@@ -340,14 +354,34 @@ func (v *ViewAction) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
+// protoClusterNamespacesToEntity 转换集群命名空间
+func protoClusterNamespacesToEntity(ns []*clusterRes.ClusterNamespaces) []entity.ClusterNamespaces {
+	result := make([]entity.ClusterNamespaces, 0)
+	for _, v := range ns {
+		result = append(result, entity.ClusterNamespaces{
+			ClusterID:  v.ClusterID,
+			Namespaces: v.Namespaces})
+	}
+	return result
+}
+
+// protoFilterToFilter 转换视图筛选条件
 func protoFilterToFilter(filter *clusterRes.ViewFilter) *entity.ViewFilter {
 	if filter == nil {
 		return nil
 	}
+	ls := make([]entity.LabelSelector, 0)
+	for _, v := range filter.GetLabelSelector() {
+		ls = append(ls, entity.LabelSelector{
+			Key:    v.GetKey(),
+			Op:     v.Op,
+			Values: v.GetValues(),
+		})
+	}
 	return &entity.ViewFilter{
 		Name:          filter.GetName(),
 		Creator:       filter.GetCreator(),
-		LabelSelector: filter.GetLabelSelector(),
+		LabelSelector: ls,
 	}
 }
 
@@ -384,4 +418,145 @@ func getNewFileName(name string, files []string) string {
 		return fmt.Sprintf("%s copy", baseName)
 	}
 	return fmt.Sprintf("%s copy %d", baseName, maxCopy+1)
+}
+
+// ResourceNameSuggest xxx
+func (v *ViewAction) ResourceNameSuggest(ctx context.Context, clusteredNamespaces []*clusterRes.ClusterNamespaces) (
+	[]string, error) {
+	if err := v.checkAccess(ctx); err != nil {
+		return nil, err
+	}
+	resource, err := queryMultiClusterResources(ctx, clusteredNamespaces)
+	if err != nil {
+		return nil, err
+	}
+	result := slice.RemoveDuplicateValues(parseResourceName(resource))
+	return result, nil
+}
+
+// LabelSuggest xxx
+func (v *ViewAction) LabelSuggest(ctx context.Context, clusteredNamespaces []*clusterRes.ClusterNamespaces) (
+	[]string, error) {
+	if err := v.checkAccess(ctx); err != nil {
+		return nil, err
+	}
+	resource, err := queryMultiClusterResources(ctx, clusteredNamespaces)
+	if err != nil {
+		return nil, err
+	}
+	result := slice.RemoveDuplicateValues(parseResourceLabels(resource))
+	return result, nil
+}
+
+// ValuesSuggest xxx
+func (v *ViewAction) ValuesSuggest(ctx context.Context, clusteredNamespaces []*clusterRes.ClusterNamespaces,
+	label string) ([]string, error) {
+	if err := v.checkAccess(ctx); err != nil {
+		return nil, err
+	}
+	resource, err := queryMultiClusterResources(ctx, clusteredNamespaces)
+	if err != nil {
+		return nil, err
+	}
+	result := slice.RemoveDuplicateValues(parseResourceLabelValues(resource, label))
+	return result, nil
+}
+
+// 联想用户输入的资源类型
+var queryKind = []string{
+	"Deployment",
+	"StatefulSet",
+	"DaemonSet",
+	"Job",
+	"CronJob",
+	"Pod",
+	"Service",
+	"ConfigMap",
+	"GameDeployment",
+	"GameStatefulSet",
+}
+
+// 根据集群命名空间查询资源
+func queryMultiClusterResources(ctx context.Context, cns []*clusterRes.ClusterNamespaces) ([]*storage.Resource, error) {
+	var resources []*storage.Resource
+	viewCache := redis.NewCache(cacheKeyPrefix, cacheTTL)
+	hash, err := hashstructure.Hash(cns, hashstructure.FormatV2, nil)
+	if err != nil {
+		return nil, err
+	}
+	cacheKey := fmt.Sprintf("%d", hash)
+	if err = viewCache.Get(ctx, cache.NewStringKey(cacheKey), &resources); err == nil {
+		// 缓存命中
+		return resources, nil
+	}
+
+	// 从 storage 并发查询资源
+	clusteredNamespaces := []storage.ClusteredNamespaces{}
+	for _, v := range cns {
+		clusteredNamespaces = append(clusteredNamespaces, storage.ClusteredNamespaces{
+			ClusterID:  v.GetClusterID(),
+			Namespaces: v.GetNamespaces(),
+		})
+	}
+	eg := errgroup.Group{}
+	mux := sync.Mutex{}
+	for _, kind := range queryKind {
+		kind := kind
+		eg.Go(func() error {
+			var resource []*storage.Resource
+			resource, _, err = storage.ListMultiClusterResources(ctx, storage.ListMultiClusterResourcesReq{
+				Kind:                kind,
+				Limit:               1000, // 限制最大查询数量，目前只查询前 1000 条，满足绝大部分场景
+				ClusteredNamespaces: clusteredNamespaces,
+			})
+			if err != nil {
+				return err
+			}
+			mux.Lock()
+			resources = append(resources, resource...)
+			mux.Unlock()
+			return nil
+		})
+	}
+	_ = eg.Wait()
+	if len(resources) != 0 {
+		err = viewCache.Set(ctx, cache.NewStringKey(cacheKey), resources, 0)
+		if err != nil {
+			log.Error(ctx, "queryMultiClusterResources cache set failed: %v", err)
+			// 缓存错误不影响正常流程
+		}
+	}
+	return resources, nil
+}
+
+// 根据集群命名空间查询资源名称
+func parseResourceName(resources []*storage.Resource) []string {
+	names := make([]string, 0)
+	for _, v := range resources {
+		names = append(names, mapx.GetStr(v.Data, "metadata.name"))
+	}
+	return names
+}
+
+// 根据集群命名空间查询资源标签
+func parseResourceLabels(resources []*storage.Resource) []string {
+	labels := make([]string, 0)
+	for _, v := range resources {
+		for k := range mapx.GetMap(v.Data, "metadata.labels") {
+			labels = append(labels, k)
+		}
+	}
+	return labels
+}
+
+// 根据集群命名空间查询资源标签值
+func parseResourceLabelValues(resources []*storage.Resource, label string) []string {
+	values := make([]string, 0)
+	for _, v := range resources {
+		value := mapx.GetStr(v.Data, []string{"metadata", "labels", mapx.ConvertPath(label)})
+		if value != "" {
+			values = append(values, value)
+		}
+	}
+	return values
 }

@@ -4524,6 +4524,24 @@ func NewViewConfigEndpoints() []*api.Endpoint {
 			Method:  []string{"DELETE"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "ViewConfig.ResourceNameSuggest",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/resource_name_suggest"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ViewConfig.LabelSuggest",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/label_suggest"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ViewConfig.ValuesSuggest",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/values_suggest"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -4542,6 +4560,12 @@ type ViewConfigService interface {
 	RenameViewConfig(ctx context.Context, in *RenameViewConfigReq, opts ...client.CallOption) (*CommonResp, error)
 	// 删除视图配置
 	DeleteViewConfig(ctx context.Context, in *DeleteViewConfigReq, opts ...client.CallOption) (*CommonResp, error)
+	// 资源名称联想
+	ResourceNameSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error)
+	// label 联想
+	LabelSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error)
+	// values 联想
+	ValuesSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type viewConfigService struct {
@@ -4616,6 +4640,36 @@ func (c *viewConfigService) DeleteViewConfig(ctx context.Context, in *DeleteView
 	return out, nil
 }
 
+func (c *viewConfigService) ResourceNameSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ViewConfig.ResourceNameSuggest", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *viewConfigService) LabelSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ViewConfig.LabelSuggest", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *viewConfigService) ValuesSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ViewConfig.ValuesSuggest", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ViewConfig service
 
 type ViewConfigHandler interface {
@@ -4631,6 +4685,12 @@ type ViewConfigHandler interface {
 	RenameViewConfig(context.Context, *RenameViewConfigReq, *CommonResp) error
 	// 删除视图配置
 	DeleteViewConfig(context.Context, *DeleteViewConfigReq, *CommonResp) error
+	// 资源名称联想
+	ResourceNameSuggest(context.Context, *ViewSuggestReq, *CommonResp) error
+	// label 联想
+	LabelSuggest(context.Context, *ViewSuggestReq, *CommonResp) error
+	// values 联想
+	ValuesSuggest(context.Context, *ViewSuggestReq, *CommonResp) error
 }
 
 func RegisterViewConfigHandler(s server.Server, hdlr ViewConfigHandler, opts ...server.HandlerOption) error {
@@ -4641,6 +4701,9 @@ func RegisterViewConfigHandler(s server.Server, hdlr ViewConfigHandler, opts ...
 		UpdateViewConfig(ctx context.Context, in *UpdateViewConfigReq, out *CommonResp) error
 		RenameViewConfig(ctx context.Context, in *RenameViewConfigReq, out *CommonResp) error
 		DeleteViewConfig(ctx context.Context, in *DeleteViewConfigReq, out *CommonResp) error
+		ResourceNameSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error
+		LabelSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error
+		ValuesSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error
 	}
 	type ViewConfig struct {
 		viewConfig
@@ -4682,6 +4745,24 @@ func RegisterViewConfigHandler(s server.Server, hdlr ViewConfigHandler, opts ...
 		Method:  []string{"DELETE"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ViewConfig.ResourceNameSuggest",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/resource_name_suggest"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ViewConfig.LabelSuggest",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/label_suggest"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ViewConfig.ValuesSuggest",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/values_suggest"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ViewConfig{h}, opts...))
 }
 
@@ -4711,6 +4792,18 @@ func (h *viewConfigHandler) RenameViewConfig(ctx context.Context, in *RenameView
 
 func (h *viewConfigHandler) DeleteViewConfig(ctx context.Context, in *DeleteViewConfigReq, out *CommonResp) error {
 	return h.ViewConfigHandler.DeleteViewConfig(ctx, in, out)
+}
+
+func (h *viewConfigHandler) ResourceNameSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error {
+	return h.ViewConfigHandler.ResourceNameSuggest(ctx, in, out)
+}
+
+func (h *viewConfigHandler) LabelSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error {
+	return h.ViewConfigHandler.LabelSuggest(ctx, in, out)
+}
+
+func (h *viewConfigHandler) ValuesSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error {
+	return h.ViewConfigHandler.ValuesSuggest(ctx, in, out)
 }
 
 // Api Endpoints for MultiCluster service

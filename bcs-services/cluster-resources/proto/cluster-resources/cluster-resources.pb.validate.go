@@ -7209,7 +7209,39 @@ func (m *ViewFilter) validate(all bool) error {
 
 	// no validation rules for Name
 
-	// no validation rules for LabelSelector
+	for idx, item := range m.GetLabelSelector() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ViewFilterValidationError{
+						field:  fmt.Sprintf("LabelSelector[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ViewFilterValidationError{
+						field:  fmt.Sprintf("LabelSelector[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ViewFilterValidationError{
+					field:  fmt.Sprintf("LabelSelector[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	if len(errors) > 0 {
 		return ViewFilterMultiError(errors)
@@ -7321,10 +7353,10 @@ func (m *CreateViewConfigReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_CreateViewConfigReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+	if len(m.GetClusterNamespaces()) < 1 {
 		err := CreateViewConfigReqValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^BCS-K8S-\\\\d{5}$\"",
+			field:  "ClusterNamespaces",
+			reason: "value must contain at least 1 item(s)",
 		}
 		if !all {
 			return err
@@ -7332,15 +7364,38 @@ func (m *CreateViewConfigReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_CreateViewConfigReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
-		err := CreateViewConfigReqValidationError{
-			field:  "Namespace",
-			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+	for idx, item := range m.GetClusterNamespaces() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CreateViewConfigReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CreateViewConfigReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateViewConfigReqValidationError{
+					field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
 		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
+
 	}
 
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
@@ -7465,10 +7520,6 @@ var _ interface {
 	ErrorName() string
 } = CreateViewConfigReqValidationError{}
 
-var _CreateViewConfigReq_ClusterID_Pattern = regexp.MustCompile("^BCS-K8S-\\d{5}$")
-
-var _CreateViewConfigReq_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
-
 // Validate checks the field values on UpdateViewConfigReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -7514,10 +7565,10 @@ func (m *UpdateViewConfigReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpdateViewConfigReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+	if len(m.GetClusterNamespaces()) < 1 {
 		err := UpdateViewConfigReqValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^BCS-K8S-\\\\d{5}$\"",
+			field:  "ClusterNamespaces",
+			reason: "value must contain at least 1 item(s)",
 		}
 		if !all {
 			return err
@@ -7525,15 +7576,38 @@ func (m *UpdateViewConfigReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpdateViewConfigReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
-		err := UpdateViewConfigReqValidationError{
-			field:  "Namespace",
-			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+	for idx, item := range m.GetClusterNamespaces() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, UpdateViewConfigReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, UpdateViewConfigReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateViewConfigReqValidationError{
+					field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
 		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
+
 	}
 
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
@@ -7655,10 +7729,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateViewConfigReqValidationError{}
-
-var _UpdateViewConfigReq_ClusterID_Pattern = regexp.MustCompile("^BCS-K8S-\\d{5}$")
-
-var _UpdateViewConfigReq_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
 // Validate checks the field values on RenameViewConfigReq with the rules
 // defined in the proto definition for this message. If any rules are
@@ -7920,6 +7990,164 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DeleteViewConfigReqValidationError{}
+
+// Validate checks the field values on ViewSuggestReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ViewSuggestReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ViewSuggestReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ViewSuggestReqMultiError,
+// or nil if none found.
+func (m *ViewSuggestReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ViewSuggestReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := ViewSuggestReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(m.GetClusterNamespaces()) < 1 {
+		err := ViewSuggestReqValidationError{
+			field:  "ClusterNamespaces",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetClusterNamespaces() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ViewSuggestReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ViewSuggestReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ViewSuggestReqValidationError{
+					field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Label
+
+	if len(errors) > 0 {
+		return ViewSuggestReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// ViewSuggestReqMultiError is an error wrapping multiple validation errors
+// returned by ViewSuggestReq.ValidateAll() if the designated constraints
+// aren't met.
+type ViewSuggestReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ViewSuggestReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ViewSuggestReqMultiError) AllErrors() []error { return m }
+
+// ViewSuggestReqValidationError is the validation error returned by
+// ViewSuggestReq.Validate if the designated constraints aren't met.
+type ViewSuggestReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ViewSuggestReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ViewSuggestReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ViewSuggestReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ViewSuggestReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ViewSuggestReqValidationError) ErrorName() string { return "ViewSuggestReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ViewSuggestReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sViewSuggestReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ViewSuggestReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ViewSuggestReqValidationError{}
 
 // Validate checks the field values on ClusterNamespaces with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -8253,8 +8481,6 @@ func (m *FetchMultiClusterResourceReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for Creator
-
 	for idx, item := range m.GetLabelSelector() {
 		_, _ = idx, item
 
@@ -8484,8 +8710,6 @@ func (m *FetchMultiClusterCustomResourceReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for Creator
-
 	for idx, item := range m.GetLabelSelector() {
 		_, _ = idx, item
 
@@ -8703,8 +8927,6 @@ func (m *MultiClusterResourceCountReq) validate(all bool) error {
 		}
 
 	}
-
-	// no validation rules for Creator
 
 	for idx, item := range m.GetLabelSelector() {
 		_, _ = idx, item
