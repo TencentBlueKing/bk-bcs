@@ -177,6 +177,9 @@ func ValidateReleaseName(name string) error {
 }
 
 const (
+	// qualifiedCfgNameFmt config item name regexp.
+	// 1. should not start with '.'.
+	// 2. support character: chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'.
 	qualifiedCfgItemNameFmt string = "^[\u4e00-\u9fa5A-Za-z0-9-_#%,@^+=\\[\\]\\{\\}]+[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]*$"
 )
 

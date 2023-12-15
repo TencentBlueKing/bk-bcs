@@ -23,6 +23,11 @@ import (
 )
 
 // qualifiedUnixFilePathRegexp unix file path validate regexp.
+// 1. should start with '/'.
+// 2. '/' in the end is optional.
+// 3. each sub path should not start with '.'.
+// 4. each sub path support character: chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'.
+// 5. each sub path should be separated by '/'.
 var qualifiedUnixFilePathRegexp = regexp.MustCompile("^/([\u4e00-\u9fa5A-Za-z0-9-_#%,@^+=\\[\\]\\{\\}]+[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]*/?)*$")
 
 // ValidateUnixFilePath validate unix os file path.
