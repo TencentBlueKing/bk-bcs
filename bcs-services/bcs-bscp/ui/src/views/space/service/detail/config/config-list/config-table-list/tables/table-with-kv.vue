@@ -11,6 +11,7 @@
       show-overflow-tooltip
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"
+      @column-sort="handleSort"
     >
       <bk-table-column label="配置项名称" prop="spec.key" :min-width="240">
         <template #default="{ row }">
@@ -33,7 +34,7 @@
       ></bk-table-column>
       <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
       <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
-      <bk-table-column label="修改时间" :sort="{sortFn:(_a:any,_b:any,type:string) => updateSortType = type}" :width="220">
+      <bk-table-column label="修改时间" :sort="true" :width="220">
         <template #default="{ row }">
           <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
         </template>
@@ -272,6 +273,10 @@ const refresh = (current = 1) => {
 const handleFilter = (checked: string[]) => {
   filterChecked.value = checked;
   return true;
+};
+
+const handleSort = ({ type }: any) => {
+  updateSortType.value = type;
 };
 
 // 判断当前行是否是删除行
