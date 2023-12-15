@@ -124,6 +124,7 @@ const permissionQueryResource = computed(() => [
 const handleDiffOrPublish = () => {
   if (selectGroupRef.value.validate()) {
     if (versionList.value.length) {
+      baseVersionId.value = versionList.value[0].id;
       isDiffSliderShow.value = true;
       return;
     }
