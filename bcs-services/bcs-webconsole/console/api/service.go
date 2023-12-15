@@ -97,7 +97,7 @@ func (s *service) ListClusters(c *gin.Context) {
 	projectId := c.Param("projectId")
 	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "项目不正确"))
+		rest.APIError(c, i18n.T(c, "项目不正确"))
 		return
 	}
 
@@ -106,7 +106,7 @@ func (s *service) ListClusters(c *gin.Context) {
 		rest.APIError(c, i18n.GetMessage(c, err.Error()))
 		return
 	}
-	rest.APIOK(c, i18n.GetMessage(c, "获取集群成功"), clusters)
+	rest.APIOK(c, i18n.T(c, "获取集群成功"), clusters)
 }
 
 // CreateWebConsoleSession 创建websocket session
@@ -153,7 +153,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
+		rest.APIError(c, i18n.T(c, "获取session失败: %s", err))
 		return
 	}
 
@@ -161,7 +161,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		"session_id": sessionId,
 		"ws_url":     makeWebSocketURL(sessionId, consoleQuery.Lang, false),
 	}
-	rest.APIOK(c, i18n.GetMessage(c, "获取session成功"), data)
+	rest.APIOK(c, i18n.T(c, "获取session成功"), data)
 }
 
 // CreatePortalSession xxx

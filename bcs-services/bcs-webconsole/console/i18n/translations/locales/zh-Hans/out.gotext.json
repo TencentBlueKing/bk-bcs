@@ -1,0 +1,42 @@
+{
+    "language": "zh-Hans",
+    "messages": [
+        {
+            "id": "项目不正确",
+            "message": "项目不正确",
+            "translation": "项目不正确",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "获取集群成功",
+            "message": "获取集群成功",
+            "translation": "获取集群成功",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "获取session失败: {Arg_1}",
+            "message": "获取session失败: {Arg_1}",
+            "translation": "获取session失败: {Arg_1}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Arg_1",
+                    "string": "%[1]s",
+                    "type": "",
+                    "underlyingType": "string",
+                    "argNum": 1
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "获取session成功",
+            "message": "获取session成功",
+            "translation": "获取session成功",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        }
+    ]
+}

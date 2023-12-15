@@ -1,0 +1,34 @@
+{
+    "language": "en",
+    "messages": [
+        {
+            "id": "项目不正确",
+            "message": "项目不正确",
+            "translation": "Project_id Incorrect"
+        },
+        {
+            "id": "获取集群成功",
+            "message": "获取集群成功",
+            "translation": "Get Clusters successful"
+        },
+        {
+            "id": "获取session失败: {Arg_1}",
+            "message": "获取session失败: {Arg_1}",
+            "translation": "Get session failed: {Arg_1}",
+            "placeholders": [
+                {
+                    "id": "Arg_1",
+                    "string": "%[1]s",
+                    "type": "",
+                    "underlyingType": "string",
+                    "argNum": 1
+                }
+            ]
+        },
+        {
+            "id": "获取session成功",
+            "message": "获取session成功",
+            "translation": "Get session successful"
+        }
+    ]
+}
