@@ -84,7 +84,7 @@ const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 const serviceStore = useServiceStore();
 const versionStore = useConfigStore();
 const { appData } = storeToRefs(serviceStore);
-const { versionData } = storeToRefs(versionStore);
+const { versionData, publishedVersionId } = storeToRefs(versionStore);
 
 const props = defineProps<{
   bkBizId: string;
@@ -188,6 +188,7 @@ const openPreviewVersionDiff = (id: number) => {
 // 上线确认
 const handleConfirm = () => {
   isDiffSliderShow.value = false;
+  publishedVersionId.value = versionData.value.id;
   handlePanelClose();
   emit('confirm');
   InfoBox({
