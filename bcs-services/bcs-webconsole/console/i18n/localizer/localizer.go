@@ -26,8 +26,8 @@ import (
 
 // supportedLangs are languages the server supports.
 var supportedLangs = []language.Tag{
-	language.English, // en fallback
-	language.Chinese, // zh
+	language.English, // en
+	language.Chinese, // zh fallback
 }
 
 // matcher is used to get the most matched language.
@@ -57,7 +57,7 @@ var localizerMap = map[string]*Localizer{
 // other language tags like en-US, en-GB, nl or unknown language tag will use English.
 func Get(lang string) *Localizer {
 	tag, _, _ := matcher.Match(language.Make(lang))
-	return localizerMap[display.English.Tags().Name(tag)]
+	return localizerMap[display.Chinese.Tags().Name(tag)]
 }
 
 // Translate acts as a wrapper to call message.Printer's Sprintf method.

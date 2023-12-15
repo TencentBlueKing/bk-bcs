@@ -135,6 +135,6 @@ func Localize() gin.HandlerFunc {
 
 // T 国际化消息
 func T(ctx *gin.Context, key message.Reference, args ...interface{}) string {
-	lang := getLangHandler(ctx, "zh-hans")
+	lang := getLangHandler(ctx, defaultLang)
 	return localizer.Get(lang).Translate(key, args...)
 }
