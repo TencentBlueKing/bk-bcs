@@ -26,6 +26,7 @@ var fs embed.FS
 const (
 	defaultFormatBundleFile = "yaml"
 	defaultRootPath         = "localize"
+	defaultLang             = "zh-hans"
 )
 
 var (
