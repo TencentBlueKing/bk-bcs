@@ -82,7 +82,14 @@ const versionsInView = computed(() => {
 watch(refreshVersionListFlag, async (val) => {
   if (val) {
     await getVersionList();
-    const versionDetail = versionList.value.find(item => item.id === publishedVersionId.value);
+    let versionDetail;
+    // 判断当前是生成版本还是上线版本
+    if (publishedVersionId.value) {
+      versionDetail = versionList.value.find(item => item.id === publishedVersionId.value);
+      publishedVersionId.value = 0;
+    } else {
+      versionDetail = versionList.value[1];
+    }
     if (versionDetail) {
       versionData.value = versionDetail;
       refreshVersionListFlag.value = false;
