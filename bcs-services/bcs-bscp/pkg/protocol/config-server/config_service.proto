@@ -1022,9 +1022,14 @@ message ListReleasedKvsReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   uint32 release_id = 3;
-  uint32 start = 6;
-  uint32 limit = 7;
-  bool all = 8;
+  uint32 start = 4;
+  uint32 limit = 5;
+  bool all = 6;
+  string search_key = 7;
+  repeated string key = 8;
+  repeated string kv_type = 9;
+  string sort = 10;
+  string order = 11;
 }
 
 message ListReleasedKvsResp {

@@ -75,6 +75,11 @@ func (s *Service) ListReleasedKvs(ctx context.Context, req *pbcs.ListReleasedKvs
 		Limit:     req.Limit,
 		All:       req.All,
 		ReleaseId: req.ReleaseId,
+		SearchKey: req.SearchKey,
+		Key:       req.Key,
+		KvType:    req.KvType,
+		Sort:      req.Sort,
+		Order:     req.Order,
 	}
 	rkv, err := s.client.DS.ListReleasedKvs(grpcKit.RpcCtx(), r)
 	if err != nil {

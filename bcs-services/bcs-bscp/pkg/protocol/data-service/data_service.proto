@@ -520,10 +520,13 @@ message ListReleasedKvReq {
   uint32 app_id = 2;
   uint32 release_id = 3;
   string search_key = 4;
+  repeated string key = 5;
   uint32 start = 6;
   uint32 limit = 7;
   bool all = 8;
-  string key = 9;
+  repeated string kv_type = 9;
+  string sort = 10;
+  string order = 11;
 }
 
 message ListReleasedKvResp {
