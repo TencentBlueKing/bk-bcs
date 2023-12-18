@@ -199,7 +199,7 @@ func ValidateCfgItemName(name string) error {
 	}
 
 	if !qualifiedCfgItemNameRegexp.MatchString(name) {
-		return fmt.Errorf("invalid name %s, should only contain chinese, english, "+
+		return fmt.Errorf("invalid name %s, should only contains chinese, english, "+
 			"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'", name)
 	}
 
