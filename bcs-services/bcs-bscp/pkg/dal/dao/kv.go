@@ -13,13 +13,14 @@
 package dao
 
 import (
+	"errors"
 	"fmt"
+
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
-	"github.com/pkg/errors"
 )
 
 // Kv supplies all the kv related operations.
