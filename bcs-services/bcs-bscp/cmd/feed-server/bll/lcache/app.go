@@ -86,6 +86,21 @@ func (ap *App) IsAppExist(kt *kit.Kit, bizID uint32, appIDs ...uint32) (bool, er
 	return true, nil
 }
 
+// RemoveCache 清空app缓存
+func (ap *App) RemoveCache(kt *kit.Kit, bizID uint32, appName string) {
+	key := fmt.Sprintf("%d-%s", bizID, appName)
+	ap.idClient.Remove(key)
+
+	// 强制 cacheserver 刷新缓存
+	opt := &pbcs.GetAppIDReq{
+		BizId:   bizID,
+		AppName: appName,
+		Refresh: true,
+	}
+
+	_, _ = ap.cs.CS().GetAppID(kt.RpcCtx(), opt)
+}
+
 // GetAppID get app id by app name.
 func (ap *App) GetAppID(kt *kit.Kit, bizID uint32, appName string) (uint32, error) {
 	key := fmt.Sprintf("%d-%s", bizID, appName)

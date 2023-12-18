@@ -30,7 +30,7 @@ func (s *Service) GetAppID(ctx context.Context, req *pbcs.GetAppIDReq) (*pbcs.Ge
 	}
 
 	kt := kit.FromGrpcContext(ctx)
-	appID, err := s.op.GetAppID(kt, req.BizId, req.AppName)
+	appID, err := s.op.GetAppID(kt, req.BizId, req.AppName, req.GetRefresh())
 	if err != nil {
 		return nil, err
 	}
