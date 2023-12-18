@@ -130,7 +130,8 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 }
 
 // PbConfigItemState convert config item state
-func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem, commits []*table.Commit) []*pbci.ConfigItem {
+func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem,
+	commits []*table.Commit) []*pbci.ConfigItem {
 	releaseMap := make(map[uint32]*table.ReleasedConfigItem, len(fileRelease))
 	for _, release := range fileRelease {
 		releaseMap[release.ConfigItemID] = release
