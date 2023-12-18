@@ -567,7 +567,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 			return nil, err
 		}
 
-		commits := make([]*table.Commit, 0)
+		var commits []*table.Commit
 		commits, err = s.dao.Commit().ListAppLatestCommits(grpcKit, req.BizId, req.AppId)
 		if err != nil {
 			logs.Errorf("get commit, err: %v, rid: %s", err, grpcKit.Rid)
