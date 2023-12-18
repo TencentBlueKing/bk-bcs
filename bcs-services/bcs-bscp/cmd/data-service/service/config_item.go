@@ -566,7 +566,15 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
-		configItems = pbrci.PbConfigItemState(details, fileReleased)
+
+		commits := make([]*table.Commit, 0)
+		commits, err = s.dao.Commit().ListAppLatestCommits(grpcKit, req.BizId, req.AppId)
+		if err != nil {
+			logs.Errorf("get commit, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+
+		configItems = pbrci.PbConfigItemState(details, fileReleased, commits)
 	} else {
 		for _, ci := range details {
 			configItems = append(configItems, pbci.PbConfigItem(ci, ""))

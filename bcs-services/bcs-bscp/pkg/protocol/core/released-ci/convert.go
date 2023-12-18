@@ -130,10 +130,14 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 }
 
 // PbConfigItemState convert config item state
-func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem) []*pbci.ConfigItem {
+func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem, commits []*table.Commit) []*pbci.ConfigItem {
 	releaseMap := make(map[uint32]*table.ReleasedConfigItem, len(fileRelease))
 	for _, release := range fileRelease {
 		releaseMap[release.ConfigItemID] = release
+	}
+	commitMap := make(map[uint32]*table.Commit, len(commits))
+	for _, commit := range commits {
+		commitMap[commit.ID] = commit
 	}
 
 	result := make([]*pbci.ConfigItem, 0)
@@ -143,10 +147,10 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 			fileState = constant.FileStateAdd
 		} else {
 			if _, ok := releaseMap[ci.ID]; ok {
-				if ci.Revision.UpdatedAt.After(releaseMap[ci.ID].Revision.CreatedAt) {
-					fileState = constant.FileStateRevise
-				} else {
+				if _, exists := commitMap[releaseMap[ci.ID].CommitID]; exists {
 					fileState = constant.FileStateUnchange
+				} else {
+					fileState = constant.FileStateRevise
 				}
 				delete(releaseMap, ci.ID)
 			}

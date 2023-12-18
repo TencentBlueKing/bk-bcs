@@ -771,7 +771,6 @@ func (s *Service) genCreateKv(kt *kit.Kit, bizID, appID uint32) ([]*pbkv.Kv, err
 		string(table.KvStateAdd),
 		string(table.KvStateRevise),
 		string(table.KvStateUnchange),
-		string(table.KvStateDelete),
 	}
 	details, err := s.dao.Kv().ListAllByAppID(kt, appID, bizID, kvState)
 	if err != nil {

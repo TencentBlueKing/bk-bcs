@@ -141,16 +141,17 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int64, error) {
 
 	m := dao.genQ.Kv
+	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID))
 
 	orderCol, ok := m.GetFieldByName(opt.Page.Sort)
 	if !ok {
 		return nil, 0, errors.New("user doesn't contains orderColStr")
 	}
 	if opt.Page.Order == types.Descending {
-		orderCol.Desc()
+		q = q.Order(orderCol.Desc())
+	} else {
+		q = q.Order(orderCol)
 	}
-
-	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).Order(orderCol)
 
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
