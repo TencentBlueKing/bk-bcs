@@ -65,7 +65,15 @@ func (s *Service) ListReleasedKvs(ctx context.Context, req *pbds.ListReleasedKvR
 
 	kt := kit.FromGrpcContext(ctx)
 
-	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	if len(req.Sort) == 0 {
+		req.Sort = "key"
+	}
+	page := &types.BasePage{
+		Start: req.Start,
+		Limit: uint(req.Limit),
+		Sort:  req.Sort,
+		Order: types.Order(req.Order),
+	}
 	opt := &types.ListRKvOption{
 		ReleaseID: req.ReleaseId,
 		BizID:     req.BizId,
@@ -74,6 +82,7 @@ func (s *Service) ListReleasedKvs(ctx context.Context, req *pbds.ListReleasedKvR
 		SearchKey: req.SearchKey,
 		All:       req.All,
 		Page:      page,
+		KvType:    req.KvType,
 	}
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,
