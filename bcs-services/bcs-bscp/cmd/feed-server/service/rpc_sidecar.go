@@ -484,7 +484,7 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 	return kv, nil
 }
 
-// isAppNotExistErr 检测app不存在错误, 有grpc， 目前通过 msg 判断
+// isAppNotExistErr 检测app不存在错误, 有grpc，目前通过 msg 判断
 // msg = rpc error: code = Code(4000005) desc = app %d not exist
 func isAppNotExistErr(err error) bool {
 	e := err.Error()
