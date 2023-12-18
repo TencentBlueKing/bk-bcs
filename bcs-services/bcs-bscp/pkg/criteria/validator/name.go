@@ -199,7 +199,7 @@ func ValidateCfgItemName(name string) error {
 	}
 
 	if !qualifiedCfgItemNameRegexp.MatchString(name) {
-		return fmt.Errorf("invalid path, each sub path should only contain chinese, english, " +
+		return fmt.Errorf("invalid path, name should only contain chinese, english, " +
 			"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'")
 	}
 
