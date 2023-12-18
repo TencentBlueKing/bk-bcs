@@ -86,9 +86,9 @@
     @confirm="handleDeleteConfigConfirm"
   >
     <div style="margin-bottom: 8px">
-      配置项：<span style="color: #313238">{{ deleteConfig?.key }}</span>
+      配置项：<span style="color: #313238">{{ deleteConfig?.spec.key }}</span>
     </div>
-    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+    <div>{{ deleteConfigTips }}</div>
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
@@ -128,7 +128,7 @@ const configsCount = ref(0);
 const editPanelShow = ref(false);
 const editable = ref(false);
 const activeConfig = ref<IConfigKvItem>();
-const deleteConfig = ref();
+const deleteConfig = ref<IConfigKvType>();
 const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
 const isSearchEmpty = ref(false);
@@ -144,6 +144,13 @@ const filterList = computed(() => CONFIG_KV_TYPE.map(item => ({
   value: item.id,
   text: item.name,
 })));
+
+const deleteConfigTips = computed(() => {
+  if (deleteConfig.value) {
+    return deleteConfig.value.kv_state === 'ADD' ? '一旦删除，该操作将无法撤销，请谨慎操作' : '配置项删除后，可以通过恢复按钮撤销删除';
+  }
+  return '';
+});
 
 watch(
   () => versionData.value.id,
@@ -226,11 +233,14 @@ const handleDel = (config: IConfigKvType) => {
     return;
   }
   isDeleteConfigDialogShow.value = true;
-  deleteConfig.value = config.id;
+  deleteConfig.value = config;
 };
 
 const handleDeleteConfigConfirm = async () => {
-  await deleteKv(props.bkBizId, props.appId, deleteConfig.value);
+  if (!deleteConfig.value) {
+    return;
+  }
+  await deleteKv(props.bkBizId, props.appId, deleteConfig.value.id);
   if (configList.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current -= 1;
   }
