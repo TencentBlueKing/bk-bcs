@@ -20,6 +20,7 @@ import { useRoute } from 'vue-router';
 import { IGroupEditing, ECategoryType } from '../../../../types/group';
 import { createGroup } from '../../../api/group';
 import groupEditForm from './components/group-edit-form.vue';
+import { Message } from 'bkui-vue';
 
 const route = useRoute();
 
@@ -74,6 +75,10 @@ const handleConfirm = async () => {
       selector: rule_logic === 'AND' ? { labels_and: rules } : { labels_or: rules },
     };
     await createGroup(route.params.spaceId as string, params);
+    Message({
+      message: '创建分组成功',
+      theme: 'success',
+    });
     handleClose();
     emits('reload');
   } catch (e) {
