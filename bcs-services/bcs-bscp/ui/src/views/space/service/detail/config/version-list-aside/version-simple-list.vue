@@ -54,7 +54,7 @@ import TableEmpty from '../../../../../../components/table/table-empty.vue';
 import VersionDiff from '../../config/components/version-diff/index.vue';
 
 const configStore = useConfigStore();
-const { versionData, refreshVersionListFlag } = storeToRefs(configStore);
+const { versionData, refreshVersionListFlag, publishedVersionId } = storeToRefs(configStore);
 
 const route = useRoute();
 const router = useRouter();
@@ -82,7 +82,7 @@ const versionsInView = computed(() => {
 watch(refreshVersionListFlag, async (val) => {
   if (val) {
     await getVersionList();
-    const versionDetail = versionList.value[1];
+    const versionDetail = versionList.value.find(item => item.id === publishedVersionId.value);
     if (versionDetail) {
       versionData.value = versionDetail;
       refreshVersionListFlag.value = false;

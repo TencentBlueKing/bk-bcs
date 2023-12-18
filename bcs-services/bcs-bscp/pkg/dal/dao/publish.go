@@ -303,7 +303,27 @@ func (dao *pubDao) upsertReleasedGroups(kit *kit.Kit, tx *gen.Query, opt *types.
 
 	groups := stg.Spec.Scope.Groups
 	if opt.Default {
-		groups = append(groups, defaultGroup)
+		// 1. delete other released groups in this release.
+		m := tx.ReleasedGroup
+		if _, err := m.WithContext(kit.Ctx).
+			Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID), m.ReleaseID.Eq(opt.ReleaseID)).
+			Delete(); err != nil {
+			logs.Errorf("delete other released groups in release failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
+		// 2. delete others groups in other releases.
+		groupIDs := make([]uint32, 0, len(groups))
+		for _, group := range groups {
+			groupIDs = append(groupIDs, group.ID)
+		}
+		if _, err := m.WithContext(kit.Ctx).
+			Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID), m.GroupID.In(groupIDs...)).
+			Delete(); err != nil {
+			logs.Errorf("delete other released groups in other releases failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
+		// 3. only publish default group
+		groups = []*table.Group{defaultGroup}
 	}
 	for _, group := range groups {
 		rg := &table.ReleasedGroup{
