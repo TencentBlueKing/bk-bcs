@@ -176,15 +176,9 @@ func ValidateReleaseName(name string) error {
 	return nil
 }
 
-const (
-	// qualifiedCfgNameFmt config item name regexp.
-	// 1. should not start with '.'.
-	// 2. support character: chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'.
-	qualifiedCfgItemNameFmt string = "^[\u4e00-\u9fa5A-Za-z0-9-_#%,@^+=\\[\\]\\{\\}]+[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]*$"
-)
-
 // qualifiedCfgItemNameRegexp config item name regexp.
-var qualifiedCfgItemNameRegexp = regexp.MustCompile(qualifiedCfgItemNameFmt)
+// support character: chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'.
+var qualifiedCfgItemNameRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]+$")
 
 // ValidateCfgItemName validate config item's name.
 func ValidateCfgItemName(name string) error {
@@ -200,13 +194,13 @@ func ValidateCfgItemName(name string) error {
 		return err
 	}
 
-	if name == "." || name == ".." {
-		return fmt.Errorf("invalid name: %s, not allows to be '.' or '..'", name)
+	if strings.HasPrefix(name, ".") {
+		return fmt.Errorf("invalid name, should not start with '.'")
 	}
 
 	if !qualifiedCfgItemNameRegexp.MatchString(name) {
-		return fmt.Errorf("invalid name: %s, only allows to include english、numbers、underscore (_)"+
-			"、hyphen (-)、point (.)", name)
+		return fmt.Errorf("invalid path, each sub path should only contain chinese, english, " +
+			"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'")
 	}
 
 	return nil

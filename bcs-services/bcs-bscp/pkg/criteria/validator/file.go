@@ -18,17 +18,14 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 )
 
-// qualifiedUnixFilePathRegexp unix file path validate regexp.
-// 1. should start with '/'.
-// 2. '/' in the end is optional.
-// 3. each sub path should not start with '.'.
-// 4. each sub path support character: chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'.
-// 5. each sub path should be separated by '/'.
-var qualifiedUnixFilePathRegexp = regexp.MustCompile("^/([\u4e00-\u9fa5A-Za-z0-9-_#%,@^+=\\[\\]\\{\\}]+[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]*/?)*$")
+// validUnixFileSubPathRegexp sub path support character:
+// chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'.
+var validUnixFileSubPathRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,@^+=\\[\\]{}]+$")
 
 // ValidateUnixFilePath validate unix os file path.
 func ValidateUnixFilePath(path string) error {
@@ -40,8 +37,29 @@ func ValidateUnixFilePath(path string) error {
 		return errors.New("invalid path, length should <= 1024")
 	}
 
-	if !qualifiedUnixFilePathRegexp.MatchString(path) {
-		return fmt.Errorf("invalid path, path does not conform to the unix file path format specification")
+	// 1. should start with '/'
+	if !strings.HasPrefix(path, "/") {
+		return fmt.Errorf("invalid path, should start with '/'")
+	}
+
+	// Split the path into parts
+	parts := strings.Split(path, "/")[1:] // Ignore the first empty part due to the leading '/'
+
+	// Iterate over each part to validate
+	for _, part := range parts {
+		// 2. '/' in the end is optional (already handled by strings.Split)
+		// 3. each sub path should not start with '.'
+		if strings.HasPrefix(part, ".") {
+			return fmt.Errorf("invalid path, each sub path should not start with '.'")
+		}
+
+		// 4. each sub path support character: chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'
+		if !validUnixFileSubPathRegexp.MatchString(part) {
+			return fmt.Errorf("invalid path, each sub path should only contain chinese, english, " +
+				"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'")
+		}
+		// 5. each sub path should be separated by '/'
+		// (handled by strings.Split above)
 	}
 
 	return nil
