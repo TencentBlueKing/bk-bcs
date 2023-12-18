@@ -195,12 +195,12 @@ func ValidateCfgItemName(name string) error {
 	}
 
 	if strings.HasPrefix(name, ".") {
-		return fmt.Errorf("invalid name, should not start with '.'")
+		return fmt.Errorf("invalid name %s, should not start with '.'", name)
 	}
 
 	if !qualifiedCfgItemNameRegexp.MatchString(name) {
-		return fmt.Errorf("invalid path, name should only contain chinese, english, " +
-			"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'")
+		return fmt.Errorf("invalid name %s, should only contain chinese, english, "+
+			"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'", name)
 	}
 
 	return nil
