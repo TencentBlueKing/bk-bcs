@@ -22,12 +22,7 @@
             <div class="config-name">{{ config.name }}</div>
             <div class="config-type">{{ getConfigTypeName(config.file_type) }}</div>
           </div>
-          <bk-exception
-            v-if="group.configs.length === 0"
-            scene="part"
-            type="empty"
-            description="暂无配置文件"
-          ></bk-exception>
+          <TableEmpty v-if="configList.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch"></TableEmpty>
         </div>
       </div>
     </bk-loading>
@@ -63,6 +58,7 @@ import { getConfigTypeName } from '../../../../../../../utils/config';
 import SearchInput from '../../../../../../../components/search-input.vue';
 import EditConfig from '../config-table-list/edit-config.vue';
 import ViewConfig from '../config-table-list/view-config.vue';
+import TableEmpty from '../../../../../../../components/table/table-empty.vue';
 
 interface IConfigsGroupData {
   id: number;
@@ -99,6 +95,7 @@ const boundTemplateListLoading = ref(false);
 const templateGroupList = ref<IBoundTemplateGroup[]>([]); // 配置文件模板
 const tableGroupsData = ref<IConfigsGroupData[]>([]);
 const searchStr = ref('');
+const isSearchEmpty = ref(false);
 const editConfigSliderData = ref({
   open: false,
   id: 0,
@@ -112,6 +109,13 @@ watch(
   () => versionData.value.id,
   () => {
     getListData();
+  },
+);
+
+watch(
+  () => searchStr.value,
+  (val) => {
+    isSearchEmpty.value = !!val;
   },
 );
 
@@ -142,7 +146,7 @@ const getCommonConfigList = async () => {
       all: true,
     };
     if (searchStr.value) {
-      params.search_fields = 'revision_name,revision_memo,name,path,creator';
+      params.search_fields = 'name,memo,path,creator,reviser';
       params.search_value = searchStr.value;
     }
 
@@ -170,7 +174,7 @@ const getBoundTemplateList = async () => {
       all: true,
     };
     if (searchStr.value) {
-      params.search_fields = 'revision_name,revision_memo,name,path,creator';
+      params.search_fields = 'name,memo,path,creator,reviser';
       params.search_value = searchStr.value;
     }
 
@@ -257,6 +261,11 @@ const handleConfigClick = (config: IConfigTableItem, groupId: number) => {
       data: { id, type },
     };
   }
+};
+
+const clearSearch = () => {
+  searchStr.value = '';
+  getListData();
 };
 </script>
 <style lang="scss" scoped>
