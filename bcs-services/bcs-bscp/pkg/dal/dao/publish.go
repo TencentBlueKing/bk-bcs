@@ -256,6 +256,7 @@ func (dao *pubDao) increaseReleasePublishNum(kit *kit.Kit, tx *gen.Query, releas
 	return nil
 }
 
+// nolint: funlen
 func (dao *pubDao) upsertReleasedGroups(kit *kit.Kit, tx *gen.Query, opt *types.PublishOption,
 	stg *table.Strategy) error {
 	defaultGroup := &table.Group{

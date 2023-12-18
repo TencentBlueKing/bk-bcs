@@ -53,7 +53,8 @@ func ValidateUnixFilePath(path string) error {
 			return fmt.Errorf("invalid path, each sub path should not start with '.'")
 		}
 
-		// 4. each sub path support character: chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'
+		// 4. each sub path support character:
+		//    chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'
 		if !validUnixFileSubPathRegexp.MatchString(part) {
 			return fmt.Errorf("invalid path, each sub path should only contain chinese, english, " +
 				"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'")
