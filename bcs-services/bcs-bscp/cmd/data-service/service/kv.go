@@ -235,8 +235,16 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 
 	kt := kit.FromGrpcContext(ctx)
 
+	app, err := s.dao.App().Get(kt, req.BizId, req.AppId)
+	if err != nil {
+		return nil, fmt.Errorf("get app fail,err : %v", err)
+	}
+
 	var editingKeyArr []string
 	for _, kv := range req.Kvs {
+		if !checkKVTypeMatch(table.DataType(kv.KvSpec.KvType), app.Spec.DataType) {
+			return nil, fmt.Errorf("kv type does not match the data type defined in the application")
+		}
 		editingKeyArr = append(editingKeyArr, kv.KvSpec.Key)
 	}
 	kvStateArr := []string{
