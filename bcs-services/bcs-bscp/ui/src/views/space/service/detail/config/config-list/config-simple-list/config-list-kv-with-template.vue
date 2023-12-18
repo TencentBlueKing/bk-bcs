@@ -20,6 +20,7 @@
       :config="(selectedConfig as IConfigKvItem)"
       :editable="isEditConfig"
       :view="!isEditConfig"
+      @confirm="getListData"
     />
   </section>
 </template>
