@@ -26,28 +26,7 @@
         <span class="node-name">
           {{ group.name }}
         </span>
-        <bk-popover
-          v-if="group.id === 0 && excludedGroups.length > 0"
-          ext-cls="default-group-rules-popover"
-          theme="light"
-          placement="top-start">
-          <InfoLine class="default-group-tips-icon" />
-          <template #content>
-            <div class="title">除以下下分组之外的所有实例</div>
-            <div class="exclude-groups">
-              <div v-for="excludeItem in excludedGroups" class="exclude-item">
-                <span class="group-name">{{ excludeItem.name }}</span>
-                <span v-if="excludeItem.rules && excludeItem.rules.length > 0" class="split-line">|</span>
-                <div class="rules">
-                  <div v-for="(rule, index) in excludeItem.rules" :key="index">
-                    <template v-if="index > 0"> & </template>
-                    <rule-tag class="tag-item" :rule="rule" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </template>
-        </bk-popover>
+        <default-group-rules-popover v-if="group.id === 0 && excludedGroups.length > 0" :excluded-groups="excludedGroups" />
         <span v-if="group.rules && group.rules.length > 0" class="split-line">|</span>
         <div class="rules">
           <div v-for="(rule, index) in group.rules" :key="index">
@@ -56,7 +35,7 @@
           </div>
         </div>
         <span
-          v-if="props.allowPreviewDelete && !props.disabled.includes(group.id)"
+          v-if="props.allowPreviewDelete && !props.releasedGroups.includes(group.id)"
           class="del-icon"
           @click="emits('delete', group.id)"
         >
@@ -68,17 +47,19 @@
 </template>
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { Del, AngleDown, AngleRight, InfoLine } from 'bkui-vue/lib/icon';
+import { Del, AngleDown, AngleRight } from 'bkui-vue/lib/icon';
 import { IGroupPreviewItem, IGroupToPublish } from '../../../../../../../../types/group';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../store/config';
 import RuleTag from '../../../../../groups/components/rule-tag.vue';
+import DefaultGroupRulesPopover from '../default-group-rules-popover.vue';
+
 const versionStore = useConfigStore();
 const { versionData } = storeToRefs(versionStore);
 const props = defineProps<{
   allowPreviewDelete: boolean;
   previewGroup: IGroupPreviewItem;
-  disabled: number[];
+  releasedGroups: number[];
   groupList: IGroupToPublish[];
 }>();
 
@@ -180,44 +161,4 @@ const excludedGroups = computed(() => {
     }
   }
 }
-.default-group-tips-icon {
-  margin-left: 8px;
-  font-size: 14px;
-  color: #939ba5;
-  cursor: pointer;
-  &:hover {
-    color: #3a84ff;
-  }
-}
-
-</style>
-<style lang="scss">
-  .default-group-rules-popover {
-    .title {
-      margin: 8px 0;
-      color: #979ba5;
-    }
-    .exclude-groups {
-      line-height: 16px;
-      font-size: 12px;
-      color: #979ba5;
-      .exclude-item {
-        display: flex;
-        align-items: center;
-      }
-      .group-name {
-        line-height: 20px;
-        color: #63656e;
-      }
-      .split-line {
-        margin: 0 4px 0 16px;
-      }
-      .rules {
-        display: flex;
-        align-items: center;
-        line-height: 16px;
-        white-space: nowrap;
-      }
-    }
-  }
 </style>

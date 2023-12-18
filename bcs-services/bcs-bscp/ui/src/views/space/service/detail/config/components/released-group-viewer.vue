@@ -3,7 +3,6 @@
     ext-cls="released-group-viewer"
     theme="light"
     placement="bottom-end"
-    trigger="click"
     :disabled="props.disabled"
     @after-show="popoverOpen">
     <slot name="default"></slot>

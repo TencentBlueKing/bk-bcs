@@ -9,8 +9,9 @@
           :version-list="versionList"
           :version-list-loading="versionListLoading"
           :version-status="props.versionStatus"
-          :disabled="props.disabled"
+          :released-groups="props.releasedGroups"
           :release-type="releaseType"
+          :released-id="props.releaseId"
           :value="props.groups"
           @release-type-change="emits('releaseTypeChange', $event)"
           @change="emits('change', $event)"
@@ -24,7 +25,7 @@
         :version-list="versionList"
         :version-list-loading="versionListLoading"
         :is-default-group-released="isDefaultGroupReleased"
-        :disabled="props.disabled"
+        :released-groups="props.releasedGroups"
         :value="props.groups"
         @diff="emits('openPreviewVersionDiff', $event)"
         @change="emits('change', $event)"
@@ -53,10 +54,12 @@ const props = withDefaults(
     releaseType?: string;
     groups: IGroupToPublish[];
     versionStatus: string;
-    disabled?: number[];
+    releaseId: number;
+    releasedGroups?: number[];
   }>(),
   {
     releaseType: 'select',
+    releaseId: 0,
   },
 );
 const emits = defineEmits(['openPreviewVersionDiff', 'releaseTypeChange', 'change']);

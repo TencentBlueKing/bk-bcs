@@ -18,7 +18,7 @@
           :group-list="props.groupList"
           :preview-group="previewGroup"
           :allow-preview-delete="props.releaseType === 'select'"
-          :disabled="props.disabled"
+          :released-groups="props.releasedGroups"
           @diff="emits('diff', $event)"
           @delete="handleDelete"
         >
@@ -55,25 +55,25 @@ const aggregateGroup = (groups: IGroupToPublish[]) => {
 
     return id === 0 || release_id > 0 || props.releaseType === 'select';
   })
-
-  // 全部实例上线
-  // 只展示已上线的分组，如果默认分组已上线，放到【变更版本】分组中，否则放到【首次上线】分组中
-  // 选择分组实例上线
-  // 新添加的分组状态取决于默认分组是否已上线
-  // 排除分组实例上线
-  // 默认不勾选分组，至少勾选一个分组才能提交
-
-  // 默认分组是否已上线，则将分组放到【变更版本】中，否则放到【首次上线】中
+  /**
+   * 1.全部实例上线
+   * 只展示已上线的分组，如果默认分组已上线，放到【变更版本】分组中，否则放到【首次上线】分组中
+   * 2.选择分组实例上线
+   * 新添加的分组状态取决于默认分组是否已上线，逻辑同上
+   * 3.排除分组实例上线
+   * 默认不勾选分组，至少勾选一个分组才能提交
+   */
   groupsToBePreviewed.forEach((group) => {
     const { release_id, release_name } = group;
     if (props.isDefaultGroupReleased) {
-      const version = modifiedVersionGroups.find(item => item.id === release_id);
+      const defaultGroup = props.groupList.find(group => group.id === 0);
+      const id = release_id === 0 ? (defaultGroup as IGroupToPublish).release_id : release_id;
+      const version = modifiedVersionGroups.find(item => item.id === id);
       if (version) {
         version.children.push(group);
       } else {
-        const defaultGroup = props.groupList.find(group => group.id === 0);
-        const name = release_id === 0 ? (defaultGroup as IGroupToPublish).release_name : release_name
-        modifiedVersionGroups.push({ id: release_id, name, type: 'modify', children: [group] });
+        const name = release_id === 0 ? (defaultGroup as IGroupToPublish).release_name : release_name;
+        modifiedVersionGroups.push({ id, name, type: 'modify', children: [group] });
       }
     } else {
       initialReleaseGroup.children.push(group);
@@ -95,11 +95,11 @@ const props = withDefaults(
     versionList: IConfigVersion[];
     releaseType: string;
     isDefaultGroupReleased: boolean;
-    disabled?: number[];
+    releasedGroups?: number[];
     value: IGroupToPublish[];
   }>(),
   {
-    disabled: () => [],
+    releasedGroups: () => [],
   },
 );
 
