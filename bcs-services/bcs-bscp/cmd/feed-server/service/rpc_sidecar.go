@@ -243,6 +243,10 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 
 	metas, err := s.bll.Release().ListAppLatestReleaseMeta(im.Kit, meta)
 	if err != nil {
+		// appid等未找到, 刷新缓存, 客户端重试请求
+		if isAppNotExistErr(err) {
+			s.bll.AppCache().RemoveCache(im.Kit, req.BizId, req.GetAppMeta().App)
+		}
 		return nil, err
 	}
 
@@ -344,11 +348,8 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 
 	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.GetAppMeta().App)
 	if err != nil {
-		fmt.Println("lejiaomin11")
 		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
 	}
-
-	fmt.Println("lejiaomin112", appID)
 
 	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
 	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
@@ -383,7 +384,6 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 
 	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(im.Kit, meta)
 	if err != nil {
-		fmt.Println("lejiaomin114", meta.AppID)
 		// appid等未找到, 刷新缓存, 客户端重试请求
 		if isAppNotExistErr(err) {
 			s.bll.AppCache().RemoveCache(im.Kit, req.BizId, req.GetAppMeta().App)
@@ -468,6 +468,11 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 
 	rkv, err := s.bll.RKvCache().GetKvValue(im.Kit, req.BizId, appID, metas.ReleaseId, req.Key)
 	if err != nil {
+		// appid等未找到, 刷新缓存, 客户端重试请求
+		if isAppNotExistErr(err) {
+			s.bll.AppCache().RemoveCache(im.Kit, req.BizId, req.GetAppMeta().App)
+		}
+
 		return nil, status.Errorf(codes.Aborted, "get rkv failed, %s", err.Error())
 	}
 
