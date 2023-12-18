@@ -26,6 +26,7 @@
           :release-type="releaseType"
           :groups="groups"
           :version-status="versionData.status.publish_status"
+          :release-id="versionData.id"
           @open-preview-version-diff="openPreviewVersionDiff"
           @release-type-change="releaseType = $event"
           @change="groups = $event"

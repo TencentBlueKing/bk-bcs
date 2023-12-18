@@ -100,7 +100,7 @@ const categorizingData = (groupList: IGroupToPublish[]) => {
       return;
     }
     const checked = props.value.findIndex(item => item.id === group.id) > -1;
-    const disabled = props.disabled.includes(group.id);
+    const disabled = props.releasedGroups.includes(group.id);
     nodeItemList.push({ ...group, node_id: group.id, checked, disabled });
   });
 
@@ -112,10 +112,10 @@ const props = withDefaults(defineProps<{
   groupList: IGroupToPublish[];
   versionListLoading: boolean;
   versionList: IConfigVersion[];
-  disabled?: number[]; // 调整分组上线时，【选择分组上线】已选择分组不可取消
+  releasedGroups?: number[]; // 调整分组上线时，【选择分组上线】已选择分组不可取消
   value: IGroupToPublish[];
 }>(), {
-  disabled: () => [],
+  releasedGroups: () => [],
 });
 
 const emits = defineEmits(['change']);
@@ -163,7 +163,7 @@ const handleSelectAll = () => {
   props.groupList.forEach((group) => {
     const hasGroupChecked = props.value.findIndex(item => item.id === group.id) > -1; // 分组在编辑前是否选中
     const hasAdded = groupList.findIndex(item => item.id === group.id) > -1; // 分组已添加
-    const isDisabled = props.disabled.includes(group.id);
+    const isDisabled = props.releasedGroups.includes(group.id);
     if (group.id !== 0 && !hasAdded && (!isDisabled || hasGroupChecked)) {
       groupList.push(group);
     }
@@ -174,7 +174,7 @@ const handleSelectAll = () => {
 // 全不选
 const handleClearAll = () => {
   const hasCheckedGroups = props.groupList.filter((group) => {
-    const res = props.disabled.includes(group.id) && props.value.findIndex(item => item.id === group.id) > -1;
+    const res = props.releasedGroups.includes(group.id) && props.value.findIndex(item => item.id === group.id) > -1;
     return res;
   });
   emits('change', hasCheckedGroups);

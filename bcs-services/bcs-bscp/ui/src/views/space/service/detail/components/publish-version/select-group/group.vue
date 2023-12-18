@@ -14,16 +14,23 @@
             :group-list-loading="props.groupListLoading"
             :version-list="props.versionList"
             :version-list-loading="props.versionListLoading"
-            :disabled="props.disabled"
+            :released-groups="props.releasedGroups"
             :value="selectedGroup"
             @change="handleSelectGroup">
           </GroupTree>
         </bk-radio>
-        <bk-radio label="exclude" :disabled="props.versionStatus === 'not_released'">
-          排除分组实例上线
+        <bk-radio label="exclude" :disabled="isExcludeModeDisabled">
+          <span
+            v-bk-tooltips="{
+              disabled: !isExcludeModeDisabled,
+              placement: 'top-start',
+              content: '其它版本没有上线分组，无法使用此选项'
+            }">
+            排除分组实例上线
+          </span>
           <GroupTree
             v-if="type === 'exclude'"
-            :group-list="props.groupList.filter(item => item.release_id !== 0)"
+            :group-list="props.groupList.filter(item => item.release_id !== 0 && item.release_id !== props.releasedId)"
             :group-list-loading="groupListLoading"
             :version-list="versionList"
             :version-list-loading="versionListLoading"
@@ -47,13 +54,14 @@ const props = withDefaults(defineProps<{
     versionListLoading: boolean;
     versionList: IConfigVersion[];
     versionStatus: string;
-    disabled?: number[];
+    releasedGroups?: number[];
     releaseType: string;
+    releasedId: number;
     value: IGroupToPublish[];
   }>(), {
   groupList: () => [],
   versionList: () => [],
-  disabled: () => [],
+  releasedGroups: () => [],
   value: () => [],
 });
 
@@ -70,13 +78,19 @@ const selectedGroup = computed(() => {
   return props.value;
 });
 
+// 排除分组实例上线逻辑：非当前上线版本下的已上线分组为空
+const isExcludeModeDisabled = computed(() => {
+  const releasedGroups = props.groupList.filter(group => group.id !== 0 && group.release_id > 0 && group.release_id !== props.releasedId);
+  return releasedGroups.length === 0
+});
+
 // 切换选择分组类型
 const handleTypeChange = (val: string) => {
   type.value = val;
   if (val === 'all') {
     handleSelectGroup(props.groupList);
   } else if (val === 'select') {
-    const list = props.groupList.filter(group => props.disabled.includes(group.id));
+    const list = props.groupList.filter(group => props.releasedGroups.includes(group.id));
     handleSelectGroup(list);
   } else {
     handleSelectGroup([]);

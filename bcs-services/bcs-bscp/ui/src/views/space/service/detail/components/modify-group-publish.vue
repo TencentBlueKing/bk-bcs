@@ -27,7 +27,8 @@
           :release-type="releaseType"
           :groups="groups"
           :version-status="versionData.status.publish_status"
-          :disabled="currentSelectedGroups"
+          :release-id="versionData.id"
+          :released-groups="releasedGroups"
           @open-preview-version-diff="openPreviewVersionDiff"
           @release-type-change="releaseType = $event"
           @change="groups = $event"
@@ -107,7 +108,8 @@ const groups = ref<IGroupToPublish[]>([]);
 const baseVersionId = ref(0);
 const selectGroupRef = ref();
 
-const currentSelectedGroups = computed(() => versionData.value.status.released_groups.map(group => group.id));
+// 已上线分组
+const releasedGroups = computed(() => versionData.value.status.released_groups.map(group => group.id));
 
 const permissionQueryResource = computed(() => [
   {

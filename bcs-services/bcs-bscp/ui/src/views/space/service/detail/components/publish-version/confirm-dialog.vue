@@ -10,10 +10,11 @@
     @confirm="handleConfirm"
   >
     <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="localVal">
-      <bk-form-item label="上线分组">
-        <div v-for="group in props.groups" class="group-item" :key="group.id">
+      <bk-form-item label="本次上线分组">
+        <div v-for="group in groupsToBePreviewed" class="group-item" :key="group.id">
           <div class="name">{{ group.name }}</div>
-          <div class="rules">
+          <default-group-rules-popover v-if="group.id === 0 && excludedGroups.length > 0" :excluded-groups="excludedGroups" />
+          <div v-if="group.rules.length > 0" class="rules">
             <bk-overflow-title type="tips">
               <span v-for="(rule, index) in group.rules" :key="index" class="rule">
                 <span v-if="index > 0"> & </span>
@@ -36,10 +37,11 @@
   </bk-dialog>
 </template>
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed,watch } from 'vue';
 import { publishVersion } from '../../../../../../api/config';
 import { IGroupToPublish } from '../../../../../../../types/group';
 import RuleTag from '../../../../groups/components/rule-tag.vue';
+import DefaultGroupRulesPopover from './default-group-rules-popover.vue';
 
 interface IFormData {
   groups: number[];
@@ -74,6 +76,23 @@ const rules = {
   ],
 };
 
+// 只展示已上线的分组
+const groupsToBePreviewed = computed(() => {
+  return props.groups.filter(group => {
+    const { id, release_id } = group;
+    // 过滤掉当前版本已上线分组
+    if (release_id === props.releaseId) {
+      return false;
+    }
+    return id === 0 || release_id > 0 || props.releaseType === 'select';
+  });
+});
+
+// 默认分组对应的排除分组
+const excludedGroups = computed(() => {
+  return props.groups.filter((group) => group.release_id > 0 && group.id > 0);
+});
+
 watch(
   () => props.groups,
   () => {
@@ -96,6 +115,7 @@ const handleConfirm = async () => {
     pending.value = true;
     await formRef.value.validate();
     const params = { ...localVal.value };
+    // 全部实例上线，只需要将all置为true
     if (props.releaseType === 'all') {
       params.groups = [];
       params.all = true;
