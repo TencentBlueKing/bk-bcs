@@ -13,8 +13,8 @@ option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg
 service Upstream {
   // APIs for sidecar.
   rpc Handshake(HandshakeMessage) returns (HandshakeResp) {}
-  rpc Watch(SideWatchMeta) returns (stream FeedWatchMessage) {}
   rpc Messaging(MessagingMeta) returns (MessagingResp) {}
+  rpc Watch(SideWatchMeta) returns (stream FeedWatchMessage) {}
   rpc PullAppFileMeta(PullAppFileMetaReq) returns (PullAppFileMetaResp) {}
   rpc GetDownloadURL(GetDownloadURLReq) returns (GetDownloadURLResp) {}
   rpc PullKvMeta(PullKvMetaReq) returns (PullKvMetaResp) {}
@@ -146,7 +146,6 @@ message PullKvMetaReq {
   uint32 biz_id = 2;
   AppMeta app_meta = 3;
   string token = 4;
-  string key = 5;
 }
 
 message PullKvMetaResp {

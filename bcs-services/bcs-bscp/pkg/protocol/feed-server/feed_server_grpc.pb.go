@@ -20,8 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	Upstream_Handshake_FullMethodName       = "/pbfs.Upstream/Handshake"
-	Upstream_Watch_FullMethodName           = "/pbfs.Upstream/Watch"
 	Upstream_Messaging_FullMethodName       = "/pbfs.Upstream/Messaging"
+	Upstream_Watch_FullMethodName           = "/pbfs.Upstream/Watch"
 	Upstream_PullAppFileMeta_FullMethodName = "/pbfs.Upstream/PullAppFileMeta"
 	Upstream_GetDownloadURL_FullMethodName  = "/pbfs.Upstream/GetDownloadURL"
 	Upstream_PullKvMeta_FullMethodName      = "/pbfs.Upstream/PullKvMeta"
@@ -34,8 +34,8 @@ const (
 type UpstreamClient interface {
 	// APIs for sidecar.
 	Handshake(ctx context.Context, in *HandshakeMessage, opts ...grpc.CallOption) (*HandshakeResp, error)
-	Watch(ctx context.Context, in *SideWatchMeta, opts ...grpc.CallOption) (Upstream_WatchClient, error)
 	Messaging(ctx context.Context, in *MessagingMeta, opts ...grpc.CallOption) (*MessagingResp, error)
+	Watch(ctx context.Context, in *SideWatchMeta, opts ...grpc.CallOption) (Upstream_WatchClient, error)
 	PullAppFileMeta(ctx context.Context, in *PullAppFileMetaReq, opts ...grpc.CallOption) (*PullAppFileMetaResp, error)
 	GetDownloadURL(ctx context.Context, in *GetDownloadURLReq, opts ...grpc.CallOption) (*GetDownloadURLResp, error)
 	PullKvMeta(ctx context.Context, in *PullKvMetaReq, opts ...grpc.CallOption) (*PullKvMetaResp, error)
@@ -53,6 +53,15 @@ func NewUpstreamClient(cc grpc.ClientConnInterface) UpstreamClient {
 func (c *upstreamClient) Handshake(ctx context.Context, in *HandshakeMessage, opts ...grpc.CallOption) (*HandshakeResp, error) {
 	out := new(HandshakeResp)
 	err := c.cc.Invoke(ctx, Upstream_Handshake_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *upstreamClient) Messaging(ctx context.Context, in *MessagingMeta, opts ...grpc.CallOption) (*MessagingResp, error) {
+	out := new(MessagingResp)
+	err := c.cc.Invoke(ctx, Upstream_Messaging_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,15 +98,6 @@ func (x *upstreamWatchClient) Recv() (*FeedWatchMessage, error) {
 		return nil, err
 	}
 	return m, nil
-}
-
-func (c *upstreamClient) Messaging(ctx context.Context, in *MessagingMeta, opts ...grpc.CallOption) (*MessagingResp, error) {
-	out := new(MessagingResp)
-	err := c.cc.Invoke(ctx, Upstream_Messaging_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *upstreamClient) PullAppFileMeta(ctx context.Context, in *PullAppFileMetaReq, opts ...grpc.CallOption) (*PullAppFileMetaResp, error) {
@@ -142,8 +142,8 @@ func (c *upstreamClient) GetKvValue(ctx context.Context, in *GetKvValueReq, opts
 type UpstreamServer interface {
 	// APIs for sidecar.
 	Handshake(context.Context, *HandshakeMessage) (*HandshakeResp, error)
-	Watch(*SideWatchMeta, Upstream_WatchServer) error
 	Messaging(context.Context, *MessagingMeta) (*MessagingResp, error)
+	Watch(*SideWatchMeta, Upstream_WatchServer) error
 	PullAppFileMeta(context.Context, *PullAppFileMetaReq) (*PullAppFileMetaResp, error)
 	GetDownloadURL(context.Context, *GetDownloadURLReq) (*GetDownloadURLResp, error)
 	PullKvMeta(context.Context, *PullKvMetaReq) (*PullKvMetaResp, error)
@@ -157,11 +157,11 @@ type UnimplementedUpstreamServer struct {
 func (UnimplementedUpstreamServer) Handshake(context.Context, *HandshakeMessage) (*HandshakeResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Handshake not implemented")
 }
-func (UnimplementedUpstreamServer) Watch(*SideWatchMeta, Upstream_WatchServer) error {
-	return status.Errorf(codes.Unimplemented, "method Watch not implemented")
-}
 func (UnimplementedUpstreamServer) Messaging(context.Context, *MessagingMeta) (*MessagingResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Messaging not implemented")
+}
+func (UnimplementedUpstreamServer) Watch(*SideWatchMeta, Upstream_WatchServer) error {
+	return status.Errorf(codes.Unimplemented, "method Watch not implemented")
 }
 func (UnimplementedUpstreamServer) PullAppFileMeta(context.Context, *PullAppFileMetaReq) (*PullAppFileMetaResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PullAppFileMeta not implemented")
@@ -205,6 +205,24 @@ func _Upstream_Handshake_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Upstream_Messaging_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MessagingMeta)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UpstreamServer).Messaging(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Upstream_Messaging_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UpstreamServer).Messaging(ctx, req.(*MessagingMeta))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Upstream_Watch_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(SideWatchMeta)
 	if err := stream.RecvMsg(m); err != nil {
@@ -224,24 +242,6 @@ type upstreamWatchServer struct {
 
 func (x *upstreamWatchServer) Send(m *FeedWatchMessage) error {
 	return x.ServerStream.SendMsg(m)
-}
-
-func _Upstream_Messaging_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MessagingMeta)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UpstreamServer).Messaging(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Upstream_Messaging_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UpstreamServer).Messaging(ctx, req.(*MessagingMeta))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Upstream_PullAppFileMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
