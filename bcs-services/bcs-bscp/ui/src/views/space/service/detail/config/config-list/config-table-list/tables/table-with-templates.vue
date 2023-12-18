@@ -9,7 +9,7 @@
           <th class="user">创建人</th>
           <th class="user">修改人</th>
           <th class="datetime">修改时间</th>
-          <th class="status" v-show="versionData.id === 0">变更状态</th>
+          <th class="status" v-if="versionData.id === 0">变更状态</th>
           <th class="operation">操作</th>
         </tr>
       </thead>
@@ -79,7 +79,7 @@
                         <td class="user">{{ config.creator }}</td>
                         <td class="user">{{ config.reviser }}</td>
                         <td class="datetime">{{ config.update_at }}</td>
-                        <td class="status" v-show="versionData.id === 0"><StatusTag :status="config.file_state" /></td>
+                        <td class="status" v-if="versionData.id === 0"><StatusTag :status="config.file_state" /></td>
                         <td class="operation">
                           <div class="config-actions">
                             <!-- 非套餐配置文件 -->
@@ -587,7 +587,7 @@ defineExpose({
   width: 100%;
   border: 1px solid #dedee5;
   border-collapse: collapse;
-  table-layout: fixed;
+  // table-layout: fixed;
   .config-groups-table-tr {
     th {
       padding: 11px 16px;
@@ -649,7 +649,7 @@ defineExpose({
     width: 331px;
   }
   .version {
-    width: 100%;
+    width: 140px;
   }
   .path {
     width: 331px;
