@@ -47,13 +47,14 @@ func (a actionDesc) String() string { // nolint
 }
 
 type resource struct {
-	RepoName  string `json:"repoName" yaml:"repoName"`
-	ClusterID string `json:"clusterID" yaml:"clusterID"`
-	Namespace string `json:"namespace" yaml:"namespace"`
-	Name      string `json:"name" yaml:"name"`
-	Version   string `json:"version" yaml:"version"`
-	Chart     string `json:"chart" yaml:"chart"`
-	Revision  uint32 `json:"revision" yaml:"revision"`
+	RepoName    string `json:"repoName" yaml:"repoName"`
+	ClusterID   string `json:"clusterID" yaml:"clusterID"`
+	Namespace   string `json:"namespace" yaml:"namespace"`
+	Name        string `json:"name" yaml:"name"`
+	Version     string `json:"version" yaml:"version"`
+	Chart       string `json:"chart" yaml:"chart"`
+	Revision    uint32 `json:"revision" yaml:"revision"`
+	ProjectCode string `json:"projectCode" yaml:"projectCode"`
 }
 
 // resource to map
@@ -80,6 +81,9 @@ func (r resource) toMap() map[string]any {
 	if r.Revision != 0 {
 		result["Revision"] = r.Revision
 	}
+	if r.ProjectCode != "" {
+		result["ProjectCode"] = r.ProjectCode
+	}
 	return result
 }
 
@@ -93,6 +97,13 @@ func getResourceID(req server.Request) resource {
 }
 
 var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Action){
+	"HelmManager.CreatePersonalRepo": func(req server.Request) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeHelm, ResourceID: res.ProjectCode, ResourceName: res.ProjectCode,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "create_personal_repo", ActivityType: audit.ActivityTypeCreate}
+	},
 	"HelmManager.GetChartDetailV1": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
