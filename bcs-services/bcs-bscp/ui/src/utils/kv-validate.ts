@@ -44,7 +44,7 @@ export const validateYAML = (yamlString: string) => {
   const markers = [];
   try {
     yaml.load(yamlString, 'utf8');
-  } catch (e) {
+  } catch (e: any) {
     markers.push({
       severity: monaco.MarkerSeverity.Error,
       message: e.reason,
