@@ -374,10 +374,12 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 				editing.KvState = table.KvStateRevise
 			}
 			toUpdate = append(toUpdate, &table.Kv{
-				ID: editing.ID,
+				ID:      editing.ID,
+				KvState: editing.KvState,
 				Spec: &table.KvSpec{
 					Key:     kv.KvSpec.Key,
 					Version: uint32(version),
+					KvType:  editing.Spec.KvType,
 				},
 				Attachment: &table.KvAttachment{
 					BizID: req.BizId,
