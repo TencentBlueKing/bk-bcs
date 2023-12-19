@@ -19,6 +19,7 @@ import { IVariableEditParams } from '../../../types/variable';
 import useEditorVariableReplace from '../../utils/hooks/use-editor-variable-replace';
 import { useRoute } from 'vue-router';
 import { getUnReleasedAppVariables, getVariableList } from '../../api/variable';
+import { validateXML, validateYAML, validateJSON } from '../../utils/kv-validate';
 
 interface errorLineItem {
   lineNumber: number;
@@ -87,7 +88,10 @@ watch(
 watch(
   () => props.language,
   (val) => {
+    // 设置编辑器语言
     monaco.editor.setModelLanguage(editor.getModel() as monaco.editor.ITextModel, val);
+    // 清空错误行
+    monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', []);
   },
 );
 
@@ -138,6 +142,7 @@ onMounted(() => {
 
   editor.onDidChangeModelContent(() => {
     localVal.value = editor.getValue();
+    validate(localVal.value);
     emit('update:modelValue', localVal.value);
     emit('change', localVal.value);
   });
@@ -265,6 +270,25 @@ const handlePlaceholderClick = () => {
   nextTick(() => editor.focus());
 };
 
+// 校验xml、yaml、json数据类型
+const validate = (val: string) => {
+  let markers: any[] = [];
+  if (props.language === 'xml') {
+    markers = validateXML(val);
+  };
+  if (props.language === 'yaml') {
+    markers = validateYAML(val);
+  };
+  if (props.language === 'json') {
+    return validateJSON(val);
+  }
+  // 添加错误行
+  monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
+  // 返回当前内容是否正确
+  return !markers.length;
+};
+
+
 // @bug vue3的Teleport组件销毁时，子组件的onBeforeUnmount不会被执行，会出现内存泄漏，目前尚未被修复 https://github.com/vuejs/core/issues/6347
 // onBeforeUnmount(() => {
 //   if (editor) {
@@ -289,6 +313,7 @@ const destroy = () => {
 defineExpose({
   destroy,
   openSearch,
+  validate,
 });
 </script>
 <style lang="scss" scoped>

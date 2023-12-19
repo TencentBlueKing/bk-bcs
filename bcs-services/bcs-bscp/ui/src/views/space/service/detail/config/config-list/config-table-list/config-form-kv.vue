@@ -23,6 +23,7 @@
       />
       <KvConfigContentEditor
         v-else
+        ref="KvCodeEditorRef"
         :languages="localVal.kv_type"
         :content="localVal.value"
         :editable="!view"
@@ -39,7 +40,6 @@ import KvConfigContentEditor from '../../components/kv-config-content-editor.vue
 import { IConfigKvEditParams } from '../../../../../../../../types/config';
 import useServiceStore from '../../../../../../../store/service';
 import { storeToRefs } from 'pinia';
-import { validateJSON, validateXML, validateYAML } from '../../../../../../../utils/kv-validate';
 
 const serviceStore = useServiceStore();
 const { appData } = storeToRefs(serviceStore);
@@ -59,6 +59,7 @@ const props = withDefaults(
   },
 );
 
+const KvCodeEditorRef = ref();
 const formRef = ref();
 const localVal = ref({
   ...props.config,
@@ -96,11 +97,9 @@ const validate = async () => {
   await formRef.value.validate();
   switch (localVal.value.kv_type) {
     case 'json':
-      return validateJSON(localVal.value.value);
     case 'xml':
-      return validateXML(localVal.value.value);
     case 'yaml':
-      return validateYAML(localVal.value.value);
+      return KvCodeEditorRef.value.validate();
   }
   return true;
 };
