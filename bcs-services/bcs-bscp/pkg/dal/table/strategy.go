@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"strings"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/criteria/validator"
-	"bscp.io/pkg/runtime/selector"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
 )
 
 const (

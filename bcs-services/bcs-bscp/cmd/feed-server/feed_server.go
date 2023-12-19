@@ -17,10 +17,10 @@ import (
 	"fmt"
 	"os"
 
-	"bscp.io/cmd/feed-server/app"
-	"bscp.io/cmd/feed-server/options"
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/app"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/options"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 func main() {

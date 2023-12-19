@@ -2,7 +2,7 @@
   <section :class="['service-card', { 'no-view-perm': !props.service.permissions.view }]" @click="handleCardClick">
     <div class="card-content-wrapper">
       <div class="card-head">
-        <div class="service-type">{{ props.service.spec.config_type === 'file' ? '文件型' : '键值型' }}</div>
+        <bk-tag class="type-tag">{{ isFileType ? '文件型' : '键值型' }}</bk-tag>
         <div class="service-name">
           <bk-overflow-title type="tips">
             {{ props.service.spec?.name }}
@@ -10,13 +10,18 @@
         </div>
       </div>
       <span class="del-btn"><Del @click="handleDeleteItem" /></span>
+      <div class="service-alias">
+        <bk-overflow-title type="tips">
+          {{ props.service.spec?.alias }}
+        </bk-overflow-title>
+      </div>
       <div class="service-config">
         <div class="config-info">
           <span class="bk-bscp-icon icon-configuration-line"></span>
           {{ props.service.config?.count }}个配置{{ props.service.spec.config_type === 'file' ? '文件' : '项' }}
         </div>
         <div class="time-info">
-          <span class="bk-bscp-icon icon-time-2"  v-bk-tooltips="{content: '最新上线', placement: 'top'}"></span>
+          <span class="bk-bscp-icon icon-time-2" v-bk-tooltips="{ content: '最新上线', placement: 'top' }"></span>
           <template v-if="props.service.config && props.service.config.update_at">
             {{ datetimeFormat(props.service.config.update_at) }}
           </template>
@@ -73,7 +78,7 @@
   </bk-dialog>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
@@ -98,6 +103,8 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits(['edit', 'update']);
+
+const isFileType = computed(() => props.service.spec.config_type === 'file');
 
 const handleDeleteItem = () => {
   if (props.service.permissions.delete) {
@@ -161,7 +168,6 @@ const handleDeleteService = async () => {
 .service-card {
   position: relative;
   width: 304px;
-  height: 143px;
   padding: 0px 8px 16px 8px;
   &.no-view-perm {
     cursor: pointer;
@@ -211,55 +217,48 @@ const handleDeleteService = async () => {
     }
   }
   .card-head {
-    margin-top: 16px;
     position: relative;
-    height: 22px;
-    font-weight: Bold;
-    font-size: 14px;
+    padding-top: 22px;
     color: #313238;
     line-height: 22px;
-    text-align: left;
-    padding: 0 50px 0 16px;
-    display: flex;
-    align-items: center;
-    .service-type {
-      width: 52px;
-      height: 22px;
-      margin-right: 8px;
-      background: #f0f1f5;
-      border-radius: 2px;
-      color: #63656e;
-      text-align: center;
-      font-size: 12px;
-    }
-    .service-name {
-      width: calc(100% - 60px);
-    }
-    .service-name {
-      flex: 1;
-    }
-    &::before {
-      content: '';
+    .type-tag {
       position: absolute;
+      top: 0;
       left: 0;
-      top: 3px;
-      width: 4px;
-      height: 16px;
-      background: #699df4;
-      border-radius: 0 2px 2px 0;
+      margin: 0;
+    }
+    .service-name {
+      margin-top: 4px;
+      padding: 0 20px;
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 22px;
     }
   }
-  .service-config {
-    padding: 0 16px;
-    height: 33px;
+  .service-alias {
+    padding: 0 20px;
     font-size: 12px;
-    color: #979ba5;
     line-height: 20px;
-    margin: 4px 0 12px 0;
+    color: #63656e;
+  }
+  .service-config {
+    height: 28px;
+    font-size: 12px;
+    background: #f5f7fa;
+    border-radius: 2px;
+    color: #979ba5;
+    line-height: 28px;
+    margin: 12px;
+    padding-left: 8px;
     display: flex;
     align-items: end;
+    margin-bottom: 16px;
     .time-info {
       padding-left: 10px;
+    }
+    span {
+      font-size: 14px;
+      margin-right: 5px;
     }
   }
   .card-footer {

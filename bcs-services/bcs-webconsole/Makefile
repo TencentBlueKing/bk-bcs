@@ -58,3 +58,9 @@ docker:
 .PHONY: kubectld
 kubectld:
 	cd kubectld && docker build . -t kubectld:latest
+
+# @go generate ./console/i18n/translations/translations.go
+.PHONY: i18n
+i18n:
+	@cd ./console/i18n/translations && gotext -srclang=zh-Hans update -out=catalog.go -lang=en,zh-Hans ../../../
+	@cd ./console/i18n/translations && cp ./locales/en/out.gotext.json ./locales/en/messages.gotext.json

@@ -17,7 +17,7 @@ import (
 	"strings"
 	"testing"
 
-	"bscp.io/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 )
 
 func TestTLSBytes(t *testing.T) {

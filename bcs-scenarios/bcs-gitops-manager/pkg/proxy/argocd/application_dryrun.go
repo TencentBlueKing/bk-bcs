@@ -72,6 +72,8 @@ type ApplicationDiffOrDryRunData struct {
 type Manifest struct {
 	Namespace string `json:"namespace,omitempty"`
 	Name      string `json:"name,omitempty"`
+	Group     string `json:"group,omitempty"`
+	Version   string `json:"version,omitempty"`
 	Kind      string `json:"kind,omitempty"`
 
 	// diff result
@@ -96,7 +98,7 @@ func (plugin *AppPlugin) applicationDiff(r *http.Request) (*http.Request, *mw.Ht
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Wrapf(err, "build application from request failed"))
 	}
-	result, err := plugin.compareApplicationManifests(r.Context(), req, application, false)
+	result, err := plugin.compareApplicationManifests(r.Context(), req, application.DeepCopy(), false)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Wrapf(err, "compare application manifests failed"))
@@ -230,12 +232,14 @@ func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context, req *A
 		return nil, errors.Wrapf(err, "decode application manifest failed")
 	}
 	// 未指定 revision 或只指定 manifest，表示只是 DryRun 不需要对比，直接返回
-	if req.Revision == "" || req.ApplicationManifests != "" || isDryRun {
+	if (req.Revision == "" && len(req.Revisions) == 0) || req.ApplicationManifests != "" || isDryRun {
 		results := make([]*Manifest, 0, len(manifestMap))
 		for _, decodeObj := range manifestMap {
 			results = append(results, &Manifest{
 				Namespace: decodeObj.GetNamespace(),
 				Name:      decodeObj.GetName(),
+				Group:     decodeObj.GroupVersionKind().Group,
+				Version:   decodeObj.GroupVersionKind().Version,
 				Kind:      decodeObj.GetKind(),
 				Local:     decodeObj,
 			})
@@ -270,6 +274,8 @@ func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context, req *A
 		results = append(results, &Manifest{
 			Namespace: decodeObj.GetNamespace(),
 			Name:      decodeObj.GetName(),
+			Group:     decodeObj.GroupVersionKind().Group,
+			Version:   decodeObj.GroupVersionKind().Version,
 			Kind:      decodeObj.GetKind(),
 			Local:     decodeObj,
 			Live:      liveDecodeObj,
@@ -282,6 +288,8 @@ func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context, req *A
 		results = append(results, &Manifest{
 			Namespace: obj.GetNamespace(),
 			Name:      obj.GetName(),
+			Group:     obj.GroupVersionKind().Group,
+			Version:   obj.GroupVersionKind().Version,
 			Kind:      obj.GetKind(),
 			Local:     obj,
 		})
@@ -291,6 +299,8 @@ func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context, req *A
 		results = append(results, &Manifest{
 			Namespace: obj.GetNamespace(),
 			Name:      obj.GetName(),
+			Group:     obj.GroupVersionKind().Group,
+			Version:   obj.GroupVersionKind().Version,
 			Kind:      obj.GetKind(),
 			Live:      obj,
 		})
@@ -351,6 +361,8 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 		dryRunManifest := &Manifest{
 			Namespace: local.GetNamespace(),
 			Name:      local.GetName(),
+			Group:     local.GroupVersionKind().Group,
+			Version:   local.GroupVersionKind().Version,
 			Kind:      local.GetKind(),
 		}
 		gvk := local.GroupVersionKind().GroupVersion().String() + "/" + local.GetKind()
@@ -362,14 +374,21 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 			results = append(results, dryRunManifest)
 			continue
 		}
-		_, err = dynamicClient.
-			Resource(local.GroupVersionKind().GroupVersion().WithResource(resource)).
-			Namespace(local.GetNamespace()).
-			Get(context.Background(), local.GetName(), metav1.GetOptions{})
+
+		localGVR := local.GroupVersionKind().GroupVersion().WithResource(resource.Name)
+		localName := local.GetName()
+		localNamespace := local.GetNamespace()
+		// NOTE: there should set namespace empty if resource is not namespaced
+		if !resource.Namespaced {
+			localNamespace = ""
+			dryRunManifest.Namespace = localNamespace
+		}
+		_, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
+			Get(context.Background(), localName, metav1.GetOptions{})
 		if err != nil && !k8serrors.IsNotFound(err) {
 			dryRunManifest.IsSucceed = false
-			dryRunManifest.ErrMessage = fmt.Sprintf("get resource '%s/%s/%s' failed: %s",
-				resource, local.GetNamespace(), local.GetName(), err.Error())
+			dryRunManifest.ErrMessage = fmt.Sprintf("get resource '%s' with gvr '%v' from namespace '%s' failed: %s",
+				local.GetName(), localGVR, localNamespace, err.Error())
 			results = append(results, dryRunManifest)
 			continue
 		}
@@ -378,15 +397,15 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 		var isExisted bool
 		if k8serrors.IsNotFound(err) {
 			isExisted = false
-			updatedObj, err = dynamicClient.
-				Resource(local.GroupVersionKind().GroupVersion().WithResource(resource)).
-				Namespace(local.GetNamespace()).Create(context.Background(), local,
-				metav1.CreateOptions{
-					DryRun:       []string{metav1.DryRunAll},
-					FieldManager: "kubectl-client-side-apply",
-				})
+			updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
+				Create(context.Background(), local,
+					metav1.CreateOptions{
+						DryRun:       []string{metav1.DryRunAll},
+						FieldManager: "kubectl-client-side-apply",
+					})
 			if err != nil {
-				dryRunError = errors.Wrapf(err, "dry-run with resource not exist failed")
+				dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
+					"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
 			}
 		} else {
 			var localBS []byte
@@ -396,20 +415,21 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 			}
 			isExisted = true
 			updatedObj, err = dynamicClient.
-				Resource(local.GroupVersionKind().GroupVersion().WithResource(resource)).
-				Namespace(local.GetNamespace()).
+				Resource(localGVR).
+				Namespace(localNamespace).
 				Patch(context.Background(), local.GetName(), types.MergePatchType,
 					localBS, metav1.PatchOptions{
 						DryRun:       []string{metav1.DryRunAll},
 						FieldManager: "kubectl-client-side-apply",
 					})
 			if err != nil {
-				dryRunError = errors.Wrapf(err, "dry-run with resource exist failed")
+				dryRunError = errors.Wrapf(err, "dry-run with exist resource '%s' with gvr '%v' "+
+					"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
 			}
 		}
 		dryRunManifest.Existed = isExisted
-		updatedObj.SetManagedFields(nil)
 		if dryRunError == nil {
+			updatedObj.SetManagedFields(nil)
 			dryRunManifest.IsSucceed = true
 			dryRunManifest.Merged = updatedObj
 		} else {
@@ -422,7 +442,7 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 }
 
 // getGroupVersionKindResource returns all GroupVersionResource from cluster
-func getGroupVersionKindResource(config *rest.Config) (map[string]string, error) {
+func getGroupVersionKindResource(config *rest.Config) (map[string]metav1.APIResource, error) {
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
 		return nil, errors.Wrapf(err, "create discovery client failed")
@@ -431,14 +451,14 @@ func getGroupVersionKindResource(config *rest.Config) (map[string]string, error)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get server groups and resources failed")
 	}
-	result := make(map[string]string)
+	result := make(map[string]metav1.APIResource)
 	for _, resourceList := range resources {
 		for i := range resourceList.APIResources {
 			res := resourceList.APIResources[i]
 			if strings.Contains(res.Name, "/") {
 				continue
 			}
-			result[resourceList.GroupVersion+"/"+res.Kind] = res.Name
+			result[resourceList.GroupVersion+"/"+res.Kind] = res
 		}
 	}
 	return result, nil

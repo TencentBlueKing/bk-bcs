@@ -21,7 +21,7 @@ import (
 	// import the package translations so that it's init() function is run.
 	// it ensures default message catalog is updated to use our translations
 	// before we initialize the message.Printer instances below.
-	_ "bscp.io/pkg/i18n/translations"
+	_ "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/i18n/translations"
 )
 
 // supportedLangs are languages the server supports.

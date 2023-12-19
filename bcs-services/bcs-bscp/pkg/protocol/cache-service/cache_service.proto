@@ -8,7 +8,7 @@ import "google/api/annotations.proto";
 
 package pbcs;
 
-option go_package = "bscp.io/pkg/protocol/cache-service;pbcs";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service;pbcs";
 
 service Cache {
   rpc GetAppID(GetAppIDReq) returns (GetAppIDResp) {
@@ -101,6 +101,7 @@ message JsonRawResp {
 message GetAppIDReq {
   uint32 biz_id = 1;
   string app_name = 2;
+  bool refresh = 3;
 }
 
 message GetAppIDResp {

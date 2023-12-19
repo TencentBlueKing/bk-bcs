@@ -16,8 +16,8 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // ReleaseColumns defines Release's columns

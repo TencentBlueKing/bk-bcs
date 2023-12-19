@@ -82,6 +82,7 @@ import (
 	resource "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tkehandler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnel"
@@ -545,7 +546,8 @@ func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
 	cloud.UpdateTime = timeStr
 
 	destCloud, err := cm.model.GetCloud(cm.ctx, cloud.CloudID)
-	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) &&
+		!errors.Is(err, util.ErrDecryptCloudCredential) {
 		blog.Errorf("updateCloudConfig GetCloud[%s] failed: %v", cloud.CloudID, err)
 		return err
 	}

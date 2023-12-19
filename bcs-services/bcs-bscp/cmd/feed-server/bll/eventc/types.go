@@ -20,9 +20,9 @@ import (
 
 	"go.uber.org/atomic"
 
-	"bscp.io/pkg/logs"
-	sfs "bscp.io/pkg/sf-share"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	sfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // SubscribeSpec defines the metadata to watch the event.

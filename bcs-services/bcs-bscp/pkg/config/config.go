@@ -24,7 +24,7 @@ import (
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"gopkg.in/yaml.v3"
 
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Configuration 配置

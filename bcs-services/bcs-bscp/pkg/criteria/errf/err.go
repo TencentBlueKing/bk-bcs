@@ -15,7 +15,7 @@ package errf
 import (
 	"errors"
 
-	"bscp.io/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 var (

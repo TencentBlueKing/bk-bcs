@@ -32,6 +32,8 @@ const (
 	SuccessStatus = "SUCCESS"
 	// TerminatedStatus rule terminated status
 	TerminatedStatus = "TERMINATED"
+	// DeletedStatus rule deleted status
+	DeletedStatus = "DELETED"
 
 	// create or update rule timeout
 	defaultTimeout = time.Minute * 10

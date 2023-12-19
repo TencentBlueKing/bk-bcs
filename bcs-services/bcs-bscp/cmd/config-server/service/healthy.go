@@ -15,10 +15,10 @@ package service
 import (
 	"net/http"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/rest"
-	"bscp.io/pkg/runtime/shutdown"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
 )
 
 // HealthyHandler livenessProbe 健康检查

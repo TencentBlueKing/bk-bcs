@@ -24,4 +24,4 @@ package translations
 * gotext源码使用example：https://cs.opensource.google/go/x/text/+/refs/tags/v0.14.0:cmd/gotext/examples/
 * 更多实现细节见gotext源码：https://cs.opensource.google/go/x/text/+/refs/tags/v0.14.0:cmd/gotext/main.go
  */
-//go:generate gotext -srclang=en update -out=catalog.go -lang=en,zh bscp.io/cmd/api-server bscp.io/cmd/auth-server bscp.io/cmd/cache-service bscp.io/cmd/config-server bscp.io/cmd/data-service bscp.io/cmd/feed-server
+//go:generate gotext -srclang=en update -out=catalog.go -lang=en,zh github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/api-server github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/config-server github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server

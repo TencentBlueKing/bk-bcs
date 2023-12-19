@@ -17,11 +17,11 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"bscp.io/pkg/criteria/uuid"
-	pbcs "bscp.io/pkg/protocol/config-server"
-	"bscp.io/test/client/api"
-	"bscp.io/test/suite"
-	"bscp.io/test/suite/cases"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/client/api"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/suite"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/suite/cases"
 )
 
 func TestInstance(t *testing.T) {

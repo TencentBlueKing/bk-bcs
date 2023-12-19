@@ -337,8 +337,8 @@ func (c *CreatePersonalRepositoryAction) createRepository2Repo(
 	return nil
 }
 
-func (c *CreatePersonalRepositoryAction) setResp(
-	err common.HelmManagerError, message string, r *helmmanager.Repository) {
+func (c *CreatePersonalRepositoryAction) setResp(err common.HelmManagerError, message string,
+	r *helmmanager.Repository) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
 	c.resp.Code = &code

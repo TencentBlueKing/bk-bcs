@@ -7,12 +7,12 @@
 package pbcs
 
 import (
-	app "bscp.io/pkg/protocol/core/app"
-	base "bscp.io/pkg/protocol/core/base"
-	group "bscp.io/pkg/protocol/core/group"
-	hook_revision "bscp.io/pkg/protocol/core/hook-revision"
-	release "bscp.io/pkg/protocol/core/release"
 	context "context"
+	app "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	base "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	group "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group"
+	hook_revision "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
+	release "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -153,7 +153,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ConfigClient interface {
 	CreateApp(ctx context.Context, in *CreateAppReq, opts ...grpc.CallOption) (*CreateAppResp, error)
-	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*UpdateAppResp, error)
+	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*app.App, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*DeleteAppResp, error)
 	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error)
 	GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error)
@@ -305,8 +305,8 @@ func (c *configClient) CreateApp(ctx context.Context, in *CreateAppReq, opts ...
 	return out, nil
 }
 
-func (c *configClient) UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*UpdateAppResp, error) {
-	out := new(UpdateAppResp)
+func (c *configClient) UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*app.App, error) {
+	out := new(app.App)
 	err := c.cc.Invoke(ctx, Config_UpdateApp_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1399,7 +1399,7 @@ func (c *configClient) UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts .
 // for forward compatibility
 type ConfigServer interface {
 	CreateApp(context.Context, *CreateAppReq) (*CreateAppResp, error)
-	UpdateApp(context.Context, *UpdateAppReq) (*UpdateAppResp, error)
+	UpdateApp(context.Context, *UpdateAppReq) (*app.App, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error)
 	GetApp(context.Context, *GetAppReq) (*app.App, error)
 	GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error)
@@ -1541,7 +1541,7 @@ type UnimplementedConfigServer struct {
 func (UnimplementedConfigServer) CreateApp(context.Context, *CreateAppReq) (*CreateAppResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateApp not implemented")
 }
-func (UnimplementedConfigServer) UpdateApp(context.Context, *UpdateAppReq) (*UpdateAppResp, error) {
+func (UnimplementedConfigServer) UpdateApp(context.Context, *UpdateAppReq) (*app.App, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateApp not implemented")
 }
 func (UnimplementedConfigServer) DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error) {

@@ -20,19 +20,19 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbapp "bscp.io/pkg/protocol/core/app"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/thirdparty/esb/cmdb"
-	"bscp.io/pkg/tools"
-	"bscp.io/pkg/types"
-	"bscp.io/pkg/version"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbapp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/cmdb"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version"
 )
 
 // CreateApp create application.
@@ -75,7 +75,7 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 }
 
 // UpdateApp update application.
-func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbase.EmptyResp, error) {
+func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbapp.App, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	old, err := s.dao.App().GetByAlias(grpcKit, req.BizId, req.Spec.Alias)
@@ -93,8 +93,8 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbas
 		return nil, err
 	}
 	if app.Spec.ConfigType == table.KV {
-		if err := s.checkUpdateAppDataType(grpcKit, req, app); err != nil {
-			return nil, err
+		if e := s.checkUpdateAppDataType(grpcKit, req, app); e != nil {
+			return nil, e
 		}
 	}
 
@@ -106,12 +106,19 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbas
 			Reviser: grpcKit.User,
 		},
 	}
-	if err := s.dao.App().Update(grpcKit, app); err != nil {
+	if err = s.dao.App().Update(grpcKit, app); err != nil {
 		logs.Errorf("update app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return new(pbbase.EmptyResp), nil
+	app, err = s.dao.App().Get(grpcKit, req.BizId, req.Id)
+	if err != nil {
+		logs.Errorf("updating the app was successful, but retrieving the app failed, err: %v, rid: %s",
+			err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return pbapp.PbApp(app), nil
 }
 
 func (s *Service) checkUpdateAppDataType(kt *kit.Kit, req *pbds.UpdateAppReq, app *table.App) error {
@@ -125,7 +132,13 @@ func (s *Service) checkUpdateAppDataType(kt *kit.Kit, req *pbds.UpdateAppReq, ap
 	}
 
 	// 获取所有的kv
-	kvList, err := s.dao.Kv().ListAllByAppID(kt, app.ID, req.BizId)
+	kvState := []string{
+		string(table.KvStateAdd),
+		string(table.KvStateRevise),
+		string(table.KvStateUnchange),
+		string(table.KvStateDelete),
+	}
+	kvList, err := s.dao.Kv().ListAllByAppID(kt, app.ID, req.BizId, kvState)
 	if err != nil {
 		return err
 	}

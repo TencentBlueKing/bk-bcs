@@ -17,7 +17,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"bscp.io/cmd/data-service/db-migration/migrator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrator"
 )
 
 const mig20230418102723 = "20230418102723_add_credential"

@@ -6,39 +6,44 @@
           <InfoLine class="info-icon" />
           仅支持大小不超过 50M
         </div>
-        <div v-if="editable" class="btns">
-            <ReadFileContent
-              v-bk-tooltips="{
-                content: '上传',
-                placement: 'top',
-                distance: 20
-              }"
-            @completed="handleFileReadComplete" />
-            <FilliscreenLine
-              v-if="!isOpenFullScreen"
-              v-bk-tooltips="{
-                content: '全屏',
-                placement: 'top',
-                distance: 20
-              }"
-              @click="handleOpenFullScreen" />
-            <UnfullScreen
-              v-else
-              v-bk-tooltips="{
-                content: '退出全屏',
-                placement: 'bottom',
-                distance: 20
-              }"
-              @click="handleCloseFullScreen" />
+        <div class="btns">
+          <ReadFileContent
+            v-if="editable"
+            v-bk-tooltips="{
+              content: '上传',
+              placement: 'top',
+              distance: 20,
+            }"
+            @completed="handleFileReadComplete"
+          />
+          <FilliscreenLine
+            v-if="!isOpenFullScreen"
+            v-bk-tooltips="{
+              content: '全屏',
+              placement: 'top',
+              distance: 20,
+            }"
+            @click="handleOpenFullScreen"
+          />
+          <UnfullScreen
+            v-else
+            v-bk-tooltips="{
+              content: '退出全屏',
+              placement: 'bottom',
+              distance: 20,
+            }"
+            @click="handleCloseFullScreen"
+          />
         </div>
       </div>
-      <div class="editor-content" >
+      <div class="editor-content">
         <CodeEditor
           ref="codeEditorRef"
           :model-value="props.content"
           :variables="props.variables"
           :editable="editable"
-          @update:model-value="emits('change', $event)" />
+          @update:model-value="emits('change', $event)"
+        />
       </div>
     </div>
   </Teleport>
@@ -51,14 +56,17 @@ import { IVariableEditParams } from '../../../../../../../types/variable';
 import ReadFileContent from './read-file-content.vue';
 import CodeEditor from '../../../../../../components/code-editor/index.vue';
 
-const props = withDefaults(defineProps<{
+const props = withDefaults(
+  defineProps<{
     content: string;
     variables?: IVariableEditParams[];
     editable: boolean;
-  }>(), {
-  variables: () => [],
-  editable: true,
-});
+  }>(),
+  {
+    variables: () => [],
+    editable: true,
+  },
+);
 
 const emits = defineEmits(['change']);
 
@@ -94,7 +102,6 @@ const handleEscClose = (event: KeyboardEvent) => {
     isOpenFullScreen.value = false;
   }
 };
-
 </script>
 <style lang="scss" scoped>
 .config-content-editor {
@@ -127,7 +134,7 @@ const handleEscClose = (event: KeyboardEvent) => {
     .btns {
       display: flex;
       align-items: center;
-      & > span{
+      & > span {
         cursor: pointer;
         &:hover {
           color: #3a84ff;

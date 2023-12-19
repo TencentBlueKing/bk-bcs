@@ -377,8 +377,10 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 	}
 
 	// append bklog rule
+	found := false
 	for _, v := range lcs {
 		if e.RuleID == v.RuleID {
+			found = true
 			resp.Config = v.ToLogRule()
 			// append bkbase info
 			if resp.Config.DataInfo.FileBKDataDataID != 0 {
@@ -400,6 +402,12 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 			}
 			break
 		}
+	}
+
+	// log is deleted from bklog
+	if !found && e.Status == entity.SuccessStatus {
+		resp.RuleID = 0
+		resp.Status = entity.DeletedStatus
 	}
 }
 

@@ -17,10 +17,10 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"bscp.io/pkg/dal/table"
-	pbcs "bscp.io/pkg/protocol/config-server"
-	"bscp.io/test/suite"
-	"bscp.io/test/suite/cases"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/suite"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/suite/cases"
 )
 
 func TestApplication(t *testing.T) {

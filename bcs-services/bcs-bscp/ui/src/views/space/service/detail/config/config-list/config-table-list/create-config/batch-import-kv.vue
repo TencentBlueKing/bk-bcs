@@ -11,13 +11,13 @@
     ext-cls="variable-import-dialog"
   >
     <bk-form>
-      <bk-form-item label="导入方式">
+      <!-- <bk-form-item label="导入方式">
         <bk-radio-group v-model="importType">
           <bk-radio label="text">文本导入</bk-radio>
           <bk-radio label="file">文件导入</bk-radio>
         </bk-radio-group>
         <div class="tips" v-if="importType === 'text'">只支持string、number类型,其他类型请使用文件导入</div>
-      </bk-form-item>
+      </bk-form-item> -->
       <bk-form-item label="配置文件内容" required>
         <KvContentEditor v-if="importType === 'text'" ref="editorRef" />
         <bk-upload v-else with-credentials>

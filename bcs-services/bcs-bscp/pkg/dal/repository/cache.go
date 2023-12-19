@@ -17,11 +17,11 @@ import (
 	"fmt"
 	"io"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/dal/bedis"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/tmplprocess"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/bedis"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tmplprocess"
 )
 
 // variableCacheTTLSeconds is ttl for variable cache, 7 day.

@@ -1,6 +1,7 @@
 <template>
   <bk-sideslider title="生成版本" :is-show="props.show" :width="640" :before-close="handleBeforeClose" @closed="close">
-    <div class="slider-form-content">
+    <bk-loading :loading="pending"  title="版本生成中">
+      <div class="slider-form-content">
       <div class="version-basic-form">
         <div class="section-title">版本信息</div>
         <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="formData">
@@ -21,6 +22,7 @@
         <VariablesTable ref="tableRef" :list="variableList" :editable="true" @change="handleVariablesChange" />
       </div>
     </div>
+    </bk-loading>
     <div class="action-btns">
       <bk-button theme="primary" @click="confirm">确定</bk-button>
       <bk-button @click="close">取消</bk-button>

@@ -15,20 +15,22 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	prm "github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"bscp.io/cmd/feed-server/bll/types"
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbkv "bscp.io/pkg/protocol/core/kv"
-	pbfs "bscp.io/pkg/protocol/feed-server"
-	"bscp.io/pkg/runtime/jsoni"
-	sfs "bscp.io/pkg/sf-share"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	pbfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	sfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Handshake received handshake from sidecar to validate the app instance's authorization and legality.
@@ -241,6 +243,10 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 
 	metas, err := s.bll.Release().ListAppLatestReleaseMeta(im.Kit, meta)
 	if err != nil {
+		// appid等未找到, 刷新缓存, 客户端重试请求
+		if isAppNotExistErr(err) {
+			s.bll.AppCache().RemoveCache(im.Kit, req.BizId, req.GetAppMeta().App)
+		}
 		return nil, err
 	}
 
@@ -336,24 +342,35 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
-	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "do authorization failed, %s", err.Error())
-	}
-
-	if !authorized {
-		return nil, status.Error(codes.PermissionDenied, "no permission to access bscp server")
-	}
-
-	if req.AppMeta == nil {
-		return nil, status.Error(codes.InvalidArgument, "app meta is empty")
+	if req.GetAppMeta() == nil {
+		return nil, status.Error(codes.InvalidArgument, "app_meta is required")
 	}
 
 	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.GetAppMeta().App)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
 	}
+
+	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
+	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "do authorization failed, %s", err.Error())
+	}
+	if !authorized {
+		return nil, status.Error(codes.PermissionDenied, "no permission to access bscp server")
+	}
+
+	// validate can file be downloaded by credential.
+	// 获取 kv 列表, 只需要有服务权限即可
+	match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.GetAppMeta().App, req.Token, "", "")
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
+	}
+
+	if !match {
+		return nil, status.Error(codes.PermissionDenied, "no permission get value")
+	}
+
 	meta := &types.AppInstanceMeta{
 		BizID:  req.BizId,
 		App:    req.GetAppMeta().App,
@@ -367,6 +384,10 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 
 	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(im.Kit, meta)
 	if err != nil {
+		// appid等未找到, 刷新缓存, 客户端重试请求
+		if isAppNotExistErr(err) {
+			s.bll.AppCache().RemoveCache(im.Kit, req.BizId, req.GetAppMeta().App)
+		}
 		return nil, err
 	}
 
@@ -414,10 +435,21 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 		return nil, status.Error(codes.PermissionDenied, "no permission to access bscp server")
 	}
 
+	// validate can file be downloaded by credential.
+	match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.GetAppMeta().App, req.Token, req.Key, "")
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
+	}
+
+	if !match {
+		return nil, status.Error(codes.PermissionDenied, "no permission get value")
+	}
+
 	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.GetAppMeta().App)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
 	}
+
 	meta := &types.AppInstanceMeta{
 		BizID:  req.BizId,
 		App:    req.GetAppMeta().App,
@@ -434,18 +466,13 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 		return nil, err
 	}
 
-	// validate can file be downloaded by credential.
-	match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.GetAppMeta().App, req.Token, req.Key, "")
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
-	}
-
-	if !match {
-		return nil, status.Error(codes.PermissionDenied, "no permission get value")
-	}
-
 	rkv, err := s.bll.RKvCache().GetKvValue(im.Kit, req.BizId, appID, metas.ReleaseId, req.Key)
 	if err != nil {
+		// appid等未找到, 刷新缓存, 客户端重试请求
+		if isAppNotExistErr(err) {
+			s.bll.AppCache().RemoveCache(im.Kit, req.BizId, req.GetAppMeta().App)
+		}
+
 		return nil, status.Errorf(codes.Aborted, "get rkv failed, %s", err.Error())
 	}
 
@@ -455,4 +482,20 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 	}
 
 	return kv, nil
+}
+
+// isAppNotExistErr 检测app不存在错误, 有grpc，目前通过 msg 判断
+// msg = rpc error: code = Code(4000005) desc = app %d not exist
+func isAppNotExistErr(err error) bool {
+	e := err.Error()
+
+	if !strings.Contains(e, fmt.Sprintf("Code(%d)", errf.RecordNotFound)) {
+		return false
+	}
+
+	if strings.Contains(e, "app") && strings.Contains(e, "not exist") {
+		return true
+	}
+
+	return false
 }

@@ -4,7 +4,7 @@ import "pkg/protocol/core/base/base.proto";
 
 package pbtemplate;
 
-option go_package = "bscp.io/pkg/protocol/core/template;pbtemplate";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template;pbtemplate";
 
 // Template source resource reference: pkg/dal/table/template.go
 message Template {

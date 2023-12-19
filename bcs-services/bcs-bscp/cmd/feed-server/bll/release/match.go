@@ -17,11 +17,11 @@ import (
 	"fmt"
 	"sort"
 
-	"bscp.io/cmd/feed-server/bll/types"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	ptypes "bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	ptypes "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // GetMatchedRelease get the app instance's matched release id.

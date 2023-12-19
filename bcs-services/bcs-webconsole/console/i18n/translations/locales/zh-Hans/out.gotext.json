@@ -1,0 +1,60 @@
+{
+    "language": "zh-Hans",
+    "messages": [
+        {
+            "id": "项目不正确",
+            "message": "项目不正确",
+            "translation": "项目不正确",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "获取集群成功",
+            "message": "获取集群成功",
+            "translation": "获取集群成功",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "获取session失败: {Err}",
+            "message": "获取session失败: {Err}",
+            "translation": "获取session失败: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "获取session成功",
+            "message": "获取session成功",
+            "translation": "获取session成功",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "请求参数错误: {Err}",
+            "message": "请求参数错误: {Err}",
+            "translation": "请求参数错误: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        }
+    ]
+}

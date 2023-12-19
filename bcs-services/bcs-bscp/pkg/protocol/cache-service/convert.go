@@ -14,10 +14,10 @@
 package pbcs
 
 import (
-	"bscp.io/pkg/dal/table"
-	pbapp "bscp.io/pkg/protocol/core/app"
-	pbevent "bscp.io/pkg/protocol/core/event"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbapp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	pbevent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/event"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // PbAppMetaMap convert app meta map.

@@ -13,7 +13,7 @@
 // Package types NOTES
 package types
 
-import "bscp.io/pkg/cc"
+import "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 
 // CommParams defines esb request common parameter
 type CommParams struct {
