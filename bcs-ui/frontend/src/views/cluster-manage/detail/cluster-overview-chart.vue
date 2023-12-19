@@ -78,6 +78,7 @@ export default defineComponent({
         {
           type: 'time',
           boundaryGap: false,
+          splitNumber: 5,
           axisLine: {
             show: true,
             lineStyle: {
@@ -167,14 +168,10 @@ export default defineComponent({
         showSymbol: false,
         hoverAnimation: false,
         areaStyle: {
-          normal: {
-            opacity: 0.2,
-          },
+          opacity: 0.2,
         },
         itemStyle: {
-          normal: {
-            color: colors.value[index % colors.value.length],
-          },
+          color: colors.value[index % colors.value.length],
         },
         data: item.result?.[0]?.values || [[new Date(), 0]],
       }));

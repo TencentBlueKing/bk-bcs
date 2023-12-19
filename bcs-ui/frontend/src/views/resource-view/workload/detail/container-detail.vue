@@ -47,7 +47,7 @@
           <span class="label">{{ $t('container.label.lastState') }}</span>
           <span class="value">
             <bk-popover :disabled="!lastState.status">
-              <span :class="{ 'bcs-border-tips': lastState.status }">{{ lastState.status || '--' }}</span>
+              <span :class="{ 'bcs-border-tips inline-flex': lastState.status }">{{ lastState.status || '--' }}</span>
               <template #content>
                 <div>
                   <span>{{ $t('container.label.reason') }}:</span>
