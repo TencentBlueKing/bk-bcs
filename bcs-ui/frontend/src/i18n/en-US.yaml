@@ -327,7 +327,7 @@ generic:
       subTitle: 'Confirm that you need to expel the POD on the node {IP}'
       subTitle2: 'Confirm that {ip} and other {num} pods on the node node'
     cordon:
-      text: UnCordon
+      text: Cordon
       title: 'Confirm stops scheduling {ip} '
       title1: Confirm batch stop dispatch
       subTitle: >-
@@ -336,7 +336,7 @@ generic:
         LB to NodePort
       subTitle2: 'Please confirm whether to stop {ip} and other {num} IP scheduling'
     uncordon:
-      text: Cordon
+      text: UnCordon
       title: Confirm the allowable scheduling
       title2: Confirm batch dispatch
       subTitle: 'Confirm allows dispatch  {ip}'
@@ -440,6 +440,7 @@ generic:
     labelKey: 'only support letters, numbers and characters (-_./)'
     required1: TAINTS cannot have vacant fields
     annotationValueEmpty: The annotation value cannot be empty
+    annotations: 'only support letters, numbers, space and characters (-_./)'
     labelKey1: >-
       Only support the letters, numbers and characters (-_./), and need to start
       with the letter number
@@ -967,9 +968,9 @@ cluster:
       bufferResourceRatio:
         title: Resource threshold (Pods)
         desc: >-
-          The cluster Pod number usage exceeds the threshold to trigger capacity
-          expansion, regardless of whether the CPU/memory resource usage reaches
-          the threshold or not
+          The cluster resource usage of Pod numbers exceeding this threshold
+          will trigger scaling out regardless of whether CPU/memory resource
+          usage has reached the threshold.
       maxNodeProvisionTime:
         title: Provide node maximum time
         desc: >-

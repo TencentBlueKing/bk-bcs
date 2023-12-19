@@ -175,16 +175,12 @@ export default defineComponent({
             smooth: true,
             hoverAnimation: false,
             areaStyle: {
-              normal: {
-                opacity: 0.2,
-              },
+              opacity: 0.2,
             },
             itemStyle: {
-              normal: {
-                color: Array.isArray(props.colors)
-                  ? props.colors[index % props.colors.length]
-                  : props.colors,
-              },
+              color: Array.isArray(props.colors)
+                ? props.colors[index % props.colors.length]
+                : props.colors,
             },
             data: result?.values || [],
           }, defaultSeries);

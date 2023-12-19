@@ -487,7 +487,7 @@ export default defineComponent({
     });
     const getReadinessGates = (row) => {
       const readinessGates = handleGetExtData(row.metadata.uid, 'readinessGates');
-      const keys = Object.keys(readinessGates);
+      const keys = Object.keys(readinessGates || {});
       // <none> 会被当作dom渲染不出来
       return {
         rate: `${keys.filter(key => readinessGates[key] === 'True').length}/${keys.length}`,
