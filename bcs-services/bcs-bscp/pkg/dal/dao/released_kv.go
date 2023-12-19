@@ -13,6 +13,7 @@
 package dao
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
@@ -98,9 +99,31 @@ func (dao *releasedKvDao) Get(kit *kit.Kit, bizID, appID, releasedID uint32, key
 func (dao *releasedKvDao) List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table.ReleasedKv, int64, error) {
 
 	m := dao.genQ.ReleasedKv
-	q := dao.genQ.ReleasedKv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID),
-		m.ReleaseID.Eq(opt.ReleaseID)).Or(m.Key.Eq(opt.Key)).
-		Order(m.Key)
+	q := dao.genQ.ReleasedKv.WithContext(kit.Ctx)
+
+	orderCol, ok := m.GetFieldByName(opt.Page.Sort)
+	if !ok {
+		return nil, 0, errors.New("user doesn't contains orderColStr")
+	}
+	if opt.Page.Order == types.Descending {
+		q = q.Order(orderCol.Desc())
+	} else {
+		q = q.Order(orderCol)
+	}
+
+	if opt.SearchKey != "" {
+		searchKey := "%" + opt.SearchKey + "%"
+		q = q.Where(q.Where(q.Or(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))))
+	}
+
+	q = q.Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID), m.ReleaseID.Eq(opt.ReleaseID))
+
+	if len(opt.KvType) > 0 {
+		q = q.Where(m.KvType.In(opt.KvType...))
+	}
+	if len(opt.Key) > 0 {
+		q = q.Where(m.Key.In(opt.Key...))
+	}
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
 		result, err := q.Find()
@@ -109,7 +132,6 @@ func (dao *releasedKvDao) List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table
 		}
 
 		return result, int64(len(result)), err
-
 	}
 
 	result, count, err := q.FindByPage(opt.Page.Offset(), opt.Page.LimitInt())

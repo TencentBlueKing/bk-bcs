@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -94,8 +93,8 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbapp
 		return nil, err
 	}
 	if app.Spec.ConfigType == table.KV {
-		if err := s.checkUpdateAppDataType(grpcKit, req, app); err != nil {
-			return nil, err
+		if e := s.checkUpdateAppDataType(grpcKit, req, app); e != nil {
+			return nil, e
 		}
 	}
 
@@ -104,12 +103,18 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbapp
 		BizID: req.BizId,
 		Spec:  req.Spec.AppSpec(),
 		Revision: &table.Revision{
-			Reviser:   grpcKit.User,
-			UpdatedAt: time.Now().UTC(),
+			Reviser: grpcKit.User,
 		},
 	}
-	if err := s.dao.App().Update(grpcKit, app); err != nil {
+	if err = s.dao.App().Update(grpcKit, app); err != nil {
 		logs.Errorf("update app failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	app, err = s.dao.App().Get(grpcKit, req.BizId, req.Id)
+	if err != nil {
+		logs.Errorf("updating the app was successful, but retrieving the app failed, err: %v, rid: %s",
+			err, grpcKit.Rid)
 		return nil, err
 	}
 

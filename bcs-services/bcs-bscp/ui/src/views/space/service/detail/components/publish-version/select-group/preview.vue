@@ -15,9 +15,10 @@
         <preview-version-group
           v-for="previewGroup in previewData"
           :key="previewGroup.id"
+          :group-list="props.groupList"
           :preview-group="previewGroup"
-          :allow-preview-delete="props.groupType === 'select'"
-          :disabled="props.disabled"
+          :allow-preview-delete="props.releaseType === 'select'"
+          :released-groups="props.releasedGroups"
           @diff="emits('diff', $event)"
           @delete="handleDelete"
         >
@@ -29,6 +30,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../../types/group';
+import { IConfigVersion } from '../../../../../../../../types/config';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../store/config';
 import PreviewVersionGroup from './preview-version-group.vue';
@@ -36,29 +38,51 @@ import PreviewVersionGroup from './preview-version-group.vue';
 const versionStore = useConfigStore();
 const { versionData } = storeToRefs(versionStore);
 
-// 将分组按照版本聚合，如果为调整分组上线，则需要过滤掉当前版本已上线分组
+// 将分组按照版本聚合
 const aggregateGroup = (groups: IGroupToPublish[]) => {
   const list: IGroupPreviewItem[] = [];
-  const modifyVersions: IGroupPreviewItem[] = [];
-  const noVersions: IGroupPreviewItem[] = [{ id: 0, name: '无版本', type: 'plain', children: [] }];
-  groups.forEach((group) => {
+  // 变更版本
+  const modifiedVersionGroups: IGroupPreviewItem[] = [];
+  // 首次上线
+  const initialReleaseGroup: IGroupPreviewItem = { id: 0, name: '首次上线', type: 'plain', children: [] };
+  // 需要被展示的分组
+  const groupsToBePreviewed: IGroupToPublish[] = groups.filter(group => {
+    const { id, release_id } = group;
+    // 过滤掉当前版本已上线分组
+    if (release_id === versionData.value.id) {
+      return false;
+    }
+
+    return id === 0 || release_id > 0 || props.releaseType === 'select';
+  })
+  /**
+   * 1.全部实例上线
+   * 只展示已上线的分组，如果默认分组已上线，放到【变更版本】分组中，否则放到【首次上线】分组中
+   * 2.选择分组实例上线
+   * 新添加的分组状态取决于默认分组是否已上线，逻辑同上
+   * 3.排除分组实例上线
+   * 默认不勾选分组，至少勾选一个分组才能提交
+   */
+  groupsToBePreviewed.forEach((group) => {
     const { release_id, release_name } = group;
-    if (release_id) {
-      if (release_id !== versionData.value.id) {
-        const version = modifyVersions.find(item => item.id === release_id);
-        if (version) {
-          version.children.push(group);
-        } else {
-          modifyVersions.push({ id: release_id, name: release_name as string, type: 'modify', children: [group] });
-        }
+    if (props.isDefaultGroupReleased) {
+      const defaultGroup = props.groupList.find(group => group.id === 0);
+      const id = release_id === 0 ? (defaultGroup as IGroupToPublish).release_id : release_id;
+      const version = modifiedVersionGroups.find(item => item.id === id);
+      if (version) {
+        version.children.push(group);
+      } else {
+        const name = release_id === 0 ? (defaultGroup as IGroupToPublish).release_name : release_name;
+        modifiedVersionGroups.push({ id, name, type: 'modify', children: [group] });
       }
     } else {
-      noVersions[0].children.push(group);
+      initialReleaseGroup.children.push(group);
     }
   });
-  list.push(...modifyVersions);
-  if (noVersions[0].children.length > 0) {
-    list.push(...noVersions);
+
+  list.push(...modifiedVersionGroups);
+  if (initialReleaseGroup.children.length > 0) {
+    list.push(initialReleaseGroup);
   }
   return list;
 };
@@ -67,12 +91,15 @@ const props = withDefaults(
   defineProps<{
     groupListLoading: boolean;
     groupList: IGroupToPublish[];
-    groupType: string;
-    disabled?: number[];
+    versionListLoading: boolean;
+    versionList: IConfigVersion[];
+    releaseType: string;
+    isDefaultGroupReleased: boolean;
+    releasedGroups?: number[];
     value: IGroupToPublish[];
   }>(),
   {
-    disabled: () => [],
+    releasedGroups: () => [],
   },
 );
 

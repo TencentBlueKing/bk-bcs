@@ -36,6 +36,8 @@ type Commit interface {
 	BatchListLatestCommits(kit *kit.Kit, bizID, appID uint32, ids []uint32) ([]*table.Commit, error)
 	// GetLatestCommit get config item's latest commit.
 	GetLatestCommit(kit *kit.Kit, bizID, appID, configItemID uint32) (*table.Commit, error)
+	// ListAppLatestCommits list app config items' latest commit.
+	ListAppLatestCommits(kit *kit.Kit, bizID, appID uint32) ([]*table.Commit, error)
 }
 
 var _ Commit = new(commitDao)
@@ -150,6 +152,15 @@ func (dao *commitDao) BatchListLatestCommits(kit *kit.Kit, bizID, appID uint32, 
 	q := dao.genQ.Commit.WithContext(kit.Ctx)
 	subQuery := q.Select(m.ID.Max().As("commit_id")).Where(
 		m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ConfigItemID.In(ids...)).Group(m.ConfigItemID)
+	return q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), q.Columns(m.ID).In(subQuery)).Find()
+}
+
+// ListAppLatestCommits list app config items' latest commit.
+func (dao *commitDao) ListAppLatestCommits(kit *kit.Kit, bizID, appID uint32) ([]*table.Commit, error) {
+	m := dao.genQ.Commit
+	q := dao.genQ.Commit.WithContext(kit.Ctx)
+	subQuery := q.Select(m.ID.Max().As("commit_id")).Where(
+		m.BizID.Eq(bizID), m.AppID.Eq(appID)).Group(m.ConfigItemID)
 	return q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), q.Columns(m.ID).In(subQuery)).Find()
 }
 

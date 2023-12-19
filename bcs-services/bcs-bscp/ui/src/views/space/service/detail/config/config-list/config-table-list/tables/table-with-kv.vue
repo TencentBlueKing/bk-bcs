@@ -11,6 +11,8 @@
       show-overflow-tooltip
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"
+      @column-sort="handleSort"
+      @column-filter="handleFilter"
     >
       <bk-table-column label="配置项名称" prop="spec.key" :min-width="240">
         <template #default="{ row }">
@@ -29,11 +31,11 @@
       <bk-table-column
         label="数据类型"
         prop="spec.kv_type"
-        :filter="{ filterFn: handleFilter, list: filterList }"
+        :filter="{ filterFn:() => true, list: filterList, checked:filterChecked }"
       ></bk-table-column>
       <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
       <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
-      <bk-table-column label="修改时间" :sort="{sortFn:(_a:any,_b:any,type:string) => updateSortType = type}" :width="220">
+      <bk-table-column label="修改时间" :sort="true" :width="220">
         <template #default="{ row }">
           <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
         </template>
@@ -84,13 +86,13 @@
     @confirm="handleDeleteConfigConfirm"
   >
     <div style="margin-bottom: 8px">
-      配置项：<span style="color: #313238">{{ deleteConfig?.key }}</span>
+      配置项：<span style="color: #313238">{{ deleteConfig?.spec.key }}</span>
     </div>
-    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+    <div>{{ deleteConfigTips }}</div>
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-import { ref, watch, onMounted, computed, toRaw } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../../store/config';
 import useServiceStore from '../../../../../../../../store/service';
@@ -105,7 +107,6 @@ import VersionDiff from '../../../components/version-diff/index.vue';
 import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
 import { Message } from 'bkui-vue';
-import { isEqual } from 'lodash';
 
 const configStore = useConfigStore();
 const serviceStore = useServiceStore();
@@ -127,7 +128,7 @@ const configsCount = ref(0);
 const editPanelShow = ref(false);
 const editable = ref(false);
 const activeConfig = ref<IConfigKvItem>();
-const deleteConfig = ref<IConfigKvItem>();
+const deleteConfig = ref<IConfigKvType>();
 const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
 const isSearchEmpty = ref(false);
@@ -144,8 +145,15 @@ const filterList = computed(() => CONFIG_KV_TYPE.map(item => ({
   text: item.name,
 })));
 
+const deleteConfigTips = computed(() => {
+  if (deleteConfig.value) {
+    return deleteConfig.value.kv_state === 'ADD' ? '一旦删除，该操作将无法撤销，请谨慎操作' : '配置项删除后，可以通过恢复按钮撤销删除';
+  }
+  return '';
+});
+
 watch(
-  [() => versionData.value.id, () => updateSortType.value],
+  () => versionData.value.id,
   () => {
     refresh();
   },
@@ -167,17 +175,6 @@ watch(
     });
   },
 );
-
-watch(
-  () => filterChecked.value,
-  (newVal, oldVal) => {
-    if (!isEqual(toRaw(newVal), toRaw(oldVal))) {
-      getListData();
-    }
-  },
-  { deep: true },
-);
-
 
 const isUnNamedVersion = computed(() => versionData.value.id === 0);
 
@@ -236,11 +233,14 @@ const handleDel = (config: IConfigKvType) => {
     return;
   }
   isDeleteConfigDialogShow.value = true;
-  deleteConfig.value = config.spec;
+  deleteConfig.value = config;
 };
 
 const handleDeleteConfigConfirm = async () => {
-  await deleteKv(props.bkBizId, props.appId, deleteConfig.value!.key);
+  if (!deleteConfig.value) {
+    return;
+  }
+  await deleteKv(props.bkBizId, props.appId, deleteConfig.value.id);
   if (configList.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current -= 1;
   }
@@ -269,9 +269,14 @@ const refresh = (current = 1) => {
   getListData();
 };
 
-const handleFilter = (checked: string[]) => {
+const handleFilter = ({ checked }: any) => {
   filterChecked.value = checked;
-  return true;
+  refresh();
+};
+
+const handleSort = ({ type }: any) => {
+  updateSortType.value = type;
+  refresh();
 };
 
 // 判断当前行是否是删除行

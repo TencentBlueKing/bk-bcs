@@ -1,0 +1,50 @@
+{
+    "language": "en",
+    "messages": [
+        {
+            "id": "项目不正确",
+            "message": "项目不正确",
+            "translation": "Project_id Incorrect"
+        },
+        {
+            "id": "获取集群成功",
+            "message": "获取集群成功",
+            "translation": "Get Clusters successful"
+        },
+        {
+            "id": "获取session失败: {Err}",
+            "message": "获取session失败: {Err}",
+            "translation": "Get session failed: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "获取session成功",
+            "message": "获取session成功",
+            "translation": "Get session successful"
+        },
+        {
+            "id": "请求参数错误: {Err}",
+            "message": "请求参数错误: {Err}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        }
+    ]
+}

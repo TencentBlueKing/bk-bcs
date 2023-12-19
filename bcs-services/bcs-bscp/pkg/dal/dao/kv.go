@@ -13,9 +13,8 @@
 package dao
 
 import (
+	"errors"
 	"fmt"
-
-	"github.com/pkg/errors"
 
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
@@ -141,25 +140,30 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int64, error) {
 
 	m := dao.genQ.Kv
+	q := dao.genQ.Kv.WithContext(kit.Ctx)
 
-	orderCol, ok := m.GetFieldByName(opt.SortField)
+	orderCol, ok := m.GetFieldByName(opt.Page.Sort)
 	if !ok {
 		return nil, 0, errors.New("user doesn't contains orderColStr")
 	}
-
-	if opt.SortOrder == "desc" {
-		orderCol.Desc()
+	if opt.Page.Order == types.Descending {
+		q = q.Order(orderCol.Desc())
+	} else {
+		q = q.Order(orderCol)
 	}
-
-	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).Order(orderCol)
 
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
-		q = q.Where(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))
+		q = q.Where(q.Where(q.Or(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))))
 	}
+
+	q = q.Where(m.BizID.Eq(opt.BizID)).Where(m.AppID.Eq(opt.AppID))
 
 	if len(opt.KvType) > 0 {
 		q = q.Where(m.KvType.In(opt.KvType...))
+	}
+	if len(opt.Key) > 0 {
+		q = q.Where(m.Key.In(opt.Key...))
 	}
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
@@ -390,8 +394,11 @@ func (dao *kvDao) UpdateSelectedKVStates(kit *kit.Kit, tx *gen.QueryTx, bizID, a
 
 	m := tx.Kv
 
-	if _, err := tx.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
-		m.KvState.In(targetKVStates...)).Select(m.KvState).Update(m.KvState, newKVStates); err != nil {
+	if _, err := tx.Kv.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.KvState.In(targetKVStates...)).
+		Select(m.KvState).
+		Omit(m.UpdatedAt).
+		Update(m.KvState, newKVStates); err != nil {
 		return err
 	}
 

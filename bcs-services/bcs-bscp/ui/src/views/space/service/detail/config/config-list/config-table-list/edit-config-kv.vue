@@ -87,6 +87,7 @@ const handleChange = (data: IConfigKvItem) => {
 const handleSubmit = async () => {
   const isValid = await formRef.value.validate();
   if (!isValid) return;
+  if (configForm.value!.kv_type === 'number') configForm.value!.value = configForm.value!.value.replace(/^0+(?=\d|$)/, '');
   try {
     pending.value = true;
     await updateKv(props.bkBizId, props.appId, configForm.value!.key, configForm.value!.value);

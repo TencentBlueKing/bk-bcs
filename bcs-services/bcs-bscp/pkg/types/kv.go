@@ -132,14 +132,12 @@ type ListKvOption struct {
 	BizID     uint32    `json:"biz_id"`
 	AppID     uint32    `json:"app_id"`
 	Name      string    `json:"name"`
-	Key       string    `json:"key"`
+	Key       []string  `json:"key"`
 	SearchKey string    `json:"search_key"`
 	All       bool      `json:"all"`
 	Page      *BasePage `json:"page"`
 	IDs       []uint32  `json:"ids"`
 	KvType    []string  `json:"kv_type"`
-	SortField string    `json:"sort_field"`
-	SortOrder string    `json:"sort_order"`
 }
 
 // Validate is used to validate the effectiveness of the ListKvOption structure.
@@ -160,16 +158,4 @@ func (opt *ListKvOption) Validate(po *PageOption) error {
 	}
 
 	return nil
-}
-
-// TrySetDefault tries to set default option values.
-func (opt *ListKvOption) TrySetDefault() {
-
-	if opt.SortField == "" {
-		opt.SortField = "key"
-	}
-
-	if opt.SortOrder == "" {
-		opt.SortOrder = "asc"
-	}
 }

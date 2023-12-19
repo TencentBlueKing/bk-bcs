@@ -101,6 +101,7 @@ message JsonRawResp {
 message GetAppIDReq {
   uint32 biz_id = 1;
   string app_name = 2;
+  bool refresh = 3;
 }
 
 message GetAppIDResp {
