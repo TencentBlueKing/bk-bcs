@@ -45,6 +45,10 @@ func ValidateUnixFilePath(path string) error {
 	// Split the path into parts
 	parts := strings.Split(path, "/")[1:] // Ignore the first empty part due to the leading '/'
 
+	if strings.HasSuffix(path, "/") {
+		parts = parts[:len(parts)-1] // Ignore the last empty part due to the trailing '/'
+	}
+
 	// Iterate over each part to validate
 	for _, part := range parts {
 		// 2. '/' in the end is optional (already handled by strings.Split)
@@ -54,7 +58,7 @@ func ValidateUnixFilePath(path string) error {
 		}
 
 		// 4. each sub path support character:
-		//    chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'
+		// chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'
 		if !validUnixFileSubPathRegexp.MatchString(part) {
 			return fmt.Errorf("invalid path, each sub path should only contain chinese, english, " +
 				"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'")
