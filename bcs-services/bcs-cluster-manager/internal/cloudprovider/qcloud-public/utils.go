@@ -15,13 +15,13 @@ package qcloud
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"strconv"
 	"strings"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
@@ -86,6 +86,7 @@ var (
 	}
 
 	// create cluster task
+	// nolint
 	createClusterShieldAlarmStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-CreateClusterShieldAlarmTask", cloudName),
 		StepName:   "屏蔽机器告警",
@@ -126,6 +127,7 @@ var (
 	}
 
 	// add node to cluster
+	// nolint
 	addNodesShieldAlarmStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-AddNodesShieldAlarmTask", cloudName),
 		StepName:   "屏蔽机器告警",

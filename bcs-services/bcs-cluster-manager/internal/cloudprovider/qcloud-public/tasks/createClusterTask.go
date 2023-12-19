@@ -143,11 +143,7 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 		NetworkType: cluster.ClusterAdvanceSettings.NetworkType,
 		ExtraArgs:   &api.ClusterExtraArgs{},
 		IsNonStaticIpMode: func() bool {
-			if cluster.GetNetworkSettings().GetIsStaticIpMode() {
-				return false
-			}
-
-			return true
+			return !cluster.GetNetworkSettings().GetIsStaticIpMode()
 		}(),
 		VpcCniType:         api.TKERouteEni,
 		RuntimeVersion:     cluster.ClusterAdvanceSettings.RuntimeVersion,
@@ -379,6 +375,7 @@ func disksToCVMDisks(disks []*proto.CloudDataDisk) []*cvm.DataDisk {
 }
 
 // generateNewRunInstance run instances by instance template
+// nolint
 func generateNewRunInstance(info *cloudprovider.CloudDependBasicInfo, role string,
 	templates []*proto.InstanceTemplateConfig, operator string) *api.RunInstancesForNode {
 	runInstance := &api.RunInstancesForNode{
@@ -560,6 +557,7 @@ func generateNewInstanceForDisk(templates []*proto.InstanceTemplateConfig) []*ap
 }
 
 // generateCreateClusterRequest 独立集群 or 托管集群
+// nolint
 func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	masterIps, workerIps []string, operator string) (*api.CreateClusterRequest, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -1186,7 +1184,8 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 }
 
 // getRandomSubnetFromNodes get random subnet from nodes
-func getRandomSubnetFromNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIps []string) (string, error) {
+func getRandomSubnetFromNodes(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIps []string) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	cvmClient, err := api.GetCVMClient(info.CmOption)
@@ -1285,13 +1284,17 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	bkBizID, _ := strconv.Atoi(dependInfo.Cluster.GetBusinessID())
 	if dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID() != "" {
 		bkModuleID, _ := strconv.Atoi(dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID())
-		dependInfo.Cluster.GetClusterBasicSettings().GetModule().MasterModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		dependInfo.Cluster.
+			GetClusterBasicSettings().
+			GetModule().MasterModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
 	}
 	if dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID() != "" {
 		bkModuleID, _ := strconv.Atoi(dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID())
-		dependInfo.Cluster.GetClusterBasicSettings().GetModule().WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		dependInfo.Cluster.
+			GetClusterBasicSettings().
+			GetModule().WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
 	}
-	cloudprovider.UpdateCluster(dependInfo.Cluster)
+	_ = cloudprovider.UpdateCluster(dependInfo.Cluster)
 
 	// sync clusterData to pass-cc
 	providerutils.SyncClusterInfoToPassCC(taskID, dependInfo.Cluster)

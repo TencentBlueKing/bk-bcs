@@ -447,7 +447,7 @@ func (cli *TkeClient) DescribeInstanceCreateProgress(clusterId, instanceId strin
 	}
 
 	if resp == nil || resp.Response == nil {
-		return "", fmt.Errorf("response emtpy")
+		return "", fmt.Errorf("response empty")
 	}
 
 	var (
