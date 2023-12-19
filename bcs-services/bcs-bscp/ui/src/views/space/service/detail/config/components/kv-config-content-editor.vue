@@ -88,6 +88,14 @@ const handleEscClose = (event: KeyboardEvent) => {
     isOpenFullScreen.value = false;
   }
 };
+
+defineExpose({
+  validate: () => {
+    if (codeEditorRef.value) {
+      return codeEditorRef.value.validate(props.content);
+    }
+  },
+});
 </script>
 <style lang="scss" scoped>
 .config-content-editor {
