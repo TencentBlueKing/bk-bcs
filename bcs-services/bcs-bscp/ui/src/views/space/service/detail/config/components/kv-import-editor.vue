@@ -50,11 +50,12 @@
           :model-value="kvsContent"
           @update:model-value="kvsContent = $event"
           @enter="separatorShow = true"
+          @validate="handleValidateEditor"
           :error-line="errorLine"
           :placeholder="editorPlaceholder"
         />
         <div class="separator" v-show="separatorShow">
-          <SeparatorSelect @closed="separatorShow = false" @confirm="separator = $event" />
+          <SeparatorSelect @closed="separatorShow = false" @confirm="handleSelectSeparator" />
         </div>
       </div>
     </div>
@@ -139,7 +140,7 @@ const handleValidateEditor = () => {
     if (item === '') return;
     const kvContent = item.split(separator.value);
     const key = kvContent[0];
-    const kv_type = kvContent[1];
+    const kv_type = kvContent[1] ? kvContent[1].toLowerCase() : '';
     const value = kvContent[2];
     kvs.value.push({
       key,
@@ -164,6 +165,7 @@ const handleValidateEditor = () => {
     }
   });
 };
+
 // 导入kv
 const handleImport = async () => {
   handleValidateEditor();
@@ -171,6 +173,12 @@ const handleImport = async () => {
   if (errorLine.value.length > 0) return Promise.reject();
   await batchUpsertKv(bkBizId.value, appId.value, kvs.value);
 };
+
+const handleSelectSeparator = (selectSeparator: string) => {
+  separator.value = selectSeparator;
+  handleValidateEditor();
+};
+
 defineExpose({
   handleImport,
 });

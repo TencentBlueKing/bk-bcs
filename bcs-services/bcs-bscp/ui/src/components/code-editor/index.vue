@@ -62,7 +62,7 @@ const props = withDefaults(
   },
 );
 
-const emit = defineEmits(['update:modelValue', 'change', 'enter']);
+const emit = defineEmits(['update:modelValue', 'change', 'enter', 'validate']);
 
 const codeEditorRef = ref();
 let editor: monaco.editor.IStandaloneCodeEditor;
@@ -157,9 +157,11 @@ onMounted(() => {
   // 自动换行
   editor.updateOptions({ wordWrap: 'on' });
   editor.onDidBlurEditorWidget(() => {
+    // 当编辑器失去焦点时触发的自定义事件处理逻辑
     if (!props.modelValue) {
       isShowPlaceholder.value = true;
     }
+    emit('validate');
   });
 });
 
@@ -321,6 +323,7 @@ defineExpose({
   height: 100%;
   :deep(.monaco-editor) {
     width: 100%;
+    padding-top: 10px;
     .template-variable-item {
       color: #1768ef;
       border: 1px solid #1768ef;
@@ -331,6 +334,7 @@ defineExpose({
 .placeholderBox {
   height: 100%;
   background-color: #1e1e1e;
+  padding-top: 10px;
   .placeholderLine {
     display: flex;
     height: 19px;

@@ -16,16 +16,29 @@
       <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
+  <bk-dialog ext-cls="confirm-dialog" :is-show="isShowConfirmDialog" :show-mask="true" :quick-close="false">
+    <div class="title-icon"><Done fill="#42C06A" /></div>
+    <div class="title-info">服务新建成功</div>
+    <div class="content-info">
+      {{ serviceData.config_type === 'file' ? '接下来你可以在服务下新增配置文件' : '接下来你可以在服务下新增配置项' }}
+    </div>
+    <div class="footer-btn">
+      <bk-button theme="primary" @click="handleGoCreateConfig" style="margin-right: 8px">
+        {{ serviceData.config_type === 'file' ? '新增配置文件' : '新增配置项' }}
+      </bk-button>
+      <bk-button @click="isShowConfirmDialog = false">稍后再说</bk-button>
+    </div>
+  </bk-dialog>
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import InfoBox from 'bkui-vue/lib/info-box';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../store/global';
 import { createApp } from '../../../../../api';
 import { IServiceEditForm } from '../../../../../../types/service';
+import { Done } from 'bkui-vue/lib/icon';
 import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
 import SearviceForm from './service-form.vue';
 
@@ -52,6 +65,8 @@ const serviceData = ref<IServiceEditForm>({
 const formCompRef = ref();
 const pending = ref(false);
 const isFormChange = ref(false);
+const isShowConfirmDialog = ref(false);
+const appId = ref();
 
 watch(
   () => props.show,
@@ -87,25 +102,9 @@ const handleCreateConfirm = async () => {
     } else {
       resp = await createApp(spaceId.value, { ...serviceData.value, reload_type: '', reload_file_path: '' });
     }
+    appId.value = resp.id;
     emits('reload');
-    InfoBox({
-      type: 'success',
-      title: '服务新建成功',
-      subTitle: serviceData.value.config_type === 'file' ? '接下来你可以在服务下新增并使用配置文件' : '接下来你可以在服务下新增并使用配置项',
-      headerAlign: 'center',
-      footerAlign: 'center',
-      confirmText: serviceData.value.config_type === 'file' ? '新增配置文件' : '新增配置项',
-      cancelText: '稍后再说',
-      onConfirm() {
-        router.push({
-          name: 'service-config',
-          params: {
-            spaceId: spaceId.value,
-            appId: resp.id,
-          },
-        });
-      },
-    } as any);
+    isShowConfirmDialog.value = true;
     close();
   } catch (e) {
     console.error(e);
@@ -120,6 +119,16 @@ const handleBeforeClose = async () => {
     return result;
   }
   return true;
+};
+
+const handleGoCreateConfig = () => {
+  router.push({
+    name: 'service-config',
+    params: {
+      spaceId: spaceId.value,
+      appId: appId.value,
+    },
+  });
 };
 
 const close = () => {
@@ -141,6 +150,50 @@ const close = () => {
   button {
     margin-right: 8px;
     min-width: 88px;
+  }
+}
+
+.confirm-dialog {
+  :deep(.bk-modal-body) {
+    width: 400px;
+    padding: 0;
+    .bk-modal-header {
+      display: none;
+    }
+    .bk-modal-footer {
+      display: none;
+    }
+    .bk-modal-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      .title-icon {
+        margin: 27px 0 19px;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        font-size: 42px;
+        line-height: 42px;
+        background-color: #e5f6e8;
+      }
+      .title-info {
+        height: 32px;
+        font-size: 20px;
+        color: #313238;
+        text-align: center;
+        line-height: 32px;
+      }
+      .content-info {
+        margin-top: 8px;
+        height: 22px;
+        font-size: 14px;
+        color: #63656e;
+        line-height: 22px;
+      }
+      .footer-btn {
+        margin: 24px 0;
+      }
+    }
   }
 }
 </style>
