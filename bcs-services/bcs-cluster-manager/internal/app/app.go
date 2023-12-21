@@ -70,6 +70,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/bkmonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/tmp"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/audit"
 	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
@@ -961,12 +962,17 @@ func (cm *ClusterManager) initMicro() error { // nolint
 			cm.disc.Stop()
 			return nil
 		}),
+		microsvc.AfterStop(func() error {
+			audit.GetAuditClient().Close()
+			return nil
+		}),
 		microsvc.WrapHandler(
 			utils.HandleLanguageWrapper,
 			utils.RequestLogWarpper,
 			utils.ResponseWrapper,
 			authWrapper.AuthenticationFunc,
 			authWrapper.AuthorizationFunc,
+			utils.NewAuditWrapper,
 		),
 	)
 	microService.Init()

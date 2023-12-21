@@ -1282,6 +1282,9 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 			StepName: template.UserAfterInit,
 			Cluster:  opt.Cluster,
 			Extra: template.ExtraInfo{
+				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption,
+					group.NodeTemplate, false),
+				BusinessID:         cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, true),
 				InstancePasswd:     passwd,
 				NodeIPList:         "",
 				NodeOperator:       opt.Operator,
@@ -1556,6 +1559,9 @@ func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*pr
 			StepName: template.UserAfterInit,
 			Cluster:  opt.Cluster,
 			Extra: template.ExtraInfo{
+				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, nil,
+					group.NodeTemplate, false),
+				BusinessID:         cloudprovider.GetBusinessID(nil, group.NodeTemplate, true),
 				InstancePasswd:     "",
 				NodeIPList:         strings.Join(nodeIPs, ","),
 				NodeOperator:       opt.Operator,

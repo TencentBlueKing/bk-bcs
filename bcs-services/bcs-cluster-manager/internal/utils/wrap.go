@@ -15,6 +15,7 @@ package utils
 import (
 	"context"
 	"reflect"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
@@ -61,6 +62,18 @@ func ResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		ctx = context.WithValue(ctx, RequestIDContextKey, requestID)
 		err = fn(ctx, req, rsp)
 		return renderResponse(rsp, requestID, err)
+	}
+}
+
+// NewAuditWrapper 审计
+func NewAuditWrapper(fn server.HandlerFunc) server.HandlerFunc {
+	return func(ctx context.Context, req server.Request, rsp interface{}) error {
+		startTime := time.Now()
+		err := fn(ctx, req, rsp)
+		endTime := time.Now()
+		// async add audit
+		go addAudit(ctx, req, rsp, startTime, endTime)
+		return err
 	}
 }
 

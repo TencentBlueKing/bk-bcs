@@ -885,7 +885,7 @@ func getUserClusterPermList(iam iam.PermClient, user actions.PermInfo,
 	clusterPerm := cluster.NewBCSClusterPermClient(iam)
 
 	actionIDs := []string{cluster.ClusterView.String(), cluster.ClusterManage.String(), cluster.ClusterDelete.String()}
-	perms, err := clusterPerm.GetMultiClusterMultiActionPermission(user.UserID, user.ProjectID, clusterList, actionIDs)
+	perms, err := clusterPerm.GetMultiClusterMultiActionPerm(user.UserID, user.ProjectID, clusterList, actionIDs)
 	if err != nil {
 		blog.Errorf("getUserClusterPermList GetMultiClusterMultiActionPermission failed: %v", err)
 		return nil, err
