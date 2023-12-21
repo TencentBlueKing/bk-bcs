@@ -91,7 +91,7 @@ const handleCreateConfirm = async () => {
     InfoBox({
       type: 'success',
       title: '服务新建成功',
-      subTitle: serviceData.value.config_type === 'file' ? '接下来你可以在服务下新增并使用配置文件' : '接下来你可以在服务下新增并使用配置项',
+      subTitle: serviceData.value.config_type === 'file' ? '接下来你可以在服务下新增配置文件' : '接下来你可以在服务下新增配置项',
       headerAlign: 'center',
       footerAlign: 'center',
       confirmText: serviceData.value.config_type === 'file' ? '新增配置文件' : '新增配置项',
