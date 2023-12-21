@@ -32,6 +32,7 @@ local CLUSTER_HEADER = "BCS-ClusterID"
 local USERMGR_METHOD = "GET"
 local USERMGR_URL = "/usermanager/v2/permissions/verify"
 local USERMGR_HOST = "usermanager"
+local OPERATOR_HEADER = "X-BCS-Operator" -- 运维人员头部 header
 
 local userTarget = {
     type = "name",
@@ -223,7 +224,15 @@ function BKUserCli:construct_identity(conf, request)
         core.log.error(" user_cli get token information from request ", ngx.var.uri, " failed: ", err)
         return nil, "Authorization token lost"
     end
-    auth.user_token = m[1]
+
+    local user_token = m[1]
+    -- 如果有操作人头部, 使用操作人+token查询
+    if auth_header[OPERATOR_HEADER] then
+        user_token = "op-" .. auth_header[OPERATOR_HEADER] .. ":" .. user_token
+        core.log.warn("req use operator instead: ", auth_header[OPERATOR_HEADER])
+    end
+
+    auth.user_token = user_token
     return auth, nil
 end
 
