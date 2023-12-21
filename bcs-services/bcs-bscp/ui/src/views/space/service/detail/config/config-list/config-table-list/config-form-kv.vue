@@ -9,7 +9,7 @@
           v-for="kvType in CONFIG_KV_TYPE"
           :key="kvType.id"
           :label="kvType.id"
-          :disabled="appData.spec.data_type !== 'any' || editable || view"
+          :disabled="radioDisabled(kvType.id)"
           >{{ kvType.name }}</bk-radio
         >
       </bk-radio-group>
@@ -70,6 +70,13 @@ const typeDescription = computed(() => {
     return `已限制该服务下所有配置项数据类型为${appData.value.spec.data_type}，如需其他数据类型，请调整服务属性下的数据类型`;
   }
   return '';
+});
+
+const radioDisabled = computed(() => (kvTypeId: string) => {
+  if (appData.value.spec.data_type !== 'any' || props.editable || props.view) {
+    return kvTypeId !== localVal.value.kv_type;
+  }
+  return false;
 });
 
 const rules = {
