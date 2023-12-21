@@ -14,6 +14,7 @@
           :un-named-version-variables="props.unNamedVersionVariables"
           :selected-config="props.selectedConfig"
           :selected-config-kv="props.selectedConfigKv"
+          :is-publish="props.showPublishBtn"
           @selected="handleSelectDiffItem"
         />
         <div :class="['diff-content-area', { light: diffDetailData.contentType === 'file' }]">
