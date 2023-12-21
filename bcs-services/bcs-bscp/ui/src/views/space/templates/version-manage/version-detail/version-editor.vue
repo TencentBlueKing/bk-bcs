@@ -74,7 +74,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import SHA256 from 'crypto-js/sha256';
 import WordArray from 'crypto-js/lib-typedarrays';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import { Done, TextFill } from 'bkui-vue/lib/icon';
 import { ITemplateVersionEditingData } from '../../../../../../types/template';
 import { IFileConfigContentSummary } from '../../../../../../types/config';

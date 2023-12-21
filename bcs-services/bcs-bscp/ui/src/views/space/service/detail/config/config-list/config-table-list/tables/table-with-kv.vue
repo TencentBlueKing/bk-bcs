@@ -106,7 +106,7 @@ import EditConfig from '../edit-config-kv.vue';
 import VersionDiff from '../../../components/version-diff/index.vue';
 import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 
 const configStore = useConfigStore();
 const serviceStore = useServiceStore();

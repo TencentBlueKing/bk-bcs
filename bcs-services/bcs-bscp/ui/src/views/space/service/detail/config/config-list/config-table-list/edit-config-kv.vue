@@ -31,7 +31,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import ConfigForm from './config-form-kv.vue';
 import { updateKv } from '../../../../../../../api/config';
 import { IConfigKvItem } from '../../../../../../../../types/config';

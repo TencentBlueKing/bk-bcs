@@ -77,12 +77,14 @@ const getExcludeGroups = async () => {
     font-size: 12px;
     line-height: 16px;
     color: #63656e;
+    background: #ffffff;
     .header-area {
       padding-bottom: 12px;
       border-bottom: 1px solid #dcdee5;
     }
     .title {
       margin: 0;
+      padding: 7px 14px 0;
       font-size: 12px;
       line-height: 20px;
       color: #313238;
@@ -96,7 +98,10 @@ const getExcludeGroups = async () => {
       color: #979BA5;
     }
     .group-list {
-      padding-top: 12px;
+      padding: 12px 14px 7px;
+      max-height: 300px;
+      max-width: 520px;
+      overflow: auto;
     }
     .group-item {
       margin-bottom: 8px;
@@ -104,7 +109,17 @@ const getExcludeGroups = async () => {
     .rules {
       margin-top: 4px;
       padding: 5px 8px;
+      width: 100%;
+      white-space: normal;
       background: #f5f7fa;
+      .tag-item {
+        display: inline;
+      }
     }
+  }
+</style>
+<style lang="scss">
+  .released-group-viewer.bk-popover.bk-pop2-content {
+    padding: 0;
   }
 </style>

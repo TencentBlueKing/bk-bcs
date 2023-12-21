@@ -54,7 +54,7 @@
 import { ref, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Warn } from 'bkui-vue/lib/icon';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../../../store/global';
 import useTemplateStore from '../../../../../../../store/template';
 import { IPackagesCitedByApps } from '../../../../../../../../types/template';

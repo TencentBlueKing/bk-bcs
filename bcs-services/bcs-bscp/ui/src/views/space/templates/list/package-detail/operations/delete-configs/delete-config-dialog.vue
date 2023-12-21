@@ -10,7 +10,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../../../store/global';
 import useTemplateStore from '../../../../../../../store/template';
 import { ITemplateConfigItem } from '../../../../../../../../types/template';

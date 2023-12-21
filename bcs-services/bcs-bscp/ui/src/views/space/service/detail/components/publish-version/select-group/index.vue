@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../../../store/global';
 import useServiceStore from '../../../../../../../store/service';
 import { IConfigVersion } from '../../../../../../../../types/config';

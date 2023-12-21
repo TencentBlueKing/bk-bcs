@@ -84,7 +84,7 @@ import { IConfigImportItem } from '../../../../../../../../../types/config';
 import { importTemplateFile, importTemplateBatchAdd, addTemplateToPackage } from '../../../../../../../../api/template';
 import ConfigTable from './config-table.vue';
 import SelectPackage from './select-package.vue';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import { Upload } from 'bkui-vue/lib/icon';
 const props = defineProps<{
   show: boolean;

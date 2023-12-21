@@ -144,7 +144,7 @@ const handleSelectVersion = (version: IConfigVersion) => {
   if (version.id !== 0) {
     params.versionId = version.id;
   }
-  router.push({ name: 'service-config', params });
+  router.push({ name: route.name as string, params });
 };
 
 const handleDiffDialogShow = (version: IConfigVersion) => {

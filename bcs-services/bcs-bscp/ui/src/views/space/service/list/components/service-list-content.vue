@@ -48,7 +48,6 @@
           <div class="serving-list">
             <Card
               v-for="service in serviceList"
-              class="service-item"
               :key="service.id"
               :service="service"
               @edit="handleEditService"

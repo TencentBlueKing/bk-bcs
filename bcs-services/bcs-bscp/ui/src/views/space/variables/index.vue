@@ -77,7 +77,7 @@ import VariableImport from './variable-import.vue';
 import SearchInput from '../../../components/search-input.vue';
 import TableEmpty from '../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
