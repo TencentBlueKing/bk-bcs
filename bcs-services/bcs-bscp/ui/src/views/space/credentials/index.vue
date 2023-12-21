@@ -725,11 +725,12 @@ const goToIAM = () => {
   .bk-modal-header {
     display: none;
   }
-}
-.delete-service-dialog {
   .bk-modal-footer {
+    height: auto !important;
     background-color: #fff !important;
     border-top: none !important;
+    padding-bottom: 24px !important;
   }
 }
+
 </style>

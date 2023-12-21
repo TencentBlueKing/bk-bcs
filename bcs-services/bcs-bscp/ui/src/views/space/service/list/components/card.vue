@@ -328,12 +328,15 @@ const handleDeleteService = async () => {
 
 <style lang="scss">
 .delete-service-dialog {
+  top: 40% !important;
   .bk-modal-header {
     display: none;
   }
   .bk-modal-footer {
-    border: none !important;
+    height: auto !important;
     background-color: #fff !important;
+    border-top: none !important;
+    padding-bottom: 24px !important;
   }
 }
 </style>
