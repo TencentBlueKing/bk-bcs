@@ -321,6 +321,7 @@ defineExpose({
   height: 100%;
   :deep(.monaco-editor) {
     width: 100%;
+    padding-top: 10px;
     .template-variable-item {
       color: #1768ef;
       border: 1px solid #1768ef;
@@ -331,6 +332,7 @@ defineExpose({
 .placeholderBox {
   height: 100%;
   background-color: #1e1e1e;
+  padding-top: 10px;
   .placeholderLine {
     display: flex;
     height: 19px;
