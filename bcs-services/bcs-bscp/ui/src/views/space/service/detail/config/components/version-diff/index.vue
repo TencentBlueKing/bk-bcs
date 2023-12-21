@@ -21,7 +21,7 @@
             <template #leftHead>
               <slot name="baseHead">
                 <div class="diff-panel-head">
-                  <div class="version-tag base-version">{{showPublishBtn ? '上线版本' : '对比版本'}}</div>
+                  <div class="version-tag base-version">{{showPublishBtn ? '线上版本' : '对比版本'}}</div>
                   <bk-select
                     :model-value="selectedBaseVersion"
                     style="width: 320px"
