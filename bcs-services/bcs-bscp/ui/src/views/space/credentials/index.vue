@@ -607,7 +607,7 @@ const goToIAM = () => {
   align-items: center;
   justify-content: space-between;
   .text {
-    width: calc(100% - 80px);
+    width: calc(100% - 50px);
   }
   .actions {
     display: flex;
