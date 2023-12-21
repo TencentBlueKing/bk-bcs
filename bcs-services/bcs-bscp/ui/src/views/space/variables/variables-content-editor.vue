@@ -50,11 +50,12 @@
           :model-value="variables"
           @update:model-value="variables = $event"
           @enter="separatorShow = true"
+          @validate="handleValidateEditor"
           :error-line="errorLine"
           :placeholder="editorPlaceholder"
         />
         <div class="separator" v-show="separatorShow">
-          <SeparatorSelect @closed="separatorShow = false" @confirm="separator = $event" />
+          <SeparatorSelect @closed="separatorShow = false" @confirm="handleSelectSeparator" />
         </div>
       </div>
     </div>
@@ -172,6 +173,11 @@ const handleImport = async () => {
     variables: variables.value,
   };
   await batchImportTemplateVariables(spaceId.value, params);
+};
+
+const handleSelectSeparator = (selectSeparator: string) => {
+  separator.value = selectSeparator;
+  handleValidateEditor();
 };
 defineExpose({
   handleImport,

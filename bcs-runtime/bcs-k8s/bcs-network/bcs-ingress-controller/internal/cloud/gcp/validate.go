@@ -252,7 +252,7 @@ func (g *GclbValidater) validateProtocol(protocol string) (bool, string) {
 		protocol != ProtocolHTTPS &&
 		protocol != ProtocolTCP &&
 		protocol != ProtocolUDP {
-		return false, fmt.Sprintf("invalid protocol %s, available [http, https, tcp, udp]", protocol)
+		return false, fmt.Sprintf("invalid protocol %s, available [HTTP, HTTPS, TCP, UDP]", protocol)
 	}
 	return true, ""
 }

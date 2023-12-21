@@ -149,6 +149,46 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/label_suggest": {
+      "post": {
+        "summary": "Label suggest",
+        "description": "label 联想",
+        "operationId": "ViewConfig_LabelSuggest",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesViewSuggestReq"
+            }
+          }
+        ],
+        "tags": [
+          "ViewConfig"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects": {
       "post": {
         "summary": "Get multi cluster custom resources",
@@ -278,6 +318,86 @@
         ],
         "tags": [
           "MultiCluster"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/resource_name_suggest": {
+      "post": {
+        "summary": "Resource name suggest",
+        "description": "资源名称联想",
+        "operationId": "ViewConfig_ResourceNameSuggest",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesViewSuggestReq"
+            }
+          }
+        ],
+        "tags": [
+          "ViewConfig"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/values_suggest": {
+      "post": {
+        "summary": "Values suggest",
+        "description": "values 联想",
+        "operationId": "ViewConfig_ValuesSuggest",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesViewSuggestReq"
+            }
+          }
+        ],
+        "tags": [
+          "ViewConfig"
         ]
       }
     },
@@ -8589,13 +8709,12 @@
           "type": "string",
           "title": "项目编码"
         },
-        "clusterID": {
-          "type": "string",
-          "title": "集群 ID"
-        },
-        "namespace": {
-          "type": "string",
-          "title": "命名空间"
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
         },
         "name": {
           "type": "string",
@@ -8656,7 +8775,10 @@
           "title": "crd"
         },
         "creator": {
-          "type": "string",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "creator"
         },
         "labelSelector": {
@@ -8703,7 +8825,10 @@
           "title": "资源类型"
         },
         "creator": {
-          "type": "string",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "creator"
         },
         "labelSelector": {
@@ -8830,7 +8955,10 @@
           "title": "集群和命名空间"
         },
         "creator": {
-          "type": "string",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "creator"
         },
         "labelSelector": {
@@ -9125,13 +9253,12 @@
           "type": "string",
           "title": "项目编码"
         },
-        "clusterID": {
-          "type": "string",
-          "title": "集群 ID"
-        },
-        "namespace": {
-          "type": "string",
-          "title": "命名空间"
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
         },
         "name": {
           "type": "string",
@@ -9195,12 +9322,34 @@
           }
         },
         "labelSelector": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesLabelSelector"
           }
         }
       }
+    },
+    "clusterresourcesViewSuggestReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
+        },
+        "label": {
+          "type": "string",
+          "title": "标签"
+        }
+      },
+      "description": "获取视图配置建议",
+      "title": "ViewSuggestReq"
     },
     "protobufAny": {
       "type": "object",
