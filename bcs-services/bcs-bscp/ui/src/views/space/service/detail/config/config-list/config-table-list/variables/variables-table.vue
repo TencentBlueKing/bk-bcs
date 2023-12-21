@@ -66,7 +66,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import cloneDeep from 'lodash';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
 
 interface IErrorDetail {

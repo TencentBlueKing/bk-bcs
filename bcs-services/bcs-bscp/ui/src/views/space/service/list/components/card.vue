@@ -88,7 +88,7 @@ import { IAppItem } from '../../../../../../types/app';
 import { IPermissionQueryResourceItem } from '../../../../../../types/index';
 import { deleteApp } from '../../../../../api';
 import { datetimeFormat } from '../../../../../utils/index';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 
 const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 

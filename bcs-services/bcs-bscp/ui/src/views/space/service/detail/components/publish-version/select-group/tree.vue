@@ -61,10 +61,12 @@
               <template v-if="node.rules">
                 <span class="split-line"> | </span>
                 <div class="rules">
-                  <span v-for="(rule, index) in node.rules" :key="index" class="rule">
-                    <span v-if="index > 0"> & </span>
-                    <rule-tag class="tag-item" :rule="rule" />
-                  </span>
+                  <bk-overflow-title type="tips">
+                    <span v-for="(rule, index) in node.rules" :key="index" class="rule">
+                      <span v-if="index > 0"> & </span>
+                      <rule-tag class="tag-item" :rule="rule" />
+                    </span>
+                  </bk-overflow-title>
                 </div>
               </template>
             </div>

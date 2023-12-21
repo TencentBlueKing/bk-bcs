@@ -61,7 +61,7 @@ import { IServiceEditForm } from '../../../../../../types/service';
 import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
 import SearviceForm from './service-form.vue';
 import { IConfigKvType } from '../../../../../../types/config';
-import { InfoBox } from 'bkui-vue';
+import InfoBox from 'bkui-vue/lib/info-box';
 
 const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 

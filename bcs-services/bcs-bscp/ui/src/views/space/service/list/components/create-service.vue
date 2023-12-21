@@ -21,7 +21,7 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { InfoBox } from 'bkui-vue/lib';
+import InfoBox from 'bkui-vue/lib/info-box';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../store/global';
 import { createApp } from '../../../../../api';

@@ -210,7 +210,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue/lib';
+import Message from 'bkui-vue/lib/message';
 import { DownShape, Close } from 'bkui-vue/lib/icon';
 import useConfigStore from '../../../../../../../../store/config';
 import useServiceStore from '../../../../../../../../store/service';

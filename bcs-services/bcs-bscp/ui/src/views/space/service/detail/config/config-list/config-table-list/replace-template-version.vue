@@ -42,7 +42,7 @@ import { ref, watch } from 'vue';
 import { getTemplateVersionsNameByIds } from '../../../../../../../api/template';
 import { updateBoundTemplateVersion } from '../../../../../../../api/config';
 import { ITemplateVersionsName } from '../../../../../../../../types/template';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 
 interface ITplVersionItem {
   id: number;

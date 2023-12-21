@@ -17,7 +17,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import { IConfigKvEditParams } from '../../../../../../../../../types/config';
 import { createKv } from '../../../../../../../../api/config';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';

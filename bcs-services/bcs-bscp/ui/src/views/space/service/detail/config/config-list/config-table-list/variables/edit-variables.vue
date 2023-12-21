@@ -27,7 +27,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import { storeToRefs } from 'pinia';
 import useServiceStore from '../../../../../../../../store/service';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';

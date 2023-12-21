@@ -209,7 +209,7 @@ import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../store/global';
 import { Plus, Search, Eye, Unvisible, Copy, EditLine } from 'bkui-vue/lib/icon';
 import BkMessage from 'bkui-vue/lib/message';
-import { InfoBox } from 'bkui-vue/lib';
+import InfoBox from 'bkui-vue/lib/info-box';
 import { permissionCheck } from '../../../api/index';
 import { getCredentialList, createCredential, updateCredential, deleteCredential } from '../../../api/credentials';
 import { copyToClipBoard, datetimeFormat } from '../../../utils/index';

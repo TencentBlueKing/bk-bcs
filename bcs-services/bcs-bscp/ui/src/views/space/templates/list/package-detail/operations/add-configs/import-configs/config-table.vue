@@ -250,7 +250,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { DownShape, EditLine } from 'bkui-vue/lib/icon';
 import { IConfigImportItem } from '../../../../../../../../../types/config';
 import { cloneDeep } from 'lodash';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 
 const PRIVILEGE_GROUPS = ['属主（own）', '属组（group）', '其他人（other）'];
 const PRIVILEGE_VALUE_MAP = {

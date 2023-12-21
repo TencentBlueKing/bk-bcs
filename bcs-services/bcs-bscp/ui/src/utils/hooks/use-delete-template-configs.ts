@@ -1,4 +1,4 @@
-import { InfoBox } from 'bkui-vue';
+import InfoBox from 'bkui-vue/lib/info-box';
 import { ITemplateConfigItem } from '../../../types/template';
 import { deleteTemplate } from '../../api/template';
 
