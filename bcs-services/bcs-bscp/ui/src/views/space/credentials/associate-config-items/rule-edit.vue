@@ -229,6 +229,7 @@ defineExpose({ handleRuleValidate });
     width: 38px;
     color: #979ba5;
     font-size: 14px;
+    text-align: right;
     > i {
       cursor: pointer;
       &:hover {
