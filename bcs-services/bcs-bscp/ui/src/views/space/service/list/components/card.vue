@@ -254,7 +254,7 @@ const handleDeleteService = async () => {
     align-items: end;
     margin-bottom: 16px;
     .time-info {
-      padding-left: 10px;
+      padding-left: 16px;
     }
     span {
       font-size: 14px;
