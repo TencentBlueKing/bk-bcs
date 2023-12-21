@@ -53,11 +53,11 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 			req.GrayPublishMode = table.PublishByGroups.String()
 		}
 		publishMode := table.GrayPublishMode(req.GrayPublishMode)
-		if err := publishMode.Validate(); err != nil {
+		if e := publishMode.Validate(); e != nil {
 			if rErr := tx.Rollback(); rErr != nil {
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 			}
-			return nil, err
+			return nil, e
 		}
 		// validate and query group ids.
 		if publishMode == table.PublishByGroups {
@@ -77,13 +77,13 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 			}
 		}
 		if publishMode == table.PublishByLabels {
-			groupID, err := s.getOrCreateGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.GroupName, req.Labels)
-			if err != nil {
-				logs.Errorf("create group by labels failed, err: %v, rid: %s", err, grpcKit.Rid)
+			groupID, gErr := s.getOrCreateGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.GroupName, req.Labels)
+			if gErr != nil {
+				logs.Errorf("create group by labels failed, err: %v, rid: %s", gErr, grpcKit.Rid)
 				if rErr := tx.Rollback(); rErr != nil {
 					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 				}
-				return nil, err
+				return nil, gErr
 			}
 			groupIDs = append(groupIDs, groupID)
 		}

@@ -123,7 +123,8 @@ func (s *Service) GetReleaseByName(ctx context.Context, req *pbcs.GetReleaseByNa
 }
 
 // DeprecateRelease deprecate a release
-func (s *Service) DeprecateRelease(ctx context.Context, req *pbcs.DeprecateReleaseReq) (*pbcs.DeprecateReleaseResp, error) {
+func (s *Service) DeprecateRelease(ctx context.Context, req *pbcs.DeprecateReleaseReq) (
+	*pbcs.DeprecateReleaseResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
@@ -151,7 +152,8 @@ func (s *Service) DeprecateRelease(ctx context.Context, req *pbcs.DeprecateRelea
 }
 
 // UnDeprecateRelease undeprecate a release
-func (s *Service) UnDeprecateRelease(ctx context.Context, req *pbcs.UnDeprecateReleaseReq) (*pbcs.UnDeprecateReleaseResp, error) {
+func (s *Service) UnDeprecateRelease(ctx context.Context, req *pbcs.UnDeprecateReleaseReq) (
+	*pbcs.UnDeprecateReleaseResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{

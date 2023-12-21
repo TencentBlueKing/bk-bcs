@@ -749,26 +749,26 @@ func (s *Service) DeleteRelease(ctx context.Context, req *pbds.DeleteReleaseReq)
 
 	switch app.Spec.ConfigType {
 	case table.File:
-		if err := s.dao.ReleasedAppTemplate().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
-			req.BizId, req.AppId, req.ReleaseId); err != nil {
-			return nil, err
+		if e := s.dao.ReleasedAppTemplate().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			req.BizId, req.AppId, req.ReleaseId); e != nil {
+			return nil, e
 		}
-		if err := s.dao.ReleasedAppTemplateVariable().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
-			req.BizId, req.AppId, req.ReleaseId); err != nil {
-			return nil, err
+		if e := s.dao.ReleasedAppTemplateVariable().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			req.BizId, req.AppId, req.ReleaseId); e != nil {
+			return nil, e
 		}
-		if err := s.dao.ReleasedHook().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
-			req.BizId, req.AppId, req.ReleaseId); err != nil {
-			return nil, err
+		if e := s.dao.ReleasedHook().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			req.BizId, req.AppId, req.ReleaseId); e != nil {
+			return nil, e
 		}
-		if err := s.dao.ReleasedCI().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
-			req.BizId, req.AppId, req.ReleaseId); err != nil {
-			return nil, err
+		if e := s.dao.ReleasedCI().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			req.BizId, req.AppId, req.ReleaseId); e != nil {
+			return nil, e
 		}
 	case table.KV:
-		if err := s.dao.ReleasedKv().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
-			req.BizId, req.AppId, req.ReleaseId); err != nil {
-			return nil, err
+		if e := s.dao.ReleasedKv().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			req.BizId, req.AppId, req.ReleaseId); e != nil {
+			return nil, e
 		}
 	}
 
