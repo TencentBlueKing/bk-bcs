@@ -153,7 +153,7 @@ const handleToggleView = () => {
   .service-detail-header {
     &.version-detail-header {
       background: #fafbfd;
-      box-shadow: none;
+      border: none;
     }
   }
   .setting-content-container {

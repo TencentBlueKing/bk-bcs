@@ -290,7 +290,7 @@ const handleTabChange = (val: string) => {
     .released-groups {
       display: flex;
       align-items: center;
-      padding: 5px 8px;
+      padding: 2px 8px;
       background: #F0F1F5;
       border-radius: 2px;
       cursor: pointer;
@@ -303,11 +303,12 @@ const handleTabChange = (val: string) => {
     .groups-tag {
       display: flex;
       align-items: center;
-      line-height: 22px;
+      line-height: 18px;
       font-size: 12px;
       color: #63656e;
       .count {
-        padding: 4px;
+        padding: 2px 4px;
+        line-height: 1;
         background: #FAFBFD;
         border-radius: 2px;
       }

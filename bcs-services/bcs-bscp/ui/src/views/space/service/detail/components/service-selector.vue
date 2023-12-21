@@ -126,7 +126,12 @@ const handleOptionClick = (service: IAppItem, event: Event) => {
 const handleAppChange = (id: number) => {
   const service = serviceList.value.find(service => service.id === id);
   if (service) {
-    router.push({ name: route.name as string, params: { spaceId: service.space_id, appId: id } });
+    let name = route.name as string;
+    if (route.name === 'init-script' && service.spec.config_type === 'kv') {
+      name = 'service-config';
+    }
+
+    router.push({ name, params: { spaceId: service.space_id, appId: id } });
   }
 };
 </script>
