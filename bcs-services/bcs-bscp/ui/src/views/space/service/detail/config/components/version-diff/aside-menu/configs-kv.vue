@@ -69,6 +69,7 @@ const props = withDefaults(
     baseVersionId: number | undefined;
     selectedConfig: number;
     actived: boolean;
+    isPublish: boolean
   }>(),
   {
     unNamedVersionVariables: () => [],
@@ -159,6 +160,11 @@ onMounted(async () => {
   aggregatedList.value.sort((a, b) => a.key.charCodeAt(0) - b.key.charCodeAt(0));
   groupedConfigListOnShow.value = aggregatedList.value.slice();
   setDefaultSelected();
+  // 如果是上线版本 默认选中只差看差异项
+  if (props.isPublish) {
+    isOnlyShowDiff.value = true;
+    handleSearch();
+  }
 });
 
 // 获取当前版本和基准版本的所有配置文件列表(非模板配置和套餐下模板)

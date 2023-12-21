@@ -131,6 +131,7 @@ const props = withDefaults(
     baseVersionId: number | undefined;
     selectedConfig: IConfigDiffSelected;
     actived: boolean;
+    isPublish: boolean;
   }>(),
   {
     unNamedVersionVariables: () => [],
@@ -233,6 +234,11 @@ onMounted(async () => {
   aggregatedList.value = calcDiff();
   groupedConfigListOnShow.value = aggregatedList.value.slice();
   setDefaultSelected();
+  // 如果是上线版本 默认选中只差看差异项
+  if (props.isPublish) {
+    isOnlyShowDiff.value = true;
+    handleSearch();
+  }
 });
 
 // 判断版本是否为未命名版本

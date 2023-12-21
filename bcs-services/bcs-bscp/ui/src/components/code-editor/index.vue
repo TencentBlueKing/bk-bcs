@@ -8,7 +8,7 @@
   <section v-show="!isShowPlaceholder || !placeholder" class="code-editor-wrapper" ref="codeEditorRef"></section>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue';
+import { ref, watch, onMounted, nextTick, computed } from 'vue';
 import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker.js?worker';
@@ -92,6 +92,8 @@ watch(
     monaco.editor.setModelLanguage(editor.getModel() as monaco.editor.ITextModel, val);
     // 清空错误行
     monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', []);
+    // 切换缩进空格数
+    editor.getModel()!.updateOptions({ tabSize: tabSize.value });
   },
 );
 
@@ -118,6 +120,11 @@ watch(
   },
 );
 
+const tabSize = computed(() => {
+  if (props.language === 'xml' || props.language === 'yaml') return 2;
+  return 4;
+});
+
 onMounted(() => {
   handleVariableList();
   aotoCompletion();
@@ -130,6 +137,7 @@ onMounted(() => {
       language: props.language || 'custom-language',
       readOnly: !props.editable,
       scrollBeyondLastLine: false,
+      tabSize: tabSize.value,
     });
   }
   if (props.lfEol) {

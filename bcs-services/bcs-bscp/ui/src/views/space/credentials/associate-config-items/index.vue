@@ -106,7 +106,8 @@ const handleSave = async () => {
       del_id: [],
       alter_scope: [],
     };
-    handleClose();
+    isRuleEdit.value = false;
+    loadRules();
     emits('refresh');
   } catch (e) {
     console.error(e);
