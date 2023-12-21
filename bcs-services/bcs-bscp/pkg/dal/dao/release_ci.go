@@ -44,6 +44,8 @@ type ReleasedCI interface {
 	ListAllByAppIDs(kit *kit.Kit, appIDs []uint32, bizID uint32) ([]*table.ReleasedConfigItem, error)
 	// ListAllByReleaseIDs batch list released config items by releaseIDs.
 	ListAllByReleaseIDs(kit *kit.Kit, releasedIDs []uint32, bizID uint32) ([]*table.ReleasedConfigItem, error)
+	// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+	BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
 }
 
 var _ ReleasedCI = new(releasedCIDao)
@@ -190,4 +192,22 @@ func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, bizID, appId uint32) (
 	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId), m.ConfigItemID.Neq(0))
 	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).Order(m.ReleaseID.Desc()).Limit(1).Select(m.ReleaseID)
 	return query.Where(q.Columns(m.ReleaseID).Eq(subQuery)).Find()
+}
+
+// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+func (dao *releasedCIDao) BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	bizID, appID, releaseID uint32) error {
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "biz_id can not be 0")
+	}
+	if appID == 0 {
+		return errf.New(errf.InvalidParameter, "app_id can not be 0")
+	}
+	if releaseID == 0 {
+		return errf.New(errf.InvalidParameter, "release_id can not be 0")
+	}
+
+	m := tx.ReleasedConfigItem
+	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID)).Delete()
+	return err
 }

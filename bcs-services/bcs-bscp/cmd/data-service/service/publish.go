@@ -39,6 +39,14 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 	groupIDs := make([]uint32, 0)
 	tx := s.dao.GenQuery().Begin()
 
+	release, err := s.dao.Release().Get(grpcKit, req.BizId, req.AppId, req.ReleaseId)
+	if err != nil {
+		return nil, err
+	}
+	if release.Spec.Deprecated {
+		return nil, fmt.Errorf("release %s is deprecated, can not be published", release.Spec.Name)
+	}
+
 	if !req.All {
 		if req.GrayPublishMode == "" {
 			// !NOTE: Compatible with previous pipelined plugins version

@@ -161,7 +161,22 @@ service Config {
       get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/query/name/{release_name}"
     };
   }
-
+  rpc DeprecateRelease(DeprecateReleaseReq) returns (DeprecateReleaseResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/deprecate"
+    };
+  }
+  rpc UnDeprecateRelease(UnDeprecateReleaseReq) returns (UnDeprecateReleaseResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/undeprecate"
+      body: "*"
+    };
+  }
+  rpc DeleteRelease(DeleteReleaseReq) returns (DeleteReleaseResp) {
+    option (google.api.http) = {
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}"
+    };
+  }
   rpc CreateHook(CreateHookReq) returns (CreateHookResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/hooks"
@@ -1078,6 +1093,30 @@ message GetReleaseByNameReq {
   uint32 app_id = 2;
   string release_name = 3;
 }
+
+message DeprecateReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message DeprecateReleaseResp {}
+
+message UnDeprecateReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message UnDeprecateReleaseResp {}
+
+message DeleteReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message DeleteReleaseResp {}
 
 message CreateHookReq {
   uint32 biz_id = 1;
