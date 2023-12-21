@@ -225,6 +225,7 @@ const handleTabChange = (val: string) => {
   align-items: center;
   padding: 0 24px;
   height: 41px;
+  border-bottom: 1px solid #dcdee5;
   box-shadow: 0 3px 4px 0 #0000000a;
   z-index: 1;
   .summary-wrapper {
