@@ -96,6 +96,9 @@ const handleCreateConfirm = async () => {
       footerAlign: 'center',
       confirmText: serviceData.value.config_type === 'file' ? '新增配置文件' : '新增配置项',
       cancelText: '稍后再说',
+      quickClose: false,
+      extCls: 'create-app-info',
+      width: 400,
       onConfirm() {
         router.push({
           name: 'service-config',
@@ -141,6 +144,20 @@ const close = () => {
   button {
     margin-right: 8px;
     min-width: 88px;
+  }
+}
+</style>
+
+<style lang="scss">
+.create-app-info {
+  .bk-modal-body {
+    .bk-modal-content {
+      padding-bottom: 24px;
+    }
+    .bk-modal-footer {
+      height: auto;
+      padding-bottom: 24px;
+    }
   }
 }
 </style>
