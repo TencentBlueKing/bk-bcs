@@ -38,30 +38,30 @@ func (s *service) UploadHandler(c *gin.Context) {
 	sessionId := c.Param("sessionId")
 
 	if uploadPath == "" {
-		rest.APIError(c, i18n.GetMessage(c, "请先输入上传路径"))
+		rest.APIError(c, i18n.T(c, "请先输入上传路径"))
 		return
 	}
 	err := checkFileExists(uploadPath, sessionId)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "目标路径不存在"))
+		rest.APIError(c, i18n.T(c, "目标路径不存在"))
 		return
 	}
 	err = checkPathIsDir(uploadPath, sessionId)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "目标路径不存在"))
+		rest.APIError(c, i18n.T(c, "目标路径不存在"))
 		return
 	}
 	file, err := c.FormFile("file")
 	if err != nil {
 		logger.Errorf("get file from request failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "解析上传文件失败"))
+		rest.APIError(c, i18n.T(c, "解析上传文件失败"))
 		return
 	}
 
 	opened, err := file.Open()
 	if err != nil {
 		logger.Errorf("open file from request failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "解析上传文件失败"))
+		rest.APIError(c, i18n.T(c, "解析上传文件失败"))
 		return
 	}
 	defer opened.Close()
@@ -69,14 +69,14 @@ func (s *service) UploadHandler(c *gin.Context) {
 	podCtx, err := sessions.NewStore().WebSocketScope().Get(c.Request.Context(), sessionId)
 	if err != nil {
 		logger.Errorf("get pod context by session %s failed, err: %s", sessionId, err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "获取pod信息失败"))
+		rest.APIError(c, i18n.T(c, "获取pod信息失败"))
 		return
 	}
 	reader, writer := io.Pipe()
 	pe, err := podCtx.NewPodExec()
 	if err != nil {
 		logger.Errorf("new pod exec failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "执行上传命令失败"))
+		rest.APIError(c, i18n.T(c, "执行上传命令失败"))
 		return
 	}
 	errChan := make(chan error, 1)
@@ -117,18 +117,18 @@ func (s *service) UploadHandler(c *gin.Context) {
 
 	if err = pe.Exec(); err != nil {
 		logger.Errorf("pod exec failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "执行上传命令失败"))
+		rest.APIError(c, i18n.T(c, "执行上传命令失败"))
 		return
 	}
 
 	err, ok := <-errChan
 	if ok && err != nil {
 		logger.Errorf("writer to tar failed, err: %s", err.Error())
-		rest.APIError(c, i18n.GetMessage(c, "文件上传失败"))
+		rest.APIError(c, i18n.T(c, "文件上传失败"))
 		return
 	}
 
-	rest.APIOK(c, i18n.GetMessage(c, "文件上传成功"), gin.H{})
+	rest.APIOK(c, i18n.T(c, "文件上传成功"), gin.H{})
 }
 
 // DownloadHandler 下载文件
@@ -169,7 +169,7 @@ func (s *service) DownloadHandler(c *gin.Context) {
 	tarReader := tar.NewReader(reader)
 	_, err := tarReader.Next()
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "复制文件流失败"))
+		rest.APIError(c, i18n.T(c, "复制文件流失败"))
 		return
 	}
 	fileName := downloadPath[strings.LastIndex(downloadPath, "/")+1:]
@@ -194,7 +194,7 @@ func (s *service) CheckDownloadHandler(c *gin.Context) {
 		rest.APIOK(c, msg, types.CheckPassed{
 			Passed: false,
 			Detail: err.Error(),
-			Reason: i18n.GetMessage(c, "目标文件不存在"),
+			Reason: i18n.T(c, "目标文件不存在"),
 		})
 		return
 	}
@@ -203,7 +203,7 @@ func (s *service) CheckDownloadHandler(c *gin.Context) {
 		rest.APIOK(c, msg, types.CheckPassed{
 			Passed: false,
 			Detail: err.Error(),
-			Reason: i18n.GetMessage(c, "暂不支持文件夹下载"),
+			Reason: i18n.T(c, "暂不支持文件夹下载"),
 		})
 		return
 	}
@@ -212,7 +212,7 @@ func (s *service) CheckDownloadHandler(c *gin.Context) {
 		rest.APIOK(c, msg, types.CheckPassed{
 			Passed: false,
 			Detail: err.Error(),
-			Reason: i18n.GetMessage(c, "文件不能超过{}MB", map[string]int{"fileLimit": FileSizeLimits}),
+			Reason: i18n.T(c, "文件不能超过%dMB", FileSizeLimits),
 		})
 		return
 	}

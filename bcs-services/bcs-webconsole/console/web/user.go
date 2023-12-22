@@ -30,19 +30,19 @@ func (s *service) UserPermRequestRedirect(c *gin.Context) {
 	projectId := c.Query("project_id")
 	clusterId := c.Query("cluster_id")
 	if projectId == "" {
-		rest.APIError(c, i18n.GetMessage(c, "project_id is required"))
+		rest.APIError(c, i18n.T(c, "project_id is required"))
 		return
 	}
 	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "项目不正确"))
+		rest.APIError(c, i18n.T(c, "项目不正确"))
 		return
 	}
 
 	redirectUrl, err := iam.MakeResourceApplyUrl(c.Request.Context(),
 		project.ProjectId, clusterId, route.GetNamespace(c), "")
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, err.Error()))
+		rest.APIError(c, i18n.T(c, "%s", err))
 		return
 	}
 
