@@ -34,8 +34,14 @@ type Release interface {
 	List(kit *kit.Kit, opts *types.ListReleasesOption) (*types.ListReleaseDetails, error)
 	// ListAllByIDs list all releases by releaseIDs.
 	ListAllByIDs(kit *kit.Kit, ids []uint32, bizID uint32) ([]*table.Release, error)
-	// GetByName ..
+	// GetByName get release by name
 	GetByName(kit *kit.Kit, bizID uint32, appID uint32, name string) (*table.Release, error)
+	// Get get release by id
+	Get(kit *kit.Kit, bizID, appID, releaseID uint32) (*table.Release, error)
+	// UpdateDeprecated update release deprecated status.
+	UpdateDeprecated(kit *kit.Kit, bizID, appID, releaseID uint32, deprecated bool) error
+	// DeleteWithTx delete release with tx.
+	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
 }
 
 var _ Release = new(releaseDao)
@@ -79,6 +85,12 @@ func (dao *releaseDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Rele
 	}
 
 	return g.ID, nil
+}
+
+// GetByName 通过名称获取, 可以做唯一性校验
+func (dao *releaseDao) Get(kit *kit.Kit, bizID uint32, appID, releaseID uint32) (*table.Release, error) {
+	m := dao.genQ.Release
+	return m.WithContext(kit.Ctx).Where(m.ID.Eq(releaseID), m.AppID.Eq(appID), m.BizID.Eq(bizID)).Take()
 }
 
 // GetByName 通过名称获取, 可以做唯一性校验
@@ -155,4 +167,19 @@ func (dao *releaseDao) validateAttachmentResExist(kit *kit.Kit, am *table.Releas
 		return fmt.Errorf("get release attached app %d failed", am.AppID)
 	}
 	return nil
+}
+
+func (dao *releaseDao) UpdateDeprecated(kit *kit.Kit, bizID, appID, releaseID uint32, deprecated bool) error {
+	m := dao.genQ.Release
+	_, err := m.WithContext(kit.Ctx).
+		Where(m.ID.Eq(releaseID), m.AppID.Eq(appID), m.BizID.Eq(bizID)).
+		Update(m.Deprecated, true)
+	return err
+}
+
+// DeleteWithTx delete release with tx.
+func (dao *releaseDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error {
+	m := tx.Release
+	_, err := m.WithContext(kit.Ctx).Where(m.ID.Eq(releaseID), m.AppID.Eq(appID), m.BizID.Eq(bizID)).Delete()
+	return err
 }

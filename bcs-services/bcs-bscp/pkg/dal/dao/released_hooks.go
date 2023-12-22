@@ -52,6 +52,8 @@ type ReleasedHook interface {
 		hookID, hookRevisionID, releaseID uint32) error
 	// CountByHookRevisionIDAndReleaseID counts the released hook by hook revision id and release id.
 	CountByHookRevisionIDAndReleaseID(kit *kit.Kit, bizID, hookID, hookRevisionID, releaseID uint32) (int64, error)
+	// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+	BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
 }
 
 var _ ReleasedHook = new(releasedHookDao)
@@ -327,4 +329,21 @@ func (dao *releasedHookDao) CountByHookRevisionIDAndReleaseID(kit *kit.Kit,
 	return m.WithContext(kit.Ctx).
 		Where(m.BizID.Eq(bizID), m.HookID.Eq(hookID), m.HookRevisionID.Eq(hookRevisionID), m.ReleaseID.Eq(releaseID)).
 		Count()
+}
+
+// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+func (dao *releasedHookDao) BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	bizID, appID, releaseID uint32) error {
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+	if appID == 0 {
+		return errf.New(errf.InvalidParameter, "appID is 0")
+	}
+	if releaseID == 0 {
+		return errf.New(errf.InvalidParameter, "releaseID is 0")
+	}
+	m := tx.ReleasedHook
+	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID)).Delete()
+	return err
 }

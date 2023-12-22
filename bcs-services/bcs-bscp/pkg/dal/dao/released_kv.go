@@ -37,6 +37,8 @@ type ReleasedKv interface {
 	GetReleasedLately(kit *kit.Kit, bizID, appID uint32) ([]*table.ReleasedKv, error)
 	// GetReleasedLatelyByKey get released kv lately by key
 	GetReleasedLatelyByKey(kit *kit.Kit, bizID, appID uint32, key string) (*table.ReleasedKv, error)
+	// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+	BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
 }
 
 var _ ReleasedKv = new(releasedKvDao)
@@ -170,4 +172,24 @@ func (dao *releasedKvDao) GetReleasedLatelyByKey(kit *kit.Kit, bizID, appID uint
 	error) {
 	m := dao.genQ.ReleasedKv
 	return m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Key.Eq(key)).Take()
+}
+
+// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+func (dao *releasedKvDao) BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	bizID, appID, releaseID uint32) error {
+
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "biz_id can not be 0")
+	}
+	if appID == 0 {
+		return errf.New(errf.InvalidParameter, "app_id can not be 0")
+	}
+	if releaseID == 0 {
+		return errf.New(errf.InvalidParameter, "release_id can not be 0")
+	}
+
+	m := tx.ReleasedKv
+
+	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID)).Delete()
+	return err
 }
