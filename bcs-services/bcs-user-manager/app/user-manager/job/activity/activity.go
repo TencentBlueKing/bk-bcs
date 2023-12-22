@@ -50,6 +50,7 @@ func IntervalDeleteActivity(ctx context.Context) (err error) {
 				blog.Info("user not configured, ignoring")
 				continue
 			}
+			blog.Info("clean activity start")
 			// 解析配置文件的配置时间，如1s、1m、1h
 			duration, err := time.ParseDuration(config.GetGlobalConfig().Activity.Duration)
 			if err != nil {
@@ -62,7 +63,9 @@ func IntervalDeleteActivity(ctx context.Context) (err error) {
 			err = sqlstore.BatchDeleteActivity(config.GetGlobalConfig().Activity.ResourceType, createdAt)
 			if err != nil {
 				blog.Errorf("BatchDeleteActivity failed: %v", err)
+				continue
 			}
+			blog.Info("clean activity end")
 		}
 	}
 }

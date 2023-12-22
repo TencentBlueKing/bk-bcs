@@ -186,6 +186,14 @@ func (resp *ListBCSCollectorRespData) ToLogRule() LogRule {
 			multiline = &Multiline{MultilinePattern: conf.Params.MultilinePattern,
 				MultilineMaxLines: conf.Params.MultilineMaxLines, MultilineTimeout: conf.Params.MultilineTimeout}
 		}
+		if conf.Params.Conditions != nil {
+			if conf.Params.Conditions.MatchType == "" {
+				conf.Params.Conditions.MatchType = "include"
+			}
+			if conf.Params.Conditions.Type == "" {
+				conf.Params.Conditions.Type = "match"
+			}
+		}
 		rule.LogRuleContainer = LogRuleContainer{
 			Namespaces:    namespaces,
 			Paths:         paths,

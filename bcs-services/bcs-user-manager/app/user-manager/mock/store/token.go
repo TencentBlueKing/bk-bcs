@@ -79,4 +79,40 @@ func (m *MockTokenStore) GetAllTokens() []models.BcsUser {
 	return args.Get(0).([]models.BcsUser)
 }
 
+// CreateClientToken implements sqlstore.TokenStore.
+func (m *MockTokenStore) CreateClientToken(token *models.BcsClientUser) error {
+	args := m.Called(token)
+	return args.Error(0)
+}
+
+// GetAllClients implements sqlstore.TokenStore.
+func (m *MockTokenStore) GetAllClients() []models.BcsClientUser {
+	args := m.Called()
+	return args.Get(0).([]models.BcsClientUser)
+}
+
+// GetClient implements sqlstore.TokenStore.
+func (m *MockTokenStore) GetClient(projectCode, name string) *models.BcsClientUser {
+	args := m.Called(projectCode, name)
+	return args.Get(0).(*models.BcsClientUser)
+}
+
+// GetProjectClients implements sqlstore.TokenStore.
+func (m *MockTokenStore) GetProjectClients(projectCode string) []models.BcsClientUser {
+	args := m.Called(projectCode)
+	return args.Get(0).([]models.BcsClientUser)
+}
+
+// UpdateClientToken implements sqlstore.TokenStore.
+func (m *MockTokenStore) UpdateClientToken(client *models.BcsClient, updatedClient *models.BcsClient) error {
+	args := m.Called(client, updatedClient)
+	return args.Error(0)
+}
+
+// DeleteProjectClient implements sqlstore.TokenStore.
+func (m *MockTokenStore) DeleteProjectClient(projectCode, name string) error {
+	args := m.Called(projectCode, name)
+	return args.Get(0).(error)
+}
+
 var _ sqlstore.TokenStore = &MockTokenStore{}
