@@ -202,7 +202,7 @@ func (s *service) CheckDownloadHandler(c *gin.Context) {
 	if err := checkPathIsDir(downloadPath, sessionId); err == nil {
 		rest.APIOK(c, msg, types.CheckPassed{
 			Passed: false,
-			Detail: err.Error(),
+			Detail: "",
 			Reason: i18n.T(c, "暂不支持文件夹下载"),
 		})
 		return
