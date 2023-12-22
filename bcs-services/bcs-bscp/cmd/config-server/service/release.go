@@ -121,3 +121,89 @@ func (s *Service) GetReleaseByName(ctx context.Context, req *pbcs.GetReleaseByNa
 
 	return rp, nil
 }
+
+// DeprecateRelease deprecate a release
+func (s *Service) DeprecateRelease(ctx context.Context, req *pbcs.DeprecateReleaseReq) (
+	*pbcs.DeprecateReleaseResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.DeprecateReleaseReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		ReleaseId: req.ReleaseId,
+	}
+	_, err = s.client.DS.DeprecateRelease(kt.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("deprecate release %s failed, err: %v, rid: %s", req.ReleaseId, err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.DeprecateReleaseResp{}
+	return resp, nil
+}
+
+// UnDeprecateRelease undeprecate a release
+func (s *Service) UnDeprecateRelease(ctx context.Context, req *pbcs.UnDeprecateReleaseReq) (
+	*pbcs.UnDeprecateReleaseResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.UnDeprecateReleaseReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		ReleaseId: req.ReleaseId,
+	}
+	_, err = s.client.DS.UnDeprecateRelease(kt.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("undeprecate release %s failed, err: %v, rid: %s", req.ReleaseId, err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.UnDeprecateReleaseResp{}
+	return resp, nil
+}
+
+// DeleteRelease delete a release
+func (s *Service) DeleteRelease(ctx context.Context, req *pbcs.DeleteReleaseReq) (*pbcs.DeleteReleaseResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.DeleteReleaseReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		ReleaseId: req.ReleaseId,
+	}
+	_, err = s.client.DS.DeleteRelease(kt.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("delete release %s failed, err: %v, rid: %s", req.ReleaseId, err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.DeleteReleaseResp{}
+	return resp, nil
+}

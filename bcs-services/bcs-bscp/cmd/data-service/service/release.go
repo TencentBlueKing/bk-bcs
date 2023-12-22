@@ -703,6 +703,79 @@ func (s *Service) GetReleaseByName(ctx context.Context, req *pbds.GetReleaseByNa
 	return pbrelease.PbRelease(release), nil
 }
 
+// DeprecateRelease deprecate a release
+func (s *Service) DeprecateRelease(ctx context.Context, req *pbds.DeprecateReleaseReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	// check if release was published
+	rgs, err := s.dao.ReleasedGroup().ListAllByReleaseID(grpcKit, req.ReleaseId, req.BizId)
+	if err != nil {
+		return nil, err
+	}
+	if len(rgs) > 0 {
+		return nil, fmt.Errorf("release %d was published, can not deprecate", req.ReleaseId)
+	}
+	err = s.dao.Release().UpdateDeprecated(grpcKit, req.BizId, req.AppId, req.ReleaseId, true)
+	return new(pbbase.EmptyResp), err
+}
+
+// UnDeprecateRelease undeprecate a release
+func (s *Service) UnDeprecateRelease(ctx context.Context, req *pbds.UnDeprecateReleaseReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	err := s.dao.Release().UpdateDeprecated(grpcKit, req.BizId, req.AppId, req.ReleaseId, false)
+	return new(pbbase.EmptyResp), err
+}
+
+// DeleteRelease delete a release
+func (s *Service) DeleteRelease(ctx context.Context, req *pbds.DeleteReleaseReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	release, err := s.dao.Release().Get(grpcKit, req.BizId, req.AppId, req.ReleaseId)
+	if err != nil {
+		return nil, err
+	}
+	if release.Spec.Deprecated {
+		return nil, fmt.Errorf("release %d can not delete, you should deprecate it first", req.ReleaseId)
+	}
+
+	// get app type
+	app, err := s.dao.App().Get(grpcKit, req.BizId, req.AppId)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := s.dao.GenQuery().Begin()
+
+	switch app.Spec.ConfigType {
+	case table.File:
+		if e := s.dao.ReleasedAppTemplate().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			req.BizId, req.AppId, req.ReleaseId); e != nil {
+			return nil, e
+		}
+		if e := s.dao.ReleasedAppTemplateVariable().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			req.BizId, req.AppId, req.ReleaseId); e != nil {
+			return nil, e
+		}
+		if e := s.dao.ReleasedHook().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			req.BizId, req.AppId, req.ReleaseId); e != nil {
+			return nil, e
+		}
+		if e := s.dao.ReleasedCI().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			req.BizId, req.AppId, req.ReleaseId); e != nil {
+			return nil, e
+		}
+	case table.KV:
+		if e := s.dao.ReleasedKv().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			req.BizId, req.AppId, req.ReleaseId); e != nil {
+			return nil, e
+		}
+	}
+
+	err = s.dao.Release().DeleteWithTx(grpcKit, tx, req.BizId, req.AppId, req.ReleaseId)
+	return new(pbbase.EmptyResp), err
+}
+
 func (s *Service) queryPublishStatus(gcrs []*table.ReleasedGroup, releaseID uint32) (
 	string, []*table.ReleasedGroup) {
 	var includeDefault = false

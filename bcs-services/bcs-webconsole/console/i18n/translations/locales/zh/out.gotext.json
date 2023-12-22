@@ -1,60 +1,81 @@
 {
-    "language": "en",
+    "language": "zh",
     "messages": [
         {
             "id": "请先输入上传路径",
             "message": "请先输入上传路径",
-            "translation": "Please enter the upload path first"
+            "translation": "请先输入上传路径",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "目标路径不存在",
             "message": "目标路径不存在",
-            "translation": "Destination path does not exist"
+            "translation": "目标路径不存在",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "解析上传文件失败",
             "message": "解析上传文件失败",
-            "translation": "Failed to parse uploaded file"
+            "translation": "解析上传文件失败",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "获取pod信息失败",
             "message": "获取pod信息失败",
-            "translation": "Failed to get pod information"
+            "translation": "获取pod信息失败",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "执行上传命令失败",
             "message": "执行上传命令失败",
-            "translation": "Failed to execute upload command"
+            "translation": "执行上传命令失败",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "文件上传失败",
             "message": "文件上传失败",
-            "translation": "File upload failed"
+            "translation": "文件上传失败",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "文件上传成功",
             "message": "文件上传成功",
-            "translation": "File upload successful"
+            "translation": "文件上传成功",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "复制文件流失败",
             "message": "复制文件流失败",
-            "translation": "Failed to copy file stream"
+            "translation": "复制文件流失败",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "目标文件不存在",
             "message": "目标文件不存在",
-            "translation": "Target file does not exist"
+            "translation": "目标文件不存在",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "暂不支持文件夹下载",
             "message": "暂不支持文件夹下载",
-            "translation": "Download directory is not supported"
+            "translation": "暂不支持文件夹下载",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "文件不能超过{FileSizeLimits}MB",
             "message": "文件不能超过{FileSizeLimits}MB",
-            "translation": "Files cannot exceed {FileSizeLimits}MB",
+            "translation": "文件不能超过{FileSizeLimits}MB",
+            "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "FileSizeLimits",
@@ -64,17 +85,21 @@
                     "argNum": 1,
                     "expr": "FileSizeLimits"
                 }
-            ]
+            ],
+            "fuzzy": true
         },
         {
             "id": "项目不正确",
             "message": "项目不正确",
-            "translation": "Project_id Incorrect"
+            "translation": "项目不正确",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "{Err}",
             "message": "{Err}",
             "translation": "{Err}",
+            "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Err",
@@ -84,17 +109,21 @@
                     "argNum": 1,
                     "expr": "err"
                 }
-            ]
+            ],
+            "fuzzy": true
         },
         {
             "id": "获取集群成功",
             "message": "获取集群成功",
-            "translation": "Get Clusters successful"
+            "translation": "获取集群成功",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "获取session失败: {Err}",
             "message": "获取session失败: {Err}",
-            "translation": "Get session failed: {Err}",
+            "translation": "获取session失败: {Err}",
+            "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Err",
@@ -104,22 +133,28 @@
                     "argNum": 1,
                     "expr": "err"
                 }
-            ]
+            ],
+            "fuzzy": true
         },
         {
             "id": "获取session成功",
             "message": "获取session成功",
-            "translation": "Get session successful"
+            "translation": "获取session成功",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "session_id不合法或已经过期",
             "message": "session_id不合法或已经过期",
-            "translation": "session_id is incorrect or has expired"
+            "translation": "session_id不合法或已经过期",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "请求参数错误: {Err}",
             "message": "请求参数错误: {Err}",
-            "translation": "Request Params Error: {Err}",
+            "translation": "请求参数错误: {Err}",
+            "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Err",
@@ -129,12 +164,14 @@
                     "argNum": 1,
                     "expr": "err"
                 }
-            ]
+            ],
+            "fuzzy": true
         },
         {
             "id": "请求参数错误, command not valid: {Err}",
             "message": "请求参数错误, command not valid: {Err}",
-            "translation": "Request Params Error, command not valid: {Err}",
+            "translation": "请求参数错误, command not valid: {Err}",
+            "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Err",
@@ -144,12 +181,14 @@
                     "argNum": 1,
                     "expr": "err"
                 }
-            ]
+            ],
+            "fuzzy": true
         },
         {
             "id": "服务请求失败: {Err}",
             "message": "服务请求失败: {Err}",
-            "translation": "Service request failed: {Err}",
+            "translation": "服务请求失败: {Err}",
+            "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Err",
@@ -159,17 +198,21 @@
                     "argNum": 1,
                     "expr": "err"
                 }
-            ]
+            ],
+            "fuzzy": true
         },
         {
             "id": "服务请求成功",
             "message": "服务请求成功",
-            "translation": "Service request successful"
+            "translation": "服务请求成功",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "用户没有设置命令延时",
             "message": "用户没有设置命令延时",
-            "translation": "User did not set command delay",
+            "translation": "用户没有设置命令延时",
+            "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Err",
@@ -179,42 +222,56 @@
                     "argNum": 1,
                     "expr": "err"
                 }
-            ]
+            ],
+            "fuzzy": true
         },
         {
             "id": "参数不合法",
             "message": "参数不合法",
-            "translation": "Invalid parameter"
+            "translation": "参数不合法",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "session不合法",
             "message": "session不合法",
-            "translation": "Invalid session"
+            "translation": "session不合法",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "初始化session失败",
             "message": "初始化session失败",
-            "translation": "Init session failed"
+            "translation": "初始化session失败",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "BCS Console 服务端连接断开，请重新登录",
             "message": "BCS Console 服务端连接断开，请重新登录",
-            "translation": "The BCS Console server is disconnected, please login again"
+            "translation": "BCS Console 服务端连接断开，请重新登录",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab",
             "message": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab",
-            "translation": "Support common Bash shortcuts; Ctrl-W in Windows is to close the window shortcut, please use Alt-W instead; use Alt-Num to switch Tab"
+            "translation": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替",
             "message": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替",
-            "translation": "Support common Bash shortcuts; Ctrl-W under Windows is the shortcut to close, please use Alt-W instead"
+            "translation": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "BCS Console 已经{Minutes}分钟无操作",
             "message": "BCS Console 已经{Minutes}分钟无操作",
-            "translation": "BCS Console has no operation for {Minutes} minutes",
+            "translation": "BCS Console 已经{Minutes}分钟无操作",
+            "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Minutes",
@@ -224,12 +281,14 @@
                     "argNum": 1,
                     "expr": "int64(idleTime.Minutes())"
                 }
-            ]
+            ],
+            "fuzzy": true
         },
         {
             "id": "BCS Console 使用已经超过{1440}小时，请重新登录",
             "message": "BCS Console 使用已经超过{1440}小时，请重新登录",
-            "translation": "BCS console has been used for more than {1440} hours. Please login again",
+            "translation": "BCS Console 使用已经超过{1440}小时，请重新登录",
+            "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "1440",
@@ -239,32 +298,43 @@
                     "argNum": 1,
                     "expr": "1440"
                 }
-            ]
+            ],
+            "fuzzy": true
         },
         {
             "id": "zh",
             "message": "zh",
-            "translation": "en"
+            "translation": "zh",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "下载",
             "message": "下载",
-            "translation": "Download"
+            "translation": "下载",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "project_id is required",
             "message": "project_id is required",
-            "translation": "project_id is required"
+            "translation": "project_id is required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "项目或者集群Id不正确",
             "message": "项目或者集群Id不正确",
-            "translation": "ProjectId or ClusterId Incorrect"
+            "translation": "项目或者集群Id不正确",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         },
         {
             "id": "没有权限",
             "message": "没有权限",
-            "translation": "No permission"
+            "translation": "没有权限",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
         }
     ]
 }

@@ -67,6 +67,9 @@ service Data {
   rpc CreateRelease(CreateReleaseReq) returns (CreateResp) {}
   rpc ListReleases(ListReleasesReq) returns (ListReleasesResp) {}
   rpc GetReleaseByName(GetReleaseByNameReq) returns (pbrelease.Release) {}
+  rpc DeprecateRelease(DeprecateReleaseReq) returns (pbbase.EmptyResp) {}
+  rpc UnDeprecateRelease(UnDeprecateReleaseReq) returns (pbbase.EmptyResp) {}
+  rpc DeleteRelease(DeleteReleaseReq) returns (pbbase.EmptyResp) {}
 
   // released config item related interface.
   rpc GetReleasedConfigItem(GetReleasedCIReq) returns (pbrci.ReleasedConfigItem) {}
@@ -499,6 +502,24 @@ message GetReleaseByNameReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   string release_name = 3;
+}
+
+message DeprecateReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message UnDeprecateReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message DeleteReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
 }
 
 message GetReleasedCIReq {
