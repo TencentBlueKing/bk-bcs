@@ -101,6 +101,11 @@ func (ap *App) RemoveCache(kt *kit.Kit, bizID uint32, appName string) {
 	_, _ = ap.cs.CS().GetAppID(kt.RpcCtx(), opt)
 }
 
+// ListApps 获取App列表, 不缓存，直接透传请求
+func (ap *App) ListApps(kt *kit.Kit, req *pbcs.ListAppsReq) (*pbcs.ListAppsResp, error) {
+	return ap.cs.CS().ListApps(kt.Ctx, req)
+}
+
 // GetAppID get app id by app name.
 func (ap *App) GetAppID(kt *kit.Kit, bizID uint32, appName string) (uint32, error) {
 	key := fmt.Sprintf("%d-%s", bizID, appName)

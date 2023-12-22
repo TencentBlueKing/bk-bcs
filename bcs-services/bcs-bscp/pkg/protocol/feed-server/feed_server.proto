@@ -7,6 +7,7 @@ import "pkg/protocol/core/commit/commit.proto";
 import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/hook/hook.proto";
 import "pkg/protocol/core/kv/kvs.proto";
+import "pkg/protocol/core/app/app.proto";
 
 option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server;pbfs";
 
@@ -19,6 +20,7 @@ service Upstream {
   rpc GetDownloadURL(GetDownloadURLReq) returns (GetDownloadURLResp) {}
   rpc PullKvMeta(PullKvMetaReq) returns (PullKvMetaResp) {}
   rpc GetKvValue(GetKvValueReq) returns (GetKvValueResp) {}
+  rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
 }
 
 // HandshakeMessage defines the handshake message from sidecar to feed server.
@@ -170,4 +172,22 @@ message GetKvValueReq {
 message GetKvValueResp {
   string kv_type = 1;
   string value = 2;
+}
+
+message ListAppsReq {
+  uint32 biz_id = 1;
+  string token = 2;
+}
+
+// App 对外简单版本
+message App {
+  uint32 id = 1;
+  string name = 2;
+  string config_type = 3;
+  string reviser = 4;
+  string update_at = 5;
+}
+
+message ListAppsResp {
+  repeated App apps = 1;
 }

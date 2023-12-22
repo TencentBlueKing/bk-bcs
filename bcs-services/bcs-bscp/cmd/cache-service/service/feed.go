@@ -19,6 +19,7 @@ import (
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	pbapp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
 	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
@@ -55,6 +56,27 @@ func (s *Service) GetAppMeta(ctx context.Context, req *pbcs.GetAppMetaReq) (*pbc
 	return &pbcs.JsonRawResp{
 		JsonRaw: meta,
 	}, nil
+}
+
+// ListApps 获取服务列表
+func (s *Service) ListApps(ctx context.Context, req *pbcs.ListAppsReq) (*pbcs.ListAppsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	opt := &types.BasePage{
+		Start: 0,
+		Limit: 1000, // 不需要分页, 直接使用 limit 获取
+	}
+
+	apps, count, err := s.dao.App().List(kt, []uint32{req.GetBizId()}, "", "", opt)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pbcs.ListAppsResp{
+		Count:   uint32(count),
+		Details: pbapp.PbApps(apps),
+	}
+	return resp, nil
 }
 
 // GetReleasedCI get released config items from cache.
