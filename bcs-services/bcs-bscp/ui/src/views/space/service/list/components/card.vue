@@ -42,43 +42,9 @@
       </div>
     </div>
   </section>
-  <bk-dialog
-    ext-cls="delete-service-dialog"
-    v-model:is-show="isShowDeleteDialog"
-    :theme="'primary'"
-    :dialog-type="'operation'"
-    header-align="center"
-    footer-align="center"
-    @value-change="dialogInputStr = ''"
-    :draggable="false"
-  >
-    <div class="dialog-content">
-      <div class="dialog-title">确认删除此服务？</div>
-      <div>删除的服务<span>无法找回</span>,请谨慎操作！</div>
-      <div class="dialog-input">
-        <div class="dialog-info">
-          请输入服务名<span>{{ service.spec.name }}</span
-          >以确认删除
-        </div>
-        <bk-input v-model="dialogInputStr" />
-      </div>
-    </div>
-    <template #footer>
-      <div class="dialog-footer">
-        <bk-button
-          theme="danger"
-          style="margin-right: 20px"
-          :disabled="dialogInputStr !== service.spec.name"
-          @click="handleDeleteService"
-          >删除</bk-button
-        >
-        <bk-button @click="isShowDeleteDialog = false">取消</bk-button>
-      </div>
-    </template>
-  </bk-dialog>
 </template>
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
@@ -86,45 +52,21 @@ import { Del } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../../../store/global';
 import { IAppItem } from '../../../../../../types/app';
 import { IPermissionQueryResourceItem } from '../../../../../../types/index';
-import { deleteApp } from '../../../../../api';
 import { datetimeFormat } from '../../../../../utils/index';
-import Message from 'bkui-vue/lib/message';
 
 const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
-const isShowDeleteDialog = ref(false);
-const dialogInputStr = ref('');
 
 const props = defineProps<{
   service: IAppItem;
 }>();
 
-const emits = defineEmits(['edit', 'update']);
+const emits = defineEmits(['edit', 'update', 'delete']);
 
 const isFileType = computed(() => props.service.spec.config_type === 'file');
-
-const handleDeleteItem = () => {
-  if (props.service.permissions.delete) {
-    isShowDeleteDialog.value = true;
-  } else {
-    const query = {
-      resources: [
-        {
-          biz_id: props.service.biz_id,
-          basic: {
-            type: 'app',
-            action: 'delete',
-            resource_id: props.service.id,
-          },
-        },
-      ],
-    };
-    openPermApplyDialog(query);
-  }
-};
 
 const handleCardClick = () => {
   if (props.service.permissions.view) {
@@ -145,6 +87,26 @@ const handleCardClick = () => {
   openPermApplyDialog(query);
 };
 
+const handleDeleteItem = () => {
+  if (props.service.permissions.delete) {
+    emits('delete', props.service);
+  } else {
+    const query = {
+      resources: [
+        {
+          biz_id: props.service.biz_id,
+          basic: {
+            type: 'app',
+            action: 'delete',
+            resource_id: props.service.id,
+          },
+        },
+      ],
+    };
+    openPermApplyDialog(query);
+  }
+};
+
 const openPermApplyDialog = (query: { resources: IPermissionQueryResourceItem[] }) => {
   permissionQuery.value = query;
   showApplyPermDialog.value = true;
@@ -152,16 +114,6 @@ const openPermApplyDialog = (query: { resources: IPermissionQueryResourceItem[] 
 
 const goToDetail = () => {
   router.push({ name: 'service-config', params: { spaceId: route.params.spaceId, appId: props.service.id } });
-};
-
-const handleDeleteService = async () => {
-  await deleteApp(props.service.id as number, props.service.biz_id);
-  Message({
-    message: '删除服务成功',
-    theme: 'success',
-  });
-  emits('update');
-  isShowDeleteDialog.value = false;
 };
 </script>
 <style lang="scss" scoped>
@@ -292,51 +244,6 @@ const handleDeleteService = async () => {
       height: 100%;
       color: #979ba5;
     }
-  }
-}
-.dialog-content {
-  text-align: center;
-  margin: 10px 0 20px;
-  span {
-    color: red;
-  }
-  .dialog-title {
-    margin: 10px;
-    font-size: 24px;
-    color: #121213;
-  }
-  .dialog-input {
-    margin-top: 10px;
-    text-align: start;
-    padding: 20px;
-    background-color: #f4f7fa;
-    .dialog-info {
-      margin-bottom: 5px;
-      span {
-        color: #121213;
-        font-weight: 600;
-      }
-    }
-  }
-}
-.dialog-footer {
-  .bk-button {
-    width: 100px;
-  }
-}
-</style>
-
-<style lang="scss">
-.delete-service-dialog {
-  top: 40% !important;
-  .bk-modal-header {
-    display: none;
-  }
-  .bk-modal-footer {
-    height: auto !important;
-    background-color: #fff !important;
-    border-top: none !important;
-    padding-bottom: 24px !important;
   }
 }
 </style>
