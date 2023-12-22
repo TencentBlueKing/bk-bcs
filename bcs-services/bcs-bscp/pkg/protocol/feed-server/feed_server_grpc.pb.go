@@ -26,6 +26,7 @@ const (
 	Upstream_GetDownloadURL_FullMethodName  = "/pbfs.Upstream/GetDownloadURL"
 	Upstream_PullKvMeta_FullMethodName      = "/pbfs.Upstream/PullKvMeta"
 	Upstream_GetKvValue_FullMethodName      = "/pbfs.Upstream/GetKvValue"
+	Upstream_ListApps_FullMethodName        = "/pbfs.Upstream/ListApps"
 )
 
 // UpstreamClient is the client API for Upstream service.
@@ -40,6 +41,7 @@ type UpstreamClient interface {
 	GetDownloadURL(ctx context.Context, in *GetDownloadURLReq, opts ...grpc.CallOption) (*GetDownloadURLResp, error)
 	PullKvMeta(ctx context.Context, in *PullKvMetaReq, opts ...grpc.CallOption) (*PullKvMetaResp, error)
 	GetKvValue(ctx context.Context, in *GetKvValueReq, opts ...grpc.CallOption) (*GetKvValueResp, error)
+	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 }
 
 type upstreamClient struct {
@@ -136,6 +138,15 @@ func (c *upstreamClient) GetKvValue(ctx context.Context, in *GetKvValueReq, opts
 	return out, nil
 }
 
+func (c *upstreamClient) ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error) {
+	out := new(ListAppsResp)
+	err := c.cc.Invoke(ctx, Upstream_ListApps_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UpstreamServer is the server API for Upstream service.
 // All implementations should embed UnimplementedUpstreamServer
 // for forward compatibility
@@ -148,6 +159,7 @@ type UpstreamServer interface {
 	GetDownloadURL(context.Context, *GetDownloadURLReq) (*GetDownloadURLResp, error)
 	PullKvMeta(context.Context, *PullKvMetaReq) (*PullKvMetaResp, error)
 	GetKvValue(context.Context, *GetKvValueReq) (*GetKvValueResp, error)
+	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 }
 
 // UnimplementedUpstreamServer should be embedded to have forward compatible implementations.
@@ -174,6 +186,9 @@ func (UnimplementedUpstreamServer) PullKvMeta(context.Context, *PullKvMetaReq) (
 }
 func (UnimplementedUpstreamServer) GetKvValue(context.Context, *GetKvValueReq) (*GetKvValueResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetKvValue not implemented")
+}
+func (UnimplementedUpstreamServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListApps not implemented")
 }
 
 // UnsafeUpstreamServer may be embedded to opt out of forward compatibility for this service.
@@ -316,6 +331,24 @@ func _Upstream_GetKvValue_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Upstream_ListApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAppsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UpstreamServer).ListApps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Upstream_ListApps_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UpstreamServer).ListApps(ctx, req.(*ListAppsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Upstream_ServiceDesc is the grpc.ServiceDesc for Upstream service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -346,6 +379,10 @@ var Upstream_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetKvValue",
 			Handler:    _Upstream_GetKvValue_Handler,
+		},
+		{
+			MethodName: "ListApps",
+			Handler:    _Upstream_ListApps_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

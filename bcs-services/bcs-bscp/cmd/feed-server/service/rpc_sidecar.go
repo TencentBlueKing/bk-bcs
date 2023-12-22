@@ -26,6 +26,7 @@ import (
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
 	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	pbfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
@@ -498,4 +499,33 @@ func isAppNotExistErr(err error) bool {
 	}
 
 	return false
+}
+
+// ListApps 获取服务列表
+func (s *Service) ListApps(ctx context.Context, req *pbfs.ListAppsReq) (*pbfs.ListAppsResp, error) {
+	im, err := sfs.ParseFeedIncomingContext(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	resp, err := s.bll.AppCache().ListApps(im.Kit, &pbcs.ListAppsReq{
+		BizId: req.BizId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	apps := make([]*pbfs.App, 0, len(resp.Details))
+	for _, d := range resp.Details {
+		apps = append(apps, &pbfs.App{
+			Id:         d.Id,
+			Name:       d.Spec.Name,
+			ConfigType: d.Spec.ConfigType,
+			Reviser:    d.Revision.Reviser,
+			UpdateAt:   d.Revision.UpdateAt,
+		})
+	}
+
+	r := &pbfs.ListAppsResp{Apps: apps}
+	return r, nil
 }
