@@ -11,7 +11,6 @@ require (
 	github.com/TencentBlueKing/iam-go-sdk v0.1.4
 	github.com/dustin/go-humanize v1.0.0
 	github.com/gin-contrib/cors v1.3.1
-	github.com/gin-contrib/i18n v0.0.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-micro/plugins/v4/config/encoder/yaml v1.1.0
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
@@ -24,7 +23,6 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/gosimple/slug v1.12.0
 	github.com/hashicorp/go-version v1.4.0
-	github.com/nicksnyder/go-i18n/v2 v2.2.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pborman/ansi v1.0.0
 	github.com/pkg/errors v0.9.1
@@ -49,7 +47,6 @@ require (
 )
 
 require (
-	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20220824120805-4b6e5c587895 // indirect
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.5 // indirect
