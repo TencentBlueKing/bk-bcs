@@ -3,13 +3,17 @@
     <div class="card-content-wrapper">
       <div class="card-head">
         <bk-tag class="type-tag">{{ isFileType ? '文件型' : '键值型' }}</bk-tag>
-        <div class="service-name" v-overflow-title>
+        <div class="service-name">
+          <bk-overflow-title type="tips">
             {{ props.service.spec?.name }}
+          </bk-overflow-title>
         </div>
       </div>
       <span class="del-btn"><Del @click="handleDeleteItem" /></span>
-      <div class="service-alias" v-overflow-title>
+      <div class="service-alias">
+        <bk-overflow-title type="tips">
           {{ props.service.spec?.alias }}
+        </bk-overflow-title>
       </div>
       <div class="service-config">
         <div class="config-info">
@@ -38,10 +42,9 @@
       </div>
     </div>
   </section>
-
 </template>
 <script setup lang="ts">
-import {  computed } from 'vue';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
@@ -57,7 +60,6 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
-
 const props = defineProps<{
   service: IAppItem;
 }>();
@@ -65,7 +67,6 @@ const props = defineProps<{
 const emits = defineEmits(['edit', 'update', 'delete']);
 
 const isFileType = computed(() => props.service.spec.config_type === 'file');
-
 
 const handleCardClick = () => {
   if (props.service.permissions.view) {
@@ -114,8 +115,6 @@ const openPermApplyDialog = (query: { resources: IPermissionQueryResourceItem[] 
 const goToDetail = () => {
   router.push({ name: 'service-config', params: { spaceId: route.params.spaceId, appId: props.service.id } });
 };
-
-
 </script>
 <style lang="scss" scoped>
 .service-card {
@@ -247,7 +246,4 @@ const goToDetail = () => {
     }
   }
 }
-
 </style>
-
-
