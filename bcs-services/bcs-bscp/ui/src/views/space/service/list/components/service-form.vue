@@ -11,7 +11,7 @@
     <bk-form-item :label="t('服务别名')" property="alias" required>
       <bk-input
         v-model="localData.alias"
-        placeholder="请输入2-64字符，只允许中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾"
+        placeholder="请输入2-128字符，只允许中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾"
         @change="handleChange"
       />
     </bk-form-item>
