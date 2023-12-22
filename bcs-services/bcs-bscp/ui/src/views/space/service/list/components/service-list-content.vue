@@ -33,7 +33,8 @@
                 text
                 theme="primary"
                 :class="{ 'bk-button-with-no-perm': props.permCheckLoading || !props.hasCreateServicePerm }"
-                @click="handleCreateServiceClick">
+                @click="handleCreateServiceClick"
+              >
                 {{ t('立即创建') }}
               </bk-button>
               <span class="divider-middle"></span>
@@ -51,6 +52,7 @@
               :key="service.id"
               :service="service"
               @edit="handleEditService"
+              @delete="handleDeleteService"
               @update="handleDeletedUpdate"
             />
           </div>
@@ -68,11 +70,41 @@
       </bk-loading>
     </div>
     <CreateService v-model:show="isCreateServiceOpen" @reload="loadAppList" />
-    <EditService
-      v-model:show="isEditServiceOpen"
-      :service="editingService"
-      @reload="loadAppList"
-    />
+    <EditService v-model:show="isEditServiceOpen" :service="editingService" @reload="loadAppList" />
+    <bk-dialog
+      ext-cls="delete-service-dialog"
+      v-model:is-show="isShowDeleteDialog"
+      :theme="'primary'"
+      :dialog-type="'operation'"
+      header-align="center"
+      footer-align="center"
+      @value-change="dialogInputStr = ''"
+      :draggable="false"
+    >
+      <div class="dialog-content">
+        <div class="dialog-title">确认删除此服务？</div>
+        <div>删除的服务<span>无法找回</span>,请谨慎操作！</div>
+        <div class="dialog-input">
+          <div class="dialog-info">
+            请输入服务名<span>{{ deleteService!.spec.name }}</span
+            >以确认删除
+          </div>
+          <bk-input v-model="dialogInputStr" />
+        </div>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <bk-button
+            theme="danger"
+            style="margin-right: 20px"
+            :disabled="dialogInputStr !== deleteService!.spec.name"
+            @click="handleDeleteConfirm"
+            >删除</bk-button
+          >
+          <bk-button @click="isShowDeleteDialog = false">取消</bk-button>
+        </div>
+      </template>
+    </bk-dialog>
   </div>
 </template>
 <script setup lang="ts">
@@ -82,12 +114,13 @@ import { useI18n } from 'vue-i18n';
 import { Plus } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../../../store/global';
 import useUserStore from '../../../../../store/user';
-import { getAppList, getAppsConfigData } from '../../../../../api/index';
+import { getAppList, getAppsConfigData, deleteApp } from '../../../../../api/index';
 import { IAppItem, IAppListQuery } from '../../../../../../types/app';
 import Card from './card.vue';
 import CreateService from './create-service.vue';
 import EditService from './edit-service.vue';
 import tableEmpty from '../../../../../components/table/table-empty.vue';
+import Message from 'bkui-vue/lib/message';
 import { debounce } from 'lodash';
 
 const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
@@ -106,6 +139,9 @@ const isLoading = ref(true);
 const searchStr = ref('');
 const isCreateServiceOpen = ref(false);
 const isEditServiceOpen = ref(false);
+const dialogInputStr = ref('');
+const isShowDeleteDialog = ref(false);
+const deleteService = ref<IAppItem>();
 const editingService = ref<IAppItem>({
   id: 0,
   biz_id: 0,
@@ -229,6 +265,21 @@ const refreshSeviceList = () => {
   loadAppList();
 };
 
+// 删除服务
+const handleDeleteService = (service: IAppItem) => {
+  deleteService.value = service;
+  isShowDeleteDialog.value = true;
+};
+const handleDeleteConfirm = async () => {
+  await deleteApp(deleteService.value!.id as number, deleteService.value!.biz_id);
+  Message({
+    message: '删除服务成功',
+    theme: 'success',
+  });
+  loadAppList();
+  isShowDeleteDialog.value = false;
+};
+
 // 删除服务后更新列表
 const handleDeletedUpdate = () => {
   if (serviceList.value.length === 1 && pagination.value.current > 1) {
@@ -251,8 +302,6 @@ const handleClearSearchStr = () => {
   isSearchEmpty.value = false;
   refreshSeviceList();
 };
-
-
 </script>
 <style lang="scss" scoped>
 .service-list-content {
@@ -311,6 +360,52 @@ const handleClearSearchStr = () => {
   padding: 0 8px;
   :deep(.bk-pagination-list.is-last) {
     margin-left: auto;
+  }
+}
+
+.dialog-content {
+  text-align: center;
+  margin: 10px 0 20px;
+  span {
+    color: red;
+  }
+  .dialog-title {
+    margin: 10px;
+    font-size: 24px;
+    color: #121213;
+  }
+  .dialog-input {
+    margin-top: 10px;
+    text-align: start;
+    padding: 20px;
+    background-color: #f4f7fa;
+    .dialog-info {
+      margin-bottom: 5px;
+      span {
+        color: #121213;
+        font-weight: 600;
+      }
+    }
+  }
+}
+.dialog-footer {
+  .bk-button {
+    width: 100px;
+  }
+}
+</style>
+
+<style lang="scss">
+.delete-service-dialog {
+  top: 40% !important;
+  .bk-modal-header {
+    display: none;
+  }
+  .bk-modal-footer {
+    height: auto !important;
+    background-color: #fff !important;
+    border-top: none !important;
+    padding-bottom: 24px !important;
   }
 }
 </style>
