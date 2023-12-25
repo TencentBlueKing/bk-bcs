@@ -10,10 +10,10 @@
           :multiple="true"
           :filterable="true"
           :input-search="false"
+          :show-select-all="true"
           :popover-min-width="240"
           @change="handleSelectVersion"
-          @toggle="versionSelectorOpen = $event"
-        >
+          @toggle="versionSelectorOpen = $event">
           <template #trigger>
             <bk-button text theme="primary">
               按版本选择
@@ -21,13 +21,12 @@
               <AngleDown class="arrow-icon" v-else />
             </bk-button>
           </template>
-          <bk-option v-if="props.versionList.length > 0" :value="0">全选</bk-option>
+          <!-- <bk-option v-if="props.versionList.length > 0" :value="0">全选</bk-option> -->
           <bk-option
             v-for="version in props.versionList"
             :key="version.id"
             :label="version.spec.name"
-            :value="version.id"
-          ></bk-option>
+            :value="version.id" />
         </bk-select>
       </div>
       <bk-input v-model="searchStr" class="group-search-input" placeholder="搜索分组名称/标签key" :clearable="true">
@@ -127,6 +126,7 @@ const versionSelectorOpen = ref(false);
 const searchStr = ref('');
 const treeRef = ref();
 const isSearchEmpty = ref(false);
+const selectedVersionIds = ref<number[]>([]);
 
 // 节点搜索
 const searchTreeData = computed(() => {
@@ -183,30 +183,29 @@ const handleClearAll = () => {
 };
 
 // 按版本选择
-const handleSelectVersion = (versions: number[]) => {
-  const selectedVersion: IConfigVersion[] = [];
+const handleSelectVersion = (val: number[]) => {
   const list: IGroupToPublish[] = [];
-  if (versions.includes(0)) {
-    // 全选
-    selectedVersion.push(...props.versionList);
-  } else {
-    // 选择部分
-    versions.forEach((id) => {
-      const version = props.versionList.find(item => item.id === id);
-      if (version) {
-        selectedVersion.push(version);
-      }
-    });
-  }
-  selectedVersion.forEach((version) => {
-    version.status.released_groups.forEach((releaseItem) => {
-      if (!list.find(item => releaseItem.id === item.id)) {
-        const group = allGroupNode.value.find(groupItem => groupItem.id === releaseItem.id);
-        if (group) {
-          list.push(group);
+  val.forEach(id => {
+    const version = props.versionList.find(item => item.id === id);
+    if (version) {
+      version.status.released_groups.forEach((releaseItem) => {
+        if (!list.find(item => releaseItem.id === item.id)) {
+          const group = allGroupNode.value.find(groupItem => groupItem.id === releaseItem.id);
+          if (group) {
+            list.push(group);
+          }
         }
+      });
+    }
+  });
+  // 调整分组上线时，当前版本已上线分组不可取消
+  props.releasedGroups.forEach(id => {
+    if (!list.find(item => item.id === id)) {
+      const group = allGroupNode.value.find(groupItem => groupItem.id === id);
+      if (group) {
+        list.push(group);
       }
-    });
+    }
   });
   emits('change', list);
 };
