@@ -1,7 +1,7 @@
 <template>
   <section class="version-detail-table">
     <div class="service-selector-wrapper">
-      <ServiceSelector :value="props.appId" :no-border-mode="true" />
+      <ServiceSelector :value="props.appId" />
     </div>
     <div class="content-container">
       <div class="head-operate-wrapper">

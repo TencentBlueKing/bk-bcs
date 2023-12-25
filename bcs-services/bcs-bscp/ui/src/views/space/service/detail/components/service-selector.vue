@@ -12,10 +12,9 @@
       :loading="loading"
       @change="handleAppChange">
       <template #trigger>
-        <div :class="['selector-trigger', props.noBorderMode ? 'no-border' : '']">
+        <div class="selector-trigger">
           <input readonly :value="appData.spec.name" />
-          <AngleUpFill v-if="props.noBorderMode" class="arrow-icon arrow-fill" />
-          <AngleDown v-else class="arrow-icon arrow-line" />
+          <AngleUpFill class="arrow-icon arrow-fill" />
         </div>
       </template>
       <bk-option
@@ -64,7 +63,6 @@ const bizId = route.params.spaceId as string;
 
 const props = defineProps<{
   value: number;
-  noBorderMode?: Boolean;
 }>();
 
 defineEmits(['change']);
@@ -165,7 +163,6 @@ const handleAppChange = (id: number) => {
     font-family: MicrosoftYaHei;
     color: #313238;
     background: #F0F1F5;
-    font-weight: bold;
     border-radius: 2px;
     border: none;
     outline: none;
@@ -174,13 +171,6 @@ const handleAppChange = (id: number) => {
     text-overflow: ellipsis;
     white-space: nowrap;
     cursor: pointer;
-  }
-  &.no-border {
-    border: none;
-    box-shadow: none !important;
-    & > input {
-      background-color: #f5f7fa;
-    }
   }
   .arrow-icon {
     display: inline-flex;
