@@ -14,6 +14,7 @@ package types
 
 import (
 	"fmt"
+	"path"
 	"strings"
 	"time"
 
@@ -121,30 +122,64 @@ type FilePermissionCache struct {
 
 // CredentialCache cache struct.
 type CredentialCache struct {
-	Enabled  bool                `json:"enabled"`
-	Scope    []string            `json:"scope"`
-	ScopeMap map[string][]string `json:"-"` // app:scope
+	Enabled      bool                `json:"enabled"`
+	Scope        []string            `json:"scope"`
+	scopeMap     map[string][]string `json:"-"` // app:scope
+	isPreprocess bool                `json:"-"`
 }
 
-// InitScopeMap scope 格式化为app:scope, 方便鉴权处理
-func (c *CredentialCache) InitScopeMap() error {
-	c.ScopeMap = map[string][]string{}
+// preprocess 预处理数据结构, 格式化为app:scope, 方便鉴权处理
+func (c *CredentialCache) preprocess() {
+	if c.isPreprocess {
+		return
+	}
+
+	c.scopeMap = map[string][]string{}
 	for _, v := range c.Scope {
 		index := strings.Index(v, "/")
 		if index == -1 {
-			return fmt.Errorf("invalid scope %s", v)
+			panic(fmt.Errorf("invalid scope %s", v))
 		}
 
 		app := v[:index]
 		scope := v[index:]
-		_, ok := c.ScopeMap[app]
+		_, ok := c.scopeMap[app]
 		if !ok {
-			c.ScopeMap[app] = []string{scope}
+			c.scopeMap[app] = []string{scope}
 		} else {
-			c.ScopeMap[app] = append(c.ScopeMap[app], scope)
+			c.scopeMap[app] = append(c.scopeMap[app], scope)
 		}
 	}
-	return nil
+
+	c.isPreprocess = true
+}
+
+// MatchApp 是否匹配 App
+func (c *CredentialCache) MatchApp(app string) bool {
+	c.preprocess()
+
+	_, ok := c.scopeMap[app]
+	return ok
+}
+
+// MatchKv 是否匹配kv
+func (c *CredentialCache) MatchKv(app, key string) bool {
+	scopes, ok := c.scopeMap[app]
+	if !ok {
+		return false
+	}
+
+	for _, v := range scopes {
+		ok, err := path.Match(v, key)
+		if err != nil {
+			return false
+		}
+		if ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 // ReleaseCICaches convert ReleasedConfigItem to ReleaseCICache.

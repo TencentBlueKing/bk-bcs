@@ -7,7 +7,6 @@ import "pkg/protocol/core/commit/commit.proto";
 import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/hook/hook.proto";
 import "pkg/protocol/core/kv/kvs.proto";
-import "pkg/protocol/core/app/app.proto";
 
 option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server;pbfs";
 
@@ -140,40 +139,6 @@ message MessagingMeta {
 // which is empty.
 message MessagingResp {}
 
-message PullKvMetaReq {
-  // version defines message's protocol version from sidecar
-  pbbase.Versioning api_version = 1;
-  // payload is the message's details information which is a json raw bytes.
-  // refer to sfs.SideWatchPayload.
-  uint32 biz_id = 2;
-  AppMeta app_meta = 3;
-  string token = 4;
-}
-
-message PullKvMetaResp {
-  uint32 release_id = 1;
-  repeated KvMeta kv_metas = 3;
-}
-
-message KvMeta {
-  string key = 1;
-  pbkv.KvAttachment kv_attachment = 5;
-}
-
-message GetKvValueReq {
-  // version defines message's protocol version from sidecar
-  pbbase.Versioning api_version = 1;
-  uint32 biz_id = 2;
-  AppMeta app_meta = 3;
-  string token = 4;
-  string key = 5;
-}
-
-message GetKvValueResp {
-  string kv_type = 1;
-  string value = 2;
-}
-
 message ListAppsReq {
   uint32 biz_id = 1;
 }
@@ -189,4 +154,30 @@ message App {
 
 message ListAppsResp {
   repeated App apps = 1;
+}
+
+message PullKvMetaReq {
+  uint32 biz_id = 1;
+  AppMeta app_meta = 2;
+}
+
+message PullKvMetaResp {
+  uint32 release_id = 1;
+  repeated KvMeta kv_metas = 3;
+}
+
+message KvMeta {
+  string key = 1;
+  pbkv.KvAttachment kv_attachment = 5;
+}
+
+message GetKvValueReq {
+  uint32 biz_id = 1;
+  AppMeta app_meta = 2;
+  string key = 3;
+}
+
+message GetKvValueResp {
+  string kv_type = 1;
+  string value = 2;
 }

@@ -23,14 +23,15 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	pbfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 var (
 	// 兼容老的请求, 只部分方法使用中间件
 	allowMethod = map[string]struct{}{
-		"/pbfs.Upstream/ListApps": {},
+		"/pbfs.Upstream/ListApps":   {},
+		"/pbfs.Upstream/PullKvMeta": {},
+		"/pbfs.Upstream/GetKvValue": {},
 	}
 )
 
@@ -38,16 +39,16 @@ var (
 type ctxKey int
 
 const (
-	credScopeKey ctxKey = iota
+	credentialKey ctxKey = iota
 )
 
-func withCredScope(ctx context.Context, value *types.CredentialCache) context.Context {
-	return context.WithValue(ctx, credScopeKey, value)
+func withCredential(ctx context.Context, value *types.CredentialCache) context.Context {
+	return context.WithValue(ctx, credentialKey, value)
 }
 
-// authScope 包内私有方法断言, 认为一直可用
-func credScope(ctx context.Context) *types.CredentialCache {
-	return ctx.Value(credScopeKey).(*types.CredentialCache)
+// getCredential 包内私有方法断言, 认为一直可用
+func getCredential(ctx context.Context) *types.CredentialCache {
+	return ctx.Value(credentialKey).(*types.CredentialCache)
 }
 
 func getBearerToken(md metadata.MD) (string, error) {
@@ -76,20 +77,16 @@ func (s *Service) authorize(ctx context.Context, bizID uint32) (context.Context,
 		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}
 
-	scope, err := s.bll.Auth().GetCred(kit.FromGrpcContext(ctx), bizID, token)
+	cred, err := s.bll.Auth().GetCred(kit.FromGrpcContext(ctx), bizID, token)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, err.Error())
 	}
-	if !scope.Enabled {
-		return nil, status.Errorf(codes.PermissionDenied, err.Error())
-	}
-
-	if err := scope.InitScopeMap(); err != nil {
+	if !cred.Enabled {
 		return nil, status.Errorf(codes.PermissionDenied, err.Error())
 	}
 
 	// 获取scope，到下一步处理
-	ctx = withCredScope(ctx, scope)
+	ctx = withCredential(ctx, cred)
 	return ctx, nil
 }
 
@@ -103,8 +100,8 @@ func FeedUnaryAuthInterceptor(
 
 	var bizID uint32
 	switch r := req.(type) {
-	case *pbfs.ListAppsReq:
-		bizID = r.BizId
+	case interface{ GetBizId() uint32 }: // 请求都必须有 uint32 biz_id 参数
+		bizID = r.GetBizId()
 	default:
 		return nil, status.Error(codes.Aborted, "missing bizId in request")
 	}
