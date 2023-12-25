@@ -150,6 +150,33 @@ interface ICreateVersionParams {
 export const createVersion = (bizId: string, appId: number, params: ICreateVersionParams) => http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, params);
 
 /**
+ * 废弃版本
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param releaseId 版本ID
+ * @returns
+ */
+export const deprecateVersion = (bizId: string, appId: number, releaseId: number) => http.put(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/deprecate`);
+
+/**
+ * 恢复版本
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param releaseId 版本ID
+ * @returns
+ */
+export const undeprecateVersion = (bizId: string, appId: number, releaseId: number) => http.put(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/undeprecate`);
+
+/**
+ * 删除版本
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param releaseId 版本ID
+ * @returns
+ */
+export const deleteVersion = (bizId: string, appId: number, releaseId: number) => http.delete(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}`);
+
+/**
  * 获取版本列表
  * @param bizId 业务ID
  * @param appId 应用ID

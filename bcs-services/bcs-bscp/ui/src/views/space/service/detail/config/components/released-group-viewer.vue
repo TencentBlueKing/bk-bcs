@@ -7,7 +7,7 @@
     @after-show="popoverOpen">
     <slot name="default"></slot>
     <template #content>
-      <div v-bk-loading="{ loading, opacity: 1 }" class="groups-content-wrapper">
+      <bk-loading :loading="loading" :opacity="1" class="groups-content-wrapper">
         <div class="header-area">
           <h3 class="title">已上线实例</h3>
           <template v-if="props.isDefaultGroup">
@@ -26,7 +26,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </bk-loading>
     </template>
   </bk-popover>
 </template>
