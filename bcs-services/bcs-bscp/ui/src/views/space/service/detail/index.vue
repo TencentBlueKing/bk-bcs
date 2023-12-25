@@ -145,7 +145,6 @@ const handleToggleView = () => {
   height: 100%;
   z-index: 10;
   border-right: 1px solid #dcdee5;
-  box-shadow: 0 2px 2px 0 #00000026;
   // transition: width 0.1s ease-in-out;
 }
 .config-setting-area {

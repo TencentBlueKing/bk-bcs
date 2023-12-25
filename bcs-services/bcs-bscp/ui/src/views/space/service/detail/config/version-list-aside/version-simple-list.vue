@@ -28,7 +28,11 @@
             <template #content>
               <div class="action-list">
                 <div class="action-item" @click="handleDiffDialogShow(version)">版本对比</div>
-                <!-- <bk-dropdown-item @click="handleDeprecate(version.id)">废弃</bk-dropdown-item> -->
+                <div
+                  :class="['action-item', { disabled: version.status.publish_status !== 'not_released' }]"
+                  @click="handleDeprecateDialogShow(version)">
+                  版本废弃
+                </div>
               </div>
             </template>
           </bk-popover>
@@ -36,22 +40,29 @@
         <TableEmpty v-if="searchStr && versionsInView.length === 0" :is-search-empty="true" @clear="searchStr = ''" />
       </section>
     </bk-loading>
-    <VersionDiff v-model:show="showDiffPanel" :current-version="diffVersion" />
+    <VersionDiff v-model:show="showDiffPanel" :current-version="currentOperatingVersion" />
+    <VersionOperateConfirmDialog
+      v-model:show="showOperateConfirmDialog"
+      title="确认废弃该版本"
+      tips="此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作"
+      :confirm-fn="handleDeprecateVersion"
+      :version="currentOperatingVersion" />
   </section>
 </template>
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import useConfigStore from '../../../../../../store/config';
 import { Ellipsis } from 'bkui-vue/lib/icon';
-import { getConfigVersionList } from '../../../../../../api/config';
+import useConfigStore from '../../../../../../store/config';
+import { getConfigVersionList, deprecateVersion } from '../../../../../../api/config';
 import { GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
 import { IConfigVersion } from '../../../../../../../types/config';
 import ServiceSelector from '../../components/service-selector.vue';
 import SearchInput from '../../../../../../components/search-input.vue';
 import TableEmpty from '../../../../../../components/table/table-empty.vue';
 import VersionDiff from '../../config/components/version-diff/index.vue';
+import VersionOperateConfirmDialog from './version-operate-confirm-dialog.vue';
 
 const configStore = useConfigStore();
 const { versionData, refreshVersionListFlag, publishedVersionId } = storeToRefs(configStore);
@@ -69,7 +80,8 @@ const versionListLoading = ref(false);
 const versionList = ref<IConfigVersion[]>([]);
 const searchStr = ref('');
 const showDiffPanel = ref(false);
-const diffVersion = ref();
+const currentOperatingVersion = ref();
+const showOperateConfirmDialog = ref(false);
 
 const versionsInView = computed(() => {
   if (searchStr.value === '') {
@@ -148,19 +160,44 @@ const handleSelectVersion = (version: IConfigVersion) => {
 };
 
 const handleDiffDialogShow = (version: IConfigVersion) => {
-  diffVersion.value = version;
+  currentOperatingVersion.value = version;
   showDiffPanel.value = true;
 };
 
-// const handleDeprecate = (id: number) => {
-//   InfoBox({
-//     title: '确认废弃此版本？',
-//     subTitle: '废弃操作无法撤回，请谨慎操作！',
-//     headerAlign: 'center' as const,
-//     footerAlign: 'center' as const,
-//     onConfirm: () => {},
-//   } as any);
-// };
+const handleDeprecateDialogShow = (version: IConfigVersion) => {
+  if (version.status.publish_status !== 'not_released') {
+    return;
+  }
+  currentOperatingVersion.value = version;
+  showOperateConfirmDialog.value = true;
+};
+
+const handleDeprecateVersion = () => {
+  return new Promise(() => {
+    const id = currentOperatingVersion.value.id;
+    deprecateVersion(props.bkBizId, props.appId, id)
+      .then(() => {
+        showOperateConfirmDialog.value = false;
+        console.log(versionsInView);
+        if (id !== versionData.value.id) {
+          return;
+        }
+
+        const versions = versionsInView.value.filter(item => item.id > 0);
+        const index = versions.findIndex(item => item.id === id);
+
+        if (versions.length === 1) {
+          handleSelectVersion(unNamedVersion);
+        } else if (index === versions.length - 1) {
+          handleSelectVersion(versions[index - 1]);
+        } else {
+          handleSelectVersion(versions[index + 1]);
+        }
+
+        versionList.value = versionList.value.filter(item => item.id !== id);
+      });
+  })
+};
 </script>
 
 <style lang="scss" scoped>
@@ -261,6 +298,10 @@ const handleDiffDialogShow = (version: IConfigVersion) => {
       cursor: pointer;
       &:hover {
         background: #f5f7fa;
+      }
+      &.disabled {
+        color: #dcdee5;
+        cursor: not-allowed;
       }
     }
   }
