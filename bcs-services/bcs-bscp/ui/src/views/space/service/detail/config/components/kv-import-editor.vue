@@ -47,8 +47,7 @@
       <div class="editor-content">
         <CodeEditor
           ref="codeEditorRef"
-          :model-value="kvsContent"
-          @update:model-value="kvsContent = $event"
+          v-model="kvsContent"
           @enter="separatorShow = true"
           @validate="handleValidateEditor"
           :error-line="errorLine"
@@ -75,6 +74,9 @@ interface errorLineItem {
   lineNumber: number;
   errorInfo: string;
 }
+
+const emits = defineEmits(['trigger']);
+
 const route = useRoute();
 const isOpenFullScreen = ref(false);
 const codeEditorRef = ref();
@@ -90,19 +92,18 @@ const appId = ref(Number(route.params.appId));
 
 watch(
   () => kvsContent.value,
-  () => {
+  (val) => {
     if (shouldValidate.value) {
       handleValidateEditor();
     }
+    if (!val) emits('trigger', false);
   },
 );
 
 watch(
   () => errorLine.value,
   (val) => {
-    if (val.length === 0) {
-      shouldValidate.value = false;
-    }
+    shouldValidate.value = val.length > 0;
   },
 );
 
@@ -164,12 +165,12 @@ const handleValidateEditor = () => {
       });
     }
   });
+  emits('trigger', kvsContent.value && errorLine.value.length === 0);
 };
 
 // 导入kv
 const handleImport = async () => {
   handleValidateEditor();
-  shouldValidate.value = true;
   if (errorLine.value.length > 0) return Promise.reject();
   await batchUpsertKv(bkBizId.value, appId.value, kvs.value);
 };

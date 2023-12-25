@@ -59,11 +59,13 @@ const props = withDefaults(
   },
 );
 
+
 const KvCodeEditorRef = ref();
 const formRef = ref();
 const localVal = ref({
   ...props.config,
 });
+
 
 const typeDescription = computed(() => {
   if (appData.value.spec.data_type !== 'any' && !props.editable && !props.view) {
