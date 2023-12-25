@@ -30,7 +30,7 @@
           :is-default-group="hasDefaultGroup"
           :disabled="versionData.status.publish_status === 'full_released'">
           <div class="released-groups">
-            <i class="bk-bscp-icon icon-resources"></i>
+            <i class="bk-bscp-icon icon-resources-fill"></i>
             <div class="groups-tag">
               <div class="first-group-name">{{ firstReleasedGroupName }}</div>
               <div
@@ -295,7 +295,7 @@ const handleTabChange = (val: string) => {
       border-radius: 2px;
       cursor: pointer;
     }
-    .icon-resources {
+    .icon-resources-fill {
       margin-right: 4px;
       font-size: 14px;
       color: #979BA5;

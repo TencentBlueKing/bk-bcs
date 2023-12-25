@@ -44,6 +44,7 @@
                 <template v-if="row.status.publish_status !== 'partial_released'">{{ getGroupNames(row) }}</template>
                 <ReleasedGroupViewer
                   v-else
+                  placement="bottom-start"
                   :bk-biz-id="props.bkBizId"
                   :app-id="props.appId"
                   :groups="row.status.released_groups"
