@@ -45,7 +45,16 @@ func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *
 
 // CreateCloudAccountValidate create cloud account validate
 func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
-	return cloudprovider.ErrCloudNotImplemented
+	nm := &NodeManager{}
+
+	_, err := nm.GetCloudRegions(&cloudprovider.CommonOption{
+		Account: account,
+	})
+	if err != nil {
+		return fmt.Errorf("%s CreateCloudAccountValidate failed, %v", cloudName, err)
+	}
+
+	return nil
 }
 
 // ImportClusterValidate check importCluster operation

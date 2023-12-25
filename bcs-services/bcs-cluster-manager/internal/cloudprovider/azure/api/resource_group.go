@@ -16,21 +16,20 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/services/subscription/mgmt/2020-09-01/subscription" // nolint
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2021-04-01/resources"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
-// SubClient defines the interface for azure subscription client
-type SubClient struct {
-	resourceGroupName string
-	subscriptionID    string
-	subClient         subscription.SubscriptionsClient
+// ResourceGroupsClient defines the interface for azure subscription client
+type ResourceGroupsClient struct {
+	subscriptionID string
+	groupClient    resources.GroupsClient
 }
 
-// NewAMClient create azure api management client
-func NewAMClient(opt *cloudprovider.CommonOption) (*SubClient, error) {
+// NewResourceGroupsClient create azure api resource group client
+func NewResourceGroupsClient(opt *cloudprovider.CommonOption) (*ResourceGroupsClient, error) {
 	if opt == nil || opt.Account == nil {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
@@ -45,35 +44,34 @@ func NewAMClient(opt *cloudprovider.CommonOption) (*SubClient, error) {
 		return nil, fmt.Errorf("get authorizer error: %v", err)
 	}
 
-	// new subscriptions client
-	subClient := subscription.NewSubscriptionsClient()
-	subClient.Authorizer = authorizer
-	return &SubClient{
-		resourceGroupName: opt.Account.ResourceGroupName,
-		subscriptionID:    opt.Account.SubscriptionID,
-		subClient:         subClient,
+	groupClient := resources.NewGroupsClient(opt.Account.SubscriptionID)
+	groupClient.Authorizer = authorizer
+	return &ResourceGroupsClient{
+		subscriptionID: opt.Account.SubscriptionID,
+		groupClient:    groupClient,
 	}, nil
 }
 
-// ListLocations list locations
-func (sub *SubClient) ListLocations(ctx context.Context) ([]*proto.RegionInfo, error) {
-	locations, err := sub.subClient.ListLocations(ctx, sub.subscriptionID)
+// ListResourceGroups get azure resource groups list
+func (group *ResourceGroupsClient) ListResourceGroups(ctx context.Context) ([]*proto.ResourceGroupInfo, error) {
+	groups, err := group.groupClient.List(ctx, "", nil)
 	if err != nil {
 		return nil, fmt.Errorf("list locations error: %v", err)
 	}
 
-	if locations.Value == nil {
-		return nil, nil
+	groupsInfo := make([]*proto.ResourceGroupInfo, 0)
+	for _, g := range groups.Values() {
+		groupsInfo = append(groupsInfo, &proto.ResourceGroupInfo{
+			Name:   *g.Name,
+			Region: *g.Location,
+			ProvisioningState: func() string {
+				if g.Properties != nil && g.Properties.ProvisioningState != nil {
+					return *g.Properties.ProvisioningState
+				}
+				return ""
+			}(),
+		})
 	}
 
-	result := make([]*proto.RegionInfo, 0)
-	for _, v := range *locations.Value {
-		if v.Name != nil && v.DisplayName != nil {
-			result = append(result, &proto.RegionInfo{
-				Region:     *v.Name,
-				RegionName: *v.DisplayName,
-			})
-		}
-	}
-	return result, nil
+	return groupsInfo, nil
 }

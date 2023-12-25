@@ -232,6 +232,8 @@ type NodeManager interface {
 	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
 	// ListKeyPairs list ssh keyPairs
 	ListKeyPairs(opt *CommonOption) ([]*proto.KeyPair, error)
+	// GetResourceGroups resource groups list
+	GetResourceGroups(opt *CommonOption) ([]*proto.ResourceGroupInfo, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo

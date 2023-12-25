@@ -37,6 +37,7 @@ type AksServiceImpl struct {
 	vnetClient           *armnetwork.VirtualNetworksClient
 	clustersClient       *armcontainerservice.ManagedClustersClient
 	securityGroupsClient *armnetwork.SecurityGroupsClient
+	resourceGroupsClient *armnetwork.SecurityGroupsClient
 }
 
 // NewAksServiceImplWithCommonOption 从 CommonOption 创建 AksService

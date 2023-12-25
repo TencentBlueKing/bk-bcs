@@ -170,7 +170,25 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 // CheckClusterEndpointStatus check cluster endpoint status
 func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
-	return false, cloudprovider.ErrCloudNotImplemented
+	cli, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
+	if err != nil {
+		return false, fmt.Errorf("CheckClusterEndpointStatus create aks client failed, %v", err)
+	}
+
+	credentials, err := cli.GetClusterAdminCredentialsWithName(context.Background(), opt.ResourceGroupName, clusterID)
+	if err != nil {
+		return false, fmt.Errorf("CheckClusterEndpointStatus GetClusterAdminCredentialsWithName failed, %v", err)
+	}
+	if len(credentials) == 0 {
+		return false, fmt.Errorf("credentials not found")
+	}
+
+	_, err = cloudprovider.GetCRDByKubeConfig(string(credentials[0].Value))
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 // AppendCloudNodeInfo append cloud node detailed info

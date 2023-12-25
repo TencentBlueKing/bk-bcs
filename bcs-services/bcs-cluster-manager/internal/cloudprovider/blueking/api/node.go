@@ -140,3 +140,8 @@ func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Li
 func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
+
+// GetResourceGroups resource groups list
+func (nm *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*proto.ResourceGroupInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}

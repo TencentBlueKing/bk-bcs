@@ -203,6 +203,11 @@ func (n *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.Ke
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// GetResourceGroups resource groups list
+func (n *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*proto.ResourceGroupInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // transInstanceIDsToNodes trans IDList to Nodes
 func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node,
 	error) {

@@ -399,6 +399,11 @@ func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.K
 	return keyPairs, nil
 }
 
+// GetResourceGroups resource groups list
+func (nm *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*proto.ResourceGroupInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // ListOsImage list image os
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	os := make([]*proto.OsImage, 0)

@@ -93,3 +93,18 @@ func (n *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Lis
 func (n *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
+
+// GetResourceGroups resource groups list
+func (n *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*proto.ResourceGroupInfo, error) {
+	client, err := api.NewResourceGroupsClient(opt)
+	if err != nil {
+		return nil, fmt.Errorf("create azure client failed, err %s", err.Error())
+	}
+
+	groups, err := client.ListResourceGroups(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("list regions failed, err %s", err.Error())
+	}
+
+	return groups, nil
+}
