@@ -176,7 +176,6 @@ message GetKvValueResp {
 
 message ListAppsReq {
   uint32 biz_id = 1;
-  string token = 2;
 }
 
 // App 对外简单版本

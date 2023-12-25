@@ -13,6 +13,8 @@
 package types
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
@@ -119,8 +121,30 @@ type FilePermissionCache struct {
 
 // CredentialCache cache struct.
 type CredentialCache struct {
-	Enabled bool     `json:"enabled"`
-	Scope   []string `json:"scope"`
+	Enabled  bool                `json:"enabled"`
+	Scope    []string            `json:"scope"`
+	ScopeMap map[string][]string `json:"-"` // app:scope
+}
+
+// InitScopeMap scope 格式化为app:scope, 方便鉴权处理
+func (c *CredentialCache) InitScopeMap() error {
+	c.ScopeMap = map[string][]string{}
+	for _, v := range c.Scope {
+		index := strings.Index(v, "/")
+		if index == -1 {
+			return fmt.Errorf("invalid scope %s", v)
+		}
+
+		app := v[:index]
+		scope := v[index:]
+		_, ok := c.ScopeMap[app]
+		if !ok {
+			c.ScopeMap[app] = []string{scope}
+		} else {
+			c.ScopeMap[app] = append(c.ScopeMap[app], scope)
+		}
+	}
+	return nil
 }
 
 // ReleaseCICaches convert ReleasedConfigItem to ReleaseCICache.

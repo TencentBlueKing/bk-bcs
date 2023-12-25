@@ -15,27 +15,92 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
+
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	pbfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 var (
+	// 兼容老的请求, 只部分方法使用中间件
 	allowMethod = map[string]struct{}{
 		"/pbfs.Upstream/ListApps": {},
 	}
 )
 
-func (s *Service) authorize(ctx context.Context) (context.Context, error) {
+// ctxKey context key
+type ctxKey int
+
+const (
+	credScopeKey ctxKey = iota
+)
+
+func withCredScope(ctx context.Context, value *types.CredentialCache) context.Context {
+	return context.WithValue(ctx, credScopeKey, value)
+}
+
+// authScope 包内私有方法断言, 认为一直可用
+func credScope(ctx context.Context) *types.CredentialCache {
+	return ctx.Value(credScopeKey).(*types.CredentialCache)
+}
+
+// wrappedStream stream 封装, 可自定义 context 传值
+type wrappedStream struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+// Context 覆盖 context
+func (s *wrappedStream) Context() context.Context {
+	return s.ctx
+}
+
+func getBearerToken(md metadata.MD) (string, error) {
+	values := md.Get("authorization")
+	if len(values) < 1 {
+		return "", fmt.Errorf("missing authorization header")
+	}
+
+	authorizationHeader := values[0]
+	authHeaderParts := strings.Split(authorizationHeader, " ")
+	if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
+		return "", fmt.Errorf("invalid authorization header format")
+	}
+
+	return authHeaderParts[1], nil
+}
+
+func (s *Service) authorize(ctx context.Context, bizID uint32) (context.Context, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, status.Errorf(codes.Aborted, "not have valid metadata")
+		return nil, status.Errorf(codes.Aborted, "missing grpc metadata")
 	}
-	p, _ := peer.FromContext(ctx)
-	fmt.Println("lejioamin", md, p.Addr.String())
+
+	token, err := getBearerToken(md)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	scope, err := s.bll.Auth().GetCred(kit.FromGrpcContext(ctx), bizID, token)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, err.Error())
+	}
+	if !scope.Enabled {
+		return nil, status.Errorf(codes.PermissionDenied, err.Error())
+	}
+
+	if err := scope.InitScopeMap(); err != nil {
+		return nil, status.Errorf(codes.PermissionDenied, err.Error())
+	}
+
+	// 获取scope，到下一步处理
+	ctx = withCredScope(ctx, scope)
 	return ctx, nil
 }
 
@@ -47,24 +112,21 @@ func FeedUnaryAuthInterceptor(
 		return handler(ctx, req)
 	}
 
+	var bizID uint32
+	switch r := req.(type) {
+	case *pbfs.ListAppsReq:
+		bizID = r.BizId
+	default:
+		return nil, status.Error(codes.Aborted, "missing bizId in request")
+	}
+
 	svr := info.Server.(*Service)
-	ctx, err := svr.authorize(ctx)
+	ctx, err := svr.authorize(ctx, bizID)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := handler(ctx, req)
-	return resp, err
-}
-
-// wrappedStream stream 封装, 可自定义 context 传值
-type wrappedStream struct {
-	grpc.ServerStream
-	ctx context.Context
-}
-
-func (s *wrappedStream) Context() context.Context {
-	return s.ctx
+	return handler(ctx, req)
 }
 
 // FeedStreamAuthInterceptor feed 鉴权中间件
@@ -75,7 +137,8 @@ func FeedStreamAuthInterceptor(
 		return handler(srv, ss)
 	}
 
-	ctx, err := srv.(*Service).authorize(ss.Context())
+	var bizID uint32
+	ctx, err := srv.(*Service).authorize(ss.Context(), bizID)
 	if err != nil {
 		return err
 	}

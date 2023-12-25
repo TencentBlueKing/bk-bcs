@@ -503,20 +503,20 @@ func isAppNotExistErr(err error) bool {
 
 // ListApps 获取服务列表
 func (s *Service) ListApps(ctx context.Context, req *pbfs.ListAppsReq) (*pbfs.ListAppsResp, error) {
-	im, err := sfs.ParseFeedIncomingContext(ctx)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	resp, err := s.bll.AppCache().ListApps(im.Kit, &pbcs.ListAppsReq{
-		BizId: req.BizId,
-	})
+	kt := kit.FromGrpcContext(ctx)
+	resp, err := s.bll.AppCache().ListApps(kt, &pbcs.ListAppsReq{BizId: req.BizId})
 	if err != nil {
 		return nil, err
 	}
 
+	scope := credScope(ctx)
 	apps := make([]*pbfs.App, 0, len(resp.Details))
 	for _, d := range resp.Details {
+		// 过滤无权限的 app
+		if _, ok := scope.ScopeMap[d.Spec.Name]; !ok {
+			continue
+		}
+
 		apps = append(apps, &pbfs.App{
 			Id:         d.Id,
 			Name:       d.Spec.Name,
