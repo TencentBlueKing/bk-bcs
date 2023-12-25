@@ -50,17 +50,6 @@ func credScope(ctx context.Context) *types.CredentialCache {
 	return ctx.Value(credScopeKey).(*types.CredentialCache)
 }
 
-// wrappedStream stream 封装, 可自定义 context 传值
-type wrappedStream struct {
-	grpc.ServerStream
-	ctx context.Context
-}
-
-// Context 覆盖 context
-func (s *wrappedStream) Context() context.Context {
-	return s.ctx
-}
-
 func getBearerToken(md metadata.MD) (string, error) {
 	values := md.Get("authorization")
 	if len(values) < 1 {
@@ -127,6 +116,17 @@ func FeedUnaryAuthInterceptor(
 	}
 
 	return handler(ctx, req)
+}
+
+// wrappedStream stream 封装, 可自定义 context 传值
+type wrappedStream struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+// Context 覆盖 context
+func (s *wrappedStream) Context() context.Context {
+	return s.ctx
 }
 
 // FeedStreamAuthInterceptor feed 鉴权中间件
