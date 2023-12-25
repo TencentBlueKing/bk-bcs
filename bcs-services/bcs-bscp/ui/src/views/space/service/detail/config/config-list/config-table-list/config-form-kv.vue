@@ -59,11 +59,13 @@ const props = withDefaults(
   },
 );
 
+
 const KvCodeEditorRef = ref();
 const formRef = ref();
 const localVal = ref({
   ...props.config,
 });
+
 
 const typeDescription = computed(() => {
   if (appData.value.spec.data_type !== 'any' && !props.editable && !props.view) {
@@ -86,8 +88,8 @@ const rules = {
       message: '最大长度128个字符',
     },
     {
-      validator: (value: string) => /^[\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*$/.test(value),
-      message: '请使用中文、英文、数字、下划线、中划线或点',
+      validator: (value: string) => /^[a-zA-Z0-9\u4e00-\u9fa5][a-zA-Z0-9_\u4e00-\u9fa5-]*[a-zA-Z0-9\u4e00-\u9fa5]$/.test(value),
+      message: '只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾',
     },
   ],
   value: [

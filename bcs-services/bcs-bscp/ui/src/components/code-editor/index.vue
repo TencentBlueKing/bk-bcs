@@ -94,6 +94,8 @@ watch(
     monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', []);
     // 切换缩进空格数
     editor.getModel()!.updateOptions({ tabSize: tabSize.value });
+    // 校验编辑器内容
+    if (localVal.value) validate(localVal.value);
   },
 );
 
@@ -285,12 +287,12 @@ const validate = (val: string) => {
   let markers: any[] = [];
   if (props.language === 'xml') {
     markers = validateXML(val);
-  };
-  if (props.language === 'yaml') {
+  } else if (props.language === 'yaml') {
     markers = validateYAML(val);
-  };
-  if (props.language === 'json') {
+  } else if (props.language === 'json') {
     return validateJSON(val);
+  } else {
+    return;
   }
   // 添加错误行
   monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
