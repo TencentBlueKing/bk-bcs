@@ -11,6 +11,13 @@
           placeholder="版本名称"/>
       </div>
       <section class="versions-wrapper">
+        <section v-if="!searchStr" class="unnamed-version">
+          <section :class="['version-item', { active: versionData.id === 0 }]" @click="handleSelectVersion(unNamedVersion)">
+            <i class="bk-bscp-icon icon-edit-small edit-icon" />
+            <div class="version-name">未命名版本</div>
+          </section>
+          <div class="divider"></div>
+        </section>
         <section
           v-for="version in versionsInView"
           :key="version.id"
@@ -85,9 +92,9 @@ const showOperateConfirmDialog = ref(false);
 
 const versionsInView = computed(() => {
   if (searchStr.value === '') {
-    return versionList.value;
+    return versionList.value.slice(1);
   }
-  return versionList.value.filter(item => item.spec.name.toLowerCase().includes(searchStr.value.toLocaleLowerCase()));
+  return versionList.value.filter(item => item.id > 0 && item.spec.name.toLowerCase().includes(searchStr.value.toLocaleLowerCase()));
 });
 
 // 监听刷新版本列表标识，处理新增版本场景，默认选中新增的版本
@@ -223,6 +230,12 @@ const handleDeprecateVersion = () => {
   padding: 16px 0;
   overflow: auto;
 }
+.unnamed-version {
+  .divider {
+    margin: 8px 24px;
+    border-bottom: 1px solid #DCDEE5;
+  }
+}
 .version-item {
   position: relative;
   padding: 0 40px 0 48px;
@@ -232,6 +245,13 @@ const handleDeprecateVersion = () => {
   }
   &:hover {
     background: #e1ecff;
+  }
+  .edit-icon {
+    position: absolute;
+    top: 10px;
+    left: 24px;
+    font-size: 22px;
+    color: #979BA5;
   }
   .dot {
     position: absolute;
@@ -254,8 +274,8 @@ const handleDeprecateVersion = () => {
   }
 }
 .version-name {
-  height: 40px;
-  line-height: 40px;
+  height: 42px;
+  line-height: 42px;
   font-size: 12px;
   color: #313238;
   text-align: left;
