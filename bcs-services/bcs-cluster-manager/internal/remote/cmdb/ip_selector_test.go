@@ -12,6 +12,7 @@
 package cmdb
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -23,7 +24,7 @@ func GetGseTestClient() *gse.Client {
 		Enable:     true,
 		AppCode:    "xxx",
 		AppSecret:  "xxx",
-		Server:     "xxx",
+		EsbServer:  "xxx",
 		BKUserName: "admin",
 		Debug:      true,
 	})
@@ -63,7 +64,7 @@ func TestGetHostCountByObject(t *testing.T) {
 func TestGetBizModuleTopoData(t *testing.T) {
 	cli := getNewClient()
 
-	data, err := GetBizModuleTopoData(cli, 2)
+	data, err := GetBizModuleTopoData(context.TODO(), cli, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +94,7 @@ func TestGetBizHostDetailedData(t *testing.T) {
 func TestGetBizModuleTopoData2(t *testing.T) {
 	cli := NewIpSelector(cmdb, gseCli)
 
-	topo, err := cli.GetBizModuleTopoData(2)
+	topo, err := cli.GetBizModuleTopoData(context.TODO(), 2)
 	if err != nil {
 		t.Fatal(err)
 	}

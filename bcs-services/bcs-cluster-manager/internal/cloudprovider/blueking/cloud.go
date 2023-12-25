@@ -127,8 +127,6 @@ func clusterCloudAdvancedSetting(cls *proto.Cluster) {
 	if cls.ClusterAdvanceSettings.NetworkType == "" {
 		cls.ClusterAdvanceSettings.NetworkType = common.Flannel
 	}
-
-	return
 }
 
 func clusterCloudDefaultNodeSetting(cls *proto.Cluster) {

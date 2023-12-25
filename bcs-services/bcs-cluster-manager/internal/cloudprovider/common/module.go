@@ -148,6 +148,7 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 	return nil
 }
 
+// nolint
 func transBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 

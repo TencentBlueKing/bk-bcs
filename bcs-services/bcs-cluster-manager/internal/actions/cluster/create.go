@@ -468,6 +468,7 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 
+// nolint
 func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Cluster) error {
 	// step1: create cluster to save mongo
 	// step2: call cloud provider cluster_manager feature to create cluster task
