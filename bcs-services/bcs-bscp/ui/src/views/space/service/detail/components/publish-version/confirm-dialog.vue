@@ -23,6 +23,7 @@
             </bk-overflow-title>
           </div>
         </div>
+        <template v-if="groupsToBePreviewed.length === 0">--</template>
       </bk-form-item>
       <bk-form-item label="上线说明" property="memo">
         <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :resize="true"></bk-input>
@@ -170,6 +171,7 @@ const handleConfirm = async () => {
     font-size: 12px;
     line-height: 22px;
     color: #c4c6cc;
+    overflow: hidden;
   }
 }
 .dialog-footer {
