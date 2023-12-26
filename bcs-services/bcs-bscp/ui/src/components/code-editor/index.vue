@@ -62,7 +62,7 @@ const props = withDefaults(
   },
 );
 
-const emit = defineEmits(['update:modelValue', 'change', 'enter', 'validate']);
+const emit = defineEmits(['update:modelValue', 'change', 'enter']);
 
 const codeEditorRef = ref();
 let editor: monaco.editor.IStandaloneCodeEditor;
@@ -171,7 +171,6 @@ onMounted(() => {
     if (!props.modelValue) {
       isShowPlaceholder.value = true;
     }
-    emit('validate');
   });
 });
 
@@ -344,6 +343,7 @@ defineExpose({
 .placeholderBox {
   height: 100%;
   background-color: #1e1e1e;
+  box-sizing: content-box;
   padding-top: 10px;
   .placeholderLine {
     display: flex;

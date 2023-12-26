@@ -49,7 +49,6 @@
           ref="codeEditorRef"
           v-model="kvsContent"
           @enter="separatorShow = true"
-          @validate="handleValidateEditor"
           :error-line="errorLine"
           :placeholder="editorPlaceholder"
         />
@@ -93,9 +92,7 @@ const appId = ref(Number(route.params.appId));
 watch(
   () => kvsContent.value,
   (val) => {
-    if (shouldValidate.value) {
-      handleValidateEditor();
-    }
+    handleValidateEditor();
     if (!val) emits('trigger', false);
   },
 );
@@ -163,6 +160,11 @@ const handleValidateEditor = () => {
         errorInfo: '类型为number 值不为number',
         lineNumber: index + 1,
       });
+    } else if (value === '') {
+      errorLine.value.push({
+        errorInfo: 'value不能为空',
+        lineNumber: index + 1,
+      });
     }
   });
   emits('trigger', kvsContent.value && errorLine.value.length === 0);
@@ -170,8 +172,6 @@ const handleValidateEditor = () => {
 
 // 导入kv
 const handleImport = async () => {
-  handleValidateEditor();
-  if (errorLine.value.length > 0) return Promise.reject();
   await batchUpsertKv(bkBizId.value, appId.value, kvs.value);
 };
 
