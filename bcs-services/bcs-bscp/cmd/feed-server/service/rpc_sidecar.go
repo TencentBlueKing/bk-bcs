@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"path"
 	"strings"
 
 	prm "github.com/prometheus/client_golang/prometheus"
@@ -372,11 +373,16 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 		if !credential.MatchKv(req.AppMeta.App, kv.Key) {
 			continue
 		}
+
+		// 客户端匹配
+		if !matchPattern(kv.Key, req.Match) {
+			continue
+		}
+
 		kvMetas = append(kvMetas, &pbfs.KvMeta{
 			Key:      kv.Key,
 			KvType:   kv.KvType,
-			Reviser:  kv.Reviser,
-			UpdateAt: kv.UpdateAt,
+			Revision: kv.Revision,
 			KvAttachment: &pbkv.KvAttachment{
 				BizId: kv.KvAttachment.BizId,
 				AppId: kv.KvAttachment.AppId,
@@ -476,15 +482,35 @@ func (s *Service) ListApps(ctx context.Context, req *pbfs.ListAppsReq) (*pbfs.Li
 			continue
 		}
 
+		// 客户端匹配
+		if !matchPattern(d.Spec.Name, req.Match) {
+			continue
+		}
+
 		apps = append(apps, &pbfs.App{
 			Id:         d.Id,
 			Name:       d.Spec.Name,
 			ConfigType: d.Spec.ConfigType,
-			Reviser:    d.Revision.Reviser,
-			UpdateAt:   d.Revision.UpdateAt,
+			Revision:   d.Revision,
 		})
 	}
 
 	r := &pbfs.ListAppsResp{Apps: apps}
 	return r, nil
+}
+
+// 匹配
+func matchPattern(name string, match []string) bool {
+	if len(match) == 0 {
+		return true
+	}
+
+	for _, m := range match {
+		ok, _ := path.Match(m, name)
+		if ok {
+			return true
+		}
+	}
+
+	return false
 }

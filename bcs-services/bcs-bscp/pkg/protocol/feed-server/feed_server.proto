@@ -141,6 +141,7 @@ message MessagingResp {}
 
 message ListAppsReq {
   uint32 biz_id = 1;
+  repeated string match = 2;
 }
 
 // App 对外简单版本
@@ -148,8 +149,7 @@ message App {
   uint32 id = 1;
   string name = 2;
   string config_type = 3;
-  string reviser = 4;
-  string update_at = 5;
+  pbbase.Revision revision = 4;
 }
 
 message ListAppsResp {
@@ -159,6 +159,7 @@ message ListAppsResp {
 message PullKvMetaReq {
   uint32 biz_id = 1;
   AppMeta app_meta = 2;
+  repeated string match = 3;
 }
 
 message PullKvMetaResp {
@@ -169,9 +170,8 @@ message PullKvMetaResp {
 message KvMeta {
   string key = 1;
   string kv_type = 2;
-  string reviser = 3;
-  string update_at = 4;
-  pbkv.KvAttachment kv_attachment = 5;
+  pbbase.Revision revision = 3;
+  pbkv.KvAttachment kv_attachment = 4;
 }
 
 message GetKvValueReq {
