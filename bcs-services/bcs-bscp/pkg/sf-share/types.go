@@ -480,7 +480,6 @@ type KvMetaV1 struct {
 	ID           uint32             `json:"id"`
 	Key          string             `json:"key"`
 	KvType       string             `json:"kv_type"`
-	Reviser      string             `json:"reviser"`
-	UpdateAt     string             `json:"updateAt"`
+	Revision     *pbbase.Revision   `json:"revision"`
 	KvAttachment *pbkv.KvAttachment `json:"kv_attachment"`
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbcommit "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
 	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	pbcontent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
@@ -160,6 +161,12 @@ func (rs *ReleasedService) ListAppLatestReleaseKvMeta(kt *kit.Kit, opts *types.A
 		kvList[idx] = &types.ReleasedKvMeta{
 			Key:    one.Key,
 			KvType: one.KvType,
+			Revision: &pbbase.Revision{
+				Creator:  one.Revision.Creator,
+				Reviser:  one.Revision.Reviser,
+				CreateAt: one.Revision.CreatedAt.Format(time.RFC3339),
+				UpdateAt: one.Revision.UpdatedAt.Format(time.RFC3339),
+			},
 			KvAttachment: &pbkv.KvAttachment{
 				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,
