@@ -264,6 +264,7 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 			ReleaseId:    detail.ReleaseId,
 			ReleaseName:  detail.ReleaseName,
 			Type:         detail.Type,
+			Deprecated:   detail.Deprecated,
 		})
 	}
 

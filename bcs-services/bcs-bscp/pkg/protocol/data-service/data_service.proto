@@ -631,6 +631,7 @@ message ListHookReferencesResp {
     uint32 release_id = 5;
     string release_name = 6;
     string type = 7;
+    bool deprecated = 8;
   }
   uint32 count = 1;
   repeated Detail details = 2;
@@ -716,6 +717,7 @@ message ListHookRevisionReferencesResp {
     uint32 release_id = 5;
     string release_name = 6;
     string type = 7;
+    bool deprecated = 8;
   }
   uint32 count = 1;
   repeated Detail details = 2;
