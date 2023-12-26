@@ -2,7 +2,6 @@
   <CommonConfigTable
     v-model:selectedConfigs="selectedConfigs"
     ref="configTable"
-    :current-template-space="currentTemplateSpace"
     :key="currentPkg"
     :show-cited-by-pkgs-col="true"
     :show-bound-by-apps-col="true"
