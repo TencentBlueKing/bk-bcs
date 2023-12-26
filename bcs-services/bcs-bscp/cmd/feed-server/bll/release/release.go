@@ -158,13 +158,15 @@ func (rs *ReleasedService) ListAppLatestReleaseKvMeta(kt *kit.Kit, opts *types.A
 	for idx, one := range rkv {
 
 		kvList[idx] = &types.ReleasedKvMeta{
-			Key: one.Key,
+			Key:      one.Key,
+			KvType:   one.KvType,
+			Reviser:  one.Reviser,
+			UpdateAt: one.UpdateAt,
 			KvAttachment: &pbkv.KvAttachment{
 				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,
 			},
 		}
-
 	}
 	meta.Kvs = kvList
 

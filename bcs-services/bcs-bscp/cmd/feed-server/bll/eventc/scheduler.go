@@ -420,8 +420,11 @@ func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.R
 	kvMeta := make([]*sfs.KvMetaV1, len(kvList))
 	for idx, one := range kvList {
 		kvMeta[idx] = &sfs.KvMetaV1{
-			ID:  one.ID,
-			Key: one.Key,
+			ID:       one.ID,
+			Key:      one.Key,
+			KvType:   one.KvType,
+			Reviser:  one.Reviser,
+			UpdateAt: one.UpdateAt,
 			KvAttachment: &pbkv.KvAttachment{
 				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,

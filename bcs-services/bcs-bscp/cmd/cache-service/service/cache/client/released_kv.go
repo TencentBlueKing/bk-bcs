@@ -97,6 +97,8 @@ func (c *client) GetReleasedKvValue(kt *kit.Kit, bizID, appID, releaseID uint32,
 		Key:       rkv.Spec.Key,
 		Value:     rkv.Spec.Value,
 		KvType:    rkv.Spec.KvType,
+		Reviser:   rkv.Revision.Reviser,
+		UpdateAt:  rkv.Revision.UpdateAt,
 	})
 	if err != nil {
 		return "", err

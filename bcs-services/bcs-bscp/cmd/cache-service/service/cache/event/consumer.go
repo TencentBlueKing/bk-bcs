@@ -341,8 +341,6 @@ func (c *consumer) cacheReleasedKv(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 
 		kvList := make(map[string][]*table.ReleasedKv)
 		for _, one := range releasedKv {
-			// remove useless revision info
-			one.Revision = nil
 			key := keys.Key.ReleasedKv(one.Attachment.BizID, one.ReleaseID)
 			kvList[key] = append(kvList[key], one)
 		}

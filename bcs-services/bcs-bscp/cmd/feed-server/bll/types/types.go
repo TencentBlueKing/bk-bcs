@@ -119,5 +119,8 @@ type AppLatestReleaseKvMeta struct {
 // ReleasedKvMeta defines a release's released kv metadata
 type ReleasedKvMeta struct {
 	Key          string             `json:"key,omitempty"`
+	KvType       string             `json:"kv_type,omitempty"`
+	Reviser      string             `json:"reviser,omitempty"`
+	UpdateAt     string             `json:"updateAt,omitempty"`
 	KvAttachment *pbkv.KvAttachment `json:"kv_attachment,omitempty"`
 }

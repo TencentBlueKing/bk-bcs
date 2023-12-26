@@ -373,7 +373,10 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 			continue
 		}
 		kvMetas = append(kvMetas, &pbfs.KvMeta{
-			Key: kv.Key,
+			Key:      kv.Key,
+			KvType:   kv.KvType,
+			Reviser:  kv.Reviser,
+			UpdateAt: kv.UpdateAt,
 			KvAttachment: &pbkv.KvAttachment{
 				BizId: kv.KvAttachment.BizId,
 				AppId: kv.KvAttachment.AppId,

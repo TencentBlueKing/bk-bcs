@@ -168,6 +168,9 @@ message PullKvMetaResp {
 
 message KvMeta {
   string key = 1;
+  string kv_type = 2;
+  string reviser = 3;
+  string update_at = 4;
   pbkv.KvAttachment kv_attachment = 5;
 }
 

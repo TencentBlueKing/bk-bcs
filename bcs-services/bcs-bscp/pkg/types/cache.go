@@ -71,6 +71,9 @@ type ReleaseKvCache struct {
 	ID         uint32              `json:"id"`
 	ReleaseID  uint32              `json:"reid"`
 	Key        string              `json:"key"`
+	KvType     string              `json:"kv_type"`
+	Reviser    string              `json:"reviser"`
+	UpdateAt   string              `json:"update_at"`
 	Attachment *table.KvAttachment `json:"am"`
 }
 
@@ -142,7 +145,7 @@ func (c *CredentialCache) preprocess() {
 		}
 
 		app := v[:index]
-		scope := v[index:]
+		scope := v[index+1:]
 		_, ok := c.scopeMap[app]
 		if !ok {
 			c.scopeMap[app] = []string{scope}
@@ -227,6 +230,9 @@ func ReleaseKvCaches(rs []*table.ReleasedKv) []*ReleaseKvCache {
 			ID:        one.ID,
 			ReleaseID: one.ReleaseID,
 			Key:       one.Spec.Key,
+			KvType:    string(one.Spec.KvType),
+			Reviser:   one.Revision.Reviser,
+			UpdateAt:  one.Revision.UpdatedAt.Format(time.RFC3339),
 			Attachment: &table.KvAttachment{
 				BizID: one.Attachment.BizID,
 				AppID: one.Attachment.AppID,
@@ -244,4 +250,6 @@ type ReleaseKvValueCache struct {
 	Key       string `json:"key"`
 	Value     string `json:"value"`
 	KvType    string `json:"kv_type"`
+	Reviser   string `json:"reviser"`
+	UpdateAt  string `json:"update_at"`
 }
