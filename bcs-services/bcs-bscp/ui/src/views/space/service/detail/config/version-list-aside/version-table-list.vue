@@ -91,6 +91,11 @@
                       版本对比
                     </bk-button>
                     <bk-button
+                      v-bk-tooltips="{
+                        disabled: row.status.publish_status === 'not_released',
+                        placement: 'bottom',
+                        content: '只支持未上线版本'
+                      }"
                       text
                       theme="primary"
                       :disabled="row.status.publish_status !== 'not_released'"

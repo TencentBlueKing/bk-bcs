@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
-import InfoBox from 'bkui-vue/lib/info-box';
+import { InfoBox } from 'bkui-vue';
 import BkMessage from 'bkui-vue/lib/message';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../store/global';

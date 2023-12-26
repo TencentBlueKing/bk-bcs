@@ -1,7 +1,7 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item label="配置项名称" property="key" :required="true">
-      <bk-input v-model="localVal.key" :disabled="editable || view" @change="change" />
+      <bk-input v-model="localVal.key" :disabled="editable || view" @input="change" />
     </bk-form-item>
     <bk-form-item label="数据类型" property="kv_type" :required="true" :description="typeDescription">
       <bk-radio-group v-model="localVal.kv_type">
@@ -9,17 +9,17 @@
           v-for="kvType in CONFIG_KV_TYPE"
           :key="kvType.id"
           :label="kvType.id"
-          :disabled="radioDisabled(kvType.id)"
-          >{{ kvType.name }}</bk-radio
-        >
+          :disabled="radioDisabled(kvType.id)">
+          {{ kvType.name }}
+        </bk-radio>
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item label="配置项值" property="value" :required="true">
       <bk-input
         v-if="localVal.kv_type === 'string' || localVal.kv_type === 'number'"
         v-model.trim="localVal!.value"
-        @change="change"
         :disabled="view"
+        @input="change"
       />
       <KvConfigContentEditor
         v-else
