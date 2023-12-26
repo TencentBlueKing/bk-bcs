@@ -1,7 +1,7 @@
 <template>
   <div class="service-detail-header">
     <section class="summary-wrapper">
-      <div :class="['status-tag', versionData.status.publish_status]">
+      <div :class="['status-tag', versionData.spec.deprecated ? 'deprecated' : versionData.status.publish_status]">
         {{ statusName }}
       </div>
       <div class="version-name" :title="versionData.spec.name">{{ versionData.spec.name }}</div>
@@ -115,6 +115,10 @@ const publishVersionRef = ref();
 
 const statusName = computed(() => {
   const status = versionData.value.status.publish_status;
+  if (versionData.value.spec.deprecated) {
+    return '已废弃';
+  }
+
   if (status === 'editing') {
     return '编辑中';
   } else if (status === 'not_released') {
@@ -240,6 +244,11 @@ const handleTabChange = (val: string) => {
       color: #63656e;
       border: 1px solid rgba(151, 155, 165, 0.3);
       border-radius: 11px;
+      &.deprecated {
+        color: #ea3536;
+        background-color: #feebea;
+        border-color: #ea35364d;
+      }
       &.not_released {
         color: #fe9000;
         background: #ffe8c3;

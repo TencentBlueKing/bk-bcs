@@ -26,14 +26,17 @@
         <bk-table-column label="服务名称" prop="app_name"></bk-table-column>
         <bk-table-column label="服务版本">
           <template #default="{ row }">
-            <bk-link
-              v-if="row.release_name"
-              class="link-btn"
-              theme="primary"
-              target="_blank"
-              :href="getHref(row.app_id, row.release_id)"
-              >{{ row.release_name }}</bk-link
-            >
+            <template v-if="row.release_name">
+              <span v-if="row.deprecated">{{ row.release_name }}</span>
+              <bk-link
+                v-else
+                class="link-btn"
+                theme="primary"
+                target="_blank"
+                :href="getHref(row.app_id, row.release_id)">
+                {{ row.release_name }}
+              </bk-link>
+            </template>
           </template>
         </bk-table-column>
       </bk-table>
