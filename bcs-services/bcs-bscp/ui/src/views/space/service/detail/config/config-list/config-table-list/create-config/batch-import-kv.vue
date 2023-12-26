@@ -1,6 +1,6 @@
 <template>
   <bk-dialog
-    :is-show="show"
+    :is-show="props.show"
     :title="'批量导入'"
     :theme="'primary'"
     width="960"

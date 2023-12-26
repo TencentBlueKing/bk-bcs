@@ -18,6 +18,7 @@
       <bk-input
         v-if="localVal.kv_type === 'string' || localVal.kv_type === 'number'"
         v-model.trim="localVal!.value"
+        :placeholder="stringTypePlaceholder"
         :disabled="view"
         @input="change"
       />
@@ -79,6 +80,13 @@ const radioDisabled = computed(() => (kvTypeId: string) => {
     return kvTypeId !== localVal.value.kv_type;
   }
   return false;
+});
+
+const stringTypePlaceholder = computed(() => {
+  if (localVal.value.kv_type === 'string') {
+    return '请输入(仅支持大小不超过2M)';
+  }
+  return '请输入';
 });
 
 const rules = {

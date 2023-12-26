@@ -29,6 +29,7 @@
         @page-limit-change="handlePageLimitChange"
         @page-value-change="refreshList($event,true)"
         @selection-change="handleSelectionChange"
+        @select-all="handleSelectAll"
       >
         <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
         <bk-table-column label="配置文件名称">
@@ -165,7 +166,6 @@ const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShou
   storeToRefs(templateStore);
 
 const props = defineProps<{
-  currentTemplateSpace: number;
   currentPkg: number | string;
   selectedConfigs: ITemplateConfigItem[];
   showCitedByPkgsCol?: boolean; // 是否显示模板被套餐引用列
@@ -275,42 +275,31 @@ const refreshListAfterDeleted = (num: number) => {
 const handleSearchInputChange = debounce(() => refreshList(), 300);
 const handleSelectionChange = ({
   checked,
-  isAll,
   row,
 }: {
   checked: boolean;
-  isAll: boolean;
   row: ITemplateConfigItem;
 }) => {
   const configs = props.selectedConfigs.slice();
-  if (isAll) {
-    if (checked) {
-      list.value.forEach((config) => {
-        if (!configs.find(item => item.id === config.id)) {
-          configs.push(config);
-        }
-      });
-    } else {
-      list.value.forEach((config) => {
-        const index = configs.findIndex(item => item.id === config.id);
-        if (index > -1) {
-          configs.splice(index, 1);
-        }
-      });
+  if (checked) {
+    if (!configs.find(item => item.id === row.id)) {
+      configs.push(row);
     }
   } else {
-    if (checked) {
-      if (!configs.find(item => item.id === row.id)) {
-        configs.push(row);
-      }
-    } else {
-      const index = configs.findIndex(item => item.id === row.id);
-      if (index > -1) {
-        configs.splice(index, 1);
-      }
+    const index = configs.findIndex(item => item.id === row.id);
+    if (index > -1) {
+      configs.splice(index, 1);
     }
   }
   emits('update:selectedConfigs', configs);
+};
+
+const handleSelectAll = ({ checked }: {checked: boolean;}) => {
+  if (checked)  {
+    emits('update:selectedConfigs', list.value);
+  } else {
+    emits('update:selectedConfigs', []);
+  }
 };
 
 const isSelectedFn = ({
@@ -361,7 +350,7 @@ const goToVersionManage = (id: number) => {
   router.push({
     name: 'template-version-manage',
     params: {
-      templateSpaceId: props.currentTemplateSpace,
+      templateSpaceId: currentTemplateSpace.value,
       packageId: props.currentPkg,
       templateId: id,
     },
