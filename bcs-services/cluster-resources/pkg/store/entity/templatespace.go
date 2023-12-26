@@ -12,18 +12,27 @@
 
 package entity
 
-// 定义一批统一的key, 用在db相关的字段
-const (
-	FieldKeyObjectID      = "_id"
-	FieldKeyProjectCode   = "projectCode"
-	FieldKeyClusterID     = "clusterID"
-	FieldKeyName          = "name"
-	FieldKeyScope         = "scope"
-	FieldKeyTemplateSpace = "templateSpace"
-	FieldKeyVersion       = "version"
-	FieldKeyTemplateName  = "templateName"
-
-	FieldKeyCreateBy = "createBy"
-	FieldKeyCreateAt = "createAt"
-	FieldKeyUpdateAt = "updateAt"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+// TemplateSpace 定义了模板文件文件夹的模型
+type TemplateSpace struct {
+	ID          primitive.ObjectID `json:"id" bson:"_id"`
+	Name        string             `json:"name" bson:"name"`
+	ProjectCode string             `json:"projectCode" bson:"projectCode"`
+	Description string             `json:"description" bson:"description"`
+}
+
+// ToMap trans templatespace to map
+func (t *TemplateSpace) ToMap() map[string]interface{} {
+	if t == nil {
+		return nil
+	}
+	m := make(map[string]interface{}, 0)
+	m["id"] = t.ID.Hex()
+	m["name"] = t.Name
+	m["projectCode"] = t.ProjectCode
+	m["description"] = t.Description
+	return m
+}
