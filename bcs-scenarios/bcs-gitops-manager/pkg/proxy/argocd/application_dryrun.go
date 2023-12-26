@@ -16,6 +16,7 @@ package argocd
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -42,8 +43,9 @@ import (
 // User can specify application exist, or transfer application manifests which not
 // created.
 type ApplicationDiffOrDryRunRequest struct {
-	ApplicationName string `json:"applicationName"`
-	Revision        string `json:"revision"`
+	ApplicationName string   `json:"applicationName"`
+	Revision        string   `json:"revision"`
+	Revisions       []string `json:"revisions"`
 
 	ApplicationManifests string `json:"applicationManifests"`
 }
@@ -70,6 +72,8 @@ type ApplicationDiffOrDryRunData struct {
 type Manifest struct {
 	Namespace string `json:"namespace,omitempty"`
 	Name      string `json:"name,omitempty"`
+	Group     string `json:"group,omitempty"`
+	Version   string `json:"version,omitempty"`
 	Kind      string `json:"kind,omitempty"`
 
 	// diff result
@@ -89,7 +93,12 @@ func (plugin *AppPlugin) applicationDiff(r *http.Request) (*http.Request, *mw.Ht
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "build request failed"))
 	}
 	blog.Infof("RequestID[%s] received diff request: %v", mw.RequestID(r.Context()), req)
-	application, result, err := plugin.compareApplicationManifests(r.Context(), req, false)
+	application, err := plugin.buildApplicationByDifOrDryRunRequest(r.Context(), req)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			errors.Wrapf(err, "build application from request failed"))
+	}
+	result, err := plugin.compareApplicationManifests(r.Context(), req, application.DeepCopy(), false)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Wrapf(err, "compare application manifests failed"))
@@ -115,7 +124,12 @@ func (plugin *AppPlugin) applicationDryRun(r *http.Request) (*http.Request, *mw.
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "build request failed"))
 	}
 	blog.Infof("RequestID[%s] received dry-run request: %v", mw.RequestID(r.Context()), req)
-	application, result, err := plugin.compareApplicationManifests(r.Context(), req, true)
+	application, err := plugin.buildApplicationByDifOrDryRunRequest(r.Context(), req)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			errors.Wrapf(err, "build application from request failed"))
+	}
+	result, err := plugin.compareApplicationManifests(r.Context(), req, application, true)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Wrapf(err, "compare application manifests failed"))
@@ -125,7 +139,7 @@ func (plugin *AppPlugin) applicationDryRun(r *http.Request) (*http.Request, *mw.
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Wrapf(err, "manifests dry run failed"))
 	}
-	return r, mw.ReturnJSONResponse(&ApplicationDiffOrDryRunResponse{
+	resp := &ApplicationDiffOrDryRunResponse{
 		Code:      0,
 		RequestID: mw.RequestID(r.Context()),
 		Data: &ApplicationDiffOrDryRunData{
@@ -135,7 +149,48 @@ func (plugin *AppPlugin) applicationDryRun(r *http.Request) (*http.Request, *mw.
 			LiveRevision:  application.Spec.Source.TargetRevision,
 			Result:        result,
 		},
-	})
+	}
+	return r, mw.ReturnJSONResponse(resp)
+}
+
+func (plugin *AppPlugin) buildApplicationByDifOrDryRunRequest(ctx context.Context,
+	req *ApplicationDiffOrDryRunRequest) (*v1alpha1.Application, error) {
+	application := new(v1alpha1.Application)
+	if req.ApplicationName != "" {
+		var statusCode int
+		var err error
+		application, statusCode, err = plugin.middleware.
+			CheckApplicationPermission(ctx, req.ApplicationName, iam.ProjectView)
+		if statusCode != http.StatusOK {
+			return nil, errors.Wrapf(err, "check application permission failed")
+		}
+	} else if req.ApplicationManifests != "" {
+		var statusCode int
+		var err error
+		if err = json.Unmarshal([]byte(req.ApplicationManifests), application); err != nil {
+			return nil, errors.Wrapf(err, "unmarshal applicationManifests failed")
+		}
+		statusCode, err = plugin.middleware.CheckCreateApplication(ctx, application)
+		if statusCode != http.StatusOK {
+			return nil, errors.Wrapf(err, "check create application failed")
+		}
+		blog.Infof("RequestID[%s] checked create application permission", mw.RequestID(ctx))
+	} else {
+		return nil, errors.Errorf("request body 'applicationName' or 'applicationManifests' cannot be empty")
+	}
+	if application.Spec.HasMultipleSources() {
+		if len(req.Revisions) != 0 && len(req.Revisions) != len(application.Spec.Sources) {
+			return nil, errors.Errorf("application has '%d' resources, but request body 'revisions' only "+
+				"have '%d'. Or you can set empty 'revisions', we will use default revisions in application",
+				len(application.Spec.Sources), len(req.Revisions))
+		}
+		return application, nil
+	} else {
+		if application.Spec.Source == nil {
+			return nil, errors.Errorf("application spec.source is nil")
+		}
+		return application, nil
+	}
 }
 
 func buildDiffOrDryRunRequest(r *http.Request) (*ApplicationDiffOrDryRunRequest, error) {
@@ -144,7 +199,7 @@ func buildDiffOrDryRunRequest(r *http.Request) (*ApplicationDiffOrDryRunRequest,
 		return nil, errors.Wrapf(err, "read body failed")
 	}
 	req := new(ApplicationDiffOrDryRunRequest)
-	if err := json.Unmarshal(body, req); err != nil {
+	if err = json.Unmarshal(body, req); err != nil {
 		return nil, errors.Wrapf(err, "unmarshal request body failed")
 	}
 	if req.ApplicationName == "" && req.ApplicationManifests == "" {
@@ -153,49 +208,57 @@ func buildDiffOrDryRunRequest(r *http.Request) (*ApplicationDiffOrDryRunRequest,
 	return req, nil
 }
 
-func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context,
-	req *ApplicationDiffOrDryRunRequest, isDryRun bool) (*v1alpha1.Application, []*Manifest, error) {
-	var application *v1alpha1.Application
-	var manifestResponse *apiclient.ManifestResponse
-	var err error
-	if req.ApplicationName != "" {
-		application, manifestResponse, err = plugin.buildApplicationManifestsWithName(ctx,
-			req.ApplicationName, req.Revision)
-		if err != nil {
-			return nil, nil, errors.Wrapf(err, "build application manfiests failed")
+func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context, req *ApplicationDiffOrDryRunRequest,
+	application *v1alpha1.Application, isDryRun bool) ([]*Manifest, error) {
+	originalApplication := application.DeepCopy()
+	// 使用 Request 的 Revision 版本覆盖应用的版本
+	if len(req.Revisions) != 0 {
+		for i := range application.Spec.Sources {
+			application.Spec.Sources[i].TargetRevision = req.Revisions[i]
 		}
-	} else if req.ApplicationManifests != "" {
-		application, manifestResponse, err = plugin.buildApplicationManifestsWithAppYaml(ctx, req.ApplicationManifests)
-		if err != nil {
-			return nil, nil, errors.Wrapf(err, "build application manifests failed")
-		}
+	} else if req.Revision != "" {
+		application.Spec.Source.TargetRevision = req.Revision
 	}
+	resp, err := plugin.storage.GetApplicationManifestsFromRepoServerWithMultiSources(ctx, application)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get application manifests failed")
+	}
+	if len(resp) == 0 {
+		return nil, errors.Errorf("application manifests response length is 0")
+	}
+	manifestResponse := resp[0]
 	manifestMap, err := decodeManifest(application, manifestResponse)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "decode application manifest failed")
+		return nil, errors.Wrapf(err, "decode application manifest failed")
 	}
-	// 未指定 revision 或指定 manifest，表示不需要对比，直接返回
-	if req.Revision == "" || req.ApplicationManifests != "" || isDryRun {
+	// 未指定 revision 或只指定 manifest，表示只是 DryRun 不需要对比，直接返回
+	if (req.Revision == "" && len(req.Revisions) == 0) || req.ApplicationManifests != "" || isDryRun {
 		results := make([]*Manifest, 0, len(manifestMap))
 		for _, decodeObj := range manifestMap {
 			results = append(results, &Manifest{
 				Namespace: decodeObj.GetNamespace(),
 				Name:      decodeObj.GetName(),
+				Group:     decodeObj.GroupVersionKind().Group,
+				Version:   decodeObj.GroupVersionKind().Version,
 				Kind:      decodeObj.GetKind(),
 				Local:     decodeObj,
 			})
 		}
-		return application, results, nil
+		return results, nil
 	}
 
 	// 获取已存在的 application 的 revision 结果
-	liveManifestResp, err := plugin.storage.GetApplicationManifestsFromRepoServer(ctx, application)
+	liveManifestResp, err := plugin.storage.
+		GetApplicationManifestsFromRepoServerWithMultiSources(ctx, originalApplication)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "get application manifests with live failed")
+		return nil, errors.Wrapf(err, "get application manifests with live failed")
 	}
-	liveManifestMap, err := decodeManifest(application, liveManifestResp)
+	if len(liveManifestResp) == 0 {
+		return nil, errors.Errorf("application manifests response length is 0")
+	}
+	liveManifestMap, err := decodeManifest(originalApplication, liveManifestResp[0])
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "decode live application manifest failed")
+		return nil, errors.Wrapf(err, "decode live application manifest failed")
 	}
 	results := make([]*Manifest, 0)
 	// 对比目标 revision 和已保存的 revision
@@ -204,13 +267,15 @@ func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context,
 		if !ok {
 			continue
 		}
-		if err = plugin.storage.ApplicationNormalizeWhenDiff(application,
+		if err = plugin.storage.ApplicationNormalizeWhenDiff(originalApplication,
 			decodeObj, liveDecodeObj, true); err != nil {
-			return nil, nil, errors.Wrapf(err, "application normlize failed when diff")
+			return nil, errors.Wrapf(err, "application normlize failed when diff")
 		}
 		results = append(results, &Manifest{
 			Namespace: decodeObj.GetNamespace(),
 			Name:      decodeObj.GetName(),
+			Group:     decodeObj.GroupVersionKind().Group,
+			Version:   decodeObj.GroupVersionKind().Version,
 			Kind:      decodeObj.GetKind(),
 			Local:     decodeObj,
 			Live:      liveDecodeObj,
@@ -219,62 +284,28 @@ func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context,
 		delete(liveManifestMap, k)
 	}
 	for _, obj := range manifestMap {
+		obj.SetManagedFields(nil)
 		results = append(results, &Manifest{
 			Namespace: obj.GetNamespace(),
 			Name:      obj.GetName(),
+			Group:     obj.GroupVersionKind().Group,
+			Version:   obj.GroupVersionKind().Version,
 			Kind:      obj.GetKind(),
 			Local:     obj,
 		})
 	}
 	for _, obj := range liveManifestMap {
+		obj.SetManagedFields(nil)
 		results = append(results, &Manifest{
 			Namespace: obj.GetNamespace(),
 			Name:      obj.GetName(),
+			Group:     obj.GroupVersionKind().Group,
+			Version:   obj.GroupVersionKind().Version,
 			Kind:      obj.GetKind(),
 			Live:      obj,
 		})
 	}
-	return application, results, nil
-}
-
-func (plugin *AppPlugin) buildApplicationManifestsWithName(ctx context.Context,
-	appName, revision string) (*v1alpha1.Application, *apiclient.ManifestResponse, error) {
-	application, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, appName, iam.ProjectView)
-	if statusCode != http.StatusOK {
-		return nil, nil, errors.Wrapf(err, "check application permission failed")
-	}
-	originalRevision := application.Spec.Source.TargetRevision
-	if revision != "" {
-		application.Spec.Source.TargetRevision = revision
-	}
-	blog.Infof("RequestID[%s] checked application permission", mw.RequestID(ctx))
-	var manifestResp *apiclient.ManifestResponse
-	manifestResp, err = plugin.storage.GetApplicationManifestsFromRepoServer(ctx, application)
-	if err != nil {
-		return nil, nil, errors.Wrapf(err, "get application manifests failed")
-	}
-
-	application.Spec.Source.TargetRevision = originalRevision
-	return application, manifestResp, nil
-}
-
-func (plugin *AppPlugin) buildApplicationManifestsWithAppYaml(ctx context.Context, appYaml string) (
-	*v1alpha1.Application, *apiclient.ManifestResponse, error) {
-	application := new(v1alpha1.Application)
-	if err := json.Unmarshal([]byte(appYaml), application); err != nil {
-		return nil, nil, errors.Wrapf(err, "unmarshal applicationManifests failed")
-	}
-	statusCode, err := plugin.middleware.CheckCreateApplication(ctx, application)
-	if statusCode != http.StatusOK {
-		return nil, nil, errors.Wrapf(err, "check create application failed")
-	}
-	blog.Infof("RequestID[%s] checked create application permission", mw.RequestID(ctx))
-	var manifestResp *apiclient.ManifestResponse
-	manifestResp, err = plugin.storage.GetApplicationManifestsFromRepoServer(ctx, application)
-	if err != nil {
-		return nil, nil, errors.Wrapf(err, "get application manifests without created failed")
-	}
-	return application, manifestResp, nil
+	return results, nil
 }
 
 func decodeManifest(application *v1alpha1.Application,
@@ -327,32 +358,54 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 	results := make([]*Manifest, 0, len(manifests))
 	for _, manifest := range manifests {
 		local := manifest.Local
+		dryRunManifest := &Manifest{
+			Namespace: local.GetNamespace(),
+			Name:      local.GetName(),
+			Group:     local.GroupVersionKind().Group,
+			Version:   local.GroupVersionKind().Version,
+			Kind:      local.GetKind(),
+		}
 		gvk := local.GroupVersionKind().GroupVersion().String() + "/" + local.GetKind()
 		resource, ok := gvr[gvk]
 		if !ok {
-			return nil, errors.Errorf("cluster '%s' get resource from gvk '%s' not found", clusterServer, gvk)
+			dryRunManifest.IsSucceed = false
+			dryRunManifest.ErrMessage = fmt.Sprintf("cluster '%s' get resource from gvk '%s' not found",
+				clusterServer, gvk)
+			results = append(results, dryRunManifest)
+			continue
 		}
-		_, err = dynamicClient.
-			Resource(local.GroupVersionKind().GroupVersion().WithResource(resource)).
-			Namespace(local.GetNamespace()).
-			Get(context.Background(), local.GetName(), metav1.GetOptions{})
+
+		localGVR := local.GroupVersionKind().GroupVersion().WithResource(resource.Name)
+		localName := local.GetName()
+		localNamespace := local.GetNamespace()
+		// NOTE: there should set namespace empty if resource is not namespaced
+		if !resource.Namespaced {
+			localNamespace = ""
+			dryRunManifest.Namespace = localNamespace
+		}
+		_, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
+			Get(context.Background(), localName, metav1.GetOptions{})
 		if err != nil && !k8serrors.IsNotFound(err) {
-			return nil, errors.Wrapf(err, "get resource '%s/%s/%s' failed",
-				resource, local.GetNamespace(), local.GetName())
+			dryRunManifest.IsSucceed = false
+			dryRunManifest.ErrMessage = fmt.Sprintf("get resource '%s' with gvr '%v' from namespace '%s' failed: %s",
+				local.GetName(), localGVR, localNamespace, err.Error())
+			results = append(results, dryRunManifest)
+			continue
 		}
 		var updatedObj *unstructured.Unstructured
 		var dryRunError error
 		var isExisted bool
 		if k8serrors.IsNotFound(err) {
 			isExisted = false
-			updatedObj, err = dynamicClient.
-				Resource(local.GroupVersionKind().GroupVersion().WithResource(resource)).
-				Namespace(local.GetNamespace()).Create(context.Background(), local, metav1.CreateOptions{
-				DryRun:       []string{metav1.DryRunAll},
-				FieldManager: "kubectl-client-side-apply",
-			})
+			updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
+				Create(context.Background(), local,
+					metav1.CreateOptions{
+						DryRun:       []string{metav1.DryRunAll},
+						FieldManager: "kubectl-client-side-apply",
+					})
 			if err != nil {
-				dryRunError = errors.Wrapf(err, "dry-run with resource not exist failed")
+				dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
+					"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
 			}
 		} else {
 			var localBS []byte
@@ -362,23 +415,21 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 			}
 			isExisted = true
 			updatedObj, err = dynamicClient.
-				Resource(local.GroupVersionKind().GroupVersion().WithResource(resource)).
-				Namespace(local.GetNamespace()).Patch(context.Background(), local.GetName(), types.ApplyPatchType,
-				localBS, metav1.PatchOptions{
-					DryRun:       []string{metav1.DryRunAll},
-					FieldManager: "kubectl-client-side-apply",
-				})
+				Resource(localGVR).
+				Namespace(localNamespace).
+				Patch(context.Background(), local.GetName(), types.MergePatchType,
+					localBS, metav1.PatchOptions{
+						DryRun:       []string{metav1.DryRunAll},
+						FieldManager: "kubectl-client-side-apply",
+					})
 			if err != nil {
-				dryRunError = errors.Wrapf(err, "dry-run with resource exist failed")
+				dryRunError = errors.Wrapf(err, "dry-run with exist resource '%s' with gvr '%v' "+
+					"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
 			}
 		}
-		dryRunManifest := &Manifest{
-			Namespace: updatedObj.GetNamespace(),
-			Name:      updatedObj.GetName(),
-			Kind:      updatedObj.GetKind(),
-			Existed:   isExisted,
-		}
+		dryRunManifest.Existed = isExisted
 		if dryRunError == nil {
+			updatedObj.SetManagedFields(nil)
 			dryRunManifest.IsSucceed = true
 			dryRunManifest.Merged = updatedObj
 		} else {
@@ -391,7 +442,7 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 }
 
 // getGroupVersionKindResource returns all GroupVersionResource from cluster
-func getGroupVersionKindResource(config *rest.Config) (map[string]string, error) {
+func getGroupVersionKindResource(config *rest.Config) (map[string]metav1.APIResource, error) {
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
 		return nil, errors.Wrapf(err, "create discovery client failed")
@@ -400,14 +451,14 @@ func getGroupVersionKindResource(config *rest.Config) (map[string]string, error)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get server groups and resources failed")
 	}
-	result := make(map[string]string)
+	result := make(map[string]metav1.APIResource)
 	for _, resourceList := range resources {
 		for i := range resourceList.APIResources {
 			res := resourceList.APIResources[i]
 			if strings.Contains(res.Name, "/") {
 				continue
 			}
-			result[resourceList.GroupVersion+"/"+res.Kind] = res.Name
+			result[resourceList.GroupVersion+"/"+res.Kind] = res
 		}
 	}
 	return result, nil

@@ -84,14 +84,6 @@ func (hm *HelmManager) DownloadChart(ctx context.Context,
 	return action.Handle(ctx, req, resp)
 }
 
-// UploadChart provide the actions to upload chart
-func (hm *HelmManager) UploadChart(ctx context.Context,
-	req *helmmanager.UploadChartReq, resp *helmmanager.UploadChartResp) error {
-	defer recorder(ctx, "UploadChart", req, nil)()
-	action := actionChart.NewUploadChartAction(hm.model, hm.platform)
-	return action.Handle(ctx, req, resp)
-}
-
 // GetChartRelease provide the actions to get chart releases
 func (hm *HelmManager) GetChartRelease(ctx context.Context,
 	req *helmmanager.GetChartReleaseReq, resp *helmmanager.GetChartReleaseResp) error {

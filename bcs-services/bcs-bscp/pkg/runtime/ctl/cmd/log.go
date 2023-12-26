@@ -13,9 +13,9 @@
 package cmd
 
 import (
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // WithLog init and returns the log command.

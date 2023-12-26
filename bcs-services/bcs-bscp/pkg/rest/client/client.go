@@ -19,7 +19,7 @@ import (
 	"net/http"
 	"time"
 
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // NewClient new http client.

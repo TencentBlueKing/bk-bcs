@@ -1,0 +1,163 @@
+{
+    "language": "en",
+    "messages": [
+        {
+            "id": "template variable name must start with {TemplateVariablePrefix}",
+            "message": "template variable name must start with {TemplateVariablePrefix}",
+            "translation": "template variable name must start with {TemplateVariablePrefix}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "TemplateVariablePrefix",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "constant.TemplateVariablePrefix"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "app {AppId} not found",
+            "message": "app {AppId} not found",
+            "translation": "app {AppId} not found",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "AppId",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "req.AppId"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "same template variable name {Name} already exists",
+            "message": "same template variable name {Name} already exists",
+            "translation": "same template variable name {Name} already exists",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Name"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "db operation failed",
+            "message": "db operation failed",
+            "translation": "db operation failed",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid argument",
+            "message": "invalid argument",
+            "translation": "invalid argument",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "id should not be set",
+            "message": "id should not be set",
+            "translation": "id should not be set",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "spec not set",
+            "message": "spec not set",
+            "translation": "spec not set",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "attachment not set",
+            "message": "attachment not set",
+            "translation": "attachment not set",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "revision not set",
+            "message": "revision not set",
+            "translation": "revision not set",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
+            "message": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
+            "translation": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid name, length should \u003c= 128",
+            "message": "invalid name, length should \u003c= 128",
+            "translation": "invalid name, length should \u003c= 128",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid name: {Name}, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)",
+            "message": "invalid name: {Name}, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)",
+            "translation": "invalid name: {Name}, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "default_val {DefaultVal} is not a number type",
+            "message": "default_val {DefaultVal} is not a number type",
+            "translation": "default_val {DefaultVal} is not a number type",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "DefaultVal",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "t.DefaultVal"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "unsupported variable type: {VariableType}",
+            "message": "unsupported variable type: {VariableType}",
+            "translation": "unsupported variable type: {VariableType}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "VariableType",
+                    "string": "%[1]s",
+                    "type": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.VariableType",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "t"
+                }
+            ],
+            "fuzzy": true
+        }
+    ]
+}

@@ -14,6 +14,8 @@ package table
 
 import (
 	"errors"
+
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // ReleasedAppTemplateVariable 已生成版本服务的应用模版变量
@@ -45,9 +47,9 @@ func (t *ReleasedAppTemplateVariable) ResType() string {
 }
 
 // ValidateCreate validate ReleasedAppTemplateVariable is valid or not when created.
-func (t *ReleasedAppTemplateVariable) ValidateCreate() error {
+func (t *ReleasedAppTemplateVariable) ValidateCreate(kit *kit.Kit) error {
 	if t.Spec != nil {
-		if err := t.Spec.ValidateCreate(); err != nil {
+		if err := t.Spec.ValidateCreate(kit); err != nil {
 			return err
 		}
 	}
@@ -78,9 +80,9 @@ type ReleasedAppTemplateVariableSpec struct {
 }
 
 // ValidateCreate validate ReleasedAppTemplateVariable spec when it is created.
-func (t *ReleasedAppTemplateVariableSpec) ValidateCreate() error {
+func (t *ReleasedAppTemplateVariableSpec) ValidateCreate(kit *kit.Kit) error {
 	for _, v := range t.Variables {
-		if err := v.ValidateCreate(); err != nil {
+		if err := v.ValidateCreate(kit); err != nil {
 			return err
 		}
 	}

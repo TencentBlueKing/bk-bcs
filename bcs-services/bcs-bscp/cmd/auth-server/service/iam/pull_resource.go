@@ -19,10 +19,10 @@ import (
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 
-	"bscp.io/cmd/auth-server/types"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbas "bscp.io/pkg/protocol/auth-server"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbas "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server"
 )
 
 // PullResource callback function for iam to pull auth resource.

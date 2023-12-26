@@ -362,7 +362,7 @@ export const getKvList = (bizId: string, appId: number, query: ICommonQuery) => 
  * 批量上传｜更新kv
  * @param bizId 业务ID
  * @param appId 应用ID
- * @param kv 配置键值类型
+ * @param kvs 上传kv列表
  * @returns
  */
 export const batchUpsertKv = (bizId: string, appId: number, kvs: any) => http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, { kvs });
@@ -371,7 +371,8 @@ export const batchUpsertKv = (bizId: string, appId: number, kvs: any) => http.pu
  * 更新kv
  * @param bizId 业务ID
  * @param appId 应用ID
- * @param kv 配置键值类型
+ * @param key 配置键
+ * @param value 配置值
  * @returns
  */
 export const updateKv = (bizId: string, appId: number, key: string, value: string) => http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value });
@@ -380,17 +381,18 @@ export const updateKv = (bizId: string, appId: number, key: string, value: strin
  * 删除kv
  * @param bizId 业务ID
  * @param appId 应用ID
- * @param kv 配置键值类型
+ * @param configId 配置项ID
  * @returns
  */
-export const deleteKv = (bizId: string, appId: number, key: string) => http.delete(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`);
+export const deleteKv = (bizId: string, appId: number, configId: number) => http.delete(`/config/biz/${bizId}/apps/${appId}/kvs/${configId}`);
 
 
 /**
  * 获取已发布kv
  * @param bizId 业务ID
  * @param appId 应用ID
- * @param kv 配置键值类型
+ * @param releaseId 版本id
+ * @param key 配置键
  * @returns
  */
 export const getReleaseKv = (bizId: string, appId: number, releaseId: number, key: string) => http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs/${key}`).then(res => res.data);
@@ -400,8 +402,17 @@ export const getReleaseKv = (bizId: string, appId: number, releaseId: number, ke
  * 获取已发布kv列表
  * @param bizId 业务ID
  * @param appId 应用ID
- * @param kv 配置键值类型
+ * @param releaseId 版本id
  * @returns
  */
 export const getReleaseKvList = (bizId: string, appId: number, releaseId: number, query: ICommonQuery) => http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs`, { params: query }).then(res => res.data);
+
+/**
+ * 撤销删除kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const undeleteKv = (bizId: string, appId: number, key: string) => http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undelete`);
 

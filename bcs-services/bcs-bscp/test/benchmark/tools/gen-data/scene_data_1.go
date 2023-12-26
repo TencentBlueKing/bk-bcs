@@ -16,8 +16,8 @@ import (
 	"context"
 	"fmt"
 
-	"bscp.io/pkg/dal/table"
-	pbcs "bscp.io/pkg/protocol/config-server"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
 )
 
 // genSceneData1 在biz_id=11，app_id=501的应用下，创建5个配置项，执行一次兜底策略发布和1次实例发布。

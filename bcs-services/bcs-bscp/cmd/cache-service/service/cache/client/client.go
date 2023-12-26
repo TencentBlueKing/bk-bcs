@@ -16,19 +16,19 @@ package client
 import (
 	"context"
 
-	"bscp.io/pkg/dal/bedis"
-	"bscp.io/pkg/dal/dao"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/jsoni"
-	"bscp.io/pkg/runtime/lock"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/bedis"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/lock"
 )
 
 // Interface defines all the supported operations to get resource cache.
 type Interface interface {
-	GetAppID(kt *kit.Kit, bizID uint32, appName string) (uint32, error)
+	GetAppID(kt *kit.Kit, bizID uint32, appName string, refresh bool) (uint32, error)
 	GetAppMeta(kt *kit.Kit, bizID uint32, appID uint32) (string, error)
 	GetReleasedCI(kt *kit.Kit, bizID uint32, releaseID uint32) (string, error)
 	GetReleasedHook(kt *kit.Kit, bizID uint32, releaseID uint32) (string, error)

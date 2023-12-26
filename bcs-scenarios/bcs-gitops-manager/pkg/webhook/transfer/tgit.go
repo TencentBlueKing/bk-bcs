@@ -21,7 +21,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
 const (
@@ -50,7 +50,7 @@ func (t *TGitHandler) Transfer(ctx context.Context, body []byte) ([]byte, error)
 	if err := json.Unmarshal(body, hookEvent); err != nil {
 		return nil, errors.Wrapf(err, "unmarshal failed: %s", string(body))
 	}
-	blog.Infof("RequestID[%s] received '%s' webhook by user '%s'", utils.RequestID(ctx),
+	blog.Infof("RequestID[%s] received '%s' webhook by user '%s'", middleware.RequestID(ctx),
 		hookEvent.ObjectKind, hookEvent.UserName)
 	result := t.buildByPushHook(hookEvent)
 	bs, err := json.Marshal(result)

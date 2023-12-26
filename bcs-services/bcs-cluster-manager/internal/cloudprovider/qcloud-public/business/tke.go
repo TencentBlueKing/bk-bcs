@@ -545,6 +545,7 @@ func getDefaultNodePath(cluster *proto.Cluster) (string, string) {
 }
 
 // getNodeCommonLabels common labels
+// nolint
 func getNodeCommonLabels(cls *proto.Cluster, group *proto.NodeGroup) []*api.KeyValue {
 	labels := make([]*api.KeyValue, 0)
 

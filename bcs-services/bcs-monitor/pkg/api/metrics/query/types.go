@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // Usage 使用量
@@ -71,13 +72,13 @@ func (q *UsageQuery) GetQueryTime() (*clientutil.PromQueryTime, error) {
 	queryTime := &clientutil.PromQueryTime{}
 
 	if q.EndAt == "" {
-		queryTime.End = time.Now()
+		queryTime.End = utils.GetNowQueryTime()
 	} else {
 		t, err := parseTime(q.EndAt)
 		if err != nil {
 			return nil, err
 		}
-		queryTime.End = t
+		queryTime.End = t.Add(-utils.QueryFallbackTime)
 	}
 
 	if q.StartAt == "" {
@@ -87,7 +88,7 @@ func (q *UsageQuery) GetQueryTime() (*clientutil.PromQueryTime, error) {
 		if err != nil {
 			return nil, err
 		}
-		queryTime.Start = t
+		queryTime.Start = t.Add(-utils.QueryFallbackTime)
 	}
 
 	// 默认只返回 60 个点

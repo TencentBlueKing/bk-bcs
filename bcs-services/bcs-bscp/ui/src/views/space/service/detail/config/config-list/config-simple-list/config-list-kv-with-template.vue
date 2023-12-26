@@ -11,7 +11,7 @@
         <div class="config-name">{{ config.spec.key }}</div>
         <div class="config-type">{{ config.spec.kv_type }}</div>
       </div>
-      <bk-exception v-if="configList.length === 0" scene="part" type="empty" description="暂无配置文件"></bk-exception>
+      <TableEmpty v-if="configList.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch"></TableEmpty>
     </bk-loading>
     <EditConfig
       v-model:show="isShowEdit"
@@ -20,6 +20,7 @@
       :config="(selectedConfig as IConfigKvItem)"
       :editable="isEditConfig"
       :view="!isEditConfig"
+      @confirm="getListData"
     />
   </section>
 </template>
@@ -32,6 +33,7 @@ import { ICommonQuery } from '../../../../../../../../types/index';
 import { getKvList, getReleaseKvList } from '../../../../../../../api/config';
 import SearchInput from '../../../../../../../components/search-input.vue';
 import EditConfig from '../config-table-list/edit-config-kv.vue';
+import TableEmpty from '../../../../../../../components/table/table-empty.vue';
 
 const store = useConfigStore();
 const { versionData } = storeToRefs(store);
@@ -47,11 +49,19 @@ const searchStr = ref('');
 const selectedConfig = ref<IConfigKvItem>();
 const isShowEdit = ref(false);
 const isEditConfig = ref(true);
+const isSearchEmpty = ref(false);
 
 watch(
   () => versionData.value.id,
   () => {
     getListData();
+  },
+);
+
+watch(
+  () => searchStr.value,
+  (val) => {
+    isSearchEmpty.value = !!val;
   },
 );
 
@@ -96,6 +106,11 @@ const handleConfigClick = (config: IConfigKvType) => {
   selectedConfig.value = config.spec;
   isEditConfig.value = isUnNamedVersion.value;
   isShowEdit.value = true;
+};
+
+const clearSearch = () => {
+  searchStr.value = '';
+  getListData();
 };
 </script>
 <style lang="scss" scoped>

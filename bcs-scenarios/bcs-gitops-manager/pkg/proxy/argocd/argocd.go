@@ -20,6 +20,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
@@ -72,7 +73,7 @@ func (ops *ArgocdProxy) Stop() {
 func (ops *ArgocdProxy) initArgoPathHandler() error {
 	argoSession := session.NewArgoSession(ops.option)
 	secretSession := session.NewSecretSession(ops.option.SecretOption)
-	monitorSession := session.NewMonitorSession(nil) // todo
+	monitorSession := session.NewMonitorSession(nil)
 	middleware := mw.NewMiddlewareHandler(ops.option, argoSession, secretSession, monitorSession)
 	if err := middleware.Init(); err != nil {
 		return errors.Wrapf(err, "middleware init failed")
@@ -95,6 +96,7 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 	}
 	appPlugin := &AppPlugin{
 		storage:        ops.option.Storage,
+		db:             dao.GlobalDB(),
 		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
 		middleware:     middleware,
 		analysisClient: analysis.GetAnalysisClient(),

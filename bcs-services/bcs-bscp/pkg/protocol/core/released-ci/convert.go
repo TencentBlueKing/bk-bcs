@@ -16,13 +16,13 @@ package pbrci
 import (
 	"time"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/dal/table"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	pbcommit "bscp.io/pkg/protocol/core/commit"
-	pbci "bscp.io/pkg/protocol/core/config-item"
-	pbcontent "bscp.io/pkg/protocol/core/content"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbcommit "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
+	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // PbReleasedConfigItems convert table ReleasedConfigItems to pb ReleasedConfigItems
@@ -130,10 +130,15 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 }
 
 // PbConfigItemState convert config item state
-func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem) []*pbci.ConfigItem {
+func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem,
+	commits []*table.Commit) []*pbci.ConfigItem {
 	releaseMap := make(map[uint32]*table.ReleasedConfigItem, len(fileRelease))
 	for _, release := range fileRelease {
 		releaseMap[release.ConfigItemID] = release
+	}
+	commitMap := make(map[uint32]*table.Commit, len(commits))
+	for _, commit := range commits {
+		commitMap[commit.ID] = commit
 	}
 
 	result := make([]*pbci.ConfigItem, 0)
@@ -143,10 +148,10 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 			fileState = constant.FileStateAdd
 		} else {
 			if _, ok := releaseMap[ci.ID]; ok {
-				if ci.Revision.UpdatedAt.After(releaseMap[ci.ID].Revision.CreatedAt) {
-					fileState = constant.FileStateRevise
-				} else {
+				if _, exists := commitMap[releaseMap[ci.ID].CommitID]; exists {
 					fileState = constant.FileStateUnchange
+				} else {
+					fileState = constant.FileStateRevise
 				}
 				delete(releaseMap, ci.ID)
 			}

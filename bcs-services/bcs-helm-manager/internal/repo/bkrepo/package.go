@@ -17,11 +17,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 	"unicode/utf8"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
+	"github.com/chartmuseum/helm-push/pkg/helm"
+	"helm.sh/helm/v3/pkg/chart/loader"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -38,6 +42,9 @@ const (
 	repositoryDeletePackageURI = "/helm/ext/package/delete"
 	// delete helm chart version
 	repositoryDeleteVersionURI = "/helm/ext/version/delete"
+
+	// upload chart timeout
+	timeout = 10
 )
 
 // list chart
@@ -241,6 +248,56 @@ func (rh *repositoryHandler) getOCIChart(ctx context.Context, name string) (*rep
 // getOCIChartURI
 func (rh *repositoryHandler) getOCIChartURI(name string) string {
 	return fmt.Sprintf("%s/%s/%s?packageKey=oci://%s", repositoryGetHelmURI, rh.projectID, rh.repository, name)
+}
+
+// uploadChart
+func (rh *repositoryHandler) uploadChart(_ context.Context, option repo.UploadOption) error {
+	chart, err := loader.LoadArchive(option.Content)
+	if err != nil {
+		return fmt.Errorf("failed load chart, %s", err)
+	}
+	helmChart := &helm.Chart{Chart: chart}
+	// 设置自定义版本
+	if option.Version != "" {
+		helmChart.SetVersion(option.Version)
+	}
+
+	// 创建临时目录
+	tmp, err := os.MkdirTemp("", "helm-push-")
+	if err != nil {
+		return fmt.Errorf("error creates a new temporary directory in the directory dir, %s", err)
+	}
+	defer func(path string) {
+		err = os.RemoveAll(path)
+		if err != nil {
+			blog.Errorf("failed to remove temporary directory, %s: %s", path, err.Error())
+		}
+	}(tmp)
+	chartPackagePath, err := helm.CreateChartPackage(helmChart, tmp)
+	if err != nil {
+		return fmt.Errorf("creates chart package in directory error, %s", err)
+	}
+
+	// new chartmusuem client
+	cmClient, err := cm.NewClient(
+		cm.URL(rh.getRepoURL()),
+		cm.Username(rh.user.Name),
+		cm.Password(rh.user.Password),
+		cm.Timeout(timeout),
+	)
+	if err != nil {
+		return fmt.Errorf("creates client fail, %s", err)
+	}
+
+	// 上传chart
+	chartPackage, err := cmClient.UploadChartPackage(chartPackagePath, option.Force)
+	if err != nil {
+		return fmt.Errorf("uploads a chart package fail, %s", err)
+	}
+	if chartPackage.StatusCode != 201 {
+		return fmt.Errorf("uploads a chart package response error, %s", chartPackage.Status)
+	}
+	return nil
 }
 
 type searchChartReq struct {

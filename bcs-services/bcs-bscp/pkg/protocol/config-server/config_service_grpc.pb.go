@@ -7,12 +7,12 @@
 package pbcs
 
 import (
-	app "bscp.io/pkg/protocol/core/app"
-	base "bscp.io/pkg/protocol/core/base"
-	group "bscp.io/pkg/protocol/core/group"
-	hook_revision "bscp.io/pkg/protocol/core/hook-revision"
-	release "bscp.io/pkg/protocol/core/release"
 	context "context"
+	app "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	base "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	group "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group"
+	hook_revision "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
+	release "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -47,6 +47,9 @@ const (
 	Config_CreateRelease_FullMethodName                     = "/pbcs.Config/CreateRelease"
 	Config_ListReleases_FullMethodName                      = "/pbcs.Config/ListReleases"
 	Config_GetReleaseByName_FullMethodName                  = "/pbcs.Config/GetReleaseByName"
+	Config_DeprecateRelease_FullMethodName                  = "/pbcs.Config/DeprecateRelease"
+	Config_UnDeprecateRelease_FullMethodName                = "/pbcs.Config/UnDeprecateRelease"
+	Config_DeleteRelease_FullMethodName                     = "/pbcs.Config/DeleteRelease"
 	Config_CreateHook_FullMethodName                        = "/pbcs.Config/CreateHook"
 	Config_DeleteHook_FullMethodName                        = "/pbcs.Config/DeleteHook"
 	Config_ListHooks_FullMethodName                         = "/pbcs.Config/ListHooks"
@@ -153,7 +156,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ConfigClient interface {
 	CreateApp(ctx context.Context, in *CreateAppReq, opts ...grpc.CallOption) (*CreateAppResp, error)
-	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*UpdateAppResp, error)
+	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*app.App, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*DeleteAppResp, error)
 	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error)
 	GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error)
@@ -178,6 +181,9 @@ type ConfigClient interface {
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
 	GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error)
+	DeprecateRelease(ctx context.Context, in *DeprecateReleaseReq, opts ...grpc.CallOption) (*DeprecateReleaseResp, error)
+	UnDeprecateRelease(ctx context.Context, in *UnDeprecateReleaseReq, opts ...grpc.CallOption) (*UnDeprecateReleaseResp, error)
+	DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*DeleteReleaseResp, error)
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
@@ -305,8 +311,8 @@ func (c *configClient) CreateApp(ctx context.Context, in *CreateAppReq, opts ...
 	return out, nil
 }
 
-func (c *configClient) UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*UpdateAppResp, error) {
-	out := new(UpdateAppResp)
+func (c *configClient) UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*app.App, error) {
+	out := new(app.App)
 	err := c.cc.Invoke(ctx, Config_UpdateApp_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -497,6 +503,33 @@ func (c *configClient) ListReleases(ctx context.Context, in *ListReleasesReq, op
 func (c *configClient) GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error) {
 	out := new(release.Release)
 	err := c.cc.Invoke(ctx, Config_GetReleaseByName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeprecateRelease(ctx context.Context, in *DeprecateReleaseReq, opts ...grpc.CallOption) (*DeprecateReleaseResp, error) {
+	out := new(DeprecateReleaseResp)
+	err := c.cc.Invoke(ctx, Config_DeprecateRelease_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UnDeprecateRelease(ctx context.Context, in *UnDeprecateReleaseReq, opts ...grpc.CallOption) (*UnDeprecateReleaseResp, error) {
+	out := new(UnDeprecateReleaseResp)
+	err := c.cc.Invoke(ctx, Config_UnDeprecateRelease_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*DeleteReleaseResp, error) {
+	out := new(DeleteReleaseResp)
+	err := c.cc.Invoke(ctx, Config_DeleteRelease_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1399,7 +1432,7 @@ func (c *configClient) UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts .
 // for forward compatibility
 type ConfigServer interface {
 	CreateApp(context.Context, *CreateAppReq) (*CreateAppResp, error)
-	UpdateApp(context.Context, *UpdateAppReq) (*UpdateAppResp, error)
+	UpdateApp(context.Context, *UpdateAppReq) (*app.App, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error)
 	GetApp(context.Context, *GetAppReq) (*app.App, error)
 	GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error)
@@ -1424,6 +1457,9 @@ type ConfigServer interface {
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
 	GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error)
+	DeprecateRelease(context.Context, *DeprecateReleaseReq) (*DeprecateReleaseResp, error)
+	UnDeprecateRelease(context.Context, *UnDeprecateReleaseReq) (*UnDeprecateReleaseResp, error)
+	DeleteRelease(context.Context, *DeleteReleaseReq) (*DeleteReleaseResp, error)
 	CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
@@ -1541,7 +1577,7 @@ type UnimplementedConfigServer struct {
 func (UnimplementedConfigServer) CreateApp(context.Context, *CreateAppReq) (*CreateAppResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateApp not implemented")
 }
-func (UnimplementedConfigServer) UpdateApp(context.Context, *UpdateAppReq) (*UpdateAppResp, error) {
+func (UnimplementedConfigServer) UpdateApp(context.Context, *UpdateAppReq) (*app.App, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateApp not implemented")
 }
 func (UnimplementedConfigServer) DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error) {
@@ -1606,6 +1642,15 @@ func (UnimplementedConfigServer) ListReleases(context.Context, *ListReleasesReq)
 }
 func (UnimplementedConfigServer) GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleaseByName not implemented")
+}
+func (UnimplementedConfigServer) DeprecateRelease(context.Context, *DeprecateReleaseReq) (*DeprecateReleaseResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeprecateRelease not implemented")
+}
+func (UnimplementedConfigServer) UnDeprecateRelease(context.Context, *UnDeprecateReleaseReq) (*UnDeprecateReleaseResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnDeprecateRelease not implemented")
+}
+func (UnimplementedConfigServer) DeleteRelease(context.Context, *DeleteReleaseReq) (*DeleteReleaseResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteRelease not implemented")
 }
 func (UnimplementedConfigServer) CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHook not implemented")
@@ -2326,6 +2371,60 @@ func _Config_GetReleaseByName_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).GetReleaseByName(ctx, req.(*GetReleaseByNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeprecateRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeprecateReleaseReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeprecateRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_DeprecateRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeprecateRelease(ctx, req.(*DeprecateReleaseReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UnDeprecateRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnDeprecateReleaseReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UnDeprecateRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UnDeprecateRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UnDeprecateRelease(ctx, req.(*UnDeprecateReleaseReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteReleaseReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_DeleteRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteRelease(ctx, req.(*DeleteReleaseReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4210,6 +4309,18 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReleaseByName",
 			Handler:    _Config_GetReleaseByName_Handler,
+		},
+		{
+			MethodName: "DeprecateRelease",
+			Handler:    _Config_DeprecateRelease_Handler,
+		},
+		{
+			MethodName: "UnDeprecateRelease",
+			Handler:    _Config_UnDeprecateRelease_Handler,
+		},
+		{
+			MethodName: "DeleteRelease",
+			Handler:    _Config_DeleteRelease_Handler,
 		},
 		{
 			MethodName: "CreateHook",

@@ -15,12 +15,14 @@ package service
 import (
 	"context"
 	"errors"
+	"math"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/kit"
-	pbcs "bscp.io/pkg/protocol/cache-service"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	pbapp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // GetAppID get app id by app name.
@@ -30,7 +32,7 @@ func (s *Service) GetAppID(ctx context.Context, req *pbcs.GetAppIDReq) (*pbcs.Ge
 	}
 
 	kt := kit.FromGrpcContext(ctx)
-	appID, err := s.op.GetAppID(kt, req.BizId, req.AppName)
+	appID, err := s.op.GetAppID(kt, req.BizId, req.AppName, req.GetRefresh())
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +57,27 @@ func (s *Service) GetAppMeta(ctx context.Context, req *pbcs.GetAppMetaReq) (*pbc
 	return &pbcs.JsonRawResp{
 		JsonRaw: meta,
 	}, nil
+}
+
+// ListApps 获取服务列表
+func (s *Service) ListApps(ctx context.Context, req *pbcs.ListAppsReq) (*pbcs.ListAppsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	opt := &types.BasePage{
+		Start: 0,
+		Limit: math.MaxUint32, // 不需要分页, 直接使用 max 获取
+	}
+
+	apps, count, err := s.dao.App().List(kt, []uint32{req.GetBizId()}, "", "", opt)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pbcs.ListAppsResp{
+		Count:   uint32(count),
+		Details: pbapp.PbApps(apps),
+	}
+	return resp, nil
 }
 
 // GetReleasedCI get released config items from cache.

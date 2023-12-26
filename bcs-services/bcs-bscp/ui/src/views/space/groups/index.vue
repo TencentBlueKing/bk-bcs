@@ -141,7 +141,7 @@
     @confirm="handleDeleteGroupConfirm"
   >
     <div style="margin-bottom: 8px">
-      配置模板套餐: <span style="color: #313238; font-weight: 600">{{ deleteGroupItem?.name }}</span>
+      分组名称: <span style="color: #313238; font-weight: 600">{{ deleteGroupItem?.name }}</span>
     </div>
     <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
   </DeleteConfirmDialog>
@@ -160,7 +160,7 @@ import ServicesToPublished from './services-to-published.vue';
 import tableEmpty from '../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
 import { debounce } from 'lodash';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -194,7 +194,7 @@ const editingGroup = ref<IGroupItem>({
 const isPublishedSliderShow = ref(false);
 const isSearchEmpty = ref(false);
 const headInfo =
-  '分组由 1 个或多个标签组成，服务配置版本选择分组上线结合客户端配置的标签用于灰度发布、A/B Test等运营场景，详情参考文档：';
+  '分组由 1 个或多个标签选择器组成，服务配置版本选择分组上线结合客户端配置的标签用于灰度发布、A/B Test等运营场景，详情参考文档：';
 
 watch(
   () => spaceId.value,

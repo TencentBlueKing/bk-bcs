@@ -7,8 +7,8 @@
 package pbcs
 
 import (
-	base "bscp.io/pkg/protocol/core/base"
 	context "context"
+	base "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Cache_GetAppID_FullMethodName                 = "/pbcs.Cache/GetAppID"
 	Cache_GetAppMeta_FullMethodName               = "/pbcs.Cache/GetAppMeta"
+	Cache_ListApps_FullMethodName                 = "/pbcs.Cache/ListApps"
 	Cache_GetReleasedCI_FullMethodName            = "/pbcs.Cache/GetReleasedCI"
 	Cache_GetReleasedHook_FullMethodName          = "/pbcs.Cache/GetReleasedHook"
 	Cache_ListAppReleasedGroups_FullMethodName    = "/pbcs.Cache/ListAppReleasedGroups"
@@ -40,6 +41,7 @@ const (
 type CacheClient interface {
 	GetAppID(ctx context.Context, in *GetAppIDReq, opts ...grpc.CallOption) (*GetAppIDResp, error)
 	GetAppMeta(ctx context.Context, in *GetAppMetaReq, opts ...grpc.CallOption) (*JsonRawResp, error)
+	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	GetReleasedCI(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	GetReleasedHook(ctx context.Context, in *GetReleasedHookReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	ListAppReleasedGroups(ctx context.Context, in *ListAppReleasedGroupsReq, opts ...grpc.CallOption) (*JsonRawResp, error)
@@ -73,6 +75,15 @@ func (c *cacheClient) GetAppID(ctx context.Context, in *GetAppIDReq, opts ...grp
 func (c *cacheClient) GetAppMeta(ctx context.Context, in *GetAppMetaReq, opts ...grpc.CallOption) (*JsonRawResp, error) {
 	out := new(JsonRawResp)
 	err := c.cc.Invoke(ctx, Cache_GetAppMeta_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cacheClient) ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error) {
+	out := new(ListAppsResp)
+	err := c.cc.Invoke(ctx, Cache_ListApps_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +186,7 @@ func (c *cacheClient) GetReleasedKvValue(ctx context.Context, in *GetReleasedKvV
 type CacheServer interface {
 	GetAppID(context.Context, *GetAppIDReq) (*GetAppIDResp, error)
 	GetAppMeta(context.Context, *GetAppMetaReq) (*JsonRawResp, error)
+	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 	GetReleasedCI(context.Context, *GetReleasedCIReq) (*JsonRawResp, error)
 	GetReleasedHook(context.Context, *GetReleasedHookReq) (*JsonRawResp, error)
 	ListAppReleasedGroups(context.Context, *ListAppReleasedGroupsReq) (*JsonRawResp, error)
@@ -197,6 +209,9 @@ func (UnimplementedCacheServer) GetAppID(context.Context, *GetAppIDReq) (*GetApp
 }
 func (UnimplementedCacheServer) GetAppMeta(context.Context, *GetAppMetaReq) (*JsonRawResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAppMeta not implemented")
+}
+func (UnimplementedCacheServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListApps not implemented")
 }
 func (UnimplementedCacheServer) GetReleasedCI(context.Context, *GetReleasedCIReq) (*JsonRawResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedCI not implemented")
@@ -272,6 +287,24 @@ func _Cache_GetAppMeta_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CacheServer).GetAppMeta(ctx, req.(*GetAppMetaReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cache_ListApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAppsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServer).ListApps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Cache_ListApps_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServer).ListApps(ctx, req.(*ListAppsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -470,6 +503,10 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAppMeta",
 			Handler:    _Cache_GetAppMeta_Handler,
+		},
+		{
+			MethodName: "ListApps",
+			Handler:    _Cache_ListApps_Handler,
 		},
 		{
 			MethodName: "GetReleasedCI",

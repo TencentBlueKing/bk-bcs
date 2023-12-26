@@ -20,14 +20,14 @@ import (
 	"github.com/bluele/gcache"
 	prm "github.com/prometheus/client_golang/prometheus"
 
-	clientset "bscp.io/cmd/feed-server/bll/client-set"
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbcs "bscp.io/pkg/protocol/cache-service"
-	"bscp.io/pkg/runtime/jsoni"
-	"bscp.io/pkg/tools"
-	"bscp.io/pkg/types"
+	clientset "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // newReleasedKv create released kv cache instance.
@@ -58,8 +58,8 @@ type ReleasedKv struct {
 // GetKvValue Get the rkv value cache.
 func (kv *ReleasedKv) GetKvValue(kt *kit.Kit, bizID, appID, releaseID uint32, key string) (*types.ReleaseKvValueCache,
 	error) {
-
-	val, err := kv.client.GetIFPresent(releaseID)
+	cacheKey := fmt.Sprintf("%d-%d-%d-%s", bizID, appID, releaseID, key)
+	val, err := kv.client.GetIFPresent(cacheKey)
 	if err == nil {
 		kv.mc.hitCounter.With(prm.Labels{"resource": "released_kv_value", "biz": tools.Itoa(bizID)}).Inc()
 
@@ -100,7 +100,7 @@ func (kv *ReleasedKv) GetKvValue(kt *kit.Kit, bizID, appID, releaseID uint32, ke
 		return nil, err
 	}
 
-	if err = kv.client.Set(releaseID, rkv); err != nil {
+	if err = kv.client.Set(cacheKey, rkv); err != nil {
 		logs.Errorf("refresh biz: %d, release: %d KV cache failed, err: %v, rid: %s", bizID, releaseID, err, kt.Rid)
 		// do not return, ignore the error directly.
 	}
@@ -114,8 +114,8 @@ func (kv *ReleasedKv) GetKvValue(kt *kit.Kit, bizID, appID, releaseID uint32, ke
 
 // Get the released kvs cache.
 func (kv *ReleasedKv) Get(kt *kit.Kit, bizID uint32, releaseID uint32) ([]*types.ReleaseKvCache, error) {
-
-	val, err := kv.client.GetIFPresent(releaseID)
+	cacheKey := fmt.Sprintf("%d-%d", bizID, releaseID)
+	val, err := kv.client.GetIFPresent(cacheKey)
 	if err == nil {
 		kv.mc.hitCounter.With(prm.Labels{"resource": "released_kv", "biz": tools.Itoa(bizID)}).Inc()
 
@@ -154,11 +154,8 @@ func (kv *ReleasedKv) Get(kt *kit.Kit, bizID uint32, releaseID uint32) ([]*types
 		return nil, err
 	}
 
-	maxRKVSizeKB := 10
-
-	if len(resp.JsonRaw) <= maxRKVSizeKB {
-		// only cache the released kv which is less than maxRKVSizeKB
-		err = kv.client.Set(releaseID, rkv)
+	if len(resp.JsonRaw) <= maxRCISizeKB {
+		err = kv.client.Set(cacheKey, rkv)
 		if err != nil {
 			logs.Errorf("refresh biz: %d, release: %d KV cache failed, err: %v, rid: %s", bizID, releaseID, err, kt.Rid)
 			// do not return, ignore the error directly.

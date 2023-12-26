@@ -15,11 +15,11 @@ package service
 import (
 	"context"
 
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbcs "bscp.io/pkg/protocol/config-server"
-	pbds "bscp.io/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 )
 
 // GetReleasedKv get released kv
@@ -75,6 +75,11 @@ func (s *Service) ListReleasedKvs(ctx context.Context, req *pbcs.ListReleasedKvs
 		Limit:     req.Limit,
 		All:       req.All,
 		ReleaseId: req.ReleaseId,
+		SearchKey: req.SearchKey,
+		Key:       req.Key,
+		KvType:    req.KvType,
+		Sort:      req.Sort,
+		Order:     req.Order,
 	}
 	rkv, err := s.client.DS.ListReleasedKvs(grpcKit.RpcCtx(), r)
 	if err != nil {

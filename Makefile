@@ -46,7 +46,8 @@ export PACKAGEPATH=./build/bcs.${VERSION}
 export SCENARIOSPACKAGE=${WORKSPACE}/${PACKAGEPATH}/bcs-scenarios
 
 # bscp 应用自定义
-export BSCP_LDFLAG=-ldflags "-X bscp.io/pkg/version.BUILDTIME=${BUILDTIME} -X bscp.io/pkg/version.GITHASH=${GITHASH}"
+export BSCP_LDFLAG=-ldflags "-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
+	-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH}"
 
 # tongsuo related environment variables
 export TONGSUO_PATH?=$(WORKSPACE)/build/bcs.${VERSION}/tongsuo
@@ -80,7 +81,7 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 
 bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	netservice sd-prometheus storage \
-	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager \
+	user-manager cluster-manager cluster-reporter tools alert-manager k8s-watch kube-agent data-manager \
 	helm-manager project-manager nodegroup-manager
 
 bcs-scenarios: kourse gitops
@@ -409,6 +410,11 @@ cluster-manager:pre
 	cp -R ${BCS_SERVICES_PATH}/bcs-cluster-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/
 	cp ${BCS_SERVICES_PATH}/bcs-cluster-manager/api/clustermanager/clustermanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/swagger-ui/clustermanager.swagger.json
 	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go mod tidy && ${CGO_BUILD_FLAGS} go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
+
+cluster-reporter:
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cluster-reporter
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-cluster-reporter/* ${PACKAGEPATH}/bcs-services/bcs-cluster-reporter/
+	cd ${BCS_SERVICES_PATH}/bcs-cluster-reporter && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-reporter/bcs-cluster-reporter ./main.go
 
 alert-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger

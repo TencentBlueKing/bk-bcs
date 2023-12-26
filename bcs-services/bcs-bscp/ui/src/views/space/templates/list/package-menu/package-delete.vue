@@ -29,7 +29,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue/lib';
+import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../store/global';
 import { getUnNamedVersionAppsBoundByPackage, deleteTemplatePackage } from '../../../../../api/template';
 import { ITemplatePackageItem, IPackageCitedByApps } from '../../../../../../types/template';

@@ -27,13 +27,13 @@
 <script lang="ts">
 import moment from 'moment';
 import { computed, defineComponent, onMounted, PropType, reactive, ref, toRef, toRefs, watch } from 'vue';
-import ECharts from 'vue-echarts/components/ECharts.vue';
 
 import defaultChartOption from '../views/resource-view/common/default-echarts-option';
 
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
+import ECharts from '@/components/echarts.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
@@ -175,16 +175,12 @@ export default defineComponent({
             smooth: true,
             hoverAnimation: false,
             areaStyle: {
-              normal: {
-                opacity: 0.2,
-              },
+              opacity: 0.2,
             },
             itemStyle: {
-              normal: {
-                color: Array.isArray(props.colors)
-                  ? props.colors[index % props.colors.length]
-                  : props.colors,
-              },
+              color: Array.isArray(props.colors)
+                ? props.colors[index % props.colors.length]
+                : props.colors,
             },
             data: result?.values || [],
           }, defaultSeries);

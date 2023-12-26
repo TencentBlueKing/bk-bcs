@@ -20,15 +20,14 @@ import (
 	"github.com/bluele/gcache"
 	prm "github.com/prometheus/client_golang/prometheus"
 
-	clientset "bscp.io/cmd/feed-server/bll/client-set"
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbcs "bscp.io/pkg/protocol/cache-service"
-	pbci "bscp.io/pkg/protocol/core/config-item"
-	"bscp.io/pkg/runtime/jsoni"
-	"bscp.io/pkg/tools"
-	"bscp.io/pkg/types"
+	clientset "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // newCredential credential's local cache instance.
@@ -56,9 +55,9 @@ type Credential struct {
 }
 
 // CanMatchCI the credential's local cache.
+// CanMatchCI 支持文件类型和KV类型
 func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credential string,
-	ci *pbci.ConfigItemSpec) (bool, error) {
-
+	path string, name string) (bool, error) {
 	if bizID == 0 {
 		return false, fmt.Errorf("invalid biz id")
 	}
@@ -67,9 +66,6 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 	}
 	if len(credential) == 0 {
 		return false, fmt.Errorf("invalid credential")
-	}
-	if ci == nil {
-		return false, fmt.Errorf("ci is nil")
 	}
 
 	c, hit, err := s.getCredentialFromCache(kt, bizID, credential)
@@ -83,7 +79,7 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 			return false, nil
 		}
 		for _, s := range c.Scope {
-			if tools.MatchAppConfigItem(s, app, ci.Path, ci.Name) {
+			if tools.MatchAppConfigItem(s, app, path, name) {
 				return true, nil
 			}
 		}
@@ -115,7 +111,7 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 		if !c.Enabled {
 			return false, nil
 		}
-		if tools.MatchAppConfigItem(s, app, ci.Path, ci.Name) {
+		if tools.MatchAppConfigItem(s, app, path, name) {
 			return true, nil
 		}
 	}

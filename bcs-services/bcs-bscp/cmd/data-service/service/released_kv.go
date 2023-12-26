@@ -15,15 +15,15 @@ package service
 import (
 	"context"
 
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	pbkv "bscp.io/pkg/protocol/core/kv"
-	pbrkv "bscp.io/pkg/protocol/core/released-kv"
-	released_kv "bscp.io/pkg/protocol/core/released-kv"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	pbrkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
+	released_kv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // GetReleasedKv get released kv
@@ -65,7 +65,15 @@ func (s *Service) ListReleasedKvs(ctx context.Context, req *pbds.ListReleasedKvR
 
 	kt := kit.FromGrpcContext(ctx)
 
-	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	if len(req.Sort) == 0 {
+		req.Sort = "key"
+	}
+	page := &types.BasePage{
+		Start: req.Start,
+		Limit: uint(req.Limit),
+		Sort:  req.Sort,
+		Order: types.Order(req.Order),
+	}
 	opt := &types.ListRKvOption{
 		ReleaseID: req.ReleaseId,
 		BizID:     req.BizId,
@@ -74,6 +82,7 @@ func (s *Service) ListReleasedKvs(ctx context.Context, req *pbds.ListReleasedKvR
 		SearchKey: req.SearchKey,
 		All:       req.All,
 		Page:      page,
+		KvType:    req.KvType,
 	}
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,

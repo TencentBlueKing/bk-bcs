@@ -58,8 +58,9 @@ func BuildKubeconfig(config *rest.Config) clientcmdapi.Config {
 	}
 
 	kubeConfig.Clusters["default-cluster"] = &clientcmdapi.Cluster{
-		Server:               config.Host,
-		CertificateAuthority: config.CAFile,
+		Server:                config.Host,
+		CertificateAuthority:  config.CAFile,
+		InsecureSkipTLSVerify: config.Insecure,
 	}
 
 	kubeConfig.Contexts["default-context"] = &clientcmdapi.Context{

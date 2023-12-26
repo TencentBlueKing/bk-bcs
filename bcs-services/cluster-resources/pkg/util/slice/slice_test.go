@@ -13,6 +13,7 @@
 package slice_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -88,4 +89,24 @@ func TestFilterMatchKVFormSlice(t *testing.T) {
 	mapList = slice.FilterMatchKVFromSlice(typeMapList, "kind", "c")
 	assert.Equal(t, len(mapList), 1)
 	assert.True(t, slice.MatchKVInSlice(mapList, "kind", "c"))
+}
+
+func TestRemoveDuplicates(t *testing.T) {
+	var tests = []struct {
+		s    []string
+		want []string
+	}{
+		{[]string{"apple", "banana", "apple", "orange", "banana", "orange", "apple"}, []string{"apple", "banana", "orange"}},
+		{[]string{"a", "a", "b", "b", "c", "c"}, []string{"a", "b", "c"}},
+		{[]string{}, []string{}},
+		{[]string{"a"}, []string{"a"}},
+	}
+
+	for _, tt := range tests {
+		testname := fmt.Sprintf("%v", tt.s)
+		t.Run(testname, func(t *testing.T) {
+			got := slice.RemoveDuplicateValues(tt.s)
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }

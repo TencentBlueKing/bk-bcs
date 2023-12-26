@@ -22,7 +22,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // WebhookPlugin defines the webhook plugin
@@ -45,19 +44,13 @@ func (plugin *WebhookPlugin) executeWebhook(r *http.Request) (*http.Request, *mw
 	user := mw.User(r.Context())
 	requestID := mw.RequestID(r.Context())
 	blog.Infof("RequestID[%s], user %s request webhook", requestID, user.GetUser())
-	reqCopy, err := utils.DeepCopyHttpRequest(r, plugin.appsetWebhook)
-	if err != nil {
-		blog.Errorf("RequestID[%s] copy webhook request failed: %s", mw.RequestID(r.Context()), err.Error())
-	} else {
-		go plugin.forwardToApplicationSet(reqCopy, requestID)
-	}
 	return r, mw.ReturnArgoReverse()
 }
 
 func (plugin *WebhookPlugin) forwardToApplicationSet(r *http.Request, requestID string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	r.WithContext(ctx)
+	r = r.WithContext(ctx)
 	resp, err := http.DefaultClient.Do(r)
 	if err != nil {
 		blog.Errorf("RequestID[%s] webhook forward to appset controller failed: %s", requestID, err.Error())

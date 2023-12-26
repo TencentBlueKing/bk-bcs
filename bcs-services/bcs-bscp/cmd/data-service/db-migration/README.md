@@ -141,16 +141,16 @@ Connecting to MySQL database...
 Database connected!
 Running migration 20230511114513
 
-2023/05/20 12:09:50 bscp.io/cmd/data-service/db-migration/migrations/20230511114513_add_template.go:121
+2023/05/20 12:09:50 github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrations/20230511114513_add_template.go:121
 [1.358ms] [rows:-] SELECT DATABASE()
 
-2023/05/20 12:09:50 bscp.io/cmd/data-service/db-migration/migrations/20230511114513_add_template.go:121
+2023/05/20 12:09:50 github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrations/20230511114513_add_template.go:121
 [4.871ms] [rows:1] SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'bk_bscp_admin%' ORDER BY SCHEMA_NAME='bk_bscp_admin' DESC,SCHEMA_NAME limit 1
 
-2023/05/20 12:09:50 bscp.io/cmd/data-service/db-migration/migrations/20230511114513_add_template.go:121
+2023/05/20 12:09:50 github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrations/20230511114513_add_template.go:121
 [4.914ms] [rows:-] SELECT count(*) FROM information_schema.tables WHERE table_schema = 'bk_bscp_admin' AND table_name = 'template_spaces' AND table_type = 'BASE TABLE'
 
-2023/05/20 12:09:50 bscp.io/cmd/data-service/db-migration/migrations/20230511114513_add_template.go:121
+2023/05/20 12:09:50 github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrations/20230511114513_add_template.go:121
 [48.765ms] [rows:0] CREATE TABLE `template_spaces` (`id` bigint(1) unsigned not null,`name` varchar(255) not null,`memo` varchar(256) default '',`biz_id` bigint(1) unsigned not null,`creator` varchar(64) not null,`reviser` varchar(64) not null,`created_at` datetime(6) not null,`updated_at` datetime(6) not null,PRIMARY KEY (`id`),UNIQUE INDEX `idx_bizID_name` (`biz_id`,`name`))ENGINE=InnoDB CHARSET=utf8mb4
 ```
 

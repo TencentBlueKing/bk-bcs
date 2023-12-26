@@ -122,7 +122,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	// cluster cloud basic setting
 	clusterBasicSettingByQCloud(cls, tkeCluster)
 	// cluster cloud node setting
-	clusterCloudDefaultNodeSetting(cls, false)
+	_ = clusterCloudDefaultNodeSetting(cls, false)
 	// cluster cloud advanced setting
 	clusterAdvancedSettingByQCloud(cls, tkeCluster)
 
@@ -402,7 +402,8 @@ func clusterCloudNetworkSetting(cls *cmproto.Cluster) error {
 		if cls.NetworkSettings.ServiceIPv4CIDR == "" {
 			return fmt.Errorf("network[%s] ServiceIPv4CIDR empty", common.VpcCni)
 		}
-		if cls.NetworkSettings.SubnetSource == nil || (len(cls.NetworkSettings.SubnetSource.New) == 0 && cls.NetworkSettings.SubnetSource.Existed == nil) {
+		if cls.NetworkSettings.SubnetSource == nil ||
+			(len(cls.NetworkSettings.SubnetSource.New) == 0 && cls.NetworkSettings.SubnetSource.Existed == nil) {
 			return fmt.Errorf("network[%s] subnet resource empty", common.VpcCni)
 		}
 	}

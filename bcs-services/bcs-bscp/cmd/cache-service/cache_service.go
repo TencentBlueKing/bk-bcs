@@ -17,10 +17,10 @@ import (
 	"fmt"
 	"os"
 
-	"bscp.io/cmd/cache-service/app"
-	"bscp.io/cmd/cache-service/options"
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/app"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/options"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 func main() {

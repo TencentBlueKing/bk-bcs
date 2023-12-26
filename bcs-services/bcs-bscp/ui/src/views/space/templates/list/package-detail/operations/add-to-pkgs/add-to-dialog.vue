@@ -50,7 +50,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import { ITemplateConfigItem, IPackagesCitedByApps } from '../../../../../../../../types/template';
 import useGlobalStore from '../../../../../../../store/global';
 import useTemplateStore from '../../../../../../../store/template';

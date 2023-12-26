@@ -6,7 +6,7 @@
           <InfoLine class="info-icon" />
           仅支持大小不超过 2M
         </div>
-        <div v-if="editable" class="btns">
+        <div class="btns">
           <FilliscreenLine
             v-if="!isOpenFullScreen"
             v-bk-tooltips="{
@@ -88,6 +88,14 @@ const handleEscClose = (event: KeyboardEvent) => {
     isOpenFullScreen.value = false;
   }
 };
+
+defineExpose({
+  validate: () => {
+    if (codeEditorRef.value) {
+      return codeEditorRef.value.validate(props.content);
+    }
+  },
+});
 </script>
 <style lang="scss" scoped>
 .config-content-editor {

@@ -34,17 +34,17 @@ import (
 	"github.com/go-chi/render"
 	"github.com/panjf2000/ants/v2"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/dal/repository"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/iam/auth"
-	"bscp.io/pkg/kit"
-	pbcs "bscp.io/pkg/protocol/config-server"
-	pbci "bscp.io/pkg/protocol/core/config-item"
-	"bscp.io/pkg/rest"
-	"bscp.io/pkg/runtime/archive"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/archive"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 var bufferPool = sync.Pool{

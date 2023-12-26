@@ -12,13 +12,7 @@
 
 package common
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/envx"
-)
-
 var (
-	// LocalizeFilePath 国际化配置文件
-	LocalizeFilePath = envx.GetEnv(
-		"LOCALIZE_FILE_PATH", "/data/bcs/bcs-helm-manager/lc_msgs.yaml",
-	)
+	// LocalizeFileName 国际化配置文件
+	LocalizeFileName = "locale/lc_msgs.yaml"
 )

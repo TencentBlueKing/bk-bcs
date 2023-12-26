@@ -208,7 +208,7 @@ const handleOpenPreview = (type: string) => {
   const id = type === 'pre' ? formData.value.pre.id : formData.value.post.id;
   const versionId = type === 'pre' ? formData.value.pre.versionId : formData.value.post.versionId;
   const script = scriptsData.value.find(item => item.id === id);
-  if (script) {
+  if (script && script.id > 0) {
     previewConfig.value = {
       open: true,
       name: script.name,
@@ -216,6 +216,8 @@ const handleOpenPreview = (type: string) => {
       content: '',
     };
     getPreviewContent(script.id, versionId);
+  } else {
+    previewConfig.value.open = false;
   }
 };
 

@@ -15,12 +15,12 @@ package service
 import (
 	"context"
 
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbrci "bscp.io/pkg/protocol/core/released-ci"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/search"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbrci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // GetReleasedConfigItem get released config item

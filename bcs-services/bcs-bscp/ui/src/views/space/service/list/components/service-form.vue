@@ -11,7 +11,7 @@
     <bk-form-item :label="t('服务别名')" property="alias" required>
       <bk-input
         v-model="localData.alias"
-        placeholder="请输入2-64字符，只允许中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾"
+        placeholder="请输入2-128字符，只允许中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾"
         @change="handleChange"
       />
     </bk-form-item>
@@ -72,8 +72,8 @@ const rules = {
       message: '最大长度32个字符',
     },
     {
-      validator: (value: string) => /^[a-zA-Z0-9\u4e00-\u9fa5][a-zA-Z0-9_\-\u4e00-\u9fa5]*[a-zA-Z0-9\u4e00-\u9fa5]$/.test(value),
-      message: '服务名称由中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾',
+      validator: (value: string) => /^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]?$/.test(value),
+      message: '服务名称由英文、数字、下划线、中划线组成且以英文、数字开头和结尾',
     },
   ],
   alias: [
@@ -86,8 +86,8 @@ const rules = {
       message: '最大长度128个字符',
     },
     {
-      validator: (value: string) => /^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]?$/.test(value),
-      message: '服务别名由英文、数字、下划线、中划线组成且以英文、数字开头和结尾',
+      validator: (value: string) => /^[a-zA-Z0-9\u4e00-\u9fa5][a-zA-Z0-9_\-\u4e00-\u9fa5]*[a-zA-Z0-9\u4e00-\u9fa5]$/.test(value),
+      message: '服务别名由中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾',
     },
   ],
 };
@@ -95,10 +95,10 @@ const rules = {
 const tips = {
   config: `文件型：通常以文件的形式存储,通常具有良好的可读性和可维护性
            键值型：以键值对的形式存储，其中键（key）用于位置标识一个配置项，值（value）为该配置项的具体内容，kv型配置通常存储在数据库，使用SDK或API的方式读取`,
-  type: `任意类型：可以创建以下任意类型的配置。否则只能创建单一类型的配置
+  type: `任意类型：不对配置项的类型做限制。如果选择下方某个类型，则只能创建指定类型的配置项
          string：单行字符串
          number：数值，包含整数、浮点数、会校验数据类型
-         text：多行字符串文本，不校验数据结构
+         text：多行字符串文本，不校验数据结构，大小2Mb
          json、xml、yaml：不同格式的结构化数据，会校验数据结构`,
 };
 

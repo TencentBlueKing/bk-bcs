@@ -6,7 +6,7 @@
         <bk-button text theme="primary" @click="handleClearAll">全不选</bk-button>
         <bk-select
           class="version-select"
-          empty-text="暂无可上线分组"
+          no-data-text="暂无已上线的可选版本"
           :multiple="true"
           :filterable="true"
           :input-search="false"
@@ -21,7 +21,7 @@
               <AngleDown class="arrow-icon" v-else />
             </bk-button>
           </template>
-          <bk-option :value="0">全选</bk-option>
+          <bk-option v-if="props.versionList.length > 0" :value="0">全选</bk-option>
           <bk-option
             v-for="version in props.versionList"
             :key="version.id"
@@ -41,6 +41,7 @@
         ref="treeRef"
         label="name"
         node-key="node_id"
+        :selectable="false"
         :data="searchTreeData"
         :expand-all="false"
         :show-node-type-icon="false"
@@ -52,19 +53,20 @@
               :model-value="node.checked"
               :disabled="node.disabled"
               :indeterminate="node.indeterminate"
-              @change="handleNodeCheckChange(node, $event)"
-            >
+              @change="handleNodeCheckChange(node)">
             </bk-checkbox>
-            <div class="node-label">
+            <div class="node-label" @click="handleNodeCheckChange(node)">
               <div class="label">{{ node.name }}</div>
               <span v-if="node.count" class="count">({{ node.count }})</span>
               <template v-if="node.rules">
                 <span class="split-line"> | </span>
                 <div class="rules">
-                  <span v-for="(rule, index) in node.rules" :key="index" class="rule">
-                    <span v-if="index > 0"> & </span>
-                    <rule-tag class="tag-item" :rule="rule" />
-                  </span>
+                  <bk-overflow-title type="tips">
+                    <span v-for="(rule, index) in node.rules" :key="index" class="rule">
+                      <span v-if="index > 0"> & </span>
+                      <rule-tag class="tag-item" :rule="rule" />
+                    </span>
+                  </bk-overflow-title>
                 </div>
               </template>
             </div>
@@ -100,21 +102,23 @@ const categorizingData = (groupList: IGroupToPublish[]) => {
       return;
     }
     const checked = props.value.findIndex(item => item.id === group.id) > -1;
-    const disabled = props.disabled.includes(group.id);
+    const disabled = props.releasedGroups.includes(group.id);
     nodeItemList.push({ ...group, node_id: group.id, checked, disabled });
   });
 
   allGroupNode.value = nodeItemList;
 };
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   groupListLoading: boolean;
   groupList: IGroupToPublish[];
   versionListLoading: boolean;
   versionList: IConfigVersion[];
-  disabled: number[]; // 调整分组上线时，【选择分组上线】已选择分组不可取消，【排除分组上线】已选择分组不可勾选
+  releasedGroups?: number[]; // 调整分组上线时，【选择分组上线】已选择分组不可取消
   value: IGroupToPublish[];
-}>();
+}>(), {
+  releasedGroups: () => [],
+});
 
 const emits = defineEmits(['change']);
 
@@ -161,7 +165,7 @@ const handleSelectAll = () => {
   props.groupList.forEach((group) => {
     const hasGroupChecked = props.value.findIndex(item => item.id === group.id) > -1; // 分组在编辑前是否选中
     const hasAdded = groupList.findIndex(item => item.id === group.id) > -1; // 分组已添加
-    const isDisabled = props.disabled.includes(group.id);
+    const isDisabled = props.releasedGroups.includes(group.id);
     if (group.id !== 0 && !hasAdded && (!isDisabled || hasGroupChecked)) {
       groupList.push(group);
     }
@@ -172,7 +176,7 @@ const handleSelectAll = () => {
 // 全不选
 const handleClearAll = () => {
   const hasCheckedGroups = props.groupList.filter((group) => {
-    const res = props.disabled.includes(group.id) && props.value.findIndex(item => item.id === group.id) > -1;
+    const res = props.releasedGroups.includes(group.id) && props.value.findIndex(item => item.id === group.id) > -1;
     return res;
   });
   emits('change', hasCheckedGroups);
@@ -208,15 +212,18 @@ const handleSelectVersion = (versions: number[]) => {
 };
 
 // 选中/取消选中节点
-const handleNodeCheckChange = (node: IGroupNodeData, checked: boolean) => {
+const handleNodeCheckChange = (node: IGroupNodeData) => {
+  if (node.disabled) {
+    return;
+  }
   const list = props.value.slice();
   // 叶子节点
-  const group = props.groupList.find(group => group.id === (node as IGroupNodeData).id);
+  const group = props.groupList.find(group => group.id === node.id);
   if (group) {
-    if (checked) {
+    const index = list.findIndex(item => item.id === group.id);
+    if (index === -1) {
       list.push(group);
     } else {
-      const index = list.findIndex(item => item.id === group.id);
       list.splice(index, 1);
     }
   }
@@ -273,9 +280,11 @@ const handleClearSearch = () => {
   .node-label {
     display: flex;
     align-items: center;
+    flex: 1;
     padding: 0 8px;
     color: #63656e;
     font-size: 12px;
+    overflow: hidden;
   }
   .count {
     margin-left: 4px;
@@ -285,8 +294,11 @@ const handleClearSearch = () => {
     color: #979ba5;
   }
   .rules {
+    flex: 1;
     min-width: 0;
     color: #979ba5;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 </style>

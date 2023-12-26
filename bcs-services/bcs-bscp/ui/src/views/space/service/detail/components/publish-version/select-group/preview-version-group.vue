@@ -23,16 +23,19 @@
     </div>
     <div v-if="!fold" class="group-list">
       <div v-for="group in previewGroup.children" class="group-item" :key="group.id">
-        <span class="node-name">{{ group.name }}</span>
+        <span class="node-name">
+          {{ group.name }}
+        </span>
+        <default-group-rules-popover v-if="group.id === 0 && excludedGroups.length > 0" :excluded-groups="excludedGroups" />
         <span v-if="group.rules && group.rules.length > 0" class="split-line">|</span>
         <div class="rules">
           <div v-for="(rule, index) in group.rules" :key="index">
-            <template v-if="index > 0"> ； </template>
+            <template v-if="index > 0"> & </template>
             <rule-tag class="tag-item" :rule="rule" />
           </div>
         </div>
         <span
-          v-if="props.allowPreviewDelete && !props.disabled.includes(group.id)"
+          v-if="props.allowPreviewDelete && !props.releasedGroups.includes(group.id)"
           class="del-icon"
           @click="emits('delete', group.id)"
         >
@@ -43,18 +46,21 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Del, AngleDown, AngleRight } from 'bkui-vue/lib/icon';
-import { IGroupPreviewItem } from '../../../../../../../../types/group';
+import { IGroupPreviewItem, IGroupToPublish } from '../../../../../../../../types/group';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../store/config';
 import RuleTag from '../../../../../groups/components/rule-tag.vue';
+import DefaultGroupRulesPopover from '../default-group-rules-popover.vue';
+
 const versionStore = useConfigStore();
 const { versionData } = storeToRefs(versionStore);
 const props = defineProps<{
   allowPreviewDelete: boolean;
   previewGroup: IGroupPreviewItem;
-  disabled: number[];
+  releasedGroups: number[];
+  groupList: IGroupToPublish[];
 }>();
 
 const emits = defineEmits(['diff', 'delete']);
@@ -66,6 +72,11 @@ const TYPE_MAP = {
 };
 
 const fold = ref(false);
+
+const excludedGroups = computed(() => {
+  return props.groupList.filter((group) => group.release_id > 0 && group.id > 0);
+});
+
 </script>
 <style lang="scss" scoped>
 .version-callapse-item {

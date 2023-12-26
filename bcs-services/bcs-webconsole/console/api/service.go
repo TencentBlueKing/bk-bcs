@@ -97,16 +97,16 @@ func (s *service) ListClusters(c *gin.Context) {
 	projectId := c.Param("projectId")
 	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "项目不正确"))
+		rest.APIError(c, i18n.T(c, "项目不正确"))
 		return
 	}
 
 	clusters, err := bcs.ListClusters(c.Request.Context(), project.ProjectId)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, err.Error()))
+		rest.APIError(c, i18n.T(c, "%s", err))
 		return
 	}
-	rest.APIOK(c, i18n.GetMessage(c, "获取集群成功"), clusters)
+	rest.APIOK(c, i18n.T(c, "获取集群成功"), clusters)
 }
 
 // CreateWebConsoleSession 创建websocket session
@@ -141,7 +141,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}()
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, err.Error()))
+		rest.APIError(c, i18n.T(c, "%s", err))
 		return
 	}
 
@@ -153,7 +153,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
+		rest.APIError(c, i18n.T(c, "获取session失败: %s", err))
 		return
 	}
 
@@ -161,14 +161,14 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		"session_id": sessionId,
 		"ws_url":     makeWebSocketURL(sessionId, consoleQuery.Lang, false),
 	}
-	rest.APIOK(c, i18n.GetMessage(c, "获取session成功"), data)
+	rest.APIOK(c, i18n.T(c, "获取session成功"), data)
 }
 
 // CreatePortalSession xxx
 func (s *service) CreatePortalSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 	if authCtx.BindSession == nil {
-		rest.APIError(c, i18n.GetMessage(c, "session_id不合法或已经过期"))
+		rest.APIError(c, i18n.T(c, "session_id不合法或已经过期"))
 		return
 	}
 
@@ -178,7 +178,7 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 
 	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
+		rest.APIError(c, i18n.T(c, "获取session失败: %s", err))
 		return
 	}
 
@@ -188,7 +188,7 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 		"session_id": sessionId,
 		"ws_url":     makeWebSocketURL(sessionId, lang, false),
 	}
-	rest.APIOK(c, i18n.GetMessage(c, "获取session成功"), data)
+	rest.APIOK(c, i18n.T(c, "获取session成功"), data)
 }
 
 // CreateContainerPortalSession 创建 webconsole url api
@@ -199,12 +199,13 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 
 	err := c.BindJSON(consoleQuery)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
+		rest.APIError(c, i18n.T(c, "请求参数错误: %s", err))
 		return
 	}
 
-	if e := consoleQuery.Validate(); e != nil {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", e))
+	err = consoleQuery.Validate()
+	if err != nil {
+		rest.APIError(c, i18n.T(c, "请求参数错误: %s", err))
 		return
 	}
 
@@ -212,13 +213,13 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	commands, err := consoleQuery.SplitCommand()
 	if err != nil {
 		rest.APIError(
-			c, i18n.GetMessage(c, "请求参数错误, command not valid{}", err))
+			c, i18n.T(c, "请求参数错误, command not valid: %s", err))
 		return
 	}
 
 	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
+		rest.APIError(c, i18n.T(c, "请求参数错误: %s", err))
 		return
 	}
 
@@ -236,7 +237,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 
 	sessionId, err := sessions.NewStore().OpenAPIScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
+		rest.APIError(c, i18n.T(c, "获取session失败: %s", err))
 		return
 	}
 
@@ -249,14 +250,14 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	if consoleQuery.WSAcquire {
 		wsSessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 		if err != nil {
-			rest.APIError(c, i18n.GetMessage(c, "获取session失败{}", err))
+			rest.APIError(c, i18n.T(c, "获取session失败: %s", err))
 			return
 		}
 
 		data["ws_url"] = makeWebSocketURL(wsSessionId, "", true)
 	}
 
-	rest.APIOK(c, i18n.GetMessage(c, "获取session成功"), data)
+	rest.APIOK(c, i18n.T(c, "获取session成功"), data)
 }
 
 // makeWebConsoleURL webconsole 页面访问地址
@@ -313,22 +314,24 @@ func (s *service) SetUserDelaySwitch(c *gin.Context) {
 	var commandDelays types.CommandDelay
 	err := c.BindJSON(&commandDelays)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", err))
+		rest.APIError(c, i18n.T(c, "请求参数错误: %s", err))
 		return
 	}
 
 	if len(commandDelays.ConsoleKey) != 1 {
-		rest.APIError(c, i18n.GetMessage(c, "请求参数错误{}", errors.New("invalid console_key")))
+		// 保持翻译统一不冲突
+		err = errors.New("invalid console_key")
+		rest.APIError(c, i18n.T(c, "请求参数错误: %s", err))
 		return
 	}
 
 	// 将用户设置的延时命令开关放到 redis 上保存
 	err = storage.GetDefaultRedisSession().Client.HSet(c, types.GetMeterKey(), username, commandDelays.HashValue()).Err()
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		rest.APIError(c, i18n.T(c, "服务请求失败: %s", err))
 		return
 	}
-	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), nil)
+	rest.APIOK(c, i18n.T(c, "服务请求成功"), nil)
 }
 
 // GetUserDelaySwitch 获取某个用户命令延时统计API
@@ -337,20 +340,20 @@ func (s *service) GetUserDelaySwitch(c *gin.Context) {
 	result, err := storage.GetDefaultRedisSession().Client.HGet(c, types.GetMeterKey(), username).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			rest.APIError(c, i18n.GetMessage(c, "用户没有设置命令延时", err))
+			rest.APIError(c, i18n.T(c, "用户没有设置命令延时", err))
 			return
 		}
-		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		rest.APIError(c, i18n.T(c, "服务请求失败: %s", err))
 		return
 	}
 
 	// 将用户设置的延时命令转成结构体数组输出
 	commandDelay, err := types.MakeCommandDelay(result)
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		rest.APIError(c, i18n.T(c, "服务请求失败: %s", err))
 		return
 	}
-	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), commandDelay)
+	rest.APIOK(c, i18n.T(c, "服务请求成功"), commandDelay)
 }
 
 // GetUserDelayMeter 查看用户+集群(选填)命令延时情况 API
@@ -360,7 +363,7 @@ func (s *service) GetUserDelayMeter(c *gin.Context) {
 	key := types.GetMeterDataKey(username)
 	result, err := storage.GetDefaultRedisSession().Client.LRange(c, key, 0, -1).Result()
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+		rest.APIError(c, i18n.T(c, "服务请求失败: %s", err))
 		return
 	}
 
@@ -377,7 +380,7 @@ func (s *service) GetUserDelayMeter(c *gin.Context) {
 		var delayData types.DelayData
 		err = json.Unmarshal([]byte(result[i]), &delayData)
 		if err != nil {
-			rest.APIError(c, i18n.GetMessage(c, "服务请求失败", err))
+			rest.APIError(c, i18n.T(c, "服务请求失败: %s", err))
 			return
 		}
 
@@ -440,14 +443,14 @@ func (s *service) GetUserDelayMeter(c *gin.Context) {
 		}
 		rsp = append(rsp, userMeterRsp)
 	}
-	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), rsp)
+	rest.APIOK(c, i18n.T(c, "服务请求成功"), rsp)
 }
 
 // GetDelayUsers 查看哪些用户开启命令延时情况 API
 func (s *service) GetDelayUsers(c *gin.Context) {
 	result, err := storage.GetDefaultRedisSession().Client.HGetAll(c, types.GetMeterKey()).Result()
 	if err != nil {
-		rest.APIError(c, i18n.GetMessage(c, "服务请求失败{}", err))
+		rest.APIError(c, i18n.T(c, "服务请求失败: %s", err))
 		return
 	}
 
@@ -456,11 +459,11 @@ func (s *service) GetDelayUsers(c *gin.Context) {
 	for k, v := range result {
 		commandDelay, err := types.MakeCommandDelay(v)
 		if err != nil {
-			rest.APIError(c, i18n.GetMessage(c, "服务请求失败{}", err))
+			rest.APIError(c, i18n.T(c, "服务请求失败: %s", err))
 			return
 		}
 		rsp[k] = commandDelay
 	}
 
-	rest.APIOK(c, i18n.GetMessage(c, "服务请求成功"), rsp)
+	rest.APIOK(c, i18n.T(c, "服务请求成功"), rsp)
 }

@@ -22,14 +22,14 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"gorm.io/gorm"
 
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbgroup "bscp.io/pkg/protocol/core/group"
-	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/selector"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbgroup "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group"
+	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Publish exec publish strategy.
@@ -39,17 +39,25 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 	groupIDs := make([]uint32, 0)
 	tx := s.dao.GenQuery().Begin()
 
+	release, err := s.dao.Release().Get(grpcKit, req.BizId, req.AppId, req.ReleaseId)
+	if err != nil {
+		return nil, err
+	}
+	if release.Spec.Deprecated {
+		return nil, fmt.Errorf("release %s is deprecated, can not be published", release.Spec.Name)
+	}
+
 	if !req.All {
 		if req.GrayPublishMode == "" {
 			// !NOTE: Compatible with previous pipelined plugins version
 			req.GrayPublishMode = table.PublishByGroups.String()
 		}
 		publishMode := table.GrayPublishMode(req.GrayPublishMode)
-		if err := publishMode.Validate(); err != nil {
+		if e := publishMode.Validate(); e != nil {
 			if rErr := tx.Rollback(); rErr != nil {
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 			}
-			return nil, err
+			return nil, e
 		}
 		// validate and query group ids.
 		if publishMode == table.PublishByGroups {
@@ -69,13 +77,13 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 			}
 		}
 		if publishMode == table.PublishByLabels {
-			groupID, err := s.getOrCreateGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.GroupName, req.Labels)
-			if err != nil {
-				logs.Errorf("create group by labels failed, err: %v, rid: %s", err, grpcKit.Rid)
+			groupID, gErr := s.getOrCreateGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.GroupName, req.Labels)
+			if gErr != nil {
+				logs.Errorf("create group by labels failed, err: %v, rid: %s", gErr, grpcKit.Rid)
 				if rErr := tx.Rollback(); rErr != nil {
 					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 				}
-				return nil, err
+				return nil, gErr
 			}
 			groupIDs = append(groupIDs, groupID)
 		}

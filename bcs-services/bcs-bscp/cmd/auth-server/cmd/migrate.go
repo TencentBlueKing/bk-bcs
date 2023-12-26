@@ -19,12 +19,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/iam/client"
-	"bscp.io/pkg/iam/sys"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/metrics"
-	"bscp.io/pkg/tools"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 var migrateCmd = &cobra.Command{

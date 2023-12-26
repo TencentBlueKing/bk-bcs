@@ -18,10 +18,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"bscp.io/cmd/auth-server/app"
-	"bscp.io/cmd/auth-server/options"
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/app"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/options"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // SysOpt is the system option

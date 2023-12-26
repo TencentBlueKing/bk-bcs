@@ -1534,6 +1534,42 @@ service ViewConfig {
 			summary: "Delete view config"
 		};
 	}
+
+	// 资源名称联想
+	rpc ResourceNameSuggest(ViewSuggestReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/resource_name_suggest"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "资源名称联想"
+			summary: "Resource name suggest"
+		};
+	}
+
+	// label 联想
+	rpc LabelSuggest(ViewSuggestReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/label_suggest"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "label 联想"
+			summary: "Label suggest"
+		};
+	}
+
+	// values 联想
+	rpc ValuesSuggest(ViewSuggestReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/values_suggest"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "values 联想"
+			summary: "Values suggest"
+		};
+	}
 }
 
 service TemplateSet {
@@ -2868,7 +2904,7 @@ message GetViewConfigReq {
 message ViewFilter {
 	string name = 1;
 	repeated string creator = 2;
-	map<string, string> labelSelector = 3;
+	repeated LabelSelector labelSelector = 3;
 }
 
 message CreateViewConfigReq {
@@ -2878,19 +2914,16 @@ message CreateViewConfigReq {
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
 	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
-	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "集群 ID"
-	}, (validate.rules).string = {pattern: "^BCS-K8S-\\d{5}$"}];
-	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "命名空间"
-	}, (validate.rules).string = {pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
-	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	repeated ClusterNamespaces clusterNamespaces = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群和命名空间"
+	}, (validate.rules).repeated = {min_items: 1}];
+	string name = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "视图名称"
 	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
-	ViewFilter filter = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	ViewFilter filter = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "筛选条件"
 	}];
-	bool saveAs = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	bool saveAs = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "另存为"
 	}];
 }
@@ -2905,16 +2938,13 @@ message UpdateViewConfigReq {
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
 	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
-	string clusterID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "集群 ID"
-	}, (validate.rules).string = {pattern: "^BCS-K8S-\\d{5}$"}];
-	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "命名空间"
-	}, (validate.rules).string = {pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
-	string name = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	repeated ClusterNamespaces clusterNamespaces = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群和命名空间"
+	}, (validate.rules).repeated = {min_items: 1}];
+	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "视图名称"
 	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
-	ViewFilter filter = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	ViewFilter filter = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "筛选条件"
 	}];
 }
@@ -2944,6 +2974,21 @@ message DeleteViewConfigReq {
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
 	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message ViewSuggestReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ViewSuggestReq", description: "获取视图配置建议"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
+	repeated ClusterNamespaces clusterNamespaces = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群和命名空间"
+	}, (validate.rules).repeated = {min_items: 1}];
+	string label = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "标签"
+	}];
 }
 
 message ClusterNamespaces {
@@ -2978,7 +3023,7 @@ message FetchMultiClusterResourceReq {
 	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源类型"
 	}, (validate.rules).string = {min_len: 1}];
-	string creator = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	repeated string creator = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "creator"
 	}];
 	repeated LabelSelector labelSelector = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -3008,7 +3053,7 @@ message FetchMultiClusterCustomResourceReq {
 	string crd = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "crd"
 	}, (validate.rules).string = {min_len: 1}];
-	string creator = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	repeated string creator = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "creator"
 	}];
 	repeated LabelSelector labelSelector = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -3035,7 +3080,7 @@ message MultiClusterResourceCountReq {
 	repeated ClusterNamespaces clusterNamespaces = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群和命名空间"
 	}, (validate.rules).repeated = {min_items: 1}];
-	string creator = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	repeated string creator = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "creator"
 	}];
 	repeated LabelSelector labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {

@@ -126,7 +126,12 @@ const handleOptionClick = (service: IAppItem, event: Event) => {
 const handleAppChange = (id: number) => {
   const service = serviceList.value.find(service => service.id === id);
   if (service) {
-    router.push({ name: route.name as string, params: { spaceId: service.space_id, appId: id } });
+    let name = route.name as string;
+    if (route.name === 'init-script' && service.spec.config_type === 'kv') {
+      name = 'service-config';
+    }
+
+    router.push({ name, params: { spaceId: service.space_id, appId: id } });
   }
 };
 </script>
@@ -139,8 +144,6 @@ const handleAppChange = (id: number) => {
   }
   &.is-focus {
     .selector-trigger {
-      border-color: #3a84ff;
-      box-shadow: 0 0 3px #a3c5fd;
       outline: 0;
     }
   }
@@ -151,7 +154,6 @@ const handleAppChange = (id: number) => {
   width: 100%;
   height: 32px;
   font-size: 12px;
-  border: 1px solid #c4c6cc;
   border-radius: 2px;
   transition: all 0.3s;
   & > input {
@@ -159,8 +161,11 @@ const handleAppChange = (id: number) => {
     width: 100%;
     padding: 0 24px 0 10px;
     line-height: 1;
-    color: #63656e;
-    background-color: #fff;
+    font-size: 14px;
+    font-family: MicrosoftYaHei;
+    color: #313238;
+    background: #F0F1F5;
+    font-weight: bold;
     border-radius: 2px;
     border: none;
     outline: none;

@@ -2,7 +2,7 @@
   <div class="service-detail-header">
     <section class="summary-wrapper">
       <div :class="['status-tag', versionData.status.publish_status]">
-        {{ VERSION_STATUS_MAP[versionData.status.publish_status as keyof typeof VERSION_STATUS_MAP] || '编辑中' }}
+        {{ statusName }}
       </div>
       <div class="version-name" :title="versionData.spec.name">{{ versionData.spec.name }}</div>
       <InfoLine
@@ -22,6 +22,26 @@
         </BkTab>
       </div>
       <section class="version-operations">
+        <ReleasedGroupViewer
+          v-if="isShowReleasedGroups"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :groups="versionData.status.released_groups"
+          :is-default-group="hasDefaultGroup"
+          :disabled="versionData.status.publish_status === 'full_released'">
+          <div class="released-groups">
+            <i class="bk-bscp-icon icon-resources"></i>
+            <div class="groups-tag">
+              <div class="first-group-name">{{ firstReleasedGroupName }}</div>
+              <div
+                v-if="versionData.status.publish_status === 'partial_released' && versionData.status.released_groups.length > 1"
+                class="remaining-count">
+                ;
+                <span class="count">+{{ versionData.status.released_groups.length - 1 }}</span>
+              </div>
+            </div>
+        </div>
+        </ReleasedGroupViewer>
         <CreateVersion
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
@@ -49,15 +69,15 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { InfoLine } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../store/config';
 import useServiceStore from '../../../../../store/service';
-import { VERSION_STATUS_MAP } from '../../../../../constants/config';
 import { IConfigVersion } from '../../../../../../types/config';
 import { permissionCheck } from '../../../../../api/index';
+import ReleasedGroupViewer from '../config/components/released-group-viewer.vue';
 import PublishVersion from './publish-version/index.vue';
 import CreateVersion from './create-version/index.vue';
 import ModifyGroupPublish from './modify-group-publish.vue';
@@ -92,6 +112,38 @@ const getDefaultTab = () => {
 };
 const activeTab = ref(getDefaultTab());
 const publishVersionRef = ref();
+
+const statusName = computed(() => {
+  const status = versionData.value.status.publish_status;
+  if (status === 'editing') {
+    return '编辑中';
+  } else if (status === 'not_released') {
+    return '未上线';
+  } else {
+    return '已上线';
+  }
+});
+
+// 是否需要展示版本分组信息
+const isShowReleasedGroups = computed(() => {
+  return ['partial_released', 'full_released'].includes(versionData.value.status.publish_status);
+});
+
+// 当前版本是否上线到默认分组
+const hasDefaultGroup = computed(() => {
+  return versionData.value.status.released_groups.findIndex(item => item.id === 0) > -1;
+});
+
+// 第一个分组名称
+const firstReleasedGroupName = computed(() => {
+  if (isShowReleasedGroups.value) {
+    if (versionData.value.status.publish_status === 'full_released') {
+      return '全部实例';
+    } else {
+      return hasDefaultGroup.value ? '默认分组' : versionData.value.status.released_groups[0].name;
+    }
+  }
+});
 
 watch(
   () => route.name,
@@ -173,6 +225,7 @@ const handleTabChange = (val: string) => {
   align-items: center;
   padding: 0 24px;
   height: 41px;
+  border-bottom: 1px solid #dcdee5;
   box-shadow: 0 3px 4px 0 #0000000a;
   z-index: 1;
   .summary-wrapper {
@@ -232,7 +285,35 @@ const handleTabChange = (val: string) => {
     position: absolute;
     top: 5px;
     right: 24px;
+    display: flex;
+    align-items: center;
     z-index: 10;
+    .released-groups {
+      display: flex;
+      align-items: center;
+      padding: 2px 8px;
+      background: #F0F1F5;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .icon-resources {
+      margin-right: 4px;
+      font-size: 14px;
+      color: #979BA5;
+    }
+    .groups-tag {
+      display: flex;
+      align-items: center;
+      line-height: 18px;
+      font-size: 12px;
+      color: #63656e;
+      .count {
+        padding: 2px 4px;
+        line-height: 1;
+        background: #FAFBFD;
+        border-radius: 2px;
+      }
+    }
   }
 }
 </style>

@@ -28,6 +28,7 @@ import useGlobalStore from '../../../store/global';
 import { IGroupEditing, IGroupRuleItem, IGroupItem } from '../../../../types/group';
 import { updateGroup } from '../../../api/group';
 import groupEditForm from './components/group-edit-form.vue';
+import Message from 'bkui-vue/lib/message';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -87,6 +88,10 @@ const handleConfirm = async () => {
       selector: rule_logic === 'AND' ? { labels_and: rules } : { labels_or: rules },
     };
     await updateGroup(spaceId.value, id as number, params);
+    Message({
+      message: '编辑分组成功',
+      theme: 'success',
+    });
     handleClose();
     emits('reload');
   } catch (e) {

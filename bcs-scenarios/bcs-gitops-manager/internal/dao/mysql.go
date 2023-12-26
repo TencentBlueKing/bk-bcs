@@ -32,19 +32,28 @@ type driver struct {
 	rateClient mysqlrate.RateInterface
 }
 
+var (
+	globalDB *driver
+)
+
+func GlobalDB() Interface {
+	return globalDB
+}
+
 // NewDriver creates the MySQL instance
 func NewDriver(dbCfg *common.DBConfig) (Interface, error) {
 	connArgs := fmt.Sprintf("%s:%s@(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		dbCfg.Username, dbCfg.Password, dbCfg.Addr, dbCfg.Database)
-	d, err := newDriver(connArgs)
+	var err error
+	globalDB, err = newDriver(connArgs)
 	if err != nil {
 		return nil, err
 	}
 	if dbCfg.LimitQPS == 0 {
 		dbCfg.LimitQPS = 200
 	}
-	d.rateClient = mysqlrate.NewRateLimit(d.db, dbCfg.LimitQPS)
-	return d, nil
+	globalDB.rateClient = mysqlrate.NewRateLimit(globalDB.db, dbCfg.LimitQPS)
+	return globalDB, nil
 }
 
 func newDriver(connArgs string) (*driver, error) {
@@ -68,13 +77,16 @@ func (d *driver) Init() error {
 
 func (d *driver) autoCreateTable() error {
 	if err := d.createTable(tableActivityUser, &ActivityUser{}); err != nil {
-		return errors.Wrapf(err, "create table failed")
+		return errors.Wrapf(err, "create table '%s' failed", tableActivityUser)
 	}
 	if err := d.createTable(tableResourcePreference, &ResourcePreference{}); err != nil {
-		return errors.Wrapf(err, "create table failed")
+		return errors.Wrapf(err, "create table '%s' failed", tableResourcePreference)
 	}
 	if err := d.createTable(tableSyncInfo, &SyncInfo{}); err != nil {
-		return errors.Wrapf(err, "create table failed")
+		return errors.Wrapf(err, "create table '%s' failed", tableSyncInfo)
+	}
+	if err := d.createTable(tableHistoryManifest, &ApplicationHistoryManifest{}); err != nil {
+		return errors.Wrapf(err, "create table '%s' failed", tableHistoryManifest)
 	}
 	return nil
 }
@@ -87,8 +99,8 @@ func (d *driver) createTable(tableName string, obj interface{}) error {
 			AutoMigrate(obj); err != nil {
 			return errors.Wrapf(err, "create table '%s' failed", tableName)
 		}
+		blog.Infof("[DB] create table '%s' success.", tableName)
 	}
-	blog.Infof("[DB] create table '%s' success.", tableName)
 	return nil
 }
 
@@ -242,4 +254,34 @@ func (d *driver) ListResourcePreferences(project, resourceType string) ([]Resour
 		result = append(result, *prefer)
 	}
 	return result, nil
+}
+
+// CreateApplicationHistoryManifest create application history manifest object
+func (d *driver) CreateApplicationHistoryManifest(hm *ApplicationHistoryManifest) error {
+	return d.db.Table(tableHistoryManifest).Save(hm).Error
+}
+
+// GetApplicationHistoryManifest get application history manifest
+func (d *driver) GetApplicationHistoryManifest(appName, appUID string,
+	historyID int64) (*ApplicationHistoryManifest, error) {
+	rows, err := d.rateClient.Table(tableHistoryManifest).Where("name = ?", appName).
+		Where("applicationUID = ?", appUID).
+		Where("historyID = ?", historyID).Rows()
+	if err != nil {
+		return nil, errors.Wrapf(err, "get application history manifest failed")
+	}
+	defer rows.Close()
+
+	result := make([]ApplicationHistoryManifest, 0)
+	for rows.Next() {
+		appHM := new(ApplicationHistoryManifest)
+		if err = d.db.ScanRows(rows, appHM); err != nil {
+			return nil, errors.Wrapf(err, "scan syncinfo rows failed")
+		}
+		result = append(result, *appHM)
+	}
+	if len(result) == 0 {
+		return nil, nil
+	}
+	return &result[0], nil
 }

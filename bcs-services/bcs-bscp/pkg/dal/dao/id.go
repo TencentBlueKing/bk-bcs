@@ -16,10 +16,10 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/sharding"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/sharding"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // IDGenInterface supplies all the method to generate a resource's

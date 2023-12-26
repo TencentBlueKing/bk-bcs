@@ -15,7 +15,7 @@ package unit
 import (
 	"os"
 
-	"bscp.io/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // DefaultTestLogDir default test log save dir.

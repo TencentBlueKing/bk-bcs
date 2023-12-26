@@ -1,13 +1,18 @@
 <template>
   <bk-loading :loading="loading">
     <bk-table
+      class="config-table"
       :border="['outer']"
       :data="configList"
       :remote-pagination="true"
       :pagination="pagination"
+      :key="versionData.id"
+      :row-class="getRowCls"
       show-overflow-tooltip
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"
+      @column-sort="handleSort"
+      @column-filter="handleFilter"
     >
       <bk-table-column label="配置项名称" prop="spec.key" :min-width="240">
         <template #default="{ row }">
@@ -15,7 +20,7 @@
             v-if="row.spec"
             text
             theme="primary"
-            :disabled="row.file_state === 'DELETE'"
+            :disabled="row.kv_state === 'DELETE'"
             @click="handleEdit(row)"
           >
             {{ row.spec.key }}
@@ -26,7 +31,7 @@
       <bk-table-column
         label="数据类型"
         prop="spec.kv_type"
-        :filter="{ filterFn: handleFilter, list: filterList }"
+        :filter="{ filterFn:() => true, list: filterList, checked:filterChecked }"
       ></bk-table-column>
       <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
       <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
@@ -43,24 +48,20 @@
       <bk-table-column label="操作" fixed="right">
         <template #default="{ row }">
           <div class="operate-action-btns">
-            <bk-button :disabled="row.file_state === 'DELETE'" text theme="primary" @click="handleEdit(row)">{{
-              versionData.id === 0 ? '编辑' : '查看'
-            }}</bk-button>
-            <bk-button
-              v-if="versionData.status.publish_status !== 'editing'"
-              text
-              theme="primary"
-              @click="handleDiff(row)"
-              >对比</bk-button
-            >
-            <bk-button
-              v-if="versionData.id === 0"
-              text
-              theme="primary"
-              :disabled="row.file_state === 'DELETE'"
-              @click="handleDel(row)"
-              >删除</bk-button
-            >
+            <bk-button v-if="row.kv_state === 'DELETE'" text theme="primary" @click="handleUndelete(row)">恢复</bk-button>
+            <template v-else>
+              <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEdit(row)">{{
+                versionData.id === 0 ? '编辑' : '查看'
+              }}</bk-button>
+              <bk-button
+                v-if="versionData.status.publish_status !== 'editing'"
+                text
+                theme="primary"
+                @click="handleDiff(row)"
+                >对比</bk-button
+              >
+              <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">删除</bk-button>
+            </template>
           </div>
         </template>
       </bk-table-column>
@@ -85,19 +86,19 @@
     @confirm="handleDeleteConfigConfirm"
   >
     <div style="margin-bottom: 8px">
-      配置项：<span style="color: #313238">{{ deleteConfig?.key }}</span>
+      配置项：<span style="color: #313238">{{ deleteConfig?.spec.key }}</span>
     </div>
-    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+    <div>{{ deleteConfigTips }}</div>
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-import { ref, watch, onMounted, computed, toRaw } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../../store/config';
 import useServiceStore from '../../../../../../../../store/service';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
-import { getKvList, deleteKv, getReleaseKvList } from '../../../../../../../../api/config';
+import { getKvList, deleteKv, getReleaseKvList, undeleteKv } from '../../../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../../../utils/index';
 import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
 import StatusTag from './status-tag';
@@ -105,8 +106,7 @@ import EditConfig from '../edit-config-kv.vue';
 import VersionDiff from '../../../components/version-diff/index.vue';
 import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
-import { Message } from 'bkui-vue';
-import { isEqual } from 'lodash';
+import Message from 'bkui-vue/lib/message';
 
 const configStore = useConfigStore();
 const serviceStore = useServiceStore();
@@ -128,12 +128,13 @@ const configsCount = ref(0);
 const editPanelShow = ref(false);
 const editable = ref(false);
 const activeConfig = ref<IConfigKvItem>();
-const deleteConfig = ref<IConfigKvItem>();
+const deleteConfig = ref<IConfigKvType>();
 const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
 const isSearchEmpty = ref(false);
 const isDeleteConfigDialogShow = ref(false);
 const filterChecked = ref<string[]>([]);
+const updateSortType = ref('null');
 const pagination = ref({
   current: 1,
   count: 0,
@@ -144,17 +145,24 @@ const filterList = computed(() => CONFIG_KV_TYPE.map(item => ({
   text: item.name,
 })));
 
+const deleteConfigTips = computed(() => {
+  if (deleteConfig.value) {
+    return deleteConfig.value.kv_state === 'ADD' ? '一旦删除，该操作将无法撤销，请谨慎操作' : '配置项删除后，可以通过恢复按钮撤销删除';
+  }
+  return '';
+});
 
 watch(
   () => versionData.value.id,
   () => {
-    getListData();
+    refresh();
   },
 );
 
 watch(
   () => props.searchStr,
   () => {
+    props.searchStr ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
     refresh();
   },
 );
@@ -166,16 +174,6 @@ watch(
       state.allConfigCount = configsCount.value;
     });
   },
-);
-
-watch(
-  () => filterChecked.value,
-  (newVal, oldVal) => {
-    if (!isEqual(toRaw(newVal), toRaw(oldVal))) {
-      getListData();
-    }
-  },
-  { deep: true },
 );
 
 const isUnNamedVersion = computed(() => versionData.value.id === 0);
@@ -198,6 +196,10 @@ const getListData = async () => {
     }
     if (filterChecked.value!.length > 0) {
       params.kv_type = filterChecked.value;
+    }
+    if (updateSortType.value !== 'null') {
+      params.sort = 'updated_at';
+      params.order = updateSortType.value.toUpperCase();
     }
     let res;
     if (isUnNamedVersion.value) {
@@ -231,11 +233,14 @@ const handleDel = (config: IConfigKvType) => {
     return;
   }
   isDeleteConfigDialogShow.value = true;
-  deleteConfig.value = config.spec;
+  deleteConfig.value = config;
 };
 
 const handleDeleteConfigConfirm = async () => {
-  await deleteKv(props.bkBizId, props.appId, deleteConfig.value!.key);
+  if (!deleteConfig.value) {
+    return;
+  }
+  await deleteKv(props.bkBizId, props.appId, deleteConfig.value.id);
   if (configList.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current -= 1;
   }
@@ -243,8 +248,15 @@ const handleDeleteConfigConfirm = async () => {
     theme: 'success',
     message: '删除配置项成功',
   });
-  getListData();
+  refresh();
   isDeleteConfigDialogShow.value = false;
+};
+
+// 撤销删除
+const handleUndelete = async (config: IConfigKvType) => {
+  await undeleteKv(props.bkBizId, props.appId, config.spec.key);
+  Message({ theme: 'success', message: '恢复配置项成功' });
+  refresh();
 };
 
 const handlePageLimitChange = (limit: number) => {
@@ -257,9 +269,19 @@ const refresh = (current = 1) => {
   getListData();
 };
 
-const handleFilter = (checked: string[]) => {
+const handleFilter = ({ checked }: any) => {
   filterChecked.value = checked;
-  return true;
+  refresh();
+};
+
+const handleSort = ({ type }: any) => {
+  updateSortType.value = type;
+  refresh();
+};
+
+// 判断当前行是否是删除行
+const getRowCls = (config: IConfigKvType) => {
+  if (config.kv_state === 'DELETE') return 'delete-row';
 };
 
 defineExpose({
@@ -270,6 +292,16 @@ defineExpose({
 .operate-action-btns {
   .bk-button:not(:last-of-type) {
     margin-right: 8px;
+  }
+}
+.config-table {
+  :deep(.bk-table-body) {
+    tr.delete-row td {
+      background: #fafbfd !important;
+      .cell {
+        color: #c4c6cc !important;
+      }
+    }
   }
 }
 </style>

@@ -68,6 +68,21 @@
                   })
                 }}
               </span>
+              <span
+                class="text-[#699DF4] ml-[5px] h-[20px] flex items-center"
+                style="border-bottom: 1px dashed #699DF4;"
+                v-else-if="data.prop === 'bufferResourceRatio'"
+                v-bk-tooltips="overview.pod_usage
+                  ?`${Number((overview.pod_usage.used || 0))} / ${Number(Math.ceil(overview.pod_usage.total) || 0)}`
+                  : '--'">
+                {{
+                  $t('cluster.ca.metric.curUsagePath', {
+                    val: overview.pod_usage
+                      ?conversionPercentUsed(overview.pod_usage.used, overview.pod_usage.total)
+                      : '--'
+                  })
+                }}
+              </span>
             </template>
           </AutoScalerFormItem>
         </LayoutGroup>
@@ -144,7 +159,7 @@
       </div>
     </section>
     <!-- 资源池配置 -->
-    <section class="group-border-top">
+    <section class="group-border-top" v-if="curCluster.provider === 'tencentCloud'">
       <div class="group-header">
         <div class="group-header-title">{{$t('tkeCa.label.poolManage')}}</div>
       </div>
@@ -237,7 +252,7 @@
         <bcs-table-column :label="$t('cluster.ca.nodePool.label.system')" show-overflow-tooltip>
           <template #default>{{clusterOS}}</template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('tkeCa.label.provider.text')" show-overflow-tooltip>
+        <bcs-table-column :label="$t('tkeCa.label.provider.text')" show-overflow-tooltip v-if="curCluster.provider === 'tencentCloud'">
           <template #default="{ row }">
             {{ (row.extraInfo && row.extraInfo.resourcePoolType ? row.extraInfo.resourcePoolType : 'yunti') === 'yunti'
               ? $t('tkeCa.label.provider.yunti')
@@ -1876,6 +1891,7 @@ export default defineComponent({
       stopTaskPool();
     });
     return {
+      curCluster,
       searchIp,
       isPodsPriorityEnable,
       podsPriorityLoading,

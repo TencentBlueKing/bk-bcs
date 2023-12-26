@@ -3,7 +3,7 @@
     <p class="title">配置关联规则</p>
     <div class="rules-edit-area">
       <div v-for="(rule, index) in localRules" class="rule-list" :key="index">
-        <div class="rule-item">
+          <div :class="['rule-item',{'is-error':!rule.isRight}]">
           <bk-input
             v-model="rule.content"
             class="rule-input"
@@ -39,13 +39,19 @@
             </template>
           </div>
         </div>
-        <div class="error-info"><span v-if="!rule.isRight">输入的规则有误，请重新确认</span></div>
-      </div>
+        <div class="error-info" v-if="!rule.isRight"><span>输入的规则有误，请重新确认</span></div>
+        </div>
       <div class="tips">
-        <div>填写格式为“服务名称/配置路径”，支持通配符，常用方法：</div>
-        <div>关联myservice服务下所有的配置(包含子目录):myservice/**</div>
-        <div>关联myservice服务/etc目录下所有的配置(不含子目录):myservice/etc/*</div>
-        <div>关联myservice服务/etc/nginx/nginx.conf文件:myservice/etc/nginx/nginx.conf</div>
+        <div>- [文件型]关联myservice服务下所有的配置(包含子目录)</div>
+        <div>&nbsp;&nbsp;myservice/**</div>
+        <div>- [文件型]关联myservice服务/etc目录下所有的配置(不含子目录)</div>
+        <div>&nbsp;&nbsp;myservice/etc/*</div>
+        <div>- [文件型]关联myservice服务/etc/nginx/nginx.conf文件</div>
+        <div>&nbsp;&nbsp;myservice/etc/nginx/nginx.conf</div>
+        <div>- [键值型]关联myservice服务下所有配置项</div>
+        <div>&nbsp;&nbsp;myservice/*</div>
+        <div>- [键值型]关联myservice服务下所有以demo_开头的配置项</div>
+        <div>&nbsp;&nbsp;myservice/demo_*</div>
       </div>
     </div>
     <!-- <div class="preview-btn">预览匹配结果</div> -->
@@ -68,6 +74,7 @@ const RULE_TYPE_MAP: { [key: string]: string } = {
 };
 
 const localRules = ref<IRuleEditing[]>([]);
+
 
 const transformRulesToEditing = (rules: ICredentialRule[]) => {
   const rulesEditing: IRuleEditing[] = [];
@@ -186,6 +193,9 @@ defineExpose({ handleRuleValidate });
     content: '*';
   }
 }
+.rule-list {
+  margin-bottom: 24px;
+}
 .rule-item {
   display: flex;
   align-items: center;
@@ -219,6 +229,7 @@ defineExpose({ handleRuleValidate });
     width: 38px;
     color: #979ba5;
     font-size: 14px;
+    text-align: right;
     > i {
       cursor: pointer;
       &:hover {
@@ -227,6 +238,11 @@ defineExpose({ handleRuleValidate });
     }
   }
 }
+.is-error {
+    .rule-input {
+      border-color: #ea3636 !important;
+    }
+  }
 .error-info {
   margin: 4px 0 6px;
   height: 16px;

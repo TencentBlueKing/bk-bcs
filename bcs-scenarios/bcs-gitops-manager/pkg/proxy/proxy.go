@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
@@ -50,6 +51,7 @@ type GitOpsOptions struct {
 	IAMClient    iam.PermClient
 	SecretOption *SecretOption
 	TraceOption  *TraceOption
+	DB           dao.Interface
 }
 
 // TraceOption defines the config of bkmonitor APM

@@ -54,7 +54,7 @@ import TableEmpty from '../../../../../../components/table/table-empty.vue';
 import VersionDiff from '../../config/components/version-diff/index.vue';
 
 const configStore = useConfigStore();
-const { versionData, refreshVersionListFlag } = storeToRefs(configStore);
+const { versionData, refreshVersionListFlag, publishedVersionId } = storeToRefs(configStore);
 
 const route = useRoute();
 const router = useRouter();
@@ -82,7 +82,14 @@ const versionsInView = computed(() => {
 watch(refreshVersionListFlag, async (val) => {
   if (val) {
     await getVersionList();
-    const versionDetail = versionList.value[1];
+    let versionDetail;
+    // 判断当前是生成版本还是上线版本
+    if (publishedVersionId.value) {
+      versionDetail = versionList.value.find(item => item.id === publishedVersionId.value);
+      publishedVersionId.value = 0;
+    } else {
+      versionDetail = versionList.value[1];
+    }
     if (versionDetail) {
       versionData.value = versionDetail;
       refreshVersionListFlag.value = false;
@@ -137,7 +144,7 @@ const handleSelectVersion = (version: IConfigVersion) => {
   if (version.id !== 0) {
     params.versionId = version.id;
   }
-  router.push({ name: 'service-config', params });
+  router.push({ name: route.name as string, params });
 };
 
 const handleDiffDialogShow = (version: IConfigVersion) => {

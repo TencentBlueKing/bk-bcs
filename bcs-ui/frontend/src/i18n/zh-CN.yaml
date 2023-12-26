@@ -89,6 +89,10 @@ k8s:
     partition: 分区滚动更新
     podManagementPolicy: Pod 管理策略
   containerNetwork: 容器网络分配
+  deploy:
+    readyTips: >-
+      Pod实例Ready需要具备以下两个条件<br/>1. Pod中所有容器都已就绪<br/>2. Readiness Gates中所有状况都为
+      True 值
 nav:
   dashboard: 资源视图
   namespace: 命名空间
@@ -412,6 +416,7 @@ generic:
     required: 必填项
     labelValueEmpty: 标签值不能为空
     labelKey: 仅支持字母，数字和字符(-_./)
+    annotations: 仅支持字母，数字，空格和字符(-_./)
     label: 标签必须由字母数字字符、连字符、下划线或点组成
     required1: taints不能有空字段
     annotationValueEmpty: 注解值不能为空
@@ -806,7 +811,7 @@ cluster:
         desc: '集群整体内存资源(Request)使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值'
       bufferResourceRatio:
         title: 触发扩容资源阈值 (Pods)
-        desc: '集群整体内存资源Pod数量使用率超过该阈值触发扩容, 无论CPU / 内存资源使用率是否达到阈值'
+        desc: '集群资源Pod数量使用率超过该阈值触发扩容, 无论CPU / 内存资源使用率是否达到阈值'
       maxNodeProvisionTime:
         title: 等待节点提供最长时间
         desc: 如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败
@@ -2712,3 +2717,11 @@ tkeCa:
       self: 自建资源池
 provider:
   tencentPublicCloud: 腾讯云公有云
+container:
+  label:
+    restartCnt: 重启次数
+    startedAt: 启动时间
+    lastState: 最后一次退出状态
+    finishedAt: 退出时间
+    exitCode: 退出码
+    reason: 原因

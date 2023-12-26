@@ -36,6 +36,7 @@ type Options struct {
 	User           string // storage user
 	Pass           string // storage pass
 	Cache          bool   // init cache for performance
+	CacheHistory   bool
 	AdminNamespace string
 
 	// RepoServerUrl this parameter must be passed in only
@@ -72,11 +73,13 @@ type Store interface {
 	ListRepository(ctx context.Context, projNames []string) (*v1alpha1.RepositoryList, error)
 
 	GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error)
+	GetApplicationResourceTree(ctx context.Context, name string) (*v1alpha1.ApplicationTree, error)
 	ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (*v1alpha1.ApplicationList, error)
-	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application) error
+	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application,
+		resources []*ApplicationResource) []ApplicationDeleteResourceResult
 	GetApplicationManifests(ctx context.Context, name, revision string) (*apiclient.ManifestResponse, error)
-	GetApplicationManifestsFromRepoServer(ctx context.Context,
-		application *v1alpha1.Application) (*apiclient.ManifestResponse, error)
+	GetApplicationManifestsFromRepoServerWithMultiSources(ctx context.Context,
+		application *v1alpha1.Application) ([]*apiclient.ManifestResponse, error)
 	ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
 		live *unstructured.Unstructured, hideData bool) error
 

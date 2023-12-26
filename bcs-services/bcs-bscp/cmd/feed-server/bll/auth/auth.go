@@ -14,10 +14,9 @@
 package auth
 
 import (
-	"bscp.io/cmd/feed-server/bll/lcache"
-	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/kit"
-	pbci "bscp.io/pkg/protocol/core/config-item"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/lcache"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // New initialize the auth service instance.
@@ -38,7 +37,7 @@ func (as *AuthService) Authorize(kt *kit.Kit, res *meta.ResourceAttribute) (bool
 }
 
 // CanMatchCI if credential can match the config item.
-func (as *AuthService) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credential string,
-	ci *pbci.ConfigItemSpec) (bool, error) {
-	return as.cache.Credential.CanMatchCI(kt, bizID, app, credential, ci)
+func (as *AuthService) CanMatchCI(kt *kit.Kit, bizID uint32,
+	app string, token string, path string, name string) (bool, error) {
+	return as.cache.Credential.CanMatchCI(kt, bizID, app, token, path, name)
 }

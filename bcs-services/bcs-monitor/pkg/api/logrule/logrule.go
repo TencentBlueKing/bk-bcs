@@ -414,6 +414,7 @@ func EnableLogRule(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		data.Update(entity.FieldKeyStatus, entity.FailedStatus)
 		data.Update(entity.FieldKeyMessage, err.Error())
+		store.UpdateLogRule(c.Context, id, data) // nolint
 		return nil, err
 	}
 
@@ -459,6 +460,7 @@ func DisableLogRule(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		data.Update(entity.FieldKeyStatus, entity.FailedStatus)
 		data.Update(entity.FieldKeyMessage, err.Error())
+		store.UpdateLogRule(c.Context, id, data) // nolint
 		return nil, err
 	}
 

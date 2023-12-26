@@ -56,6 +56,13 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "HelmManager.CreatePersonalRepo",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/personal"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "HelmManager.UpdateRepository",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 			Method:  []string{"PUT"},
@@ -123,13 +130,6 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Name:    "HelmManager.DownloadChart",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}/download"},
 			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "HelmManager.UploadChart",
-			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/version/{version}/upload"},
-			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
@@ -227,6 +227,7 @@ type HelmManagerService interface {
 	Available(ctx context.Context, in *AvailableReq, opts ...client.CallOption) (*AvailableResp, error)
 	//* repository service
 	CreateRepository(ctx context.Context, in *CreateRepositoryReq, opts ...client.CallOption) (*CreateRepositoryResp, error)
+	CreatePersonalRepo(ctx context.Context, in *CreatePersonalRepoReq, opts ...client.CallOption) (*CreatePersonalRepoResp, error)
 	UpdateRepository(ctx context.Context, in *UpdateRepositoryReq, opts ...client.CallOption) (*UpdateRepositoryResp, error)
 	GetRepository(ctx context.Context, in *GetRepositoryReq, opts ...client.CallOption) (*GetRepositoryResp, error)
 	DeleteRepository(ctx context.Context, in *DeleteRepositoryReq, opts ...client.CallOption) (*DeleteRepositoryResp, error)
@@ -239,7 +240,6 @@ type HelmManagerService interface {
 	DeleteChart(ctx context.Context, in *DeleteChartReq, opts ...client.CallOption) (*DeleteChartResp, error)
 	DeleteChartVersion(ctx context.Context, in *DeleteChartVersionReq, opts ...client.CallOption) (*DeleteChartVersionResp, error)
 	DownloadChart(ctx context.Context, in *DownloadChartReq, opts ...client.CallOption) (*httpbody.HttpBody, error)
-	UploadChart(ctx context.Context, in *UploadChartReq, opts ...client.CallOption) (*UploadChartResp, error)
 	GetChartRelease(ctx context.Context, in *GetChartReleaseReq, opts ...client.CallOption) (*GetChartReleaseResp, error)
 	//* release service
 	ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, opts ...client.CallOption) (*ListReleaseV1Resp, error)
@@ -281,6 +281,16 @@ func (c *helmManagerService) Available(ctx context.Context, in *AvailableReq, op
 func (c *helmManagerService) CreateRepository(ctx context.Context, in *CreateRepositoryReq, opts ...client.CallOption) (*CreateRepositoryResp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.CreateRepository", in)
 	out := new(CreateRepositoryResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *helmManagerService) CreatePersonalRepo(ctx context.Context, in *CreatePersonalRepoReq, opts ...client.CallOption) (*CreatePersonalRepoResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.CreatePersonalRepo", in)
+	out := new(CreatePersonalRepoResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -391,16 +401,6 @@ func (c *helmManagerService) DeleteChartVersion(ctx context.Context, in *DeleteC
 func (c *helmManagerService) DownloadChart(ctx context.Context, in *DownloadChartReq, opts ...client.CallOption) (*httpbody.HttpBody, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.DownloadChart", in)
 	out := new(httpbody.HttpBody)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *helmManagerService) UploadChart(ctx context.Context, in *UploadChartReq, opts ...client.CallOption) (*UploadChartResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.UploadChart", in)
-	out := new(UploadChartResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -545,6 +545,7 @@ type HelmManagerHandler interface {
 	Available(context.Context, *AvailableReq, *AvailableResp) error
 	//* repository service
 	CreateRepository(context.Context, *CreateRepositoryReq, *CreateRepositoryResp) error
+	CreatePersonalRepo(context.Context, *CreatePersonalRepoReq, *CreatePersonalRepoResp) error
 	UpdateRepository(context.Context, *UpdateRepositoryReq, *UpdateRepositoryResp) error
 	GetRepository(context.Context, *GetRepositoryReq, *GetRepositoryResp) error
 	DeleteRepository(context.Context, *DeleteRepositoryReq, *DeleteRepositoryResp) error
@@ -557,7 +558,6 @@ type HelmManagerHandler interface {
 	DeleteChart(context.Context, *DeleteChartReq, *DeleteChartResp) error
 	DeleteChartVersion(context.Context, *DeleteChartVersionReq, *DeleteChartVersionResp) error
 	DownloadChart(context.Context, *DownloadChartReq, *httpbody.HttpBody) error
-	UploadChart(context.Context, *UploadChartReq, *UploadChartResp) error
 	GetChartRelease(context.Context, *GetChartReleaseReq, *GetChartReleaseResp) error
 	//* release service
 	ListReleaseV1(context.Context, *ListReleaseV1Req, *ListReleaseV1Resp) error
@@ -578,6 +578,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 	type helmManager interface {
 		Available(ctx context.Context, in *AvailableReq, out *AvailableResp) error
 		CreateRepository(ctx context.Context, in *CreateRepositoryReq, out *CreateRepositoryResp) error
+		CreatePersonalRepo(ctx context.Context, in *CreatePersonalRepoReq, out *CreatePersonalRepoResp) error
 		UpdateRepository(ctx context.Context, in *UpdateRepositoryReq, out *UpdateRepositoryResp) error
 		GetRepository(ctx context.Context, in *GetRepositoryReq, out *GetRepositoryResp) error
 		DeleteRepository(ctx context.Context, in *DeleteRepositoryReq, out *DeleteRepositoryResp) error
@@ -589,7 +590,6 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		DeleteChart(ctx context.Context, in *DeleteChartReq, out *DeleteChartResp) error
 		DeleteChartVersion(ctx context.Context, in *DeleteChartVersionReq, out *DeleteChartVersionResp) error
 		DownloadChart(ctx context.Context, in *DownloadChartReq, out *httpbody.HttpBody) error
-		UploadChart(ctx context.Context, in *UploadChartReq, out *UploadChartResp) error
 		GetChartRelease(ctx context.Context, in *GetChartReleaseReq, out *GetChartReleaseResp) error
 		ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error
 		GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, out *GetReleaseDetailV1Resp) error
@@ -617,6 +617,13 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.CreateRepository",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.CreatePersonalRepo",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/personal"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
@@ -689,13 +696,6 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Name:    "HelmManager.DownloadChart",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}/download"},
 		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.UploadChart",
-		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/version/{version}/upload"},
-		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -798,6 +798,10 @@ func (h *helmManagerHandler) CreateRepository(ctx context.Context, in *CreateRep
 	return h.HelmManagerHandler.CreateRepository(ctx, in, out)
 }
 
+func (h *helmManagerHandler) CreatePersonalRepo(ctx context.Context, in *CreatePersonalRepoReq, out *CreatePersonalRepoResp) error {
+	return h.HelmManagerHandler.CreatePersonalRepo(ctx, in, out)
+}
+
 func (h *helmManagerHandler) UpdateRepository(ctx context.Context, in *UpdateRepositoryReq, out *UpdateRepositoryResp) error {
 	return h.HelmManagerHandler.UpdateRepository(ctx, in, out)
 }
@@ -840,10 +844,6 @@ func (h *helmManagerHandler) DeleteChartVersion(ctx context.Context, in *DeleteC
 
 func (h *helmManagerHandler) DownloadChart(ctx context.Context, in *DownloadChartReq, out *httpbody.HttpBody) error {
 	return h.HelmManagerHandler.DownloadChart(ctx, in, out)
-}
-
-func (h *helmManagerHandler) UploadChart(ctx context.Context, in *UploadChartReq, out *UploadChartResp) error {
-	return h.HelmManagerHandler.UploadChart(ctx, in, out)
 }
 
 func (h *helmManagerHandler) GetChartRelease(ctx context.Context, in *GetChartReleaseReq, out *GetChartReleaseResp) error {

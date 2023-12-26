@@ -20,7 +20,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	gameAppsv1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned"
 	gameScheme "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/scheme"
@@ -47,6 +46,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
@@ -179,7 +179,7 @@ func (c *CRDClient) HistoryRevision(ctx context.Context, kind, namespace, name s
 		var unstructuredObj map[string]interface{}
 		unstructuredObj, err = runtime.DefaultUnstructuredConverter.ToUnstructured(s[v])
 		if err != nil {
-			blog.Errorf("convert to unstructured failed, err %s", err.Error())
+			log.Error(ctx, "convert to unstructured failed, err %s", err.Error())
 			continue
 		}
 		ret := formatter.FormatWorkloadRes(unstructuredObj)

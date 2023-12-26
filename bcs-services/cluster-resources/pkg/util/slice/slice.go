@@ -63,3 +63,16 @@ func FilterMatchKVFromSlice(list []interface{}, key, value string) []interface{}
 	}
 	return ret
 }
+
+// RemoveDuplicateValues 删除重复的值
+func RemoveDuplicateValues(strSlice []string) []string {
+	keys := make(map[string]bool)
+	result := []string{}
+	for _, s := range strSlice {
+		if _, v := keys[s]; !v {
+			keys[s] = true
+			result = append(result, s)
+		}
+	}
+	return result
+}

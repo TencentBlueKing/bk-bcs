@@ -16,8 +16,8 @@ import (
 	"sync"
 	"time"
 
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/shutdown"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
 )
 
 func initWait() *waitShutdown {

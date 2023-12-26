@@ -158,15 +158,18 @@
                 </bcs-option>
               </bcs-select>
             </div>
-            <bcs-select
+            <bk-input
               class="w-[88px] bg-[#fff] ml10"
+              type="number"
               :disabled="isEdit"
-              :clearable="false"
+              :min="50"
+              :max="16380"
               v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize">
-              <bcs-option id="50" name="50"></bcs-option>
-              <bcs-option id="100" name="100"></bcs-option>
-            </bcs-select>
+            </bk-input>
             <span :class="['company', { disabled: isEdit }]">GB</span>
+            <p class="error-tips ml-[6px]" v-if="nodePoolConfig.launchTemplate.systemDisk.diskSize % 10 !== 0">
+              {{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.dataDisks')}}
+            </p>
           </div>
           <div class="mt20">
             <bk-checkbox
@@ -1026,7 +1029,9 @@ export default defineComponent({
       const validateDataDiskSize = nodePoolConfig.value.nodeTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
       const mountTargetList = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => item.mountTarget);
       const validateDataDiskMountTarget = new Set(mountTargetList).size === mountTargetList.length;
-      if (!basicFormValidate || !result || !validateDataDiskSize || !validateDataDiskMountTarget) return false;
+      const validateSystemDisk = nodePoolConfig.value.launchTemplate.systemDisk.diskSize % 10 === 0;
+      if (!basicFormValidate || !result || !validateDataDiskSize || !validateDataDiskMountTarget
+        || !validateSystemDisk) return false;
 
       return true;
     };

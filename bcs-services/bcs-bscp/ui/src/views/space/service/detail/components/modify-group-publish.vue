@@ -23,11 +23,14 @@
           </section>
         </template>
         <select-group
-          :group-type="groupType"
+          ref="selectGroupRef"
+          :release-type="releaseType"
           :groups="groups"
-          :disabled="currentSelectedGroups"
+          :version-status="versionData.status.publish_status"
+          :release-id="versionData.id"
+          :released-groups="releasedGroups"
           @open-preview-version-diff="openPreviewVersionDiff"
-          @group-type-change="groupType = $event"
+          @release-type-change="releaseType = $event"
           @change="groups = $event"
         >
         </select-group>
@@ -46,7 +49,7 @@
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
       :release-id="versionData.id"
-      :group-type="groupType"
+      :release-type="releaseType"
       :groups="groups"
       @confirm="handleConfirm"
     />
@@ -82,7 +85,7 @@ const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 const serviceStore = useServiceStore();
 const versionStore = useConfigStore();
 const { appData } = storeToRefs(serviceStore);
-const { versionData } = storeToRefs(versionStore);
+const { versionData, publishedVersionId } = storeToRefs(versionStore);
 
 const props = defineProps<{
   bkBizId: string;
@@ -100,11 +103,13 @@ const versionList = ref<IConfigVersion[]>([]);
 const isSelectGroupPanelOpen = ref(false);
 const isDiffSliderShow = ref(false);
 const isConfirmDialogShow = ref(false);
-const groupType = ref('select');
+const releaseType = ref('select');
 const groups = ref<IGroupToPublish[]>([]);
 const baseVersionId = ref(0);
+const selectGroupRef = ref();
 
-const currentSelectedGroups = computed(() => versionData.value.status.released_groups.map(group => group.id));
+// 已上线分组
+const releasedGroups = computed(() => versionData.value.status.released_groups.map(group => group.id));
 
 const permissionQueryResource = computed(() => [
   {
@@ -119,11 +124,14 @@ const permissionQueryResource = computed(() => [
 
 // 判断是否需要对比上线版本
 const handleDiffOrPublish = () => {
-  if (versionList.value.length) {
-    isDiffSliderShow.value = true;
-    return;
+  if (selectGroupRef.value.validate()) {
+    if (versionList.value.length) {
+      baseVersionId.value = versionList.value[0].id;
+      isDiffSliderShow.value = true;
+      return;
+    }
+    handleOpenPublishDialog();
   }
-  handleOpenPublishDialog();
 };
 
 // 获取所有对比基准版本
@@ -152,7 +160,7 @@ const openSelectGroupPanel = () => {
   groups.value = versionData.value.status.released_groups.map((group) => {
     const { id, name } = group;
     const selector = group.new_selector;
-    const rules = selector.labels_and || [];
+    const rules = selector?.labels_and || [];
     return {
       id,
       name,
@@ -182,6 +190,7 @@ const openPreviewVersionDiff = (id: number) => {
 // 上线确认
 const handleConfirm = () => {
   isDiffSliderShow.value = false;
+  publishedVersionId.value = versionData.value.id;
   handlePanelClose();
   emit('confirm');
   InfoBox({
@@ -194,12 +203,15 @@ const handleConfirm = () => {
 
 // 关闭选择分组面板
 const handlePanelClose = () => {
-  groupType.value = 'select';
+  releaseType.value = 'select';
   isSelectGroupPanelOpen.value = false;
   groups.value = [];
 };
 </script>
 <style lang="scss" scoped>
+.trigger-button {
+  margin-left: 8px;
+}
 .header-wrapper {
   display: flex;
   align-items: center;

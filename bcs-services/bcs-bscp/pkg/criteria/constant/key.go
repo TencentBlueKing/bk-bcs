@@ -24,6 +24,9 @@ const (
 	// RidKeyGeneric for generic header key
 	RidKeyGeneric = "X-Request-Id"
 
+	// LangKey is language key
+	LangKey = "X-Bkapi-Language"
+
 	// UserKey is operator name header key.
 	UserKey = "X-Bkapi-User-Name"
 
@@ -78,6 +81,9 @@ const (
 	DefaultTmplSetName = "默认套餐"
 	// DefaultTmplSetMemo is default template set memo
 	DefaultTmplSetMemo = "当前空间下的所有模版"
+
+	// DefaultLanguage is default language
+	DefaultLanguage = "zh"
 )
 
 // Note:
@@ -130,16 +136,4 @@ const (
 	MaxUploadContentLength = 100 * 1024 * 1024
 	// MaxConcurrentUpload 限制上传文件并发数
 	MaxConcurrentUpload = 10
-)
-
-// kv状态，未命名版本服务配置项相比上一个版本的变化
-const (
-	// KvStateAdd 增加
-	KvStateAdd = "ADD"
-	// KvStateDelete 删除
-	KvStateDelete = "DELETE"
-	// KvStateRevise 修改
-	KvStateRevise = "REVISE"
-	// KvStateUnchange 不变
-	KvStateUnchange = "UNCHANGE"
 )

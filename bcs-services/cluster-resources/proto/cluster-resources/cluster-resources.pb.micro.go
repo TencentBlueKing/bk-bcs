@@ -4524,6 +4524,24 @@ func NewViewConfigEndpoints() []*api.Endpoint {
 			Method:  []string{"DELETE"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "ViewConfig.ResourceNameSuggest",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/resource_name_suggest"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ViewConfig.LabelSuggest",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/label_suggest"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ViewConfig.ValuesSuggest",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/values_suggest"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -4542,6 +4560,12 @@ type ViewConfigService interface {
 	RenameViewConfig(ctx context.Context, in *RenameViewConfigReq, opts ...client.CallOption) (*CommonResp, error)
 	// 删除视图配置
 	DeleteViewConfig(ctx context.Context, in *DeleteViewConfigReq, opts ...client.CallOption) (*CommonResp, error)
+	// 资源名称联想
+	ResourceNameSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error)
+	// label 联想
+	LabelSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error)
+	// values 联想
+	ValuesSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type viewConfigService struct {
@@ -4616,6 +4640,36 @@ func (c *viewConfigService) DeleteViewConfig(ctx context.Context, in *DeleteView
 	return out, nil
 }
 
+func (c *viewConfigService) ResourceNameSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ViewConfig.ResourceNameSuggest", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *viewConfigService) LabelSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ViewConfig.LabelSuggest", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *viewConfigService) ValuesSuggest(ctx context.Context, in *ViewSuggestReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ViewConfig.ValuesSuggest", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ViewConfig service
 
 type ViewConfigHandler interface {
@@ -4631,6 +4685,12 @@ type ViewConfigHandler interface {
 	RenameViewConfig(context.Context, *RenameViewConfigReq, *CommonResp) error
 	// 删除视图配置
 	DeleteViewConfig(context.Context, *DeleteViewConfigReq, *CommonResp) error
+	// 资源名称联想
+	ResourceNameSuggest(context.Context, *ViewSuggestReq, *CommonResp) error
+	// label 联想
+	LabelSuggest(context.Context, *ViewSuggestReq, *CommonResp) error
+	// values 联想
+	ValuesSuggest(context.Context, *ViewSuggestReq, *CommonResp) error
 }
 
 func RegisterViewConfigHandler(s server.Server, hdlr ViewConfigHandler, opts ...server.HandlerOption) error {
@@ -4641,6 +4701,9 @@ func RegisterViewConfigHandler(s server.Server, hdlr ViewConfigHandler, opts ...
 		UpdateViewConfig(ctx context.Context, in *UpdateViewConfigReq, out *CommonResp) error
 		RenameViewConfig(ctx context.Context, in *RenameViewConfigReq, out *CommonResp) error
 		DeleteViewConfig(ctx context.Context, in *DeleteViewConfigReq, out *CommonResp) error
+		ResourceNameSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error
+		LabelSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error
+		ValuesSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error
 	}
 	type ViewConfig struct {
 		viewConfig
@@ -4682,6 +4745,24 @@ func RegisterViewConfigHandler(s server.Server, hdlr ViewConfigHandler, opts ...
 		Method:  []string{"DELETE"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ViewConfig.ResourceNameSuggest",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/resource_name_suggest"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ViewConfig.LabelSuggest",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/label_suggest"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ViewConfig.ValuesSuggest",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/values_suggest"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ViewConfig{h}, opts...))
 }
 
@@ -4713,512 +4794,16 @@ func (h *viewConfigHandler) DeleteViewConfig(ctx context.Context, in *DeleteView
 	return h.ViewConfigHandler.DeleteViewConfig(ctx, in, out)
 }
 
-// Api Endpoints for TemplateSet service
-
-func NewTemplateSetEndpoints() []*api.Endpoint {
-	return []*api.Endpoint{
-		{
-			Name:    "TemplateSet.GetTemplateSpace",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space/{id}"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.ListTemplateSpace",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/spaces"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.CreateTemplateSpace",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space"},
-			Method:  []string{"POST"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.UpdateTemplateSpace",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space"},
-			Method:  []string{"PUT"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.DeleteTemplateSpace",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space/{id}/{isRelateDelete}"},
-			Method:  []string{"DELETE"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.GetTemplateMetadata",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadata/{id}"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.ListTemplateMetadata",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadatas/{templateSpace}"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.CreateTemplateMetadata",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadata"},
-			Method:  []string{"POST"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.UpdateTemplateMetadata",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadata"},
-			Method:  []string{"PUT"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.DeleteTemplateMetadata",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadata/{id}/{isRelateDelete}"},
-			Method:  []string{"DELETE"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.GetTemplateVersion",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/version/{id}"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.ListTemplateVersion",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/versions/{templateSpace}/{templateName}"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.CreateTemplateVersion",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/version"},
-			Method:  []string{"POST"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.UpdateTemplateVersion",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/version"},
-			Method:  []string{"PUT"},
-			Handler: "rpc",
-		},
-		{
-			Name:    "TemplateSet.DeleteTemplateVersion",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/version/{id}"},
-			Method:  []string{"DELETE"},
-			Handler: "rpc",
-		},
-	}
+func (h *viewConfigHandler) ResourceNameSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error {
+	return h.ViewConfigHandler.ResourceNameSuggest(ctx, in, out)
 }
 
-// Client API for TemplateSet service
-
-type TemplateSetService interface {
-	// 获取模板文件文件夹详情
-	GetTemplateSpace(ctx context.Context, in *GetTemplateSpaceReq, opts ...client.CallOption) (*CommonResp, error)
-	// 获取模板文件文件夹列表
-	ListTemplateSpace(ctx context.Context, in *ListTemplateSpaceReq, opts ...client.CallOption) (*CommonListResp, error)
-	// 创建模板文件文件夹
-	CreateTemplateSpace(ctx context.Context, in *CreateTemplateSpaceReq, opts ...client.CallOption) (*CommonResp, error)
-	// 更新模板文件文件夹
-	UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, opts ...client.CallOption) (*CommonResp, error)
-	// 删除模板文件文件夹
-	DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...client.CallOption) (*CommonResp, error)
-	// 获取模板文件元数据详情
-	GetTemplateMetadata(ctx context.Context, in *GetTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error)
-	// 获取模板文件元数据列表
-	ListTemplateMetadata(ctx context.Context, in *ListTemplateMetadataReq, opts ...client.CallOption) (*CommonListResp, error)
-	// 创建模板文件元数据
-	CreateTemplateMetadata(ctx context.Context, in *CreateTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error)
-	// 更新模板文件元数据
-	UpdateTemplateMetadata(ctx context.Context, in *UpdateTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error)
-	// 删除模板文件元数据
-	DeleteTemplateMetadata(ctx context.Context, in *DeleteTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error)
-	// 获取模板文件版本详情
-	GetTemplateVersion(ctx context.Context, in *GetTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error)
-	// 获取模板文件版本列表
-	ListTemplateVersion(ctx context.Context, in *ListTemplateVersionReq, opts ...client.CallOption) (*CommonListResp, error)
-	// 创建模板文件版本
-	CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error)
-	// 更新模板文件版本
-	UpdateTemplateVersion(ctx context.Context, in *UpdateTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error)
-	// 删除模板文件版本
-	DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error)
+func (h *viewConfigHandler) LabelSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error {
+	return h.ViewConfigHandler.LabelSuggest(ctx, in, out)
 }
 
-type templateSetService struct {
-	c    client.Client
-	name string
-}
-
-func NewTemplateSetService(name string, c client.Client) TemplateSetService {
-	return &templateSetService{
-		c:    c,
-		name: name,
-	}
-}
-
-func (c *templateSetService) GetTemplateSpace(ctx context.Context, in *GetTemplateSpaceReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.GetTemplateSpace", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) ListTemplateSpace(ctx context.Context, in *ListTemplateSpaceReq, opts ...client.CallOption) (*CommonListResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.ListTemplateSpace", in)
-	out := new(CommonListResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) CreateTemplateSpace(ctx context.Context, in *CreateTemplateSpaceReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.CreateTemplateSpace", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.UpdateTemplateSpace", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.DeleteTemplateSpace", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) GetTemplateMetadata(ctx context.Context, in *GetTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.GetTemplateMetadata", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) ListTemplateMetadata(ctx context.Context, in *ListTemplateMetadataReq, opts ...client.CallOption) (*CommonListResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.ListTemplateMetadata", in)
-	out := new(CommonListResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) CreateTemplateMetadata(ctx context.Context, in *CreateTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.CreateTemplateMetadata", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) UpdateTemplateMetadata(ctx context.Context, in *UpdateTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.UpdateTemplateMetadata", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) DeleteTemplateMetadata(ctx context.Context, in *DeleteTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.DeleteTemplateMetadata", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) GetTemplateVersion(ctx context.Context, in *GetTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.GetTemplateVersion", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) ListTemplateVersion(ctx context.Context, in *ListTemplateVersionReq, opts ...client.CallOption) (*CommonListResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.ListTemplateVersion", in)
-	out := new(CommonListResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.CreateTemplateVersion", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) UpdateTemplateVersion(ctx context.Context, in *UpdateTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.UpdateTemplateVersion", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateSetService) DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error) {
-	req := c.c.NewRequest(c.name, "TemplateSet.DeleteTemplateVersion", in)
-	out := new(CommonResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// Server API for TemplateSet service
-
-type TemplateSetHandler interface {
-	// 获取模板文件文件夹详情
-	GetTemplateSpace(context.Context, *GetTemplateSpaceReq, *CommonResp) error
-	// 获取模板文件文件夹列表
-	ListTemplateSpace(context.Context, *ListTemplateSpaceReq, *CommonListResp) error
-	// 创建模板文件文件夹
-	CreateTemplateSpace(context.Context, *CreateTemplateSpaceReq, *CommonResp) error
-	// 更新模板文件文件夹
-	UpdateTemplateSpace(context.Context, *UpdateTemplateSpaceReq, *CommonResp) error
-	// 删除模板文件文件夹
-	DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq, *CommonResp) error
-	// 获取模板文件元数据详情
-	GetTemplateMetadata(context.Context, *GetTemplateMetadataReq, *CommonResp) error
-	// 获取模板文件元数据列表
-	ListTemplateMetadata(context.Context, *ListTemplateMetadataReq, *CommonListResp) error
-	// 创建模板文件元数据
-	CreateTemplateMetadata(context.Context, *CreateTemplateMetadataReq, *CommonResp) error
-	// 更新模板文件元数据
-	UpdateTemplateMetadata(context.Context, *UpdateTemplateMetadataReq, *CommonResp) error
-	// 删除模板文件元数据
-	DeleteTemplateMetadata(context.Context, *DeleteTemplateMetadataReq, *CommonResp) error
-	// 获取模板文件版本详情
-	GetTemplateVersion(context.Context, *GetTemplateVersionReq, *CommonResp) error
-	// 获取模板文件版本列表
-	ListTemplateVersion(context.Context, *ListTemplateVersionReq, *CommonListResp) error
-	// 创建模板文件版本
-	CreateTemplateVersion(context.Context, *CreateTemplateVersionReq, *CommonResp) error
-	// 更新模板文件版本
-	UpdateTemplateVersion(context.Context, *UpdateTemplateVersionReq, *CommonResp) error
-	// 删除模板文件版本
-	DeleteTemplateVersion(context.Context, *DeleteTemplateVersionReq, *CommonResp) error
-}
-
-func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts ...server.HandlerOption) error {
-	type templateSet interface {
-		GetTemplateSpace(ctx context.Context, in *GetTemplateSpaceReq, out *CommonResp) error
-		ListTemplateSpace(ctx context.Context, in *ListTemplateSpaceReq, out *CommonListResp) error
-		CreateTemplateSpace(ctx context.Context, in *CreateTemplateSpaceReq, out *CommonResp) error
-		UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, out *CommonResp) error
-		DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, out *CommonResp) error
-		GetTemplateMetadata(ctx context.Context, in *GetTemplateMetadataReq, out *CommonResp) error
-		ListTemplateMetadata(ctx context.Context, in *ListTemplateMetadataReq, out *CommonListResp) error
-		CreateTemplateMetadata(ctx context.Context, in *CreateTemplateMetadataReq, out *CommonResp) error
-		UpdateTemplateMetadata(ctx context.Context, in *UpdateTemplateMetadataReq, out *CommonResp) error
-		DeleteTemplateMetadata(ctx context.Context, in *DeleteTemplateMetadataReq, out *CommonResp) error
-		GetTemplateVersion(ctx context.Context, in *GetTemplateVersionReq, out *CommonResp) error
-		ListTemplateVersion(ctx context.Context, in *ListTemplateVersionReq, out *CommonListResp) error
-		CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, out *CommonResp) error
-		UpdateTemplateVersion(ctx context.Context, in *UpdateTemplateVersionReq, out *CommonResp) error
-		DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, out *CommonResp) error
-	}
-	type TemplateSet struct {
-		templateSet
-	}
-	h := &templateSetHandler{hdlr}
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.GetTemplateSpace",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space/{id}"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.ListTemplateSpace",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/spaces"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.CreateTemplateSpace",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space"},
-		Method:  []string{"POST"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.UpdateTemplateSpace",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space"},
-		Method:  []string{"PUT"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.DeleteTemplateSpace",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space/{id}/{isRelateDelete}"},
-		Method:  []string{"DELETE"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.GetTemplateMetadata",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadata/{id}"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.ListTemplateMetadata",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadatas/{templateSpace}"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.CreateTemplateMetadata",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadata"},
-		Method:  []string{"POST"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.UpdateTemplateMetadata",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadata"},
-		Method:  []string{"PUT"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.DeleteTemplateMetadata",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadata/{id}/{isRelateDelete}"},
-		Method:  []string{"DELETE"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.GetTemplateVersion",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/version/{id}"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.ListTemplateVersion",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/versions/{templateSpace}/{templateName}"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.CreateTemplateVersion",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/version"},
-		Method:  []string{"POST"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.UpdateTemplateVersion",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/version"},
-		Method:  []string{"PUT"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "TemplateSet.DeleteTemplateVersion",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/version/{id}"},
-		Method:  []string{"DELETE"},
-		Handler: "rpc",
-	}))
-	return s.Handle(s.NewHandler(&TemplateSet{h}, opts...))
-}
-
-type templateSetHandler struct {
-	TemplateSetHandler
-}
-
-func (h *templateSetHandler) GetTemplateSpace(ctx context.Context, in *GetTemplateSpaceReq, out *CommonResp) error {
-	return h.TemplateSetHandler.GetTemplateSpace(ctx, in, out)
-}
-
-func (h *templateSetHandler) ListTemplateSpace(ctx context.Context, in *ListTemplateSpaceReq, out *CommonListResp) error {
-	return h.TemplateSetHandler.ListTemplateSpace(ctx, in, out)
-}
-
-func (h *templateSetHandler) CreateTemplateSpace(ctx context.Context, in *CreateTemplateSpaceReq, out *CommonResp) error {
-	return h.TemplateSetHandler.CreateTemplateSpace(ctx, in, out)
-}
-
-func (h *templateSetHandler) UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, out *CommonResp) error {
-	return h.TemplateSetHandler.UpdateTemplateSpace(ctx, in, out)
-}
-
-func (h *templateSetHandler) DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, out *CommonResp) error {
-	return h.TemplateSetHandler.DeleteTemplateSpace(ctx, in, out)
-}
-
-func (h *templateSetHandler) GetTemplateMetadata(ctx context.Context, in *GetTemplateMetadataReq, out *CommonResp) error {
-	return h.TemplateSetHandler.GetTemplateMetadata(ctx, in, out)
-}
-
-func (h *templateSetHandler) ListTemplateMetadata(ctx context.Context, in *ListTemplateMetadataReq, out *CommonListResp) error {
-	return h.TemplateSetHandler.ListTemplateMetadata(ctx, in, out)
-}
-
-func (h *templateSetHandler) CreateTemplateMetadata(ctx context.Context, in *CreateTemplateMetadataReq, out *CommonResp) error {
-	return h.TemplateSetHandler.CreateTemplateMetadata(ctx, in, out)
-}
-
-func (h *templateSetHandler) UpdateTemplateMetadata(ctx context.Context, in *UpdateTemplateMetadataReq, out *CommonResp) error {
-	return h.TemplateSetHandler.UpdateTemplateMetadata(ctx, in, out)
-}
-
-func (h *templateSetHandler) DeleteTemplateMetadata(ctx context.Context, in *DeleteTemplateMetadataReq, out *CommonResp) error {
-	return h.TemplateSetHandler.DeleteTemplateMetadata(ctx, in, out)
-}
-
-func (h *templateSetHandler) GetTemplateVersion(ctx context.Context, in *GetTemplateVersionReq, out *CommonResp) error {
-	return h.TemplateSetHandler.GetTemplateVersion(ctx, in, out)
-}
-
-func (h *templateSetHandler) ListTemplateVersion(ctx context.Context, in *ListTemplateVersionReq, out *CommonListResp) error {
-	return h.TemplateSetHandler.ListTemplateVersion(ctx, in, out)
-}
-
-func (h *templateSetHandler) CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, out *CommonResp) error {
-	return h.TemplateSetHandler.CreateTemplateVersion(ctx, in, out)
-}
-
-func (h *templateSetHandler) UpdateTemplateVersion(ctx context.Context, in *UpdateTemplateVersionReq, out *CommonResp) error {
-	return h.TemplateSetHandler.UpdateTemplateVersion(ctx, in, out)
-}
-
-func (h *templateSetHandler) DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, out *CommonResp) error {
-	return h.TemplateSetHandler.DeleteTemplateVersion(ctx, in, out)
+func (h *viewConfigHandler) ValuesSuggest(ctx context.Context, in *ViewSuggestReq, out *CommonResp) error {
+	return h.ViewConfigHandler.ValuesSuggest(ctx, in, out)
 }
 
 // Api Endpoints for MultiCluster service

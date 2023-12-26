@@ -9,7 +9,7 @@
           v-for="kvType in CONFIG_KV_TYPE"
           :key="kvType.id"
           :label="kvType.id"
-          :disabled="appData.spec.data_type !== 'any' || editable || view"
+          :disabled="radioDisabled(kvType.id)"
           >{{ kvType.name }}</bk-radio
         >
       </bk-radio-group>
@@ -23,6 +23,7 @@
       />
       <KvConfigContentEditor
         v-else
+        ref="KvCodeEditorRef"
         :languages="localVal.kv_type"
         :content="localVal.value"
         :editable="!view"
@@ -39,7 +40,6 @@ import KvConfigContentEditor from '../../components/kv-config-content-editor.vue
 import { IConfigKvEditParams } from '../../../../../../../../types/config';
 import useServiceStore from '../../../../../../../store/service';
 import { storeToRefs } from 'pinia';
-import { validateJSON, validateXML, validateYAML } from '../../../../../../../utils/kv-validate';
 
 const serviceStore = useServiceStore();
 const { appData } = storeToRefs(serviceStore);
@@ -59,6 +59,7 @@ const props = withDefaults(
   },
 );
 
+const KvCodeEditorRef = ref();
 const formRef = ref();
 const localVal = ref({
   ...props.config,
@@ -71,7 +72,24 @@ const typeDescription = computed(() => {
   return '';
 });
 
+const radioDisabled = computed(() => (kvTypeId: string) => {
+  if (appData.value.spec.data_type !== 'any' || props.editable || props.view) {
+    return kvTypeId !== localVal.value.kv_type;
+  }
+  return false;
+});
+
 const rules = {
+  key: [
+    {
+      validator: (value: string) => value.length <= 128,
+      message: '最大长度128个字符',
+    },
+    {
+      validator: (value: string) => /^[\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*$/.test(value),
+      message: '请使用中文、英文、数字、下划线、中划线或点',
+    },
+  ],
   value: [
     {
       validator: (value: string) => {
@@ -96,11 +114,9 @@ const validate = async () => {
   await formRef.value.validate();
   switch (localVal.value.kv_type) {
     case 'json':
-      return validateJSON(localVal.value.value);
     case 'xml':
-      return validateXML(localVal.value.value);
     case 'yaml':
-      return validateYAML(localVal.value.value);
+      return KvCodeEditorRef.value.validate();
   }
   return true;
 };

@@ -129,7 +129,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import { Plus, Search } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../store/global';

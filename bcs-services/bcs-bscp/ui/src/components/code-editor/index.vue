@@ -8,7 +8,7 @@
   <section v-show="!isShowPlaceholder || !placeholder" class="code-editor-wrapper" ref="codeEditorRef"></section>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue';
+import { ref, watch, onMounted, nextTick, computed } from 'vue';
 import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker.js?worker';
@@ -19,6 +19,7 @@ import { IVariableEditParams } from '../../../types/variable';
 import useEditorVariableReplace from '../../utils/hooks/use-editor-variable-replace';
 import { useRoute } from 'vue-router';
 import { getUnReleasedAppVariables, getVariableList } from '../../api/variable';
+import { validateXML, validateYAML, validateJSON } from '../../utils/kv-validate';
 
 interface errorLineItem {
   lineNumber: number;
@@ -61,7 +62,7 @@ const props = withDefaults(
   },
 );
 
-const emit = defineEmits(['update:modelValue', 'change', 'enter']);
+const emit = defineEmits(['update:modelValue', 'change', 'enter', 'validate']);
 
 const codeEditorRef = ref();
 let editor: monaco.editor.IStandaloneCodeEditor;
@@ -87,7 +88,12 @@ watch(
 watch(
   () => props.language,
   (val) => {
+    // 设置编辑器语言
     monaco.editor.setModelLanguage(editor.getModel() as monaco.editor.ITextModel, val);
+    // 清空错误行
+    monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', []);
+    // 切换缩进空格数
+    editor.getModel()!.updateOptions({ tabSize: tabSize.value });
   },
 );
 
@@ -114,6 +120,11 @@ watch(
   },
 );
 
+const tabSize = computed(() => {
+  if (props.language === 'xml' || props.language === 'yaml') return 2;
+  return 4;
+});
+
 onMounted(() => {
   handleVariableList();
   aotoCompletion();
@@ -126,6 +137,7 @@ onMounted(() => {
       language: props.language || 'custom-language',
       readOnly: !props.editable,
       scrollBeyondLastLine: false,
+      tabSize: tabSize.value,
     });
   }
   if (props.lfEol) {
@@ -138,6 +150,7 @@ onMounted(() => {
 
   editor.onDidChangeModelContent(() => {
     localVal.value = editor.getValue();
+    validate(localVal.value);
     emit('update:modelValue', localVal.value);
     emit('change', localVal.value);
   });
@@ -152,9 +165,11 @@ onMounted(() => {
   // 自动换行
   editor.updateOptions({ wordWrap: 'on' });
   editor.onDidBlurEditorWidget(() => {
+    // 当编辑器失去焦点时触发的自定义事件处理逻辑
     if (!props.modelValue) {
       isShowPlaceholder.value = true;
     }
+    emit('validate');
   });
 });
 
@@ -265,6 +280,25 @@ const handlePlaceholderClick = () => {
   nextTick(() => editor.focus());
 };
 
+// 校验xml、yaml、json数据类型
+const validate = (val: string) => {
+  let markers: any[] = [];
+  if (props.language === 'xml') {
+    markers = validateXML(val);
+  };
+  if (props.language === 'yaml') {
+    markers = validateYAML(val);
+  };
+  if (props.language === 'json') {
+    return validateJSON(val);
+  }
+  // 添加错误行
+  monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
+  // 返回当前内容是否正确
+  return !markers.length;
+};
+
+
 // @bug vue3的Teleport组件销毁时，子组件的onBeforeUnmount不会被执行，会出现内存泄漏，目前尚未被修复 https://github.com/vuejs/core/issues/6347
 // onBeforeUnmount(() => {
 //   if (editor) {
@@ -289,6 +323,7 @@ const destroy = () => {
 defineExpose({
   destroy,
   openSearch,
+  validate,
 });
 </script>
 <style lang="scss" scoped>
@@ -296,6 +331,7 @@ defineExpose({
   height: 100%;
   :deep(.monaco-editor) {
     width: 100%;
+    padding-top: 10px;
     .template-variable-item {
       color: #1768ef;
       border: 1px solid #1768ef;
@@ -306,6 +342,7 @@ defineExpose({
 .placeholderBox {
   height: 100%;
   background-color: #1e1e1e;
+  padding-top: 10px;
   .placeholderLine {
     display: flex;
     height: 19px;

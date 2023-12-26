@@ -5,7 +5,7 @@ import "pkg/protocol/core/base/base.proto";
 
 package pbrelease;
 
-option go_package = "bscp.io/pkg/protocol/core/release;pbrelease";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release;pbrelease";
 
 // Release source resource reference: pkg/dal/table/release.go
 message Release {

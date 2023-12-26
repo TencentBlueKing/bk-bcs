@@ -14,11 +14,27 @@
 package i18n
 
 import (
-	ginI18n "github.com/gin-contrib/i18n"
 	"github.com/gin-gonic/gin"
-	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/pkg/errors"
 	"golang.org/x/text/language"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n/localizer"
+)
+
+const (
+	defaultLang = "zh-hans"
+)
+
+var (
+	availableLanguage = map[string]language.Tag{
+		"en":         language.English,
+		"zh":         language.SimplifiedChinese,
+		"zh-hans-cn": language.SimplifiedChinese,
+		"zh-hans":    language.SimplifiedChinese,
+		"zh-cn":      language.SimplifiedChinese,
+	}
+
+	defaultAcceptLanguage = makeAcceptLanguage()
 )
 
 // makeAcceptLanguage : 合法的语言列表
@@ -92,40 +108,8 @@ func getMatchLangByHeader(lng string) (string, error) {
 	return language.String(), nil
 }
 
-// GetMessage accepts values in following formats:
-//   - GetMessage("MessageID")
-//   - GetMessage("MessageID", error)
-//   - GetMessage("MessageID", any)
-func GetMessage(ctx *gin.Context, messageID string, values ...interface{}) string {
-	// 如果messageID 没有国际化, 默认原样返回
-	if _, err := ginI18n.GetMessage(ctx, messageID); err != nil {
-		return messageID
-	}
-
-	if values == nil {
-		return ginI18n.MustGetMessage(ctx, messageID)
-	}
-
-	switch param := values[0].(type) {
-	case error:
-		// - Must("MessageID", error)
-		return ginI18n.MustGetMessage(ctx, &i18n.LocalizeConfig{
-			MessageID:    messageID,
-			TemplateData: map[string]string{"err": param.Error()},
-		})
-	default:
-		return ginI18n.MustGetMessage(ctx, &i18n.LocalizeConfig{
-			MessageID:    messageID,
-			TemplateData: param,
-		})
-	}
-
-}
-
-// Localize 国际化
-func Localize() gin.HandlerFunc {
-	bundle := ginI18n.WithBundle(defaultBundleConfig)
-	handle := ginI18n.WithGetLngHandle(getLangHandler)
-
-	return ginI18n.Localize(bundle, handle)
+// T 国际化消息
+func T(ctx *gin.Context, format string, args ...any) string {
+	lang := getLangHandler(ctx, defaultLang)
+	return localizer.Get(lang).Translate(format, args...)
 }

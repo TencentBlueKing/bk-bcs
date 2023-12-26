@@ -342,6 +342,8 @@ func getClusters() {
 				return
 			}
 
+			config.TLSClientConfig.Insecure = true
+
 			filenameWithExt := filepath.Base(filePath) // 获取文件名（包括后缀）
 			ext := filepath.Ext(filenameWithExt)       // 获取文件后缀
 

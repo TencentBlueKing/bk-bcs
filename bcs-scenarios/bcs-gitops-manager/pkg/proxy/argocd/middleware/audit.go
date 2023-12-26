@@ -26,15 +26,16 @@ import (
 )
 
 var (
-	ApplicationCreate         = "application_create"
-	ApplicationUpdate         = "application_update"
-	ApplicationSync           = "application_sync"
-	ApplicationRollback       = "application_rollback"
-	ApplicationDelete         = "application_delete"
-	ApplicationPatchResource  = "application_patch_resource"
-	ApplicationDeleteResource = "application_resource_delete"
-	ApplicationClean          = "application_clean"
-	ApplicationGRPCOperate    = "application_grpc_operate"
+	ApplicationCreate          = "application_create"
+	ApplicationUpdate          = "application_update"
+	ApplicationSync            = "application_sync"
+	ApplicationRollback        = "application_rollback"
+	ApplicationDelete          = "application_delete"
+	ApplicationPatchResource   = "application_patch_resource"
+	ApplicationDeleteResource  = "application_resource_delete"
+	ApplicationClean           = "application_clean"
+	ApplicationDeleteResources = "application_multiple_resources_delete"
+	ApplicationGRPCOperate     = "application_grpc_operate"
 
 	ApplicationSetCreateOrUpdate = "applicationset_create_or_update"
 	ApplicationSetDelete         = "applicationset_delete"
@@ -170,7 +171,7 @@ func handleAudit(req *http.Request, resp *HttpResponse, start, end time.Time) {
 		auditResource = audit.Resource{
 			ProjectCode:  project,
 			ResourceType: audit.ResourceTypeGitOps,
-			ResourceID:   "Repository",
+			ResourceID:   "Secret",
 			ResourceName: project,
 			ResourceData: make(map[string]any),
 		}

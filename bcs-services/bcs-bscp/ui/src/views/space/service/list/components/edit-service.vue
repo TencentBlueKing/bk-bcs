@@ -8,31 +8,31 @@
     </template>
     <div class="service-edit-wrapper">
       <bk-form v-if="isViewMode" label-width="100">
-        <bk-form-item :label="t('服务名称')">{{ serviceData.name }}</bk-form-item>
-        <bk-form-item :label="t('服务别名')">{{ serviceData.alias }}</bk-form-item>
+        <bk-form-item :label="t('服务名称')">{{ serviceData!.spec.name }}</bk-form-item>
+        <bk-form-item :label="t('服务别名')">{{ serviceData!.spec.alias }}</bk-form-item>
         <bk-form-item :label="t('服务描述')">
-          {{ serviceData.memo || '--' }}
+          {{ serviceData!.spec.memo || '--' }}
         </bk-form-item>
         <bk-form-item :label="t('数据格式')">
-          {{ serviceData.config_type === 'file' ? '文件型' : '键值型' }}
+          {{ serviceData!.spec.config_type === 'file' ? '文件型' : '键值型' }}
         </bk-form-item>
-        <bk-form-item v-if="serviceData.config_type !== 'file'" :label="t('数据类型')">
-          {{ serviceData.data_type === 'any' ? '任意类型': serviceData.data_type}}
+        <bk-form-item v-if="serviceData!.spec.config_type !== 'file'" :label="t('数据类型')">
+          {{ serviceData!.spec.data_type === 'any' ? '任意类型' : serviceData!.spec.data_type }}
         </bk-form-item>
         <bk-form-item :label="t('创建者')">
-          {{ props.service.revision.creator }}
+          {{ serviceData?.revision.creator }}
         </bk-form-item>
         <bk-form-item :label="t('创建时间')">
-          {{ datetimeFormat(props.service.revision.create_at) }}
+          {{ datetimeFormat(serviceData!.revision.create_at) }}
         </bk-form-item>
         <bk-form-item :label="t('更新者')">
-          {{ props.service.revision.reviser }}
+          {{ serviceData!.revision.reviser }}
         </bk-form-item>
         <bk-form-item :label="t('更新时间')">
-          {{ datetimeFormat(props.service.revision.update_at) }}
+          {{ datetimeFormat(serviceData!.revision.update_at) }}
         </bk-form-item>
       </bk-form>
-      <SearviceForm v-else ref="formCompRef" :form-data="serviceData" @change="handleChange" :editable="true" />
+      <SearviceForm v-else ref="formCompRef" :form-data="serviceEditForm" @change="handleChange" :editable="true" />
     </div>
     <div v-if="!isViewMode" class="service-edit-footer">
       <bk-button
@@ -61,7 +61,7 @@ import { IServiceEditForm } from '../../../../../../types/service';
 import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
 import SearviceForm from './service-form.vue';
 import { IConfigKvType } from '../../../../../../types/config';
-import { InfoBox } from 'bkui-vue';
+import InfoBox from 'bkui-vue/lib/info-box';
 
 const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 
@@ -76,7 +76,7 @@ const emits = defineEmits(['update:show', 'reload']);
 
 const isFormChange = ref(false);
 const isViewMode = ref(true);
-const serviceData = ref<IServiceEditForm>({
+const serviceEditForm = ref<IServiceEditForm>({
   name: '',
   alias: '',
   config_type: 'file',
@@ -86,6 +86,7 @@ const serviceData = ref<IServiceEditForm>({
   mode: 'normal',
   memo: '',
 });
+const serviceData = ref<IAppItem>();
 const pending = ref(false);
 const formCompRef = ref();
 
@@ -98,7 +99,7 @@ watch(
       const { spec } = props.service;
       const { name, memo, mode, config_type, reload, data_type, alias } = spec;
       const { reload_type, file_reload_spec } = reload;
-      serviceData.value = {
+      serviceEditForm.value = {
         name,
         memo,
         mode,
@@ -108,6 +109,7 @@ watch(
         reload_file_path: file_reload_spec.reload_file_path,
         alias,
       };
+      serviceData.value = props.service;
     }
   },
 );
@@ -130,7 +132,7 @@ const openPermApplyDialog = () => {
 
 const handleChange = (val: IServiceEditForm) => {
   isFormChange.value = true;
-  serviceData.value = val;
+  serviceEditForm.value = val;
 };
 
 const handleEditConfirm = async () => {
@@ -141,14 +143,14 @@ const handleEditConfirm = async () => {
 
   await formCompRef.value.validate();
   const { id, biz_id } = props.service;
-  if (serviceData.value.data_type !== 'any') {
+  if (serviceEditForm.value.data_type !== 'any') {
     const configList = await getKvList(String(biz_id), id as number, { all: true, start: 0 });
-    const res = configList.details.some((config: IConfigKvType) => config.spec.kv_type !== serviceData.value.data_type);
+    const res = configList.details.some((config: IConfigKvType) => config.spec.kv_type !== serviceEditForm.value.data_type);
     if (res) {
       InfoBox({
         infoType: 'danger',
-        title: `调整服务数据类型${serviceData.value.data_type}失败`,
-        subTitle: `该服务下存在非${serviceData.value.data_type}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为${serviceData.value.data_type}`,
+        title: `调整服务数据类型${serviceEditForm.value.data_type}失败`,
+        subTitle: `该服务下存在非${serviceEditForm.value.data_type}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为${serviceEditForm.value.data_type}`,
         dialogType: 'confirm',
         confirmText: '我知道了',
       });
@@ -158,10 +160,11 @@ const handleEditConfirm = async () => {
   const data = {
     id,
     biz_id,
-    ...serviceData.value,
+    ...serviceEditForm.value,
   };
 
-  await updateApp({ id, biz_id, data });
+  const res =  await updateApp({ id, biz_id, data });
+  serviceData.value = res;
   emits('reload');
   isViewMode.value = true;
 };

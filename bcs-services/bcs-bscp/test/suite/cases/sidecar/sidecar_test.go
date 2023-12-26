@@ -21,9 +21,9 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"bscp.io/pkg/kit"
-	"bscp.io/test/suite"
-	"bscp.io/test/util"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/suite"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/util"
 )
 
 func TestSidecar(t *testing.T) {

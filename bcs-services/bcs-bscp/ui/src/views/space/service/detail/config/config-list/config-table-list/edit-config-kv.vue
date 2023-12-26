@@ -31,7 +31,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import ConfigForm from './config-form-kv.vue';
 import { updateKv } from '../../../../../../../api/config';
 import { IConfigKvItem } from '../../../../../../../../types/config';
@@ -87,6 +87,7 @@ const handleChange = (data: IConfigKvItem) => {
 const handleSubmit = async () => {
   const isValid = await formRef.value.validate();
   if (!isValid) return;
+  if (configForm.value!.kv_type === 'number') configForm.value!.value = configForm.value!.value.replace(/^0+(?=\d|$)/, '');
   try {
     pending.value = true;
     await updateKv(props.bkBizId, props.appId, configForm.value!.key, configForm.value!.value);

@@ -225,7 +225,7 @@ func (c *ConsoleManager) handleIdleTimeout(ctx *gin.Context) error {
 	idleTime := nowTime.Sub(c.LastInputTime)
 	if idleTime > c.podCtx.GetConnIdleTimeout() {
 		// BCS Console 已经分钟无操作
-		msg := i18n.GetMessage(ctx, "BCS Console 已经{}分钟无操作", map[string]int64{"time": int64(idleTime.Minutes())})
+		msg := i18n.T(ctx, "BCS Console 已经%d分钟无操作", int64(idleTime.Minutes()))
 		logger.Infof("conn idle timeout, close session %s, idle time, %s", c.podCtx.PodName, idleTime)
 		return errors.New(msg)
 	}
@@ -233,7 +233,7 @@ func (c *ConsoleManager) handleIdleTimeout(ctx *gin.Context) error {
 	loginTime := nowTime.Sub(c.ConnTime).Seconds()
 	if loginTime > LoginTimeout {
 		// BCS Console 使用已经超过{}小时，请重新登录
-		msg := i18n.GetMessage(ctx, "BCS Console 使用已经超过{}小时，请重新登录", map[string]int{"time": LoginTimeout / 60})
+		msg := i18n.T(ctx, "BCS Console 使用已经超过%d小时，请重新登录", LoginTimeout/60)
 		logger.Infof("tick timeout, close session %s, login time, %.2f", c.podCtx.PodName, loginTime)
 		return errors.New(msg)
 	}

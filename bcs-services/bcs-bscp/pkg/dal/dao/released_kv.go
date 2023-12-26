@@ -13,13 +13,14 @@
 package dao
 
 import (
+	"errors"
 	"fmt"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/types"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // ReleasedKv supplies all the released kv related operations.
@@ -36,6 +37,8 @@ type ReleasedKv interface {
 	GetReleasedLately(kit *kit.Kit, bizID, appID uint32) ([]*table.ReleasedKv, error)
 	// GetReleasedLatelyByKey get released kv lately by key
 	GetReleasedLatelyByKey(kit *kit.Kit, bizID, appID uint32, key string) (*table.ReleasedKv, error)
+	// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+	BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
 }
 
 var _ ReleasedKv = new(releasedKvDao)
@@ -98,9 +101,31 @@ func (dao *releasedKvDao) Get(kit *kit.Kit, bizID, appID, releasedID uint32, key
 func (dao *releasedKvDao) List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table.ReleasedKv, int64, error) {
 
 	m := dao.genQ.ReleasedKv
-	q := dao.genQ.ReleasedKv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID),
-		m.ReleaseID.Eq(opt.ReleaseID)).Or(m.Key.Eq(opt.Key)).
-		Order(m.Key)
+	q := dao.genQ.ReleasedKv.WithContext(kit.Ctx)
+
+	orderCol, ok := m.GetFieldByName(opt.Page.Sort)
+	if !ok {
+		return nil, 0, errors.New("user doesn't contains orderColStr")
+	}
+	if opt.Page.Order == types.Descending {
+		q = q.Order(orderCol.Desc())
+	} else {
+		q = q.Order(orderCol)
+	}
+
+	if opt.SearchKey != "" {
+		searchKey := "%" + opt.SearchKey + "%"
+		q = q.Where(q.Where(q.Or(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))))
+	}
+
+	q = q.Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID), m.ReleaseID.Eq(opt.ReleaseID))
+
+	if len(opt.KvType) > 0 {
+		q = q.Where(m.KvType.In(opt.KvType...))
+	}
+	if len(opt.Key) > 0 {
+		q = q.Where(m.Key.In(opt.Key...))
+	}
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
 		result, err := q.Find()
@@ -109,7 +134,6 @@ func (dao *releasedKvDao) List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table
 		}
 
 		return result, int64(len(result)), err
-
 	}
 
 	result, count, err := q.FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
@@ -148,4 +172,24 @@ func (dao *releasedKvDao) GetReleasedLatelyByKey(kit *kit.Kit, bizID, appID uint
 	error) {
 	m := dao.genQ.ReleasedKv
 	return m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Key.Eq(key)).Take()
+}
+
+// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+func (dao *releasedKvDao) BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	bizID, appID, releaseID uint32) error {
+
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "biz_id can not be 0")
+	}
+	if appID == 0 {
+		return errf.New(errf.InvalidParameter, "app_id can not be 0")
+	}
+	if releaseID == 0 {
+		return errf.New(errf.InvalidParameter, "release_id can not be 0")
+	}
+
+	m := tx.ReleasedKv
+
+	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID)).Delete()
+	return err
 }

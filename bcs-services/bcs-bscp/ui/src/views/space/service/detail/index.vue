@@ -143,8 +143,9 @@ const handleToggleView = () => {
   position: relative;
   width: 280px;
   height: 100%;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
   z-index: 10;
+  border-right: 1px solid #dcdee5;
+  box-shadow: 0 2px 2px 0 #00000026;
   // transition: width 0.1s ease-in-out;
 }
 .config-setting-area {
@@ -153,7 +154,7 @@ const handleToggleView = () => {
   .service-detail-header {
     &.version-detail-header {
       background: #fafbfd;
-      box-shadow: none;
+      border: none;
     }
   }
   .setting-content-container {

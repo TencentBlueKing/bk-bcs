@@ -344,6 +344,7 @@ func (ins InstanceInfo) GetNodeFailedReason() string {
 }
 
 // CheckCvmInstanceState check cvm nodes state
+// nolint
 func CheckCvmInstanceState(ctx context.Context, ids []string,
 	opt *cloudprovider.ListNodesOption) (*InstanceList, error) {
 	taskId := cloudprovider.GetTaskIDFromContext(ctx)

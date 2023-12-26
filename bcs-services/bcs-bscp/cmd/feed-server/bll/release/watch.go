@@ -18,11 +18,11 @@ import (
 
 	"go.uber.org/atomic"
 
-	"bscp.io/cmd/feed-server/bll/eventc"
-	"bscp.io/cmd/feed-server/bll/lcache"
-	"bscp.io/pkg/logs"
-	pbfs "bscp.io/pkg/protocol/feed-server"
-	sfs "bscp.io/pkg/sf-share"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/eventc"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/lcache"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
+	sfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
 )
 
 // Watch handle watch messages delivered from sidecar.

@@ -16,7 +16,7 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // Template 模版

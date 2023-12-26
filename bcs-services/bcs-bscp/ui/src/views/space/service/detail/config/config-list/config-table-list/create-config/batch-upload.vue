@@ -81,7 +81,7 @@ import { batchAddConfigList, importNonTemplateConfigFile } from '../../../../../
 import ConfigTable from '../../../../../../templates/list/package-detail/operations/add-configs/import-configs/config-table.vue';
 import useServiceStore from '../../../../../../../../store/service';
 import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import { Upload } from 'bkui-vue/lib/icon';
 const props = defineProps<{
   show: boolean;

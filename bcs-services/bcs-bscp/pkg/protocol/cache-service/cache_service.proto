@@ -8,7 +8,7 @@ import "google/api/annotations.proto";
 
 package pbcs;
 
-option go_package = "bscp.io/pkg/protocol/cache-service;pbcs";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service;pbcs";
 
 service Cache {
   rpc GetAppID(GetAppIDReq) returns (GetAppIDResp) {
@@ -23,6 +23,8 @@ service Cache {
       body: "*"
     };
   }
+
+  rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
 
   rpc GetReleasedCI(GetReleasedCIReq) returns (JsonRawResp) {
     // response data is a json array raw of RCI(released config item)
@@ -101,6 +103,7 @@ message JsonRawResp {
 message GetAppIDReq {
   uint32 biz_id = 1;
   string app_name = 2;
+  bool refresh = 3;
 }
 
 message GetAppIDResp {
@@ -110,6 +113,15 @@ message GetAppIDResp {
 message GetAppMetaReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
+}
+
+message ListAppsReq {
+  uint32 biz_id = 1;  // 多个以逗号分割
+}
+
+message ListAppsResp {
+  uint32 count = 1;
+  repeated pbapp.App details = 2;
 }
 
 message GetReleasedCIReq {

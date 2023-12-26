@@ -7,18 +7,20 @@ import "pkg/protocol/core/commit/commit.proto";
 import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/hook/hook.proto";
 import "pkg/protocol/core/kv/kvs.proto";
+import "pkg/protocol/core/app/app.proto";
 
-option go_package = "bscp.io/pkg/protocol/feed-server;pbfs";
+option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server;pbfs";
 
 service Upstream {
   // APIs for sidecar.
   rpc Handshake(HandshakeMessage) returns (HandshakeResp) {}
-  rpc Watch(SideWatchMeta) returns (stream FeedWatchMessage) {}
   rpc Messaging(MessagingMeta) returns (MessagingResp) {}
+  rpc Watch(SideWatchMeta) returns (stream FeedWatchMessage) {}
   rpc PullAppFileMeta(PullAppFileMetaReq) returns (PullAppFileMetaResp) {}
   rpc GetDownloadURL(GetDownloadURLReq) returns (GetDownloadURLResp) {}
   rpc PullKvMeta(PullKvMetaReq) returns (PullKvMetaResp) {}
   rpc GetKvValue(GetKvValueReq) returns (GetKvValueResp) {}
+  rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
 }
 
 // HandshakeMessage defines the handshake message from sidecar to feed server.
@@ -146,7 +148,6 @@ message PullKvMetaReq {
   uint32 biz_id = 2;
   AppMeta app_meta = 3;
   string token = 4;
-  string key = 5;
 }
 
 message PullKvMetaResp {
@@ -162,14 +163,31 @@ message KvMeta {
 message GetKvValueReq {
   // version defines message's protocol version from sidecar
   pbbase.Versioning api_version = 1;
-  uint32 biz_id = 3;
-  uint32 app_id = 4;
-  uint32 release_id = 5;
-  string key = 6;
-  string token = 7;
+  uint32 biz_id = 2;
+  AppMeta app_meta = 3;
+  string token = 4;
+  string key = 5;
 }
 
 message GetKvValueResp {
   string kv_type = 1;
   string value = 2;
+}
+
+message ListAppsReq {
+  uint32 biz_id = 1;
+  string token = 2;
+}
+
+// App 对外简单版本
+message App {
+  uint32 id = 1;
+  string name = 2;
+  string config_type = 3;
+  string reviser = 4;
+  string update_at = 5;
+}
+
+message ListAppsResp {
+  repeated App apps = 1;
 }

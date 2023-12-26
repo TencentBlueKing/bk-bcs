@@ -18,9 +18,9 @@ import (
 	"strconv"
 	"time"
 
-	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/criteria/validator"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // ConfigItemColumns defines config item's columns

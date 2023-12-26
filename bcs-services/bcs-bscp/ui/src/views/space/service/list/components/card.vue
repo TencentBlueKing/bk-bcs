@@ -2,7 +2,7 @@
   <section :class="['service-card', { 'no-view-perm': !props.service.permissions.view }]" @click="handleCardClick">
     <div class="card-content-wrapper">
       <div class="card-head">
-        <div class="service-type">{{ props.service.spec.config_type === 'file' ? '文件型' : '键值型' }}</div>
+        <bk-tag class="type-tag">{{ isFileType ? '文件型' : '键值型' }}</bk-tag>
         <div class="service-name">
           <bk-overflow-title type="tips">
             {{ props.service.spec?.name }}
@@ -10,13 +10,18 @@
         </div>
       </div>
       <span class="del-btn"><Del @click="handleDeleteItem" /></span>
+      <div class="service-alias">
+        <bk-overflow-title type="tips">
+          {{ props.service.spec?.alias }}
+        </bk-overflow-title>
+      </div>
       <div class="service-config">
         <div class="config-info">
           <span class="bk-bscp-icon icon-configuration-line"></span>
-          {{ props.service.config?.count }}个配置文件
+          {{ props.service.config?.count }}个配置{{ props.service.spec.config_type === 'file' ? '文件' : '项' }}
         </div>
         <div class="time-info">
-          <span class="bk-bscp-icon icon-time-2"  v-bk-tooltips="{content: '最新上线', placement: 'top'}"></span>
+          <span class="bk-bscp-icon icon-time-2" v-bk-tooltips="{ content: '最新上线', placement: 'top' }"></span>
           <template v-if="props.service.config && props.service.config.update_at">
             {{ datetimeFormat(props.service.config.update_at) }}
           </template>
@@ -37,43 +42,9 @@
       </div>
     </div>
   </section>
-  <bk-dialog
-    ext-cls="delete-service-dialog"
-    v-model:is-show="isShowDeleteDialog"
-    :theme="'primary'"
-    :dialog-type="'operation'"
-    header-align="center"
-    footer-align="center"
-    @value-change="dialogInputStr = ''"
-    :draggable="false"
-  >
-    <div class="dialog-content">
-      <div class="dialog-title">确认删除此服务？</div>
-      <div>删除的服务<span>无法找回</span>,请谨慎操作！</div>
-      <div class="dialog-input">
-        <div class="dialog-info">
-          请输入服务名<span>{{ service.spec.name }}</span
-          >以确认删除
-        </div>
-        <bk-input v-model="dialogInputStr" />
-      </div>
-    </div>
-    <template #footer>
-      <div class="dialog-footer">
-        <bk-button
-          theme="danger"
-          style="margin-right: 20px"
-          :disabled="dialogInputStr !== service.spec.name"
-          @click="handleDeleteService"
-          >删除</bk-button
-        >
-        <bk-button @click="isShowDeleteDialog = false">取消</bk-button>
-      </div>
-    </template>
-  </bk-dialog>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
@@ -81,43 +52,21 @@ import { Del } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../../../store/global';
 import { IAppItem } from '../../../../../../types/app';
 import { IPermissionQueryResourceItem } from '../../../../../../types/index';
-import { deleteApp } from '../../../../../api';
 import { datetimeFormat } from '../../../../../utils/index';
-import { Message } from 'bkui-vue';
 
 const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
-const isShowDeleteDialog = ref(false);
-const dialogInputStr = ref('');
 
 const props = defineProps<{
   service: IAppItem;
 }>();
 
-const emits = defineEmits(['edit', 'update']);
+const emits = defineEmits(['edit', 'update', 'delete']);
 
-const handleDeleteItem = () => {
-  if (props.service.permissions.delete) {
-    isShowDeleteDialog.value = true;
-  } else {
-    const query = {
-      resources: [
-        {
-          biz_id: props.service.biz_id,
-          basic: {
-            type: 'app',
-            action: 'delete',
-            resource_id: props.service.id,
-          },
-        },
-      ],
-    };
-    openPermApplyDialog(query);
-  }
-};
+const isFileType = computed(() => props.service.spec.config_type === 'file');
 
 const handleCardClick = () => {
   if (props.service.permissions.view) {
@@ -138,6 +87,26 @@ const handleCardClick = () => {
   openPermApplyDialog(query);
 };
 
+const handleDeleteItem = () => {
+  if (props.service.permissions.delete) {
+    emits('delete', props.service);
+  } else {
+    const query = {
+      resources: [
+        {
+          biz_id: props.service.biz_id,
+          basic: {
+            type: 'app',
+            action: 'delete',
+            resource_id: props.service.id,
+          },
+        },
+      ],
+    };
+    openPermApplyDialog(query);
+  }
+};
+
 const openPermApplyDialog = (query: { resources: IPermissionQueryResourceItem[] }) => {
   permissionQuery.value = query;
   showApplyPermDialog.value = true;
@@ -146,22 +115,11 @@ const openPermApplyDialog = (query: { resources: IPermissionQueryResourceItem[] 
 const goToDetail = () => {
   router.push({ name: 'service-config', params: { spaceId: route.params.spaceId, appId: props.service.id } });
 };
-
-const handleDeleteService = async () => {
-  await deleteApp(props.service.id as number, props.service.biz_id);
-  Message({
-    message: '删除服务成功',
-    theme: 'success',
-  });
-  emits('update');
-  isShowDeleteDialog.value = false;
-};
 </script>
 <style lang="scss" scoped>
 .service-card {
   position: relative;
   width: 304px;
-  height: 143px;
   padding: 0px 8px 16px 8px;
   &.no-view-perm {
     cursor: pointer;
@@ -211,55 +169,48 @@ const handleDeleteService = async () => {
     }
   }
   .card-head {
-    margin-top: 16px;
     position: relative;
-    height: 22px;
-    font-weight: Bold;
-    font-size: 14px;
+    padding-top: 22px;
     color: #313238;
     line-height: 22px;
-    text-align: left;
-    padding: 0 50px 0 16px;
-    display: flex;
-    align-items: center;
-    .service-type {
-      width: 52px;
-      height: 22px;
-      margin-right: 8px;
-      background: #f0f1f5;
-      border-radius: 2px;
-      color: #63656e;
-      text-align: center;
-      font-size: 12px;
-    }
-    .service-name {
-      width: calc(100% - 60px);
-    }
-    .service-name {
-      flex: 1;
-    }
-    &::before {
-      content: '';
+    .type-tag {
       position: absolute;
+      top: 0;
       left: 0;
-      top: 3px;
-      width: 4px;
-      height: 16px;
-      background: #699df4;
-      border-radius: 0 2px 2px 0;
+      margin: 0;
+    }
+    .service-name {
+      margin-top: 4px;
+      padding: 0 20px;
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 22px;
     }
   }
-  .service-config {
-    padding: 0 16px;
-    height: 33px;
+  .service-alias {
+    padding: 0 20px;
     font-size: 12px;
-    color: #979ba5;
     line-height: 20px;
-    margin: 4px 0 12px 0;
+    color: #63656e;
+  }
+  .service-config {
+    height: 28px;
+    font-size: 12px;
+    background: #f5f7fa;
+    border-radius: 2px;
+    color: #979ba5;
+    line-height: 28px;
+    margin: 12px;
+    padding-left: 8px;
     display: flex;
     align-items: end;
+    margin-bottom: 16px;
     .time-info {
-      padding-left: 10px;
+      padding-left: 16px;
+    }
+    span {
+      font-size: 14px;
+      margin-right: 5px;
     }
   }
   .card-footer {
@@ -293,48 +244,6 @@ const handleDeleteService = async () => {
       height: 100%;
       color: #979ba5;
     }
-  }
-}
-.dialog-content {
-  text-align: center;
-  margin: 10px 0 20px;
-  span {
-    color: red;
-  }
-  .dialog-title {
-    margin: 10px;
-    font-size: 24px;
-    color: #121213;
-  }
-  .dialog-input {
-    margin-top: 10px;
-    text-align: start;
-    padding: 20px;
-    background-color: #f4f7fa;
-    .dialog-info {
-      margin-bottom: 5px;
-      span {
-        color: #121213;
-        font-weight: 600;
-      }
-    }
-  }
-}
-.dialog-footer {
-  .bk-button {
-    width: 100px;
-  }
-}
-</style>
-
-<style lang="scss">
-.delete-service-dialog {
-  .bk-modal-header {
-    display: none;
-  }
-  .bk-modal-footer {
-    border: none !important;
-    background-color: #fff !important;
   }
 }
 </style>

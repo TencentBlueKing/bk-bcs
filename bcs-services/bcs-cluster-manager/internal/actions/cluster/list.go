@@ -711,6 +711,7 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 
+// nolint
 func (la *ListNodesInClusterAction) handleNodes() {
 	// get all nodes instance cloud info
 	ips := make([]string, 0)

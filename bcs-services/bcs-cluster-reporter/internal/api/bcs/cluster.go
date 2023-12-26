@@ -36,7 +36,9 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 		httpClient *http.Client
 	)
 
-	rt = &BcsTransport{token: cm.token}
+	rt = &BcsTransport{
+		token: cm.token,
+	}
 	httpClient = &http.Client{Transport: rt}
 
 	if len(clusterIds) == 0 {
@@ -188,6 +190,8 @@ func (cm *ClusterManager) GetKubeconfig(clusterID string) *k8srest.Config {
 		BearerToken: cm.apiGatewayToken,
 		TLSClientConfig: k8srest.TLSClientConfig{
 			Insecure: true,
+			CAFile:   "",
+			CAData:   nil,
 		},
 	}
 
