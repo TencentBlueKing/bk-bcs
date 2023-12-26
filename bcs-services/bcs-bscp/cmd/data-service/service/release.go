@@ -735,7 +735,7 @@ func (s *Service) DeleteRelease(ctx context.Context, req *pbds.DeleteReleaseReq)
 	if err != nil {
 		return nil, err
 	}
-	if release.Spec.Deprecated {
+	if !release.Spec.Deprecated {
 		return nil, fmt.Errorf("release %d can not delete, you should deprecate it first", req.ReleaseId)
 	}
 
@@ -747,33 +747,27 @@ func (s *Service) DeleteRelease(ctx context.Context, req *pbds.DeleteReleaseReq)
 
 	tx := s.dao.GenQuery().Begin()
 
-	switch app.Spec.ConfigType {
-	case table.File:
-		if e := s.dao.ReleasedAppTemplate().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
-			req.BizId, req.AppId, req.ReleaseId); e != nil {
-			return nil, e
+	if err := s.deleteReleaseRelatedResources(grpcKit, tx, req.BizId, req.AppId, req.ReleaseId, app); err != nil {
+		logs.Errorf("delete release related resources failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
-		if e := s.dao.ReleasedAppTemplateVariable().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
-			req.BizId, req.AppId, req.ReleaseId); e != nil {
-			return nil, e
-		}
-		if e := s.dao.ReleasedHook().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
-			req.BizId, req.AppId, req.ReleaseId); e != nil {
-			return nil, e
-		}
-		if e := s.dao.ReleasedCI().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
-			req.BizId, req.AppId, req.ReleaseId); e != nil {
-			return nil, e
-		}
-	case table.KV:
-		if e := s.dao.ReleasedKv().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
-			req.BizId, req.AppId, req.ReleaseId); e != nil {
-			return nil, e
-		}
+		return nil, err
 	}
 
-	err = s.dao.Release().DeleteWithTx(grpcKit, tx, req.BizId, req.AppId, req.ReleaseId)
-	return new(pbbase.EmptyResp), err
+	if err := s.dao.Release().DeleteWithTx(grpcKit, tx, req.BizId, req.AppId, req.ReleaseId); err != nil {
+		logs.Errorf("delete release failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	return new(pbbase.EmptyResp), nil
 }
 
 func (s *Service) queryPublishStatus(gcrs []*table.ReleasedGroup, releaseID uint32) (
@@ -925,5 +919,34 @@ func (s *Service) cleanUpKV(kt *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) e
 		return e
 	}
 
+	return nil
+}
+
+func (s *Service) deleteReleaseRelatedResources(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32,
+	app *table.App) error {
+	switch app.Spec.ConfigType {
+	case table.File:
+		if err := s.dao.ReleasedAppTemplate().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+		if err := s.dao.ReleasedAppTemplateVariable().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+		if err := s.dao.ReleasedHook().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+		if err := s.dao.ReleasedCI().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+	case table.KV:
+		if err := s.dao.ReleasedKv().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+	}
 	return nil
 }

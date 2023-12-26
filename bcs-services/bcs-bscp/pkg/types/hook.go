@@ -88,6 +88,7 @@ type ListHookReferencesDetail struct {
 	ReleaseID        uint32 `gorm:"column:release_id" json:"release_id"`
 	ReleaseName      string `gorm:"column:release_name" json:"release_name"`
 	HookType         string `gorm:"column:hook_type" json:"hook_type"`
+	Deprecated       bool   `gorm:"column:deprecated" json:"deprecated"`
 }
 
 // HookTagCount defines the response details of requested CountHookTag.
