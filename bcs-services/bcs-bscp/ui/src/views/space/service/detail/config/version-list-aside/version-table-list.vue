@@ -68,7 +68,8 @@
           </bk-table-column>
           <bk-table-column label="状态">
             <template #default="{ row }">
-              <template v-if="row.status">
+              <div v-if="row.spec && row.spec.deprecated" class="status-tag deprecated">已废弃</div>
+              <template v-else-if="row.status">
                 <template v-if="!VERSION_STATUS_MAP[row.status.publish_status as keyof typeof VERSION_STATUS_MAP]">
                   --
                 </template>
@@ -91,6 +92,11 @@
                       版本对比
                     </bk-button>
                     <bk-button
+                      v-bk-tooltips="{
+                        disabled: row.status.publish_status === 'not_released',
+                        placement: 'bottom',
+                        content: '只支持未上线版本'
+                      }"
                       text
                       theme="primary"
                       :disabled="row.status.publish_status !== 'not_released'"
@@ -263,7 +269,6 @@ const handleDeprecate = (version: IConfigVersion) => {
       deprecateVersion(props.bkBizId, props.appId, version.id)
         .then(() => {
           operateConfirmDialog.value.open = false;
-          console.log(version);
           updateListAndSetVersionAfterOperate(version.id);
         });
     })
@@ -281,7 +286,6 @@ const handleUndeprecate = (version: IConfigVersion) => {
       undeprecateVersion(props.bkBizId, props.appId, version.id)
         .then(() => {
           operateConfirmDialog.value.open = false;
-          console.log(version);
           updateListAndSetVersionAfterOperate(version.id);
         });
     })
@@ -299,7 +303,6 @@ const handleDelete = (version: IConfigVersion) => {
       deleteVersion(props.bkBizId, props.appId, version.id)
         .then(() => {
           operateConfirmDialog.value.open = false;
-          console.log(version);
           updateListAndSetVersionAfterOperate(version.id);
         });
     })
@@ -309,14 +312,16 @@ const handleDelete = (version: IConfigVersion) => {
 // 更新列表数据以及设置选中版本
 const updateListAndSetVersionAfterOperate = async(id: number) => {
   const index = versionList.value.findIndex(item => item.id === id);
-  const current = pagination.value.current;
-  pagination.value.current = (versionList.value.length === 1 && current > 1) ? current - 1 : current;
+  const currentPage = pagination.value.current;
+  pagination.value.current = (versionList.value.length === 1 && currentPage > 1) ? currentPage - 1 : currentPage;
   await getVersionList();
   if (id === versionData.value.id) {
     const len = versionList.value.length;
-    if (len > 1) {
+    if (len > 0) {
       const version = len - 1 >= index ? versionList.value[index] : versionList.value[len - 1];
       handleSelectVersion(undefined, version);
+    } else {
+      handleSelectVersion(undefined, UN_NAMED_VERSION)
     }
   }
 };
@@ -408,6 +413,11 @@ const handleClearSearchStr = () => {
   border: 1px solid #cccccc;
   border-radius: 11px;
   text-align: center;
+  &.deprecated {
+    color: #ea3536;
+    background-color: #feebea;
+    border-color: #ea35364d;
+  }
   &.not_released {
     color: #fe9000;
     background: #ffe8c3;

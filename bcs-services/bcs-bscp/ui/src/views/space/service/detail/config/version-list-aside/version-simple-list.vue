@@ -36,6 +36,11 @@
               <div class="action-list">
                 <div class="action-item" @click="handleDiffDialogShow(version)">版本对比</div>
                 <div
+                  v-bk-tooltips="{
+                    disabled: version.status.publish_status === 'not_released',
+                    placement: 'bottom',
+                    content: '只支持未上线版本'
+                  }"
                   :class="['action-item', { disabled: version.status.publish_status !== 'not_released' }]"
                   @click="handleDeprecateDialogShow(version)">
                   版本废弃
