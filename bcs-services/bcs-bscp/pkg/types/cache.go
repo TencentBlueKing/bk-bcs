@@ -243,11 +243,10 @@ func ReleaseKvCaches(rs []*table.ReleasedKv) []*ReleaseKvCache {
 
 // ReleaseKvValueCache is the release kv value info which will be stored in cache.
 type ReleaseKvValueCache struct {
-	ID        uint32 `json:"id"`
-	ReleaseID uint32 `json:"reid"`
-	Key       string `json:"key"`
-	Value     string `json:"value"`
-	KvType    string `json:"kv_type"`
-	Reviser   string `json:"reviser"`
-	UpdateAt  string `json:"update_at"`
+	ID        uint32          `json:"id"`
+	ReleaseID uint32          `json:"reid"`
+	Key       string          `json:"key"`
+	Value     string          `json:"value"`
+	KvType    string          `json:"kv_type"`
+	Revision  *table.Revision `json:"revision"`
 }
