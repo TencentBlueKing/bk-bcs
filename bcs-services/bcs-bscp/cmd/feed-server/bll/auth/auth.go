@@ -17,6 +17,7 @@ import (
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/lcache"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // New initialize the auth service instance.
@@ -40,4 +41,9 @@ func (as *AuthService) Authorize(kt *kit.Kit, res *meta.ResourceAttribute) (bool
 func (as *AuthService) CanMatchCI(kt *kit.Kit, bizID uint32,
 	app string, token string, path string, name string) (bool, error) {
 	return as.cache.Credential.CanMatchCI(kt, bizID, app, token, path, name)
+}
+
+// GetCred 获取凭证配置
+func (as *AuthService) GetCred(kt *kit.Kit, bizID uint32, token string) (*types.CredentialCache, error) {
+	return as.cache.Credential.GetCred(kt, bizID, token)
 }

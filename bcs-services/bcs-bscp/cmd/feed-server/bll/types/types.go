@@ -18,6 +18,7 @@ import (
 
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbcommit "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
 	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	pbhook "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
@@ -119,5 +120,7 @@ type AppLatestReleaseKvMeta struct {
 // ReleasedKvMeta defines a release's released kv metadata
 type ReleasedKvMeta struct {
 	Key          string             `json:"key,omitempty"`
+	KvType       string             `json:"kv_type,omitempty"`
+	Revision     *pbbase.Revision   `json:"revision,omitempty"`
 	KvAttachment *pbkv.KvAttachment `json:"kv_attachment,omitempty"`
 }
