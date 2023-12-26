@@ -262,7 +262,7 @@ func UpdateLogRule(c *rest.Context) (interface{}, error) {
 		return nil, errors.Errorf("invalid rule id")
 	}
 
-	err = store.UpdateLogRule(c.Request.Context(), id, req.toEntity(c.Username, c.ProjectCode))
+	err = store.UpdateLogRule(c.Request.Context(), id, req.toEntity(c.Username, c.ProjectCode, rule.Name))
 	if err != nil {
 		return nil, err
 	}
@@ -469,5 +469,55 @@ func DisableLogRule(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	return nil, nil
+}
+
+// GetStorageClusters 获取 ES 存储集群
+// @Summary 获取 ES 存储集群
+// @Tags    LogCollectors
+// @Produce json
+// @Success 200
+// @Router  /log_collector/storages/cluster_groups [get]
+func GetStorageClusters(c *rest.Context) (interface{}, error) {
+	data, err := bklog.GetStorageClusters(c.Request.Context(), GetSpaceID(c.ProjectCode))
+	if err != nil {
+		return nil, err
+	}
+	selectCluster, err := bklog.GetBcsCollectorStorage(c.Request.Context(), GetSpaceID(c.ProjectCode), c.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+	for i := range data {
+		if data[i].StorageClusterID == selectCluster {
+			data[i].IsSelected = true
+		}
+	}
+
+	return data, nil
+}
+
+// SwitchStorageReq 切换 ES 存储集群请求
+type SwitchStorageReq struct {
+	StorageClusterID int `json:"storage_cluster_id"`
+}
+
+// SwitchStorage 切换 ES 存储集群
+// @Summary 切换 ES 存储集群
+// @Tags    LogCollectors
+// @Produce json
+// @Success 200
+// @Router  /log_collector/storages/switch_storage [post]
+func SwitchStorage(c *rest.Context) (interface{}, error) {
+	req := &SwitchStorageReq{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		klog.Errorf("SwitchStorage bind req json error, %s", err.Error())
+		return nil, err
+	}
+
+	if err := bklog.SwitchStorage(c.Request.Context(),
+		GetSpaceID(c.ProjectCode), c.ClusterId, req.StorageClusterID); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }

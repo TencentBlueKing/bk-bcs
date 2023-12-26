@@ -155,6 +155,8 @@ func registerRoutes(engine *gin.RouterGroup) {
 		route.POST("/log_collector/rules/:id/retry", rest.RestHandlerFunc(logrule.RetryLogRule))
 		route.POST("/log_collector/rules/:id/enable", rest.RestHandlerFunc(logrule.EnableLogRule))
 		route.POST("/log_collector/rules/:id/disable", rest.RestHandlerFunc(logrule.DisableLogRule))
+		route.GET("/log_collector/storages/cluster_groups", rest.RestHandlerFunc(logrule.GetStorageClusters))
+		route.POST("/log_collector/storages/switch_storage", rest.RestHandlerFunc(logrule.SwitchStorage))
 	}
 }
 
