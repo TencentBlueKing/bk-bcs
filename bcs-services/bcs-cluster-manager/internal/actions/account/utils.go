@@ -100,7 +100,7 @@ func getUserAccountPermList(
 	accountPerm := cloudaccount.NewBCSAccountPermClient(iam)
 
 	actionIDs := []string{cloudaccount.AccountUse.String(), cloudaccount.AccountManage.String()}
-	perms, err := accountPerm.GetMultiAccountMultiActionPermission(user.UserID, user.ProjectID, accountList, actionIDs)
+	perms, err := accountPerm.GetMultiAccountMultiActionPerm(user.UserID, user.ProjectID, accountList, actionIDs)
 	if err != nil {
 		return nil, err
 	}
