@@ -52,7 +52,6 @@ const props = withDefaults(
     editable: boolean;
   }>(),
   {
-    variables: () => [],
     editable: true,
   },
 );

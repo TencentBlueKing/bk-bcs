@@ -50,7 +50,7 @@
                               theme="primary"
                               :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
                               :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
-                              @click="handleEditOpen(config)"
+                              @click="handleViewConfig(config.id, 'config')"
                             >
                               {{ config.name }}
                             </bk-button>
