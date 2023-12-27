@@ -745,11 +745,11 @@ service Config {
 }
 
 message UpdateCredentialScopeReq {
-  repeated uint32 del_id = 1;
-  repeated string add_scope = 2;
-  uint32 biz_id = 3;
-  uint32 credential_id = 4;
-  repeated pbcrs.UpdateScopeSpec alter_scope = 5;
+  uint32 biz_id = 1;
+  uint32 credential_id = 2;
+  repeated pbcrs.CredentialScopeSpec add_scope = 3;
+  repeated pbcrs.UpdateScopeSpec alter_scope = 4;
+  repeated uint32 del_id = 5;
 }
 
 message UpdateCredentialScopeResp {}

@@ -230,8 +230,8 @@ service Data {
 message UpdateCredentialScopesReq {
   uint32 biz_id = 1;
   uint32 credential_id = 2;
-  repeated pbcrs.UpdateScopeSpec updated = 3;
-  repeated string created = 4;
+  repeated pbcrs.CredentialScopeSpec created = 3;
+  repeated pbcrs.UpdateScopeSpec updated = 4;
   repeated uint32 deleted = 5;
 }
 message UpdateCredentialScopesResp {}

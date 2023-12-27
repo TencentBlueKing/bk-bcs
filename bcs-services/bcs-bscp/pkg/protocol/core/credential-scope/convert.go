@@ -73,8 +73,14 @@ func PbCredentialScopeSpec(spec *table.CredentialScopeSpec) (*CredentialScopeSpe
 		return nil, nil
 	}
 
+	app, scope, err := spec.CredentialScope.Split()
+	if err != nil {
+		return nil, err
+	}
+
 	return &CredentialScopeSpec{
-		CredentialScope: string(spec.CredentialScope),
+		App:   app,
+		Scope: scope,
 	}, nil
 }
 
