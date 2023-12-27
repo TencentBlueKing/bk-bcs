@@ -25,7 +25,8 @@ export interface ICredentialItem {
 export interface ICredentialRule {
   id: number;
   spec: {
-    credential_scope: string;
+    scope: string;
+    app: string;
   };
   attachment: {
     biz_id: number;
@@ -46,12 +47,20 @@ export interface IRuleEditing {
   type: string;
   content: string;
   original: string;
+  app: string;
   isRight: boolean;
+  isSelectService: boolean
 }
 
 // 调用关联规则更新接口参数
-export interface IRuleUpdateParams {
-  add_scope: string[];
-  del_id: number[];
-  alter_scope: { id: number; scope: string }[]
+interface IRuleUpdateItem {
+  app: string,
+  scope: string
+  id?: number
 }
+export interface IRuleUpdateParams {
+  add_scope: IRuleUpdateItem[];
+  del_id: number[];
+  alter_scope: IRuleUpdateItem[]
+}
+
