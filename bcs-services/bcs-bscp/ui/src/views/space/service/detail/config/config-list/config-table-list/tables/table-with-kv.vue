@@ -8,7 +8,6 @@
       :pagination="pagination"
       :key="versionData.id"
       :row-class="getRowCls"
-      show-overflow-tooltip
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"
       @column-sort="handleSort"
@@ -21,17 +20,24 @@
             text
             theme="primary"
             :disabled="row.kv_state === 'DELETE'"
-            @click="handleEdit(row)"
+            @click="handleView(row)"
           >
             {{ row.spec.key }}
           </bk-button>
         </template>
       </bk-table-column>
-      <bk-table-column label="配置项值预览" prop="spec.value"></bk-table-column>
+      <bk-table-column label="配置项值预览" prop="spec.value">
+        <template #default="{ row }">
+          <div v-if="row.spec" class="preview">
+            <div class="preview-value">{{ row.spec.value }}</div>
+            <text-file @click="handleView(row)"/>
+          </div>
+        </template>
+      </bk-table-column>
       <bk-table-column
         label="数据类型"
         prop="spec.kv_type"
-        :filter="{ filterFn:() => true, list: filterList, checked:filterChecked }"
+        :filter="{ filterFn: () => true, list: filterList, checked: filterChecked }"
       ></bk-table-column>
       <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
       <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
@@ -48,9 +54,11 @@
       <bk-table-column label="操作" fixed="right">
         <template #default="{ row }">
           <div class="operate-action-btns">
-            <bk-button v-if="row.kv_state === 'DELETE'" text theme="primary" @click="handleUndelete(row)">恢复</bk-button>
+            <bk-button v-if="row.kv_state === 'DELETE'" text theme="primary" @click="handleUndelete(row)"
+              >恢复</bk-button
+            >
             <template v-else>
-              <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEdit(row)">{{
+              <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEditOrView(row)">{{
                 versionData.id === 0 ? '编辑' : '查看'
               }}</bk-button>
               <bk-button
@@ -72,13 +80,13 @@
   </bk-loading>
   <edit-config
     v-model:show="editPanelShow"
-    :config="activeConfig as IConfigKvItem"
+    :config="(activeConfig as IConfigKvItem)"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    :editable="editable"
-    :view="!editable"
+    :editable="true"
     @confirm="getListData"
   />
+  <ViewConfigKv v-model:show="viewPanelShow" :config="(activeConfig as IConfigKvItem)" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config-kv="diffConfig" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
@@ -101,8 +109,10 @@ import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/c
 import { getKvList, deleteKv, getReleaseKvList, undeleteKv } from '../../../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../../../utils/index';
 import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
+import { TextFile } from 'bkui-vue/lib/icon';
 import StatusTag from './status-tag';
 import EditConfig from '../edit-config-kv.vue';
+import ViewConfigKv from '../view-config-kv.vue';
 import VersionDiff from '../../../components/version-diff/index.vue';
 import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
@@ -126,7 +136,7 @@ const loading = ref(false);
 const configList = ref<IConfigKvType[]>([]);
 const configsCount = ref(0);
 const editPanelShow = ref(false);
-const editable = ref(false);
+const viewPanelShow = ref(false);
 const activeConfig = ref<IConfigKvItem>();
 const deleteConfig = ref<IConfigKvType>();
 const isDiffPanelShow = ref(false);
@@ -147,7 +157,9 @@ const filterList = computed(() => CONFIG_KV_TYPE.map(item => ({
 
 const deleteConfigTips = computed(() => {
   if (deleteConfig.value) {
-    return deleteConfig.value.kv_state === 'ADD' ? '一旦删除，该操作将无法撤销，请谨慎操作' : '配置项删除后，可以通过恢复按钮撤销删除';
+    return deleteConfig.value.kv_state === 'ADD'
+      ? '一旦删除，该操作将无法撤销，请谨慎操作'
+      : '配置项删除后，可以通过恢复按钮撤销删除';
   }
   return '';
 });
@@ -217,10 +229,18 @@ const getListData = async () => {
   }
 };
 
-const handleEdit = (config: IConfigKvType) => {
-  editable.value = versionData.value.id === 0;
+const handleEditOrView = (config: IConfigKvType) => {
   activeConfig.value = config.spec;
-  editPanelShow.value = true;
+  if (isUnNamedVersion.value) {
+    editPanelShow.value = true;
+  } else {
+    viewPanelShow.value = true;
+  }
+};
+
+const handleView = (config: IConfigKvType) => {
+  activeConfig.value = config.spec;
+  viewPanelShow.value = true;
 };
 
 const handleDiff = (config: IConfigKvType) => {
@@ -301,6 +321,23 @@ defineExpose({
       .cell {
         color: #c4c6cc !important;
       }
+    }
+  }
+}
+.preview {
+  display: flex;
+  justify-content: space-between;
+  .preview-value {
+    width: 80%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  span {
+    font-size: 16px;
+    cursor: pointer;
+    &:hover {
+      color: #3a84ff;
     }
   }
 }
