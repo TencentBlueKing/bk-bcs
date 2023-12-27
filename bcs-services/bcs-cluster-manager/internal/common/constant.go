@@ -186,6 +186,18 @@ const (
 	// Zones gke zone cluster
 	Zones = "zones"
 
+	// CloudClusterTypeKey cloud cluster type
+	CloudClusterTypeKey = "CloudClusterType"
+	// CloudClusterTypeEdge cloud cluster type for ECK EDGE
+	CloudClusterTypeEdge = "K8SEXTENSION_EDGE"
+	// CloudClusterTypeNative cloud cluster type for ECK native
+	CloudClusterTypeNative = "K8SEXTENSION_NATIVE"
+
+	// NodeRoleMaster node role master
+	NodeRoleMaster = "MASTER_ETCD"
+	// NodeRoleWorker node role worker
+	NodeRoleWorker = "WORKER"
+
 	// ClusterAddNodesLimit cluster addNodes limit
 	ClusterAddNodesLimit = 100
 	// ClusterManagerServiceDomain domain name for service
@@ -217,6 +229,8 @@ const (
 
 	// DefaultImageName default image name
 	DefaultImageName = "TencentOS Server 2.6 (TK4)"
+	// DefaultECKImageName default ECK image name
+	DefaultECKImageName = "CentOS-7.6-BITS64"
 
 	// DockerContainerRuntime runtime
 	DockerContainerRuntime = "docker"

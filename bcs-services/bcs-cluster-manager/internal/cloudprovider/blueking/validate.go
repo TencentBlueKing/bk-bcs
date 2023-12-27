@@ -22,6 +22,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
@@ -38,8 +39,43 @@ func init() {
 type CloudValidate struct {
 }
 
-// CreateClusterValidate check createCluster operation
+// CreateClusterValidate create cluster validate
 func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
+	// kubernetes version
+	if len(req.ClusterBasicSettings.Version) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate lost kubernetes version in request", cloudName)
+	}
+
+	// check masterIP
+	if req.ManageType == common.ClusterManageTypeIndependent && len(req.Master) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate lost kubernetes cluster masterIP", cloudName)
+	}
+
+	// default not handle systemReinstall
+	req.SystemReinstall = true
+
+	// auto generate master nodes
+	if req.AutoGenerateMasterNodes && len(req.Instances) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate invalid instanceTemplate config "+
+			"when AutoGenerateMasterNodes=true", cloudName)
+	}
+
+	// use existed instances
+	if !req.AutoGenerateMasterNodes {
+		switch req.ManageType {
+		case common.ClusterManageTypeManaged:
+			if len(req.Nodes) == 0 {
+				return fmt.Errorf("%s CreateClusterValidate invalid node config "+
+					"when AutoGenerateMasterNodes false in MANAGED_CLUSTER", cloudName)
+			}
+		default:
+			if len(req.Master) == 0 {
+				return fmt.Errorf("%s CreateClusterValidate invalid master config "+
+					"when AutoGenerateMasterNodes false in INDEPENDENT_CLUSTER", cloudName)
+			}
+		}
+	}
+
 	return nil
 }
 

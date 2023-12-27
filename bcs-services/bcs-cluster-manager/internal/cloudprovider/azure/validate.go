@@ -38,9 +38,9 @@ func init() {
 type CloudValidate struct {
 }
 
-// CreateClusterValidate check createCluster operation
+// CreateClusterValidate create cluster validate
 func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // CreateCloudAccountValidate create cloud account validate
