@@ -67,7 +67,7 @@ const props = defineProps<{
   rules: ICredentialRule[];
 }>();
 
-const emits = defineEmits(['change']);
+const emits = defineEmits(['change', 'formChange']);
 
 const RULE_TYPE_MAP: { [key: string]: string } = {
   new: '新增',
@@ -100,6 +100,7 @@ watch(
 
 const handleAddRule = (index: number) => {
   localRules.value.splice(index + 1, 0, { id: 0, type: 'new', content: '', original: '', isRight: true });
+  emits('formChange');
 };
 
 const handleDeleteRule = (index: number) => {
@@ -133,6 +134,7 @@ const handleInput = (index: number) => {
   if (!rule.isRight) {
     rule.isRight = validateRule(rule.content);
   }
+  emits('formChange');
 };
 
 const handleRuleContentChange = (index: number) => {
@@ -167,6 +169,7 @@ const updateRuleParams = () => {
     }
   });
   emits('change', params);
+  emits('formChange');
 };
 
 const handleRuleValidate = () => {

@@ -23,10 +23,10 @@
       </bk-select>
     </bk-form-item>
     <bk-form-item label="默认值" property="default_val" required>
-      <bk-input v-model="localVal.default_val" @change="change" />
+      <bk-input v-model="localVal.default_val" @input="change" />
     </bk-form-item>
     <bk-form-item label="描述" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :rows="5" @change="change" :resize="true" />
+      <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :rows="5" @input="change" :resize="true" />
     </bk-form-item>
   </bk-form>
 </template>

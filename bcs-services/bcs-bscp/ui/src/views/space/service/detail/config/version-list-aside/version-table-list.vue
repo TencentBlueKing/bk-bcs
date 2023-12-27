@@ -128,9 +128,10 @@
   </section>
 </template>
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, version } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia';
+import { Message } from 'bkui-vue';
 import useConfigStore from '../../../../../../store/config';
 import { getConfigVersionList, deprecateVersion, undeprecateVersion, deleteVersion } from '../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../utils/index';
@@ -269,6 +270,10 @@ const handleDeprecate = (version: IConfigVersion) => {
       deprecateVersion(props.bkBizId, props.appId, version.id)
         .then(() => {
           operateConfirmDialog.value.open = false;
+          Message({
+            theme: 'success',
+            message: '版本废弃成功',
+          });
           updateListAndSetVersionAfterOperate(version.id);
         });
     })
@@ -286,6 +291,10 @@ const handleUndeprecate = (version: IConfigVersion) => {
       undeprecateVersion(props.bkBizId, props.appId, version.id)
         .then(() => {
           operateConfirmDialog.value.open = false;
+          Message({
+            theme: 'success',
+            message: '版本恢复成功',
+          });
           updateListAndSetVersionAfterOperate(version.id);
         });
     })
@@ -303,6 +312,10 @@ const handleDelete = (version: IConfigVersion) => {
       deleteVersion(props.bkBizId, props.appId, version.id)
         .then(() => {
           operateConfirmDialog.value.open = false;
+          Message({
+            theme: 'success',
+            message: '版本删除成功',
+          });
           updateListAndSetVersionAfterOperate(version.id);
         });
     })
