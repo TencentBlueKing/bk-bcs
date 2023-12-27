@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -309,6 +310,12 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (
 	}
 	if len(bizList) == 0 {
 		return nil, fmt.Errorf("bizList is empty")
+	}
+
+	// all 使用最大值
+	if req.All {
+		opt.Start = 0
+		opt.Limit = math.MaxUint32
 	}
 
 	details, count, err := s.dao.App().List(kt, bizList, req.Name, req.Operator, opt)
