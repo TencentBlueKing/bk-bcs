@@ -95,12 +95,14 @@ func GetProjectAccountsV3Perm(
 }
 
 func getUserAccountPermList(
-	iam iam.PermClient, user actions.PermInfo, accountList []string) (map[string]map[string]interface{}, error) {
+	iam iam.PermClient, user actions.PermInfo, accountList []string) (map[string]map[string]interface{},
+	error) {
 	permissions := make(map[string]map[string]interface{})
 	accountPerm := cloudaccount.NewBCSAccountPermClient(iam)
 
 	actionIDs := []string{cloudaccount.AccountUse.String(), cloudaccount.AccountManage.String()}
-	perms, err := accountPerm.GetMultiAccountMultiActionPermission(user.UserID, user.ProjectID, accountList, actionIDs)
+	perms, err := accountPerm.GetMultiAccountMultiActionPerm(
+		user.UserID, user.ProjectID, accountList, actionIDs)
 	if err != nil {
 		return nil, err
 	}
