@@ -869,6 +869,7 @@ message ListAppsBySpaceRestReq {
   uint32 limit = 3;
   string operator = 4;
   string name = 5;
+  bool all = 6;
 }
 
 message ListAppsResp {
