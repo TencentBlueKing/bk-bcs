@@ -24,6 +24,7 @@ import (
 
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -350,6 +351,15 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
 	}
 
+	app, err := s.bll.AppCache().GetMeta(kt, req.BizId, appID)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app failed, %s", err.Error())
+	}
+
+	if app.ConfigType != table.KV {
+		return nil, status.Errorf(codes.Aborted, "app not %s type", table.KV)
+	}
+
 	meta := &types.AppInstanceMeta{
 		BizID:  req.BizId,
 		App:    req.AppMeta.App,
@@ -417,6 +427,15 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 	appID, err := s.bll.AppCache().GetAppID(kt, req.BizId, req.GetAppMeta().App)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
+	}
+
+	app, err := s.bll.AppCache().GetMeta(kt, req.BizId, appID)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app failed, %s", err.Error())
+	}
+
+	if app.ConfigType != table.KV {
+		return nil, status.Errorf(codes.Aborted, "app not %s type", table.KV)
 	}
 
 	meta := &types.AppInstanceMeta{
