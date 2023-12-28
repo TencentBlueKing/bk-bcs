@@ -334,7 +334,7 @@ defineExpose({
     text-overflow: ellipsis;
   }
   span {
-    font-size: 16px;
+    font-size: 12px;
     cursor: pointer;
     &:hover {
       color: #3a84ff;
