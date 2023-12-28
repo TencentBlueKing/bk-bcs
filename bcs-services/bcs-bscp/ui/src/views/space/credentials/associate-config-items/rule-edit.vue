@@ -1,13 +1,36 @@
 <template>
   <div class="rule-edit">
-    <p class="title">配置关联规则</p>
+    <div class="head">
+      <p class="title">配置关联规则</p>
+      <bk-popover placement="bottom" theme="light" trigger="click" ext-cls="view-rule-wrap">
+        <span class="view-rule">查看规则示例</span>
+        <template #content>
+          <ViewRuleExample />
+        </template>
+      </bk-popover>
+    </div>
     <div class="rules-edit-area">
       <div v-for="(rule, index) in localRules" class="rule-list" :key="index">
-        <div class="rule-item">
+        <div :class="['rule-item', { 'rule-error': !rule.isRight }, { 'service-error': !rule.isSelectService }]">
+          <bk-select
+            v-model="rule.app"
+            class="service-select"
+            :filterable="true"
+            :disabled="rule.type === 'del'"
+            placeholder="请选择服务"
+            @change="handleRuleContentChange(index)"
+          >
+            <bk-option
+              v-for="service in serviceList"
+              :id="service.spec.name"
+              :key="service.id"
+              :name="service.spec.name"
+            />
+          </bk-select>
           <bk-input
             v-model="rule.content"
             class="rule-input"
-            placeholder="请填写"
+            placeholder="请输入文件路径"
             :disabled="rule.type === 'del'"
             @input="handleInput(index)"
             @blur="handleRuleContentChange(index)"
@@ -39,33 +62,31 @@
             </template>
           </div>
         </div>
-        <div class="error-info"><span v-if="!rule.isRight">输入的规则有误，请重新确认</span></div>
-      </div>
-      <div class="tips">
-        <div>- [文件型]关联myservice服务下所有的配置(包含子目录)</div>
-        <div>&nbsp;&nbsp;myservice/**</div>
-        <div>- [文件型]关联myservice服务/etc目录下所有的配置(不含子目录)</div>
-        <div>&nbsp;&nbsp;myservice/etc/*</div>
-        <div>- [文件型]关联myservice服务/etc/nginx/nginx.conf文件</div>
-        <div>&nbsp;&nbsp;myservice/etc/nginx/nginx.conf</div>
-        <div>- [键值型]关联myservice服务下所有配置项</div>
-        <div>&nbsp;&nbsp;myservice/*</div>
-        <div>- [键值型]关联myservice服务下所有以demo_开头的配置项</div>
-        <div>&nbsp;&nbsp;myservice/demo_*</div>
+        <div class="error-info" v-if="!rule.isRight || !rule.isSelectService">
+          <span v-if="!rule.isSelectService">请选择服务</span>
+          <span v-else-if="!rule.isRight" class="rule-error">输入的规则有误，请重新确认</span>
+        </div>
       </div>
     </div>
     <!-- <div class="preview-btn">预览匹配结果</div> -->
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { ICredentialRule, IRuleEditing, IRuleUpdateParams } from '../../../../../types/credential';
+import { useRoute } from 'vue-router';
+import { getAppList } from '../../../../api/index';
+import { IAppItem } from '../../../../../types/app';
+import ViewRuleExample from './view-rule-example.vue';
 
+const route = useRoute();
 const props = defineProps<{
   rules: ICredentialRule[];
 }>();
 
-const emits = defineEmits(['change']);
+const emits = defineEmits(['change', 'formChange']);
+const serviceList = ref<IAppItem[]>([]);
+const bkBizId = ref(String(route.params.spaceId));
 
 const RULE_TYPE_MAP: { [key: string]: string } = {
   new: '新增',
@@ -75,12 +96,28 @@ const RULE_TYPE_MAP: { [key: string]: string } = {
 
 const localRules = ref<IRuleEditing[]>([]);
 
+onMounted(async () => {
+  const resp = await getAppList(bkBizId.value, { start: 0, all: true });
+  serviceList.value = resp.details;
+});
 
 const transformRulesToEditing = (rules: ICredentialRule[]) => {
   const rulesEditing: IRuleEditing[] = [];
   rules.forEach((item) => {
-    const { id, spec } = item;
-    rulesEditing.push({ id, type: '', content: spec.credential_scope, original: spec.credential_scope, isRight: true });
+    const {
+      id,
+      spec: { app, scope },
+    } = item;
+    rulesEditing.push({
+      id,
+      type: '',
+      content: scope,
+      original: scope,
+      isRight: true,
+      app,
+      originalApp: app,
+      isSelectService: true,
+    });
   });
   return rulesEditing;
 };
@@ -89,7 +126,18 @@ watch(
   () => props.rules,
   (val) => {
     if (val.length === 0) {
-      localRules.value = [{ id: 0, type: 'new', content: '', original: '', isRight: true }];
+      localRules.value = [
+        {
+          id: 0,
+          type: 'new',
+          content: '',
+          original: '',
+          isRight: true,
+          app: '',
+          originalApp: '',
+          isSelectService: true,
+        },
+      ];
     } else {
       localRules.value = transformRulesToEditing(val);
     }
@@ -98,7 +146,16 @@ watch(
 );
 
 const handleAddRule = (index: number) => {
-  localRules.value.splice(index + 1, 0, { id: 0, type: 'new', content: '', original: '', isRight: true });
+  localRules.value.splice(index + 1, 0, {
+    id: 0,
+    type: 'new',
+    content: '',
+    original: '',
+    isRight: true,
+    app: '',
+    originalApp: '',
+    isSelectService: true,
+  });
 };
 
 const handleDeleteRule = (index: number) => {
@@ -130,18 +187,21 @@ const validateRule = (rule: string) => {
 const handleInput = (index: number) => {
   const rule = localRules.value[index];
   if (!rule.isRight) {
-    rule.isRight = validateRule(rule.content);
+    rule.isRight = validateRule(rule.app + rule.content);
   }
+  emits('formChange');
 };
 
 const handleRuleContentChange = (index: number) => {
   const rule = localRules.value[index];
-  localRules.value[index].isRight = validateRule(rule.content);
+  localRules.value[index].isRight = validateRule(rule.app + rule.content);
+  localRules.value[index].isSelectService = !!localRules.value[index].app;
   if (rule.id) {
-    rule.type = rule.content === rule.original ? '' : 'modify';
+    rule.type = (rule.content === rule.original && rule.app === rule.originalApp) ? '' : 'modify';
   }
   updateRuleParams();
 };
+
 
 const updateRuleParams = () => {
   const params: IRuleUpdateParams = {
@@ -150,34 +210,45 @@ const updateRuleParams = () => {
     alter_scope: [],
   };
   localRules.value.forEach((item) => {
-    const { id, type, content } = item;
+    const { id, type, content, app } = item;
     switch (type) {
       case 'new':
         if (content) {
-          params.add_scope.push(content);
+          params.add_scope.push({ app, scope: content });
         }
         break;
       case 'del':
         params.del_id.push(id);
         break;
       case 'modify':
-        params.alter_scope.push({ id, scope: content });
+        params.alter_scope.push({ id, scope: content, app });
         break;
     }
   });
   emits('change', params);
+  emits('formChange');
 };
 
 const handleRuleValidate = () => {
   localRules.value.forEach((item) => {
-    item.isRight = validateRule(item.content);
+    item.isRight = validateRule(item.app + item.content);
+    item.isSelectService = !!item.app;
   });
-  return localRules.value.some(item => !item.isRight);
+  return localRules.value.some(item => !item.isRight || !item.isSelectService);
 };
 
 defineExpose({ handleRuleValidate });
 </script>
 <style lang="scss" scoped>
+.head {
+  display: flex;
+  justify-content: space-between;
+  .view-rule {
+    font-size: 12px;
+    color: #3a84ff;
+    cursor: pointer;
+  }
+}
 .title {
   position: relative;
   margin: 0 0 6px;
@@ -193,13 +264,20 @@ defineExpose({ handleRuleValidate });
     content: '*';
   }
 }
+.rule-list {
+  margin-bottom: 24px;
+}
 .rule-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  .service-select {
+    width: 120px;
+    margin-right: 8px;
+  }
   .rule-input {
     position: relative;
-    width: 312px;
+    width: 184px;
     .status-tag {
       position: absolute;
       top: 4px;
@@ -226,6 +304,7 @@ defineExpose({ handleRuleValidate });
     width: 38px;
     color: #979ba5;
     font-size: 14px;
+    text-align: right;
     > i {
       cursor: pointer;
       &:hover {
@@ -234,18 +313,29 @@ defineExpose({ handleRuleValidate });
     }
   }
 }
+.rule-error {
+  .rule-input {
+    border-color: #ea3636 !important;
+  }
+}
+.service-error {
+  .service-select {
+    :deep(.bk-input) {
+      border-color: #ea3636 !important;
+    }
+  }
+}
 .error-info {
+  position: relative;
   margin: 4px 0 6px;
   height: 16px;
   color: #ea3636;
   font-size: 12px;
   line-height: 16px;
-}
-.tips {
-  margin: 8px 0 0;
-  line-height: 20px;
-  color: #979ba5;
-  font-size: 12px;
+  .rule-error {
+    position: absolute;
+    left: 135px;
+  }
 }
 .preview-btn {
   margin-top: 16px;
@@ -257,5 +347,11 @@ defineExpose({ handleRuleValidate });
   border: 1px solid #3a84ff;
   border-radius: 2px;
   cursor: pointer;
+}
+</style>
+
+<style lang="scss">
+.view-rule-wrap {
+  padding: 16px !important;
 }
 </style>

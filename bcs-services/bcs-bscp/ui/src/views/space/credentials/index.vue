@@ -209,7 +209,7 @@ import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../store/global';
 import { Plus, Search, Eye, Unvisible, Copy, EditLine } from 'bkui-vue/lib/icon';
 import BkMessage from 'bkui-vue/lib/message';
-import { InfoBox } from 'bkui-vue/lib';
+import { InfoBox } from 'bkui-vue';
 import { permissionCheck } from '../../../api/index';
 import { getCredentialList, createCredential, updateCredential, deleteCredential } from '../../../api/credentials';
 import { copyToClipBoard, datetimeFormat } from '../../../utils/index';
@@ -607,7 +607,7 @@ const goToIAM = () => {
   align-items: center;
   justify-content: space-between;
   .text {
-    width: calc(100% - 80px);
+    width: calc(100% - 50px);
   }
   .actions {
     display: flex;
@@ -725,11 +725,12 @@ const goToIAM = () => {
   .bk-modal-header {
     display: none;
   }
-}
-.delete-service-dialog {
   .bk-modal-footer {
+    height: auto !important;
     background-color: #fff !important;
     border-top: none !important;
+    padding-bottom: 24px !important;
   }
 }
+
 </style>

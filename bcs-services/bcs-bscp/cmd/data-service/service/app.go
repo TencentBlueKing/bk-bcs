@@ -298,6 +298,7 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (
 	opt := &types.BasePage{
 		Start: req.Start,
 		Limit: limit,
+		All:   req.All,
 	}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err

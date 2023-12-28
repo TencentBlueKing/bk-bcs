@@ -25,7 +25,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../../types/config';
 import { createServiceConfigItem, updateConfigContent } from '../../../../../../../../api/config';
 import { getConfigEditParams } from '../../../../../../../../utils/config';

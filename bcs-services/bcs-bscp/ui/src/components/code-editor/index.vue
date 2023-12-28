@@ -8,7 +8,7 @@
   <section v-show="!isShowPlaceholder || !placeholder" class="code-editor-wrapper" ref="codeEditorRef"></section>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue';
+import { ref, watch, onMounted, nextTick, computed } from 'vue';
 import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker.js?worker';
@@ -92,6 +92,10 @@ watch(
     monaco.editor.setModelLanguage(editor.getModel() as monaco.editor.ITextModel, val);
     // 清空错误行
     monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', []);
+    // 切换缩进空格数
+    editor.getModel()!.updateOptions({ tabSize: tabSize.value });
+    // 校验编辑器内容
+    if (localVal.value) validate(localVal.value);
   },
 );
 
@@ -118,6 +122,11 @@ watch(
   },
 );
 
+const tabSize = computed(() => {
+  if (props.language === 'xml' || props.language === 'yaml') return 2;
+  return 4;
+});
+
 onMounted(() => {
   handleVariableList();
   aotoCompletion();
@@ -130,6 +139,7 @@ onMounted(() => {
       language: props.language || 'custom-language',
       readOnly: !props.editable,
       scrollBeyondLastLine: false,
+      tabSize: tabSize.value,
     });
   }
   if (props.lfEol) {
@@ -157,6 +167,7 @@ onMounted(() => {
   // 自动换行
   editor.updateOptions({ wordWrap: 'on' });
   editor.onDidBlurEditorWidget(() => {
+    // 当编辑器失去焦点时触发的自定义事件处理逻辑
     if (!props.modelValue) {
       isShowPlaceholder.value = true;
     }
@@ -275,12 +286,12 @@ const validate = (val: string) => {
   let markers: any[] = [];
   if (props.language === 'xml') {
     markers = validateXML(val);
-  };
-  if (props.language === 'yaml') {
+  } else if (props.language === 'yaml') {
     markers = validateYAML(val);
-  };
-  if (props.language === 'json') {
+  } else if (props.language === 'json') {
     return validateJSON(val);
+  } else {
+    return;
   }
   // 添加错误行
   monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
@@ -321,6 +332,7 @@ defineExpose({
   height: 100%;
   :deep(.monaco-editor) {
     width: 100%;
+    padding-top: 10px;
     .template-variable-item {
       color: #1768ef;
       border: 1px solid #1768ef;
@@ -331,6 +343,8 @@ defineExpose({
 .placeholderBox {
   height: 100%;
   background-color: #1e1e1e;
+  box-sizing: content-box;
+  padding-top: 10px;
   .placeholderLine {
     display: flex;
     height: 19px;

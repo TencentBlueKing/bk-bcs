@@ -14,6 +14,7 @@ package api
 
 import (
 	"fmt"
+
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
@@ -205,6 +206,7 @@ func generateAddExistedInstancesReq(addReq *AddExistedInstanceReq) *tke.AddExist
 }
 
 // generateClusterRequestInfo create cluster request
+// nolint
 func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClusterRequest, error) {
 	if request.Region == "" || request.ClusterType == "" {
 		return nil, fmt.Errorf("CreateClusterRequest invalid region or clusterType info")

@@ -47,14 +47,14 @@
       <div class="editor-content">
         <CodeEditor
           ref="codeEditorRef"
-          :model-value="variables"
-          @update:model-value="variables = $event"
+          v-model="variables"
           @enter="separatorShow = true"
+          @validate="handleValidateEditor"
           :error-line="errorLine"
           :placeholder="editorPlaceholder"
         />
         <div class="separator" v-show="separatorShow">
-          <SeparatorSelect @closed="separatorShow = false" @confirm="separator = $event" />
+          <SeparatorSelect @closed="separatorShow = false" @confirm="handleSelectSeparator" />
         </div>
       </div>
     </div>
@@ -75,6 +75,8 @@ interface errorLineItem {
   errorInfo: string;
 }
 
+const emits = defineEmits(['trigger']);
+
 const isOpenFullScreen = ref(false);
 const codeEditorRef = ref();
 const separatorShow = ref(false);
@@ -86,19 +88,16 @@ const editorPlaceholder = ref(['示例：', '变量名 变量类型 变量值 �
 
 watch(
   () => variables.value,
-  () => {
-    if (shouldValidate.value) {
-      handleValidateEditor();
-    }
+  (val) => {
+    handleValidateEditor();
+    if (!val) emits('trigger', false);
   },
 );
 
 watch(
   () => errorLine.value,
   (val) => {
-    if (val.length === 0) {
-      shouldValidate.value = false;
-    }
+    shouldValidate.value = val.length > 0;
   },
 );
 
@@ -161,6 +160,7 @@ const handleValidateEditor = () => {
       });
     }
   });
+  emits('trigger', variables.value && errorLine.value.length === 0);
 };
 // 导入变量
 const handleImport = async () => {
@@ -172,6 +172,11 @@ const handleImport = async () => {
     variables: variables.value,
   };
   await batchImportTemplateVariables(spaceId.value, params);
+};
+
+const handleSelectSeparator = (selectSeparator: string) => {
+  separator.value = selectSeparator;
+  handleValidateEditor();
 };
 defineExpose({
   handleImport,

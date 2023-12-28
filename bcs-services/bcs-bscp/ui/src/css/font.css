@@ -91,14 +91,15 @@
 	content: "\e111";
 }
 
-.icon-resources:before {
+.icon-resources-fill:before {
 	content: "\e112";
 }
-
 .icon-file-line:before {
 	content: "\e113";
 }
-
 .icon-kv:before {
 	content: "\e114";
+}
+.icon-resources:before {
+	content: "\e115";
 }

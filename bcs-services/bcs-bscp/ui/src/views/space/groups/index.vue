@@ -160,7 +160,7 @@ import ServicesToPublished from './services-to-published.vue';
 import tableEmpty from '../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
 import { debounce } from 'lodash';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 

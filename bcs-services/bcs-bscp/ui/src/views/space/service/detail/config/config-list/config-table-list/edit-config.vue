@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import ConfigForm from './config-form.vue';
 import {
   getConfigItemDetail,

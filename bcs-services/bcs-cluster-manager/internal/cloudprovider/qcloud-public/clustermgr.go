@@ -16,7 +16,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"sort"
 	"sync"
 
@@ -26,6 +25,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
@@ -852,7 +852,8 @@ func getZoneSubnets(vpcId string, opt cloudprovider.CommonOption) ([]string, map
 	return snZones, zoneSubnetMap, nil
 }
 
-func getZoneMachineTypes(cpu, mem int, opt cloudprovider.CommonOption) ([]string, map[string][]*proto.InstanceType, error) {
+func getZoneMachineTypes(
+	cpu, mem int, opt cloudprovider.CommonOption) ([]string, map[string][]*proto.InstanceType, error) {
 	var (
 		mtZones = make([]string, 0)
 	)
@@ -880,11 +881,13 @@ func getZoneMachineTypes(cpu, mem int, opt cloudprovider.CommonOption) ([]string
 				if zoneInstanceTypes[instanceTypes[i].Zones[j]] == nil {
 					zoneInstanceTypes[instanceTypes[i].Zones[j]] = make([]*proto.InstanceType, 0)
 				}
-				zoneInstanceTypes[instanceTypes[i].Zones[j]] = append(zoneInstanceTypes[instanceTypes[i].Zones[j]], instanceTypes[i])
+				zoneInstanceTypes[instanceTypes[i].Zones[j]] = append(zoneInstanceTypes[instanceTypes[i].Zones[j]],
+					instanceTypes[i])
 				continue
 			}
 
-			zoneInstanceTypes[instanceTypes[i].Zones[j]] = append(zoneInstanceTypes[instanceTypes[i].Zones[j]], instanceTypes[i])
+			zoneInstanceTypes[instanceTypes[i].Zones[j]] = append(zoneInstanceTypes[instanceTypes[i].Zones[j]],
+				instanceTypes[i])
 		}
 	}
 	// 按照价格排序

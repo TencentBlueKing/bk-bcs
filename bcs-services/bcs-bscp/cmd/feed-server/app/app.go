@@ -131,10 +131,12 @@ func (fs *feedServer) listenAndServe() error {
 		grpc.ChainUnaryInterceptor(
 			brpc.LogUnaryServerInterceptor(),
 			grpcMetrics.UnaryServerInterceptor(),
+			service.FeedUnaryAuthInterceptor,
 			grpc_recovery.UnaryServerInterceptor(recoveryOpt),
 		),
 		grpc.ChainStreamInterceptor(
 			grpcMetrics.StreamServerInterceptor(),
+			service.FeedStreamAuthInterceptor,
 			grpc_recovery.StreamServerInterceptor(recoveryOpt),
 		),
 	}

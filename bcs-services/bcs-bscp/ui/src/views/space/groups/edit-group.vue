@@ -28,7 +28,7 @@ import useGlobalStore from '../../../store/global';
 import { IGroupEditing, IGroupRuleItem, IGroupItem } from '../../../../types/group';
 import { updateGroup } from '../../../api/group';
 import groupEditForm from './components/group-edit-form.vue';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 

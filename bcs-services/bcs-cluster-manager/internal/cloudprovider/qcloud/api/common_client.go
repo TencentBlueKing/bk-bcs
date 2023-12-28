@@ -502,7 +502,8 @@ func NewDescribeInstanceCreateProgressResponse() (response *DescribeInstanceCrea
 }
 
 // DescribeInstanceCreateProgress 获取节点创建进度
-func (c *Client) DescribeInstanceCreateProgress(request *DescribeInstanceCreateProgressRequest) (response *DescribeInstanceCreateProgressResponse, err error) {
+func (c *Client) DescribeInstanceCreateProgress(
+	request *DescribeInstanceCreateProgressRequest) (response *DescribeInstanceCreateProgressResponse, err error) {
 	return c.DescribeInstanceCreateProgressWithContext(context.Background(), request)
 }
 

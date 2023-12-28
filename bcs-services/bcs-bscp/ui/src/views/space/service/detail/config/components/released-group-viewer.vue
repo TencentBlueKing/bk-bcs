@@ -2,22 +2,24 @@
   <bk-popover
     ext-cls="released-group-viewer"
     theme="light"
-    placement="bottom-end"
+    :placement="props.placement"
     :disabled="props.disabled"
     @after-show="popoverOpen">
     <slot name="default"></slot>
     <template #content>
-      <div v-bk-loading="{ loading, opacity: 1 }" class="groups-content-wrapper">
+      <bk-loading :loading="loading" :opacity="1" class="groups-content-wrapper">
         <div class="header-area">
           <h3 class="title">已上线实例</h3>
           <template v-if="props.isDefaultGroup">
-            <div class="default-group-name">默认分组</div>
             <div class="tips">除以下分组之外的所有实例</div>
           </template>
         </div>
         <div class="group-list">
           <div v-for="group in groupList" class="group-item">
-            <div class="group-name">{{ group.name }}</div>
+            <div class="group-name">
+              <i class="bk-bscp-icon icon-resources-fill" />
+              {{ group.name }}
+            </div>
             <div class="rules">
               <template v-for="(rule, index) in group.new_selector?.labels_and" :key="index">
                 <template v-if="index > 0"> & </template>
@@ -26,7 +28,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </bk-loading>
     </template>
   </bk-popover>
 </template>
@@ -42,8 +44,10 @@
     appId: number;
     isDefaultGroup?: boolean;
     disabled?: boolean;
+    placement?: string;
     groups: IReleasedGroup[];
   }>(), {
+    placement: 'bottom-end',
     groups: () => [],
   });
 
@@ -76,8 +80,12 @@ const getExcludeGroups = async () => {
     min-width: 220px;
     font-size: 12px;
     line-height: 16px;
+    max-height: 400px;
     color: #63656e;
+    background: #ffffff;
+    overflow: auto;
     .header-area {
+      margin: 10px 16px 0;
       padding-bottom: 12px;
       border-bottom: 1px solid #dcdee5;
     }
@@ -87,24 +95,48 @@ const getExcludeGroups = async () => {
       line-height: 20px;
       color: #313238;
     }
-    .default-group-name {
+    .group-name {
+      display: flex;
+      align-items: center;
       line-height: 20px;
       color: #63656E;
+      .bk-bscp-icon {
+        margin-right: 4px;
+        color: #979BA5;
+        font-size: 16px;
+      }
     }
     .tips {
       line-height: 20px;
       color: #979BA5;
     }
     .group-list {
-      padding-top: 12px;
+      padding: 12px 16px 7px;
+      max-width: 400px;
     }
     .group-item {
+      padding-bottom: 12px;
       margin-bottom: 8px;
+      border-bottom: 1px solid #dcdee5;
+      &:last-child {
+        margin-bottom: 0;
+        border-bottom: none;
+      }
     }
     .rules {
       margin-top: 4px;
-      padding: 5px 8px;
-      background: #f5f7fa;
+      padding: 0 8px;
+      width: 100%;
+      color: #979BA5;
+      white-space: normal;
+      .tag-item {
+        display: inline;
+      }
     }
+  }
+</style>
+<style lang="scss">
+  .released-group-viewer.bk-popover.bk-pop2-content {
+    padding: 0;
   }
 </style>

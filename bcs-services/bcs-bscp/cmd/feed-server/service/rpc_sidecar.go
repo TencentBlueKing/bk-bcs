@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"path"
 	"strings"
 
 	prm "github.com/prometheus/client_golang/prometheus"
@@ -23,9 +24,11 @@ import (
 
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
 	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	pbfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
@@ -332,69 +335,64 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 
 // PullKvMeta pull an app's latest release metadata only when the app's configures is kv type.
 func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbfs.PullKvMetaResp, error) {
-	// check if the sidecar's version can be accepted.
-	if !sfs.IsAPIVersionMatch(req.ApiVersion) {
-		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
-	}
+	kt := kit.FromGrpcContext(ctx)
 
-	im, err := sfs.ParseFeedIncomingContext(ctx)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	if req.GetAppMeta() == nil {
+	if req.GetAppMeta() == nil || req.GetAppMeta().App == "" {
 		return nil, status.Error(codes.InvalidArgument, "app_meta is required")
 	}
 
-	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.GetAppMeta().App)
+	credential := getCredential(ctx)
+	if !credential.MatchApp(req.AppMeta.App) {
+		return nil, status.Errorf(codes.PermissionDenied, "not have app %s permission", req.AppMeta.App)
+	}
+
+	appID, err := s.bll.AppCache().GetAppID(kt, req.BizId, req.AppMeta.App)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
 	}
 
-	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
-	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
+	app, err := s.bll.AppCache().GetMeta(kt, req.BizId, appID)
 	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "do authorization failed, %s", err.Error())
-	}
-	if !authorized {
-		return nil, status.Error(codes.PermissionDenied, "no permission to access bscp server")
+		return nil, status.Errorf(codes.Aborted, "get app failed, %s", err.Error())
 	}
 
-	// validate can file be downloaded by credential.
-	// 获取 kv 列表, 只需要有服务权限即可
-	match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.GetAppMeta().App, req.Token, "", "")
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
-	}
-
-	if !match {
-		return nil, status.Error(codes.PermissionDenied, "no permission get value")
+	if app.ConfigType != table.KV {
+		return nil, status.Errorf(codes.Aborted, "app not %s type", table.KV)
 	}
 
 	meta := &types.AppInstanceMeta{
 		BizID:  req.BizId,
-		App:    req.GetAppMeta().App,
+		App:    req.AppMeta.App,
 		AppID:  appID,
 		Uid:    req.AppMeta.Uid,
 		Labels: req.AppMeta.Labels,
 	}
 
-	cancel := im.Kit.CtxWithTimeoutMS(1500)
-	defer cancel()
-
-	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(im.Kit, meta)
+	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(kt, meta)
 	if err != nil {
 		// appid等未找到, 刷新缓存, 客户端重试请求
 		if isAppNotExistErr(err) {
-			s.bll.AppCache().RemoveCache(im.Kit, req.BizId, req.GetAppMeta().App)
+			s.bll.AppCache().RemoveCache(kt, req.BizId, req.AppMeta.App)
 		}
 		return nil, err
 	}
 
 	kvMetas := make([]*pbfs.KvMeta, 0, len(metas.Kvs))
 	for _, kv := range metas.Kvs {
+		// 只返回有权限的kv
+		if !credential.MatchKv(req.AppMeta.App, kv.Key) {
+			continue
+		}
+
+		// 客户端匹配
+		if !matchPattern(kv.Key, req.Match) {
+			continue
+		}
+
 		kvMetas = append(kvMetas, &pbfs.KvMeta{
-			Key: kv.Key,
+			Key:      kv.Key,
+			KvType:   kv.KvType,
+			Revision: kv.Revision,
 			KvAttachment: &pbkv.KvAttachment{
 				BizId: kv.KvAttachment.BizId,
 				AppId: kv.KvAttachment.AppId,
@@ -412,42 +410,32 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 
 // GetKvValue get kv value
 func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbfs.GetKvValueResp, error) {
-	// check if the sidecar's version can be accepted.
-	if !sfs.IsAPIVersionMatch(req.ApiVersion) {
-		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
-	}
-
-	im, err := sfs.ParseFeedIncomingContext(ctx)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	if req.GetAppMeta() == nil {
+	kt := kit.FromGrpcContext(ctx)
+	if req.GetAppMeta() == nil || req.GetAppMeta().App == "" {
 		return nil, status.Error(codes.InvalidArgument, "app_meta is required")
 	}
 
-	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
-	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "do authorization failed, %s", err.Error())
-	}
-	if !authorized {
-		return nil, status.Error(codes.PermissionDenied, "no permission to access bscp server")
+	credential := getCredential(ctx)
+	if !credential.MatchApp(req.AppMeta.App) {
+		return nil, status.Errorf(codes.PermissionDenied, "not have app %s permission", req.AppMeta.App)
 	}
 
-	// validate can file be downloaded by credential.
-	match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.GetAppMeta().App, req.Token, req.Key, "")
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
-	}
-
-	if !match {
+	if !credential.MatchKv(req.AppMeta.App, req.Key) {
 		return nil, status.Error(codes.PermissionDenied, "no permission get value")
 	}
 
-	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.GetAppMeta().App)
+	appID, err := s.bll.AppCache().GetAppID(kt, req.BizId, req.GetAppMeta().App)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
+	}
+
+	app, err := s.bll.AppCache().GetMeta(kt, req.BizId, appID)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app failed, %s", err.Error())
+	}
+
+	if app.ConfigType != table.KV {
+		return nil, status.Errorf(codes.Aborted, "app not %s type", table.KV)
 	}
 
 	meta := &types.AppInstanceMeta{
@@ -458,19 +446,16 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 		Labels: req.AppMeta.Labels,
 	}
 
-	cancel := im.Kit.CtxWithTimeoutMS(1500)
-	defer cancel()
-
-	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(im.Kit, meta)
+	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(kt, meta)
 	if err != nil {
 		return nil, err
 	}
 
-	rkv, err := s.bll.RKvCache().GetKvValue(im.Kit, req.BizId, appID, metas.ReleaseId, req.Key)
+	rkv, err := s.bll.RKvCache().GetKvValue(kt, req.BizId, appID, metas.ReleaseId, req.Key)
 	if err != nil {
 		// appid等未找到, 刷新缓存, 客户端重试请求
 		if isAppNotExistErr(err) {
-			s.bll.AppCache().RemoveCache(im.Kit, req.BizId, req.GetAppMeta().App)
+			s.bll.AppCache().RemoveCache(kt, req.BizId, req.GetAppMeta().App)
 		}
 
 		return nil, status.Errorf(codes.Aborted, "get rkv failed, %s", err.Error())
@@ -495,6 +480,55 @@ func isAppNotExistErr(err error) bool {
 
 	if strings.Contains(e, "app") && strings.Contains(e, "not exist") {
 		return true
+	}
+
+	return false
+}
+
+// ListApps 获取服务列表
+func (s *Service) ListApps(ctx context.Context, req *pbfs.ListAppsReq) (*pbfs.ListAppsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	resp, err := s.bll.AppCache().ListApps(kt, &pbcs.ListAppsReq{BizId: req.BizId})
+	if err != nil {
+		return nil, err
+	}
+
+	credential := getCredential(ctx)
+	apps := make([]*pbfs.App, 0, len(resp.Details))
+	for _, d := range resp.Details {
+		// 过滤无权限的 app
+		if !credential.MatchApp(d.Spec.Name) {
+			continue
+		}
+
+		// 客户端匹配
+		if !matchPattern(d.Spec.Name, req.Match) {
+			continue
+		}
+
+		apps = append(apps, &pbfs.App{
+			Id:         d.Id,
+			Name:       d.Spec.Name,
+			ConfigType: d.Spec.ConfigType,
+			Revision:   d.Revision,
+		})
+	}
+
+	r := &pbfs.ListAppsResp{Apps: apps}
+	return r, nil
+}
+
+// 匹配
+func matchPattern(name string, match []string) bool {
+	if len(match) == 0 {
+		return true
+	}
+
+	for _, m := range match {
+		ok, _ := path.Match(m, name)
+		if ok {
+			return true
+		}
 	}
 
 	return false

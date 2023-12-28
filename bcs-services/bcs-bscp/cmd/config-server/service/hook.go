@@ -247,6 +247,7 @@ func (s *Service) ListHookReferences(ctx context.Context,
 			ReleaseId:        detail.ReleaseId,
 			ReleaseName:      detail.ReleaseName,
 			Type:             detail.Type,
+			Deprecated:       detail.Deprecated,
 		})
 	}
 	resp := &pbcs.ListHookReferencesResp{

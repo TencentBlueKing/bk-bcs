@@ -12,7 +12,7 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue/lib';
+import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../store/global';
 import { ITemplatePackageEditParams, ITemplatePackageItem } from '../../../../../../types/template';
 import { updateTemplatePackage } from '../../../../../api/template';

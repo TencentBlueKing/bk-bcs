@@ -134,6 +134,7 @@ func (c *Client) generateGateWayAuth() (string, error) {
 }
 
 // GetHostsGseAgentStatus get host agent status
+// nolint
 func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]HostAgentStatus, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
@@ -199,8 +200,6 @@ func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]H
 				})
 				agentLock.Unlock()
 			}
-
-			return
 		}(agentHostList[i])
 	}
 	con.Wait()
@@ -219,7 +218,7 @@ func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]H
 
 			agentIDs := make([]string, 0)
 			for i := range hosts {
-				agentIDs = append(agentIDs, hosts[i].AgentID)
+				agentIDs = append(agentIDs, hosts[i].AgentID) // nolint
 			}
 
 			resp, err := c.GetAgentStatusV1(&GetAgentStatusReq{
@@ -242,7 +241,6 @@ func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]H
 				agentLock.Unlock()
 			}
 
-			return
 		}(cloudHostList[i])
 	}
 	con.Wait()

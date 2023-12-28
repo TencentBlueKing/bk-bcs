@@ -12,7 +12,7 @@
     "@types/js-cookie": "^3.0.2",
     "@types/lodash.clonedeep": "^4.5.7",
     "axios": "^0.27.2",
-    "bkui-vue": "0.0.2-beta.43",
+    "bkui-vue": "0.0.2-beta.112",
     "crypto-js": "^4.1.1",
     "dayjs": "^1.11.9",
     "highlight.js": "~11.5.0",

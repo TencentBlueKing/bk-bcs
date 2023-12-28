@@ -77,7 +77,18 @@ func (dao *appDao) List(kit *kit.Kit, bizList []uint32, name, operator string, o
 		conds = append(conds, m.Name.Like("%"+name+"%"))
 	}
 
-	result, count, err := q.Where(conds...).FindByPage(opt.Offset(), opt.LimitInt())
+	var (
+		result []*table.App
+		count  int64
+		err    error
+	)
+
+	if opt.All {
+		result, err = q.Where(conds...).Find()
+		count = int64(len(result))
+	} else {
+		result, count, err = q.Where(conds...).FindByPage(opt.Offset(), opt.LimitInt())
+	}
 	if err != nil {
 		return nil, 0, err
 	}

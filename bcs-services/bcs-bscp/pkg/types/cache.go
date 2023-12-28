@@ -13,6 +13,9 @@
 package types
 
 import (
+	"fmt"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
@@ -68,6 +71,8 @@ type ReleaseKvCache struct {
 	ID         uint32              `json:"id"`
 	ReleaseID  uint32              `json:"reid"`
 	Key        string              `json:"key"`
+	KvType     string              `json:"kv_type"`
+	Revision   *table.Revision     `json:"revision"`
 	Attachment *table.KvAttachment `json:"am"`
 }
 
@@ -119,8 +124,64 @@ type FilePermissionCache struct {
 
 // CredentialCache cache struct.
 type CredentialCache struct {
-	Enabled bool     `json:"enabled"`
-	Scope   []string `json:"scope"`
+	Enabled      bool                `json:"enabled"`
+	Scope        []string            `json:"scope"`
+	scopeMap     map[string][]string `json:"-"` // app:scope
+	isPreprocess bool                `json:"-"`
+}
+
+// preprocess 预处理数据结构, 格式化为app:scope, 方便鉴权处理
+func (c *CredentialCache) preprocess() {
+	if c.isPreprocess {
+		return
+	}
+
+	c.scopeMap = map[string][]string{}
+	for _, v := range c.Scope {
+		index := strings.Index(v, "/")
+		if index == -1 {
+			panic(fmt.Errorf("invalid scope %s", v))
+		}
+
+		app := v[:index]
+		scope := v[index+1:]
+		_, ok := c.scopeMap[app]
+		if !ok {
+			c.scopeMap[app] = []string{scope}
+		} else {
+			c.scopeMap[app] = append(c.scopeMap[app], scope)
+		}
+	}
+
+	c.isPreprocess = true
+}
+
+// MatchApp 是否匹配 App
+func (c *CredentialCache) MatchApp(app string) bool {
+	c.preprocess()
+
+	_, ok := c.scopeMap[app]
+	return ok
+}
+
+// MatchKv 是否匹配kv
+func (c *CredentialCache) MatchKv(app, key string) bool {
+	scopes, ok := c.scopeMap[app]
+	if !ok {
+		return false
+	}
+
+	for _, v := range scopes {
+		ok, err := path.Match(v, key)
+		if err != nil {
+			return false
+		}
+		if ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 // ReleaseCICaches convert ReleasedConfigItem to ReleaseCICache.
@@ -168,6 +229,8 @@ func ReleaseKvCaches(rs []*table.ReleasedKv) []*ReleaseKvCache {
 			ID:        one.ID,
 			ReleaseID: one.ReleaseID,
 			Key:       one.Spec.Key,
+			KvType:    string(one.Spec.KvType),
+			Revision:  one.Revision,
 			Attachment: &table.KvAttachment{
 				BizID: one.Attachment.BizID,
 				AppID: one.Attachment.AppID,

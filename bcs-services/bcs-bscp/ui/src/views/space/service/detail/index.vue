@@ -116,8 +116,14 @@ const setLastAccessedServiceDetail = () => {
 
 // 切换视图
 const handleToggleView = () => {
+  // 非配置管理tab切换为版本详情视图
   if (!versionDetailView.value && route.name !== 'service-config') {
     router.push({ name: 'service-config', params: { spaceId: bkBizId.value, appId: appId.value } });
+  }
+
+  // 版本详情视图下，选中版本为废弃版本时，切换到配置详情视图，需要默认选中未命名版本
+  if (versionDetailView.value && versionData.value.spec.deprecated) {
+    router.push({ name: 'service-config', params: { spaceId: bkBizId.value, appId: appId.value, versionId: 0 } });
   }
   versionDetailView.value = !versionDetailView.value;
 };
@@ -143,8 +149,8 @@ const handleToggleView = () => {
   position: relative;
   width: 280px;
   height: 100%;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
   z-index: 10;
+  border-right: 1px solid #dcdee5;
   // transition: width 0.1s ease-in-out;
 }
 .config-setting-area {
@@ -153,7 +159,7 @@ const handleToggleView = () => {
   .service-detail-header {
     &.version-detail-header {
       background: #fafbfd;
-      box-shadow: none;
+      border: none;
     }
   }
   .setting-content-container {

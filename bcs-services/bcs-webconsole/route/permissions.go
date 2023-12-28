@@ -132,12 +132,12 @@ func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 
 	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
-		return errors.Wrap(err, i18n.GetMessage(c, "项目不正确"))
+		return errors.Wrap(err, i18n.T(c, "项目不正确"))
 	}
 
 	cluster, err := bcs.GetCluster(c.Request.Context(), project.ProjectId, clusterId)
 	if err != nil {
-		return errors.Wrap(err, i18n.GetMessage(c, "项目或者集群Id不正确"))
+		return errors.Wrap(err, i18n.T(c, "项目或者集群Id不正确"))
 	}
 
 	authCtx.BindProject = project
@@ -159,7 +159,7 @@ func initContextWithIAMProject(c *gin.Context, authCtx *AuthContext) error {
 		return err
 	}
 	if !allow {
-		return errors.New(i18n.GetMessage(c, "没有权限"))
+		return errors.New(i18n.T(c, "没有权限"))
 	}
 
 	return nil

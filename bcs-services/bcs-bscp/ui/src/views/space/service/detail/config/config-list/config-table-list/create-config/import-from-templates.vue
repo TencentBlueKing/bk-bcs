@@ -74,7 +74,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import { ITemplateBoundByAppData } from '../../../../../../../../../types/config';
 import { IAllPkgsGroupBySpaceInBiz } from '../../../../../../../../../types/template';
 import {

@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../../store/global';
 import useConfigStore from '../../../../../../store/config';
 import { IConfigVersion } from '../../../../../../../types/config';

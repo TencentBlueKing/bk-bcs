@@ -31,6 +31,7 @@ import (
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	pbct "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
 	pbhook "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
@@ -420,8 +421,15 @@ func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.R
 	kvMeta := make([]*sfs.KvMetaV1, len(kvList))
 	for idx, one := range kvList {
 		kvMeta[idx] = &sfs.KvMetaV1{
-			ID:  one.ID,
-			Key: one.Key,
+			ID:     one.ID,
+			Key:    one.Key,
+			KvType: one.KvType,
+			Revision: &pbbase.Revision{
+				Creator:  one.Revision.Creator,
+				Reviser:  one.Revision.Reviser,
+				CreateAt: one.Revision.CreatedAt.Format(time.RFC3339),
+				UpdateAt: one.Revision.UpdatedAt.Format(time.RFC3339),
+			},
 			KvAttachment: &pbkv.KvAttachment{
 				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,

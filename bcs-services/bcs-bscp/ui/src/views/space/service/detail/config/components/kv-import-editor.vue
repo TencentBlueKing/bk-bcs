@@ -47,14 +47,13 @@
       <div class="editor-content">
         <CodeEditor
           ref="codeEditorRef"
-          :model-value="kvsContent"
-          @update:model-value="kvsContent = $event"
+          v-model="kvsContent"
           @enter="separatorShow = true"
           :error-line="errorLine"
           :placeholder="editorPlaceholder"
         />
         <div class="separator" v-show="separatorShow">
-          <SeparatorSelect @closed="separatorShow = false" @confirm="separator = $event" />
+          <SeparatorSelect @closed="separatorShow = false" @confirm="handleSelectSeparator" />
         </div>
       </div>
     </div>
@@ -74,6 +73,9 @@ interface errorLineItem {
   lineNumber: number;
   errorInfo: string;
 }
+
+const emits = defineEmits(['trigger']);
+
 const route = useRoute();
 const isOpenFullScreen = ref(false);
 const codeEditorRef = ref();
@@ -89,19 +91,16 @@ const appId = ref(Number(route.params.appId));
 
 watch(
   () => kvsContent.value,
-  () => {
-    if (shouldValidate.value) {
-      handleValidateEditor();
-    }
+  (val) => {
+    handleValidateEditor();
+    if (!val) emits('trigger', false);
   },
 );
 
 watch(
   () => errorLine.value,
   (val) => {
-    if (val.length === 0) {
-      shouldValidate.value = false;
-    }
+    shouldValidate.value = val.length > 0;
   },
 );
 
@@ -139,7 +138,7 @@ const handleValidateEditor = () => {
     if (item === '') return;
     const kvContent = item.split(separator.value);
     const key = kvContent[0];
-    const kv_type = kvContent[1];
+    const kv_type = kvContent[1] ? kvContent[1].toLowerCase() : '';
     const value = kvContent[2];
     kvs.value.push({
       key,
@@ -161,16 +160,26 @@ const handleValidateEditor = () => {
         errorInfo: '类型为number 值不为number',
         lineNumber: index + 1,
       });
+    } else if (value === '') {
+      errorLine.value.push({
+        errorInfo: 'value不能为空',
+        lineNumber: index + 1,
+      });
     }
   });
+  emits('trigger', kvsContent.value && errorLine.value.length === 0);
 };
+
 // 导入kv
 const handleImport = async () => {
-  handleValidateEditor();
-  shouldValidate.value = true;
-  if (errorLine.value.length > 0) return Promise.reject();
   await batchUpsertKv(bkBizId.value, appId.value, kvs.value);
 };
+
+const handleSelectSeparator = (selectSeparator: string) => {
+  separator.value = selectSeparator;
+  handleValidateEditor();
+};
+
 defineExpose({
   handleImport,
 });
