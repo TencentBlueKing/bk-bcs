@@ -103,6 +103,9 @@ type ControllerOption struct {
 	// LBCacheExpiration lb缓存过期时间，单位分钟
 	LBCacheExpiration int
 
+	// ListenerAutoReconcileSeconds != 0时， 间隔若干秒reconcile一次listener, 默认1200s（20分钟）
+	ListenerAutoReconcileSeconds int
+
 	// Conf HttpServer conf
 	Conf Conf
 	// ServCert http server cert
@@ -218,6 +221,9 @@ func (op *ControllerOption) BindFromCommandLine() {
 
 	flag.UintVar(&op.HttpServerPort, "http_svr_port", 8088, "port for ingress controller http server")
 	flag.IntVar(&op.LBCacheExpiration, "lb_cache_expiration", 60, "lb cache expiration, unit: minute ")
+
+	flag.IntVar(&op.ListenerAutoReconcileSeconds, "listener_auto_reconcile_seconds", 1200,
+		"seconds to auto reconcile listeners")
 
 	flag.Parse()
 

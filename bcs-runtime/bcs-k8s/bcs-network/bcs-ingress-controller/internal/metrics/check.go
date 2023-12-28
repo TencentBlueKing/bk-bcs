@@ -36,8 +36,8 @@ var (
 	PortBindingConflictGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "bkbcs_ingressctrl",
 		Subsystem: "portbinding",
-		Name:      "total",
-		Help:      "The total portBinding managed by controller",
+		Name:      "conflict",
+		Help:      "The conflict portbinding gauge",
 	}, []string{"conflict_key"})
 )
 
