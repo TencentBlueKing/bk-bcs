@@ -17,6 +17,7 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 )
 
