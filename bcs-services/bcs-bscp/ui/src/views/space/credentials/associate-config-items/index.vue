@@ -14,7 +14,7 @@
           :id="props.id"
           :rules="rules"
           @change="handleRuleChange"
-          @formChange="isFormChange = true"/>
+          @form-change="isFormChange = true"/>
         <RuleView v-else :rules="rules" @edit="isRuleEdit = true" />
       </div>
       <!-- <div class="results-wrapper">
