@@ -18,7 +18,7 @@
             :filterable="true"
             :disabled="rule.type === 'del'"
             placeholder="请选择服务"
-            @select="handleServiceChange(index)"
+            @change="handleRuleContentChange(index)"
           >
             <bk-option
               v-for="service in serviceList"
@@ -64,7 +64,7 @@
         </div>
         <div class="error-info" v-if="!rule.isRight || !rule.isSelectService">
           <span v-if="!rule.isSelectService">请选择服务</span>
-          <span v-if="!rule.isRight" class="rule-error">输入的规则有误，请重新确认</span>
+          <span v-else-if="!rule.isRight" class="rule-error">输入的规则有误，请重新确认</span>
         </div>
       </div>
     </div>
@@ -195,19 +195,13 @@ const handleInput = (index: number) => {
 const handleRuleContentChange = (index: number) => {
   const rule = localRules.value[index];
   localRules.value[index].isRight = validateRule(rule.app + rule.content);
+  localRules.value[index].isSelectService = !!localRules.value[index].app;
   if (rule.id) {
-    rule.type = rule.content === rule.original ? '' : 'modify';
+    rule.type = (rule.content === rule.original && rule.app === rule.originalApp) ? '' : 'modify';
   }
   updateRuleParams();
 };
 
-const handleServiceChange = (index: number) => {
-  const rule = localRules.value[index];
-  if (rule.id) {
-    rule.type = rule.app === rule.originalApp ? '' : 'modify';
-  }
-  updateRuleParams();
-};
 
 const updateRuleParams = () => {
   const params: IRuleUpdateParams = {
