@@ -8,11 +8,11 @@ replace (
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.12.1-tx.3
-	k8s.io/api => k8s.io/api v0.27.0
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.27.0
-	k8s.io/apimachinery => k8s.io/apimachinery v0.27.0
-	k8s.io/cli-runtime => k8s.io/cli-runtime v0.27.0
-	k8s.io/client-go => k8s.io/client-go v0.27.0
+	k8s.io/api => k8s.io/api v0.27.2
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.27.2
+	k8s.io/apimachinery => k8s.io/apimachinery v0.27.2
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.27.2
+	k8s.io/client-go => k8s.io/client-go v0.27.2
 )
 
 require (

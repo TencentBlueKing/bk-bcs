@@ -327,3 +327,116 @@ func HasLog(ctx context.Context, indexSetID int) (bool, error) {
 	}
 	return result.Data.Hits.Total > 0, nil
 }
+
+// GetStorageClusters get storage clusters
+func GetStorageClusters(ctx context.Context, spaceUID string) ([]GetStorageClustersRespData, error) {
+	url := fmt.Sprintf("%s/databus_storage/cluster_groups", config.G.BKLog.APIServer)
+	authInfo, err := component.GetBKAPIAuthorization()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetQueryParam("space_uid", spaceUID).
+		Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !resp.IsSuccess() {
+		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+
+	result := &GetStorageClustersResp{}
+	err = json.Unmarshal(resp.Body(), result)
+	if err != nil {
+		return nil, errors.Errorf("unmarshal resp body error, %s", err.Error())
+	}
+
+	if !result.IsSuccess() {
+		return nil, errors.Errorf("has log esquery_search error, code: %d, message: %s, request_id: %s",
+			result.GetCode(), result.Message, result.RequestID)
+	}
+	return result.Data, nil
+}
+
+// SwitchStorage switch storage
+func SwitchStorage(ctx context.Context, spaceUID, bcsClusterID string, storageClusterID int) error {
+	url := fmt.Sprintf("%s/switch_bcs_collector_storage", config.G.BKLog.APIServer)
+	authInfo, err := component.GetBKAPIAuthorization()
+	if err != nil {
+		return err
+	}
+
+	body := map[string]interface{}{
+		"space_uid":          spaceUID,
+		"bcs_cluster_id":     bcsClusterID,
+		"storage_cluster_id": storageClusterID,
+	}
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetBody(body).
+		Post(url)
+
+	if err != nil {
+		return err
+	}
+
+	if !resp.IsSuccess() {
+		return errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+
+	result := &BaseResp{}
+	err = json.Unmarshal(resp.Body(), result)
+	if err != nil {
+		return errors.Errorf("unmarshal resp body error, %s", err.Error())
+	}
+
+	if !result.IsSuccess() {
+		return errors.Errorf("switch storage error, code: %d, message: %s, request_id: %s",
+			result.GetCode(), result.Message, result.RequestID)
+	}
+	return nil
+}
+
+// GetBcsCollectorStorage get bcs collector storage
+func GetBcsCollectorStorage(ctx context.Context, spaceUID, clusterID string) (int, error) {
+	url := fmt.Sprintf("%s/get_bcs_collector_storage", config.G.BKLog.APIServer)
+	authInfo, err := component.GetBKAPIAuthorization()
+	if err != nil {
+		return 0, err
+	}
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetQueryParam("space_uid", spaceUID).
+		SetQueryParam("bcs_cluster_id", clusterID).
+		Get(url)
+
+	if err != nil {
+		return 0, err
+	}
+
+	if !resp.IsSuccess() {
+		return 0, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+
+	result := &GetBcsCollectorStorageResp{}
+	err = json.Unmarshal(resp.Body(), result)
+	if err != nil {
+		return 0, errors.Errorf("unmarshal resp body error, %s", err.Error())
+	}
+
+	if !result.IsSuccess() {
+		return 0, errors.Errorf("get_bcs_collector_storage error, code: %d, message: %s, request_id: %s",
+			result.GetCode(), result.Message, result.RequestID)
+	}
+	data, err := result.Data.Int64()
+	if err != nil {
+		return 0, nil
+	}
+	return int(data), nil
+}

@@ -14,7 +14,7 @@ Usage:
     [ -e --check ]
 ```
 
-## 预置检查（可选）
+## 预置检查
 
 机器执行`./bcs-ops --check all`，脚本将对这些 `check_kernel check_swap check_selinux check_firewalld check_yum_proxy check_http_proxy check_openssl check_hostname check_tools` 项目进行统一检查。您应当注意检查结果为 `[FATAL]` 项目，并在准备环境的过程中进行调整。
 
@@ -62,8 +62,19 @@ ip -6 route add fd00::/8 via <next hop> dev <interface> src <lan_ipv6>
 
 > 注意：`fe80::/10` link-local 地址不能用于 k8s 的 node-ip。
 
+也可以在执行脚本安装前直接手动设定
+
+```bash
+set -x
+LAN_IP=<YOUR LAN IP>
+LAN_IPv6<YOUR LAN ipv6> #if enable K8S_IPv6_STATUS=dualstack
+set +x
+```
+
 ## 安装示例
+
 目前仅支持 k8s `1.20.15` （默认）, `1.23.17` 和 `1.24.15` 版本。
+
 ### 集群创建与节点添加
 
 1. 在第一台主机（后称中控机）上启动集群控制平面：`./bcs-ops --instal master`，集群启动成功后会显示加入集群的指令
@@ -108,6 +119,7 @@ ip -6 route add fd00::/8 via <next hop> dev <interface> src <lan_ipv6>
 注意，当你要使用多个特性时，相关的环境变量都得申明
 
 ### 示例：使用 containerd 作为容器运行时
+
 ```bash
 set -a
 K8S_VER="1.24.15"
@@ -128,7 +140,9 @@ set +a
 ```
 
 ### 示例： 修改镜像 registry，并信任
+
 相关环境变量。镜像仓库默认为蓝鲸官方镜像仓库`hub.bktencent.com`，如果采用自己的镜像仓库，并且没有证书信任，需要添加下面两项环境变量
+
 ```bash
 # 默认镜像地址
 set -a
@@ -151,8 +165,25 @@ K8S_VER="${VERSION}"
 set +a
 ```
 
+#### 离线包制作
+
+离线包的制作依赖命令工具 [yq](https://github.com/mikefarah/yq) 和 [skopeo](https://github.com/containers/skopeo)，请提前安装对应的工具。
+制作 bcs-ops 所支持的离线包版本。
+
+```bash
+make build_offline_pkg
+```
+
+如果你只想制作对应版本的离线包（该版本应该在`env/offline-manifest.yaml`中出现）。
+
+```bash
+./offline_package.sh env/offline-manifest.yaml <verion>
+```
+
 ### 示例：开启 apiserver 高可用
+
 APISERVER_HA_MODE 支持 [bcs-apiserver-proxy](https://github.com/TencentBlueKing/bk-bcs/blob/master/docs/features/bcs-apiserver-proxy/bcs-apiserver-proxy.md)（默认） 和 kube-vip。
+
 ```bash
 set -a
 VIP=192.168.1.1 # 按照实际的需求填写，避免冲突
@@ -172,6 +203,7 @@ bcs-ops 脚本工具集也支持安装 k8s 相关插件。多数的插件需要�
 #### localpv
 
 相关配置项，中控机启动前需要运行
+
 ```bash
 # 申明 CSI 组件 为 `localpv`
 K8S_CSI=localpv

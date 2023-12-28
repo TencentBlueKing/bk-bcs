@@ -5,7 +5,7 @@
         v-model="localVal.name"
         placeholder="请输入1~64个字符，只允许英文、数字、下划线、中划线或点"
         :disabled="!editable"
-        @change="change"
+        @input="change"
       />
     </bk-form-item>
     <bk-form-item label="配置文件路径" property="path" :required="true">
@@ -18,7 +18,7 @@
           }"
           >配置文件路径</span>
       </template>
-      <bk-input v-model="localVal.path" placeholder="请输入绝对路径" :disabled="!editable" @change="change" />
+      <bk-input v-model="localVal.path" placeholder="请输入绝对路径" :disabled="!editable" @input="change" />
     </bk-form-item>
     <bk-form-item label="配置文件描述" property="memo">
       <bk-input
@@ -26,8 +26,8 @@
         type="textarea"
         :maxlength="200"
         :disabled="!editable"
-        @change="change"
         :resize="true"
+        @input="change"
       />
     </bk-form-item>
     <bk-form-item label="配置文件格式">
@@ -93,10 +93,10 @@
         </div>
       </bk-form-item>
       <bk-form-item label="用户" property="user" :required="true">
-        <bk-input v-model="localVal.user" :disabled="!editable" @change="change"></bk-input>
+        <bk-input v-model="localVal.user" :disabled="!editable" @input="change"></bk-input>
       </bk-form-item>
       <bk-form-item label="用户组" property="user_group" :required="true">
-        <bk-input v-model="localVal.user_group" :disabled="!editable" @change="change"></bk-input>
+        <bk-input v-model="localVal.user_group" :disabled="!editable" @input="change"></bk-input>
       </bk-form-item>
     </div>
     <bk-form-item v-if="localVal.file_type === 'binary'" label="配置内容" :required="true">
@@ -389,7 +389,6 @@ const validate = async () => {
 const instance = getCurrentInstance();
 
 const change = () => {
-  console.log('change', instance?.uid);
   const content = localVal.value.file_type === 'binary' ? fileContent.value : stringContent.value;
   emits('change', localVal.value, content);
 };

@@ -1,4 +1,4 @@
-import InfoBox from 'bkui-vue/lib/info-box';
+import { InfoBox } from 'bkui-vue';
 
 const useModalCloseConfirmation = (title?: string, subTitle?: string) => new Promise((resolve) => {
   InfoBox({

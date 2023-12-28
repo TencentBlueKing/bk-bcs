@@ -42,6 +42,7 @@ type LogRuleContainer struct {
 	Conditions    *Conditions   `json:"conditions,omitempty"`
 	LabelSelector LabelSelector `json:"label_selector,omitempty"`
 	Container     Container     `json:"container,omitempty"`
+	Multiline     *Multiline    `json:"multiline,omitempty"`
 }
 
 // LabelSelector label selector
@@ -59,8 +60,9 @@ type Container struct {
 
 // Label label
 type Label struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+	Key      string `json:"key"`
+	Operator string `json:"operator,omitempty"`
+	Value    string `json:"value"`
 }
 
 // Expression expression
@@ -94,6 +96,13 @@ func (s SeparatorFilters) IntFieldIndex() int {
 		return 1
 	}
 	return int(i)
+}
+
+// Multiline multi line
+type Multiline struct {
+	MultilinePattern  string      `json:"multiline_pattern"`
+	MultilineMaxLines json.Number `json:"multiline_max_lines"`
+	MultilineTimeout  json.Number `json:"multiline_timeout"`
 }
 
 // DataInfo data info
@@ -166,11 +175,16 @@ func (resp *ListBCSCollectorRespData) ToLogRule() LogRule {
 		conf := resp.ContainerConfig[0]
 		namespaces := make([]string, 0)
 		paths := make([]string, 0)
+		var multiline *Multiline
 		if conf.Namespaces != nil {
 			namespaces = conf.Namespaces
 		}
 		if conf.Params.Paths != nil {
 			paths = conf.Params.Paths
+		}
+		if conf.Params.MultilinePattern != "" {
+			multiline = &Multiline{MultilinePattern: conf.Params.MultilinePattern,
+				MultilineMaxLines: conf.Params.MultilineMaxLines, MultilineTimeout: conf.Params.MultilineTimeout}
 		}
 		rule.LogRuleContainer = LogRuleContainer{
 			Namespaces:    namespaces,
@@ -180,6 +194,7 @@ func (resp *ListBCSCollectorRespData) ToLogRule() LogRule {
 			Conditions:    conf.Params.Conditions,
 			LabelSelector: conf.LabelSelector,
 			Container:     conf.Container,
+			Multiline:     multiline,
 		}
 		// append data info
 		rule.DataInfo = DataInfo{
@@ -235,6 +250,7 @@ type ContainerConfig struct {
 type Params struct {
 	Paths      []string    `json:"paths"`
 	Conditions *Conditions `json:"conditions"`
+	Multiline
 }
 
 // StdoutConf stdout config
@@ -338,4 +354,28 @@ type QueryLogResp struct {
 			Total int `json:"total"`
 		} `json:"hits"`
 	} `json:"data"`
+}
+
+// GetStorageClustersResp xxx
+type GetStorageClustersResp struct {
+	BaseResp
+	Data []GetStorageClustersRespData `json:"data"`
+}
+
+// GetStorageClustersRespData xxx
+type GetStorageClustersRespData struct {
+	StorageClusterID   int     `json:"storage_cluster_id"`
+	StorageClusterName string  `json:"storage_cluster_name"`
+	StorageVersion     string  `json:"storage_version"`
+	StorageUsage       int     `json:"storage_usage"`
+	StorageTotal       float64 `json:"storage_total"`
+	IsPlatform         bool    `json:"is_platform"`
+	IsSelected         bool    `json:"is_selected"`
+	Description        string  `json:"description"`
+}
+
+// GetBcsCollectorStorageResp xxx
+type GetBcsCollectorStorageResp struct {
+	BaseResp
+	Data json.Number `json:"data"`
 }

@@ -2218,7 +2218,7 @@ message CreateCloudAccountRequest {
   string creator = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator",
     description: "cloud账号创建者"
-  }, (validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 1024}];
   string projectID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "projectID",
     description: "CloudAccount所属的项目信息"
@@ -2279,7 +2279,7 @@ message UpdateCloudAccountRequest {
   string updater = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater",
     description: "更新者"
-  },(validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z]+$"}];
+  },(validate.rules).string = {min_len : 2, max_len : 1024}];
   Account account = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "account",
     description: "cloud更新云账号信息"
@@ -2648,7 +2648,7 @@ message CreateCloudVPCRequest {
   string creator = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator",
     description: "信息创建者"
-  }, (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 100}];
   uint32 reservedIPNum = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "reservedIPNum",
     description: "vpc预留IP数量,默认不预留"
@@ -2714,7 +2714,7 @@ message UpdateCloudVPCRequest {
   string updater = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater",
     description: "更新者"
-  },(validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z]+$"}];
+  },(validate.rules).string = {min_len : 2, max_len : 100}];
   google.protobuf.UInt32Value reservedIPNum = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "reservedIPNum",
     description: "更新vpc预留IP数量"
@@ -4092,7 +4092,7 @@ message CreateNodeTemplateRequest {
   string creator = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator",
     description: "cloud账号创建者"
-  }, (validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 1024}];
   RunTimeInfo runtime = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "runtime",
     description: "节点池节点运行时可运行时版本信息, 若不指定和集群运行时和版本保持一致"
@@ -4215,7 +4215,7 @@ message UpdateNodeTemplateRequest {
   string updater = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater",
     description: "更新者"
-  },(validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z]+$"}];
+  },(validate.rules).string = {min_len : 2, max_len : 1024}];
   RunTimeInfo runtime = 19 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "runtime",
     description: "节点池节点运行时可运行时版本信息, 若不指定和集群运行时和版本保持一致"
@@ -7357,7 +7357,7 @@ message CreateCloudRequest {
   string creator = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator", 
     description: "信息创建者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
+  }, (validate.rules).string = {min_len : 2, max_len : 20}
   ];
   string cloudProvider = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudProvider", 
@@ -7459,7 +7459,7 @@ message UpdateCloudRequest {
   string updater = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater", 
     description: "更新者"
-  },(validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z]+$"}
+  },(validate.rules).string = {min_len : 2, max_len : 1024}
   ];
   string cloudProvider = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudProvider", 
@@ -7713,7 +7713,7 @@ message CreateNodeGroupRequest {
   string creator = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator", 
     description: "信息创建者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
+  }, (validate.rules).string = {min_len : 2, max_len : 20}
   ];
   string provider = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "provider", 
@@ -7850,7 +7850,7 @@ message UpdateNodeGroupRequest {
   string updater = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater", 
     description: "信息更新者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
+  }, (validate.rules).string = {min_len : 2, max_len : 20}
   ];
   string provider = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "provider", 
@@ -8161,7 +8161,7 @@ message AddNodesRequest {
   string operator = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator",
     description : "操作者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 20}];
   string nodeTemplateID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "nodeTemplateID",
     description : "关联的节点模板ID"
@@ -8232,7 +8232,7 @@ message BatchDeleteClusterNodesRequest {
   string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator",
     description : "操作者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 20}];
 }
 
 message BatchDeleteClusterNodesResponse {
@@ -8304,7 +8304,7 @@ message DeleteNodesRequest {
   string operator = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator",
     description : "操作者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 20}];
   bool onlyDeleteInfo = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "onlyDeleteInfo",
     description : "默认为false。设置为true时，仅删除cluster-manager所记录的信息，不会触发任何自动化流程."
@@ -8492,7 +8492,7 @@ message CleanNodesInGroupRequest {
   string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator", 
     description : "操作者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
+  }, (validate.rules).string = {min_len : 2, max_len : 20}
   ];
 }
 
@@ -8553,7 +8553,7 @@ message CleanNodesInGroupV2Request {
   string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator",
     description : "操作者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
+  }, (validate.rules).string = {min_len : 2, max_len : 20}
   ];
 }
 

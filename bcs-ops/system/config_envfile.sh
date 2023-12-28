@@ -101,6 +101,7 @@ init_env() {
   K8S_CSI=${K8S_CSI:-""}
   ## localpv
   LOCALPV_DIR=${LOCALPV_DIR:-${BK_HOME}/localpv}
+  LOCALPV_DST_DIR=${LOCALPV_DST_DIR:-"/mnt/blueking"}
   LOCALPV_COUNT=${LOCALPV_COUNT:-20}
   LOCALPV_reclaimPolicy=${LOCALPV_reclaimPolicy:-"Delete"}
 
@@ -151,6 +152,17 @@ source_cluster_env() {
   fi
 }
 
+_setIPUsage_and_exit() {
+  cat <<EOF
+you can set LAN_IP manually by following:
+set -x
+LAN_IP=<YOUR LAN IP>
+LAN_IPv6<YOUR LAN ipv6> #if enable K8S_IPv6_STATUS=dualstack
+set -x
+EOF
+  exit 1
+}
+
 check_env() {
   trap "utils::on_ERR;" ERR
   # match k8s_ver
@@ -176,10 +188,16 @@ check_env() {
   # ToDo: ip format check
   case ${K8S_IPv6_STATUS,,} in
     "disable")
-      [[ -n $LAN_IP ]] || utils::log "ERROR, missing LAN_IP"
+      if [[ -z $LAN_IP ]]; then
+        utils::log "WARN" "missing LAN_IP"
+        _setIPUsage_and_exit
+      fi
       ;;
     "singlestack")
-      [[ -n $LAN_IPv6 ]] || utils::log "ERROR, missing LAN_IPv6"
+      if [[ -z $LAN_IPv6 ]]; then
+        utils::log "WARN" "missing LAN_IPv6"
+        _setIPUsage_and_exit
+      fi
       if [[ $K8S_VER =~ ^1\.2[0-2] ]]; then
         utils::log "ERROR" \
           "ipv6 DualStack only support 1.2[3-4].x, here is ${K8S_VER}"
@@ -189,8 +207,10 @@ check_env() {
       K8S_POD_CIDR=${K8S_POD_CIDRv6}
       ;;
     "dualstack")
-      [[ -n $LAN_IP ]] || utils::log "ERROR, missing LAN_IP"
-      [[ -n $LAN_IPv6 ]] || utils::log "ERROR, missing LAN_IPv6"
+      if [[ -z $LAN_IP ]] || [[ -z $LAN_IPv6 ]]; then
+        utils::log "WARN" "missing LAN_IP or LAN_IPv6"
+        _setIPUsage_and_exit
+      fi
       if [[ $K8S_VER =~ ^1\.2[0-2] ]]; then
         utils::log "ERROR" \
           "ipv6 DualStack only support 1.2[3-4].x, here is ${K8S_VER}"
@@ -275,6 +295,7 @@ $(
       "localpv")
         cat <<CSI_EOF
 LOCALPV_DIR="${LOCALPV_DIR}"
+LOCALPV_DST_DIR="${LOCALPV_DST_DIR}"
 LOCALPV_COUNT="${LOCALPV_COUNT}"
 LOCALPV_reclaimPolicy="${LOCALPV_reclaimPolicy}"
 CSI_EOF

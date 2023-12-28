@@ -78,7 +78,7 @@
 <script lang="ts" setup>
 import { ref, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import InfoBox from 'bkui-vue/lib/info-box';
+import { InfoBox } from 'bkui-vue';
 import useConfigStore from '../../../../../../../../store/config';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import { IConfigItem } from '../../../../../../../../../types/config';

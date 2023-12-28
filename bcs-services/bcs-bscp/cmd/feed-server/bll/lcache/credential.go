@@ -119,6 +119,40 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 	return false, nil
 }
 
+// GetCred 获取凭证, 并缓存
+func (s *Credential) GetCred(kt *kit.Kit, bizID uint32, credential string) (*types.CredentialCache, error) {
+	c, hit, err := s.getCredentialFromCache(kt, bizID, credential)
+	if err != nil {
+		return nil, err
+	}
+
+	if hit {
+		s.mc.hitCounter.With(prm.Labels{"resource": "credential", "biz": tools.Itoa(bizID)}).Inc()
+	}
+
+	// get the cache from cache service directly.
+	opt := &pbcs.GetCredentialReq{
+		BizId:      bizID,
+		Credential: credential,
+	}
+	resp, err := s.cs.CS().GetCredential(kt.RpcCtx(), opt)
+	if err != nil {
+		s.mc.errCounter.With(prm.Labels{"resource": "credential", "biz": tools.Itoa(bizID)}).Inc()
+		return nil, err
+	}
+
+	err = jsoni.UnmarshalFromString(resp.JsonRaw, &c)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.client.SetWithExpire(fmt.Sprintf("%d-%s", bizID, credential), c, 10*time.Second); err != nil {
+		logs.Errorf("refresh credential %d-%s cache failed, %s", bizID, credential, err.Error())
+	}
+
+	return &c, nil
+}
+
 func (s *Credential) getCredentialFromCache(_ *kit.Kit, bizID uint32, credential string) (
 	c types.CredentialCache, hit bool, err error) {
 

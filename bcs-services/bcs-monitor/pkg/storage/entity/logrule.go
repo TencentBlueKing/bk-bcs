@@ -42,6 +42,7 @@ const (
 // LogRule log rule
 type LogRule struct {
 	ID                 primitive.ObjectID `json:"id" bson:"_id"`
+	DisplayName        string             `json:"display_name" bson:"displayName"`
 	Name               string             `json:"name" bson:"name"`
 	RuleName           string             `json:"rule_name" bson:"ruleName"`
 	RuleID             int                `json:"rule_id" bson:"ruleID"`

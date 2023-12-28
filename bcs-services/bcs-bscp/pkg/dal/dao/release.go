@@ -173,7 +173,7 @@ func (dao *releaseDao) UpdateDeprecated(kit *kit.Kit, bizID, appID, releaseID ui
 	m := dao.genQ.Release
 	_, err := m.WithContext(kit.Ctx).
 		Where(m.ID.Eq(releaseID), m.AppID.Eq(appID), m.BizID.Eq(bizID)).
-		Update(m.Deprecated, true)
+		Update(m.Deprecated, deprecated)
 	return err
 }
 

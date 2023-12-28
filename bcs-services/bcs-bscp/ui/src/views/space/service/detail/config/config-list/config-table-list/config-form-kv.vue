@@ -1,7 +1,7 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item label="配置项名称" property="key" :required="true">
-      <bk-input v-model="localVal.key" :disabled="editable || view" @change="change" />
+      <bk-input v-model="localVal.key" :disabled="editable" @input="change" />
     </bk-form-item>
     <bk-form-item label="数据类型" property="kv_type" :required="true" :description="typeDescription">
       <bk-radio-group v-model="localVal.kv_type">
@@ -9,24 +9,23 @@
           v-for="kvType in CONFIG_KV_TYPE"
           :key="kvType.id"
           :label="kvType.id"
-          :disabled="radioDisabled(kvType.id)"
-          >{{ kvType.name }}</bk-radio
-        >
+          :disabled="radioDisabled(kvType.id)">
+          {{ kvType.name }}
+        </bk-radio>
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item label="配置项值" property="value" :required="true">
       <bk-input
         v-if="localVal.kv_type === 'string' || localVal.kv_type === 'number'"
         v-model.trim="localVal!.value"
-        @change="change"
-        :disabled="view"
+        :placeholder="stringTypePlaceholder"
+        @input="change"
       />
       <KvConfigContentEditor
         v-else
         ref="KvCodeEditorRef"
         :languages="localVal.kv_type"
         :content="localVal.value"
-        :editable="!view"
         @change="handleStringContentChange"
       />
     </bk-form-item>
@@ -48,14 +47,12 @@ const props = withDefaults(
   defineProps<{
     config: IConfigKvEditParams;
     editable?: boolean;
-    view?: boolean;
     bkBizId: string;
     id: number; // 服务ID或者模板空间ID
     isTpl?: boolean; // 是否未模板配置文件，非模板配置文件和模板配置文件的上传、下载接口参数有差异
   }>(),
   {
     editable: false,
-    view: false,
   },
 );
 
@@ -68,17 +65,24 @@ const localVal = ref({
 
 
 const typeDescription = computed(() => {
-  if (appData.value.spec.data_type !== 'any' && !props.editable && !props.view) {
+  if (appData.value.spec.data_type !== 'any' && !props.editable) {
     return `已限制该服务下所有配置项数据类型为${appData.value.spec.data_type}，如需其他数据类型，请调整服务属性下的数据类型`;
   }
   return '';
 });
 
 const radioDisabled = computed(() => (kvTypeId: string) => {
-  if (appData.value.spec.data_type !== 'any' || props.editable || props.view) {
+  if (appData.value.spec.data_type !== 'any' || props.editable) {
     return kvTypeId !== localVal.value.kv_type;
   }
   return false;
+});
+
+const stringTypePlaceholder = computed(() => {
+  if (localVal.value.kv_type === 'string') {
+    return '请输入(仅支持大小不超过2M)';
+  }
+  return '请输入';
 });
 
 const rules = {
@@ -107,7 +111,7 @@ const rules = {
 
 // 新建文件任意类型默认选中string
 onMounted(() => {
-  if (!props.editable && !props.view) {
+  if (!props.editable) {
     localVal.value.kv_type = appData.value.spec.data_type! === 'any' ? 'string' : appData.value.spec.data_type!;
   }
 });

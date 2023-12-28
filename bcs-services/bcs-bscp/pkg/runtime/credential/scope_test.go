@@ -72,6 +72,32 @@ func TestCredentialScopeMatchApp(t *testing.T) {
 	}
 }
 
+func TestCredentialToAppAndScope(t *testing.T) {
+	testCases := []struct {
+		cred        string
+		app         string
+		scope       string
+		expectMatch bool
+	}{
+		{"*/*", "*", "/*", true},
+		{"mysql/*", "mysql", "/*", true},
+		{"test-*/*", "test-*", "/*", true},
+		{"*-test-*/*", "*-test-*", "/*", true},
+		{"test-*/*", "test-123", "/*", false},
+		{"mysql/*", "mysql", "/", false},
+	}
+
+	for _, tc := range testCases {
+		cs := Scope(tc.cred)
+		app, scope, err := cs.Split()
+		if err != nil {
+			t.Error(err)
+		}
+		assert.Equal(t, tc.expectMatch,
+			app == tc.app && scope == tc.scope, fmt.Sprintf("scope: %s, appName: %s", tc.scope, tc.app))
+	}
+}
+
 func TestCredentialScopeMatchConfigItem(t *testing.T) {
 	testCases := []struct {
 		scope       string

@@ -15,6 +15,7 @@ package tasks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -91,20 +92,7 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // no
 		return retErr
 	}
 
-	// update response information to task common params
-	if state.Task.CommonParams == nil {
-		state.Task.CommonParams = make(map[string]string)
-	}
-
-	if len(recordInstanceList.InstanceIPList) > 0 && len(recordInstanceList.DeviceIDList) > 0 {
-		state.Task.CommonParams[cloudprovider.DeviceIDsKey.String()] = strings.Join(recordInstanceList.DeviceIDList, ",")
-		// Job Result parameter
-		state.Task.NodeIPList = recordInstanceList.InstanceIPList
-		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(recordInstanceList.InstanceIPList, ",")
-		state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(recordInstanceList.InstanceIDList, ",")
-	}
-
-	err = recordClusterExternalNodeToDB(ctx, dependInfo, &RecordInstanceToDBOption{
+	err = recordClusterExternalNodeToDB(ctx, dependInfo, state.Task, &RecordInstanceToDBOption{
 		InstanceIPs: recordInstanceList.InstanceIPList,
 		DeviceIDs:   recordInstanceList.DeviceIDList,
 	})
@@ -221,7 +209,7 @@ type RecordInstanceToDBOption struct {
 
 // 录入第三方节点
 func recordClusterExternalNodeToDB(
-	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, opt *RecordInstanceToDBOption) error {
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, task *proto.Task, opt *RecordInstanceToDBOption) error {
 	var (
 		nodes = make([]*proto.Node, 0)
 		err   error
@@ -248,6 +236,22 @@ func recordClusterExternalNodeToDB(
 	if err != nil {
 		blog.Errorf("recordClusterExternalNodeToDB[%s] failed: %v", taskID, err)
 		return err
+	}
+	if len(nodes) == 0 {
+		blog.Errorf("recordClusterExternalNodeToDB[%s] cmdb sync nodes failed: %v", taskID, opt.InstanceIPs)
+		return errors.New("cmdb sync nodes failed")
+	}
+
+	// update response information to task common params
+	if task.CommonParams == nil {
+		task.CommonParams = make(map[string]string)
+	}
+	if len(opt.InstanceIPs) > 0 && len(opt.DeviceIDs) > 0 {
+		task.CommonParams[cloudprovider.DeviceIDsKey.String()] = strings.Join(opt.DeviceIDs, ",")
+		// Job Result parameter
+		task.NodeIPList = opt.InstanceIPs
+		task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(opt.InstanceIPs, ",")
+		task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(opt.InstanceIDs, ",")
 	}
 
 	for _, n := range nodes {

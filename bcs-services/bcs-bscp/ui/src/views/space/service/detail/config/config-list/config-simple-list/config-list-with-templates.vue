@@ -22,7 +22,7 @@
             <div class="config-name">{{ config.name }}</div>
             <div class="config-type">{{ getConfigTypeName(config.file_type) }}</div>
           </div>
-          <TableEmpty v-if="configList.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch"></TableEmpty>
+          <TableEmpty v-if="group.configs.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch"></TableEmpty>
         </div>
       </div>
     </bk-loading>

@@ -8,7 +8,13 @@
   >
     <section class="associate-config-items">
       <div :class="['rules-wrapper', { 'edit-mode': isRuleEdit }]">
-        <RuleEdit v-if="isRuleEdit" :id="props.id" :rules="rules" @change="handleRuleChange" ref="ruleEdit"/>
+        <RuleEdit
+          v-if="isRuleEdit"
+          ref="ruleEdit"
+          :id="props.id"
+          :rules="rules"
+          @change="handleRuleChange"
+          @form-change="isFormChange = true"/>
         <RuleView v-else :rules="rules" @edit="isRuleEdit = true" />
       </div>
       <!-- <div class="results-wrapper">
@@ -92,7 +98,6 @@ const handleOpenEdit = () => {
 };
 
 const handleRuleChange = (val: IRuleUpdateParams) => {
-  isFormChange.value = true;
   ruleChangeParams.value = Object.assign({}, ruleChangeParams.value, val);
 };
 

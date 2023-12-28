@@ -2257,13 +2257,6 @@ func (m *CreateCloudAccountRequest) Validate() error {
 		}
 	}
 
-	if !_CreateCloudAccountRequest_Creator_Pattern.MatchString(m.GetCreator()) {
-		return CreateCloudAccountRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	if utf8.RuneCountInString(m.GetProjectID()) < 2 {
 		return CreateCloudAccountRequestValidationError{
 			field:  "ProjectID",
@@ -2331,8 +2324,6 @@ var _ interface {
 } = CreateCloudAccountRequestValidationError{}
 
 var _CreateCloudAccountRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CreateCloudAccountRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CreateCloudAccountResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -2476,13 +2467,6 @@ func (m *UpdateCloudAccountRequest) Validate() error {
 		}
 	}
 
-	if !_UpdateCloudAccountRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
-		return UpdateCloudAccountRequestValidationError{
-			field:  "Updater",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z]+$\"",
-		}
-	}
-
 	if v, ok := interface{}(m.GetAccount()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return UpdateCloudAccountRequestValidationError{
@@ -2555,8 +2539,6 @@ var _ interface {
 var _UpdateCloudAccountRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _UpdateCloudAccountRequest_AccountID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateCloudAccountRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
 
 // Validate checks the field values on UpdateCloudAccountResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -3808,13 +3790,6 @@ func (m *CreateCloudVPCRequest) Validate() error {
 		}
 	}
 
-	if !_CreateCloudVPCRequest_Creator_Pattern.MatchString(m.GetCreator()) {
-		return CreateCloudVPCRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	// no validation rules for ReservedIPNum
 
 	// no validation rules for BusinessID
@@ -3895,8 +3870,6 @@ var _CreateCloudVPCRequest_Available_InLookup = map[string]struct{}{
 	"true":  {},
 	"false": {},
 }
-
-var _CreateCloudVPCRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CreateCloudVPCResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -4029,13 +4002,6 @@ func (m *UpdateCloudVPCRequest) Validate() error {
 		}
 	}
 
-	if !_UpdateCloudVPCRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
-		return UpdateCloudVPCRequestValidationError{
-			field:  "Updater",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z]+$\"",
-		}
-	}
-
 	if v, ok := interface{}(m.GetReservedIPNum()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return UpdateCloudVPCRequestValidationError{
@@ -4124,8 +4090,6 @@ var _UpdateCloudVPCRequest_Available_InLookup = map[string]struct{}{
 	"true":  {},
 	"false": {},
 }
-
-var _UpdateCloudVPCRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
 
 // Validate checks the field values on UpdateCloudVPCResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -7498,13 +7462,6 @@ func (m *CreateNodeTemplateRequest) Validate() error {
 		}
 	}
 
-	if !_CreateNodeTemplateRequest_Creator_Pattern.MatchString(m.GetCreator()) {
-		return CreateNodeTemplateRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	if v, ok := interface{}(m.GetRuntime()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return CreateNodeTemplateRequestValidationError{
@@ -7615,8 +7572,6 @@ var _ interface {
 } = CreateNodeTemplateRequestValidationError{}
 
 var _CreateNodeTemplateRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CreateNodeTemplateRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CreateNodeTemplateResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -7798,13 +7753,6 @@ func (m *UpdateNodeTemplateRequest) Validate() error {
 		}
 	}
 
-	if !_UpdateNodeTemplateRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
-		return UpdateNodeTemplateRequestValidationError{
-			field:  "Updater",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z]+$\"",
-		}
-	}
-
 	if v, ok := interface{}(m.GetRuntime()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return UpdateNodeTemplateRequestValidationError{
@@ -7913,8 +7861,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateNodeTemplateRequestValidationError{}
-
-var _UpdateNodeTemplateRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
 
 // Validate checks the field values on UpdateNodeTemplateResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -16087,13 +16033,6 @@ func (m *CreateCloudRequest) Validate() error {
 		}
 	}
 
-	if !_CreateCloudRequest_Creator_Pattern.MatchString(m.GetCreator()) {
-		return CreateCloudRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	// no validation rules for CloudProvider
 
 	// no validation rules for Config
@@ -16186,8 +16125,6 @@ var _ interface {
 } = CreateCloudRequestValidationError{}
 
 var _CreateCloudRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CreateCloudRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CreateCloudResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -16367,13 +16304,6 @@ func (m *UpdateCloudRequest) Validate() error {
 		}
 	}
 
-	if !_UpdateCloudRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
-		return UpdateCloudRequestValidationError{
-			field:  "Updater",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z]+$\"",
-		}
-	}
-
 	// no validation rules for CloudProvider
 
 	// no validation rules for Config
@@ -16464,8 +16394,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateCloudRequestValidationError{}
-
-var _UpdateCloudRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
 
 // Validate checks the field values on UpdateCloudResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -17149,13 +17077,6 @@ func (m *CreateNodeGroupRequest) Validate() error {
 		}
 	}
 
-	if !_CreateNodeGroupRequest_Creator_Pattern.MatchString(m.GetCreator()) {
-		return CreateNodeGroupRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	// no validation rules for Provider
 
 	// no validation rules for ConsumerID
@@ -17252,8 +17173,6 @@ var _ interface {
 var _CreateNodeGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _CreateNodeGroupRequest_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CreateNodeGroupRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on GroupExtraInfo with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
@@ -17600,13 +17519,6 @@ func (m *UpdateNodeGroupRequest) Validate() error {
 		}
 	}
 
-	if !_UpdateNodeGroupRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
-		return UpdateNodeGroupRequestValidationError{
-			field:  "Updater",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	// no validation rules for Provider
 
 	// no validation rules for ConsumerID
@@ -17697,8 +17609,6 @@ var _ interface {
 } = UpdateNodeGroupRequestValidationError{}
 
 var _UpdateNodeGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateNodeGroupRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on UpdateNodeGroupResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -18669,13 +18579,6 @@ func (m *AddNodesRequest) Validate() error {
 		}
 	}
 
-	if !_AddNodesRequest_Operator_Pattern.MatchString(m.GetOperator()) {
-		return AddNodesRequestValidationError{
-			field:  "Operator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	// no validation rules for NodeTemplateID
 
 	// no validation rules for IsExternalNode
@@ -18748,8 +18651,6 @@ var _ interface {
 } = AddNodesRequestValidationError{}
 
 var _AddNodesRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _AddNodesRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on AddNodesResponse with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -18882,13 +18783,6 @@ func (m *BatchDeleteClusterNodesRequest) Validate() error {
 		}
 	}
 
-	if !_BatchDeleteClusterNodesRequest_Operator_Pattern.MatchString(m.GetOperator()) {
-		return BatchDeleteClusterNodesRequestValidationError{
-			field:  "Operator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	return nil
 }
 
@@ -18950,8 +18844,6 @@ var _ interface {
 } = BatchDeleteClusterNodesRequestValidationError{}
 
 var _BatchDeleteClusterNodesRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _BatchDeleteClusterNodesRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on BatchDeleteClusterNodesResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -19174,13 +19066,6 @@ func (m *DeleteNodesRequest) Validate() error {
 		}
 	}
 
-	if !_DeleteNodesRequest_Operator_Pattern.MatchString(m.GetOperator()) {
-		return DeleteNodesRequestValidationError{
-			field:  "Operator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	// no validation rules for OnlyDeleteInfo
 
 	// no validation rules for NodeTemplateID
@@ -19249,8 +19134,6 @@ var _ interface {
 } = DeleteNodesRequestValidationError{}
 
 var _DeleteNodesRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _DeleteNodesRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on DeleteNodesResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -19867,13 +19750,6 @@ func (m *CleanNodesInGroupRequest) Validate() error {
 		}
 	}
 
-	if !_CleanNodesInGroupRequest_Operator_Pattern.MatchString(m.GetOperator()) {
-		return CleanNodesInGroupRequestValidationError{
-			field:  "Operator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	return nil
 }
 
@@ -19936,8 +19812,6 @@ var _ interface {
 var _CleanNodesInGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _CleanNodesInGroupRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CleanNodesInGroupRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CleanNodesInGroupResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -20089,13 +19963,6 @@ func (m *CleanNodesInGroupV2Request) Validate() error {
 		}
 	}
 
-	if !_CleanNodesInGroupV2Request_Operator_Pattern.MatchString(m.GetOperator()) {
-		return CleanNodesInGroupV2RequestValidationError{
-			field:  "Operator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	return nil
 }
 
@@ -20158,8 +20025,6 @@ var _ interface {
 var _CleanNodesInGroupV2Request_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _CleanNodesInGroupV2Request_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CleanNodesInGroupV2Request_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CleanNodesInGroupV2Response with the
 // rules defined in the proto definition for this message. If any rules are

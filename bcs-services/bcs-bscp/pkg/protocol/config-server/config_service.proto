@@ -745,11 +745,11 @@ service Config {
 }
 
 message UpdateCredentialScopeReq {
-  repeated uint32 del_id = 1;
-  repeated string add_scope = 2;
-  uint32 biz_id = 3;
-  uint32 credential_id = 4;
-  repeated pbcrs.UpdateScopeSpec alter_scope = 5;
+  uint32 biz_id = 1;
+  uint32 credential_id = 2;
+  repeated pbcrs.CredentialScopeSpec add_scope = 3;
+  repeated pbcrs.UpdateScopeSpec alter_scope = 4;
+  repeated uint32 del_id = 5;
 }
 
 message UpdateCredentialScopeResp {}
@@ -869,6 +869,7 @@ message ListAppsBySpaceRestReq {
   uint32 limit = 3;
   string operator = 4;
   string name = 5;
+  bool all = 6;
 }
 
 message ListAppsResp {
@@ -1275,6 +1276,7 @@ message ListHookRevisionReferencesResp {
     uint32 release_id = 5;
     string release_name = 6;
     string type = 7;
+    bool deprecated = 8;
   }
   uint32 count = 1;
   repeated Detail details = 2;
@@ -1297,6 +1299,7 @@ message ListHookReferencesResp {
     uint32 release_id = 5;
     string release_name = 6;
     string type = 7;
+    bool deprecated = 8;
   }
   uint32 count = 1;
   repeated Detail details = 2;

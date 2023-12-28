@@ -46,8 +46,8 @@ func NewUpdateVirtualClusterQuotaAction(model store.ClusterManagerModel,
 	}
 }
 
-func (ca *UpdateVirtualClusterQuotaAction) validate() error {
-	err := ca.req.Validate()
+func (ua *UpdateVirtualClusterQuotaAction) validate() error {
+	err := ua.req.Validate()
 	if err != nil {
 		return err
 	}
@@ -55,68 +55,68 @@ func (ca *UpdateVirtualClusterQuotaAction) validate() error {
 	return nil
 }
 
-func (ca *UpdateVirtualClusterQuotaAction) setResp(code uint32, msg string) {
-	ca.resp.Code = code
-	ca.resp.Message = msg
-	ca.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+func (ua *UpdateVirtualClusterQuotaAction) setResp(code uint32, msg string) {
+	ua.resp.Code = code
+	ua.resp.Message = msg
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle create virtual cluster request
-func (ca *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmproto.UpdateVirtualClusterQuotaReq,
+func (ua *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmproto.UpdateVirtualClusterQuotaReq,
 	resp *cmproto.UpdateVirtualClusterQuotaResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("create virtual cluster failed, req or resp is empty")
 		return
 	}
-	ca.ctx = ctx
-	ca.req = req
-	ca.resp = resp
+	ua.ctx = ctx
+	ua.req = req
+	ua.resp = resp
 
 	var err error
 
 	// create validate cluster
-	if err = ca.validate(); err != nil {
-		ca.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+	if err = ua.validate(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 
-	ca.cluster, err = actions.GetClusterInfoByClusterID(ca.model, ca.req.ClusterID)
+	ua.cluster, err = actions.GetClusterInfoByClusterID(ua.model, ua.req.ClusterID)
 	if err != nil {
-		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 
 	var nsInfo cmproto.NamespaceInfo
-	err = utils.ToStringObject([]byte(ca.cluster.ExtraInfo[common.VClusterNamespaceInfo]), &nsInfo)
+	err = utils.ToStringObject([]byte(ua.cluster.ExtraInfo[common.VClusterNamespaceInfo]), &nsInfo)
 	if err != nil {
-		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
 
 	// update quota
-	err = ca.k8sOp.UpdateResourceQuota(ctx, ca.cluster.SystemID, clusterops.ResourceQuotaInfo{
+	err = ua.k8sOp.UpdateResourceQuota(ctx, ua.cluster.SystemID, clusterops.ResourceQuotaInfo{
 		Name:        nsInfo.Name,
-		CpuRequests: ca.req.Quota.CpuRequests,
-		CpuLimits:   ca.req.Quota.CpuLimits,
-		MemRequests: ca.req.Quota.MemoryRequests,
-		MemLimits:   ca.req.Quota.MemoryLimits,
+		CpuRequests: ua.req.Quota.CpuRequests,
+		CpuLimits:   ua.req.Quota.CpuLimits,
+		MemRequests: ua.req.Quota.MemoryRequests,
+		MemLimits:   ua.req.Quota.MemoryLimits,
 	})
 	if err != nil {
-		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
 
-	nsInfo.Quota.CpuRequests = ca.req.Quota.CpuRequests
-	nsInfo.Quota.CpuLimits = ca.req.Quota.CpuLimits
-	nsInfo.Quota.MemoryRequests = ca.req.Quota.MemoryRequests
-	nsInfo.Quota.MemoryLimits = ca.req.Quota.MemoryLimits
+	nsInfo.Quota.CpuRequests = ua.req.Quota.CpuRequests
+	nsInfo.Quota.CpuLimits = ua.req.Quota.CpuLimits
+	nsInfo.Quota.MemoryRequests = ua.req.Quota.MemoryRequests
+	nsInfo.Quota.MemoryLimits = ua.req.Quota.MemoryLimits
 
-	ca.cluster.ExtraInfo[common.VClusterNamespaceInfo] = utils.ToJSONString(nsInfo)
-	err = ca.model.UpdateCluster(ctx, ca.cluster)
+	ua.cluster.ExtraInfo[common.VClusterNamespaceInfo] = utils.ToJSONString(nsInfo)
+	err = ua.model.UpdateCluster(ctx, ua.cluster)
 	if err != nil {
-		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 
-	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }

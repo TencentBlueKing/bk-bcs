@@ -230,8 +230,8 @@ service Data {
 message UpdateCredentialScopesReq {
   uint32 biz_id = 1;
   uint32 credential_id = 2;
-  repeated pbcrs.UpdateScopeSpec updated = 3;
-  repeated string created = 4;
+  repeated pbcrs.CredentialScopeSpec created = 3;
+  repeated pbcrs.UpdateScopeSpec updated = 4;
   repeated uint32 deleted = 5;
 }
 message UpdateCredentialScopesResp {}
@@ -344,6 +344,7 @@ message ListAppsRestReq {
   uint32 limit = 3;
   string operator = 4;
   string name = 5;
+  bool all = 6;
 }
 
 message ListAppsResp {
@@ -631,6 +632,7 @@ message ListHookReferencesResp {
     uint32 release_id = 5;
     string release_name = 6;
     string type = 7;
+    bool deprecated = 8;
   }
   uint32 count = 1;
   repeated Detail details = 2;
@@ -716,6 +718,7 @@ message ListHookRevisionReferencesResp {
     uint32 release_id = 5;
     string release_name = 6;
     string type = 7;
+    bool deprecated = 8;
   }
   uint32 count = 1;
   repeated Detail details = 2;

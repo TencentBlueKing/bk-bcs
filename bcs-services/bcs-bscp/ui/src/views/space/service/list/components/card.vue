@@ -200,7 +200,7 @@ const goToDetail = () => {
     border-radius: 2px;
     color: #979ba5;
     line-height: 28px;
-    margin: 12px;
+    margin: 12px 8px;
     padding-left: 8px;
     display: flex;
     align-items: end;

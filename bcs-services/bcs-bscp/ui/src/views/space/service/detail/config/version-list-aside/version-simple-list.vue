@@ -36,6 +36,11 @@
               <div class="action-list">
                 <div class="action-item" @click="handleDiffDialogShow(version)">版本对比</div>
                 <div
+                  v-bk-tooltips="{
+                    disabled: version.status.publish_status === 'not_released',
+                    placement: 'bottom',
+                    content: '只支持未上线版本'
+                  }"
                   :class="['action-item', { disabled: version.status.publish_status !== 'not_released' }]"
                   @click="handleDeprecateDialogShow(version)">
                   版本废弃
@@ -60,6 +65,7 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
+import { Message } from 'bkui-vue';
 import { Ellipsis } from 'bkui-vue/lib/icon';
 import useConfigStore from '../../../../../../store/config';
 import { getConfigVersionList, deprecateVersion } from '../../../../../../api/config';
@@ -185,7 +191,10 @@ const handleDeprecateVersion = () => {
     deprecateVersion(props.bkBizId, props.appId, id)
       .then(() => {
         showOperateConfirmDialog.value = false;
-        console.log(versionsInView);
+        Message({
+          theme: 'success',
+          message: '版本废弃成功',
+        });
         if (id !== versionData.value.id) {
           return;
         }

@@ -89,9 +89,7 @@ const editorPlaceholder = ref(['示例：', '变量名 变量类型 变量值 �
 watch(
   () => variables.value,
   (val) => {
-    if (shouldValidate.value) {
-      handleValidateEditor();
-    }
+    handleValidateEditor();
     if (!val) emits('trigger', false);
   },
 );

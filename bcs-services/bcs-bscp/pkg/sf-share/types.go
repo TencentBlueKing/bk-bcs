@@ -479,5 +479,7 @@ type KvMetaV1 struct {
 	// ID is released configuration item identity id.
 	ID           uint32             `json:"id"`
 	Key          string             `json:"key"`
+	KvType       string             `json:"kv_type"`
+	Revision     *pbbase.Revision   `json:"revision"`
 	KvAttachment *pbkv.KvAttachment `json:"kv_attachment"`
 }

@@ -57,10 +57,15 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context,
 	tx := s.dao.GenQuery().Begin()
 
 	for _, updated := range req.Updated {
+		credScope, err := credential.New(updated.App, updated.Scope)
+		if err != nil {
+			return nil, err
+		}
+
 		credentialScope := &table.CredentialScope{
 			ID: updated.Id,
 			Spec: &table.CredentialScopeSpec{
-				CredentialScope: credential.Scope(updated.Scope),
+				CredentialScope: credScope,
 				ExpiredAt:       time.Now().UTC(),
 			},
 			Attachment: &table.CredentialScopeAttachment{
@@ -90,9 +95,14 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context,
 	}
 
 	for _, created := range req.Created {
+		credScope, err := credential.New(created.App, created.Scope)
+		if err != nil {
+			return nil, err
+		}
+
 		credentialScope := &table.CredentialScope{
 			Spec: &table.CredentialScopeSpec{
-				CredentialScope: credential.Scope(created),
+				CredentialScope: credScope,
 				ExpiredAt:       time.Now().UTC(),
 			},
 			Attachment: &table.CredentialScopeAttachment{

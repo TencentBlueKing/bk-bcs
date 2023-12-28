@@ -104,6 +104,7 @@ func (l GetLogRuleRespSortByStatus) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 // CreateLogRuleReq req
 type CreateLogRuleReq struct {
+	DisplayName string        `json:"display_name" form:"display_name"`
 	Name        string        `json:"name" form:"name" binding:"required" validate:"max=30,min=5,regexp=^[A-Za-z0-9_]+$"`
 	RuleName    string        `json:"-" form:"-"`
 	Description string        `json:"description"`
@@ -113,7 +114,11 @@ type CreateLogRuleReq struct {
 
 // toEntity convert to entity.LogRule
 func (req *CreateLogRuleReq) toEntity(c *rest.Context) *entity.LogRule {
+	if req.DisplayName == "" {
+		req.DisplayName = req.Name
+	}
 	return &entity.LogRule{
+		DisplayName: req.DisplayName,
 		Name:        req.Name,
 		RuleName:    req.RuleName,
 		Description: req.Description,
@@ -148,13 +153,18 @@ func (req *CreateLogRuleReq) toBKLog(c *rest.Context) *bklog.CreateBCSCollectorR
 
 // UpdateLogRuleReq req
 type UpdateLogRuleReq struct {
+	DisplayName string        `json:"display_name" form:"display_name"`
 	Description string        `json:"description"`
 	Rule        bklog.LogRule `json:"rule"`
 }
 
 // toEntity convert to entity.LogRule
-func (req *UpdateLogRuleReq) toEntity(username, projectCode string) entity.M {
+func (req *UpdateLogRuleReq) toEntity(username, projectCode, ruleName string) entity.M {
+	if req.DisplayName == "" {
+		req.DisplayName = ruleName
+	}
 	return entity.M{
+		"displayName":              req.DisplayName,
 		"description":              req.Description,
 		entity.FieldKeyStatus:      entity.PendingStatus,
 		entity.FieldKeyMessage:     "",
@@ -269,11 +279,11 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 	}
 	resp.Config.LogRuleContainer.Paths = append(resp.Config.LogRuleContainer.Paths, logConfig.Spec.LogPaths...)
 	for tagk, tagv := range logConfig.Spec.LogTags {
-		resp.Config.ExtraLabels = append(resp.Config.ExtraLabels, bklog.Label{Key: tagk, Value: tagv})
+		resp.Config.ExtraLabels = append(resp.Config.ExtraLabels, bklog.Label{Key: tagk, Operator: "=", Value: tagv})
 	}
 	for tagk, tagv := range logConfig.Spec.Selector.MatchLabels {
 		resp.Config.LogRuleContainer.LabelSelector.MatchLabels = append(resp.Config.ExtraLabels, // nolint
-			bklog.Label{Key: tagk, Value: tagv})
+			bklog.Label{Key: tagk, Operator: "=", Value: tagv})
 	}
 	if logConfig.Spec.WorkloadNamespace != "" {
 		resp.Config.LogRuleContainer.Namespaces = []string{logConfig.Spec.WorkloadNamespace}
@@ -296,7 +306,8 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 			resp.Config.LogRuleContainer.Paths = append(resp.Config.LogRuleContainer.Paths, v.LogPaths...)
 			resp.Config.LogRuleContainer.EnableStdout = v.Stdout
 			for tagk, tagv := range v.LogTags {
-				resp.Config.ExtraLabels = append(resp.Config.ExtraLabels, bklog.Label{Key: tagk, Value: tagv})
+				resp.Config.ExtraLabels = append(resp.Config.ExtraLabels, bklog.Label{
+					Key: tagk, Operator: "=", Value: tagv})
 			}
 		}
 		resp.Config.LogRuleContainer.Container.ContainerName = strings.Join(names, ",")

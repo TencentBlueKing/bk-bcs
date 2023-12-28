@@ -14,9 +14,14 @@ package k8sclient
 
 import (
 	"context"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	defaultTimeout = 20 * time.Second
 )
 
 // GetNodeList 获取集群节点列表
@@ -102,6 +107,8 @@ func GetNodeInfo(ctx context.Context, clusterId, nodeName string) (*v1.Node, err
 // GetMasterNodeList 获取集群节点列表
 func GetMasterNodeList(ctx context.Context, clusterID string) ([]string, []string, error) {
 	client, err := GetK8SClientByClusterId(clusterID)
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
 	if err != nil {
 		return nil, nil, err
 	}

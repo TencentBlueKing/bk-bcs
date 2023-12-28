@@ -123,10 +123,10 @@ const handleSelect = async (id: number) => {
   }
   .close-btn {
     position: absolute;
-    top: 18px;
+    top: 16px;
     right: 10px;
     font-size: 12px;
-    z-index: 1;
+    z-index: 10;
     .arrow-icon {
       margin-left: 4px;
     }
