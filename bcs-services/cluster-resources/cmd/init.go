@@ -57,6 +57,7 @@ import (
 	rbacHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/rbac"
 	resHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/resource"
 	storageHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/storage"
+	templateSetHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/templateset"
 	viewHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/view"
 	workloadHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/workload"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
@@ -229,6 +230,10 @@ func (crSvc *clusterResourcesService) initHandler() error { // nolint:cyclop
 	if err := clusterRes.RegisterViewConfigHandler(crSvc.microSvc.Server(), viewHdlr.New(crSvc.model)); err != nil {
 		return err
 	}
+	if err := clusterRes.RegisterTemplateSetHandler(
+		crSvc.microSvc.Server(), templateSetHdlr.New(crSvc.model)); err != nil {
+		return err
+	}
 	if err := clusterRes.RegisterMultiClusterHandler(crSvc.microSvc.Server(), multiHdlr.New()); err != nil {
 		return err
 	}
@@ -323,6 +328,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		clusterRes.RegisterRBACGwFromEndpoint, clusterRes.RegisterHPAGwFromEndpoint,
 		clusterRes.RegisterCustomResGwFromEndpoint, clusterRes.RegisterResourceGwFromEndpoint,
 		clusterRes.RegisterViewConfigGwFromEndpoint, clusterRes.RegisterMultiClusterGwFromEndpoint,
+		clusterRes.RegisterTemplateSetGwFromEndpoint,
 	} {
 		err := epRegister(crSvc.ctx, rmMux, endpoint, grpcDialOpts)
 		if err != nil {

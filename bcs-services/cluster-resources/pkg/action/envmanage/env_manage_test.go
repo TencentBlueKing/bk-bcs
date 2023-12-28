@@ -10,18 +10,33 @@
  * limitations under the License.
  */
 
-package entity
+// Package envmanage environment manage
+package envmanage
 
-// 定义一批统一的key, 用在db相关的字段
-const (
-	FieldKeyObjectID    = "_id"
-	FieldKeyProjectCode = "projectCode"
-	FieldKeyClusterID   = "clusterID"
-	FieldKeyName        = "name"
-	FieldKeyScope       = "scope"
-	FieldKeyEnv         = "env"
+import (
+	"testing"
 
-	FieldKeyCreateBy = "createBy"
-	FieldKeyCreateAt = "createAt"
-	FieldKeyUpdateAt = "updateAt"
+	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
+
+func TestValidateAssociate(t *testing.T) {
+	associates := []*clusterRes.Associate{
+		{
+			Cluster:   "1",
+			Namespace: "1",
+		}, {
+			Cluster:   "1",
+			Namespace: "2",
+		}, {
+			Cluster:   "2",
+			Namespace: "1",
+		}, {
+			Cluster:   "2",
+			Namespace: "2",
+		},
+	}
+	err := validateAssociate(associates)
+	if err != nil {
+		t.Errorf("validateAssociate err: %s", err)
+	}
+}

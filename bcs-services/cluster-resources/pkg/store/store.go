@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/envmanage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/view"
 )
@@ -33,15 +34,24 @@ type ClusterResourcesModel interface {
 	GetViewByName(ctx context.Context, projectCode, name string) (*entity.View, error)
 	ListViews(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (int64, []*entity.View, error)
 	DeleteView(ctx context.Context, id string) error
+
+	// 环境管理
+	GetEnvManage(ctx context.Context, id string) (*entity.EnvManage, error)
+	ListEnvManages(ctx context.Context, cond *operator.Condition) ([]*entity.EnvManage, error)
+	CreateEnvManage(ctx context.Context, envManage *entity.EnvManage) (string, error)
+	UpdateEnvManage(ctx context.Context, id string, envManage entity.M) error
+	DeleteEnvManage(ctx context.Context, id string) error
 }
 
 type modelSet struct {
 	*view.ModelView
+	*envmanage.ModelEnvManage
 }
 
 // New return a new ClusterResourcesModel instance
 func New(db drivers.DB) ClusterResourcesModel {
 	return &modelSet{
-		ModelView: view.New(db),
+		ModelView:      view.New(db),
+		ModelEnvManage: envmanage.New(db),
 	}
 }
