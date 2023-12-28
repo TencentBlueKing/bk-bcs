@@ -48,6 +48,7 @@ export interface IRuleEditing {
   content: string;
   original: string;
   app: string;
+  originalApp: string;
   isRight: boolean;
   isSelectService: boolean
 }

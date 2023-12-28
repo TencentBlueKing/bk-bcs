@@ -65,6 +65,7 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
+import { Message } from 'bkui-vue';
 import { Ellipsis } from 'bkui-vue/lib/icon';
 import useConfigStore from '../../../../../../store/config';
 import { getConfigVersionList, deprecateVersion } from '../../../../../../api/config';
@@ -190,7 +191,10 @@ const handleDeprecateVersion = () => {
     deprecateVersion(props.bkBizId, props.appId, id)
       .then(() => {
         showOperateConfirmDialog.value = false;
-        console.log(versionsInView);
+        Message({
+          theme: 'success',
+          message: '版本废弃成功',
+        });
         if (id !== versionData.value.id) {
           return;
         }

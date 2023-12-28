@@ -18,7 +18,7 @@
             :filterable="true"
             :disabled="rule.type === 'del'"
             placeholder="请选择服务"
-            @select="updateRuleParams"
+            @select="handleServiceChange(index)"
           >
             <bk-option
               v-for="service in serviceList"
@@ -84,7 +84,7 @@ const props = defineProps<{
   rules: ICredentialRule[];
 }>();
 
-const emits = defineEmits(['change']);
+const emits = defineEmits(['change', 'formChange']);
 const serviceList = ref<IAppItem[]>([]);
 const bkBizId = ref(String(route.params.spaceId));
 
@@ -108,7 +108,16 @@ const transformRulesToEditing = (rules: ICredentialRule[]) => {
       id,
       spec: { app, scope },
     } = item;
-    rulesEditing.push({ id, type: '', content: scope, original: scope, isRight: true, app, isSelectService: true });
+    rulesEditing.push({
+      id,
+      type: '',
+      content: scope,
+      original: scope,
+      isRight: true,
+      app,
+      originalApp: app,
+      isSelectService: true,
+    });
   });
   return rulesEditing;
 };
@@ -118,7 +127,16 @@ watch(
   (val) => {
     if (val.length === 0) {
       localRules.value = [
-        { id: 0, type: 'new', content: '', original: '', isRight: true, app: '', isSelectService: true },
+        {
+          id: 0,
+          type: 'new',
+          content: '',
+          original: '',
+          isRight: true,
+          app: '',
+          originalApp: '',
+          isSelectService: true,
+        },
       ];
     } else {
       localRules.value = transformRulesToEditing(val);
@@ -135,6 +153,7 @@ const handleAddRule = (index: number) => {
     original: '',
     isRight: true,
     app: '',
+    originalApp: '',
     isSelectService: true,
   });
 };
@@ -168,15 +187,24 @@ const validateRule = (rule: string) => {
 const handleInput = (index: number) => {
   const rule = localRules.value[index];
   if (!rule.isRight) {
-    rule.isRight = validateRule(rule.content);
+    rule.isRight = validateRule(rule.app + rule.content);
   }
+  emits('formChange');
 };
 
 const handleRuleContentChange = (index: number) => {
   const rule = localRules.value[index];
-  localRules.value[index].isRight = validateRule(rule.content);
+  localRules.value[index].isRight = validateRule(rule.app + rule.content);
   if (rule.id) {
     rule.type = rule.content === rule.original ? '' : 'modify';
+  }
+  updateRuleParams();
+};
+
+const handleServiceChange = (index: number) => {
+  const rule = localRules.value[index];
+  if (rule.id) {
+    rule.type = rule.app === rule.originalApp ? '' : 'modify';
   }
   updateRuleParams();
 };
@@ -204,11 +232,12 @@ const updateRuleParams = () => {
     }
   });
   emits('change', params);
+  emits('formChange');
 };
 
 const handleRuleValidate = () => {
   localRules.value.forEach((item) => {
-    item.isRight = validateRule(item.content);
+    item.isRight = validateRule(item.app + item.content);
     item.isSelectService = !!item.app;
   });
   return localRules.value.some(item => !item.isRight || !item.isSelectService);

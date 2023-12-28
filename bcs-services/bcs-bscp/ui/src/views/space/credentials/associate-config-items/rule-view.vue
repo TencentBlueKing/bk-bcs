@@ -5,7 +5,7 @@
       >项关联规则
     </p>
     <div v-if="props.rules.length > 0" class="rule-list">
-      <div v-for="rule in rules" :key="rule.id" class="rule-item">{{ rule.spec.scope }}</div>
+      <div v-for="rule in rules" :key="rule.id" class="rule-item">{{ rule.spec.app +rule.spec.scope }}</div>
     </div>
     <bk-exception v-else scene="part" type="empty">
       <p class="empty-tips">暂未设置关联规则</p>

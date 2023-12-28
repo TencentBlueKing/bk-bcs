@@ -291,6 +291,7 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context,
 		Limit:    req.Limit,
 		Operator: req.Operator,
 		Name:     req.Name,
+		All:      req.All,
 	}
 	rp, err := s.client.DS.ListAppsRest(kt.RpcCtx(), r)
 	if err != nil {
