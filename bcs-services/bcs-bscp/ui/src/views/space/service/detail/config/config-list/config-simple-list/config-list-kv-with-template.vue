@@ -18,10 +18,10 @@
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
       :config="(selectedConfig as IConfigKvItem)"
-      :editable="isEditConfig"
-      :view="!isEditConfig"
+      :editable="true"
       @confirm="getListData"
     />
+    <ViewConfig v-model:show="isShowView" :config="(selectedConfig as IConfigKvItem)" />
   </section>
 </template>
 <script setup lang="ts">
@@ -33,6 +33,7 @@ import { ICommonQuery } from '../../../../../../../../types/index';
 import { getKvList, getReleaseKvList } from '../../../../../../../api/config';
 import SearchInput from '../../../../../../../components/search-input.vue';
 import EditConfig from '../config-table-list/edit-config-kv.vue';
+import ViewConfig from '../config-table-list/view-config-kv.vue';
 import TableEmpty from '../../../../../../../components/table/table-empty.vue';
 
 const store = useConfigStore();
@@ -48,7 +49,7 @@ const configList = ref<IConfigKvType[]>([]);
 const searchStr = ref('');
 const selectedConfig = ref<IConfigKvItem>();
 const isShowEdit = ref(false);
-const isEditConfig = ref(true);
+const isShowView = ref(false);
 const isSearchEmpty = ref(false);
 
 watch(
@@ -104,8 +105,11 @@ const getListData = async () => {
 
 const handleConfigClick = (config: IConfigKvType) => {
   selectedConfig.value = config.spec;
-  isEditConfig.value = isUnNamedVersion.value;
-  isShowEdit.value = true;
+  if (isUnNamedVersion.value) {
+    isShowEdit.value = true;
+  } else {
+    isShowView.value = true;
+  }
 };
 
 const clearSearch = () => {

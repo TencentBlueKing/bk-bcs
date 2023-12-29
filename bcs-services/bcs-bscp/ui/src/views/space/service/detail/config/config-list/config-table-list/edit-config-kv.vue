@@ -1,7 +1,7 @@
 <template>
   <bk-sideslider
     width="640"
-    :title="sliderTitle"
+    title="编辑配置项"
     :is-show="props.show"
     :before-close="handleBeforeClose"
     @closed="close"
@@ -12,8 +12,7 @@
         class="config-form-wrapper"
         :config="(configForm as IConfigKvItem)"
         :content="content"
-        :editable="editable"
-        :view="view"
+        :editable="true"
         :bk-biz-id="props.bkBizId"
         :id="props.appId"
         @change="handleChange"
@@ -21,36 +20,25 @@
     </div>
 
     <section class="action-btns">
-      <template v-if="editable">
         <bk-button theme="primary" :loading="pending" @click="handleSubmit"> 保存 </bk-button>
         <bk-button @click="close">取消</bk-button>
-      </template>
-      <bk-button v-else @click="close">关闭</bk-button>
     </section>
   </bk-sideslider>
 </template>
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 import Message from 'bkui-vue/lib/message';
 import ConfigForm from './config-form-kv.vue';
 import { updateKv } from '../../../../../../../api/config';
 import { IConfigKvItem } from '../../../../../../../../types/config';
 import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
 
-const props = withDefaults(
-  defineProps<{
+const props = defineProps<{
   bkBizId: string;
   appId: number;
   config: IConfigKvItem;
   show: boolean;
-  editable: boolean;
-  view: boolean
-}>(),
-  {
-    editable: false,
-    view: false,
-  },
-);
+}>();
 
 const emits = defineEmits(['update:show', 'confirm']);
 
@@ -59,7 +47,6 @@ const content = ref('');
 const formRef = ref();
 const pending = ref(false);
 const isFormChange = ref(false);
-const sliderTitle = computed(() => (props.editable ? '编辑配置项' : '查看配置项'));
 
 watch(
   () => props.show,
