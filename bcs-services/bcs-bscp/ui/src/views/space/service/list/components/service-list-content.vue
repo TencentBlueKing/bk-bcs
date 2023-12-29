@@ -325,9 +325,7 @@ const handleClearSearchStr = () => {
   }
 }
 .content-body {
-  margin: 0 auto;
-  padding-bottom: 24px;
-  width: 1233px;
+  padding: 0 343px 24px;
   height: calc(100% - 64px);
   overflow: auto;
   .serving-list {
