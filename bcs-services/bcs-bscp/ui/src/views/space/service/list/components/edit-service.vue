@@ -61,7 +61,7 @@ import { IServiceEditForm } from '../../../../../../types/service';
 import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
 import SearviceForm from './service-form.vue';
 import { IConfigKvType } from '../../../../../../types/config';
-import { InfoBox } from 'bkui-vue';
+import { InfoBox, Message } from 'bkui-vue';
 
 const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 
@@ -140,7 +140,6 @@ const handleEditConfirm = async () => {
     openPermApplyDialog();
     return;
   }
-
   await formCompRef.value.validate();
   const { id, biz_id } = props.service;
   if (serviceEditForm.value.data_type !== 'any') {
@@ -163,8 +162,12 @@ const handleEditConfirm = async () => {
     ...serviceEditForm.value,
   };
 
-  const res =  await updateApp({ id, biz_id, data });
+  const res = await updateApp({ id, biz_id, data });
   serviceData.value = res;
+  Message({
+    theme: 'success',
+    message: '调整服务数据类型成功',
+  });
   emits('reload');
   isViewMode.value = true;
 };
