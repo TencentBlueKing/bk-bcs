@@ -12,7 +12,7 @@
 
 package api
 
-import "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/suite/cases"
+import "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/suite/cases"
 
 func genNormalNameForCreateTest() []string {
 	return []string{

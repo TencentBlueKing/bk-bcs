@@ -15,7 +15,7 @@ package unit
 import (
 	"os"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // DefaultTestLogDir default test log save dir.

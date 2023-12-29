@@ -15,7 +15,7 @@ package types
 import (
 	"errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 // ListHooksWithReferOption defines options to list group.

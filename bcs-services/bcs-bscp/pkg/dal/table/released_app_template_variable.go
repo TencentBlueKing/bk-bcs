@@ -15,7 +15,7 @@ package table
 import (
 	"errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // ReleasedAppTemplateVariable 已生成版本服务的应用模版变量

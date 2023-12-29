@@ -18,7 +18,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // Operator is a factory which defines the operators which is supported to match labels
