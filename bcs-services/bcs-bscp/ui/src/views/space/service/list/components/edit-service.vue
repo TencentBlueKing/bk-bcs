@@ -166,7 +166,7 @@ const handleEditConfirm = async () => {
   serviceData.value = res;
   Message({
     theme: 'success',
-    message: '调整服务数据类型成功',
+    message: '服务属性编辑成功',
   });
   emits('reload');
   isViewMode.value = true;
