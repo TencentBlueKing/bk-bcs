@@ -6,6 +6,8 @@
     width="960"
     height="720"
     ext-cls="variable-import-dialog"
+    :esc-close="false"
+    @closed="handleClose"
   >
     <bk-form>
       <!-- <bk-form-item label="导入方式">
