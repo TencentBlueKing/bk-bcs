@@ -1,11 +1,13 @@
 <template>
   <bk-dialog
-    :is-show="show"
+    :is-show="props.show"
     :title="'批量导入'"
     :theme="'primary'"
     width="960"
     height="720"
     ext-cls="variable-import-dialog"
+    :esc-close="false"
+    @closed="handleClose"
   >
     <bk-form>
       <bk-form-item label="变量内容" required>
@@ -21,21 +23,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import VariableContentEditor from './variables-content-editor.vue';
-const isShow = ref(false);
 const props = defineProps<{
   show: boolean;
 }>();
 const editorRef = ref();
 const confirmBtnPerm = ref(false);
 const emits = defineEmits(['update:show', 'edited']);
-watch(
-  () => props.show,
-  (val) => {
-    isShow.value = val;
-  },
-);
+
 const handleClose = () => {
   emits('update:show', false);
 };
