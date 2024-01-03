@@ -51,12 +51,12 @@
 {
     "labels_or": [
         {
-	    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/biz",
+	    "key": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/ns/biz",
             "op": "eq",
             "value": "lol"
 	},
 	{
-	    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/group_id",
+	    "key": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/ns/group_id",
             "op": "in",
             "value": ["1", "2", "3"]
 	}
@@ -73,12 +73,12 @@
 	"selector": {
 	    "labels_or": [
 	        {
-		    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/biz",
+		    "key": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/ns/biz",
 		    "op": "eq",
 		    "value": "lol"
 	        },
 	        {
-		    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/group_id",
+		    "key": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/ns/group_id",
 		    "op": "in",
 		    "value": ["1", "2", "3"]
 		}
@@ -90,12 +90,12 @@
             "selector": {
 	        "labels_or": [
 	        {
-		    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/biz",
+		    "key": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/ns/biz",
 		    "op": "eq",
 		    "value": "lol"
 	        },
 	        {
-		    "key": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/ns/group_id",
+		    "key": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/ns/group_id",
 		    "op": "in",
 		    "value": ["1", "2", "3"]
 		}

@@ -13,7 +13,7 @@
 // Package pbds provides data service core protocol struct and convert functions.
 package pbds
 
-import "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+import "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 
 // PbInstanceResources convert types InstanceResource to pb InstanceResource
 func PbInstanceResources(instances []*types.InstanceResource) []*InstanceResource {

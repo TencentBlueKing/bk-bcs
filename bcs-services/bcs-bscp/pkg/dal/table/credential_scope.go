@@ -16,7 +16,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/credential"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/credential"
 )
 
 // CredentialScope defines CredentialScope's columns

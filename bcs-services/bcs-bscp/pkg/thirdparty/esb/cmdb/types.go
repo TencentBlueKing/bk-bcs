@@ -15,7 +15,7 @@ package cmdb
 import (
 	"encoding/json"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/types"
 )
 
 // SearchBizParams is esb search cmdb business parameter.
