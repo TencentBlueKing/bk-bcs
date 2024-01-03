@@ -27,14 +27,14 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 	"k8s.io/klog/v2"
 
-	bscp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp"
-	_ "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/docs" // 文档自动注册到 swagger
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/config"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	bscp "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp"
+	_ "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/docs" // 文档自动注册到 swagger
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/config"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 )
 
 // WebServer :

@@ -6,7 +6,7 @@ import "pkg/protocol/core/config-item/config_item.proto";
 
 package pbrci;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci;pbrci";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci;pbrci";
 
 // ReleasedConfigItem source resource reference: pkg/dal/table/release_ci.go
 message ReleasedConfigItem {

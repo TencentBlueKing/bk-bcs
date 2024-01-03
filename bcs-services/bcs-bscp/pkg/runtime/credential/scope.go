@@ -19,7 +19,7 @@ import (
 
 	"github.com/gobwas/glob"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Scope defines the credential scope expression.

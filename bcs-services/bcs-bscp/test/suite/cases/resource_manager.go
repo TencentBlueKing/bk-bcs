@@ -13,7 +13,7 @@
 package cases
 
 import (
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 // ResourceManager struct of resource manager, which is to save created data ids.

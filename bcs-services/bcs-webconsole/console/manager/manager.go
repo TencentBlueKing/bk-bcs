@@ -145,11 +145,14 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 
 	// 结束会话时,处理缓存/关闭文件
 	defer c.recorder.End()
+
 	p := perf.GetGlobalPerformance()
 	defer p.PushMeter(c.meters)
 
-	meterKeyChan := p.Subscribe(c.podCtx.SessionId, c.podCtx.Username)
-	defer p.UnSubscribe(c.podCtx.SessionId)
+	// sessionID 可能被重复连接, 添加内存地址做唯一键
+	sid := fmt.Sprintf("%s:%p", c.podCtx.SessionId, c)
+	meterKeyChan := p.Subscribe(sid, c.podCtx.Username)
+	defer p.UnSubscribe(sid)
 
 	for {
 		select {

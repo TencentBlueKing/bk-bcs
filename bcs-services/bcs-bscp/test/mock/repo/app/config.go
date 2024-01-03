@@ -20,7 +20,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 )
 
 // Setting repo mock related setting.

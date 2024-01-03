@@ -20,7 +20,7 @@ import (
 	_ "github.com/go-sql-driver/mysql" // import mysql drive, used to create conn.
 	"github.com/jmoiron/sqlx"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 )
 
 // connect to mysql
