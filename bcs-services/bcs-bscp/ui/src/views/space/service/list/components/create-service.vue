@@ -16,7 +16,13 @@
       <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
-  <bk-dialog ext-cls="confirm-dialog" :is-show="isShowConfirmDialog" :show-mask="true" :quick-close="false">
+  <bk-dialog
+    ext-cls="confirm-dialog"
+    :is-show="isShowConfirmDialog"
+    :show-mask="true"
+    :quick-close="false"
+    @closed="isShowConfirmDialog = false"
+  >
     <div class="title-icon"><Done fill="#42C06A" /></div>
     <div class="title-info">服务新建成功</div>
     <div class="content-info">

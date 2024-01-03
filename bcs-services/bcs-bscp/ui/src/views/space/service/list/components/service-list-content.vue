@@ -325,11 +325,15 @@ const handleClearSearchStr = () => {
   }
 }
 .content-body {
-  padding: 0 343px 24px;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 24px;
+  margin-left: 13px;
   height: calc(100% - 64px);
   overflow: auto;
   .serving-list {
     display: flex;
+    width: 1233px;
     flex-wrap: wrap;
     align-content: flex-start;
     :deep(.bk-exception-description) {
