@@ -26,7 +26,7 @@ type TemplateVersion struct {
 	Version       string             `json:"version" bson:"version"`
 	Content       string             `json:"content" bson:"content"`
 	Creator       string             `json:"creator" bson:"creator"`
-	UpdateAt      int64              `json:"updateAt" bson:"updateAt"`
+	CreateAt      int64              `json:"createAt" bson:"createAt"`
 }
 
 // ToMap trans TemplateVersion to map
@@ -43,6 +43,6 @@ func (t *TemplateVersion) ToMap() map[string]interface{} {
 	m["version"] = t.Version
 	m["content"] = t.Content
 	m["creator"] = t.Creator
-	m["updateAt"] = t.UpdateAt
+	m["createAt"] = t.CreateAt
 	return m
 }

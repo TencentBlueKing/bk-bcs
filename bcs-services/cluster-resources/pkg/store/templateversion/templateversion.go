@@ -137,8 +137,8 @@ func (m *ModelTemplateVersion) CreateTemplateVersion(
 		templateVersion.ID = primitive.NewObjectIDFromTimestamp(now)
 	}
 
-	if templateVersion.UpdateAt == 0 {
-		templateVersion.UpdateAt = now.UTC().Unix()
+	if templateVersion.CreateAt == 0 {
+		templateVersion.CreateAt = now.UTC().Unix()
 	}
 
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{templateVersion}); err != nil {
@@ -170,8 +170,8 @@ func (m *ModelTemplateVersion) UpdateTemplateVersion(ctx context.Context, id str
 		return err
 	}
 
-	if templateVersion[entity.FieldKeyUpdateAt] == nil {
-		templateVersion.Update(entity.FieldKeyUpdateAt, time.Now().UTC().Unix())
+	if templateVersion[entity.FieldKeyCreateAt] == nil {
+		templateVersion.Update(entity.FieldKeyCreateAt, time.Now().UTC().Unix())
 	}
 
 	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": templateVersion}); err != nil {

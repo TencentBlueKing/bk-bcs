@@ -18,7 +18,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
@@ -147,6 +146,8 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 		return "", errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "元数据名称重复"))
 	}
 
+	userName := ctxkey.GetUsernameFromCtx(ctx)
+
 	// 创建顺序：templateVersion -> template
 	templateVersion := &entity.TemplateVersion{
 		ProjectCode:   p.Code,
@@ -155,7 +156,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 		TemplateSpace: req.TemplateSpace,
 		Version:       req.Version,
 		Content:       req.Content,
-		Creator:       req.Creator,
+		Creator:       userName,
 	}
 
 	_, err = t.model.CreateTemplateVersion(ctx, templateVersion)
@@ -169,10 +170,10 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 		Description:   req.GetDescription(),
 		TemplateSpace: req.GetTemplateSpace(),
 		ResourceType:  req.GetResourceType(),
-		Creator:       req.GetCreator(),
-		Updator:       req.GetUpdator(),
+		Creator:       userName,
+		Updator:       userName,
 		Tags:          req.GetTags(),
-		VersionMode:   action.LatestVersion,
+		VersionMode:   0,
 		Version:       req.GetVersion(),
 	}
 	templateId, err := t.model.CreateTemplate(ctx, template)
@@ -190,7 +191,7 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 	}
 
 	// 校验版本模式
-	if req.VersionMode != action.SpecifyVersion && req.VersionMode != action.LatestVersion {
+	if req.GetVersionMode() != 0 && req.GetVersionMode() != 1 {
 		return errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "版本模式校验失败"))
 	}
 
@@ -204,6 +205,7 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 		return err
 	}
 
+	userName := ctxkey.GetUsernameFromCtx(ctx)
 	// 检验更新 Template 的权限
 	if template.ProjectCode != p.Code {
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
@@ -241,7 +243,7 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 		"name":         req.GetName(),
 		"description":  req.GetDescription(),
 		"resourceType": req.GetResourceType(),
-		"updator":      req.GetUpdator(),
+		"updator":      userName,
 		"tags":         req.GetTags(),
 		"versionMode":  req.GetVersionMode(),
 		"version":      req.GetVersion(),

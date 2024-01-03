@@ -29,7 +29,7 @@ type Template struct {
 	CreateAt      int64              `json:"createAt" bson:"createAt"`
 	UpdateAt      int64              `json:"updateAt" bson:"updateAt"`
 	Tags          []string           `json:"tags" bson:"tags"`
-	VersionMode   string             `json:"versionMode" bson:"versionMode"`
+	VersionMode   int                `json:"versionMode" bson:"versionMode"`
 	Version       string             `json:"version" bson:"version"`
 }
 

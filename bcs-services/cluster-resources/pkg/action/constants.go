@@ -22,9 +22,4 @@ const (
 	FormDataFormat = "formData"
 	// SelectItemsFormat 下拉框数据格式
 	SelectItemsFormat = "selectItems"
-
-	// SpecifyVersion 版本模式 指定版本
-	SpecifyVersion = "指定版本"
-	// LatestVersion 版本模式 更新时间最新
-	LatestVersion = "更新时间最新"
 )

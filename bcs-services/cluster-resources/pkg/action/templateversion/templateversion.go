@@ -145,8 +145,25 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 		return "", err
 	}
 
+	userName := ctxkey.GetUsernameFromCtx(ctx)
 	if len(templateVersions) > 0 {
-		return "", errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "版本号重复"))
+		// 版本存在且不允许覆盖的情况下直接返回
+		if !req.GetForce() {
+			return "", errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "版本已存在"))
+		}
+
+		// 允许覆盖的情况下直接覆盖
+		updateTemplateVersion := entity.M{
+			"description": req.GetDescription(),
+			"version":     req.GetVersion(),
+			"content":     req.GetContent(),
+			"creator":     userName,
+		}
+		if err = t.model.UpdateTemplateVersion(ctx, templateVersions[0].ID.Hex(), updateTemplateVersion); err != nil {
+			return "", err
+		}
+
+		return templateVersions[0].ID.Hex(), nil
 	}
 
 	templateVersion := &entity.TemplateVersion{
@@ -156,63 +173,13 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 		TemplateSpace: req.GetTemplateSpace(),
 		Version:       req.GetVersion(),
 		Content:       req.GetContent(),
-		Creator:       req.GetCreator(),
+		Creator:       userName,
 	}
 	id, err := t.model.CreateTemplateVersion(ctx, templateVersion)
 	if err != nil {
 		return "", err
 	}
 	return id, nil
-}
-
-// Update xxx
-func (t *TemplateVersionAction) Update(ctx context.Context, req *clusterRes.UpdateTemplateVersionReq) error {
-	if err := t.checkAccess(ctx); err != nil {
-		return err
-	}
-
-	p, err := project.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	templateVersion, err := t.model.GetTemplateVersion(ctx, req.GetId())
-	if err != nil {
-		return err
-	}
-
-	// 检验更新 TemplateVersion 的权限
-	if templateVersion.ProjectCode != p.Code {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
-	}
-
-	// 检测版本是否重复
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		entity.FieldKeyTemplateName:  templateVersion.TemplateName,
-		entity.FieldKeyTemplateSpace: templateVersion.TemplateSpace,
-		entity.FieldKeyProjectCode:   p.Code,
-		entity.FieldKeyVersion:       req.GetVersion(),
-	})
-	templateVersions, err := t.model.ListTemplateVersion(ctx, cond)
-	if err != nil {
-		return err
-	}
-
-	// 存在同一个projectCode、不同id、相同的版本号则不能更新
-	if len(templateVersions) > 0 && templateVersions[0].ID.Hex() != req.GetId() {
-		return errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "版本号重复"))
-	}
-
-	updateTemplateVersion := entity.M{
-		"description": req.GetDescription(),
-		"version":     req.GetVersion(),
-		"content":     req.GetContent(),
-		"creator":     req.GetCreator(),
-	}
-	if err := t.model.UpdateTemplateVersion(ctx, req.GetId(), updateTemplateVersion); err != nil {
-		return err
-	}
-	return nil
 }
 
 // Delete xxx

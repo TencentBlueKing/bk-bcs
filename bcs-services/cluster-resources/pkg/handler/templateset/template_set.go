@@ -204,17 +204,6 @@ func (h *Handler) CreateTemplateVersion(
 	return nil
 }
 
-// UpdateTemplateVersion 更新模板文件版本
-func (h *Handler) UpdateTemplateVersion(
-	ctx context.Context, in *clusterRes.UpdateTemplateVersionReq, out *clusterRes.CommonResp) error {
-	action := templateversion.NewTemplateVersionAction(h.model)
-	err := action.Update(ctx, in)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // DeleteTemplateVersion 删除模板文件版本
 func (h *Handler) DeleteTemplateVersion(
 	ctx context.Context, in *clusterRes.DeleteTemplateVersionReq, out *clusterRes.CommonResp) error {
