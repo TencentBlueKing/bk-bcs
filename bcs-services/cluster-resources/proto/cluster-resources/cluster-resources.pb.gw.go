@@ -25032,17 +25032,17 @@ func RegisterTemplateSetGwClient(ctx context.Context, mux *runtime.ServeMux, cli
 }
 
 var (
-	pattern_TemplateSet_GetEnvManage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "env", "manages", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_TemplateSet_GetEnvManage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"clusterresources", "v1", "projects", "projectCode", "envs", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_TemplateSet_ListEnvManages_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"clusterresources", "v1", "projects", "projectCode", "env", "manages"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_TemplateSet_ListEnvManages_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"clusterresources", "v1", "projects", "projectCode", "envs"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_TemplateSet_CreateEnvManage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"clusterresources", "v1", "projects", "projectCode", "env", "manages"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_TemplateSet_CreateEnvManage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"clusterresources", "v1", "projects", "projectCode", "envs"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_TemplateSet_UpdateEnvManage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "env", "manages", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_TemplateSet_UpdateEnvManage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"clusterresources", "v1", "projects", "projectCode", "envs", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_TemplateSet_RenameEnvManage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"clusterresources", "v1", "projects", "projectCode", "env", "manages", "id", "rename"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_TemplateSet_RenameEnvManage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "envs", "id", "rename"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_TemplateSet_DeleteEnvManage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "env", "manages", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_TemplateSet_DeleteEnvManage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"clusterresources", "v1", "projects", "projectCode", "envs", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

@@ -18,16 +18,10 @@ import (
 
 // EnvManage 定义了环境管理的模型
 type EnvManage struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id"`
-	Env         string             `json:"env" bson:"env"`
-	ProjectCode string             `json:"projectCode" bson:"projectCode"`
-	Associates  []Associate        `json:"associates" bson:"associates"`
-}
-
-// Associate 关联命名空间
-type Associate struct {
-	Cluster   string `json:"cluster" bson:"cluster"`
-	Namespace string `json:"namespace" bson:"namespace"`
+	ID                primitive.ObjectID  `json:"id" bson:"_id"`
+	Env               string              `json:"env" bson:"env"`
+	ProjectCode       string              `json:"projectCode" bson:"projectCode"`
+	ClusterNamespaces []ClusterNamespaces `json:"clusterNamespaces" bson:"clusterNamespaces"`
 }
 
 // ToMap trans EnvManage to map
@@ -38,13 +32,13 @@ func (e *EnvManage) ToMap() map[string]interface{} {
 	m := make(map[string]interface{}, 0)
 	m["id"] = e.ID.Hex()
 	m["env"] = e.Env
-	associates := make([]map[string]interface{}, 0)
-	for _, v := range e.Associates {
-		associates = append(associates, map[string]interface{}{
-			"cluster":   v.Cluster,
-			"namespace": v.Namespace,
+	clusterNamespaces := make([]map[string]interface{}, 0)
+	for _, v := range e.ClusterNamespaces {
+		clusterNamespaces = append(clusterNamespaces, map[string]interface{}{
+			"clusterID":  v.ClusterID,
+			"namespaces": v.Namespaces,
 		})
 	}
-	m["associates"] = associates
+	m["clusterNamespaces"] = clusterNamespaces
 	return m
 }

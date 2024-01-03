@@ -15,7 +15,6 @@ package envmanage
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
@@ -126,12 +125,6 @@ func (e *EnvManageAction) Create(ctx context.Context, req *clusterRes.CreateEnvM
 		return "", err
 	}
 
-	// 校验关联命名空间
-	err = validateAssociate(req.GetAssociates())
-	if err != nil {
-		return "", err
-	}
-
 	// 检测同名
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		entity.FieldKeyProjectCode: p.Code,
@@ -147,9 +140,9 @@ func (e *EnvManageAction) Create(ctx context.Context, req *clusterRes.CreateEnvM
 	}
 
 	envManage := &entity.EnvManage{
-		Env:         req.GetEnv(),
-		ProjectCode: p.Code,
-		Associates:  protoAssociatesToEntity(req.GetAssociates()),
+		Env:               req.GetEnv(),
+		ProjectCode:       p.Code,
+		ClusterNamespaces: protoClusterNamespacesToEntity(req.GetClusterNamespaces()),
 	}
 	id, err := e.model.CreateEnvManage(ctx, envManage)
 	if err != nil {
@@ -169,12 +162,6 @@ func (e *EnvManageAction) Update(ctx context.Context, req *clusterRes.UpdateEnvM
 		return err
 	}
 
-	// 校验关联命名空间
-	err = validateAssociate(req.GetAssociates())
-	if err != nil {
-		return err
-	}
-
 	envManage, err := e.model.GetEnvManage(ctx, req.GetId())
 	if err != nil {
 		return err
@@ -185,8 +172,24 @@ func (e *EnvManageAction) Update(ctx context.Context, req *clusterRes.UpdateEnvM
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 	}
 
+	// 检测环境名称是否重复
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyEnv:         req.GetEnv(),
+		entity.FieldKeyProjectCode: p.Code,
+	})
+	envManages, err := e.model.ListEnvManages(ctx, cond)
+	if err != nil {
+		return err
+	}
+
+	// 存在同一个projectCode的环境名称则不能更新
+	if len(envManages) > 0 && envManages[0].ID.Hex() != req.GetId() {
+		return errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "环境名称已存在"))
+	}
+
 	updateEnvManage := entity.M{
-		"associates": protoAssociatesToEntity(req.GetAssociates()),
+		"clusterNamespaces": protoClusterNamespacesToEntity(req.GetClusterNamespaces()),
+		"env":               req.GetEnv(),
 	}
 	if err := e.model.UpdateEnvManage(ctx, req.GetId(), updateEnvManage); err != nil {
 		return err
@@ -227,7 +230,7 @@ func (e *EnvManageAction) Rename(ctx context.Context, req *clusterRes.RenameEnvM
 
 	// 存在同一个projectCode的环境名称则不能更新
 	if len(envManages) > 0 && envManages[0].ID.Hex() != req.GetId() {
-		return errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "环境名称重复"))
+		return errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "环境名称已存在"))
 	}
 
 	updateEnvManage := entity.M{
@@ -266,38 +269,13 @@ func (e *EnvManageAction) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// protoAssociatesToEntity 转换关联命名空间
-func protoAssociatesToEntity(associates []*clusterRes.Associate) []entity.Associate {
-	result := make([]entity.Associate, 0)
-	for _, v := range associates {
-		result = append(result, entity.Associate{
-			Cluster:   v.Cluster,
-			Namespace: v.Namespace,
-		})
+// protoClusterNamespacesToEntity 转换关联命名空间
+func protoClusterNamespacesToEntity(ns []*clusterRes.ClusterNamespaces) []entity.ClusterNamespaces {
+	result := make([]entity.ClusterNamespaces, 0)
+	for _, v := range ns {
+		result = append(result, entity.ClusterNamespaces{
+			ClusterID:  v.ClusterID,
+			Namespaces: v.Namespaces})
 	}
 	return result
-}
-
-// 校验关联命名空间是否重复
-func validateAssociate(associates []*clusterRes.Associate) error {
-	isRepeat := make(map[string]interface{}, 0)
-	for _, v := range associates {
-		// 取不出值就追加
-		if _, ok := isRepeat[v.Cluster].(map[string]interface{}); !ok {
-			// 追加不重复的值
-			isRepeat[v.Cluster] = map[string]interface{}{
-				v.Namespace: struct{}{},
-			}
-			continue
-		}
-
-		// 有值且里面的键值能取到说明有重复
-		if _, ok := isRepeat[v.Cluster].(map[string]interface{})[v.Namespace]; ok {
-			return fmt.Errorf("repeat namespace: cluster: %s, namespace: %s", v.Cluster, v.Namespace)
-		}
-		// 追加不重复的值
-		isRepeat[v.Cluster].(map[string]interface{})[v.Namespace] = struct{}{}
-
-	}
-	return nil
 }

@@ -8426,10 +8426,10 @@ func (m *GetEnvManageReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := GetEnvManageReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -8537,10 +8537,10 @@ func (m *ListEnvManagesReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := ListEnvManagesReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -8650,10 +8650,10 @@ func (m *CreateEnvManageReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := CreateEnvManageReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -8672,7 +8672,7 @@ func (m *CreateEnvManageReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	for idx, item := range m.GetAssociates() {
+	for idx, item := range m.GetClusterNamespaces() {
 		_, _ = idx, item
 
 		if all {
@@ -8680,7 +8680,7 @@ func (m *CreateEnvManageReq) validate(all bool) error {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, CreateEnvManageReqValidationError{
-						field:  fmt.Sprintf("Associates[%v]", idx),
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -8688,7 +8688,7 @@ func (m *CreateEnvManageReq) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, CreateEnvManageReqValidationError{
-						field:  fmt.Sprintf("Associates[%v]", idx),
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -8697,7 +8697,7 @@ func (m *CreateEnvManageReq) validate(all bool) error {
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return CreateEnvManageReqValidationError{
-					field:  fmt.Sprintf("Associates[%v]", idx),
+					field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -8820,10 +8820,10 @@ func (m *UpdateEnvManageReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := UpdateEnvManageReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -8831,7 +8831,7 @@ func (m *UpdateEnvManageReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	for idx, item := range m.GetAssociates() {
+	for idx, item := range m.GetClusterNamespaces() {
 		_, _ = idx, item
 
 		if all {
@@ -8839,7 +8839,7 @@ func (m *UpdateEnvManageReq) validate(all bool) error {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, UpdateEnvManageReqValidationError{
-						field:  fmt.Sprintf("Associates[%v]", idx),
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -8847,7 +8847,7 @@ func (m *UpdateEnvManageReq) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, UpdateEnvManageReqValidationError{
-						field:  fmt.Sprintf("Associates[%v]", idx),
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -8856,13 +8856,24 @@ func (m *UpdateEnvManageReq) validate(all bool) error {
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return UpdateEnvManageReqValidationError{
-					field:  fmt.Sprintf("Associates[%v]", idx),
+					field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
 			}
 		}
 
+	}
+
+	if l := utf8.RuneCountInString(m.GetEnv()); l < 1 || l > 64 {
+		err := UpdateEnvManageReqValidationError{
+			field:  "Env",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if len(errors) > 0 {
@@ -8945,127 +8956,6 @@ var _ interface {
 	ErrorName() string
 } = UpdateEnvManageReqValidationError{}
 
-// Validate checks the field values on Associate with the rules defined in the
-// proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *Associate) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on Associate with the rules defined in
-// the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in AssociateMultiError, or nil
-// if none found.
-func (m *Associate) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *Associate) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if l := utf8.RuneCountInString(m.GetCluster()); l < 1 || l > 64 {
-		err := AssociateValidationError{
-			field:  "Cluster",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		err := AssociateValidationError{
-			field:  "Namespace",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if len(errors) > 0 {
-		return AssociateMultiError(errors)
-	}
-
-	return nil
-}
-
-// AssociateMultiError is an error wrapping multiple validation errors returned
-// by Associate.ValidateAll() if the designated constraints aren't met.
-type AssociateMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m AssociateMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m AssociateMultiError) AllErrors() []error { return m }
-
-// AssociateValidationError is the validation error returned by
-// Associate.Validate if the designated constraints aren't met.
-type AssociateValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e AssociateValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e AssociateValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e AssociateValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e AssociateValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e AssociateValidationError) ErrorName() string { return "AssociateValidationError" }
-
-// Error satisfies the builtin error interface
-func (e AssociateValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sAssociate.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = AssociateValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = AssociateValidationError{}
-
 // Validate checks the field values on RenameEnvManageReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -9100,10 +8990,10 @@ func (m *RenameEnvManageReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := RenameEnvManageReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -9236,10 +9126,10 @@ func (m *DeleteEnvManageReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := DeleteEnvManageReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err

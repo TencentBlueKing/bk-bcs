@@ -4812,37 +4812,37 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
 		{
 			Name:    "TemplateSet.GetEnvManage",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages/{id}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "TemplateSet.ListEnvManages",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "TemplateSet.CreateEnvManage",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs"},
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "TemplateSet.UpdateEnvManage",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages/{id}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
 			Method:  []string{"PUT"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "TemplateSet.RenameEnvManage",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages/{id}/rename"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}/rename"},
 			Method:  []string{"PUT"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "TemplateSet.DeleteEnvManage",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages/{id}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
 			Method:  []string{"DELETE"},
 			Handler: "rpc",
 		},
@@ -4970,37 +4970,37 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 	h := &templateSetHandler{hdlr}
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.GetEnvManage",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages/{id}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.ListEnvManages",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.CreateEnvManage",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.UpdateEnvManage",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages/{id}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
 		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.RenameEnvManage",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages/{id}/rename"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}/rename"},
 		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.DeleteEnvManage",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/env/manages/{id}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
 		Method:  []string{"DELETE"},
 		Handler: "rpc",
 	}))
