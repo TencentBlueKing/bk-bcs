@@ -20,6 +20,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/envmanage"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/template"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/templatespace"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/templateversion"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/view"
 )
@@ -84,6 +88,6 @@ func New(db drivers.DB) ClusterResourcesModel {
 		ModelTemplateSpace:   templatespace.New(db),
 		ModelTemplate:        template.New(db),
 		ModelTemplateVersion: templateversion.New(db),
-		ModelEnvManage: envmanage.New(db),
+		ModelEnvManage:       envmanage.New(db),
 	}
 }

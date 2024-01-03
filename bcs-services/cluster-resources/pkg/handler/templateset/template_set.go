@@ -16,6 +16,7 @@ package templateset
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/envmanage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/template"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/templatespace"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/templateversion"

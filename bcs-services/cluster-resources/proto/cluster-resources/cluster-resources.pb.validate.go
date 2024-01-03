@@ -10259,6 +10259,831 @@ var _ interface {
 	ErrorName() string
 } = DeleteTemplateVersionReqValidationError{}
 
+// Validate checks the field values on GetEnvManageReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GetEnvManageReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetEnvManageReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetEnvManageReqMultiError, or nil if none found.
+func (m *GetEnvManageReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetEnvManageReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetId()) != 24 {
+		err := GetEnvManageReqValidationError{
+			field:  "Id",
+			reason: "value length must be 24 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetEnvManageReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetEnvManageReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetEnvManageReqMultiError is an error wrapping multiple validation errors
+// returned by GetEnvManageReq.ValidateAll() if the designated constraints
+// aren't met.
+type GetEnvManageReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetEnvManageReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetEnvManageReqMultiError) AllErrors() []error { return m }
+
+// GetEnvManageReqValidationError is the validation error returned by
+// GetEnvManageReq.Validate if the designated constraints aren't met.
+type GetEnvManageReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetEnvManageReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetEnvManageReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetEnvManageReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetEnvManageReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetEnvManageReqValidationError) ErrorName() string { return "GetEnvManageReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetEnvManageReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetEnvManageReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetEnvManageReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetEnvManageReqValidationError{}
+
+// Validate checks the field values on ListEnvManagesReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ListEnvManagesReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListEnvManagesReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListEnvManagesReqMultiError, or nil if none found.
+func (m *ListEnvManagesReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListEnvManagesReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := ListEnvManagesReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListEnvManagesReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListEnvManagesReqMultiError is an error wrapping multiple validation errors
+// returned by ListEnvManagesReq.ValidateAll() if the designated constraints
+// aren't met.
+type ListEnvManagesReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListEnvManagesReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListEnvManagesReqMultiError) AllErrors() []error { return m }
+
+// ListEnvManagesReqValidationError is the validation error returned by
+// ListEnvManagesReq.Validate if the designated constraints aren't met.
+type ListEnvManagesReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListEnvManagesReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListEnvManagesReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListEnvManagesReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListEnvManagesReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListEnvManagesReqValidationError) ErrorName() string {
+	return "ListEnvManagesReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListEnvManagesReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListEnvManagesReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListEnvManagesReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListEnvManagesReqValidationError{}
+
+// Validate checks the field values on CreateEnvManageReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateEnvManageReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateEnvManageReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateEnvManageReqMultiError, or nil if none found.
+func (m *CreateEnvManageReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateEnvManageReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := CreateEnvManageReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetEnv()); l < 1 || l > 64 {
+		err := CreateEnvManageReqValidationError{
+			field:  "Env",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetClusterNamespaces() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CreateEnvManageReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CreateEnvManageReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateEnvManageReqValidationError{
+					field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return CreateEnvManageReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateEnvManageReqMultiError is an error wrapping multiple validation errors
+// returned by CreateEnvManageReq.ValidateAll() if the designated constraints
+// aren't met.
+type CreateEnvManageReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateEnvManageReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateEnvManageReqMultiError) AllErrors() []error { return m }
+
+// CreateEnvManageReqValidationError is the validation error returned by
+// CreateEnvManageReq.Validate if the designated constraints aren't met.
+type CreateEnvManageReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateEnvManageReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateEnvManageReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateEnvManageReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateEnvManageReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateEnvManageReqValidationError) ErrorName() string {
+	return "CreateEnvManageReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateEnvManageReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateEnvManageReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateEnvManageReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateEnvManageReqValidationError{}
+
+// Validate checks the field values on UpdateEnvManageReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateEnvManageReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateEnvManageReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateEnvManageReqMultiError, or nil if none found.
+func (m *UpdateEnvManageReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateEnvManageReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetId()) != 24 {
+		err := UpdateEnvManageReqValidationError{
+			field:  "Id",
+			reason: "value length must be 24 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := UpdateEnvManageReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetClusterNamespaces() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, UpdateEnvManageReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, UpdateEnvManageReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateEnvManageReqValidationError{
+					field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if l := utf8.RuneCountInString(m.GetEnv()); l < 1 || l > 64 {
+		err := UpdateEnvManageReqValidationError{
+			field:  "Env",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return UpdateEnvManageReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateEnvManageReqMultiError is an error wrapping multiple validation errors
+// returned by UpdateEnvManageReq.ValidateAll() if the designated constraints
+// aren't met.
+type UpdateEnvManageReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateEnvManageReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateEnvManageReqMultiError) AllErrors() []error { return m }
+
+// UpdateEnvManageReqValidationError is the validation error returned by
+// UpdateEnvManageReq.Validate if the designated constraints aren't met.
+type UpdateEnvManageReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateEnvManageReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateEnvManageReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateEnvManageReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateEnvManageReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateEnvManageReqValidationError) ErrorName() string {
+	return "UpdateEnvManageReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateEnvManageReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateEnvManageReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateEnvManageReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateEnvManageReqValidationError{}
+
+// Validate checks the field values on RenameEnvManageReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RenameEnvManageReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RenameEnvManageReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RenameEnvManageReqMultiError, or nil if none found.
+func (m *RenameEnvManageReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RenameEnvManageReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetId()) != 24 {
+		err := RenameEnvManageReqValidationError{
+			field:  "Id",
+			reason: "value length must be 24 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := RenameEnvManageReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetEnv()); l < 1 || l > 64 {
+		err := RenameEnvManageReqValidationError{
+			field:  "Env",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return RenameEnvManageReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// RenameEnvManageReqMultiError is an error wrapping multiple validation errors
+// returned by RenameEnvManageReq.ValidateAll() if the designated constraints
+// aren't met.
+type RenameEnvManageReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RenameEnvManageReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RenameEnvManageReqMultiError) AllErrors() []error { return m }
+
+// RenameEnvManageReqValidationError is the validation error returned by
+// RenameEnvManageReq.Validate if the designated constraints aren't met.
+type RenameEnvManageReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RenameEnvManageReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RenameEnvManageReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RenameEnvManageReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RenameEnvManageReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RenameEnvManageReqValidationError) ErrorName() string {
+	return "RenameEnvManageReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RenameEnvManageReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRenameEnvManageReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RenameEnvManageReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RenameEnvManageReqValidationError{}
+
+// Validate checks the field values on DeleteEnvManageReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteEnvManageReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteEnvManageReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteEnvManageReqMultiError, or nil if none found.
+func (m *DeleteEnvManageReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteEnvManageReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetId()) != 24 {
+		err := DeleteEnvManageReqValidationError{
+			field:  "Id",
+			reason: "value length must be 24 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := DeleteEnvManageReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return DeleteEnvManageReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteEnvManageReqMultiError is an error wrapping multiple validation errors
+// returned by DeleteEnvManageReq.ValidateAll() if the designated constraints
+// aren't met.
+type DeleteEnvManageReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteEnvManageReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteEnvManageReqMultiError) AllErrors() []error { return m }
+
+// DeleteEnvManageReqValidationError is the validation error returned by
+// DeleteEnvManageReq.Validate if the designated constraints aren't met.
+type DeleteEnvManageReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteEnvManageReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteEnvManageReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteEnvManageReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteEnvManageReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteEnvManageReqValidationError) ErrorName() string {
+	return "DeleteEnvManageReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteEnvManageReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteEnvManageReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteEnvManageReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteEnvManageReqValidationError{}
+
 // Validate checks the field values on FetchMultiClusterResourceReq with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

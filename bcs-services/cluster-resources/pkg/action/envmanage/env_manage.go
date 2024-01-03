@@ -136,7 +136,7 @@ func (e *EnvManageAction) Create(ctx context.Context, req *clusterRes.CreateEnvM
 	}
 
 	if len(envManages) > 0 {
-		return "", errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "环境名称重复"))
+		return "", errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "环境名称已存在"))
 	}
 
 	envManage := &entity.EnvManage{

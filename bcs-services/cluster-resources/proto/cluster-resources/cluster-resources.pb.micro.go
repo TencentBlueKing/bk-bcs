@@ -4894,6 +4894,42 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 			Method:  []string{"DELETE"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "TemplateSet.GetEnvManage",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "TemplateSet.ListEnvManages",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "TemplateSet.CreateEnvManage",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "TemplateSet.UpdateEnvManage",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "TemplateSet.RenameEnvManage",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}/rename"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "TemplateSet.DeleteEnvManage",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -4928,6 +4964,18 @@ type TemplateSetService interface {
 	CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error)
 	// 删除模板文件版本
 	DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error)
+	// 获取环境管理详情
+	GetEnvManage(ctx context.Context, in *GetEnvManageReq, opts ...client.CallOption) (*CommonResp, error)
+	// 获取环境管理列表
+	ListEnvManages(ctx context.Context, in *ListEnvManagesReq, opts ...client.CallOption) (*CommonListResp, error)
+	// 创建环境管理
+	CreateEnvManage(ctx context.Context, in *CreateEnvManageReq, opts ...client.CallOption) (*CommonResp, error)
+	// 更新环境管理
+	UpdateEnvManage(ctx context.Context, in *UpdateEnvManageReq, opts ...client.CallOption) (*CommonResp, error)
+	// 环境管理重命名
+	RenameEnvManage(ctx context.Context, in *RenameEnvManageReq, opts ...client.CallOption) (*CommonResp, error)
+	// 删除环境管理
+	DeleteEnvManage(ctx context.Context, in *DeleteEnvManageReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type templateSetService struct {
@@ -5082,6 +5130,66 @@ func (c *templateSetService) DeleteTemplateVersion(ctx context.Context, in *Dele
 	return out, nil
 }
 
+func (c *templateSetService) GetEnvManage(ctx context.Context, in *GetEnvManageReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.GetEnvManage", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) ListEnvManages(ctx context.Context, in *ListEnvManagesReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.ListEnvManages", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) CreateEnvManage(ctx context.Context, in *CreateEnvManageReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.CreateEnvManage", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) UpdateEnvManage(ctx context.Context, in *UpdateEnvManageReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.UpdateEnvManage", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) RenameEnvManage(ctx context.Context, in *RenameEnvManageReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.RenameEnvManage", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) DeleteEnvManage(ctx context.Context, in *DeleteEnvManageReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.DeleteEnvManage", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for TemplateSet service
 
 type TemplateSetHandler interface {
@@ -5113,6 +5221,18 @@ type TemplateSetHandler interface {
 	CreateTemplateVersion(context.Context, *CreateTemplateVersionReq, *CommonResp) error
 	// 删除模板文件版本
 	DeleteTemplateVersion(context.Context, *DeleteTemplateVersionReq, *CommonResp) error
+	// 获取环境管理详情
+	GetEnvManage(context.Context, *GetEnvManageReq, *CommonResp) error
+	// 获取环境管理列表
+	ListEnvManages(context.Context, *ListEnvManagesReq, *CommonListResp) error
+	// 创建环境管理
+	CreateEnvManage(context.Context, *CreateEnvManageReq, *CommonResp) error
+	// 更新环境管理
+	UpdateEnvManage(context.Context, *UpdateEnvManageReq, *CommonResp) error
+	// 环境管理重命名
+	RenameEnvManage(context.Context, *RenameEnvManageReq, *CommonResp) error
+	// 删除环境管理
+	DeleteEnvManage(context.Context, *DeleteEnvManageReq, *CommonResp) error
 }
 
 func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts ...server.HandlerOption) error {
@@ -5131,6 +5251,12 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		ListTemplateVersion(ctx context.Context, in *ListTemplateVersionReq, out *CommonListResp) error
 		CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, out *CommonResp) error
 		DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, out *CommonResp) error
+		GetEnvManage(ctx context.Context, in *GetEnvManageReq, out *CommonResp) error
+		ListEnvManages(ctx context.Context, in *ListEnvManagesReq, out *CommonListResp) error
+		CreateEnvManage(ctx context.Context, in *CreateEnvManageReq, out *CommonResp) error
+		UpdateEnvManage(ctx context.Context, in *UpdateEnvManageReq, out *CommonResp) error
+		RenameEnvManage(ctx context.Context, in *RenameEnvManageReq, out *CommonResp) error
+		DeleteEnvManage(ctx context.Context, in *DeleteEnvManageReq, out *CommonResp) error
 	}
 	type TemplateSet struct {
 		templateSet
@@ -5220,6 +5346,42 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		Method:  []string{"DELETE"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.GetEnvManage",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.ListEnvManages",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.CreateEnvManage",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.UpdateEnvManage",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.RenameEnvManage",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}/rename"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.DeleteEnvManage",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
+		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&TemplateSet{h}, opts...))
 }
 
@@ -5281,6 +5443,30 @@ func (h *templateSetHandler) CreateTemplateVersion(ctx context.Context, in *Crea
 
 func (h *templateSetHandler) DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, out *CommonResp) error {
 	return h.TemplateSetHandler.DeleteTemplateVersion(ctx, in, out)
+}
+
+func (h *templateSetHandler) GetEnvManage(ctx context.Context, in *GetEnvManageReq, out *CommonResp) error {
+	return h.TemplateSetHandler.GetEnvManage(ctx, in, out)
+}
+
+func (h *templateSetHandler) ListEnvManages(ctx context.Context, in *ListEnvManagesReq, out *CommonListResp) error {
+	return h.TemplateSetHandler.ListEnvManages(ctx, in, out)
+}
+
+func (h *templateSetHandler) CreateEnvManage(ctx context.Context, in *CreateEnvManageReq, out *CommonResp) error {
+	return h.TemplateSetHandler.CreateEnvManage(ctx, in, out)
+}
+
+func (h *templateSetHandler) UpdateEnvManage(ctx context.Context, in *UpdateEnvManageReq, out *CommonResp) error {
+	return h.TemplateSetHandler.UpdateEnvManage(ctx, in, out)
+}
+
+func (h *templateSetHandler) RenameEnvManage(ctx context.Context, in *RenameEnvManageReq, out *CommonResp) error {
+	return h.TemplateSetHandler.RenameEnvManage(ctx, in, out)
+}
+
+func (h *templateSetHandler) DeleteEnvManage(ctx context.Context, in *DeleteEnvManageReq, out *CommonResp) error {
+	return h.TemplateSetHandler.DeleteEnvManage(ctx, in, out)
 }
 
 // Api Endpoints for MultiCluster service
