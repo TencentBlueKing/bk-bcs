@@ -22,6 +22,7 @@ const (
 	FieldKeyTemplateSpace = "templateSpace"
 	FieldKeyVersion       = "version"
 	FieldKeyTemplateName  = "templateName"
+	FieldKeyEnv           = "env"
 
 	FieldKeyCreateBy = "createBy"
 	FieldKeyCreateAt = "createAt"

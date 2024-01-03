@@ -149,6 +149,240 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/envs": {
+      "get": {
+        "summary": "Get env manages list",
+        "description": "获取环境管理列表",
+        "operationId": "TemplateSet_ListEnvManages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "post": {
+        "summary": "Create env manage",
+        "description": "创建环境管理",
+        "operationId": "TemplateSet_CreateEnvManage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCreateEnvManageReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/envs/{id}": {
+      "get": {
+        "summary": "Get env manage detail",
+        "description": "获取环境管理详情",
+        "operationId": "TemplateSet_GetEnvManage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "delete": {
+        "summary": "Delete env manage",
+        "description": "删除环境管理",
+        "operationId": "TemplateSet_DeleteEnvManage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "put": {
+        "summary": "Update env manage",
+        "description": "更新环境管理",
+        "operationId": "TemplateSet_UpdateEnvManage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesUpdateEnvManageReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/envs/{id}/rename": {
+      "put": {
+        "summary": "Update env manage name",
+        "description": "环境管理重命名",
+        "operationId": "TemplateSet_RenameEnvManage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesRenameEnvManageReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/label_suggest": {
       "post": {
         "summary": "Label suggest",
@@ -9257,6 +9491,28 @@
       "description": "通用响应体，适用于资源型 API 请求返回，如需定义详细的 data 结构则不使用该响应体",
       "title": "CommonResp"
     },
+    "clusterresourcesCreateEnvManageReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "env": {
+          "type": "string",
+          "title": "环境名称"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "关联命名空间"
+        }
+      },
+      "description": "创建环境管理",
+      "title": "CreateEnvManageReq"
+    },
     "clusterresourcesCreateTemplateMetadataReq": {
       "type": "object",
       "properties": {
@@ -9643,6 +9899,25 @@
       "description": "Ping API 响应",
       "title": "PingResp"
     },
+    "clusterresourcesRenameEnvManageReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "环境管理 ID"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "env": {
+          "type": "string",
+          "title": "环境名称"
+        }
+      },
+      "description": "环境管理重命名",
+      "title": "RenameEnvManageReq"
+    },
     "clusterresourcesRenameViewConfigReq": {
       "type": "object",
       "properties": {
@@ -9896,6 +10171,32 @@
           "title": "manifestExt"
         }
       }
+    },
+    "clusterresourcesUpdateEnvManageReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "环境管理 ID"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "关联命名空间"
+        },
+        "env": {
+          "type": "string",
+          "title": "环境名称"
+        }
+      },
+      "description": "更新环境管理",
+      "title": "UpdateEnvManageReq"
     },
     "clusterresourcesUpdateTemplateMetadataReq": {
       "type": "object",

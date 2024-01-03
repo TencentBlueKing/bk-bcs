@@ -1732,6 +1732,74 @@ service TemplateSet {
 		};
 	}
 
+	// 获取环境管理详情
+	rpc GetEnvManage(GetEnvManageReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/envs/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取环境管理详情"
+			summary: "Get env manage detail"
+		};
+	}
+
+	// 获取环境管理列表
+	rpc ListEnvManages(ListEnvManagesReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/envs"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取环境管理列表"
+			summary: "Get env manages list"
+		};
+	}
+
+	// 创建环境管理
+	rpc CreateEnvManage(CreateEnvManageReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/envs"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建环境管理"
+			summary: "Create env manage"
+		};
+	}
+
+	// 更新环境管理
+	rpc UpdateEnvManage(UpdateEnvManageReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectCode}/envs/{id}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "更新环境管理"
+			summary: "Update env manage"
+		};
+	}
+
+	// 环境管理重命名
+	rpc RenameEnvManage(RenameEnvManageReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectCode}/envs/{id}/rename"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "环境管理重命名"
+			summary: "Update env manage name"
+		};
+	}
+
+	// 删除环境管理
+	rpc DeleteEnvManage(DeleteEnvManageReq) returns (CommonResp) {
+		option (google.api.http) = {
+			delete: "/clusterresources/v1/projects/{projectCode}/envs/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "删除环境管理"
+			summary: "Delete env manage"
+		};
+	}
 }
 
 service MultiCluster {
@@ -2964,6 +3032,87 @@ message DeleteTemplateVersionReq {
 	};
 	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message GetEnvManageReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetEnvManageReq", description: "获取环境管理详情"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境管理 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message ListEnvManagesReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ListEnvManagesReq", description: "获取环境管理列表"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message CreateEnvManageReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CreateEnvManageReq", description: "创建环境管理"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string env = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	repeated ClusterNamespaces clusterNamespaces = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "关联命名空间"
+	}, (validate.rules).repeated = {min_items : 0}];
+}
+
+message UpdateEnvManageReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "UpdateEnvManageReq", description: "更新环境管理"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境管理 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	repeated ClusterNamespaces clusterNamespaces = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "关联命名空间"
+	}, (validate.rules).repeated = {min_items : 0}];
+	string env = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+}
+
+message RenameEnvManageReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "RenameEnvManageReq", description: "环境管理重命名"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境管理 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1 , max_len : 32}];
+	string env = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境名称"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message DeleteEnvManageReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "DeleteEnvManageReq", description: "删除环境管理"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境管理 ID"
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"

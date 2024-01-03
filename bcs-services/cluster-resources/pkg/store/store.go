@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/envmanage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/template"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/templatespace"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/templateversion"
@@ -63,6 +64,13 @@ type ClusterResourcesModel interface {
 		ctx context.Context, projectCode, templateName, templateSpace string, templateVersion entity.M) error
 	DeleteTemplateVersion(ctx context.Context, id string) error
 	DeleteTemplateVersionBySpecial(ctx context.Context, projectCode, templateName, templateSpace string) error
+
+	// 环境管理
+	GetEnvManage(ctx context.Context, id string) (*entity.EnvManage, error)
+	ListEnvManages(ctx context.Context, cond *operator.Condition) ([]*entity.EnvManage, error)
+	CreateEnvManage(ctx context.Context, envManage *entity.EnvManage) (string, error)
+	UpdateEnvManage(ctx context.Context, id string, envManage entity.M) error
+	DeleteEnvManage(ctx context.Context, id string) error
 }
 
 type modelSet struct {
@@ -70,6 +78,7 @@ type modelSet struct {
 	*templatespace.ModelTemplateSpace
 	*template.ModelTemplate
 	*templateversion.ModelTemplateVersion
+	*envmanage.ModelEnvManage
 }
 
 // New return a new ClusterResourcesModel instance
@@ -79,5 +88,6 @@ func New(db drivers.DB) ClusterResourcesModel {
 		ModelTemplateSpace:   templatespace.New(db),
 		ModelTemplate:        template.New(db),
 		ModelTemplateVersion: templateversion.New(db),
+		ModelEnvManage:       envmanage.New(db),
 	}
 }
