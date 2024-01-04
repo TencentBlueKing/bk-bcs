@@ -15,6 +15,7 @@ package azure
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -65,13 +66,69 @@ func (n *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto
 
 // GetZoneList get zoneList by region
 func (n *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*proto.ZoneInfo, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	client, err := api.NewAMClient(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("create azure client failed, err %s", err.Error())
+	}
+	zones, err := client.ListAvailabilityZones(context.Background(), opt.Region)
+	if err != nil {
+		return nil, fmt.Errorf("list zones failed, err %s", err.Error())
+	}
+	return zones, nil
 }
 
 // ListNodeInstanceType list node type by zone and node family
 func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	cli, err := api.NewAksServiceImplWithCommonOption(opt)
+	if err != nil {
+		return nil, fmt.Errorf("ListNodeInstanceType create aks client failed, %v", err)
+	}
+
+	resources, err := cli.ListResourceByLocation(context.Background(), opt.Region)
+	if err != nil {
+		return nil, fmt.Errorf("ListNodeInstanceType ListResourceByLocation failed, %v", err)
+	}
+
+	instanceTypes := make([]*proto.InstanceType, 0)
+	for _, v := range resources {
+		var cpu, mem, gpu int
+		if *v.ResourceType == "virtualMachines" {
+			for _, c := range v.Capabilities {
+				if *c.Name == "vCPUs" {
+					cpu, _ = strconv.Atoi(*c.Value)
+				}
+				if *c.Name == "MemoryGB" {
+					mem, _ = strconv.Atoi(*c.Value)
+				}
+				if *c.Name == "GPUs" {
+					gpu, _ = strconv.Atoi(*c.Value)
+				}
+			}
+
+			if cpu == 0 || mem == 0 {
+				continue
+			}
+
+			zones := make([]string, 0)
+			if len(v.LocationInfo) != 0 {
+				for _, z := range v.LocationInfo[0].Zones {
+					zones = append(zones, *z)
+				}
+			}
+
+			instanceTypes = append(instanceTypes, &proto.InstanceType{
+				TypeName:   *v.Name,
+				NodeFamily: *v.Family,
+				Cpu:        uint32(cpu),
+				Memory:     uint32(mem),
+				Gpu:        uint32(gpu),
+				Zones:      zones,
+			})
+		}
+	}
+
+	return instanceTypes, nil
 }
 
 // ListOsImage get osimage list
@@ -90,8 +147,23 @@ func (n *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Lis
 }
 
 // ListKeyPairs keyPairs list
-func (n *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+func (n *NodeManager) ListKeyPairs(opt *cloudprovider.ListNetworksOption) ([]*proto.KeyPair, error) {
+	cli, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("ListKeyPairs create aks client failed, %v", err)
+	}
+
+	result, err := cli.ListSSHPublicKeys(context.Background(), opt.ResourceGroupName)
+	if err != nil {
+		return nil, fmt.Errorf("ListSSHPublicKeys failed, %v", err)
+	}
+
+	keys := make([]*proto.KeyPair, 0)
+	for _, v := range result {
+		keys = append(keys, &proto.KeyPair{KeyName: *v.Name})
+	}
+
+	return keys, nil
 }
 
 // GetResourceGroups resource groups list

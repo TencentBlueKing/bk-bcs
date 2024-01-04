@@ -199,7 +199,7 @@ func (n *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.Lis
 }
 
 // ListKeyPairs keyPairs list
-func (n *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
+func (n *NodeManager) ListKeyPairs(opt *cloudprovider.ListNetworksOption) ([]*proto.KeyPair, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

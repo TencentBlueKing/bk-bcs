@@ -170,11 +170,12 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid crendential info", cloudName)
 	}
 
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid region info", cloudName)
-	}
 	if len(req.VpcID) == 0 {
 		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid vpcID info", cloudName)
+	}
+
+	if len(req.ResourceGroupName) == 0 {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost resourceGroupName info", cloudName)
 	}
 
 	return nil
@@ -183,7 +184,15 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 // ListCloudVpcsValidate xxx
 func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
 	account *proto.Account) error {
-	return cloudprovider.ErrCloudNotImplemented
+	if c == nil {
+		return fmt.Errorf("%s ListCloudVpcsValidate request is empty", cloudName)
+	}
+
+	if len(req.ResourceGroupName) == 0 {
+		return fmt.Errorf("%s ListCloudVpcsValidate request lost resourceGroupName info", cloudName)
+	}
+
+	return nil
 }
 
 // ListSecurityGroupsValidate xxx
@@ -199,8 +208,8 @@ func (c *CloudValidate) ListSecurityGroupsValidate(
 		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid crendential info", cloudName)
 	}
 
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid region info", cloudName)
+	if len(req.ResourceGroupName) == 0 {
+		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid resourceGroupName info", cloudName)
 	}
 
 	return nil
@@ -208,8 +217,8 @@ func (c *CloudValidate) ListSecurityGroupsValidate(
 
 // ListKeyPairsValidate list key pairs validate
 func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, account *proto.Account) error {
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListKeyPairsValidate request lost valid region info", cloudName)
+	if len(req.ResourceGroupName) == 0 {
+		return fmt.Errorf("%s ListKeyPairsValidate request lost valid resourceGroupName info", cloudName)
 	}
 
 	return nil
@@ -273,5 +282,19 @@ func (c *CloudValidate) DeleteNodesFromClusterValidate(
 // CreateNodeGroupValidate xxx
 func (c *CloudValidate) CreateNodeGroupValidate(
 	req *proto.CreateNodeGroupRequest, opt *cloudprovider.CommonOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+	// call cloud interface to check cluster
+	if c == nil || req == nil {
+		return fmt.Errorf("%s ImportClusterValidate request is empty", cloudName)
+	}
+
+	if opt == nil || opt.Account == nil {
+		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
+	}
+
+	if len(opt.Account.SubscriptionID) == 0 || len(opt.Account.TenantID) == 0 || len(opt.Account.ClientID) == 0 ||
+		len(opt.Account.ClientSecret) == 0 || len(opt.Region) == 0 {
+		return fmt.Errorf("%s ImportClusterValidate opt lost valid crendential info", cloudName)
+	}
+
+	return nil
 }

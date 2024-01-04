@@ -15,6 +15,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
 	"strconv"
 	"strings"
 	"time"
@@ -32,9 +33,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	cmutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // ApplyInstanceMachinesTask 扩容节点 - update desired nodes task
@@ -465,71 +469,95 @@ func checkClusterInstanceStatus(rootCtx context.Context, info *cloudprovider.Clo
 		addFailureNodes = make([]string, 0)
 		asg             = info.NodeGroup.AutoScaling
 		taskID          = cloudprovider.GetTaskIDFromContext(rootCtx)
-		ctx, cancel     = context.WithTimeout(rootCtx, 2*time.Minute)
+		ctx, cancel     = context.WithTimeout(context.TODO(), 5*time.Minute)
 		instanceList    []*armcompute.VirtualMachineScaleSetVM
 	)
 	defer cancel()
+
+	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
 
 	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption) // new client
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "checkClusterInstanceStatus[%s] new client failed", taskID)
 	}
 
-	err = loop.LoopDoFunc(ctx, func() error { // wait all nodes to be ready
+	// wait all nodes to be ready
+	errLoop := loop.LoopDoFunc(ctx, func() error {
+		running := make([]string, 0)
+
+		nodes, err2 := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID)
+		if err2 != nil {
+			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
+			return nil
+		}
+
+		var k8sNodeMap = make(map[string]*corev1.Node, 0)
+		for i := range nodes {
+			k8sNodeMap[nodes[i].Name] = nodes[i]
+		}
+
 		instanceList, err = client.ListInstanceByIDAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID, instanceIDs)
 		if err != nil {
 			return errors.Wrapf(err, "checkClusterInstanceStatus[%s] ListInstanceByIDAndReturn failed", taskID)
 		}
-		index := 0
-		running, failure := make([]string, 0), make([]string, 0)
 		for _, vm := range instanceList {
 			id := api.VmIDToNodeID(vm)
-			state := *vm.Properties.ProvisioningState
-			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, id, state)
-			switch state {
-			case api.NormalState:
-				running = append(running, id)
-				index++
-			default:
-				failure = append(failure, id)
-				index++
+			if n, ok := k8sNodeMap[*vm.Properties.OSProfile.ComputerName]; ok {
+				if ok && cmutils.CheckNodeIfReady(n) {
+					blog.Infof("checkClusterInstanceStatus[%s] node[%s] ready", taskID, id)
+					running = append(running, id)
+				}
 			}
 		}
-		if index == len(instanceIDs) {
+
+		blog.Infof("checkClusterInstanceStatus[%s] ready nodes[%+v]", taskID, running)
+		if len(running) == len(instanceIDs) {
 			addSuccessNodes = running
-			addFailureNodes = failure
 			return loop.EndLoop
 		}
+
 		return nil
-	}, loop.LoopInterval(10*time.Second))
-	if err != nil && !errors.Is(err, context.DeadlineExceeded) { // other error
-		return nil, nil, errors.Wrapf(err, "checkClusterInstanceStatus[%s] ListInstanceByIDAndReturn failed", taskID)
+	}, loop.LoopInterval(30*time.Second))
+	// other error
+	if errLoop != nil && !errors.Is(errLoop, context.DeadlineExceeded) {
+		blog.Errorf("checkClusterInstanceStatus[%s] check nodes status failed: %v", taskID, errLoop)
+		return nil, nil, errLoop
 	}
 
-	if errors.Is(err, context.DeadlineExceeded) { // timeout error
+	// timeout error
+	if errors.Is(errLoop, context.DeadlineExceeded) {
 		running, failure := make([]string, 0), make([]string, 0)
-		ctx, cancel = context.WithTimeout(rootCtx, 2*time.Minute)
-		defer cancel()
-		instanceList, err = client.ListInstanceByIDAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID, instanceIDs)
+
+		nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID) // nolint
 		if err != nil {
-			return nil, nil, errors.Wrapf(err,
-				"checkClusterInstanceStatus[%s] call ListInstanceByIDAndReturn failed", taskID)
+			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
+			return nil, nil, err
 		}
+
+		var k8sNodeMap = make(map[string]*corev1.Node, 0)
+		for i := range nodes {
+			k8sNodeMap[nodes[i].Name] = nodes[i]
+		}
+		instanceList, err = client.ListInstanceByIDAndReturn(context.Background(), asg.AutoScalingName,
+			asg.AutoScalingID, instanceIDs)
+		if err != nil {
+			return nil, nil, errors.Wrapf(err, "checkClusterInstanceStatus[%s] ListInstanceByIDAndReturn failed", taskID)
+		}
+
 		for _, ins := range instanceList {
 			id := api.VmIDToNodeID(ins)
-			state := *ins.Properties.ProvisioningState
-			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, id, state)
-			switch state {
-			case api.NormalState:
+			n, ok := k8sNodeMap[*ins.Properties.OSProfile.ComputerName]
+			if ok && cmutils.CheckNodeIfReady(n) {
 				running = append(running, id)
-			default:
+			} else {
 				failure = append(failure, id)
 			}
 		}
+
 		addSuccessNodes = running
 		addFailureNodes = failure
 	}
-	blog.Infof("checkClusterInstanceStatus[%s] success[%s] failure[%s]", taskID, addSuccessNodes, addFailureNodes)
+	blog.Infof("checkClusterInstanceStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
 
 	for _, n := range addFailureNodes { // set cluster node status
 		err = cloudprovider.UpdateNodeStatusByInstanceID(n, common.StatusAddNodesFailed)

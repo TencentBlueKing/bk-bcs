@@ -115,7 +115,10 @@ func (la *ListCloudVpcsAction) ListCloudVpcs() error {
 	cmOption.Region = la.req.Region
 
 	// get vpc list
-	vpcs, err := vpcMgr.ListVpcs(la.req.VpcID, cmOption)
+	vpcs, err := vpcMgr.ListVpcs(la.req.VpcID, &cloudprovider.ListNetworksOption{
+		CommonOption:      *cmOption,
+		ResourceGroupName: la.req.ResourceGroupName,
+	})
 	if err != nil {
 		return err
 	}

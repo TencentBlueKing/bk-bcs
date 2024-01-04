@@ -78,7 +78,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// 设置节点密码、购买系统盘、数据盘
+	// 设置节点密码、购买系统盘、数据盘等
 	if err = setVmSets(ctx, dependInfo); err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: call setVmSets[%s] api in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -270,19 +270,33 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 			cluster.ClusterID, group.CloudNodeGroupID)
 	}
 
+	group.AutoScaling.AutoScalingName = api.RegexpSetNodeGroupResourcesName(set)
+	// 设置虚拟规模集网络
+	err = api.SetVmSetNetWork(ctx, client, group, set)
+	if err != nil {
+		return errors.Wrapf(err, "createAgentPool[%s]: call SetVmSetNetWork[%s][%s] falied", taskID,
+			cluster.ClusterID, group.CloudNodeGroupID)
+	}
 	// 设置虚拟规模密码
-	if len(lc.InitLoginUsername) != 0 && len(lc.InitLoginPassword) != 0 {
-		api.SetVmSetPasswd(group, set)
-	}
-	// 买系统盘
-	if lc.SystemDisk != nil {
-		api.BuySystemDisk(group, set)
-	}
+	api.SetVmSetPasswd(group, set)
+	// 设置虚拟规模SSH免密登录公钥
+	api.SetVmSetSSHPublicKey(group, set)
+
+	// 已经创建了系统盘, 无需再购买
+	//if lc.SystemDisk != nil {
+	//	api.BuySystemDisk(group, set)
+	//}
+
 	// 买数据盘
 	if len(lc.DataDisks) != 0 {
 		api.BuyDataDisk(group, set)
 	}
+	// 用户数据
+	api.SetUserData(group, set)
 	api.SetImageReferenceNull(set)
+
+	// 设置自定义脚本会导致VM加入集群失败!!!
+	//api.SetVmSetCustomScript(group, set)
 
 	ctx, cancel = context.WithTimeout(rootCtx, 5*time.Minute)
 	defer cancel()
@@ -411,7 +425,7 @@ func cloudDataToNodeGroup(rootCtx context.Context, pool *armcontainerservice.Age
 	_ = client.SetToNodeGroup(set, group)
 	_ = client.AgentPoolToNodeGroup(pool, group)
 	syncSku(rootCtx, client, group)
-	syncSecurityGroups(rootCtx, client, group)
+	//syncSecurityGroups(rootCtx, client, group)
 	setModuleInfo(group, cluster.BusinessID)
 	group.ClusterID = cluster.ClusterID
 	// 镜像信息/dockerGraphPath节点运行时/runtime(运行时版本信息，RunTimeInfo)

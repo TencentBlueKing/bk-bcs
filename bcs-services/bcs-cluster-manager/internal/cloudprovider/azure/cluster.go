@@ -15,6 +15,7 @@ package azure
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"sync"
 	"time"
 
@@ -84,7 +85,7 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubenretes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	return opt.Cluster, nil
 }
 
 // ListCluster get cloud cluster list by region
@@ -137,7 +138,7 @@ func (c *Cluster) DeleteNodesFromCluster(
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
 func (c *Cluster) CheckClusterCidrAvailable(
 	cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
-	return false, cloudprovider.ErrCloudNotImplemented
+	return true, nil
 }
 
 // EnableExternalNodeSupport enable cluster support external node
@@ -147,7 +148,17 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 
 // ListOsImage list image os
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	if opt == nil || opt.Account == nil {
+		return nil, cloudprovider.ErrCloudCredentialLost
+	}
+	account := opt.Account
+	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 ||
+		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 ||
+		len(account.ResourceGroupName) == 0 {
+		return nil, fmt.Errorf("azure ListOsImage lost authoration")
+	}
+
+	return utils.AKSImageOsList, nil
 }
 
 // AddSubnetsToCluster add subnets to cluster

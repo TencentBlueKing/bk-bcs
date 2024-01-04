@@ -16,7 +16,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/services/subscription/mgmt/2020-09-01/subscription" // nolint
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
+	"github.com/pkg/errors"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -26,7 +27,7 @@ import (
 type SubClient struct {
 	resourceGroupName string
 	subscriptionID    string
-	subClient         subscription.SubscriptionsClient
+	subClient         *armsubscriptions.Client
 }
 
 // NewAMClient create azure api management client
@@ -40,40 +41,70 @@ func NewAMClient(opt *cloudprovider.CommonOption) (*SubClient, error) {
 	}
 
 	// get Authorizer
-	authorizer, err := getAuthorizer(opt.Account.TenantID, opt.Account.ClientID, opt.Account.ClientSecret)
+	cred, err := getClientCredential(opt.Account.TenantID, opt.Account.ClientID, opt.Account.ClientSecret)
 	if err != nil {
 		return nil, fmt.Errorf("get authorizer error: %v", err)
 	}
+	clientFactory, err := armsubscriptions.NewClientFactory(cred, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create client factory error: %v", err)
+	}
 
-	// new subscriptions client
-	subClient := subscription.NewSubscriptionsClient()
-	subClient.Authorizer = authorizer
 	return &SubClient{
 		resourceGroupName: opt.Account.ResourceGroupName,
 		subscriptionID:    opt.Account.SubscriptionID,
-		subClient:         subClient,
+		subClient:         clientFactory.NewClient(),
 	}, nil
 }
 
 // ListLocations list locations
 func (sub *SubClient) ListLocations(ctx context.Context) ([]*proto.RegionInfo, error) {
-	locations, err := sub.subClient.ListLocations(ctx, sub.subscriptionID)
-	if err != nil {
-		return nil, fmt.Errorf("list locations error: %v", err)
+	pager := sub.subClient.NewListLocationsPager(sub.subscriptionID, nil)
+	result := make([]*armsubscriptions.Location, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list locations")
+		}
+		result = append(result, next.Value...)
 	}
 
-	if locations.Value == nil {
-		return nil, nil
-	}
-
-	result := make([]*proto.RegionInfo, 0)
-	for _, v := range *locations.Value {
+	regions := make([]*proto.RegionInfo, 0)
+	for _, v := range result {
 		if v.Name != nil && v.DisplayName != nil {
-			result = append(result, &proto.RegionInfo{
+			regions = append(regions, &proto.RegionInfo{
 				Region:     *v.Name,
 				RegionName: *v.DisplayName,
 			})
 		}
 	}
-	return result, nil
+	return regions, nil
+}
+
+// ListAvailabilityZones list availability zones
+func (sub *SubClient) ListAvailabilityZones(ctx context.Context, location string) ([]*proto.ZoneInfo, error) {
+	pager := sub.subClient.NewListLocationsPager(sub.subscriptionID, nil)
+	result := make([]*armsubscriptions.Location, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list zones")
+		}
+		result = append(result, next.Value...)
+	}
+
+	zones := make([]*proto.ZoneInfo, 0)
+	for _, v := range result {
+		if *v.Name == location {
+			for _, z := range v.AvailabilityZoneMappings {
+				zones = append(zones, &proto.ZoneInfo{
+					Zone:     *z.LogicalZone,
+					ZoneName: *z.PhysicalZone,
+				})
+			}
+			break
+		}
+	}
+
+	return zones, nil
 }
