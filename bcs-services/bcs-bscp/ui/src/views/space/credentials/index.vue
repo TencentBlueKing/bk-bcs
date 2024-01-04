@@ -53,7 +53,24 @@
                 v-model="createCredentialName"
                 @blur="testCreateCredentialName"
               ></bk-input>
-              <span v-if="row.spec">{{ row.spec.name }}</span>
+              <div v-if="row.spec" class="credential-memo">
+                <div v-if="editingNameId !== row.id" class="memo-content" :title="row.spec.memo || '--'">
+                  {{ row.spec.name || '--' }}
+                </div>
+                <div v-else class="memo-edit">
+                  <div
+                    ref="nameInputRef"
+                    class="edit-name-input"
+                    contenteditable="true"
+                    @blur="handleMemoOrNameBlur(row)"
+                  >
+                    {{ row.spec.name }}
+                  </div>
+                </div>
+                <div class="edit-icon">
+                  <EditLine @click="handleEditName(row.id)" />
+                </div>
+              </div>
             </template>
           </bk-table-column>
           <bk-table-column label="密钥" width="296">
@@ -84,7 +101,12 @@
                   {{ row.spec.memo || '--' }}
                 </div>
                 <div v-else class="memo-edit">
-                  <div ref="memoInputRef" class="edit-input" contenteditable="true" @blur="handleMemoBlur(row)">
+                  <div
+                    ref="memoInputRef"
+                    class="edit-input"
+                    contenteditable="true"
+                    @blur="handleMemoOrNameBlur(row, false)"
+                  >
                     {{ row.spec.memo }}
                   </div>
                 </div>
@@ -126,17 +148,13 @@
             <template #default="{ row, index }">
               <template v-if="index === 0 && isCreateCredential">
                 <bk-button text theme="primary" @click="handleCreateCredential">创建</bk-button>
-                <bk-button
-                  text
-                  theme="primary"
-                  style="margin-left: 8px"
-                  @click="handleCancelCreateCredential">
+                <bk-button text theme="primary" style="margin-left: 8px" @click="handleCancelCreateCredential">
                   取消
                 </bk-button>
               </template>
               <template v-if="row.spec">
                 <bk-button text theme="primary" @click="handleOpenAssociate(row)">
-                  <span :class="{ redPoint: newCredentials[0] === row.id }">关联配置文件</span>
+                  <span :class="{ redPoint: newCredentials[0] === row.id }">关联服务配置</span>
                 </bk-button>
                 <div class="delete-btn" v-bk-tooltips="deleteTooltip(hasManagePerm && row.spec.enable)">
                   <bk-button
@@ -146,7 +164,8 @@
                     theme="primary"
                     :class="{ 'bk-text-with-no-perm': !hasManagePerm }"
                     :disabled="hasManagePerm && row.spec.enable"
-                    @click="handleDeleteConfirm(row)">
+                    @click="handleDeleteConfirm(row)"
+                  >
                     删除
                   </bk-button>
                 </div>
@@ -231,7 +250,9 @@ const isCreateCredential = ref(false);
 const newCredentials = ref<number[]>([]); // 记录新增加的密钥id，实现表格标记效果
 const searchStr = ref('');
 const editingMemoId = ref(0); // 记录当前正在编辑说明的密钥id
+const editingNameId = ref(0); // 记录当前正在编辑名称的密钥id
 const memoInputRef = ref();
+const nameInputRef = ref();
 const isAssociateSliderShow = ref(false);
 const currentCredential = ref(0);
 const isSearchEmpty = ref(false);
@@ -404,24 +425,45 @@ const handleEditMemo = (id: number) => {
   });
 };
 
-// 失焦时保存密钥说明
-const handleMemoBlur = async (credential: ICredentialItem) => {
-  editingMemoId.value = 0;
-  const memo = memoInputRef.value.textContent.trim();
-  if (credential.spec.memo === memo) {
-    return;
-  }
+// 密钥名称编辑
+const handleEditName = (id: number) => {
+  editingNameId.value = id;
+  nextTick(() => {
+    if (nameInputRef.value) {
+      nameInputRef.value.focus();
+    }
+  });
+};
 
+// 失焦时保存密钥说明或密钥名称
+const handleMemoOrNameBlur = async (credential: ICredentialItem, isEditName = true) => {
   const params = {
     id: credential.id,
     enable: credential.spec.enable,
-    memo,
+    name: credential.spec.name,
+    memo: credential.spec.memo,
   };
+  if (isEditName) {
+    editingNameId.value = 0;
+    const name = nameInputRef.value.textContent.trim();
+    if (credential.spec.name === name) {
+      return;
+    }
+    params.name = name;
+  } else {
+    editingMemoId.value = 0;
+    const memo = memoInputRef.value.textContent.trim();
+    if (credential.spec.memo === memo) {
+      return;
+    }
+    params.memo = memo;
+  }
   await updateCredential(spaceId.value, params);
-  credential.spec.memo = memo;
+  credential.spec.memo = params.memo;
+  credential.spec.name = params.name;
   BkMessage({
     theme: 'success',
-    message: '密钥说明修改成功',
+    message: isEditName ? '密钥名称修改成功' : '密钥说明修改成功',
   });
 };
 
@@ -667,6 +709,10 @@ const goToIAM = () => {
       box-shadow: 0 0 3px #a3c5fd;
     }
   }
+  .edit-name-input {
+    @extend .edit-input;
+    min-height: 32px;
+  }
   .edit-icon {
     position: absolute;
     top: 4px;
@@ -732,5 +778,4 @@ const goToIAM = () => {
     padding-bottom: 24px !important;
   }
 }
-
 </style>

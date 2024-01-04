@@ -1,6 +1,6 @@
 <template>
   <bk-sideslider
-    title="关联配置文件"
+    title="关联服务配置"
     width="400"
     :is-show="props.show"
     :before-close="handleBeforeClose"
