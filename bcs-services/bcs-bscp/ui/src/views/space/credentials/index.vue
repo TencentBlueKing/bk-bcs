@@ -73,7 +73,7 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column label="密钥" width="296">
+          <bk-table-column label="密钥" width="340">
             <template #default="{ row, index }">
               <span v-if="index === 0 && isCreateCredential" style="color: #c4c6cc">待确认</span>
               <div v-if="row.spec" class="credential-text">
@@ -114,6 +114,21 @@
                   <EditLine @click="handleEditMemo(row.id)" />
                 </div>
               </div>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="关联规则" width="140">
+            <template #default="{ row }">
+              <bk-popover v-if="row.rule && row.rule.length" theme="light" :popover-delay="[300, 0]">
+                <div  class="table-rule">
+                  {{ row.rule[0].spec.app + row.rule[0].spec.scope }}
+                </div>
+                <template #content>
+                  <div v-for="rule in row.rule" :key="rule.id">
+                    {{ rule.spec.app + rule.spec.scope }}
+                  </div>
+                </template>
+              </bk-popover>
+              <span v-else>--</span>
             </template>
           </bk-table-column>
           <bk-table-column label="更新人" width="88" prop="revision.reviser"></bk-table-column>
@@ -230,7 +245,13 @@ import { Plus, Search, Eye, Unvisible, Copy, EditLine } from 'bkui-vue/lib/icon'
 import BkMessage from 'bkui-vue/lib/message';
 import { InfoBox } from 'bkui-vue';
 import { permissionCheck } from '../../../api/index';
-import { getCredentialList, createCredential, updateCredential, deleteCredential } from '../../../api/credentials';
+import {
+  getCredentialList,
+  createCredential,
+  updateCredential,
+  deleteCredential,
+  getCredentialScopes,
+} from '../../../api/credentials';
 import { copyToClipBoard, datetimeFormat } from '../../../utils/index';
 import { ICredentialItem } from '../../../../types/credential';
 import AssociateConfigItems from './associate-config-items/index.vue';
@@ -330,6 +351,11 @@ const loadCredentialList = async () => {
   credentialList.value = res.details;
   tableData.value = res.details;
   pagination.value.count = res.count;
+  // 获取密钥关联规则
+  tableData.value.forEach(async (item: any) => {
+    const res = await getCredentialScopes(spaceId.value, item.id);
+    item.rule = res.details;
+  });
 };
 
 // 更新列表数据，带loading效果
@@ -646,12 +672,11 @@ const goToIAM = () => {
 }
 .credential-text {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
   .text {
-    width: calc(100% - 50px);
+    width: 300px;
   }
   .actions {
+    margin-left: 16px;
     display: flex;
     align-items: center;
     color: #979ba5;
@@ -672,26 +697,18 @@ const goToIAM = () => {
   }
 }
 .credential-memo {
-  position: relative;
-  padding-right: 20px;
+  display: flex;
+  align-items: center;
   &:hover {
     .edit-icon {
       display: inline-block;
     }
   }
   .memo-content {
-    width: 100%;
+    max-width: calc(100% - 40px);
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-  }
-  .memo-edit {
-    position: absolute;
-    top: 2px;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1;
   }
   .edit-input {
     padding: 6px 10px;
@@ -714,10 +731,8 @@ const goToIAM = () => {
     min-height: 32px;
   }
   .edit-icon {
-    position: absolute;
-    top: 4px;
-    right: 0;
     display: none;
+    padding-left: 16px;
     font-size: 14px;
     color: #979ba5;
     cursor: pointer;
@@ -762,6 +777,11 @@ const goToIAM = () => {
   .bk-button {
     width: 100px;
   }
+}
+.table-rule {
+  white-space: nowrap; /* 让文本在单行中显示 */
+  overflow: hidden; /* 隐藏溢出部分 */
+  text-overflow: ellipsis; /* 使用省略号表示被隐藏的文本 */
 }
 </style>
 

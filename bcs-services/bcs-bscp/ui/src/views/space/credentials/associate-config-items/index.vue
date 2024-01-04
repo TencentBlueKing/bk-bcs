@@ -46,7 +46,6 @@ import { ICredentialRule, IRuleUpdateParams } from '../../../../../types/credent
 import useModalCloseConfirmation from '../../../../utils/hooks/use-modal-close-confirmation';
 import { getAppList } from '../../../../api/index';
 import { IAppItem } from '../../../../../types/app';
-import { useRoute } from 'vue-router';
 // import MatchingResult from './matching-result.vue'
 import RuleView from './rule-view.vue';
 import RuleEdit from './rule-edit.vue';
@@ -62,8 +61,6 @@ const props = defineProps<{
 
 const emits = defineEmits(['close', 'refresh', 'applyPerm']);
 
-const route = useRoute();
-
 const loading = ref(true);
 const rules = ref<ICredentialRule[]>([]);
 const ruleChangeParams = ref<IRuleUpdateParams>({
@@ -76,11 +73,10 @@ const isFormChange = ref(false);
 const pending = ref(false);
 const ruleEdit = ref();
 const appList = ref<IAppItem[]>([]);
-const bkBizId = ref(String(route.params.spaceId));
 
 
 onMounted(async () => {
-  const resp = await getAppList(bkBizId.value, { start: 0, all: true });
+  const resp = await getAppList(spaceId.value, { start: 0, all: true });
   appList.value = resp.details;
 });
 watch(
