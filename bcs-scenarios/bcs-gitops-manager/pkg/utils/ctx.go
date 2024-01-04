@@ -17,6 +17,13 @@ import (
 	"strings"
 )
 
+func IsPermissionDenied(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "PermissionDenied")
+}
+
 // IsContextCanceled confirm the error whether context canceled
 func IsContextCanceled(err error) bool {
 	if err == nil {

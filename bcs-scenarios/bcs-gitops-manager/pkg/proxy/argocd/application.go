@@ -28,6 +28,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
@@ -35,6 +36,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/resources"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils/jsonq"
+	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 )
 
 // AppPlugin for internal project authorization
@@ -44,6 +46,7 @@ type AppPlugin struct {
 	storage        store.Store
 	middleware     mw.MiddlewareInterface
 	analysisClient analysis.AnalysisInterface
+	bcsStorage     bcsapi.Storage
 }
 
 // all argocd application URL:
@@ -109,6 +112,8 @@ func (plugin *AppPlugin) Init() error {
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationDeleteResourcesHandler))
 	appRouter.Path("/history_state").Methods("GET").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationHistoryState))
+	appRouter.Path("/custom_revisions").Methods("GET").
+		Handler(plugin.middleware.HttpWrapper(plugin.customRevisionsMetadata))
 
 	appRouter.PathPrefix("").Methods("PUT", "POST", "DELETE", "PATCH").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationEditHandler))
@@ -190,7 +195,8 @@ func (plugin *AppPlugin) applicationEditHandler(r *http.Request) (*http.Request,
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("request application name cannot be empty"))
 	}
-	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectEdit)
+	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
+		iamnamespace.NameSpaceScopedUpdate)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check application permission failed"))
 	}
@@ -224,7 +230,8 @@ func (plugin *AppPlugin) applicationCleanHandler(r *http.Request) (*http.Request
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("request application name cannot be empty"))
 	}
-	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectEdit)
+	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
+		iamnamespace.NameSpaceScopedDelete)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
@@ -263,7 +270,8 @@ func (plugin *AppPlugin) applicationDeleteResourcesHandler(r *http.Request) (*ht
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("request application name cannot be empty"))
 	}
-	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectEdit)
+	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
+		iamnamespace.NameSpaceScopedDelete)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
@@ -281,10 +289,9 @@ func (plugin *AppPlugin) applicationDeleteResourcesHandler(r *http.Request) (*ht
 			errors.Errorf("request body 'resources' cannot be empty"))
 	}
 	for i, resource := range req.Resources {
-		if resource.ResourceName == "" || resource.Kind == "" || resource.Namespace == "" ||
-			resource.Group == "" || resource.Version == "" {
+		if resource.ResourceName == "" || resource.Kind == "" || resource.Namespace == "" || resource.Version == "" {
 			return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("request 'resources[%d] "+
-				"have param empty, 'resourceName/kind/namespace/group/version' cannot be empty'", i))
+				"have param empty, 'resourceName/kind/namespace/version' cannot be empty'", i))
 		}
 	}
 	r = middleware.SetAuditMessage(r, app, middleware.ApplicationDeleteResources)
@@ -303,7 +310,8 @@ func (plugin *AppPlugin) applicationViewsHandler(r *http.Request) (*http.Request
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("request application name cannot be empty"))
 	}
-	_, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
+		iamnamespace.NameSpaceScopedView)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
@@ -316,7 +324,8 @@ func (plugin *AppPlugin) applicationCollect(r *http.Request) (*http.Request, *mw
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("request application name cannot be empty"))
 	}
-	argoApp, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectView)
+	argoApp, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
+		iamnamespace.NameSpaceScopedView)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
@@ -332,7 +341,8 @@ func (plugin *AppPlugin) applicationCancelCollect(r *http.Request) (*http.Reques
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("request application name cannot be empty"))
 	}
-	argoApp, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectView)
+	argoApp, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
+		iamnamespace.NameSpaceScopedUpdate)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
@@ -348,12 +358,14 @@ func (plugin *AppPlugin) applicationPodResources(r *http.Request) (*http.Request
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("request application name cannot be empty"))
 	}
-	argoApp, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectView)
+	argoApp, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
+		iamnamespace.NameSpaceScopedView)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
 	podQuery := resources.PodQuery{
-		Storage: plugin.storage,
+		Storage:    plugin.storage,
+		BCSStorage: plugin.bcsStorage,
 	}
 	pods, err := podQuery.Query(r.Context(), argoApp)
 	if err != nil {
@@ -369,4 +381,63 @@ func (plugin *AppPlugin) applicationPodResources(r *http.Request) (*http.Request
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "parse by query 'fields' failed"))
 	}
 	return r, mw.ReturnDirectResponse(string(bs))
+}
+
+// ApplicationRevisionsMetadata defines the response that get revision metadata of application's repo
+// It adapt to multiple sources.
+type ApplicationRevisionsMetadata struct {
+	Code      int32                        `json:"code"`
+	Message   string                       `json:"message"`
+	RequestID string                       `json:"requestID"`
+	Data      []*v1alpha1.RevisionMetadata `json:"data"`
+}
+
+func (plugin *AppPlugin) customRevisionsMetadata(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	appName := mux.Vars(r)["name"]
+	if appName == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request application name cannot be empty"))
+	}
+	argoApp, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
+		iamnamespace.NameSpaceScopedView)
+	if statusCode != http.StatusOK {
+		return r, mw.ReturnErrorResponse(statusCode, err)
+	}
+	revisions := r.URL.Query()["revisions"]
+	if len(revisions) == 0 {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("query parameter 'revisions' cannot be empty"))
+	}
+	for _, revision := range revisions {
+		if revision == "" {
+			return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+				fmt.Errorf("query parameter 'revisions' has empty value"))
+		}
+	}
+	repos := make([]string, 0)
+	if argoApp.Spec.HasMultipleSources() {
+		if len(argoApp.Spec.Sources) != len(revisions) {
+			return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("application has multiple(%d) "+
+				"sources, not same as query param 'revisions'", len(argoApp.Spec.Sources)))
+		}
+		for _, source := range argoApp.Spec.Sources {
+			repos = append(repos, source.RepoURL)
+		}
+	} else {
+		if len(revisions) != 1 {
+			return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("application has single source"))
+		}
+		repos = append(repos, argoApp.Spec.Source.RepoURL)
+	}
+
+	revisionsMetadata, err := plugin.storage.GetApplicationRevisionsMetadata(r.Context(), repos, revisions)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError,
+			fmt.Errorf("get application revisions metadata failed: %s", err.Error()))
+	}
+	return r, mw.ReturnJSONResponse(&ApplicationRevisionsMetadata{
+		Code:      0,
+		RequestID: mw.RequestID(r.Context()),
+		Data:      revisionsMetadata,
+	})
 }

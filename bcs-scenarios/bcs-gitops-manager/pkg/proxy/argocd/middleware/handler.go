@@ -32,6 +32,8 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/exp/slices"
 
+	argocluster "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
@@ -40,8 +42,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
+	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
 )
 
 // MiddlewareInterface defines the middleware interface
@@ -84,13 +88,14 @@ type MiddlewareInterface interface {
 
 // handler 定义 http 中间件处理对象
 type handler struct {
-	projectPermission *project.BCSProjectPerm
-	clusterPermission *cluster.BCSClusterPerm
-	option            *proxy.GitOpsOptions
-	argoSession       *session.ArgoSession
-	secretSession     *session.SecretSession
-	analysisClient    analysis.AnalysisInterface
-	monitorSession    *session.MonitorSession
+	projectPermission   *project.BCSProjectPerm
+	clusterPermission   *cluster.BCSClusterPerm
+	namespacePermission *namespace.BCSNamespacePerm
+	option              *proxy.GitOpsOptions
+	argoSession         *session.ArgoSession
+	secretSession       *session.SecretSession
+	analysisClient      analysis.AnalysisInterface
+	monitorSession      *session.MonitorSession
 
 	tracer func(context.Context) error
 }
@@ -100,13 +105,14 @@ func NewMiddlewareHandler(option *proxy.GitOpsOptions, session *session.ArgoSess
 	secretSession *session.SecretSession,
 	monitorSession *session.MonitorSession) MiddlewareInterface {
 	return &handler{
-		option:            option,
-		argoSession:       session,
-		secretSession:     secretSession,
-		monitorSession:    monitorSession,
-		projectPermission: project.NewBCSProjectPermClient(option.IAMClient),
-		clusterPermission: cluster.NewBCSClusterPermClient(option.IAMClient),
-		analysisClient:    analysis.GetAnalysisClient(),
+		option:              option,
+		argoSession:         session,
+		secretSession:       secretSession,
+		monitorSession:      monitorSession,
+		projectPermission:   project.NewBCSProjectPermClient(option.IAMClient),
+		clusterPermission:   cluster.NewBCSClusterPermClient(option.IAMClient),
+		namespacePermission: namespace.NewBCSNamespacePermClient(option.IAMClient),
+		analysisClient:      analysis.GetAnalysisClient(),
 	}
 }
 
@@ -213,66 +219,36 @@ func (h *handler) CheckBusinessPermission(ctx context.Context, bizID string, act
 	return http.StatusForbidden, errors.Errorf("businessID '%s' for action '%s' forbidden", bizID, action)
 }
 
-// CheckCreateApplication 检查创建某个应用是否具备权限
-func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Application) (int, error) {
-	projectName := app.Spec.Project
-	if projectName == "" || projectName == "default" {
-		return http.StatusBadRequest, errors.Errorf("project information lost")
+// CheckNamespaceScopedResourcePermission 检查 NamespaceScopedResource 的权限
+func (h *handler) CheckNamespaceScopedResourcePermission(ctx context.Context, projectName, projectID, clusterID,
+	namespace string, action iam.ActionID) (int, error) {
+	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
+	var permit bool
+	var err error
+	switch action {
+	case iamnamespace.NameSpaceScopedView:
+		permit, _, _, err = h.namespacePermission.
+			CanViewNamespaceScopedResource(user.GetUser(), projectID, clusterID, namespace)
+	case iamnamespace.NameSpaceScopedCreate:
+		permit, _, _, err = h.namespacePermission.
+			CanCreateNamespaceScopedResource(user.GetUser(), projectID, clusterID, namespace)
+	case iamnamespace.NameSpaceScopedUpdate:
+		permit, _, _, err = h.namespacePermission.
+			CanUpdateNamespaceScopedResource(user.GetUser(), projectID, clusterID, namespace)
+	case iamnamespace.NameSpaceScopedDelete:
+		permit, _, _, err = h.namespacePermission.
+			CanDeleteNamespaceScopedResource(user.GetUser(), projectID, clusterID, namespace)
+	default:
+		return http.StatusInternalServerError, errors.Errorf("unknown iam action '%s'", action)
 	}
-	argoProject, statusCode, err := h.CheckProjectPermission(ctx, projectName, iam.ProjectEdit)
-	if statusCode != http.StatusOK {
-		return statusCode, errors.Wrapf(err, "check application '%s' permission failed", projectName)
-	}
-
-	for i := range app.Spec.Sources {
-		appSource := app.Spec.Sources[i]
-		repoUrl := appSource.RepoURL
-		repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
-		if err != nil {
-			return http.StatusBadRequest,
-				errors.Wrapf(err, "check multi-source repository '%s' permission failed", repoUrl)
-		}
-		if !repoBelong {
-			return http.StatusForbidden,
-				errors.Errorf("check multi-source repo '%s' not belong to project '%s'", repoUrl, projectName)
-		}
-		blog.Infof("RequestID[%s] check multi-source repo '%s' success", RequestID(ctx), repoUrl)
-	}
-	if app.Spec.Source != nil {
-		repoUrl := app.Spec.Source.RepoURL
-		repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
-		if err != nil {
-			return http.StatusBadRequest, errors.Wrapf(err, "check repository permission failed")
-		}
-		if !repoBelong {
-			return http.StatusForbidden, errors.Errorf("repo '%s' not belong to project '%s'",
-				repoUrl, projectName)
-		}
-		blog.Infof("RequestID[%s] check source repo '%s' success", RequestID(ctx), repoUrl)
-	}
-
-	clusterQuery := clusterclient.ClusterQuery{
-		Server: app.Spec.Destination.Server,
-		Name:   app.Spec.Destination.Name,
-	}
-	argoCluster, err := h.option.Storage.GetCluster(ctx, &clusterQuery)
 	if err != nil {
-		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster '%v' failed", clusterQuery)
+		return http.StatusInternalServerError, errors.Wrapf(err, "auth center failed")
 	}
-	if argoCluster == nil {
-		return http.StatusNotFound, fmt.Errorf("cluster '%v' not found", clusterQuery)
+	if !permit {
+		return http.StatusForbidden, errors.Errorf("project '%s' namespace '%s/%s' for action '%s' forbidden",
+			projectName, clusterID, namespace, action)
 	}
-
-	// setting application name with project prefix
-	if !strings.HasPrefix(app.Name, projectName+"-") {
-		app.Name = projectName + "-" + app.Name
-	}
-	// setting control annotations
-	if app.Annotations == nil {
-		app.Annotations = make(map[string]string)
-	}
-	common.AddCustomAnnotationForApplication(argoProject, app)
-	return 0, nil
+	return http.StatusOK, nil
 }
 
 // CheckProjectPermissionByID 检查登录态用户对于项目的权限
@@ -389,20 +365,120 @@ func (h *handler) CheckApplicationPermission(ctx context.Context, appName string
 	if app == nil {
 		return nil, http.StatusNotFound, errors.Errorf("application '%s' not found", appName)
 	}
+	// 检查是否具备 ProjectView 权限
 	projectID := common.GetBCSProjectID(app.Annotations)
 	if projectID != "" {
-		statusCode, err := h.CheckProjectPermissionByID(ctx, app.Spec.Project, projectID, action)
+		statusCode, err := h.CheckProjectPermissionByID(ctx, app.Spec.Project, projectID, iam.ProjectView)
 		if err != nil {
 			return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", projectID)
 		}
 		return app, http.StatusOK, nil
+	} else {
+		argoProject, statusCode, err := h.CheckProjectPermission(ctx, app.Spec.Project, iam.ProjectView)
+		if err != nil {
+			return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", app.Spec.Project)
+		}
+		projectID = common.GetBCSProjectID(argoProject.Annotations)
 	}
-
-	_, statusCode, err := h.CheckProjectPermission(ctx, app.Spec.Project, action)
+	// 获取集群信息
+	argoCluster, err := h.option.Storage.GetCluster(ctx, &argocluster.ClusterQuery{
+		Server: app.Spec.Destination.Server,
+	})
 	if err != nil {
-		return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", app.Spec.Project)
+		return nil, http.StatusInternalServerError,
+			errors.Wrapf(err, "get cluster '%s' failed", app.Spec.Destination.Server)
+	}
+	if argoCluster == nil {
+		return nil, http.StatusNotFound, fmt.Errorf("cluster '%s' not found", app.Spec.Destination.Server)
+	}
+	// 检查是否具备 NamespaceScopedResource 权限
+	if app.Spec.Destination.Namespace == "" {
+		app.Spec.Destination.Namespace = "default"
+	}
+	statusCode, err := h.CheckNamespaceScopedResourcePermission(ctx, app.Spec.Project, projectID, argoCluster.Name,
+		app.Spec.Destination.Namespace, action)
+	if err != nil {
+		return nil, statusCode,
+			errors.Wrapf(err, "check namespaceScoped resource permission for action '%s' failed", action)
 	}
 	return app, http.StatusOK, nil
+}
+
+// CheckCreateApplication 检查创建某个应用是否具备权限
+func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Application) (int, error) {
+	projectName := app.Spec.Project
+	if projectName == "" || projectName == "default" {
+		return http.StatusBadRequest, errors.Errorf("project information lost")
+	}
+	argoProject, statusCode, err := h.CheckProjectPermission(ctx, projectName, iam.ProjectView)
+	if statusCode != http.StatusOK {
+		return statusCode, errors.Wrapf(err, "check application '%s' permission failed", projectName)
+	}
+
+	if app.Spec.HasMultipleSources() {
+		for i := range app.Spec.Sources {
+			appSource := app.Spec.Sources[i]
+			repoUrl := appSource.RepoURL
+			repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
+			if err != nil {
+				return http.StatusBadRequest,
+					errors.Wrapf(err, "check multi-source repository '%s' permission failed", repoUrl)
+			}
+			if !repoBelong {
+				return http.StatusForbidden,
+					errors.Errorf("check multi-source repo '%s' not belong to project '%s'", repoUrl, projectName)
+			}
+			blog.Infof("RequestID[%s] check multi-source repo '%s' success", RequestID(ctx), repoUrl)
+		}
+	} else {
+		if app.Spec.Source != nil {
+			repoUrl := app.Spec.Source.RepoURL
+			repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
+			if err != nil {
+				return http.StatusBadRequest, errors.Wrapf(err, "check repository permission failed")
+			}
+			if !repoBelong {
+				return http.StatusForbidden, errors.Errorf("repo '%s' not belong to project '%s'",
+					repoUrl, projectName)
+			}
+			blog.Infof("RequestID[%s] check source repo '%s' success", RequestID(ctx), repoUrl)
+		}
+	}
+
+	clusterQuery := clusterclient.ClusterQuery{
+		Server: app.Spec.Destination.Server,
+		Name:   app.Spec.Destination.Name,
+	}
+	argoCluster, err := h.option.Storage.GetCluster(ctx, &clusterQuery)
+	if err != nil {
+		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster '%v' failed", clusterQuery)
+	}
+	if argoCluster == nil {
+		return http.StatusNotFound, fmt.Errorf("cluster '%v' not found", clusterQuery)
+	}
+	// 检查是否具备 NamespaceScopedResource 权限
+	if app.Spec.Destination.Namespace == "" {
+		app.Spec.Destination.Namespace = "default"
+	}
+	projectID := common.GetBCSProjectID(argoProject.Annotations)
+	statusCode, err = h.CheckNamespaceScopedResourcePermission(ctx, app.Spec.Project, projectID, argoCluster.Name,
+		app.Spec.Destination.Namespace, iamnamespace.NameSpaceScopedCreate)
+	if err != nil {
+		return statusCode,
+			errors.Wrapf(err, "check namespaceScoped resource permission for action '%s' failed",
+				iamnamespace.NameSpaceScopedCreate)
+	}
+
+	// setting application name with project prefix
+	if !strings.HasPrefix(app.Name, projectName+"-") {
+		app.Name = projectName + "-" + app.Name
+	}
+	// setting control annotations
+	if app.Annotations == nil {
+		app.Annotations = make(map[string]string)
+	}
+	common.AddCustomAnnotationForApplication(argoProject, app)
+	return 0, nil
 }
 
 // ListProjectsWithoutAuth list all projects that argo controlled

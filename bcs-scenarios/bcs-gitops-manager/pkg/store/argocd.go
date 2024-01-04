@@ -235,7 +235,7 @@ func (cd *argo) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, err
 func (cd *argo) CreateCluster(ctx context.Context, cls *v1alpha1.Cluster) error {
 	_, err := cd.clusterClient.Create(ctx, &cluster.ClusterCreateRequest{Cluster: cls})
 	if err != nil {
-		if !utils.IsContextCanceled(err) {
+		if !utils.IsContextCanceled(err) && !utils.IsPermissionDenied(err) {
 			metric.ManagerArgoOperateFailed.WithLabelValues("CreateCluster").Inc()
 		}
 		return errors.Wrapf(err, "argocd create cluster '%s' failed", cls.Name)
@@ -436,6 +436,39 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 	return result, nil
 }
 
+// GetApplicationRevisionsMetadata get revisions metadata for repos, adapt to multiple sources
+func (cd *argo) GetApplicationRevisionsMetadata(ctx context.Context, repos,
+	revisions []string) ([]*v1alpha1.RevisionMetadata, error) {
+	repoClientSet := apiclient.NewRepoServerClientset(cd.option.RepoServerUrl, 60,
+		apiclient.TLSConfiguration{
+			DisableTLS:       false,
+			StrictValidation: false,
+		})
+	repoCloser, repoClient, err := repoClientSet.NewRepoServerClient()
+	if err != nil {
+		return nil, errors.Wrapf(err, "create reposerver client failed")
+	}
+	defer repoCloser.Close()
+
+	result := make([]*v1alpha1.RevisionMetadata, 0, len(repos))
+	for i, repo := range repos {
+		argoRepo, err := cd.argoDB.GetRepository(ctx, repo)
+		if err != nil {
+			return nil, errors.Wrapf(err, "get repo '%s' from db failed", repo)
+		}
+		revisionMetadata, err := repoClient.GetRevisionMetadata(ctx, &apiclient.RepoServerRevisionMetadataRequest{
+			Repo:           argoRepo,
+			Revision:       revisions[i],
+			CheckSignature: false,
+		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "get revision metadata '%s/%s' failed", repo, revisions[i])
+		}
+		result = append(result, revisionMetadata)
+	}
+	return result, nil
+}
+
 // GetApplicationResourceTree returns the resource tree of application
 func (cd *argo) GetApplicationResourceTree(ctx context.Context, name string) (*v1alpha1.ApplicationTree, error) {
 	resp, err := cd.appClient.ResourceTree(ctx, &applicationpkg.ResourcesQuery{
@@ -547,8 +580,24 @@ func (cd *argo) ListApplications(ctx context.Context, query *appclient.Applicati
 			if query.Name != nil && (*query.Name != "" && *query.Name != v.Name) {
 				continue
 			}
-			if query.Repo != nil && (*query.Repo != "" && *query.Repo != v.Spec.Source.RepoURL) {
-				continue
+			if query.Repo != nil {
+				queryRepo := *query.Repo
+				if v.Spec.HasMultipleSources() {
+					consistent := false
+					for _, source := range v.Spec.Sources {
+						if queryRepo == source.RepoURL {
+							consistent = true
+							break
+						}
+					}
+					if !consistent {
+						continue
+					}
+				} else {
+					if queryRepo != v.Spec.Source.RepoURL {
+						continue
+					}
+				}
 			}
 			if query.AppNamespace != nil && (*query.AppNamespace != "" && *query.AppNamespace !=
 				v.Spec.Destination.Namespace) {
@@ -614,21 +663,15 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 		return result
 	}
 	result = make([]ApplicationDeleteResourceResult, 0, len(resources))
-	resourceMap := make(map[string]*v1alpha1.ResourceStatus)
-	for _, resource := range application.Status.Resources {
-		resourceMap[buildResourceKeyWithResourceStatus(&resource)] = &resource
-	}
 	for _, appResource := range resources {
 		key := buildResourceKeyWithCustomResource(appResource)
-		resource, ok := resourceMap[key]
-		if !ok {
-			result = append(result, ApplicationDeleteResourceResult{
-				Succeeded:  false,
-				ErrMessage: fmt.Sprintf("resource '%s' not belong to application '%s'", key, application.Name),
-			})
-			continue
-		}
-		if err := cd.deleteApplicationResource(ctx, application, resource); err != nil {
+		if err := cd.deleteApplicationResource(ctx, application, &v1alpha1.ResourceStatus{
+			Name:      appResource.ResourceName,
+			Kind:      appResource.Kind,
+			Namespace: appResource.Namespace,
+			Group:     appResource.Group,
+			Version:   appResource.Version,
+		}); err != nil {
 			result = append(result, ApplicationDeleteResourceResult{
 				Succeeded:  false,
 				ErrMessage: fmt.Sprintf("resource '%s' delete failed: %s", key, err.Error()),

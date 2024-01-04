@@ -73,6 +73,7 @@ type Store interface {
 	ListRepository(ctx context.Context, projNames []string) (*v1alpha1.RepositoryList, error)
 
 	GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error)
+	GetApplicationRevisionsMetadata(ctx context.Context, repo, revision []string) ([]*v1alpha1.RevisionMetadata, error)
 	GetApplicationResourceTree(ctx context.Context, name string) (*v1alpha1.ApplicationTree, error)
 	ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (*v1alpha1.ApplicationList, error)
 	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application,
