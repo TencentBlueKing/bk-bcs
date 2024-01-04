@@ -13,6 +13,7 @@
           ref="ruleEdit"
           :id="props.id"
           :rules="rules"
+          :app-list="appList"
           @change="handleRuleChange"
           @form-change="isFormChange = true"/>
         <RuleView v-else :rules="rules" @edit="isRuleEdit = true" />
@@ -37,12 +38,15 @@
   </bk-sideslider>
 </template>
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../store/global';
 import { getCredentialScopes, updateCredentialScopes } from '../../../../api/credentials';
 import { ICredentialRule, IRuleUpdateParams } from '../../../../../types/credential';
 import useModalCloseConfirmation from '../../../../utils/hooks/use-modal-close-confirmation';
+import { getAppList } from '../../../../api/index';
+import { IAppItem } from '../../../../../types/app';
+import { useRoute } from 'vue-router';
 // import MatchingResult from './matching-result.vue'
 import RuleView from './rule-view.vue';
 import RuleEdit from './rule-edit.vue';
@@ -58,6 +62,8 @@ const props = defineProps<{
 
 const emits = defineEmits(['close', 'refresh', 'applyPerm']);
 
+const route = useRoute();
+
 const loading = ref(true);
 const rules = ref<ICredentialRule[]>([]);
 const ruleChangeParams = ref<IRuleUpdateParams>({
@@ -69,6 +75,14 @@ const isRuleEdit = ref(false);
 const isFormChange = ref(false);
 const pending = ref(false);
 const ruleEdit = ref();
+const appList = ref<IAppItem[]>([]);
+const bkBizId = ref(String(route.params.spaceId));
+
+
+onMounted(async () => {
+  const resp = await getAppList(bkBizId.value, { start: 0, all: true });
+  appList.value = resp.details;
+});
 watch(
   () => props.show,
   (val) => {
