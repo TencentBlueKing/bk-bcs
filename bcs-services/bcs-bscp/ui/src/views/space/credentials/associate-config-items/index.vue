@@ -49,6 +49,7 @@ import { IAppItem } from '../../../../../types/app';
 // import MatchingResult from './matching-result.vue'
 import RuleView from './rule-view.vue';
 import RuleEdit from './rule-edit.vue';
+import { Message } from 'bkui-vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -124,6 +125,10 @@ const handleSave = async () => {
     isRuleEdit.value = false;
     loadRules();
     emits('refresh');
+    Message({
+      theme: 'success',
+      message: '编辑规则成功',
+    });
   } catch (e) {
     console.error(e);
   } finally {

@@ -413,6 +413,10 @@ const handleCreateCredential = async () => {
     createPending.value = true;
     const params = { memo: createCredentialMemo.value, name: createCredentialName.value };
     const res = await createCredential(spaceId.value, params);
+    BkMessage({
+      theme: 'success',
+      message: '新建服务密钥成功',
+    });
     pagination.value.current = 1;
     await loadCredentialList();
     newCredentials.value.push(res.id);
