@@ -83,6 +83,8 @@ type Store interface {
 		application *v1alpha1.Application) ([]*apiclient.ManifestResponse, error)
 	ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
 		live *unstructured.Unstructured, hideData bool) error
+	UpdateApplicationSpec(ctx context.Context, spec *appclient.ApplicationUpdateSpecRequest) (
+		*v1alpha1.ApplicationSpec, error)
 
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (

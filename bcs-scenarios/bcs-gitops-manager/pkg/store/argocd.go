@@ -469,6 +469,15 @@ func (cd *argo) GetApplicationRevisionsMetadata(ctx context.Context, repos,
 	return result, nil
 }
 
+// UpdateApplicationSpec will return application by name
+func (cd *argo) UpdateApplicationSpec(ctx context.Context, spec *applicationpkg.ApplicationUpdateSpecRequest) (*v1alpha1.ApplicationSpec, error) {
+	resp, err := cd.appClient.UpdateSpec(ctx, spec)
+	if err != nil {
+		return nil, errors.Wrapf(err, "update application spec '%s' failed", *spec.Name)
+	}
+	return resp, nil
+}
+
 // GetApplicationResourceTree returns the resource tree of application
 func (cd *argo) GetApplicationResourceTree(ctx context.Context, name string) (*v1alpha1.ApplicationTree, error) {
 	resp, err := cd.appClient.ResourceTree(ctx, &applicationpkg.ResourcesQuery{

@@ -62,6 +62,8 @@ type AppPlugin struct {
 // POST：  /api/v1/applications/{name}/rollback，回退到上个版本
 // PUT：   /api/v1/applications/{name}/spec，更新spec
 // POST：  /api/v1/applications/{name}/sync，发起app同步
+// PUT:    /api/v1/applications/{name}/parameters/set, 设置app临时参数
+// PUT:    /api/v1/applications/{name}/parameters/unset, 取消app临时参数
 //
 // * required Project View projectPermission
 // GET：/api/v1/applications?projects={projects}，获取列表，强制启用projects参数
@@ -114,6 +116,10 @@ func (plugin *AppPlugin) Init() error {
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationHistoryState))
 	appRouter.Path("/custom_revisions").Methods("GET").
 		Handler(plugin.middleware.HttpWrapper(plugin.customRevisionsMetadata))
+	appRouter.Path("/parameters/set").Methods("PUT").
+		Handler(plugin.middleware.HttpWrapper(plugin.applicationParameters))
+	appRouter.Path("/parameters/unset").Methods("PUT").
+		Handler(plugin.middleware.HttpWrapper(plugin.applicationParameters))
 
 	appRouter.PathPrefix("").Methods("PUT", "POST", "DELETE", "PATCH").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationEditHandler))
@@ -440,4 +446,106 @@ func (plugin *AppPlugin) customRevisionsMetadata(r *http.Request) (*http.Request
 		RequestID: mw.RequestID(r.Context()),
 		Data:      revisionsMetadata,
 	})
+}
+
+type parameterAction string
+
+const (
+	parameterSet   parameterAction = "set"
+	parameterUnset parameterAction = "unset"
+)
+
+// set body: [param1=value1, param2=value2]
+// unset body: [param1, param2]
+func (plugin *AppPlugin) applicationParameters(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	appName := mux.Vars(r)["name"]
+	if appName == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request application name cannot be empty"))
+	}
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "read body failed"))
+	}
+	var parameters []string
+	if err = json.Unmarshal(body, &parameters); err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "unmarshal body failed"))
+	}
+
+	argoApp, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
+		iamnamespace.NameSpaceScopedUpdate)
+	if statusCode != http.StatusOK {
+		return r, mw.ReturnErrorResponse(statusCode, err)
+	}
+
+	var action parameterAction
+	if strings.HasSuffix(r.URL.Path, "/set") {
+		action = parameterSet
+	} else if strings.HasSuffix(r.URL.Path, "/unset") {
+		action = parameterUnset
+	}
+	switch action {
+	case parameterSet:
+		if err = setParameterOverrides(argoApp, parameters, parameterSet); err != nil {
+			return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+		}
+	case parameterUnset:
+		if err = setParameterOverrides(argoApp, parameters, parameterUnset); err != nil {
+			return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+		}
+	default:
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError,
+			errors.Errorf("url path error: %s", r.URL.Path))
+	}
+
+	if _, err = plugin.storage.UpdateApplicationSpec(r.Context(), &appclient.ApplicationUpdateSpecRequest{
+		Name: &argoApp.Name,
+		Spec: &argoApp.Spec,
+	}); err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+	}
+	return r, mw.ReturnJSONResponse("success")
+}
+
+// setParameterOverrides updates an existing or appends a new parameters override in the application
+func setParameterOverrides(app *v1alpha1.Application, parameters []string, action parameterAction) error {
+	if len(parameters) == 0 {
+		return errors.New("parameters cannot be null")
+	}
+	source := app.Spec.GetSource()
+	sourceType, err := source.ExplicitType()
+	if err != nil {
+		return errors.Wrapf(err, "check sourceType error")
+	}
+
+	if *sourceType != v1alpha1.ApplicationSourceTypeHelm {
+		return errors.New("parameters can only be set against Helm applications")
+	}
+	if source.Helm == nil {
+		return errors.New("source helm is nil cannot unset")
+	}
+	switch action {
+	case parameterSet:
+		for _, p := range parameters {
+			newParam, err := v1alpha1.NewHelmParameter(p, false)
+			if err != nil {
+				return errors.Wrapf(err, "set helm parameter error")
+			}
+			source.Helm.AddParameter(*newParam)
+		}
+	case parameterUnset:
+		for _, paramStr := range parameters {
+			helmParams := source.Helm.Parameters
+			for i, p := range helmParams {
+				if p.Name == paramStr {
+					source.Helm.Parameters = append(helmParams[0:i], helmParams[i+1:]...)
+					break
+				}
+			}
+		}
+	default:
+		return errors.Errorf("action error: '%s'", action)
+	}
+
+	return nil
 }
