@@ -172,6 +172,10 @@ const handleImport = async () => {
     variables: variables.value,
   };
   await batchImportTemplateVariables(spaceId.value, params);
+  BkMessage({
+    theme: 'success',
+    message: '导入变量成功',
+  });
 };
 
 const handleSelectSeparator = (selectSeparator: string) => {

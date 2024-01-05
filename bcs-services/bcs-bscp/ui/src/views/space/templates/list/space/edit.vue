@@ -63,7 +63,7 @@ const handleEdit = () => {
       emits('edited');
       Message({
         theme: 'success',
-        message: '编辑成功',
+        message: '编辑空间成功',
       });
     } catch (e) {
       console.error(e);

@@ -63,7 +63,7 @@ const handleCreate = () => {
       emits('created', res.id);
       Message({
         theme: 'success',
-        message: '创建成功',
+        message: '创建空间成功',
       });
     } catch (e) {
       console.error(e);
