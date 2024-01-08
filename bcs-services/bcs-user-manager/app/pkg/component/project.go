@@ -40,13 +40,25 @@ type Project struct {
 	ProjectCode string `json:"projectCode"`
 }
 
-// GetProject 通过 project_id/code 获取项目信息
-func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
+// GetProjectWithCache 通过 project_id/code 获取项目信息
+func GetProjectWithCache(ctx context.Context, projectIDOrCode string) (*Project, error) {
 	cacheKey := fmt.Sprintf("bcs.GetProject:%s", projectIDOrCode)
 	if cacheResult, ok := cache.LocalCache.Get(cacheKey); ok {
 		return cacheResult.(*Project), nil
 	}
 
+	proj, err := GetProject(ctx, projectIDOrCode)
+	if err != nil {
+		return nil, err
+	}
+
+	cache.LocalCache.Set(cacheKey, proj, time.Minute*5)
+
+	return proj, nil
+}
+
+// GetProject 通过 project_id/code 获取项目信息
+func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", config.GetGlobalConfig().BcsAPI.InnerHost,
 		projectIDOrCode)
 	resp, err := GetClient().R().
@@ -62,9 +74,6 @@ func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 	if err := UnmarshalBKResult(resp, project); err != nil {
 		return nil, err
 	}
-
-	cache.LocalCache.Set(cacheKey, project, time.Hour*1)
-
 	return project, nil
 }
 
@@ -163,7 +172,7 @@ func GetCachedNamespace(ctx context.Context, clusterID, nsID string) (*Namespace
 	if err != nil {
 		return nil, err
 	}
-	project, err := GetProject(ctx, cluster.ProjectID)
+	project, err := GetProjectWithCache(ctx, cluster.ProjectID)
 	if err != nil {
 		return nil, err
 	}

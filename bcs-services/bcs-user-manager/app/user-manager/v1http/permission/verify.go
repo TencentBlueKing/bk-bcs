@@ -351,7 +351,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 // checkNamespaceInProjectCluster
 func (cli *PermVerifyClient) checkNamespaceInProjectCluster(ctx context.Context, projectID, clusterID string,
 	namespace string) (bool, error) {
-	project, err := component.GetProject(ctx, projectID)
+	project, err := component.GetProjectWithCache(ctx, projectID)
 	if err != nil {
 		blog.Log(ctx).Errorf("checkNamespaceInProjectCluster get project failed: %v", err)
 		return false, err
@@ -644,7 +644,7 @@ func addAudit(pCtx context.Context, user, projectID, method, actionID string, re
 		return
 	}
 
-	project, err := component.GetProject(ctx, projectID)
+	project, err := component.GetProjectWithCache(ctx, projectID)
 	if err != nil {
 		blog.Log(ctx).Errorf("get project failed: %v", err.Error())
 		return

@@ -93,7 +93,8 @@ func (p ProjectProvider) FetchInstanceInfo(req resource.Request) resource.Respon
 				blog.Log(ctx).Errorf("get project %s failed, err %s", id, err.Error())
 				return
 			}
-			nsChan <- Instance{p.ProjectID, combineNameID(p.Name, p.ProjectCode), []string{p.Creator, p.Updater}}
+			nsChan <- Instance{p.ProjectID, combineNameID(p.Name, p.ProjectCode),
+				[]string{p.Creator, p.Updater, p.Managers}}
 		}(v)
 	}
 	wg.Wait()
