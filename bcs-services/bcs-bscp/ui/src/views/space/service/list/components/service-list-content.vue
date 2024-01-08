@@ -72,8 +72,8 @@
     <CreateService v-model:show="isCreateServiceOpen" @reload="loadAppList" />
     <EditService v-model:show="isEditServiceOpen" :service="editingService" @reload="loadAppList" />
     <bk-dialog
-      ext-cls="delete-service-dialog"
       v-model:is-show="isShowDeleteDialog"
+      ext-cls="delete-service-dialog"
       :theme="'primary'"
       :dialog-type="'operation'"
       header-align="center"
@@ -82,12 +82,14 @@
       :draggable="false"
     >
       <div class="dialog-content">
-        <div class="dialog-title">确认删除此服务？</div>
-        <div>删除的服务<span>无法找回</span>,请谨慎操作！</div>
+        <div class="dialog-title">确认删除服务？</div>
         <div class="dialog-input">
           <div class="dialog-info">
-            请输入服务名<span>{{ deleteService!.spec.name }}</span
-            >以确认删除
+            <div>删除的服务<span>无法找回</span>,请谨慎操作！</div>
+            <div>同时会删除服务密钥对服务的关联规则</div>
+          </div>
+          <div class="tips">
+            请输入服务名 <span>{{ deleteService!.spec.name }}</span> 以确认删除
           </div>
           <bk-input v-model="dialogInputStr" />
         </div>
@@ -201,7 +203,7 @@ watch(
     isSearchEmpty.value = false;
     pagination.value.limit = 50;
     refreshSeviceList();
-  },
+  }
 );
 
 onMounted(() => {
@@ -367,25 +369,27 @@ const handleClearSearchStr = () => {
 
 .dialog-content {
   text-align: center;
-  margin: 10px 0 20px;
-  span {
-    color: red;
-  }
+  margin-top: 48px;
   .dialog-title {
-    margin: 10px;
-    font-size: 24px;
-    color: #121213;
+    font-size: 20px;
+    color: #313238;
+    line-height: 32px;
   }
   .dialog-input {
-    margin-top: 10px;
+    margin-top: 16px;
     text-align: start;
     padding: 20px;
     background-color: #f4f7fa;
     .dialog-info {
-      margin-bottom: 5px;
+      margin-bottom: 16px;
       span {
-        color: #121213;
-        font-weight: 600;
+        color: red;
+      }
+    }
+    .tips {
+      margin-bottom: 8px;
+      span {
+        font-weight: bolder;
       }
     }
   }
@@ -400,6 +404,9 @@ const handleClearSearchStr = () => {
 <style lang="scss">
 .delete-service-dialog {
   top: 40% !important;
+  .bk-modal-body {
+    padding-bottom: 104px;
+  }
   .bk-modal-header {
     display: none;
   }
@@ -407,7 +414,7 @@ const handleClearSearchStr = () => {
     height: auto !important;
     background-color: #fff !important;
     border-top: none !important;
-    padding-bottom: 24px !important;
+    padding: 24px 24px 48px !important;
   }
 }
 </style>

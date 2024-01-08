@@ -213,13 +213,12 @@
     @value-change="dialogInputStr = ''"
   >
     <div class="dialog-content">
-      <div class="dialog-title">确认删除此密钥？</div>
-      <div>删除的密钥<span>无法找回</span>,请谨慎操作！</div>
+      <div class="dialog-title">确认删除密钥？</div>
       <div class="dialog-input">
         <div class="dialog-info">
-          请输入密钥名称<span>{{ deleteCredentialInfo?.spec.name }}</span
-          >以确认删除
+          <div>删除的密钥<span>无法找回</span>,请谨慎操作！</div>
         </div>
+        <div class="tips">请输入密钥名称 <span>{{ deleteCredentialInfo?.spec.name }}</span> 以确认删除</div>
         <bk-input v-model="dialogInputStr" />
       </div>
     </div>
@@ -754,25 +753,27 @@ const goToIAM = () => {
 }
 .dialog-content {
   text-align: center;
-  margin: 10px 0 20px;
-  span {
-    color: red;
-  }
+  margin-top: 48px;
   .dialog-title {
-    margin: 10px;
-    font-size: 24px;
-    color: #121213;
+    font-size: 20px;
+    color: #313238;
+    line-height: 32px;
   }
   .dialog-input {
-    margin-top: 10px;
+    margin-top: 16px;
     text-align: start;
     padding: 20px;
     background-color: #f4f7fa;
     .dialog-info {
-      margin-bottom: 5px;
+      margin-bottom: 16px;
       span {
-        color: #121213;
-        font-weight: 600;
+        color: red;
+      }
+    }
+    .tips {
+      margin-bottom: 8px;
+      span {
+        font-weight: bolder;
       }
     }
   }
@@ -783,15 +784,18 @@ const goToIAM = () => {
   }
 }
 .table-rule {
-  white-space: nowrap; /* 让文本在单行中显示 */
-  overflow: hidden; /* 隐藏溢出部分 */
-  text-overflow: ellipsis; /* 使用省略号表示被隐藏的文本 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
 
 <style lang="scss">
 .delete-service-dialog {
   top: 40% !important;
+  .bk-modal-body {
+    padding-bottom: 104px !important;
+  }
   .bk-modal-header {
     display: none;
   }
@@ -799,7 +803,7 @@ const goToIAM = () => {
     height: auto !important;
     background-color: #fff !important;
     border-top: none !important;
-    padding-bottom: 24px !important;
+    padding: 24px 24px 48px !important;
   }
 }
 </style>

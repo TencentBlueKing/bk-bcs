@@ -52,6 +52,7 @@
               :model-value="node.checked"
               :disabled="node.disabled"
               :indeterminate="node.indeterminate"
+              v-bk-tooltips="{ content: '已上线分组不可取消选择',disabled: !node.disabled }"
               @change="handleNodeCheckChange(node)">
             </bk-checkbox>
             <div class="node-label" @click="handleNodeCheckChange(node)">
