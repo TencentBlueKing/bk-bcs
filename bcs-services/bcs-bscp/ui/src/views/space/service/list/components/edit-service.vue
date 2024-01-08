@@ -3,7 +3,9 @@
     <template #header>
       <div class="service-edit-head">
         <span class="title">{{ isViewMode ? t('服务属性') : t('编辑服务') }}</span>
-        <bk-button v-if="isViewMode" class="edit-entry-btn" theme="primary" @click="isViewMode = false">编辑</bk-button>
+        <bk-button v-if="isViewMode" class="edit-entry-btn" theme="primary" @click="isViewMode = false">
+          {{ t('编辑') }}
+        </bk-button>
       </div>
     </template>
     <div class="service-edit-wrapper">
@@ -14,10 +16,10 @@
           {{ serviceData!.spec.memo || '--' }}
         </bk-form-item>
         <bk-form-item :label="t('数据格式')">
-          {{ serviceData!.spec.config_type === 'file' ? '文件型' : '键值型' }}
+          {{ serviceData!.spec.config_type === 'file' ? t('文件型') : t('键值型') }}
         </bk-form-item>
         <bk-form-item v-if="serviceData!.spec.config_type !== 'file'" :label="t('数据类型')">
-          {{ serviceData!.spec.data_type === 'any' ? '任意类型' : serviceData!.spec.data_type }}
+          {{ serviceData!.spec.data_type === 'any' ? t('任意类型') : serviceData!.spec.data_type }}
         </bk-form-item>
         <bk-form-item :label="t('创建者')">
           {{ serviceData?.revision.creator }}

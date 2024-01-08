@@ -2,7 +2,7 @@
   <section :class="['service-card', { 'no-view-perm': !props.service.permissions.view }]" @click="handleCardClick">
     <div class="card-content-wrapper">
       <div class="card-head">
-        <bk-tag class="type-tag">{{ isFileType ? '文件型' : '键值型' }}</bk-tag>
+        <bk-tag class="type-tag">{{ isFileType ? t('文件型') : t('键值型')}}</bk-tag>
         <div class="service-name">
           <bk-overflow-title type="tips">
             {{ props.service.spec?.name }}
@@ -18,14 +18,14 @@
       <div class="service-config">
         <div class="config-info">
           <span class="bk-bscp-icon icon-configuration-line"></span>
-          {{ props.service.config?.count }}个配置{{ props.service.spec.config_type === 'file' ? '文件' : '项' }}
+          {{ props.service.config?.count }}{{ isFileType ? t('个配置文件') : t('个配置项')}}
         </div>
         <div class="time-info">
-          <span class="bk-bscp-icon icon-time-2" v-bk-tooltips="{ content: '最新上线', placement: 'top' }"></span>
+          <span class="bk-bscp-icon icon-time-2" v-bk-tooltips="{ content: t('最新上线'), placement: 'top' }"></span>
           <template v-if="props.service.config && props.service.config.update_at">
             {{ datetimeFormat(props.service.config.update_at) }}
           </template>
-          <template v-else>未更新</template>
+          <template v-else>{{ t('未更新') }}</template>
         </div>
       </div>
       <div class="card-footer">
@@ -38,7 +38,7 @@
             {{ t('配置管理') }}
           </bk-button>
         </template>
-        <div v-else class="apply-btn">申请服务权限</div>
+        <div v-else class="apply-btn">{{ t('申请服务权限') }}</div>
       </div>
     </div>
   </section>

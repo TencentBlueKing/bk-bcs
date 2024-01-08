@@ -17,7 +17,7 @@
   </LayoutTopBar>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
@@ -35,10 +35,10 @@ const { spaceId } = storeToRefs(useGlobalStore());
 const activeTabName = ref<string>(route.name as string);
 const hasCreateServicePerm = ref(false);
 const permCheckLoading = ref(false);
-const panels = [
+const panels = computed(() => [
   { name: 'service-all', label: t('全部服务') },
   { name: 'service-mine', label: t('我的服务') },
-];
+]);
 
 watch(
   () => route.name,

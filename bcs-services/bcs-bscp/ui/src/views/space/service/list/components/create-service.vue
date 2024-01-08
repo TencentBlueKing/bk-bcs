@@ -24,15 +24,15 @@
     @closed="isShowConfirmDialog = false"
   >
     <div class="title-icon"><Done fill="#42C06A" /></div>
-    <div class="title-info">服务新建成功</div>
+    <div class="title-info">{{t('服务新建成功')}}</div>
     <div class="content-info">
-      {{ serviceData.config_type === 'file' ? '接下来你可以在服务下新增配置文件' : '接下来你可以在服务下新增配置项' }}
+      {{ serviceData.config_type === 'file' ? t('接下来你可以在服务下新增配置文件') : t('接下来你可以在服务下新增配置项') }}
     </div>
     <div class="footer-btn">
       <bk-button theme="primary" @click="handleGoCreateConfig" style="margin-right: 8px">
-        {{ serviceData.config_type === 'file' ? '新增配置文件' : '新增配置项' }}
+        {{ serviceData.config_type === 'file' ? t('新增配置文件') : t('新增配置项') }}
       </bk-button>
-      <bk-button @click="isShowConfirmDialog = false">稍后再说</bk-button>
+      <bk-button @click="isShowConfirmDialog = false">{{ t('稍后再说') }}</bk-button>
     </div>
   </bk-dialog>
 </template>
