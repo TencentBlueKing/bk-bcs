@@ -203,7 +203,7 @@ watch(
     isSearchEmpty.value = false;
     pagination.value.limit = 50;
     refreshSeviceList();
-  }
+  },
 );
 
 onMounted(() => {
@@ -405,7 +405,7 @@ const handleClearSearchStr = () => {
 .delete-service-dialog {
   top: 40% !important;
   .bk-modal-body {
-    padding-bottom: 104px;
+    padding-bottom: 104px !important;
   }
   .bk-modal-header {
     display: none;

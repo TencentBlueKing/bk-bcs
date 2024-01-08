@@ -5,7 +5,7 @@
         <span class="logo">
           <img src="../assets/logo.svg" alt="" />
         </span>
-        <span class="head-title"> 服务配置中心 </span>
+        <span class="head-title"> {{ t('服务配置中心') }} </span>
       </div>
       <div class="head-routes">
         <router-link
@@ -61,6 +61,7 @@
           </div>
         </bk-option>
       </bk-select>
+      <div @click="switchLanguage">{{ locale === 'zh-CN' ? '中' : 'en' }}</div>
       <bk-dropdown trigger="hover" ext-cls="dropdown" :is-show="isShowDropdown" @hide="isShowDropdown = false">
         <bk-button text :class="['dropdown-trigger', isShowDropdown ? 'active' : '']">
           <help-fill width="16" height="16" :fill="isShowDropdown ? '#fff' : '#96a2b9'" />
@@ -95,6 +96,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { AngleDown, HelpFill, DownShape, Plus } from 'bkui-vue/lib/icon';
@@ -110,7 +112,9 @@ import MarkdownIt from 'markdown-it';
 
 const route = useRoute();
 const router = useRouter();
-const { bscpVersion, spaceId, spaceList, spaceFeatureFlags, showPermApplyPage, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
+const { t, locale } = useI18n();
+const { bscpVersion, spaceId, spaceList, spaceFeatureFlags, showPermApplyPage, showApplyPermDialog, permissionQuery } =
+  storeToRefs(useGlobalStore());
 const { userInfo } = storeToRefs(useUserStore());
 const templateStore = useTemplateStore();
 const md = new MarkdownIt({
@@ -118,14 +122,14 @@ const md = new MarkdownIt({
   linkify: true,
   typographer: true,
 });
-const navList = [
-  { id: 'service-all', module: 'service', name: '服务管理' },
-  { id: 'groups-management', module: 'groups', name: '分组管理' },
-  { id: 'variables-management', module: 'variables', name: '全局变量' },
-  { id: 'templates-list', module: 'templates', name: '配置模板' },
-  { id: 'script-list', module: 'scripts', name: '脚本管理' },
-  { id: 'credentials-management', module: 'credentials', name: '服务密钥' },
-];
+const navList = computed(() => [
+  { id: 'service-all', module: 'service', name: t('服务管理') },
+  { id: 'groups-management', module: 'groups', name: t('分组管理') },
+  { id: 'variables-management', module: 'variables', name: t('全局变量') },
+  { id: 'templates-list', module: 'templates', name: t('配置模板') },
+  { id: 'script-list', module: 'scripts', name: t('脚本管理') },
+  { id: 'credentials-management', module: 'credentials', name: t('服务密钥') },
+]);
 
 const optionList = ref<ISpaceDetail[]>([]);
 
@@ -201,7 +205,7 @@ const handleSelectSpace = async (id: string) => {
       state.currentTemplateSpace = 0;
       state.currentPkg = '';
     });
-    const nav = navList.find(item => item.module === route.meta.navModule);
+    const nav = navList.value.find(item => item.module === route.meta.navModule);
     if (nav) {
       router.push({ name: nav.id, params: { spaceId: id } });
     } else {
@@ -211,9 +215,9 @@ const handleSelectSpace = async (id: string) => {
 };
 
 // 下拉菜单
-const dropdownList = [
+const dropdownList = computed(() => [
   {
-    title: '产品文档',
+    title: t('产品文档'),
     click() {
       // @ts-ignore
       // eslint-disable-next-line
@@ -221,24 +225,24 @@ const dropdownList = [
     },
   },
   {
-    title: '版本日志',
+    title: t('版本日志'),
     click() {
       isShowVersionLog.value = true;
     },
   },
   {
-    title: '功能特性',
+    title: t('功能特性'),
     click() {
       isShowFeatures.value = true;
     },
   },
   {
-    title: '问题反馈',
+    title: t('问题反馈'),
     click() {
       window.open('https://bk.tencent.com/s-mart/community/question');
     },
   },
-];
+]);
 
 const isShowDropdown = ref(false);
 
@@ -276,6 +280,15 @@ const handleLoginOut = () => {
 const handleToCMDB = () => {
   // @ts-ignore
   window.open(`${BK_CC_HOST}/#/resource/business`); // eslint-disable-line no-undef
+};
+
+// 切换语言
+const switchLanguage = () => {
+  if (locale.value === 'zh-CN') {
+    locale.value = 'en-US';
+  } else {
+    locale.value = 'zh-CN';
+  }
 };
 </script>
 
@@ -322,6 +335,7 @@ const handleToCMDB = () => {
     display: flex;
     align-items: center;
     justify-self: flex-end;
+    justify-content: space-between;
     font-size: 14px;
     color: #979ba5;
   }
