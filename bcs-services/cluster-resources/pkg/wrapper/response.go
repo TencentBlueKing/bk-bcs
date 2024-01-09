@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -49,6 +50,8 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 			case *clusterRes.CommonResp:
 				r.RequestID = getRequestID(ctx)
 				r.Message, r.Code = getRespMsgCode(err)
+				// 记录模板集metrics
+				metrics.RecordTemplateMetrics(req.Method(), r.Code, startTime)
 				if err != nil {
 					r.Data = genNewRespData(ctx, err)
 					// 返回 nil 避免框架重复处理 error
@@ -57,6 +60,8 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 			case *clusterRes.CommonListResp:
 				r.RequestID = getRequestID(ctx)
 				r.Message, r.Code = getRespMsgCode(err)
+				// 记录模板集metrics
+				metrics.RecordTemplateMetrics(req.Method(), r.Code, startTime)
 				if err != nil {
 					r.Data = nil
 					return nil // nolint:nilerr
