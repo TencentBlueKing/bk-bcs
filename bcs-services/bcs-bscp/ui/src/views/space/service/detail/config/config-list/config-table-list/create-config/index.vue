@@ -10,7 +10,7 @@
     @after-hidden="isPopoverOpen = false"
   >
     <div theme="primary" :class="['create-config-btn', { 'popover-open': isPopoverOpen }]">
-      {{ isFileType ? '新建配置文件' : '新建配置项'}}
+      {{ isFileType ? t('新建配置文件') : t('新建配置项')}}
       <AngleDown class="angle-icon" />
     </div>
     <template #content>
@@ -20,7 +20,7 @@
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
           @click="handleManualCreateSlideOpen"
         >
-          手动新增
+          {{ t('手动新增') }}
         </div>
         <div
           v-if="isFileType"
@@ -28,7 +28,7 @@
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
           @click="handleBatchUploadSlideOpen"
         >
-          批量上传
+          {{ t('批量上传') }}
         </div>
         <div
           v-if="isFileType"
@@ -36,7 +36,7 @@
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
           @click="handleImportTemplateDialogOpen"
         >
-          从配置模板导入
+          {{ t('从配置模板导入') }}
         </div>
         <div
           v-if="!isFileType"
@@ -44,7 +44,7 @@
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
           @click="handleBatchImportDialogOpen"
         >
-          批量导入
+          {{ t('批量导入') }}
         </div>
       </div>
     </template>
@@ -85,6 +85,7 @@ import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { AngleDown } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
+import { useI18n } from 'vue-i18n';
 import useServiceStore from '../../../../../../../../store/service';
 import ManualCreate from './manual-create.vue';
 import ManualCreateKv from './manual-create-kv.vue';
@@ -93,6 +94,7 @@ import BatchUpload from './batch-upload.vue';
 import BatchImportKv from './batch-import-kv.vue';
 
 const route = useRoute();
+const { t } = useI18n();
 
 const serviceStore = useServiceStore();
 const { permCheckLoading, hasEditServicePerm, isFileType } = storeToRefs(serviceStore);

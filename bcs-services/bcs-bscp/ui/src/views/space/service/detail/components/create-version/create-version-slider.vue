@@ -1,36 +1,37 @@
 <template>
-  <bk-sideslider title="生成版本" :is-show="props.show" :width="640" :before-close="handleBeforeClose" @closed="close">
-    <bk-loading :loading="pending"  title="版本生成中">
+  <bk-sideslider :title="t('生成版本')" :is-show="props.show" :width="640" :before-close="handleBeforeClose" @closed="close">
+    <bk-loading :loading="pending"  :title="t('版本生成中')">
       <div class="slider-form-content">
       <div class="version-basic-form">
-        <div class="section-title">版本信息</div>
+        <div class="section-title">{{t('版本信息')}}</div>
         <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="formData">
-          <bk-form-item label="版本名称" property="name" :required="true">
+          <bk-form-item :label="t('版本名称')" property="name" :required="true">
             <bk-input v-model="formData.name" @change="formChange" />
           </bk-form-item>
-          <bk-form-item label="版本描述" property="memo">
+          <bk-form-item :label="t('版本描述')" property="memo">
             <bk-input v-model="formData.memo" type="textarea" :maxlength="200" @change="formChange" :resize="true" />
           </bk-form-item>
           <bk-checkbox v-model="isPublish" :true-label="true" :false-label="false" @change="formChange">
-            <span style="font-size: 12px;">同时上线版本</span>
+            <span style="font-size: 12px;">{{ t('同时上线版本') }}</span>
           </bk-checkbox>
         </bk-form>
       </div>
       <div class="variable-form" v-if="isFileType">
-        <div v-bkloading="{ loading }" class="section-title">服务变量赋值</div>
+        <div v-bkloading="{ loading }" class="section-title">{{ t('服务变量赋值') }}</div>
         <ResetDefaultValue class="reset-default-btn" :list="initialVariables" @reset="handleResetDefault" />
         <VariablesTable ref="tableRef" :list="variableList" :editable="true" @change="handleVariablesChange" />
       </div>
     </div>
     </bk-loading>
     <div class="action-btns">
-      <bk-button theme="primary" @click="confirm">确定</bk-button>
-      <bk-button @click="close">取消</bk-button>
+      <bk-button theme="primary" @click="confirm">{{ t('确定') }}</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { assign } from 'lodash';
 import { GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
 import { createVersion } from '../../../../../../api/config';
@@ -50,6 +51,7 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits(['update:show', 'created', 'open-diff']);
+const { t } = useI18n();
 
 const serviceStore = useServiceStore();
 const { isFileType } = storeToRefs(serviceStore);
@@ -75,13 +77,13 @@ const rules = {
         }
         return true;
       },
-      message: '仅允许使用中文、英文、数字、下划线、中划线、点，且必须以中文、英文、数字开头和结尾',
+      message: t('仅允许使用中文、英文、数字、下划线、中划线、点，且必须以中文、英文、数字开头和结尾'),
     },
   ],
   memo: [
     {
       validator: (value: string) => value.length <= 200,
-      message: '最大长度200个字符',
+      message: t('最大长度200个字符'),
     },
   ],
 };

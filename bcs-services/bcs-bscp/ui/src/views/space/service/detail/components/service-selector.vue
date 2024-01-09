@@ -29,14 +29,14 @@
             :class="['service-option-item', { 'no-perm': !item.permissions.view }]"
             @click="handleOptionClick(item, $event)">
             <div class="name-text">{{ item.spec.name }}</div>
-            <div class="type-tag">{{ item.spec.config_type === 'file' ? '文件型': '键值型' }}</div>
+            <div class="type-tag">{{ item.spec.config_type === 'file' ? t('文件型'): t('键值型') }}</div>
           </div>
       </bk-option>
       <template #extension>
         <div class="selector-extensition">
           <div class="content" @click="router.push({ name: 'service-all' })">
             <i class="bk-bscp-icon icon-app-store app-icon"></i>
-            服务管理
+            {{ t('服务管理') }}
           </div>
         </div>
       </template>
@@ -52,9 +52,11 @@ import useGlobalStore from '../../../../../store/global';
 import useServiceStore from '../../../../../store/service';
 import { IAppItem } from '../../../../../../types/app';
 import { getAppList } from '../../../../../api';
+import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const { appData } = storeToRefs(useServiceStore());
 const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());

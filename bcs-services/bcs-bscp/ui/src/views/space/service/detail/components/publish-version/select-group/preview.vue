@@ -1,14 +1,14 @@
 <template>
   <div class="roll-back-preview">
     <h3 class="title">
-      上线预览
-      <span class="tips">上线后，以下分组将从以下各版本更新至当前版本</span>
+      {{t('上线预览')}}
+      <span class="tips">{{t('上线后，以下分组将从以下各版本更新至当前版本')}}</span>
     </h3>
     <div class="version-list-wrapper">
       <bk-exception v-if="previewData.length === 0" scene="part" type="empty">
         <div class="empty-tips">
-          暂无预览
-          <p>请先从左侧选择待上线的分组范围</p>
+          {{t('暂无预览')}}
+          <p>{{t('请先从左侧选择待上线的分组范围')}}</p>
         </div>
       </bk-exception>
       <template v-else>
@@ -29,6 +29,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../../types/group';
 import { IConfigVersion } from '../../../../../../../../types/config';
 import { storeToRefs } from 'pinia';
@@ -37,6 +38,7 @@ import PreviewVersionGroup from './preview-version-group.vue';
 
 const versionStore = useConfigStore();
 const { versionData } = storeToRefs(versionStore);
+const { t } = useI18n();
 
 // 将分组按照版本聚合
 const aggregateGroup = (groups: IGroupToPublish[]) => {
@@ -44,9 +46,9 @@ const aggregateGroup = (groups: IGroupToPublish[]) => {
   // 变更版本
   const modifiedVersionGroups: IGroupPreviewItem[] = [];
   // 首次上线
-  const initialReleaseGroup: IGroupPreviewItem = { id: 0, name: '首次上线', type: 'plain', children: [] };
+  const initialReleaseGroup: IGroupPreviewItem = { id: 0, name: t('首次上线'), type: 'plain', children: [] };
   // 需要被展示的分组
-  const groupsToBePreviewed: IGroupToPublish[] = groups.filter(group => {
+  const groupsToBePreviewed: IGroupToPublish[] = groups.filter((group) => {
     const { id, release_id } = group;
     // 过滤掉当前版本已上线分组
     if (release_id === versionData.value.id) {
@@ -54,7 +56,7 @@ const aggregateGroup = (groups: IGroupToPublish[]) => {
     }
 
     return id === 0 || release_id > 0 || props.releaseType === 'select';
-  })
+  });
   /**
    * 1.全部实例上线
    * 只展示已上线的分组，如果默认分组已上线，放到【变更版本】分组中，否则放到【首次上线】分组中

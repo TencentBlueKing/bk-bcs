@@ -9,13 +9,13 @@
     <template #content>
       <bk-loading :loading="loading" :opacity="1" class="groups-content-wrapper">
         <div class="header-area">
-          <h3 class="title">已上线实例</h3>
+          <h3 class="title">{{t('已上线实例')}}</h3>
           <template v-if="props.isDefaultGroup">
-            <div class="tips">除以下分组之外的所有实例</div>
+            <div class="tips">{{t('除以下分组之外的所有实例')}}</div>
           </template>
         </div>
         <div class="group-list">
-          <div v-for="group in groupList" class="group-item">
+          <div v-for="group in groupList" class="group-item" :key="group.id">
             <div class="group-name">
               <i class="bk-bscp-icon icon-resources-fill" />
               {{ group.name }}
@@ -33,13 +33,16 @@
   </bk-popover>
 </template>
 <script setup lang="ts">
-  import { ref, withDefaults } from 'vue';
-  import { getServiceGroupList } from '../../../../../../api/group';
-  import { IReleasedGroup } from "../../../../../../../types/config";
-  import { IGroupItemInService } from '../../../../../../../types/group';
-  import RuleTag from '../../../../groups/components/rule-tag.vue';
+import { ref, withDefaults } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { getServiceGroupList } from '../../../../../../api/group';
+import { IReleasedGroup } from '../../../../../../../types/config';
+import { IGroupItemInService } from '../../../../../../../types/group';
+import RuleTag from '../../../../groups/components/rule-tag.vue';
 
-  const props = withDefaults(defineProps<{
+const { t } = useI18n();
+
+const props = withDefaults(defineProps<{
     bkBizId: string;
     appId: number;
     isDefaultGroup?: boolean;
@@ -47,20 +50,20 @@
     placement?: string;
     groups: IReleasedGroup[];
   }>(), {
-    placement: 'bottom-end',
-    groups: () => [],
-  });
+  placement: 'bottom-end',
+  groups: () => [],
+});
 
-  const loading = ref(false);
-  const groupList = ref<IReleasedGroup[]>([]);
+const loading = ref(false);
+const groupList = ref<IReleasedGroup[]>([]);
 
-  const popoverOpen = () => {
-    if (props.isDefaultGroup) {
-      getExcludeGroups();
-    } else {
-      groupList.value = props.groups;
-    }
+const popoverOpen = () => {
+  if (props.isDefaultGroup) {
+    getExcludeGroups();
+  } else {
+    groupList.value = props.groups;
   }
+};
 
 // 获取默认分组下的排除分组
 const getExcludeGroups = async () => {
@@ -68,9 +71,7 @@ const getExcludeGroups = async () => {
   const res = await getServiceGroupList(props.bkBizId, props.appId);
   groupList.value = res.details
     .filter((item: IGroupItemInService) => item.group_id > 0 && item.release_id > 0)
-    .map((item: IGroupItemInService) => {
-      return { ...item, name: item.group_name, id: item.group_id };
-    });
+    .map((item: IGroupItemInService) => ({ ...item, name: item.group_name, id: item.group_id }));
   loading.value = false;
 };
 

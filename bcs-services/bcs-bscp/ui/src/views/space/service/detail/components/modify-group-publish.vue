@@ -8,7 +8,7 @@
       :disabled="props.permCheckLoading"
       @click="handleBtnClick"
     >
-      调整分组上线
+      {{ t('调整分组上线') }}
     </bk-button>
     <Teleport to="body">
       <VersionLayout v-if="isSelectGroupPanelOpen">
@@ -19,7 +19,7 @@
               <span class="service-name">{{ appData.spec.name }}</span>
             </span>
             <AngleRight class="arrow-right" />
-            调整分组上线：{{ versionData.spec.name }}
+            {{ t('调整分组上线') }}：{{ versionData.spec.name }}
           </section>
         </template>
         <select-group
@@ -37,7 +37,7 @@
         <template #footer>
           <section class="actions-wrapper">
             <bk-button class="publish-btn" theme="primary" @click="handleDiffOrPublish">{{
-              versionList.length ? '对比并上线' : '上线版本'
+              versionList.length ? t('对比并上线') : t('上线版本')
             }}</bk-button>
             <bk-button @click="handlePanelClose">取消</bk-button>
           </section>
@@ -65,6 +65,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
 import { InfoBox } from 'bkui-vue';
 import BkMessage from 'bkui-vue/lib/message';
@@ -86,6 +87,7 @@ const serviceStore = useServiceStore();
 const versionStore = useConfigStore();
 const { appData } = storeToRefs(serviceStore);
 const { versionData, publishedVersionId } = storeToRefs(versionStore);
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;

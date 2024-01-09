@@ -8,13 +8,13 @@
         <SearchInput
           v-model="searchStr"
           class="config-search-input"
-          placeholder="版本名称"/>
+          :placeholder="t('版本名称')"/>
       </div>
       <section class="versions-wrapper">
         <section v-if="!searchStr" class="unnamed-version">
           <section :class="['version-item', { active: versionData.id === 0 }]" @click="handleSelectVersion(unNamedVersion)">
             <i class="bk-bscp-icon icon-edit-small edit-icon" />
-            <div class="version-name">未命名版本</div>
+            <div class="version-name">{{ t('未命名版本') }}</div>
           </section>
           <div class="divider"></div>
         </section>
@@ -34,7 +34,7 @@
             <Ellipsis class="action-more-icon" />
             <template #content>
               <div class="action-list">
-                <div class="action-item" @click="handleDiffDialogShow(version)">版本对比</div>
+                <div class="action-item" @click="handleDiffDialogShow(version)">{{ t('版本对比') }}</div>
                 <div
                   v-bk-tooltips="{
                     disabled: version.status.publish_status === 'not_released',
@@ -43,7 +43,7 @@
                   }"
                   :class="['action-item', { disabled: version.status.publish_status !== 'not_released' }]"
                   @click="handleDeprecateDialogShow(version)">
-                  版本废弃
+                  {{ t('版本废弃') }}
                 </div>
               </div>
             </template>
@@ -55,8 +55,8 @@
     <VersionDiff v-model:show="showDiffPanel" :current-version="currentOperatingVersion" />
     <VersionOperateConfirmDialog
       v-model:show="showOperateConfirmDialog"
-      title="确认废弃该版本"
-      tips="此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作"
+      :title="t('确认废弃该版本')"
+      :tips="t('此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作')"
       :confirm-fn="handleDeprecateVersion"
       :version="currentOperatingVersion" />
   </section>
@@ -65,6 +65,7 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
+import { useI18n } from 'vue-i18n';
 import { Message } from 'bkui-vue';
 import { Ellipsis } from 'bkui-vue/lib/icon';
 import useConfigStore from '../../../../../../store/config';
@@ -82,6 +83,7 @@ const { versionData, refreshVersionListFlag, publishedVersionId } = storeToRefs(
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;
@@ -185,35 +187,33 @@ const handleDeprecateDialogShow = (version: IConfigVersion) => {
   showOperateConfirmDialog.value = true;
 };
 
-const handleDeprecateVersion = () => {
-  return new Promise(() => {
-    const id = currentOperatingVersion.value.id;
-    deprecateVersion(props.bkBizId, props.appId, id)
-      .then(() => {
-        showOperateConfirmDialog.value = false;
-        Message({
-          theme: 'success',
-          message: '版本废弃成功',
-        });
-        if (id !== versionData.value.id) {
-          return;
-        }
-
-        const versions = versionsInView.value.filter(item => item.id > 0);
-        const index = versions.findIndex(item => item.id === id);
-
-        if (versions.length === 1) {
-          handleSelectVersion(unNamedVersion);
-        } else if (index === versions.length - 1) {
-          handleSelectVersion(versions[index - 1]);
-        } else {
-          handleSelectVersion(versions[index + 1]);
-        }
-
-        versionList.value = versionList.value.filter(item => item.id !== id);
+const handleDeprecateVersion = () => new Promise(() => {
+  const id = currentOperatingVersion.value.id;
+  deprecateVersion(props.bkBizId, props.appId, id)
+    .then(() => {
+      showOperateConfirmDialog.value = false;
+      Message({
+        theme: 'success',
+        message: '版本废弃成功',
       });
-  })
-};
+      if (id !== versionData.value.id) {
+        return;
+      }
+
+      const versions = versionsInView.value.filter(item => item.id > 0);
+      const index = versions.findIndex(item => item.id === id);
+
+      if (versions.length === 1) {
+        handleSelectVersion(unNamedVersion);
+      } else if (index === versions.length - 1) {
+        handleSelectVersion(versions[index - 1]);
+      } else {
+        handleSelectVersion(versions[index + 1]);
+      }
+
+      versionList.value = versionList.value.filter(item => item.id !== id);
+    });
+});
 </script>
 
 <style lang="scss" scoped>

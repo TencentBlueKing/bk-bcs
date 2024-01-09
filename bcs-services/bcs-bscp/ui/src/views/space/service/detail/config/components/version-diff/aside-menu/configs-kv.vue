@@ -1,7 +1,7 @@
 <template>
   <div :class="['configs-menu', { 'search-opened': isOpenSearch }]">
     <div class="title-area">
-      <div class="title">配置项</div>
+      <div class="title">{{ t('配置项') }}</div>
       <div class="title-extend">
         <bk-checkbox
           v-if="isBaseVersionExist"
@@ -9,7 +9,7 @@
           class="view-diff-checkbox"
           @change="handleSearch"
         >
-          只查看差异项({{ diffCount }})
+          {{ t('只查看差异项') }}({{ diffCount }})
         </bk-checkbox>
         <div :class="['search-trigger', { actived: isOpenSearch }]" @click="isOpenSearch = !isOpenSearch">
           <Search />
@@ -17,7 +17,7 @@
       </div>
     </div>
     <div v-if="isOpenSearch" class="search-wrapper">
-      <SearchInput v-model="searchStr" placeholder="搜索配置项名称" @search="handleSearch" />
+      <SearchInput v-model="searchStr" :placeholder="t('搜索配置项名称')" @search="handleSearch" />
     </div>
     <div class="groups-wrapper">
       <div
@@ -34,7 +34,7 @@
         v-if="groupedConfigListOnShow.length === 0"
         class="empty-tips"
         :is-search-empty="isSearchEmpty"
-        empty-title="没有差异配置项"
+        :empty-title="t('没有差异配置项')"
         @clear="clearStr"
       >
       </tableEmpty>
@@ -43,6 +43,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { Search } from 'bkui-vue/lib/icon';
 import { ICommonQuery } from '../../../../../../../../../types/index';
@@ -69,7 +70,7 @@ const props = withDefaults(
     baseVersionId: number | undefined;
     selectedConfig: number;
     actived: boolean;
-    isPublish: boolean
+    isPublish: boolean;
   }>(),
   {
     unNamedVersionVariables: () => [],
@@ -77,6 +78,7 @@ const props = withDefaults(
   },
 );
 
+const { t } = useI18n();
 const emits = defineEmits(['selected']);
 
 const route = useRoute();

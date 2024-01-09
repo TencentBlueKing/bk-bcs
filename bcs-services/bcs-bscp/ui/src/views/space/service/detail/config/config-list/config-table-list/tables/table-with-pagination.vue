@@ -9,7 +9,7 @@
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh($event)"
     >
-      <bk-table-column label="配置文件名" prop="spec.name" :sort="true" :min-width="240" show-overflow-tooltip>
+      <bk-table-column :label="t('配置文件名')" prop="spec.name" :sort="true" :min-width="240" show-overflow-tooltip>
         <template #default="{ row }">
           <bk-button
             v-if="row.spec"
@@ -22,36 +22,36 @@
           </bk-button>
         </template>
       </bk-table-column>
-      <bk-table-column label="配置文件路径" prop="spec.path" show-overflow-tooltip></bk-table-column>
-      <bk-table-column label="配置文件格式">
+      <bk-table-column :label="t('配置文件路径')" prop="spec.path" show-overflow-tooltip></bk-table-column>
+      <bk-table-column :label="t('配置文件格式')">
         <template #default="{ row }">
           {{ getConfigTypeName(row.spec?.file_type) }}
         </template>
       </bk-table-column>
-      <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
-      <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
-      <bk-table-column label="修改时间" :sort="true" :width="220">
+      <bk-table-column :label="t('创建人')" prop="revision.creator"></bk-table-column>
+      <bk-table-column :label="t('修改人')" prop="revision.reviser"></bk-table-column>
+      <bk-table-column :label="t('修改时间')" :sort="true" :width="220">
         <template #default="{ row }">
           <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column v-if="versionData.id === 0" label="变更状态">
+      <bk-table-column v-if="versionData.id === 0" :label="t('变更状态')">
         <template #default="{ row }">
           <StatusTag :status="row.file_state" />
         </template>
       </bk-table-column>
-      <bk-table-column label="操作" fixed="right">
+      <bk-table-column :label="t('操作')" fixed="right">
         <template #default="{ row }">
           <div class="operate-action-btns">
             <bk-button :disabled="row.file_state === 'DELETE'" text theme="primary" @click="handleEdit(row)">{{
-              versionData.id === 0 ? '编辑' : '查看'
+              versionData.id === 0 ? t('编辑') : t('查看')
             }}</bk-button>
             <bk-button
               v-if="versionData.status.publish_status !== 'editing'"
               text
               theme="primary"
               @click="handleDiff(row)"
-              >对比</bk-button
+              >{{t('对比')}}</bk-button
             >
             <bk-button
               v-if="versionData.id === 0"
@@ -59,7 +59,7 @@
               theme="primary"
               :disabled="row.file_state === 'DELETE'"
               @click="handleDel(row)"
-              >删除</bk-button
+              >{{ t('删除') }}</bk-button
             >
           </div>
         </template>
@@ -77,6 +77,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { InfoBox } from 'bkui-vue';
 import useConfigStore from '../../../../../../../../store/config';
@@ -91,6 +92,7 @@ import VersionDiff from '../../../components/version-diff/index.vue';
 
 const configStore = useConfigStore();
 const { versionData } = storeToRefs(configStore);
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;

@@ -10,7 +10,7 @@
       </div>
       <span v-if="previewGroup.type === 'modify'" class="name"> - {{ previewGroup.name }}</span>
       <span class="group-count-wrapper"
-        >共 <span class="count">{{ previewGroup.children.length }}</span> 个分组</span>
+        >{{t('共')}} <span class="count">{{ previewGroup.children.length }}</span> {{t('个分组')}}</span>
       <bk-button
         v-if="previewGroup.id && previewGroup.id !== versionData.id"
         text
@@ -18,7 +18,7 @@
         theme="primary"
         @click.stop="emits('diff', previewGroup.id)"
       >
-        版本对比
+        {{t('版本对比')}}
       </bk-button>
     </div>
     <div v-if="!fold" class="group-list">
@@ -47,6 +47,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Del, AngleDown, AngleRight } from 'bkui-vue/lib/icon';
 import { IGroupPreviewItem, IGroupToPublish } from '../../../../../../../../types/group';
 import { storeToRefs } from 'pinia';
@@ -56,6 +57,8 @@ import DefaultGroupRulesPopover from '../default-group-rules-popover.vue';
 
 const versionStore = useConfigStore();
 const { versionData } = storeToRefs(versionStore);
+const { t } = useI18n();
+
 const props = defineProps<{
   allowPreviewDelete: boolean;
   previewGroup: IGroupPreviewItem;
@@ -66,16 +69,14 @@ const props = defineProps<{
 const emits = defineEmits(['diff', 'delete']);
 
 const TYPE_MAP = {
-  current: '当前版本',
-  modify: '变更版本',
-  plain: '首次上线',
+  current: t('当前版本'),
+  modify: t('变更版本'),
+  plain: t('首次上线'),
 };
 
 const fold = ref(false);
 
-const excludedGroups = computed(() => {
-  return props.groupList.filter((group) => group.release_id > 0 && group.id > 0);
-});
+const excludedGroups = computed(() => props.groupList.filter(group => group.release_id > 0 && group.id > 0));
 
 </script>
 <style lang="scss" scoped>

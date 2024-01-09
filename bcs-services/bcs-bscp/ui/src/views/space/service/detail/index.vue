@@ -5,7 +5,7 @@
         <VersionListAside :version-detail-view="versionDetailView" :bk-biz-id="bkBizId" :app-id="appId" />
         <div :class="['view-change-trigger', { extend: versionDetailView }]" @click="handleToggleView">
           <AngleDoubleRight class="arrow-icon" />
-          <span class="text">版本详情</span>
+          <span class="text">{{ t('版本详情')}} </span>
         </div>
       </div>
       <div class="config-setting-area">
@@ -24,6 +24,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { AngleDoubleRight } from 'bkui-vue/lib/icon';
 import BkMessage from 'bkui-vue/lib/message';
@@ -37,6 +38,7 @@ import { AxiosError } from 'axios';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const serviceStore = useServiceStore();
 const configStore = useConfigStore();
 
