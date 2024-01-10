@@ -1,7 +1,7 @@
 <template>
   <bk-dialog
     :is-show="props.show"
-    :title="'批量导入'"
+    :title="t('批量导入')"
     :theme="'primary'"
     width="960"
     height="720"
@@ -10,21 +10,25 @@
     @closed="handleClose"
   >
     <bk-form>
-      <bk-form-item label="变量内容" required>
+      <bk-form-item :label="t('变量内容')" required>
         <VariableContentEditor ref="editorRef" @trigger="confirmBtnPerm = $event"/>
       </bk-form-item>
     </bk-form>
     <template #footer>
       <bk-button theme="primary" style="margin-right: 8px" :disabled="!confirmBtnPerm" @click="handleConfirm"
-        >导入</bk-button>
-      <bk-button @click="handleClose">取消</bk-button>
+        >{{ t('导入') }}</bk-button>
+      <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
     </template>
   </bk-dialog>
 </template>
 
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import VariableContentEditor from './variables-content-editor.vue';
+
+const { t } = useI18n();
+
 const props = defineProps<{
   show: boolean;
 }>();
