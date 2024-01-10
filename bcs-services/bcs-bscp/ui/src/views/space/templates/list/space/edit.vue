@@ -1,7 +1,7 @@
 <template>
   <bk-dialog
     ext-cls="edit-template-space-dialog"
-    confirm-text="保存"
+    :confirm-text="t('保存')"
     :width="480"
     :is-show="isShow"
     :is-loading="pending"
@@ -12,12 +12,12 @@
   >
     <template #header>
       <div class="header-wrapper">
-        <div class="title">编辑空间</div>
+        <div class="title">{{t('编辑空间')}}</div>
         <div class="space-name">{{ props.data.name }}</div>
       </div>
     </template>
     <bk-form ref="formRef" form-type="vertical" :model="{ memo }">
-      <bk-form-item label="模板空间描述" property="memo">
+      <bk-form-item :label="t('模板空间描述')" property="memo">
         <bk-input v-model="memo" type="textarea" :rows="6" :maxlength="100" :resize="true" />
       </bk-form-item>
     </bk-form>
@@ -25,12 +25,14 @@
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../store/global';
 import { updateTemplateSpace } from '../../../../../api/template';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -63,7 +65,7 @@ const handleEdit = () => {
       emits('edited');
       Message({
         theme: 'success',
-        message: '编辑空间成功',
+        message: t('编辑空间成功'),
       });
     } catch (e) {
       console.error(e);

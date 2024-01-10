@@ -1,8 +1,8 @@
 <template>
   <bk-dialog
-    title="上传至套餐"
+    :title="t('上传至套餐')"
     ext-cls="create-to-pkg-dialog"
-    confirm-text="确认"
+    :confirm-text="t('确认')"
     :width="640"
     :is-show="props.show"
     :esc-close="false"
@@ -12,7 +12,7 @@
     @closed="close"
   >
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
-      <bk-form-item label="模板套餐" property="pkgs" required>
+      <bk-form-item :label="t('模板套餐')" property="pkgs" required>
         <bk-select multiple :model-value="selectedPkgs" @change="handleSelectPkg">
           <bk-option v-for="pkg in allOptions" v-show="pkg.id !== 0" :key="pkg.id" :value="pkg.id" :label="pkg.name">
           </bk-option>
@@ -21,7 +21,7 @@
               :class="['no-specified-option', { selected: unSpecifiedSelected }]"
               @click="handleSelectUnSpecifiedPkg"
             >
-              未指定套餐
+              {{ t('未指定套餐') }}
               <Done v-if="unSpecifiedSelected" class="selected-icon" />
             </div>
           </template>
@@ -32,8 +32,8 @@
     <p class="tips">{{ tips }}</p>
     <bk-loading style="min-height: 100px" :loading="loading">
       <bk-table v-if="!selectedPkgs.includes(0)" :data="citedList" :max-height="maxTableHeight">
-        <bk-table-column label="模板套餐" prop="template_set_name"></bk-table-column>
-        <bk-table-column label="使用此套餐的服务">
+        <bk-table-column :label="t('模板套餐')" prop="template_set_name"></bk-table-column>
+        <bk-table-column :label="t('使用此套餐的服务')">
           <template #default="{ row }">
             <div v-if="row.app_id" class="app-info" @click="goToConfigPage(row.app_id)">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
@@ -48,6 +48,7 @@
 </template>
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Done } from 'bkui-vue/lib/icon';
@@ -59,6 +60,7 @@ import LinkToApp from '../../../../components/link-to-app.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { currentTemplateSpace, currentPkg, packageList } = storeToRefs(useTemplateStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -75,8 +77,8 @@ const loading = ref(false);
 const citedList = ref<IPackagesCitedByApps[]>([]);
 
 const tips = computed(() => (selectedPkgs.value.includes(0)
-  ? '若未指定套餐，此配置文件模板将无法被服务引用。后续请使用「添加至」或「添加已有配置文件」功能添加至指定套餐'
-  : '以下服务配置的未命名版本引用目标套餐的内容也将更新'));
+  ? t('若未指定套餐，此配置文件模板将无法被服务引用。后续请使用「添加至」或「添加已有配置文件」功能添加至指定套餐')
+  : t('以下服务配置的未命名版本引用目标套餐的内容也将更新')));
 
 const maxTableHeight = computed(() => {
   const windowHeight = window.innerHeight;
@@ -103,7 +105,7 @@ const allOptions = computed(() => {
     const { id, spec } = item;
     return { id, name: spec.name };
   });
-  pkgs.push({ id: 0, name: '未指定套餐' });
+  pkgs.push({ id: 0, name: t('未指定套餐') });
 
   return pkgs;
 });

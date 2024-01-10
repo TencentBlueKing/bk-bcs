@@ -2,7 +2,7 @@
   <div class="space-selector">
     <bk-select
       ref="selectorRef"
-      search-placeholder="搜索空间"
+      :search-placeholder="t('搜索空间')"
       filterable
       :input-search="false"
       :model-value="currentTemplateSpace"
@@ -33,7 +33,7 @@
       <template #extension>
         <div class="create-space-extension" @click="handleCreateOpen">
           <i class="bk-bscp-icon icon-add"></i>
-          创建空间
+          {{ t('创建空间') }}
         </div>
       </template>
     </bk-select>
@@ -42,17 +42,18 @@
   <Edit v-model:show="editingData.open" :data="editingData.data" @edited="loadList" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteTemplateSpaceDialogShow"
-    title="确认删除该配置模板空间？"
+    :title="t('确认删除该配置模板空间？')"
     @confirm="handleDeleteTemplateSpaceConfirm"
   >
     <div style="margin-bottom: 8px;">
-      配置模板空间: <span style="color: #313238;font-weight: 600;">{{ deleteTemplateSpaceItem?.spec.name }}</span>
+      {{ t('配置模板空间') }}: <span style="color: #313238;font-weight: 600;">{{ deleteTemplateSpaceItem?.spec.name }}</span>
     </div>
-    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+    <div>{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { DownShape, Del } from 'bkui-vue/lib/icon';
@@ -71,6 +72,7 @@ const router = useRouter();
 const { spaceId } = storeToRefs(useGlobalStore());
 const templateStore = useTemplateStore();
 const { currentTemplateSpace, templateSpaceList } = storeToRefs(templateStore);
+const { t } = useI18n();
 
 const loading = ref(false);
 const spaceList = ref<ITemplateSpaceItem[]>([]);
@@ -130,7 +132,7 @@ const loadList = async () => {
   if (index > -1) {
     // 默认空间放到首位
     spaceList.value = res.details.splice(index, 1).concat(res.details);
-    spaceList.value[0].spec.memo = '空间可将业务下不同使用场景的配置模板文件隔离，每个空间内的配置文件路径+配置文件名称是唯一的，每个业务下会自动创建一个默认空间';
+    spaceList.value[0].spec.memo = t('空间可将业务下不同使用场景的配置模板文件隔离，每个空间内的配置文件路径+配置文件名称是唯一的，每个业务下会自动创建一个默认空间');
   } else {
     spaceList.value = res.details;
   }
@@ -178,17 +180,17 @@ const handleDelete = async (space: ITemplateSpaceItem) => {
   const packageRes = await getTemplatePackageList(spaceId.value, String(space.id), packageParams);
   if (res.count > 0) {
     InfoBox({
-      title: `未能删除【${space.spec.name}】`,
-      subTitle: '请先确认删除此空间下所有配置文件',
+      title: `${t('未能删除')}【${space.spec.name}】`,
+      subTitle: t('请先确认删除此空间下所有配置文件'),
       dialogType: 'confirm',
-      confirmText: '我知道了',
+      confirmText: t('我知道了'),
     } as any);
   } else if (packageRes.count > 0) {
     InfoBox({
-      title: `未能删除【${space.spec.name}】`,
-      subTitle: '请先确认删除此空间下所有配置套餐',
+      title: `${t('未能删除')}【${space.spec.name}】`,
+      subTitle: t('请先确认删除此空间下所有配置套餐'),
       dialogType: 'confirm',
-      confirmText: '我知道了',
+      confirmText: t('我知道了'),
     } as any);
   } else {
     deleteTemplateSpaceItem.value = space;
@@ -209,7 +211,7 @@ const handleDeleteTemplateSpaceConfirm = async () => {
   }
   Message({
     theme: 'success',
-    message: '删除空间成功',
+    message: t('删除空间成功'),
   });
   isDeleteTemplateSpaceDialogShow.value = false;
 };

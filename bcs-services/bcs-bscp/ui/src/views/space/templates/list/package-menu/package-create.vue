@@ -1,16 +1,17 @@
 <template>
-  <bk-sideslider title="新建模板套餐" :width="640" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider :title="t('新建模板套餐')" :width="640" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="create-package-form">
       <PackageForm ref="formRef" :space-id="spaceId" :data="data" @change="handleChange" />
     </div>
     <div class="action-btns">
-      <bk-button theme="primary" :loading="pending" @click="handleCreate">创建</bk-button>
-      <bk-button @click="close">取消</bk-button>
+      <bk-button theme="primary" :loading="pending" @click="handleCreate">{{ t('创建') }}</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../store/global';
@@ -20,6 +21,7 @@ import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-clos
 import PackageForm from './package-form.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -62,7 +64,7 @@ const handleCreate = () => {
       emits('created', res.id);
       Message({
         theme: 'success',
-        message: '创建成功',
+        message: t('创建成功'),
       });
     } catch (e) {
       console.error(e);

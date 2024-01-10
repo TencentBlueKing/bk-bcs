@@ -2,7 +2,7 @@
   <div :class="['package-content-detail', { 'with-apps-panel': isPackage && isAppsPanelOpen }]">
     <div class="detail-container">
       <div class="header-wrapper">
-        <div v-if="headerInfo.isPublic" class="tag">公开</div>
+        <div v-if="headerInfo.isPublic" class="tag">{{ t('公开') }}</div>
         <h4 class="package-name">{{ headerInfo.name }}</h4>
         <p class="package-desc" :title="headerInfo.memo" v-if="headerInfo.primary_name !== '默认套餐'">
           {{ headerInfo.memo }}
@@ -14,7 +14,7 @@
     </div>
     <div v-if="isPackage" class="app-list-panel">
       <div class="panel-switch-trigger" @click="isAppsPanelOpen = !isAppsPanelOpen">
-        使用模板
+        {{ t('使用模板') }}
         <AngleDoubleRightLine v-if="isAppsPanelOpen" class="arrow-icon" />
         <AngleDoubleLeftLine v-else class="arrow-icon" />
       </div>
@@ -24,6 +24,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { AngleDoubleRightLine, AngleDoubleLeftLine } from 'bkui-vue/lib/icon';
 import useTemplateStore from '../../../../../store/template';
@@ -34,6 +35,7 @@ import ConfigInAllTable from './tables/config-in-all.vue';
 import ConfigWithoutPackageTable from './tables/config-without-package.vue';
 
 const { packageList, currentPkg } = storeToRefs(useTemplateStore());
+const { t } = useI18n();
 
 const isAppsPanelOpen = ref(true);
 const templateCounts = ref(0);

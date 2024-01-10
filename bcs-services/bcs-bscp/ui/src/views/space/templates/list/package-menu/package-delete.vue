@@ -1,18 +1,18 @@
 <template>
   <DeleteConfirmDialog
     :is-show="isShow"
-    title="确认删除该配置模板套餐？"
+    :title="t('确认删除该配置模板套餐？')"
     @confirm="handleDelete"
     @close="emits('update:show',false)"
   >
     <div style="margin-bottom: 8px;">
-      配置模板套餐: <span style="color: #313238;font-weight: 600;">{{ props.pkg.spec.name }}</span>
+      {{ t('配置模板套餐') }}: <span style="color: #313238;font-weight: 600;">{{ props.pkg.spec.name }}</span>
     </div>
-    <div style="margin-bottom: 8px;">一旦删除，该操作将无法撤销，以下服务配置的未命名版本中引用该套餐的内容也将清除</div>
+    <div style="margin-bottom: 8px;">{{ t('一旦删除，该操作将无法撤销，以下服务配置的未命名版本中引用该套餐的内容也将清除') }}</div>
     <div class="service-table">
       <bk-loading style="min-height: 200px" :loading="appsLoading">
-        <bk-table :data="appList" :max-height="maxTableHeight" empty-text="暂无未命名版本引用此套餐">
-          <bk-table-column label="引用此套餐的服务">
+        <bk-table :data="appList" :max-height="maxTableHeight" :empty-text="t('暂无未命名版本引用此套餐')">
+          <bk-table-column :label="t('引用此套餐的服务')">
             <template #default="{ row }">
               <div class="app-info" @click="goToConfigPageImport(row.app_id)">
                 <div v-overflow-title class="name-text" >{{ row.app_name }}</div>
@@ -27,6 +27,7 @@
 </template>
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
@@ -39,6 +40,7 @@ import DeleteConfirmDialog from '../../../../../components/delete-confirm-dialog
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -97,7 +99,7 @@ const handleDelete = async () => {
   emits('deleted', props.pkg.id);
   Message({
     theme: 'success',
-    message: '删除配置模板套餐成功',
+    message: t('删除配置模板套餐成功'),
   });
   pending.value = false;
 };

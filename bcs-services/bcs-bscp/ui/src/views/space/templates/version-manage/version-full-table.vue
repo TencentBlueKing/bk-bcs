@@ -7,19 +7,19 @@
     @page-value-change="emits('page-value-change', $event)"
     @page-limit-change="emits('page-limit-change', $event)"
   >
-    <bk-table-column label="版本号" prop="spec.revision_name">
+    <bk-table-column :label="t('版本号')" prop="spec.revision_name">
       <template #default="{ row }">
         <bk-button v-if="row.spec" text theme="primary" @click="emits('select', row.id)">{{
           row.spec.revision_name
         }}</bk-button>
       </template>
     </bk-table-column>
-    <bk-table-column label="版本说明">
+    <bk-table-column :label="t('版本说明')">
       <template #default="{ row }">
         <span v-if="row.spec">{{ row.spec.revision_memo || '--' }}</span>
       </template>
     </bk-table-column>
-    <bk-table-column label="被引用">
+    <bk-table-column :label="t('被引用')">
       <template #default="{ row, index }">
         <template v-if="boundByAppsCountLoading"><Spinner /></template>
         <template v-else-if="boundByAppsCountList[index]">
@@ -35,18 +35,18 @@
         </template>
       </template>
     </bk-table-column>
-    <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
-    <bk-table-column label="创建时间" prop="revision.create_at">
+    <bk-table-column :label="t('创建人')" prop="revision.creator"></bk-table-column>
+    <bk-table-column :label="t('创建时间')" prop="revision.create_at">
       <template #default="{ row }">
         <template v-if="row.revision">
           {{ datetimeFormat(row.revision.create_at) }}
         </template>
       </template>
     </bk-table-column>
-    <bk-table-column label="操作" width="180">
+    <bk-table-column :label="t('操作')" width="180">
       <template #default="{ row }">
         <div class="actions-wrapper">
-          <bk-button text theme="primary" @click="handleOpenDiffSlider(row)">版本对比</bk-button>
+          <bk-button text theme="primary" @click="handleOpenDiffSlider(row)">{{ t('版本对比') }}</bk-button>
           <!-- <bk-button text theme="primary" :disabled="pagination.count === 1" @click="handleDeleteVersion(row)"
             >删除</bk-button
           > -->
@@ -69,6 +69,7 @@
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Spinner } from 'bkui-vue/lib/icon';
 import { IPagination } from '../../../../../types/index';
 import { ITemplateVersionItem, ITemplateCitedCountDetailItem, DiffSliderDataType } from '../../../../../types/template';
@@ -76,6 +77,7 @@ import { datetimeFormat } from '../../../../utils/index';
 import VersionBoundByAppsDetail from './version-bound-by-apps-detail.vue';
 import TemplateVersionDiff from './template-version-diff.vue';
 
+const { t } = useI18n();
 const props = defineProps<{
   spaceId: string;
   templateSpaceId: number;

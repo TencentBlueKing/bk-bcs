@@ -4,7 +4,7 @@
       class="exception-part"
       type="empty"
       scene="part"
-      :title="emptyTitle"
+      :title="emptyTitle || t('暂无数据')"
     />
     <bk-exception
       v-else
@@ -28,7 +28,6 @@ const props = withDefaults(
     }>(),
   {
     isSearchEmpty: false,
-    emptyTitle: '暂无数据',
   },
 );
 const emits = defineEmits(['clear']);
