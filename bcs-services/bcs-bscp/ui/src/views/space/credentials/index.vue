@@ -53,10 +53,27 @@
                 v-model="createCredentialName"
                 @blur="testCreateCredentialName"
               ></bk-input>
-              <span v-if="row.spec">{{ row.spec.name }}</span>
+              <div v-if="row.spec" class="credential-memo">
+                <div v-if="editingNameId !== row.id" class="memo-content" :title="row.spec.memo || '--'">
+                  {{ row.spec.name || '--' }}
+                </div>
+                <div v-else class="memo-edit">
+                  <div
+                    ref="nameInputRef"
+                    class="edit-name-input"
+                    contenteditable="true"
+                    @blur="handleMemoOrNameBlur(row)"
+                  >
+                    {{ row.spec.name }}
+                  </div>
+                </div>
+                <div class="edit-icon">
+                  <EditLine @click="handleEditName(row.id)" />
+                </div>
+              </div>
             </template>
           </bk-table-column>
-          <bk-table-column label="密钥" width="296">
+          <bk-table-column label="密钥" width="340">
             <template #default="{ row, index }">
               <span v-if="index === 0 && isCreateCredential" style="color: #c4c6cc">待确认</span>
               <div v-if="row.spec" class="credential-text">
@@ -84,7 +101,12 @@
                   {{ row.spec.memo || '--' }}
                 </div>
                 <div v-else class="memo-edit">
-                  <div ref="memoInputRef" class="edit-input" contenteditable="true" @blur="handleMemoBlur(row)">
+                  <div
+                    ref="memoInputRef"
+                    class="edit-input"
+                    contenteditable="true"
+                    @blur="handleMemoOrNameBlur(row, false)"
+                  >
                     {{ row.spec.memo }}
                   </div>
                 </div>
@@ -92,6 +114,21 @@
                   <EditLine @click="handleEditMemo(row.id)" />
                 </div>
               </div>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="关联规则" width="140">
+            <template #default="{ row }">
+              <bk-popover v-if="row.rule && row.rule.length" theme="light" :popover-delay="[300, 0]">
+                <div  class="table-rule">
+                  {{ row.rule[0].spec.app + row.rule[0].spec.scope }}
+                </div>
+                <template #content>
+                  <div v-for="rule in row.rule" :key="rule.id">
+                    {{ rule.spec.app + rule.spec.scope }}
+                  </div>
+                </template>
+              </bk-popover>
+              <span v-else>--</span>
             </template>
           </bk-table-column>
           <bk-table-column label="更新人" width="88" prop="revision.reviser"></bk-table-column>
@@ -126,17 +163,13 @@
             <template #default="{ row, index }">
               <template v-if="index === 0 && isCreateCredential">
                 <bk-button text theme="primary" @click="handleCreateCredential">创建</bk-button>
-                <bk-button
-                  text
-                  theme="primary"
-                  style="margin-left: 8px"
-                  @click="handleCancelCreateCredential">
+                <bk-button text theme="primary" style="margin-left: 8px" @click="handleCancelCreateCredential">
                   取消
                 </bk-button>
               </template>
               <template v-if="row.spec">
                 <bk-button text theme="primary" @click="handleOpenAssociate(row)">
-                  <span :class="{ redPoint: newCredentials[0] === row.id }">关联配置文件</span>
+                  <span :class="{ redPoint: newCredentials[0] === row.id }">关联服务配置</span>
                 </bk-button>
                 <div class="delete-btn" v-bk-tooltips="deleteTooltip(hasManagePerm && row.spec.enable)">
                   <bk-button
@@ -146,7 +179,8 @@
                     theme="primary"
                     :class="{ 'bk-text-with-no-perm': !hasManagePerm }"
                     :disabled="hasManagePerm && row.spec.enable"
-                    @click="handleDeleteConfirm(row)">
+                    @click="handleDeleteConfirm(row)"
+                  >
                     删除
                   </bk-button>
                 </div>
@@ -179,13 +213,12 @@
     @value-change="dialogInputStr = ''"
   >
     <div class="dialog-content">
-      <div class="dialog-title">确认删除此密钥？</div>
-      <div>删除的密钥<span>无法找回</span>,请谨慎操作！</div>
+      <div class="dialog-title">确认删除密钥？</div>
       <div class="dialog-input">
         <div class="dialog-info">
-          请输入密钥名称<span>{{ deleteCredentialInfo?.spec.name }}</span
-          >以确认删除
+          <div>删除的密钥<span>无法找回</span>,请谨慎操作！</div>
         </div>
+        <div class="tips">请输入密钥名称 <span>{{ deleteCredentialInfo?.spec.name }}</span> 以确认删除</div>
         <bk-input v-model="dialogInputStr" />
       </div>
     </div>
@@ -211,7 +244,13 @@ import { Plus, Search, Eye, Unvisible, Copy, EditLine } from 'bkui-vue/lib/icon'
 import BkMessage from 'bkui-vue/lib/message';
 import { InfoBox } from 'bkui-vue';
 import { permissionCheck } from '../../../api/index';
-import { getCredentialList, createCredential, updateCredential, deleteCredential } from '../../../api/credentials';
+import {
+  getCredentialList,
+  createCredential,
+  updateCredential,
+  deleteCredential,
+  getCredentialScopes,
+} from '../../../api/credentials';
 import { copyToClipBoard, datetimeFormat } from '../../../utils/index';
 import { ICredentialItem } from '../../../../types/credential';
 import AssociateConfigItems from './associate-config-items/index.vue';
@@ -231,7 +270,9 @@ const isCreateCredential = ref(false);
 const newCredentials = ref<number[]>([]); // 记录新增加的密钥id，实现表格标记效果
 const searchStr = ref('');
 const editingMemoId = ref(0); // 记录当前正在编辑说明的密钥id
+const editingNameId = ref(0); // 记录当前正在编辑名称的密钥id
 const memoInputRef = ref();
+const nameInputRef = ref();
 const isAssociateSliderShow = ref(false);
 const currentCredential = ref(0);
 const isSearchEmpty = ref(false);
@@ -309,6 +350,11 @@ const loadCredentialList = async () => {
   credentialList.value = res.details;
   tableData.value = res.details;
   pagination.value.count = res.count;
+  // 获取密钥关联规则
+  tableData.value.forEach(async (item: any) => {
+    const res = await getCredentialScopes(spaceId.value, item.id);
+    item.rule = res.details;
+  });
 };
 
 // 更新列表数据，带loading效果
@@ -366,6 +412,10 @@ const handleCreateCredential = async () => {
     createPending.value = true;
     const params = { memo: createCredentialMemo.value, name: createCredentialName.value };
     const res = await createCredential(spaceId.value, params);
+    BkMessage({
+      theme: 'success',
+      message: '新建服务密钥成功',
+    });
     pagination.value.current = 1;
     await loadCredentialList();
     newCredentials.value.push(res.id);
@@ -404,24 +454,45 @@ const handleEditMemo = (id: number) => {
   });
 };
 
-// 失焦时保存密钥说明
-const handleMemoBlur = async (credential: ICredentialItem) => {
-  editingMemoId.value = 0;
-  const memo = memoInputRef.value.textContent.trim();
-  if (credential.spec.memo === memo) {
-    return;
-  }
+// 密钥名称编辑
+const handleEditName = (id: number) => {
+  editingNameId.value = id;
+  nextTick(() => {
+    if (nameInputRef.value) {
+      nameInputRef.value.focus();
+    }
+  });
+};
 
+// 失焦时保存密钥说明或密钥名称
+const handleMemoOrNameBlur = async (credential: ICredentialItem, isEditName = true) => {
   const params = {
     id: credential.id,
     enable: credential.spec.enable,
-    memo,
+    name: credential.spec.name,
+    memo: credential.spec.memo,
   };
+  if (isEditName) {
+    editingNameId.value = 0;
+    const name = nameInputRef.value.textContent.trim();
+    if (credential.spec.name === name) {
+      return;
+    }
+    params.name = name;
+  } else {
+    editingMemoId.value = 0;
+    const memo = memoInputRef.value.textContent.trim();
+    if (credential.spec.memo === memo) {
+      return;
+    }
+    params.memo = memo;
+  }
   await updateCredential(spaceId.value, params);
-  credential.spec.memo = memo;
+  credential.spec.memo = params.memo;
+  credential.spec.name = params.name;
   BkMessage({
     theme: 'success',
-    message: '密钥说明修改成功',
+    message: isEditName ? '密钥名称修改成功' : '密钥说明修改成功',
   });
 };
 
@@ -604,12 +675,11 @@ const goToIAM = () => {
 }
 .credential-text {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
   .text {
-    width: calc(100% - 50px);
+    width: 300px;
   }
   .actions {
+    margin-left: 16px;
     display: flex;
     align-items: center;
     color: #979ba5;
@@ -630,26 +700,18 @@ const goToIAM = () => {
   }
 }
 .credential-memo {
-  position: relative;
-  padding-right: 20px;
+  display: flex;
+  align-items: center;
   &:hover {
     .edit-icon {
       display: inline-block;
     }
   }
   .memo-content {
-    width: 100%;
+    max-width: calc(100% - 40px);
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-  }
-  .memo-edit {
-    position: absolute;
-    top: 2px;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1;
   }
   .edit-input {
     padding: 6px 10px;
@@ -667,11 +729,13 @@ const goToIAM = () => {
       box-shadow: 0 0 3px #a3c5fd;
     }
   }
+  .edit-name-input {
+    @extend .edit-input;
+    min-height: 32px;
+  }
   .edit-icon {
-    position: absolute;
-    top: 4px;
-    right: 0;
     display: none;
+    padding-left: 16px;
     font-size: 14px;
     color: #979ba5;
     cursor: pointer;
@@ -689,25 +753,27 @@ const goToIAM = () => {
 }
 .dialog-content {
   text-align: center;
-  margin: 10px 0 20px;
-  span {
-    color: red;
-  }
+  margin-top: 48px;
   .dialog-title {
-    margin: 10px;
-    font-size: 24px;
-    color: #121213;
+    font-size: 20px;
+    color: #313238;
+    line-height: 32px;
   }
   .dialog-input {
-    margin-top: 10px;
+    margin-top: 16px;
     text-align: start;
     padding: 20px;
     background-color: #f4f7fa;
     .dialog-info {
-      margin-bottom: 5px;
+      margin-bottom: 16px;
       span {
-        color: #121213;
-        font-weight: 600;
+        color: red;
+      }
+    }
+    .tips {
+      margin-bottom: 8px;
+      span {
+        font-weight: bolder;
       }
     }
   }
@@ -717,11 +783,19 @@ const goToIAM = () => {
     width: 100px;
   }
 }
+.table-rule {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 </style>
 
 <style lang="scss">
 .delete-service-dialog {
   top: 40% !important;
+  .bk-modal-body {
+    padding-bottom: 104px !important;
+  }
   .bk-modal-header {
     display: none;
   }
@@ -729,8 +803,7 @@ const goToIAM = () => {
     height: auto !important;
     background-color: #fff !important;
     border-top: none !important;
-    padding-bottom: 24px !important;
+    padding: 24px 24px 48px !important;
   }
 }
-
 </style>

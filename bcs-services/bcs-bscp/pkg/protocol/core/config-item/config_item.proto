@@ -5,7 +5,7 @@ import "pkg/protocol/core/commit/commit.proto";
 
 package pbci;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item;pbci";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item;pbci";
 
 // ConfigItem source resource reference: pkg/dal/table/config_item.go
 message ConfigItem {

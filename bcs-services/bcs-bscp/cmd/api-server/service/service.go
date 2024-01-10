@@ -19,7 +19,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 )
 
 // Service do all the api server's work

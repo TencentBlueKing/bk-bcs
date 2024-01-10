@@ -14,11 +14,15 @@ package entity
 
 // 定义一批统一的key, 用在db相关的字段
 const (
-	FieldKeyObjectID    = "_id"
-	FieldKeyProjectCode = "projectCode"
-	FieldKeyClusterID   = "clusterID"
-	FieldKeyName        = "name"
-	FieldKeyScope       = "scope"
+	FieldKeyObjectID      = "_id"
+	FieldKeyProjectCode   = "projectCode"
+	FieldKeyClusterID     = "clusterID"
+	FieldKeyName          = "name"
+	FieldKeyScope         = "scope"
+	FieldKeyTemplateSpace = "templateSpace"
+	FieldKeyVersion       = "version"
+	FieldKeyTemplateName  = "templateName"
+	FieldKeyEnv           = "env"
 
 	FieldKeyCreateBy = "createBy"
 	FieldKeyCreateAt = "createAt"

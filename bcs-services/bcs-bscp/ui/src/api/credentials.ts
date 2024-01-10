@@ -28,7 +28,7 @@ export const deleteCredential = (biz_id: string, id: number) => http.delete(`/co
  * @param biz_id 空间ID
  * @returns
  */
-export const updateCredential = (biz_id: string, params: { id: number; memo?: string; enable?: boolean }) => http.put(`/config/biz_id/${biz_id}/credential`, params).then(res => res.data);
+export const updateCredential = (biz_id: string, params: { id: number; memo?: string; enable?: boolean, name?: string }) => http.put(`/config/biz_id/${biz_id}/credential`, params).then(res => res.data);
 
 /**
  * 获取密钥关联的配置文件规则

@@ -1572,6 +1572,236 @@ service ViewConfig {
 	}
 }
 
+service TemplateSet {
+	// 获取模板文件文件夹详情
+	rpc GetTemplateSpace(GetTemplateSpaceReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/template/spaces/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取模板文件文件夹详情"
+			summary: "Get template space detail"
+		};
+	}
+
+	// 获取模板文件文件夹列表
+	rpc ListTemplateSpace(ListTemplateSpaceReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/template/spaces"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取模板文件文件夹列表"
+			summary: "Get template space list"
+		};
+	}
+
+	// 创建模板文件文件夹
+	rpc CreateTemplateSpace(CreateTemplateSpaceReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/template/spaces"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建模板文件文件夹"
+			summary: "Create template space"
+		};
+	}
+
+	// 更新模板文件文件夹
+	rpc UpdateTemplateSpace(UpdateTemplateSpaceReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectCode}/template/spaces/{id}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "更新模板文件文件夹"
+			summary: "Update template space"
+		};
+	}
+
+	// 删除模板文件文件夹
+	rpc DeleteTemplateSpace(DeleteTemplateSpaceReq) returns (CommonResp) {
+		option (google.api.http) = {
+			delete: "/clusterresources/v1/projects/{projectCode}/template/spaces/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "删除模板文件文件夹"
+			summary: "Delete template space"
+		};
+	}
+
+	// 获取模板文件元数据详情
+	rpc GetTemplateMetadata(GetTemplateMetadataReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/template/metadatas/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取模板文件元数据详情"
+			summary: "Get template metadata detail"
+		};
+	}
+
+	// 获取模板文件元数据列表
+	rpc ListTemplateMetadata(ListTemplateMetadataReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/template/metadatas"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取模板文件元数据列表"
+			summary: "Get template metadata list"
+		};
+	}
+
+	// 创建模板文件元数据
+	rpc CreateTemplateMetadata(CreateTemplateMetadataReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/template/metadatas"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建模板文件元数据"
+			summary: "Create template metadata"
+		};
+	}
+
+	// 更新模板文件元数据
+	rpc UpdateTemplateMetadata(UpdateTemplateMetadataReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectCode}/template/metadatas/{id}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "更新模板文件元数据"
+			summary: "Update template metadata"
+		};
+	}
+
+	// 删除模板文件元数据
+	rpc DeleteTemplateMetadata(DeleteTemplateMetadataReq) returns (CommonResp) {
+		option (google.api.http) = {
+			delete: "/clusterresources/v1/projects/{projectCode}/template/metadatas/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "删除模板文件元数据"
+			summary: "Delete template metadata"
+		};
+	}
+
+	// 获取模板文件版本详情
+	rpc GetTemplateVersion(GetTemplateVersionReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/template/versions/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取模板文件版本详情"
+			summary: "Get template version detail"
+		};
+	}
+
+	// 获取模板文件版本列表
+	rpc ListTemplateVersion(ListTemplateVersionReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/template/versions"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取模板文件版本列表"
+			summary: "Get template version list"
+		};
+	}
+
+	// 创建模板文件版本
+	rpc CreateTemplateVersion(CreateTemplateVersionReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/template/versions"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建模板文件版本"
+			summary: "Create template version"
+		};
+	}
+
+	// 删除模板文件版本
+	rpc DeleteTemplateVersion(DeleteTemplateVersionReq) returns (CommonResp) {
+		option (google.api.http) = {
+			delete: "/clusterresources/v1/projects/{projectCode}/template/versions/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "删除模板文件版本"
+			summary: "Delete template version"
+		};
+	}
+
+	// 获取环境管理详情
+	rpc GetEnvManage(GetEnvManageReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/envs/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取环境管理详情"
+			summary: "Get env manage detail"
+		};
+	}
+
+	// 获取环境管理列表
+	rpc ListEnvManages(ListEnvManagesReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/envs"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取环境管理列表"
+			summary: "Get env manages list"
+		};
+	}
+
+	// 创建环境管理
+	rpc CreateEnvManage(CreateEnvManageReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/envs"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建环境管理"
+			summary: "Create env manage"
+		};
+	}
+
+	// 更新环境管理
+	rpc UpdateEnvManage(UpdateEnvManageReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectCode}/envs/{id}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "更新环境管理"
+			summary: "Update env manage"
+		};
+	}
+
+	// 环境管理重命名
+	rpc RenameEnvManage(RenameEnvManageReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectCode}/envs/{id}/rename"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "环境管理重命名"
+			summary: "Update env manage name"
+		};
+	}
+
+	// 删除环境管理
+	rpc DeleteEnvManage(DeleteEnvManageReq) returns (CommonResp) {
+		option (google.api.http) = {
+			delete: "/clusterresources/v1/projects/{projectCode}/envs/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "删除环境管理"
+			summary: "Delete env manage"
+		};
+	}
+}
+
 service MultiCluster {
 	rpc FetchMultiClusterResource(FetchMultiClusterResourceReq) returns (CommonResp) {
 		option (google.api.http) = {
@@ -2564,6 +2794,329 @@ message LabelSelector {
 	repeated string values = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "values"
 	}];
+}
+
+message GetTemplateSpaceReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetTemplateSpaceReq", description: "获取模板文件文件夹详情"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message ListTemplateSpaceReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ListTemplateSpaceReq", description: "获取模板文件文件夹列表"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message CreateTemplateSpaceReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CreateTemplateSpaceReq", description: "创建模板文件文件夹"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string description = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹描述"
+	}];
+}
+
+message UpdateTemplateSpaceReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "UpdateTemplateSpaceReq", description: "更新模板文件文件夹"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string name = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string description = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹描述"
+	}];
+}
+
+message DeleteTemplateSpaceReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "DeleteTemplateSpaceReq", description: "删除单个模板文件文件夹"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	bool isRelateDelete = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "是否把相关的版本删除"
+	}];
+}
+
+message GetTemplateMetadataReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetTemplateMetadataReq", description: "获取模板文件元数据详情"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板元数据 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message ListTemplateMetadataReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ListTemplateMetadataReq", description: "获取模板文件元数据列表"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string templateSpace = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件文件夹"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+}
+
+message CreateTemplateMetadataReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CreateTemplateMetadataReq", description: "创建模板文件元数据"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string description = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据描述"
+	}];
+	string templateSpace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件文件夹"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string resourceType = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据资源类型"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	repeated string tags = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据标签"
+	}];
+	string versionDescription = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本描述"
+	}];
+	string version = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string content = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本Content"
+	}];
+}
+
+message UpdateTemplateMetadataReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "UpdateTemplateMetadataReq", description: "更新模板文件元数据"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string name = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string description = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据描述"
+	}];
+	string resourceType = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据资源类型"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	repeated string tags = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据标签"
+	}];
+	string version = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	VersionMode versionMode = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本模式"
+	}];
+}
+
+enum VersionMode {
+	SpecifyVersion = 0;
+	LatestUpdateTime = 1;
+}
+
+message DeleteTemplateMetadataReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "DeleteTemplateMetadataReq", description: "删除模板文件元数据"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	bool isRelateDelete = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "是否把相关的版本删除"
+	}];
+}
+
+message GetTemplateVersionReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetTemplateVersionReq", description: "获取模板文件版本详情"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message ListTemplateVersionReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ListTemplateVersionReq", description: "获取模板文件版本列表"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string templateName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string templateSpace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件文件夹名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+}
+
+message CreateTemplateVersionReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CreateTemplateVersionReq", description: "创建模板文件版本"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string description = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本描述"
+	}];
+	string version = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string content = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本Content"
+	}];
+	string templateName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string templateSpace = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件文件夹名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	bool force = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "能否被覆盖"
+	}];
+}
+
+message DeleteTemplateVersionReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "DeleteTemplateVersionReq", description: "删除单个删除模板文件版本"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message GetEnvManageReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetEnvManageReq", description: "获取环境管理详情"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境管理 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message ListEnvManagesReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ListEnvManagesReq", description: "获取环境管理列表"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message CreateEnvManageReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CreateEnvManageReq", description: "创建环境管理"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string env = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	repeated ClusterNamespaces clusterNamespaces = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "关联命名空间"
+	}, (validate.rules).repeated = {min_items : 0}];
+}
+
+message UpdateEnvManageReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "UpdateEnvManageReq", description: "更新环境管理"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境管理 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	repeated ClusterNamespaces clusterNamespaces = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "关联命名空间"
+	}, (validate.rules).repeated = {min_items : 0}];
+	string env = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+}
+
+message RenameEnvManageReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "RenameEnvManageReq", description: "环境管理重命名"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境管理 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1 , max_len : 32}];
+	string env = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境名称"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message DeleteEnvManageReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "DeleteEnvManageReq", description: "删除环境管理"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "环境管理 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
 }
 
 message FetchMultiClusterResourceReq {

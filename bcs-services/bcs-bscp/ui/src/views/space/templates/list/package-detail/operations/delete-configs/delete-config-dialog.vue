@@ -6,7 +6,7 @@
     :is-show="props.show"
     ext-cls="delete-confirm-dialog"
     @confirm="handleConfirm"
-    @close="close"
+    @closed="close"
   >
     <div class="tips">一旦删除，该操作将无法撤销，请谨慎操作</div>
     <bk-table :data="props.configs" border="outer" max-height="200">

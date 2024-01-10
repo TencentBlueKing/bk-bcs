@@ -57,12 +57,12 @@ linters-settings:
   govet:
     check-shadowing: true
   goimports:
-    local-prefixes: github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/vault-server/vault-barrier
+    local-prefixes: github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/vault-server/vault-barrier
   gci:
     sections:
       - standard
       - default
-      - prefix(github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/vault-server/vault-barrier)
+      - prefix(github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/vault-server/vault-barrier)
   gocritic:
     settings:
       ifElseChain:

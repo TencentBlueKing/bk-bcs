@@ -235,6 +235,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-scenarios/kourse v0.0.0-20231011121510-d30829b961ad
 	github.com/go-redis/redis/extra/redisotel/v8 v8.11.5
 	github.com/googleapis/gnostic v0.5.5
+	github.com/mitchellh/hashstructure/v2 v2.0.2
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.44.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230711160842-782d3b101e98
 )
@@ -258,7 +259,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
-	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect

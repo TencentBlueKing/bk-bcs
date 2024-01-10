@@ -1,4 +1,4 @@
-module github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/vault-server/vault-barrier
+module github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/vault-server/vault-barrier
 
 go 1.20
 

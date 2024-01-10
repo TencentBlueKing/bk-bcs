@@ -24,7 +24,7 @@
             v-bk-tooltips="{
               disabled: !isExcludeModeDisabled,
               placement: 'top-start',
-              content: '其它版本没有上线分组，无法使用此选项'
+              content: '其它版本没有上线任何分组（默认版本除外），无法使用此选项'
             }">
             排除分组实例上线
           </span>

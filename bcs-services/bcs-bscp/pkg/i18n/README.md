@@ -86,7 +86,7 @@ i18n:
 * gotext源码使用example：https://cs.opensource.google/go/x/text/+/refs/tags/v0.14.0:cmd/gotext/examples/
 * 更多实现细节见gotext源码：https://cs.opensource.google/go/x/text/+/refs/tags/v0.14.0:cmd/gotext/main.go
  */
-//go:generate gotext -srclang=en update -out=catalog.go -lang=en,zh github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/api-server github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/config-server github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server
+//go:generate gotext -srclang=en update -out=catalog.go -lang=en,zh github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/api-server github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/config-server github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/data-service github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server
 ```
 
 执行操作后的示例, 如果存在没有翻译的message，输出会提示哪些message缺少对应的翻译：

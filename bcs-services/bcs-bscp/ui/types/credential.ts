@@ -1,3 +1,4 @@
+import { IAppItem } from './app';
 export interface ICredentialItem {
   id: number;
   attachment: {
@@ -47,10 +48,10 @@ export interface IRuleEditing {
   type: string;
   content: string;
   original: string;
-  app: string;
+  app: IAppItem | null;
   originalApp: string;
   isRight: boolean;
-  isSelectService: boolean
+  isSelectService: boolean;
 }
 
 // 调用关联规则更新接口参数

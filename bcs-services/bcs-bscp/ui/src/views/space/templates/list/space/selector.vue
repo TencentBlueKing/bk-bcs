@@ -209,7 +209,7 @@ const handleDeleteTemplateSpaceConfirm = async () => {
   }
   Message({
     theme: 'success',
-    message: '删除成功',
+    message: '删除空间成功',
   });
   isDeleteTemplateSpaceDialogShow.value = false;
 };
