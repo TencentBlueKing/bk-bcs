@@ -1,8 +1,8 @@
 <template>
-  <bk-sideslider :title="`${name}-上线服务`" :width="640" :is-show="props.show" @closed="handleClose">
+  <bk-sideslider :title="`${name}-${t('上线服务')}`" :width="640" :is-show="props.show" @closed="handleClose">
     <div class="services-content">
       <div class="search-area">
-        <SearchInput v-model="searchStr" placeholder="服务名称/服务版本" :width="320" @search="handleSearch" />
+        <SearchInput v-model="searchStr" :placeholder="t('服务名称/服务版本')" :width="320" @search="handleSearch" />
       </div>
       <bk-loading class="loading-wrapper" :loading="loading">
         <bk-table
@@ -13,8 +13,8 @@
           @page-limit-change="handlePageLimitChange"
           @page-value-change="loadServicesList"
         >
-          <bk-table-column label="服务名称" prop="app_name"></bk-table-column>
-          <bk-table-column label="服务版本">
+          <bk-table-column :label="t('服务名称')" prop="app_name"></bk-table-column>
+          <bk-table-column :label="t('服务版本')">
             <template #default="{ row }">
               <bk-link v-if="row.app_id" class="link-btn" theme="primary" target="_blank" :href="getHref(row)">{{
                 row.release_name
@@ -28,12 +28,13 @@
       </bk-loading>
     </div>
     <div class="action-btn">
-      <bk-button @click="handleClose">关闭</bk-button>
+      <bk-button @click="handleClose">{{ t('关闭') }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../store/global';
@@ -44,6 +45,7 @@ import SearchInput from '../../../components/search-input.vue';
 import tableEmpty from '../../../components/table/table-empty.vue';
 
 const router = useRouter();
+const { t } = useI18n();
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
