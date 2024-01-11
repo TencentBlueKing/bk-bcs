@@ -13,13 +13,13 @@
         <span class="title-icon">
           <img :src="LockIcon" alt="permission-lock" class="lock-img" />
         </span>
-        <h3>该操作需要以下权限</h3>
+        <h3>{{ t('该操作需要以下权限') }}</h3>
       </div>
       <table class="permission-table table-header">
         <thead>
           <tr>
-            <th width="40%">需要申请的权限</th>
-            <th width="60%">关联的资源实例</th>
+            <th width="40%">{{ t('需要申请的权限') }}</th>
+            <th width="60%">{{ t('关联的资源实例') }}</th>
           </tr>
         </thead>
       </table>
@@ -37,7 +37,7 @@
               </tr>
             </template>
             <tr v-else>
-              <td class="no-data" colspan="2">无数据</td>
+              <td class="no-data" colspan="2">{{ t('无数据') }}</td>
             </tr>
           </tbody>
         </table>
@@ -46,15 +46,16 @@
     <template #footer>
       <div class="button-group">
         <bk-button theme="primary" :disabled="loading" @click="handleSubmitClick">
-          {{ clicked ? '已申请' : '去申请' }}
+          {{ clicked ? t('已申请') : t('去申请') }}
         </bk-button>
-        <bk-button @click="handleClose">取消</bk-button>
+        <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
       </div>
     </template>
   </bk-dialog>
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../store/global';
 import { IPermissionResource } from '../../../types/index';
@@ -63,6 +64,7 @@ import LockIcon from '../../assets/lock-radius.svg';
 
 const globalStore = useGlobalStore();
 const { showApplyPermDialog, permissionQuery } = storeToRefs(globalStore);
+const { t } = useI18n();
 
 const show = ref(false);
 const loading = ref(false);
