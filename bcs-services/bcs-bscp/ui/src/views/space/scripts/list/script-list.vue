@@ -3,10 +3,10 @@
     <div class="side-menu">
       <div class="group-wrapper">
         <li :class="['group-item', { actived: showAllTag }]" @click="handleSelectTag('', true)">
-          <i class="bk-bscp-icon icon-block-shape group-icon"></i>全部脚本
+          <i class="bk-bscp-icon icon-block-shape group-icon"></i>{{ t('全部脚本') }}
         </li>
         <li :class="['group-item', { actived: !showAllTag && selectedTag === '' }]" @click="handleSelectTag('')">
-          <i class="bk-bscp-icon icon-tags group-icon"></i>未分类
+          <i class="bk-bscp-icon icon-tags group-icon"></i>{{ t('未分类') }}
         </li>
       </div>
       <div class="custom-tag-list">
@@ -24,11 +24,11 @@
     </div>
     <div class="script-list-wrapper">
       <div class="operate-area">
-        <bk-button theme="primary" @click="showCreateScript = true"><Plus class="button-icon" />新建脚本</bk-button>
+        <bk-button theme="primary" @click="showCreateScript = true"><Plus class="button-icon" />{{ t('新建脚本') }}</bk-button>
         <bk-input
           v-model="searchStr"
           class="search-script-input"
-          placeholder="脚本名称"
+          :placeholder="t('脚本名称')"
           :clearable="true"
           @clear="refreshList"
           @input="handleNameInputChange"
@@ -47,7 +47,7 @@
           @page-limit-change="handlePageLimitChange"
           @page-value-change="handlePageCurrentChange"
         >
-          <bk-table-column label="脚本名称">
+          <bk-table-column :label="t('脚本名称')">
             <template #default="{ row }">
               <div
                 v-if="row.hook"
@@ -58,13 +58,13 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column label="脚本语言" prop="hook.spec.type" width="120"></bk-table-column>
-          <bk-table-column label="分类标签">
+          <bk-table-column :label="t('脚本语言')" prop="hook.spec.type" width="120"></bk-table-column>
+          <bk-table-column :label="t('分类标签')">
             <template #default="{ row }">
               <span v-if="row.hook">{{ row.hook.spec.tag || '--' }}</span>
             </template>
           </bk-table-column>
-          <bk-table-column label="被引用" width="100">
+          <bk-table-column :label="t('被引用')" width="100">
             <template #default="{ row }">
               <bk-button v-if="row.bound_num > 0" text theme="primary" @click="handleOpenCitedSlider(row.hook.id)">{{
                 row.bound_num
@@ -72,23 +72,23 @@
               <span v-else>0</span>
             </template>
           </bk-table-column>
-          <bk-table-column label="更新人" prop="hook.revision.reviser"></bk-table-column>
-          <bk-table-column label="更新时间" width="220">
+          <bk-table-column :label="t('更新人')" prop="hook.revision.reviser"></bk-table-column>
+          <bk-table-column :label="t('更新时间')" width="220">
             <template #default="{ row }">
               <span v-if="row.hook">{{ datetimeFormat(row.hook.revision.update_at) }}</span>
             </template>
           </bk-table-column>
-          <bk-table-column label="操作">
+          <bk-table-column :label="t('操作')">
             <template #default="{ row }" width="180">
               <div class="action-btns">
-                <bk-button text theme="primary" @click="handleEditClick(row)">编辑</bk-button>
+                <bk-button text theme="primary" @click="handleEditClick(row)">{{ t('编辑') }}</bk-button>
                 <bk-button
                   text
                   theme="primary"
                   @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })"
-                  >版本管理</bk-button
+                  >{{ t('版本管理') }}</bk-button
                 >
-                <bk-button text theme="primary" @click="handleDeleteScript(row)">删除</bk-button>
+                <bk-button text theme="primary" @click="handleDeleteScript(row)">{{ t('删除') }}</bk-button>
               </div>
             </template>
           </bk-table-column>
@@ -103,17 +103,17 @@
   </section>
   <DeleteConfirmDialog
     v-model:isShow="isDeleteScriptDialogShow"
-    title="确认删除该脚本？"
+    :title="t('确认删除该脚本？')"
     @confirm="handleDeleteScriptConfirm"
   >
     <div style="margin-bottom: 8px">
-      脚本: <span style="color: #313238; font-weight: 600">{{ deleteScriptItem?.hook.spec.name }}</span>
+      {{ t('脚本') }}: <span style="color: #313238; font-weight: 600">{{ deleteScriptItem?.hook.spec.name }}</span>
     </div>
-    <div style="margin-bottom: 8px">一旦删除，该操作将无法撤销，以下服务配置的未命名版本中引用该脚本也将清除</div>
+    <div style="margin-bottom: 8px">{{ t('一旦删除，该操作将无法撤销，以下服务配置的未命名版本中引用该脚本也将清除') }}</div>
     <div class="service-table">
       <bk-loading style="min-height: 200px" :loading="appsLoading">
-        <bk-table :data="appList" :max-height="maxTableHeight" empty-text="暂无未命名版本引用此脚本">
-          <bk-table-column label="引用此脚本的服务">
+        <bk-table :data="appList" :max-height="maxTableHeight" :empty-text="t('暂无未命名版本引用此脚本')">
+          <bk-table-column :label="t('引用此脚本的服务')">
             <template #default="{ row }">
               <div class="app-info" @click="goToConfigPageImport(row.app_id)">
                 <div v-overflow-title class="name-text">{{ row.app_name }}</div>
@@ -128,6 +128,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import Message from 'bkui-vue/lib/message';
 import { Plus, Search } from 'bkui-vue/lib/icon';
@@ -147,6 +148,7 @@ import { debounce } from 'lodash';
 const { spaceId } = storeToRefs(useGlobalStore());
 const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useScriptStore());
 const router = useRouter();
+const { t } = useI18n();
 
 interface IAppItem {
   app_id: number;
@@ -270,7 +272,7 @@ const handleDeleteScriptConfirm = async () => {
   }
   Message({
     theme: 'success',
-    message: '删除版本成功',
+    message: t('删除版本成功'),
   });
   isDeleteScriptDialogShow.value = false;
   getScripts();

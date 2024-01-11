@@ -10,19 +10,19 @@
   >
     <bk-button theme="primary" :disabled="props.disabled" @click="handleCreateClick">
       <Plus class="button-icon" />
-      新建版本
+      {{ t('新建版本') }}
     </bk-button>
     <template #content>
-      <h3 class="tips">当前已有「未上线」版本</h3>
+      <h3 class="tips">{{ t('当前已有「未上线」版本') }}</h3>
       <div class="actions">
-        <bk-button theme="primary" size="small" @click="handleEditClick">前往编辑</bk-button>
-        <bk-button size="small" @click="closePopover">取消</bk-button>
+        <bk-button theme="primary" size="small" @click="handleEditClick">{{ t('前往编辑') }}</bk-button>
+        <bk-button size="small" @click="closePopover">{{ t('取消') }}</bk-button>
       </div>
     </template>
   </bk-popover>
   <bk-dialog
-    title="创建版本"
-    confirm-text="创建"
+    :title="t('创建版本')"
+    :confirm-text="t('创建')"
     head-align="left"
     footer-align="right"
     width="480"
@@ -33,7 +33,7 @@
     @closed="dialogShow = false"
   >
     <bk-form ref="formRef" form-type="vertical" :model="{ selectedScript }">
-      <bk-form-item label="选择载入脚本" required property="selectedScript">
+      <bk-form-item :label="t('选择载入脚本')" required property="selectedScript">
         <bk-select
           v-model="selectedScript"
           :loading="listLoading"
@@ -55,6 +55,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Plus } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../store/global';
@@ -62,6 +63,7 @@ import { IScriptVersionListItem, IScriptMapItem } from '../../../../../types/scr
 import { getScriptVersionList } from '../../../../api/script';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const props = withDefaults(
   defineProps<{
