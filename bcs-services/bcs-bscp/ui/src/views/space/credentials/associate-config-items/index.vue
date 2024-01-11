@@ -1,6 +1,6 @@
 <template>
   <bk-sideslider
-    title="关联服务配置"
+    :title="t('关联服务配置')"
     width="400"
     :is-show="props.show"
     :before-close="handleBeforeClose"
@@ -23,7 +23,7 @@
       </div> -->
     </section>
     <div class="action-btns">
-      <bk-button v-if="isRuleEdit" theme="primary" :loading="pending" @click="handleSave"> 保存 </bk-button>
+      <bk-button v-if="isRuleEdit" theme="primary" :loading="pending" @click="handleSave"> {{ t('保存') }} </bk-button>
       <bk-button
         v-else
         v-cursor="{ active: !props.hasManagePerm }"
@@ -31,14 +31,15 @@
         theme="primary"
         @click="handleOpenEdit"
       >
-        编辑规则
+        {{ t('编辑规则') }}
       </bk-button>
-      <bk-button @click="handleClose">{{ isRuleEdit ? '取消' : '关闭' }}</bk-button>
+      <bk-button @click="handleClose">{{ isRuleEdit ? t('取消') : t('关闭') }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../store/global';
 import { getCredentialScopes, updateCredentialScopes } from '../../../../api/credentials';
@@ -52,6 +53,7 @@ import RuleEdit from './rule-edit.vue';
 import { Message } from 'bkui-vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -127,7 +129,7 @@ const handleSave = async () => {
     emits('refresh');
     Message({
       theme: 'success',
-      message: '编辑规则成功',
+      message: t('编辑规则成功'),
     });
   } catch (e) {
     console.error(e);
