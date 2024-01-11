@@ -45,21 +45,20 @@ func Audit(next http.Handler) http.Handler {
 		resp := bytes.NewBuffer(nil)
 		ww.Tee(resp)
 
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			render.Render(w, r, rest.BadRequest(err))
-			return
-		}
-		// Unmarshal the request body into a map[string]interface{}
+		// get the request param and body
 		input := make(map[string]any)
-		// Get URL parameters
 		params := r.URL.Query()
 		for key, values := range params {
 			if len(values) > 0 {
 				input[key] = values[0]
 			}
 		}
-
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+		r.Body = io.NopCloser(bytes.NewBuffer(body))
 		if len(body) != 0 {
 			err = json.Unmarshal(body, &input)
 			if err != nil {
@@ -87,8 +86,6 @@ func Audit(next http.Handler) http.Handler {
 
 			addAudit(r, res, act, st, input, status, msg)
 		}()
-
-		r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 		next.ServeHTTP(ww, r)
 	})

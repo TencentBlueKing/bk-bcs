@@ -17,15 +17,14 @@ import (
 	"strings"
 	"sync"
 
-	"k8s.io/klog/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 
-	ad "github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/audit/routematch"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
 )
 
 var (
-	auditClient *ad.Client
+	auditClient *audit.Client
 	auditOnce   sync.Once
 
 	routeMatcher *routematch.RouteMatcher
@@ -33,10 +32,10 @@ var (
 )
 
 // GetAuditClient 获取审计客户端
-func GetAuditClient() *ad.Client {
+func GetAuditClient() *audit.Client {
 	if auditClient == nil {
 		auditOnce.Do(func() {
-			auditClient = ad.NewClient("", "", nil)
+			auditClient = audit.NewClient("", "", nil)
 		})
 	}
 	return auditClient
@@ -47,7 +46,7 @@ func GetRouteMatcher() *routematch.RouteMatcher {
 	if routeMatcher == nil {
 		routeOnce.Do(func() {
 			routeMatcher = routematch.NewRouteMatcher(getRoutes())
-			klog.Infof("construct route map: %#v", routeMatcher.RouteMap())
+			// klog.Infof("construct route map: %#v", routeMatcher.RouteMap())
 		})
 	}
 	return routeMatcher
@@ -63,41 +62,41 @@ func getRoutes() []routematch.Route {
 	return rs
 }
 
-var auditFuncMap = map[string]func() (ad.Resource, ad.Action){
+var auditFuncMap = map[string]func() (audit.Resource, audit.Action){
 	// config server api, see pkg/protocol/config-server/config_service.proto
-	"POST./api/v1/config/create/app/app/biz_id/{biz_id}": func() (ad.Resource, ad.Action) {
-		return ad.Resource{ResourceType: ad.ResourceType(sys.Application)},
-			ad.Action{ActionID: "create_app", ActivityType: ad.ActivityTypeCreate}
+	"POST./api/v1/config/create/app/app/biz_id/{biz_id}": func() (audit.Resource, audit.Action) {
+		return audit.Resource{ResourceType: audit.ResourceType(sys.Application)},
+			audit.Action{ActionID: "create_app", ActivityType: audit.ActivityTypeCreate}
 	},
-	"PUT./api/v1/config/update/app/app/app_id/{id}/biz_id/{biz_id}": func() (ad.Resource,
-		ad.Action) {
-		return ad.Resource{ResourceType: ad.ResourceType(sys.Application)},
-			ad.Action{ActionID: "update_app", ActivityType: ad.ActivityTypeUpdate}
+	"PUT./api/v1/config/update/app/app/app_id/{id}/biz_id/{biz_id}": func() (audit.Resource,
+		audit.Action) {
+		return audit.Resource{ResourceType: audit.ResourceType(sys.Application)},
+			audit.Action{ActionID: "update_app", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"DELETE./api/v1/config/delete/app/app/app_id/{id}/biz_id/{biz_id}": func() (ad.Resource,
-		ad.Action) {
-		return ad.Resource{ResourceType: ad.ResourceType(sys.Application)},
-			ad.Action{ActionID: "delete_app", ActivityType: ad.ActivityTypeDelete}
+	"DELETE./api/v1/config/delete/app/app/app_id/{id}/biz_id/{biz_id}": func() (audit.Resource,
+		audit.Action) {
+		return audit.Resource{ResourceType: audit.ResourceType(sys.Application)},
+			audit.Action{ActionID: "delete_app", ActivityType: audit.ActivityTypeDelete}
 	},
-	"GET./api/v1/config/biz/{biz_id}/apps/{app_id}": func() (ad.Resource, ad.Action) {
-		return ad.Resource{ResourceType: ad.ResourceType(sys.Application)},
-			ad.Action{ActionID: "get_app", ActivityType: ad.ActivityTypeView}
+	"GET./api/v1/config/biz/{biz_id}/apps/{app_id}": func() (audit.Resource, audit.Action) {
+		return audit.Resource{ResourceType: audit.ResourceType(sys.Application)},
+			audit.Action{ActionID: "get_app", ActivityType: audit.ActivityTypeView}
 	},
-	"GET./api/v1/config/biz/{biz_id}/apps/query/name/{app_name}": func() (ad.Resource, ad.Action) {
-		return ad.Resource{ResourceType: ad.ResourceType(sys.Application)},
-			ad.Action{ActionID: "get_app_by_name", ActivityType: ad.ActivityTypeView}
+	"GET./api/v1/config/biz/{biz_id}/apps/query/name/{app_name}": func() (audit.Resource, audit.Action) {
+		return audit.Resource{ResourceType: audit.ResourceType(sys.Application)},
+			audit.Action{ActionID: "get_app_by_name", ActivityType: audit.ActivityTypeView}
 	},
-	"GET./api/v1/config/biz/{biz_id}/apps": func() (ad.Resource, ad.Action) {
-		return ad.Resource{ResourceType: ad.ResourceType(sys.Application)},
-			ad.Action{ActionID: "list_apps_rest", ActivityType: ad.ActivityTypeView}
+	"GET./api/v1/config/biz/{biz_id}/apps": func() (audit.Resource, audit.Action) {
+		return audit.Resource{ResourceType: audit.ResourceType(sys.Application)},
+			audit.Action{ActionID: "list_apps_rest", ActivityType: audit.ActivityTypeView}
 	},
-	"GET./api/v1/config/list/app/app/biz_id/{biz_id}": func() (ad.Resource, ad.Action) {
-		return ad.Resource{ResourceType: ad.ResourceType(sys.Application)},
-			ad.Action{ActionID: "list_apps_by_space_rest", ActivityType: ad.ActivityTypeView}
+	"GET./api/v1/config/list/app/app/biz_id/{biz_id}": func() (audit.Resource, audit.Action) {
+		return audit.Resource{ResourceType: audit.ResourceType(sys.Application)},
+			audit.Action{ActionID: "list_apps_by_space_rest", ActivityType: audit.ActivityTypeView}
 	},
 	"POST./api/v1/config/create/config_item/config_item/app_id/{app_id}/biz_id/{biz_id}": func() (
-		ad.Resource, ad.Action) {
-		return ad.Resource{ResourceType: ad.ResourceType(sys.Application)},
-			ad.Action{ActionID: "create_config_item", ActivityType: ad.ActivityTypeCreate}
+		audit.Resource, audit.Action) {
+		return audit.Resource{ResourceType: audit.ResourceType(sys.Application)},
+			audit.Action{ActionID: "create_config_item", ActivityType: audit.ActivityTypeCreate}
 	},
 }
