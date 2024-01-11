@@ -2,7 +2,7 @@ import { createI18n } from 'vue-i18n';
 import zhCn from './zh-cn';
 import enUs from './en-us';
 const i18n = createI18n({
-  locale: 'zh-CN',
+  locale: localStorage.getItem('language') || 'zh-CN',
   legacy: false,
   messages: {
     'zh-CN': zhCn,

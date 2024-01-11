@@ -286,8 +286,10 @@ const handleToCMDB = () => {
 const switchLanguage = () => {
   if (locale.value === 'zh-CN') {
     locale.value = 'en-US';
+    localStorage.setItem('language', 'en-US');
   } else {
     locale.value = 'zh-CN';
+    localStorage.setItem('language', 'zh-CN');
   }
 };
 </script>
