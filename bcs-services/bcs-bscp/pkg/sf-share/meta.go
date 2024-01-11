@@ -20,6 +20,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 )
@@ -57,22 +58,12 @@ func ParseFeedIncomingContext(ctx context.Context) (*IncomingMeta, error) {
 		return nil, errors.New("invalid incoming context from sidecar")
 	}
 
-	var user string
-	if um := md.Get(constant.SideUserKey); len(um) != 0 {
-		user = um[0]
-	}
-
-	if len(user) == 0 {
-		return nil, errors.New("invalid request without 'user' header from sidecar")
-	}
-
 	var rid string
 	if sr := md.Get(constant.SideRidKey); len(sr) != 0 {
 		rid = sr[0]
-	}
-
-	if len(rid) == 0 {
-		return nil, errors.New("invalid request without 'rid' header from sidecar")
+	} else {
+		// same from kit.FromGrpcContext
+		rid = "bscp-" + uuid.UUID()
 	}
 
 	var metaHeader string
@@ -95,9 +86,8 @@ func ParseFeedIncomingContext(ctx context.Context) (*IncomingMeta, error) {
 
 	return &IncomingMeta{
 		Kit: &kit.Kit{
-			Ctx:  ctx,
-			User: user,
-			Rid:  rid,
+			Ctx: ctx,
+			Rid: rid,
 		},
 		Meta: sm,
 	}, nil

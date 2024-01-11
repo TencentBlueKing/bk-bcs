@@ -22,12 +22,6 @@ service Upstream {
   rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
 }
 
-// HandshakeMessage defines the handshake message from sidecar to feed server.
-message HandshakeMessage {
-  pbbase.Versioning api_version = 1;
-  SidecarSpec spec = 2;
-}
-
 // SidecarSpec defines a sidecar's specifics.
 message SidecarSpec {
   uint32 biz_id = 1;
@@ -35,10 +29,10 @@ message SidecarSpec {
   pbbase.Versioning version = 2;
 }
 
-// SidecarMeta define a sidecar's basic metadata information.
-message SidecarAppMeta {
-  uint32 app_id = 1;
-  string uid = 2;
+// HandshakeMessage defines the handshake message from sidecar to feed server.
+message HandshakeMessage {
+  pbbase.Versioning api_version = 1;
+  SidecarSpec spec = 2;
 }
 
 // HandshakeResp defines handshake resp.
@@ -48,6 +42,22 @@ message HandshakeResp {
   bytes payload = 2;
 }
 
+// MessagingMeta defines the message metadata send from sdk to upstream server.
+message MessagingMeta {
+  // version defines message's protocol version from feed server
+  pbbase.Versioning api_version = 1;
+  // rid is the message's request id
+  string rid = 2;
+  // type is an enum type, it's an substitute of scs.MessagingType.
+  uint32 type = 3;
+  // payload is the message's details information which is a json raw bytes.
+  bytes payload = 4;
+}
+
+// MessagingResp defines response from upstream server to sdk,
+// which is empty.
+message MessagingResp {}
+
 // SideWatchMeta defines watch messages send from sidecar to feed server.
 message SideWatchMeta {
   // version defines message's protocol version from sidecar
@@ -55,6 +65,41 @@ message SideWatchMeta {
   // payload is the message's details information which is a json raw bytes.
   // refer to sfs.SideWatchPayload.
   bytes payload = 2;
+}
+
+// FeedWatchMessage defines watch messages send from feed server to sdk.
+message FeedWatchMessage {
+  // version defines message's protocol version from feed server
+  pbbase.Versioning api_version = 1;
+  // rid is the message's request id
+  string rid = 2;
+  // type is an enum type, it's an substitute of sfs.FeedMessageType.
+  uint32 type = 3;
+  // payload is the message's details information which is a json raw bytes.
+  bytes payload = 4;
+}
+
+message AppMeta {
+  string app = 1;
+  string uid = 2;
+  map<string, string> labels = 3;
+}
+
+message Repository {
+  string root = 1;
+}
+
+message RepositorySpec {
+  string path = 1;
+}
+
+message FileMeta {
+  uint32 id = 1;
+  uint32 commit_id = 2;
+  pbcommit.CommitSpec commit_spec = 3;
+  pbci.ConfigItemSpec config_item_spec = 4;
+  pbci.ConfigItemAttachment config_item_attachment = 5;
+  RepositorySpec repository_spec = 6;
 }
 
 message PullAppFileMetaReq {
@@ -66,12 +111,6 @@ message PullAppFileMetaReq {
   AppMeta app_meta = 3;
   string token = 4;
   string key = 5;
-}
-
-message AppMeta {
-  string app = 1;
-  string uid = 2;
-  map<string, string> labels = 3;
 }
 
 message PullAppFileMetaResp {
@@ -94,62 +133,17 @@ message GetDownloadURLResp {
   string url = 1;
 }
 
-message Repository {
-  string root = 1;
-}
-
-message FileMeta {
-  uint32 id = 1;
-  uint32 commit_id = 2;
-  pbcommit.CommitSpec commit_spec = 3;
-  pbci.ConfigItemSpec config_item_spec = 4;
-  pbci.ConfigItemAttachment config_item_attachment = 5;
-  RepositorySpec repository_spec = 6;
-}
-
-message RepositorySpec {
-  string path = 1;
-}
-
-// FeedWatchMessage defines watch messages send from feed server to sdk.
-message FeedWatchMessage {
-  // version defines message's protocol version from feed server
-  pbbase.Versioning api_version = 1;
-  // rid is the message's request id
-  string rid = 2;
-  // type is an enum type, it's an substitute of sfs.FeedMessageType.
-  uint32 type = 3;
-  // payload is the message's details information which is a json raw bytes.
-  bytes payload = 4;
-}
-
-// MessagingMeta defines the message metadata send from sdk to upstream server.
-message MessagingMeta {
-  // version defines message's protocol version from feed server
-  pbbase.Versioning api_version = 1;
-  // rid is the message's request id
-  string rid = 2;
-  // type is an enum type, it's an substitute of scs.MessagingType.
-  uint32 type = 3;
-  // payload is the message's details information which is a json raw bytes.
-  bytes payload = 4;
-}
-
-// MessagingResp defines response from upstream server to sdk,
-// which is empty.
-message MessagingResp {}
-
-message ListAppsReq {
-  uint32 biz_id = 1;
-  repeated string match = 2;
-}
-
 // App 对外简单版本
 message App {
   uint32 id = 1;
   string name = 2;
   string config_type = 3;
   pbbase.Revision revision = 4;
+}
+
+message ListAppsReq {
+  uint32 biz_id = 1;
+  repeated string match = 2;
 }
 
 message ListAppsResp {
