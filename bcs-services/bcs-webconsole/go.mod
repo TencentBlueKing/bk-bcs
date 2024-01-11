@@ -169,8 +169,6 @@ require (
 )
 
 replace (
-	// concurrency safe
-	github.com/gin-contrib/i18n v0.0.1 => github.com/ifooth/i18n v0.0.0-20230609093731-5838804173a5
 	// 修复 IPv6 单栈 Bug
 	github.com/go-micro/plugins/v4/server/http => github.com/ifooth/go-micro-plugins/v4/server/http v0.0.0-20230207124152-a253b0517244
 	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
