@@ -23,3 +23,10 @@
 .bk-switcher-with-no-perm {
   opacity: 0.3;
 }
+
+// 表单校验错误时，表单项边框会被设置为红色，设计师要求表单项获取焦点时，将边框保持为蓝色
+.bk-input.is-focused:not(.is-readonly),
+.bk-textarea.is-focused:not(.is-readonly),
+.bk-select.is-focus .bk-select-trigger .bk-input--default {
+  border-color: #3a84ff;
+}
