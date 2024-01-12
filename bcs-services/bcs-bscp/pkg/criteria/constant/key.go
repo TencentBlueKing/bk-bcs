@@ -94,8 +94,6 @@ const (
 	SidecarMetaKey = "sidecar-meta"
 	// SideRidKey defines the incoming request id between sidecar and feed server.
 	SideRidKey = "side-rid"
-	// SideUserKey defines the sidecar's user key.
-	SideUserKey = "side-user"
 	// SideWorkspaceDir sidecar workspace dir name.
 	SideWorkspaceDir = "bk-bscp"
 )

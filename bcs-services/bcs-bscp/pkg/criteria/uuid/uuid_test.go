@@ -10,35 +10,26 @@
  * limitations under the License.
  */
 
-// Package uuid NOTES
 package uuid
 
 import (
-	"bytes"
-	"sync"
-
-	"github.com/google/uuid"
+	"testing"
 )
 
-var uuidLock sync.Mutex
-var lastUUID uuid.UUID
+// BenchmarkUUID
+// Benchmark Result
+// 1: pborman/uuid
+// 2: github.com/google/uuid v4
+// 3: github.com/google/uuid v4 with uuid.EnableRandPool()
+// 4: github.com/google/uuid v1
 
-// UUID generates a UUID string which is version 4 or version 1.
-func UUID() string {
-	uuidLock.Lock()
-	defer uuidLock.Unlock()
+// BenchmarkUUID-16         5305968               223.3 ns/op            64 B/op          2 allocs/op
+// BenchmarkUUID-16          815874               1463 ns/op             64 B/op          2 allocs/op
+// BenchmarkUUID-16         3996272               279.6 ns/op            48 B/op          1 allocs/op
+// BenchmarkUUID-16         6107228               195.4 ns/op            48 B/op          1 allocs/op
+func BenchmarkUUID(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_ = UUID()
 
-	// version 1
-	result := uuid.Must(uuid.NewUUID())
-
-	// The UUID package is naive and can generate identical UUIDs if the
-	// time interval is quick enough.
-	// The UUID uses 100 ns increments, so it's short enough to actively
-	// wait for a new value.
-	for bytes.Equal(lastUUID[:], result[:]) {
-		result = uuid.Must(uuid.NewUUID())
 	}
-
-	lastUUID = result
-	return result.String()
 }

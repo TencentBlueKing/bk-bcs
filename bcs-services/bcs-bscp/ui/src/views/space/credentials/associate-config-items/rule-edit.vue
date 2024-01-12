@@ -324,13 +324,13 @@ defineExpose({ handleRuleValidate });
 }
 .rule-error {
   .rule-input {
-    border-color: #ea3636 !important;
+    border-color: #ea3636;
   }
 }
 .service-error {
   .service-select {
     :deep(.bk-input) {
-      border-color: #ea3636 !important;
+      border-color: #ea3636;
     }
   }
 }
