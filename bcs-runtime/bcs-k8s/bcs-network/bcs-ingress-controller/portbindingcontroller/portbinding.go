@@ -189,11 +189,11 @@ func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.
 	}
 
 	// 使用statefulset的情况下， 清理注解可能导致误清理新建Pod的注解
-	// blog.V(3).Infof("do clean annotation from port binding %s/%s related resource", portBinding.GetName(),
-	// 	portBinding.GetNamespace())
-	// if err := pbh.postPortBindingClean(portBinding); err != nil {
-	// 	return true, err
-	// }
+	blog.V(3).Infof("do clean annotation from port binding %s/%s related resource", portBinding.GetName(),
+		portBinding.GetNamespace())
+	if err := pbh.postPortBindingClean(portBinding); err != nil {
+		return true, err
+	}
 
 	return notCleanedNum != 0, nil
 }
