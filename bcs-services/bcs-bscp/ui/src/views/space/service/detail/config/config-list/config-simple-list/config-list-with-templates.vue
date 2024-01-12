@@ -3,7 +3,7 @@
     <SearchInput
       v-model="searchStr"
       class="config-search-input"
-      placeholder="配置文件名/创建人/修改人"
+      :placeholder="t('配置文件名/创建人/修改人')"
       @search="getListData"
     />
     <bk-loading class="loading-wrapper" :loading="loading">
@@ -43,6 +43,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { DownShape } from 'bkui-vue/lib/icon';
 import useConfigStore from '../../../../../../../store/config';
@@ -82,6 +83,7 @@ interface IConfigTableItem {
 
 const store = useConfigStore();
 const { versionData } = storeToRefs(store);
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;
@@ -195,7 +197,7 @@ const getBoundTemplateList = async () => {
 const transListToTableData = () => {
   const pkgsGroups = groupTplsByPkg(templateGroupList.value);
   return [
-    { id: 0, name: '非模板配置', expand: true, configs: transConfigsToTableItemData(configList.value) },
+    { id: 0, name: t('非模板配置'), expand: true, configs: transConfigsToTableItemData(configList.value) },
     ...pkgsGroups,
   ];
 };

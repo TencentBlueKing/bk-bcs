@@ -9,13 +9,15 @@
   >
     <slot></slot>
     <template #footer>
-      <bk-button theme="primary" @click="emits('confirm')" style="margin-right: 8px">{{ confirmText }}</bk-button>
-      <bk-button @click="handleClose">取消</bk-button>
+      <bk-button theme="primary" @click="emits('confirm')" style="margin-right: 8px">{{ confirmText || t('删除')}}</bk-button>
+      <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
     </template>
   </bk-dialog>
 </template>
 
 <script lang="ts" setup>
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 withDefaults(
   defineProps<{
     isShow: boolean;

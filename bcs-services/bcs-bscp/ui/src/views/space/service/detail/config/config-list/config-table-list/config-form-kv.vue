@@ -1,9 +1,9 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
-    <bk-form-item label="配置项名称" property="key" :required="true">
+    <bk-form-item :label="t('配置项名称')" property="key" :required="true">
       <bk-input v-model="localVal.key" :disabled="editable" @input="change" />
     </bk-form-item>
-    <bk-form-item label="数据类型" property="kv_type" :required="true" :description="typeDescription">
+    <bk-form-item :label="t('数据类型')" property="kv_type" :required="true" :description="typeDescription">
       <bk-radio-group v-model="localVal.kv_type">
         <bk-radio
           v-for="kvType in CONFIG_KV_TYPE"
@@ -14,7 +14,7 @@
         </bk-radio>
       </bk-radio-group>
     </bk-form-item>
-    <bk-form-item label="配置项值" property="value" :required="true">
+    <bk-form-item :label="t('配置项值')" property="value" :required="true">
       <bk-input
         v-if="localVal.kv_type === 'string' || localVal.kv_type === 'number'"
         v-model.trim="localVal!.value"
@@ -34,6 +34,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { CONFIG_KV_TYPE } from '../../../../../../../constants/config';
 import KvConfigContentEditor from '../../components/kv-config-content-editor.vue';
 import { IConfigKvEditParams } from '../../../../../../../../types/config';
@@ -42,6 +43,7 @@ import { storeToRefs } from 'pinia';
 
 const serviceStore = useServiceStore();
 const { appData } = storeToRefs(serviceStore);
+const { t } = useI18n();
 
 const props = withDefaults(
   defineProps<{
@@ -80,20 +82,20 @@ const radioDisabled = computed(() => (kvTypeId: string) => {
 
 const stringTypePlaceholder = computed(() => {
   if (localVal.value.kv_type === 'string') {
-    return '请输入(仅支持大小不超过2M)';
+    return t('请输入(仅支持大小不超过2M)');
   }
-  return '请输入';
+  return t('请输入');
 });
 
 const rules = {
   key: [
     {
       validator: (value: string) => value.length <= 128,
-      message: '最大长度128个字符',
+      message: t('最大长度128个字符'),
     },
     {
       validator: (value: string) => /^[a-zA-Z0-9\u4e00-\u9fa5][a-zA-Z0-9_\u4e00-\u9fa5-]*[a-zA-Z0-9\u4e00-\u9fa5]$/.test(value),
-      message: '只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾',
+      message: t('只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾'),
     },
   ],
   value: [
@@ -104,7 +106,7 @@ const rules = {
         }
         return true;
       },
-      message: '配置项值不为数字',
+      message: t('配置项值不为数字'),
     },
   ],
 };

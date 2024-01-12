@@ -1,8 +1,9 @@
 <template>
   <bk-dialog
-    title="新建空间"
+    :title="t('')"
     ext-cls="create-template-space-dialog"
-    confirm-text="创建"
+    :confirm-text="t('创建')"
+    :cancel-text="t('取消')"
     :width="480"
     :is-show="isShow"
     :is-loading="pending"
@@ -12,10 +13,10 @@
     @closed="handleClose"
   >
     <bk-form ref="formRef" form-type="vertical" :model="localVal">
-      <bk-form-item label="模板空间名称" required property="name">
+      <bk-form-item :label="t('模板空间名称')" required property="name">
         <bk-input v-model="localVal.name" />
       </bk-form-item>
-      <bk-form-item label="模板空间描述" property="memo">
+      <bk-form-item :label="t('模板空间描述')" property="memo">
         <bk-input v-model="localVal.memo" type="textarea" :rows="6" :maxlength="100" :resize="true" />
       </bk-form-item>
     </bk-form>
@@ -23,12 +24,14 @@
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../store/global';
 import { createTemplateSpace } from '../../../../../api/template';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -63,7 +66,7 @@ const handleCreate = () => {
       emits('created', res.id);
       Message({
         theme: 'success',
-        message: '创建空间成功',
+        message: t('创建空间成功'),
       });
     } catch (e) {
       console.error(e);

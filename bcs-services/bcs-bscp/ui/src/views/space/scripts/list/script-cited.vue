@@ -1,7 +1,7 @@
 <template>
-  <bk-sideslider title="关联配置文件" width="640" :is-show="props.show" @closed="handleClose">
+  <bk-sideslider :title="t('关联配置文件')" width="640" :is-show="props.show" @closed="handleClose">
     <div class="search-area">
-      <SearchInput v-model="searchStr" placeholder="服务名称/版本名称/被引用的版本" @search="refreshList()" />
+      <SearchInput v-model="searchStr" :placeholder="t('服务名称/版本名称/被引用的版本')" @search="refreshList()" />
     </div>
     <div class="cited-data-table">
       <bk-table
@@ -13,18 +13,18 @@
         @page-limit-change="handlePageLimitChange"
         @page-value-change="refreshList"
       >
-        <bk-table-column label="脚本版本">
+        <bk-table-column :label="t('脚本版本')">
           <template #default="{ row }">
             <template v-if="row.hook_revision_name || row.revision_name">{{
               row.hook_revision_name || row.revision_name
             }}</template>
           </template>
         </bk-table-column>
-        <bk-table-column label="脚本类型">
-          <template #default="{ row }">{{ row.type === 'pre_hook' ? '前置脚本':'后置脚本' }}</template>
+        <bk-table-column :label="t('脚本类型')">
+          <template #default="{ row }">{{ row.type === 'pre_hook' ? t('前置脚本'):t('后置脚本') }}</template>
         </bk-table-column>
-        <bk-table-column label="服务名称" prop="app_name"></bk-table-column>
-        <bk-table-column label="服务版本">
+        <bk-table-column :label="t('服务名称')" prop="app_name"></bk-table-column>
+        <bk-table-column :label="t('服务版本')">
           <template #default="{ row }">
             <template v-if="row.release_name">
               <span v-if="row.deprecated">{{ row.release_name }}</span>
@@ -42,12 +42,13 @@
       </bk-table>
     </div>
     <div class="action-btn">
-      <bk-button @click="handleClose">关闭</bk-button>
+      <bk-button @click="handleClose">{{t('关闭')}}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../store/global';
@@ -56,7 +57,7 @@ import { getScriptCiteList, getScriptVersionCiteList } from '../../../../api/scr
 import SearchInput from '../../../../components/search-input.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
-
+const { t } = useI18n();
 const router = useRouter();
 
 const props = defineProps<{

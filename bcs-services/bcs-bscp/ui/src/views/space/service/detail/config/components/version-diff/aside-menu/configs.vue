@@ -1,7 +1,7 @@
 <template>
   <div :class="['configs-menu', { 'search-opened': isOpenSearch }]">
     <div class="title-area">
-      <div class="title">配置文件</div>
+      <div class="title">{{ t('配置文件') }}</div>
       <div class="title-extend">
         <bk-checkbox
           v-if="isBaseVersionExist"
@@ -9,7 +9,7 @@
           class="view-diff-checkbox"
           @change="handleSearch"
         >
-          只查看差异文件({{ diffCount }})
+          {{ t('只查看差异文件') }}({{ diffCount }})
         </bk-checkbox>
         <div :class="['search-trigger', { actived: isOpenSearch }]" @click="isOpenSearch = !isOpenSearch">
           <Search />
@@ -17,7 +17,7 @@
       </div>
     </div>
     <div v-if="isOpenSearch" class="search-wrapper">
-      <SearchInput v-model="searchStr" placeholder="搜索配置文件名称" @search="handleSearch" />
+      <SearchInput v-model="searchStr" :placeholder="t('搜索配置文件名称')" @search="handleSearch" />
     </div>
     <div class="groups-wrapper">
       <div v-for="group in groupedConfigListOnShow" class="config-group-item" :key="group.id">
@@ -49,7 +49,7 @@
         v-if="groupedConfigListOnShow.length === 0"
         class="empty-tips"
         :is-search-empty="isSearchEmpty"
-        empty-title="没有差异配置项"
+        :empty-title="t('没有差异配置文件')"
         @clear="clearStr"
       >
       </tableEmpty>
@@ -58,6 +58,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Search, RightShape } from 'bkui-vue/lib/icon';
@@ -124,6 +125,7 @@ interface IDiffGroupData extends IConfigsGroupData {
   configs: IConfigDiffItem[];
 }
 
+const { t } = useI18n();
 const props = withDefaults(
   defineProps<{
     currentVersionId: number;

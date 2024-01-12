@@ -12,7 +12,7 @@
                 </div>
                 <div class="signature">{{ props.base.signature }}</div>
             </div>
-            <bk-exception v-else class="exception-tips" scene="part" type="empty">该版本下文件不存在</bk-exception>
+            <bk-exception v-else class="exception-tips" scene="part" type="empty">{{ t('该版本下文件不存在') }}</bk-exception>
         </div>
         <div class="right-version-content">
             <div v-if="props.current" class="file-wrapper" @click="handleDownloadFile(props.current)">
@@ -26,12 +26,13 @@
                 </div>
                 <div class="signature">{{ props.current.signature }}</div>
             </div>
-            <bk-exception v-else class="exception-tips" scene="part" theme="empty">文件已被删除</bk-exception>
+            <bk-exception v-else class="exception-tips" scene="part" theme="empty">{{ t('文件已被删除') }}</bk-exception>
         </div>
     </section>
 </template>
 <script setup lang="ts">
 import { withDefaults } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { TextFill } from 'bkui-vue/lib/icon';
 import { IFileConfigContentSummary } from '../../../types/config';
@@ -39,6 +40,7 @@ import { downloadConfigContent } from '../../api/config';
 import { downloadTemplateContent } from '../../api/template';
 import { fileDownload } from '../../utils/file';
 
+const { t } = useI18n();
 const route = useRoute();
 const bkBizId = String(route.params.spaceId);
 
@@ -49,8 +51,8 @@ const props = withDefaults(defineProps<{
         downloadable?: boolean;
         isTpl?: boolean;
     }>(), {
-        downloadable: true,
-    });
+  downloadable: true,
+});
 
 // 下载已上传文件
 const handleDownloadFile = async (config: IFileConfigContentSummary) => {

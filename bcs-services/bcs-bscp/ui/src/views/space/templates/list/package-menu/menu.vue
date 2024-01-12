@@ -2,9 +2,9 @@
   <div class="package-list-comp">
     <div class="search-wrapper">
       <div class="search-input">
-        <SearchInput v-model="searchStr" placeholder="搜索模板套餐" @search="handleSearch" />
+        <SearchInput v-model="searchStr" :placeholder="t('搜索模板套餐')" @search="handleSearch" />
       </div>
-      <div class="create-btn" v-bk-tooltips="'新建模板套餐'" @click="isCreatePackageDialogShow = true">
+      <div class="create-btn" v-bk-tooltips="t('新建模板套餐')" @click="isCreatePackageDialogShow = true">
         <Plus />
       </div>
     </div>
@@ -47,24 +47,25 @@
   <PackageEdit
     v-model:show="editingPkgData.open"
     :template-space-id="currentTemplateSpace"
-    :pkg="editingPkgData.data as ITemplatePackageItem"
+    :pkg="(editingPkgData.data as ITemplatePackageItem)"
     @edited="getList"
   />
   <PackageClone
     v-model:show="cloningPkgData.open"
     :template-space-id="currentTemplateSpace"
-    :pkg="cloningPkgData.data as ITemplatePackageItem"
+    :pkg="(cloningPkgData.data as ITemplatePackageItem)"
     @created="getList"
   />
   <PackageDelete
     v-model:show="deletingPkgData.open"
     :template-space-id="currentTemplateSpace"
-    :pkg="deletingPkgData.data as ITemplatePackageItem"
+    :pkg="(deletingPkgData.data as ITemplatePackageItem)"
     @deleted="handlePkgDeleted"
   />
 </template>
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Plus } from 'bkui-vue/lib/icon';
@@ -86,6 +87,7 @@ import TableEmpty from '../../../../../components/table/table-empty.vue';
 
 const router = useRouter();
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 const templateStore = useTemplateStore();
 const {
   currentTemplateSpace,
@@ -116,13 +118,13 @@ const deletingPkgData = ref<{ open: boolean; data: ITemplatePackageItem | undefi
 
 const MenuItemOfallConfigList = computed(() => ({
   id: 'all',
-  name: '全部配置文件',
+  name: t('全部配置文件'),
   count: CountOfAllTemplatesInSpace.value,
 }));
 
 const menuItemOfNoSpecifiedPackage = computed(() => ({
   id: 'no_specified',
-  name: '未指定套餐',
+  name: t('未指定套餐'),
   count: countOfTemplatesForNoSpecifiedPackage.value,
 }));
 

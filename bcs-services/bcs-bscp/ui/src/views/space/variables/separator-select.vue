@@ -1,6 +1,6 @@
 <template>
   <div class="wrap">
-    <div class="title">分隔符</div>
+    <div class="title">{{ t('分隔符') }}</div>
     <div class="select">
       <div
         v-for="item in allSelect"
@@ -14,27 +14,29 @@
     </div>
     <bk-form ref="formRef" v-if="selectSeparatorId === 4" :rules="rules" :model="formData">
       <bk-form-item required property="separator">
-        <bk-input class="custom-input" v-model="formData.separator" placeholder="未输入" />
+        <bk-input class="custom-input" v-model="formData.separator" :placeholder="t('未输入')" />
       </bk-form-item>
     </bk-form>
     <div class="footer">
-      <bk-button theme="primary" size="small" @click="handleConfirm">确定</bk-button>
-      <bk-button size="small" @click="emits('closed')">取消</bk-button>
+      <bk-button theme="primary" size="small" @click="handleConfirm">{{ t('确定') }}</bk-button>
+      <bk-button size="small" @click="emits('closed')">{{ t('取消') }}</bk-button>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const emits = defineEmits(['closed', 'confirm']);
-const allSelect = [
-  { id: 0, text: '空字符', value: ' ' },
+const allSelect = computed(() => [
+  { id: 0, text: t('空字符'), value: ' ' },
   { id: 1, text: ',', value: ',' },
   { id: 2, text: ';', value: ';' },
   { id: 3, text: '|', value: '|' },
-  { id: 4, text: '自定义' },
-];
+  { id: 4, text: t('自定义') },
+]);
 const selectSeparatorId = ref(0);
 const formData = ref({
   separator: '',
@@ -45,11 +47,11 @@ const rules = {
   separator: [
     {
       validator: (val: string) => regex.test(val),
-      message: '您输入的分隔符错误,请重新输入',
+      message: t('您输入的分隔符错误,请重新输入'),
     },
     {
       validator: (val: string) => val.length === 1,
-      message: '您输入的分隔符过长,请重新输入',
+      message: t('您输入的分隔符过长,请重新输入'),
     },
   ],
 };
@@ -59,7 +61,7 @@ const handleConfirm = async () => {
     await formRef.value.validate();
     emits('confirm', formData.value.separator);
   } else {
-    emits('confirm', allSelect[selectSeparatorId.value].value);
+    emits('confirm', allSelect.value[selectSeparatorId.value].value);
   }
   emits('closed');
 };

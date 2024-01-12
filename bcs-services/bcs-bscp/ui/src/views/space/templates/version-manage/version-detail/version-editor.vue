@@ -2,29 +2,29 @@
   <div class="version-editor">
     <div class="header-wrapper">
       <div class="title">
-        <div v-if="props.type === 'create'" class="create-version-title">新建版本</div>
+        <div v-if="props.type === 'create'" class="create-version-title">{{ t('新建版本') }}</div>
         <div v-else class="version-view-title">
           {{ props.versionName }}
-          <span class="cited-info">被引用：{{ boundCount }}</span>
+          <span class="cited-info">{{ t('被引用') }}：{{ boundCount }}</span>
         </div>
       </div>
     </div>
     <div :class="['template-config-content-wrapper', { 'view-mode': isViewMode }]">
       <div v-if="!isViewMode" class="config-form">
         <bk-form ref="formRef" form-type="vertical" :model="formData" :rules="rules">
-          <bk-form-item label="版本号" property="revision_name">
+          <bk-form-item :label="t('版本号')" property="revision_name">
             <bk-input v-model="formData.revision_name" />
           </bk-form-item>
-          <bk-form-item label="版本描述" property="revision_memo">
+          <bk-form-item :label="t('版本描述')" property="revision_memo">
             <bk-input v-model="formData.revision_memo" type="textarea" :rows="4" :maxlength="200" :resize="true" />
           </bk-form-item>
-          <bk-form-item label="文件权限" required>
+          <bk-form-item :label="t('文件权限')" required>
             <PermissionInputPicker v-model="formData.privilege" />
           </bk-form-item>
-          <bk-form-item label="用户" required>
+          <bk-form-item :label="t('用户')" required>
             <bk-input v-model="formData.user" />
           </bk-form-item>
-          <bk-form-item label="用户组" required>
+          <bk-form-item :label="t('用户组')" required>
             <bk-input v-model="formData.user_group" />
           </bk-form-item>
         </bk-form>
@@ -35,7 +35,7 @@
             class="config-uploader"
             url=""
             theme="button"
-            tip="支持扩展名：.bin，文件大小100M以内"
+            :tip="t('支持扩展名：.bin，文件大小100M以内')"
             :size="100"
             :disabled="isViewMode"
             :multiple="false"
@@ -56,8 +56,8 @@
       </div>
     </div>
     <div class="action-btns">
-      <bk-button class="submit-btn" theme="primary" @click="handleSubmitClick">提交</bk-button>
-      <bk-button class="cancel-btn" @click="emits('close')">取消</bk-button>
+      <bk-button class="submit-btn" theme="primary" @click="handleSubmitClick">{{ t('提交') }}</bk-button>
+      <bk-button class="cancel-btn" @click="emits('close')">{{ t('取消') }}</bk-button>
     </div>
   </div>
   <CreateVersionConfirmDialog
@@ -72,6 +72,7 @@
 </template>
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import SHA256 from 'crypto-js/sha256';
 import WordArray from 'crypto-js/lib-typedarrays';
 import Message from 'bkui-vue/lib/message';
@@ -90,6 +91,7 @@ import CodeEditor from '../../../../../components/code-editor/index.vue';
 import PermissionInputPicker from '../../../../../components/permission-input-picker.vue';
 import CreateVersionConfirmDialog from './create-version-confirm-dialog.vue';
 
+const { t } = useI18n();
 const props = defineProps<{
   spaceId: string;
   templateSpaceId: number;
@@ -107,7 +109,7 @@ const rules = {
   revision_name: [
     {
       validator: (value: string) => value.length <= 128,
-      message: '最大长度128个字符',
+      message: t('最大长度128个字符'),
     },
     {
       validator: (value: string) => {
@@ -116,13 +118,13 @@ const rules = {
         }
         return true;
       },
-      message: '仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾',
+      message: t('仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾'),
     },
   ],
   revision_memo: [
     {
       validator: (value: string) => value.length <= 200,
-      message: '最大长度200个字符',
+      message: t('最大长度200个字符'),
     },
   ],
 };
@@ -263,12 +265,12 @@ const validate = async () => {
   await formRef.value.validate();
   if (formData.value.file_type === 'binary') {
     if (fileList.value.length === 0) {
-      Message({ theme: 'error', message: '请上传文件' });
+      Message({ theme: 'error', message: t('请上传文件') });
       return false;
     }
   } else if (formData.value.file_type === 'text') {
     if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * 50) {
-      Message({ theme: 'error', message: '配置内容不能超过50M' });
+      Message({ theme: 'error', message: t('配置内容不能超过50M') });
       return false;
     }
   }
@@ -292,7 +294,7 @@ const triggerCreate = async () => {
     emits('created', res.id);
     Message({
       theme: 'success',
-      message: '创建版本成功',
+      message: t('创建版本成功'),
     });
   } catch (e) {
     console.log(e);

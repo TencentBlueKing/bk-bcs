@@ -88,7 +88,6 @@ const handleTabChange = (name: string) => {
   display: flex;
   justify-content: center;
   .head-tabs {
-    width: 200px;
     font-size: 14px;
 
     :deep(.bk-tab-content) {

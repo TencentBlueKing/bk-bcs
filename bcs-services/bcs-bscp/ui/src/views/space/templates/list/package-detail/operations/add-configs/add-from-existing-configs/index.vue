@@ -1,6 +1,6 @@
 <template>
   <bk-sideslider
-    title="从已有配置文件添加"
+    :title="t('从已有配置文件添加')"
     :width="640"
     :is-show="isShow"
     :before-close="handleBeforeClose"
@@ -9,7 +9,7 @@
     <div  class="slider-content-container">
       <div class="package-configs-pick">
         <div class="search-wrapper">
-          <SearchInput v-model="searchStr" placeholder="配置文件名称/路径/描述" @search="handleSearch" />
+          <SearchInput v-model="searchStr" :placeholder="t('配置文件名称/路径/描述')" @search="handleSearch" />
         </div>
         <div class="package-tables">
           <PackageTable
@@ -28,14 +28,14 @@
       </div>
       <div class="selected-panel">
         <h5 class="title-text">
-          已选 <span class="num">{{ selectedConfigs.length }}</span> 个配置文件
+          {{ t('已选') }} <span class="num">{{ selectedConfigs.length }}</span> {{ t('个配置文件') }}
         </h5>
         <div class="selected-list">
           <div v-for="config in selectedConfigs" class="config-item" :key="config.id">
             <div class="name" :title="config.name">{{ config.name }}</div>
             <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(config.id)" />
           </div>
-          <p v-if="selectedConfigs.length === 0" class="empty-tips">请先从左侧选择配置文件</p>
+          <p v-if="selectedConfigs.length === 0" class="empty-tips">{{ t('请先从左侧选择配置文件') }}</p>
         </div>
       </div>
     </div>
@@ -46,14 +46,15 @@
         :disabled="loading || selectedConfigs.length === 0"
         @click="handleAddConfigs"
       >
-        添加
+        {{ t('添加') }}
       </bk-button>
-      <bk-button @click="close">取消</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../../../../store/global';
@@ -76,6 +77,7 @@ interface IPackageTableGroup {
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -162,7 +164,7 @@ const handleAddConfigs = async () => {
     close();
     Message({
       theme: 'success',
-      message: '添加配置文件成功',
+      message: t('添加配置文件成功'),
     });
   } catch (e) {
     console.log(e);

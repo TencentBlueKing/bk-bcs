@@ -1,12 +1,12 @@
 <template>
   <bk-form form-type="vertical" ref="formRef" :model="formData" :rules="rules">
-    <bk-form-item label="分组名称" required property="name">
-      <bk-input v-model="formData.name" placeholder="请输入分组名称" @blur="change"></bk-input>
+    <bk-form-item :label="t('分组名称')" required property="name">
+      <bk-input v-model="formData.name" :placeholder="t('请输入分组名称')" @blur="change"></bk-input>
     </bk-form-item>
-    <bk-form-item class="radio-group-form" label="服务可见范围" required property="public">
+    <bk-form-item class="radio-group-form" :label="t('服务可见范围')" required property="public">
       <bk-radio-group v-model="formData.public" @change="change">
-        <bk-radio :label="true">公开</bk-radio>
-        <bk-radio :label="false">指定服务</bk-radio>
+        <bk-radio :label="true">{{ t('公开') }}</bk-radio>
+        <bk-radio :label="false">{{ t('指定服务') }}</bk-radio>
       </bk-radio-group>
       <bk-select
         v-if="!formData.public"
@@ -14,7 +14,7 @@
         class="service-selector"
         multiple
         filterable
-        placeholder="请选择服务"
+        :placeholder="t('请选择服务')"
         :input-search="false"
         @change="change"
       >
@@ -26,13 +26,13 @@
         ></bk-option>
       </bk-select>
     </bk-form-item>
-    <bk-form-item class="radio-group-form" label="标签选择器" required property="rules">
+    <bk-form-item class="radio-group-form" :label="t('标签选择器')" required property="rules">
       <template #label>
-        <span class="label-text">标签选择器</span>
+        <span class="label-text">{{ t('标签选择器') }}</span>
         <span
           ref="nodeRef"
           v-bk-tooltips="{
-            content: '标签选择器由key、操作符、value组成，筛选符合条件的客户端拉取服务配置，一般用于灰度发布服务配置',
+            content: t('标签选择器由key、操作符、value组成，筛选符合条件的客户端拉取服务配置，一般用于灰度发布服务配置'),
           }"
           class="bk-tooltips-base">
           <Info />
@@ -80,12 +80,13 @@
           <i v-if="index === formData.rules.length - 1" class="bk-bscp-icon icon-add" @click="handleAddRule(index)"></i>
         </div>
       </div>
-      <div v-if="!rulesValid" class="bk-form-error">分组规则表单不能为空</div>
+      <div v-if="!rulesValid" class="bk-form-error">{{ t('分组规则表单不能为空') }}</div>
     </bk-form-item>
   </bk-form>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 // import { storeToRefs } from 'pinia';
 import { cloneDeep } from 'lodash';
@@ -99,6 +100,7 @@ import { Info } from 'bkui-vue/lib/icon';
 const getDefaultRuleConfig = (): IGroupRuleItem => ({ key: '', op: 'eq', value: '' });
 
 const route = useRoute();
+const { t } = useI18n();
 // const { userInfo } = storeToRefs(useUserStore());
 
 const props = defineProps<{
@@ -117,7 +119,7 @@ const rules = {
   name: [
     {
       validator: (value: string) => value.length <= 128,
-      message: '最大长度128个字符',
+      message: t('最大长度128个字符'),
     },
     {
       validator: (value: string) => {
@@ -126,7 +128,7 @@ const rules = {
         }
         return true;
       },
-      message: '仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾',
+      message: t('仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾'),
     },
   ],
   public: [
@@ -137,7 +139,7 @@ const rules = {
         }
         return true;
       },
-      message: '指定服务不能为空',
+      message: t('指定服务不能为空'),
     },
   ],
 };

@@ -1,8 +1,8 @@
 <template>
-  <h4 class="title">从配置模板导入</h4>
+  <h4 class="title">{{ t('从配置模板导入') }}</h4>
   <div class="search-wrap">
-    <SearchInput v-model="searchStr" placeholder="搜索模板套餐" @search="handleSearch" />
-    <bk-button style="margin-left: 8px;" @click="router.push({name:'templates-list'})"> 管理模板 </bk-button>
+    <SearchInput v-model="searchStr" :placeholder="t('搜索模板套餐')" @search="handleSearch" />
+    <bk-button style="margin-left: 8px;" @click="router.push({name:'templates-list'})"> {{ t('管理模板') }} </bk-button>
   </div>
   <div class="packages-tree">
     <bk-tree
@@ -41,6 +41,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { ITemplateBoundByAppData } from '../../../../../../../../../types/config';
 import { IAllPkgsGroupBySpaceInBiz, IPkgTreeItem } from '../../../../../../../../../types/template';
@@ -52,6 +53,7 @@ interface ISpaceTreeItem extends IPkgTreeItem {
 }
 
 const router = useRouter();
+const { t } = useI18n();
 const props = defineProps<{
   bkBizId: string;
   pkgList: IAllPkgsGroupBySpaceInBiz[];
@@ -63,7 +65,7 @@ const emits = defineEmits(['change']);
 
 const searchStr = ref('');
 const isSearchEmpty = ref(false);
-const checkboxTooltips = (isImport: boolean) => (isImport ? '导入配置模板套餐时无法移除已有配置模板套餐' : '该套餐中没有可用配置文件，无法被导入到服务配置中');
+const checkboxTooltips = (isImport: boolean) => (isImport ? t('导入配置模板套餐时无法移除已有配置模板套餐') : t('该套餐中没有可用配置文件，无法被导入到服务配置中'));
 const pkgTreeData = computed(() => {
   let list: IAllPkgsGroupBySpaceInBiz[] = [];
   if (searchStr.value) {
@@ -103,11 +105,11 @@ const pkgTreeData = computed(() => {
       disabled: false,
     };
 
-    const notEmptyTplPkgNodes: IPkgTreeItem[] = []
-    const emptyTplPkgNodes: IPkgTreeItem[] = []
+    const notEmptyTplPkgNodes: IPkgTreeItem[] = [];
+    const emptyTplPkgNodes: IPkgTreeItem[] = [];
 
     template_sets.forEach((pkg) => {
-      const isEmpty = pkg.template_ids.length === 0
+      const isEmpty = pkg.template_ids.length === 0;
       const node = {
         id: pkg.template_set_id,
         nodeId: `pkg_${pkg.template_set_id}`,
@@ -115,14 +117,14 @@ const pkgTreeData = computed(() => {
         checked: isPkgNodeChecked(pkg.template_set_id),
         disabled: isPkgImported(pkg.template_set_id) || isEmpty,
         indeterminate: false,
-      }
+      };
       if (isEmpty) {
-        emptyTplPkgNodes.push(node)
+        emptyTplPkgNodes.push(node);
       } else {
-        notEmptyTplPkgNodes.push(node)
+        notEmptyTplPkgNodes.push(node);
       }
     });
-    group.children = [...notEmptyTplPkgNodes, ...emptyTplPkgNodes]
+    group.children = [...notEmptyTplPkgNodes, ...emptyTplPkgNodes];
     return group;
   });
 });

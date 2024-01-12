@@ -1,6 +1,6 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
-    <bk-form-item label="变量名称" property="name" :required="!isEditMode">
+    <bk-form-item :label="t('变量名称')" property="name" :required="!isEditMode">
       <bk-input v-model.trim="localVal.name" :disabled="isEditMode" @change="change">
         <template #prefix>
           <bk-select
@@ -16,24 +16,26 @@
         </template>
       </bk-input>
     </bk-form-item>
-    <bk-form-item label="类型" property="type" :required="!isEditMode">
+    <bk-form-item :label="t('类型')" property="type" :required="!isEditMode">
       <bk-select v-model="localVal.type" :clearable="false" :disabled="isEditMode" @change="change">
         <bk-option id="string" label="string"></bk-option>
         <bk-option id="number" label="number"></bk-option>
       </bk-select>
     </bk-form-item>
-    <bk-form-item label="默认值" property="default_val" required>
+    <bk-form-item :label="t('默认值')" property="default_val" required>
       <bk-input v-model="localVal.default_val" @input="change" />
     </bk-form-item>
-    <bk-form-item label="描述" property="memo">
+    <bk-form-item :label="t('描述')" property="memo">
       <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :rows="5" @input="change" :resize="true" />
     </bk-form-item>
   </bk-form>
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { IVariableEditParams } from '../../../../types/variable';
 
+const { t } = useI18n();
 const props = defineProps<{
   type: string;
   prefix: string;
@@ -54,12 +56,12 @@ const rules = {
   name: [
     {
       required: true,
-      message: '变量名称不能为空',
+      message: t('变量名称不能为空'),
       trigger: 'blur',
     },
     {
       validator: (value: string) => value.length <= 128,
-      message: '最大长度128个字符',
+      message: t('最大长度128个字符'),
     },
     {
       validator: (value: string) => {
@@ -68,14 +70,14 @@ const rules = {
         }
         return true;
       },
-      message: '仅允许使用中文、英文、数字、下划线，且不能以数字开头',
+      message: t('仅允许使用中文、英文、数字、下划线，且不能以数字开头'),
       trigger: 'blur',
     },
   ],
   memo: [
     {
       validator: (value: string) => value.length <= 200,
-      message: '最大长度200个字符',
+      message: t('最大长度200个字符'),
     },
   ],
   default_val: [
@@ -84,7 +86,7 @@ const rules = {
         if (localVal.value.type === 'string') return true;
         return /^-?\d+(\.\d+)?$/.test(value);
       },
-      message: '无效默认值，类型为number值不为数字',
+      message: t('无效默认值，类型为number值不为数字'),
     },
   ],
 };

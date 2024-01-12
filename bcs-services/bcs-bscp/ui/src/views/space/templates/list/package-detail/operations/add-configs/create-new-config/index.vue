@@ -1,6 +1,6 @@
 <template>
   <bk-sideslider
-    title="新建配置文件"
+    :title="t('新建配置文件')"
     :width="640"
     :is-show="props.show"
     :quick-close="!isSelectPkgDialogShow"
@@ -21,8 +21,8 @@
       />
     </div>
     <div class="action-btns">
-      <bk-button theme="primary" @click="handleCreateClick">去创建</bk-button>
-      <bk-button @click="close">取消</bk-button>
+      <bk-button theme="primary" @click="handleCreateClick">{{ t('去创建') }}</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
   <SelectPackage
@@ -34,12 +34,12 @@
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../../../../store/global';
 import useTemplateStore from '../../../../../../../../store/template';
 import { updateTemplateContent, createTemplate, addTemplateToPackage } from '../../../../../../../../api/template';
-
 import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../../types/config';
 import { getConfigEditParams } from '../../../../../../../../utils/config';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
@@ -48,6 +48,7 @@ import SelectPackage from './select-package.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -109,7 +110,7 @@ const handleCreateConfirm = async (pkgIds: number[]) => {
     close();
     Message({
       theme: 'success',
-      message: '新建配置文件成功',
+      message: t('新建配置文件成功'),
     });
   } catch (e) {
     console.log(e);

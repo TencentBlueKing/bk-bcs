@@ -2,7 +2,7 @@
   <div class="templates-page">
     <bk-alert class="template-tips" theme="info">
       <div class="tips-wrapper">
-        <div class="message">配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。</div>
+        <div class="message">{{ t('配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。') }}</div>
         <!-- <bk-button text theme="primary">go template</bk-button> -->
       </div>
     </bk-alert>
@@ -23,6 +23,7 @@
 </template>
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import useTemplateStore from '../../../../store/template';
 import SpaceSelector from './space/selector.vue';
 import PackageMenu from './package-menu/menu.vue';
@@ -31,6 +32,7 @@ import { onMounted } from 'vue';
 
 const route = useRoute();
 const templateStore = useTemplateStore();
+const { t } = useI18n();
 
 onMounted(() => {
   const { templateSpaceId, packageId } = route.params;

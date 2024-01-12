@@ -1,5 +1,5 @@
 <template>
-  <bk-sideslider width="640" :title="'查看配置文件'" :is-show="props.show" @closed="close">
+  <bk-sideslider width="640" :title="t('查看配置文件')" :is-show="props.show" @closed="close">
     <bk-loading :loading="detailLoading" class="config-loading-container">
       <ConfigForm
         v-if="props.show && !detailLoading"
@@ -14,12 +14,13 @@
       />
     </bk-loading>
     <section class="action-btns">
-      <bk-button @click="close">关闭</bk-button>
+      <bk-button @click="close">{{ t('关闭') }}</bk-button>
     </section>
   </bk-sideslider>
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import ConfigForm from './config-form.vue';
 import {
@@ -39,6 +40,7 @@ import { getReleasedAppVariables } from '../../../../../../../api/variable';
 import useConfigStore from '../../../../../../../store/config';
 
 const { versionData } = storeToRefs(useConfigStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;

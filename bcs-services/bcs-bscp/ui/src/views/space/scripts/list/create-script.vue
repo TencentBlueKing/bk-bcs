@@ -1,16 +1,16 @@
 <template>
-  <DetailLayout name="新建脚本" @close="handleClose">
+  <DetailLayout :name="t('新建脚本')" @close="handleClose">
     <template #content>
       <div class="create-script-forms">
         <bk-form ref="formRef" form-type="vertical" :model="formData" :rules="rules">
-          <bk-form-item class="fixed-width-form" label="脚本名称" property="name" required>
+          <bk-form-item class="fixed-width-form" :label="t('脚本名称')" property="name" required>
             <bk-input v-model="formData.name" />
           </bk-form-item>
-          <bk-form-item class="fixed-width-form" property="tag" label="分类标签">
+          <bk-form-item class="fixed-width-form" property="tag" :label="t('分类标签')">
             <!-- <bk-input v-model="formData.tag" /> -->
             <bk-tag-input
               v-model="selectTags"
-              placeholder="请选择标签或输入新标签按Enter结束"
+              :placeholder="t('请选择标签或输入新标签按Enter结束')"
               display-key="tag"
               save-key="tag"
               search-key="tag"
@@ -20,10 +20,10 @@
               trigger="focus"
             />
           </bk-form-item>
-          <bk-form-item class="fixed-width-form" property="memo" label="脚本描述">
+          <bk-form-item class="fixed-width-form" property="memo" :label="t('脚本描述')">
             <bk-input v-model="formData.memo" type="textarea" :rows="3" :maxlength="200" :resize="true" />
           </bk-form-item>
-          <bk-form-item label="脚本内容" property="content" required>
+          <bk-form-item :label="t('脚本内容')" property="content" required>
             <div class="script-content-wrapper">
               <ScriptEditor v-model="showContent" :language="formData.type">
                 <template #header>
@@ -46,14 +46,15 @@
     </template>
     <template #footer>
       <div class="actions-wrapper">
-        <bk-button theme="primary" :loading="pending" @click="handleCreate">创建</bk-button>
-        <bk-button @click="handleClose">取消</bk-button>
+        <bk-button theme="primary" :loading="pending" @click="handleCreate">{{ t('创建') }}</bk-button>
+        <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
       </div>
     </template>
   </DetailLayout>
 </template>
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import BkMessage from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../store/global';
@@ -63,6 +64,7 @@ import DetailLayout from '../components/detail-layout.vue';
 import ScriptEditor from '../components/script-editor.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const emits = defineEmits(['update:show', 'created']);
 
@@ -96,14 +98,14 @@ const rules = {
   name: [
     {
       validator: (value: string) => value.length <= 64,
-      message: '不能超过64个字符',
+      message: t('不能超过64个字符'),
       trigger: 'change',
     },
   ],
   memo: [
     {
       validator: (value: string) => value.length <= 200,
-      message: '最大长度200个字符',
+      message: t('最大长度200个字符'),
     },
   ],
 };
@@ -129,7 +131,7 @@ const handleCreate = async () => {
     await createScript(spaceId.value, formData.value);
     BkMessage({
       theme: 'success',
-      message: '脚本创建成功',
+      message: t('脚本创建成功'),
     });
     handleClose();
     emits('created');

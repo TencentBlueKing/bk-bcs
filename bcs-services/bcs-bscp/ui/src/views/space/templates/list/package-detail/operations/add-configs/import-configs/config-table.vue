@@ -4,7 +4,7 @@
       <div class="title-content" @click="emits('changeExpand')">
         <DownShape :class="['fold-icon', { fold: !expand }]" />
         <div class="title-text">
-          {{ isExsitTable ? '已存在配置文件' : '新建配置文件' }} <span>({{ tableData.length }})</span>
+          {{ isExsitTable ? t('已存在配置文件') : t('新建配置文件') }} <span>({{ tableData.length }})</span>
         </div>
       </div>
     </div>
@@ -12,12 +12,12 @@
       <table class="table" v-show="expand">
         <thead>
           <tr>
-            <th class="th-cell name">配置文件名称</th>
-            <th class="th-cell path">配置文件路径</th>
-            <th class="th-cell type">配置文件格式</th>
+            <th class="th-cell name">{{ t('配置文件名称') }}</th>
+            <th class="th-cell path">{{ t('配置文件路径') }}</th>
+            <th class="th-cell type">{{ t('配置文件格式') }}</th>
             <th class="th-cell memo">
               <div class="th-cell-edit">
-                <span>配置文件描述</span>
+                <span>{{ t('配置文件描述') }}</span>
                 <bk-popover
                   ext-cls="popover-wrap"
                   theme="light"
@@ -29,7 +29,7 @@
                   <template #content>
                     <div class="pop-wrap">
                       <div class="pop-content">
-                        <div class="pop-title">批量设置配置文件描述</div>
+                        <div class="pop-title">{{ t('批量设置配置文件描述') }}</div>
                         <bk-input v-model="batchSet.memo"></bk-input>
                       </div>
                       <div class="pop-footer">
@@ -39,9 +39,9 @@
                             style="margin-right: 8px; width: 80px"
                             size="small"
                             @click="handleConfirmPop('memo')"
-                            >确定</bk-button
+                            >{{ t('确定') }}</bk-button
                           >
-                          <bk-button size="small" @click="batchSet.isShowMemoPop = false">取消</bk-button>
+                          <bk-button size="small" @click="batchSet.isShowMemoPop = false">{{ t('取消') }}</bk-button>
                         </div>
                       </div>
                     </div>
@@ -51,7 +51,7 @@
             </th>
             <th class="th-cell privilege">
               <div class="th-cell-edit">
-                <span>文件权限</span>
+                <span>{{ t('文件权限') }}</span>
                 <bk-popover
                   ext-cls="popover-wrap"
                   theme="light"
@@ -63,14 +63,14 @@
                   <template #content>
                     <div class="pop-wrap privilege-wrap">
                       <div class="pop-content">
-                        <div class="pop-title">批量设置文件权限</div>
+                        <div class="pop-title">{{ t('批量设置文件权限') }}</div>
                         <bk-input
                           v-model="batchSet.privilege"
                           style="width: 184px; margin-bottom: 16px"
                           @blur="testPrivilegeInput(batchSet.privilege)"
                         ></bk-input>
                         <span class="error-tip" style="margin-left: 10px" v-if="batchSet.isShowPrivilegeError"
-                          >只能输入三位 0~7 数字且文件own必须有读取权限</span
+                          >{{ t('只能输入三位 0~7 数字且文件own必须有读取权限') }}</span
                         >
                         <div class="privilege-select-panel">
                           <div v-for="(item, index) in PRIVILEGE_GROUPS" class="group-item" :key="index" :label="item">
@@ -81,9 +81,9 @@
                                 :model-value="privilegeGroupsValue(batchSet.privilege)[index]"
                                 @change="handleSelectPrivilege(index, $event)"
                               >
-                                <bk-checkbox size="small" :label="4" :disabled="index === 0">读</bk-checkbox>
-                                <bk-checkbox size="small" :label="2">写</bk-checkbox>
-                                <bk-checkbox size="small" :label="1">执行</bk-checkbox>
+                                <bk-checkbox size="small" :label="4" :disabled="index === 0">{{ t('读') }}</bk-checkbox>
+                                <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
+                                <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
                               </bk-checkbox-group>
                             </div>
                           </div>
@@ -96,9 +96,9 @@
                             style="margin-right: 8px; width: 80px"
                             size="small"
                             @click="handleConfirmPop('privilege')"
-                            >确定</bk-button
+                            >{{ t('确定') }}</bk-button
                           >
-                          <bk-button size="small" @click="handleCancelPop">取消</bk-button>
+                          <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
                         </div>
                       </div>
                     </div>
@@ -108,7 +108,7 @@
             </th>
             <th class="th-cell user">
               <div class="th-cell-edit">
-                <span>用户</span>
+                <span>{{ t('用户') }}</span>
                 <bk-popover
                   ext-cls="popover-wrap"
                   theme="light"
@@ -120,7 +120,7 @@
                   <template #content>
                     <div class="pop-wrap">
                       <div class="pop-content">
-                        <div class="pop-title">批量设置用户</div>
+                        <div class="pop-title">{{ t('批量设置用户') }}</div>
                         <bk-input v-model="batchSet.user"></bk-input>
                       </div>
                       <div class="pop-footer">
@@ -130,9 +130,9 @@
                             style="margin-right: 8px; width: 80px"
                             size="small"
                             @click="handleConfirmPop('user')"
-                            >确定</bk-button
+                            >{{ t('确定') }}</bk-button
                           >
-                          <bk-button size="small" @click="handleCancelPop">取消</bk-button>
+                          <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
                         </div>
                       </div>
                     </div>
@@ -142,7 +142,7 @@
             </th>
             <th class="th-cell user-group">
               <div class="th-cell-edit">
-                <span>用户组</span>
+                <span>{{ t('用户组') }}</span>
                 <bk-popover
                   ext-cls="popover-wrap"
                   theme="light"
@@ -154,7 +154,7 @@
                   <template #content>
                     <div class="pop-wrap">
                       <div class="pop-content">
-                        <div class="pop-title">批量设置用户组</div>
+                        <div class="pop-title">{{ t('批量设置用户组') }}</div>
                         <bk-input v-model="batchSet.user_group"></bk-input>
                       </div>
                       <div class="pop-footer">
@@ -164,9 +164,9 @@
                             style="margin-right: 8px; width: 80px"
                             size="small"
                             @click="handleConfirmPop('user_group')"
-                            >确定</bk-button
+                            >{{ t('确定') }}</bk-button
                           >
-                          <bk-button size="small" @click="handleCancelPop">取消</bk-button>
+                          <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
                         </div>
                       </div>
                     </div>
@@ -190,7 +190,7 @@
             </td>
             <td class="not-editable td-cell">
               <bk-overflow-title type="tips">
-                {{ item.file_type === 'text' ? '文本' : '二进制' }}
+                {{ item.file_type === 'text' ? t('文本') : t('二进制') }}
               </bk-overflow-title>
             </td>
             <td class="td-cell-editable" :class="{ change: isContentChange(item.id, 'memo') }">
@@ -201,7 +201,6 @@
                 <bk-input
                   v-model="item.privilege"
                   type="number"
-                  placeholder="请输入"
                   @blur="handlePrivilegeInputBlur(item)"
                 />
                 <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
@@ -218,9 +217,9 @@
                             :model-value="privilegeGroupsValue(item.privilege)[i]"
                             @change="handleSelectPrivilege(i, $event, item)"
                           >
-                            <bk-checkbox size="small" :label="4" :disabled="i === 0">读</bk-checkbox>
-                            <bk-checkbox size="small" :label="2">写</bk-checkbox>
-                            <bk-checkbox size="small" :label="1">执行</bk-checkbox>
+                            <bk-checkbox size="small" :label="4" :disabled="i === 0">{{ t('读') }}</bk-checkbox>
+                            <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
+                            <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
                           </bk-checkbox-group>
                         </div>
                       </div>
@@ -247,12 +246,14 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { DownShape, EditLine } from 'bkui-vue/lib/icon';
 import { IConfigImportItem } from '../../../../../../../../../types/config';
 import { cloneDeep } from 'lodash';
 import Message from 'bkui-vue/lib/message';
 
-const PRIVILEGE_GROUPS = ['属主（own）', '属组（group）', '其他人（other）'];
+const { t } = useI18n();
+const PRIVILEGE_GROUPS = [t('属主（own）'), t('属组（group）'), t('其他人（other）')];
 const PRIVILEGE_VALUE_MAP = {
   0: [],
   1: [1],
@@ -411,7 +412,7 @@ const handlePrivilegeInputBlur = (item: IConfigImportItem) => {
   if (!/^[0-7]{3}$/.test(val) || own < 4) {
     item.privilege = '644';
     Message({
-      message: '只能输入三位 0~7 数字且文件own必须有读取权限',
+      message: t('只能输入三位 0~7 数字且文件own必须有读取权限'),
       theme: 'error',
     });
   }

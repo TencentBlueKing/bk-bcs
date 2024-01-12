@@ -1,5 +1,5 @@
 <template>
-  <bk-sideslider :is-show="props.show" title="版本对比" :width="1200" @closed="handleClose">
+  <bk-sideslider :is-show="props.show" :title="t('版本对比')" :width="1200" @closed="handleClose">
     <div class="diff-content-area">
       <div class="header-wrapper">
         <div class="base-title">
@@ -28,15 +28,18 @@
       </div>
     </div>
     <div class="actions-btn">
-      <bk-button @click="handleClose">关闭</bk-button>
+      <bk-button @click="handleClose">{{ t('关闭') }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { IScriptVersion, IScriptVersionListItem } from '../../../../../types/script';
 import { getScriptVersionList } from '../../../../api/script';
 import DiffText from '../../../../components/diff/text.vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   spaceId: string;

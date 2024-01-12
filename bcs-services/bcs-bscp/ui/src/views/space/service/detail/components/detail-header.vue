@@ -70,6 +70,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { InfoLine } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
@@ -84,6 +85,7 @@ import ModifyGroupPublish from './modify-group-publish.vue';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const configStore = useConfigStore();
 const serviceStore = useServiceStore();
@@ -102,8 +104,8 @@ const props = defineProps<{
 }>();
 
 const tabs = ref([
-  { name: 'config', label: '配置管理', routeName: 'service-config' },
-  { name: 'script', label: '前/后置脚本', routeName: 'init-script' },
+  { name: 'config', label: t('配置管理'), routeName: 'service-config' },
+  { name: 'script', label: t('前/后置脚本'), routeName: 'init-script' },
 ]);
 
 const getDefaultTab = () => {
@@ -116,36 +118,30 @@ const publishVersionRef = ref();
 const statusName = computed(() => {
   const status = versionData.value.status.publish_status;
   if (versionData.value.spec.deprecated) {
-    return '已废弃';
+    return t('已废弃');
   }
 
   if (status === 'editing') {
-    return '编辑中';
-  } else if (status === 'not_released') {
-    return '未上线';
-  } else {
-    return '已上线';
+    return t('编辑中');
+  } if (status === 'not_released') {
+    return t('未上线');
   }
+  return t('已上线');
 });
 
 // 是否需要展示版本分组信息
-const isShowReleasedGroups = computed(() => {
-  return ['partial_released', 'full_released'].includes(versionData.value.status.publish_status);
-});
+const isShowReleasedGroups = computed(() => ['partial_released', 'full_released'].includes(versionData.value.status.publish_status));
 
 // 当前版本是否上线到默认分组
-const hasDefaultGroup = computed(() => {
-  return versionData.value.status.released_groups.findIndex(item => item.id === 0) > -1;
-});
+const hasDefaultGroup = computed(() => versionData.value.status.released_groups.findIndex(item => item.id === 0) > -1);
 
 // 第一个分组名称
 const firstReleasedGroupName = computed(() => {
   if (isShowReleasedGroups.value) {
     if (versionData.value.status.publish_status === 'full_released') {
-      return '全部实例';
-    } else {
-      return hasDefaultGroup.value ? '默认分组' : versionData.value.status.released_groups[0].name;
+      return t('全部实例');
     }
+    return hasDefaultGroup.value ? t('默认分组') : versionData.value.status.released_groups[0].name;
   }
 });
 

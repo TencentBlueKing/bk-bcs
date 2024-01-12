@@ -1,7 +1,7 @@
 <template>
   <bk-sideslider
     width="640"
-    title="编辑配置项"
+    :title="t('编辑配置项')"
     :is-show="props.show"
     :before-close="handleBeforeClose"
     @closed="close"
@@ -20,19 +20,21 @@
     </div>
 
     <section class="action-btns">
-        <bk-button theme="primary" :loading="pending" @click="handleSubmit"> 保存 </bk-button>
-        <bk-button @click="close">取消</bk-button>
+        <bk-button theme="primary" :loading="pending" @click="handleSubmit"> {{ t('保存') }} </bk-button>
+        <bk-button @click="close">{{ t('取消') }}</bk-button>
     </section>
   </bk-sideslider>
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Message from 'bkui-vue/lib/message';
 import ConfigForm from './config-form-kv.vue';
 import { updateKv } from '../../../../../../../api/config';
 import { IConfigKvItem } from '../../../../../../../../types/config';
 import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
 
+const { t } = useI18n();
 const props = defineProps<{
   bkBizId: string;
   appId: number;
@@ -82,7 +84,7 @@ const handleSubmit = async () => {
     close();
     Message({
       theme: 'success',
-      message: '编辑配置文件成功',
+      message: t('编辑配置项成功'),
     });
   } catch (e) {
     console.error(e);

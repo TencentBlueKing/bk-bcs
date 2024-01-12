@@ -1,9 +1,9 @@
 <template>
   <div class="rule-edit">
     <div class="head">
-      <p class="title">配置关联规则</p>
+      <p class="title">{{ t('配置关联规则') }}</p>
       <bk-popover placement="bottom" theme="light" trigger="click" ext-cls="view-rule-wrap">
-        <span class="view-rule">查看规则示例</span>
+        <span class="view-rule">{{ t('查看规则示例') }}</span>
         <template #content>
           <ViewRuleExample />
         </template>
@@ -17,7 +17,7 @@
             class="service-select"
             :filterable="true"
             :disabled="rule.type === 'del'"
-            placeholder="请选择服务"
+            :placeholder="t('请选择服务')"
             @change="handleSelectApp(index)"
           >
             <bk-option v-for="app in appList" :id="app" :key="app.id" :name="app.spec.name" />
@@ -47,7 +47,7 @@
           <div class="action-btns">
             <i
               v-if="rule.type === 'del'"
-              v-bk-tooltips="'撤销本次删除'"
+              v-bk-tooltips="t('撤销本次删除')"
               class="bk-bscp-icon icon-revoke revoke-icon"
               @click="handleRevoke(index)"
             >
@@ -59,8 +59,8 @@
           </div>
         </div>
         <div class="error-info" v-if="!rule.isRight || !rule.isSelectService">
-          <span v-if="!rule.isSelectService">请选择服务</span>
-          <span v-else-if="!rule.isRight" class="rule-error">输入的规则有误，请重新确认</span>
+          <span v-if="!rule.isSelectService">{{ t('请选择服务') }}</span>
+          <span v-else-if="!rule.isRight" class="rule-error">{{ t('输入的规则有误，请重新确认') }}</span>
         </div>
       </div>
     </div>
@@ -69,10 +69,12 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ICredentialRule, IRuleEditing, IRuleUpdateParams } from '../../../../../types/credential';
 import { IAppItem } from '../../../../../types/app';
 import ViewRuleExample from './view-rule-example.vue';
 
+const { t } = useI18n();
 const props = defineProps<{
   rules: ICredentialRule[];
   appList: IAppItem[];
@@ -81,17 +83,17 @@ const props = defineProps<{
 const emits = defineEmits(['change', 'formChange']);
 
 const RULE_TYPE_MAP: { [key: string]: string } = {
-  new: '新增',
-  del: '删除',
-  modify: '修改',
+  new: t('新增'),
+  del: t('删除'),
+  modify: t('修改'),
 };
 
 const localRules = ref<IRuleEditing[]>([]);
 
 const inputPlaceholder = computed(() => (rule: IRuleEditing) => {
   if (!rule.app) return ' ';
-  if (rule.app.spec.config_type === 'file') return '请输入文件路径';
-  return '请输入配置项名称';
+  if (rule.app.spec.config_type === 'file') return t('请输入文件路径');
+  return t('请输入配置项名称');
 });
 
 const transformRulesToEditing = (rules: ICredentialRule[]) => {

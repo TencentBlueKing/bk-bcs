@@ -4,19 +4,18 @@
     theme="light add-configs-button-popover"
     placement="bottom-end"
     trigger="click"
-    width="122"
     :arrow="false">
-    <bk-button theme="primary" class="create-config-btn"> <Plus class="button-icon" />添加配置文件 </bk-button>
+    <bk-button theme="primary" class="create-config-btn"> <Plus class="button-icon" />{{ t('添加配置文件') }}</bk-button>
     <template #content>
       <div class="add-config-operations">
-        <div class="operation-item" @click="handleOpenSlider('isCreateOpen')">新建配置文件</div>
+        <div class="operation-item" @click="handleOpenSlider('isCreateOpen')">{{ t('新建配置文件') }}</div>
         <div
           v-if="props.showAddExistingConfigOption && packageGroups.length > 0"
           class="operation-item"
           @click="handleOpenSlider('isAddOpen')">
-          添加已有配置文件
+          {{ t('添加已有配置文件') }}
         </div>
-        <div class="operation-item" @click="handleOpenSlider('isImportOpen')">批量上传配置文件</div>
+        <div class="operation-item" @click="handleOpenSlider('isImportOpen')">{{ t('批量上传配置文件') }}</div>
       </div>
     </template>
   </bk-popover>
@@ -26,6 +25,7 @@
 </template>
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../../../store/global';
 import useTemplateStore from '../../../../../../../store/template';
@@ -41,6 +41,7 @@ interface IPackageTableGroup {
   name: string;
   configs: ITemplateConfigItem[];
 }
+const { t } = useI18n();
 
 const props = defineProps<{
   showAddExistingConfigOption?: boolean;
@@ -81,7 +82,7 @@ const getGroupConfigs = async () => {
   const packages: IPackageTableGroup[] = [
     {
       id: 0,
-      name: '全部配置文件',
+      name: t('全部配置文件'),
       configs: configsRes.details,
     },
   ];

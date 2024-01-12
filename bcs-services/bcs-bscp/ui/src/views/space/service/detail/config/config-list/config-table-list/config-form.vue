@@ -1,26 +1,26 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
-    <bk-form-item label="配置文件名称" property="name" :required="true">
+    <bk-form-item :label="t('配置文件名称')" property="name" :required="true">
       <bk-input
         v-model="localVal.name"
-        placeholder="请输入1~64个字符，只允许英文、数字、下划线、中划线或点"
+        :placeholder="t('请输入1~64个字符，只允许英文、数字、下划线、中划线或点')"
         :disabled="!editable"
         @input="change"
       />
     </bk-form-item>
-    <bk-form-item label="配置文件路径" property="path" :required="true">
+    <bk-form-item :label="t('配置文件路径')" property="path" :required="true">
       <template #label>
         <span
           v-bk-tooltips="{
             content:
-              '客户端拉取配置文件后存放路径为：临时目录/业务ID/服务名称/files/配置文件路径，除了配置文件路径其它参数都在客户端sidecar中配置',
+              t('客户端拉取配置文件后存放路径为：临时目录/业务ID/服务名称/files/配置文件路径，除了配置文件路径其它参数都在客户端sidecar中配置'),
             placement: 'top',
           }"
-          >配置文件路径</span>
+          >{{ t('配置文件路径') }}</span>
       </template>
-      <bk-input v-model="localVal.path" placeholder="请输入绝对路径" :disabled="!editable" @input="change" />
+      <bk-input v-model="localVal.path" :placeholder="t('请输入绝对路径')" :disabled="!editable" @input="change" />
     </bk-form-item>
-    <bk-form-item label="配置文件描述" property="memo">
+    <bk-form-item :label="t('配置文件描述')" property="memo">
       <bk-input
         v-model="localVal.memo"
         type="textarea"
@@ -30,7 +30,7 @@
         @input="change"
       />
     </bk-form-item>
-    <bk-form-item label="配置文件格式">
+    <bk-form-item :label="t('配置文件格式')">
       <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">
         <bk-radio v-for="typeItem in CONFIG_FILE_TYPE" :key="typeItem.id" :label="typeItem.id" :disabled="!editable">{{
           typeItem.name
@@ -38,7 +38,7 @@
       </bk-radio-group>
     </bk-form-item>
     <div class="user-settings">
-      <bk-form-item label="文件权限" property="privilege" required>
+      <bk-form-item :label="t('文件权限')" property="privilege" required>
         <div class="perm-input">
           <bk-popover
             ext-cls="privilege-tips-wrap"
@@ -50,14 +50,14 @@
             <bk-input
               v-model="privilegeInputVal"
               type="number"
-              placeholder="请输入三位权限数字"
+              :placeholder="t('请输入三位权限数字')"
               :disabled="!editable"
               @blur="handlePrivilegeInputBlur"
             />
             <template #content>
-              <div>只能输入三位 0~7 数字</div>
+              <div>{{ t('只能输入三位 0~7 数字') }}</div>
               <div class="privilege-tips-btn-area">
-                <bk-button text theme="primary" @click="showPrivilegeErrorTips = false">我知道了</bk-button>
+                <bk-button text theme="primary" @click="showPrivilegeErrorTips = false">{{ t('我知道了') }}</bk-button>
               </div>
             </template>
           </bk-popover>
@@ -81,9 +81,9 @@
                       :model-value="privilegeGroupsValue[index]"
                       @change="handleSelectPrivilege(index, $event)"
                     >
-                      <bk-checkbox size="small" :label="4" :disabled="privilegeGroupsValue[0]">读</bk-checkbox>
-                      <bk-checkbox size="small" :label="2">写</bk-checkbox>
-                      <bk-checkbox size="small" :label="1">执行</bk-checkbox>
+                      <bk-checkbox size="small" :label="4" :disabled="privilegeGroupsValue[0]">{{ t('读') }}</bk-checkbox>
+                      <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
+                      <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
                     </bk-checkbox-group>
                   </div>
                 </div>
@@ -92,19 +92,19 @@
           </bk-popover>
         </div>
       </bk-form-item>
-      <bk-form-item label="用户" property="user" :required="true">
+      <bk-form-item :label="t('用户')" property="user" :required="true">
         <bk-input v-model="localVal.user" :disabled="!editable" @input="change"></bk-input>
       </bk-form-item>
-      <bk-form-item label="用户组" property="user_group" :required="true">
+      <bk-form-item :label="t('用户组')" property="user_group" :required="true">
         <bk-input v-model="localVal.user_group" :disabled="!editable" @input="change"></bk-input>
       </bk-form-item>
     </div>
-    <bk-form-item v-if="localVal.file_type === 'binary'" label="配置内容" :required="true">
+    <bk-form-item v-if="localVal.file_type === 'binary'" :label="t('配置内容')" :required="true">
       <bk-upload
         class="config-uploader"
         url=""
         theme="button"
-        tip="文件大小100M以内"
+        :tip="t('文件大小100M以内')"
         :size="100"
         :disabled="!editable"
         :multiple="false"
@@ -128,11 +128,12 @@
       </bk-upload>
     </bk-form-item>
     <bk-form-item v-else>
-      <template #label
-        ><div class="config-content-label">
-          <span>配置内容</span
-          ><info v-bk-tooltips="{ content: configContentTip, placement: 'top' }" fill="#3a84ff" /></div
-      ></template>
+      <template #label>
+        <div class="config-content-label">
+          <span>{{ t('配置内容') }}</span>
+          <info v-bk-tooltips="{ content: configContentTip, placement: 'top' }" fill="#3a84ff" />
+        </div>
+      </template>
       <ConfigContentEditor
         :content="stringContent"
         :editable="editable"
@@ -144,6 +145,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch, getCurrentInstance } from 'vue';
+import { useI18n } from 'vue-i18n';
 import SHA256 from 'crypto-js/sha256';
 import WordArray from 'crypto-js/lib-typedarrays';
 import { TextFill, Done, Info, Error } from 'bkui-vue/lib/icon';
@@ -157,7 +159,9 @@ import { transFileToObject, fileDownload } from '../../../../../../../utils/file
 import { CONFIG_FILE_TYPE } from '../../../../../../../constants/config';
 import ConfigContentEditor from '../../components/config-content-editor.vue';
 
-const PRIVILEGE_GROUPS = ['属主（own）', '属组（group）', '其他人（other）'];
+const { t } = useI18n();
+
+const PRIVILEGE_GROUPS = [t('属主（own）'), t('属组（group）'), t('其他人（other）')];
 const PRIVILEGE_VALUE_MAP = {
   0: [],
   1: [1],
@@ -168,6 +172,7 @@ const PRIVILEGE_VALUE_MAP = {
   6: [2, 4],
   7: [1, 2, 4],
 };
+
 
 const props = withDefaults(
   defineProps<{
@@ -201,11 +206,11 @@ const rules = {
   name: [
     {
       validator: (value: string) => value.length <= 64,
-      message: '最大长度64个字符',
+      message: t('最大长度64个字符'),
     },
     {
       validator: (value: string) => /^[\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*$/.test(value),
-      message: '请使用中文、英文、数字、下划线、中划线或点',
+      message: t('请使用中文、英文、数字、下划线、中划线或点'),
     },
   ],
   privilege: [
@@ -215,7 +220,7 @@ const rules = {
         const type = typeof privilegeInputVal.value;
         return type === 'number' || (type === 'string' && privilegeInputVal.value.length > 0);
       },
-      message: '文件权限 不能为空',
+      message: t('文件权限 不能为空'),
       trigger: 'change',
     },
     {
@@ -223,26 +228,26 @@ const rules = {
         const privilege = parseInt(privilegeInputVal.value[0], 10);
         return privilege >= 4;
       },
-      message: '文件own必须有读取权限',
+      message: t('文件own必须有读取权限'),
       trigger: 'blur',
     },
   ],
   path: [
     {
       validator: (value: string) => value.length <= 1024,
-      message: '最大长度1024个字符',
+      message: t('最大长度1024个字符'),
       trigger: 'change',
     },
     {
       validator: (value: string) => /^\/([\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*\/?)*$/.test(value),
-      message: '无效的路径,路径不符合Unix文件路径格式规范',
+      message: t('无效的路径,路径不符合Unix文件路径格式规范'),
       trigger: 'change',
     },
   ],
   memo: [
     {
       validator: (value: string) => value.length <= 200,
-      message: '最大长度200个字符',
+      message: t('最大长度200个字符'),
     },
   ],
 };
@@ -375,12 +380,12 @@ const validate = async () => {
   await formRef.value.validate();
   if (localVal.value.file_type === 'binary') {
     if (fileList.value.length === 0) {
-      BkMessage({ theme: 'error', message: '请上传文件' });
+      BkMessage({ theme: 'error', message: t('请上传文件') });
       return false;
     }
   } else if (localVal.value.file_type === 'text') {
     if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * 50) {
-      BkMessage({ theme: 'error', message: '配置内容不能超过50M' });
+      BkMessage({ theme: 'error', message: t('配置内容不能超过50M') });
       return false;
     }
   }

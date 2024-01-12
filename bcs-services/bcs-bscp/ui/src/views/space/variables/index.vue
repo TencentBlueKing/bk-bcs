@@ -1,13 +1,15 @@
 <template>
   <section class="variables-management-page">
-    <bk-alert theme="info">{{ headInfo }}<span @click="goVariablesDoc" class="hyperlink">配置模板与变量</span>
+    <bk-alert theme="info"
+      >{{ headInfo }}<span @click="goVariablesDoc" class="hyperlink">{{ t('配置模板与变量') }}</span>
     </bk-alert>
     <div class="operation-area">
       <div class="button">
-        <bk-button theme="primary" @click="isCreateSliderShow = true"><Plus class="button-icon" />新增变量</bk-button>
-        <bk-button @click="isImportVariableShow = true">导入变量</bk-button>
+        <bk-button theme="primary" @click="isCreateSliderShow = true"
+          ><Plus class="button-icon" />{{ t('新增变量') }}</bk-button>
+        <bk-button @click="isImportVariableShow = true">{{ t('导入变量') }}</bk-button>
       </div>
-      <SearchInput v-model="searchStr" placeholder="请输入变量名称" :width="320" @search="refreshList()" />
+      <SearchInput v-model="searchStr" :placeholder="t('请输入变量名称')" :width="320" @search="refreshList()" />
     </div>
     <div class="variable-table">
       <bk-table
@@ -18,23 +20,23 @@
         @page-limit-change="handlePageLimitChange"
         @page-value-change="refreshList"
       >
-        <bk-table-column label="变量名称">
+        <bk-table-column :label="t('变量名称')">
           <template #default="{ row }">
             <bk-button v-if="row.spec" text theme="primary" @click="handleEditVar(row)">{{ row.spec.name }}</bk-button>
           </template>
         </bk-table-column>
-        <bk-table-column label="类型" prop="spec.type" width="120"></bk-table-column>
-        <bk-table-column label="默认值" prop="spec.default_val"></bk-table-column>
-        <bk-table-column label="描述">
+        <bk-table-column :label="t('类型')" prop="spec.type" width="120"></bk-table-column>
+        <bk-table-column :label="t('默认值')" prop="spec.default_val"></bk-table-column>
+        <bk-table-column :label="t('描述')">
           <template #default="{ row }">
             <span v-if="row.spec">{{ row.spec.memo || '--' }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column label="操作" width="200">
+        <bk-table-column :label="t('操作')" width="200">
           <template #default="{ row }">
             <div class="action-btns">
-              <bk-button text theme="primary" @click="handleEditVar(row)">编辑</bk-button>
-              <bk-button text theme="primary" @click="handleDeleteVar(row)">删除</bk-button>
+              <bk-button text theme="primary" @click="handleEditVar(row)">{{ t('编辑') }}</bk-button>
+              <bk-button text theme="primary" @click="handleDeleteVar(row)">{{ t('删除') }}</bk-button>
             </div>
           </template>
         </bk-table-column>
@@ -54,17 +56,18 @@
   </section>
   <DeleteConfirmDialog
     v-model:isShow="isDeleteVariableDialogShow"
-    title="确认删除该全局变量？"
+    :title="t('确认删除该全局变量？')"
     @confirm="handleDeleteVarConfirm"
   >
-    <div style="margin-bottom: 8px;">
-      全局变量: <span style="color: #313238;font-weight: 600;">{{ deleteVariableItem?.spec.name }}</span>
+    <div style="margin-bottom: 8px">
+      {{ t('全局变量') }}: <span style="color: #313238; font-weight: 600">{{ deleteVariableItem?.spec.name }}</span>
     </div>
-    <div>一旦删除，该操作将无法撤销，服务配置文件中不可再引用该全局变量，请谨慎操作</div>
+    <div>{{ t('一旦删除，该操作将无法撤销，服务配置文件中不可再引用该全局变量，请谨慎操作') }}</div>
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { Plus } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../store/global';
@@ -80,6 +83,7 @@ import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
 import Message from 'bkui-vue/lib/message';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const loading = ref(false);
 const list = ref<IVariableItem[]>([]);
@@ -93,8 +97,7 @@ const isCreateSliderShow = ref(false);
 const isImportVariableShow = ref(false);
 const isDeleteVariableDialogShow = ref(false);
 const deleteVariableItem = ref<IVariableItem>();
-const headInfo = `定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如{{ .bk_bscp_appid }},
-      变量使用详情请参考：`;
+const headInfo = computed(() => t('定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如{{ .bk_bscp_appid }},变量使用详情请参考：'));
 const editSliderData = ref<{ open: boolean; id: number; data: IVariableEditParams }>({
   open: false,
   id: 0,
@@ -151,7 +154,7 @@ const handleDeleteVar = (variable: IVariableItem) => {
 const handleDeleteVarConfirm = async () => {
   await deleteVariable(spaceId.value, deleteVariableItem.value!.id);
   Message({
-    message: '删除变量成功',
+    message: t('删除变量成功'),
     theme: 'success',
   });
   if (list.value.length === 1 && pagination.value.current > 1) {

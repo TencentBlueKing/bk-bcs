@@ -1,7 +1,7 @@
 <template>
   <bk-sideslider
     width="640"
-    title="编辑配置文件"
+    :title="t('编辑配置文件')"
     :is-show="props.show"
     :before-close="handleBeforeClose"
     @closed="close"
@@ -27,14 +27,15 @@
         :disabled="configDetailLoading || fileUploading"
         @click="handleSubmit"
       >
-        保存
+        {{ t('保存') }}
       </bk-button>
-      <bk-button @click="close">取消</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </section>
   </bk-sideslider>
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
 import ConfigForm from './config-form.vue';
@@ -50,6 +51,7 @@ import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../
 import useConfigStore from '../../../../../../../store/config';
 import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
 
+const { t } = useI18n();
 const { versionData } = storeToRefs(useConfigStore());
 
 const props = defineProps<{

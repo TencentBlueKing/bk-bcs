@@ -1,5 +1,5 @@
 <template>
-  <DetailLayout :name="`版本管理 - ${scriptDetail.spec.name}`" :show-footer="false" @close="handleClose">
+  <DetailLayout :name="`${t('版本管理')} - ${scriptDetail.spec.name}`" :show-footer="false" @close="handleClose">
     <template #content>
       <bk-loading :loading="initLoading" class="script-version-manage">
         <div class="operation-area">
@@ -13,7 +13,7 @@
           <bk-input
             v-model.trim="searchStr"
             class="search-input"
-            placeholder="版本号/版本说明/更新人"
+            :placeholder="t('版本号/版本说明/更新人')"
             :clearable="true"
             @enter="refreshList"
             @clear="refreshList"
@@ -44,14 +44,14 @@
                     text
                     theme="primary"
                     @click="handlePublishClick(data.hook_revision)"
-                    >上线</bk-button
+                    >{{ t('上线') }}</bk-button
                   >
                   <bk-button
                     v-if="data.hook_revision.spec.state === 'not_deployed'"
                     text
                     theme="primary"
                     @click="handleEditVersionClick"
-                    >编辑</bk-button
+                    >{{ t('编辑') }}</bk-button
                   >
                   <bk-button text theme="primary" @click="handleVersionDiff(data.hook_revision)">版本对比</bk-button>
                   <bk-button
@@ -61,7 +61,7 @@
                     :disabled="!!unPublishVersion"
                     @click="handleCreateVersionClick(data.hook_revision.spec.content)"
                   >
-                    复制并新建
+                    {{ t('复制并新建') }}
                   </bk-button>
                   <bk-button
                     v-if="data.hook_revision.spec.state === 'not_deployed'"
@@ -69,14 +69,14 @@
                     theme="primary"
                     :disabled="pagination.count <= 1"
                     @click="handleDelClick(data)"
-                    >删除</bk-button
+                    >{{ t('删除') }}</bk-button
                   >
                 </div>
               </template>
             </VersionListFullTable>
             <template v-else>
               <bk-button class="back-table-btn" text theme="primary" @click="versionEditData.panelOpen = false">
-                展开列表
+                {{ t('展开列表') }}
                 <AngleDoubleRightLine class="arrow-icon" />
               </bk-button>
               <VersionListSimpleTable
@@ -112,18 +112,19 @@
   />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteScriptVersionDialogShow"
-    title="确认删除该脚本版本？"
+    :title="t('确认删除该脚本版本？')"
     @confirm="handleDeleteScriptVersionConfirm"
   >
     <div style="margin-bottom: 8px;">
-      脚本名称: <span style="color: #313238;font-weight: 600;">{{ deleteScriptVersionItem?.hook_revision.spec.name }}</span>
+      {{ t('脚本名称') }}: <span style="color: #313238;font-weight: 600;">{{ deleteScriptVersionItem?.hook_revision.spec.name }}</span>
     </div>
-    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+    <div>{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
   </DeleteConfirmDialog>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { InfoBox, Message } from 'bkui-vue';
 import { Search, AngleDoubleRightLine } from 'bkui-vue/lib/icon';
@@ -151,6 +152,7 @@ const { spaceId } = storeToRefs(useGlobalStore());
 const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useScriptStore());
 const router = useRouter();
 const route = useRoute();
+const { t } = useI18n();
 
 const scriptId = ref(Number(route.params.scriptId));
 const initLoading = ref(false);
@@ -284,10 +286,10 @@ const handleViewVersionClick = (version: IScriptVersionListItem) => {
 // 上线版本
 const handlePublishClick = (version: IScriptVersion) => {
   InfoBox({
-    title: '确定上线此版本？',
-    subTitle: '上线后，之前的线上版本将被置为「已下线」状态',
+    title: t('确定上线此版本？'),
+    subTitle: t('上线后，之前的线上版本将被置为「已下线」状态'),
     // infoType: 'warning',
-    confirmText: '确定',
+    confirmText: t('确定'),
     onConfirm: async () => {
       await publishVersion(spaceId.value, scriptId.value, version.id);
       unPublishVersion.value = null;
@@ -312,7 +314,7 @@ const handleDeleteScriptVersionConfirm = async () => {
   getVersionList();
   Message({
     theme: 'success',
-    message: '删除版本成功',
+    message: t('删除版本成功'),
   });
 };
 

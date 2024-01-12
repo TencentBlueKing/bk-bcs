@@ -1,8 +1,9 @@
 <template>
   <bk-dialog
     ext-cls="move-out-configs-dialog"
-    title="批量移出当前套餐"
-    confirm-text="确定移出"
+    :title="t('批量移出当前套餐')"
+    :confirm-text="t('确定移出')"
+    :cancel-text="t('取消')"
     :width="480"
     :is-show="props.show"
     :esc-close="false"
@@ -12,14 +13,14 @@
     @closed="close"
   >
     <div class="selected-mark">
-      已选 <span class="num">{{ props.value.length }}</span> 个配置文件
+      {{t('已选')}} <span class="num">{{ props.value.length }}</span> {{t('个配置文件')}}
     </div>
-    <p class="tips">以下服务配置的未命名版本中引用此套餐的内容也将更新</p>
+    <p class="tips">{{t('以下服务配置的未命名版本中引用此套餐的内容也将更新')}}</p>
     <div class="service-table">
       <bk-loading style="min-height: 100px" :loading="loading">
         <bk-table :data="citedList" :max-height="maxTableHeight">
-          <bk-table-column label="所在模板套餐" prop="template_set_name"></bk-table-column>
-          <bk-table-column label="使用此套餐的服务">
+          <bk-table-column :label="t('所在模板套餐')" prop="template_set_name"></bk-table-column>
+          <bk-table-column :label="t('使用此套餐的服务')">
             <template #default="{ row }">
               <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
                 <div v-overflow-title class="name-text">{{ row.app_name }}</div>
@@ -34,6 +35,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
@@ -45,6 +47,7 @@ import LinkToApp from '../../../components/link-to-app.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -69,7 +72,7 @@ watch(
   () => props.show,
   () => {
     getCitedData();
-  }
+  },
 );
 
 const goToConfigPageImport = (id: number) => {
@@ -91,25 +94,25 @@ const getCitedData = async () => {
     spaceId.value,
     currentTemplateSpace.value,
     [props.currentPkg],
-    params
+    params,
   );
   citedList.value = res.details;
   loading.value = false;
 };
 
 const handleConfirm = async () => {
-  const pkg = packageList.value.find((item) => item.id === currentPkg.value);
+  const pkg = packageList.value.find(item => item.id === currentPkg.value);
   if (!pkg) return;
 
   try {
     pending.value = true;
-    const ids = props.value.map((item) => item.id);
+    const ids = props.value.map(item => item.id);
     await moveOutTemplateFromPackage(spaceId.value, currentTemplateSpace.value, ids, [currentPkg.value as number]);
     emits('movedOut');
     close();
     Message({
       theme: 'success',
-      message: '配置文件移出套餐成功',
+      message: t('配置文件移出套餐成功'),
     });
   } catch (e) {
     console.log(e);

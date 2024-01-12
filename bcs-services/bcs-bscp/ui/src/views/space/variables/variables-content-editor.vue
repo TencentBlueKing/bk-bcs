@@ -4,13 +4,13 @@
       <div class="editor-title">
         <div class="tips">
           <InfoLine class="info-icon" />
-          仅支持大小不超过 5M
+          {{ t('仅支持大小不超过') }} 5M
         </div>
         <div class="btns">
           <i
             class="bk-bscp-icon icon-separator"
             v-bk-tooltips="{
-              content: '分隔符',
+              content: t('分隔符'),
               placement: 'top',
               distance: 20,
             }"
@@ -18,7 +18,7 @@
           />
           <Search
             v-bk-tooltips="{
-              content: '搜索',
+              content: t('搜索'),
               placement: 'top',
               distance: 20,
             }"
@@ -27,7 +27,7 @@
           <FilliscreenLine
             v-if="!isOpenFullScreen"
             v-bk-tooltips="{
-              content: '全屏',
+              content: t('全屏'),
               placement: 'top',
               distance: 20,
             }"
@@ -36,7 +36,7 @@
           <UnfullScreen
             v-else
             v-bk-tooltips="{
-              content: '退出全屏',
+              content: t('退出全屏'),
               placement: 'bottom',
               distance: 20,
             }"
@@ -62,6 +62,7 @@
 </template>
 <script setup lang="ts">
 import { ref, onBeforeUnmount, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BkMessage from 'bkui-vue/lib/message';
 import { InfoLine, FilliscreenLine, UnfullScreen, Search } from 'bkui-vue/lib/icon';
 import { batchImportTemplateVariables } from '../../../api/variable';
@@ -75,6 +76,7 @@ interface errorLineItem {
   errorInfo: string;
 }
 
+const { t } = useI18n();
 const emits = defineEmits(['trigger']);
 
 const isOpenFullScreen = ref(false);
@@ -112,7 +114,7 @@ const handleOpenFullScreen = () => {
   window.addEventListener('keydown', handleEscClose, { once: true });
   BkMessage({
     theme: 'primary',
-    message: '按 Esc 即可退出全屏模式',
+    message: t('按 Esc 即可退出全屏模式'),
   });
 };
 
@@ -140,22 +142,22 @@ const handleValidateEditor = () => {
     const value = variablesContent[2];
     if (variablesContent.length < 3 || variablesContent.length > 4) {
       errorLine.value.push({
-        errorInfo: '请检查是否已正确使用分隔符',
+        errorInfo: t('请检查是否已正确使用分隔符'),
         lineNumber: index + 1,
       });
     } else if (!key.startsWith('bk_bscp_') && !key.startsWith('BK_BSCP_')) {
       errorLine.value.push({
-        errorInfo: '变量必须以bk_bscp_开头',
+        errorInfo: t('变量必须以bk_bscp_或BK_BSCP_开头'),
         lineNumber: index + 1,
       });
     } else if (type !== 'string' && type !== 'number') {
       errorLine.value.push({
-        errorInfo: '类型必须为 string 或者 number',
+        errorInfo: t('类型必须为 string 或者 number'),
         lineNumber: index + 1,
       });
     } else if (type === 'number' && !/^\d+(\.\d+)?$/.test(value)) {
       errorLine.value.push({
-        errorInfo: '类型为number 值不为number',
+        errorInfo: t('类型为number 值不为number'),
         lineNumber: index + 1,
       });
     }
@@ -174,7 +176,7 @@ const handleImport = async () => {
   await batchImportTemplateVariables(spaceId.value, params);
   BkMessage({
     theme: 'success',
-    message: '导入变量成功',
+    message: t('导入变量成功'),
   });
 };
 
