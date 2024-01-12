@@ -3,6 +3,7 @@
     :title="t('上传至套餐')"
     ext-cls="create-to-pkg-dialog"
     :confirm-text="t('确认')"
+    :cancel-text="t('取消')"
     :width="640"
     :is-show="props.show"
     :esc-close="false"

@@ -2,6 +2,7 @@
   <bk-dialog
     ext-cls="edit-template-space-dialog"
     :confirm-text="t('保存')"
+    :cancel-text="t('取消')"
     :width="480"
     :is-show="isShow"
     :is-loading="pending"

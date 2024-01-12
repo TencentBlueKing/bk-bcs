@@ -2,6 +2,7 @@
   <bk-dialog
     ext-cls="add-configs-to-pkg-dialog"
     :confirm-text="t('添加')"
+    :cancel-text="t('取消')"
     :width="640"
     :is-show="props.show"
     :esc-close="false"

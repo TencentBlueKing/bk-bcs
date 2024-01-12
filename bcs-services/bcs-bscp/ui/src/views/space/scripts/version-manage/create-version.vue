@@ -23,6 +23,7 @@
   <bk-dialog
     :title="t('创建版本')"
     :confirm-text="t('创建')"
+    :cancel-text="t('取消')"
     head-align="left"
     footer-align="right"
     width="480"

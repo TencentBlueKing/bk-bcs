@@ -25,7 +25,7 @@
           <span class="text">{{ t('当前使用此套餐的服务') }}</span>
           <right-turn-line class="refresh-button" :class="{rotate:boundAppsLoading}"  @click="getBoundApps"/>
         </div>
-        <bk-table :border="['outer']" :data="boundApps" :thead="{isShow:false}">
+        <bk-table :border="['outer']" :data="boundApps" :thead="{isShow:false}" :empty-text="t('暂无数据')">
           <bk-table-column label="">
             <template #default="{ row }">
               <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">

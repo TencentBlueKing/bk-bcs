@@ -3,6 +3,7 @@
     ext-cls="move-out-configs-dialog"
     :title="t('批量移出当前套餐')"
     :confirm-text="t('确定移出')"
+    :cancel-text="t('取消')"
     :width="480"
     :is-show="props.show"
     :esc-close="false"

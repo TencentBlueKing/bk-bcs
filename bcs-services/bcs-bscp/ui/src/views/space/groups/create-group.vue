@@ -3,6 +3,7 @@
     :title="t('新增分组')"
     ext-cls="create-group-dialog"
     :confirm-text="t('提交')"
+    :cancel-text="t('取消')"
     :width="640"
     :is-show="props.show"
     :esc-close="false"

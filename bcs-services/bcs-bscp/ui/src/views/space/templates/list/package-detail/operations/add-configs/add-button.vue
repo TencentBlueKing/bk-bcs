@@ -4,7 +4,6 @@
     theme="light add-configs-button-popover"
     placement="bottom-end"
     trigger="click"
-    width="122"
     :arrow="false">
     <bk-button theme="primary" class="create-config-btn"> <Plus class="button-icon" />{{ t('添加配置文件') }}</bk-button>
     <template #content>
