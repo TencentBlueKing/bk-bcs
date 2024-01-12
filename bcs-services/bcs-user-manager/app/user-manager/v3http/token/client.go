@@ -231,14 +231,13 @@ func (t *TokenHandler) UpdateProjectClient(request *restful.Request, response *r
 		return
 	}
 	manager := strings.Join(form.Manager, ",")
-	err = t.tokenStore.UpdateClientToken(&models.BcsClient{ProjectCode: clientInDB.ProjectCode, Name: clientInDB.Name},
+	err = t.tokenStore.UpdateClientToken(project.ProjectCode, clientName,
 		&models.BcsClient{
 			ProjectCode:   clientInDB.ProjectCode,
 			Name:          clientInDB.Name,
 			Manager:       &manager,
 			AuthorityUser: &clientInDB.AuthorityUser,
 			CreatedBy:     clientInDB.CreatedBy,
-			CreatedAt:     clientInDB.CreatedAt,
 		})
 	if err != nil {
 		blog.Errorf("update client %s manager failed, %s", clientName, err.Error())
@@ -363,7 +362,7 @@ func (t *TokenHandler) AuthorizeClient(request *restful.Request, response *restf
 		return
 	}
 	manager := strings.Join(append(clientInDB.AuthorityUserList(), form.Username), ",")
-	err = t.tokenStore.UpdateClientToken(&models.BcsClient{ProjectCode: clientInDB.ProjectCode, Name: clientInDB.Name},
+	err = t.tokenStore.UpdateClientToken(project.ProjectCode, clientName,
 		&models.BcsClient{
 			ProjectCode:   clientInDB.ProjectCode,
 			Name:          clientInDB.Name,
@@ -431,7 +430,7 @@ func (t *TokenHandler) DeAuthorizeClient(request *restful.Request, response *res
 		}
 	}
 	authorityUser := strings.Join(authorityUsers, ",")
-	err = t.tokenStore.UpdateClientToken(&models.BcsClient{ProjectCode: clientInDB.ProjectCode, Name: clientInDB.Name},
+	err = t.tokenStore.UpdateClientToken(project.ProjectCode, clientName,
 		&models.BcsClient{
 			ProjectCode:   clientInDB.ProjectCode,
 			Name:          clientInDB.Name,

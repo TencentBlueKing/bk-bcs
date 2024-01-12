@@ -38,7 +38,7 @@ type TokenStore interface {
 	GetAllClients() []models.BcsClientUser
 	GetClient(projectCode, name string) *models.BcsClientUser
 	CreateClientToken(token *models.BcsClientUser) error
-	UpdateClientToken(client, updatedClient *models.BcsClient) error
+	UpdateClientToken(projectCode, name string, updatedClient *models.BcsClient) error
 	DeleteProjectClient(projectCode, name string) error
 }
 
@@ -295,8 +295,9 @@ func (u *realTokenStore) CreateClientToken(clientUser *models.BcsClientUser) err
 	return err
 }
 
-func (u *realTokenStore) UpdateClientToken(client, updatedClient *models.BcsClient) error {
-	return u.db.Model(client).Updates(*updatedClient).Error
+func (u *realTokenStore) UpdateClientToken(projectCode, name string, updatedClient *models.BcsClient) error {
+	return u.db.Model(models.BcsClient{}).Where("project_code = ? and name = ?", projectCode, name).
+		Updates(*updatedClient).Error
 }
 
 func (u *realTokenStore) DeleteProjectClient(projectCode, name string) error {

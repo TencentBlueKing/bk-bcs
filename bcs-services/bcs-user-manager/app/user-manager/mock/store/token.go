@@ -104,8 +104,8 @@ func (m *MockTokenStore) GetProjectClients(projectCode string) []models.BcsClien
 }
 
 // UpdateClientToken implements sqlstore.TokenStore.
-func (m *MockTokenStore) UpdateClientToken(client *models.BcsClient, updatedClient *models.BcsClient) error {
-	args := m.Called(client, updatedClient)
+func (m *MockTokenStore) UpdateClientToken(projectCode, name string, updatedClient *models.BcsClient) error {
+	args := m.Called(projectCode, name, updatedClient)
 	return args.Error(0)
 }
 
