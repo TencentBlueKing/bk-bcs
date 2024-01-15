@@ -40,6 +40,7 @@ const (
 // GetLogRuleResp log rule resp
 type GetLogRuleResp struct {
 	ID                 string         `json:"id"`
+	DisplayName        string         `json:"display_name"`
 	Name               string         `json:"name"`
 	RuleID             int            `json:"rule_id"`
 	RuleName           string         `json:"rule_name"`
@@ -138,6 +139,10 @@ func (req *CreateLogRuleReq) toBKLog(c *rest.Context) *bklog.CreateBCSCollectorR
 	if req.Rule.LogRuleContainer.DataEncoding == "" {
 		req.Rule.LogRuleContainer.DataEncoding = bklog.DefaultEncoding
 	}
+	matchLabels, matchExpressions := bklog.MergeOutLabels(req.Rule.LogRuleContainer.LabelSelector.MatchLabels,
+		req.Rule.LogRuleContainer.LabelSelector.MatchExpressions)
+	req.Rule.LogRuleContainer.LabelSelector = bklog.LabelSelector{
+		MatchLabels: matchLabels, MatchExpressions: matchExpressions}
 	return &bklog.CreateBCSCollectorReq{
 		SpaceUID:              GetSpaceID(c.ProjectCode),
 		ProjectID:             c.ProjectId,
@@ -179,6 +184,10 @@ func (req *UpdateLogRuleReq) toBKLog(c *rest.Context, ruleName string) *bklog.Up
 	if req.Rule.LogRuleContainer.DataEncoding == "" {
 		req.Rule.LogRuleContainer.DataEncoding = bklog.DefaultEncoding
 	}
+	matchLabels, matchExpressions := bklog.MergeOutLabels(req.Rule.LogRuleContainer.LabelSelector.MatchLabels,
+		req.Rule.LogRuleContainer.LabelSelector.MatchExpressions)
+	req.Rule.LogRuleContainer.LabelSelector = bklog.LabelSelector{
+		MatchLabels: matchLabels, MatchExpressions: matchExpressions}
 	return &bklog.UpdateBCSCollectorReq{
 		SpaceUID:              GetSpaceID(c.ProjectCode),
 		ProjectID:             c.ProjectId,
@@ -240,6 +249,7 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 	newRuleID string) {
 	id := toBcsLogConfigID(logConfig.Namespace, logConfig.Name)
 	resp.ID = id
+	resp.DisplayName = logConfig.Name
 	resp.Name = logConfig.Name
 	resp.CreatedAt = utils.JSONTime(logConfig.CreationTimestamp)
 	resp.UpdatedAt = utils.JSONTime(logConfig.CreationTimestamp)
@@ -269,7 +279,7 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 			Conditions:   &bklog.Conditions{Type: "match", MatchType: "include"},
 			LabelSelector: bklog.LabelSelector{
 				MatchLabels:      make([]bklog.Label, 0),
-				MatchExpressions: make([]bklog.Expression, 0),
+				MatchExpressions: make([]bklog.Label, 0),
 			},
 			Container: bklog.Container{
 				WorkloadType: logConfig.Spec.WorkloadType,
@@ -279,7 +289,7 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 	}
 	resp.Config.LogRuleContainer.Paths = append(resp.Config.LogRuleContainer.Paths, logConfig.Spec.LogPaths...)
 	for tagk, tagv := range logConfig.Spec.LogTags {
-		resp.Config.ExtraLabels = append(resp.Config.ExtraLabels, bklog.Label{Key: tagk, Operator: "=", Value: tagv})
+		resp.Config.ExtraLabels = append(resp.Config.ExtraLabels, bklog.Label{Key: tagk, Value: tagv})
 	}
 	for tagk, tagv := range logConfig.Spec.Selector.MatchLabels {
 		resp.Config.LogRuleContainer.LabelSelector.MatchLabels = append(resp.Config.ExtraLabels, // nolint
@@ -296,7 +306,7 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 			}
 			resp.Config.LogRuleContainer.LabelSelector.MatchExpressions = append(
 				resp.Config.LogRuleContainer.LabelSelector.MatchExpressions,
-				bklog.Expression{Key: v.Key, Value: value, Operator: v.Operator})
+				bklog.Label{Key: v.Key, Value: value, Operator: v.Operator})
 		}
 	}
 	if len(logConfig.Spec.ContainerConfs) > 0 {
@@ -318,8 +328,9 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 func (resp *GetLogRuleResp) loadFromBkLog(rule bklog.ListBCSCollectorRespData, projectCode string) {
 	resp.ID = toBKLogID(rule.CollectorConfigNameEN)
 	resp.Name = rule.CollectorConfigName
+	resp.DisplayName = rule.CollectorConfigName
 	// 从日志平台创建的规则禁止编辑
-	resp.RuleID = 0
+	resp.RuleID = -1
 	resp.RuleName = rule.CollectorConfigNameEN
 	resp.Description = rule.Description
 	resp.FileIndexSetID = rule.FileIndexSetID
@@ -359,6 +370,7 @@ func (resp *GetLogRuleResp) loadFromBkLog(rule bklog.ListBCSCollectorRespData, p
 // 转换 entity.LogRule 到通用规则
 func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBCSCollectorRespData) {
 	resp.ID = e.ID.Hex()
+	resp.DisplayName = e.DisplayName
 	resp.Name = e.Name
 	resp.RuleID = e.RuleID
 	resp.RuleName = e.RuleName

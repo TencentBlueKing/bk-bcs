@@ -47,8 +47,8 @@ type LogRuleContainer struct {
 
 // LabelSelector label selector
 type LabelSelector struct {
-	MatchLabels      []Label      `json:"match_labels,omitempty"`
-	MatchExpressions []Expression `json:"match_expressions,omitempty"`
+	MatchLabels      []Label `json:"match_labels,omitempty"`
+	MatchExpressions []Label `json:"match_expressions,omitempty"`
 }
 
 // Container container config
@@ -58,17 +58,57 @@ type Container struct {
 	ContainerName string `json:"container_name"`
 }
 
+// MergeInLabels merge labels
+// matchExpressions 合并到 matchLabels
+func MergeInLabels(matchLabels, matchExpressions []Label) []Label {
+	matchLabels = FilterLabels(matchLabels)
+	matchExpressions = FilterLabels(matchExpressions)
+	for _, v := range matchExpressions {
+		matchLabels = append(matchLabels, v)
+	}
+	return matchLabels
+}
+
+// MergeOutLabels merge labels
+// matchLabels 分开非 = 的表达式到 matchExpressions
+func MergeOutLabels(matchLabels, matchExpressions []Label) ([]Label, []Label) {
+	matchLabels = FilterLabels(matchLabels)
+	matchExpressions = FilterLabels(matchExpressions)
+	newLabels := make([]Label, 0)
+	for _, v := range matchLabels {
+		if v.Operator != "=" {
+			matchExpressions = append(matchExpressions, v)
+			continue
+		}
+		newLabels = append(newLabels, v)
+	}
+	return newLabels, matchExpressions
+}
+
+// FilterLabels filter labels
+func FilterLabels(labels []Label) []Label {
+	newLabels := make([]Label, 0)
+	for _, v := range labels {
+		switch v.Operator {
+		case "", "=":
+			newLabels = append(newLabels, Label{Key: v.Key, Operator: "=", Value: v.Value})
+		case "In":
+			newLabels = append(newLabels, Label{Key: v.Key, Operator: "In", Value: v.Value})
+		case "NotIn":
+			newLabels = append(newLabels, Label{Key: v.Key, Operator: "NotIn", Value: v.Value})
+		case "Exists":
+			newLabels = append(newLabels, Label{Key: v.Key, Operator: "Exists", Value: v.Value})
+		case "DoesNotExist":
+			newLabels = append(newLabels, Label{Key: v.Key, Operator: "DoesNotExist", Value: v.Value})
+		}
+	}
+	return newLabels
+}
+
 // Label label
 type Label struct {
 	Key      string `json:"key"`
 	Operator string `json:"operator,omitempty"`
-	Value    string `json:"value"`
-}
-
-// Expression expression
-type Expression struct {
-	Key      string `json:"key"`
-	Operator string `json:"operator"`
 	Value    string `json:"value"`
 }
 
@@ -194,13 +234,15 @@ func (resp *ListBCSCollectorRespData) ToLogRule() LogRule {
 				conf.Params.Conditions.Type = "match"
 			}
 		}
+		labelSelector := LabelSelector{}
+		labelSelector.MatchLabels = MergeInLabels(conf.LabelSelector.MatchLabels, conf.LabelSelector.MatchExpressions)
 		rule.LogRuleContainer = LogRuleContainer{
 			Namespaces:    namespaces,
 			Paths:         paths,
 			DataEncoding:  conf.DataEncoding,
 			EnableStdout:  conf.EnableStdout,
 			Conditions:    conf.Params.Conditions,
-			LabelSelector: conf.LabelSelector,
+			LabelSelector: labelSelector,
 			Container:     conf.Container,
 			Multiline:     multiline,
 		}

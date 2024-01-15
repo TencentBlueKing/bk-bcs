@@ -349,6 +349,10 @@ func RetryLogRule(c *rest.Context) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+		matchLabels, matchExpressions := bklog.MergeOutLabels(rule.Rule.LogRuleContainer.LabelSelector.MatchLabels,
+			rule.Rule.LogRuleContainer.LabelSelector.MatchExpressions)
+		rule.Rule.LogRuleContainer.LabelSelector = bklog.LabelSelector{
+			MatchLabels: matchLabels, MatchExpressions: matchExpressions}
 		go createBKLog(&bklog.CreateBCSCollectorReq{
 			SpaceUID:              GetSpaceID(c.ProjectCode),
 			ProjectID:             c.ProjectId,
