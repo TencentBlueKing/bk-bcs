@@ -30,7 +30,7 @@
         <template #default="{ row }">
           <div v-if="row.spec" class="preview">
             <div class="preview-value">{{ row.spec.value }}</div>
-            <text-file @click="handleView(row)"/>
+            <Copy @click="handleCopyText(row.spec.value)"/>
           </div>
         </template>
       </bk-table-column>
@@ -108,9 +108,9 @@ import useServiceStore from '../../../../../../../../store/service';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
 import { getKvList, deleteKv, getReleaseKvList, undeleteKv } from '../../../../../../../../api/config';
-import { datetimeFormat } from '../../../../../../../../utils/index';
+import { datetimeFormat, copyToClipBoard } from '../../../../../../../../utils/index';
 import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
-import { TextFile } from 'bkui-vue/lib/icon';
+import { Copy } from 'bkui-vue/lib/icon';
 import StatusTag from './status-tag';
 import EditConfig from '../edit-config-kv.vue';
 import ViewConfigKv from '../view-config-kv.vue';
@@ -256,6 +256,14 @@ const handleDel = (config: IConfigKvType) => {
   }
   isDeleteConfigDialogShow.value = true;
   deleteConfig.value = config;
+};
+
+const handleCopyText = (text: string) => {
+  copyToClipBoard(text);
+  Message({
+    theme: 'success',
+    message: t('配置项值已复制'),
+  });
 };
 
 const handleDeleteConfigConfirm = async () => {
