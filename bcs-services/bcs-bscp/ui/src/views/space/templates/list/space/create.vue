@@ -1,6 +1,6 @@
 <template>
   <bk-dialog
-    :title="t('')"
+    :title="t('新建空间')"
     ext-cls="create-template-space-dialog"
     :confirm-text="t('创建')"
     :cancel-text="t('取消')"

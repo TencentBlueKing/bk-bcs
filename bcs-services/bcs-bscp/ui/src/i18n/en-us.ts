@@ -556,4 +556,5 @@ export default {
   社区论坛: 'Community forum',
   产品官网: 'Product official website',
   请输入: 'Please enter',
+  确认: 'Confirm',
 };
