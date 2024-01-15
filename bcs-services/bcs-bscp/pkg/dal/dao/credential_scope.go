@@ -26,12 +26,16 @@ type CredentialScope interface {
 	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, credential *table.CredentialScope) (uint32, error)
 	// Get get credential scopes
 	Get(kit *kit.Kit, credentialId, bizID uint32) ([]*table.CredentialScope, int64, error)
+	// ListAll list all credential scopes under the business
+	ListAll(kit *kit.Kit, bizID uint32) ([]*table.CredentialScope, error)
 	// DeleteWithTx delete credential scope with transaction
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error
 	// UpdateWithTx update credential scope with transaction
 	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, credentialScope *table.CredentialScope) error
 	// DeleteByCredentialIDWithTx delete credential scope by credential id with transaction
 	DeleteByCredentialIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, credentialID uint32) error
+	// BatchDeleteWithTx batch delete credential scope with transaction
+	BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32, ids []uint32) error
 }
 
 var _ CredentialScope = new(credentialScopeDao)
@@ -79,6 +83,15 @@ func (dao *credentialScopeDao) Get(kit *kit.Kit, credentialId, bizID uint32) ([]
 	}
 
 	return result, int64(len(result)), nil
+}
+
+// ListAll list all credential scopes under the business
+func (dao *credentialScopeDao) ListAll(kit *kit.Kit, bizID uint32) ([]*table.CredentialScope, error) {
+	if bizID == 0 {
+		return nil, errors.New("biz id is 0")
+	}
+	m := dao.genQ.CredentialScope
+	return m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID)).Find()
 }
 
 // DeleteWithTx delete credential scope with transaction
@@ -149,5 +162,18 @@ func (dao *credentialScopeDao) DeleteByCredentialIDWithTx(kit *kit.Kit, tx *gen.
 	}
 	m := tx.CredentialScope
 	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.CredentialId.Eq(credentialID)).Delete()
+	return err
+}
+
+// BatchDeleteWithTx batch delete credential scope with transaction
+func (dao *credentialScopeDao) BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32, ids []uint32) error {
+	if bizID == 0 {
+		return errors.New("biz id is 0")
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	m := tx.CredentialScope
+	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.ID.In(ids...)).Delete()
 	return err
 }
