@@ -99,6 +99,9 @@ const handleCreateConfirm = async (pkgIds: number[]) => {
       size = new Blob([stringContent]).size;
       await updateTemplateContent(spaceId.value, currentTemplateSpace.value, stringContent, sign);
     }
+    if (configForm.value.path?.endsWith('/') && configForm.value.path !== '/') {
+      configForm.value.path = configForm.value.path.slice(0, -1);
+    }
     const params = { ...configForm.value, ...{ sign, byte_size: size } };
     const res = await createTemplate(spaceId.value, currentTemplateSpace.value, params);
     // 选择未指定套餐时,不需要调用添加接口
