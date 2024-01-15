@@ -103,7 +103,7 @@ func checkTokenCreateBy(request *restful.Request, targetUser string) (allow, isC
 		return false, false, ""
 	}
 
-	if userToken.IsAdmin() {
+	if userToken.IsClient() {
 		return true, true, userToken.Name
 	}
 	if userToken.Name == targetUser {

@@ -216,7 +216,7 @@ func (u *realTokenStore) GetAllClients() []models.BcsClientUser {
 	var tokens []models.BcsClientUser
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
 		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
-		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL`, models.ClientUser).
+		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL`, models.PlainUser).
 		Find(&tokens)
 	for k, v := range tokens {
 		tokens[k].UserToken, err = u.decryptToken(v.UserToken)
@@ -233,7 +233,7 @@ func (u *realTokenStore) GetProjectClients(projectCode string) []models.BcsClien
 	var tokens []models.BcsClientUser
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
 		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
-		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL AND c.project_code = ?`, models.ClientUser, projectCode).
+		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL AND c.project_code = ?`, models.PlainUser, projectCode).
 		Find(&tokens)
 	for k, v := range tokens {
 		tokens[k].UserToken, err = u.decryptToken(v.UserToken)
@@ -250,7 +250,7 @@ func (u *realTokenStore) GetClient(projectCode, name string) *models.BcsClientUs
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
 		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
 		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL AND c.project_code = ? AND c.name = ?`,
-		models.ClientUser, projectCode, name).Scan(&client)
+		models.PlainUser, projectCode, name).Scan(&client)
 	return &client
 }
 

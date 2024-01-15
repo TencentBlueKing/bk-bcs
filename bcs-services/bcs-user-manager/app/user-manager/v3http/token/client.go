@@ -82,7 +82,7 @@ func (t *TokenHandler) CreateProjectClient(request *restful.Request, response *r
 	}
 
 	// check if client name already exist
-	exist := t.tokenStore.GetTokenByCondition(&models.BcsUser{Name: form.ClientName, UserType: models.ClientUser})
+	exist := t.tokenStore.GetTokenByCondition(&models.BcsUser{Name: form.ClientName, UserType: models.PlainUser})
 	if exist != nil {
 		utils.ResponseParamsError(response, fmt.Errorf("client %s already exist", form.ClientName))
 		return
@@ -97,8 +97,8 @@ func (t *TokenHandler) CreateProjectClient(request *restful.Request, response *r
 	key := constant.TokenKeyPrefix + token
 	expiredAt := time.Now().Add(time.Duration(form.Expiration) * time.Second)
 	jwtString, err := t.jwtClient.JWTSign(&jwt.UserInfo{
-		SubType:     jwt.Client.String(),
-		ClientName:  form.ClientName,
+		SubType:     jwt.User.String(),
+		UserName:    form.ClientName,
 		ExpiredTime: int64(form.Expiration),
 		Issuer:      jwt.JWTIssuer,
 	})
@@ -124,7 +124,7 @@ func (t *TokenHandler) CreateProjectClient(request *restful.Request, response *r
 		ProjectCode: project.ProjectCode,
 		Name:        form.ClientName,
 		UserToken:   token,
-		UserType:    models.ClientUser,
+		UserType:    models.PlainUser,
 		CreatedBy:   user.Name,
 		ExpiresAt:   expiredAt,
 	}
