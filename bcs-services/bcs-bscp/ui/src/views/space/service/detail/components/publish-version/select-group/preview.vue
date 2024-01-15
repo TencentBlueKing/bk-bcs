@@ -59,15 +59,15 @@ const aggregateGroup = (groups: IGroupToPublish[]) => {
   });
   /**
    * 1.全部实例上线
-   * 只展示已上线的分组，如果默认分组已上线，放到【变更版本】分组中，否则放到【首次上线】分组中
+   * 只展示已上线的分组，如果默认分组已上线或已经上线过其他版本，放到【变更版本】分组中，否则放到【首次上线】分组中
    * 2.选择分组实例上线
-   * 新添加的分组状态取决于默认分组是否已上线，逻辑同上
+   * 新添加的分组状态取决于默认分组是否已上线或已经上线过其他版本，逻辑同上
    * 3.排除分组实例上线
    * 默认不勾选分组，至少勾选一个分组才能提交
    */
   groupsToBePreviewed.forEach((group) => {
     const { release_id, release_name } = group;
-    if (props.isDefaultGroupReleased) {
+    if (props.isDefaultGroupReleased || release_id > 0) {
       const defaultGroup = props.groupList.find(group => group.id === 0);
       const id = release_id === 0 ? (defaultGroup as IGroupToPublish).release_id : release_id;
       const version = modifiedVersionGroups.find(item => item.id === id);
