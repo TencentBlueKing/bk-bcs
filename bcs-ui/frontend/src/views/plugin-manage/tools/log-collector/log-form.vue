@@ -1,12 +1,42 @@
 <template>
   <bk-form class="log-form" :label-width="labelWidth" :rules="formDataRules" :model="formData" ref="formRef">
     <bk-form-item
-      :label="$t('plugin.tools.ruleName')"
+      :label="$t('logCollector.label.displayName')"
+      property="display_name"
+      error-display-type="normal"
+      required>
+      <bcs-input
+        v-model="formData.display_name"
+        :maxlength="64"
+        show-word-limit>
+      </bcs-input>
+    </bk-form-item>
+    <bk-form-item
+      :label="$t('logCollector.label.name')"
       property="name"
       error-display-type="normal"
-      required
-      v-if="!isEdit">
-      <bcs-input v-model="formData.name"></bcs-input>
+      required>
+      <bcs-input v-model="formData.name" :disabled="isEdit"></bcs-input>
+      <div class="flex items-center text-[#979BA5] h-[20px]">
+        <i class="bk-icon icon-info-circle text-[#979BA5] text-[14px]"></i>
+        <i18n path="logCollector.tips.name" class="ml-[4px]">
+          <span class="text-[#FF9C01]">{{ $t('logCollector.tips.disabledEdit') }}</span>
+        </i18n>
+      </div>
+    </bk-form-item>
+    <bk-form-item :label="$t('logCollector.label.logType.text')" required>
+      <div class="bk-button-group">
+        <bk-button
+          :class="['min-w-[106px]', { 'is-selected': logType === '' }]"
+          @click="handleChangeLogType('')">
+          {{ $t('logCollector.label.logType.line') }}
+        </bk-button>
+        <bk-button
+          :class="['min-w-[106px]', { 'is-selected': logType === 'multiline' }]"
+          @click="handleChangeLogType('multiline')">
+          {{ $t('logCollector.label.logType.multiline') }}
+        </bk-button>
+      </div>
     </bk-form-item>
     <bk-form-item :label="$t('logCollector.label.configInfo')">
       <div class="border border-[#DCDEE5] border-solid p-[16px] bg-[#FAFBFD]">
@@ -57,7 +87,7 @@
               property="match_labels"
               error-display-type="normal"
               class="hide-form-label">
-              <KeyValue
+              <ContainerLabel
                 :value="formData.rule.config.label_selector.match_labels"
                 :disabled="fromOldRule"
                 @change="handleMatchLabelsChange" />
@@ -254,6 +284,34 @@
             </bk-form-item>
           </div>
         </bk-form-item>
+        <bk-form-item
+          :label="$t('logCollector.label.beginOfLineRegex')"
+          class="vertical-form-item !mt-[16px]"
+          property="multiline_pattern"
+          required
+          v-if="logType === 'multiline'">
+          <bcs-input clearable v-model="formData.rule.config.multiline.multiline_pattern"></bcs-input>
+          <i18n path="logCollector.label.multilineMaxLineAndTimeout" tag="div" class="flex items-center mt-[10px]">
+            <span class="px-[4px]">
+              <bk-input
+                type="number"
+                :min="1"
+                :max="1000"
+                class="w-[88px]"
+                v-model="formData.rule.config.multiline.multiline_max_lines">
+              </bk-input>
+            </span>
+            <span class="px-[4px]">
+              <bk-input
+                type="number"
+                :min="1"
+                :max="10"
+                class="w-[88px]"
+                v-model="formData.rule.config.multiline.multiline_timeout">
+              </bk-input>
+            </span>
+          </i18n>
+        </bk-form-item>
       </div>
     </bk-form-item>
     <bk-form-item
@@ -280,9 +338,10 @@
   </bk-form>
 </template>
 <script setup lang="ts">
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep, isEqual, merge } from 'lodash';
 import { computed, onBeforeMount, onMounted, PropType, ref, watch } from 'vue';
 
+import ContainerLabel from './container-label.vue';
 import KeyValue from './key-value.vue';
 import LogPanel from './log-panel.vue';
 import SeparatorConfig from './separator-config.vue';
@@ -321,6 +380,7 @@ watch(() => props.data, () => {
 const { getWorkloadList } = useLog();
 // 表单默认数据
 const defaultData = {
+  display_name: '',
   name: '',
   description: '',
   rule: {
@@ -349,12 +409,24 @@ const defaultData = {
         workload_name: '',
         container_name: '',
       },
+      multiline: {
+        multiline_pattern: '',
+        multiline_max_lines: 50,
+        multiline_timeout: 2,
+      },
     },
   },
   from_rule: '',
 };
 const formData = ref<IRuleData>(cloneDeep(defaultData));
 const formDataRules = ref({
+  display_name: [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+  ],
   name: [
     {
       required: true,
@@ -426,9 +498,22 @@ const formDataRules = ref({
       trigger: 'custom',
       validator: () => {
         const regex = /^[A-Za-z0-9._/-]+$/;
+        const valueReg = /^[A-Za-z0-9,._/-]+$/;
         return formData.value.rule.config.label_selector.match_labels
-          .filter(item => !!item.key)
-          .every(item => regex.test(item.key) && regex.test(item.value));
+          .every(item => (!item.key || regex.test(item.key))
+          && (!item.value || valueReg.test(item.value)));
+      },
+    },
+  ],
+  multiline_pattern: [
+    {
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'custom',
+      validator: () => {
+        if (logType.value === 'multiline') {
+          return !!formData.value.rule.config.multiline.multiline_pattern;
+        }
+        return true;
       },
     },
   ],
@@ -452,7 +537,7 @@ const nsList = computed(() => formData.value.rule.config.namespaces?.filter(item
 
 // 处理数据
 const handleSetFormData = () => {
-  formData.value = cloneDeep(props.data || defaultData);
+  formData.value = merge({}, defaultData, props.data || {});
 
   // 采集对象是否为容器文件
   isContainerFile.value = !!formData.value.rule.config.paths?.length; // 要在空日志路径前面
@@ -498,6 +583,9 @@ const handleSetFormData = () => {
       hasAdd: !!containerName.value.length,
     },
   ];
+
+  // 日志类型
+  logType.value = !!formData.value?.rule?.config?.multiline?.multiline_pattern ? 'multiline' : '';
 };
 
 // 获取数据
@@ -517,6 +605,7 @@ const handleGetFormData = async () => {
   if (!isValidate) return null;
 
   const data: IRuleData = cloneDeep(formData.value);
+  // 处理一些空数据逻辑
   if (data.rule.config.conditions.type === 'separator') {
     data.rule.config.conditions.match_content = '';
   } else if (data.rule.config.conditions.type === 'match') {
@@ -533,6 +622,13 @@ const handleGetFormData = async () => {
     data.rule.config.paths = [];
   }
   return data;
+};
+
+// 日志类型
+const logType = ref<'' | 'multiline'>('');
+const handleChangeLogType = (type: '' | 'multiline') => {
+  logType.value = type;
+  formData.value.rule.config.multiline.multiline_pattern = '';
 };
 
 // 命名空间

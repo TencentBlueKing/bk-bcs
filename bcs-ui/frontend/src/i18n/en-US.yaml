@@ -240,6 +240,7 @@ metrics:
     disk:
       read: read
       write: write
+  usage: 'Usage {0}'
 generic:
   msg:
     error:
@@ -2880,9 +2881,35 @@ logCollector:
     oldRuleHasNewRule: >-
       New rule generated: <br/> {0}<br/>This rule will be automatically cleaned
       up after: <br/>{1}
+    bizPrivateCluster: Business Dedicated Cluster
+    privateData: Sensitive Data
+    greaterThan100GB: Greater than 100GB
+    exceed14d: Exceeds 14 days
+    storageCluster:
+      text: >-
+        Container log data defaults to using a public cluster; it is recommended
+        to use {0} under the following conditions
+      p1: >-
+        Container log data contains {0}, requiring physical isolation for data
+        storage
+      p2: 'Daily volume of container log data is {0}'
+      p3: 'The effective storage period for container log data should be {0}'
+    volumeOfClusterIsExcessivelyHigh: >-
+      The log volume of this cluster is excessively high, it is recommended to
+      promptly switch to a business dedicated cluster
+    volumeOfPrivateClusterIsExcessivelyHigh: >-
+      The storage utilization rate of this cluster has exceeded 80%, it is
+      recommended to expand or clean up cluster storage space
+    disabledEdit: Editing Disabled
+    name: >-
+      Data name related to index and data source names, after the collection
+      item {0}
   placeholder:
     search: Rule name / Namespace / Updated by
     workloadName: 'Please enter the application name, supports regular expressions'
+    multiLabel: >-
+      Separate multiple values with an English comma (,), also known as a
+      half-width comma.
   validate:
     name: >-
       Only supports English, numbers and underscores, and the length is 5~30
@@ -2910,6 +2937,7 @@ logCollector:
       retry: Retry task submitted successfully
       enable: Enabled successfully
       stop: Disabled successfully
+    canNotEditBkLogRule: Rules created from the bk-log currently do not support editing.
   title:
     exitNewRule: '{0} has generated a new rule, do you want to generate it again?'
     confirmRetry: 'Are you sure to retry rule {0}?'
@@ -2921,6 +2949,7 @@ logCollector:
       desc: >-
         All selected ranges can be superimposed and applied to each other. At
         least one range must be added except for the namespace
+    confirmSwitchStorageCluster: Confirm switching to the ES (Elasticsearch) storage cluster.
   label:
     newChartVersion: Latest version
     newChartDesc: Description
@@ -2966,9 +2995,19 @@ logCollector:
     dataID:
       text: DataID
       tips: To BkBase
+    esStorages: ES Storage Cluster
+    displayName: Collection item name
+    name: Name
+    logType:
+      text: Log Type
+      line: Single-line Log File
+      multiline: Multi-line Log File
+    beginOfLineRegex: Beginning of Line Regex
+    multilineMaxLineAndTimeout: 'Match up to {0} lines, with a maximum duration of {1} seconds'
   status:
     pending: Issuing
     failed: Failed
+    delete: Deleted
   action:
     enable: Enable
     stop: Disable
@@ -2992,6 +3031,7 @@ logCollector:
           labels that exist on the Pod will be collected
       workload: Select by workload
       container: Select by container name
+    goBKLog: GO BK-Log
 manualNode:
   title:
     source:
