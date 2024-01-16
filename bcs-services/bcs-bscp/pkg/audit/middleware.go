@@ -15,26 +15,23 @@ package audit
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	"k8s.io/klog/v2"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 )
 
-// Audit is a middleware that add audit.
+// Audit is a http middleware that add audit.
 func Audit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pattern, err := GetRouteMatcher().Match(r.Method, r.URL.Path)
-		fn, ok := auditFuncMap[r.Method+"."+pattern]
+		fn, ok := auditHttpMap[r.Method+"."+pattern]
 		if err != nil || !ok {
-			klog.Warningf("no audit for method:%s, path: %s, pattern:%s", r.Method, r.URL.Path, pattern)
+			// klog.Warningf("no audit for method:%s, path: %s, pattern:%s", r.Method, r.URL.Path, pattern)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -45,31 +42,9 @@ func Audit(next http.Handler) http.Handler {
 		resp := bytes.NewBuffer(nil)
 		ww.Tee(resp)
 
-		// get the request param and body
-		input := make(map[string]any)
-		params := r.URL.Query()
-		for key, values := range params {
-			if len(values) > 0 {
-				input[key] = values[0]
-			}
-		}
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			render.Render(w, r, rest.BadRequest(err))
-			return
-		}
-		r.Body = io.NopCloser(bytes.NewBuffer(body))
-		if len(body) != 0 {
-			err = json.Unmarshal(body, &input)
-			if err != nil {
-				render.Render(w, r, rest.BadRequest(err))
-				return
-			}
-		}
-
 		defer func() {
 			status := ww.Status()
-			msg := "OK"
+			msg := "Success"
 			if status != http.StatusOK {
 				rs := struct {
 					Error struct {
@@ -84,50 +59,26 @@ func Audit(next http.Handler) http.Handler {
 				msg = rs.Error.Message
 			}
 
-			addAudit(r, res, act, st, input, status, msg)
+			user := r.Header.Get(constant.UserKey)
+			// if no auth for the api
+			if user == "" {
+				user = "no-user"
+			}
+
+			p := auditParam{
+				Username:     user,
+				SourceIP:     r.RemoteAddr,
+				UserAgent:    r.UserAgent(),
+				Rid:          r.Header.Get(constant.RidKey),
+				Resource:     res,
+				Action:       act,
+				StartTime:    st,
+				ResultStatus: status,
+				ResultMsg:    msg,
+			}
+			addAudit(p)
 		}()
 
 		next.ServeHTTP(ww, r)
 	})
-}
-
-const ignoredField string = "ignored"
-
-func addAudit(r *http.Request, res audit.Resource, act audit.Action, st time.Time, input map[string]any, status int,
-	msg string) {
-	user := r.Header.Get(constant.UserKey)
-	// if no auth for the api
-	if user == "" {
-		user = "no-user"
-	}
-	auditCtx := audit.RecorderContext{
-		Username:  user,
-		SourceIP:  r.RemoteAddr,
-		UserAgent: r.UserAgent(),
-		RequestID: r.Header.Get(constant.RidKey),
-		StartTime: st,
-		EndTime:   time.Now(),
-	}
-	resource := audit.Resource{
-		ProjectCode:  ignoredField,
-		ResourceID:   ignoredField,
-		ResourceName: ignoredField,
-		ResourceType: res.ResourceType,
-		ResourceData: input,
-	}
-	action := audit.Action{
-		ActionID:     act.ActionID,
-		ActivityType: act.ActivityType,
-	}
-
-	result := audit.ActionResult{
-		Status:        audit.ActivityStatusSuccess,
-		ResultCode:    status,
-		ResultContent: msg,
-	}
-
-	if err := GetAuditClient().R().DisableActivity().SetContext(auditCtx).SetResource(resource).SetAction(action).
-		SetResult(result).Do(); err != nil {
-		klog.Errorf("add audit err: %v", err)
-	}
 }

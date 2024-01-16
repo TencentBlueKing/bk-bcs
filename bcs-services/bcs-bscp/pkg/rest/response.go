@@ -173,7 +173,7 @@ func BadRequest(err error) render.Renderer {
 }
 
 // GRPCErr GRPC-Gateway 错误
-func GRPCErr(err error) render.Renderer {
+func GRPCErr(err error) *ErrorResponse {
 	s := status.Convert(err)
 	code := errf.BscpCodeMap[int32(s.Code())]
 	if code == "" {

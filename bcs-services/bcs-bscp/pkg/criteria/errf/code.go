@@ -120,6 +120,7 @@ var (
 	// BscpCodeMap bscp错误码->错误字符串映射
 	BscpCodeMap = map[int32]string{
 		// 兼容grpc错误码
+		int32(codes.OK):                 "OK",
 		int32(codes.Canceled):           "CANCELED",
 		int32(codes.Unknown):            "UNKNOWN",
 		int32(codes.InvalidArgument):    "INVALID_ARGUMENT",
@@ -161,6 +162,7 @@ var (
 	// BscpStatusMap bscp错误码->状态映射
 	BscpStatusMap = map[int32]int{
 		// 兼容grpc错误码
+		int32(codes.OK):                 http.StatusOK,
 		int32(codes.Canceled):           http.StatusBadRequest,
 		int32(codes.Unknown):            http.StatusBadRequest,
 		int32(codes.InvalidArgument):    http.StatusBadRequest,
