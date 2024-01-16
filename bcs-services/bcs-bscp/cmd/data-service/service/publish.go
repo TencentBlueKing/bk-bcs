@@ -33,6 +33,7 @@ import (
 )
 
 // Publish exec publish strategy.
+// nolint: funlen
 func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.PublishResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
@@ -110,7 +111,7 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 		}
 		return nil, err
 	}
-	haveCredentials, err := s.checkAppHaveCredentials(grpcKit, tx, req.BizId, req.AppId)
+	haveCredentials, err := s.checkAppHaveCredentials(grpcKit, req.BizId, req.AppId)
 	if err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
@@ -132,7 +133,7 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 // checkAppHaveCredentials check if there is available credential for app.
 // 1. credential scope can match app name.
 // 2. credential is enabled.
-func (s *Service) checkAppHaveCredentials(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) (bool, error) {
+func (s *Service) checkAppHaveCredentials(grpcKit *kit.Kit, bizID, appID uint32) (bool, error) {
 	app, err := s.dao.App().Get(grpcKit, bizID, appID)
 	if err != nil {
 		return false, err
@@ -146,15 +147,18 @@ func (s *Service) checkAppHaveCredentials(grpcKit *kit.Kit, tx *gen.QueryTx, biz
 		return false, nil
 	}
 	for _, scope := range scopes {
-		match, err := scope.Spec.CredentialScope.MatchApp(app.Spec.Name)
-		if err != nil {
-			return false, err
+		match, e := scope.Spec.CredentialScope.MatchApp(app.Spec.Name)
+		if e != nil {
+			return false, e
 		}
 		if match {
 			matchedCredentials = append(matchedCredentials, scope.Attachment.CredentialId)
 		}
 	}
-	credentials, err := s.dao.Credential().BatchListByIDs(grpcKit, bizID, matchedCredentials)
+	credentials, e := s.dao.Credential().BatchListByIDs(grpcKit, bizID, matchedCredentials)
+	if e != nil {
+		return false, e
+	}
 	for _, credential := range credentials {
 		if credential.Spec.Enable {
 			return true, nil
