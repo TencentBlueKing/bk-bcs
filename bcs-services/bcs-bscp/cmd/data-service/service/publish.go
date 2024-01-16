@@ -134,6 +134,7 @@ func (s *Service) checkAppHaveCredentials(grpcKit *kit.Kit, tx *gen.QueryTx, biz
 	if err != nil {
 		return false, err
 	}
+	matchedCredentials := make([]uint32, 0)
 	scopes, err := s.dao.CredentialScope().ListAll(grpcKit, bizID)
 	if err != nil {
 		return false, err
@@ -147,6 +148,12 @@ func (s *Service) checkAppHaveCredentials(grpcKit *kit.Kit, tx *gen.QueryTx, biz
 			return false, err
 		}
 		if match {
+			matchedCredentials = append(matchedCredentials, scope.Attachment.CredentialId)
+		}
+	}
+	credentials, err := s.dao.Credential().BatchListByIDs(grpcKit, bizID, matchedCredentials)
+	for _, credential := range credentials {
+		if credential.Spec.Enable {
 			return true, nil
 		}
 	}
