@@ -114,9 +114,6 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 	exist := make([]*types.TemplateItem, 0)
 	nonExist := make([]*types.TemplateItem, 0)
 	for _, item := range folder {
-		if !strings.HasSuffix(item.Path, "/") {
-			item.Path += "/"
-		}
 		pathName := path.Join(item.Path, item.Name)
 		data, ok := templateItem[pathName]
 		if !ok {
@@ -210,9 +207,6 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	exist := make([]*types.TemplateItem, 0)
 	nonExist := make([]*types.TemplateItem, 0)
 	for _, item := range folder {
-		if !strings.HasSuffix(item.Path, "/") {
-			item.Path += "/"
-		}
 		pathName := path.Join(item.Path, item.Name)
 		config, ok := configItem[pathName]
 		if !ok {
