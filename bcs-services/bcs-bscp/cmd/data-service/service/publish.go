@@ -129,6 +129,9 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 	return resp, nil
 }
 
+// checkAppHaveCredentials check if there is available credential for app.
+// 1. credential scope can match app name.
+// 2. credential is enabled.
 func (s *Service) checkAppHaveCredentials(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) (bool, error) {
 	app, err := s.dao.App().Get(grpcKit, bizID, appID)
 	if err != nil {
