@@ -41,7 +41,7 @@
         <template #extension>
           <div class="create-operation" @click="handleToCMDB">
             <plus />
-            <div class="content">新建业务</div>
+            <div class="content">{{ t('新建业务') }}</div>
           </div>
         </template>
         <bk-option v-for="item in optionList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
@@ -85,7 +85,7 @@
           <DownShape class="arrow-icon" />
         </div>
         <template #content>
-          <div class="login-out-btn" @click="handleLoginOut">退出登录</div>
+          <div class="login-out-btn" @click="handleLoginOut">{{ t('退出登录') }}</div>
         </template>
       </bk-popover>
     </div>
@@ -286,8 +286,10 @@ const handleToCMDB = () => {
 const switchLanguage = () => {
   if (locale.value === 'zh-CN') {
     locale.value = 'en-US';
+    localStorage.setItem('language', 'en-US');
   } else {
     locale.value = 'zh-CN';
+    localStorage.setItem('language', 'zh-CN');
   }
 };
 </script>

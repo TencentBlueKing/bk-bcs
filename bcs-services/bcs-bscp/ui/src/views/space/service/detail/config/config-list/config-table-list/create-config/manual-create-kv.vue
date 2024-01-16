@@ -1,5 +1,5 @@
 <template>
-  <bk-sideslider width="640" title="新增配置项" :is-show="props.show" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider width="640" :title="t('新增配置项')" :is-show="props.show" :before-close="handleBeforeClose" @closed="close">
     <ConfigForm
       ref="formRef"
       class="config-form-wrapper"
@@ -10,13 +10,14 @@
       @change="handleFormChange"
     />
     <section class="action-btns">
-      <bk-button theme="primary" @click="handleSubmit">保存</bk-button>
-      <bk-button @click="close">取消</bk-button>
+      <bk-button theme="primary" @click="handleSubmit">{{ t('保存') }}</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </section>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Message from 'bkui-vue/lib/message';
 import { IConfigKvEditParams } from '../../../../../../../../../types/config';
 import { createKv } from '../../../../../../../../api/config';
@@ -28,6 +29,8 @@ const props = defineProps<{
   bkBizId: string;
   appId: number;
 }>();
+
+const { t } = useI18n();
 
 const emits = defineEmits(['update:show', 'confirm']);
 const content = ref('');

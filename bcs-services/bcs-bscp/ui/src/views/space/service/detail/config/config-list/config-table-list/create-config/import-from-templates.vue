@@ -18,10 +18,10 @@
         />
       </div>
       <div class="selected-result-wrapper">
-        <h4>结果预览</h4>
+        <h4>{{ t('结果预览') }}</h4>
         <p class="tips-text">
-          已选择导入
-          <span class="num">{{ importedPkgs.length + selectedPkgs.length }}</span> 个模板套餐，可按需要切换模板版本
+          {{ t('已选择导入') }}
+          <span class="num">{{ importedPkgs.length + selectedPkgs.length }}</span> {{ t('个模板套餐，可按需要切换模板版本') }}
         </p>
         <div v-if="!pkgListLoading" class="packages-list">
           <template v-if="importedPkgs.length + selectedPkgs.length > 0">
@@ -51,8 +51,8 @@
           </template>
           <bk-exception v-else scene="part" type="empty">
             <div class="empty-tips">
-              暂无预览
-              <p>请先从左侧选择导入的模板套餐</p>
+              {{ t('暂无预览') }}
+              <p>{{ t('请先从左侧选择导入的模板套餐') }}</p>
             </div>
           </bk-exception>
         </div>
@@ -60,12 +60,11 @@
     </div>
     <template #footer>
       <div class="footer-wrapper">
-        <p v-if="hasConflict" class="conflict-tip">检测到模板冲突，无法导入</p>
+        <p v-if="hasConflict" class="conflict-tip">{{ t('检测到模板冲突，无法导入') }}</p>
         <div class="action-btns">
           <bk-button theme="primary" :disabled="isImportBtnDisabled" :loading="pending" @click="handleImportConfirm"
-            >导入</bk-button
-          >
-          <bk-button @click="close">取消</bk-button>
+            >{{ t('导入') }}</bk-button>
+          <bk-button @click="close">{{ t('取消') }}</bk-button>
         </div>
       </div>
     </template>
@@ -73,6 +72,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import Message from 'bkui-vue/lib/message';
 import { ITemplateBoundByAppData } from '../../../../../../../../../types/config';
@@ -88,6 +88,7 @@ import PkgTemplatesTable from './pkg-templates-table.vue';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -226,7 +227,7 @@ const handleImportConfirm = async () => {
     close();
     Message({
       theme: 'success',
-      message: '配置文件导入成功',
+      message: t('配置文件导入成功'),
     });
   } catch (e) {
     console.log(e);

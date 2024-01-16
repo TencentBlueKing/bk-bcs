@@ -2,7 +2,7 @@
   <div class="init-script-page">
     <div class="script-select-area">
       <bk-form form-type="vertical">
-        <bk-form-item label="前置脚本">
+        <bk-form-item :label="t('前置脚本')">
           <div class="select-wrapper">
             <ScriptSelector
               type="pre"
@@ -20,11 +20,11 @@
               :disabled="typeof formData.pre.id !== 'number' || formData.pre.id === 0"
               @click="handleOpenPreview('pre')"
             >
-              预览
+              {{t('预览')}}
             </bk-button>
           </div>
         </bk-form-item>
-        <bk-form-item label="后置脚本">
+        <bk-form-item :label="t('后置脚本')">
           <div class="select-wrapper">
             <ScriptSelector
               type="post"
@@ -42,7 +42,7 @@
               :disabled="typeof formData.post.id !== 'number' || formData.post.id === 0"
               @click="handleOpenPreview('post')"
             >
-              预览
+              {{ t('预览') }}
             </bk-button>
           </div>
         </bk-form-item>
@@ -56,7 +56,7 @@
         :loading="pending"
         @click="handleSubmit"
       >
-        保存设置
+        {{ t('保存设置') }}
       </bk-button>
     </div>
     <bk-loading v-if="previewConfig.open" class="preview-area" :loading="contentLoading">
@@ -71,7 +71,7 @@
             <div class="close-area" @click="previewConfig.open = false">
               <AngleRight class="arrow-icon" />
             </div>
-            <div class="title">{{ `脚本预览 - ${previewConfig.name}` }}</div>
+            <div class="title">{{ `${t('脚本预览')} - ${previewConfig.name}` }}</div>
           </div>
         </template>
       </ScriptEditor>
@@ -80,6 +80,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import BkMessage from 'bkui-vue/lib/message';
 import { AngleRight } from 'bkui-vue/lib/icon';
@@ -97,6 +98,7 @@ const { versionData } = storeToRefs(useConfigStore());
 const serviceStore = useServiceStore();
 const { checkPermBeforeOperate } = serviceStore;
 const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
+const { t } = useI18n();
 
 const props = defineProps<{
   appId: number;
@@ -158,7 +160,7 @@ const getScripts = async () => {
     name: item.hook.spec.name,
     type: item.hook.spec.type,
   })).sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
-  scriptsData.value = [{ id: 0, versionId: 0, name: '<不使用脚本>', type: '' }, ...list];
+  scriptsData.value = [{ id: 0, versionId: 0, name: t('<不使用脚本>'), type: '' }, ...list];
   scriptsLoading.value = false;
 };
 
@@ -236,7 +238,7 @@ const handleSubmit = async () => {
     await updateConfigInitScript(spaceId.value, props.appId, params);
     BkMessage({
       theme: 'success',
-      message: '初始化脚本设置成功',
+      message: t('初始化脚本设置成功'),
     });
   } catch (e) {
     console.error(e);

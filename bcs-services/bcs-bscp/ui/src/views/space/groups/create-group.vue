@@ -1,8 +1,9 @@
 <template>
   <bk-dialog
-    title="新增分组"
+    :title="t('新增分组')"
     ext-cls="create-group-dialog"
-    confirm-text="提交"
+    :confirm-text="t('提交')"
+    :cancel-text="t('取消')"
     :width="640"
     :is-show="props.show"
     :esc-close="false"
@@ -16,6 +17,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { IGroupEditing, ECategoryType } from '../../../../types/group';
 import { createGroup } from '../../../api/group';
@@ -23,6 +25,7 @@ import groupEditForm from './components/group-edit-form.vue';
 import Message from 'bkui-vue/lib/message';
 
 const route = useRoute();
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -76,7 +79,7 @@ const handleConfirm = async () => {
     };
     await createGroup(route.params.spaceId as string, params);
     Message({
-      message: '创建分组成功',
+      message: t('创建分组成功'),
       theme: 'success',
     });
     handleClose();

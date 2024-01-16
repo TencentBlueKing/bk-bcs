@@ -3,14 +3,14 @@
     <table class="config-groups-table">
       <thead>
         <tr class="config-groups-table-tr">
-          <th class="name">配置文件名称</th>
-          <th class="version">配置模板版本</th>
-          <th class="path">配置路径</th>
-          <th class="user">创建人</th>
-          <th class="user">修改人</th>
-          <th class="datetime">修改时间</th>
-          <th class="status" v-if="versionData.id === 0">变更状态</th>
-          <th class="operation">操作</th>
+          <th class="name">{{t('配置文件名称')}}</th>
+          <th class="version">{{ t('配置模板版本') }}</th>
+          <th class="path">{{ t('配置路径') }}</th>
+          <th class="user">{{ t('创建人') }}</th>
+          <th class="user">{{ t('修改人') }}</th>
+          <th class="datetime">{{ t('修改时间') }}</th>
+          <th class="status" v-if="versionData.id === 0">{{ t('变更状态') }}</th>
+          <th class="operation">{{ t('操作') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -29,7 +29,7 @@
                   @click="handleDeletePkg(group.id, group.name)"
                 >
                   <Close class="close-icon" />
-                  移除套餐
+                  {{ t('移除套餐') }}
                 </div>
               </div>
             </td>
@@ -93,7 +93,7 @@
                                   :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
                                   @click="handleEditOpen(config)"
                                 >
-                                  编辑
+                                  {{ t('编辑') }}
                                 </bk-button>
                                 <bk-button
                                   v-cursor="{ active: !hasEditServicePerm }"
@@ -103,19 +103,19 @@
                                   :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
                                   @click="handleDel(config)"
                                 >
-                                  删除
+                                  {{ t('删除') }}
                                 </bk-button>
                               </template>
                               <template v-else>
                                 <bk-button text theme="primary" @click="handleViewConfig(config.id, 'config')"
-                                  >查看</bk-button
+                                  >{{ t('查看') }}</bk-button
                                 >
                                 <bk-button
                                   v-if="versionData.status.publish_status !== 'editing'"
                                   text
                                   theme="primary"
                                   @click="handleConfigDiff(group.id, config)"
-                                  >对比</bk-button
+                                  >{{ t('对比') }}</bk-button
                                 >
                               </template>
                             </template>
@@ -129,18 +129,18 @@
                                 :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
                                 @click="handleOpenReplaceVersionDialog(group.id, config)"
                               >
-                                替换版本
+                                {{ t('替换版本') }}
                               </bk-button>
                               <template v-else>
                                 <bk-button text theme="primary" @click="handleViewConfig(config.versionId, 'template')"
-                                  >查看</bk-button
+                                  >{{ t('查看') }}</bk-button
                                 >
                                 <bk-button
                                   v-if="versionData.status.publish_status !== 'editing'"
                                   text
                                   theme="primary"
                                   @click="handleConfigDiff(group.id, config)"
-                                  >对比</bk-button
+                                  >{{ t('对比') }}</bk-button
                                 >
                               </template>
                             </template>
@@ -187,28 +187,29 @@
   />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
-    title="确认删除该配置文件？"
+    :title="t('确认删除该配置文件？')"
     @confirm="handleDeleteConfigConfirm"
   >
     <div style="margin-bottom: 8px">
-      配置文件：<span style="color: #313238">{{ deleteConfig?.name }}</span>
+      {{t('配置文件')}}：<span style="color: #313238">{{ deleteConfig?.name }}</span>
     </div>
-    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+    <div>{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
   </DeleteConfirmDialog>
   <DeleteConfirmDialog
     v-model:isShow="isDeletePkgDialogShow"
-    title="确认移除该配置模板套餐？"
-    confirm-text="移除"
+    :title="t('确认移除该配置模板套餐？')"
+    :confirm-text="t('移除')"
     @confirm="handleDeletePkgConfirm"
   >
     <div style="margin-bottom: 8px">
-      配置模板套餐: <span style="color: #313238">{{ deleteTemplatePkgName }}</span>
+      {{t('配置模板套餐')}}: <span style="color: #313238">{{ deleteTemplatePkgName }}</span>
     </div>
-    <div>移除后本服务配置将不再引用该配置模板套餐，以后需要时可以重新从配置模板导入</div>
+    <div>{{ t('移除后本服务配置将不再引用该配置模板套餐，以后需要时可以重新从配置模板导入') }}</div>
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
 import { DownShape, Close } from 'bkui-vue/lib/icon';
@@ -260,6 +261,7 @@ interface IConfigTableItem {
   permission?: IPermissionType;
 }
 
+const { t } = useI18n();
 const configStore = useConfigStore();
 const serviceStore = useServiceStore();
 const { versionData, allConfigCount } = storeToRefs(configStore);
@@ -418,7 +420,7 @@ const getBoundTemplateList = async () => {
 const transListToTableData = () => {
   const pkgsGroups = groupTplsByPkg(templateGroupList.value);
   return [
-    { id: 0, name: '非模板配置', expand: true, configs: transConfigsToTableItemData(configList.value) },
+    { id: 0, name: t('非模板配置'), expand: true, configs: transConfigsToTableItemData(configList.value) },
     ...pkgsGroups,
   ];
 };
@@ -531,7 +533,7 @@ const handleDeletePkgConfirm = async () => {
   emits('deleteConfig');
   Message({
     theme: 'success',
-    message: '移除模板套餐成功',
+    message: t('移除模板套餐成功'),
   });
   isDeletePkgDialogShow.value = false;
 };
@@ -560,7 +562,7 @@ const handleDeleteConfigConfirm = async () => {
   await deleteServiceConfigItem(deleteConfig.value!.id, props.bkBizId, props.appId);
   Message({
     theme: 'success',
-    message: '删除配置文件成功',
+    message: t('删除配置文件成功'),
   });
   await getCommonConfigList();
   emits('deleteConfig');

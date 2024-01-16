@@ -1,16 +1,17 @@
 <template>
-  <bk-sideslider title="编辑模板套餐" :width="640" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider :title="t('编辑模板套餐')" :width="640" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="package-form">
       <PackageForm ref="formRef" :space-id="spaceId" :data="data" :apps="apps" @change="handleChange" />
     </div>
     <div class="action-btns">
-      <bk-button theme="primary" :loading="pending" @click="handleSave">保存</bk-button>
-      <bk-button @click="close">取消</bk-button>
+      <bk-button theme="primary" :loading="pending" @click="handleSave">{{ t('保存') }}</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../store/global';
@@ -20,6 +21,7 @@ import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-clos
 import PackageForm from './package-form.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -36,7 +38,7 @@ const data = ref<ITemplatePackageEditParams>({
   memo: '',
   public: true,
   bound_apps: [],
-  template_ids: []
+  template_ids: [],
 });
 const apps = ref<number[]>([]);
 const isFormChange = ref(false);
@@ -73,7 +75,7 @@ const handleSave = () => {
       emits('edited');
       Message({
         theme: 'success',
-        message: '编辑成功',
+        message: t('编辑成功'),
       });
     } catch (e) {
       console.error(e);

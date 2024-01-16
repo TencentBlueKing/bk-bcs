@@ -7,18 +7,20 @@
     @confirm="handleConfirm"
     @closed="handleCancel">
     <div class="confirm-content">
-      <p>版本名称：<span class="name">{{ props.version.spec.name }}</span></p>
+      <p>{{ t('版本名称') }}：<span class="name">{{ props.version.spec.name }}</span></p>
       <p>{{ props.tips }}</p>
     </div>
   </bk-dialog>
 </template>
 <script lang="ts" setup>
-  import { ref, watch } from 'vue';
-  import { IConfigVersion } from '../../../../../../../types/config';
+import { ref, watch } from 'vue';
+import { IConfigVersion } from '../../../../../../../types/config';
+import { useI18n } from 'vue-i18n';
 
-  const emits = defineEmits(['confirm', 'cancel', 'update:show']);
+const { t } = useI18n();
+const emits = defineEmits(['confirm', 'cancel', 'update:show']);
 
-  const props = defineProps<{
+const props = defineProps<{
     show: boolean;
     title: string;
     tips: string;
@@ -26,30 +28,30 @@
     confirmFn: Function;
   }>();
 
-  const pending = ref(false);
+const pending = ref(false);
 
-  watch(() => props.show, val => {
-    if (val) {
-      pending.value = false;
-    }
-  });
-
-  const handleConfirm = async() => {
-    if (pending.value) {
-      return;
-    }
-    pending.value = true;
-    if (typeof props.confirmFn === 'function') {
-      await props.confirmFn();
-    }
+watch(() => props.show, (val) => {
+  if (val) {
     pending.value = false;
-    emits('confirm');
-  };
+  }
+});
 
-  const handleCancel = () => {
-    emits('update:show', false);
-    emits('cancel');
-  };
+const handleConfirm = async () => {
+  if (pending.value) {
+    return;
+  }
+  pending.value = true;
+  if (typeof props.confirmFn === 'function') {
+    await props.confirmFn();
+  }
+  pending.value = false;
+  emits('confirm');
+};
+
+const handleCancel = () => {
+  emits('update:show', false);
+  emits('cancel');
+};
 
 </script>
 <style>

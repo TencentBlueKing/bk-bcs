@@ -1,8 +1,8 @@
 <template>
-  <bk-sideslider title="被引用" :width="640" :quick-close="true" :is-show="isShow" @closed="close">
+  <bk-sideslider :title="t('被引用')" :width="640" :quick-close="true" :is-show="isShow" @closed="close">
     <div class="top-area">
       <div class="config-name">{{ props.config.name }}</div>
-      <SearchInput placeholder="服务名称/配置文件版本" v-model="searchStr" :width="320" @search="handleSearch" />
+      <SearchInput :placeholder="t('服务名称/配置文件版本')" v-model="searchStr" :width="320" @search="handleSearch" />
     </div>
     <div class="apps-table">
       <bk-table
@@ -13,8 +13,8 @@
         @page-limit-change="handlePageLimitChange"
         @page-value-change="getList"
       >
-        <bk-table-column label="配置文件版本" prop="template_revision_name"></bk-table-column>
-        <bk-table-column label="引用此配置文件的服务">
+        <bk-table-column :label="t('配置文件版本')" prop="template_revision_name"></bk-table-column>
+        <bk-table-column :label="t('引用此配置文件的服务')">
           <template #default="{ row }">
             <bk-link v-if="row.app_id" class="link-btn" theme="primary" target="_blank" :href="getHref(row.app_id)">
               {{ row.app_name }}
@@ -27,12 +27,13 @@
       </bk-table>
     </div>
     <div class="action-btn">
-      <bk-button @click="close">关闭</bk-button>
+      <bk-button @click="close">{{ t('关闭') }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { getUnNamedVersionAppsBoundByTemplate } from '../../../../../api/template';
 import { ICommonQuery } from '../../../../../../types/index';
@@ -41,6 +42,7 @@ import SearchInput from '../../../../../components/search-input.vue';
 import tableEmpty from '../../../../../components/table/table-empty.vue';
 
 const router = useRouter();
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;

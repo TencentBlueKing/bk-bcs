@@ -1,7 +1,8 @@
 <template>
   <bk-dialog
     ext-cls="add-configs-to-pkg-dialog"
-    confirm-text="添加"
+    :confirm-text="t('添加')"
+    :cancel-text="t('取消')"
     :width="640"
     :is-show="props.show"
     :esc-close="false"
@@ -12,27 +13,27 @@
   >
     <template #header>
       <div class="header-wrapper">
-        <div class="title">{{ isMultiple ? '批量添加至' : '添加至套餐' }}</div>
+        <div class="title">{{ isMultiple ? t('批量添加至') : t('添加至套餐') }}</div>
         <div v-if="props.value.length === 1" class="config-name">{{ props.value[0].spec.name }}</div>
       </div>
     </template>
     <div v-if="isMultiple" class="selected-mark">
-      已选 <span class="num">{{ props.value.length }}</span> 个配置文件
+      {{ t('已选') }} <span class="num">{{ props.value.length }}</span> {{ t('个配置文件') }}
     </div>
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
-      <bk-form-item :label="isMultiple ? '添加至模板套餐' : '模板套餐'" property="pkgs" required>
+      <bk-form-item :label="isMultiple ? t('添加至模板套餐') : t('模板套餐')" property="pkgs" required>
         <bk-select v-model="selectedPkgs" multiple @change="handPkgsChange">
           <bk-option v-for="pkg in allPackages" :key="pkg.id" :value="pkg.id" :label="pkg.spec.name"> </bk-option>
         </bk-select>
       </bk-form-item>
     </bk-form>
     <div v-if="citedList.length">
-    <p class="tips">以下服务配置的未命名版本中将添加已选配置文件的 <span class="notice">latest 版本</span></p>
+    <p class="tips">{{ t('以下服务配置的未命名版本中将添加已选配置文件的') }} <span class="notice">latest {{ t('版本') }}</span></p>
     <div class="service-table">
       <bk-loading style="min-height: 100px" :loading="loading">
         <bk-table :data="citedList" :max-height="maxTableHeight">
-          <bk-table-column label="目标模板套餐" prop="template_set_name"></bk-table-column>
-          <bk-table-column label="使用此套餐的服务">
+          <bk-table-column :label="t('目标模板套餐')" prop="template_set_name"></bk-table-column>
+          <bk-table-column :label="t('使用此套餐的服务')">
             <template #default="{ row }">
               <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
                 <div v-overflow-title class="name-text">{{ row.app_name }}</div>
@@ -48,6 +49,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
@@ -59,6 +61,7 @@ import LinkToApp from '../../../components/link-to-app.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -140,7 +143,7 @@ const handleConfirm = async () => {
     close();
     Message({
       theme: 'success',
-      message: '添加配置文件成功',
+      message: t('添加配置文件成功'),
     });
   } catch (e) {
     console.log(e);

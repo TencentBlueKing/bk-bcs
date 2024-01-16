@@ -12,24 +12,27 @@
       <template v-if="props.editable" #preContent="{ fullscreen }">
         <div v-show="!fullscreen" class="version-config-form">
           <bk-form ref="formRef" :rules="rules" form-type="vertical" :model="localVal">
-            <bk-form-item label="版本号" property="name">
+            <bk-form-item :label="t('版本号')" property="name">
               <bk-input v-model="localVal.name" />
             </bk-form-item>
-            <bk-form-item label="版本说明" propperty="memo">
-              <bk-input v-model="localVal.memo" type="textarea" :rows="8" :resize="true"/>
+            <bk-form-item :label="t('版本说明')" propperty="memo">
+              <bk-input v-model="localVal.memo" type="textarea" :rows="8" :resize="true" />
             </bk-form-item>
           </bk-form>
         </div>
       </template>
     </ScriptEditor>
     <div v-if="props.editable" class="action-btns">
-      <bk-button class="submit-btn" theme="primary" :loading="pending" @click="handleSubmit">{{ props.versionData.id ? '保存' : '提交' }} </bk-button>
-      <bk-button class="cancel-btn" @click="emits('close')">取消</bk-button>
+      <bk-button class="submit-btn" theme="primary" :loading="pending" @click="handleSubmit">
+        {{ props.versionData.id ? t('保存') : t('提交') }}
+      </bk-button>
+      <bk-button class="cancel-btn" @click="emits('close')">{{t('取消')}}</bk-button>
     </div>
   </section>
 </template>
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import BkMessage from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../store/global';
@@ -38,6 +41,7 @@ import { createScriptVersion, updateScriptVersion } from '../../../../api/script
 import ScriptEditor from '../components/script-editor.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const props = withDefaults(
   defineProps<{
@@ -57,14 +61,14 @@ const rules = {
   name: [
     {
       validator: (value: string) => /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value),
-      message: '无效名称，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
+      message: t('无效名称，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾'),
       trigger: 'change',
     },
   ],
   memo: [
     {
       validator: (value: string) => value.length <= 200,
-      message: '最大长度200个字符',
+      message: t('最大长度200个字符'),
     },
   ],
 };
@@ -81,7 +85,7 @@ const title = computed(() => {
   if (!props.editable) {
     return props.versionData.name;
   }
-  return props.versionData.id ? '编辑版本' : '新建版本';
+  return props.versionData.id ? t('编辑版本') : t('新建版本');
 });
 
 watch(
@@ -97,7 +101,7 @@ const handleSubmit = async () => {
   if (!localVal.value.content) {
     BkMessage({
       theme: 'error',
-      message: '脚本内容不能为空',
+      message: t('脚本内容不能为空'),
     });
     return;
   }
@@ -110,14 +114,14 @@ const handleSubmit = async () => {
       emits('submitted', { ...localVal.value }, 'update');
       BkMessage({
         theme: 'success',
-        message: '编辑版本成功',
+        message: t('编辑版本成功'),
       });
     } else {
       const res = await createScriptVersion(spaceId.value, props.scriptId, params);
       emits('submitted', { ...localVal.value, id: res.id }, 'create');
       BkMessage({
         theme: 'success',
-        message: '新建版本成功',
+        message: t('新建版本成功'),
       });
     }
   } catch (e) {

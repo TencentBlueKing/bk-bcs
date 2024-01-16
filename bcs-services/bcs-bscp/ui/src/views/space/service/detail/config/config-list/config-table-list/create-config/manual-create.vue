@@ -1,7 +1,7 @@
 <template>
   <bk-sideslider
     width="640"
-    title="新增配置文件"
+    :title="t('新增配置文件')"
     :is-show="props.show"
     :before-close="handleBeforeClose"
     @closed="close"
@@ -18,13 +18,14 @@
       @change="handleFormChange"
     />
     <section class="action-btns">
-      <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">保存</bk-button>
-      <bk-button @click="close">取消</bk-button>
+      <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">{{ t('保存') }}</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </section>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Message from 'bkui-vue/lib/message';
 import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../../types/config';
 import { createServiceConfigItem, updateConfigContent } from '../../../../../../../../api/config';
@@ -42,6 +43,7 @@ const props = defineProps<{
 
 const serviceStore = useServiceStore();
 const { lastCreatePermission } = storeToRefs(serviceStore);
+const { t } = useI18n();
 
 const emits = defineEmits(['update:show', 'confirm']);
 const fileUploading = ref(false);
@@ -98,6 +100,9 @@ const handleSubmit = async () => {
       const stringContent = content.value as string;
       size = new Blob([stringContent]).size;
       await updateConfigContent(props.bkBizId, props.appId, stringContent, sign);
+    }
+    if (configForm.value.path?.endsWith('/') && configForm.value.path !== '/') {
+      configForm.value.path = configForm.value.path.slice(0, -1);
     }
     const params = { ...configForm.value, ...{ sign, byte_size: size } };
     await createServiceConfigItem(props.appId, props.bkBizId, params);

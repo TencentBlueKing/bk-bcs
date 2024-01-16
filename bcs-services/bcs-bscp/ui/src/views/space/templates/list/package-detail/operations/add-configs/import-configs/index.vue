@@ -1,13 +1,19 @@
 <template>
-  <bk-sideslider title="批量上传配置文件" :width="960" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider
+    :title="t('批量上传配置文件')"
+    :width="960"
+    :is-show="isShow"
+    :before-close="handleBeforeClose"
+    @closed="close"
+  >
     <div class="slider-content-container">
       <bk-form form-type="vertical">
-        <bk-form-item label="上传配置文件包" required property="package">
+        <bk-form-item :label="t('上传配置文件包')" required property="package">
           <bk-upload
             v-show="!isTableChange"
             class="config-uploader"
             theme="button"
-            tip="支持扩展名：.zip  .tar  .gz"
+            :tip="t('支持扩展名：.zip  .tar  .gz')"
             :size="100"
             :multiple="false"
             accept=".zip, .tar, .gz"
@@ -17,22 +23,22 @@
               <div ref="buttonRef">
                 <bk-button class="upload-button">
                   <upload />
-                  <span class="text">上传文件</span>
+                  <span class="text">{{ t('上传文件') }}</span>
                 </bk-button>
               </div>
             </template>
           </bk-upload>
           <div v-show="isTableChange">
             <bk-pop-confirm
-              title="确认放弃下方修改，重新上传配置项包？"
+              :title="t('确认放弃下方修改，重新上传配置项包？')"
               trigger="click"
               @confirm="() => buttonRef.click()"
             >
               <bk-button class="upload-button">
                 <upload />
-                <span class="text">重新上传</span>
+                <span class="text">{{ t('重新上传') }}</span>
               </bk-button>
-              <span class="upload-tips">支持扩展名：.zip .tar .gz</span>
+              <span class="upload-tips">{{ t('支持扩展名：.zip .tar .gz') }}</span>
             </bk-pop-confirm>
           </div>
         </bk-form-item>
@@ -40,8 +46,9 @@
       <span v-if="loading" style="color: #63656e">上传中...</span>
       <bk-loading :loading="loading">
         <div class="tips" v-if="!loading">
-          共将导入 <span>{{ importConfigList.length }}</span> 个配置项，其中
-          <span>{{ existConfigList.length }}</span> 个已存在,导入后将<span style="color: #ff9c01">覆盖原配置</span>
+          {{ t('共将导入') }} <span>{{ importConfigList.length }}</span> {{ t('个配置项，其中') }}
+          <span>{{ existConfigList.length }}</span> {{ t('个已存在,导入后将')}}
+          <span style="color: #ff9c01">{{ t('覆盖原配置') }}</span>
         </div>
         <ConfigTable
           :table-data="nonExistConfigList"
@@ -67,15 +74,16 @@
         :loading="pending"
         :disabled="!importConfigList.length"
         @click="isSelectPkgDialogShow = true"
-        >去上传</bk-button
+        >{{ t('去上传') }}</bk-button
       >
-      <bk-button @click="close">取消</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
   <SelectPackage v-model:show="isSelectPkgDialogShow" :pending="pending" @confirm="handleImport" />
 </template>
 <script lang="ts" setup>
 import { ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../../../../store/global';
 import useTemplateStore from '../../../../../../../../store/template';
@@ -86,6 +94,8 @@ import ConfigTable from './config-table.vue';
 import SelectPackage from './select-package.vue';
 import Message from 'bkui-vue/lib/message';
 import { Upload } from 'bkui-vue/lib/icon';
+
+const { t } = useI18n();
 const props = defineProps<{
   show: boolean;
 }>();
@@ -163,7 +173,7 @@ const handleImport = async (pkgIds: number[]) => {
     close();
     Message({
       theme: 'success',
-      message: '导入配置文件成功',
+      message: t('导入配置文件成功'),
     });
   } catch (e) {
     console.log(e);

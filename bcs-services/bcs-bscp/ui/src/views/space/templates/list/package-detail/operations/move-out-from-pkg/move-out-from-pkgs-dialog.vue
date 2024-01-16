@@ -3,7 +3,7 @@
     ext-cls="move-out-from-pkgs-dialog"
     header-align="center"
     footer-align="center"
-    title="确认从配置套餐中移出该配置文件?"
+    :title="t('确认从配置套餐中移出该配置文件?')"
     :width="600"
     :is-show="props.show"
     :esc-close="false"
@@ -12,7 +12,7 @@
     @closed="close"
   >
     <div style="margin-bottom: 8px">
-      配置文件: <span style="color: #313238; font-weight: 600">{{ name }}</span>
+      {{t('配置文件')}}: <span style="color: #313238; font-weight: 600">{{ name }}</span>
     </div>
     <div class="service-table">
       <bk-loading style="min-height: 100px" :loading="loading">
@@ -24,34 +24,35 @@
           @selection-change="handleSelectionChange"
         >
           <bk-table-column v-if="citedList.length > 1" type="selection" min-width="30" width="40" />
-          <bk-table-column label="所在模板套餐">
+          <bk-table-column :label="t('所在模板套餐')">
             <template #default="{ row }">
               <div class="pkg-name">
                 <span v-overflow-title class="name-text">{{ row.name }}</span>
-                <span v-if="props.currentPkg === row.id" class="tag">当前</span>
+                <span v-if="props.currentPkg === row.id" class="tag">{{t('当前')}}</span>
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column show-overflow-tooltip label="使用此套餐的服务" prop="appNames"></bk-table-column>
+          <bk-table-column show-overflow-tooltip :label="t('使用此套餐的服务')" prop="appNames"></bk-table-column>
         </bk-table>
       </bk-loading>
     </div>
     <p v-if="citedList.length === 1" class="tips">
       <Warn class="warn-icon" />
-      移出后配置文件将不存在任一套餐。你仍可在「全部配置文件」或「未指定套餐」分类下找回。
+      {{t('移出后配置文件将不存在任一套餐。你仍可在「全部配置文件」或「未指定套餐」分类下找回。')}}
     </p>
     <template #footer>
       <div class="actions-wrapper">
         <bk-button theme="primary" :loading="pending" :disabled="selectedPkgs.length === 0" @click="handleConfirm"
-          >确认移出</bk-button
+          >{{t('确认移出')}}</bk-button
         >
-        <bk-button @click="close">取消</bk-button>
+        <bk-button @click="close">{{t('取消')}}</bk-button>
       </div>
     </template>
   </bk-dialog>
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { Warn } from 'bkui-vue/lib/icon';
 import Message from 'bkui-vue/lib/message';
@@ -72,6 +73,7 @@ interface ICitedItem {
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -180,7 +182,7 @@ const handleConfirm = async () => {
     close();
     Message({
       theme: 'success',
-      message: '移出套餐成功',
+      message: t('移出套餐成功'),
     });
   } catch (e) {
     console.log(e);

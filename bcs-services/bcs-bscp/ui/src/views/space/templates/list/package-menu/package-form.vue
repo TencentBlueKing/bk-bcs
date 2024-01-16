@@ -1,15 +1,15 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
-    <bk-form-item label="模板套餐名称" property="name" required>
+    <bk-form-item :label="t('模板套餐名称')" property="name" required>
       <bk-input v-model="localVal.name" @change="change" />
     </bk-form-item>
-    <bk-form-item label="模板套餐描述" property="memo">
+    <bk-form-item :label="t('模板套餐描述')" property="memo">
       <bk-input v-model="localVal.memo" type="textarea" :rows="6" :maxlength="256" @change="change" :resize="true" />
     </bk-form-item>
-    <bk-form-item label="服务可见范围" property="public" required>
+    <bk-form-item :label="t('服务可见范围')" property="public" required>
       <bk-radio-group v-model="localVal.public" @change="change">
-        <bk-radio :label="true">公开</bk-radio>
-        <bk-radio :label="false">指定服务</bk-radio>
+        <bk-radio :label="true">{{ t('公开') }}</bk-radio>
+        <bk-radio :label="false">{{ t('指定服务') }}</bk-radio>
       </bk-radio-group>
       <bk-select
         v-if="!localVal.public"
@@ -17,7 +17,7 @@
         class="service-selector"
         multiple
         filterable
-        placeholder="请选择服务"
+        :placeholder="t('请选择服务')"
         :loading="serviceLoading"
         @change="handleServiceChange"
       >
@@ -29,15 +29,16 @@
         ></bk-option>
       </bk-select>
       <p v-if="!localVal.public && deletedApps.length > 0" class="tips">
-        提醒：修改可见范围后，服务
+        {{ t('提醒：修改可见范围后，服务') }}
         <span v-for="item in deletedApps" :key="item.id">【{{ item.spec.name }}】</span>
-        将不再引用此套餐
+        {{ t('将不再引用此套餐') }}
       </p>
     </bk-form-item>
   </bk-form>
 </template>
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
 import { storeToRefs } from 'pinia';
 import useUserStore from '../../../../../store/user';
@@ -46,6 +47,7 @@ import { getAppList } from '../../../../../api/index';
 import { IAppItem } from '../../../../../../types/app';
 
 const { userInfo } = storeToRefs(useUserStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   spaceId: string;
@@ -69,13 +71,13 @@ const rules = {
         }
         return true;
       },
-      message: '指定服务不能为空',
+      message: t('指定服务不能为空'),
     },
   ],
   memo: [
     {
       validator: (value: string) => value.length <= 200,
-      message: '最大长度200个字符',
+      message: t('最大长度200个字符'),
     },
   ],
 };

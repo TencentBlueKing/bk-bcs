@@ -17,8 +17,8 @@
       />
     </template>
     <template #columnOperations="{ config }">
-      <bk-button theme="primary" text @click="handleAddToPkgsClick(config)">添加至</bk-button>
-      <bk-button class="delete-btn" theme="primary" text @click="handleDeleteClick(config)">删除</bk-button>
+      <bk-button theme="primary" text @click="handleAddToPkgsClick(config)">{{ t('添加至') }}</bk-button>
+      <bk-button class="delete-btn" theme="primary" text @click="handleDeleteClick(config)">{{ t('删除') }}</bk-button>
     </template>
   </CommonConfigTable>
   <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="selectedConfigs" @added="refreshConfigList" />
@@ -30,6 +30,7 @@
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../../store/global';
 import useTemplateStore from '../../../../../../store/template';
@@ -45,6 +46,7 @@ import DeleteConfigDialog from '../operations/delete-configs/delete-config-dialo
 const { spaceId } = storeToRefs(useGlobalStore());
 const templateStore = useTemplateStore();
 const { currentTemplateSpace } = storeToRefs(templateStore);
+const { t } = useI18n();
 
 const configTable = ref();
 const selectedConfigs = ref<ITemplateConfigItem[]>([]);

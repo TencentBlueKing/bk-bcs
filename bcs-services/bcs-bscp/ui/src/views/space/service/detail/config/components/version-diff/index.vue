@@ -1,7 +1,7 @@
 <template>
   <bk-sideslider
     :is-show="props.show"
-    title="版本对比"
+    :title="t('版本对比')"
     ext-cls="config-version-diff-slider"
     :width="1200"
     @closed="handleClose"
@@ -22,13 +22,13 @@
             <template #leftHead>
               <slot name="baseHead">
                 <div class="diff-panel-head">
-                  <div class="version-tag base-version">{{showPublishBtn ? '线上版本' : '对比版本'}}</div>
+                  <div class="version-tag base-version">{{showPublishBtn ? t('线上版本') : t('对比版本')}}</div>
                   <bk-select
                     :model-value="selectedBaseVersion"
                     style="width: 320px"
                     :loading="versionListLoading"
                     :clearable="false"
-                    no-data-text="暂无数据"
+                    :no-data-text="t('暂无数据')"
                     @change="handleSelectVersion"
                   >
                     <bk-option
@@ -45,7 +45,7 @@
             <template #rightHead>
               <slot name="currentHead">
                 <div class="diff-panel-head">
-                  <div class="version-tag">当前版本</div>
+                  <div class="version-tag">{{ t('当前版本') }}</div>
                   <div class="version-name">{{ props.currentVersion.spec.name }}</div>
                 </div>
               </slot>
@@ -58,9 +58,9 @@
       <div class="actions-btns">
         <slot name="footerActions">
           <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')"
-            >上线版本</bk-button
+            >{{ t('上线版本') }}</bk-button
           >
-          <bk-button @click="handleClose">关闭</bk-button>
+          <bk-button @click="handleClose">{{ t('关闭') }}</bk-button>
         </slot>
       </div>
     </template>
@@ -68,6 +68,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { IConfigVersion, IConfigDiffSelected } from '../../../../../../../../types/config';
 import { IDiffDetail } from '../../../../../../../../types/service';
@@ -76,6 +77,7 @@ import { getConfigVersionList } from '../../../../../../../api/config';
 import AsideMenu from './aside-menu/index.vue';
 import Diff from '../../../../../../../components/diff/index.vue';
 
+const { t } = useI18n();
 const props = defineProps<{
   show: boolean;
   showPublishBtn?: boolean; // 是否显示发布按钮

@@ -1,7 +1,7 @@
 <template>
   <bk-dialog
     :is-show="props.show"
-    :title="'批量导入'"
+    :title="t('批量导入')"
     :theme="'primary'"
     width="960"
     height="720"
@@ -17,7 +17,7 @@
         </bk-radio-group>
         <div class="tips" v-if="importType === 'text'">只支持string、number类型,其他类型请使用文件导入</div>
       </bk-form-item> -->
-      <bk-form-item label="配置文件内容" required>
+      <bk-form-item :label="t('配置文件内容')" required>
         <KvContentEditor
           v-if="importType === 'text'"
           ref="editorRef"
@@ -35,15 +35,18 @@
     </bk-form>
     <template #footer>
       <bk-button theme="primary" style="margin-right: 8px" :disabled="!confirmBtnPerm" @click="handleConfirm"
-        >导入</bk-button>
-      <bk-button @click="handleClose">取消</bk-button>
+        >{{ t('导入') }}</bk-button>
+      <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
     </template>
   </bk-dialog>
 </template>
 
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import KvContentEditor from '../../../components/kv-import-editor.vue';
+
+const { t } = useI18n();
 const props = defineProps<{
   show: boolean;
   bkBizId: string;

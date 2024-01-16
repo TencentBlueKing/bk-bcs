@@ -1,8 +1,8 @@
 <template>
-  <bk-alert theme="info">{{ headInfo }}<span @click="goGroupDoc" class="hyperlink">分组管理</span></bk-alert>
+  <bk-alert theme="info">{{ headInfo }}<span @click="goGroupDoc" class="hyperlink">{{ t('分组管理') }}</span></bk-alert>
   <section class="groups-management-page">
     <div class="operate-area">
-      <bk-button theme="primary" @click="openCreateGroupDialog"><Plus class="button-icon" />新增分组</bk-button>
+      <bk-button theme="primary" @click="openCreateGroupDialog"><Plus class="button-icon" />{{ t('新增分组') }}</bk-button>
       <div class="filter-actions">
         <bk-checkbox
           v-model="isCategorizedView"
@@ -13,11 +13,11 @@
           :disabled="changeViewPending"
           @change="handleChangeView"
         >
-          按标签分类查看
+          {{ t('按标签分类查看') }}
         </bk-checkbox>
         <bk-input
           class="search-group-input"
-          placeholder="分组名称/标签选择器"
+          :placeholder="t('分组名称/标签选择器')"
           @input="handleSearch"
           v-model.trim="searchInfo"
           @clear="handleSearch"
@@ -32,7 +32,7 @@
     <div class="group-table-wrapper">
       <bk-loading style="min-height: 300px" :loading="listLoading">
           <bk-table class="group-table" :border="['outer']" :data="tableData">
-            <bk-table-column label="分组名称" :width="210" show-overflow-tooltip>
+            <bk-table-column :label="t('分组名称')" :width="210" show-overflow-tooltip>
               <template #default="{ row }">
                 <div v-if="isCategorizedView" class="categorized-view-name">
                   <DownShape
@@ -45,7 +45,7 @@
                 <template v-else>{{ row.name }}</template>
               </template>
             </bk-table-column>
-            <bk-table-column label="标签选择器" show-overflow-tooltip>
+            <bk-table-column :label="t('标签选择器')" show-overflow-tooltip>
               <template #default="{ row }">
                 <template v-if="!row.IS_CATEORY_ROW">
                   <template v-if="row.selector">
@@ -58,25 +58,25 @@
                 </template>
               </template>
             </bk-table-column>
-            <bk-table-column label="服务可见范围" :width="240">
+            <bk-table-column :label="t('服务可见范围')" :width="240">
               <template #default="{ row }">
                 <template v-if="!row.IS_CATEORY_ROW">
-                  <span v-if="row.public">公开</span>
+                  <span v-if="row.public">{{ t('公开') }}</span>
                   <span v-else>{{ getBindAppsName(row.bind_apps) }}</span>
                 </template>
               </template>
             </bk-table-column>
-            <bk-table-column label="分组状态" :width="100">
+            <bk-table-column :label="t('分组状态')" :width="100">
               <template #default="{ row }">
                 <template v-if="!row.IS_CATEORY_ROW">
                   <span class="group-status">
                     <div :class="['dot', { published: row.released_apps_num > 0 }]"></div>
-                    {{ row.released_apps_num > 0 ? '已上线' : '未上线' }}
+                    {{ row.released_apps_num > 0 ? t('已上线') : t('未上线') }}
                   </span>
                 </template>
               </template>
             </bk-table-column>
-            <bk-table-column label="上线服务数" :width="110">
+            <bk-table-column :label="t('上线服务数')" :width="110">
               <template #default="{ row }">
                 <template v-if="!row.IS_CATEORY_ROW">
                   <template v-if="row.released_apps_num === 0">0</template>
@@ -86,25 +86,25 @@
                 </template>
               </template>
             </bk-table-column>
-            <bk-table-column label="操作" :width="120">
+            <bk-table-column :label="t('操作')" :width="120">
               <template #default="{ row }">
                 <div v-if="!row.IS_CATEORY_ROW" class="action-btns">
-                  <div v-bk-tooltips="handleTooltip(row.released_apps_num, '编辑')" class="btn-item">
+                  <div v-bk-tooltips="handleTooltip(row.released_apps_num, t('编辑'))" class="btn-item">
                     <bk-button
                       text
                       theme="primary"
                       :disabled="row.released_apps_num > 0"
                       @click="openEditGroupDialog(row)">
-                      编辑分组
+                      {{ t('编辑分组') }}
                     </bk-button>
                   </div>
-                  <div v-bk-tooltips="handleTooltip(row.released_apps_num, '删除')" class="btn-item">
+                  <div v-bk-tooltips="handleTooltip(row.released_apps_num, t('删除'))" class="btn-item">
                     <bk-button
                       text
                       theme="primary"
                       :disabled="row.released_apps_num > 0"
                       @click="handleDeleteGroup(row)">
-                      删除
+                      {{ t('删除') }}
                     </bk-button>
                   </div>
                 </div>
@@ -137,17 +137,18 @@
   </section>
   <DeleteConfirmDialog
     v-model:isShow="isDeleteGroupDialogShow"
-    title="确认删除该分组？"
+    :title="t('确认删除该分组？')"
     @confirm="handleDeleteGroupConfirm"
   >
     <div style="margin-bottom: 8px">
-      分组名称: <span style="color: #313238; font-weight: 600">{{ deleteGroupItem?.name }}</span>
+      {{t('分组名称')}}: <span style="color: #313238; font-weight: 600">{{ deleteGroupItem?.name }}</span>
     </div>
-    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+    <div>{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
   </DeleteConfirmDialog>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue';
+import { ref, watch, onMounted, nextTick, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { Plus, Search, DownShape } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../store/global';
@@ -163,6 +164,7 @@ import { debounce } from 'lodash';
 import Message from 'bkui-vue/lib/message';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const listLoading = ref(false);
 const groupList = ref<IGroupItem[]>([]);
@@ -193,8 +195,7 @@ const editingGroup = ref<IGroupItem>({
 });
 const isPublishedSliderShow = ref(false);
 const isSearchEmpty = ref(false);
-const headInfo =
-  '分组由 1 个或多个标签选择器组成，服务配置版本选择分组上线结合客户端配置的标签用于灰度发布、A/B Test等运营场景，详情参考文档：';
+const headInfo = computed(() => t('分组由 1 个或多个标签选择器组成，服务配置版本选择分组上线结合客户端配置的标签用于灰度发布、A/B Test等运营场景，详情参考文档：'));
 
 watch(
   () => spaceId.value,
@@ -356,7 +357,7 @@ const handleDeleteGroupConfirm = async () => {
   await deleteGroup(spaceId.value, deleteGroupItem.value!.id);
   Message({
     theme: 'success',
-    message: '删除分组成功',
+    message: t('删除分组成功'),
   });
   if (tableData.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current = pagination.value.current - 1;
@@ -389,7 +390,7 @@ const handlePageLimitChange = (val: number) => {
 const handleTooltip = (flag: boolean, info: string) => {
   if (flag) {
     return {
-      content: `分组已上线，不能${info}`,
+      content: `${t('分组已上线，不能')}${info}`,
       placement: 'top',
     };
   }

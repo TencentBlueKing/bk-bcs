@@ -8,7 +8,7 @@
       :disabled="props.permCheckLoading"
       @click="handleBtnClick"
     >
-      上线版本
+      {{ t('上线版本') }}
     </bk-button>
     <Teleport to="body">
       <VersionLayout v-if="isSelectGroupPanelOpen">
@@ -19,7 +19,7 @@
               <span class="service-name">{{ appData.spec.name }}</span>
             </span>
             <AngleRight class="arrow-right" />
-            上线版本：{{ versionData.spec.name }}
+            {{ t('上线版本') }}：{{ versionData.spec.name }}
           </section>
         </template>
         <select-group
@@ -34,9 +34,9 @@
         <template #footer>
           <section class="actions-wrapper">
             <bk-button class="publish-btn" theme="primary" @click="handleDiffOrPublish">{{
-              versionListByGroup.length ? '对比并上线' : '上线版本'
+              versionListByGroup.length ? t('对比并上线') : t('上线版本')
             }}</bk-button>
-            <bk-button @click="handlePanelClose">取消</bk-button>
+            <bk-button @click="handlePanelClose">{{ t('取消') }}</bk-button>
           </section>
         </template>
       </VersionLayout>
@@ -62,6 +62,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
 import { InfoBox } from 'bkui-vue';
 import BkMessage from 'bkui-vue/lib/message';
@@ -84,6 +85,7 @@ const serviceStore = useServiceStore();
 const versionStore = useConfigStore();
 const { appData } = storeToRefs(serviceStore);
 const { versionData, publishedVersionId } = storeToRefs(versionStore);
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;
@@ -159,7 +161,7 @@ const handleBtnClick = () => {
 
 const handleOpenPublishDialog = () => {
   if (groups.value.length === 0) {
-    BkMessage({ theme: 'error', message: '请选择上线分组' });
+    BkMessage({ theme: 'error', message: t('请选择上线分组') });
     return;
   }
   isConfirmDialogShow.value = true;
@@ -180,7 +182,7 @@ const handleConfirm = () => {
   InfoBox({
     // @ts-ignore
     infoType: 'success',
-    title: '版本已上线',
+    title: t('版本已上线'),
     dialogType: 'confirm',
   });
 };

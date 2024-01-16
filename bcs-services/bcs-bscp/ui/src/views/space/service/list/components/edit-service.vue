@@ -10,8 +10,8 @@
     </template>
     <div class="service-edit-wrapper">
       <bk-form v-if="isViewMode" label-width="100">
-        <bk-form-item :label="t('服务名称')">{{ serviceData!.spec.name }}</bk-form-item>
-        <bk-form-item :label="t('服务别名')">{{ serviceData!.spec.alias }}</bk-form-item>
+        <bk-form-item :label="t('form_服务名称')">{{ serviceData!.spec.name }}</bk-form-item>
+        <bk-form-item :label="t('form_服务别名')">{{ serviceData!.spec.alias }}</bk-form-item>
         <bk-form-item :label="t('服务描述')">
           {{ serviceData!.spec.memo || '--' }}
         </bk-form-item>

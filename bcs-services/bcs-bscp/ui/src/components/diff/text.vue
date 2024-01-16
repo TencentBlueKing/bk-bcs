@@ -1,11 +1,11 @@
 <template>
   <div class="diff-wrapper">
     <div class="permission-diff" v-show="isShowPermissionDiff">
-      <div class="left-header">文件属性</div>
+      <div class="left-header">{{ t('文件属性') }}</div>
       <section ref="permissionDiffRef" class="fill-diff-wrapper"></section>
     </div>
     <div class="text-diff">
-      <div class="left-header" v-show="isShowPermissionDiff">文件内容</div>
+      <div class="left-header" v-show="isShowPermissionDiff">{{ t('文件内容') }}</div>
       <section ref="textDiffRef" class="text-diff-wrapper"></section>
     </div>
     <div class="footer">
@@ -19,6 +19,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker.js?worker';
@@ -29,6 +30,7 @@ import { IVariableEditParams } from '../../../types/variable';
 import useDiffEditorVariableReplace from '../../utils/hooks/use-diff-editor-variable-replace';
 import navigator from './navigator.vue';
 
+const { t } = useI18n();
 self.MonacoEnvironment = {
   getWorker(_, label) {
     if (label === 'json') {

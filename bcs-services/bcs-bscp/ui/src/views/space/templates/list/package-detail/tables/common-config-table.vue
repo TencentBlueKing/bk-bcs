@@ -7,7 +7,7 @@
       <bk-input
         v-model="searchStr"
         class="search-script-input"
-        placeholder="配置文件名称/路径/描述/创建人/更新人"
+        :placeholder="t('配置文件名称/路径/描述/创建人/更新人')"
         :clearable="true"
         @clear="refreshList()"
         @input="handleSearchInputChange"
@@ -32,21 +32,21 @@
         @select-all="handleSelectAll"
       >
         <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
-        <bk-table-column label="配置文件名称">
+        <bk-table-column :label="t('配置文件名称')">
           <template #default="{ row }">
             <div v-if="row.spec" v-overflow-title class="config-name" @click="goToViewVersionManage(row.id)">
               {{ row.spec.name }}
             </div>
           </template>
         </bk-table-column>
-        <bk-table-column label="配置文件路径" prop="spec.path"></bk-table-column>
-        <bk-table-column label="配置文件描述" prop="spec.memo">
+        <bk-table-column :label="t('配置文件路径')" prop="spec.path"></bk-table-column>
+        <bk-table-column :label="t('配置文件描述')" prop="spec.memo">
           <template #default="{ row }">
             <span v-if="row.spec">{{ row.spec.memo || '--' }}</span>
           </template>
         </bk-table-column>
         <template v-if="showCitedByPkgsCol">
-          <bk-table-column label="所在套餐" :width="200">
+          <bk-table-column :label="t('所在套餐')" :width="200">
             <template #default="{ index }">
               <template v-if="citedByPkgsLoading"><Spinner /></template>
               <template v-else-if="citeByPkgsList[index]">
@@ -57,7 +57,7 @@
           </bk-table-column>
         </template>
         <template v-if="showBoundByAppsCol">
-          <bk-table-column label="被引用">
+          <bk-table-column :label="t('被引用')">
             <template #default="{ row, index }">
               <template v-if="boundByAppsCountLoading"><Spinner /></template>
               <template v-else-if="boundByAppsCountList[index]">
@@ -74,21 +74,21 @@
             </template>
           </bk-table-column>
         </template>
-        <bk-table-column label="创建人" prop="revision.creator" :width="100"></bk-table-column>
-        <bk-table-column label="更新人" prop="revision.reviser" :width="100"></bk-table-column>
-        <bk-table-column label="更新时间" prop="" :width="180">
+        <bk-table-column :label="t('创建人')" prop="revision.creator" :width="100"></bk-table-column>
+        <bk-table-column :label="t('更新人')" prop="revision.reviser" :width="100"></bk-table-column>
+        <bk-table-column :label="t('更新时间')" prop="" :width="180">
           <template #default="{ row }">
             <template v-if="row.revision">
               {{ datetimeFormat(row.revision.update_at) }}
             </template>
           </template>
         </bk-table-column>
-        <bk-table-column label="操作" width="140" fixed="right">
+        <bk-table-column :label="t('操作')" width="140" fixed="right">
           <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
-                <bk-button theme="primary" text @click="goToCreateVersionManage(row.id)">编辑</bk-button>
-                <bk-button theme="primary" text @click="goToVersionManage(row.id)">版本管理</bk-button>
+                <bk-button theme="primary" text @click="goToCreateVersionManage(row.id)">{{ t('编辑') }}</bk-button>
+                <bk-button theme="primary" text @click="goToVersionManage(row.id)">{{ t('版本管理') }}</bk-button>
                 <bk-popover
                   theme="light template-config-actions-popover"
                   placement="bottom-end"
@@ -100,13 +100,13 @@
                   </div>
                   <template #content>
                     <div class="config-actions">
-                      <div class="action-item" @click="handleOpenAddToPkgsDialog(row)">添加至套餐</div>
+                      <div class="action-item" @click="handleOpenAddToPkgsDialog(row)">{{ t('添加至套餐') }}</div>
                       <div
                         v-if="citeByPkgsList[index].length > 0"
                         class="action-item"
                         @click="handleOpenMoveOutFromPkgsDialog(row)"
                       >
-                        移出套餐
+                        {{ t('移出套餐') }}
                       </div>
                     </div>
                   </template>
@@ -138,6 +138,7 @@
 </template>
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Ellipsis, Search, Spinner } from 'bkui-vue/lib/icon';
@@ -159,7 +160,7 @@ import TableEmpty from '../../../../../../components/table/table-empty.vue';
 import { debounce } from 'lodash';
 
 const router = useRouter();
-
+const { t } = useI18n();
 const { spaceId } = storeToRefs(useGlobalStore());
 const templateStore = useTemplateStore();
 const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView, batchUploadIds } =

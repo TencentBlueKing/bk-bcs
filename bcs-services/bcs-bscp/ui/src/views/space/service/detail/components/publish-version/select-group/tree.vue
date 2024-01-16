@@ -2,11 +2,11 @@
   <div class="group-tree-container">
     <div class="operate-actions">
       <div class="btns">
-        <bk-button text theme="primary" @click="handleSelectAll">全选</bk-button>
-        <bk-button text theme="primary" @click="handleClearAll">全不选</bk-button>
+        <bk-button text theme="primary" @click="handleSelectAll">{{t('全选')}}</bk-button>
+        <bk-button text theme="primary" @click="handleClearAll">{{t('全不选')}}</bk-button>
         <bk-select
           class="version-select"
-          no-data-text="暂无已上线的可选版本"
+          :no-data-text="t('暂无已上线的可选版本')"
           :multiple="true"
           :filterable="true"
           :input-search="false"
@@ -16,7 +16,7 @@
           @toggle="versionSelectorOpen = $event">
           <template #trigger>
             <bk-button text theme="primary">
-              按版本选择
+              {{ t('按版本选择') }}
               <AngleUp class="arrow-icon" v-if="versionSelectorOpen" />
               <AngleDown class="arrow-icon" v-else />
             </bk-button>
@@ -29,7 +29,7 @@
             :value="version.id" />
         </bk-select>
       </div>
-      <bk-input v-model="searchStr" class="group-search-input" placeholder="搜索分组名称/标签key" :clearable="true">
+      <bk-input v-model="searchStr" class="group-search-input" :placeholder="t('搜索分组名称/标签key')" :clearable="true">
         <template #suffix>
           <Search class="search-input-icon" />
         </template>
@@ -52,7 +52,7 @@
               :model-value="node.checked"
               :disabled="node.disabled"
               :indeterminate="node.indeterminate"
-              v-bk-tooltips="{ content: '已上线分组不可取消选择',disabled: !node.disabled }"
+              v-bk-tooltips="{ content: t('已上线分组不可取消选择'),disabled: !node.disabled }"
               @change="handleNodeCheckChange(node)">
             </bk-checkbox>
             <div class="node-label" @click="handleNodeCheckChange(node)">
@@ -81,6 +81,7 @@
 </template>
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Search, AngleDown, AngleUp } from 'bkui-vue/lib/icon';
 import { IGroupToPublish } from '../../../../../../../../types/group';
 import { IConfigVersion } from '../../../../../../../../types/config';
@@ -92,6 +93,8 @@ interface IGroupNodeData extends IGroupToPublish {
   checked: boolean;
   disabled: boolean;
 }
+
+const { t } = useI18n();
 
 // 将全量分组数据按照规则key分组，并记录所有分组节点数据
 const categorizingData = (groupList: IGroupToPublish[]) => {
@@ -133,10 +136,10 @@ const selectedVersionIds = ref<number[]>([]);
 const searchTreeData = computed(() => {
   if (searchStr.value === '') return allGroupNode.value;
   isSearchEmpty.value = true;
-  return allGroupNode.value.filter(node => {
-    const { name, rules } = node
-    const searchText = searchStr.value.toLowerCase()
-    return name.toLowerCase().includes(searchText) || rules.some(rule => rule.key.toLowerCase().includes(searchText))
+  return allGroupNode.value.filter((node) => {
+    const { name, rules } = node;
+    const searchText = searchStr.value.toLowerCase();
+    return name.toLowerCase().includes(searchText) || rules.some(rule => rule.key.toLowerCase().includes(searchText));
   });
 });
 
@@ -154,9 +157,9 @@ watch(
   () => props.value,
   (val) => {
     const ids = val.map(item => item.id);
-    allGroupNode.value.forEach(node => {
+    allGroupNode.value.forEach((node) => {
       node.checked = ids.includes(node.id);
-    })
+    });
   },
 );
 
@@ -186,7 +189,7 @@ const handleClearAll = () => {
 // 按版本选择
 const handleSelectVersion = (val: number[]) => {
   const list: IGroupToPublish[] = [];
-  val.forEach(id => {
+  val.forEach((id) => {
     const version = props.versionList.find(item => item.id === id);
     if (version) {
       version.status.released_groups.forEach((releaseItem) => {
@@ -200,7 +203,7 @@ const handleSelectVersion = (val: number[]) => {
     }
   });
   // 调整分组上线时，当前版本已上线分组不可取消
-  props.releasedGroups.forEach(id => {
+  props.releasedGroups.forEach((id) => {
     if (!list.find(item => item.id === id)) {
       const group = allGroupNode.value.find(groupItem => groupItem.id === id);
       if (group) {

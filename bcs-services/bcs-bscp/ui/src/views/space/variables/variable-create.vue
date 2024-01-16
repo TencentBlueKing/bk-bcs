@@ -1,16 +1,17 @@
 <template>
-  <bk-sideslider title="新增变量" :width="640" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider :title="t('新增变量')" :width="640" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="variable-form">
       <EditingForm ref="formRef" type="create" :prefix="prefix" :value="variableConfig" @change="handleFormChange" />
     </div>
     <div class="action-btns">
-      <bk-button theme="primary" :loading="pending" @click="handleCreateSubmit">创建</bk-button>
-      <bk-button @click="close">取消</bk-button>
+      <bk-button theme="primary" :loading="pending" @click="handleCreateSubmit">{{t('创建')}}</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import Message from 'bkui-vue/lib/message';
 import useModalCloseConfirmation from '../../../utils/hooks/use-modal-close-confirmation';
@@ -20,6 +21,7 @@ import { IVariableEditParams } from '../../../../types/variable';
 import EditingForm from './editing-form.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -71,7 +73,7 @@ const handleCreateSubmit = async () => {
     emits('created');
     Message({
       theme: 'success',
-      message: '创建变量成功',
+      message: t('创建变量成功'),
     });
   } catch (e) {
     console.log(e);

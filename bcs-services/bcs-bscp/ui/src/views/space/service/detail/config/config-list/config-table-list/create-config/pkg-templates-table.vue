@@ -6,7 +6,7 @@
       <ExclamationCircleShape
         v-if="props.conflictTpls.length > 0"
         v-bk-tooltips="{
-          content: '检测到模板冲突，请先删除冲突套餐',
+          content: t('检测到模板冲突，请先删除冲突套餐'),
         }"
         class="conflict-icon"
       />
@@ -15,9 +15,9 @@
     <table v-if="expand" v-bkloading="{ loading: listLoading }" class="template-table">
       <thead>
         <tr>
-          <th>模板名称</th>
-          <th>模板路径</th>
-          <th>版本号</th>
+          <th>{{ t('模板名称') }}</th>
+          <th>{{ t('模板路径') }}</th>
+          <th>{{ t('版本号') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -62,7 +62,7 @@
         </template>
         <tr v-else>
           <td colspan="3">
-            <bk-exception class="empty-tips" scene="part" type="empty">该套餐下暂无模板</bk-exception>
+            <bk-exception class="empty-tips" scene="part" type="empty">{{ t('该套餐下暂无模板') }}</bk-exception>
           </td>
         </tr>
       </tbody>
@@ -71,6 +71,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { RightShape, ExclamationCircleShape, Close } from 'bkui-vue/lib/icon';
 import {
   IAllPkgsGroupBySpaceInBiz,
@@ -82,6 +83,7 @@ import { getTemplatesByPackageId, getTemplateVersionsNameByIds } from '../../../
 interface ITemplateConfigWithVersions extends ITemplateConfigItem {
   versions: { id: number; name: string; memo: string; isLatest: boolean }[];
 }
+const { t } = useI18n();
 
 const props = withDefaults(
   defineProps<{
