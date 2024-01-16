@@ -35,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/render"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/repo"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/utils"
 )
 
@@ -45,8 +46,9 @@ type AppMonitorReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 
-	Ctx    context.Context
-	Render render.IRender
+	Ctx         context.Context
+	Render      render.IRender
+	RepoManager *repo.Manager
 }
 
 // Reconcile app monitor
@@ -84,6 +86,9 @@ func (r *AppMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 	if err := r.checkLabels(appMonitor); err != nil {
+		return ctrl.Result{}, err
+	}
+	if err := r.checkRepo(appMonitor); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -209,6 +214,7 @@ func (r *AppMonitorReconciler) checkLabels(monitor *monitorextensionv1.AppMonito
 			"labels": map[string]interface{}{
 				monitorextensionv1.LabelKeyForScenarioName: monitor.Spec.Scenario,
 				monitorextensionv1.LabelKeyForBizID:        monitor.Spec.BizId,
+				// monitorextensionv1.LabelKeyForScenarioRepo: repo.GenRepoKeyFromAppMonitor(monitor),
 			},
 		},
 	}
@@ -228,6 +234,23 @@ func (r *AppMonitorReconciler) checkLabels(monitor *monitorextensionv1.AppMonito
 		return errors.Wrapf(err, "patch app monitor %s/%s annotation failed, patcheStruct: %s",
 			monitor.GetNamespace(), monitor.GetName(), string(patchBytes))
 	}
+	return nil
+}
+
+func (r *AppMonitorReconciler) checkRepo(monitor *monitorextensionv1.AppMonitor) error {
+	repoRef := monitor.Spec.RepoRef
+	if repoRef == nil {
+		return nil
+	}
+
+	repoKey := repo.GenRepoKeyFromAppMonitor(monitor)
+	_, ok := r.RepoManager.GetRepo(repoKey)
+	if !ok {
+		if err := r.RepoManager.RegisterRepoFromArgo(repoRef.URL, repoRef.TargetRevision); err != nil {
+			return fmt.Errorf("register repo failed, err: %s", err.Error())
+		}
+	}
+
 	return nil
 }
 
