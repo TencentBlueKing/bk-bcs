@@ -1487,6 +1487,7 @@ message GenerateReleaseAndPublishReq {
 
 message PublishResp {
   uint32 published_strategy_history_id = 1;
+  bool have_credentials = 2;
 }
 
 message ListInstancesReq {
