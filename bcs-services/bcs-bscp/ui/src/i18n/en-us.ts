@@ -317,6 +317,8 @@ export default {
   请输入关键字: 'Please enter a keyword',
   '格式：': 'Format:',
   'key 类型 value': 'key type value',
+  新增服务密钥: 'Add service key',
+  调整分组上线成功: 'Adjustment of grouping went online successfully',
 
   // 分组管理
   新增分组: 'New group',

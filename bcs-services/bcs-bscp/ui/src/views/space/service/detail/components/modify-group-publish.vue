@@ -78,7 +78,7 @@ import VersionLayout from '../config/components/version-layout.vue';
 import ConfirmDialog from './publish-version/confirm-dialog.vue';
 import SelectGroup from './publish-version/select-group/index.vue';
 import VersionDiff from '../config/components/version-diff/index.vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { getConfigVersionList } from '../../../../../api/config';
 import { IConfigVersion } from '../../../../../../types/config';
 
@@ -99,6 +99,7 @@ const props = defineProps<{
 const emit = defineEmits(['confirm']);
 
 const route = useRoute();
+const router = useRouter();
 const bkBizId = String(route.params.spaceId);
 const appId = Number(route.params.appId);
 const versionList = ref<IConfigVersion[]>([]);
@@ -190,17 +191,29 @@ const openPreviewVersionDiff = (id: number) => {
 };
 
 // 上线确认
-const handleConfirm = () => {
+const handleConfirm = (haveCredentials: boolean) => {
+  console.log(haveCredentials);
   isDiffSliderShow.value = false;
   publishedVersionId.value = versionData.value.id;
   handlePanelClose();
   emit('confirm');
-  InfoBox({
-    // @ts-ignore
-    infoType: 'success',
-    title: '调整分组上线成功',
-    dialogType: 'confirm',
-  });
+  if (haveCredentials) {
+    InfoBox({
+      infoType: 'success',
+      title: t('调整分组上线成功'),
+      dialogType: 'confirm',
+    });
+  } else {
+    InfoBox({
+      infoType: 'success',
+      title: t('调整分组上线成功'),
+      confirmText: t('新增服务密钥'),
+      cancelText: t('稍后再说'),
+      onConfirm: () => {
+        router.push({ name: 'credentials-management' });
+      },
+    });
+  }
 };
 
 // 关闭选择分组面板
