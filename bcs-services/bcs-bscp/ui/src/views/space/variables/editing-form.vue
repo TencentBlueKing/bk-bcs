@@ -1,7 +1,7 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item :label="t('变量名称')" property="name" :required="!isEditMode">
-      <bk-input v-model.trim="localVal.name" :disabled="isEditMode" @change="change">
+      <bk-input v-model.trim="localVal.name" :placeholder="t('请输入')" :disabled="isEditMode" @change="change">
         <template #prefix>
           <bk-select
             v-model="localPrefix"
@@ -23,10 +23,10 @@
       </bk-select>
     </bk-form-item>
     <bk-form-item :label="t('默认值')" property="default_val" required>
-      <bk-input v-model="localVal.default_val" @input="change" />
+      <bk-input v-model="localVal.default_val" :placeholder="t('请输入')" @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('描述')" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :rows="5" @input="change" :resize="true" />
+      <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :maxlength="200" :rows="5" @input="change" :resize="true" />
     </bk-form-item>
   </bk-form>
 </template>

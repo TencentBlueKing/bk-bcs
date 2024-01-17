@@ -91,7 +91,7 @@
           <div class="tips">
             请输入服务名 <span>{{ deleteService!.spec.name }}</span> 以确认删除
           </div>
-          <bk-input v-model="dialogInputStr" />
+          <bk-input v-model="dialogInputStr" :placeholder="t('请输入')" />
         </div>
       </div>
       <template #footer>

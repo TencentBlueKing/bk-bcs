@@ -10,6 +10,7 @@
       :input-search="false"
       :clearable="false"
       :loading="loading"
+      :search-placeholder="$t('请输入关键字')"
       @change="handleAppChange">
       <template #trigger>
         <div class="selector-trigger">

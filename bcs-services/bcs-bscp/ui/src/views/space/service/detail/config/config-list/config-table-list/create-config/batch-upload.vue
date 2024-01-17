@@ -187,7 +187,6 @@ const clearData = () => {
   height: calc(100vh - 101px);
 }
 .upload-button {
-  width: 100px;
   .text {
     margin-left: 5px;
   }

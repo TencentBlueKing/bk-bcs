@@ -4,6 +4,8 @@
     :width="440"
     :title="props.title"
     :loading="pending"
+    :confirm-text="t('确定')"
+    :cancel-text="t('取消')"
     @confirm="handleConfirm"
     @closed="handleCancel">
     <div class="confirm-content">

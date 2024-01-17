@@ -5,7 +5,7 @@
         <VersionListAside :version-detail-view="versionDetailView" :bk-biz-id="bkBizId" :app-id="appId" />
         <div :class="['view-change-trigger', { extend: versionDetailView }]" @click="handleToggleView">
           <AngleDoubleRight class="arrow-icon" />
-          <span class="text">{{ t('版本详情')}} </span>
+          <span :class="['text',{'en-text': locale === 'en-US'}]">{{ t('版本详情')}} </span>
         </div>
       </div>
       <div class="config-setting-area">
@@ -38,7 +38,7 @@ import { AxiosError } from 'axios';
 
 const route = useRoute();
 const router = useRouter();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const serviceStore = useServiceStore();
 const configStore = useConfigStore();
 
@@ -178,6 +178,7 @@ const handleToggleView = () => {
   background: #c4c6cc;
   border-radius: 0 4px 4px 0;
   text-align: center;
+  height: auto;
   cursor: pointer;
   &:hover {
     background: #a3c5fd;
@@ -192,6 +193,9 @@ const handleToggleView = () => {
     margin-top: -8px;
     font-size: 12px;
     transform: scale(0.833);
+  }
+  .en-text {
+    writing-mode: vertical-lr;
   }
   .arrow-icon {
     font-size: 14px;

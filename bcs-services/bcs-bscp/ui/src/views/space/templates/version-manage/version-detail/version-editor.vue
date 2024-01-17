@@ -13,19 +13,19 @@
       <div v-if="!isViewMode" class="config-form">
         <bk-form ref="formRef" form-type="vertical" :model="formData" :rules="rules">
           <bk-form-item :label="t('版本号')" property="revision_name">
-            <bk-input v-model="formData.revision_name" />
+            <bk-input v-model="formData.revision_name" :placeholder="t('请输入')"/>
           </bk-form-item>
           <bk-form-item :label="t('版本描述')" property="revision_memo">
-            <bk-input v-model="formData.revision_memo" type="textarea" :rows="4" :maxlength="200" :resize="true" />
+            <bk-input v-model="formData.revision_memo" type="textarea" :placeholder="t('请输入')" :rows="4" :maxlength="200" :resize="true" />
           </bk-form-item>
           <bk-form-item :label="t('文件权限')" required>
             <PermissionInputPicker v-model="formData.privilege" />
           </bk-form-item>
           <bk-form-item :label="t('用户')" required>
-            <bk-input v-model="formData.user" />
+            <bk-input v-model="formData.user" :placeholder="t('请输入')"/>
           </bk-form-item>
           <bk-form-item :label="t('用户组')" required>
-            <bk-input v-model="formData.user_group" />
+            <bk-input v-model="formData.user_group" :placeholder="t('请输入')"/>
           </bk-form-item>
         </bk-form>
       </div>

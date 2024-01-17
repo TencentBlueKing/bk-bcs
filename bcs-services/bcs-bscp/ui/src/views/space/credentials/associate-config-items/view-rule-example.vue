@@ -56,7 +56,6 @@ const rule = computed(() => ({
 }
 .rule-wrap {
   width: 325px;
-  height: 56px;
   padding: 8px 16px;
   background: #f5f7fa;
   border-radius: 2px;
@@ -70,7 +69,6 @@ const rule = computed(() => ({
     line-height: 20px;
   }
   .info {
-    height: 20px;
     font-size: 12px;
     color: #979ba5;
     line-height: 20px;

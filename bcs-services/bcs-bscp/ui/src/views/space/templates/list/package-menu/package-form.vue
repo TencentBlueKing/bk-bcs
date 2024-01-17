@@ -1,10 +1,10 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item :label="t('模板套餐名称')" property="name" required>
-      <bk-input v-model="localVal.name" @change="change" />
+      <bk-input v-model="localVal.name" :placeholder="t('请输入')" @change="change" />
     </bk-form-item>
     <bk-form-item :label="t('模板套餐描述')" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :rows="6" :maxlength="256" @change="change" :resize="true" />
+      <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :rows="6" :maxlength="256" @change="change" :resize="true" />
     </bk-form-item>
     <bk-form-item :label="t('服务可见范围')" property="public" required>
       <bk-radio-group v-model="localVal.public" @change="change">

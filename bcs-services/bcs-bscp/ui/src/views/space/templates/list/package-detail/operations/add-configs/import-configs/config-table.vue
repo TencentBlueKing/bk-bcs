@@ -30,7 +30,7 @@
                     <div class="pop-wrap">
                       <div class="pop-content">
                         <div class="pop-title">{{ t('批量设置配置文件描述') }}</div>
-                        <bk-input v-model="batchSet.memo"></bk-input>
+                        <bk-input v-model="batchSet.memo" :placeholder="t('请输入')"></bk-input>
                       </div>
                       <div class="pop-footer">
                         <div class="button">
@@ -66,6 +66,7 @@
                         <div class="pop-title">{{ t('批量设置文件权限') }}</div>
                         <bk-input
                           v-model="batchSet.privilege"
+                          :placeholder="t('请输入')"
                           style="width: 184px; margin-bottom: 16px"
                           @blur="testPrivilegeInput(batchSet.privilege)"
                         ></bk-input>
@@ -121,7 +122,7 @@
                     <div class="pop-wrap">
                       <div class="pop-content">
                         <div class="pop-title">{{ t('批量设置用户') }}</div>
-                        <bk-input v-model="batchSet.user"></bk-input>
+                        <bk-input v-model="batchSet.user" :placeholder="t('请输入')"></bk-input>
                       </div>
                       <div class="pop-footer">
                         <div class="button">
@@ -155,7 +156,7 @@
                     <div class="pop-wrap">
                       <div class="pop-content">
                         <div class="pop-title">{{ t('批量设置用户组') }}</div>
-                        <bk-input v-model="batchSet.user_group"></bk-input>
+                        <bk-input v-model="batchSet.user_group" :placeholder="t('请输入')"></bk-input>
                       </div>
                       <div class="pop-footer">
                         <div class="button">
@@ -194,13 +195,14 @@
               </bk-overflow-title>
             </td>
             <td class="td-cell-editable" :class="{ change: isContentChange(item.id, 'memo') }">
-              <bk-input v-model="item.memo"></bk-input>
+              <bk-input v-model="item.memo" :placeholder="t('请输入')"></bk-input>
             </td>
             <td class="td-cell-editable" :class="{ change: isContentChange(item.id, 'privilege') }">
               <div class="perm-input">
                 <bk-input
                   v-model="item.privilege"
                   type="number"
+                  :placeholder="t('请输入')"
                   @blur="handlePrivilegeInputBlur(item)"
                 />
                 <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
@@ -229,10 +231,10 @@
               </div>
             </td>
             <td class="td-cell-editable" :class="{ change: isContentChange(item.id, 'user') }">
-              <bk-input v-model="item.user"></bk-input>
+              <bk-input v-model="item.user" :placeholder="t('请输入')"></bk-input>
             </td>
             <td class="td-cell-editable" :class="{ change: isContentChange(item.id, 'user_group') }">
-              <bk-input v-model="item.user_group"></bk-input>
+              <bk-input v-model="item.user_group" :placeholder="t('请输入')"></bk-input>
             </td>
             <td class="td-cell-delete">
               <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(index)"></i>

@@ -281,8 +281,8 @@ const handleDeprecate = (version: IConfigVersion) => {
 // 恢复
 const handleUndeprecate = (version: IConfigVersion) => {
   operateConfirmDialog.value.open = true;
-  operateConfirmDialog.value.title = '确认恢复该版本';
-  operateConfirmDialog.value.tips = '此操作会把改版本恢复至可用版本列表';
+  operateConfirmDialog.value.title = t('确认恢复该版本');
+  operateConfirmDialog.value.tips = t('此操作会把改版本恢复至可用版本列表');
   operateConfirmDialog.value.version = version;
   operateConfirmDialog.value.confirmFn = () => new Promise(() => {
     undeprecateVersion(props.bkBizId, props.appId, version.id)
@@ -290,7 +290,7 @@ const handleUndeprecate = (version: IConfigVersion) => {
         operateConfirmDialog.value.open = false;
         Message({
           theme: 'success',
-          message: '版本恢复成功',
+          message: t('版本恢复成功'),
         });
         updateListAndSetVersionAfterOperate(version.id);
       });
@@ -300,8 +300,8 @@ const handleUndeprecate = (version: IConfigVersion) => {
 // 删除
 const handleDelete = (version: IConfigVersion) => {
   operateConfirmDialog.value.open = true;
-  operateConfirmDialog.value.title = '确认删除该版本';
-  operateConfirmDialog.value.tips = '一旦删除，该操作将无法撤销，请谨慎操作';
+  operateConfirmDialog.value.title = t('确认删除该版本');
+  operateConfirmDialog.value.tips = t('一旦删除，该操作将无法撤销，请谨慎操作');
   operateConfirmDialog.value.version = version;
   operateConfirmDialog.value.confirmFn = () => new Promise(() => {
     deleteVersion(props.bkBizId, props.appId, version.id)
@@ -309,7 +309,7 @@ const handleDelete = (version: IConfigVersion) => {
         operateConfirmDialog.value.open = false;
         Message({
           theme: 'success',
-          message: '版本删除成功',
+          message: t('版本删除成功'),
         });
         updateListAndSetVersionAfterOperate(version.id);
       });

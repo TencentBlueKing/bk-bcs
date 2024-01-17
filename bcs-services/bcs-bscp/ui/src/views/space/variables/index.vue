@@ -200,10 +200,12 @@ const goVariablesDoc = () => window.open(BSCP_CONFIG.variable_template_doc);
   margin-top: 24px;
   padding: 0 24px;
   .button {
-    width: 200px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    .bk-button {
+      margin-right: 8px;
+    }
     .button-icon {
       font-size: 18px;
     }

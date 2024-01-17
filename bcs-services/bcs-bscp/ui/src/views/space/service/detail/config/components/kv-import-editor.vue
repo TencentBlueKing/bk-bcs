@@ -87,7 +87,7 @@ const kvs = ref<IConfigKvItem[]>([]);
 const separator = ref(' ');
 const shouldValidate = ref(false);
 const errorLine = ref<errorLineItem[]>([]);
-const editorPlaceholder = ref(['格式：', 'key 类型 value', 'name string nginx', ' port number 8080']);
+const editorPlaceholder = ref([t('格式：'), t('key 类型 value'), 'name string nginx', ' port number 8080']);
 const bkBizId = ref(String(route.params.spaceId));
 const appId = ref(Number(route.params.appId));
 

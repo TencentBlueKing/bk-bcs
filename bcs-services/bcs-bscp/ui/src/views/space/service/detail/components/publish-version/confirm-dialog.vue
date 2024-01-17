@@ -26,7 +26,7 @@
         <template v-if="groupsToBePreviewed.length === 0">--</template>
       </bk-form-item>
       <bk-form-item :label="t('上线说明')" property="memo">
-        <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :resize="true"></bk-input>
+        <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :maxlength="200" :resize="true"></bk-input>
       </bk-form-item>
     </bk-form>
     <template #footer>

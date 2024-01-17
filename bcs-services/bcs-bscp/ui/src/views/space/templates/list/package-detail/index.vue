@@ -14,7 +14,7 @@
     </div>
     <div v-if="isPackage" class="app-list-panel">
       <div class="panel-switch-trigger" @click="isAppsPanelOpen = !isAppsPanelOpen">
-        {{ t('使用模板') }}
+        <div :class="{'en-text':locale === 'en-US'}">{{ t('使用模板') }}</div>
         <AngleDoubleRightLine v-if="isAppsPanelOpen" class="arrow-icon" />
         <AngleDoubleLeftLine v-else class="arrow-icon" />
       </div>
@@ -35,7 +35,7 @@ import ConfigInAllTable from './tables/config-in-all.vue';
 import ConfigWithoutPackageTable from './tables/config-without-package.vue';
 
 const { packageList, currentPkg } = storeToRefs(useTemplateStore());
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const isAppsPanelOpen = ref(true);
 const templateCounts = ref(0);
@@ -166,6 +166,9 @@ const headerInfo = computed(() => {
     .arrow-icon {
       margin-top: 4px;
       font-size: 12px;
+    }
+    .en-text {
+      writing-mode: vertical-lr;
     }
   }
   .use-package-apps {

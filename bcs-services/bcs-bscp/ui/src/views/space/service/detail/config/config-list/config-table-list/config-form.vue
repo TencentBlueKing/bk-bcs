@@ -26,6 +26,7 @@
         type="textarea"
         :maxlength="200"
         :disabled="!editable"
+        :placeholder="t('请输入')"
         :resize="true"
         @input="change"
       />
@@ -93,9 +94,9 @@
         </div>
       </bk-form-item>
       <bk-form-item :label="t('用户')" property="user" :required="true">
-        <bk-input v-model="localVal.user" :disabled="!editable" @input="change"></bk-input>
+        <bk-input v-model="localVal.user" :placeholder="t('请输入')" :disabled="!editable" @input="change"></bk-input>
       </bk-form-item>
-      <bk-form-item :label="t('用户组')" property="user_group" :required="true">
+      <bk-form-item :label="t('用户组')" :placeholder="t('请输入')" property="user_group" :required="true">
         <bk-input v-model="localVal.user_group" :disabled="!editable" @input="change"></bk-input>
       </bk-form-item>
     </div>
