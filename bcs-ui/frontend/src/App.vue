@@ -61,7 +61,7 @@ export default defineComponent({
       setTimeout(async () => {
         try {
           const res = await fetch(`${window.BK_STATIC_URL}/static/static_version.txt`, { cache: 'no-store' });
-          const hash = await res.text();
+          const hash = await res?.text();
           if (resourceHash.value && (resourceHash.value !== hash)) {
             $bkInfo({
               type: 'warning',

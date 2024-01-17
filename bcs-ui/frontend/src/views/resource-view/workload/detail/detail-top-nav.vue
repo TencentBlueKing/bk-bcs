@@ -19,19 +19,7 @@ export default defineComponent({
       type: Array as PropType<any[]>,
       default: () => [],
     },
-    from: {
-      type: String,
-      default: '',
-    },
     clusterId: {
-      type: String,
-      default: '',
-    },
-    nodeId: {
-      type: String,
-      default: '',
-    },
-    nodeName: {
       type: String,
       default: '',
     },

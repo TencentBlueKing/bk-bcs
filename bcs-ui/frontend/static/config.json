@@ -16,5 +16,7 @@
   "k8sService": "https://bk.tencent.com/docs/document/7.0/173/14112",
   "k8sStatefulset": "https://bk.tencent.com/docs/document/7.0/173/14106",
   "token": "https://bk.tencent.com/docs/document/7.0/173/30227",
-  "questionsYaml": "https://bk.tencent.com/docs/document/7.0/173/14125"
+  "questionsYaml": "https://bk.tencent.com/docs/document/7.0/173/14125",
+  "nodemanHost": "",
+  "cmdbhost": ""
 }

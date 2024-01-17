@@ -4,8 +4,7 @@
 
 <script>
 import * as echarts from 'echarts';
-import { addListener, removeListener } from 'resize-detector';
-import { debounce } from 'throttle-debounce';
+import { debounce } from 'lodash';
 
 // enumerating ECharts events for now
 const EVENTS = [

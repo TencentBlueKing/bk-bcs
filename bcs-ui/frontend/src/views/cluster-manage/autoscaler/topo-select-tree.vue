@@ -6,6 +6,7 @@
     searchable
     :remote-method="remote"
     :clearable="false"
+    :loading="topoLoading"
     ref="selectRef"
     @clear="handleClearScaleOutNode">
     <bcs-big-tree
@@ -26,6 +27,12 @@
         </div>
       </template>
     </bcs-big-tree>
+    <template slot="extension">
+      <SelectExtension
+        :link-text="$t('tke.link.cmdb')"
+        :link="PROJECT_CONFIG.cmdbhost"
+        @refresh="handleGetTopoData" />
+    </template>
   </TopoSelect>
 </template>
 <script lang="ts">
@@ -33,17 +40,18 @@ import TopoSelect from 'bk-magic-vue/lib/select';
 import { defineComponent, onMounted, ref } from 'vue';
 
 import { ccTopology } from '@/api/base';
+import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 
 export default defineComponent({
   name: 'TopoSelectTree',
-  components: { TopoSelect },
+  components: { TopoSelect, SelectExtension },
   model: {
     prop: 'value',
     event: 'change',
   },
   props: {
     value: {
-      type: String,
+      type: [String, Number],
       default: '',
     },
     placeholder: {
@@ -102,12 +110,14 @@ export default defineComponent({
     });
 
     return {
+      topoLoading,
       selectRef,
       treeRef,
       topoData,
       remote,
       handleChangeSelectedNode,
       handleClearScaleOutNode,
+      handleGetTopoData,
     };
   },
 });

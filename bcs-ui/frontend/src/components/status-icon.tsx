@@ -41,6 +41,10 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    message: {
+      type: String,
+      default: '',
+    },
   },
   setup(props) {
     const { statusColorMap, statusTextMap, status, type, hideText } = toRefs(props);
@@ -75,7 +79,11 @@ export default defineComponent({
             {
                 this.$scopedSlots.default
                   ? this.$scopedSlots.default(this.status)
-                  : <span class="status-name bcs-ellipsis">{this.statusText}</span>
+                  : <span
+                      class={['status-name bcs-ellipsis', this.message ? 'bcs-border-tips !flex-none' : '']}
+                      v-bk-tooltips={{ content: this.message, disabled: !this.message }}>
+                      {this.statusText}
+                    </span>
             }
         </div>
       );

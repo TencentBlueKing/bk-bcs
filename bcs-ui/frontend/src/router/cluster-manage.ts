@@ -20,7 +20,7 @@ const ClusterNodeOverview = () => import(/* webpackChunkName: 'cluster' */'@/vie
 // const Node = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/node.vue');
 const NodeTemplate = () => import(/* webpackChunkName: 'cluster'  */'@/views/cluster-manage/node-template/node-template.vue');
 const EditNodeTemplate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-template/edit-node-template.vue');
-const AddClusterNode = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/add-cluster-node.vue');
+const AddClusterNode = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/add-nodes.vue');
 const NodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/tencent/node-pool.vue');
 const NodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/tencent/node-pool-detail.vue');
 const EditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/tencent/edit-node-pool.vue');
@@ -41,7 +41,7 @@ export default [
   {
     path: 'clusters',
     name: 'clusterMain',
-    props: route => ({ ...route.query }),
+    props: route => ({ ...route.query, ...route.params }),
     component: Cluster,
     meta: {
       hideMenu: true,

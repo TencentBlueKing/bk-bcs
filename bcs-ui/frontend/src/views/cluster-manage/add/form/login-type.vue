@@ -18,11 +18,17 @@
           <bcs-input
             type="password"
             autocomplete="new-password"
-            v-model="loginConfig.initLoginPassword">
+            v-model="loginConfig.initLoginPassword"
+            @blur="handlePasswordBlur">
           </bcs-input>
         </bk-form-item>
         <bk-form-item :label="$t('tke.label.confirmPassword')" class="!mt-[16px]" required>
-          <bcs-input type="password" autocomplete="new-password" v-model="confirm"></bcs-input>
+          <bcs-input
+            type="password"
+            autocomplete="new-password"
+            v-model="confirm"
+            @blur="handleConfirmPasswordBlur">
+          </bcs-input>
         </bk-form-item>
       </template>
       <template v-else-if="loginType === 'ssh'">
@@ -57,19 +63,20 @@
           :desc="$t('cluster.ca.nodePool.create.loginType.ssh.label.privateKey.desc')"
           class="!mt-[16px]"
           required>
-          <bk-input type="textarea" v-model="loginConfig.keyPair.keySecret"></bk-input>
+          <bk-input type="textarea" v-model="loginConfig.keyPair.keySecret" @blur="handleKeySecretBlur"></bk-input>
         </bk-form-item>
       </template>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { onBeforeMount, PropType, ref, watch } from 'vue';
 
 import { IKeyItem } from '../tencent/types';
 
 import { cloudKeyPairs } from '@/api/modules/cluster-manager';
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
+import $store from '@/store';
+import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';;
 
 const props = defineProps({
   region: {
@@ -92,11 +99,30 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  type: {
+    type: String as PropType<'password'|'ssh'>,
+    default: 'password',
+  },
+  initData: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const emits = defineEmits(['change', 'type-change', 'pass-change']);
+const emits = defineEmits([
+  'change',
+  'type-change',
+  'pass-change',
+  'pass-blur',
+  'confirm-pass-blur',
+  'key-secret-blur',
+]);
 // 登录方式
-const loginType = ref<'password'|'ssh'>('password');
+const loginType = ref<'password'|'ssh'>(props.type);
+watch(() => props.type, () => {
+  loginType.value = props.type;
+});
+
 const loginConfig = ref({
   initLoginUsername: '',
   initLoginPassword: '',
@@ -148,7 +174,7 @@ watch(loginConfig, () => {
 }, { deep: true });
 
 // 密钥
-const keyPairs = ref<Array<IKeyItem>>([]);
+const keyPairs = ref<Array<IKeyItem>>($store.state.cloudMetadata.keyPairsList);
 const cloudKeyPairsLoading = ref(false);
 const handleGetCloudKeyPairs = async () => {
   if (!props.region || !props.cloudAccountID || !props.cloudID) return;
@@ -158,7 +184,18 @@ const handleGetCloudKeyPairs = async () => {
     accountID: props.cloudAccountID,
     region: props.region,
   }).catch(() => []);
+  $store.commit('cloudMetadata/updateKeyPairsList',  keyPairs.value);
   cloudKeyPairsLoading.value = false;
+};
+
+const handlePasswordBlur = (v) => {
+  emits('pass-blur', v);
+};
+const handleConfirmPasswordBlur = (v) => {
+  emits('confirm-pass-blur', v);
+};
+const handleKeySecretBlur = (v) => {
+  emits('key-secret-blur', v);
 };
 
 watch(
@@ -170,6 +207,9 @@ watch(
   () => {
     handleGetCloudKeyPairs();
   },
-  { immediate: true },
 );
+
+onBeforeMount(() => {
+  props.initData && handleGetCloudKeyPairs();
+});
 </script>

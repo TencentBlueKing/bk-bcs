@@ -19,15 +19,24 @@
             <span class="tools">
               <span
                 v-if="isEdit"
-                v-bk-tooltips.top="$t('dashboard.workload.editor.reset')" @click="handleReset"><i class="bcs-icon bcs-icon-reset"></i></span>
+                v-bk-tooltips.top="$t('dashboard.workload.editor.reset')"
+                @click="handleReset">
+                <i class="bcs-icon bcs-icon-reset"></i>
+              </span>
               <span class="upload" v-bk-tooltips.top="$t('dashboard.workload.editor.uploadYAML')">
                 <input type="file" ref="fileRef" tabindex="-1" accept=".yaml,.yml" @change="handleFileChange">
                 <i class="bcs-icon bcs-icon-upload"></i>
               </span>
-              <span :class="{ active: showExample }" v-bk-tooltips.top="$t('dashboard.workload.editor.example')" @click="handleToggleExample">
+              <span
+                :class="{ active: showExample }"
+                v-bk-tooltips.top="$t('dashboard.workload.editor.example')"
+                @click="handleToggleExample">
                 <i class="bcs-icon bcs-icon-code-example"></i>
               </span>
-              <span v-bk-tooltips.top="fullScreen ? $t('dashboard.workload.editor.zoomOut') : $t('dashboard.workload.editor.zoomIn')" @click="handleFullScreen">
+              <span
+                v-bk-tooltips.top="fullScreen
+                  ? $t('dashboard.workload.editor.zoomOut') : $t('dashboard.workload.editor.zoomIn')"
+                @click="handleFullScreen">
                 <i :class="['bcs-icon', fullScreen ? 'bcs-icon-zoom-out' : 'bcs-icon-enlarge']"></i>
               </span>
             </span>
@@ -80,7 +89,11 @@
             </bk-dropdown-menu>
             <span v-else><!-- 空元素为了flex布局 --></span>
             <span class="tools">
-              <span v-bk-tooltips.top="$t('dashboard.workload.editor.copy')" @click="handleCopy"><i class="bcs-icon bcs-icon-copy"></i></span>
+              <span
+                v-bk-tooltips.top="$t('dashboard.workload.editor.copy')"
+                @click="handleCopy">
+                <i class="bcs-icon bcs-icon-copy"></i>
+              </span>
               <span
                 v-bk-tooltips.top="$t('blueking.help')"
                 @click="handleHelp"><i :class="['bcs-icon bcs-icon-help-2', { active: showHelp }]"></i></span>
@@ -149,7 +162,11 @@
       </div>
     </div>
     <div class="resource-btn-group">
-      <div v-bk-tooltips.top="{ disabled: !disabledResourceUpdate, content: $t('dashboard.workload.editor.tips.contentUnchangedOrInvalidFormat') }">
+      <div
+        v-bk-tooltips.top="{
+          disabled: !disabledResourceUpdate,
+          content: $t('dashboard.workload.editor.tips.contentUnchangedOrInvalidFormat')
+        }">
         <bk-button
           theme="primary"
           class="main-btn"
@@ -165,7 +182,9 @@
         :disabled="!showDiff && disabledResourceUpdate"
         @click="toggleDiffEditor"
       >
-        {{ showDiff ? $t('dashboard.workload.editor.continueEditing') : $t('dashboard.workload.editor.showDifference') }}
+        {{ showDiff
+          ? $t('dashboard.workload.editor.continueEditing')
+          : $t('dashboard.workload.editor.showDifference') }}
       </bk-button>
       <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
     </div>
@@ -570,7 +589,7 @@ export default defineComponent({
         });
         $store.commit('updateCurNamespace', detail.value.metadata?.namespace);
         // 跳转回列表页
-        $router.push({ name: $store.state.curSideMenu?.route });
+        $router.back();
       }
     };
     const handleUpdateResource = () => {
@@ -623,7 +642,7 @@ export default defineComponent({
               message: $i18n.t('generic.msg.success.update'),
             });
             // 跳转回列表页
-            $router.push({ name: $store.state.curSideMenu?.route });
+            $router.back();
           }
         },
       });
@@ -646,13 +665,13 @@ export default defineComponent({
         defaultInfo: true,
         confirmFn: () => {
           // 跳转回列表页
-          $router.push({ name: $store.state.curSideMenu?.route });
+          $router.back();
         },
       });
     };
     // 切换到表单模式
     const handleChangeMode = () => {
-      $router.push({
+      $router.replace({
         name: 'dashboardFormResourceUpdate',
         params: {
           ...(isEdit.value ? { name: name.value } : {}),

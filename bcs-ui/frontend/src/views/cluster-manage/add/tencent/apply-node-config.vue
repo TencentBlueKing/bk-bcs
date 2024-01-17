@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100vh-60px)]">
+  <div class="h-[calc(100vh-60px)]" ref="nodeConfigRef">
     <bk-form
       class="py-[20px] px-[40px] max-h-[calc(100vh-108px)] overflow-auto"
       form-type="vertical"
@@ -11,23 +11,15 @@
         property="zone"
         error-display-type="normal"
         required>
-        <bcs-select
-          searchable
-          :clearable="false"
-          v-model="instanceItem.zone">
-          <bcs-option
-            v-for="zone in zoneList"
-            :key="zone.zoneID"
-            :id="zone.zone"
-            :name="zone.zoneName"
-            :disabled="!!enabledZoneList.length && !enabledZoneList.includes(zone.zone)"
-            v-bk-tooltips="{
-              content: $t('tke.tips.zone'),
-              disabled: !enabledZoneList.length || enabledZoneList.includes(zone.zone),
-              placement: 'left'
-            }">
-          </bcs-option>
-        </bcs-select>
+        <Zone
+          v-model="instanceItem.zone"
+          :region="region"
+          :cloud-account-i-d="cloudAccountID"
+          :cloud-i-d="cloudID"
+          :vpc-id="vpcId"
+          :disabled-tips="$t('tke.tips.zone')"
+          :enabled-zone-list="enabledZoneList"
+          :init-data="true" />
       </bk-form-item>
       <bk-form-item
         :label="$t('tke.label.subnet')"
@@ -37,7 +29,7 @@
         <bk-select
           searchable
           :clearable="false"
-          :loading="subnetLoading"
+          :loading="subnetLoading && !!instanceItem.zone"
           v-model="instanceItem.subnetID">
           <bk-option
             v-for="net in subnets"
@@ -76,24 +68,32 @@
         required>
         <div class="flex items-center">
           <span class="prefix">CPU</span>
-          <bcs-select v-model="cpu" searchable class="ml-[-1px] w-[140px] mr-[16px]">
+          <bcs-select v-model="cpu" searchable class="ml-[-1px] w-[140px] mr-[16px]" @change="handleValidateInstance">
             <bcs-option v-for="item in cpuList" :key="item" :id="item" :name="item"></bcs-option>
           </bcs-select>
           <span class="prefix">{{ $t('generic.label.mem') }}</span>
-          <bcs-select v-model="mem" searchable class="ml-[-1px] w-[140px]">
+          <bcs-select v-model="mem" searchable class="ml-[-1px] w-[140px]" @change="handleValidateInstance">
             <bcs-option v-for="item in memList" :key="item" :id="item" :name="item"></bcs-option>
           </bcs-select>
         </div>
         <bcs-table
-          :data="instanceList"
-          v-bkloading="{ isLoading: instanceLoading }"
+          :data="instanceItem.zone && instanceItem.subnetID ? instanceList : []"
+          v-bkloading="{ isLoading: instanceLoading && instanceItem.zone }"
           :pagination="pagination"
           :row-class-name="instanceRowClass"
           class="mt-[16px]"
           @page-change="pageChange"
           @page-limit-change="pageSizeChange"
-          @row-click="handleCheckInstanceType">
-          <bcs-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="typeName">
+          @row-click="handleCheckInstanceType"
+          @filter-change="handleFilterChange"
+          @sort-change="handleSortChange">
+          <bcs-table-column
+            :label="$t('generic.ipSelector.label.serverModel')"
+            :filters="nodeTypeFilters"
+            :key="nodeTypeFilters.length"
+            column-key="typeName"
+            filter-multiple
+            prop="typeName">
             <template #default="{ row }">
               <span
                 v-bk-tooltips="{
@@ -115,17 +115,20 @@
             show-overflow-tooltip
             prop="nodeType">
           </bcs-table-column>
-          <bcs-table-column label="CPU" prop="cpu" width="80" align="right">
+          <bcs-table-column label="CPU" prop="cpu" width="90" align="right" sortable>
             <template #default="{ row }">
               <span>{{ `${row.cpu}${$t('units.suffix.cores')}` }}</span>
             </template>
           </bcs-table-column>
-          <bcs-table-column :label="$t('generic.label.mem')" prop="memory" width="80" align="right">
+          <bcs-table-column :label="$t('generic.label.mem')" prop="memory" width="80" align="right" sortable>
             <template #default="{ row }">
               <span>{{ row.memory }}G</span>
             </template>
           </bcs-table-column>
-          <bcs-table-column :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.label.configurationFee.text')">
+          <bcs-table-column
+            :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.label.configurationFee.text')"
+            prop="unitPrice"
+            sortable>
             <template #default="{ row }">
               <span>
                 {{ $t('cluster.ca.nodePool.create.instanceTypeConfig.label.configurationFee.unit',
@@ -135,33 +138,53 @@
             </template>
           </bcs-table-column>
         </bcs-table>
-        <div class="h-[24px] flex items-center">
-          <span
-            class="text-[#ea3636] text-[12px] h-[24px] leading-[24px]"
-            v-show="!instanceItem.instanceType">{{ $t('generic.validate.required') }}</span>
-        </div>
-        <!-- 系统盘 -->
-        <SystemDisk
-          :value="instanceItem.systemDisk"
-          @change="(v) => instanceItem.systemDisk = v" />
-        <!-- 数据盘 -->
+        <p
+          class="bcs-form-error-tip text-[#ea3636] text-[12px] h-[20px] leading-[20px] mt-[4px]"
+          v-if="!instanceItem.instanceType && !firstTrigger">{{ $t('generic.validate.required') }}</p>
+      </bk-form-item>
+      <!-- 系统盘 -->
+      <SystemDisk
+        class="mt-[24px]"
+        :value="instanceItem.systemDisk"
+        @change="(v) => instanceItem.systemDisk = v" />
+      <!-- 数据盘 -->
+      <bk-form-item
+        :label-width="0.1"
+        property="cloudDataDisks"
+        error-display-type="normal">
         <DataDisk
           class="mt-[20px]"
           :value="instanceItem.cloudDataDisks"
           :disabled="disableDataDisk"
           @change="(v) => instanceItem.cloudDataDisks = v" />
-        <!-- 带宽包 -->
+      </bk-form-item>
+      <!-- 带宽包 -->
+      <bk-form-item
+        :label-width="0.1"
+        property="internetAccess"
+        error-display-type="normal"
+        v-if="!disableInternetAccess">
         <InternetAccess
           :region="region"
           :cloud-account-i-d="cloudAccountID"
           :cloud-i-d="cloudID"
           :value="instanceItem.internetAccess"
-          @change="(v) => instanceItem.internetAccess = v"
-          v-if="!disableInternetAccess" />
+          class="mb-[20px]"
+          @change="(v) => instanceItem.internetAccess = v" />
       </bk-form-item>
+
       <bk-form-item :label="$t('tke.label.count')">
-        <bcs-input type="number" class="max-w-[120px]" :min="1" :max="5" v-model="instanceItem.applyNum"></bcs-input>
+        <bcs-input
+          type="number"
+          class="max-w-[120px]"
+          :min="1"
+          :max="maxNodes"
+          v-model="instanceItem.applyNum">
+        </bcs-input>
       </bk-form-item>
+      <p class="text-[#979BA5] leading-[16px] mt-[8px] text-[12px]">
+        {{ $t('tke.tips.maxNodeNum', [maxNodes]) }}
+      </p>
     </bk-form>
     <div class="flex items-center px-[40px] absolute bottom-0 left-0 bg-[#FAFBFD] w-full h-[48px] bcs-border-top">
       <bcs-button theme="primary" class="min-w-[88px]" @click="handleConfirm">
@@ -184,6 +207,7 @@ import SelectExtension from '@/views/cluster-manage/add/common/select-extension.
 import DataDisk from '@/views/cluster-manage/add/form/data-disk.vue';
 import InternetAccess from '@/views/cluster-manage/add/form/internet-access.vue';
 import SystemDisk from '@/views/cluster-manage/add/form/system-disk.vue';
+import Zone from '@/views/cluster-manage/add/form/zone.vue';
 
 const cloudID = 'tencentPublicCloud';
 
@@ -208,10 +232,6 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  zoneList: {
-    type: Array as PropType<any[]>,
-    default: () => [],
-  },
   instance: {
     type: Object as PropType<IInstanceItem|null>,
     default: () => ({}),
@@ -227,6 +247,10 @@ const props = defineProps({
   disableInternetAccess: {
     type: Boolean,
     default: true,
+  },
+  maxNodes: {
+    type: Number,
+    default: 5,
   },
 });
 const isEdit = computed(() => !!props.instance && !!Object.keys(props.instance).length);
@@ -260,7 +284,7 @@ const initData = ref({
     },
   ],
   internetAccess: {
-    internetChargeType: '',
+    internetChargeType: 'TRAFFIC_POSTPAID_BY_HOUR',
     internetMaxBandwidth: '0',
     publicIPAssigned: false,
     bandwidthPackageId: '',
@@ -282,13 +306,40 @@ const rules = ref({
       trigger: 'blur',
     },
   ],
+  cloudDataDisks: [
+    {
+      trigger: 'custom',
+      message: '',
+      validator() {
+        let preMountTarget = '';
+        const repeatMountTarget = instanceItem.value.cloudDataDisks.some((item) => {
+          if (preMountTarget === item.mountTarget) return true;
+          preMountTarget = item.mountTarget;
+          return false;
+        });
+        return !repeatMountTarget;
+      },
+    },
+  ],
+  internetAccess: [
+    {
+      trigger: 'custom',
+      message: $i18n.t('ca.tips.requiredBandwidthPackage'),
+      validator() {
+        if (instanceItem.value.internetAccess.internetChargeType === 'BANDWIDTH_PACKAGE') {
+          return !!instanceItem.value.internetAccess.bandwidthPackageId;
+        }
+        return true;
+      },
+    },
+  ],
 });
 
 // 子网
 const subnets = ref<Array<ISubnet>>([]);
 const subnetLoading = ref(false);
 const handleGetSubnets = async () => {
-  if (!props.accountId || !props.region || !props.vpcId) return;
+  if (!props.accountId || !props.region || !props.vpcId || !instanceItem.value.zone) return;
   subnetLoading.value = true;
   subnets.value = await cloudSubnets({
     $cloudId: cloudID,
@@ -320,16 +371,60 @@ const memList = computed(() => instanceTypesListByZone.value.reduce<number[]>((p
   return pre;
 }, []).sort((a, b) => a - b));
 
+const filters = ref<Record<string, string[]>>({});
+const sortData = ref({
+  prop: '',
+  order: '',
+});
 const filterInstanceList = computed(() => instanceTypesListByZone.value
   .filter(item => (!cpu.value || item.cpu === cpu.value)
-     && (!mem.value || item.memory === mem.value)));
+     && (!mem.value || item.memory === mem.value))
+  .sort((a, b) => {
+    // 排序
+    if (sortData.value.prop === 'cpu') {
+      return sortData.value.order === 'ascending' ? a.cpu - b.cpu : b.cpu - a.cpu;
+    }
+    if (sortData.value.prop === 'memory') {
+      return sortData.value.order === 'ascending' ? a.memory - b.memory : b.memory - a.memory;
+    }
+    if (sortData.value.prop === 'unitPrice') {
+      return sortData.value.order === 'ascending' ? a.unitPrice - b.unitPrice : b.unitPrice - a.unitPrice;
+    }
+    return 0;
+  }));
+const nodeTypeFilters = computed(() => filterInstanceList.value
+  .reduce<Array<{text: string, value: string}>>((pre, item) => {
+  const exist = pre.find(data => data.value === item.typeName);
+  if (!exist) {
+    pre.push({
+      text: item.typeName,
+      value: item.typeName,
+    });
+  }
+  return pre;
+}, []));
+
+const handleFilterChange = (data) => {
+  pageChange(1);
+  filters.value = data;
+};
+const handleSortChange = ({ prop, order  }) => {
+  sortData.value = {
+    prop,
+    order,
+  };
+};
+
+// 过滤机型
+const filterTableData = computed(() => filterInstanceList.value.filter(item => Object.keys(filters.value)
+  .every(key => !filters.value[key]?.length || filters.value[key]?.includes(item[key]))));
 
 const {
   pagination,
   curPageData: instanceList,
   pageChange,
   pageSizeChange,
-} = usePage<IInstanceType>(filterInstanceList);
+} = usePage<IInstanceType>(filterTableData);
 
 
 const instanceLoading = ref(false);
@@ -360,31 +455,83 @@ const handleCancel = () => {
   emits('cancel');
 };
 // 校验
+const firstTrigger = ref(true);
 const formRef = ref();
 const validate = async () => {
+  firstTrigger.value = false;
   const result = await formRef.value?.validate().catch(() => false);
-  return result && !!instanceItem.value.instanceType;
+  const validateSystemDiskSize = Number(instanceItem.value.systemDisk.diskSize) % 10 === 0;
+  const validateDataDiskSize = instanceItem.value.cloudDataDisks.every(item => Number(item.diskSize) % 10 === 0);
+  return result && !!instanceItem.value.instanceType && validateSystemDiskSize && validateDataDiskSize;
 };
 // 确定
+const nodeConfigRef = ref();
 const handleConfirm = async () => {
+  const instance = instanceTypesList.value.find(item => item.nodeType === instanceItem.value.instanceType);
   const result = await validate();
-  result && emits('confirm', {
-    ...instanceItem.value,
-    systemDisk: {
-      diskType: instanceItem.value.systemDisk.diskType,
-      diskSize: String(instanceItem.value.systemDisk.diskSize), // 类型转换
-    },
-    cloudDataDisks: instanceItem.value.cloudDataDisks.map(item => ({
-      ...item,
-      diskSize: String(item.diskSize), // 类型转换
-    })),
+  if (result) {
+    emits('confirm', {
+      ...instanceItem.value,
+      applyNum: Number(instanceItem.value.applyNum), // 类型转换
+      CPU: instance?.cpu || props.instance?.CPU,
+      Mem: instance?.memory || props.instance?.Mem,
+      systemDisk: {
+        diskType: instanceItem.value.systemDisk.diskType,
+        diskSize: String(instanceItem.value.systemDisk.diskSize), // 类型转换
+      },
+      cloudDataDisks: instanceItem.value.cloudDataDisks.map(item => ({
+        ...item,
+        diskSize: String(item.diskSize), // 类型转换
+      })),
+    });
+  } else {
+    // 自动滚动到第一个错误的位置
+    const errDom = nodeConfigRef.value?.querySelectorAll('.form-error-tip');
+    const bcsErrDom = nodeConfigRef.value?.querySelectorAll('.bcs-form-error-tip');
+    const firstErrDom = errDom[0] || bcsErrDom[0];
+    firstErrDom?.scrollIntoView({
+      block: 'center',
+      behavior: 'smooth',
+    });
+  }
+};
+
+// 校验机型是否在当前页中
+const handleValidateInstance = () => {
+  setTimeout(() => {
+    const exitInstance = filterInstanceList.value.find(item => item.nodeType === instanceItem.value.instanceType);
+    if (!exitInstance) {
+      instanceItem.value.instanceType = '';
+    }
   });
 };
 
 watch(
-  props,
+  [
+    () => cpu.value,
+    () => mem.value,
+  ],
+  () => {
+    pageChange(1);
+  },
+);
+watch(
+  [
+    () => props.accountId,
+    () => props.region,
+    () => props.vpcId,
+  ],
   () => {
     handleGetSubnets();
+  },
+  { immediate: true },
+);
+watch(
+  [
+    () => props.accountId,
+    () => props.region,
+  ],
+  () => {
     handleGetInstanceType();
   },
   { immediate: true },
@@ -395,6 +542,7 @@ watch(
     instanceItem.value = merge({}, initData.value, props.instance);
     cpu.value = props.instance?.CPU;
     mem.value = props.instance?.Mem;
+    handleGetSubnets();
   },
   { deep: true, immediate: true },
 );

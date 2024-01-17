@@ -7,50 +7,32 @@
     ref="formRef">
     <DescList size="middle" :title="$t('cluster.create.label.basicConfig')">
       <bk-form-item :label="$t('cluster.create.label.region')" required>
-        <bcs-select
-          :value="region"
-          searchable
-          :clearable="false"
-          disabled>
-          <bcs-option
-            v-for="item in regionList"
-            :key="item.region"
-            :id="item.region"
-            :name="item.regionName">
-          </bcs-option>
-        </bcs-select>
+        <Region :value="region" :cloud-account-i-d="cloudAccountID" :cloud-i-d="cloudID" disabled />
       </bk-form-item>
       <bk-form-item
         :label="$t('cluster.create.label.privateNet.text')"
         property="vpcID"
         error-display-type="normal"
-        required>
-        <bk-select
-          class="max-w-[600px]"
-          v-model="networkConfig.vpcID"
-          :loading="vpcLoading"
-          searchable
-          :clearable="false">
-          <!-- VPC可用容器网络IP数量最低限制 -->
-          <bk-option
-            v-for="item in vpcList"
-            :key="item.vpcId"
-            :id="item.vpcId"
-            :name="`${item.name}(${item.vpcId})`">
-            <div class="flex items-center place-content-between">
-              <span>
-                {{item.name}}
-                <span class="vpc-id">{{`(${item.vpcId})`}}</span>
-              </span>
-            </div>
-          </bk-option>
-          <template slot="extension">
-            <SelectExtension
-              :link-text="$t('tke.link.vpc')"
-              link="https://console.cloud.tencent.com/vpc/vpc"
-              @refresh="handleGetVPCList" />
-          </template>
-        </bk-select>
+        required
+        class="private-net-form-item">
+        <div class="flex items-center">
+          <Vpc
+            class="max-w-[576px] flex-1"
+            :cloud-account-i-d="cloudAccountID"
+            :cloud-i-d="cloudID"
+            :region="region"
+            init-data
+            v-model="networkConfig.vpcID"
+            @change="handleGetVpcDetail" />
+          <span
+            :class="[
+              'inline-flex items-center',
+              'px-[16px] h-[24px] rounded-full bg-[#F0F1F5] text-[12px] ml-[8px]'
+            ]"
+            v-if="networkConfig.clusterAdvanceSettings.networkType === 'VPC-CNI'">
+            {{ $t('tke.tips.totalIpNum', [vpcDetail.allocateIpNum || '--']) }}
+          </span>
+        </div>
       </bk-form-item>
       <bk-form-item
         :label="$t('cluster.create.label.defaultNetPlugin')"
@@ -62,7 +44,7 @@
         error-display-type="normal"
         required>
         <bcs-select :clearable="false" searchable v-model="networkConfig.clusterAdvanceSettings.networkType">
-          <bcs-option id="GR" name="Global Route"></bcs-option>
+          <bcs-option id="GR" name="Global Router"></bcs-option>
           <bcs-option id="VPC-CNI" name="VPC-CNI"></bcs-option>
         </bcs-select>
         <div id="netPlugin">
@@ -70,9 +52,11 @@
           <div>{{ $t('tke.tips.vpcCniDesc') }}</div>
           <div>
             <i18n path="tke.button.goDetail">
-              <bk-link theme="primary" target="_blank" href="https://cloud.tencent.com/document/product/457/50353">
-                <span class="text-[12px]">{{ $t('tke.link.netOverview') }}</span>
-              </bk-link>
+              <span
+                class="text-[12px] text-[#699DF4] cursor-pointer"
+                @click="openLink('https://cloud.tencent.com/document/product/457/50353')">
+                {{ $t('tke.link.netOverview') }}
+              </span>
             </i18n>
           </div>
         </div>
@@ -81,7 +65,8 @@
         :label="$t('cluster.create.label.clusterIPType.text')"
         property="networkSettings.clusterIpType"
         error-display-type="normal"
-        required>
+        required
+        class="unset-form-content-width">
         <bk-radio-group v-model="networkConfig.networkSettings.clusterIpType">
           <bk-radio value="ipv4">
             <span>IPv4</span>
@@ -123,7 +108,7 @@
             </div>
             <span
               class="inline-flex items-center px-[16px] h-[24px] rounded-full bg-[#F0F1F5] text-[12px] ml-[16px]">
-              {{ $t('tke.tips.totalIpNum', [countsClusterIPv4CIDR || 0]) }}
+              {{ $t('tke.tips.totalIpNum', [countsClusterIPv4CIDR || '--']) }}
             </span>
           </div>
           <div id="networkCIDR">
@@ -164,7 +149,8 @@
           property="podIP"
           error-display-type="normal"
           required
-          key="GR-Pod">
+          key="GR-Pod"
+          ref="podIpRef">
           <template v-if="['ipv4', 'dual'].includes(networkConfig.networkSettings.clusterIpType)">
             <div class="flex flex-1 max-w-[50%]">
               <!-- GR模式时 pod ip = 网段总数 减去 service数量 -->
@@ -179,7 +165,7 @@
         </bk-form-item>
         <bk-form-item
           :label="$t('cluster.create.label.maxNodePodNum')"
-          :desc="$t('tke.tips.ipCannotBeAdjustedWhenCreated', [$t('cluster.create.label.maxNodePodNum')])"
+          :desc="$t('tke.tips.ipCannotBeAdjustedWhenCreated2', [$t('cluster.create.label.maxNodePodNum')])"
           property="networkSettings.maxNodePodNum"
           error-display-type="normal"
           required>
@@ -232,7 +218,9 @@
           <template v-if="['ipv4', 'dual'].includes(networkConfig.networkSettings.clusterIpType)">
             <VpcCni
               :subnets="networkConfig.networkSettings.subnetSource.new"
-              :zone-list="zoneList"
+              :cloud-account-i-d="cloudAccountID"
+              :cloud-i-d="cloudID"
+              :region="region"
               @change="handleSetSubnetSourceNew" />
           </template>
         </bk-form-item>
@@ -269,16 +257,17 @@
   </bk-form>
 </template>
 <script setup lang="ts">
-import { computed, PropType, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-import { ICloudRegion, IZoneItem } from './types';
+import { IVpcItem } from './types';
 import VpcCni from './vpc-cni.vue';
 
-import { cloudCidrconflict, cloudsZones, cloudVPC } from '@/api/modules/cluster-manager';
+import { cloudCidrconflict, cloudVPC } from '@/api/modules/cluster-manager';
 import { cidrContains, countIPsInCIDR, validateCIDR } from '@/common/util';
 import DescList from '@/components/desc-list.vue';
 import $i18n from '@/i18n/i18n-setup';
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
+import Region from '@/views/cluster-manage/add/form/region.vue';
+import Vpc from '@/views/cluster-manage/add/form/vpc.vue';
 
 const props = defineProps({
   region: {
@@ -293,13 +282,9 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  regionList: {
-    type: Array as PropType<ICloudRegion[]>,
-    default: () => [],
-  },
 });
 
-const emits = defineEmits(['next', 'cancel', 'pre', 'set-vpc-list', 'set-zone-list']);
+const emits = defineEmits(['next', 'cancel', 'pre']);
 
 const nodePodNumList = ref([32, 64, 128]);
 const serviceIPList = ref([128, 256, 512, 1024, 2048, 4096]);
@@ -341,6 +326,7 @@ watch(() => networkConfig.value.clusterAdvanceSettings.networkType, () => {
     networkConfig.value.networkSettings.clusterIPv4CIDR = '';
   }
 });
+const conflictCIDR = ref('');
 const networkConfigRules = ref({
   vpcID: [
     {
@@ -401,6 +387,18 @@ const networkConfigRules = ref({
     },
     {
       trigger: 'blur',
+      message: $i18n.t('tke.validate.cidrMaskLen', ['[10, 20]']),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'GR') {
+          const cidr = networkConfig.value.networkSettings.clusterIPv4CIDR;
+          const mask = Number(cidr?.split('/')?.[1] || 0);
+          return mask >= 10 && mask <= 20;
+        }
+        return true;
+      },
+    },
+    {
+      trigger: 'blur',
       message: $i18n.t('tke.validate.supportCidrList', ['10.0.0.0/8, 172.16.0.0/16 ~ 172.31.0.0/16, 192.168.0.0/16']),
       async validator() {
         if (networkConfig.value.clusterAdvanceSettings.networkType === 'GR') {
@@ -414,7 +412,7 @@ const networkConfigRules = ref({
     },
     {
       trigger: 'blur',
-      message: $i18n.t('generic.validate.cidrConflict'),
+      message: () => $i18n.t('generic.validate.cidrConflict', { cidr: conflictCIDR.value }),
       async validator() {
         if (networkConfig.value.clusterAdvanceSettings.networkType === 'GR') {
           return networkConfig.value.networkSettings.clusterIPv4CIDR
@@ -460,6 +458,18 @@ const networkConfigRules = ref({
     },
     {
       trigger: 'blur',
+      message: $i18n.t('tke.validate.cidrMaskLen', ['[10, 24]']),
+      async validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
+          const cidr = networkConfig.value.networkSettings.serviceIPv4CIDR;
+          const mask = Number(cidr?.split('/')?.[1] || 0);
+          return mask >= 10 && mask <= 24;
+        }
+        return true;
+      },
+    },
+    {
+      trigger: 'blur',
       message: $i18n.t('tke.validate.supportCidrList', ['10.0.0.0/8, 172.16.0.0/16 ~ 172.31.0.0/16, 192.168.0.0/16']),
       async validator() {
         if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
@@ -473,7 +483,7 @@ const networkConfigRules = ref({
     },
     {
       trigger: 'blur',
-      message: $i18n.t('generic.validate.cidrConflict'),
+      message: () => $i18n.t('generic.validate.cidrConflict', { cidr: conflictCIDR.value }),
       async validator() {
         if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
           return networkConfig.value.networkSettings.serviceIPv4CIDR
@@ -488,7 +498,7 @@ const networkConfigRules = ref({
     {
       trigger: 'blur',
       message: $i18n.t('generic.validate.required'),
-      async validator() {
+      validator() {
         if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
           const subnetSource = networkConfig.value.networkSettings.subnetSource.new as Array<{
             ipCnt: number
@@ -499,41 +509,52 @@ const networkConfigRules = ref({
         return true;
       },
     },
+    {
+      trigger: 'blur',
+      message: $i18n.t('tke.validate.minPodIP'),
+      validator() {
+        if (networkConfig.value.clusterAdvanceSettings.networkType === 'VPC-CNI') {
+          return true;
+        }
+        return maxPodNum.value > 0;
+      },
+    },
+    {
+      trigger: 'custom',
+      message: $i18n.t('tke.validate.podIPsNeedLessThanVpcIPs'),
+      validator() {
+        const subnetSource = networkConfig.value.networkSettings.subnetSource.new as Array<{
+          ipCnt: number
+          zone: string
+        }>;
+        const counts = subnetSource.reduce((counts, item) => {
+          counts += item.ipCnt;
+          return counts;
+        }, 0);
+
+        return counts <= (vpcDetail.value.allocateIpNum || 0);
+      },
+    },
   ],
 });
-
-// vpc列表
-const vpcLoading = ref(false);
-const vpcList = ref<Array<{
-  name: string
-  vpcId: string
-}>>([]);
-const handleGetVPCList = async () => {
-  if (!props.region || !props.cloudAccountID) return;
-  vpcLoading.value = true;
-  vpcList.value = await cloudVPC({
-    $cloudId: props.cloudID,
-    accountID: props.cloudAccountID,
-    region: props.region,
-  }).catch(() => []);
-  emits('set-vpc-list', vpcList.value);
-  vpcLoading.value = false;
+const podIpRef = ref();
+const validatePodIP = () => {
+  podIpRef.value?.validate('blur');
 };
-
-// 可用区
-const zoneList = ref<Array<IZoneItem>>([]);
-const zoneLoading = ref(false);
-const handleGetZoneList = async () => {
-  if (!props.region || !props.cloudAccountID) return;
-  zoneLoading.value = true;
-  const data = await cloudsZones({
+watch(maxPodNum, () => {
+  validatePodIP();
+});
+// VPC详情
+const vpcDetail = ref<Partial<IVpcItem>>({});
+const handleGetVpcDetail = async (vpcID: string) => {
+  // 取数组第 1 个
+  const [detail] = await cloudVPC({
     $cloudId: props.cloudID,
-    accountID: props.cloudAccountID,
     region: props.region,
-  }).catch(() => []);
-  zoneList.value = data.filter(item => item.zoneState === 'AVAILABLE');
-  emits('set-zone-list', zoneList.value);
-  zoneLoading.value = false;
+    accountID: props.cloudAccountID,
+    vpcID,
+  });
+  vpcDetail.value = detail;
 };
 
 // 设置vpc-cni子网
@@ -551,6 +572,7 @@ const cidrConflict = async (cidr) => {
     accountID: props.cloudAccountID,
     cidr,
   }).catch(() => false);
+  conflictCIDR.value = cidrs.join(',');
   return !cidrs.length;
 };
 
@@ -559,9 +581,14 @@ watch([
   () => props.cloudAccountID,
 ], () => {
   networkConfig.value.vpcID = '';
-  handleGetVPCList();
-  handleGetZoneList();
 }, { immediate: true });
+
+// 跳转链接
+const openLink = (link: string) => {
+  if (!link) return;
+
+  window.open(link);
+};
 
 // 校验
 const formRef = ref();
@@ -580,13 +607,35 @@ const nextStep = async () => {
   validating.value = true;
   const result = await validate();
   validating.value = false;
-  result && emits('next', {
-    ...networkConfig.value,
-    networkType: networkConfig.value.clusterAdvanceSettings.networkType === 'GR' ? 'overlay' : 'underlay',
-  });
+  if (result) {
+    emits('next', {
+      ...networkConfig.value,
+      networkType: networkConfig.value.clusterAdvanceSettings.networkType === 'GR' ? 'overlay' : 'underlay',
+    });
+  } else {
+    // 自动滚动到第一个错误的位置
+    const errDom = document.getElementsByClassName('form-error-tip');
+    errDom[0]?.scrollIntoView({
+      block: 'center',
+      behavior: 'smooth',
+    });
+  }
 };
 // 取消
 const handleCancel = () => {
   emits('cancel');
 };
+
+defineExpose({
+  validate,
+});
 </script>
+<style scoped lang="postcss">
+>>> .private-net-form-item .bk-form-content {
+  max-width: 800px !important;
+}
+
+>>> .unset-form-content-width .bk-form-content {
+  max-width: none !important;
+}
+</style>

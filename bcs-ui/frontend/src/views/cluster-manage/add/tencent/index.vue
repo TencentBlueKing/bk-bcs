@@ -1,6 +1,6 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div>
+  <div class="add-tke-cluster">
     <Header :title="$t('cluster.button.addCluster')" :desc="$t('generic.title.createPublicCluster')" />
     <div class="pt-[8px] bg-[#f0f1f5]">
       <bcs-tab
@@ -11,12 +11,15 @@
         <!-- 基本信息 -->
         <bcs-tab-panel :name="steps[0].name">
           <template #label>
-            <StepTabLabel :title="$t('generic.title.basicInfo1')" :step-num="1" :active="activeTabName === steps[0].name" />
+            <StepTabLabel
+              :title="$t('generic.title.basicInfo1')"
+              :step-num="1"
+              :active="activeTabName === steps[0].name"
+              :is-error="steps[0].isErr" />
           </template>
           <BasicInfo
-            :cloud-id="cloudID"
-            @set-image-group="setImageGroup"
-            @set-region-list="setRegionList"
+            :cloud-i-d="cloudID"
+            ref="basicRef"
             @next="nextStep"
             @cancel="handleCancel" />
         </bcs-tab-panel>
@@ -27,15 +30,14 @@
               :title="$t('cluster.detail.title.network')"
               :step-num="2"
               :active="activeTabName === steps[1].name"
-              :disabled="steps[1].disabled" />
+              :disabled="steps[1].disabled"
+              :is-error="steps[1].isErr" />
           </template>
           <Network
             :region="clusterData.region"
             :cloud-account-i-d="clusterData.cloudAccountID"
             :cloud-i-d="cloudID"
-            :region-list="regionList"
-            @set-vpc-list="setVpcList"
-            @set-zone-list="setZoneList"
+            ref="netRef"
             @pre="preStep"
             @next="nextStep"
             @cancel="handleCancel" />
@@ -47,21 +49,17 @@
               :title="$t('cluster.detail.title.controlConfig')"
               :step-num="3"
               :active="activeTabName === steps[2].name"
-              :disabled="steps[2].disabled" />
+              :disabled="steps[2].disabled"
+              :is-error="steps[2].isErr" />
           </template>
           <Master
             :region="clusterData.region"
             :cloud-account-i-d="clusterData.cloudAccountID"
             :cloud-i-d="cloudID"
-            :environment="clusterData.environment"
             :provider="clusterData.provider"
             :vpc-i-d="clusterData.vpcID"
             :nodes="clusterData.nodes"
-            :region-list="regionList"
-            :vpc-list="vpcList"
-            :image-list-by-group="imageListByGroup"
-            :zone-list="zoneList"
-            :os="clusterData.clusterBasicSettings ? clusterData.clusterBasicSettings.OS : ''"
+            ref="masterRef"
             @pre="preStep"
             @next="nextStep"
             @cancel="handleCancel"
@@ -74,7 +72,8 @@
               :title="$t('cluster.nodeList.create.text')"
               :step-num="4"
               :active="activeTabName === steps[3].name"
-              :disabled="steps[3].disabled" />
+              :disabled="steps[3].disabled"
+              :is-error="steps[3].isErr" />
           </template>
           <Nodes
             :region="clusterData.region"
@@ -84,13 +83,10 @@
             :provider="clusterData.provider"
             :vpc-i-d="clusterData.vpcID"
             :master="clusterData.master"
-            :region-list="regionList"
-            :vpc-list="vpcList"
-            :image-list-by-group="imageListByGroup"
-            :zone-list="zoneList"
-            :os="clusterData.clusterBasicSettings ? clusterData.clusterBasicSettings.OS : ''"
             :master-login="clusterData.nodeSettings ? clusterData.nodeSettings.masterLogin : undefined"
+            :manage-type="clusterData.manageType"
             :auto-generate-master-nodes="clusterData.autoGenerateMasterNodes"
+            ref="nodesRef"
             @pre="preStep"
             @next="nextStep"
             @cancel="handleCancel"
@@ -103,7 +99,7 @@
 </template>
 <script lang="ts" setup>
 import { merge } from 'lodash';
-import { computed, provide, ref } from 'vue';
+import { computed, provide, ref, watch } from 'vue';
 
 import StepTabLabel from '../common/step-tab-label.vue';
 
@@ -125,10 +121,10 @@ import $store from '@/store';;
 const cloudID = 'tencentPublicCloud';
 
 const steps = ref([
-  { name: 'basicInfo', disabled: false },
-  { name: 'network',  disabled: true },
-  { name: 'master',  disabled: true },
-  { name: 'nodes', disabled: true },
+  { name: 'basicInfo', disabled: false, isErr: false },
+  { name: 'network',  disabled: true, isErr: false },
+  { name: 'master',  disabled: true, isErr: false },
+  { name: 'nodes', disabled: true, isErr: false },
 ]);
 
 const activeTabName = ref<typeof steps.value[number]['name']>('basicInfo');
@@ -137,25 +133,22 @@ const clusterData = ref<DeepPartial<IClusterData>>({});
 
 provide(ClusterDataInjectKey, clusterData);
 
-const regionList = ref([]);
-const setRegionList = (data) => {
-  regionList.value = data;
-};
+// tab切换
+watch(activeTabName, () => {
+  const tabItem = steps.value.find(item => item.name === activeTabName.value);
+  if (tabItem) {
+    tabItem.isErr = false;
+  }
+});
 
-const imageListByGroup = ref({});
-const setImageGroup = (data) => {
-  imageListByGroup.value = data;
-};
+// tab切换
+watch(activeTabName, () => {
+  const tabItem = steps.value.find(item => item.name === activeTabName.value);
+  if (tabItem) {
+    tabItem.isErr = false;
+  }
+});
 
-const vpcList = ref([]);
-const setVpcList = (data) => {
-  vpcList.value = data;
-};
-
-const zoneList = ref([]);
-const setZoneList = (data) => {
-  zoneList.value = data;
-};
 // 机型
 const masterInstances = ref<IInstanceItem[]>([]);
 const handleMasterInstanceChange = (data) => {
@@ -184,8 +177,38 @@ const nextStep = async (data = {}) => {
 const handleCancel = () => {
   $router.back();
 };
+// 校验表单
+const basicRef = ref();
+const netRef = ref();
+const masterRef = ref();
+const nodesRef = ref();
+const validate = async () => {
+  const list = [
+    basicRef.value.validate().then((result) => {
+      steps.value[0].isErr = !result;
+      return result;
+    }),
+    netRef.value.validate().then((result) => {
+      steps.value[1].isErr = !result;
+      return result;
+    }),
+    masterRef.value.validate().then((result) => {
+      steps.value[2].isErr = !result;
+      return result;
+    }),
+    nodesRef.value.validate().then((result) => {
+      steps.value[3].isErr = !result;
+      return result;
+    }),
+  ];
+  const data = await Promise.all(list);
+  return data.every(result => !!result);
+};
 // 创建集群
 const handleShowConfirmDialog = async () => {
+  const result = await validate();
+  if (!result) return;
+
   $bkInfo({
     type: 'warning',
     clsName: 'custom-info-confirm',
@@ -217,14 +240,18 @@ const handleCreateCluster = async () => {
     clusterData.value,
   );
   console.log(params);
-  const result = await createCluster(params).then(() => true)
-    .catch(() => false);
+  const result = await createCluster(params).catch(() => false);
   if (result) {
     $bkMessage({
       theme: 'success',
       message: $i18n.t('generic.msg.success.deliveryTask'),
     });
-    $router.push({ name: 'clusterMain' });
+    $router.push({
+      name: 'clusterMain',
+      params: {
+        highlightClusterId: result?.clusterID,
+      },
+    });
   }
 };
 
@@ -235,6 +262,7 @@ const handleCreateCluster = async () => {
 }
 >>> .bk-tab-content {
   height: calc(100vh - 224px);
+  padding-bottom: 24px;
   overflow: auto;
 }
 
@@ -253,6 +281,12 @@ const handleCreateCluster = async () => {
   font-size: 12px;
   &.disabled {
     border-color: #dcdee5;
+  }
+}
+
+.add-tke-cluster {
+  >>> .bk-form-item+.bk-form-item {
+    margin-top: 24px;
   }
 }
 </style>

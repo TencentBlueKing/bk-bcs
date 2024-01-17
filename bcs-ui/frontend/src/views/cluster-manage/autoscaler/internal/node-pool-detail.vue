@@ -399,9 +399,8 @@ export default defineComponent({
 
     // 安全组信息
     const securityGroupsList = ref<any[]>([]);
-    const securityGroupNames = computed(() => securityGroupsList.value
-      .filter(item => nodePoolData.value.launchTemplate.securityGroupIDs.includes(item.securityGroupID))
-      .map(item => item.securityGroupName));
+    const securityGroupNames = computed(() => nodePoolData.value.launchTemplate?.securityGroupIDs
+      ?.map(id => securityGroupsList.value.find(item => item.securityGroupID === id)?.securityGroupName) || []);
 
     const securityGroupLoading = ref(false);
     const handleGetCloudSecurityGroups = async () => {

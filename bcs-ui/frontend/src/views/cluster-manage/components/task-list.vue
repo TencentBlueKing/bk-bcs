@@ -3,6 +3,7 @@
     <bk-table
       :data="data"
       :row-class-name="rowClass"
+      class="overflow-auto"
       @row-click="handleRowClick">
       <bk-table-column :label="$t('generic.label.step')" prop="taskName" min-width="155">
         <template #default="{ row }">
@@ -50,6 +51,22 @@
           </template>
         </template>
       </bk-table-column>
+      <bk-table-column :label="$t('generic.label.action')">
+        <template #default="{ row }">
+          <div class="flex items-center" v-if="row.status === 'FAILURE'">
+            <bk-button
+              text
+              v-if="row.status === 'FAILURE'"
+              @click="handleRetry(row)">{{ $t('generic.button.retry') }}</bk-button>
+            <bk-button
+              text
+              class="ml-[8px]"
+              v-if="row.allowSkip && row.status === 'FAILURE'"
+              @click="handleSkip(row)">{{ $t('generic.button.skip') }}</bk-button>
+          </div>
+          <span v-else>--</span>
+        </template>
+      </bk-table-column>
     </bk-table>
     <div class="bg-[#F5F7FA] p-[16px] w-[280px] text-[#313238] text-[12px] task-message">
       {{ curTaskRow.message }}
@@ -57,7 +74,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref } from 'vue';
+import { computed, defineComponent, PropType, ref, watch } from 'vue';
 
 import { timeDelta, timeFormat } from '@/common/util';
 import LoadingIcon from '@/components/loading-icon.vue';
@@ -71,11 +88,11 @@ export default defineComponent({
   },
   props: {
     data: {
-      type: Array,
+      type: Array as PropType<any[]>,
       default: () => [],
     },
   },
-  setup(props) {
+  setup(props, ctx) {
     const taskStatusTextMap = {
       initialzing: window.i18n.t('generic.status.initializing'),
       running: window.i18n.t('generic.status.running'),
@@ -83,6 +100,8 @@ export default defineComponent({
       failure: window.i18n.t('generic.status.failed'),
       timeout: window.i18n.t('generic.status.timeout'),
       notstarted: window.i18n.t('generic.status.todo'),
+      part_failure: window.i18n.t('generic.status.part_failure'),
+      skip: window.i18n.t('generic.status.skip'),
     };
     const taskStatusColorMap = {
       initialzing: 'blue',
@@ -91,14 +110,30 @@ export default defineComponent({
       failure: 'red',
       timeout: 'red',
       notstarted: 'gray',
+      part_failure: 'red',
+      skip: 'red',
     };
     const activeIndex = ref(0);
+    const watchOnce = watch(() => props.data, () => {
+      if (!props.data.length) return;
+      activeIndex.value = props.data.findIndex(item => ['INITIALZING', 'RUNNING', 'FAILURE'].includes(item.status)) || 0;
+      watchOnce?.();
+    }, { deep: true, immediate: true });
     const curTaskRow = computed<Record<string, any>>(() => props.data?.[activeIndex.value] || {});
 
     // 跳转标准运维
     const handleGotoSops = (row) => {
       window.open(row.params.taskUrl);
     };
+    // 重试
+    const handleRetry = (row) => {
+      ctx.emit('retry', row);
+    };
+    // 跳过
+    const handleSkip = (row) => {
+      ctx.emit('skip', row);
+    };
+
     const handleRowClick = (row, event, column, rowIndex) => {
       activeIndex.value = rowIndex;
     };
@@ -113,6 +148,8 @@ export default defineComponent({
       handleGotoSops,
       handleRowClick,
       rowClass,
+      handleRetry,
+      handleSkip,
     };
   },
 });

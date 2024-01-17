@@ -213,7 +213,7 @@ export default defineComponent({
         name,
         params: {
           projectCode: $store.getters.curProjectCode,
-          clusterId: $store.getters.curClusterId,
+          // clusterId: $store.getters.curClusterId,
         },
       }).catch(err => console.warn(err));
     };

@@ -7,15 +7,59 @@
     <bcs-alert type="info" class="cluster-node-tip">
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
-        <i18n
-          path="cluster.nodeList.article2"
-          v-if="maxRemainNodesCount > 0">
+        <i18n path="cluster.nodeList.article2">
           <span place="nodes" class="num">{{nodesCount}}</span>
-          <span place="realRemainNodesCount" class="num">{{realRemainNodesCount}}</span>
-          <span place="maxRemainNodesCount" class="num">{{maxRemainNodesCount}}</span>
+          <span place="realRemainNodesCount" class="num">{{realRemainNodesCount || 0}}</span>
         </i18n>
+        <template v-if="curSelectedCluster.provider === 'tencentCloud'">
+          <i18n path="cluster.nodeList.article3" v-if="maxRemainNodesCount > 0 && cidrLen <= 3">
+            <span place="maxRemainNodesCount" class="num">{{maxRemainNodesCount}}</span>
+          </i18n>
+          <span v-else-if="cidrLen >= 4">{{ $t('cluster.nodeList.article4') }}</span>
+        </template>
       </div>
     </bcs-alert>
+    <!-- 修改节点转移模块 -->
+    <template v-if="['tencentCloud', 'tencentPublicCloud'].includes(curSelectedCluster.provider || '')">
+      <div class="flex items-center text-[12px]">
+        <div class="text-[#979BA5] bcs-border-tips" v-bk-tooltips="$t('tke.tips.transferNodeCMDBModule')">
+          {{ $t('tke.label.nodeModule.text') }}
+        </div>
+        <span class="mx-[4px]">:</span>
+        <template v-if="isEditModule">
+          <div class="flex items-center">
+            <TopoSelector
+              :placeholder="$t('generic.placeholder.select')"
+              :cluster-id="clusterId"
+              v-model="curModuleID"
+              class="w-[360px]"
+              @change="handleWorkerModuleChange"
+              @node-data-change="handleNodeChange" />
+            <span
+              class="text-[12px] text-[#3a84ff] ml-[8px] cursor-pointer"
+              text
+              @click="handleSaveWorkerModule">{{ $t('generic.button.save') }}</span>
+            <span
+              class="text-[12px] text-[#3a84ff] ml-[8px] cursor-pointer"
+              text
+              @click="isEditModule = false">{{ $t('generic.button.cancel') }}</span>
+          </div>
+        </template>
+        <template v-else>
+          <span>
+            {{ clusterData.clusterBasicSettings && clusterData.clusterBasicSettings.module
+              ? clusterData.clusterBasicSettings.module.workerModuleName || '--'
+              : '--' }}
+          </span>
+          <span
+            class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
+            @click="handleEditWorkerModule">
+            <i class="bk-icon icon-edit-line"></i>
+          </span>
+        </template>
+      </div>
+      <bcs-divider></bcs-divider>
+    </template>
     <!-- 操作栏 -->
     <div class="cluster-node-operate">
       <div class="left">
@@ -564,27 +608,43 @@
     <!-- 查看日志 -->
     <bk-sideslider
       :is-show.sync="logSideDialogConf.isShow"
-      :title="logSideDialogConf.title"
+      :title="logSideDialogConf.title || ' '"
       :width="960"
       @hidden="closeLog"
       :quick-close="true"
       transfer>
       <div slot="content">
         <div class="log-wrapper" v-bkloading="{ isLoading: logSideDialogConf.loading }">
-          <TaskList :data="logSideDialogConf.taskData"></TaskList>
+          <TaskList
+            :data="logSideDialogConf.taskData"
+            @retry="handleRetry(logSideDialogConf.row)"
+            @skip="handleSkip">
+          </TaskList>
         </div>
       </div>
     </bk-sideslider>
-    <!-- 确认删除 -->
-    <ConfirmDialog
-      v-model="showConfirmDialog"
-      :title="removeNodeDialogTitle"
-      :sub-title="$t('generic.subTitle.deleteConfirm')"
-      :tips="deleteNodeNoticeList"
-      :ok-text="$t('generic.button.delete')"
-      :cancel-text="$t('generic.button.close')"
-      :confirm="confirmDelNode"
-      @cancel="cancelDelNode" />
+    <!-- 删除节点 -->
+    <bcs-dialog
+      v-model="showDeleteDialog"
+      :show-footer="false"
+      render-directive="if">
+      <DeleteNode
+        :title="$t('cluster.ca.nodePool.nodes.action.delete.title')"
+        :sub-title="curCheckedNodes.length > 1
+          ? $i18n.t('cluster.nodeList.button.delete.subTitle', {
+            num: curCheckedNodes.length,
+            ip: curCheckedNodes[0].innerIP || curCheckedNodes[0].nodeID,
+          })
+          : $t('cluster.ca.nodePool.nodes.action.delete.subTitle', { ip: curCheckedNodes[0].innerIP })"
+        :is-loading="deleting"
+        v-if="curCheckedNodes.length"
+        @confirm="delNode"
+        @cancel="showDeleteDialog = false">
+        <div class="flex items-center justify-center mt-[8px]" v-if="curSelectedCluster.provider === 'tencentPublicCloud'">
+          <bcs-checkbox v-model="deleteMode">{{ $t('tke.label.retain') }}</bcs-checkbox>
+        </div>
+      </DeleteNode>
+    </bcs-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -594,29 +654,32 @@ import { TranslateResult } from 'vue-i18n';
 import useTableAcrossCheck from '../../../composables/use-table-across-check';
 import useTableSearchSelect, { ISearchSelectData } from '../../../composables/use-table-search-select';
 import useTableSetting from '../../../composables/use-table-setting';
+import { useClusterInfo, useClusterList, useTask } from '../cluster/use-cluster';
 import TaintContent from '../components/taint.vue';
 import TaskList from '../components/task-list.vue';
 
+import DeleteNode from './delete-node.vue';
 import useNode from './use-node';
 
+import { setClusterModule } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
-import { copyText, formatBytes, padIPv6 } from '@/common/util';
+import { copyText, formatBytes, getCidrIpNum, padIPv6 } from '@/common/util';
 import { CheckType } from '@/components/across-check.vue';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import BcsCascade from '@/components/cascade.vue';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
-import ConfirmDialog from '@/components/comfirm-dialog.vue';
 import KeyValue, { IData } from '@/components/key-value.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import StatusIcon from '@/components/status-icon';
-import { ICluster, useCluster } from '@/composables/use-app';
+import { ICluster } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
 import usePage from '@/composables/use-page';
 import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
+import TopoSelector from '@/views/cluster-manage/autoscaler/topo-select-tree.vue';
 import ApplyHost from '@/views/cluster-manage/components/apply-host.vue';
 import LoadingCell from '@/views/cluster-manage/components/loading-cell.vue';
 import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
@@ -653,10 +716,11 @@ export default defineComponent({
     LoadingCell,
     KeyValue,
     TaintContent,
-    ConfirmDialog,
     ApplyHost,
     TaskList,
     BcsCascade,
+    TopoSelector,
+    DeleteNode,
   },
   props: {
     clusterId: {
@@ -676,6 +740,57 @@ export default defineComponent({
     const webAnnotations = computed(() => $store.state.cluster.clusterWebAnnotations);
     const curProject = computed(() => $store.state.curProject);
 
+    // 修改节点转移模块设置
+    const { clusterData, getClusterDetail } = useClusterInfo();// clusterData和curCluster一样，就是多了云上的数据信息
+    const isEditModule = ref(false);
+    const curModuleID = ref();
+    const curNodeModule = ref<Record<string, any>>({});
+    const handleEditWorkerModule = () => {
+      curModuleID.value = Number(clusterData.value.clusterBasicSettings?.module?.workerModuleID);
+      isEditModule.value = true;
+    };
+    const handleWorkerModuleChange = (moduleID) => {
+      curModuleID.value = moduleID;
+    };
+    const handleNodeChange = (node) => {
+      curNodeModule.value = node;
+    };
+    const handleSaveWorkerModule = async () => {
+      if (curModuleID.value === clusterData.value.clusterBasicSettings?.module?.workerModuleID) {
+        isEditModule.value = false;
+        return;
+      };
+
+      $bkInfo({
+        type: 'warning',
+        clsName: 'custom-info-confirm',
+        title: $i18n.t('tke.title.confirmUpdateNodeCMDBModule'),
+        subTitle: $i18n.t('tke.title.confirmUpdateNodeCMDBModuleSubTitle', [curNodeModule.value.path]),
+        defaultInfo: true,
+        confirmFn: async () => {
+          tableLoading.value = true;
+          const result = await setClusterModule({
+            $clusterId: props.clusterId,
+            module: {
+              workerModuleID: curModuleID.value,
+            },
+            operator: $store.state.user?.username,
+          }).then(() => true)
+            .catch(() => false);
+          if (result) {
+            await getClusterDetail(curSelectedCluster.value.clusterID || '', true);
+            $bkMessage({
+              theme: 'success',
+              message: $i18n.t('generic.msg.success.modify'),
+            });
+            isEditModule.value = false;
+          }
+          tableLoading.value = false;
+        },
+      });
+    };
+
+    // 侧滑关闭交互
     const { reset, setChanged, handleBeforeClose } = useSideslider();
     const nodeStatusColorMap = {
       initialization: 'blue',
@@ -963,8 +1078,8 @@ export default defineComponent({
     } = useNode();
 
     const tableLoading = ref(false);
-    const localClusterId = ref(props.clusterId || $store.getters.curClusterId);
-    const { clusterList } = useCluster();
+    const localClusterId = ref(props.clusterId);
+    const { clusterList } = useClusterList();
     const curSelectedCluster = computed<Partial<ICluster>>(() => clusterList.value
       .find(item => item.clusterID === localClusterId.value) || {});
     // 导入集群
@@ -1282,7 +1397,7 @@ export default defineComponent({
         data: {},
       }));
     };
-    const mergeLaels = (_originLabels, _newLabels) => {
+    const mergeLabels = (_originLabels, _newLabels) => {
       const originLabels = JSON.parse(JSON.stringify(_originLabels));
       const newLabels = JSON.parse(JSON.stringify(_newLabels));
       // 批量编辑
@@ -1308,7 +1423,7 @@ export default defineComponent({
         clusterID: localClusterId.value,
         nodes: setLabelConf.value.rows.map(item => ({
           nodeName: item.nodeName,
-          labels: mergeLaels(item.labels, labels),
+          labels: mergeLabels(item.labels, labels),
         })),
       });
       setLabelConf.value.btnLoading = false;
@@ -1382,48 +1497,59 @@ export default defineComponent({
       });
     };
     // 节点删除
-    const showConfirmDialog = ref(false);
-    const deleteNodeNoticeList = ref([
-      $i18n.t('cluster.nodeList.button.delete.article1'),
-      $i18n.t('cluster.nodeList.button.delete.article2'),
-      $i18n.t('cluster.nodeList.button.delete.article3'),
-    ]);
-    const curDeleteRows = ref<any[]>([]);
-    const removeNodeDialogTitle = ref<any>('');
+    const deleting = ref(false);
     const user = computed(() => $store.state.user);
+    const deleteMode = ref<'retain'|'terminate'>('retain');
+    const showDeleteDialog = ref(false);
+    const curCheckedNodes = ref<any[]>([]);
+    const handleHideDeleteDialog = () => {
+      showDeleteDialog.value = false;
+      curCheckedNodes.value = [];
+    };
     const handleDeleteNode = async (row) => {
       if (isImportCluster.value && !row.nodeGroupID) return;
 
-      $bkInfo({
-        type: 'warning',
-        clsName: 'custom-info-confirm',
-        title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
-        subTitle: $i18n.t('cluster.ca.nodePool.nodes.action.delete.subTitle', { ip: row.innerIP }),
-        defaultInfo: true,
-        confirmFn: async () => {
-          await delNode(row.clusterID, [row]);
-        },
-      });
+      curCheckedNodes.value = [row];
+      showDeleteDialog.value = true;
+      // $bkInfo({
+      //   type: 'warning',
+      //   clsName: 'custom-info-confirm',
+      //   title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
+      //   subTitle: $i18n.t('cluster.ca.nodePool.nodes.action.delete.subTitle', { ip: row.innerIP }),
+      //   defaultInfo: true,
+      //   confirmFn: async () => {
+      //     await delNode(row.clusterID, [row]);
+      //   },
+      // });
     };
-    const cancelDelNode = () => {
-      curDeleteRows.value = [];
-    };
-    const delNode = async ($clusterId: string, data: any[]) => {
+    const delNode = async () => {
+      if (!curCheckedNodes.value.length) return;
+
+      if (curCheckedNodes.value.length > 100) {
+        $bkMessage({
+          theme: 'warning',
+          message: $i18n.t('cluster.validate.maxNumberOfDeletion'),
+        });
+        return;
+      }
       const nodeIPs: string[] = [];
       const virtualNodeIDs: string[] = [];
-      data.forEach((row) => {
+      curCheckedNodes.value.forEach((row) => {
         if (row.innerIP) {
           nodeIPs.push(row.innerIP);
         } else if (row.nodeID) {
           virtualNodeIDs.push(row.nodeID);
         }
       });
+      deleting.value = true;
       const result = await batchDeleteNodes({
-        $clusterId,
+        $clusterId: localClusterId.value,
         nodeIPs: nodeIPs.join(','),
         virtualNodeIDs: virtualNodeIDs.join(','),
+        deleteMode: deleteMode.value,
         operator: user.value.username,
       });
+      deleting.value = false;
       if (result) {
         $bkMessage({
           theme: 'success',
@@ -1432,11 +1558,10 @@ export default defineComponent({
         handleGetNodeData();
         handleResetPage();
         handleResetCheckStatus();
+        handleHideDeleteDialog();
       }
     };
-    const confirmDelNode = async () => {
-      await delNode(localClusterId.value, curDeleteRows.value);
-    };
+    // 添加节点（任务重试时会调用重新添加接口）
     const addClusterNode = async (clusterId: string, nodeIps: string[]) => {
       stop();
       const result = await addNode({
@@ -1450,12 +1575,47 @@ export default defineComponent({
     };
     // 节点重试
     const handleRetry = async (row) => {
-      tableLoading.value = true;
-      await retryTask({
-        clusterId: row.cluster_id,
-        nodeIP: row.inner_ip,
+      $bkInfo({
+        type: 'warning',
+        title: $i18n.t('cluster.title.retryTask'),
+        clsName: 'custom-info-confirm default-info',
+        subTitle: row.taskName || row.name,
+        confirmFn: async () => {
+          tableLoading.value = true;
+          logSideDialogConf.value.loading = true;
+          const result = await retryTask({
+            clusterId: row.cluster_id,
+            nodeIP: row.inner_ip,
+          });
+          if (result) {
+            await handleGetNodeData();
+            logSideDialogConf.value.isShow && await getTaskTableData(row);
+          }
+          logSideDialogConf.value.loading = false;
+          tableLoading.value = false;
+        },
       });
-      tableLoading.value = false;
+    };
+    // 跳过任务
+    const { skipTask } = useTask();
+    const handleSkip = (row) => {
+      $bkInfo({
+        type: 'warning',
+        title: $i18n.t('cluster.title.skipTask'),
+        clsName: 'custom-info-confirm default-info',
+        subTitle: row.taskName || row.name,
+        confirmFn: async () => {
+          const result = await skipTask(logSideDialogConf.value.taskID);
+          if (result) {
+            $bkMessage({
+              theme: 'success',
+              message: $i18n.t('generic.msg.success.deliveryTask'),
+            });
+            logSideDialogConf.value.isShow = false;
+            handleGetNodeData();
+          }
+        },
+      });
     };
     // 批量允许调度
     const showBatchMenu = ref(false);
@@ -1527,16 +1687,19 @@ export default defineComponent({
     // 批量删除节点
     const handleBatchDeleteNodes = () => {
       if (disableBatchDelete.value) return;
-      bkComfirmInfo({
-        title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
-        subTitle: $i18n.t('cluster.nodeList.button.delete.subTitle', {
-          num: selections.value.length,
-          ip: selections.value[0].innerIP || selections.value[0].nodeID,
-        }),
-        callback: async () => {
-          await delNode(localClusterId.value, selections.value);
-        },
-      });
+
+      curCheckedNodes.value = [...selections.value];
+      showDeleteDialog.value = true;
+      // bkComfirmInfo({
+      //   title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
+      //   subTitle: $i18n.t('cluster.nodeList.button.delete.subTitle', {
+      //     num: selections.value.length,
+      //     ip: selections.value[0].innerIP || selections.value[0].nodeID,
+      //   }),
+      //   callback: async () => {
+      //     await delNode(localClusterId.value, selections.value);
+      //   },
+      // });
     };
     // 批量Pod驱逐
     const handleBatchPodScheduler = () => {
@@ -1577,13 +1740,14 @@ export default defineComponent({
     const logSideDialogConf = ref({
       isShow: false,
       title: '',
+      taskID: '',
       taskData: [],
       row: null,
       loading: false,
     });
     const handleShowLog = async (row) => {
       logSideDialogConf.value.isShow = true;
-      logSideDialogConf.value.title = row.inner_ip;
+      logSideDialogConf.value.title = row.nodeName || row.innerIP;
       logSideDialogConf.value.row = row;
       logSideDialogConf.value.loading = true;
       await getTaskTableData(row);
@@ -1592,9 +1756,10 @@ export default defineComponent({
     const getTaskTableData = async (row) => {
       let logStatus = '';
       if (row.taskID) {
-        const { stepSequence = [], steps, status } = await taskDetail(row.taskID);
+        const { stepSequence = [], steps, status, taskID } = await taskDetail(row.taskID);
         logStatus = status;
         logSideDialogConf.value.taskData = stepSequence.map(key => steps[key]) as unknown as any;
+        logSideDialogConf.value.taskID = taskID;
       } else {
         const { taskData, latestTask } = await getTaskData({
           clusterId: row.cluster_id,
@@ -1602,6 +1767,7 @@ export default defineComponent({
         });
         logStatus = latestTask?.status;
         logSideDialogConf.value.taskData = taskData || [];
+        logSideDialogConf.value.taskID = latestTask.taskID;
       }
       if (['RUNNING', 'INITIALZING'].includes(logStatus)) {
         logIntervalStart();
@@ -1715,13 +1881,13 @@ export default defineComponent({
 
     // eslint-disable-next-line max-len
     const nodesCount = computed(() => tableData.value.length + Object.keys(curSelectedCluster.value?.master || {}).length);
-    const getCidrIpNum = (cidr) => {
-      const mask = Number(cidr.split('/')[1] || 0);
-      if (mask <= 0) {
-        return 0;
-      }
-      return Math.pow(2, 32 - mask);
-    };
+
+    // 容器网络网段数量
+    const cidrLen = computed(() => {
+      const { multiClusterCIDR = [] } = curSelectedCluster.value?.networkSettings || {};
+      // +1 是clusterIPv4CIDR占有一个网段
+      return multiClusterCIDR.length + 1;
+    });
     // 当前CIDR可添加节点数
     const realRemainNodesCount = computed(() => {
       const {
@@ -1730,7 +1896,7 @@ export default defineComponent({
         clusterIPv4CIDR = 0,
         multiClusterCIDR = [],
       } = curSelectedCluster.value?.networkSettings || {};
-      const totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce((pre, cidr) => {
+      const totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce<number>((pre, cidr) => {
         pre += getCidrIpNum(cidr);
         return pre;
       }, 0);
@@ -1752,7 +1918,7 @@ export default defineComponent({
           return pre;
         }, 0);
       } else {
-        totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce((pre, cidr) => {
+        totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce<number>((pre, cidr) => {
           pre += getCidrIpNum(cidr);
           return pre;
         }, 0);
@@ -1761,6 +1927,7 @@ export default defineComponent({
     });
 
     onMounted(async () => {
+      getClusterDetail(curSelectedCluster.value.clusterID || '', true);
       await handleGetNodeData();
       if (tableData.value.length) {
         start();
@@ -1771,16 +1938,15 @@ export default defineComponent({
       stop();
     });
     return {
-      showConfirmDialog,
+      cidrLen,
       copyList,
       metricColumnConfig,
-      removeNodeDialogTitle,
       nodesCount,
       realRemainNodesCount,
       maxRemainNodesCount,
       curSelectedCluster,
+      clusterData, // 全量数据
       logSideDialogConf,
-      deleteNodeNoticeList,
       searchSelectData,
       searchSelectValue,
       tableKey,
@@ -1824,9 +1990,8 @@ export default defineComponent({
       handleStopNode,
       handleDeleteNode,
       handleSchedulerNode,
-      confirmDelNode,
-      cancelDelNode,
       handleRetry,
+      handleSkip,
       handleBatchEnableNodes,
       handleBatchStopNodes,
       handleBatchReAddNodes,
@@ -1850,6 +2015,18 @@ export default defineComponent({
       handleBeforeClose,
       disableBatchDelete,
       disableBatchDeleteTips,
+      isEditModule,
+      curModuleID,
+      handleEditWorkerModule,
+      handleWorkerModuleChange,
+      handleSaveWorkerModule,
+      handleNodeChange,
+      showDeleteDialog,
+      curCheckedNodes,
+      handleHideDeleteDialog,
+      delNode,
+      deleteMode,
+      deleting,
     };
   },
 });

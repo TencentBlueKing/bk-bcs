@@ -152,3 +152,10 @@
 .bk-table .bk-loading {
   transform: translate(-1px, -1px);
 }
+
+.bk-table-filter-panel {
+  .panel-checkbox-group {
+    max-height: 380px;
+    overflow: auto;
+  }
+}

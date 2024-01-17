@@ -2,10 +2,7 @@
   <div class="detail">
     <DetailTopNav
       :titles="titles"
-      :from="from"
       :cluster-id="clusterId"
-      :node-id="nodeId"
-      :node-name="nodeName"
       @change="handleNavChange">
     </DetailTopNav>
     <component
@@ -73,20 +70,7 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    // 区分是否从 集群管理node-pods 跳转过来的
-    from: {
-      type: String,
-      default: '',
-    },
     clusterId: {
-      type: String,
-      default: '',
-    },
-    nodeId: {
-      type: String,
-      default: '',
-    },
-    nodeName: {
       type: String,
       default: '',
     },

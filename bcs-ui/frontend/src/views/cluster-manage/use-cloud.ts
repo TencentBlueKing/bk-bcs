@@ -1,20 +1,29 @@
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+
+import { ICloudRegion, INodeManCloud, ISecurityGroup, IVpcItem } from './add/tencent/types';
 
 import {
   cloudAccounts as cloudAccountsAPI,
+  cloudRegionByAccount,
+  cloudSecurityGroups,
+  cloudVPC,
   clusterConnect as clusterConnectAPI,
   createCloudAccounts as createCloudAccountsAPI,
   deleteCloudAccounts as deleteCloudAccountsAPI,
+  nodemanCloud,
   updateCloudAccounts as updateCloudAccountsAPI,
   validateCloudAccounts as validateCloudAccountsAPI,
 } from '@/api/modules/cluster-manager';
 import $store from '@/store';
 
-export type CloudID = 'tencentCloud'|'gcpCloud'|'tencentPublicCloud';
-
 export interface IGoogleAccount {
   gkeProjectID?: string
   serviceAccountSecret: string
+}
+
+export interface ITencentAccount {
+  secretID: string
+  secretKey: string
 }
 
 export interface ICreateAccountParams<T> {
@@ -47,12 +56,18 @@ export default function () {
   const user = computed(() => $store.state.user);
 
   // 云账号列表
-  const cloudAccounts = async ($cloudId: CloudID) => {
+  const cloudAccountList = ref<ICloudAccount[]>([]);
+  const cloudAccountLoading = ref(false);
+  const cloudAccounts = async ($cloudId: CloudID|undefined) => {
+    if (!$cloudId) return { data: [], web_annotations: { perms: {} } };
+    cloudAccountLoading.value = true;
     const res = await cloudAccountsAPI({
       $cloudId,
       projectID: curProject.value.projectID,
       operator: user.value.username,
     }, { needRes: true }).catch(() => []);
+    cloudAccountList.value = res.data || [];
+    cloudAccountLoading.value = false;
     return res as {
       data: ICloudAccount[]
       web_annotations: {
@@ -96,7 +111,7 @@ export default function () {
   // 校验云账号
   const validateCloudAccounts = async (params: {
     $cloudId: CloudID
-    account: IGoogleAccount
+    account: IGoogleAccount | ITencentAccount
   }) => {
     const result = await validateCloudAccountsAPI(params).then(() => '')
       .catch(data => data?.response?.data?.message || data);
@@ -116,12 +131,81 @@ export default function () {
     return result;
   };
 
+  // 区域列表
+  const regionLoading = ref(false);
+  const regionList = ref<Array<ICloudRegion>>($store.state.cloudMetadata.regionList);
+  const handleGetRegionList = async ({ cloudAccountID, cloudID }) => {
+    if (!cloudAccountID || !cloudID) return;
+
+    regionLoading.value = true;
+    regionList.value = await cloudRegionByAccount({
+      $cloudId: cloudID,
+      accountID: cloudAccountID,
+    }).catch(() => []);
+    regionLoading.value = false;
+    return regionList.value;
+  };
+
+  // 管控区域
+  const nodemanCloudList = ref<Array<INodeManCloud>>([]);
+  const nodemanCloudLoading = ref(false);
+  const handleGetNodeManCloud = async () => {
+    nodemanCloudLoading.value = true;
+    nodemanCloudList.value = await nodemanCloud().catch(() => []);
+    nodemanCloudLoading.value = false;
+    return nodemanCloudList.value;
+  };
+
+  // vpc列表
+  const vpcLoading = ref(false);
+  const vpcList = ref<Array<IVpcItem>>($store.state.cloudMetadata.vpcList);
+  const handleGetVPCList = async ({ region, cloudAccountID,  cloudID }) => {
+    if (!region || !cloudAccountID || !cloudID) return;
+    vpcLoading.value = true;
+    vpcList.value = await cloudVPC({
+      $cloudId: cloudID,
+      accountID: cloudAccountID,
+      region,
+    }).catch(() => []);
+    vpcLoading.value = false;
+    return vpcList.value;
+  };
+
+  // 安全组
+  const securityGroupLoading = ref(false);
+  const securityGroups = ref<Array<ISecurityGroup>>($store.state.cloudMetadata.securityGroupsList);
+  const handleGetSecurityGroups = async ({ region, cloudAccountID,  cloudID }) => {
+    if (!region || !cloudAccountID || !cloudID) return;
+    securityGroupLoading.value = true;
+    securityGroups.value = await cloudSecurityGroups({
+      $cloudId: cloudID,
+      accountID: cloudAccountID,
+      region,
+    }).catch(() => []);
+    securityGroupLoading.value = false;
+    return securityGroups.value;
+  };
+
   return {
+    cloudAccountLoading,
+    cloudAccountList,
     cloudAccounts,
     createCloudAccounts,
     deleteCloudAccounts,
     validateCloudAccounts,
     updateCloudAccounts,
     clusterConnect,
+    regionLoading,
+    regionList,
+    handleGetRegionList,
+    nodemanCloudList,
+    nodemanCloudLoading,
+    handleGetNodeManCloud,
+    vpcLoading,
+    vpcList,
+    handleGetVPCList,
+    securityGroupLoading,
+    securityGroups,
+    handleGetSecurityGroups,
   };
 }

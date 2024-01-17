@@ -9,15 +9,19 @@
         :name="diskItem.name">
       </bcs-option>
     </bcs-select>
-    <bcs-select
+    <bcs-input
       class="w-[88px] bg-[#fff] ml10"
-      :clearable="false"
+      type="number"
+      :min="50"
+      :max="1000"
       v-model="systemDisk.diskSize">
-      <!-- 后端需要字符串类型 -->
-      <bcs-option id="50" name="50"></bcs-option>
-      <bcs-option id="100" name="100"></bcs-option>
-    </bcs-select>
+    </bcs-input>
     <span class="suffix ml-[-1px]">GB</span>
+    <p
+      class="bcs-form-error-tip text-[12px] text-[#ea3636] ml-[6px]"
+      v-if="Number(systemDisk.diskSize || 0) % 10 !== 0">
+      {{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.systemDisk')}}
+    </p>
   </div>
 </template>
 <script setup lang="ts">
@@ -48,8 +52,11 @@ watch(() => props.value, (newValue, oldValue) => {
 }, { immediate: true });
 
 watch(systemDisk, () => {
-  emits('change', systemDisk.value);
-});
+  emits('change', {
+    ...systemDisk.value,
+    diskSize: String(systemDisk.value.diskSize),
+  });
+}, { deep: true });
 </script>
 <style lang="postcss" scoped>
 >>> .prefix {
@@ -66,6 +73,7 @@ watch(systemDisk, () => {
   }
 }
 .suffix{
+  line-height: 30px;
   font-size: 12px;
   display: inline-block;
   min-width: 30px;

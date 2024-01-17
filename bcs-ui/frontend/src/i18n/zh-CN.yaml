@@ -22,6 +22,7 @@ bcs:
     cloud: 云凭证导入
     publicIcon: 共享
     privateIcon: 专用
+    platform: 平台创建
   msg:
     emptyHostResource: 您在当前业务下没有主机资源，请联系业务运维
     notDevOps: 您不是当前项目绑定业务的运维人员，请联系业务运维人员
@@ -276,6 +277,7 @@ generic:
     command: 多个命令用空格分隔，例如/bin/bash &quot;-c&quot
     searchIp: '输入IP搜索, 多个IP用逗号或空格隔开'
   button:
+    validate: 校验
     confirm: 确定
     confirm1: 确认
     cancel: 取消
@@ -326,6 +328,9 @@ generic:
     create: 创建
     submit: 提交
     reload: 立即刷新
+    copyAll: 复制全部
+    retry: 重试
+    skip: 跳过
   label:
     key: 键
     value: 值
@@ -376,6 +381,7 @@ generic:
     stop: 停止
     basicConfig: 基本配置
   status:
+    part_failure: 部分失败
     support: 支持
     unSupport: 不支持
     ready: 正常
@@ -410,6 +416,7 @@ generic:
     taskNotEnable: 未启动
     restarting: 重启中
     pending: 处理中
+    skip: 已跳过
   validate:
     name: 仅支持字母，数字和字符(-)，且以字母开头
     repeatKey: 重复键
@@ -424,8 +431,9 @@ generic:
     kindName: 名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     fileName: 文件名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     notRootName: 用户名不能为root
-    cidr: CIDR格式不正确
-    cidrConflict: CIDR冲突
+    cidr: CIDR格式错误，请重新输入，如：10.0.0.0/8
+    cidrConflict: 'CIDR与 {cidr} 冲突，请重新输入'
+    fieldRequired: '{0} 必填'
   title:
     createPublicCluster: 新建公有云集群
     curVersion: 当前版本
@@ -513,12 +521,12 @@ cluster:
     emptyCluster: 暂无集群
     emptyClusterGuide: 推荐使用共享集群。如有需要也可添加新的集群
   title:
-    retryCreate: 确认重新创建集群
-    confirmDelete: 确认删除集群
     clusterInfo: 集群信息
     clusterConfig: 集群配置
     operationRecord: 操作记录
     setClusterVar: 设置变量
+    skipTask: 确认跳过当前步骤
+    retryTask: 确认重试任务
   button:
     useSharedCluster: 使用共享集群
     addCluster: 添加集群
@@ -534,7 +542,6 @@ cluster:
       article4: 删除导入集群不会对集群有任何操作
       article5: 删除导入集群后蓝鲸容器管理平台会丧失对该集群的管理能力
       article6: 删除导入集群不会清理集群上的任何资源，删除集群后请视情况手工清理
-      article7: 请确认已清理该集群下的所有应用与节点
       article8: 集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本
   tips:
     highMetricData: 集群指标过载
@@ -568,8 +575,10 @@ cluster:
   status:
     unknown: 未知集群状态
     importFailed: 导入失败
+    connectFailed: 连接失败
   validate:
     exitNodes: 集群下存在节点，无法删除
+    maxNumberOfDeletion: 单次删除最大数量为100
   create:
     title:
       newCluster: 新建集群
@@ -909,6 +918,7 @@ cluster:
               unit: '￥{price}元/小时起'
           validate:
             dataDisks: '范围: 50~16380, 步长: 10'
+            systemDisk: '范围: 50~1000, 步长: 10'
             repeatPath: 目录不能重复
             maxDataDisks: 最多4个数据盘
           button:
@@ -1150,10 +1160,9 @@ cluster:
         meaning: 含义
   nodeList:
     article1: 集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务。
-    article2: >-
-      当前集群已添加节点数（含Master） {nodes}，还可添加节点数
-      {realRemainNodesCount}，当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加
-      {maxRemainNodesCount} 个节点。
+    article2: '当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {realRemainNodesCount}。'
+    article3: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加 {maxRemainNodesCount} 个节点。'
+    article4: 容器网络网段数量已达到最大限制，如需继续扩容容器网络，请联系容器平台管理员。
     button:
       selectPage: 本页全选
       selectAcrossPage: 跨页全选
@@ -1169,9 +1178,6 @@ cluster:
       cancelSelectAll: 取消选择所有数据
       delete:
         subTitle: '确认是否删除 {ip} 等 {num} 个节点'
-        article1: 当前节点上正在运行的容器会被调度到其它可用节点
-        article2: 清理容器服务系统组件
-        article3: 节点删除后服务器如不再使用请尽快回收，避免产生不必要的成本
     msg:
       labelDesc: 标签有助于整理你的资源
       selectedData: '已选择 {num} 条数据'
@@ -2441,6 +2447,8 @@ ca:
     bandwidthPackage: 带宽包
     button:
       createBandWidth: 新建带宽包
+  tips:
+    requiredBandwidthPackage: ca.tips.requiredBandwidthPackage
 googleCloud:
   button:
     create: 新建凭证
@@ -2562,10 +2570,10 @@ tke:
       qGPU: qGPU 共享场景
       privateImage: 自定义镜像说明
   label:
+    retain: 销毁节点
+    ipAndPort: IP端口
+    clusterAvailableNodes: 集群支持添加节点数量
     recommended: 推荐
-    serviceIpNum: Service IP数量
-    podIpNum: Pod IP数量
-    podCidr: Pod 网段
     tencentCloud: 腾讯云
     account: 云凭证
     project:
@@ -2585,9 +2593,9 @@ tke:
         用于蓝鲸容器管理平台连接集群APIServer，根据实际网络情况选择公网访问与内网访问，蓝鲸平台所在网络与被添加集群所在网络内网可连通优先选择内网访问，否则需要选择外网访问，选择不正确会导致添加集群失败
       internet: 公网访问
       intranet: 内网访问
-    port: 端口
     securityGroup:
       text: 安全组
+      defaultSecurityGroupTips: 云梯默认安全组已对自研云网段配置好安全规则，无需用户再额外配置；业务如有特殊安全规则配置可创建自定义安全组，结合云梯默认安全组使用
       desc: >-
         用于控制访问被添加集群APIServer的白名单IP，安全组入站规则必须放通蓝鲸平台所在网络出口IP地址的TCP:443端口，否则会导致添加集群失败
     masterModule:
@@ -2603,8 +2611,8 @@ tke:
     publicKey: 指定公钥
     secretKey: 指定私钥
     nodeModule:
-      text: Node 节点转移模板
-      desc: 将 Node 节点从蓝鲸配置平台的空闲机模块转移至指定的业务模块
+      text: 节点转移模块
+      desc: 将节点从蓝鲸配置平台的空闲机模块转移至指定的业务模块
     region: 地域
     system: 操作系统
     configRec: 配置推荐
@@ -2638,6 +2646,9 @@ tke:
         bandwidth_prepaid: 按带宽计费
       maxBandWidth: 购买宽带
   title:
+    installGseAgentFailed:
+      text: 安装 GSE Agent 失败
+      reason: 安装 GSE Agent 失败，可能是管控区域问题，请重新选择管控区域。
     connectFailure:
       text: 集群创建成功，但连接集群 APIServer 失败
       reason: 连接集群 APIServer 失败，一般是 CLB 安全组配置与网络连通性问题。
@@ -2647,6 +2658,10 @@ tke:
     modifyNodeConfig: 修改配置
     addSubnets: 添加子网
     noAvailableSubnets: 暂无可用子网，请前往腾讯云控制台创建子网，如使用VPC-CNI网络插件，子网可用区需与VPC-CNI网络插件的Pod IP可用区子网保持一致
+    confirmUpdateNodeCMDBModule: 确认修改Worker节点所在CMDB模块
+    confirmUpdateNodeCMDBModuleSubTitle: '确认将所有Worker节点转移至 {0}'
+    confirmUpdateMasterCMDBModule: 确认修改控制面节点所在CMDB模块
+    confirmUpdateMasterCMDBModuleSubTitle: '确认将所有控制面节点转移至 {0}'
   button:
     chargeTypeDiff: 模式对比
     addNodeConfig: 添加配置
@@ -2666,10 +2681,14 @@ tke:
     cmdb: 管理配置平台
     package: 管理带宽包
   validate:
+    cidrMaskLen: '子网掩码长度范围 {0}'
+    minPodIP: Pod IP需要大于 0
+    podIPsNeedLessThanVpcIPs: Pod IP总数要小于私有网络IP数量
     passwordNotSame: 两次输入的密码不一致
     minIpNum: '为保证集群有足够IP, 容器网段不能低于 {0} 个IP'
     supportCidrList: '仅支持 {0} 之间网段'
     minIpNum2: '容器网段不能少于 {0} 个 IP, 请重新输入'
+    formErr: 表单填写有误，请修改
   configRec:
     l100:
       text: 节点数1~100
@@ -2684,6 +2703,14 @@ tke:
       text: 自定义配置
       desc: 修改下方任意配置数据，即切换为自定义配置
   tips:
+    transferNodeCMDBModule: 将所有 Worker 节点服务器转移至指定配置平台（CMDB）模块
+    transferMasterCMDBModule: 将所有控制面节点服务器转移至指定配置平台（CMDB）模块
+    subnetNum: '可用子网数量: {0}'
+    maxNodeNum: '单次添加节点数量不可超过 {0}'
+    nodeNum: '已配置 {0} 个节点'
+    clusterAvailableNodes: 支持添加节点数量 (包含控制面节点) = Pod IP数量 / 单节点Pod数量上限
+    needSameResourceType: 控制面配置步骤必须与添加节点步骤资源提供方式保持一致(腾讯云TKE功能限制)
+    hasSelected: 已选择
     zone: 'VPC-CNI网络插件的Pod IP没有使用此可用区, 请选择其他可用区'
     imageUsedInCluster: 有集群正在使用
     subnetZone: VPC-CNI网络插件的Pod IP绑定在集群节点上，Pod IP可用区必须与集群节点(包含控制面与Node节点)可用区保持一致
@@ -2697,8 +2724,11 @@ tke:
     notSupport: 暂不支持
     supportCidr: '腾讯云支持私有网络范围: '
     ipCannotBeAdjustedWhenCreated: '{0} IP数量一旦分配后将无法调整, 请谨慎评估后填写'
+    ipCannotBeAdjustedWhenCreated2: '{0} 一旦分配后将无法调整, 请谨慎评估后填写'
     podIpCalcFormula: Pod IP数量 = 容器网段数量 - Service IP数量
     vpcCniPodIp: Pod IP从私有网络的主/辅网段自动分配
+    prepaidOfCA: '包年包月计费模式不适用于节点弹性扩缩容场景, 如果您准备手动调整节点池的节点数量，请忽略提示'
+    prepaidOfEnableCA: 包年包月计费模式适合节点长期使用，不适用开启节点弹性扩缩容，如需开启扩缩容，建议计费模式选择按量计费
     staticIpMode:
       p1: 此选项只支持在集群创建时开启，集群创建后无法修改，请谨慎操作。
       p2: '此选项适用于依赖容器固定IP的场景, 对IP无限制的业务不推荐您使用固定IP模式, 详情请参考 {0}'

@@ -17,49 +17,27 @@
     </div>
     <div class="leading-[22px] mt-[2px]">
       <i18n path="tke.title.connectFailure.ref">
-        <bk-link theme="primary">
+        <span
+          class="text-[14px] text-[#699DF4] cursor-pointer"
+          @click="openLink('https://bk.tencent.com/docs/markdown/ZH/BCS/1.29/UserGuide/FAQ/faq.md')">
           {{ $t('tke.title.connectFailure.refButton') }}
-        </bk-link>
+        </span>
       </i18n>
     </div>
     <div class="bg-[#F5F7FA] p-[16px] mt-[16px]">
-      <bk-radio-group v-model="isExtranet">
-        <div class="flex items-center mb-[8px] w-full max-w-[500px]">
-          <bk-radio :value="true">
-            {{ $t('tke.label.apiServerCLB.internet') }}
-          </bk-radio>
-          <div class="flex items-center flex-1 ml-[16px]">
-            <span
-              class="prefix"
-              v-bk-tooltips="$t('tke.label.securityGroup.desc')">
-              <span class="bcs-border-tips">{{ $t('tke.label.securityGroup.text') }}</span>
-            </span>
-            <bcs-select
-              class="ml-[-1px] flex-1 bg-[#fff]"
-              searchable
-              :clearable="false"
-              :loading="securityGroupLoading"
-              :disabled="!isExtranet"
-              v-model="securityGroup">
-              <bcs-option
-                v-for="item in securityGroupList"
-                :key="item.securityGroupID"
-                :id="item.securityGroupID"
-                :name="item.securityGroupName">
-              </bcs-option>
-            </bcs-select>
-          </div>
-        </div>
-        <bk-radio :value="false">
-          {{ $t('tke.label.apiServerCLB.intranet') }}
-        </bk-radio>
-      </bk-radio-group>
+      <ApiServer
+        :value="clusterConnectSetting"
+        :region="cluster.region"
+        :cloud-account-i-d="cluster.cloudAccountID"
+        :cloud-i-d="cluster.provider"
+        @change="(v) => clusterConnectSetting = v" />
     </div>
     <div class="flex items-center justify-center mt-[24px]">
       <bk-button
         theme="primary"
         class="min-w-[88px]"
         :loading="isLoading"
+        :disabled="clusterConnectSetting.isExtranet && !clusterConnectSetting.securityGroup"
         @click="handleConfirm">{{ $t('generic.button.confirm') }}</bk-button>
       <bk-button class="min-w-[88px]" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
     </div>
@@ -69,10 +47,9 @@
 import { merge } from 'lodash';
 import { PropType, ref, watch } from 'vue';
 
-import { ISecurityGroup } from '../add/tencent/types';
-
-import { cloudSecurityGroups, modifyCluster } from '@/api/modules/cluster-manager';
+import { modifyCluster } from '@/api/modules/cluster-manager';
 import { ICluster } from '@/composables/use-app';
+import ApiServer from '@/views/cluster-manage/add/form/api-server.vue';
 
 const props = defineProps({
   cluster: {
@@ -82,23 +59,19 @@ const props = defineProps({
 });
 const emits = defineEmits(['cancel', 'confirm']);
 
-const isExtranet = ref(true);
-const securityGroup = ref('');
+const clusterConnectSetting = ref({
+  isExtranet: true,
+  securityGroup: '',
+});
 
-// 安全组
-const securityGroupLoading = ref(false);
-const securityGroupList = ref<Array<ISecurityGroup>>([]);
-const handleGetSecurityGroups = async () => {
-  const { provider, cloudAccountID, region } = props.cluster || {};
-  if (!provider || !cloudAccountID || !region) return;
-  securityGroupLoading.value = true;
-  securityGroupList.value = await cloudSecurityGroups({
-    $cloudId: provider,
-    accountID: cloudAccountID,
-    region,
-  }).catch(() => []);
-  securityGroupLoading.value = false;
-};
+watch(
+  () => props.cluster,
+  () => {
+    const setting = props.cluster?.clusterAdvanceSettings?.clusterConnectSetting || {};
+    clusterConnectSetting.value = JSON.parse(JSON.stringify(setting));
+  },
+  { immediate: true, deep: true },
+);
 
 const isLoading = ref(false);
 const handleConfirm = async () => {
@@ -109,8 +82,8 @@ const handleConfirm = async () => {
       props.cluster.clusterAdvanceSettings,
       {
         clusterConnectSetting: {
-          isExtranet: isExtranet.value,
-          securityGroup: securityGroup.value,
+          isExtranet: clusterConnectSetting.value.isExtranet,
+          securityGroup: clusterConnectSetting.value.securityGroup,
         },
       },
     ),
@@ -119,21 +92,20 @@ const handleConfirm = async () => {
 
   isLoading.value = false;
   if (result) {
-    emits('confirm', props.cluster);
+    emits('confirm', props.cluster.clusterID);
     emits('cancel');
   }
+};
+// 跳转链接
+const openLink = (link: string) => {
+  if (!link) return;
+
+  window.open(link);
 };
 const handleCancel = () => {
   emits('cancel');
 };
 
-watch(
-  () => props.cluster,
-  () => {
-    handleGetSecurityGroups();
-  },
-  { immediate: true, deep: true },
-);
 </script>
 <style scoped lang="postcss">
 >>> .prefix {

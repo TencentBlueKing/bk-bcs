@@ -8,6 +8,7 @@
     :clearable="false"
     ref="selectRef"
     :loading="topoLoading"
+    :search-placeholder="$t('generic.placeholder.searchName')"
     @clear="handleClearScaleOutNode">
     <bcs-big-tree
       :data="topoData"
@@ -39,12 +40,11 @@
 import TopoSelect from 'bk-magic-vue/lib/select';
 import { defineComponent, onMounted, ref } from 'vue';
 
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
-
 import { topologyHostCount } from '@/api/modules/cluster-manager';
 import $store from '@/store';
+import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 
-interface ITopoData {
+export interface ITopoData {
   count: number
   expanded: boolean
   instanceId: number
@@ -62,14 +62,10 @@ export default defineComponent({
   },
   props: {
     value: {
-      type: String,
+      type: [String, Number],
       default: '',
     },
     placeholder: {
-      type: String,
-      default: '',
-    },
-    clusterId: {
       type: String,
       default: '',
     },

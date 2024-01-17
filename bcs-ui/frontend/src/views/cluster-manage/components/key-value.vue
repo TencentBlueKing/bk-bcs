@@ -104,6 +104,7 @@ export default defineComponent({
         pre[item.key] = item.value;
         return pre;
       }, {});
+      ctx.emit('validate', validate());
       ctx.emit('change', keyValues);
     };
     const handleLabelKeyChange = (newValue, oldValue) => {
@@ -119,6 +120,22 @@ export default defineComponent({
       if (disabledDelete.value) return;
       labels.value.splice(index, 1);
     };
+    // 数据校验
+    const validate = () => {
+      const keys: string[] = [];
+      const values: string[] = [];
+      labels.value.forEach((item) => {
+        keys.push(item.key);
+        values.push(item.value);
+      });
+
+      const removeDuplicateData = new Set(keys);
+      if (keys.length !== removeDuplicateData.size) {
+        return false;
+      }
+      return keys.every(key => props.keyRules.every(rule => new RegExp(rule.validator).test(key)))
+      && values.every(value => props.valueRules.every(rule => new RegExp(rule.validator).test(value)));
+    };
     return {
       labels,
       disabledDelete,
@@ -126,6 +143,7 @@ export default defineComponent({
       handleLabelValueChange,
       handleAddLabel,
       handleDeleteLabel,
+      validate,
     };
   },
 });

@@ -129,7 +129,11 @@
               </template>
             </bcs-table-column>
           </bcs-table>
-          <p class="text-[12px] text-[#ea3636]" v-if="!nodePoolConfig.launchTemplate.instanceType">{{ $t('generic.validate.required') }}</p>
+          <p
+            class="text-[12px] text-[#ea3636] error-tips"
+            v-if="!nodePoolConfig.launchTemplate.instanceType">
+            {{ $t('generic.validate.required') }}
+          </p>
           <!-- self资源池不支持数据盘、系统盘和公网IP -->
           <template v-if="$route.query.provider !== 'self'">
             <div class="mt25" style="display:flex;align-items:center;">
@@ -292,14 +296,29 @@
             searchable
             class="bg-[#fff]"
             selected-style="checkbox"
-            disabled>
+            :disabled="isEdit || $route.query.provider === 'self'"
+            :clearable="false">
             <bcs-option
               v-for="securityGroup in securityGroupsList"
               :key="securityGroup.securityGroupID"
               :id="securityGroup.securityGroupID"
-              :name="securityGroup.securityGroupName">
+              :name="securityGroup.securityGroupName"
+              :disabled="securityGroup.securityGroupName === defaultSecurityGroupName">
+              <div class="flex items-center text-[12px]">
+                <span>{{ securityGroup.securityGroupName }}</span>
+                <span class="text-[#C4C6CC]">({{ securityGroup.securityGroupID }})</span>
+              </div>
+              <!-- 性能问题，暂时隐藏 -->
+              <!-- <bcs-checkbox
+                :value="nodePoolConfig.launchTemplate.securityGroupIDs.includes(securityGroup.securityGroupID)"
+                :disabled="securityGroup.securityGroupName === defaultSecurityGroupName">
+
+              </bcs-checkbox> -->
             </bcs-option>
           </bcs-select>
+          <p class="text-[#979BA5] leading-4 mt-[4px] text-[12px]">
+            {{ $t('tke.label.securityGroup.defaultSecurityGroupTips') }}
+          </p>
         </bk-form-item>
         <bk-form-item
           :label="$t('cluster.ca.nodePool.create.subnet.title')"
@@ -369,6 +388,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
+    const defaultSecurityGroupName = '云梯默认安全组';
     const resourcePoolProvider = computed<'yunti'|'self'>(() => $router.currentRoute?.query?.provider || 'yunti');
     const { defaultValues, cluster, isEdit, schema } = toRefs(props);
     const nodeConfigRef = ref<any>(null);
@@ -442,6 +462,16 @@ export default defineComponent({
           message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
           validator: () => !!nodePoolConfig.value.launchTemplate.securityGroupIDs.length,
+        },
+        {
+          message: $i18n.t('generic.validate.fieldRequired', [defaultSecurityGroupName]),
+          trigger: 'blur',
+          validator: () => {
+            const defaultSecurityGroup = securityGroupsList.value
+              .find(item => item.securityGroupName === defaultSecurityGroupName);
+
+            return nodePoolConfig.value.launchTemplate.securityGroupIDs?.includes(defaultSecurityGroup.securityGroupID);
+          },
         },
       ],
       'nodePoolConfig.autoScaling.zones': [
@@ -645,11 +675,16 @@ export default defineComponent({
         region: cluster.value.region,
         accountID: cluster.value.cloudAccountID,
       });
-      securityGroupsList.value = data.filter(item => item.securityGroupName !== 'default');
+      // 放开默认安全过滤限制
+      securityGroupsList.value = data;
+      // securityGroupsList.value = data.filter(item => item.securityGroupName !== 'default');
       // 默认安全组先写死（没有唯一ID标识，只能通过名称，很low）
-      nodePoolConfig.value.launchTemplate.securityGroupIDs = [
-        securityGroupsList.value.find(item => item.securityGroupName === '云梯默认安全组')?.securityGroupID,
-      ];
+      if (!isEdit.value) {
+        nodePoolConfig.value.launchTemplate.securityGroupIDs = [
+          securityGroupsList.value.find(item => item.securityGroupName === defaultSecurityGroupName)?.securityGroupID,
+        ];
+      }
+
       securityGroupsLoading.value = false;
     };
 
@@ -707,33 +742,32 @@ export default defineComponent({
     };
     const validate = async () => {
       const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);
-      if (!basicFormValidate && nodeConfigRef.value) {
-        nodeConfigRef.value.scrollTop = 0;
-        return false;
-      }
-      // 校验机型
-      if (!nodePoolConfig.value.launchTemplate.instanceType) {
-        nodeConfigRef.value.scrollTop = 20;
-        return false;
-      }
+
       const result = await formRef.value?.validate().catch(() => false);
-      if (!result && nodeConfigRef.value) {
-        if (isSpecifiedZoneList.value && !nodePoolConfig.value.autoScaling?.zones?.length) {
-          nodeConfigRef.value.scrollTop = 0;
-        } else {
-          nodeConfigRef.value.scrollTop = nodeConfigRef.value.offsetHeight;
-        }
-      }
       // eslint-disable-next-line max-len
       const validateDataDiskSize = nodePoolConfig.value.nodeTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
       const mountTargetList = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => item.mountTarget);
       const validateDataDiskMountTarget = new Set(mountTargetList).size === mountTargetList.length;
-      if (!basicFormValidate || !result || !validateDataDiskSize || !validateDataDiskMountTarget) return false;
+      if (!basicFormValidate
+        || !nodePoolConfig.value.launchTemplate.instanceType // 校验机型
+        || !result
+        || !validateDataDiskSize
+        || !validateDataDiskMountTarget) return false;
 
       return true;
     };
     const handleNext = async () => {
-      if (!await validate()) return;
+      if (!await validate()) {
+        // 自动滚动到第一个错误的位置
+        const errDom = document.getElementsByClassName('form-error-tip');
+        const bcsErrDom = document.getElementsByClassName('error-tips');
+        const firstErrDom = errDom[0] || bcsErrDom[0];
+        firstErrDom?.scrollIntoView({
+          block: 'center',
+          behavior: 'smooth',
+        });
+        return;
+      };
 
       ctx.emit('next', getNodePoolData());
     };
@@ -818,6 +852,7 @@ export default defineComponent({
       clusterDetailLoading,
       instanceTypesList,
       instanceDesc,
+      defaultSecurityGroupName,
     };
   },
 });

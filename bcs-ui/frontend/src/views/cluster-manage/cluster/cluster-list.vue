@@ -1,18 +1,29 @@
 <template>
   <bk-table
-    :data="clusterList"
+    :data="sortClusterList"
     size="medium"
     :row-class-name="rowClassName"
     @row-click="handleRowClick">
     <bk-table-column :label="$t('cluster.labels.nameAndId')" :min-width="160" :show-overflow-tooltip="false">
       <template #default="{ row }">
         <bk-button
-          :disabled="row.status !== 'RUNNING'"
+          :disabled="!supportDetailStatusList.includes(row.status)"
           text
           @click.stop="handleChangeActiveRow(row)">
-          <span class="bcs-ellipsis" v-bk-overflow-tips>{{ row.name }}</span>
+          <div class="flex items-center">
+            <span class="bcs-ellipsis flex-1" v-bk-overflow-tips>{{ row.name }}</span>
+            <span
+              :class="[
+                'flex items-center justify-center px-[2px] rounded-sm',
+                'text-[#fff] text-[12px] bg-[#2DCB56]'
+              ]"
+              style="transform: scale(0.75);"
+              v-if="highlightClusterId === row.clusterID">
+              new
+            </span>
+          </div>
         </bk-button>
-        <div :class="row.status === 'RUNNING' ? 'text-[#979BA5]' : 'text-[#dcdee5]'">
+        <div :class="supportDetailStatusList.includes(row.status) ? 'text-[#979BA5]' : 'text-[#dcdee5]'">
           {{ row.clusterID }}
         </div>
       </template>
@@ -20,44 +31,19 @@
     <bk-table-column
       :label="$t('cluster.labels.status')"
       prop="status"
-      :filters="[{
-        text: $t('generic.status.ready'),
-        value: 'RUNNING'
-      },{
-        text: $t('generic.status.initializing'),
-        value: 'INITIALIZATION'
-      },{
-        text: $t('generic.status.deleting'),
-        value: 'DELETING'
-      },{
-        text: $t('generic.status.createFailed'),
-        value: 'CREATE-FAILURE'
-      },{
-        text: $t('generic.status.deleteFailed'),
-        value: 'DELETE-FAILURE'
-      },{
-        text: $t('cluster.status.importFailed'),
-        value: 'IMPORT-FAILURE'
-      }]"
+      :filters="statusList"
       :filter-method="filterMethod">
       <template #default="{ row }">
         <StatusIcon
-          :status-color-map="{
-            'CREATE-FAILURE': 'red',
-            'DELETE-FAILURE': 'red',
-            'IMPORT-FAILURE': 'red',
-            RUNNING: 'green'
-          }"
-          :status-text-map="{
-            INITIALIZATION: $t('generic.status.initializing'),
-            DELETING: $t('generic.status.deleting'),
-            'CREATE-FAILURE': $t('generic.status.createFailed'),
-            'DELETE-FAILURE': $t('generic.status.deleteFailed'),
-            'IMPORT-FAILURE': $t('cluster.status.importFailed'),
-            RUNNING: $t('generic.status.ready')
-          }"
+          :status-color-map="statusColorMap"
+          :status-text-map="statusTextMap"
           :status="row.status"
-          :pending="['INITIALIZATION', 'DELETING'].includes(row.status)" />
+          :message="failedStatusList.includes(row.status) ? row.message : ''"
+          :pending="['INITIALIZATION', 'DELETING'].includes(row.status)"
+          @click.native.stop="
+            failedStatusList.includes(row.status)
+              ? handleShowClusterLog(row)
+              : handleChangeActiveRow(row)" />
       </template>
     </bk-table-column>
     <bk-table-column
@@ -142,6 +128,15 @@
               <ul class="bg-[#fff]">
                 <li
                   class="bcs-dropdown-item"
+                  @click.stop="handleGotoClusterDetail(row, 'info')">{{ $t('generic.title.basicInfo1') }}</li>
+                <li
+                  class="bcs-dropdown-item"
+                  @click.stop="handleGotoClusterDetail(row, 'network')">{{ $t('cluster.detail.title.network') }}</li>
+                <li
+                  class="bcs-dropdown-item"
+                  @click.stop="handleGotoClusterDetail(row, 'master')">{{ $t('cluster.detail.title.master') }}</li>
+                <li
+                  class="bcs-dropdown-item"
                   v-authority="{
                     clickable: perms[row.clusterID]
                       && perms[row.clusterID].cluster_delete,
@@ -162,7 +157,7 @@
           </PopoverSelector>
         </template>
         <!-- 正常状态 -->
-        <template v-else-if="row.status === 'RUNNING'">
+        <template v-else-if="normalStatusList.includes(row.status)">
           <bk-button text class="mr10" @click.stop="handleGotoClusterOverview(row)">
             {{ $t('cluster.button.overview') }}
           </bk-button>
@@ -295,7 +290,7 @@
   </bk-table>
 </template>
 <script lang="ts">
-import { computed, defineComponent, PropType, toRefs } from 'vue';
+import { computed, defineComponent, PropType, ref, toRefs } from 'vue';
 
 import { CLUSTER_ENV } from '@/common/constant';
 import LoadingIcon from '@/components/loading-icon.vue';
@@ -338,11 +333,46 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    highlightClusterId: {
+      type: String,
+      default: '',
+    },
   },
   setup(props, ctx) {
     const { curProject } = useProject();
-    const { clusterExtraInfo, clusterList } = toRefs(props);
-    const clusterEnvFilters = computed(() => props.clusterList
+    const { clusterExtraInfo, clusterList, highlightClusterId } = toRefs(props);
+    const sortClusterList = computed(() => clusterList.value.sort((cur) => {
+      if (cur.clusterID === highlightClusterId.value) return -1;
+
+      return 0;
+    }));
+    const statusTextMap = ref({
+      INITIALIZATION: $i18n.t('generic.status.initializing'),
+      DELETING: $i18n.t('generic.status.deleting'),
+      'CREATE-FAILURE': $i18n.t('generic.status.createFailed'),
+      'DELETE-FAILURE': $i18n.t('generic.status.deleteFailed'),
+      'IMPORT-FAILURE': $i18n.t('cluster.status.importFailed'),
+      'CONNECT-FAILURE': $i18n.t('cluster.status.connectFailed'),
+      RUNNING: $i18n.t('generic.status.ready'),
+    });
+    const statusList = computed(() => Object.keys(statusTextMap.value).map(status => ({
+      text: statusTextMap.value[status],
+      value: status,
+    })));
+    const statusColorMap = ref({
+      'CREATE-FAILURE': 'red',
+      'DELETE-FAILURE': 'red',
+      'IMPORT-FAILURE': 'red',
+      'CONNECT-FAILURE': 'red',
+      RUNNING: 'green',
+    });
+    // 异常状态
+    const failedStatusList = ['CREATE-FAILURE', 'DELETE-FAILURE', 'IMPORT-FAILURE'];
+    // 支持详情页展示的状态
+    const supportDetailStatusList = ['CREATE-FAILURE', 'DELETE-FAILURE', 'CONNECT-FAILURE', 'RUNNING'];
+    // 正常状态
+    const normalStatusList = ['CONNECT-FAILURE', 'RUNNING'];
+    const clusterEnvFilters = computed(() => clusterList.value
       .reduce<Array<{value: string, text: string}>>((pre, cluster) => {
       if (pre.find(item => item.value === cluster.environment)) return pre;
       pre.push({
@@ -432,7 +462,7 @@ export default defineComponent({
 
     // 行点击事件
     const handleRowClick = (row, e, col) => {
-      if (col.property === 'action' || row.status !== 'RUNNING') return;
+      if (col.property === 'action' || !supportDetailStatusList.includes(row.status)) return;
       handleChangeActiveRow(row);
     };
 
@@ -440,13 +470,32 @@ export default defineComponent({
     const handleChangeActiveRow = (row) => {
       ctx.emit('active-row', row.clusterID);
     };
-    const rowClassName = ({ row }) => (row.clusterID === props.activeClusterId ? 'cluster-list-row active-row' : 'cluster-list-row');
+    const rowClassName = ({ row }) => {
+      let classes = 'cluster-list-row';
+      if (row.clusterID === props.activeClusterId) {
+        classes += ' active-row';
+      }
+      if (supportDetailStatusList.includes(row.status)) {
+        classes += ' cluster-row-clickable';
+      }
+      if (row.clusterID === props.highlightClusterId) {
+        classes += ' highlight-active-row';
+      }
+      return classes;
+    };
 
     return {
+      normalStatusList,
+      failedStatusList,
+      sortClusterList,
+      supportDetailStatusList,
       CLUSTER_ENV,
       clusterEnvFilters,
       curProject,
       clusterTypeFilterList,
+      statusTextMap,
+      statusColorMap,
+      statusList,
       filterMethod,
       handleGotoClusterOverview,
       handleGotoClusterDetail,
@@ -471,7 +520,10 @@ export default defineComponent({
 >>> .active-row {
   background-color: #E1ECFF;
 }
->>> .cluster-list-row {
+>>> .highlight-active-row {
+  background-color: #F2FFF4;
+}
+>>> .cluster-row-clickable {
   cursor: pointer;
 }
 >>> .bk-table-body-wrapper {

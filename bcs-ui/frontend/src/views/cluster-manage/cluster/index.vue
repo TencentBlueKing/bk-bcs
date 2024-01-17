@@ -54,6 +54,7 @@
           :cluster-extra-info="clusterExtraInfo"
           :cluster-nodes-map="clusterNodesMap"
           :active-cluster-id="activeClusterID"
+          :highlight-cluster-id="highlightClusterId"
           @overview="goOverview"
           @detail="goClusterDetail"
           @node="goNodeInfo"
@@ -80,21 +81,27 @@
     <!-- 集群日志 -->
     <bcs-sideslider
       :is-show.sync="showLogDialog"
-      :title="curOperateCluster && curOperateCluster.cluster_id"
+      :title="curOperateCluster ? `${curOperateCluster.clusterName} (${curOperateCluster.clusterID})` : '--'"
       :width="960"
       quick-close
       @hidden="handleCloseLog">
       <template #content>
-        <TaskList v-bkloading="{ isLoading: logLoading }" class="px-[24px] py-[20px]" :data="taskData"></TaskList>
+        <TaskList
+          v-bkloading="{ isLoading: logLoading }"
+          class="px-[24px] py-[20px]"
+          :data="taskData"
+          @retry="handleRetry(curOperateCluster)"
+          @skip="handleSkip">
+        </TaskList>
         <div class="bg-[#FAFBFD] h-[48px] flex items-center px-[24px] log-footer-border-top">
-          <bcs-button
+          <!-- <bcs-button
             class="w-[88px]"
             theme="primary"
             v-if="['CREATE-FAILURE', 'DELETE-FAILURE'].includes(curOperateCluster.status)"
             @click="handleRetry(curOperateCluster)">
             {{ $t('cluster.ca.nodePool.records.action.retry') }}
-          </bcs-button>
-          <bcs-button class="w-[88px]" @click="showLogDialog = false">{{ $t('generic.button.cancel') }}</bcs-button>
+          </bcs-button> -->
+          <bcs-button class="w-[88px]" @click="showLogDialog = false">{{ $t('generic.button.close') }}</bcs-button>
         </div>
       </template>
     </bcs-sideslider>
@@ -109,14 +116,27 @@
       :confirm="confirmDeleteCluster" />
     <!-- 编辑项目集群信息 -->
     <ProjectConfig v-model="isProjectConfDialogShow" />
+    <!-- 修改集群安全组信息-->
     <bcs-dialog
       v-model="showConnectCluster"
       :show-footer="false"
-      width="588">
-      <ConnectCluster
+      width="588"
+      render-directive="if">
+      <SetConnectInfo
         :cluster="curRow"
         @confirm="handleRetryTask"
         @cancel="showConnectCluster = false" />
+    </bcs-dialog>
+    <!-- 修改集群管控区域信息-->
+    <bcs-dialog
+      v-model="showInstallGseAgent"
+      :show-footer="false"
+      width="588"
+      render-directive="if">
+      <SetAgentArea
+        :cluster="curRow"
+        @confirm="handleRetryTask"
+        @cancel="showInstallGseAgent = false" />
     </bcs-dialog>
   </div>
 </template>
@@ -129,8 +149,9 @@ import { computed, defineComponent, onMounted, ref, set, watch } from 'vue';
 import ApplyHost from '../components/apply-host.vue';
 
 import ListMode from './cluster-list.vue';
-import ConnectCluster from './connect-cluster.vue';
 import ClusterDetail from './detail.vue';
+import SetAgentArea from './set-agent-area.vue';
+import SetConnectInfo from './set-connect-info.vue';
 import { useClusterList, useClusterOperate, useClusterOverview, useTask, useVCluster } from './use-cluster';
 
 import $bkMessage from '@/common/bkmagic';
@@ -158,7 +179,8 @@ export default defineComponent({
     ClusterGuide,
     ListMode,
     ClusterDetail,
-    ConnectCluster,
+    SetConnectInfo,
+    SetAgentArea,
   },
   props: {
     clusterId: {
@@ -166,6 +188,10 @@ export default defineComponent({
       default: '',
     },
     active: {
+      type: String,
+      default: '',
+    },
+    highlightClusterId: {
       type: String,
       default: '',
     },
@@ -242,21 +268,20 @@ export default defineComponent({
     const deleteClusterTips = computed(() => {
       if (curOperateCluster.value?.clusterType === 'virtual') {
         return [
-          $i18n.t('cluster.button.delete.article1', { clusterName: curOperateCluster.value?.clusterID }),
+          $i18n.t('cluster.button.delete.article1', { clusterName: `${curOperateCluster.value?.clusterName}(${curOperateCluster.value?.clusterID})` }),
           $i18n.t('cluster.button.delete.article2'),
           $i18n.t('cluster.button.delete.article3'),
         ];
       }
       return curOperateCluster.value?.clusterCategory === 'importer'
         ? [
-          $i18n.t('cluster.button.delete.article1', { clusterName: curOperateCluster.value?.clusterID }),
+          $i18n.t('cluster.button.delete.article1', { clusterName: `${curOperateCluster.value?.clusterName}(${curOperateCluster.value?.clusterID})` }),
           $i18n.t('cluster.button.delete.article4'),
           $i18n.t('cluster.button.delete.article5'),
           $i18n.t('cluster.button.delete.article6'),
         ]
         : [
-          $i18n.t('cluster.button.delete.article1', { clusterName: curOperateCluster.value?.clusterID }),
-          $i18n.t('cluster.button.delete.article7'),
+          $i18n.t('cluster.button.delete.article1', { clusterName: `${curOperateCluster.value?.clusterName}(${curOperateCluster.value?.clusterID})` }),
           $i18n.t('cluster.button.delete.article3'),
           $i18n.t('cluster.button.delete.article8'),
         ];
@@ -282,7 +307,7 @@ export default defineComponent({
         });
       }
     };
-    const handleDeleteCluster = (cluster) => {
+    const handleDeleteCluster = (cluster: ICluster) => {
       if (
         cluster.clusterType !== 'virtual'
         && cluster.clusterCategory !== 'importer'
@@ -297,7 +322,7 @@ export default defineComponent({
     };
     // 集群日志
     const logLoading = ref(false);
-    const { taskList } = useTask();
+    const { taskList, skipTask } = useTask();
     const showLogDialog = ref(false);
     const latestTask = ref<any>(null);
     const taskTimer = ref<any>(null);
@@ -346,55 +371,80 @@ export default defineComponent({
     };
     // 失败重试
     const showConnectCluster = ref(false);
+    const showInstallGseAgent = ref(false);
     const curRow = ref<ICluster>();
     const handleRetry = async (cluster) => {
       isLoading.value = true;
-      // 判断是否是外网连接失败
       const { latestTask } = await taskList(cluster);
       isLoading.value = false;
       const steps = latestTask?.steps || {};
       const connectClusterFailure = Object.keys(steps)
-        .some(step => steps?.[step]?.params?.connectCluster);
+        .some(step => steps?.[step]?.params?.connectCluster === 'true');
+      const installGseAgent = Object.keys(steps)
+        .some(step => steps?.[step]?.params?.installGseAgent === 'true');
 
       if (connectClusterFailure) {
+        // 判断是否是外网连接失败
         curRow.value = cluster;
         showConnectCluster.value = true;
+      } else if (installGseAgent) {
+        // 判断是否管控区域不正确
+        curRow.value = cluster;
+        showInstallGseAgent.value = true;
       } else {
         retryTask(cluster);
       }
     };
     // 重试任务
-    const handleRetryTask = async (cluster) => {
+    const handleRetryTask = async (clusterID: string) => {
       isLoading.value = true;
-      const result = await retryClusterTask(cluster);
+      const result = await retryClusterTask(clusterID);
       if (result) {
-        await handleGetClusterList();
         $bkMessage({
           theme: 'success',
           message: $i18n.t('generic.msg.success.deliveryTask'),
         });
+        handleGetClusterList();
+        if (showLogDialog.value) {
+          fetchLogData(clusterData.value.find(item => item.clusterID === clusterID));
+        }
       }
       isLoading.value = false;
     };
-    const retryTask = (cluster) => {
-      showLogDialog.value = false;
-      if (['CREATE-FAILURE', 'DELETE-FAILURE'].includes(cluster.status)) {
-        // 创建重试
-        $bkInfo({
-          type: 'warning',
-          title: cluster.status === 'CREATE-FAILURE' ? $i18n.t('cluster.title.retryCreate') :  $i18n.t('cluster.title.confirmDelete'),
-          clsName: 'custom-info-confirm default-info',
-          subTitle: cluster.clusterName,
-          confirmFn: async () => {
-            await handleRetryTask(cluster);
-          },
-        });
-      } else {
-        $bkMessage({
-          theme: 'error',
-          message: $i18n.t('generic.status.unknown1'),
-        });
-      }
+    const retryTask = (cluster: ICluster) => {
+      // 创建重试
+      $bkInfo({
+        type: 'warning',
+        title: $i18n.t('cluster.title.retryTask'),
+        clsName: 'custom-info-confirm default-info',
+        subTitle: cluster.clusterName,
+        confirmFn: async () => {
+          await handleRetryTask(cluster.clusterID);
+        },
+      });
+    };
+
+    // 跳过任务
+    const handleSkip = (row) => {
+      $bkInfo({
+        type: 'warning',
+        title: $i18n.t('cluster.title.skipTask'),
+        clsName: 'custom-info-confirm default-info',
+        subTitle: row.taskName || row.name,
+        confirmFn: async () => {
+          const result = await skipTask(latestTask.value.taskID);
+          if (result) {
+            $bkMessage({
+              theme: 'success',
+              message: $i18n.t('generic.msg.success.deliveryTask'),
+            });
+            handleGetClusterList();
+            if (showLogDialog.value) {
+              fetchLogData(curOperateCluster.value);
+            }
+          }
+        },
+      });
     };
 
     // 集群节点数
@@ -412,13 +462,15 @@ export default defineComponent({
     };
     const throttleClusterNodesFunc = throttle(handleGetClusterNodes, 300);
 
+    // 支持详情页展示的状态
+    const supportDetailStatusList = ['CREATE-FAILURE', 'DELETE-FAILURE', 'CONNECT-FAILURE', 'RUNNING'];
     // 当前详情tag
     const activeTabName = computed<string>(() => props.active || 'overview');
     // 当前active 集群id
     const activeClusterID = ref(props.clusterId);
     watch(clusterList, () => {
       const activeCluster = clusterList.value.find(item => item.clusterID === activeClusterID.value);
-      if (['INITIALIZATION', 'DELETING'].includes(activeCluster?.status)) {
+      if (activeClusterID.value && !supportDetailStatusList.includes(activeCluster?.status)) {
         handleChangeDetail('');
       }
     });
@@ -496,6 +548,7 @@ export default defineComponent({
       handleShowLog,
       handleCloseLog,
       handleRetry,
+      handleSkip,
       goNodeInfo,
       goClusterToken,
       clusterExtraInfo,
@@ -510,6 +563,7 @@ export default defineComponent({
       goNodeTemplate,
       clusterDetailRef,
       handleRetryTask,
+      showInstallGseAgent,
     };
   },
 });

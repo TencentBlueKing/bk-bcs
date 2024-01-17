@@ -72,25 +72,21 @@
           </bcs-table-column>
           <bcs-table-column :label="$t('generic.label.status')">
             <template #default="{ row }">
-              <div v-if="!isSharedCluster">
-                <StatusIcon
-                  :status-color-map="{
-                    'Active': 'green',
-                  }"
-                  :status="row.status"
-                  :pending="['Terminating'].includes(row.status)">
-                  {{ row.status || '--' }}
-                </StatusIcon>
-              </div>
-              <div v-else>
-                <span
-                  v-if="row.itsmTicketURL"
-                  class="text-[#3a84ff] cursor-pointer"
-                  @click="handleToITSM(row.itsmTicketURL)">
-                  {{ $t('dashboard.ns.status.waitingApproval') }}（{{ itsmTicketTypeMap[row.itsmTicketType] }})
-                </span>
-                <span v-else>{{ $t('generic.status.ready') }}</span>
-              </div>
+              <span
+                v-if="row.itsmTicketURL"
+                class="text-[#3a84ff] cursor-pointer"
+                @click="handleToITSM(row.itsmTicketURL)">
+                {{ $t('dashboard.ns.status.waitingApproval') }}（{{ itsmTicketTypeMap[row.itsmTicketType] }})
+              </span>
+              <StatusIcon
+                :status-color-map="{
+                  'Active': 'green',
+                }"
+                :status="row.status"
+                :pending="['Terminating'].includes(row.status)"
+                v-else>
+                {{ row.status || '--' }}
+              </StatusIcon>
             </template>
           </bcs-table-column>
           <bcs-table-column :label="$t('metrics.cpuUsage')" prop="cpuUseRate" :render-header="renderHeader">

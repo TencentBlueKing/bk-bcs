@@ -161,7 +161,7 @@ export interface IImageGroup {
 }
 
 export interface ICloudProject {
-  projectID: number
+  projectID: string
   projectName: string
 }
 
@@ -192,6 +192,7 @@ export interface IZoneItem {
   zone: string
   zoneName: string
   zoneState: string
+  subnetNum?: number
 }
 
 export interface ISecurityGroup {
@@ -247,4 +248,10 @@ export interface IInternetAccess {
   internetMaxBandwidth: string
   internetChargeType: InternetChargeType | string
   bandwidthPackageId: string
+}
+
+export interface IVpcItem {
+  vpcId: string
+  name: string
+  allocateIpNum: number
 }

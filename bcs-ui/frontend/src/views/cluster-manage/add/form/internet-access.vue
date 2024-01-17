@@ -1,6 +1,6 @@
 <template>
   <div class="text-[14px]">
-    <span class="inline-flex mt15">
+    <span class="inline-flex">
       <bk-checkbox
         v-model="internetAccess.publicIPAssigned">
         {{$t('tke.label.publicIPAssigned.text')}}
@@ -86,7 +86,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, PropType, ref, watch } from 'vue';
+import { onBeforeMount, PropType, ref, watch } from 'vue';
 
 import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 import { IInternetAccess, InternetChargeType } from '@/views/cluster-manage/add/tencent/types';
@@ -130,8 +130,10 @@ watch(() => props.value, (newValue, oldValue) => {
 }, { immediate: true });
 
 watch(internetAccess, () => {
+  // 后端需要字符串类型
+  internetAccess.value.internetMaxBandwidth = String(internetAccess.value.internetMaxBandwidth);
   emits('change', internetAccess.value);
-});
+}, { deep: true });
 
 // 账户类型
 const { accountType, getCloudAccountType, getCloudBwps } = useCloud();
@@ -180,16 +182,16 @@ const handleChargeTypeChange = (value: InternetChargeType) => {
   }
 };
 
-onMounted(() => {
-  handleGetCloudAccountType();
-  getBandwidthList();
-});
-
 watch([
   () => props.cloudAccountID,
   () => props.cloudID,
   () => props.region,
 ], () => {
+  handleGetCloudAccountType();
+  getBandwidthList();
+});
+
+onBeforeMount(() => {
   handleGetCloudAccountType();
   getBandwidthList();
 });

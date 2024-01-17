@@ -5,6 +5,7 @@ const ProjectInfo = () => import(/* webpackChunkName: 'project' */'@/views/proje
 
 // 云凭证
 const tencentCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/tencentCloud.vue');
+const tencentPublicCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/tencentPublicCloud.vue');
 const googleCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/googleCloud.vue');
 
 export default [
@@ -27,6 +28,15 @@ export default [
     path: 'tencent-cloud',
     name: 'tencentCloud',
     component: tencentCloud,
+    meta: {
+      title: 'Tencent Cloud',
+      hideBack: true,
+    },
+  },
+  {
+    path: 'tencent-public-cloud',
+    name: 'tencentPublicCloud',
+    component: tencentPublicCloud,
     meta: {
       title: 'Tencent Cloud',
       hideBack: true,
