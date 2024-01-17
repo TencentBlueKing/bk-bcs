@@ -37,10 +37,11 @@
               <bk-input
                 v-else-if="col.prop === 'default_val'"
                 v-model="variable.default_val"
+                :placeholder="t('请输入')"
                 @blur="handleValueChange(variable.type, variable.default_val)"
                 @change="deleteCellError(variable.name, col.prop)"
               />
-              <bk-input v-else-if="col.prop === 'memo'" v-model="variable.memo" @change="change" />
+              <bk-input v-else-if="col.prop === 'memo'" :placeholder="t('请输入')" v-model="variable.memo" @change="change" />
               <div v-else>
                 <bk-overflow-title type="tips">
                   {{ getCellVal(variable, col.prop) }}

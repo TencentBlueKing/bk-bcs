@@ -26,7 +26,7 @@
         @change="handleChange"
       />
     </bk-form-item>
-    <bk-form-item :label="t('数据格式')" :description="tips.config">
+    <bk-form-item :label="t('数据格式')" :description="t('tips.config')">
       <bk-radio-group v-model="localData.config_type" :disabled="editable" @change="handleConfigTypeChange">
         <bk-radio label="file">{{ t('文件型') }}</bk-radio>
         <bk-radio label="kv">{{ t('键值型') }}</bk-radio>
@@ -37,7 +37,7 @@
       v-if="localData.config_type === 'kv'"
       :label="t('数据类型')"
       property="kv_type"
-      :description="tips.type"
+      :description="t('tips.type')"
     >
       <bk-radio-group v-model="localData.data_type" @change="handleChange">
         <bk-radio label="any">{{ t('任意类型') }}</bk-radio>
@@ -92,15 +92,6 @@ const rules = {
   ],
 };
 
-const tips = {
-  config: `文件型：通常以文件的形式存储,通常具有良好的可读性和可维护性
-           键值型：以键值对的形式存储，其中键（key）用于位置标识一个配置项，值（value）为该配置项的具体内容，kv型配置通常存储在数据库，使用SDK或API的方式读取`,
-  type: `任意类型：不对配置项的类型做限制。如果选择下方某个类型，则只能创建指定类型的配置项
-         string：单行字符串
-         number：数值，包含整数、浮点数、会校验数据类型
-         text：多行字符串文本，不校验数据结构，大小2Mb
-         json、xml、yaml：不同格式的结构化数据，会校验数据结构`,
-};
 
 const localData = ref({ ...props.formData });
 const formRef = ref();

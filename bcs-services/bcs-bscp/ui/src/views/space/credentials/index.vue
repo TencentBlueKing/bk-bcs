@@ -159,7 +159,7 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作')" width="160">
+          <bk-table-column :label="t('操作')" :width="160" :fixed="'right'">
             <template #default="{ row, index }">
               <template v-if="index === 0 && isCreateCredential">
                 <bk-button text theme="primary" @click="handleCreateCredential">{{ t('创建') }}</bk-button>
@@ -219,7 +219,7 @@
           <div>{{ t('删除的密钥') }}<span>{{ t('无法找回') }}</span>{{ t(',请谨慎操作！') }}</div>
         </div>
         <div class="tips">{{ t('请输入密钥名称') }} <span>{{ deleteCredentialInfo?.spec.name }}</span> {{ t('以确认删除') }}</div>
-        <bk-input v-model="dialogInputStr" />
+        <bk-input v-model="dialogInputStr" :placeholder="t('请输入')" />
       </div>
     </div>
     <template #footer>

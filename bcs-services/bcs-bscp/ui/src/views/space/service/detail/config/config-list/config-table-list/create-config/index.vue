@@ -163,6 +163,7 @@ const handleBatchImportDialogOpen = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0 8px;
   min-width: 122px;
   height: 32px;
   line-height: 32px;

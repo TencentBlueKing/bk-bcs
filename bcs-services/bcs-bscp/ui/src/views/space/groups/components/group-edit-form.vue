@@ -303,5 +303,6 @@ defineExpose({
   font-size: 14px;
   color: #3a84ff;
   line-height: 19px;
+  vertical-align: middle;
 }
 </style>

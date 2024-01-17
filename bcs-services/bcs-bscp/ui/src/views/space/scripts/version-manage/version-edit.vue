@@ -13,10 +13,10 @@
         <div v-show="!fullscreen" class="version-config-form">
           <bk-form ref="formRef" :rules="rules" form-type="vertical" :model="localVal">
             <bk-form-item :label="t('版本号')" property="name">
-              <bk-input v-model="localVal.name" />
+              <bk-input v-model="localVal.name" :placeholder="t('请输入')"/>
             </bk-form-item>
             <bk-form-item :label="t('版本说明')" propperty="memo">
-              <bk-input v-model="localVal.memo" type="textarea" :rows="8" :resize="true" />
+              <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :rows="8" :resize="true" />
             </bk-form-item>
           </bk-form>
         </div>

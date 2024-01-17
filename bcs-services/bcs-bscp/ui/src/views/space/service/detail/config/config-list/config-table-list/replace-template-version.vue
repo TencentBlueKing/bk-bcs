@@ -6,6 +6,8 @@
     width="480"
     :is-show="props.show"
     :is-loading="loading || pending"
+    :confirm-text="t('确定')"
+    :cancel-text="t('取消')"
     @confirm="handleReplaceConfirm"
     @closed="close"
   >

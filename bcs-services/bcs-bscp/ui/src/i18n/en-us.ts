@@ -36,8 +36,8 @@ export default {
   服务新建成功: 'Service creation successful',
   接下来你可以在服务下新增配置文件: 'Next you can add a configuration file under the service',
   接下来你可以在服务下新增配置项: 'Next you can add configuration items under the Services',
-  新增配置文件: 'Add Configuration File',
-  新增配置项: 'Add Configuration Item',
+  新增配置文件: 'New Configuration File',
+  新增配置项: 'New Configuration Item',
   稍后再说: 'Later on',
   编辑: 'Edit',
   最小长度2个字符: 'The minimum length is 2 characters',
@@ -47,9 +47,19 @@ export default {
   '请输入2-32字符，只允许英文、数字、下划线、中划线且必须以英文、数字开头和结尾': 'Please enter 2-32 characters, only allow English, numbers, down lines, mid-line lines, and must start with English, numbers and ending',
   '请输入2-128字符，只允许中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾': 'Please enter 2-128 characters, only allow Chinese, English, numbers, lines, lines, mid-line lines, and must start with Chinese, English, numbers, and ending',
   服务描述限制200字符: 'Service description limit 200 characters',
+  更新者: 'Regenerator',
+  tips: {
+    config: `File type: Usually stored in the form of a file, usually has good readability and maintainability
+    Key-value type: stored in the form of key-value pairs, where key is used to identify a configuration item, value is the specific content of the configuration item, kv type configuration is usually stored in the database, using the SDK or API to read`,
+    type: `arbitrary type: The type of the configuration item is not restricted. If you select one of the following types, only configuration items of the specified type can be created
+         string: One-line string
+         number: Numeric values, including integers, floating-point numbers, and checksum data types
+         text: Multi-line string text, unverified data structure, size 2Mb
+         json、xml、yaml: For structured data in different formats, the data structure is checked`,
+  },
 
   // 导航栏
-  服务配置中心: 'Service Configuration Center',
+  服务配置中心: 'BSCP',
   服务管理: 'Service Management',
   分组管理: 'Group Management',
   全局变量: 'Global Variable',
@@ -219,7 +229,7 @@ export default {
   编辑配置项成功: 'Edit configuration item successfully',
   查看配置项: 'View configuration items',
   线上版本: 'Online version',
-  对比版本: 'Compare versions',
+  对比版本: 'Compare version',
   当前版本: 'Current version',
   上线版本: 'Online version',
   只查看差异文件: 'View only diff files',
@@ -299,9 +309,19 @@ export default {
   脚本预览: 'Script preview',
   '<不使用脚本>': '<No script>',
   初始化脚本设置成功: 'Initialization script set up successfully',
+  确认恢复该版本: 'Confirm to restore this version',
+  此操作会把改版本恢复至可用版本列表: 'This operation will restore the modified version to the list of available versions',
+  版本恢复成功: 'Version restored successfully',
+  确认删除该版本: 'Confirm to delete this version',
+  版本删除成功: 'Version deleted successfully',
+  请输入关键字: 'Please enter a keyword',
+  '格式：': 'Format:',
+  'key 类型 value': 'key type value',
+  新增服务密钥: 'Add service key',
+  调整分组上线成功: 'Adjustment of grouping went online successfully',
 
   // 分组管理
-  新增分组: 'Add new group',
+  新增分组: 'New group',
   按标签分类查看: 'View by tag',
   '分组名称/标签选择器': 'Group name/Label selector',
   分组名称: 'group name',
@@ -330,7 +350,7 @@ export default {
 
   // 全局变量
   配置模板与变量: 'Configure templates and variables',
-  新增变量: 'Add new variable',
+  新增变量: 'New variable',
   导入变量: 'Import variables',
   请输入变量名称: 'Please enter variable name',
   默认值: 'default value',
@@ -349,6 +369,9 @@ export default {
   变量内容: 'variable content',
   变量必须以bk_bscp_或BK_BSCP_开头: 'Variable must start with bk_bscp_ or BK_BSCP_',
   导入变量成功: 'Import variables successfully',
+  '示例：': 'Example:',
+  '变量名 变量类型 变量值 变量描述（可选）': 'Variable name Variable type Variable value Variable Description (optional)',
+  ' bk_bscp_nginx_port number 8080 nginx端口': ' bk_bscp_nginx_port number 8080 nginx port',
 
   // 配置模板
   '配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。': 'Configuration templates are used to reuse configuration files between services under unified services, and can be referenced when creating service configurations.',
@@ -398,7 +421,7 @@ export default {
   添加至套餐: 'Add to package',
   移出套餐: 'Move out of package',
   添加至: 'Add to',
-  添加配置文件: 'Add configuration file',
+  添加配置文件: 'New configuration file',
   添加已有配置文件: 'Add existing configuration file',
   去创建: 'to create',
   新建配置文件成功: 'New configuration file successfully created',
@@ -477,6 +500,7 @@ export default {
   编辑版本成功: 'Edit version successful',
   新建版本成功: 'New version successful',
   已下线: 'Offline',
+  脚本类型: 'Script type',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',

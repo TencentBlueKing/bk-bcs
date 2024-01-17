@@ -4,7 +4,7 @@
       <div class="create-script-forms">
         <bk-form ref="formRef" form-type="vertical" :model="formData" :rules="rules">
           <bk-form-item class="fixed-width-form" :label="t('脚本名称')" property="name" required>
-            <bk-input v-model="formData.name" />
+            <bk-input v-model="formData.name" :placeholder="t('请输入')"/>
           </bk-form-item>
           <bk-form-item class="fixed-width-form" property="tag" :label="t('分类标签')">
             <!-- <bk-input v-model="formData.tag" /> -->
@@ -21,7 +21,7 @@
             />
           </bk-form-item>
           <bk-form-item class="fixed-width-form" property="memo" :label="t('脚本描述')">
-            <bk-input v-model="formData.memo" type="textarea" :rows="3" :maxlength="200" :resize="true" />
+            <bk-input v-model="formData.memo" type="textarea" :placeholder="t('请输入')" :rows="3" :maxlength="200" :resize="true" />
           </bk-form-item>
           <bk-form-item :label="t('脚本内容')" property="content" required>
             <div class="script-content-wrapper">
