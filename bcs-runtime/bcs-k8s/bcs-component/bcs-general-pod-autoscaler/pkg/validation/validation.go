@@ -220,13 +220,13 @@ func validateTime(timeRanges []autoscaling.TimeRange, fldPath *field.Path) field
 		allErrs = append(allErrs, field.Forbidden(fldPath.Child("timeRanges"), "at least one timeRanges should set"))
 	}
 	for _, timeRange := range timeRanges {
-		if timeRange.DesiredReplicas == 0 {
-			allErrs = append(allErrs, field.Forbidden(fldPath.Child("desiredReplicas"), "should not 0"))
+		if timeRange.DesiredReplicas < 0 {
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child("desiredReplicas"), "should less than 0"))
 		}
 		if len(timeRange.Schedule) == 0 {
 			allErrs = append(allErrs, field.Forbidden(fldPath.Child("schedule"), "should not empty"))
 		} else {
-			_, err := cron.Parse(timeRange.Schedule)
+			_, err := cron.ParseStandard(timeRange.Schedule)
 			if err != nil {
 				allErrs = append(allErrs, field.Forbidden(fldPath.Child("schedule"), err.Error()))
 			}
