@@ -77,8 +77,10 @@ set +x
 
 ### 集群创建与节点添加
 
-1. 在第一台主机（后称中控机）上启动集群控制平面：`./bcs-ops --instal master`，集群启动成功后会显示加入集群的指令
-2. 集群加入指令有效期为 1 小时，中控机执行 `./bcs-ops --render joincmd` 可再次渲染生成加入集群的指令，渲染结果如下所示
+1. 通过`set -a 命令`配置环境变量，环境变量配置见[`环境变量`](#环境变量)
+2. `./bcs-ops -r bcsenv` 在第一台主机（后称中控机）上渲染配置文件 `env/bcs.env`
+3. 在中控机上启动集群控制平面：`./bcs-ops --instal master`，集群启动成功后会显示加入集群的指令
+4. 集群加入指令有效期为 1 小时，中控机执行 `./bcs-ops --render joincmd` 可再次渲染生成加入集群的指令，渲染结果如下所示
 
    ```plaintext
    ======================
@@ -98,7 +100,9 @@ set +x
    ======================
    ```
 
-3. 添加控制平面节点(master node)，以及添加工作节点(wroker node)，执行第二步渲染生成的的加入集群指令
+5. 添加控制平面节点(master node)，以及添加工作节点(wroker node)，执行第二步渲染生成的的加入集群指令
+
+> `./bcs-ops -h`查看支持的命令
 
 ### 集群 node 节点移除
 
@@ -118,7 +122,100 @@ set +x
 通过配置环境变量来设置集群相关的参数。在中控机创建集群前，通过 `set -a` 设置环境变量。 你可以执行 `system/config_envfile.sh -init` 查看默认的环境变量。
 注意，当你要使用多个特性时，相关的环境变量都得申明
 
-### 示例：使用 containerd 作为容器运行时
+### host 环境变量
+
+| 环境变量          | 默认值      | 说明                                                                       |
+| ----------------- | ----------- | -------------------------------------------------------------------------- |
+| `BK_HOME`         | `/data/bcs` | 软件根路径                                                                 |
+| `K8S_IPv6_STATUS` | `Disable`   | 集群 ipv6 状态<br />支持`SingleStack`（ ipv6 单栈），`DualStack`双栈<br /> |
+| `LAN_IP`          | `""`        | 主机 IP 地址，通过默认路由获取                                             |
+| `LAN_IPv6`        | `""`        | 主机 IPv6 地址，通过默认路由获取                                           |
+| `BCS_OFFLINE`     | `""`        | 离线安装，`1`为开启                                                        |
+| `INSTALL_METHOD`  | `yum`       | 软件安装方式，默认`yum`。离线安装开启时此配置失效                          |
+| `BCS_SYSCTL`      | `1`         | 系统调优，默认开启                                                         |
+
+### 仓库地址 环境变量
+
+| 环境变量         | 默认值                                                  | 说明                               |
+| ---------------- | ------------------------------------------------------- | ---------------------------------- |
+| `MIRROR_URL`     | `https://mirrors.tencent.com`                           | yum 仓库镜像地址，默认腾讯镜像仓库 |
+| `REPO_URL`       | `https://bkopen-1252002024.file.myqcloud.com/ce7/tools` | tool (yq/jq\) 工具下载地址         |
+| `MIRROR_IP`      |                                                         | mirrors.tencentyun.com 解析地址    |
+| `REPO_MIRRORS`   | `https://mirror.ccs.tencentyun.com`                     | 容器镜像源，默认腾讯云             |
+| `BK_PUBLIC_REPO` | `hub.bktencent.com`                                     | 容器镜像默认 registry              |
+| `BKREPO_URL`     | `https://hub.bktencent.com/chartrepo/blueking<br` />    | 蓝鲸 helm chart 仓库               |
+
+### K8S 环境变量
+
+#### k8s 基础环境变量
+
+| 环境变量         | 默认值                                            | 说明                                                                                  |
+| ---------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `K8S_VER`        | `1.20.15`                                         | k8s 版本，现支持 `1.20.151.23.171.24.15`                                              |
+| `ETCD_LIB`       | `${BK_HOME}/lib/etcd`                             | 控制平面 etcd 根目录                                                                  |
+| `KUBELET_LIB`    | `${BK_HOME}/lib/kubelet`                          | kubelet 根目录                                                                        |
+| `K8S_EXTRA_ARGS` | `allowed-unsafe-sysctls: 'net.ipv4.tcp_tw_reuse'` | [cluster sysctl](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/) |
+| `BCS_CP_WORKER`  | `0`                                               | 是否单节点集群，`0`关闭，`1`开启，开启后控制平面污点取消                              |
+
+#### k8s 网络配置
+
+| 环境变量           | 默认值                                                                                      | 说明                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `K8S_CTRL_IP`      | 控制平面默认是自身。<br />工作平面默认是中控机 ip，如果开启了 apiserver hpa，则是 VIP<br /> | 访问控制平面 ip。<br />                                                                       |
+| `K8S_SVC_CIDR`     | `10.96.0.0/12`                                                                              | 集群 svc ipv4 网段                                                                            |
+| `K8S_POD_CIDR`     | `10.244.0.0/16`                                                                             | 集群 pod ipv4 网段                                                                            |
+| `K8S_SVC_CIDRv6`   | `fd00::1234:5678:1:0/112`                                                                   | 集群 svc ipv6 网段（`K8S_IPv6_STATUS`不为`Disable`时有效）                                    |
+| `K8S_POD_CIDRv6`   | `fd00::1234:5678:0/104`                                                                     | 集群 pod ipv6 网段（`K8S_IPv6_STATUS`不为`Disable`时有效）                                    |
+| `K8S_MASK`         | `24`                                                                                        | 集群 pod ipv4 掩码长度                                                                        |
+| `K8S_IPv6_MASK`    | `120`                                                                                       | 集群 pod ipv6 掩码长度                                                                        |
+| `K8S_CNI`          | `flannel`                                                                                   | CNI 插件，现仅支持 `flannel`                                                                  |
+| `ENABLE_MULTUS_HA` | `true`                                                                                      | [MULTUS_CNI](https://k8snetworkplumbingwg.github.io/multus-cni/docs/quickstart.html) 默认启用 |
+
+#### CRI 环境变量
+
+| 环境变量              | 默认值                      | 说明                                                       |
+| --------------------- | --------------------------- | ---------------------------------------------------------- |
+| `CRI_TYPE`            | `docker`                    | 容器运行时，支持`docker` 和 `containerd`                   |
+| `INSECURE_REGISTRY`   | `""`                        | 信任的 registry                                            |
+| `DOCKER_VER`          | `19.03.9`                   | 默认安装的 docker 版本                                     |
+| `DOCKER_LIB`          | `${BK_HOME}/lib/docker`     | docker root path                                           |
+| `DOCKER_LIVE_RESTORE` | `false`                     | docker config `live-restore`，重启后容器状态恢复，默认关闭 |
+| `DOCKER_BRIDGE`       | `""`                        | docker 网桥设备                                            |
+| `CONTAINERD_VER`      | `1.6.21`                    | 默认安装的 containerd 版本                                 |
+| `CONTAINERD_LIB`      | `${BK_HOME}/lib/containerd` | containerd 根路径                                          |
+
+#### CSI 环境变量
+
+| 环境变量                | 默认值               | 说明                                           |
+| ----------------------- | -------------------- | ---------------------------------------------- |
+| `k8s_csi`               | `""`                 | CSI 选择，现仅支持 `localpv`                   |
+| `localpv_dir`           | `${BK_HOME}/localpv` | localpv mount source，被挂载路径               |
+| `localpv_dst_dir`       | `/mnt/blueking`      | localpv mount point，挂载路径                  |
+| `localpv_count`         | `20`                 | localpv 创建的目录数（影响节点挂载的 PV 数量） |
+| `localpv_reclaimpolicy` | `Delete`             | localpv 的 PV 回收策略，默认删除               |
+
+#### apiserver ha 环境变量
+
+| 环境变量                  | 默认值                      | 说明                                                                                                                                                                                                                         |
+| ------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ENABLE_APISERVER_HA`     | `false`                     | apiserver ha 模式，默认关闭。                                                                                                                                                                                                |
+| `APISERVER_HA_MODE`       | `bcs-apiserver-proxy`       | 模式选择，支持 [bcs-apiserver-proxy](https://github.com/TencentBlueKing/bk-bcs/blob/625be3183d99ee3500123016a6dea99d78165565/docs/features/bcs-apiserver-proxy/bcs-apiserver-proxy.md#L1)`​[kube-vip](https://kube-vip.io/)` |
+| `VIP`                     |                             | VIP 地址，可配置与集群内不冲突的 ip 地址                                                                                                                                                                                     |
+| `VS_PORT`                 | `6443`                      | bap 代理端口                                                                                                                                                                                                                 |
+| `APISERVER_PROXY_VERSION` | `v1.29.0-alpha.130-tencent` | bap 镜像版本                                                                                                                                                                                                                 |
+| `PROXY_TOOL_PATH`         | `/usr/bin`                  | bap 工具安装目录                                                                                                                                                                                                             |
+| `PERSIST_DIR`             | `/root/.bcs`                | bap 持久化目录                                                                                                                                                                                                               |
+| `LVS_SCHEDULER`           | `rr`                        | bap 负载均衡策略                                                                                                                                                                                                             |
+| `MANAGER_INTERVAL`        | `10`                        | bap 监听时间                                                                                                                                                                                                                 |
+| `DEBUG_MODE`              | `true`                      | bap DEBUG 模式 默认开启                                                                                                                                                                                                      |
+| `LOG_LEVEL`               | `3`                         | bap 日志等级                                                                                                                                                                                                                 |
+| `KUBE_VIP_VERSION`        | `v0.5.12`                   | kube-vip 镜像版本                                                                                                                                                                                                            |
+| `BIND_INTERFACE`          | `""`                        | kube-vip 绑定网卡名                                                                                                                                                                                                          |
+| `VIP_CIDR`                | `32`                        | VIP CIDR 掩码长度                                                                                                                                                                                                            |
+
+### 示例
+
+#### a. 选择 `1.24.15` 的 k8s 版本 ，并使用 `containerd` 作为容器运行时
 
 ```bash
 set -a
@@ -127,7 +224,7 @@ CRI_TYPE="containerd"
 set +a
 ```
 
-### 示例：创建 ipv6 双栈集群
+#### b. 创建 ipv6 双栈集群
 
 > k8s 1.23 ipv6 特性为稳定版，仅支持 >=1.23.x 版本开启 ipv6 特性
 
@@ -139,7 +236,7 @@ set +a
 ./bcs-ops -i master
 ```
 
-### 示例： 修改镜像 registry，并信任
+#### c. 修改镜像 registry，并信任
 
 相关环境变量。镜像仓库默认为蓝鲸官方镜像仓库`hub.bktencent.com`，如果采用自己的镜像仓库，并且没有证书信任，需要添加下面两项环境变量
 
@@ -152,7 +249,7 @@ INSECURE_REGISTRY=""
 set +a
 ```
 
-### 示例：离线安装
+#### d. 离线安装
 
 离线安装资源清单见 `env/offline-manifest.yaml`。
 
@@ -165,22 +262,7 @@ K8S_VER="${VERSION}"
 set +a
 ```
 
-#### 离线包制作
-
-离线包的制作依赖命令工具 [yq](https://github.com/mikefarah/yq) 和 [skopeo](https://github.com/containers/skopeo)，请提前安装对应的工具。
-制作 bcs-ops 所支持的离线包版本。
-
-```bash
-make build_offline_pkg
-```
-
-如果你只想制作对应版本的离线包（该版本应该在`env/offline-manifest.yaml`中出现）。
-
-```bash
-./offline_package.sh env/offline-manifest.yaml <verion>
-```
-
-### 示例：开启 apiserver 高可用
+#### e. 开启 apiserver 高可用
 
 APISERVER_HA_MODE 支持 [bcs-apiserver-proxy](https://github.com/TencentBlueKing/bk-bcs/blob/master/docs/features/bcs-apiserver-proxy/bcs-apiserver-proxy.md)（默认） 和 kube-vip。
 
@@ -237,6 +319,25 @@ service:
     http: 32080
     https: 32443
 hostNetwork: false
+```
+
+---
+
+# 编译打包
+
+## 离线包制作
+
+离线包的制作依赖命令工具 [yq](https://github.com/mikefarah/yq) 和 [skopeo](https://github.com/containers/skopeo)，请提前安装对应的工具。
+制作 bcs-ops 所支持的离线包版本。
+
+```bash
+make build_offline_pkg
+```
+
+如果你只想制作对应版本的离线包（该版本应该在`env/offline-manifest.yaml`中出现）。
+
+```bash
+./offline_package.sh env/offline-manifest.yaml <verion>
 ```
 
 ---
