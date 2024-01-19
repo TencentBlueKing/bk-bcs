@@ -1033,3 +1033,9 @@ func (v *Vault) getConfigFromEnv() {
 	v.Token = os.Getenv(VaultTokenEnv)
 	v.Address = os.Getenv(VaultAddressEnv)
 }
+
+// BKNotice defines all the bk notice related runtime.
+type BKNotice struct {
+	Enable bool   `yaml:"enable"`
+	Host   string `yaml:"host"`
+}
