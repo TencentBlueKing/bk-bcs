@@ -162,5 +162,10 @@ func (p *proxy) routers() http.Handler {
 		r.Post("/", p.configImportService.ConfigFileImport)
 	})
 
+	// 获取通知中心通知列表
+	r.Route("/api/v1/announcements", func(r chi.Router) {
+		r.Get("/", p.bkNotice.GetCurrentAnnouncements)
+	})
+
 	return r
 }

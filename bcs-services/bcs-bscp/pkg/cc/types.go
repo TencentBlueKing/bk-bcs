@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1032,4 +1033,23 @@ func (v *Vault) getConfigFromEnv() {
 
 	v.Token = os.Getenv(VaultTokenEnv)
 	v.Address = os.Getenv(VaultAddressEnv)
+}
+
+// BKNotice defines all the bk notice related runtime.
+type BKNotice struct {
+	Enable bool   `yaml:"enable"`
+	Host   string `yaml:"host"`
+}
+
+func (b *BKNotice) getFromEnv() error {
+	// init from env
+	value := os.Getenv("ENABLE_BK_NOTICE")
+	if value != "" {
+		enable, err := strconv.ParseBool(value)
+		if err != nil {
+			return err
+		}
+		b.Enable = enable
+	}
+	return nil
 }

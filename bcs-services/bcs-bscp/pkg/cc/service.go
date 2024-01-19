@@ -72,6 +72,7 @@ type ApiServerSetting struct {
 	Service      Service                           `yaml:"service"`
 	Log          LogOption                         `yaml:"log"`
 	Repo         Repository                        `yaml:"repository"`
+	BKNotice     BKNotice                          `yaml:"bkNotice"`
 	FeatureFlags map[FeatureFlag]FeatureFlagOption `yaml:"featureFlags"`
 }
 
@@ -91,6 +92,7 @@ func (s *ApiServerSetting) trySetDefault() {
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
 	s.Repo.trySetDefault()
+	s.BKNotice.getFromEnv()
 }
 
 // Validate ApiServerSetting option.
