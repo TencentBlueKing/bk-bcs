@@ -63,9 +63,7 @@ type Container struct {
 func MergeInLabels(matchLabels, matchExpressions []Label) []Label {
 	matchLabels = FilterLabels(matchLabels)
 	matchExpressions = FilterLabels(matchExpressions)
-	for _, v := range matchExpressions {
-		matchLabels = append(matchLabels, v)
-	}
+	matchLabels = append(matchLabels, matchExpressions...)
 	return matchLabels
 }
 
