@@ -446,7 +446,7 @@ const goGroupDoc = () => window.open(BSCP_CONFIG.group_doc);
 }
 .group-table-wrapper {
   :deep(.bk-table-body) {
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 240px);
     overflow: auto;
   }
 }
