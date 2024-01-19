@@ -181,6 +181,7 @@ const handleDelete = async (space: ITemplateSpaceItem) => {
   if (res.count > 0) {
     InfoBox({
       title: `${t('未能删除')}【${space.spec.name}】`,
+      'ext-cls': 'info-box-style',
       subTitle: t('请先确认删除此空间下所有配置文件'),
       dialogType: 'confirm',
       confirmText: t('我知道了'),
@@ -188,6 +189,7 @@ const handleDelete = async (space: ITemplateSpaceItem) => {
   } else if (packageRes.count > 0) {
     InfoBox({
       title: `${t('未能删除')}【${space.spec.name}】`,
+      'ext-cls': 'info-box-style',
       subTitle: t('请先确认删除此空间下所有配置套餐'),
       dialogType: 'confirm',
       confirmText: t('我知道了'),
