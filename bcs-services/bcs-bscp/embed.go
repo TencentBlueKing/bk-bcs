@@ -47,14 +47,15 @@ var (
 
 // IndexConfig 前端配置
 type IndexConfig struct {
-	RunEnv    string
-	StaticURL string
-	IAMHost   string
-	CMDBHost  string
-	APIURL    string
-	SiteURL   string // vue 路由前缀
-	Helper    string
-	ProxyAPI  bool
+	RunEnv         string
+	StaticURL      string
+	IAMHost        string
+	CMDBHost       string
+	APIURL         string
+	SiteURL        string // vue 路由前缀
+	EnableBKNotice bool   // 是否启用蓝鲸通知中心
+	Helper         string
+	ProxyAPI       bool
 }
 
 // EmbedWebServer 前端 web server
@@ -156,14 +157,15 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		tplData := map[string]string{
-			"BK_STATIC_URL":   conf.StaticURL,
-			"RUN_ENV":         conf.RunEnv,
-			"BK_BCS_BSCP_API": conf.APIURL,
-			"BK_IAM_HOST":     conf.IAMHost,
-			"BK_CC_HOST":      conf.CMDBHost,
-			"BK_BSCP_CONFIG":  bscpConfig,
-			"SITE_URL":        conf.SiteURL,
-			"HELPER":          conf.Helper,
+			"BK_STATIC_URL":    conf.StaticURL,
+			"RUN_ENV":          conf.RunEnv,
+			"BK_BCS_BSCP_API":  conf.APIURL,
+			"BK_IAM_HOST":      conf.IAMHost,
+			"BK_CC_HOST":       conf.CMDBHost,
+			"BK_BSCP_CONFIG":   bscpConfig,
+			"SITE_URL":         conf.SiteURL,
+			"ENABLE_BK_NOTICE": strconv.FormatBool(conf.EnableBKNotice),
+			"HELPER":           conf.Helper,
 		}
 
 		// 本地开发模式 / 代理请求

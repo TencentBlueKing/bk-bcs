@@ -158,14 +158,15 @@ func (s *WebServer) subRouter() http.Handler {
 
 	shouldProxyAPI := config.G.IsDevMode()
 	conf := &bscp.IndexConfig{
-		StaticURL: path.Join(config.G.Web.RoutePrefix, "/web"),
-		RunEnv:    config.G.Base.RunEnv,
-		ProxyAPI:  shouldProxyAPI,
-		SiteURL:   config.G.Web.RoutePrefix,
-		APIURL:    config.G.Frontend.Host.BSCPAPIURL,
-		IAMHost:   config.G.Frontend.Host.BKIAMHost,
-		CMDBHost:  config.G.Frontend.Host.BKCMDBHost,
-		Helper:    config.G.Frontend.Helper,
+		StaticURL:      path.Join(config.G.Web.RoutePrefix, "/web"),
+		RunEnv:         config.G.Base.RunEnv,
+		ProxyAPI:       shouldProxyAPI,
+		SiteURL:        config.G.Web.RoutePrefix,
+		APIURL:         config.G.Frontend.Host.BSCPAPIURL,
+		IAMHost:        config.G.Frontend.Host.BKIAMHost,
+		CMDBHost:       config.G.Frontend.Host.BKCMDBHost,
+		EnableBKNotice: config.G.Frontend.EnableBKNotice,
+		Helper:         config.G.Frontend.Helper,
 	}
 
 	if shouldProxyAPI {
