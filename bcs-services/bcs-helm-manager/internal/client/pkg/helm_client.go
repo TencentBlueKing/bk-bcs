@@ -16,6 +16,7 @@ package pkg
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/chart"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -44,6 +45,7 @@ type ChartClient interface {
 	GetVersionDetail(ctx context.Context, req *helmmanager.GetVersionDetailV1Req) (*helmmanager.ChartDetail, error)
 	DeleteChart(ctx context.Context, req *helmmanager.DeleteChartReq) error
 	DeleteChartVersion(ctx context.Context, req *helmmanager.DeleteChartVersionReq) error
+	Create(ctx context.Context, req *chart.UploadChart) error
 }
 
 // ReleaseClient define the release operation handler
