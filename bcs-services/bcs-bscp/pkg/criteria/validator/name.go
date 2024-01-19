@@ -176,12 +176,12 @@ func ValidateReleaseName(name string) error {
 	return nil
 }
 
-// qualifiedCfgItemNameRegexp config item name regexp.
+// qualifiedFileNameRegexp file name regexp.
 // support character: chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'.
-var qualifiedCfgItemNameRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]+$")
+var qualifiedFileNameRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]+$")
 
-// ValidateCfgItemName validate config item's name.
-func ValidateCfgItemName(name string) error {
+// ValidateFileName validate config item's name.
+func ValidateFileName(name string) error {
 	if len(name) < 1 {
 		return errors.New("invalid name, length should >= 1")
 	}
@@ -198,7 +198,7 @@ func ValidateCfgItemName(name string) error {
 		return fmt.Errorf("invalid name %s, should not start with '.'", name)
 	}
 
-	if !qualifiedCfgItemNameRegexp.MatchString(name) {
+	if !qualifiedFileNameRegexp.MatchString(name) {
 		return fmt.Errorf("invalid name %s, should only contains chinese, english, "+
 			"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'", name)
 	}

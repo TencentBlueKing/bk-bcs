@@ -198,7 +198,7 @@ type ConfigItemSpec struct {
 // ValidateCreate validate the config item's specifics
 func (ci ConfigItemSpec) ValidateCreate() error {
 
-	if err := validator.ValidateCfgItemName(ci.Name); err != nil {
+	if err := validator.ValidateFileName(ci.Name); err != nil {
 		return err
 	}
 
@@ -283,7 +283,7 @@ func (f FilePermission) Validate(mode FileMode) error {
 func (ci ConfigItemSpec) ValidateUpdate() error {
 
 	if len(ci.Name) != 0 {
-		if err := validator.ValidateCfgItemName(ci.Name); err != nil {
+		if err := validator.ValidateFileName(ci.Name); err != nil {
 			return err
 		}
 	}

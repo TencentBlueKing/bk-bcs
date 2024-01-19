@@ -145,7 +145,7 @@ func (dao *credentialDao) BatchListByIDs(kit *kit.Kit, bizID uint32, ids []uint3
 		return nil, errors.New("bizID is empty")
 	}
 	if len(ids) == 0 {
-		return nil, errors.New("credential ids is empty")
+		return []*table.Credential{}, nil
 	}
 
 	m := dao.genQ.Credential
