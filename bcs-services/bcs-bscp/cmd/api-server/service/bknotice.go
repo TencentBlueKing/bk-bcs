@@ -30,7 +30,7 @@ func (s *bkNoticeService) GetCurrentAnnouncements(w http.ResponseWriter, r *http
 	// Prepare the new request
 
 	proxyURL := fmt.Sprintf("%s/v1/announcement/get_current_announcements/?platform=%s",
-		config.G.Base.AppCode, cc.ApiServer().BKNotice.Host)
+		cc.ApiServer().BKNotice.Host, cc.ApiServer().Esb.AppCode)
 
 	proxyReq, err := http.NewRequest("GET", proxyURL, nil)
 	if err != nil {
