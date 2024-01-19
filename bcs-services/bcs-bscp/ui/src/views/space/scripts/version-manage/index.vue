@@ -288,6 +288,7 @@ const handlePublishClick = (version: IScriptVersion) => {
   InfoBox({
     title: t('确定上线此版本？'),
     subTitle: t('上线后，之前的线上版本将被置为「已下线」状态'),
+    'ext-cls': 'info-box-style',
     // infoType: 'warning',
     confirmText: t('确定'),
     onConfirm: async () => {

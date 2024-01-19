@@ -200,12 +200,14 @@ const handleConfirm = (haveCredentials: boolean) => {
   if (haveCredentials) {
     InfoBox({
       infoType: 'success',
+      'ext-cls': 'info-box-style',
       title: t('调整分组上线成功'),
       dialogType: 'confirm',
     });
   } else {
     InfoBox({
       infoType: 'success',
+      'ext-cls': 'info-box-style',
       title: t('调整分组上线成功'),
       confirmText: t('新增服务密钥'),
       cancelText: t('稍后再说'),
