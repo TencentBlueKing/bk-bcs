@@ -51,14 +51,10 @@ func collectAPIRequestMetric(handler, code string, started time.Time) {
 	apiRequestDuration.WithLabelValues(handler, code).Observe(time.Since(started).Seconds())
 }
 
-// RecordTemplateMetrics 记录模板集metrics
-func RecordTemplateMetrics(method string, code int32, started time.Time) {
+// RecordMetrics 记录metrics
+func RecordMetrics(method string, code int32, started time.Time) {
 	methods := strings.Split(method, ".")
 	if len(methods) != 2 {
-		return
-	}
-	// 只记录模板集
-	if methods[0] != "TemplateSet" {
 		return
 	}
 	collectAPIRequestMetric(methods[1], strconv.Itoa(int(code)), started)
