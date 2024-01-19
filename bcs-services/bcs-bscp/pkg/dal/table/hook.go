@@ -140,7 +140,7 @@ func (s ScriptType) Validate() error {
 
 // ValidateCreate validate hook spec when it is created.
 func (s HookSpec) ValidateCreate() error {
-	if err := validator.ValidateName(s.Name); err != nil {
+	if err := validator.ValidateFileName(s.Name); err != nil {
 		return err
 	}
 
