@@ -92,7 +92,6 @@ func (s *ApiServerSetting) trySetDefault() {
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
 	s.Repo.trySetDefault()
-	s.BKNotice.getFromEnv()
 }
 
 // Validate ApiServerSetting option.

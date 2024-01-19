@@ -1040,16 +1040,3 @@ type BKNotice struct {
 	Enable bool   `yaml:"enable"`
 	Host   string `yaml:"host"`
 }
-
-func (b *BKNotice) getFromEnv() error {
-	// init from env
-	value := os.Getenv("ENABLE_BK_NOTICE")
-	if value != "" {
-		enable, err := strconv.ParseBool(value)
-		if err != nil {
-			return err
-		}
-		b.Enable = enable
-	}
-	return nil
-}

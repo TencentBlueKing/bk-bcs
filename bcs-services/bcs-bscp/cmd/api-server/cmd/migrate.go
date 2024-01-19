@@ -65,7 +65,6 @@ var migrateInitApigatewayCmd = &cobra.Command{
 		}
 
 		fmt.Println("Need to be implemented")
-		return
 	},
 }
 
