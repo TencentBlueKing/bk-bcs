@@ -30,67 +30,51 @@
 .icon-help-fill:before {
 	content: "\e107";
 }
-
 .icon-help:before {
 	content: "\e106";
 }
-
 .icon-help-document-fill:before {
 	content: "\e105";
 }
-
 .icon-edit-small:before {
 	content: "\e104";
 }
-
 .icon-configuration-line:before {
 	content: "\e101";
 }
-
 .icon-time-2:before {
 	content: "\e102";
 }
-
 .icon-reduce:before {
 	content: "\e108";
 }
-
 .icon-add:before {
 	content: "\e109";
 }
-
 .icon-app-store:before {
 	content: "\e10a";
 }
-
 .icon-revoke:before {
 	content: "\e10b";
 }
-
 .icon-tags:before {
 	content: "\e10c";
 }
-
 .icon-block-shape:before {
 	content: "\e10d";
 }
-
 .icon-empty:before {
 	content: "\e10e";
 }
-
 .icon-folder:before {
 	content: "\e10f";
 }
-
 .icon-setting:before {
 	content: "\e110";
 }
-
 .icon-separator:before {
 	content: "\e111";
 }
-
 .icon-resources-fill:before {
 	content: "\e112";
 }
@@ -102,4 +86,10 @@
 }
 .icon-resources:before {
 	content: "\e115";
+}
+.icon-lang-en:before {
+	content: "\e116";
+}
+.icon-lang-cn:before {
+	content: "\e117";
 }
