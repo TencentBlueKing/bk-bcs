@@ -94,7 +94,7 @@ const baseVariables = ref<IVariableEditParams[]>([]);
 // 汇总的配置文件列表，包含未修改、增加、删除、修改的所有配置文件
 const aggregatedList = ref<IConfigDiffItem[]>([]);
 const groupedConfigListOnShow = ref<IConfigDiffItem[]>([]);
-const isOnlyShowDiff = ref(false); // 只显示差异项
+const isOnlyShowDiff = ref(true); // 只显示差异项
 const isOpenSearch = ref(false);
 const searchStr = ref('');
 const isSearchEmpty = ref(false);
@@ -162,11 +162,6 @@ onMounted(async () => {
   aggregatedList.value.sort((a, b) => a.key.charCodeAt(0) - b.key.charCodeAt(0));
   groupedConfigListOnShow.value = aggregatedList.value.slice();
   setDefaultSelected();
-  // 如果是上线版本 默认选中只差看差异项
-  if (props.isPublish) {
-    isOnlyShowDiff.value = true;
-    handleSearch();
-  }
 });
 
 // 获取当前版本和基准版本的所有配置文件列表(非模板配置和套餐下模板)

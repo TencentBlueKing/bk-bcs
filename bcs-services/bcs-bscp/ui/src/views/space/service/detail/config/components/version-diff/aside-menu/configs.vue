@@ -156,7 +156,7 @@ const baseVariables = ref<IVariableEditParams[]>([]);
 // 汇总的配置文件列表，包含未修改、增加、删除、修改的所有配置文件
 const aggregatedList = ref<IDiffGroupData[]>([]);
 const groupedConfigListOnShow = ref<IDiffGroupData[]>([]);
-const isOnlyShowDiff = ref(false); // 只显示差异项
+const isOnlyShowDiff = ref(true); // 只显示差异项
 const isOpenSearch = ref(false);
 const searchStr = ref('');
 const isSearchEmpty = ref(false);
@@ -236,11 +236,6 @@ onMounted(async () => {
   aggregatedList.value = calcDiff();
   groupedConfigListOnShow.value = aggregatedList.value.slice();
   setDefaultSelected();
-  // 如果是上线版本 默认选中只差看差异项
-  if (props.isPublish) {
-    isOnlyShowDiff.value = true;
-    handleSearch();
-  }
 });
 
 // 判断版本是否为未命名版本

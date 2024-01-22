@@ -92,8 +92,8 @@ const props = defineProps<{
 const emits = defineEmits(['update:show', 'publish']);
 
 const route = useRoute();
-const bkBizId = String(route.params.spaceId);
-const appId = Number(route.params.appId);
+const bkBizId = ref(String(route.params.spaceId));
+const appId = ref(Number(route.params.appId));
 const versionList = ref<IConfigVersion[]>([]);
 const versionListLoading = ref(false);
 const selectedBaseVersion = ref(); // 基准版本ID
@@ -125,6 +125,15 @@ watch(
   },
 );
 
+watch(
+  () => route.params.appId,
+  (val) => {
+    if (val) {
+      appId.value = Number(val);
+    }
+  },
+);
+
 // 获取所有对比基准版本
 const getVersionList = async () => {
   try {
@@ -133,7 +142,7 @@ const getVersionList = async () => {
       versionList.value = props.versionDiffList;
       return;
     }
-    const res = await getConfigVersionList(bkBizId, appId, { start: 0, all: true });
+    const res = await getConfigVersionList(bkBizId.value, appId.value, { start: 0, all: true });
     versionList.value = res.data.details.filter((item: IConfigVersion) => item.id !== props.currentVersion.id);
   } catch (e) {
     console.error(e);
