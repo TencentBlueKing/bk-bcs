@@ -38,7 +38,7 @@ func (s *bkNoticeService) GetCurrentAnnouncements(w http.ResponseWriter, r *http
 	}
 
 	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
-		cc.ApiServer().Esb.AppCode, cc.ApiServer().Esb.AppCode)
+		cc.ApiServer().Esb.AppCode, cc.ApiServer().Esb.AppSecret)
 
 	proxyReq.Header.Set("X-Bkapi-Authorization", authHeader)
 
