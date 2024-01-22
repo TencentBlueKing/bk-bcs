@@ -20,7 +20,6 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/config"
 )
 
 type registerSystemResp struct {
@@ -34,7 +33,7 @@ func RegisterSystem(ctx context.Context) error {
 	url := fmt.Sprintf("%s/v1/register/", cc.ApiServer().BKNotice.Host)
 
 	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
-		config.G.Base.AppCode, config.G.Base.AppSecret)
+		cc.ApiServer().Esb.AppCode, cc.ApiServer().Esb.AppSecret)
 
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
