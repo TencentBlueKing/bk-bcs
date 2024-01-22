@@ -18,7 +18,6 @@ import (
 	"net/http"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/config"
 )
 
 // bkNoticeService is http handler for bknotice service.
@@ -39,7 +38,7 @@ func (s *bkNoticeService) GetCurrentAnnouncements(w http.ResponseWriter, r *http
 	}
 
 	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
-		config.G.Base.AppCode, config.G.Base.AppSecret)
+		cc.ApiServer().Esb.AppCode, cc.ApiServer().Esb.AppSecret)
 
 	proxyReq.Header.Set("X-Bkapi-Authorization", authHeader)
 
