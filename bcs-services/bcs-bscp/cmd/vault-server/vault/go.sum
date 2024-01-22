@@ -1846,8 +1846,6 @@ github.com/hashicorp/raft-snapshot v1.0.4/go.mod h1:5sL9eUn72lH5DzsFIJ9jaysITbHk
 github.com/hashicorp/serf v0.8.2/go.mod h1:6hOLApaqBFA1NXqRQAsxw9QxuDEvNxSQRwA/JwenrHc=
 github.com/hashicorp/serf v0.10.1 h1:Z1H2J60yRKvfDYAOZLd2MU0ND4AH/WDz7xYHDWQsIPY=
 github.com/hashicorp/serf v0.10.1/go.mod h1:yL2t6BqATOLGc5HF7qbFkTfXoPIY0WZdWHfEvMqbG+4=
-github.com/hashicorp/vault v1.14.1 h1:JBRe4N6g6iu3yWenhlMn9PwSNAQYIQQ6PTYnbccvyxM=
-github.com/hashicorp/vault v1.14.1/go.mod h1:VH1j4CD8lYPQ+XjmgpAF7gt0M2swsARFHndbDyDRgkU=
 github.com/hashicorp/vault-plugin-auth-alicloud v0.15.0 h1:R2SVwOeVLG5DXzUx42UWhjfFqS0Z9+ncfebPu+gO9VA=
 github.com/hashicorp/vault-plugin-auth-alicloud v0.15.0/go.mod h1:YQXpa2s4rGYKm3Oa/Nkgh5SuGVfHFNEIUwDDYWyhloE=
 github.com/hashicorp/vault-plugin-auth-azure v0.15.1 h1:CknW0l2O70326KfepWeDuPszuNherhAtVNaSLRBsS4U=
@@ -1925,6 +1923,8 @@ github.com/huandu/xstrings v1.4.0/go.mod h1:y5/lhBue+AyNmUVz9RLU9xbLR0o4KIIExikq
 github.com/iancoleman/strcase v0.2.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
+github.com/ifooth/vault v0.0.0-20240122073913-369f84ba6ea4 h1:pYiY9fDylGGhyqDQ4KdAXvXXrWfP6kbGkJDnpg6CsSE=
+github.com/ifooth/vault v0.0.0-20240122073913-369f84ba6ea4/go.mod h1:VH1j4CD8lYPQ+XjmgpAF7gt0M2swsARFHndbDyDRgkU=
 github.com/imdario/mergo v0.3.5/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.6/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.8/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
