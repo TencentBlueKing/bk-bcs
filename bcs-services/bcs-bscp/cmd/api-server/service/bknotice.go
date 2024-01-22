@@ -18,7 +18,6 @@ import (
 	"net/http"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/config"
 )
 
 // bkNoticeService is http handler for bknotice service.
