@@ -107,6 +107,9 @@ const handleSubmit = async () => {
   }
   try {
     pending.value = true;
+    if (!localVal.value.content.endsWith('\n')) {
+      localVal.value.content += '\n';
+    }
     const { name, memo, content } = localVal.value;
     const params = { name, memo, content };
     if (localVal.value.id) {

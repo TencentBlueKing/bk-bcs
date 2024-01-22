@@ -91,7 +91,12 @@ const formDataContent = ref({
 });
 const showContent = computed({
   get: () => (formData.value.type === 'shell' ? formDataContent.value.shell : formDataContent.value.python),
-  set: val => (formData.value.type === 'shell' ? formDataContent.value.shell = val : formDataContent.value.python = val),
+  set: (val) => {
+    if (!val.endsWith('\n')) {
+      val += '\n';
+    }
+    formData.value.type === 'shell' ? formDataContent.value.shell = val : formDataContent.value.python = val;
+  },
 });
 
 const rules = {
