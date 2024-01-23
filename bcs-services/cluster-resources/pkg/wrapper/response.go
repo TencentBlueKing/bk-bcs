@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -42,13 +43,16 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 			startTime := time.Now()
 			err := fn(ctx, req, rsp)
 			endTime := time.Now()
+			message, code := getRespMsgCode(err)
+			// 记录metrics
+			metrics.RecordMetrics(req.Method(), code, startTime)
 			// 添加审计
 			go addAudit(ctx, req, rsp, startTime, endTime)
 			// 若返回结构是标准结构，则这里将错误信息捕获，按照规范格式化到结构体中
 			switch r := rsp.(type) {
 			case *clusterRes.CommonResp:
 				r.RequestID = getRequestID(ctx)
-				r.Message, r.Code = getRespMsgCode(err)
+				r.Message, r.Code = message, code
 				if err != nil {
 					r.Data = genNewRespData(ctx, err)
 					// 返回 nil 避免框架重复处理 error
@@ -56,7 +60,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 				}
 			case *clusterRes.CommonListResp:
 				r.RequestID = getRequestID(ctx)
-				r.Message, r.Code = getRespMsgCode(err)
+				r.Message, r.Code = message, code
 				if err != nil {
 					r.Data = nil
 					return nil // nolint:nilerr

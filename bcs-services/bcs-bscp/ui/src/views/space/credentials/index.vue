@@ -507,6 +507,7 @@ const handelToggleEnable = async (credential: ICredentialItem) => {
     InfoBox({
       title: t('确定禁用此密钥'),
       subTitle: t('禁用密钥后，使用此密钥的应用将无法正常使用 SDK/API 拉取配置'),
+      'ext-cls': 'info-box-style',
       confirmText: t('禁用'),
       onConfirm: async () => {
         const params = {

@@ -164,6 +164,7 @@ const handleDel = (config: IConfigItem) => {
   InfoBox({
     title: `确认是否删除配置文件【${config.spec.name}】?`,
     infoType: 'danger',
+    'ext-cls': 'info-box-style',
     headerAlign: 'center' as const,
     footerAlign: 'center' as const,
     onConfirm: async () => {

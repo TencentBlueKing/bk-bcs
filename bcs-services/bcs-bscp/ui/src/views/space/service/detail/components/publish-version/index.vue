@@ -183,6 +183,7 @@ const handleConfirm = (haveCredentials: boolean) => {
   if (haveCredentials) {
     InfoBox({
       infoType: 'success',
+      'ext-cls': 'info-box-style',
       title: t('版本已上线'),
       dialogType: 'confirm',
     });
@@ -190,6 +191,7 @@ const handleConfirm = (haveCredentials: boolean) => {
     InfoBox({
       infoType: 'success',
       title: t('版本已上线'),
+      'ext-cls': 'info-box-style',
       confirmText: t('新增服务密钥'),
       cancelText: t('稍后再说'),
       onConfirm: () => {

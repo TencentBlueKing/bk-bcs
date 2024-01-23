@@ -78,7 +78,7 @@ import VersionLayout from '../config/components/version-layout.vue';
 import ConfirmDialog from './publish-version/confirm-dialog.vue';
 import SelectGroup from './publish-version/select-group/index.vue';
 import VersionDiff from '../config/components/version-diff/index.vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { getConfigVersionList } from '../../../../../api/config';
 import { IConfigVersion } from '../../../../../../types/config';
 
@@ -98,10 +98,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['confirm']);
 
-const route = useRoute();
 const router = useRouter();
-const bkBizId = String(route.params.spaceId);
-const appId = Number(route.params.appId);
 const versionList = ref<IConfigVersion[]>([]);
 const isSelectGroupPanelOpen = ref(false);
 const isDiffSliderShow = ref(false);
@@ -110,6 +107,7 @@ const releaseType = ref('select');
 const groups = ref<IGroupToPublish[]>([]);
 const baseVersionId = ref(0);
 const selectGroupRef = ref();
+
 
 // 已上线分组
 const releasedGroups = computed(() => versionData.value.status.released_groups.map(group => group.id));
@@ -140,7 +138,7 @@ const handleDiffOrPublish = () => {
 // 获取所有对比基准版本
 const getVersionList = async () => {
   try {
-    const res = await getConfigVersionList(bkBizId, appId, { start: 0, all: true });
+    const res = await getConfigVersionList(props.bkBizId, props.appId, { start: 0, all: true });
     versionList.value = res.data.details.filter((item: IConfigVersion) => item.id !== versionData.value.id && item.status.publish_status === 'partial_released');
   } catch (e) {
     console.error(e);
@@ -200,12 +198,14 @@ const handleConfirm = (haveCredentials: boolean) => {
   if (haveCredentials) {
     InfoBox({
       infoType: 'success',
+      'ext-cls': 'info-box-style',
       title: t('调整分组上线成功'),
       dialogType: 'confirm',
     });
   } else {
     InfoBox({
       infoType: 'success',
+      'ext-cls': 'info-box-style',
       title: t('调整分组上线成功'),
       confirmText: t('新增服务密钥'),
       cancelText: t('稍后再说'),

@@ -4,6 +4,7 @@ go 1.20
 
 // alias github.com/hashicorp/vault release commit
 replace (
+	github.com/hashicorp/vault => github.com/ifooth/vault v0.0.0-20240122073913-369f84ba6ea4
 	github.com/hashicorp/vault/api => github.com/hashicorp/vault/api v1.9.3-0.20230721171514-bf23fe8636b0
 	github.com/hashicorp/vault/api/auth/approle => github.com/hashicorp/vault/api/auth/approle v0.4.2-0.20230721171514-bf23fe8636b0
 	github.com/hashicorp/vault/api/auth/kubernetes => github.com/hashicorp/vault/api/auth/kubernetes v0.4.2-0.20230721171514-bf23fe8636b0

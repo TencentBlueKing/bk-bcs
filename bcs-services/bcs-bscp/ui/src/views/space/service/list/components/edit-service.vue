@@ -150,6 +150,7 @@ const handleEditConfirm = async () => {
     if (res) {
       InfoBox({
         infoType: 'danger',
+        'ext-cls': 'info-box-style',
         title: `调整服务数据类型${serviceEditForm.value.data_type}失败`,
         subTitle: `该服务下存在非${serviceEditForm.value.data_type}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为${serviceEditForm.value.data_type}`,
         dialogType: 'confirm',

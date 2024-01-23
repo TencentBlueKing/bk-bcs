@@ -321,6 +321,9 @@ const handleSelectPrivilege = (index: number, val: number[]) => {
 };
 
 const handleStringContentChange = (val: string) => {
+  if (!val.endsWith('\n')) {
+    val += '\n';
+  }
   stringContent.value = val;
   change();
 };
