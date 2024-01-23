@@ -41,6 +41,8 @@ const (
 	ScopeProjectCode ScopeType = "project_code" // 项目Code
 	// ScopeClusterId xxx
 	ScopeClusterId ScopeType = "cluster_id" // 集群Id
+	// ScopeNamespace xxx
+	ScopeNamespace ScopeType = "namespace" // 命名空间
 )
 
 // Scope 权限控制，格式如cluster_id: "RE_BCS-K8S-40000", 多个取且关系
