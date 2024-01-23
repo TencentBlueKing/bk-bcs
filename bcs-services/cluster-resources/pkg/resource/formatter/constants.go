@@ -57,6 +57,13 @@ var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[st
 	resCsts.CObj:    FormatCObj,
 }
 
+// Kind2PruneFuncMap 各资源类型对应 PruneFunc
+var Kind2PruneFuncMap = map[string]func(manifest map[string]interface{}) map[string]interface{}{
+	resCsts.Po:     PrunePod,
+	resCsts.CM:     PruneConfig,
+	resCsts.Secret: PruneConfig,
+}
+
 const (
 	// WorkloadStatusNormal 正常状态
 	WorkloadStatusNormal = "normal"

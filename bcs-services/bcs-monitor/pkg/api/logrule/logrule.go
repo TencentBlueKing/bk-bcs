@@ -356,7 +356,7 @@ func RetryLogRule(c *rest.Context) (interface{}, error) {
 		go createBKLog(&bklog.CreateBCSCollectorReq{
 			SpaceUID:              GetSpaceID(c.ProjectCode),
 			ProjectID:             c.ProjectId,
-			CollectorConfigName:   ruleName,
+			CollectorConfigName:   rule.DisplayName,
 			CollectorConfigNameEN: ruleName,
 			Description:           rule.Description,
 			BCSClusterID:          c.ClusterId,

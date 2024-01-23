@@ -94,7 +94,7 @@ func (p ProjectProvider) FetchInstanceInfo(req resource.Request) resource.Respon
 				return
 			}
 			nsChan <- Instance{p.ProjectID, combineNameID(p.Name, p.ProjectCode),
-				[]string{p.Creator, p.Updater, p.Managers}}
+				[]string{p.Managers}}
 		}(v)
 	}
 	wg.Wait()

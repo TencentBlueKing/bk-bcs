@@ -146,7 +146,7 @@ func (req *CreateLogRuleReq) toBKLog(c *rest.Context) *bklog.CreateBCSCollectorR
 	return &bklog.CreateBCSCollectorReq{
 		SpaceUID:              GetSpaceID(c.ProjectCode),
 		ProjectID:             c.ProjectId,
-		CollectorConfigName:   req.RuleName,
+		CollectorConfigName:   req.DisplayName,
 		CollectorConfigNameEN: req.RuleName,
 		Description:           req.Description,
 		BCSClusterID:          c.ClusterId,
@@ -191,7 +191,7 @@ func (req *UpdateLogRuleReq) toBKLog(c *rest.Context, ruleName string) *bklog.Up
 	return &bklog.UpdateBCSCollectorReq{
 		SpaceUID:              GetSpaceID(c.ProjectCode),
 		ProjectID:             c.ProjectId,
-		CollectorConfigName:   ruleName,
+		CollectorConfigName:   req.DisplayName,
 		CollectorConfigNameEN: ruleName,
 		Description:           req.Description,
 		BCSClusterID:          c.ClusterId,
