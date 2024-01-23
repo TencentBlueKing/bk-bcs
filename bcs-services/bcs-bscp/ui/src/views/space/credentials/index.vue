@@ -159,7 +159,7 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作')" :width="160" :fixed="'right'">
+          <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '160' : '260'" :fixed="'right'">
             <template #default="{ row, index }">
               <template v-if="index === 0 && isCreateCredential">
                 <bk-button text theme="primary" @click="handleCreateCredential">{{ t('创建') }}</bk-button>
@@ -259,7 +259,7 @@ import tableEmpty from '../../../components/table/table-empty.vue';
 import { debounce } from 'lodash';
 
 const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const permCheckLoading = ref(false);
 const hasManagePerm = ref(false);
