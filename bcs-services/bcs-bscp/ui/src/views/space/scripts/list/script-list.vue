@@ -58,7 +58,7 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('脚本语言')" prop="hook.spec.type" width="120"></bk-table-column>
+          <bk-table-column :label="t('脚本语言')" prop="hook.spec.type" :width="locale === 'zh-CN' ? '120' : '150'"></bk-table-column>
           <bk-table-column :label="t('分类标签')">
             <template #default="{ row }">
               <span v-if="row.hook">{{ row.hook.spec.tag || '--' }}</span>
@@ -148,7 +148,7 @@ import { debounce } from 'lodash';
 const { spaceId } = storeToRefs(useGlobalStore());
 const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useScriptStore());
 const router = useRouter();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 interface IAppItem {
   app_id: number;

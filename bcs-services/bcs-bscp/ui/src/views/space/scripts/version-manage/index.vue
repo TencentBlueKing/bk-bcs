@@ -53,7 +53,7 @@
                     @click="handleEditVersionClick"
                     >{{ t('编辑') }}</bk-button
                   >
-                  <bk-button text theme="primary" @click="handleVersionDiff(data.hook_revision)">版本对比</bk-button>
+                  <bk-button text theme="primary" @click="handleVersionDiff(data.hook_revision)">{{ t('版本对比') }}</bk-button>
                   <bk-button
                     v-if="data.hook_revision.spec.state !== 'not_deployed'"
                     text

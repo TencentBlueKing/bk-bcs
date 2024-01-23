@@ -83,7 +83,7 @@
             </template>
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('操作')" width="140" fixed="right">
+        <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '140' : '200'" fixed="right">
           <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
@@ -160,7 +160,7 @@ import TableEmpty from '../../../../../../components/table/table-empty.vue';
 import { debounce } from 'lodash';
 
 const router = useRouter();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const { spaceId } = storeToRefs(useGlobalStore());
 const templateStore = useTemplateStore();
 const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView, batchUploadIds } =
