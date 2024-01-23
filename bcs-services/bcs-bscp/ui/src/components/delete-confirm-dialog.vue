@@ -18,16 +18,11 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
-withDefaults(
-  defineProps<{
+defineProps<{
     isShow: boolean;
     title: string;
     confirmText?: string;
-  }>(),
-  {
-    confirmText: '删除',
-  },
-);
+}>();
 
 const handleClose = () => {
   emits('close');
@@ -39,11 +34,8 @@ const emits = defineEmits(['update:isShow', 'confirm', 'close']);
 <style scoped lang="scss">
 .delete-confirm-dialog {
   :deep(.bk-modal-body) {
-    .bk-modal-content {
-      margin-top: 30px;
-    }
+
     .bk-modal-footer {
-      height: auto;
       background-color: #fff;
       border: none;
       padding-bottom: 24px !important;

@@ -41,7 +41,7 @@
         </span>
       </template>
     </bk-table-column>
-    <bk-table-column :label="t('操作')" width="240">
+    <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '240' : '300'" :fixed="'right'">
       <template #default="{ row }">
         <slot name="operations" :data="row"></slot>
       </template>
@@ -61,7 +61,7 @@ import { datetimeFormat } from '../../../../utils/index';
 import ScriptCited from '../list/script-cited.vue';
 import tableEmpty from '../../../../components/table/table-empty.vue';
 
-const { t } = useI18n();
+const { t,locale } = useI18n();
 
 const STATUS_MAP = computed(() => ({
   not_deployed: t('未上线'),

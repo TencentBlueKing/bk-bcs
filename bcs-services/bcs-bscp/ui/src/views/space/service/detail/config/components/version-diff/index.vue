@@ -29,6 +29,7 @@
                     :loading="versionListLoading"
                     :clearable="false"
                     :no-data-text="t('暂无数据')"
+                    :placeholder="t('请选择')"
                     @change="handleSelectVersion"
                   >
                     <bk-option
