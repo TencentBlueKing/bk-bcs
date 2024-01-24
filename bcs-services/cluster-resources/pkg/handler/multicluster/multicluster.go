@@ -44,16 +44,22 @@ func (h *Handler) FetchMultiClusterResource(ctx context.Context, req *clusterRes
 		Creator:       req.GetCreator(),
 		Name:          req.GetName(),
 		LabelSelector: req.GetLabelSelector(),
+		IP:            req.GetIp(),
+		Status:        req.GetStatus(),
+		SortBy:        SortBy(req.GetSortBy()),
+		Order:         Order(req.GetOrder()),
 		Limit:         int(req.GetLimit()),
 		Offset:        int(req.GetOffset()),
 	}
+	clusterNS := filterClusteredNamespace(req.GetClusterNamespaces(), string(getScopedByKind(req.GetKind())))
+
 	// from api server
-	var query = NewAPIServerQuery(req.GetClusterNamespaces(), filter)
+	var query = NewAPIServerQuery(clusterNS, filter)
 	// 多集群且 bcs-storage 支持的资源则从 bcs-storage 查询
-	if len(req.GetClusterNamespaces()) > 1 &&
+	if len(clusterNS) > 1 &&
 		slice.StringInSlice(req.GetKind(), config.G.MultiCluster.EnabledQueryFromStorageKinds) {
 		// from storage
-		query = NewStorageQuery(req.GetClusterNamespaces(), filter)
+		query = NewStorageQuery(clusterNS, filter)
 	}
 
 	data, err := query.Fetch(ctx, "", req.GetKind())
@@ -78,10 +84,13 @@ func (h *Handler) FetchMultiClusterCustomResource(ctx context.Context,
 		Creator:       req.GetCreator(),
 		Name:          req.GetName(),
 		LabelSelector: req.GetLabelSelector(),
+		IP:            req.GetIp(),
+		Status:        req.GetStatus(),
+		SortBy:        SortBy(req.GetSortBy()),
+		Order:         Order(req.GetOrder()),
 		Limit:         int(req.GetLimit()),
 		Offset:        int(req.GetOffset()),
 	}
-	var query = NewAPIServerQuery(req.GetClusterNamespaces(), filter)
 
 	var groupVersion string
 	var kind string
@@ -95,7 +104,9 @@ func (h *Handler) FetchMultiClusterCustomResource(ctx context.Context,
 		return nil
 	}
 	kind, groupVersion = crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
+	clusterNS := filterClusteredNamespace(req.GetClusterNamespaces(), crdInfo["scope"].(string))
 
+	var query = NewAPIServerQuery(clusterNS, filter)
 	data, err := query.Fetch(ctx, groupVersion, kind)
 	if err != nil {
 		return err
@@ -111,28 +122,33 @@ func (h *Handler) FetchMultiClusterCustomResource(ctx context.Context,
 }
 
 // MultiClusterResourceCount get mul
-func (h *Handler) MultiClusterResourceCount(ctx context.Context,
-	req *clusterRes.MultiClusterResourceCountReq,
-	resp *clusterRes.CommonResp) (err error) {
+func (h *Handler) MultiClusterResourceCount(ctx context.Context, req *clusterRes.MultiClusterResourceCountReq,
+	resp *clusterRes.CommonResp) error {
 	filter := QueryFilter{
 		Creator:       req.GetCreator(),
 		Name:          req.GetName(),
 		LabelSelector: req.GetLabelSelector(),
 		Limit:         1,
 	}
-	var query = NewStorageQuery(req.GetClusterNamespaces(), filter)
+	var err error
 
 	errgroup := errgroup.Group{}
 	mux := sync.Mutex{}
 	data := map[string]interface{}{}
-	for _, kind := range config.G.MultiCluster.EnabledQueryFromStorageKinds {
+	for _, kind := range config.G.MultiCluster.EnabledCountKinds {
 		kind := kind
 		errgroup.Go(func() error {
+			clusterNS := filterClusteredNamespace(req.GetClusterNamespaces(), string(getScopedByKind(kind)))
+			var query = NewAPIServerQuery(clusterNS, filter)
+			// 多集群且 bcs-storage 支持的资源则从 bcs-storage 查询
+			if len(clusterNS) > 1 && slice.StringInSlice(kind, config.G.MultiCluster.EnabledQueryFromStorageKinds) {
+				query = NewStorageQuery(clusterNS, filter)
+			}
 			result, innerErr := query.Fetch(ctx, "", kind)
 			mux.Lock()
 			defer mux.Unlock()
-			if err != nil {
-				log.Error(ctx, "query storage failed, %v", innerErr)
+			if innerErr != nil {
+				log.Error(ctx, "query resource %s failed, %v", kind, innerErr)
 				data[kind] = 0
 				return nil
 			}

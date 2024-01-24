@@ -43,6 +43,7 @@ type proxy struct {
 	authorizer          auth.Authorizer
 	cfgClient           pbcs.ConfigClient
 	configImportService *configImport
+	kvService           *kvService
 }
 
 // newProxy create new mux proxy.
@@ -87,6 +88,8 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		return nil, err
 	}
 
+	kv := newKvService(authorizer, cfgClient)
+
 	p := &proxy{
 		cfgSvrMux:           cfgSvrMux,
 		repo:                repo,
@@ -96,6 +99,7 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		authorizer:          authorizer,
 		authSvrMux:          authSvrMux,
 		cfgClient:           cfgClient,
+		kvService:           kv,
 	}
 
 	p.initBizsOfTmplSpaces()

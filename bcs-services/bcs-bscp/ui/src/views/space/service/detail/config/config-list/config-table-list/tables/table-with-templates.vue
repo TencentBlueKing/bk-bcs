@@ -651,7 +651,7 @@ defineExpose({
     width: 331px;
   }
   .version {
-    width: 140px;
+    width: 200px;
   }
   .path {
     width: 331px;
@@ -663,10 +663,10 @@ defineExpose({
     width: 158px;
   }
   .status {
-    width: 100px;
+    width: 120px;
   }
   .operation {
-    width: 100px;
+    width: 150px;
   }
   .exception-tips {
     margin: 20px 0;

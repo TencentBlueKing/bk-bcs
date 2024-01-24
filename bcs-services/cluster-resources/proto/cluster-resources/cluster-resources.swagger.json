@@ -9703,6 +9703,25 @@
           "type": "string",
           "title": "name"
         },
+        "ip": {
+          "type": "string",
+          "title": "ip"
+        },
+        "status": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "status"
+        },
+        "sortBy": {
+          "type": "string",
+          "title": "sortBy"
+        },
+        "order": {
+          "type": "string",
+          "title": "desc"
+        },
         "limit": {
           "type": "integer",
           "format": "int64",
@@ -9752,6 +9771,25 @@
         "name": {
           "type": "string",
           "title": "name"
+        },
+        "ip": {
+          "type": "string",
+          "title": "ip"
+        },
+        "status": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "status"
+        },
+        "sortBy": {
+          "type": "string",
+          "title": "sortBy"
+        },
+        "order": {
+          "type": "string",
+          "title": "desc"
         },
         "limit": {
           "type": "integer",

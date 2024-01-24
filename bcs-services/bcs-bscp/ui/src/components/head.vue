@@ -61,7 +61,19 @@
           </div>
         </bk-option>
       </bk-select>
-      <div @click="switchLanguage">{{ locale === 'zh-CN' ? '中' : 'en' }}</div>
+      <bk-popover ext-cls="login-out-popover" trigger="hover" placement="bottom-center" theme="light" :arrow="false">
+        <div class="international">
+          <span :class="['bk-bscp-icon',locale === 'zh-CN' ? 'icon-lang-cn' : 'icon-lang-en']"></span>
+        </div>
+        <template #content>
+          <div class="international-item" @click="switchLanguage('en-US')">
+            <span class="bk-bscp-icon icon-lang-en"></span> English
+          </div>
+          <div class="international-item" @click="switchLanguage('zh-CN')">
+            <span class="bk-bscp-icon icon-lang-cn"></span> 中文
+          </div>
+        </template>
+      </bk-popover>
       <bk-dropdown trigger="hover" ext-cls="dropdown" :is-show="isShowDropdown" @hide="isShowDropdown = false">
         <bk-button text :class="['dropdown-trigger', isShowDropdown ? 'active' : '']">
           <help-fill width="16" height="16" :fill="isShowDropdown ? '#fff' : '#96a2b9'" />
@@ -283,14 +295,10 @@ const handleToCMDB = () => {
 };
 
 // 切换语言
-const switchLanguage = () => {
-  if (locale.value === 'zh-CN') {
-    locale.value = 'en-US';
-    localStorage.setItem('language', 'en-US');
-  } else {
-    locale.value = 'zh-CN';
-    localStorage.setItem('language', 'zh-CN');
-  }
+const switchLanguage = (language: string) => {
+  locale.value = language;
+  localStorage.setItem('language', language);
+  location.reload();
 };
 </script>
 
@@ -455,6 +463,34 @@ const switchLanguage = () => {
   display: flex;
   align-items: center;
   cursor: pointer;
+}
+.international {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  &:hover {
+    background-color: #fff;
+    span {
+      color: #3a84ff;
+    }
+  }
+}
+.international-item {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 16px;
+  cursor: pointer;
+  span {
+    font-size: 20px;
+  }
+  &:hover {
+    background-color: #eaf3ff;
+    color: #3a84ff;
+  }
 }
 </style>
 <style lang="scss">
