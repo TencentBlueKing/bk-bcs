@@ -265,10 +265,10 @@ func (ct *chart) DeleteChartVersion(ctx context.Context, req *helmmanager.Delete
 	return nil
 }
 
-// Create chart
-func (ct *chart) Create(ctx context.Context, req *utilschart.UploadChart) error {
+// PushChart push chart
+func (ct *chart) PushChart(ctx context.Context, req *utilschart.PushChart) error {
 	if req == nil {
-		return fmt.Errorf("create chart request is empty")
+		return fmt.Errorf("push chart request is empty")
 	}
 
 	if req.RepoName == "" {
@@ -316,7 +316,7 @@ func (ct *chart) Create(ctx context.Context, req *utilschart.UploadChart) error 
 	}
 
 	if r.Code != resultCodeSuccess {
-		return fmt.Errorf("create repository get result code %d, message: %s", r.Code, r.Message)
+		return fmt.Errorf("push chart get result code %d, message: %s", r.Code, r.Message)
 	}
 
 	return nil

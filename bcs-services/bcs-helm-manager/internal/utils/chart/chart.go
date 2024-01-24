@@ -13,8 +13,8 @@
 // Package chart xxx
 package chart
 
-// UploadChart upload chart struct
-type UploadChart struct {
+// PushChart push chart struct
+type PushChart struct {
 	RepoName    string
 	FilePath    string
 	ProjectCode string

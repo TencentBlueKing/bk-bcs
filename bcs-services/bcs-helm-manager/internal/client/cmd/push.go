@@ -40,7 +40,7 @@ func pushChart(cmd *cobra.Command, args []string) {
 		fmt.Printf("push chart need specific file or dir\n")
 		os.Exit(1)
 	}
-	req := chart.UploadChart{
+	req := chart.PushChart{
 		RepoName:    flagRepository,
 		FilePath:    args[0],
 		ProjectCode: flagProject,
@@ -49,12 +49,12 @@ func pushChart(cmd *cobra.Command, args []string) {
 	}
 
 	c := newClientWithConfiguration()
-	if err := c.Chart().Create(cmd.Context(), &req); err != nil {
+	if err := c.Chart().PushChart(cmd.Context(), &req); err != nil {
 		fmt.Printf("push chart failed, %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	fmt.Printf("success to create chart %s under project %s\n", req.RepoName, req.ProjectCode)
+	fmt.Printf("success to push chart %s under project %s\n", req.RepoName, req.ProjectCode)
 }
 
 func init() {

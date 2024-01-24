@@ -45,7 +45,7 @@ type ChartClient interface {
 	GetVersionDetail(ctx context.Context, req *helmmanager.GetVersionDetailV1Req) (*helmmanager.ChartDetail, error)
 	DeleteChart(ctx context.Context, req *helmmanager.DeleteChartReq) error
 	DeleteChartVersion(ctx context.Context, req *helmmanager.DeleteChartVersionReq) error
-	Create(ctx context.Context, req *chart.UploadChart) error
+	PushChart(ctx context.Context, req *chart.PushChart) error
 }
 
 // ReleaseClient define the release operation handler
