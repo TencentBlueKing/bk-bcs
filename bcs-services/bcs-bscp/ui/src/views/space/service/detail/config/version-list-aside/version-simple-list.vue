@@ -99,7 +99,6 @@ const selectedVersion = ref<IConfigVersion>();
 const popShow = ref(false);
 const popover = ref<HTMLInputElement | null>(null);
 const popHideTimerId = ref(0);
-const popShowTimerId = ref(0);
 const isMouseenter = ref(false);
 
 const versionsInView = computed(() => {
@@ -233,8 +232,7 @@ const handlePopShow = (version: IConfigVersion, event: any) => {
 };
 
 const handlePopHide = () => {
-  popHideTimerId.value = setTimeout(() => {
-    isMouseenter.value  && clearTimeout(popShowTimerId.value);
+  popHideTimerId.value = window.setTimeout(() => {
     popShow.value = false;
   }, 300);
 };
