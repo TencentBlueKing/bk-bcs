@@ -319,6 +319,12 @@ export default {
   'key 类型 value': 'key type value',
   新增服务密钥: 'Add service key',
   调整分组上线成功: 'Adjustment of grouping went online successfully',
+  导入方式: 'Import method',
+  文本导入: 'Text import',
+  文件导入: 'File import',
+  '只支持string、number类型,其他类型请使用文件导入': 'Only string and number types are supported. For other types, please use file import.',
+  '支持 JSON、YAML 等类型文件，后台会自动检测文件类型，配置项格式请参照': 'Supports JSON, YAML and other types of files. The background will automatically detect the file type. Please refer to the configuration item format',
+  示例文件包: 'sample file package',
 
   // 分组管理
   新增分组: 'New group',
