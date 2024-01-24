@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/samber/lo"
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
@@ -414,5 +415,34 @@ func (dao *configItemDao) GetCount(kit *kit.Kit, bizID uint32, appId []uint32) (
 		return nil, err
 	}
 
-	return configItem, nil
+	ma := dao.genQ.AppTemplateBinding
+	qa := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
+	result, err := qa.Select(ma.AppID, ma.TemplateIDs, ma.UpdatedAt).Where(
+		ma.BizID.Eq(bizID), ma.AppID.In(appId...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 泛型处理
+	configItemMap := lo.Associate(configItem, func(c *table.ListConfigItemCounts) (uint32, *table.ListConfigItemCounts) {
+		return c.AppId, c
+	})
+
+	// 累加配置模板计数
+	for _, r := range result {
+		_, ok := configItemMap[r.AppID()]
+		if ok {
+			configItemMap[r.AppID()].Count += uint32(len(r.Spec.TemplateIDs))
+		} else {
+			configItemMap[r.AppID()] = &table.ListConfigItemCounts{
+				AppId:     r.AppID(),
+				Count:     uint32(len(r.Spec.TemplateIDs)),
+				UpdatedAt: r.Revision.UpdatedAt,
+			}
+		}
+	}
+
+	// 泛型处理
+	v := lo.Values(configItemMap)
+	return v, nil
 }
