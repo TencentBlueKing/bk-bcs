@@ -324,7 +324,7 @@ type DataClient interface {
 	UpdateKv(ctx context.Context, in *UpdateKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListKvs(ctx context.Context, in *ListKvsReq, opts ...grpc.CallOption) (*ListKvsResp, error)
 	DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
-	BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
@@ -1511,8 +1511,8 @@ func (c *dataClient) DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc
 	return out, nil
 }
 
-func (c *dataClient) BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
-	out := new(base.EmptyResp)
+func (c *dataClient) BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*BatchUpsertKvsResp, error) {
+	out := new(BatchUpsertKvsResp)
 	err := c.cc.Invoke(ctx, Data_BatchUpsertKvs_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1714,7 +1714,7 @@ type DataServer interface {
 	UpdateKv(context.Context, *UpdateKvReq) (*base.EmptyResp, error)
 	ListKvs(context.Context, *ListKvsReq) (*ListKvsResp, error)
 	DeleteKv(context.Context, *DeleteKvReq) (*base.EmptyResp, error)
-	BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*base.EmptyResp, error)
+	BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(context.Context, *UnDeleteKvReq) (*base.EmptyResp, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
@@ -2117,7 +2117,7 @@ func (UnimplementedDataServer) ListKvs(context.Context, *ListKvsReq) (*ListKvsRe
 func (UnimplementedDataServer) DeleteKv(context.Context, *DeleteKvReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteKv not implemented")
 }
-func (UnimplementedDataServer) BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*base.EmptyResp, error) {
+func (UnimplementedDataServer) BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertKvs not implemented")
 }
 func (UnimplementedDataServer) UnDeleteKv(context.Context, *UnDeleteKvReq) (*base.EmptyResp, error) {

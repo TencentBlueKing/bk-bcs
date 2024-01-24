@@ -26,6 +26,7 @@ import (
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
@@ -152,6 +153,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		Sort:  req.Sort,
 		Order: types.Order(req.Order),
 	}
+	topIds, _ := tools.StrToUint32Slice(req.TopIds)
 	opt := &types.ListKvOption{
 		BizID:     req.BizId,
 		AppID:     req.AppId,
@@ -160,6 +162,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		All:       req.All,
 		Page:      page,
 		KvType:    req.KvType,
+		TopIDs:    topIds,
 	}
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,
@@ -231,7 +234,7 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbds.DeleteKvReq) (*pbbase.
 }
 
 // BatchUpsertKvs is used to insert or update key-value data in bulk.
-func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsReq) (*pbbase.EmptyResp, error) {
+func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsReq) (*pbds.BatchUpsertKvsResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
 
@@ -303,8 +306,18 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
 		return nil, e
 	}
-
-	return new(pbbase.EmptyResp), nil
+	createId := []uint32{}
+	updateId := []uint32{}
+	for _, item := range toCreate {
+		createId = append(createId, item.ID)
+	}
+	for _, item := range toUpdate {
+		updateId = append(updateId, item.ID)
+	}
+	mergedID := append(createId, updateId...) // nolint
+	return &pbds.BatchUpsertKvsResp{
+		Ids: mergedID,
+	}, nil
 }
 
 func (s *Service) getKv(kt *kit.Kit, bizID, appID, version uint32, key string) (table.DataType, string, error) {

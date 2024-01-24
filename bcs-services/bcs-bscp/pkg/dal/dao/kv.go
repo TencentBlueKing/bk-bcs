@@ -19,6 +19,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
@@ -148,6 +149,8 @@ func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int6
 	}
 	if opt.Page.Order == types.Descending {
 		q = q.Order(orderCol.Desc())
+	} else if len(opt.TopIDs) != 0 {
+		q = q.Order(utils.NewCustomExpr("CASE WHEN id IN (?) THEN 0 ELSE 1 END,`key` asc", []interface{}{opt.TopIDs}))
 	} else {
 		q = q.Order(orderCol)
 	}
