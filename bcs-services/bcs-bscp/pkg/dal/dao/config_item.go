@@ -424,25 +424,24 @@ func (dao *configItemDao) GetCount(kit *kit.Kit, bizID uint32, appId []uint32) (
 	}
 
 	// 泛型处理
-	configItemMap := lo.Associate(configItem, func(c *table.ListConfigItemCounts) (uint32, *table.ListConfigItemCounts) {
-		return c.AppId, c
+	configItemMap := lo.KeyBy(configItem, func(c *table.ListConfigItemCounts) uint32 {
+		return c.AppId
 	})
 
 	// 累加配置模板计数
 	for _, r := range result {
-		_, ok := configItemMap[r.AppID()]
-		if ok {
-			configItemMap[r.AppID()].Count += uint32(len(r.Spec.TemplateIDs))
+		appID := r.AppID()
+		if _, ok := configItemMap[appID]; ok {
+			configItemMap[appID].Count += uint32(len(r.Spec.TemplateIDs))
 		} else {
-			configItemMap[r.AppID()] = &table.ListConfigItemCounts{
-				AppId:     r.AppID(),
+			configItemMap[appID] = &table.ListConfigItemCounts{
+				AppId:     appID,
 				Count:     uint32(len(r.Spec.TemplateIDs)),
 				UpdatedAt: r.Revision.UpdatedAt,
 			}
 		}
 	}
 
-	// 泛型处理
 	v := lo.Values(configItemMap)
 	return v, nil
 }
