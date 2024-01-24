@@ -113,13 +113,13 @@ import { computed, inject, PropType, ref, watch } from 'vue';
 import IpSelector from '../common/ip-selector.vue';
 
 import ApplyHostResource from './apply-host-resource.vue';
-import TopoSelector from './topo-selector.vue';
 import { ClusterDataInjectKey, IHostNode, IInstanceItem, ISecurityGroup } from './types';
 
 import { cloudSecurityGroups } from '@/api/modules/cluster-manager';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
 import LoginType from '@/views/cluster-manage/add/form/login-type.vue';
+import TopoSelector from '@/views/cluster-manage/autoscaler/topo-select-tree.vue';
 import TemplateSelector from '@/views/cluster-manage/components/template-selector.vue';
 
 const props = defineProps({
