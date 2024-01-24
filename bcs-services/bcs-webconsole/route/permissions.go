@@ -13,7 +13,10 @@
 package route
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -196,10 +199,14 @@ func CredentialRequired() gin.HandlerFunc {
 			return
 		}
 
-		// 校验项目 or 集群权限
+		// namespace 模式
+		namespace := getNamespace(getRequestBody(c.Request))
+		// 校验项目 or 集群 or 命名空间权限，
+		// 其中共享集群命名空间校验，只支持 namespace/pod_name/container_name 模式，container_id 模式在共享集群检索效率较低，暂不支持
 		switch {
 		case config.G.ValidateCred(config.CredentialAppCode, bkAppCode, config.ScopeProjectCode, authCtx.ProjectCode):
 		case config.G.ValidateCred(config.CredentialAppCode, bkAppCode, config.ScopeClusterId, authCtx.ClusterId): // 校验集群权限
+		case config.G.ValidateCred(config.CredentialAppCode, bkAppCode, config.ScopeNamespace, namespace):
 		default:
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
@@ -231,4 +238,25 @@ func ManagersRequired() gin.HandlerFunc {
 			RequestID: authCtx.RequestId,
 		})
 	}
+}
+
+// 获取请求体
+func getRequestBody(r *http.Request) []byte {
+	// 读取请求体
+	body, _ := io.ReadAll(r.Body)
+	// 恢复请求体
+	r.Body = io.NopCloser(bytes.NewBuffer(body))
+	return body
+}
+
+// 其他内容忽略
+type namespaceOnly struct {
+	Namespace string `json:"namespace"`
+}
+
+// 获取body里面的namespace
+func getNamespace(b []byte) string {
+	namespace := namespaceOnly{}
+	_ = json.Unmarshal(b, &namespace)
+	return namespace.Namespace
 }
