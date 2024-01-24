@@ -203,7 +203,7 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 
 	result, count, err := q.Where(m.BizID.Eq(bizID)).
 		Where(conds...).
-		Order(m.ID.Desc()).
+		Order(m.Name).
 		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err

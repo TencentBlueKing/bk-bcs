@@ -114,6 +114,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbcs.ListKvsReq) (*pbcs.List
 		KvType:     req.KvType,
 		Sort:       req.Sort,
 		Order:      req.Order,
+		TopIds:     req.TopIds,
 	}
 	if !req.All {
 		if req.Limit == 0 {
@@ -198,12 +199,13 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbcs.BatchUpsertKvsRe
 		Kvs:        kvs,
 		ReplaceAll: true,
 	}
-	if _, err := s.client.DS.BatchUpsertKvs(grpcKit.RpcCtx(), r); err != nil {
+	data, err := s.client.DS.BatchUpsertKvs(grpcKit.RpcCtx(), r)
+	if err != nil {
 		logs.Errorf("batch upsert kv failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return &pbcs.BatchUpsertKvsResp{}, nil
+	return &pbcs.BatchUpsertKvsResp{Ids: data.Ids}, nil
 }
 
 // UnDeleteKv reverses the deletion of a key-value pair by reverting the current kvType and value to the previous
