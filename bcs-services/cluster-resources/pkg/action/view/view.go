@@ -431,7 +431,7 @@ func (v *ViewAction) ResourceNameSuggest(ctx context.Context, clusteredNamespace
 		return nil, err
 	}
 	result := slice.RemoveDuplicateValues(parseResourceName(resource))
-	sort.Sort(sort.StringSlice(result))
+	sort.Strings(result)
 	return result, nil
 }
 
@@ -446,7 +446,7 @@ func (v *ViewAction) LabelSuggest(ctx context.Context, clusteredNamespaces []*cl
 		return nil, err
 	}
 	result := slice.RemoveDuplicateValues(parseResourceLabels(resource))
-	sort.Sort(sort.StringSlice(result))
+	sort.Strings(result)
 	return result, nil
 }
 
@@ -461,7 +461,7 @@ func (v *ViewAction) ValuesSuggest(ctx context.Context, clusteredNamespaces []*c
 		return nil, err
 	}
 	result := slice.RemoveDuplicateValues(parseResourceLabelValues(resource, label))
-	sort.Sort(sort.StringSlice(result))
+	sort.Strings(result)
 	return result, nil
 }
 
