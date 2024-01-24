@@ -18,7 +18,7 @@
         <div class="tips" v-if="importType === 'text'">{{ t('只支持string、number类型,其他类型请使用文件导入') }}</div>
       </bk-form-item>
       <bk-form-item :label="t('配置文件内容')" required>
-        <KvContentEditor v-if="importType === 'text'" ref="editorRef" @trigger="confirmBtnPerm = $event" />
+        <KvContentEditor v-if="importType === 'text'" ref="editorRef" @trigger="textConfirmBtnPerm = $event" />
         <bk-upload
           v-else
           class="file-uploader"
@@ -39,7 +39,7 @@
             <TextFill class="file-icon" />
             <div class="name" :title="selectedFile.name">{{ selectedFile.name }}</div>
           </div>
-          <div v-if="!isFileUploadSuccess" class="file-right">
+          <div  v-if="!isFileUploadSuccess" class="file-right">
             <span class="error-msg">{{ t('解析失败，配置项格式不正确') }}</span>
             <span class="del-icon" @click="selectedFile = undefined">
               <Del />
@@ -49,14 +49,21 @@
       </bk-form-item>
     </bk-form>
     <template #footer>
-      <bk-button theme="primary" style="margin-right: 8px" @click="handleConfirm">{{ t('导入') }}</bk-button>
+      <bk-button
+        :loading="loading"
+        :disabled="!confirmBtnPerm"
+        theme="primary"
+        style="margin-right: 8px"
+        @click="handleConfirm"
+        >{{ t('导入') }}</bk-button
+      >
       <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
     </template>
   </bk-dialog>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Done, TextFill, Del } from 'bkui-vue/lib/icon';
 import KvContentEditor from '../../../components/kv-import-editor.vue';
@@ -74,9 +81,10 @@ const emits = defineEmits(['update:show', 'confirm']);
 const editorRef = ref();
 const isFormChange = ref(false);
 const importType = ref('text');
-const confirmBtnPerm = ref(false);
+const textConfirmBtnPerm = ref(false);
 const selectedFile = ref<File>();
 const isFileUploadSuccess = ref(true);
+const loading = ref(false);
 watch(
   () => props.show,
   () => {
@@ -84,10 +92,18 @@ watch(
   },
 );
 
+const confirmBtnPerm = computed(() => {
+  if (importType.value === 'text') return textConfirmBtnPerm.value;
+  return !!selectedFile.value && isFileUploadSuccess.value;
+});
+
 const handleClose = () => {
+  selectedFile.value = undefined;
+  isFileUploadSuccess.value = true;
   emits('update:show', false);
 };
 const handleConfirm = async () => {
+  loading.value = true;
   if (importType.value === 'file') {
     try {
       await batchImportKvFile(props.bkBizId, props.appId, selectedFile.value);
@@ -99,9 +115,21 @@ const handleConfirm = async () => {
       console.error(error);
       isFileUploadSuccess.value = false;
       return;
+    } finally {
+      loading.value = false;
     }
   } else {
-    await editorRef.value.handleImport();
+    try {
+      await editorRef.value.handleImport();
+      Message({
+        theme: 'success',
+        message: t('文本导入成功'),
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      loading.value = false;
+    }
   }
   emits('update:show', false);
   emits('confirm');
@@ -109,7 +137,7 @@ const handleConfirm = async () => {
 
 const handleSelectFile = (file: File) => {
   selectedFile.value = file;
-  isFormChange.value = true;
+  isFileUploadSuccess.value = true;
   return false;
 };
 </script>
@@ -168,9 +196,10 @@ const handleSelectFile = (file: File) => {
       margin-right: 10px;
     }
     .del-icon {
-      font-size: 14px;
-      color: #939ba5;
+      font-size: 13px;
+      color: #63656E;
       cursor: pointer;
+      vertical-align: middle;
       &:hover {
         color: #3a84ff;
       }
