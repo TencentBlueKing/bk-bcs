@@ -3246,6 +3246,7 @@ tke:
         Security group inbound rules must allow traffic from the BlueKing
         platform's network egress IP address on TCP port 443; otherwise, adding
         the cluster will fail.
+      defaultSecurityGroupTips: ''
     availableIpNum: Available number of IPs
     serviceCidr: Service CIDR
     subnetID: Subnet ID

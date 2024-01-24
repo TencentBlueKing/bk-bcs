@@ -1,7 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div :class="[
-    'cluster-node bcs-content-wrapper',
+    'cluster-node',
     { 'px-[24px] py-[16px]': !fromCluster }
   ]">
     <bcs-alert type="info" class="cluster-node-tip">
