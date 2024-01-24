@@ -51,15 +51,17 @@ type Scope map[ScopeType]string
 // LabelMatchers :
 type LabelMatchers []*labels.Matcher
 
-// Matches : 多个是且的关系, 注意, 只匹配单个
-func (m *LabelMatchers) Matches(name ScopeType, value string) bool {
+// Matches : 多个是且的关系
+func (m *LabelMatchers) Matches(scopeValues map[ScopeType]string) bool {
 	for _, matcher := range *m {
-		if matcher.Name != string(name) {
-			return false
-		}
+		for k, v := range scopeValues {
+			if matcher.Name != string(k) {
+				continue
+			}
 
-		if !matcher.Matches(value) {
-			return false
+			if !matcher.Matches(v) {
+				return false
+			}
 		}
 	}
 	return true
@@ -116,7 +118,7 @@ func (c *Credential) InitCred() error {
 }
 
 // Matches 是否匹配
-func (c *Credential) Matches(credType CredentialType, cred string, scopeType ScopeType, scopeValue string) bool {
+func (c *Credential) Matches(credType CredentialType, cred string, scopeValues map[ScopeType]string) bool {
 	// 类型必须优先匹配
 	if c.CredentialType != credType {
 		return false
@@ -136,7 +138,7 @@ func (c *Credential) Matches(credType CredentialType, cred string, scopeType Sco
 
 	// 多个是或的关系
 	for _, matcher := range c.scopeMatcher {
-		if matcher.Matches(scopeType, scopeValue) {
+		if matcher.Matches(scopeValues) {
 			return true
 		}
 	}
