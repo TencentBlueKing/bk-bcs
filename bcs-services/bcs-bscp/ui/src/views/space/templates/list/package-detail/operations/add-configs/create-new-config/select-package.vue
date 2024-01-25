@@ -9,8 +9,7 @@
     :quick-close="false"
     :is-loading="props.pending"
     @confirm="handleConfirm"
-    @closed="close"
-  >
+    @closed="close">
     <template #header>
       <div class="header-wrapper">
         <div class="title">{{ t('创建至套餐') }}</div>
@@ -25,8 +24,7 @@
           <template #extension>
             <div
               :class="['no-specified-option', { selected: unSpecifiedSelected }]"
-              @click="handleSelectUnSpecifiedPkg"
-            >
+              @click="handleSelectUnSpecifiedPkg">
               {{ t('未指定套餐') }}
               <Done v-if="unSpecifiedSelected" class="selected-icon" />
             </div>

@@ -5,8 +5,7 @@
     theme="primary"
     :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
     :disabled="(props.hasPerm && allConfigCount === 0) || props.permCheckLoading"
-    @click="handleBtnClick"
-  >
+    @click="handleBtnClick">
     {{t('生成版本')}}
   </bk-button>
   <CreateVersionSlider
@@ -15,8 +14,7 @@
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     :is-diff-slider-show="isDiffSliderShow"
-    @created="handleCreated"
-  />
+    @created="handleCreated"/>
   <!-- <VersionDiff
     v-model:show="isDiffSliderShow"
     :current-version="versionData"

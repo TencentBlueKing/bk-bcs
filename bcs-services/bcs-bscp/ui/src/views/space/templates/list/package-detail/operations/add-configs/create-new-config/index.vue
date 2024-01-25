@@ -5,8 +5,7 @@
     :is-show="props.show"
     :quick-close="!isSelectPkgDialogShow"
     :before-close="handleBeforeClose"
-    @closed="close"
-  >
+    @closed="close">
     <div class="slider-content-container">
       <ConfigForm
         ref="formRef"
@@ -17,8 +16,7 @@
         :is-tpl="true"
         :bk-biz-id="spaceId"
         :id="currentTemplateSpace"
-        @change="handleFormChange"
-      />
+        @change="handleFormChange"/>
     </div>
     <div class="action-btns">
       <bk-button theme="primary" @click="handleCreateClick">{{ t('去创建') }}</bk-button>
@@ -29,8 +27,7 @@
     v-model:show="isSelectPkgDialogShow"
     :pending="pending"
     :config-form="configForm"
-    @confirm="handleCreateConfirm"
-  />
+    @confirm="handleCreateConfirm"/>
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';

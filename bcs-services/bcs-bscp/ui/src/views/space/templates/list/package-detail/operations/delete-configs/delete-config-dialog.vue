@@ -6,8 +6,7 @@
     :is-show="props.show"
     ext-cls="delete-confirm-dialog"
     @confirm="handleConfirm"
-    @closed="close"
-  >
+    @closed="close">
     <div class="tips">{{t('一旦删除，该操作将无法撤销，请谨慎操作')}}</div>
     <bk-table :data="props.configs" border="outer" max-height="200">
       <bk-table-column :label="t('配置文件名称')">

@@ -43,8 +43,7 @@
         :selectable="false"
         :data="searchTreeData"
         :expand-all="false"
-        :show-node-type-icon="false"
-      >
+        :show-node-type-icon="false">
         <template #node="node">
           <div class="node-item-wrapper">
             <bk-checkbox
@@ -130,7 +129,6 @@ const versionSelectorOpen = ref(false);
 const searchStr = ref('');
 const treeRef = ref();
 const isSearchEmpty = ref(false);
-const selectedVersionIds = ref<number[]>([]);
 
 // 节点搜索
 const searchTreeData = computed(() => {

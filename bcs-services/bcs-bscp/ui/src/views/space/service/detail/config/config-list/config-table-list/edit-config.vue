@@ -4,8 +4,7 @@
     :title="t('编辑配置文件')"
     :is-show="props.show"
     :before-close="handleBeforeClose"
-    @closed="close"
-  >
+    @closed="close">
     <bk-loading :loading="configDetailLoading" class="config-loading-container">
       <ConfigForm
         v-if="!configDetailLoading"
@@ -17,16 +16,14 @@
         :editable="true"
         :bk-biz-id="props.bkBizId"
         :id="props.appId"
-        @change="handleChange"
-      />
+        @change="handleChange"/>
     </bk-loading>
     <section class="action-btns">
       <bk-button
         theme="primary"
         :loading="pending"
         :disabled="configDetailLoading || fileUploading"
-        @click="handleSubmit"
-      >
+        @click="handleSubmit">
         {{ t('保存') }}
       </bk-button>
       <bk-button @click="close">{{ t('取消') }}</bk-button>

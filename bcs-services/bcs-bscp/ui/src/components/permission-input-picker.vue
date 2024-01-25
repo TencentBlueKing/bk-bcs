@@ -5,15 +5,13 @@
       theme="light"
       trigger="manual"
       placement="top"
-      :is-show="showPrivilegeErrorTips"
-    >
+      :is-show="showPrivilegeErrorTips">
       <bk-input
         v-model="privilegeInputVal"
         type="number"
         :placeholder="t('请输入三位权限数字')"
         :disabled="props.disabled"
-        @blur="handleInputBlur"
-      />
+        @blur="handleInputBlur"/>
       <template #content>
         <div>{{ t('只能输入三位 0~7 数字') }}</div>
         <div class="privilege-tips-btn-area">
@@ -33,8 +31,7 @@
               <bk-checkbox-group
                 class="group-checkboxs"
                 :model-value="privilegeGroupsValue[index]"
-                @change="handleSelect(index, $event)"
-              >
+                @change="handleSelect(index, $event)">
                 <bk-checkbox size="small" :label="4">{{ t('读') }}</bk-checkbox>
                 <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
                 <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>

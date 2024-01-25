@@ -1,11 +1,12 @@
 <template>
   <bk-dialog
+    quick-close
+    width="1105"
+    dialog-type="show"
     :is-show="props.isShow"
     :theme="'primary'"
     :show-mask="true"
-    quick-close width="1105"
     :show-footer="false"
-    dialog-type="show"
     :scrollable="false"
     @closed="emits('update:isShow', false)" ext-cls="version-dialog">
     <div class="log-version">

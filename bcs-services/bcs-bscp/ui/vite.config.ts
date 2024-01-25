@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-// import eslintPlugin from 'vite-plugin-eslint';
-import basicSsl from '@vitejs/plugin-basic-ssl';
+import eslintPlugin from 'vite-plugin-eslint';
+// import basicSsl from '@vitejs/plugin-basic-ssl';
 import viteCompression from 'vite-plugin-compression';
 
 const viteHtml = (options?: any) => ({
@@ -16,9 +16,9 @@ const viteHtml = (options?: any) => ({
 export default defineConfig(({ command, mode }) => {
   const plugins = [
     vue(),
-    // eslintPlugin({
-    //   include: ['src/**/*.{ts,tsx,js,jsx,vue}'],
-    // }),
+    eslintPlugin({
+      include: ['src/**/*.{ts,tsx,js,jsx,vue}'],
+    }),
     viteCompression({
       filter: /\.js|.css$/,
       threshold: 1,

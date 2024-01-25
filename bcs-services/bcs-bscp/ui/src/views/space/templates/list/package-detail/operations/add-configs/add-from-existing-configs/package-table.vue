@@ -13,8 +13,7 @@
                 <bk-checkbox
                   :model-value="isAllSelected"
                   :indeterminate="isIndeterminate"
-                  @change="handleAllSelectionChange"
-                />
+                  @change="handleAllSelectionChange"/>
                 <div class="name-text">{{ t('配置文件名称') }}</div>
               </div>
             </th>
@@ -28,8 +27,7 @@
               <div class="cell name-info">
                 <bk-checkbox
                   :model-value="isConfigSelected(config.id)"
-                  @change="handleConfigSelectionChange($event, config)"
-                />
+                  @change="handleConfigSelectionChange($event, config)"/>
                 <div class="name-text">{{ config.spec.name }}</div>
               </div>
             </td>

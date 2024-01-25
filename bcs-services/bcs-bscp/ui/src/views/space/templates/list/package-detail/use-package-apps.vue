@@ -5,16 +5,14 @@
       :disabled="tplCounts === 0"
       :filterable="true"
       :input-search="false"
-      :search-placeholder="$t('请输入关键字')"
-    >
+      :search-placeholder="$t('请输入关键字')">
       <template #trigger>
         <div
           :class="['select-app-trigger', { disabled: tplCounts === 0 }]"
           v-bk-tooltips="{
             disabled: tplCounts > 0,
             content: t('该套餐中没有可用配置文件，无法被导入到服务配置中'),
-          }"
-        >
+          }">
           <Plus class="plus-icon" />
           {{ t('新服务中使用') }}
         </div>

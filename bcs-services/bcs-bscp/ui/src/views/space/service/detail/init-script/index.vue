@@ -11,15 +11,13 @@
               :loading="scriptsLoading"
               :list="scriptsData"
               @change="handleSelectScript"
-              @refresh="getScripts"
-            />
+              @refresh="getScripts"/>
             <bk-button
               class="preview-button"
               text
               theme="primary"
               :disabled="typeof formData.pre.id !== 'number' || formData.pre.id === 0"
-              @click="handleOpenPreview('pre')"
-            >
+              @click="handleOpenPreview('pre')">
               {{t('预览')}}
             </bk-button>
           </div>
@@ -33,15 +31,13 @@
               :loading="scriptsLoading"
               :list="scriptsData"
               @change="handleSelectScript"
-              @refresh="getScripts"
-            />
+              @refresh="getScripts"/>
             <bk-button
               class="preview-button"
               text
               theme="primary"
               :disabled="typeof formData.post.id !== 'number' || formData.post.id === 0"
-              @click="handleOpenPreview('post')"
-            >
+              @click="handleOpenPreview('post')">
               {{ t('预览') }}
             </bk-button>
           </div>
@@ -54,8 +50,7 @@
         theme="primary"
         :disabled="hasEditServicePerm && submitButtonDisabled"
         :loading="pending"
-        @click="handleSubmit"
-      >
+        @click="handleSubmit">
         {{ t('保存设置') }}
       </bk-button>
     </div>
@@ -64,8 +59,7 @@
         :model-value="previewConfig.content"
         :editable="false"
         :upload-icon="false"
-        :language="previewConfig.type"
-      >
+        :language="previewConfig.type">
         <template #header>
           <div class="script-preview-title">
             <div class="close-area" @click="previewConfig.open = false">

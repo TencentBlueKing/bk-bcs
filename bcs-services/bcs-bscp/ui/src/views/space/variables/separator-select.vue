@@ -7,8 +7,7 @@
         :key="item.id"
         class="item"
         @click="selectSeparatorId = item.id"
-        :class="{ 'select-item': selectSeparatorId === item.id }"
-      >
+        :class="{ 'select-item': selectSeparatorId === item.id }">
         {{ item.text }}
       </div>
     </div>

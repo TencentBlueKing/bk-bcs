@@ -30,8 +30,7 @@
           :pagination="pagination"
           @row-click="handleSelectVersion"
           @page-limit-change="handlePageLimitChange"
-          @page-value-change="refreshVersionList($event)"
-        >
+          @page-value-change="refreshVersionList($event)">
           <bk-table-column :label="t('版本')" prop="spec.name" show-overflow-tooltip></bk-table-column>
           <bk-table-column :label="t('版本描述')" prop="spec.memo" show-overflow-tooltip>
             <template #default="{ row }">
@@ -191,12 +190,13 @@ onMounted(() => {
 
 const getVersionList = async () => {
   listLoading.value = true;
+  const { current, limit } = pagination.value;
   const notFirstPageStart = isAvaliableView.value
-    ? (pagination.value.current - 1) * pagination.value.limit - 1
-    : (pagination.value.current - 1) * pagination.value.limit;
+    ? (current - 1) * limit - 1
+    : (current - 1) * limit;
   const params: IConfigVersionQueryParams = {
-    start: pagination.value.current === 1 ? 0 : notFirstPageStart,
-    limit: pagination.value.current === 1 && isAvaliableView.value ? pagination.value.limit - 1 : pagination.value.limit,
+    start: current === 1 ? 0 : notFirstPageStart,
+    limit: current === 1 && isAvaliableView.value ? limit - 1 : limit,
     deprecated: currentTab.value !== 'avaliable',
   };
   if (searchStr.value) {
@@ -204,7 +204,7 @@ const getVersionList = async () => {
   }
   const res = await getConfigVersionList(props.bkBizId, props.appId, params);
   const count = isAvaliableView.value ? res.data.count + 1 : res.data.count;
-  if (isAvaliableView.value && pagination.value.current === 1) {
+  if (isAvaliableView.value && current === 1) {
     versionList.value = [UN_NAMED_VERSION, ...res.data.details];
   } else {
     versionList.value = res.data.details;

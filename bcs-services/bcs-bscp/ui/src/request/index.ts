@@ -36,14 +36,14 @@ http.interceptors.response.use(
           state.showLoginModal = true;
         });
         return;
-      } else if (response.status === 403) {
+      } if (response.status === 403) {
         globalStore.$patch((state) => {
           state.showPermApplyPage = true;
           state.applyPermUrl = response.data.error.data.apply_url;
           state.applyPermResource = response.data.error.data.resources;
         });
         return response.data.error;
-      } else if (response.status === 404) {
+      } if (response.status === 404) {
         return Promise.reject(error);
       }
 

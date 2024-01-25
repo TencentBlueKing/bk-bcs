@@ -18,8 +18,7 @@
             :filterable="true"
             :disabled="rule.type === 'del'"
             :placeholder="t('请选择服务')"
-            @change="handleSelectApp(index)"
-          >
+            @change="handleSelectApp(index)">
             <bk-option v-for="app in appList" :id="app" :key="app.id" :name="app.spec.name" />
           </bk-select>
           <div style="width: 10px">/</div>
@@ -29,8 +28,7 @@
             :placeholder="inputPlaceholder(rule)"
             :disabled="rule.type === 'del'"
             @input="handleInput(index)"
-            @blur="handleRuleContentChange(index)"
-          >
+            @blur="handleRuleContentChange(index)">
             <template #suffix>
               <div
                 v-if="rule.type"
@@ -38,8 +36,7 @@
                   disabled: rule.type !== 'modify',
                   content: `${rule.original} -> ${rule.content}`,
                 }"
-                :class="`status-tag ${rule.type}`"
-              >
+                :class="`status-tag ${rule.type}`">
                 {{ RULE_TYPE_MAP[rule.type] }}
               </div>
             </template>
@@ -49,8 +46,7 @@
               v-if="rule.type === 'del'"
               v-bk-tooltips="t('撤销本次删除')"
               class="bk-bscp-icon icon-revoke revoke-icon"
-              @click="handleRevoke(index)"
-            >
+              @click="handleRevoke(index)">
             </i>
             <template v-else>
               <i v-if="localRules.length > 1" class="bk-bscp-icon icon-reduce" @click="handleDeleteRule(index)"></i>

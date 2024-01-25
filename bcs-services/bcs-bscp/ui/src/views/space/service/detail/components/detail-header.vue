@@ -1,7 +1,7 @@
 <template>
   <div class="service-detail-header">
     <section class="summary-wrapper">
-      <div :class="['status-tag', versionData.spec.deprecated ? 'deprecated' : versionData.status.publish_status]">
+      <div :class="['status-tag', versionData.spec.deprecated ? 'deprecated' : publishStatus]">
         {{ statusName }}
       </div>
       <div class="version-name" :title="versionData.spec.name">{{ versionData.spec.name }}</div>
@@ -12,8 +12,7 @@
           placement: 'bottom-start',
           theme: 'light',
         }"
-        class="version-desc"
-      />
+        class="version-desc"/>
     </section>
     <template v-if="!props.versionDetailView">
       <div class="detail-header-tabs" v-if="isFileType">
@@ -28,13 +27,13 @@
           :app-id="props.appId"
           :groups="versionData.status.released_groups"
           :is-default-group="hasDefaultGroup"
-          :disabled="versionData.status.publish_status === 'full_released'">
+          :disabled="publishStatus === 'full_released'">
           <div class="released-groups">
             <i class="bk-bscp-icon icon-resources-fill"></i>
             <div class="groups-tag">
               <div class="first-group-name">{{ firstReleasedGroupName }}</div>
               <div
-                v-if="versionData.status.publish_status === 'partial_released' && versionData.status.released_groups.length > 1"
+                v-if="publishStatus === 'partial_released' && versionData.status.released_groups.length > 1"
                 class="remaining-count">
                 ;
                 <span class="count">+{{ versionData.status.released_groups.length - 1 }}</span>
@@ -47,23 +46,20 @@
           :app-id="props.appId"
           :perm-check-loading="permCheckLoading"
           :has-perm="perms.create"
-          @confirm="handleVersionCreated"
-        />
+          @confirm="handleVersionCreated"/>
         <PublishVersion
           ref="publishVersionRef"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :perm-check-loading="permCheckLoading"
           :has-perm="perms.publish"
-          @confirm="refreshVesionList"
-        />
+          @confirm="refreshVesionList"/>
         <ModifyGroupPublish
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :perm-check-loading="permCheckLoading"
           :has-perm="perms.publish"
-          @confirm="refreshVesionList"
-        />
+          @confirm="refreshVesionList"/>
       </section>
     </template>
   </div>
@@ -115,15 +111,16 @@ const getDefaultTab = () => {
 const activeTab = ref(getDefaultTab());
 const publishVersionRef = ref();
 
+const publishStatus = computed(() => versionData.value.status.publish_status);
+
 const statusName = computed(() => {
-  const status = versionData.value.status.publish_status;
   if (versionData.value.spec.deprecated) {
     return t('已废弃');
   }
 
-  if (status === 'editing') {
+  if (publishStatus.value === 'editing') {
     return t('编辑中');
-  } if (status === 'not_released') {
+  } if (publishStatus.value === 'not_released') {
     return t('未上线');
   }
   return t('已上线');
@@ -143,6 +140,7 @@ const firstReleasedGroupName = computed(() => {
     }
     return hasDefaultGroup.value ? t('默认分组') : versionData.value.status.released_groups[0].name;
   }
+  return '';
 });
 
 watch(

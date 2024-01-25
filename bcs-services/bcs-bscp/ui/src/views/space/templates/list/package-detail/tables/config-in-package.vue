@@ -6,8 +6,7 @@
     :show-cited-by-pkgs-col="true"
     :show-bound-by-apps-col="true"
     :current-pkg="currentPkg"
-    :get-config-list="getConfigList"
-  >
+    :get-config-list="getConfigList">
     <template #tableOperations>
       <AddConfigs :show-add-existing-config-option="true" @refresh="refreshConfigList" />
       <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />

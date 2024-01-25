@@ -12,7 +12,9 @@
       </div>
       <section class="versions-wrapper">
         <section v-if="!searchStr" class="unnamed-version">
-          <section :class="['version-item', { active: versionData.id === 0 }]" @click="handleSelectVersion(unNamedVersion)">
+          <section
+            :class="['version-item', { active: versionData.id === 0 }]"
+            @click="handleSelectVersion(unNamedVersion)">
             <i class="bk-bscp-icon icon-edit-small edit-icon" />
             <div class="version-name">{{ t('未命名版本') }}</div>
           </section>
@@ -102,7 +104,10 @@ const versionsInView = computed(() => {
   if (searchStr.value === '') {
     return versionList.value.slice(1);
   }
-  return versionList.value.filter(item => item.id > 0 && item.spec.name.toLowerCase().includes(searchStr.value.toLocaleLowerCase()));
+  return versionList.value.filter((item) => {
+    const isNameMatched = item.spec.name.toLowerCase().includes(searchStr.value.toLocaleLowerCase());
+    return item.id > 0 && isNameMatched;
+  });
 });
 
 // 监听刷新版本列表标识，处理新增版本场景，默认选中新增的版本

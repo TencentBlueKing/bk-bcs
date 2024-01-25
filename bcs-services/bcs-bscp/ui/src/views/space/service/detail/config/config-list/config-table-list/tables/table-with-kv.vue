@@ -11,8 +11,7 @@
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"
       @column-sort="handleSort"
-      @column-filter="handleFilter"
-    >
+      @column-filter="handleFilter">
       <bk-table-column :label="t('配置项名称')" prop="spec.key" :min-width="240">
         <template #default="{ row }">
           <bk-button
@@ -20,8 +19,7 @@
             text
             theme="primary"
             :disabled="row.kv_state === 'DELETE'"
-            @click="handleView(row)"
-          >
+            @click="handleView(row)">
             {{ row.spec.key }}
           </bk-button>
         </template>
@@ -37,8 +35,7 @@
       <bk-table-column
         :label="t('数据类型')"
         prop="spec.kv_type"
-        :filter="{ filterFn: () => true, list: filterList, checked: filterChecked }"
-      ></bk-table-column>
+        :filter="{ filterFn: () => true, list: filterList, checked: filterChecked }"></bk-table-column>
       <bk-table-column :label="t('创建人')" prop="revision.creator"></bk-table-column>
       <bk-table-column :label="t('修改人')" prop="revision.reviser"></bk-table-column>
       <bk-table-column :label="t('修改时间')" :sort="true" :width="220">
@@ -54,9 +51,9 @@
       <bk-table-column :label="t('操作')" fixed="right">
         <template #default="{ row }">
           <div class="operate-action-btns">
-            <bk-button v-if="row.kv_state === 'DELETE'" text theme="primary" @click="handleUndelete(row)"
-              >{{ t('恢复') }}</bk-button
-            >
+            <bk-button v-if="row.kv_state === 'DELETE'" text theme="primary" @click="handleUndelete(row)">
+              {{ t('恢复') }}
+            </bk-button>
             <template v-else>
               <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEditOrView(row)">{{
                 versionData.id === 0 ? t('编辑') : t('查看')
@@ -65,10 +62,10 @@
                 v-if="versionData.status.publish_status !== 'editing'"
                 text
                 theme="primary"
-                @click="handleDiff(row)"
-                >{{ t('对比') }}</bk-button
-              >
-              <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">{{ t('删除') }}</bk-button>
+                @click="handleDiff(row)">{{ t('对比') }}</bk-button>
+              <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">
+                {{ t('删除') }}
+              </bk-button>
             </template>
           </div>
         </template>
@@ -84,15 +81,13 @@
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     :editable="true"
-    @confirm="getListData"
-  />
+    @confirm="getListData"/>
   <ViewConfigKv v-model:show="viewPanelShow" :config="(activeConfig as IConfigKvItem)" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config-kv="diffConfig" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
     :title="t('确认删除该配置项？')"
-    @confirm="handleDeleteConfigConfirm"
-  >
+    @confirm="handleDeleteConfigConfirm">
     <div style="margin-bottom: 8px">
       {{ t('配置项') }}：<span style="color: #313238">{{ deleteConfig?.spec.key }}</span>
     </div>

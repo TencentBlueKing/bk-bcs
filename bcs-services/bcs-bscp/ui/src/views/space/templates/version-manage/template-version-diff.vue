@@ -11,14 +11,12 @@
                 style="width: 320px"
                 :loading="versionListLoading"
                 :clearable="false"
-                @change="handleSelectVersion"
-              >
+                @change="handleSelectVersion">
                 <bk-option
                   v-for="version in versionList"
                   :key="version.id"
                   :label="version.spec.revision_name"
-                  :value="version.id"
-                >
+                  :value="version.id">
                 </bk-option>
               </bk-select>
             </div>

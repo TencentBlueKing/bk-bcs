@@ -1,12 +1,13 @@
 <template>
   <section class="variables-management-page">
-    <bk-alert theme="info"
-      >{{ headInfo }}<span @click="goVariablesDoc" class="hyperlink">{{ t('配置模板与变量') }}</span>
+    <bk-alert theme="info">{{ headInfo }}<span @click="goVariablesDoc" class="hyperlink">{{ t('配置模板与变量') }}</span>
     </bk-alert>
     <div class="operation-area">
       <div class="button">
-        <bk-button theme="primary" @click="isCreateSliderShow = true"
-          ><Plus class="button-icon" />{{ t('新增变量') }}</bk-button>
+        <bk-button theme="primary" @click="isCreateSliderShow = true">
+          <Plus class="button-icon" />
+          {{ t('新增变量') }}
+        </bk-button>
         <bk-button @click="isImportVariableShow = true">{{ t('导入变量') }}</bk-button>
       </div>
       <SearchInput v-model="searchStr" :placeholder="t('请输入变量名称')" :width="320" @search="refreshList()" />
@@ -18,8 +19,7 @@
         :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-value-change="refreshList"
-      >
+        @page-value-change="refreshList">
         <bk-table-column :label="t('变量名称')">
           <template #default="{ row }">
             <bk-button v-if="row.spec" text theme="primary" @click="handleEditVar(row)">{{ row.spec.name }}</bk-button>
@@ -50,15 +50,13 @@
       v-model:show="editSliderData.open"
       :id="editSliderData.id"
       :data="editSliderData.data"
-      @edited="refreshList"
-    />
+      @edited="refreshList"/>
     <VariableImport v-model:show="isImportVariableShow" @edited="refreshList" />
   </section>
   <DeleteConfirmDialog
     v-model:isShow="isDeleteVariableDialogShow"
     :title="t('确认删除该全局变量？')"
-    @confirm="handleDeleteVarConfirm"
-  >
+    @confirm="handleDeleteVarConfirm">
     <div style="margin-bottom: 8px">
       {{ t('全局变量') }}: <span style="color: #313238; font-weight: 600">{{ deleteVariableItem?.spec.name }}</span>
     </div>

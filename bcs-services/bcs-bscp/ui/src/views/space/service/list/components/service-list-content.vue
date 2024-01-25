@@ -6,8 +6,7 @@
         theme="primary"
         :class="{ 'bk-button-with-no-perm': props.permCheckLoading || !props.hasCreateServicePerm }"
         :disabled="props.permCheckLoading"
-        @click="handleCreateServiceClick"
-      >
+        @click="handleCreateServiceClick">
         <Plus class="create-icon" />
         {{ t('新建服务') }}
       </bk-button>
@@ -19,8 +18,7 @@
           :placeholder="t('服务名称')"
           :clearable="true"
           @input="handleSearch"
-          @clear="handleClearSearchStr"
-        >
+          @clear="handleClearSearchStr">
         </bk-input>
       </div>
     </div>
@@ -33,8 +31,7 @@
                 text
                 theme="primary"
                 :class="{ 'bk-button-with-no-perm': props.permCheckLoading || !props.hasCreateServicePerm }"
-                @click="handleCreateServiceClick"
-              >
+                @click="handleCreateServiceClick">
                 {{ t('立即创建') }}
               </bk-button>
               <span class="divider-middle"></span>
@@ -53,8 +50,7 @@
               :service="service"
               @edit="handleEditService"
               @delete="handleDeleteService"
-              @update="handleDeletedUpdate"
-            />
+              @update="handleDeletedUpdate"/>
           </div>
           <bk-pagination
             v-model="pagination.current"
@@ -64,8 +60,7 @@
             :count="pagination.count"
             :limit="pagination.limit"
             @change="loadAppList"
-            @limit-change="handleLimitChange"
-          />
+            @limit-change="handleLimitChange"/>
         </template>
       </bk-loading>
     </div>
@@ -79,8 +74,7 @@
       header-align="center"
       footer-align="center"
       @value-change="dialogInputStr = ''"
-      :draggable="false"
-    >
+      :draggable="false">
       <div class="dialog-content">
         <div class="dialog-title">确认删除服务？</div>
         <div class="dialog-input">
@@ -100,9 +94,7 @@
             theme="danger"
             style="margin-right: 20px"
             :disabled="dialogInputStr !== deleteService!.spec.name"
-            @click="handleDeleteConfirm"
-            >删除</bk-button
-          >
+            @click="handleDeleteConfirm">删除</bk-button>
           <bk-button @click="isShowDeleteDialog = false">取消</bk-button>
         </div>
       </template>

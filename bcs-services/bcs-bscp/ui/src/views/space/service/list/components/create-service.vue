@@ -4,8 +4,7 @@
     :is-show="props.show"
     :title="t('新建服务')"
     :before-close="handleBeforeClose"
-    @closed="close"
-  >
+    @closed="close">
     <div class="create-app-form">
       <SearviceForm ref="formCompRef" :form-data="serviceData" @change="handleChange" />
     </div>
@@ -21,8 +20,7 @@
     :is-show="isShowConfirmDialog"
     :show-mask="true"
     :quick-close="false"
-    @closed="isShowConfirmDialog = false"
-  >
+    @closed="isShowConfirmDialog = false">
     <div class="title-icon"><Done fill="#42C06A" /></div>
     <div class="title-info">{{t('服务新建成功')}}</div>
     <div class="content-info">

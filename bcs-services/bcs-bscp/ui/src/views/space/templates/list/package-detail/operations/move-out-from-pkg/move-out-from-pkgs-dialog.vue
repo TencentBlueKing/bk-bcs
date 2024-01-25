@@ -9,8 +9,7 @@
     :esc-close="false"
     :quick-close="false"
     @confirm="handleConfirm"
-    @closed="close"
-  >
+    @closed="close">
     <div style="margin-bottom: 8px">
       {{t('配置文件')}}: <span style="color: #313238; font-weight: 600">{{ name }}</span>
     </div>
@@ -21,8 +20,7 @@
           :data="citedList"
           :max-height="maxTableHeight"
           :is-selected-fn="getSelectionStatus"
-          @selection-change="handleSelectionChange"
-        >
+          @selection-change="handleSelectionChange">
           <bk-table-column v-if="citedList.length > 1" type="selection" min-width="30" width="40" />
           <bk-table-column :label="t('所在模板套餐')">
             <template #default="{ row }">
@@ -42,9 +40,9 @@
     </p>
     <template #footer>
       <div class="actions-wrapper">
-        <bk-button theme="primary" :loading="pending" :disabled="selectedPkgs.length === 0" @click="handleConfirm"
-          >{{t('确认移出')}}</bk-button
-        >
+        <bk-button theme="primary" :loading="pending" :disabled="selectedPkgs.length === 0" @click="handleConfirm">
+          {{t('确认移出')}}
+        </bk-button>
         <bk-button @click="close">{{t('取消')}}</bk-button>
       </div>
     </template>

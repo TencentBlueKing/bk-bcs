@@ -16,7 +16,13 @@
             <bk-input v-model="formData.revision_name" :placeholder="t('请输入')"/>
           </bk-form-item>
           <bk-form-item :label="t('版本描述')" property="revision_memo">
-            <bk-input v-model="formData.revision_memo" type="textarea" :placeholder="t('请输入')" :rows="4" :maxlength="200" :resize="true" />
+            <bk-input
+              v-model="formData.revision_memo"
+              type="textarea"
+              :placeholder="t('请输入')"
+              :rows="4"
+              :maxlength="200"
+              :resize="true" />
           </bk-form-item>
           <bk-form-item :label="t('文件权限')" required>
             <PermissionInputPicker v-model="formData.privilege" />
@@ -40,8 +46,7 @@
             :disabled="isViewMode"
             :multiple="false"
             :files="fileList"
-            :custom-request="handleFileUpload"
-          >
+            :custom-request="handleFileUpload">
             <template #file="{ file }">
               <div class="file-wrapper">
                 <Done class="done-icon" />
@@ -67,8 +72,7 @@
     :template-id="props.templateId"
     :version-id="props.versionId"
     :pending="submitPending"
-    @confirm="triggerCreate"
-  />
+    @confirm="triggerCreate"/>
 </template>
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue';

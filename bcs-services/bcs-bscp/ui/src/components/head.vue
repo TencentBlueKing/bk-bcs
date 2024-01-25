@@ -13,8 +13,7 @@
           :class="['nav-item', { actived: isNavActived(nav.module) }]"
           :key="nav.id"
           :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }"
-          @click="handleNavClick(nav.id)"
-        >
+          @click="handleNavClick(nav.id)">
           {{ nav.name }}
         </router-link>
       </div>
@@ -30,8 +29,7 @@
         :clearable="false"
         :input-search="false"
         :remote-method="handleSpaceSearch"
-        @change="handleSelectSpace"
-      >
+        @change="handleSelectSpace">
         <template #trigger>
           <div class="space-name">
             <input readonly :value="crtSpaceText" />
@@ -51,8 +49,7 @@
             v-bk-tooltips="{
               content: `项目名称: ${item.space_name}\n业务ID: ${item.space_id}`,
               placement: 'left',
-            }"
-          >
+            }">
             <div class="name-wrapper">
               <span class="text">{{ item.space_name }}</span>
               <span class="id">({{ item.space_id }})</span>
@@ -84,8 +81,7 @@
               v-for="item in dropdownList"
               :key="item.title"
               ext-cls="dropdown-item"
-              @click="item.click"
-            >
+              @click="item.click">
               {{ item.title }}
             </bk-dropdown-item>
           </bk-dropdown-menu>
@@ -125,8 +121,10 @@ import MarkdownIt from 'markdown-it';
 const route = useRoute();
 const router = useRouter();
 const { t, locale } = useI18n();
-const { bscpVersion, spaceId, spaceList, spaceFeatureFlags, showPermApplyPage, showApplyPermDialog, permissionQuery } =
-  storeToRefs(useGlobalStore());
+const {
+  bscpVersion, spaceId, spaceList, spaceFeatureFlags,
+  showPermApplyPage, showApplyPermDialog, permissionQuery,
+} = storeToRefs(useGlobalStore());
 const { userInfo } = storeToRefs(useUserStore());
 const templateStore = useTemplateStore();
 const md = new MarkdownIt({
@@ -163,7 +161,9 @@ watch(
   },
 );
 
-const isNavActived = (name: string) => spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === name;
+const isNavActived = (name: string) => (
+  spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === name
+);
 
 const handleNavClick = (navId: String) => {
   if (navId === 'service-all') {

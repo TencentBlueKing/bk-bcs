@@ -8,8 +8,7 @@
             class="prefix-selector"
             :clearable="false"
             :disabled="isEditMode"
-            @change="change"
-          >
+            @change="change">
             <bk-option id="bk_bscp_" name="bk_bscp_"></bk-option>
             <bk-option id="BK_BSCP_" name="BK_BSCP_"></bk-option>
           </bk-select>
@@ -26,7 +25,14 @@
       <bk-input v-model="localVal.default_val" :placeholder="t('请输入')" @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('描述')" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :maxlength="200" :rows="5" @input="change" :resize="true" />
+      <bk-input
+        v-model="localVal.memo"
+        type="textarea"
+        :placeholder="t('请输入')"
+        :maxlength="200"
+        :rows="5"
+        :resize="true"
+        @input="change" />
     </bk-form-item>
   </bk-form>
 </template>

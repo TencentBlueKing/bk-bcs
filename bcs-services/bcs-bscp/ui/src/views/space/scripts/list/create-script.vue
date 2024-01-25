@@ -17,11 +17,16 @@
               :max-data="1"
               :list="tagsData"
               :allow-create="true"
-              trigger="focus"
-            />
+              trigger="focus"/>
           </bk-form-item>
           <bk-form-item class="fixed-width-form" property="memo" :label="t('脚本描述')">
-            <bk-input v-model="formData.memo" type="textarea" :placeholder="t('请输入')" :rows="3" :maxlength="200" :resize="true" />
+            <bk-input
+              v-model="formData.memo"
+              type="textarea"
+              :placeholder="t('请输入')"
+              :rows="3"
+              :maxlength="200"
+              :resize="true" />
           </bk-form-item>
           <bk-form-item :label="t('脚本内容')" property="content" required>
             <div class="script-content-wrapper">
@@ -32,8 +37,7 @@
                       v-for="item in SCRIPT_TYPE"
                       :key="item.id"
                       :class="['tab', { actived: formData.type === item.id }]"
-                      @click="formData.type = item.id"
-                    >
+                      @click="formData.type = item.id">
                       {{ item.name }}
                     </div>
                   </div>

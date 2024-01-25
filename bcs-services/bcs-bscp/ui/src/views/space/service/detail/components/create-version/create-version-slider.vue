@@ -1,5 +1,10 @@
 <template>
-  <bk-sideslider :title="t('生成版本')" :is-show="props.show" :width="640" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider
+    :title="t('生成版本')"
+    :is-show="props.show"
+    :width="640"
+    :before-close="handleBeforeClose"
+    @closed="close">
     <bk-loading :loading="pending"  :title="t('版本生成中')">
       <div class="slider-form-content">
       <div class="version-basic-form">
@@ -9,7 +14,13 @@
             <bk-input v-model="formData.name" :placeholder="t('请输入')"  @change="formChange" />
           </bk-form-item>
           <bk-form-item :label="t('版本描述')" property="memo">
-            <bk-input v-model="formData.memo" type="textarea" :placeholder="t('请输入')" :maxlength="200" @change="formChange" :resize="true" />
+            <bk-input
+              v-model="formData.memo"
+              type="textarea"
+              :placeholder="t('请输入')"
+              :maxlength="200"
+              @change="formChange"
+              :resize="true" />
           </bk-form-item>
           <bk-checkbox v-model="isPublish" :true-label="true" :false-label="false" @change="formChange">
             <span style="font-size: 12px;">{{ t('同时上线版本') }}</span>

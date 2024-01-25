@@ -11,8 +11,7 @@
         :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-value-change="refreshList"
-      >
+        @page-value-change="refreshList">
         <bk-table-column :label="t('脚本版本')">
           <template #default="{ row }">
             <template v-if="row.hook_revision_name || row.revision_name">{{

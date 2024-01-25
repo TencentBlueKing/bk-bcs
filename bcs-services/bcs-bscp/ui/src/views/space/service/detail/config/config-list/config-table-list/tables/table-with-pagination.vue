@@ -7,8 +7,7 @@
       :remote-pagination="true"
       :pagination="pagination"
       @page-limit-change="handlePageLimitChange"
-      @page-value-change="refresh($event)"
-    >
+      @page-value-change="refresh($event)">
       <bk-table-column :label="t('配置文件名')" prop="spec.name" :sort="true" :min-width="240" show-overflow-tooltip>
         <template #default="{ row }">
           <bk-button
@@ -16,8 +15,7 @@
             text
             theme="primary"
             :disabled="row.file_state === 'DELETE'"
-            @click="handleEdit(row)"
-          >
+            @click="handleEdit(row)">
             {{ row.spec.name }}
           </bk-button>
         </template>
@@ -50,17 +48,13 @@
               v-if="versionData.status.publish_status !== 'editing'"
               text
               theme="primary"
-              @click="handleDiff(row)"
-              >{{t('对比')}}</bk-button
-            >
+              @click="handleDiff(row)">{{t('对比')}}</bk-button>
             <bk-button
               v-if="versionData.id === 0"
               text
               theme="primary"
               :disabled="row.file_state === 'DELETE'"
-              @click="handleDel(row)"
-              >{{ t('删除') }}</bk-button
-            >
+              @click="handleDel(row)">{{ t('删除') }}</bk-button>
           </div>
         </template>
       </bk-table-column>
@@ -71,8 +65,7 @@
     :config-id="activeConfig"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @confirm="getListData"
-  />
+    @confirm="getListData"/>
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :current-config="diffConfig" />
 </template>
 <script lang="ts" setup>

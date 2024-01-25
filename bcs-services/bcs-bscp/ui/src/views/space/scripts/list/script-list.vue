@@ -14,8 +14,7 @@
           v-for="(item, index) in tagsData"
           :key="index"
           :class="['group-item', { actived: selectedTag === item.tag }]"
-          @click="handleSelectTag(item.tag)"
-        >
+          @click="handleSelectTag(item.tag)">
           <i class="bk-bscp-icon icon-tags group-icon"></i>
           <span class="name">{{ item.tag }}</span>
           <span class="num">{{ item.counts }}</span>
@@ -24,15 +23,16 @@
     </div>
     <div class="script-list-wrapper">
       <div class="operate-area">
-        <bk-button theme="primary" @click="showCreateScript = true"><Plus class="button-icon" />{{ t('新建脚本') }}</bk-button>
+        <bk-button theme="primary" @click="showCreateScript = true"><Plus class="button-icon" />
+          {{ t('新建脚本') }}
+        </bk-button>
         <bk-input
           v-model="searchStr"
           class="search-script-input"
           :placeholder="t('脚本名称')"
           :clearable="true"
           @clear="refreshList"
-          @input="handleNameInputChange"
-        >
+          @input="handleNameInputChange">
           <template #suffix>
             <Search class="search-input-icon" />
           </template>
@@ -45,20 +45,22 @@
           :remote-pagination="true"
           :pagination="pagination"
           @page-limit-change="handlePageLimitChange"
-          @page-value-change="handlePageCurrentChange"
-        >
+          @page-value-change="handlePageCurrentChange">
           <bk-table-column :label="t('脚本名称')">
             <template #default="{ row }">
               <div
                 v-if="row.hook"
                 class="hook-name"
-                @click="handleViewVersionClick(row.hook.id)"
-              >
+                @click="handleViewVersionClick(row.hook.id)">
                 {{ row.hook.spec.name }}
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('脚本语言')" prop="hook.spec.type" :width="locale === 'zh-CN' ? '120' : '150'"></bk-table-column>
+          <bk-table-column
+            prop="hook.spec.type"
+            :label="t('脚本语言')"
+            :width="locale === 'zh-CN' ? '120' : '150'">
+          </bk-table-column>
           <bk-table-column :label="t('分类标签')">
             <template #default="{ row }">
               <span v-if="row.hook">{{ row.hook.spec.tag || '--' }}</span>
@@ -85,9 +87,9 @@
                 <bk-button
                   text
                   theme="primary"
-                  @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })"
-                  >{{ t('版本管理') }}</bk-button
-                >
+                  @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">
+                  {{ t('版本管理') }}
+                </bk-button>
                 <bk-button text theme="primary" @click="handleDeleteScript(row)">{{ t('删除') }}</bk-button>
               </div>
             </template>
@@ -104,8 +106,7 @@
   <DeleteConfirmDialog
     v-model:isShow="isDeleteScriptDialogShow"
     :title="t('确认删除该脚本？')"
-    @confirm="handleDeleteScriptConfirm"
-  >
+    @confirm="handleDeleteScriptConfirm">
     <div style="margin-bottom: 8px">
       {{ t('脚本') }}: <span style="color: #313238; font-weight: 600">{{ deleteScriptItem?.hook.spec.name }}</span>
     </div>
@@ -260,7 +261,9 @@ const handleDeleteScript = async (script: IScriptItem) => {
       app_name,
     };
   });
-  appList.value = Array.from(allAppInfo.reduce((map: Map<number, IAppItem>, obj: IAppItem) => map.set(obj.app_id, obj), new Map()).values());
+  appList.value = Array.from(allAppInfo.reduce((map: Map<number, IAppItem>, obj: IAppItem) => (
+    map.set(obj.app_id, obj), new Map()
+  )).values());
   deleteScriptItem.value = script;
   isDeleteScriptDialogShow.value = true;
 };

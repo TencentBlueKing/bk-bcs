@@ -19,15 +19,13 @@
         v-if="localVal.kv_type === 'string' || localVal.kv_type === 'number'"
         v-model.trim="localVal!.value"
         :placeholder="stringTypePlaceholder"
-        @input="change"
-      />
+        @input="change"/>
       <KvConfigContentEditor
         v-else
         ref="KvCodeEditorRef"
         :languages="localVal.kv_type"
         :content="localVal.value"
-        @change="handleStringContentChange"
-      />
+        @change="handleStringContentChange"/>
     </bk-form-item>
   </bk-form>
 </template>

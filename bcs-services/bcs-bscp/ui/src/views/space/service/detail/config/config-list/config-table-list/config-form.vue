@@ -5,8 +5,7 @@
         v-model="localVal.name"
         :placeholder="t('请输入1~64个字符，只允许英文、数字、下划线、中划线或点')"
         :disabled="!editable"
-        @input="change"
-      />
+        @input="change"/>
     </bk-form-item>
     <bk-form-item :label="t('配置文件路径')" property="path" :required="true">
       <template #label>
@@ -15,8 +14,7 @@
             content:
               t('客户端拉取配置文件后存放路径为：临时目录/业务ID/服务名称/files/配置文件路径，除了配置文件路径其它参数都在客户端sidecar中配置'),
             placement: 'top',
-          }"
-          >{{ t('配置文件路径') }}</span>
+          }">{{ t('配置文件路径') }}</span>
       </template>
       <bk-input v-model="localVal.path" :placeholder="t('请输入绝对路径')" :disabled="!editable" @input="change" />
     </bk-form-item>
@@ -28,8 +26,7 @@
         :disabled="!editable"
         :placeholder="t('请输入')"
         :resize="true"
-        @input="change"
-      />
+        @input="change"/>
     </bk-form-item>
     <bk-form-item :label="t('配置文件格式')">
       <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">
@@ -46,15 +43,13 @@
             theme="light"
             trigger="manual"
             placement="top"
-            :is-show="showPrivilegeErrorTips"
-          >
+            :is-show="showPrivilegeErrorTips">
             <bk-input
               v-model="privilegeInputVal"
               type="number"
               :placeholder="t('请输入三位权限数字')"
               :disabled="!editable"
-              @blur="handlePrivilegeInputBlur"
-            />
+              @blur="handlePrivilegeInputBlur"/>
             <template #content>
               <div>{{ t('只能输入三位 0~7 数字') }}</div>
               <div class="privilege-tips-btn-area">
@@ -67,8 +62,7 @@
             theme="light"
             trigger="click"
             placement="bottom"
-            :disabled="!editable"
-          >
+            :disabled="!editable">
             <div :class="['perm-panel-trigger', { disabled: !editable }]">
               <i class="bk-bscp-icon icon-configuration-line"></i>
             </div>
@@ -80,9 +74,10 @@
                     <bk-checkbox-group
                       class="group-checkboxs"
                       :model-value="privilegeGroupsValue[index]"
-                      @change="handleSelectPrivilege(index, $event)"
-                    >
-                      <bk-checkbox size="small" :label="4" :disabled="privilegeGroupsValue[0]">{{ t('读') }}</bk-checkbox>
+                      @change="handleSelectPrivilege(index, $event)">
+                      <bk-checkbox size="small" :label="4" :disabled="privilegeGroupsValue[0]">
+                        {{ t('读') }}
+                      </bk-checkbox>
                       <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
                       <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
                     </bk-checkbox-group>
@@ -110,8 +105,7 @@
         :disabled="!editable"
         :multiple="false"
         :files="fileList"
-        :custom-request="handleFileUpload"
-      >
+        :custom-request="handleFileUpload">
         <template #file="{ file }">
           <div>
             <div class="file-wrapper">
@@ -139,13 +133,12 @@
         :content="stringContent"
         :editable="editable"
         :variables="props.variables"
-        @change="handleStringContentChange"
-      />
+        @change="handleStringContentChange"/>
     </bk-form-item>
   </bk-form>
 </template>
 <script setup lang="ts">
-import { ref, computed, watch, getCurrentInstance } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SHA256 from 'crypto-js/sha256';
 import WordArray from 'crypto-js/lib-typedarrays';
@@ -395,7 +388,6 @@ const validate = async () => {
   }
   return true;
 };
-const instance = getCurrentInstance();
 
 const change = () => {
   const content = localVal.value.file_type === 'binary' ? fileContent.value : stringContent.value;

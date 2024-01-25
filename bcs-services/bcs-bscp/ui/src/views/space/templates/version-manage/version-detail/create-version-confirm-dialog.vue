@@ -8,8 +8,7 @@
     :is-show="props.show"
     :esc-close="false"
     :quick-close="false"
-    @closed="close"
-  >
+    @closed="close">
     <p class="tips">{{ t('以下套餐及服务未命名版本中引用的此配置文件也将更新') }}</p>
     <div class="service-table">
       <bk-loading style="min-height: 100px" :loading="loading">

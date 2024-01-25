@@ -8,23 +8,19 @@
             :app-id="props.appId"
             @created="refreshConfigList"
             @imported="refreshConfigList"
-            @uploaded="refreshConfigList(true)"
-          />
+            @uploaded="refreshConfigList(true)" />
           <EditVariables v-if="isFileType" ref="editVariablesRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
         </template>
         <ViewVariables
           v-else-if="isFileType"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
-          :verision-id="versionData.id"
-        />
+          :verision-id="versionData.id" />
       </div>
       <SearchInput
         v-model="searchStr"
         class="config-search-input"
-        :placeholder="t('配置文件名/创建人/修改人')"
-        :width="280"
-      />
+        :placeholder="t('配置文件名/创建人/修改人')" />
     </div>
     <section class="config-list-table">
       <template v-if="isFileType">
@@ -35,15 +31,13 @@
           :app-id="props.appId"
           :search-str="searchStr"
           @clear-str="clearStr"
-          @delete-config="refreshVariable"
-        />
+          @delete-config="refreshVariable" />
         <TableWithPagination
           v-else
           ref="tableRef"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
-          :search-str="searchStr"
-        />
+          :search-str="searchStr" />
       </template>
       <TableWithKv
         v-else
@@ -51,8 +45,7 @@
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
         :search-str="searchStr"
-        @clear-str="clearStr"
-      />
+        @clear-str="clearStr" />
     </section>
   </section>
 </template>

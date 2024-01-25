@@ -5,15 +5,13 @@
         v-model="localData.name"
         :placeholder="t('请输入2-32字符，只允许英文、数字、下划线、中划线且必须以英文、数字开头和结尾')"
         :disabled="editable"
-        @change="handleChange"
-      />
+        @change="handleChange"/>
     </bk-form-item>
     <bk-form-item :label="t('form_服务别名')" property="alias" required>
       <bk-input
         v-model="localData.alias"
         :placeholder="t('请输入2-128字符，只允许中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾')"
-        @change="handleChange"
-      />
+        @change="handleChange"/>
     </bk-form-item>
     <bk-form-item :label="t('服务描述')" property="memo">
       <bk-input
@@ -23,8 +21,7 @@
         :autosize="true"
         :resize="false"
         :maxlength="200"
-        @change="handleChange"
-      />
+        @change="handleChange"/>
     </bk-form-item>
     <bk-form-item :label="t('数据格式')" :description="t('tips.config')">
       <bk-radio-group v-model="localData.config_type" :disabled="editable" @change="handleConfigTypeChange">
@@ -37,8 +34,7 @@
       v-if="localData.config_type === 'kv'"
       :label="t('数据类型')"
       property="kv_type"
-      :description="t('tips.type')"
-    >
+      :description="t('tips.type')">
       <bk-radio-group v-model="localData.data_type" @change="handleChange">
         <bk-radio label="any">{{ t('任意类型') }}</bk-radio>
         <bk-radio v-for="kvType in CONFIG_KV_TYPE" :key="kvType.id" :label="kvType.id">{{ kvType.name }}</bk-radio>

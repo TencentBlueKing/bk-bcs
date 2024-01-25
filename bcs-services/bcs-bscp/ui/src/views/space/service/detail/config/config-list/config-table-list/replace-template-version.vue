@@ -9,8 +9,7 @@
     :confirm-text="t('确定')"
     :cancel-text="t('取消')"
     @confirm="handleReplaceConfirm"
-    @closed="close"
-  >
+    @closed="close">
     <bk-form ref="formRef" :model="{ selected }" label-width="120">
       <bk-form-item :label="t('当前版本')">
         <div>{{ props.versionName }}</div>
@@ -22,15 +21,13 @@
             v-overflow-title
             :key="option.isLatest ? 0 : option.id"
             :value="option.isLatest ? 0 : option.id"
-            :label="option.name"
-          >
+            :label="option.name">
             <div
               v-bk-tooltips="{
                 disabled: !option.memo,
                 content: option.memo,
               }"
-              class="version-name"
-            >
+              class="version-name">
               {{ option.name }}
             </div>
           </bk-option>

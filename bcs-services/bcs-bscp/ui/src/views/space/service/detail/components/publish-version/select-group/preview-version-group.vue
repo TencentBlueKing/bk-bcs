@@ -9,15 +9,16 @@
         【{{ TYPE_MAP[previewGroup.type as keyof typeof TYPE_MAP] }}】
       </div>
       <span v-if="previewGroup.type === 'modify'" class="name"> - {{ previewGroup.name }}</span>
-      <span class="group-count-wrapper"
-        >{{t('共')}} <span class="count">{{ previewGroup.children.length }}</span> {{t('个分组')}}</span>
+      <span class="group-count-wrapper">{{t('共')}}
+        <span class="count">{{ previewGroup.children.length }}</span>
+        {{t('个分组')}}
+      </span>
       <bk-button
         v-if="previewGroup.id && previewGroup.id !== versionData.id"
         text
         class="diff-btn"
         theme="primary"
-        @click.stop="emits('diff', previewGroup.id)"
-      >
+        @click.stop="emits('diff', previewGroup.id)">
         {{t('版本对比')}}
       </bk-button>
     </div>
@@ -26,7 +27,9 @@
         <span class="node-name">
           {{ group.name }}
         </span>
-        <default-group-rules-popover v-if="group.id === 0 && excludedGroups.length > 0" :excluded-groups="excludedGroups" />
+        <default-group-rules-popover
+          v-if="group.id === 0 && excludedGroups.length > 0"
+          :excluded-groups="excludedGroups" />
         <span v-if="group.rules && group.rules.length > 0" class="split-line">|</span>
         <div class="rules">
           <div v-for="(rule, index) in group.rules" :key="index">
@@ -37,8 +40,7 @@
         <span
           v-if="props.allowPreviewDelete && !props.releasedGroups.includes(group.id)"
           class="del-icon"
-          @click="emits('delete', group.id)"
-        >
+          @click="emits('delete', group.id)">
           <Del />
         </span>
       </div>

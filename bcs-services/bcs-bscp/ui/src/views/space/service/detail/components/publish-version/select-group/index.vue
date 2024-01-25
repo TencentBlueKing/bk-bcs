@@ -14,8 +14,7 @@
           :released-id="props.releaseId"
           :value="props.groups"
           @release-type-change="emits('releaseTypeChange', $event)"
-          @change="emits('change', $event)"
-        />
+          @change="emits('change', $event)"/>
     </div>
     <div class="preview-area">
       <Preview
@@ -28,8 +27,7 @@
         :released-groups="props.releasedGroups"
         :value="props.groups"
         @diff="emits('openPreviewVersionDiff', $event)"
-        @change="emits('change', $event)"
-      />
+        @change="emits('change', $event)"/>
     </div>
   </div>
 </template>

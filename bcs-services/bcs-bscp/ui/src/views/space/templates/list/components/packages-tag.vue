@@ -5,8 +5,7 @@
         v-overflow-title
         class="pkg-tag tag-in-table"
         :key="props.pkgs[0].template_set_id"
-        @click="goToPkg(props.pkgs[0].template_set_id)"
-      >
+        @click="goToPkg(props.pkgs[0].template_set_id)">
         {{ props.pkgs[0].template_set_name }}
       </div>
     </template>

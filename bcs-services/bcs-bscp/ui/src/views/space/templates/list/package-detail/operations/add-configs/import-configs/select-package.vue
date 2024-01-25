@@ -10,8 +10,7 @@
     :quick-close="false"
     :is-loading="props.pending"
     @confirm="handleConfirm"
-    @closed="close"
-  >
+    @closed="close">
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
       <bk-form-item :label="t('模板套餐')" property="pkgs" required>
         <bk-select multiple :model-value="selectedPkgs" @change="handleSelectPkg">
@@ -20,8 +19,7 @@
           <template #extension>
             <div
               :class="['no-specified-option', { selected: unSpecifiedSelected }]"
-              @click="handleSelectUnSpecifiedPkg"
-            >
+              @click="handleSelectUnSpecifiedPkg">
               {{ t('未指定套餐') }}
               <Done v-if="unSpecifiedSelected" class="selected-icon" />
             </div>

@@ -4,8 +4,7 @@
     :width="640"
     :is-show="isShow"
     :before-close="handleBeforeClose"
-    @closed="close"
-  >
+    @closed="close">
     <div  class="slider-content-container">
       <div class="package-configs-pick">
         <div class="search-wrapper">
@@ -21,8 +20,7 @@
             :open="openedPkgTable === pkg.id"
             :config-list="pkg.configs"
             @change="isFormChange = true"
-            @toggle-open="handleToggleOpenTable"
-          />
+            @toggle-open="handleToggleOpenTable"/>
           <TableEmpty v-else :is-search-empty="isSearchEmpty" @clear="clearSearchStr"></TableEmpty>
         </div>
       </div>
@@ -44,8 +42,7 @@
         theme="primary"
         :loading="pending"
         :disabled="loading || selectedConfigs.length === 0"
-        @click="handleAddConfigs"
-      >
+        @click="handleAddConfigs">
         {{ t('添加') }}
       </bk-button>
       <bk-button @click="close">{{ t('取消') }}</bk-button>

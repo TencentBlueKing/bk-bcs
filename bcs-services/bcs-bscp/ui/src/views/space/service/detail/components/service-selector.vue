@@ -48,7 +48,7 @@
 import { ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { AngleDown, AngleUpFill } from 'bkui-vue/lib/icon';
+import { AngleUpFill } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../../../store/global';
 import useServiceStore from '../../../../../store/service';
 import { IAppItem } from '../../../../../../types/app';

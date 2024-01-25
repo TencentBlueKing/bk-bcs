@@ -32,7 +32,7 @@ export const getSpaceList = () => http.get('auth/user/spaces').then((resp) => {
  * @param biz 业务ID
  * @returns
  */
-export const getSpaceFeatureFlag = (biz: string) => http.get(`feature_flags`, { params: { biz } }).then(resp => resp.data);
+export const getSpaceFeatureFlag = (biz: string) => http.get('feature_flags', { params: { biz } }).then(resp => resp.data);
 
 /**
  * 获取服务列表

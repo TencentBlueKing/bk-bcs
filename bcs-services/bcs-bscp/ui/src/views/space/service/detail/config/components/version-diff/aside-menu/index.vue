@@ -9,8 +9,7 @@
         :selected-config="props.selectedConfig"
         :actived="selectedType === 'config'"
         :is-publish="props.isPublish"
-        @selected="handleSelect($event, 'config')"
-      />
+        @selected="handleSelect($event, 'config')"/>
       <ConfigsKv
         v-else
         :base-version-id="props.baseVersionId"
@@ -18,16 +17,14 @@
         :selected-config="props.selectedConfigKv"
         :actived="selectedType === 'config'"
         :is-publish="props.isPublish"
-        @selected="handleSelect($event, 'config')"
-      />
+        @selected="handleSelect($event, 'config')"/>
     </div>
     <Scripts
       v-if="isFileType"
       :base-version-id="props.baseVersionId"
       :current-version-id="props.currentVersionId"
       :actived="selectedType === 'script'"
-      @selected="handleSelect($event, 'script')"
-    />
+      @selected="handleSelect($event, 'script')"/>
   </div>
 </template>
 <script lang="ts" setup>

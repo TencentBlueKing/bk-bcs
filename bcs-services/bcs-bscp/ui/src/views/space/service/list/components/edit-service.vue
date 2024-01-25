@@ -42,8 +42,7 @@
         theme="primary"
         :class="{ 'bk-button-with-no-perm': !props.service.permissions.update }"
         :loading="pending"
-        @click="handleEditConfirm"
-      >
+        @click="handleEditConfirm">
         {{ t('保存') }}
       </bk-button>
       <bk-button @click="isViewMode = true">{{ t('取消') }}</bk-button>
@@ -144,15 +143,16 @@ const handleEditConfirm = async () => {
   }
   await formCompRef.value.validate();
   const { id, biz_id } = props.service;
-  if (serviceEditForm.value.data_type !== 'any') {
+  const dataType = serviceEditForm.value.data_type;
+  if (dataType !== 'any') {
     const configList = await getKvList(String(biz_id), id as number, { all: true, start: 0 });
-    const res = configList.details.some((config: IConfigKvType) => config.spec.kv_type !== serviceEditForm.value.data_type);
+    const res = configList.details.some((config: IConfigKvType) => config.spec.kv_type !== dataType);
     if (res) {
       InfoBox({
         infoType: 'danger',
         'ext-cls': 'info-box-style',
-        title: `调整服务数据类型${serviceEditForm.value.data_type}失败`,
-        subTitle: `该服务下存在非${serviceEditForm.value.data_type}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为${serviceEditForm.value.data_type}`,
+        title: `调整服务数据类型${dataType}失败`,
+        subTitle: `该服务下存在非${dataType}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为${dataType}`,
         dialogType: 'confirm',
         confirmText: '我知道了',
       });

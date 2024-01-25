@@ -4,8 +4,7 @@
     v-model:show="isDialogShow"
     :is-batch-delete="true"
     :configs="props.configs"
-    @deleted="emits('deleted')"
-  />
+    @deleted="emits('deleted')"/>
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';

@@ -4,8 +4,7 @@
       v-model="searchStr"
       class="config-search-input"
       :placeholder="t('配置项名/创建人/修改人')"
-      @search="getListData"
-    />
+      @search="getListData" />
     <bk-loading class="loading-wrapper" :loading="loading">
       <div v-for="config in configList" :class="['config-item']" :key="config.id" @click="handleConfigClick(config)">
         <div class="config-name">{{ config.spec.key }}</div>
@@ -19,8 +18,7 @@
       :app-id="props.appId"
       :config="(selectedConfig as IConfigKvItem)"
       :editable="true"
-      @confirm="getListData"
-    />
+      @confirm="getListData" />
     <ViewConfig v-model:show="isShowView" :config="(selectedConfig as IConfigKvItem)" />
   </section>
 </template>

@@ -4,8 +4,7 @@
     :width="960"
     :is-show="isShow"
     :before-close="handleBeforeClose"
-    @closed="close"
-  >
+    @closed="close">
     <div class="slider-content-container">
       <bk-form form-type="vertical">
         <bk-form-item :label="t('上传配置文件包')" required property="package">
@@ -17,8 +16,7 @@
             :size="100"
             :multiple="false"
             accept=".zip, .tar, .gz"
-            :custom-request="handleFileUpload"
-          >
+            :custom-request="handleFileUpload">
             <template #trigger>
               <div ref="buttonRef">
                 <bk-button class="upload-button">
@@ -32,8 +30,7 @@
             <bk-pop-confirm
               :title="t('确认放弃下方修改，重新上传配置项包？')"
               trigger="click"
-              @confirm="() => buttonRef.click()"
-            >
+              @confirm="() => buttonRef.click()">
               <bk-button class="upload-button">
                 <upload />
                 <span class="text">{{ t('重新上传') }}</span>
@@ -56,16 +53,14 @@
           v-if="nonExistConfigList.length"
           :expand="expandNonExistTable"
           @change-expand="expandNonExistTable = !expandNonExistTable"
-          @change="handleTableChange($event, true)"
-        />
+          @change="handleTableChange($event, true)"/>
         <ConfigTable
           :table-data="existConfigList"
           :is-exsit-table="true"
           v-if="existConfigList.length"
           :expand="!expandNonExistTable"
           @change-expand="expandNonExistTable = !expandNonExistTable"
-          @change="handleTableChange($event, false)"
-        />
+          @change="handleTableChange($event, false)"/>
       </bk-loading>
     </div>
     <div class="action-btns">
@@ -73,9 +68,7 @@
         theme="primary"
         :loading="pending"
         :disabled="!importConfigList.length"
-        @click="isSelectPkgDialogShow = true"
-        >{{ t('去上传') }}</bk-button
-      >
+        @click="isSelectPkgDialogShow = true">{{ t('去上传') }}</bk-button>
       <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>

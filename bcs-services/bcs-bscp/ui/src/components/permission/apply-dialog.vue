@@ -6,8 +6,7 @@
     :is-show="show"
     :esc-close="false"
     :quick-close="false"
-    @closed="handleClose"
-  >
+    @closed="handleClose">
     <div class="permission-modal">
       <div class="permission-header">
         <span class="title-icon">

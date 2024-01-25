@@ -16,8 +16,7 @@
         placement="bottom-end"
         :popover-delay="[0, 100]"
         :arrow="false"
-        :is-show="popoverShow"
-      >
+        :is-show="popoverShow">
         <Ellipsis class="action-more-icon" @click.stop @mouseenter="popoverShow = true" />
         <template #content>
           <div class="package-actions">

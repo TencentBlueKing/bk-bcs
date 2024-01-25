@@ -15,8 +15,7 @@
         :pkg="pkg"
         :current-pkg="currentPkg"
         @select="handleSelect"
-        @open-slider="handlePkgAction"
-      />
+        @open-slider="handlePkgAction"/>
     </div>
     <div v-else class="exception-notice">
       <TableEmpty :is-search-empty="isSearchEmpty" @clear="clearSearch"></TableEmpty>
@@ -31,8 +30,7 @@
         v-if="countOfTemplatesForNoSpecifiedPackage"
         :pkg="menuItemOfNoSpecifiedPackage"
         :current-pkg="currentPkg"
-        @select="handleSelect"
-      >
+        @select="handleSelect">
         <template #icon>
           <i class="bk-bscp-icon icon-empty empty-config-icon"></i>
         </template>
@@ -42,26 +40,22 @@
   <PackageCreate
     v-model:show="isCreatePackageDialogShow"
     :template-space-id="currentTemplateSpace"
-    @created="handlePkgCreated"
-  />
+    @created="handlePkgCreated"/>
   <PackageEdit
     v-model:show="editingPkgData.open"
     :template-space-id="currentTemplateSpace"
     :pkg="(editingPkgData.data as ITemplatePackageItem)"
-    @edited="getList"
-  />
+    @edited="getList"/>
   <PackageClone
     v-model:show="cloningPkgData.open"
     :template-space-id="currentTemplateSpace"
     :pkg="(cloningPkgData.data as ITemplatePackageItem)"
-    @created="getList"
-  />
+    @created="getList"/>
   <PackageDelete
     v-model:show="deletingPkgData.open"
     :template-space-id="currentTemplateSpace"
     :pkg="(deletingPkgData.data as ITemplatePackageItem)"
-    @deleted="handlePkgDeleted"
-  />
+    @deleted="handlePkgDeleted"/>
 </template>
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue';

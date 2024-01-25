@@ -9,8 +9,7 @@
     :esc-close="false"
     :quick-close="false"
     @confirm="handleEdit"
-    @closed="handleClose"
-  >
+    @closed="handleClose">
     <template #header>
       <div class="header-wrapper">
         <div class="title">{{t('编辑空间')}}</div>

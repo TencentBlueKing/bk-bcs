@@ -6,8 +6,7 @@
       theme="primary"
       :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
       :disabled="props.permCheckLoading"
-      @click="handleBtnClick"
-    >
+      @click="handleBtnClick">
       {{ t('调整分组上线') }}
     </bk-button>
     <Teleport to="body">
@@ -31,8 +30,7 @@
           :released-groups="releasedGroups"
           @open-preview-version-diff="openPreviewVersionDiff"
           @release-type-change="releaseType = $event"
-          @change="groups = $event"
-        >
+          @change="groups = $event">
         </select-group>
         <template #footer>
           <section class="actions-wrapper">
@@ -51,16 +49,14 @@
       :release-id="versionData.id"
       :release-type="releaseType"
       :groups="groups"
-      @confirm="handleConfirm"
-    />
+      @confirm="handleConfirm"/>
     <VersionDiff
       v-model:show="isDiffSliderShow"
       :current-version="versionData"
       :base-version-id="baseVersionId"
       :show-publish-btn="true"
       @publish="handleOpenPublishDialog"
-      :version-diff-list="versionList"
-    />
+      :version-diff-list="versionList"/>
   </section>
 </template>
 <script setup lang="ts">

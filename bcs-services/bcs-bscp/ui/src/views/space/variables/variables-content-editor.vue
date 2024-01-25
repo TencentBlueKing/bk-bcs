@@ -14,16 +14,14 @@
               placement: 'top',
               distance: 20,
             }"
-            @click="separatorShow = !separatorShow"
-          />
+            @click="separatorShow = !separatorShow"/>
           <Search
             v-bk-tooltips="{
               content: t('搜索'),
               placement: 'top',
               distance: 20,
             }"
-            @click="codeEditorRef.openSearch()"
-          />
+            @click="codeEditorRef.openSearch()"/>
           <FilliscreenLine
             v-if="!isOpenFullScreen"
             v-bk-tooltips="{
@@ -31,8 +29,7 @@
               placement: 'top',
               distance: 20,
             }"
-            @click="handleOpenFullScreen"
-          />
+            @click="handleOpenFullScreen"/>
           <UnfullScreen
             v-else
             v-bk-tooltips="{
@@ -40,8 +37,7 @@
               placement: 'bottom',
               distance: 20,
             }"
-            @click="handleCloseFullScreen"
-          />
+            @click="handleCloseFullScreen"/>
         </div>
       </div>
       <div class="editor-content">
@@ -51,8 +47,7 @@
           @enter="separatorShow = true"
           @validate="handleValidateEditor"
           :error-line="errorLine"
-          :placeholder="editorPlaceholder"
-        />
+          :placeholder="editorPlaceholder"/>
         <div class="separator" v-show="separatorShow">
           <SeparatorSelect @closed="separatorShow = false" @confirm="handleSelectSeparator" />
         </div>

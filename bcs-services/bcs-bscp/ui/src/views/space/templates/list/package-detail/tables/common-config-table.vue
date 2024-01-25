@@ -10,8 +10,7 @@
         :placeholder="t('配置文件名称/路径/描述/创建人/更新人')"
         :clearable="true"
         @clear="refreshList()"
-        @input="handleSearchInputChange"
-      >
+        @input="handleSearchInputChange">
         <template #suffix>
           <Search class="search-input-icon" />
         </template>
@@ -29,8 +28,7 @@
         @page-limit-change="handlePageLimitChange"
         @page-value-change="refreshList($event,true)"
         @selection-change="handleSelectionChange"
-        @select-all="handleSelectAll"
-      >
+        @select-all="handleSelectAll">
         <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
         <bk-table-column :label="t('配置文件名称')">
           <template #default="{ row }">
@@ -65,8 +63,7 @@
                   v-if="boundByAppsCountList[index].bound_unnamed_app_count > 0"
                   text
                   theme="primary"
-                  @click="handleOpenAppBoundByTemplateSlider(row)"
-                >
+                  @click="handleOpenAppBoundByTemplateSlider(row)">
                   {{ boundByAppsCountList[index].bound_unnamed_app_count }}
                 </bk-button>
                 <span v-else>0</span>
@@ -93,8 +90,7 @@
                   theme="light template-config-actions-popover"
                   placement="bottom-end"
                   :popover-delay="[0, 100]"
-                  :arrow="false"
-                >
+                  :arrow="false">
                   <div class="more-actions">
                     <Ellipsis class="ellipsis-icon" />
                   </div>
@@ -104,8 +100,7 @@
                       <div
                         v-if="citeByPkgsList[index].length > 0"
                         class="action-item"
-                        @click="handleOpenMoveOutFromPkgsDialog(row)"
-                      >
+                        @click="handleOpenMoveOutFromPkgsDialog(row)">
                         {{ t('移出套餐') }}
                       </div>
                     </div>
@@ -126,14 +121,12 @@
       :id="crtConfig.length > 0 ? crtConfig[0].id : 0"
       :name="crtConfig.length > 0 ? crtConfig[0].spec.name : ''"
       :current-pkg="props.currentPkg"
-      @moved-out="handleMovedOut"
-    />
+      @moved-out="handleMovedOut"/>
     <AppsBoundByTemplate
       v-model:show="appBoundByTemplateSliderData.open"
       :space-id="spaceId"
       :current-template-space="currentTemplateSpace"
-      :config="appBoundByTemplateSliderData.data"
-    />
+      :config="appBoundByTemplateSliderData.data"/>
   </div>
 </template>
 <script lang="ts" setup>

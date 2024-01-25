@@ -1,5 +1,10 @@
 <template>
-  <bk-sideslider width="640" :title="t('新增配置项')" :is-show="props.show" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider
+    width="640"
+    :title="t('新增配置项')"
+    :is-show="props.show"
+    :before-close="handleBeforeClose"
+    @closed="close">
     <ConfigForm
       ref="formRef"
       class="config-form-wrapper"
@@ -7,8 +12,7 @@
       :content="content"
       :bk-biz-id="props.bkBizId"
       :id="props.appId"
-      @change="handleFormChange"
-    />
+      @change="handleFormChange"/>
     <section class="action-btns">
       <bk-button theme="primary" @click="handleSubmit">{{ t('保存') }}</bk-button>
       <bk-button @click="close">{{ t('取消') }}</bk-button>

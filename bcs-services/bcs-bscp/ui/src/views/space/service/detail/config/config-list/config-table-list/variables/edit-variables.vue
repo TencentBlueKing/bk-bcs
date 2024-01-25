@@ -3,11 +3,15 @@
     v-cursor="{ active: !hasEditServicePerm }"
     :class="{ 'bk-button-with-no-perm': !hasEditServicePerm }"
     @click="handleOpenSlider"
-    :disabled="variableList.length === 0"
-  >
+    :disabled="variableList.length === 0">
     {{ t('设置变量') }}
   </bk-button>
-  <bk-sideslider width="960" :title="t('设置变量')" :is-show="isSliderShow" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider
+    width="960"
+    :title="t('设置变量')"
+    :is-show="isSliderShow"
+    :before-close="handleBeforeClose"
+    @closed="close">
     <bk-loading :loading="loading" class="variables-table-content">
       <ResetDefaultValue class="reset-default" :list="initialVariables" @reset="handleResetDefault" />
       <VariablesTable
@@ -16,8 +20,7 @@
         :cited-list="citedList"
         :editable="true"
         :show-cited="true"
-        @change="handleVariablesChange"
-      />
+        @change="handleVariablesChange"/>
     </bk-loading>
     <section class="action-btns">
       <bk-button theme="primary" :loading="pending" @click="handleSubmit">{{t('保存')}}</bk-button>

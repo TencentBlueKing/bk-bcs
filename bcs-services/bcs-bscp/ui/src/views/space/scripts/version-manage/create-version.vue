@@ -6,8 +6,7 @@
     placement="bottom-start"
     :disabled="props.creatable"
     :is-show="popoverShow"
-    @after-hidden="closePopover"
-  >
+    @after-hidden="closePopover">
     <bk-button theme="primary" :disabled="props.disabled" @click="handleCreateClick">
       <Plus class="button-icon" />
       {{ t('新建版本') }}
@@ -31,8 +30,7 @@
     :is-loading="listLoading"
     @value-change="afterDialogShow"
     @confirm="handleLoadScript"
-    @closed="dialogShow = false"
-  >
+    @closed="dialogShow = false">
     <bk-form ref="formRef" form-type="vertical" :model="{ selectedScript }">
       <bk-form-item :label="t('选择载入脚本')" required property="selectedScript">
         <bk-select
@@ -40,15 +38,13 @@
           :loading="listLoading"
           :clearable="false"
           :filterable="true"
-          :input-search="false"
-        >
+          :input-search="false">
           <bk-option
             v-for="option in list"
             v-overflow-title
             :key="option.id"
             :value="option.id"
-            :label="option.name"
-          ></bk-option>
+            :label="option.name"></bk-option>
         </bk-select>
       </bk-form-item>
     </bk-form>

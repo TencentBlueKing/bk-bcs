@@ -8,8 +8,7 @@
             :disabled="createBtnDisabled"
             :creatable="!unPublishVersion"
             @create="handleCreateVersionClick"
-            @edit="handleEditVersionClick"
-          />
+            @edit="handleEditVersionClick"/>
           <bk-input
             v-model.trim="searchStr"
             class="search-input"
@@ -17,8 +16,7 @@
             :clearable="true"
             @enter="refreshList"
             @clear="refreshList"
-            @change="handleSearchInputChange"
-          >
+            @change="handleSearchInputChange">
             <template #suffix>
               <Search class="search-input-icon" />
             </template>
@@ -35,32 +33,28 @@
               @view="handleViewVersionClick"
               @page-change="refreshList"
               @page-limit-change="handlePageLimitChange"
-              @clear-str="clearStr"
-            >
+              @clear-str="clearStr">
               <template #operations="{ data }">
                 <div v-if="data.hook_revision" class="action-btns">
                   <bk-button
                     v-if="['not_deployed', 'shutdown'].includes(data.hook_revision.spec.state)"
                     text
                     theme="primary"
-                    @click="handlePublishClick(data.hook_revision)"
-                    >{{ t('上线') }}</bk-button
-                  >
+                    @click="handlePublishClick(data.hook_revision)">{{ t('上线') }}</bk-button>
                   <bk-button
                     v-if="data.hook_revision.spec.state === 'not_deployed'"
                     text
                     theme="primary"
-                    @click="handleEditVersionClick"
-                    >{{ t('编辑') }}</bk-button
-                  >
-                  <bk-button text theme="primary" @click="handleVersionDiff(data.hook_revision)">{{ t('版本对比') }}</bk-button>
+                    @click="handleEditVersionClick">{{ t('编辑') }}</bk-button>
+                  <bk-button text theme="primary" @click="handleVersionDiff(data.hook_revision)">
+                    {{ t('版本对比') }}
+                  </bk-button>
                   <bk-button
                     v-if="data.hook_revision.spec.state !== 'not_deployed'"
                     text
                     theme="primary"
                     :disabled="!!unPublishVersion"
-                    @click="handleCreateVersionClick(data.hook_revision.spec.content)"
-                  >
+                    @click="handleCreateVersionClick(data.hook_revision.spec.content)">
                     {{ t('复制并新建') }}
                   </bk-button>
                   <bk-button
@@ -68,9 +62,7 @@
                     text
                     theme="primary"
                     :disabled="pagination.count <= 1"
-                    @click="handleDelClick(data)"
-                    >{{ t('删除') }}</bk-button
-                  >
+                    @click="handleDelClick(data)">{{ t('删除') }}</bk-button>
                 </div>
               </template>
             </VersionListFullTable>
@@ -84,8 +76,7 @@
                 :list="versionList"
                 :pagination="pagination"
                 @select="handleSelectVersion"
-                @page-change="refreshList"
-              />
+                @page-change="refreshList"/>
             </template>
           </div>
           <div v-if="versionEditData.panelOpen" class="script-edit-area">
@@ -95,8 +86,7 @@
               :script-id="scriptId"
               :editable="versionEditData.editable"
               @submitted="handleVersionEditSubmitted"
-              @close="versionEditData.panelOpen = false"
-            />
+              @close="versionEditData.panelOpen = false"/>
           </div>
         </div>
       </bk-loading>
@@ -108,15 +98,16 @@
     :type="scriptDetail.spec.type"
     :crt-version="crtVersion as IScriptVersion"
     :space-id="spaceId"
-    :script-id="scriptId"
-  />
+    :script-id="scriptId"/>
   <DeleteConfirmDialog
     v-model:isShow="isDeleteScriptVersionDialogShow"
     :title="t('确认删除该脚本版本？')"
-    @confirm="handleDeleteScriptVersionConfirm"
-  >
+    @confirm="handleDeleteScriptVersionConfirm">
     <div style="margin-bottom: 8px;">
-      {{ t('脚本名称') }}: <span style="color: #313238;font-weight: 600;">{{ deleteScriptVersionItem?.hook_revision.spec.name }}</span>
+      {{ t('脚本名称') }}:
+      <span style="color: #313238; font-weight: 600;">
+        {{ deleteScriptVersionItem?.hook_revision.spec.name }}
+      </span>
     </div>
     <div>{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
   </DeleteConfirmDialog>

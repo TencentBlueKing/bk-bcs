@@ -23,8 +23,7 @@
                   theme="light"
                   trigger="click"
                   placement="bottom"
-                  :is-show="batchSet.isShowMemoPop"
-                >
+                  :is-show="batchSet.isShowMemoPop">
                   <edit-line class="edit-line" @click="batchSet.isShowMemoPop = true" />
                   <template #content>
                     <div class="pop-wrap">
@@ -38,9 +37,7 @@
                             theme="primary"
                             style="margin-right: 8px; width: 80px"
                             size="small"
-                            @click="handleConfirmPop('memo')"
-                            >{{ t('确定') }}</bk-button
-                          >
+                            @click="handleConfirmPop('memo')">{{ t('确定') }}</bk-button>
                           <bk-button size="small" @click="batchSet.isShowMemoPop = false">{{ t('取消') }}</bk-button>
                         </div>
                       </div>
@@ -57,8 +54,7 @@
                   theme="light"
                   trigger="click"
                   placement="bottom"
-                  :is-show="batchSet.isShowPrivilege"
-                >
+                  :is-show="batchSet.isShowPrivilege">
                   <edit-line class="edit-line" @click="batchSet.isShowPrivilege = true" />
                   <template #content>
                     <div class="pop-wrap privilege-wrap">
@@ -68,11 +64,10 @@
                           v-model="batchSet.privilege"
                           :placeholder="t('请输入')"
                           style="width: 184px; margin-bottom: 16px"
-                          @blur="testPrivilegeInput(batchSet.privilege)"
-                        ></bk-input>
-                        <span class="error-tip" style="margin-left: 10px" v-if="batchSet.isShowPrivilegeError"
-                          >{{ t('只能输入三位 0~7 数字且文件own必须有读取权限') }}</span
-                        >
+                          @blur="testPrivilegeInput(batchSet.privilege)"></bk-input>
+                        <span class="error-tip" style="margin-left: 10px" v-if="batchSet.isShowPrivilegeError">
+                          {{ t('只能输入三位 0~7 数字且文件own必须有读取权限') }}
+                        </span>
                         <div class="privilege-select-panel">
                           <div v-for="(item, index) in PRIVILEGE_GROUPS" class="group-item" :key="index" :label="item">
                             <div class="header">{{ item }}</div>
@@ -80,8 +75,7 @@
                               <bk-checkbox-group
                                 class="group-checkboxs"
                                 :model-value="privilegeGroupsValue(batchSet.privilege)[index]"
-                                @change="handleSelectPrivilege(index, $event)"
-                              >
+                                @change="handleSelectPrivilege(index, $event)">
                                 <bk-checkbox size="small" :label="4" :disabled="index === 0">{{ t('读') }}</bk-checkbox>
                                 <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
                                 <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
@@ -96,9 +90,7 @@
                             theme="primary"
                             style="margin-right: 8px; width: 80px"
                             size="small"
-                            @click="handleConfirmPop('privilege')"
-                            >{{ t('确定') }}</bk-button
-                          >
+                            @click="handleConfirmPop('privilege')">{{ t('确定') }}</bk-button>
                           <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
                         </div>
                       </div>
@@ -115,8 +107,7 @@
                   theme="light"
                   trigger="click"
                   placement="bottom"
-                  :is-show="batchSet.isShowUserPop"
-                >
+                  :is-show="batchSet.isShowUserPop">
                   <edit-line class="edit-line" @click="batchSet.isShowUserPop = true" />
                   <template #content>
                     <div class="pop-wrap">
@@ -130,9 +121,7 @@
                             theme="primary"
                             style="margin-right: 8px; width: 80px"
                             size="small"
-                            @click="handleConfirmPop('user')"
-                            >{{ t('确定') }}</bk-button
-                          >
+                            @click="handleConfirmPop('user')">{{ t('确定') }}</bk-button>
                           <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
                         </div>
                       </div>
@@ -149,8 +138,7 @@
                   theme="light"
                   trigger="click"
                   placement="bottom"
-                  :is-show="batchSet.isShowUserGroupPop"
-                >
+                  :is-show="batchSet.isShowUserGroupPop">
                   <edit-line class="edit-line" @click="batchSet.isShowUserGroupPop = true" />
                   <template #content>
                     <div class="pop-wrap">
@@ -164,9 +152,7 @@
                             theme="primary"
                             style="margin-right: 8px; width: 80px"
                             size="small"
-                            @click="handleConfirmPop('user_group')"
-                            >{{ t('确定') }}</bk-button
-                          >
+                            @click="handleConfirmPop('user_group')">{{ t('确定') }}</bk-button>
                           <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
                         </div>
                       </div>
@@ -203,8 +189,7 @@
                   v-model="item.privilege"
                   type="number"
                   :placeholder="t('请输入')"
-                  @blur="handlePrivilegeInputBlur(item)"
-                />
+                  @blur="handlePrivilegeInputBlur(item)"/>
                 <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
                   <div class="perm-panel-trigger">
                     <i class="bk-bscp-icon icon-configuration-line"></i>
@@ -217,8 +202,7 @@
                           <bk-checkbox-group
                             class="group-checkboxs"
                             :model-value="privilegeGroupsValue(item.privilege)[i]"
-                            @change="handleSelectPrivilege(i, $event, item)"
-                          >
+                            @change="handleSelectPrivilege(i, $event, item)">
                             <bk-checkbox size="small" :label="4" :disabled="i === 0">{{ t('读') }}</bk-checkbox>
                             <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
                             <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>

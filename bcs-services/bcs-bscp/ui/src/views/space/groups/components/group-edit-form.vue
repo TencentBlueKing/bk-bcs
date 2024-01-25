@@ -16,14 +16,12 @@
         filterable
         :placeholder="t('请选择服务')"
         :input-search="false"
-        @change="change"
-      >
+        @change="change">
         <bk-option
           v-for="service in serviceList"
           :key="service.id"
           :label="service.spec.name"
-          :value="service.id"
-        ></bk-option>
+          :value="service.id"></bk-option>
       </bk-select>
     </bk-form-item>
     <bk-form-item class="radio-group-form" :label="t('标签选择器')" required property="rules">
@@ -44,8 +42,7 @@
           :model-value="rule.op"
           style="width: 72px"
           :clearable="false"
-          @change="handleLogicChange(index, $event)"
-        >
+          @change="handleLogicChange(index, $event)">
           <bk-option v-for="op in GROUP_RULE_OPS" :key="op.id" :value="op.id" :label="op.name"></bk-option>
         </bk-select>
         <div class="value-input">
@@ -59,24 +56,21 @@
             :allow-auto-match="true"
             :list="[]"
             placeholder="value"
-            @change="ruleChange"
-          >
+            @change="ruleChange">
           </bk-tag-input>
           <bk-input
             v-else
             v-model="rule.value"
             placeholder="value"
             :type="['gt', 'ge', 'lt', 'le'].includes(rule.op) ? 'number' : 'text'"
-            @change="ruleChange"
-          >
+            @change="ruleChange">
           </bk-input>
         </div>
         <div class="action-btns">
           <i
             v-if="index > 0 || formData.rules.length > 1"
             class="bk-bscp-icon icon-reduce"
-            @click="handleDeleteRule(index)"
-          ></i>
+            @click="handleDeleteRule(index)"></i>
           <i v-if="index === formData.rules.length - 1" class="bk-bscp-icon icon-add" @click="handleAddRule(index)"></i>
         </div>
       </div>

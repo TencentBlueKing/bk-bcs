@@ -3,8 +3,7 @@
     :is-show="isShow"
     :title="t('确认删除该配置模板套餐？')"
     @confirm="handleDelete"
-    @close="emits('update:show',false)"
-  >
+    @close="emits('update:show',false)">
     <div style="margin-bottom: 8px;">
       {{ t('配置模板套餐') }}: <span style="color: #313238;font-weight: 600;">{{ props.pkg.spec.name }}</span>
     </div>

@@ -26,8 +26,7 @@
                   v-if="isUnNamedVersion && group.id !== 0"
                   v-cursor="{ active: !hasEditServicePerm }"
                   :class="['delete-btn', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-                  @click="handleDeletePkg(group.id, group.name)"
-                >
+                  @click="handleDeletePkg(group.id, group.name)">
                   <Close class="close-icon" />
                   {{ t('移除套餐') }}
                 </div>
@@ -50,8 +49,7 @@
                               theme="primary"
                               :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
                               :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
-                              @click="handleViewConfig(config.id, 'config')"
-                            >
+                              @click="handleViewConfig(config.id, 'config')">
                               {{ config.name }}
                             </bk-button>
                             <bk-button
@@ -59,8 +57,7 @@
                               text
                               theme="primary"
                               :disabled="config.file_state === 'DELETE'"
-                              @click="handleViewConfig(config.id, 'config')"
-                            >
+                              @click="handleViewConfig(config.id, 'config')">
                               {{ config.name }}
                             </bk-button>
                           </template>
@@ -69,8 +66,7 @@
                             text
                             theme="primary"
                             :disabled="config.file_state === 'DELETE'"
-                            @click="handleViewConfig(config.versionId, 'template')"
-                          >
+                            @click="handleViewConfig(config.versionId, 'template')">
                             {{ config.name }}
                           </bk-button>
                         </td>
@@ -91,8 +87,7 @@
                                   theme="primary"
                                   :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
                                   :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
-                                  @click="handleEditOpen(config)"
-                                >
+                                  @click="handleEditOpen(config)">
                                   {{ t('编辑') }}
                                 </bk-button>
                                 <bk-button
@@ -101,22 +96,19 @@
                                   theme="primary"
                                   :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
                                   :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
-                                  @click="handleDel(config)"
-                                >
+                                  @click="handleDel(config)">
                                   {{ t('删除') }}
                                 </bk-button>
                               </template>
                               <template v-else>
-                                <bk-button text theme="primary" @click="handleViewConfig(config.id, 'config')"
-                                  >{{ t('查看') }}</bk-button
-                                >
+                                <bk-button text theme="primary" @click="handleViewConfig(config.id, 'config')">
+                                  {{ t('查看') }}
+                                </bk-button>
                                 <bk-button
                                   v-if="versionData.status.publish_status !== 'editing'"
                                   text
                                   theme="primary"
-                                  @click="handleConfigDiff(group.id, config)"
-                                  >{{ t('对比') }}</bk-button
-                                >
+                                  @click="handleConfigDiff(group.id, config)">{{ t('对比') }}</bk-button>
                               </template>
                             </template>
                             <!-- 套餐模板 -->
@@ -127,21 +119,18 @@
                                 text
                                 theme="primary"
                                 :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
-                                @click="handleOpenReplaceVersionDialog(group.id, config)"
-                              >
+                                @click="handleOpenReplaceVersionDialog(group.id, config)">
                                 {{ t('替换版本') }}
                               </bk-button>
                               <template v-else>
-                                <bk-button text theme="primary" @click="handleViewConfig(config.versionId, 'template')"
-                                  >{{ t('查看') }}</bk-button
-                                >
+                                <bk-button text theme="primary" @click="handleViewConfig(config.versionId, 'template')">
+                                  {{ t('查看') }}
+                                </bk-button>
                                 <bk-button
                                   v-if="versionData.status.publish_status !== 'editing'"
                                   text
                                   theme="primary"
-                                  @click="handleConfigDiff(group.id, config)"
-                                  >{{ t('对比') }}</bk-button
-                                >
+                                  @click="handleConfigDiff(group.id, config)">{{ t('对比') }}</bk-button>
                               </template>
                             </template>
                           </div>
@@ -167,15 +156,13 @@
     :config-id="activeConfig"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @confirm="handleEditConfigConfirm"
-  />
+    @confirm="handleEditConfigConfirm"/>
   <ViewConfig
     v-model:show="viewConfigSliderData.open"
     v-bind="viewConfigSliderData.data"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    :version-id="versionData.id"
-  />
+    :version-id="versionData.id"/>
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config="diffConfig" />
   <ReplaceTemplateVersion
     v-model:show="replaceDialogData.open"
@@ -183,13 +170,11 @@
     :binding-id="bindingId"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @updated="getAllConfigList"
-  />
+    @updated="getAllConfigList"/>
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
     :title="t('确认删除该配置文件？')"
-    @confirm="handleDeleteConfigConfirm"
-  >
+    @confirm="handleDeleteConfigConfirm">
     <div style="margin-bottom: 8px">
       {{t('配置文件')}}：<span style="color: #313238">{{ deleteConfig?.name }}</span>
     </div>
@@ -199,8 +184,7 @@
     v-model:isShow="isDeletePkgDialogShow"
     :title="t('确认移除该配置模板套餐？')"
     :confirm-text="t('移除')"
-    @confirm="handleDeletePkgConfirm"
-  >
+    @confirm="handleDeletePkgConfirm">
     <div style="margin-bottom: 8px">
       {{t('配置模板套餐')}}: <span style="color: #313238">{{ deleteTemplatePkgName }}</span>
     </div>

@@ -7,8 +7,7 @@
     width="122"
     :arrow="false"
     @after-show="isPopoverOpen = true"
-    @after-hidden="isPopoverOpen = false"
-  >
+    @after-hidden="isPopoverOpen = false">
     <div theme="primary" :class="['create-config-btn', { 'popover-open': isPopoverOpen }]">
       {{ isFileType ? t('新建配置文件') : t('新建配置项')}}
       <AngleDown class="angle-icon" />
@@ -18,32 +17,28 @@
         <div
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleManualCreateSlideOpen"
-        >
+          @click="handleManualCreateSlideOpen">
           {{ t('手动新增') }}
         </div>
         <div
           v-if="isFileType"
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleBatchUploadSlideOpen"
-        >
+          @click="handleBatchUploadSlideOpen">
           {{ t('批量上传') }}
         </div>
         <div
           v-if="isFileType"
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleImportTemplateDialogOpen"
-        >
+          @click="handleImportTemplateDialogOpen">
           {{ t('从配置模板导入') }}
         </div>
         <div
           v-if="!isFileType"
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleBatchImportDialogOpen"
-        >
+          @click="handleBatchImportDialogOpen">
           {{ t('批量导入') }}
         </div>
       </div>
@@ -53,32 +48,27 @@
     v-model:show="isManualCreateSliderOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @confirm="emits('created')"
-  />
+    @confirm="emits('created')"/>
   <ManualCreateKv
     v-model:show="isManualCreateKvSliderOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @confirm="emits('created')"
-  />
+    @confirm="emits('created')"/>
   <ImportFromTemplate
     v-model:show="isImportTemplatesDialogOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @imported="emits('imported')"
-  />
+    @imported="emits('imported')"/>
   <BatchUpload
     v-model:show="isBatchUploadSliderOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @upload="emits('uploaded')"
-  />
+    @upload="emits('uploaded')"/>
   <BatchImportKv
     v-model:show="isBatchUploadDialogOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @confirm="emits('created')"
-  />
+    @confirm="emits('created')"/>
 </template>
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';

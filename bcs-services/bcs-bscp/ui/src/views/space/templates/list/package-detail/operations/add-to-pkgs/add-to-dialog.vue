@@ -9,8 +9,7 @@
     :quick-close="false"
     :is-loading="pending"
     @confirm="handleConfirm"
-    @closed="close"
-  >
+    @closed="close">
     <template #header>
       <div class="header-wrapper">
         <div class="title">{{ isMultiple ? t('批量添加至') : t('添加至套餐') }}</div>

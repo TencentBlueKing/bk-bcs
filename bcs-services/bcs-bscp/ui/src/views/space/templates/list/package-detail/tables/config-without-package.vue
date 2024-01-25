@@ -5,16 +5,14 @@
     :current-template-space="currentTemplateSpace"
     current-pkg="no_specified"
     :space-id="spaceId"
-    :get-config-list="getConfigList"
-  >
+    :get-config-list="getConfigList">
     <template #tableOperations>
       <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
       <DeleteConfigs
         :space-id="spaceId"
         :current-template-space="currentTemplateSpace"
         :configs="selectedConfigs"
-        @deleted="handleConfigsDeleted"
-      />
+        @deleted="handleConfigsDeleted"/>
     </template>
     <template #columnOperations="{ config }">
       <bk-button theme="primary" text @click="handleAddToPkgsClick(config)">{{ t('添加至') }}</bk-button>
@@ -25,8 +23,7 @@
   <DeleteConfigDialog
     v-model:show="isDeleteConfigDialogShow"
     :configs="selectedConfigs"
-    @deleted="handleConfigsDeleted"
-  />
+    @deleted="handleConfigsDeleted"/>
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';

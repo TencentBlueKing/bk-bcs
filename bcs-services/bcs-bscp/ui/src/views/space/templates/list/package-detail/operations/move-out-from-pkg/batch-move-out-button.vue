@@ -4,15 +4,13 @@
     v-model:show="isBatchMoveDialogShow"
     :current-pkg="props.currentPkg"
     :value="props.configs"
-    @moved-out="emits('movedOut')"
-  />
+    @moved-out="emits('movedOut')"/>
   <MoveOutFromPkgsDialog
     v-model:show="isSingleMoveDialogShow"
     :id="props.configs.length > 0 ? props.configs[0].id : 0"
     :name="props.configs.length > 0 ? props.configs[0].spec.name : ''"
     :current-pkg="props.currentPkg"
-    @moved-out="emits('movedOut')"
-  />
+    @moved-out="emits('movedOut')"/>
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';

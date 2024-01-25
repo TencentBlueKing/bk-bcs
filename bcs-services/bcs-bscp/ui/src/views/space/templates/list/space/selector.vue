@@ -8,8 +8,7 @@
       :model-value="currentTemplateSpace"
       :popover-options="{ theme: 'light bk-select-popover template-space-selector-popover' }"
       @toggle="selectorOpen = $event"
-      @change="handleSelect"
-    >
+      @change="handleSelect">
       <template #trigger>
         <div class="select-trigger">
           <h5 class="space-name" :title="templateSpaceDetail.name">{{ templateSpaceDetail.name }}</h5>
@@ -43,8 +42,7 @@
   <DeleteConfirmDialog
     v-model:isShow="isDeleteTemplateSpaceDialogShow"
     :title="t('确认删除该配置模板空间？')"
-    @confirm="handleDeleteTemplateSpaceConfirm"
-  >
+    @confirm="handleDeleteTemplateSpaceConfirm">
     <div style="margin-bottom: 8px;">
       {{ t('配置模板空间') }}: <span style="color: #313238;font-weight: 600;">{{ deleteTemplateSpaceItem?.spec.name }}</span>
     </div>

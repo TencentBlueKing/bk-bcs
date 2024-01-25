@@ -18,8 +18,7 @@
     :limit="props.pagination.limit"
     :show-limit="false"
     :show-total-count="false"
-    @change="emits('pageChange', $event)"
-  />
+    @change="emits('pageChange', $event)"/>
 </template>
 <script setup lang="ts">
 import { IScriptVersionListItem } from '../../../../../types/script';

@@ -6,8 +6,7 @@
       theme="primary"
       :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
       :disabled="props.permCheckLoading"
-      @click="handleBtnClick"
-    >
+      @click="handleBtnClick">
       {{ t('上线版本') }}
     </bk-button>
     <Teleport to="body">
@@ -29,8 +28,7 @@
           :release-id="versionData.id"
           @open-preview-version-diff="openPreviewVersionDiff"
           @release-type-change="releaseType = $event"
-          @change="groups = $event"
-        />
+          @change="groups = $event"/>
         <template #footer>
           <section class="actions-wrapper">
             <bk-button class="publish-btn" theme="primary" @click="handleDiffOrPublish">{{
@@ -48,16 +46,14 @@
       :release-id="versionData.id"
       :release-type="releaseType"
       :groups="groups"
-      @confirm="handleConfirm"
-    />
+      @confirm="handleConfirm"/>
     <VersionDiff
       v-model:show="isDiffSliderShow"
       :current-version="versionData"
       :base-version-id="baseVersionId"
       :show-publish-btn="true"
       @publish="handleOpenPublishDialog"
-      :version-diff-list="versionListByGroup"
-    />
+      :version-diff-list="versionListByGroup"/>
   </section>
 </template>
 <script setup lang="ts">
@@ -76,7 +72,7 @@ import VersionLayout from '../../config/components/version-layout.vue';
 import ConfirmDialog from './confirm-dialog.vue';
 import SelectGroup from './select-group/index.vue';
 import VersionDiff from '../../config/components/version-diff/index.vue';
-import { useRoute,useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { getConfigVersionList } from '../../../../../../api/config';
 import { IConfigVersion } from '../../../../../../../types/config';
 

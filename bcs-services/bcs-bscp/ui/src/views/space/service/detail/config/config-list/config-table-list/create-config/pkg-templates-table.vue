@@ -8,8 +8,7 @@
         v-bk-tooltips="{
           content: t('检测到模板冲突，请先删除冲突套餐'),
         }"
-        class="conflict-icon"
-      />
+        class="conflict-icon"/>
       <Close v-if="!props.disabled" class="close-icon" @click.stop="handleDeletePkg" />
     </div>
     <table v-if="expand" v-bkloading="{ loading: listLoading }" class="template-table">
@@ -25,8 +24,7 @@
           <tr
             v-for="tpl in configTemplateList"
             :key="tpl.id"
-            :class="{ 'has-conflict': props.conflictTpls.includes(tpl.id) }"
-          >
+            :class="{ 'has-conflict': props.conflictTpls.includes(tpl.id) }">
             <td>
               <bk-overflow-title class="cell" type="tips">{{ tpl.spec.name }}</bk-overflow-title>
             </td>
@@ -38,21 +36,18 @@
                 :clearable="false"
                 :popover-options="{ theme: 'light bk-select-popover add-config-selector-popover' }"
                 :model-value="getVersionSelectVal(tpl.id)"
-                @change="handleSelectVersion(tpl.id, tpl.versions, $event)"
-              >
+                @change="handleSelectVersion(tpl.id, tpl.versions, $event)">
                 <bk-option
                   v-for="version in tpl.versions"
                   :key="version.isLatest ? 0 : version.id"
                   :id="version.isLatest ? 0 : version.id"
-                  :label="version.name"
-                >
+                  :label="version.name">
                   <div
                     v-bk-tooltips="{
                       disabled: !version.memo,
                       content: version.memo,
                     }"
-                    class="version-name"
-                  >
+                    class="version-name">
                     {{ version.name }}
                   </div>
                 </bk-option>

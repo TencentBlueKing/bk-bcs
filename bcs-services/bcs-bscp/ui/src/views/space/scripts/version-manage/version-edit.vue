@@ -4,8 +4,7 @@
       v-model="localVal.content"
       :language="props.type"
       :editable="props.editable"
-      :upload-icon="props.editable"
-    >
+      :upload-icon="props.editable">
       <template #header>
         <div class="title">{{ title }}</div>
       </template>

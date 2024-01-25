@@ -5,8 +5,7 @@
     :remote-pagination="true"
     :pagination="pagination"
     @page-limit-change="emits('pageLimitChange', $event)"
-    @page-value-change="emits('pageChange', $event)"
-  >
+    @page-value-change="emits('pageChange', $event)">
     <bk-table-column :label="t('版本号')" prop="spec.name" show-overflow-tooltip>
       <template #default="{ row }">
         <div v-if="row.hook_revision" class="version-name" @click="emits('view', row)">
@@ -61,7 +60,7 @@ import { datetimeFormat } from '../../../../utils/index';
 import ScriptCited from '../list/script-cited.vue';
 import tableEmpty from '../../../../components/table/table-empty.vue';
 
-const { t,locale } = useI18n();
+const { t, locale } = useI18n();
 
 const STATUS_MAP = computed(() => ({
   not_deployed: t('未上线'),

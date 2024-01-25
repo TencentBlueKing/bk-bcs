@@ -10,8 +10,7 @@
     :quick-close="false"
     :is-loading="pending"
     @confirm="handleConfirm"
-    @closed="close"
-  >
+    @closed="close">
     <div class="selected-mark">
       {{t('已选')}} <span class="num">{{ props.value.length }}</span> {{t('个配置文件')}}
     </div>

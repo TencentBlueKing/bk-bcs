@@ -10,8 +10,7 @@
             :clearable="false"
             :filterable="true"
             @change="handleSelectVersion"
-            :show-on-init="true"
-          >
+            :show-on-init="true">
             <bk-option v-for="version in versionList" :key="version.id" :label="version.spec.name" :value="version.id">
             </bk-option>
           </bk-select>
@@ -23,8 +22,7 @@
           :current="crtVersion.spec.content"
           :current-language="props.type"
           :base="baseContent"
-          :base-language="props.type"
-        />
+          :base-language="props.type"/>
       </div>
     </div>
     <div class="actions-btn">

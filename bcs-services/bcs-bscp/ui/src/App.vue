@@ -15,8 +15,8 @@ import { storeToRefs } from 'pinia';
 import useGlobalStore from './store/global';
 import useUserStore from './store/user';
 import isCrossOriginIFrame from './utils/is-cross-origin-iframe';
-import NoticeComponent from '@blueking/notice-component'
-import '@blueking/notice-component/dist/style.css'
+import NoticeComponent from '@blueking/notice-component';
+import '@blueking/notice-component/dist/style.css';
 import Header from './components/head.vue';
 import PermissionDialog from './components/permission/apply-dialog.vue';
 
@@ -26,7 +26,7 @@ const { showLoginModal } = storeToRefs(userStore);
 const { showApplyPermDialog, showNotice } = storeToRefs(globalStore);
 
 // @ts-ignore
-const noticeApiURL = `${window.BK_BCS_BSCP_API}/api/v1/announcements`
+const noticeApiURL = `${window.BK_BCS_BSCP_API}/api/v1/announcements`;
 
 watch(
   () => showLoginModal.value,

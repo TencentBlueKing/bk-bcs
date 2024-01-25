@@ -20,8 +20,7 @@
           :allow-preview-delete="props.releaseType === 'select'"
           :released-groups="props.releasedGroups"
           @diff="emits('diff', $event)"
-          @delete="handleDelete"
-        >
+          @delete="handleDelete">
         </preview-version-group>
       </template>
     </div>

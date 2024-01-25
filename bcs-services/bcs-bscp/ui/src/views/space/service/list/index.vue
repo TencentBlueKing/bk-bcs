@@ -11,8 +11,7 @@
       :type="activeTabName"
       :space-id="spaceId"
       :perm-check-loading="permCheckLoading"
-      :has-create-service-perm="hasCreateServicePerm"
-    />
+      :has-create-service-perm="hasCreateServicePerm"/>
     <AppFooter />
   </LayoutTopBar>
 </template>

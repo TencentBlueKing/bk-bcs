@@ -7,8 +7,7 @@
           v-if="isBaseVersionExist"
           v-model="isOnlyShowDiff"
           class="view-diff-checkbox"
-          @change="handleSearch"
-        >
+          @change="handleSearch">
           {{ t('只查看差异项') }}({{ diffCount }})
         </bk-checkbox>
         <div :class="['search-trigger', { actived: isOpenSearch }]" @click="isOpenSearch = !isOpenSearch">
@@ -25,8 +24,7 @@
         v-overflow-title
         :key="index"
         :class="['config-item', { actived: getItemSelectedStatus(config) }]"
-        @click="handleSelectItem(config.id)"
-      >
+        @click="handleSelectItem(config.id)">
         <i v-if="config.diff_type" :class="['status-icon', config.diff_type]"></i>
         {{ config.key }}
       </div>
@@ -35,8 +33,7 @@
         class="empty-tips"
         :is-search-empty="isSearchEmpty"
         :empty-title="t('没有差异配置项')"
-        @clear="clearStr"
-      >
+        @clear="clearStr">
       </tableEmpty>
     </div>
   </div>

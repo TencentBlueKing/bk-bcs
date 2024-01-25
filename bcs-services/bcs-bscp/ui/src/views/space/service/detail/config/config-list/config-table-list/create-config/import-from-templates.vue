@@ -5,8 +5,7 @@
     :is-show="props.show"
     :close-icon="false"
     :show-head="false"
-    :quick-close="false"
-  >
+    :quick-close="false">
     <div v-bkloading="{ loading: pkgListLoading }" class="import-template-wrapper">
       <div class="template-packages">
         <PkgTree
@@ -14,8 +13,7 @@
           :pkg-list="pkgList"
           :imported="importedPkgs"
           :value="selectedPkgs"
-          @change="handlePkgsChange"
-        />
+          @change="handlePkgsChange"/>
       </div>
       <div class="selected-result-wrapper">
         <h4>{{ t('结果预览') }}</h4>
@@ -35,8 +33,7 @@
               :conflict-tpls="conflictDetail[pkg.template_set_id] || []"
               @delete="handleDeletePkg"
               @select-version="handleSelectTplVersion(pkg.template_set_id, $event, 'new')"
-              @update-versions="handleUpdateTplsVersions(pkg.template_set_id, $event, 'new')"
-            />
+              @update-versions="handleUpdateTplsVersions(pkg.template_set_id, $event, 'new')"/>
             <PkgTemplatesTable
               v-for="pkg in importedPkgs"
               :key="pkg.template_set_id"
@@ -46,8 +43,7 @@
               :pkg-id="pkg.template_set_id"
               :selected-versions="pkg.template_revisions"
               @select-version="handleSelectTplVersion(pkg.template_set_id, $event, 'imported')"
-              @update-versions="handleUpdateTplsVersions(pkg.template_set_id, $event, 'imported')"
-            />
+              @update-versions="handleUpdateTplsVersions(pkg.template_set_id, $event, 'imported')"/>
           </template>
           <bk-exception v-else scene="part" type="empty">
             <div class="empty-tips">
@@ -62,8 +58,9 @@
       <div class="footer-wrapper">
         <p v-if="hasConflict" class="conflict-tip">{{ t('检测到模板冲突，无法导入') }}</p>
         <div class="action-btns">
-          <bk-button theme="primary" :disabled="isImportBtnDisabled" :loading="pending" @click="handleImportConfirm"
-            >{{ t('导入') }}</bk-button>
+          <bk-button theme="primary" :disabled="isImportBtnDisabled" :loading="pending" @click="handleImportConfirm">
+            {{ t('导入') }}
+          </bk-button>
           <bk-button @click="close">{{ t('取消') }}</bk-button>
         </div>
       </div>

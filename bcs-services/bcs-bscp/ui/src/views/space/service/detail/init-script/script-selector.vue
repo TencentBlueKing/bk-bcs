@@ -7,20 +7,17 @@
     :loading="props.loading"
     filterable
     :input-search="false"
-    @change="emits('change', $event, props.type)"
-  >
+    @change="emits('change', $event, props.type)">
     <bk-option
       v-for="script in props.list"
       :class="['script-option-item', { disabled: script.id && !script.versionId }]"
       :key="script.id"
       :value="script.id"
-      :label="script.name"
-    >
+      :label="script.name">
       <div
         v-bk-tooltips="{ disabled: !script.id || script.versionId, content: t('该脚本未上线') }"
         class="option-wrapper"
-        @click="handleScriptOptionClick(script.id, script.versionId, $event)"
-      >
+        @click="handleScriptOptionClick(script.id, script.versionId, $event)">
         {{ script.name }}
       </div>
     </bk-option>

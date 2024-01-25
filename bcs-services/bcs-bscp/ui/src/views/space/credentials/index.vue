@@ -14,8 +14,7 @@
           :class="{ 'bk-button-with-no-perm': !hasManagePerm }"
           :disabled="permCheckLoading"
           :loading="createPending"
-          @click="getCredentialName"
-        >
+          @click="getCredentialName">
           <Plus class="button-icon" />
           {{ t('新建密钥') }}
         </bk-button>
@@ -26,8 +25,7 @@
             :placeholder="t('说明/更新人')"
             :clearable="true"
             @clear="refreshListWithLoading()"
-            @input="handleSearchInputChange"
-          >
+            @input="handleSearchInputChange">
             <template #suffix>
               <Search class="search-input-icon" />
             </template>
@@ -43,16 +41,14 @@
           :remote-pagination="true"
           :pagination="pagination"
           @page-limit-change="handlePageLimitChange"
-          @page-value-change="refreshListWithLoading"
-        >
+          @page-value-change="refreshListWithLoading">
           <bk-table-column :label="t('密钥名称')" width="188">
             <template #default="{ row, index }">
               <bk-input
                 v-if="index === 0 && isCreateCredential"
                 :placeholder="t('密钥名称支持中英文')"
                 v-model="createCredentialName"
-                @blur="testCreateCredentialName"
-              ></bk-input>
+                @blur="testCreateCredentialName"></bk-input>
               <div v-if="row.spec" class="credential-memo">
                 <div v-if="editingNameId !== row.id" class="memo-content" :title="row.spec.memo || '--'">
                   {{ row.spec.name || '--' }}
@@ -62,8 +58,7 @@
                     ref="nameInputRef"
                     class="edit-name-input"
                     contenteditable="true"
-                    @blur="handleMemoOrNameBlur(row)"
-                  >
+                    @blur="handleMemoOrNameBlur(row)">
                     {{ row.spec.name }}
                   </div>
                 </div>
@@ -94,8 +89,7 @@
               <bk-input
                 v-if="index === 0 && isCreateCredential"
                 :placeholder="t('请输入密钥说明')"
-                v-model="createCredentialMemo"
-              ></bk-input>
+                v-model="createCredentialMemo"></bk-input>
               <div v-if="row.spec" class="credential-memo">
                 <div v-if="editingMemoId !== row.id" class="memo-content" :title="row.spec.memo || '--'">
                   {{ row.spec.memo || '--' }}
@@ -105,8 +99,7 @@
                     ref="memoInputRef"
                     class="edit-input"
                     contenteditable="true"
-                    @blur="handleMemoOrNameBlur(row, false)"
-                  >
+                    @blur="handleMemoOrNameBlur(row, false)">
                     {{ row.spec.memo }}
                   </div>
                 </div>
@@ -153,8 +146,7 @@
                   :value="row.spec.enable"
                   :disabled="permCheckLoading"
                   :class="{ 'bk-switcher-with-no-perm': !hasManagePerm }"
-                  @change="handelToggleEnable(row)"
-                />
+                  @change="handelToggleEnable(row)"/>
                 <span class="text">{{ row.spec.enable ? t('已启用') : t('已禁用') }}</span>
               </div>
             </template>
@@ -179,8 +171,7 @@
                     theme="primary"
                     :class="{ 'bk-text-with-no-perm': !hasManagePerm }"
                     :disabled="hasManagePerm && row.spec.enable"
-                    @click="handleDeleteConfirm(row)"
-                  >
+                    @click="handleDeleteConfirm(row)">
                     {{ t('删除') }}
                   </bk-button>
                 </div>
@@ -200,8 +191,7 @@
       :has-manage-perm="hasManagePerm"
       @close="handleAssociateSliderClose"
       @refresh="refreshListWithLoading(pagination.current)"
-      @apply-perm="checkPermBeforeOperate"
-    />
+      @apply-perm="checkPermBeforeOperate"/>
   </section>
   <bk-dialog
     ext-cls="delete-service-dialog"
@@ -210,8 +200,7 @@
     :dialog-type="'operation'"
     header-align="center"
     footer-align="center"
-    @value-change="dialogInputStr = ''"
-  >
+    @value-change="dialogInputStr = ''">
     <div class="dialog-content">
       <div class="dialog-title">{{ t('确认删除密钥？') }}</div>
       <div class="dialog-input">
@@ -228,9 +217,7 @@
           theme="danger"
           style="margin-right: 20px"
           :disabled="dialogInputStr !== deleteCredentialInfo?.spec.name"
-          @click="handleDelete"
-          >{{ t('删除') }}</bk-button
-        >
+          @click="handleDelete">{{ t('删除') }}</bk-button>
         <bk-button @click="isShowDeleteDialog = false">{{ t('取消') }}</bk-button>
       </div>
     </template>

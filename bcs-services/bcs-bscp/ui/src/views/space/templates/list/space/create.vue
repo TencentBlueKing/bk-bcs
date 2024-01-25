@@ -10,14 +10,19 @@
     :esc-close="false"
     :quick-close="false"
     @confirm="handleCreate"
-    @closed="handleClose"
-  >
+    @closed="handleClose">
     <bk-form ref="formRef" form-type="vertical" :model="localVal">
       <bk-form-item :label="t('模板空间名称')" required property="name">
         <bk-input v-model="localVal.name" :placeholder="t('请输入')" />
       </bk-form-item>
       <bk-form-item :label="t('模板空间描述')" property="memo">
-        <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :rows="6" :maxlength="100" :resize="true" />
+        <bk-input
+          v-model="localVal.memo"
+          type="textarea"
+          :placeholder="t('请输入')"
+          :rows="6"
+          :maxlength="100"
+          :resize="true" />
       </bk-form-item>
     </bk-form>
   </bk-dialog>

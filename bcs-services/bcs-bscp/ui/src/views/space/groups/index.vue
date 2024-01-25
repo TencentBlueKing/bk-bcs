@@ -11,8 +11,7 @@
           :true-label="true"
           :false-label="false"
           :disabled="changeViewPending"
-          @change="handleChangeView"
-        >
+          @change="handleChangeView">
           {{ t('按标签分类查看') }}
         </bk-checkbox>
         <bk-input
@@ -21,8 +20,7 @@
           @input="handleSearch"
           v-model.trim="searchInfo"
           @clear="handleSearch"
-          :clearable="true"
-        >
+          :clearable="true">
           <template #suffix>
             <Search class="search-input-icon" />
           </template>
@@ -38,8 +36,7 @@
                   <DownShape
                     v-if="row.IS_CATEORY_ROW"
                     :class="['fold-icon', { fold: row.fold }]"
-                    @click="handleToggleCategoryFold(row.CATEGORY_NAME)"
-                  />
+                    @click="handleToggleCategoryFold(row.CATEGORY_NAME)"/>
                   {{ row.IS_CATEORY_ROW ? row.CATEGORY_NAME : row.name }}
                 </div>
                 <template v-else>{{ row.name }}</template>
@@ -123,8 +120,7 @@
             :layout="['total', 'limit', 'list']"
             :count="pagination.count"
             @change="handlePageChange"
-            @limit-change="handlePageLimitChange"
-          />
+            @limit-change="handlePageLimitChange"/>
       </bk-loading>
     </div>
     <create-group v-model:show="isCreateGroupShow" @reload="loadGroupList"></create-group>
@@ -132,14 +128,12 @@
     <services-to-published
       v-model:show="isPublishedSliderShow"
       :id="editingGroup.id"
-      :name="editingGroup.name"
-    ></services-to-published>
+      :name="editingGroup.name"></services-to-published>
   </section>
   <DeleteConfirmDialog
     v-model:isShow="isDeleteGroupDialogShow"
     :title="t('确认删除该分组？')"
-    @confirm="handleDeleteGroupConfirm"
-  >
+    @confirm="handleDeleteGroupConfirm">
     <div style="margin-bottom: 8px">
       {{t('分组名称')}}: <span style="color: #313238; font-weight: 600">{{ deleteGroupItem?.name }}</span>
     </div>

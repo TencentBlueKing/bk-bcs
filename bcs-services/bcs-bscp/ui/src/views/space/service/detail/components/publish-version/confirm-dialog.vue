@@ -7,13 +7,14 @@
     :quick-close="false"
     :is-loading="pending"
     @closed="handleClose"
-    @confirm="handleConfirm"
-  >
+    @confirm="handleConfirm">
     <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="localVal">
       <bk-form-item :label="t('本次上线分组')">
         <div v-for="group in groupsToBePreviewed" class="group-item" :key="group.id">
           <div class="name">{{ group.name }}</div>
-          <default-group-rules-popover v-if="group.id === 0 && excludedGroups.length > 0" :excluded-groups="excludedGroups" />
+          <default-group-rules-popover
+            v-if="group.id === 0 && excludedGroups.length > 0"
+            :excluded-groups="excludedGroups" />
           <div v-if="group.rules.length > 0" class="rules">
             <bk-overflow-title type="tips">
               <span v-for="(rule, index) in group.rules" :key="index" class="rule">
@@ -26,7 +27,7 @@
         <template v-if="groupsToBePreviewed.length === 0">--</template>
       </bk-form-item>
       <bk-form-item :label="t('上线说明')" property="memo">
-        <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :maxlength="200" :resize="true"></bk-input>
+        <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :maxlength="200" :resize="true" />
       </bk-form-item>
     </bk-form>
     <template #footer>

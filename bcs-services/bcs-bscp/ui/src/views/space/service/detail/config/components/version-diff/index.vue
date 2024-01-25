@@ -4,8 +4,7 @@
     :title="t('版本对比')"
     ext-cls="config-version-diff-slider"
     :width="1200"
-    @closed="handleClose"
-  >
+    @closed="handleClose">
     <bk-loading class="loading-wrapper" :loading="loading">
       <div v-if="!loading" class="version-diff-content">
         <AsideMenu
@@ -15,8 +14,7 @@
           :selected-config="props.selectedConfig"
           :selected-config-kv="props.selectedConfigKv"
           :is-publish="props.showPublishBtn"
-          @selected="handleSelectDiffItem"
-        />
+          @selected="handleSelectDiffItem"/>
         <div :class="['diff-content-area', { light: diffDetailData.contentType === 'file' }]">
           <diff :diff="diffDetailData" :id="appId" :loading="false">
             <template #leftHead>
@@ -30,14 +28,12 @@
                     :clearable="false"
                     :no-data-text="t('暂无数据')"
                     :placeholder="t('请选择')"
-                    @change="handleSelectVersion"
-                  >
+                    @change="handleSelectVersion">
                     <bk-option
                       v-for="version in versionList"
                       :key="version.id"
                       :label="version.spec.name"
-                      :value="version.id"
-                    >
+                      :value="version.id">
                     </bk-option>
                   </bk-select>
                 </div>
@@ -58,9 +54,9 @@
     <template #footer>
       <div class="actions-btns">
         <slot name="footerActions">
-          <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')"
-            >{{ t('上线版本') }}</bk-button
-          >
+          <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')">
+            {{ t('上线版本') }}
+          </bk-button>
           <bk-button @click="handleClose">{{ t('关闭') }}</bk-button>
         </slot>
       </div>

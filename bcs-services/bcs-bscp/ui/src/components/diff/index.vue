@@ -17,8 +17,7 @@
           :downloadable="false"
           :current="props.diff.current.content as IFileConfigContentSummary"
           :base="props.diff.base.content as IFileConfigContentSummary"
-          :id="props.id"
-        />
+          :id="props.id"/>
         <Text
           v-else-if="props.diff.contentType === 'text'"
           :language="props.diff.current.language"
@@ -27,13 +26,11 @@
           :current-permission="currentPermission"
           :base="(props.diff.base.content as string)"
           :base-variables="props.diff.base.variables"
-          :base-permission="basePermission"
-        />
+          :base-permission="basePermission"/>
         <Kv
           v-else
           :current="(props.diff.current.content as string)"
-          :base="(props.diff.base.content as string)"
-        />
+          :base="(props.diff.base.content as string)"/>
       </div>
     </bk-loading>
   </section>

@@ -14,8 +14,7 @@
               placement: 'top',
               distance: 20,
             }"
-            @click="handleOpenFullScreen"
-          />
+            @click="handleOpenFullScreen"/>
           <UnfullScreen
             v-else
             v-bk-tooltips="{
@@ -23,8 +22,7 @@
               placement: 'bottom',
               distance: 20,
             }"
-            @click="handleCloseFullScreen"
-          />
+            @click="handleCloseFullScreen"/>
         </div>
       </div>
       <div class="editor-content">
@@ -33,8 +31,7 @@
           :model-value="props.content"
           :editable="editable"
           :language="languages"
-          @update:model-value="emits('change', $event)"
-        />
+          @update:model-value="emits('change', $event)"/>
       </div>
     </div>
   </Teleport>

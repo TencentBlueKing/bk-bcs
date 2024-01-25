@@ -1,15 +1,18 @@
 <template>
   <section class="rule-view">
     <p class="title">
-      {{ t('共有') }}<span :class="['num', { zero: props.rules.length === 0 }]">{{ props.rules.length }}</span
-      >{{ t('项关联规则') }}
+      {{ t('共有') }}
+      <span :class="['num', { zero: props.rules.length === 0 }]">{{ props.rules.length }}</span>
+      {{ t('项关联规则') }}
     </p>
     <div v-if="props.rules.length > 0" class="rule-list">
       <div v-for="rule in rules" :key="rule.id" class="rule-item">{{ rule.spec.app +rule.spec.scope }}</div>
     </div>
     <bk-exception v-else scene="part" type="empty">
       <p class="empty-tips">{{ t('暂未设置关联规则') }}</p>
-      <bk-button class="edit-rule-btn" text theme="primary" size="small" @click="emits('edit')">{{ t('编辑规则') }}</bk-button>
+      <bk-button class="edit-rule-btn" text theme="primary" size="small" @click="emits('edit')">
+        {{ t('编辑规则') }}
+      </bk-button>
     </bk-exception>
   </section>
 </template>

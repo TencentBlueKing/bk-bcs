@@ -4,8 +4,7 @@
     :title="t('编辑配置项')"
     :is-show="props.show"
     :before-close="handleBeforeClose"
-    @closed="close"
-  >
+    @closed="close">
     <div class="config-container">
       <ConfigForm
         ref="formRef"
@@ -15,8 +14,7 @@
         :editable="true"
         :bk-biz-id="props.bkBizId"
         :id="props.appId"
-        @change="handleChange"
-      />
+        @change="handleChange"/>
     </div>
 
     <section class="action-btns">

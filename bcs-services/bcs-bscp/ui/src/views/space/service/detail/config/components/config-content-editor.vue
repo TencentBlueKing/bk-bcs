@@ -14,8 +14,7 @@
               placement: 'top',
               distance: 20,
             }"
-            @completed="handleFileReadComplete"
-          />
+            @completed="handleFileReadComplete"/>
           <FilliscreenLine
             v-if="!isOpenFullScreen"
             v-bk-tooltips="{
@@ -23,8 +22,7 @@
               placement: 'top',
               distance: 20,
             }"
-            @click="handleOpenFullScreen"
-          />
+            @click="handleOpenFullScreen"/>
           <UnfullScreen
             v-else
             v-bk-tooltips="{
@@ -32,8 +30,7 @@
               placement: 'bottom',
               distance: 20,
             }"
-            @click="handleCloseFullScreen"
-          />
+            @click="handleCloseFullScreen"/>
         </div>
       </div>
       <div class="editor-content">
@@ -42,8 +39,7 @@
           :model-value="props.content"
           :variables="props.variables"
           :editable="editable"
-          @update:model-value="emits('change', $event)"
-        />
+          @update:model-value="emits('change', $event)"/>
       </div>
     </div>
   </Teleport>

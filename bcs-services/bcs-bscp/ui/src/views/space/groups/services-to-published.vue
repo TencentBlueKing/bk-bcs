@@ -11,8 +11,7 @@
           :remote-pagination="true"
           :pagination="pagination"
           @page-limit-change="handlePageLimitChange"
-          @page-value-change="loadServicesList"
-        >
+          @page-value-change="loadServicesList">
           <bk-table-column :label="t('服务名称')" prop="app_name"></bk-table-column>
           <bk-table-column :label="t('服务版本')">
             <template #default="{ row }">

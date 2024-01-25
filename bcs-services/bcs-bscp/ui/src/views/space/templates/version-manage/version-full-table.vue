@@ -5,8 +5,7 @@
     :data="props.list"
     :pagination="pagination"
     @page-value-change="emits('page-value-change', $event)"
-    @page-limit-change="emits('page-limit-change', $event)"
-  >
+    @page-limit-change="emits('page-limit-change', $event)">
     <bk-table-column :label="t('版本号')" prop="spec.revision_name">
       <template #default="{ row }">
         <bk-button v-if="row.spec" text theme="primary" @click="emits('select', row.id)">{{
@@ -27,8 +26,7 @@
             v-if="boundByAppsCountList[index].bound_unnamed_app_count > 0"
             text
             theme="primary"
-            @click="handleOpenBoundDetailSlider(row)"
-          >
+            @click="handleOpenBoundDetailSlider(row)">
             {{ boundByAppsCountList[index].bound_unnamed_app_count }}
           </bk-button>
           <span v-else @click="handleOpenBoundDetailSlider(row)">0</span>
@@ -58,14 +56,12 @@
     v-model:show="boundDetailSliderData.open"
     :space-id="spaceId"
     :current-template-space="templateSpaceId"
-    :config="boundDetailSliderData.data"
-  />
+    :config="boundDetailSliderData.data"/>
   <TemplateVersionDiff
     v-model:show="diffSliderData.open"
     :space-id="spaceId"
     :template-space-id="templateSpaceId"
-    :crt-version="diffSliderData.data"
-  />
+    :crt-version="diffSliderData.data"/>
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';

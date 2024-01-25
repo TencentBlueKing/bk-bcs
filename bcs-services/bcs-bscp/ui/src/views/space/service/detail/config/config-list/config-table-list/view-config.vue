@@ -10,8 +10,7 @@
         :variables="variables"
         :bk-biz-id="props.bkBizId"
         :is-tpl="props.type === 'template'"
-        :id="props.type === 'template' ? tplSpaceId : props.appId"
-      />
+        :id="props.type === 'template' ? tplSpaceId : props.appId"/>
     </bk-loading>
     <section class="action-btns">
       <bk-button @click="close">{{ t('关闭') }}</bk-button>

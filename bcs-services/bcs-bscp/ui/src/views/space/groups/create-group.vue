@@ -10,8 +10,7 @@
     :quick-close="false"
     :is-loading="pending"
     @closed="handleClose"
-    @confirm="handleConfirm"
-  >
+    @confirm="handleConfirm">
     <group-edit-form ref="groupFormRef" :group="groupData" @change="updateData"></group-edit-form>
   </bk-dialog>
 </template>

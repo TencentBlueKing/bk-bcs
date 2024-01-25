@@ -6,8 +6,7 @@
           v-for="config in configList"
           :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
           :key="config.id"
-          @click="handleEditConfigOpen(config)"
-        >
+          @click="handleEditConfigOpen(config)">
           <div class="config-name">{{ config.spec.name }}</div>
           <div class="config-type">{{ getConfigTypeName(config.spec.file_type) }}</div>
         </div>
@@ -66,11 +65,10 @@ const getListData = async () => {
       all: true,
     };
 
-    let res;
     if (versionData.value.id === 0) {
-      res = await getConfigList(props.bkBizId, props.appId, params);
+      await getConfigList(props.bkBizId, props.appId, params);
     } else {
-      res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params);
+      await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params);
     }
   } catch (e) {
     console.error(e);

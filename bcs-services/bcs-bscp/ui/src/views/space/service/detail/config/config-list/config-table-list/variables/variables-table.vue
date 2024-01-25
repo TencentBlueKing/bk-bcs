@@ -22,15 +22,13 @@
                 'td-cell-edit': isCellEditable(col.prop),
                 'has-error': errorDetails[variable.name]?.includes(col.prop),
               },
-            ]"
-          >
+            ]">
             <template v-if="props.editable">
               <bk-select
                 v-if="col.prop === 'type'"
                 v-model="variable.type"
                 :clearable="false"
-                @change="deleteCellError(variable.name, col.prop)"
-              >
+                @change="deleteCellError(variable.name, col.prop)">
                 <bk-option id="string" label="string"></bk-option>
                 <bk-option id="number" label="number"></bk-option>
               </bk-select>
@@ -39,9 +37,12 @@
                 v-model="variable.default_val"
                 :placeholder="t('请输入')"
                 @blur="handleValueChange(variable.type, variable.default_val)"
-                @change="deleteCellError(variable.name, col.prop)"
-              />
-              <bk-input v-else-if="col.prop === 'memo'" :placeholder="t('请输入')" v-model="variable.memo" @change="change" />
+                @change="deleteCellError(variable.name, col.prop)"/>
+              <bk-input
+                v-else-if="col.prop === 'memo'"
+                v-model="variable.memo"
+                :placeholder="t('请输入')"
+                @change="change" />
               <div v-else>
                 <bk-overflow-title type="tips">
                   {{ getCellVal(variable, col.prop) }}

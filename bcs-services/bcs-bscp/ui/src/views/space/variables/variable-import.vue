@@ -7,16 +7,16 @@
     height="720"
     ext-cls="variable-import-dialog"
     :esc-close="false"
-    @closed="handleClose"
-  >
+    @closed="handleClose">
     <bk-form>
       <bk-form-item :label="t('变量内容')" required>
         <VariableContentEditor ref="editorRef" @trigger="confirmBtnPerm = $event"/>
       </bk-form-item>
     </bk-form>
     <template #footer>
-      <bk-button theme="primary" style="margin-right: 8px" :disabled="!confirmBtnPerm" @click="handleConfirm"
-        >{{ t('导入') }}</bk-button>
+      <bk-button theme="primary" style="margin-right: 8px" :disabled="!confirmBtnPerm" @click="handleConfirm">
+        {{ t('导入') }}
+      </bk-button>
       <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
     </template>
   </bk-dialog>

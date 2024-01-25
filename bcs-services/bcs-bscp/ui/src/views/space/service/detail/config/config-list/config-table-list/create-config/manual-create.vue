@@ -4,8 +4,7 @@
     :title="t('新增配置文件')"
     :is-show="props.show"
     :before-close="handleBeforeClose"
-    @closed="close"
-  >
+    @closed="close">
     <ConfigForm
       ref="formRef"
       class="config-form-wrapper"
@@ -15,10 +14,11 @@
       :editable="true"
       :bk-biz-id="props.bkBizId"
       :id="props.appId"
-      @change="handleFormChange"
-    />
+      @change="handleFormChange" />
     <section class="action-btns">
-      <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">{{ t('保存') }}</bk-button>
+      <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">
+        {{ t('保存') }}
+      </bk-button>
       <bk-button @click="close">{{ t('取消') }}</bk-button>
     </section>
   </bk-sideslider>

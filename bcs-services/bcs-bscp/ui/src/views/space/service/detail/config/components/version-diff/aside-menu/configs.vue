@@ -7,8 +7,7 @@
           v-if="isBaseVersionExist"
           v-model="isOnlyShowDiff"
           class="view-diff-checkbox"
-          @change="handleSearch"
-        >
+          @change="handleSearch">
           {{ t('只查看差异文件') }}({{ diffCount }})
         </bk-checkbox>
         <div :class="['search-trigger', { actived: isOpenSearch }]" @click="isOpenSearch = !isOpenSearch">
@@ -38,8 +37,7 @@
                 version: config.template_revision_id,
                 permission: config.permission,
               })
-            "
-          >
+            ">
             <i v-if="config.diff_type" :class="['status-icon', config.diff_type]"></i>
             {{ config.name }}
           </div>
@@ -50,8 +48,7 @@
         class="empty-tips"
         :is-search-empty="isSearchEmpty"
         :empty-title="t('没有差异配置文件')"
-        @clear="clearStr"
-      >
+        @clear="clearStr">
       </tableEmpty>
     </div>
   </div>

@@ -4,7 +4,14 @@
       <bk-input v-model="localVal.name" :placeholder="t('请输入')" @change="change" />
     </bk-form-item>
     <bk-form-item :label="t('模板套餐描述')" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :rows="6" :maxlength="256" @change="change" :resize="true" />
+      <bk-input
+        v-model="localVal.memo"
+        type="textarea"
+        :placeholder="t('请输入')"
+        :rows="6"
+        :maxlength="256"
+        :resize="true"
+        @change="change" />
     </bk-form-item>
     <bk-form-item :label="t('服务可见范围')" property="public" required>
       <bk-radio-group v-model="localVal.public" @change="change">
@@ -19,14 +26,13 @@
         filterable
         :placeholder="t('请选择服务')"
         :loading="serviceLoading"
-        @change="handleServiceChange"
-      >
+        @change="handleServiceChange">
         <bk-option
           v-for="service in serviceList"
           :key="service.id"
           :label="service.spec.name"
-          :value="service.id"
-        ></bk-option>
+          :value="service.id">
+        </bk-option>
       </bk-select>
       <p v-if="!localVal.public && deletedApps.length > 0" class="tips">
         {{ t('提醒：修改可见范围后，服务') }}

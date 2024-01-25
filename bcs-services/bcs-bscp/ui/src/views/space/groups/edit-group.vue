@@ -10,8 +10,7 @@
     :close-icon="false"
     :is-loading="pending"
     @closed="handleClose"
-    @confirm="handleConfirm"
-  >
+    @confirm="handleConfirm">
     <div class="group-edit-content">
       <section class="group-form-wrapper">
         <div class="dialog-title">{{ t('编辑分组') }}</div>

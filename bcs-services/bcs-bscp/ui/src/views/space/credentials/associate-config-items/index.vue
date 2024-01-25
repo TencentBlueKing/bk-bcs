@@ -4,8 +4,7 @@
     width="400"
     :is-show="props.show"
     :before-close="handleBeforeClose"
-    @closed="handleClose"
-  >
+    @closed="handleClose">
     <section class="associate-config-items">
       <div :class="['rules-wrapper', { 'edit-mode': isRuleEdit }]">
         <RuleEdit
@@ -29,8 +28,7 @@
         v-cursor="{ active: !props.hasManagePerm }"
         :class="{ 'bk-button-with-no-perm': !props.hasManagePerm }"
         theme="primary"
-        @click="handleOpenEdit"
-      >
+        @click="handleOpenEdit">
         {{ t('编辑规则') }}
       </bk-button>
       <bk-button @click="handleClose">{{ isRuleEdit ? t('取消') : t('关闭') }}</bk-button>

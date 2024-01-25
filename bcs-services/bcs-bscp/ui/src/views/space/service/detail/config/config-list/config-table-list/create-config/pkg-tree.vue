@@ -12,8 +12,7 @@
       node-key="nodeId"
       :expand-all="searchStr !== ''"
       :data="pkgTreeData"
-      :show-node-type-icon="false"
-    >
+      :show-node-type-icon="false">
       <template #node="node">
         <div class="node-item-wrapper">
           <bk-checkbox
@@ -21,15 +20,13 @@
             :model-value="node.checked"
             :disabled="node.disabled"
             :indeterminate="node.indeterminate"
-            @change="handleNodeCheckChange(node, $event)"
-          />
+            @change="handleNodeCheckChange(node, $event)"/>
           <div
             class="node-name-text"
             v-bk-tooltips="{
               content: checkboxTooltips(node.checked),
               disabled: !node.disabled,
-            }"
-          >
+            }">
             {{ node.name }}
           </div>
           <span v-if="node.children" class="num">({{ node.children.length }})</span>
@@ -86,6 +83,10 @@ const pkgTreeData = computed(() => {
     const nodeId = `space_${template_space_id}`;
     let checked = false;
     let indeterminate = false;
+    const isOpen = template_sets.some((set) => {
+      const index = props.value.findIndex(item => item.template_set_id === set.template_set_id);
+      return index > -1;
+    });
 
     if (template_sets.length > 0) {
       checked = template_sets.every(pkgItem => isPkgNodeChecked(pkgItem.template_set_id));
@@ -98,7 +99,7 @@ const pkgTreeData = computed(() => {
       id: template_space_id,
       nodeId,
       name: template_space_name,
-      isOpen: template_sets.some(set => props.value.findIndex(item => item.template_set_id === set.template_set_id) > -1),
+      isOpen,
       children: [],
       checked,
       indeterminate,

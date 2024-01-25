@@ -12,8 +12,7 @@
       <navigator
         :permission-diff-number="permissionDiffNumber"
         :diff-editor="diffEditor"
-        :permission-editor="permissionEditor"
-      ></navigator>
+        :permission-editor="permissionEditor"></navigator>
     </div>
   </div>
 </template>

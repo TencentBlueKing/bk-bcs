@@ -25,8 +25,7 @@
         :bound-by-apps-count-list="boundByAppsCountList"
         :pagination="pagination"
         @deleted="handleVersionDeleted"
-        @select="handleOpenDetailTable($event, 'view')"
-      />
+        @select="handleOpenDetailTable($event, 'view')"/>
       <VersionDetailTable
         v-else
         :space-id="spaceId"
@@ -38,8 +37,7 @@
         :version-id="versionDetailModeData.id"
         @created="handleCreatedVersion"
         @close="versionDetailModeData.open = false"
-        @select="handleOpenDetailTable($event, 'view')"
-      />
+        @select="handleOpenDetailTable($event, 'view')"/>
     </div>
     <bk-dialog
       :title="t('新建版本')"
@@ -48,8 +46,7 @@
       :is-show="selectVersionDialog.open"
       :is-loading="allVersionListLoading"
       @confirm="handleSelectVersionConfirm"
-      @closed="selectVersionDialog.open = false"
-    >
+      @closed="selectVersionDialog.open = false">
       <bk-form ref="selectVersionFormRef" form-type="vertical" :model="{ id: selectVersionDialog.id }">
         <bk-form-item :label="t('选择载入版本')" required property="id">
           <bk-select v-model="selectVersionDialog.id" :clearable="false" :filterable="true" :input-search="false">

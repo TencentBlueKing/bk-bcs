@@ -11,8 +11,7 @@
         :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-value-change="getList"
-      >
+        @page-value-change="getList">
         <bk-table-column :label="t('配置文件版本')" prop="template_revision_name"></bk-table-column>
         <bk-table-column :label="t('引用此配置文件的服务')">
           <template #default="{ row }">

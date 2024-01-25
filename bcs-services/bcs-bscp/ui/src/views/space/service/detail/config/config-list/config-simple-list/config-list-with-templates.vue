@@ -4,8 +4,7 @@
       v-model="searchStr"
       class="config-search-input"
       :placeholder="t('配置文件名/创建人/修改人')"
-      @search="getListData"
-    />
+      @search="getListData" />
     <bk-loading class="loading-wrapper" :loading="loading">
       <div v-for="group in tableGroupsData" :key="group.id" class="config-group">
         <div class="group-title" @click="group.expand = !group.expand">
@@ -17,12 +16,11 @@
             v-for="config in group.configs"
             :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
             :key="config.id"
-            @click="handleConfigClick(config, group.id)"
-          >
+            @click="handleConfigClick(config, group.id)">
             <div class="config-name">{{ config.name }}</div>
             <div class="config-type">{{ getConfigTypeName(config.file_type) }}</div>
           </div>
-          <TableEmpty v-if="group.configs.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch"></TableEmpty>
+          <TableEmpty v-if="group.configs.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch" />
         </div>
       </div>
     </bk-loading>
@@ -30,15 +28,13 @@
       v-model:show="editConfigSliderData.open"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
-      :config-id="editConfigSliderData.id"
-    />
+      :config-id="editConfigSliderData.id" />
     <ViewConfig
       v-model:show="viewConfigSliderData.open"
       v-bind="viewConfigSliderData.data"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
-      :version-id="versionData.id"
-    />
+      :version-id="versionData.id" />
   </section>
 </template>
 <script setup lang="ts">

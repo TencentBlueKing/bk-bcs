@@ -4,15 +4,13 @@
       class="exception-part"
       type="empty"
       scene="part"
-      :title="emptyTitle || t('暂无数据')"
-    />
+      :title="emptyTitle || t('暂无数据')"/>
     <bk-exception
       v-else
       class="exception-part"
       type="search-empty"
       scene="part"
-      :title="t('搜索结果为空')"
-    >
+      :title="t('搜索结果为空')">
       <div>{{ t('可以尝试 调整关键词 或') }} <span class="clear-button" @click="emits('clear')">{{ t('清空筛选条件') }}</span></div>
     </bk-exception>
 </template>
