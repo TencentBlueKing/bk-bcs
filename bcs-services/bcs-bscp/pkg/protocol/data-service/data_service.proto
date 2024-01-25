@@ -212,7 +212,7 @@ service Data {
   rpc UpdateKv(UpdateKvReq) returns (pbbase.EmptyResp) {};
   rpc ListKvs(ListKvsReq) returns (ListKvsResp) {};
   rpc DeleteKv(DeleteKvReq) returns (pbbase.EmptyResp) {};
-  rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (pbbase.EmptyResp) {};
+  rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {};
   rpc UnDeleteKv(UnDeleteKvReq) returns (pbbase.EmptyResp) {};
 
   // used iam pull resource callback.
@@ -1552,6 +1552,7 @@ message ListKvsReq {
   repeated string kv_type = 11;
   string sort = 12;
   string order = 13;
+  string top_ids = 14;
 }
 
 message ListKvsResp {
@@ -1574,6 +1575,10 @@ message BatchUpsertKvsReq {
   uint32 app_id = 2;
   repeated Kv kvs = 3;
   bool replace_all = 4;
+}
+
+message BatchUpsertKvsResp {
+  repeated uint32 ids = 1;
 }
 
 message UnDeleteKvReq {

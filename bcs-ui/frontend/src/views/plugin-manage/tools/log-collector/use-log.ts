@@ -10,10 +10,12 @@ import {
   deleteLogCollectorRule as aliasDeleteLogCollectorRule,
   disableLogCollector as aliasDisableLogCollector,
   enableLogCollector as aliasEnableLogCollector,
+  logCollectorClusterGroups,
   logCollectorDetail as aliasLogCollectorDetail,
   logCollectorRules as aliasLogCollectorRules,
   modifyLogCollectorRule as aliasModifyLogCollectorRule,
   retryLogCollectorRule as aliasRetryLogCollectorRule,
+  switchStorageCluster as aliasSwitchStorageCluster,
 } from '@/api/modules/monitor';
 
 interface IAddOnsParams {
@@ -56,6 +58,7 @@ export interface IRuleData {
   updator?: string
   updated_at?: string
   old?: boolean
+  display_name?: string// 采集项名称
   new_rule_id?: boolean
   new_rule_name?: string// 前端拼接数据
   new_rule_created_at?: string // 前端拼接数据
@@ -80,7 +83,7 @@ export interface IRuleData {
       data_encoding: string
       enable_stdout: boolean
       label_selector: {
-        match_labels: {key: string, value: string}[]
+        match_labels: {key: string, value: string, operator: string}[]
       }
       conditions: {
         type: string
@@ -94,9 +97,25 @@ export interface IRuleData {
         workload_name: string
         container_name: string
       }
+      'multiline': {
+        'multiline_pattern': string
+        'multiline_max_lines': number
+        'multiline_timeout': number
+      }
     }
   }
   from_rule: string
+}
+
+export interface IClusterGroup {
+  'storage_cluster_id': number
+  'storage_cluster_name': string
+  'storage_version': string
+  'storage_usage': number
+  'storage_total': number
+  'is_platform': boolean
+  'is_selected': boolean
+  'description': string
 }
 
 export default function useLog() {
@@ -189,6 +208,17 @@ export default function useLog() {
     return data;
   }
 
+  async function getLogCollectorClusterGroups($clusterId: string) {
+    const data = await logCollectorClusterGroups({ $clusterId }).catch(() => []);
+    return data as IClusterGroup[];
+  }
+
+  async function switchStorageCluster($clusterId: string, storage_cluster_id: string|number) {
+    const result = await aliasSwitchStorageCluster({ storage_cluster_id, $clusterId }).then(() => true)
+      .catch(() => false);
+    return result;
+  }
+
   return {
     onsData,
     getOnsDetail,
@@ -205,5 +235,7 @@ export default function useLog() {
     createLogCollectorRule,
     modifyLogCollectorRule,
     getWorkloadList,
+    getLogCollectorClusterGroups,
+    switchStorageCluster,
   };
 }

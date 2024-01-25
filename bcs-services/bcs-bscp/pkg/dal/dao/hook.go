@@ -89,7 +89,7 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 	h := dao.genQ.Hook
 	hr := dao.genQ.HookRevision
 	rh := dao.genQ.ReleasedHook
-	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(h.BizID.Eq(opt.BizID)).Order(h.ID.Desc())
+	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(h.BizID.Eq(opt.BizID)).Order(h.Name)
 
 	if opt.Name != "" {
 		q = q.Where(h.Name.Like(fmt.Sprintf("%%%s%%", opt.Name)))

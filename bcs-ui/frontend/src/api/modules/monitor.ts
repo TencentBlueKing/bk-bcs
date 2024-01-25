@@ -67,3 +67,5 @@ export const logCollectorDetail = logRequest('get', '/log_collector/rules/$ID');
 export const createLogCollectorRule = logRequest('post', '/log_collector/rules');
 export const modifyLogCollectorRule = logRequest('put', '/log_collector/rules/$ID');
 export const logCollectorEntrypoints = logRequest('post', '/log_collector/entrypoints');
+export const logCollectorClusterGroups = logRequest('get', '/log_collector/storages/cluster_groups');
+export const switchStorageCluster = logRequest('post', '/log_collector/storages/switch_storage');

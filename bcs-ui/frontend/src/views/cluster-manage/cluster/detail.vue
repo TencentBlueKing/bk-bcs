@@ -13,7 +13,7 @@
       </span>
     </span>
     <div class="resize-line" ref="resizeRef" @mousedown="onMousedownEvent"></div>
-    <div class="h-[56px] flex items-center px-[24px] pt-[16px] pb-[8px] text-[12px]">
+    <div class="h-[56px] flex items-center px-[24px] pt-[16px] pb-[8px] text-[12px]" ref="detailHeaderRef">
       <span class="font-bold text-[14px] leading-[22px]">{{ curCluster.clusterName || '--' }}</span>
       <span class="ml-[14px] text-[#979BA5] leading-[22px] select-all">{{ curCluster.clusterID }}</span>
       <bcs-divider direction="vertical"></bcs-divider>
@@ -77,7 +77,7 @@
           render-directive="if"
           v-if="normalStatusList.includes(curCluster.status || '')">
           <Node
-            class="p-[20px] max-h-[calc(100vh-188px)]"
+            class="p-[20px]"
             :cluster-id="clusterId"
             hide-cluster-select
             from-cluster />
@@ -105,6 +105,7 @@ import Node from '../node-list/node.vue';
 
 import StatusIcon from '@/components/status-icon';
 import { ICluster, useCluster } from '@/composables/use-app';
+import useCalcHeight from '@/composables/use-calc-height';
 import $router from '@/router';
 import Info from '@/views/cluster-manage/detail/basic-info.vue';
 import Master from '@/views/cluster-manage/detail/master.vue';
@@ -129,6 +130,14 @@ const props = defineProps({
 });
 
 const emits = defineEmits(['width-change']);
+
+// 设置content高度
+const detailHeaderRef = ref();
+useCalcHeight({
+  prop: 'height',
+  el: '.cluster-detail-tab .bk-tab-content',
+  calc: ['#bcs-notice-com', '.bk-navigation-header', detailHeaderRef, '.cluster-detail-tab .bk-tab-header'],
+});
 
 watch(() => props.active, () => {
   activeTabName.value = props.active;
@@ -355,7 +364,6 @@ defineExpose({
     padding: 0;
   }
   .bk-tab-content {
-    height: calc(100vh - 150px);
     overflow-y: auto;
     overflow-x: hidden;
   }

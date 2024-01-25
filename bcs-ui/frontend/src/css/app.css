@@ -82,7 +82,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
     .biz-content-wrapper {
         width: 100%;
         min-height: 400px;
-        max-height: calc(100vh - 104px);
         overflow: auto;
     }
     > section {
@@ -619,7 +618,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
     font-size: 14px;
     padding: 20px 20px 0 20px;
     color: $fontColor;
-    max-height: calc(100vh - 150px);
     overflow: auto;
 }
 
@@ -2581,7 +2579,6 @@ div.jsoneditor {
 }
 
 .bcs-content-wrapper {
-    max-height: calc(100vh - 104px);
     overflow: auto;
 }
 .bcs-flex {
