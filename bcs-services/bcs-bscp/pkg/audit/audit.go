@@ -195,9 +195,9 @@ var auditGrpcMap = map[string]func() (audit.Resource, audit.Action){
 		return audit.Resource{ResourceType: audit.ResourceType(sys.Application)},
 			audit.Action{ActionID: "list_config_item_by_tuple"}
 	},
-	"/pbcs.Config/GetReleasedKvReq": func() (audit.Resource, audit.Action) {
+	"/pbcs.Config/GetReleasedKv": func() (audit.Resource, audit.Action) {
 		return audit.Resource{ResourceType: audit.ResourceType(sys.Application)},
-			audit.Action{ActionID: "get_released_kv_req"}
+			audit.Action{ActionID: "get_released_kv"}
 	},
 	"/pbcs.Config/ListReleasedKvs": func() (audit.Resource, audit.Action) {
 		return audit.Resource{ResourceType: audit.ResourceType(sys.Application)},
