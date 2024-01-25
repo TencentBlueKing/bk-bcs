@@ -92,9 +92,6 @@ const formDataContent = ref({
 const showContent = computed({
   get: () => (formData.value.type === 'shell' ? formDataContent.value.shell : formDataContent.value.python),
   set: (val) => {
-    if (!val.endsWith('\n')) {
-      val += '\n';
-    }
     formData.value.type === 'shell' ? formDataContent.value.shell = val : formDataContent.value.python = val;
   },
 });
@@ -133,6 +130,9 @@ const handleCreate = async () => {
   try {
     pending.value = true;
     formData.value.tag = selectTags.value[0];
+    if (!formData.value.content.endsWith('\n')) {
+      formData.value.content += '\n';
+    }
     await createScript(spaceId.value, formData.value);
     BkMessage({
       theme: 'success',

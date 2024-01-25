@@ -221,6 +221,7 @@ const getBoundCount = async () => {
 // 上传配置内容
 const uploadContent = async () => {
   const signature = await getSignature();
+  if (typeof stringContent.value === 'string' && !stringContent.value.endsWith('\n')) stringContent.value += '\n';
   const data = formData.value.file_type === 'binary' ? fileContent.value : stringContent.value;
   uploadPending.value = true;
   // @ts-ignore

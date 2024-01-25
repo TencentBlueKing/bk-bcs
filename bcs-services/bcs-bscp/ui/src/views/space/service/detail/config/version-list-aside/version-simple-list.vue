@@ -5,14 +5,14 @@
     </div>
     <bk-loading :loading="versionListLoading">
       <div class="version-search-wrapper">
-        <SearchInput
-          v-model="searchStr"
-          class="config-search-input"
-          :placeholder="t('版本名称')"/>
+        <SearchInput v-model="searchStr" class="config-search-input" :placeholder="t('版本名称')" />
       </div>
       <section class="versions-wrapper">
         <section v-if="!searchStr" class="unnamed-version">
-          <section :class="['version-item', { active: versionData.id === 0 }]" @click="handleSelectVersion(unNamedVersion)">
+          <section
+            :class="['version-item', { active: versionData.id === 0 }]"
+            @click="handleSelectVersion(unNamedVersion)"
+          >
             <i class="bk-bscp-icon icon-edit-small edit-icon" />
             <div class="version-name">{{ t('未命名版本') }}</div>
           </section>
@@ -22,32 +22,15 @@
           v-for="version in versionsInView"
           :key="version.id"
           :class="['version-item', { active: versionData.id === version.id }]"
-          @click="handleSelectVersion(version)">
+          @click="handleSelectVersion(version)"
+        >
           <div :class="['dot', version.status.publish_status]"></div>
           <div class="version-name">{{ version.spec.name }}</div>
-          <bk-popover
-            v-if="version.status.publish_status !== 'editing'"
-            theme="light config-version-actions-popover"
-            placement="bottom-end"
-            :popover-delay="[0, 100]"
-            :arrow="false">
-            <Ellipsis class="action-more-icon" />
-            <template #content>
-              <div class="action-list">
-                <div class="action-item" @click="handleDiffDialogShow(version)">{{ t('版本对比') }}</div>
-                <div
-                  v-bk-tooltips="{
-                    disabled: version.status.publish_status === 'not_released',
-                    placement: 'bottom',
-                    content: '只支持未上线版本'
-                  }"
-                  :class="['action-item', { disabled: version.status.publish_status !== 'not_released' }]"
-                  @click="handleDeprecateDialogShow(version)">
-                  {{ t('版本废弃') }}
-                </div>
-              </div>
-            </template>
-          </bk-popover>
+          <Ellipsis
+            class="action-more-icon"
+            @mouseenter="handlePopShow(version, $event)"
+            @mouseleave="handlePopHide"
+          />
         </section>
         <TableEmpty v-if="searchStr && versionsInView.length === 0" :is-search-empty="true" @clear="searchStr = ''" />
       </section>
@@ -58,7 +41,22 @@
       :title="t('确认废弃该版本')"
       :tips="t('此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作')"
       :confirm-fn="handleDeprecateVersion"
-      :version="currentOperatingVersion" />
+      :version="currentOperatingVersion"
+    />
+    <div class="action-list" ref="popover" v-show="popShow" @mouseenter="handlePopContentMouseEnter" @mouseleave="handlePopContentMouseLeave ">
+      <div class="action-item" @click="handleDiffDialogShow(selectedVersion!)">{{ t('版本对比') }}</div>
+      <div
+        v-bk-tooltips="{
+          disabled: selectedVersion?.status.publish_status === 'not_released',
+          placement: 'bottom',
+          content: '只支持未上线版本',
+        }"
+        :class="['action-item', { disabled: selectedVersion?.status.publish_status !== 'not_released' }]"
+        @click="handleDeprecateDialogShow(selectedVersion!)"
+      >
+        {{ t('版本废弃') }}
+      </div>
+    </div>
   </section>
 </template>
 <script setup lang="ts">
@@ -97,6 +95,11 @@ const searchStr = ref('');
 const showDiffPanel = ref(false);
 const currentOperatingVersion = ref();
 const showOperateConfirmDialog = ref(false);
+const selectedVersion = ref<IConfigVersion>();
+const popShow = ref(false);
+const popover = ref<HTMLInputElement | null>(null);
+const popHideTimerId = ref(0);
+const isMouseenter = ref(false);
 
 const versionsInView = computed(() => {
   if (searchStr.value === '') {
@@ -164,7 +167,7 @@ const getVersionList = async () => {
 
 const handleSelectVersion = (version: IConfigVersion) => {
   versionData.value = version;
-  const params: { spaceId: string, appId: number, versionId?: number } = {
+  const params: { spaceId: string; appId: number; versionId?: number } = {
     spaceId: props.bkBizId,
     appId: props.appId,
   };
@@ -189,31 +192,64 @@ const handleDeprecateDialogShow = (version: IConfigVersion) => {
 
 const handleDeprecateVersion = () => new Promise(() => {
   const id = currentOperatingVersion.value.id;
-  deprecateVersion(props.bkBizId, props.appId, id)
-    .then(() => {
-      showOperateConfirmDialog.value = false;
-      Message({
-        theme: 'success',
-        message: '版本废弃成功',
-      });
-      if (id !== versionData.value.id) {
-        return;
-      }
-
-      const versions = versionsInView.value.filter(item => item.id > 0);
-      const index = versions.findIndex(item => item.id === id);
-
-      if (versions.length === 1) {
-        handleSelectVersion(unNamedVersion);
-      } else if (index === versions.length - 1) {
-        handleSelectVersion(versions[index - 1]);
-      } else {
-        handleSelectVersion(versions[index + 1]);
-      }
-
-      versionList.value = versionList.value.filter(item => item.id !== id);
+  deprecateVersion(props.bkBizId, props.appId, id).then(() => {
+    showOperateConfirmDialog.value = false;
+    Message({
+      theme: 'success',
+      message: '版本废弃成功',
     });
+    if (id !== versionData.value.id) {
+      return;
+    }
+
+    const versions = versionsInView.value.filter(item => item.id > 0);
+    const index = versions.findIndex(item => item.id === id);
+
+    if (versions.length === 1) {
+      handleSelectVersion(unNamedVersion);
+    } else if (index === versions.length - 1) {
+      handleSelectVersion(versions[index - 1]);
+    } else {
+      handleSelectVersion(versions[index + 1]);
+    }
+
+    versionList.value = versionList.value.filter(item => item.id !== id);
+  });
 });
+
+const handlePopShow = (version: IConfigVersion, event: any) => {
+  selectedVersion.value = version;
+  const element = event.target;
+  const rect = element.getBoundingClientRect();
+  const distanceToBottom = window.innerHeight - rect.bottom;
+  if (distanceToBottom < 70) {
+    popover.value!.style.top = `${rect.top - 140}px`;
+  } else {
+    popover.value!.style.top = `${rect.top - 20}px`;
+  }
+  popHideTimerId.value && clearTimeout(popHideTimerId.value);
+  popShow.value = true;
+};
+
+const handlePopHide = () => {
+  popHideTimerId.value = window.setTimeout(() => {
+    popShow.value = false;
+  }, 300);
+};
+
+const handlePopContentMouseEnter = () => {
+  if (popHideTimerId.value) {
+    isMouseenter.value = true;
+    clearTimeout(popHideTimerId.value);
+    popHideTimerId.value = 0;
+  }
+};
+const handlePopContentMouseLeave = () => {
+  if (isMouseenter.value) {
+    handlePopHide();
+    isMouseenter.value = false;
+  }
+};
 </script>
 
 <style lang="scss" scoped>
@@ -232,6 +268,7 @@ const handleDeprecateVersion = () => new Promise(() => {
   padding: 8px 16px;
 }
 .versions-wrapper {
+  position: relative;
   height: calc(100% - 48px);
   overflow: auto;
 }
@@ -242,7 +279,7 @@ const handleDeprecateVersion = () => new Promise(() => {
 .unnamed-version {
   .divider {
     margin: 8px 24px;
-    border-bottom: 1px solid #DCDEE5;
+    border-bottom: 1px solid #dcdee5;
   }
 }
 .version-item {
@@ -260,7 +297,7 @@ const handleDeprecateVersion = () => new Promise(() => {
     top: 10px;
     left: 24px;
     font-size: 22px;
-    color: #979BA5;
+    color: #979ba5;
   }
   .dot {
     position: absolute;
@@ -310,28 +347,28 @@ const handleDeprecateVersion = () => new Promise(() => {
 .list-pagination {
   margin-top: 16px;
 }
-</style>
-<style lang="scss">
-.config-version-actions-popover.bk-popover.bk-pop2-content {
+.action-list {
+  position: absolute;
+  right: 25px;
   padding: 4px 0;
+  width: 80px;
   border: 1px solid #dcdee5;
   box-shadow: 0 2px 6px 0 #0000001a;
-  .action-list {
-    .action-item {
-      padding: 0 12px;
-      min-width: 58px;
-      height: 32px;
-      line-height: 32px;
-      color: #63656e;
-      font-size: 12px;
-      cursor: pointer;
-      &:hover {
-        background: #f5f7fa;
-      }
-      &.disabled {
-        color: #dcdee5;
-        cursor: not-allowed;
-      }
+  background-color: #fff;
+  border-radius:4px;
+  .action-item {
+    padding: 0 12px;
+    height: 32px;
+    line-height: 32px;
+    color: #63656e;
+    font-size: 12px;
+    cursor: pointer;
+    &:hover {
+      background: #f5f7fa;
+    }
+    &.disabled {
+      color: #dcdee5;
+      cursor: not-allowed;
     }
   }
 }
