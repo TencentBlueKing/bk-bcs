@@ -45,7 +45,7 @@ func Audit(next http.Handler) http.Handler {
 		defer func() {
 			status := ww.Status()
 			msg := "Success"
-			if status != http.StatusOK {
+			if status >= http.StatusBadRequest {
 				rs := struct {
 					Error struct {
 						Message string `json:"message"`
