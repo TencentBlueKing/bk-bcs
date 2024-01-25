@@ -18,7 +18,9 @@
       @change="handleFormChange"
     />
     <section class="action-btns">
-      <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">{{ t('保存') }}</bk-button>
+      <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">{{
+        t('保存')
+      }}</bk-button>
       <bk-button @click="close">{{ t('取消') }}</bk-button>
     </section>
   </bk-sideslider>
@@ -63,7 +65,6 @@ watch(
   },
 );
 
-
 const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary | string) => {
   configForm.value = data;
   const { privilege, user, user_group } = data;
@@ -94,9 +95,11 @@ const handleSubmit = async () => {
     pending.value = true;
     const sign = await formRef.value.getSignature();
     let size = 0;
+
     if (configForm.value.file_type === 'binary') {
       size = Number((content.value as IFileConfigContentSummary).size);
     } else {
+      if (typeof content.value === 'string' && !content.value.endsWith('\n')) content.value += '\n';
       const stringContent = content.value as string;
       size = new Blob([stringContent]).size;
       await updateConfigContent(props.bkBizId, props.appId, stringContent, sign);
