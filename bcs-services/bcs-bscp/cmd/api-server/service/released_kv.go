@@ -167,8 +167,8 @@ func rkvsToOutData(rkvs []*pbrkv.ReleasedKv) map[string]interface{} {
 	d := map[string]interface{}{}
 	for _, rkv := range rkvs {
 		d[rkv.Spec.Key] = map[string]interface{}{
-			"bscp_kv_type": rkv.Spec.KvType,
-			"value":        rkv.Spec.Value,
+			"kv_type": rkv.Spec.KvType,
+			"value":   rkv.Spec.Value,
 		}
 	}
 
