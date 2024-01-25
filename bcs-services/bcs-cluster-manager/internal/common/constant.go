@@ -159,6 +159,11 @@ const (
 	// RuntimeFlag xxx
 	RuntimeFlag = "runtime"
 
+	// ClusterApiServer cluster api server
+	ClusterApiServer = "apiServer"
+	// RegionName regionName
+	RegionName = "regionName"
+
 	// ShowSharedCluster flag show shared cluster
 	ShowSharedCluster = "showSharedCluster"
 	// VClusterNetworkKey xxx
@@ -265,6 +270,8 @@ const (
 	KubeConfigImport = "kubeConfig"
 	// CloudImport import
 	CloudImport = "cloud"
+	// ImportType cloud import type
+	ImportType = "importType"
 
 	// CloudProjectId cloud project id
 	CloudProjectId = "cloudProjectId"
@@ -275,6 +282,8 @@ const (
 	StatusInitialization = "INITIALIZATION"
 	// StatusCreateClusterFailed status create failed
 	StatusCreateClusterFailed = "CREATE-FAILURE"
+	// StatusConnectClusterFailed status connect failed
+	StatusConnectClusterFailed = "CONNECT-FAILURE"
 	// StatusImportClusterFailed status import failed
 	StatusImportClusterFailed = "IMPORT-FAILURE"
 	// StatusRunning status running
@@ -464,4 +473,19 @@ const (
 	ForwardedForHeaderKey = "X-Forwarded-For"
 	// UserAgentHeaderKey is the header name of User-Agent.
 	UserAgentHeaderKey = "Grpcgateway-User-Agent"
+)
+
+const (
+	// InterImport cloud inter import
+	InterImport = "internal"
+	// ExternalImport cloud external import
+	ExternalImport = "external"
+)
+
+// InstanceChargeType
+const (
+	// PREPAID xxx
+	PREPAID = "PREPAID" // 预付费，即包年包月
+	// POSTPAIDBYHOUR xxx
+	POSTPAIDBYHOUR = "POSTPAID_BY_HOUR" // 按小时后付费
 )

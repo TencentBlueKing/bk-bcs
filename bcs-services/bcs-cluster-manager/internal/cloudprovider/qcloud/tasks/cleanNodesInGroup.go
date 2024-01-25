@@ -169,7 +169,7 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 	nodeIDs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.NodeIDsKey.String(), ",")
 
-	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(nodeIDs) == 0 {
+	if len(clusterID) == 0 || len(cloudID) == 0 || len(nodeIDs) == 0 {
 		blog.Errorf("CheckClusterCleanNodsTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("CheckClusterCleanNodsTask check parameters failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)

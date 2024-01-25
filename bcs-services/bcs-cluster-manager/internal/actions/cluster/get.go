@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -57,6 +58,8 @@ func (ga *GetAction) getCluster() error {
 	if err != nil {
 		return err
 	}
+	cluster.CreateTime = utils.TransTimeFormat(cluster.CreateTime)
+	cluster.UpdateTime = utils.TransTimeFormat(cluster.UpdateTime)
 	ga.cluster = shieldClusterInfo(cluster)
 
 	if ga.cluster != nil && ga.cluster.NetworkSettings != nil {
@@ -70,7 +73,47 @@ func (ga *GetAction) getCluster() error {
 		}
 	}
 
+	// append apiServer info
+	if cluster.ExtraInfo == nil {
+		cluster.ExtraInfo = make(map[string]string, 0)
+	}
+	credential, exist, err := ga.model.GetClusterCredential(ga.ctx, ga.req.ClusterID)
+	if err == nil && exist {
+		cluster.ExtraInfo[common.ClusterApiServer] = credential.ServerAddress
+	}
+	// append module info
+	ga.appendModuleInfo()
+
 	return nil
+}
+
+func (ga *GetAction) appendModuleInfo() {
+	if ga.cluster.GetClusterBasicSettings().GetModule() == nil {
+		ga.cluster.GetClusterBasicSettings().Module = &cmproto.ClusterModule{}
+	}
+
+	// cluster business id
+	bkBizID, _ := strconv.Atoi(ga.cluster.GetBusinessID())
+	if ga.cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID() != "" {
+		bkModuleID, _ := strconv.Atoi(ga.cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID())
+		ga.cluster.GetClusterBasicSettings().Module.MasterModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+	}
+
+	if ga.cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID() != "" {
+		bkModuleID, _ := strconv.Atoi(ga.cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID())
+		ga.cluster.GetClusterBasicSettings().Module.WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+
+		return
+	}
+
+	// compatible with autoscaling config
+	autoScalingOption, err := ga.model.GetAutoScalingOption(ga.ctx, ga.req.ClusterID)
+	if err == nil && autoScalingOption != nil && autoScalingOption.GetModule().GetScaleOutBizID() != "" &&
+		autoScalingOption.GetModule().GetScaleOutModuleID() != "" {
+		ga.cluster.GetClusterBasicSettings().Module.WorkerModuleID = autoScalingOption.GetModule().GetScaleOutModuleID()
+		ga.cluster.GetClusterBasicSettings().Module.WorkerModuleName = autoScalingOption.GetModule().GetScaleOutModuleName()
+		return
+	}
 }
 
 func (ga *GetAction) updateClusterInfoByCloud() error {

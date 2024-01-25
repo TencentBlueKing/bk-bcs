@@ -852,3 +852,31 @@ func GetFailedNodesReason(ctx context.Context, info *cloudprovider.CloudDependBa
 
 	return insMapInfo, strings.Join(allInsReason, ";"), nil
 }
+
+// DeleteTkeClusterByClusterId delete cluster by clsId
+func DeleteTkeClusterByClusterId(ctx context.Context, opt *cloudprovider.CommonOption,
+	clsId string, deleteMode string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	if len(clsId) == 0 {
+		blog.Warnf("DeleteTkeClusterByClusterId[%s] clusterID empty", taskID)
+		return nil
+	}
+
+	tkeCli, err := api.NewTkeClient(opt)
+	if err != nil {
+		blog.Errorf("DeleteTkeClusterByClusterId[%s] init tkeClient failed: %v", taskID, err)
+		return err
+	}
+
+	err = tkeCli.DeleteTKECluster(clsId, api.DeleteMode(deleteMode))
+	if err != nil && !strings.Contains(err.Error(), api.ErrClusterNotFound.Error()) {
+		blog.Errorf("DeleteTkeClusterByClusterId[%s] deleteCluster failed: %v", taskID, err)
+		return err
+	}
+
+	blog.Infof("DeleteTkeClusterByClusterId[%s] deleteCluster[%s] success", taskID, clsId)
+
+	return nil
+}
+

@@ -719,6 +719,19 @@ func (rn *RemoveNodesFromClusterTaskOption) BuildRemoveNodesFromClusterStep(task
 	task.StepSequence = append(task.StepSequence, removeNodesFromClusterStep.StepMethod)
 }
 
+// BuildCheckClusterCleanNodsStep 检测集群清理节点池节点
+func (rn *RemoveNodesFromClusterTaskOption) BuildCheckClusterCleanNodsStep(task *proto.Task) {
+	checkStep := cloudprovider.InitTaskStep(checkClusterCleanNodsStep)
+
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = rn.Cluster.ClusterID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = rn.Cluster.Provider
+	checkStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(rn.NodeIPs, ",")
+	checkStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(rn.NodeIDs, ",")
+
+	task.Steps[checkClusterCleanNodsStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, checkClusterCleanNodsStep.StepMethod)
+}
+
 // BuildUpdateRemoveNodeDBInfoStep 清理节点数据
 func (rn *RemoveNodesFromClusterTaskOption) BuildUpdateRemoveNodeDBInfoStep(task *proto.Task) {
 	updateDBStep := cloudprovider.InitTaskStep(updateRemoveNodeDBInfoStep)

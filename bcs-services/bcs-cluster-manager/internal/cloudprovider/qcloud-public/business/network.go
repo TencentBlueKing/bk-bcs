@@ -94,7 +94,7 @@ func GetAllocatedSubnetsByVpc(opt *cloudprovider.CommonOption, vpcId string) ([]
 	return ret, nil
 }
 
-// GetFreeIPNets return free globalrouter subnets
+// GetFreeIPNets return free subnets
 func GetFreeIPNets(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPNet, error) {
 	allBlocks, err := GetVpcCIDRBlocks(opt, vpcId, 0)
 	if err != nil {
@@ -209,10 +209,37 @@ func CheckConflictFromVpc(opt *cloudprovider.CommonOption, vpcId, cidr string) (
 
 	conflictCidrs := make([]string, 0)
 	for i := range ipNets {
-		if cidrtree.CidrContains(ipNets[i], c) {
+		if cidrtree.CidrContains(ipNets[i], c) || cidrtree.CidrContains(c, ipNets[i]) {
 			conflictCidrs = append(conflictCidrs, ipNets[i].String())
 		}
 	}
 
 	return conflictCidrs, nil
+}
+
+// GetZoneAvailableSubnetsByVpc 获取vpc下某个地域下每个可用区的可用子网
+func GetZoneAvailableSubnetsByVpc(opt *cloudprovider.CommonOption, vpcId string) (map[string]uint32, error) {
+	vpcCli, err := api.NewVPCClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := make([]*api.Filter, 0)
+	filter = append(filter, &api.Filter{Name: "vpc-id", Values: []string{vpcId}})
+	subnets, err := vpcCli.DescribeSubnets(nil, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		availableSubnets = make(map[string]uint32, 0)
+	)
+	for i := range subnets {
+		// subnet is available when default subnet available ipNum eq 10
+		if *subnets[i].AvailableIPAddressCount >= 10 {
+			availableSubnets[*subnets[i].Zone]++
+		}
+	}
+
+	return availableSubnets, nil
 }

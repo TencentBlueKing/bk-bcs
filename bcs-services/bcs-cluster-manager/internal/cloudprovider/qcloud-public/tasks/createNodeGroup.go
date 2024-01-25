@@ -79,7 +79,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 	if dependInfo.NodeGroup.LaunchTemplate != nil {
 		if dependInfo.NodeGroup.LaunchTemplate.InstanceChargeType == "" {
-			dependInfo.NodeGroup.LaunchTemplate.InstanceChargeType = "POSTPAID_BY_HOUR"
+			dependInfo.NodeGroup.LaunchTemplate.InstanceChargeType = icommon.POSTPAIDBYHOUR
 		}
 	}
 
@@ -293,11 +293,13 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 	asc *as.LaunchConfiguration, bkBizIDString string) *proto.NodeGroup {
 	group = generateNodeGroupFromAsg(group, cloudNodeGroup, asg)
 
-	if group.Area == nil {
-		group.Area = &proto.CloudArea{}
-	}
-	cloudAreaName := cloudprovider.GetBKCloudName(int(group.Area.BkCloudID))
-	group.Area.BkCloudName = cloudAreaName
+	/*
+		if group.Area == nil {
+			group.Area = &proto.CloudArea{}
+		}
+		cloudAreaName := cloudprovider.GetBKCloudName(int(group.Area.BkCloudID))
+		group.Area.BkCloudName = cloudAreaName
+	*/
 
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
@@ -538,6 +540,14 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration,
 		},
 		SecurityGroupIds: common.StringPtrs(template.SecurityGroupIDs),
 	}
+
+	if *conf.InstanceChargeType == icommon.PREPAID {
+		conf.InstanceChargePrepaid = &api.InstanceChargePrepaid{
+			Period:    common.Int64Ptr(int64(template.Charge.Period)),
+			RenewFlag: common.StringPtr(template.Charge.RenewFlag),
+		}
+	}
+
 	// system disks
 	if template.SystemDisk != nil {
 		conf.SystemDisk = &api.SystemDisk{

@@ -15,7 +15,6 @@ package task
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -189,44 +188,6 @@ func (ua *RetryAction) distributeTask() error {
 	return nil
 }
 
-func (ua *RetryAction) updateTaskDataStatus() error {
-	blog.Infof("RetryTaskAction[%s] taskType[%s]", ua.req.TaskID, ua.task.TaskType)
-
-	var err error
-	switch {
-	case strings.Contains(ua.task.TaskType, cloudprovider.CreateCluster.String()),
-		strings.Contains(ua.task.TaskType, cloudprovider.ImportCluster.String()),
-		strings.Contains(ua.task.TaskType, cloudprovider.CreateVirtualCluster.String()):
-		err = updateClusterStatus(ua.model, ua.cluster.ClusterID, common.StatusInitialization)
-	case strings.Contains(ua.task.TaskType, cloudprovider.DeleteCluster.String()),
-		strings.Contains(ua.task.TaskType, cloudprovider.DeleteVirtualCluster.String()):
-		err = updateClusterStatus(ua.model, ua.cluster.ClusterID, common.StatusDeleting)
-	case strings.Contains(ua.task.TaskType, cloudprovider.AddNodesToCluster.String()):
-		err = updateNodeStatus(ua.model, ua.task.NodeIPList, common.StatusInitialization)
-	case strings.Contains(ua.task.TaskType, cloudprovider.RemoveNodesFromCluster.String()):
-		err = updateNodeStatus(ua.model, ua.task.NodeIPList, common.StatusDeleting)
-	case strings.Contains(ua.task.TaskType, cloudprovider.CreateNodeGroup.String()):
-		err = updateNodeGroupStatus(ua.model, ua.task.NodeGroupID, common.StatusCreateNodeGroupCreating)
-	case strings.Contains(ua.task.TaskType, cloudprovider.DeleteNodeGroup.String()):
-		err = updateNodeGroupStatus(ua.model, ua.task.NodeGroupID, common.StatusDeleteNodeGroupDeleting)
-	case strings.HasSuffix(ua.task.TaskType, cloudprovider.UpdateNodeGroup.String()):
-		err = updateNodeGroupStatus(ua.model, ua.task.NodeGroupID, common.StatusUpdateNodeGroupUpdating)
-	case strings.HasSuffix(ua.task.TaskType, cloudprovider.UpdateNodeGroupDesiredNode.String()):
-		err = updateNodeStatus(ua.model, cloudprovider.ParseNodeIpOrIdFromCommonMap(ua.task.CommonParams,
-			cloudprovider.NodeIPsKey.String(), ","), common.StatusInitialization)
-	case strings.Contains(ua.task.TaskType, cloudprovider.CleanNodeGroupNodes.String()):
-		err = updateNodeStatus(ua.model, cloudprovider.ParseNodeIpOrIdFromCommonMap(ua.task.CommonParams,
-			cloudprovider.NodeIPsKey.String(), ","), common.StatusInitialization)
-	default:
-		blog.Warnf("RetryTaskAction[%s] not support taskType[%s]", ua.task.TaskID, ua.task.TaskType)
-	}
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Handle handle update cluster credential
 func (ua *RetryAction) Handle(
 	ctx context.Context, req *cmproto.RetryTaskRequest, resp *cmproto.RetryTaskResponse) {
@@ -254,7 +215,7 @@ func (ua *RetryAction) Handle(
 		return
 	}
 	// handle cluster data status and not block task, finally task will update data status
-	_ = ua.updateTaskDataStatus()
+	_ = updateTaskDataStatus(ua.model, ua.task)
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }

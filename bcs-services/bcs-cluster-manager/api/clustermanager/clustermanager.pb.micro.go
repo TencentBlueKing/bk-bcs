@@ -208,6 +208,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.UpdateClusterModule",
+			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/module"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.CheckNodeInCluster",
 			Path:    []string{"/clustermanager/v1/node/available"},
 			Method:  []string{"POST"},
@@ -492,6 +499,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		&api.Endpoint{
 			Name:    "ClusterManager.RetryTask",
 			Path:    []string{"/clustermanager/v1/task/{taskID}/retry"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.SkipTask",
+			Path:    []string{"/clustermanager/v1/task/{taskID}/skip"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
@@ -916,6 +930,7 @@ type ClusterManagerService interface {
 	GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...client.CallOption) (*GetNodeInfoResponse, error)
 	RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, opts ...client.CallOption) (*CommonResp, error)
 	UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error)
+	UpdateClusterModule(ctx context.Context, in *UpdateClusterModuleRequest, opts ...client.CallOption) (*UpdateClusterModuleResponse, error)
 	CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...client.CallOption) (*CheckNodesResponse, error)
 	CordonNode(ctx context.Context, in *CordonNodeRequest, opts ...client.CallOption) (*CordonNodeResponse, error)
 	UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error)
@@ -965,6 +980,7 @@ type ClusterManagerService interface {
 	//* Task information management *
 	CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error)
 	RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...client.CallOption) (*RetryTaskResponse, error)
+	SkipTask(ctx context.Context, in *SkipTaskRequest, opts ...client.CallOption) (*SkipTaskResponse, error)
 	UpdateTask(ctx context.Context, in *UpdateTaskRequest, opts ...client.CallOption) (*UpdateTaskResponse, error)
 	DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...client.CallOption) (*DeleteTaskResponse, error)
 	GetTask(ctx context.Context, in *GetTaskRequest, opts ...client.CallOption) (*GetTaskResponse, error)
@@ -1301,6 +1317,16 @@ func (c *clusterManagerService) RecordNodeInfo(ctx context.Context, in *RecordNo
 func (c *clusterManagerService) UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNode", in)
 	out := new(UpdateNodeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateClusterModule(ctx context.Context, in *UpdateClusterModuleRequest, opts ...client.CallOption) (*UpdateClusterModuleResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateClusterModule", in)
+	out := new(UpdateClusterModuleResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1731,6 +1757,16 @@ func (c *clusterManagerService) CreateTask(ctx context.Context, in *CreateTaskRe
 func (c *clusterManagerService) RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...client.CallOption) (*RetryTaskResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.RetryTask", in)
 	out := new(RetryTaskResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) SkipTask(ctx context.Context, in *SkipTaskRequest, opts ...client.CallOption) (*SkipTaskResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.SkipTask", in)
+	out := new(SkipTaskResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2368,6 +2404,7 @@ type ClusterManagerHandler interface {
 	GetNodeInfo(context.Context, *GetNodeInfoRequest, *GetNodeInfoResponse) error
 	RecordNodeInfo(context.Context, *RecordNodeInfoRequest, *CommonResp) error
 	UpdateNode(context.Context, *UpdateNodeRequest, *UpdateNodeResponse) error
+	UpdateClusterModule(context.Context, *UpdateClusterModuleRequest, *UpdateClusterModuleResponse) error
 	CheckNodeInCluster(context.Context, *CheckNodesRequest, *CheckNodesResponse) error
 	CordonNode(context.Context, *CordonNodeRequest, *CordonNodeResponse) error
 	UnCordonNode(context.Context, *UnCordonNodeRequest, *UnCordonNodeResponse) error
@@ -2417,6 +2454,7 @@ type ClusterManagerHandler interface {
 	//* Task information management *
 	CreateTask(context.Context, *CreateTaskRequest, *CreateTaskResponse) error
 	RetryTask(context.Context, *RetryTaskRequest, *RetryTaskResponse) error
+	SkipTask(context.Context, *SkipTaskRequest, *SkipTaskResponse) error
 	UpdateTask(context.Context, *UpdateTaskRequest, *UpdateTaskResponse) error
 	DeleteTask(context.Context, *DeleteTaskRequest, *DeleteTaskResponse) error
 	GetTask(context.Context, *GetTaskRequest, *GetTaskResponse) error
@@ -2525,6 +2563,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, out *GetNodeInfoResponse) error
 		RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, out *CommonResp) error
 		UpdateNode(ctx context.Context, in *UpdateNodeRequest, out *UpdateNodeResponse) error
+		UpdateClusterModule(ctx context.Context, in *UpdateClusterModuleRequest, out *UpdateClusterModuleResponse) error
 		CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, out *CheckNodesResponse) error
 		CordonNode(ctx context.Context, in *CordonNodeRequest, out *CordonNodeResponse) error
 		UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error
@@ -2568,6 +2607,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, out *DisableNodeGroupAutoScaleResponse) error
 		CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error
 		RetryTask(ctx context.Context, in *RetryTaskRequest, out *RetryTaskResponse) error
+		SkipTask(ctx context.Context, in *SkipTaskRequest, out *SkipTaskResponse) error
 		UpdateTask(ctx context.Context, in *UpdateTaskRequest, out *UpdateTaskResponse) error
 		DeleteTask(ctx context.Context, in *DeleteTaskRequest, out *DeleteTaskResponse) error
 		GetTask(ctx context.Context, in *GetTaskRequest, out *GetTaskResponse) error
@@ -2794,6 +2834,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNode",
 		Path:    []string{"/clustermanager/v1/node"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateClusterModule",
+		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/module"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
@@ -3083,6 +3130,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.RetryTask",
 		Path:    []string{"/clustermanager/v1/task/{taskID}/retry"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.SkipTask",
+		Path:    []string{"/clustermanager/v1/task/{taskID}/skip"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
@@ -3581,6 +3635,10 @@ func (h *clusterManagerHandler) UpdateNode(ctx context.Context, in *UpdateNodeRe
 	return h.ClusterManagerHandler.UpdateNode(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) UpdateClusterModule(ctx context.Context, in *UpdateClusterModuleRequest, out *UpdateClusterModuleResponse) error {
+	return h.ClusterManagerHandler.UpdateClusterModule(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, out *CheckNodesResponse) error {
 	return h.ClusterManagerHandler.CheckNodeInCluster(ctx, in, out)
 }
@@ -3751,6 +3809,10 @@ func (h *clusterManagerHandler) CreateTask(ctx context.Context, in *CreateTaskRe
 
 func (h *clusterManagerHandler) RetryTask(ctx context.Context, in *RetryTaskRequest, out *RetryTaskResponse) error {
 	return h.ClusterManagerHandler.RetryTask(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) SkipTask(ctx context.Context, in *SkipTaskRequest, out *SkipTaskResponse) error {
+	return h.ClusterManagerHandler.SkipTask(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) UpdateTask(ctx context.Context, in *UpdateTaskRequest, out *UpdateTaskResponse) error {

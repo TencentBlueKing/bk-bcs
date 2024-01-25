@@ -98,10 +98,10 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		Creator:         ca.req.Creator,
 		CreateTime:      timeStr,
 		UpdateTime:      timeStr,
-		Area: &cmproto.CloudArea{
-			BkCloudID:   ca.req.BkCloudID,
-			BkCloudName: ca.req.CloudAreaName,
-		},
+		//Area: &cmproto.CloudArea{
+		//	BkCloudID:   ca.req.BkCloudID,
+		//	BkCloudName: ca.req.CloudAreaName,
+		//},
 		NodeGroupType: func() string {
 			// default cloud nodePool
 			_, ok := common.NodeGroupTypeMap[common.NodeGroupType(ca.req.NodeGroupType)]
@@ -303,7 +303,7 @@ func (ca *CreateAction) createNodeGroup() error {
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ca.group.NodeGroupID,
 		TaskID:       taskID,
-		Message:      fmt.Sprintf("集群%s创建节点规格%s", ca.cluster.ClusterID, ca.group.NodeGroupID),
+		Message:      fmt.Sprintf("集群%s创建节点池%s", ca.cluster.ClusterID, ca.group.NodeGroupID),
 		OpUser:       ca.req.Creator,
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ca.cluster.ClusterID,

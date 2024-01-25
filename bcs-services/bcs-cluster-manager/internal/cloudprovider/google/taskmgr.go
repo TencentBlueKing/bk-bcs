@@ -553,10 +553,9 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		Port:       "",
 	})
 	// transfer host module
-	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
-		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
-		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID,
-			group.NodeTemplate.Module.ScaleOutModuleID, "")
+	moduleID := cloudprovider.GetTransModuleInfo(opt.Cluster, opt.AsOption, opt.NodeGroup)
+	if moduleID != "" {
+		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID, "")
 	}
 
 	// step4. business define sops task 支持脚本和标准运维流程

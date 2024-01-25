@@ -353,6 +353,7 @@ func (ba *BatchDeleteClusterNodesAction) handleManualNodes(ipList []string, grou
 			Operator:       ba.req.Operator,
 			NodeGroupID:    groupID,
 			IsExternalNode: external,
+			DeleteMode:     ba.req.DeleteMode,
 		}
 
 		deleteNodesResp = &cmproto.DeleteNodesResponse{}

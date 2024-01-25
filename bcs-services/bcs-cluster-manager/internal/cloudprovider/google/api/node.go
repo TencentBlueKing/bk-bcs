@@ -75,8 +75,8 @@ func (n *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto
 }
 
 // GetZoneList get zoneList by region
-func (n *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.ZoneInfo, error) {
-	client, err := NewComputeServiceClient(opt)
+func (n *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*proto.ZoneInfo, error) {
+	client, err := NewComputeServiceClient(&opt.CommonOption)
 	if err != nil {
 		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
 	}

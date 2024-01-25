@@ -219,7 +219,7 @@ func (da *DeleteAction) Handle( // nolint
 			}
 			return task.TaskID
 		}(),
-		Message:    fmt.Sprintf("集群%s删除节点规格%s", da.group.ClusterID, da.group.NodeGroupID),
+		Message:    fmt.Sprintf("集群%s删除节点池%s", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:     req.Operator,
 		CreateTime: time.Now().Format(time.RFC3339),
 		ClusterID:  da.group.ClusterID,
@@ -403,7 +403,7 @@ func (da *RemoveNodeAction) Handle(
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   da.group.NodeGroupID,
 		TaskID:       "",
-		Message:      fmt.Sprintf("集群%s节点规格%s移除节点", da.group.ClusterID, da.group.NodeGroupID),
+		Message:      fmt.Sprintf("集群%s节点池%s移除节点", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       da.group.Creator,
 		CreateTime:   time.Now().Format(time.RFC3339),
 	})
@@ -672,7 +672,7 @@ func (da *CleanNodesAction) Handle(
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   da.group.NodeGroupID,
 		TaskID:       da.task.TaskID,
-		Message:      fmt.Sprintf("集群%s节点规格%s删除节点", da.group.ClusterID, da.group.NodeGroupID),
+		Message:      fmt.Sprintf("集群%s节点池%s删除节点", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       req.Operator,
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    da.cluster.ClusterID,

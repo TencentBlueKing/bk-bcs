@@ -92,6 +92,10 @@ type TaskState struct {
 	TaskUrl string
 	// Manual CA scale nodes
 	Manual bool
+	// PartFailure step part failure state
+	PartFailure bool
+	// Message error log
+	Message string
 }
 
 // IsTerminated check task already terminated
@@ -119,16 +123,18 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 		return nil, fmt.Errorf("lost step")
 	}
 
-	// previous step success when retry task scene
-	if curStep.Status == TaskStatusSuccess {
-		blog.Infof("task[%s] current step[%s] successful", stat.Task.TaskID, stepName)
+	// previous step success when retry task or skip scene
+	switch curStep.Status {
+	case TaskStatusSuccess, TaskStatusPartFailure, TaskStatusSkip:
+		blog.Infof("task[%s] current step[%s] status[%s]", stat.Task.TaskID, stepName, curStep.Status)
 		return nil, nil
+	default:
+		blog.Infof("task[%s] current step[%s] status[%s]", stat.Task.TaskID, stepName, curStep.Status)
 	}
 
 	// check turn to step
 	if stepName != stat.Task.CurrentStep {
 		// check if pre steps are all ok, then we can set sthi step running
-		ok := true
 		for _, name := range stat.Task.StepSequence {
 			step, found := stat.Task.Steps[name]
 			if !found {
@@ -136,8 +142,9 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 			}
 
 			// found current step
-			if name == stepName && ok {
-				if step.Status == TaskStatusSuccess {
+			if name == stepName {
+				if step.Status == TaskStatusSuccess ||
+					step.Status == TaskStatusPartFailure || step.Status == TaskStatusSkip {
 					return nil, fmt.Errorf("task %s step %s already success", stat.Task.TaskID, stepName)
 				}
 				stat.Task.CurrentStep = stepName
@@ -154,7 +161,8 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 				continue
 			}
 			// check this step is ok
-			if step.Status != TaskStatusSuccess {
+			if step.Status != TaskStatusSuccess &&
+				step.Status != TaskStatusPartFailure && step.Status != TaskStatusSkip {
 				// ok = false
 				break
 			}
@@ -194,8 +202,16 @@ func (stat *TaskState) UpdateStepSucc(start time.Time, stepName string) error {
 	step.Start = start.Format(time.RFC3339)
 	step.End = end.Format(time.RFC3339)
 	step.Status = TaskStatusSuccess
+	/*
+		if stat.PartFailure {
+			step.Status = TaskStatusPartFailure
+		}
+	*/
 	step.LastUpdate = step.End
 	step.Message = "running successfully"
+	if stat.Message != "" {
+		step.Message = stat.Message
+	}
 	if stat.TaskUrl != "" {
 		step.Params[BkSopsTaskUrlKey.String()] = stat.TaskUrl
 	}
