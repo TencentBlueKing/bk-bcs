@@ -160,6 +160,8 @@ const handleSubmit = async () => {
 };
 
 const close = () => {
+  content.value = '';
+  configForm.value = getConfigEditParams();
   emits('update:show', false);
 };
 </script>
