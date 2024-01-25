@@ -129,11 +129,27 @@ func handleKv(result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, erro
 				return nil, fmt.Errorf("key: %s %s", key, err.Error())
 			}
 			var val string
-			// 如果是json需要序列化以下
 			val = fmt.Sprintf("%v", kvValue)
+			// json 和 yaml 都需要格式化
 			if kvType == string(table.KvJson) {
-				mv, _ := json.Marshal(kvValue)
+				v, ok := kvValue.(string)
+				if !ok {
+					return nil, fmt.Errorf("key: %s format error", key)
+				}
+				mv, err := json.Marshal(v)
+				if err != nil {
+					return nil, fmt.Errorf("key: %s json marshal error", key)
+				}
 				val = string(mv)
+			} else if kvType == string(table.KvYAML) {
+				_, ok := kvValue.(string)
+				if !ok {
+					ys, err := yaml.Marshal(kvValue)
+					if err != nil {
+						return nil, fmt.Errorf("key: %s yaml marshal error", key)
+					}
+					val = string(ys)
+				}
 			}
 			kvMap = append(kvMap, &pbcs.BatchUpsertKvsReq_Kv{
 				Key:    key,
