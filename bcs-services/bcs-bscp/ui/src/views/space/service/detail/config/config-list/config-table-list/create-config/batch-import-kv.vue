@@ -29,7 +29,7 @@
           <template #tip>
             <div class="upload-tips">
               <span>{{ t('支持 JSON、YAML 等类型文件，后台会自动检测文件类型，配置项格式请参照') }}</span>
-              <span class="sample">{{ t('示例文件包') }}</span>
+              <a class="sample" :href="downloadHref" download="SamplePkg.zip">{{ t('示例文件包') }}</a>
             </div>
           </template>
         </bk-upload>
@@ -63,12 +63,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Done, TextFill, Del } from 'bkui-vue/lib/icon';
 import KvContentEditor from '../../../components/kv-import-editor.vue';
 import { batchImportKvFile } from '../../../../../../../../api/config';
 import { Message } from 'bkui-vue';
+import createSamplePkg from '../../../../../../../../utils/sample-file-pkg';
 
 const { t } = useI18n();
 const props = defineProps<{
@@ -85,12 +86,17 @@ const textConfirmBtnPerm = ref(false);
 const selectedFile = ref<File>();
 const isFileUploadSuccess = ref(true);
 const loading = ref(false);
+const downloadHref = ref('');
 watch(
   () => props.show,
   () => {
     isFormChange.value = false;
   },
 );
+
+onMounted(async () => {
+  downloadHref.value = await createSamplePkg() as string;
+});
 
 const confirmBtnPerm = computed(() => {
   if (importType.value === 'text') return textConfirmBtnPerm.value;
@@ -102,6 +108,7 @@ const handleClose = () => {
   isFileUploadSuccess.value = true;
   emits('update:show', false);
 };
+
 const handleConfirm = async () => {
   loading.value = true;
   if (importType.value === 'file') {
@@ -136,6 +143,7 @@ const handleConfirm = async () => {
 };
 
 const handleSelectFile = (file: File) => {
+  // upload组件只做展示 返回false取消默认上传行为
   selectedFile.value = file;
   isFileUploadSuccess.value = true;
   return false;
