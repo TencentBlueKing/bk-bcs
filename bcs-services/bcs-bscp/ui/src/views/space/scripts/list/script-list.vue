@@ -23,8 +23,8 @@
     </div>
     <div class="script-list-wrapper">
       <div class="operate-area">
-        <bk-button theme="primary" @click="showCreateScript = true"
-          ><Plus class="button-icon" />
+        <bk-button theme="primary" @click="showCreateScript = true">
+          <Plus class="button-icon" />
           {{ t('新建脚本') }}
         </bk-button>
         <bk-input

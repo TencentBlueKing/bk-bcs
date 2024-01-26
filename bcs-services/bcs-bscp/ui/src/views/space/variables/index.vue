@@ -1,7 +1,8 @@
 <template>
   <section class="variables-management-page">
-    <bk-alert theme="info"
-      >{{ headInfo }}<span @click="goVariablesDoc" class="hyperlink">{{ t('配置模板与变量') }}</span>
+    <bk-alert theme="info">
+      {{ headInfo }}
+      <span @click="goVariablesDoc" class="hyperlink">{{ t('配置模板与变量') }}</span>
     </bk-alert>
     <div class="operation-area">
       <div class="button">

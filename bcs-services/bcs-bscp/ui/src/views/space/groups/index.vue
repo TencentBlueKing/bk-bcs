@@ -1,12 +1,14 @@
 <template>
-  <bk-alert theme="info"
-    >{{ headInfo }}<span @click="goGroupDoc" class="hyperlink">{{ t('分组管理') }}</span></bk-alert
-  >
+  <bk-alert theme="info">
+    {{ headInfo }}
+    <span @click="goGroupDoc" class="hyperlink">{{ t('分组管理') }}</span>
+  </bk-alert>
   <section class="groups-management-page">
     <div class="operate-area">
-      <bk-button theme="primary" @click="openCreateGroupDialog"
-        ><Plus class="button-icon" />{{ t('新增分组') }}</bk-button
-      >
+      <bk-button theme="primary" @click="openCreateGroupDialog">
+        <Plus class="button-icon" />
+        {{ t('新增分组') }}
+      </bk-button>
       <div class="filter-actions">
         <bk-checkbox
           v-model="isCategorizedView"
