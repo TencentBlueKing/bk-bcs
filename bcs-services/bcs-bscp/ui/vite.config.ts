@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue';
 import eslintPlugin from 'vite-plugin-eslint';
 // import basicSsl from '@vitejs/plugin-basic-ssl';
 import viteCompression from 'vite-plugin-compression';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const viteHtml = (options?: any) => ({
   name: 'vite-plugin-html-transform',
@@ -28,6 +29,13 @@ export default defineConfig(({ command, mode }) => {
   console.error('defineConfig command', command);
   if (command === 'build') {
     plugins.push(viteHtml());
+    // plugins.push(
+    //   visualizer({
+    //     open: true,
+    //     gzipSize: true,
+    //     brotliSize: true,
+    //   }),
+    // );
   }
   //  else {
   //   plugins.push(basicSsl())
@@ -61,6 +69,10 @@ export default defineConfig(({ command, mode }) => {
           entryFileNames: 'static/js/[name]-[hash].js',
           chunkFileNames: 'static/js/[name]-[hash].js',
           assetFileNames: 'static/[ext]/[name]-[hash].[ext]',
+          manualChunks: {
+            lodash: ['lodash'],
+            'notice-component': ['@blueking/notice-component'],
+          },
         },
       },
     },

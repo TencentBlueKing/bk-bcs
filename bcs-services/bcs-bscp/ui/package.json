@@ -7,7 +7,8 @@
     "dev": "vite --force",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "format": "npx prettier ./ --write"
+    "format": "npx prettier ./ --write",
+    "lint": "npx eslint \"./src/**/*.{js,vue,ts}\""
   },
   "dependencies": {
     "@blueking/notice-component": "^2.0.1",
@@ -43,6 +44,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-vue": "^9.4.0",
     "prettier": "^3.0.3",
+    "rollup-plugin-visualizer": "^5.12.0",
     "typescript": "^4.6.4",
     "vite": "^3.0.7",
     "vite-plugin-compression": "^0.5.1",
