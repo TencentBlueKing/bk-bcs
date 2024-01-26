@@ -2476,7 +2476,7 @@ ca:
     button:
       createBandWidth: 新建带宽包
   tips:
-    requiredBandwidthPackage: ca.tips.requiredBandwidthPackage
+    requiredBandwidthPackage: 带宽包必填
 googleCloud:
   button:
     create: 新建凭证
