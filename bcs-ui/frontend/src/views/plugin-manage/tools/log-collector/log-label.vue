@@ -19,7 +19,7 @@
         ref="labelValidateRef">
         <bcs-input class="flex-1" ref="labelKeyRef" v-model="label.key"></bcs-input>
       </Validate>
-      <span class="text-[#FF9C01] px-[8px]">=</span>
+      <span class="text-[#FF9C01] px-[8px]">{{ label.operator || '=' }}</span>
       <Validate
         class="flex-1 hover:z-20 ml-[-1px]"
         :value="label.value"
@@ -45,10 +45,10 @@
       <span class="flex-1">{{ label.key }}</span>
       <span
         :class="[
-          'flex items-center justify-center rounded-sm',
-          'w-[24px] h-[24px] text-[#FF9C01] mx-[12px] bg-[#fff]'
+          'flex items-center justify-center rounded-sm px-[8px]',
+          'h-[24px] text-[#FF9C01] mx-[12px] bg-[#fff]'
         ]">
-        =
+        {{ label.operator || '=' }}
       </span>
       <span class="flex-1">{{ label.value }}</span>
       <!-- <i
@@ -70,7 +70,7 @@ import Validate from '@/components/validate.vue';
 
 const props = defineProps({
   value: {
-    type: Object as PropType<{key: string, value: string}>,
+    type: Object as PropType<{key: string, value: string, operator?: string}>,
     default: () => ({}),
   },
   editable: {

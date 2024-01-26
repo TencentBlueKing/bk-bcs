@@ -212,6 +212,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			NodeIps:   strings.Join(opt.WorkerNodes, ","),
 			Operator:  opt.Operator,
 			StepName:  common.PostInitStepJob,
+			Translate: common.PostInitJob,
 		})
 	}
 
@@ -221,10 +222,11 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			StepName: template.UserAfterInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
-				InstancePasswd: passwd,
-				NodeIPList:     strings.Join(opt.WorkerNodes, ","),
-				NodeOperator:   opt.Operator,
-				ShowSopsUrl:    true,
+				InstancePasswd:  passwd,
+				NodeIPList:      strings.Join(opt.WorkerNodes, ","),
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+				TranslateMethod: template.UserPostInit,
 			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
@@ -647,15 +649,10 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
 				InstancePasswd: passwd,
-				NodeIPList: func() string {
-					if len(vpcDiffNodeIds) == 0 {
-						return strings.Join(nodeIPs, ",")
-					}
-					return ""
-				}(),
-				NodeOperator: opt.Operator,
-				ModuleID:     cloudprovider.GetScaleOutModuleID(cls, nil, opt.NodeTemplate, false),
-				BusinessID:   cloudprovider.GetBusinessID(nil, opt.NodeTemplate, true),
+				NodeIPList:     "",
+				NodeOperator:   opt.Operator,
+				ModuleID:       cloudprovider.GetScaleOutModuleID(cls, nil, opt.NodeTemplate, false),
+				BusinessID:     cloudprovider.GetBusinessID(cls, nil, opt.NodeTemplate, true),
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.AddNodesToCluster, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
@@ -665,17 +662,13 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	// step7: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
-			ClusterID: cls.ClusterID,
-			Content:   opt.NodeTemplate.UserScript,
-			NodeIps: func() string {
-				if len(vpcDiffNodeIds) == 0 {
-					return strings.Join(nodeIPs, ",")
-				}
-				return ""
-			}(),
+			ClusterID:        cls.ClusterID,
+			Content:          opt.NodeTemplate.UserScript,
+			NodeIps:          "",
 			Operator:         opt.Operator,
 			StepName:         common.PostInitStepJob,
 			AllowSkipJobTask: opt.NodeTemplate.AllowSkipScaleOutWhenFailed,
+			Translate:        common.PostInitJob,
 		})
 	}
 
@@ -685,15 +678,11 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 			StepName: template.UserAfterInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
-				InstancePasswd: passwd,
-				NodeIPList: func() string {
-					if len(vpcDiffNodeIds) == 0 {
-						return strings.Join(nodeIPs, ",")
-					}
-					return ""
-				}(),
-				NodeOperator: opt.Operator,
-				ShowSopsUrl:  true,
+				InstancePasswd:  passwd,
+				NodeIPList:      "",
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+				TranslateMethod: template.UserPostInit,
 			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
@@ -794,6 +783,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 			Operator:         opt.Operator,
 			StepName:         common.PreInitStepJob,
 			AllowSkipJobTask: opt.NodeTemplate.AllowSkipScaleInWhenFailed,
+			Translate:        common.PreInitJob,
 		})
 	}
 	// business define sops task
@@ -802,9 +792,10 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 			StepName: template.UserPreInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
-				NodeIPList:   strings.Join(nodeIPs, ","),
-				NodeOperator: opt.Operator,
-				ShowSopsUrl:  true,
+				NodeIPList:      strings.Join(nodeIPs, ","),
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+				TranslateMethod: template.UserBeforeInit,
 			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleInExtraAddons, true)
 		if err != nil {
 			return nil, fmt.Errorf("BuildRemoveNodesFromClusterTask business "+
@@ -822,7 +813,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 				NodeIPList:   strings.Join(nodeIPs, ","),
 				NodeOperator: opt.Operator,
 				ModuleID:     cloudprovider.GetScaleInModuleID(nil, opt.NodeTemplate),
-				BusinessID:   cloudprovider.GetBusinessID(nil, opt.NodeTemplate, false),
+				BusinessID:   cloudprovider.GetBusinessID(cls, nil, opt.NodeTemplate, false),
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.DeleteNodesFromCluster, true)
 		if err != nil {
 			return nil, fmt.Errorf("BuildRemoveNodesFromClusterTask BuildBkSopsStepAction failed: %v", err)
@@ -831,6 +822,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 
 	// step1: removeNodesFromTKECluster remove nodes
 	removeNodesTask.BuildRemoveNodesFromClusterStep(task)
+	removeNodesTask.BuildCheckClusterCleanNodsStep(task)
 	// step2: update node DB info
 	removeNodesTask.BuildUpdateRemoveNodeDBInfoStep(task)
 
@@ -983,6 +975,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 			Operator:         opt.Operator,
 			StepName:         common.PreInitStepJob,
 			AllowSkipJobTask: group.NodeTemplate.AllowSkipScaleInWhenFailed,
+			Translate:        common.PreInitJob,
 		})
 	}
 
@@ -992,10 +985,11 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 			StepName: template.UserPreInit,
 			Cluster:  opt.Cluster,
 			Extra: template.ExtraInfo{
-				InstancePasswd: passwd,
-				NodeIPList:     strings.Join(nodeIPs, ","),
-				NodeOperator:   opt.Operator,
-				ShowSopsUrl:    true,
+				InstancePasswd:  passwd,
+				NodeIPList:      strings.Join(nodeIPs, ","),
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+				TranslateMethod: template.UserBeforeInit,
 			}}.BuildSopsStep(task, group.NodeTemplate.ScaleInExtraAddons, true)
 		if err != nil {
 			return nil, fmt.Errorf("BuildCleanNodesInGroupTask ScaleInExtraAddons.PreActions "+
@@ -1014,7 +1008,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 				NodeIPList:     strings.Join(nodeIPs, ","),
 				NodeOperator:   opt.Operator,
 				ModuleID:       cloudprovider.GetScaleInModuleID(opt.AsOption, group.NodeTemplate),
-				BusinessID:     cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, false),
+				BusinessID:     cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, false),
 			}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.CleanNodesInGroup, true)
 		if err != nil {
 			return nil, fmt.Errorf("BuildCleanNodesInGroupTask business BuildBkSopsStepAction failed: %v", err)
@@ -1038,7 +1032,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 					NodeOperator:       opt.Operator,
 					ExternalNodeScript: "",
 					ModuleID:           cloudprovider.GetScaleInModuleID(opt.AsOption, group.NodeTemplate),
-					BusinessID:         cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, false),
+					BusinessID:         cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, false),
 					NodeGroupID:        group.NodeGroupID,
 				}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.DeleteExternalNodesFromCluster, false)
 			if err != nil {
@@ -1129,13 +1123,16 @@ func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeG
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func getTransModuleInfo(asOption *proto.ClusterAutoScalingOption, group *proto.NodeGroup) string {
+func getTransModuleInfo(cls *proto.Cluster, asOption *proto.ClusterAutoScalingOption, group *proto.NodeGroup) string {
 	if group != nil && group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
 		return group.NodeTemplate.Module.ScaleOutModuleID
 	}
+	if asOption != nil && asOption.GetModule() != nil && asOption.GetModule().GetScaleInModuleID() != "" {
+		return asOption.GetModule().GetScaleOutModuleID()
+	}
 
-	return asOption.GetModule().GetScaleOutModuleID()
+	return cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
 }
 
 // BuildUpdateDesiredNodesTask build update desired nodes task
@@ -1202,12 +1199,13 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		updateDesiredNodesTask.BuildCheckClusterNodeStatusStep(task)
 		// install gse agent
 		common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
-			ClusterId:  opt.Cluster.ClusterID,
-			BusinessId: opt.Cluster.BusinessID,
-			CloudArea:  group.GetArea(),
-			User:       "",
-			Passwd:     passwd,
-			KeyInfo:    group.GetLaunchTemplate().GetKeyPair(),
+			ClusterId:   opt.Cluster.ClusterID,
+			BusinessId:  opt.Cluster.BusinessID,
+			NodeGroupId: opt.NodeGroup.NodeGroupID,
+			// CloudArea:   group.GetArea(),
+			User:    "",
+			Passwd:  passwd,
+			KeyInfo: group.GetLaunchTemplate().GetKeyPair(),
 			Port: func() string {
 				exist := checkIfWhiteImageOsNames(&cloudprovider.ClusterGroupOption{
 					CommonOption: opt.CommonOption,
@@ -1222,7 +1220,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 			}(),
 		})
 		// transfer host module
-		moduleID := getTransModuleInfo(opt.AsOption, opt.NodeGroup)
+		moduleID := getTransModuleInfo(opt.Cluster, opt.AsOption, opt.NodeGroup)
 		if moduleID != "" {
 			common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID, "")
 		}
@@ -1239,7 +1237,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 				NodeOperator:   opt.Operator,
 				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate,
 					true),
-				BusinessID: cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, true),
+				BusinessID: cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, true),
 			}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.UpdateDesiredNodes, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask platform BuildBkSopsStepAction failed: %v", err)
@@ -1257,7 +1255,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 				ExternalNodeScript: "",
 				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate,
 					false),
-				BusinessID:  cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, true),
+				BusinessID:  cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, true),
 				NodeGroupID: group.NodeGroupID,
 			}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.AddExternalNodesToCluster, false)
 		if err != nil {
@@ -1274,6 +1272,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 			Operator:         opt.Operator,
 			StepName:         common.PostInitStepJob,
 			AllowSkipJobTask: group.NodeTemplate.GetAllowSkipScaleOutWhenFailed(),
+			Translate:        common.PostInitJob,
 		})
 	}
 
@@ -1284,13 +1283,15 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 			Extra: template.ExtraInfo{
 				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption,
 					group.NodeTemplate, false),
-				BusinessID:         cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, true),
+				BusinessID: cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption,
+					group.NodeTemplate, true),
 				InstancePasswd:     passwd,
 				NodeIPList:         "",
 				NodeOperator:       opt.Operator,
 				ShowSopsUrl:        true,
 				ExternalNodeScript: "",
 				NodeGroupID:        group.NodeGroupID,
+				TranslateMethod:    template.UserPostInit,
 			}}.BuildSopsStep(task, group.NodeTemplate.ScaleOutExtraAddons, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
@@ -1534,7 +1535,7 @@ func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*pr
 				ExternalNodeScript: "",
 				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, nil, group.NodeTemplate,
 					false),
-				BusinessID:  cloudprovider.GetBusinessID(nil, group.NodeTemplate, true),
+				BusinessID:  cloudprovider.GetBusinessID(opt.Cluster, nil, group.NodeTemplate, true),
 				NodeGroupID: group.NodeGroupID,
 			}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.AddExternalNodesToCluster, false)
 		if err != nil {
@@ -1551,6 +1552,7 @@ func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*pr
 			Operator:         opt.Operator,
 			StepName:         common.PostInitStepJob,
 			AllowSkipJobTask: group.NodeTemplate.GetAllowSkipScaleOutWhenFailed(),
+			Translate:        common.PostInitJob,
 		})
 	}
 
@@ -1561,13 +1563,15 @@ func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*pr
 			Extra: template.ExtraInfo{
 				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, nil,
 					group.NodeTemplate, false),
-				BusinessID:         cloudprovider.GetBusinessID(nil, group.NodeTemplate, true),
+				BusinessID: cloudprovider.GetBusinessID(opt.Cluster, nil,
+					group.NodeTemplate, true),
 				InstancePasswd:     "",
 				NodeIPList:         strings.Join(nodeIPs, ","),
 				NodeOperator:       opt.Operator,
 				ShowSopsUrl:        true,
 				ExternalNodeScript: "",
 				NodeGroupID:        group.NodeGroupID,
+				TranslateMethod:    template.UserPostInit,
 			}}.BuildSopsStep(task, group.NodeTemplate.ScaleOutExtraAddons, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
@@ -1662,8 +1666,9 @@ func (t *Task) BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes 
 				NodeOperator:       opt.Operator,
 				ExternalNodeScript: "",
 				ModuleID:           cloudprovider.GetScaleInModuleID(nil, group.NodeTemplate),
-				BusinessID:         cloudprovider.GetBusinessID(nil, group.NodeTemplate, false),
-				NodeGroupID:        group.NodeGroupID,
+				BusinessID: cloudprovider.GetBusinessID(opt.Cluster, nil,
+					group.NodeTemplate, false),
+				NodeGroupID: group.NodeGroupID,
 			}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.DeleteExternalNodesFromCluster, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildDeleteExternalNodeFromCluster BuildBkSopsStepAction failed: %v", err)

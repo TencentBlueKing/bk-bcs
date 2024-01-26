@@ -201,16 +201,23 @@ func CredentialRequired() gin.HandlerFunc {
 
 		// namespace 模式
 		namespace := getNamespace(getRequestBody(c.Request))
-		// 校验项目 or 集群 or 命名空间权限，
+
+		// 校验项目 and 集群 and 命名空间权限，
 		// 其中共享集群命名空间校验，只支持 namespace/pod_name/container_name 模式，container_id 模式在共享集群检索效率较低，暂不支持
+		scopeValues := map[config.ScopeType]string{
+			config.ScopeProjectCode: authCtx.ProjectCode,
+			config.ScopeClusterId:   authCtx.ClusterId,
+			config.ScopeNamespace:   namespace,
+		}
+
 		switch {
-		case config.G.ValidateCred(config.CredentialAppCode, bkAppCode, config.ScopeProjectCode, authCtx.ProjectCode):
-		case config.G.ValidateCred(config.CredentialAppCode, bkAppCode, config.ScopeClusterId, authCtx.ClusterId): // 校验集群权限
-		case config.G.ValidateCred(config.CredentialAppCode, bkAppCode, config.ScopeNamespace, namespace):
+		case config.G.ValidateCred(config.CredentialAppCode, bkAppCode, scopeValues):
 		default:
+			msg := fmt.Sprintf(
+				"app %s have no permission, %s, %s, namespace<%s>", bkAppCode, authCtx.BindProject, authCtx.BindCluster, namespace)
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
-				Message:   fmt.Sprintf("app %s have no permission, %s, %s", bkAppCode, authCtx.BindProject, authCtx.BindCluster),
+				Message:   msg,
 				RequestID: authCtx.RequestId,
 			})
 			return

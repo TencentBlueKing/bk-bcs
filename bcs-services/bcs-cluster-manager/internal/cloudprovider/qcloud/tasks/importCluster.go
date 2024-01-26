@@ -118,7 +118,14 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 
 	// 社区版本 TKE公有云导入获取集群kubeConfig并进行配置
 	err = registerTKEClusterEndpoint(ctx, basicInfo, api.ClusterEndpointConfig{
-		IsExtranet: true,
+		IsExtranet: func() bool {
+			importType, ok := basicInfo.Cluster.GetExtraInfo()[icommon.ImportType]
+			if !ok || importType == icommon.ExternalImport {
+				return true
+			}
+
+			return false
+		}(),
 	})
 	if err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getTKEExternalClusterEndpoint failed: %v", taskID, err)

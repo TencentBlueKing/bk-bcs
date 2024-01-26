@@ -194,7 +194,7 @@ export default {
   设置变量: 'Set Variables',
   设置变量成功: 'Set variable successfully',
   恢复默认值: 'Restore Defaults',
-  服务变量值默认继承上个版本: 'Service variable values inherit from the previous version by default.',
+  '如果以下变量存在于全局变量中，其值将被重置为全局变量的默认值': 'If the following variable exists in a global variable, its value will be reset to the default value of the global variable',
   暂无数据: 'No data',
   变量名称: 'Variable name',
   类型: 'Type',

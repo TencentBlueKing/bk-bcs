@@ -355,7 +355,7 @@ type VclusterInfo struct {
 func ensureVclusterWithInstaller(ctx context.Context, info *VclusterInfo) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
-	installer, err := vcluster.GetVclusterInstaller(info.ProjectID, info.Namespace)
+	installer, err := vcluster.GetVclusterInstaller(info.ProjectID, info.ClusterID, info.Namespace)
 	if err != nil {
 		blog.Errorf("ensureVclusterWithInstaller[%s] GetVclusterInstaller failed: %v", taskID, err)
 		return err
@@ -469,7 +469,7 @@ func UnInstallVclusterTask(taskID string, stepName string) error {
 func DeleteVclusterComponentByHelm(ctx context.Context, info *VclusterInfo) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
-	install, err := vcluster.GetVclusterInstaller(info.ProjectID, info.Namespace)
+	install, err := vcluster.GetVclusterInstaller(info.ProjectID, info.ClusterID, info.Namespace)
 	if err != nil {
 		blog.Errorf("DeleteVclusterComponentByHelm[%s] GetVclusterInstaller failed: %v", taskID, err)
 		return err

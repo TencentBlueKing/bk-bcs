@@ -24,6 +24,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -38,8 +39,9 @@ var (
 
 // GseInstallInfo xxx
 type GseInstallInfo struct {
-	ClusterId  string
-	BusinessId string
+	ClusterId   string
+	NodeGroupId string
+	BusinessId  string
 
 	CloudArea *proto.CloudArea
 
@@ -47,12 +49,16 @@ type GseInstallInfo struct {
 	Passwd  string
 	KeyInfo *proto.KeyInfo
 
-	Port string
+	Port               string
+	AllowReviseCloudId string
 }
 
 // BuildInstallGseAgentTaskStep build common watch step
-func BuildInstallGseAgentTaskStep(task *proto.Task, gseInfo *GseInstallInfo) {
-	installGseStep := cloudprovider.InitTaskStep(installGseAgentStep, cloudprovider.WithStepSkipFailed(true))
+func BuildInstallGseAgentTaskStep(task *proto.Task, gseInfo *GseInstallInfo, options ...cloudprovider.StepOption) {
+	installGseStep := cloudprovider.InitTaskStep(installGseAgentStep, options...)
+
+	installGseStep.Params[cloudprovider.ClusterIDKey.String()] = gseInfo.ClusterId
+	installGseStep.Params[cloudprovider.NodeGroupIDKey.String()] = gseInfo.NodeGroupId
 
 	installGseStep.Params[cloudprovider.BKBizIDKey.String()] = gseInfo.BusinessId // nolint
 	if gseInfo != nil && gseInfo.CloudArea != nil {                               // nolint
@@ -61,8 +67,12 @@ func BuildInstallGseAgentTaskStep(task *proto.Task, gseInfo *GseInstallInfo) {
 	installGseStep.Params[cloudprovider.UsernameKey.String()] = gseInfo.User
 	installGseStep.Params[cloudprovider.PasswordKey.String()] = gseInfo.Passwd
 	installGseStep.Params[cloudprovider.SecretKey.String()] = gseInfo.KeyInfo.GetKeySecret()
-	installGseStep.Params[cloudprovider.ClusterIDKey.String()] = gseInfo.ClusterId
 	installGseStep.Params[cloudprovider.PortKey.String()] = gseInfo.Port
+
+	if gseInfo.AllowReviseCloudId == "" {
+		gseInfo.AllowReviseCloudId = icommon.False
+	}
+	installGseStep.Params[cloudprovider.AllowReviseAgent.String()] = gseInfo.AllowReviseCloudId
 
 	task.Steps[installGseAgentStep.StepMethod] = installGseStep
 	task.StepSequence = append(task.StepSequence, installGseAgentStep.StepMethod)
@@ -79,12 +89,13 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	if step == nil {
 		return nil
 	}
-	// get bkBizID
+	// get cluster/nodeGroup
 	clusterIDString := step.Params[cloudprovider.ClusterIDKey.String()]
+	groupIDString := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	// get bkBizID
 	bkBizIDString := step.Params[cloudprovider.BKBizIDKey.String()]
 	// get bkCloudID
-	bkCloudIDstring := step.Params[cloudprovider.BKCloudIDKey.String()]
+	// bkCloudIDString := step.Params[cloudprovider.BKCloudIDKey.String()]
 	// get nodeIPs
 	nodeIPs := state.Task.CommonParams[cloudprovider.NodeIPsKey.String()]
 	// get password
@@ -93,6 +104,14 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	user := step.Params[cloudprovider.UsernameKey.String()]
 	// get port
 	port := step.Params[cloudprovider.PortKey.String()]
+	// allow check revise cloudId
+	allow := step.Params[cloudprovider.AllowReviseAgent.String()]
+	// update connect cluster status when task retry
+	install, ok := step.Params[cloudprovider.InstallGseAgentKey.String()]
+	if allow == icommon.True && ok && install == icommon.True {
+		step.Params[cloudprovider.InstallGseAgentKey.String()] = icommon.False
+	}
+
 	if len(user) == 0 {
 		user = nodeman.RootAccount
 	}
@@ -105,7 +124,27 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 		return nil
 	}
 
-	bkCloudID, err := strconv.Atoi(bkCloudIDstring)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterIDString,
+		NodeGroupID: groupIDString,
+	})
+	if err != nil {
+		blog.Infof("InstallGSEAgentTask GetClusterDependBasicInfo failed: %v", taskID, err)
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("installAgent getDependInfo failed"))
+		return nil
+	}
+	if bkBizIDString == "" {
+		bkBizIDString = dependInfo.Cluster.GetBusinessID()
+	}
+	cloudAreaID := func() string {
+		if dependInfo.NodeGroup != nil && dependInfo.NodeGroup.GetArea() != nil {
+			return strconv.Itoa(int(dependInfo.NodeGroup.GetArea().GetBkCloudID()))
+		}
+
+		return strconv.Itoa(int(dependInfo.Cluster.GetClusterBasicSettings().GetArea().GetBkCloudID()))
+	}()
+
+	bkCloudID, err := strconv.Atoi(cloudAreaID)
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s failed, invalid bkCloudID, err %s", taskID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("invalid bkCloudID, err %s", err.Error()))
@@ -118,13 +157,6 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 		return nil
 	}
 
-	cls, err := cloudprovider.GetClusterByID(clusterIDString)
-	if err != nil {
-		blog.Errorf("InstallGSEAgentTask %s failed, invalid clusterIDString, err %s", taskID, err.Error())
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("invalid clusterIDString, err %s", err.Error()))
-		return nil
-	}
-
 	nodeManClient := nodeman.GetNodeManClient()
 	if nodeManClient == nil {
 		blog.Errorf("nodeman client is not init")
@@ -133,7 +165,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	}
 
 	// get apID from cloud list
-	clouds, err := nodeManClient.CloudList()
+	clouds, err := nodeManClient.CloudList(context.Background())
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s get cloud list error, %s", taskID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("get cloud list error, %s", err.Error()))
@@ -144,6 +176,12 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	// install gse agent
 	hosts := make([]nodeman.JobInstallHost, 0)
 	ips := strings.Split(nodeIPs, ",")
+
+	// delete ips when install agent if hostIPs exist cmdb
+	err = RemoveHostFromCmdb(context.Background(), bkBizID, nodeIPs)
+	if err != nil {
+		blog.Errorf("InstallGSEAgentTask %s RemoveHostFromCmdb error, %s", taskID, err.Error())
+	}
 
 	for _, v := range ips {
 		hosts = append(hosts, nodeman.JobInstallHost{
@@ -166,8 +204,8 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 				return dPort
 			}(),
 			AuthType: func() nodeman.AuthType {
-				if cloudprovider.IsMasterIp(v, cls) {
-					if len(cls.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeySecret()) > 0 {
+				if cloudprovider.IsMasterIp(v, dependInfo.Cluster) {
+					if len(dependInfo.Cluster.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeySecret()) > 0 {
 						return nodeman.KeyAuthType
 					}
 					return nodeman.PasswordAuthType
@@ -179,16 +217,17 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 				return nodeman.PasswordAuthType
 			}(),
 			Password: func() string {
-				if cloudprovider.IsMasterIp(v, cls) {
-					return cls.GetNodeSettings().GetMasterLogin().GetInitLoginPassword()
+				if cloudprovider.IsMasterIp(v, dependInfo.Cluster) {
+					return dependInfo.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword()
 				}
 
 				return passwd
 			}(),
 			Key: func() string {
-				if cloudprovider.IsMasterIp(v, cls) &&
-					len(cls.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeySecret()) > 0 {
-					secretStr, _ := utils.Base64Decode(cls.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeySecret())
+				if cloudprovider.IsMasterIp(v, dependInfo.Cluster) &&
+					len(dependInfo.Cluster.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeySecret()) > 0 {
+					secretStr, _ := utils.Base64Decode(
+						dependInfo.Cluster.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeySecret())
 					return secretStr
 				}
 
@@ -231,7 +270,12 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s check gse agent install job status failed: %v", taskID, err)
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("check gse agent install job status err: %s", err.Error()))
+		if allow == icommon.True {
+			step.Params[cloudprovider.InstallGseAgentKey.String()] = icommon.True
+		}
+
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("check gse "+
+			"agent install job status err: %s", err.Error()))
 		return nil
 	}
 

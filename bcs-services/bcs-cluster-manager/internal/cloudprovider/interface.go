@@ -206,6 +206,8 @@ type CloudInfoManager interface {
 	InitCloudClusterDefaultInfo(cls *proto.Cluster, opt *InitClusterConfigOption) error
 	// SyncClusterCloudInfo sync cluster metadata
 	SyncClusterCloudInfo(cls *proto.Cluster, opt *SyncClusterCloudInfoOption) error
+	// UpdateClusterCloudInfo update cluster info by cloud
+	UpdateClusterCloudInfo(cls *proto.Cluster) error
 }
 
 // NodeManager cloud interface for cvm management
@@ -223,7 +225,7 @@ type NodeManager interface {
 	// GetCloudRegions get cloud regions
 	GetCloudRegions(opt *CommonOption) ([]*proto.RegionInfo, error)
 	// GetZoneList get zoneList by region
-	GetZoneList(opt *CommonOption) ([]*proto.ZoneInfo, error)
+	GetZoneList(opt *GetZoneListOption) ([]*proto.ZoneInfo, error)
 	// ListNodeInstanceType get node instance type list
 	ListNodeInstanceType(info InstanceInfo, opt *CommonOption) ([]*proto.InstanceType, error)
 	// ListOsImage get osimage list
@@ -305,6 +307,10 @@ type ClusterManager interface {
 		opt *GetMasterSuggestedMachinesOption) ([]*proto.InstanceTemplateConfig, error)
 	// AddSubnetsToCluster cluster add subnet
 	AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource, opt *AddSubnetsToClusterOption) error
+	// AppendCloudNodeInfo append cloud node detailed info
+	AppendCloudNodeInfo(ctx context.Context, nodes []*proto.ClusterNode, opt *CommonOption) error
+	// CheckIfGetNodesFromCluster check cluster if can get nodes from k8s
+	CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto.Cluster, nodes []*proto.ClusterNode) bool
 }
 
 // NodeGroupManager cloud interface for nodegroup management

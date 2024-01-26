@@ -223,6 +223,8 @@ func (m *Cluster) Validate() error {
 
 	// no validation rules for CloudAccountID
 
+	// no validation rules for Message
+
 	return nil
 }
 
@@ -344,6 +346,8 @@ func (m *Node) Validate() error {
 	// no validation rules for TaskID
 
 	// no validation rules for FailedReason
+
+	// no validation rules for ChargeType
 
 	return nil
 }
@@ -6433,6 +6437,16 @@ func (m *LaunchConfiguration) Validate() error {
 		}
 	}
 
+	if v, ok := interface{}(m.GetCharge()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return LaunchConfigurationValidationError{
+				field:  "Charge",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -8714,6 +8728,10 @@ func (m *Step) Validate() error {
 
 	// no validation rules for SkipOnFailed
 
+	// no validation rules for Translate
+
+	// no validation rules for AllowSkip
+
 	return nil
 }
 
@@ -10383,6 +10401,8 @@ func (m *ImportCloudMode) Validate() error {
 	// no validation rules for CloudID
 
 	// no validation rules for KubeConfig
+
+	// no validation rules for Inter
 
 	return nil
 }
@@ -12936,6 +12956,176 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = NodeStatusValidationError{}
+
+// Validate checks the field values on UpdateClusterModuleRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateClusterModuleRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ClusterID
+
+	if v, ok := interface{}(m.GetModule()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterModuleRequestValidationError{
+				field:  "Module",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(m.GetOperator()) < 1 {
+		return UpdateClusterModuleRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be at least 1 bytes",
+		}
+	}
+
+	return nil
+}
+
+// UpdateClusterModuleRequestValidationError is the validation error returned
+// by UpdateClusterModuleRequest.Validate if the designated constraints aren't met.
+type UpdateClusterModuleRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateClusterModuleRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateClusterModuleRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateClusterModuleRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateClusterModuleRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateClusterModuleRequestValidationError) ErrorName() string {
+	return "UpdateClusterModuleRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateClusterModuleRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateClusterModuleRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateClusterModuleRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateClusterModuleRequestValidationError{}
+
+// Validate checks the field values on UpdateClusterModuleResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateClusterModuleResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterModuleResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateClusterModuleResponseValidationError is the validation error returned
+// by UpdateClusterModuleResponse.Validate if the designated constraints
+// aren't met.
+type UpdateClusterModuleResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateClusterModuleResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateClusterModuleResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateClusterModuleResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateClusterModuleResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateClusterModuleResponseValidationError) ErrorName() string {
+	return "UpdateClusterModuleResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateClusterModuleResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateClusterModuleResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateClusterModuleResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateClusterModuleResponseValidationError{}
 
 // Validate checks the field values on RecordNodeInfoRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -18783,6 +18973,8 @@ func (m *BatchDeleteClusterNodesRequest) Validate() error {
 		}
 	}
 
+	// no validation rules for DeleteMode
+
 	return nil
 }
 
@@ -21818,6 +22010,175 @@ var _ interface {
 	ErrorName() string
 } = RetryTaskResponseValidationError{}
 
+// Validate checks the field values on SkipTaskRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *SkipTaskRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetTaskID()); l < 2 || l > 1024 {
+		return SkipTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
+		}
+	}
+
+	if !_SkipTaskRequest_TaskID_Pattern.MatchString(m.GetTaskID()) {
+		return SkipTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 1024 {
+		return SkipTaskRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
+		}
+	}
+
+	return nil
+}
+
+// SkipTaskRequestValidationError is the validation error returned by
+// SkipTaskRequest.Validate if the designated constraints aren't met.
+type SkipTaskRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SkipTaskRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SkipTaskRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SkipTaskRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SkipTaskRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SkipTaskRequestValidationError) ErrorName() string { return "SkipTaskRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SkipTaskRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSkipTaskRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SkipTaskRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SkipTaskRequestValidationError{}
+
+var _SkipTaskRequest_TaskID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on SkipTaskResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *SkipTaskResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SkipTaskResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// SkipTaskResponseValidationError is the validation error returned by
+// SkipTaskResponse.Validate if the designated constraints aren't met.
+type SkipTaskResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SkipTaskResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SkipTaskResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SkipTaskResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SkipTaskResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SkipTaskResponseValidationError) ErrorName() string { return "SkipTaskResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SkipTaskResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSkipTaskResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SkipTaskResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SkipTaskResponseValidationError{}
+
 // Validate checks the field values on UpdateTaskRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an
 // error is returned.
@@ -21843,7 +22204,7 @@ func (m *UpdateTaskRequest) Validate() error {
 	if _, ok := _UpdateTaskRequest_Status_InLookup[m.GetStatus()]; !ok {
 		return UpdateTaskRequestValidationError{
 			field:  "Status",
-			reason: "value must be in list [INITIALIZING RUNNING SUCCESS FAILED TIMEOUT]",
+			reason: "value must be in list [INITIALIZING RUNNING SUCCESS FAILURE TIMEOUT]",
 		}
 	}
 
@@ -21951,7 +22312,7 @@ var _UpdateTaskRequest_Status_InLookup = map[string]struct{}{
 	"INITIALIZING": {},
 	"RUNNING":      {},
 	"SUCCESS":      {},
-	"FAILED":       {},
+	"FAILURE":      {},
 	"TIMEOUT":      {},
 }
 
@@ -24733,6 +25094,8 @@ func (m *ZoneInfo) Validate() error {
 
 	// no validation rules for ZoneState
 
+	// no validation rules for SubnetNum
+
 	return nil
 }
 
@@ -25069,6 +25432,10 @@ func (m *GetCloudRegionZonesRequest) Validate() error {
 	// no validation rules for Region
 
 	// no validation rules for AccountID
+
+	// no validation rules for VpcId
+
+	// no validation rules for State
 
 	return nil
 }
@@ -27400,6 +27767,8 @@ func (m *CloudVpc) Validate() error {
 		}
 
 	}
+
+	// no validation rules for AllocateIpNum
 
 	return nil
 }
@@ -30828,17 +31197,10 @@ func (m *ListCCTopologyRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 5 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return ListCCTopologyRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 5 and 100 runes, inclusive",
-		}
-	}
-
-	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
-		return ListCCTopologyRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not have prefix \"BCS-\"",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 

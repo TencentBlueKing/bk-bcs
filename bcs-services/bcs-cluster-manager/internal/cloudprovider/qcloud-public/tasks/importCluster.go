@@ -70,6 +70,10 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		blog.Errorf("ImportClusterNodesTask[%s]: importClusterInstances failed: %v", taskID, err)
 		retErr := fmt.Errorf("importClusterInstances failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
+
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("import cluster[%s] nodes failed: %v",
+			clusterID, err.Error()))
+
 		return retErr
 	}
 	// update cluster masterNodes info
@@ -133,12 +137,23 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 
 	// 社区版本 TKE公有云导入获取集群kubeConfig并进行配置
 	err = registerTKEClusterEndpoint(ctx, basicInfo, api.ClusterEndpointConfig{
-		IsExtranet: true,
-	})
+		IsExtranet: func() bool {
+			importType, ok := basicInfo.Cluster.GetExtraInfo()[icommon.ImportType]
+			if !ok || importType == icommon.ExternalImport {
+				return true
+			}
+
+			return false
+		}(),
+	}, false)
 	if err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getTKEExternalClusterEndpoint failed: %v", taskID, err)
 		retErr := fmt.Errorf("getTKEExternalClusterEndpoint failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
+
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("import cluster[%s] endpoint failed: %v",
+			clusterID, err.Error()))
+
 		return retErr
 	}
 
@@ -147,6 +162,10 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: importClusterCredential failed: %v", taskID, err)
 		retErr := fmt.Errorf("importClusterCredential failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
+
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("import cluster[%s] credential failed: %v",
+			clusterID, err.Error()))
+
 		return retErr
 	}
 
@@ -161,7 +180,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 
 // registerTKEClusterEndpoint 开启内网或外网访问config: err = nil 已开启内/外网访问; err != nil 开启失败
 func registerTKEClusterEndpoint(ctx context.Context, data *cloudprovider.CloudDependBasicInfo,
-	config api.ClusterEndpointConfig) error {
+	config api.ClusterEndpointConfig, reinstall bool) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	tkeCli, err := api.NewTkeClient(data.CmOption)
@@ -184,6 +203,25 @@ func registerTKEClusterEndpoint(ctx context.Context, data *cloudprovider.CloudDe
 
 	switch {
 	case endpointStatus.Created():
+		if reinstall {
+			blog.Infof("taskID[%s] registerTKEClusterEndpoint reinstall inter[%v] endpointStatus[%s]",
+				taskID, config.IsExtranet, endpointStatus.Status())
+			err = tkeCli.DeleteClusterEndpoint(data.Cluster.SystemID, config.IsExtranet)
+			if err != nil {
+				return err
+			}
+			// wait cloud update endpoint when delete endpoint for create new endpoint
+			time.Sleep(5 * time.Second)
+
+			err = tkeCli.CreateClusterEndpoint(data.Cluster.SystemID, config)
+			if err != nil {
+				return err
+			}
+			err = checkClusterEndpointStatus(ctx, data, config.IsExtranet)
+			if err != nil {
+				return err
+			}
+		}
 		return nil
 	case endpointStatus.NotFound(), endpointStatus.Deleted(), endpointStatus.CreateFailed():
 		if endpointStatus.CreateFailed() {

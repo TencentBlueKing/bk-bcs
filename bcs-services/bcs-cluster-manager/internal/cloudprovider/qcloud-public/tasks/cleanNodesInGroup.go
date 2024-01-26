@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -76,13 +77,28 @@ func CleanNodeGroupNodesTask(taskID string, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = removeAsgInstances(ctx, dependInfo, nodeIDs)
-	if err != nil {
-		blog.Errorf("CleanNodeGroupNodesTask[%s] nodegroup %s removeAsgInstances failed: %v",
-			taskID, nodeGroupID, err)
-		retErr := fmt.Errorf("removeAsgInstances err, %v", err)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
+
+	// 按量计费节点池 销毁节点; 包年包月节点池 移除节点,需要用户手动回收
+	switch dependInfo.NodeGroup.GetLaunchTemplate().GetInstanceChargeType() {
+	case icommon.PREPAID:
+		deleteResult, errLocal := business.RemoveNodesFromCluster(ctx, dependInfo, cloudprovider.Terminate.String(), nodeIDs)
+		if errLocal != nil {
+			blog.Errorf("CleanNodeGroupNodesTask[%s] RemoveNodesFromCluster failed: %v",
+				taskID, errLocal)
+			retErr := fmt.Errorf("RemoveNodesFromCluster err, %s", errLocal.Error())
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
+		blog.Infof("CleanNodeGroupNodesTask[%s] deletedInstance[%v]", taskID, deleteResult)
+	default:
+		err = removeAsgInstances(ctx, dependInfo, nodeIDs)
+		if err != nil {
+			blog.Errorf("CleanNodeGroupNodesTask[%s] nodegroup %s removeAsgInstances failed: %v",
+				taskID, nodeGroupID, err)
+			retErr := fmt.Errorf("removeAsgInstances err, %v", err)
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
 	}
 
 	// update step
@@ -169,7 +185,7 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 	nodeIDs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.NodeIDsKey.String(), ",")
 
-	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(nodeIDs) == 0 {
+	if len(clusterID) == 0 || len(cloudID) == 0 || len(nodeIDs) == 0 {
 		blog.Errorf("CheckClusterCleanNodsTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("CheckClusterCleanNodsTask check parameters failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)

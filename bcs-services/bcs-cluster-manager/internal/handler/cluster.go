@@ -131,6 +131,21 @@ func (cm *ClusterManager) UpdateCluster(ctx context.Context,
 	return nil
 }
 
+// UpdateClusterModule implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateClusterModule(ctx context.Context,
+	req *cmproto.UpdateClusterModuleRequest, resp *cmproto.UpdateClusterModuleResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewUpdateClusterModuleAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateClusterModule", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateClusterModule, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // AddNodesToCluster implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) AddNodesToCluster(ctx context.Context,
 	req *cmproto.AddNodesRequest, resp *cmproto.AddNodesResponse) error {

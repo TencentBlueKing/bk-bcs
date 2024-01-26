@@ -195,7 +195,6 @@ import clusterScaleData from '../common/cluster-scale.json';
 import IpSelector from '../common/ip-selector.vue';
 
 import ApplyHostResource from './apply-host-resource.vue';
-import TopoSelector from './topo-selector.vue';
 import { ClusterDataInjectKey, IHostNode, IInstanceItem, IScale } from './types';
 
 import { cloudInstanceTypesByLevel } from '@/api/modules/cluster-manager';
@@ -204,6 +203,7 @@ import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
 import ApiServer from '@/views/cluster-manage/add/form/api-server.vue';
 import LoginType from '@/views/cluster-manage/add/form/login-type.vue';
+import TopoSelector from '@/views/cluster-manage/autoscaler/topo-select-tree.vue';
 
 const props = defineProps({
   region: {

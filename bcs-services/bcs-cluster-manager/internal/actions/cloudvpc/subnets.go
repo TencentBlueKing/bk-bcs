@@ -123,7 +123,7 @@ func (la *ListSubnetsAction) ListCloudSubnets() error {
 
 	// region zone info
 	zoneMap := make(map[string]string, 0)
-	zoneList, err := nodeMgr.GetZoneList(cmOption)
+	zoneList, err := nodeMgr.GetZoneList(&cloudprovider.GetZoneListOption{CommonOption: *cmOption})
 	if err != nil {
 		return err
 	}

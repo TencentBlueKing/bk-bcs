@@ -199,7 +199,11 @@ func (ga *GetCloudRegionZonesAction) listCloudRegionZones() error {
 	}
 	cmOption.Region = ga.req.Region
 
-	zoneList, err := nodeMgr.GetZoneList(cmOption)
+	zoneList, err := nodeMgr.GetZoneList(&cloudprovider.GetZoneListOption{
+		CommonOption: *cmOption,
+		VpcId:        ga.req.VpcId,
+		State:        ga.req.State,
+	})
 	if err != nil {
 		return err
 	}

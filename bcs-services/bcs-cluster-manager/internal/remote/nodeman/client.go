@@ -14,12 +14,14 @@
 package nodeman
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -111,11 +113,13 @@ func (c *Client) generateGateWayAuth() (string, error) {
 }
 
 // CloudList get cloud list
-func (c *Client) CloudList() ([]CloudListData, error) {
+func (c *Client) CloudList(ctx context.Context) ([]CloudListData, error) {
 	var (
 		reqURL   = fmt.Sprintf("%s/api/cloud?RUN_VER=open&with_default_area=true", c.server)
 		respData = &CloudListResponse{}
 	)
+
+	language := i18n.LanguageFromCtx(ctx)
 
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
@@ -123,6 +127,7 @@ func (c *Client) CloudList() ([]CloudListData, error) {
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", c.userAuth).
+		Set("Blueking-Language", language).
 		SetDebug(c.serverDebug).
 		EndStruct(&respData)
 	if len(errs) > 0 {

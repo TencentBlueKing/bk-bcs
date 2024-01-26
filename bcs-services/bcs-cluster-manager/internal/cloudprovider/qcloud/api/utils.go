@@ -13,6 +13,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
@@ -41,6 +42,11 @@ var (
 	Zone FilterKey = "zone"
 	// InstanceFamily instance-family
 	InstanceFamily FilterKey = "instance-family"
+)
+
+var (
+	// ErrClusterNotFound cluster not found when delete cluster
+	ErrClusterNotFound = errors.New(tke.FAILEDOPERATION_CLUSTERNOTFOUND)
 )
 
 // generateInstanceAdvancedSetting transfer InstanceAdvancedSettings to cloudInstanceAdvancedSettings

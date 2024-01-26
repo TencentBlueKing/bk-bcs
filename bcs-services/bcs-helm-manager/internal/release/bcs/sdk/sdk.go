@@ -18,10 +18,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
-	"text/template"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -48,6 +48,9 @@ const (
 	defaultMaxHistory  = 10
 	defaultTimeout     = "15s"
 )
+
+// bcs var in values regex, eg: {{ .BCS_SYS_CLUSTER_ID }}
+var bcsVarRegex = regexp.MustCompile(`{{\s*\.BCS_(\w+)\s*}}`)
 
 // Config 定义了使用sdk的基本参数
 type Config struct {
@@ -505,23 +508,20 @@ func mergeValues(valuesOpts *values.Options, base map[string]interface{}) (map[s
 
 // 渲染 values 中的变量，将 {{xxx}} 替换为变量值
 func parseVarValue(fs []*release.File, vars map[string]interface{}) []*release.File {
-	newVars := make(map[string]interface{}, 0)
-	for k, v := range vars {
-		newVars["BCS_"+k] = v
-	}
 	for i := range fs {
-		tmpl, err := template.New("vars").Parse(string(fs[i].Content))
-		if err != nil {
-			blog.Errorf("parse template failed, %s", err.Error())
-			continue
-		}
-		var buf bytes.Buffer
-		err = tmpl.Execute(&buf, newVars)
-		if err != nil {
-			blog.Errorf("execute template failed, %s", err.Error())
-			continue
-		}
-		fs[i].Content = buf.Bytes()
+		repl := bcsVarRegex.ReplaceAllStringFunc(string(fs[i].Content), func(match string) string {
+			varName := strings.TrimPrefix(match, "{{")
+			varName = strings.TrimSuffix(varName, "}}")
+			varName = strings.TrimSpace(varName)
+			varName = strings.TrimPrefix(varName, ".BCS_")
+			value, ok := vars[varName]
+			if !ok {
+				// 如果变量不存在，则直接返回原始值，不做替换
+				return match
+			}
+			return fmt.Sprint(value)
+		})
+		fs[i].Content = []byte(repl)
 	}
 	return fs
 }

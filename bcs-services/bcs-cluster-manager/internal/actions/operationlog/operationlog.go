@@ -240,7 +240,8 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 					}
 					delete(t.Steps[i].Params, k)
 				}
-				t.Steps[i].TaskName = autils.Translate(ua.ctx, t.Steps[i].TaskMethod, t.Steps[i].TaskName)
+				t.Steps[i].TaskName = autils.Translate(ua.ctx, t.Steps[i].TaskMethod,
+					t.Steps[i].TaskName, t.Steps[i].Translate)
 				if t.Steps[i].Start != "" {
 					t.Steps[i].Start = utils.TransTimeFormat(t.Steps[i].Start)
 				}
@@ -253,7 +254,7 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 			t.Start = startTime
 			t.End = endTime
 
-			t.TaskName = autils.Translate(ua.ctx, t.TaskType, t.TaskName)
+			t.TaskName = autils.Translate(ua.ctx, t.TaskType, t.TaskName, "")
 			ua.resp.Data.Results[i].Message = autils.TranslateMsg(ua.ctx, v.ResourceType, v.TaskType, v.Message, t)
 			ua.resp.Data.Results[i].Task = t
 		}

@@ -28,7 +28,7 @@ import (
 
 // CheckClusterConnection check cluster connection when delete cluster or other scenes
 func CheckClusterConnection(operator *clusterops.K8SOperator, clusterID string) bool {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
 	defer cancel()
 
 	err := operator.CheckClusterConnection(ctx, clusterID)
@@ -59,7 +59,49 @@ func GetCloudZones(cls *proto.Cluster, cloud *proto.Cloud) ([]*proto.ZoneInfo, e
 	}
 	cmOption.Region = cls.Region
 
-	return nodeMgr.GetZoneList(cmOption)
+	return nodeMgr.GetZoneList(&cloudprovider.GetZoneListOption{CommonOption: *cmOption})
+}
+
+// CheckIfGetNodesFromCluster check if get k8s nodes from cluster
+func CheckIfGetNodesFromCluster(cls *proto.Cluster, cloud *proto.Cloud, nodes []*proto.ClusterNode) bool {
+	clsMgr, err := cloudprovider.GetClusterMgr(cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("CheckIfGetNodesFromCluster[%s] failed: %v", cls.ClusterID, err)
+		return false
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cls.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s getCloudInstanceList failed, %s",
+			cloud.CloudID, cloud.CloudProvider, err.Error())
+		return false
+	}
+	cmOption.Region = cls.Region
+
+	return clsMgr.CheckIfGetNodesFromCluster(context.Background(), cls, nodes)
+}
+
+// UpdateClusterCloudInfo update cloud cluster info
+func UpdateClusterCloudInfo(cls *proto.Cluster, cloud *proto.Cloud) error {
+	cloudMgr, err := cloudprovider.GetCloudInfoMgr(cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("UpdateClusterCloudInfo[%s] failed: %v", cls.ClusterID, err)
+		return err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cls.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s getCloudInstanceList failed, %s",
+			cloud.CloudID, cloud.CloudProvider, err.Error())
+		return err
+	}
+	cmOption.Region = cls.Region
+
+	return cloudMgr.UpdateClusterCloudInfo(cls)
 }
 
 // GetCloudInstanceList get cloud instances info
@@ -109,11 +151,13 @@ func HandleTaskStepData(ctx context.Context, task *proto.Task) {
 	if task != nil && len(task.Steps) > 0 {
 		for i := range task.Steps {
 
-			task.Steps[i].TaskName = Translate(ctx, task.Steps[i].TaskMethod, task.Steps[i].TaskName)
+			task.Steps[i].TaskName = Translate(ctx, task.Steps[i].TaskMethod,
+				task.Steps[i].TaskName, task.Steps[i].Translate)
 
 			for k := range task.Steps[i].Params {
 				if utils.StringInSlice(k, []string{cloudprovider.BkSopsTaskUrlKey.String(),
-					cloudprovider.ShowSopsUrlKey.String(), cloudprovider.ConnectClusterKey.String()}) {
+					cloudprovider.ShowSopsUrlKey.String(), cloudprovider.ConnectClusterKey.String(),
+					cloudprovider.InstallGseAgentKey.String()}) {
 					continue
 				}
 				delete(task.Steps[i].Params, k)

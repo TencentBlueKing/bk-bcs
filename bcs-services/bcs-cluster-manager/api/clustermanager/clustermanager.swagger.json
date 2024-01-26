@@ -2301,6 +2301,20 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "vpcId",
+            "description": "vpcId. 过滤某个vpc的子网数量. 若为空,则不会返回可用区的子网数量",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "state",
+            "description": "state. 可用区状态(AVAILABLE可用/UNAVAILABLE不可用), 默认返回所有",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2887,7 +2901,7 @@
         "parameters": [
           {
             "name": "clusterID",
-            "description": "集群ID",
+            "description": "集群ID,默认拉去集群对应的业务拓扑。当为无效集群ID时会拉取参数bizID对应的业务拓扑",
             "in": "path",
             "required": true,
             "type": "string"
@@ -3381,6 +3395,47 @@
         ]
       }
     },
+    "/clustermanager/v1/clusters/{clusterID}/module": {
+      "put": {
+        "summary": "更新集群master和node的转移模块信息",
+        "description": "更新集群master和node的转移模块信息, 为了兼容存量配置，会同步更新autoscalingOption的模块信息",
+        "operationId": "ClusterManager_UpdateClusterModule",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateClusterModuleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateClusterModuleRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clusters/{clusterID}/nodegroups": {
       "get": {
         "summary": "查询集群的NodeGroup列表",
@@ -3466,6 +3521,13 @@
           {
             "name": "operator",
             "description": "operator. 操作者",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "deleteMode",
+            "description": "deleteMode. 删除模式，retain(移除集群节点，但是保留主机)，terminate(只支持按量计费的机器)，默认是RETAIN",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5396,6 +5458,47 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerRetryTaskRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/task/{taskID}/skip": {
+      "put": {
+        "summary": "跳过当前失败Task",
+        "description": "针对失败的任务, 进行跳过操作. 跳过操作仅操作当前失败任务且从下一步开始执行, 任务之间有相互依赖不建议跳过",
+        "operationId": "ClusterManager_SkipTask",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerSkipTaskResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "taskID",
+            "description": "任务ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerSkipTaskRequest"
             }
           }
         ],
@@ -7369,6 +7472,10 @@
           "items": {
             "$ref": "#/definitions/clustermanagerAssistantCidr"
           }
+        },
+        "allocateIpNum": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -7582,6 +7689,11 @@
           "type": "string",
           "description": "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证",
           "title": "cloudAccountID"
+        },
+        "message": {
+          "type": "string",
+          "description": "集群状态异常时的失败原因展示",
+          "title": "message"
         }
       },
       "description": "记录集群信息，用于维护集群状态",
@@ -11867,6 +11979,12 @@
           "type": "string",
           "description": "集群kubeConfig文件",
           "title": "kubeConfig"
+        },
+        "inter": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "默认外网方式导入, 为true时候以内网方式导入. 该字段仅对云导入生效",
+          "title": "inter"
         }
       },
       "description": "云provider导入集群模式",
@@ -12539,6 +12657,11 @@
           "$ref": "#/definitions/clustermanagerKeyInfo",
           "description": "节点私钥信息, 与密码2选一，2者均设置优先密钥",
           "title": "keyPair"
+        },
+        "charge": {
+          "$ref": "#/definitions/clustermanagerInstanceChargePrepaid",
+          "description": "实例的计费模式。当instanceChargeType为包年包月时，设置续费策略",
+          "title": "charge"
         }
       },
       "title": "LaunchConfigure template for scaling node"
@@ -14105,6 +14228,11 @@
           "type": "string",
           "description": "上下架节点失败时原因",
           "title": "failedReason"
+        },
+        "chargeType": {
+          "type": "string",
+          "description": "机型计费模型，POSTPAID_BY_HOUR按小时后付费，PREPAID包年包月",
+          "title": "chargeType"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",
@@ -15373,6 +15501,54 @@
       "description": "安全组信息",
       "title": "SecurityGroup"
     },
+    "clustermanagerSkipTaskRequest": {
+      "type": "object",
+      "properties": {
+        "taskID": {
+          "type": "string",
+          "description": "任务ID",
+          "title": "taskID"
+        },
+        "updater": {
+          "type": "string",
+          "description": "任务跳过的发起人",
+          "title": "updater"
+        }
+      },
+      "description": "跳过Task请求",
+      "title": "SkipTaskRequest",
+      "required": [
+        "taskID",
+        "updater"
+      ]
+    },
+    "clustermanagerSkipTaskResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerTask",
+          "description": "更新后Task信息",
+          "title": "data"
+        }
+      }
+    },
     "clustermanagerStep": {
       "type": "object",
       "properties": {
@@ -15447,8 +15623,19 @@
         "skipOnFailed": {
           "type": "boolean",
           "format": "boolean",
-          "description": "失败时跳过",
+          "description": "失败时自动跳过某步骤,由用户设置。当设置失败跳过时，系统自动跳过当前失败步骤，执行后续流程",
           "title": "skipOnFailed"
+        },
+        "translate": {
+          "type": "string",
+          "description": "解决当使用同一taskMethod时,是否转换翻译展示文本",
+          "title": "translate"
+        },
+        "allowSkip": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "标识该步骤失败时候是否允许用户手动跳过。当为true失败时候允许用户手动跳过, 为false失败时用户仅能通过重试解决",
+          "title": "allowSkip"
         }
       },
       "description": "任务执行的动作步骤，用于定义长时间运行的异步动作，例如机器重新初始化，插件安装等。",
@@ -16817,6 +17004,65 @@
         "data"
       ]
     },
+    "clustermanagerUpdateClusterModuleRequest": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID信息",
+          "title": "clusterID"
+        },
+        "module": {
+          "$ref": "#/definitions/clustermanagerClusterModule",
+          "description": "集群转移模块信息",
+          "title": "module"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人",
+          "title": "operator"
+        }
+      },
+      "description": "更新集群转移模块信息",
+      "title": "UpdateClusterModuleRequest",
+      "required": [
+        "clusterID",
+        "module"
+      ]
+    },
+    "clustermanagerUpdateClusterModuleResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerClusterModule",
+          "description": "集群配置模块信息",
+          "title": "data"
+        }
+      },
+      "description": "更新集群转移模块信息返回",
+      "title": "UpdateClusterModuleResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerUpdateClusterReq": {
       "type": "object",
       "properties": {
@@ -18038,6 +18284,12 @@
           "type": "string",
           "description": "地域状态",
           "title": "regionState"
+        },
+        "subnetNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "该可用区可用的子网数量",
+          "title": "subnetNum"
         }
       },
       "description": "可用区信息",

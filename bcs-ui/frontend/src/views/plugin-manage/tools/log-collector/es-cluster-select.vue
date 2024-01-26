@@ -30,8 +30,8 @@
         <div
           class="flex items-center justify-between"
           @click.stop="handleClusterChange(cluster.storage_cluster_id)">
-          <span>{{ cluster.storage_cluster_name }}</span>
-          <span class="text-[#979BA5]">
+          <span class="bcs-ellipsis" v-bk-overflow-tips>{{ cluster.storage_cluster_name }}</span>
+          <span class="text-[#979BA5] bcs-ellipsis">
             {{
               $t(
                 'metrics.usage',

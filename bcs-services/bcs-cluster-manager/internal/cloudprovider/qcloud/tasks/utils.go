@@ -67,14 +67,18 @@ func updateClusterSystemID(clusterID string, systemID string) error {
 }
 
 // updateNodeStatusByNodeID set node status
-func updateFailedNodeStatusByNodeID(insInfos map[string]business.InstanceInfo, status string) error { // nolint
+func updateFailedNodeStatusByNodeID(ctx context.Context, insInfos map[string]business.InstanceInfo, status string) error { // nolint
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
 	if len(insInfos) == 0 {
+		blog.Infof("updateFailedNodeStatusByNodeID[%s] failed: insInfos empty", taskId)
 		return nil
 	}
 
 	for id, data := range insInfos {
 		node, err := cloudprovider.GetStorageModel().GetNode(context.Background(), id)
 		if err != nil {
+			blog.Errorf("updateFailedNodeStatusByNodeID[%s] GetNode[%s] failed: %v", taskId, id, err)
 			continue
 		}
 		node.Status = status
@@ -83,6 +87,7 @@ func updateFailedNodeStatusByNodeID(insInfos map[string]business.InstanceInfo, s
 		}
 		err = cloudprovider.GetStorageModel().UpdateNode(context.Background(), node)
 		if err != nil {
+			blog.Errorf("updateFailedNodeStatusByNodeID[%s] UpdateNode[%s] failed: %v", taskId, id, err)
 			continue
 		}
 	}
@@ -171,9 +176,9 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 			continue
 		}
 
+		n.ClusterID = opt.ClusterID
+		n.Status = common.StatusRunning
 		if node == nil {
-			n.ClusterID = opt.ClusterID
-			n.Status = common.StatusRunning
 			err = cloudprovider.GetStorageModel().CreateNode(ctx, n)
 			if err != nil {
 				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", n.InnerIP, err)

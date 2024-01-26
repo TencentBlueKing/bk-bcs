@@ -540,7 +540,7 @@ const handleSetFormData = () => {
   formData.value = merge({}, defaultData, props.data || {});
 
   // 采集对象是否为容器文件
-  isContainerFile.value = !!formData.value.rule.config.paths?.length; // 要在空日志路径前面
+  isContainerFile.value = !!formData.value.rule.config.paths?.filter(path => !!path)?.length; // 要在空日志路径前面
 
   // 如果过滤内容和分割符不存在就默认显示“不过滤”选项（纯前端逻辑）
   if (!formData.value.rule.config?.conditions?.match_content

@@ -29,7 +29,11 @@
         </div>
         <div class="variable-form" v-if="isFileType">
           <div v-bkloading="{ loading }" class="section-title">{{ t('服务变量赋值') }}</div>
-          <ResetDefaultValue class="reset-default-btn" :list="initialVariables" @reset="handleResetDefault" />
+          <ResetDefaultValue
+            class="reset-default-btn"
+            :bk-biz-id="bkBizId"
+            :list="initialVariables"
+            @reset="handleResetDefault" />
           <VariablesTable ref="tableRef" :list="variableList" :editable="true" @change="handleVariablesChange" />
         </div>
       </div>

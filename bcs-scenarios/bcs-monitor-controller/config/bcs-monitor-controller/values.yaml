@@ -17,9 +17,14 @@ resources:
     cpu: 200m
     memory: 256Mi
 
+
 scenarioGitConfig:
+  # 默认场景仓库配置
   URL: ""
+  username: ""
+  secreat: ""
   refreshFreqSec: 10
+  argoAdminNamespace: default
 
 bkmConfig:
   fullAuthToken: ""
