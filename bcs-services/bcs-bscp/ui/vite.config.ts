@@ -18,6 +18,7 @@ export default defineConfig(({ command, mode }) => {
     vue(),
     eslintPlugin({
       include: ['src/**/*.{ts,tsx,js,jsx,vue}'],
+      cache: true,
     }),
     viteCompression({
       filter: /\.js|.css$/,

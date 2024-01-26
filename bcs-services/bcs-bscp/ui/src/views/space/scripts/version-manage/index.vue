@@ -40,16 +40,16 @@
                     v-if="['not_deployed', 'shutdown'].includes(data.hook_revision.spec.state)"
                     text
                     theme="primary"
-                    @click="handlePublishClick(data.hook_revision)"
-                    >{{ t('上线') }}</bk-button
-                  >
+                    @click="handlePublishClick(data.hook_revision)">
+                    {{ t('上线') }}
+                  </bk-button>
                   <bk-button
                     v-if="data.hook_revision.spec.state === 'not_deployed'"
                     text
                     theme="primary"
-                    @click="handleEditVersionClick"
-                    >{{ t('编辑') }}</bk-button
-                  >
+                    @click="handleEditVersionClick">
+                    {{ t('编辑') }}
+                  </bk-button>
                   <bk-button text theme="primary" @click="handleVersionDiff(data.hook_revision)">
                     {{ t('版本对比') }}
                   </bk-button>
@@ -66,9 +66,9 @@
                     text
                     theme="primary"
                     :disabled="pagination.count <= 1"
-                    @click="handleDelClick(data)"
-                    >{{ t('删除') }}</bk-button
-                  >
+                    @click="handleDelClick(data)">
+                    {{ t('删除') }}
+                  </bk-button>
                 </div>
               </template>
             </VersionListFullTable>

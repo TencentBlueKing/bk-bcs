@@ -206,8 +206,9 @@
       <div class="dialog-input">
         <div class="dialog-info">
           <div>
-            {{ t('删除的密钥') }}<span>{{ t('无法找回') }}</span
-            >{{ t(',请谨慎操作！') }}
+            {{ t('删除的密钥') }}
+            <span>{{ t('无法找回') }}</span>
+            {{ t(',请谨慎操作！') }}
           </div>
         </div>
         <div class="tips">
@@ -222,9 +223,9 @@
           theme="danger"
           style="margin-right: 20px"
           :disabled="dialogInputStr !== deleteCredentialInfo?.spec.name"
-          @click="handleDelete"
-          >{{ t('删除') }}</bk-button
-        >
+          @click="handleDelete">
+          {{ t('删除') }}
+        </bk-button>
         <bk-button @click="isShowDeleteDialog = false">{{ t('取消') }}</bk-button>
       </div>
     </template>

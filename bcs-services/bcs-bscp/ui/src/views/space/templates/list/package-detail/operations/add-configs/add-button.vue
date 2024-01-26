@@ -6,8 +6,9 @@
     trigger="click"
     :arrow="false">
     <bk-button theme="primary" class="create-config-btn">
-      <Plus class="button-icon" />{{ t('添加配置文件') }}</bk-button
-    >
+      <Plus class="button-icon" />
+      {{ t('添加配置文件') }}
+    </bk-button>
     <template #content>
       <div class="add-config-operations">
         <div class="operation-item" @click="handleOpenSlider('isCreateOpen')">{{ t('新建配置文件') }}</div>

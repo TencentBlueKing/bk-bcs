@@ -75,11 +75,11 @@
   const loading = ref(false);
   const citedList = ref<IPackagesCitedByApps[]>([]);
 
-  const tips = computed(() =>
-    selectedPkgs.value.includes(0)
+  const tips = computed(() => {
+    return selectedPkgs.value.includes(0)
       ? t('若未指定套餐，此配置文件模板将无法被服务引用。后续请使用「添加至」或「添加已有配置文件」功能添加至指定套餐')
-      : t('以下服务配置的未命名版本引用目标套餐的内容也将更新'),
-  );
+      : t('以下服务配置的未命名版本引用目标套餐的内容也将更新');
+  });
 
   const maxTableHeight = computed(() => {
     const windowHeight = window.innerHeight;

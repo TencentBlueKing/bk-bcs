@@ -94,9 +94,9 @@
             theme="danger"
             style="margin-right: 20px"
             :disabled="dialogInputStr !== deleteService!.spec.name"
-            @click="handleDeleteConfirm"
-            >删除</bk-button
-          >
+            @click="handleDeleteConfirm">
+            删除
+          </bk-button>
           <bk-button @click="isShowDeleteDialog = false">取消</bk-button>
         </div>
       </template>

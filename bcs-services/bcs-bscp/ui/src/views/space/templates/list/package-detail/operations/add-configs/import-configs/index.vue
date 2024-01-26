@@ -68,9 +68,9 @@
         theme="primary"
         :loading="pending"
         :disabled="!importConfigList.length"
-        @click="isSelectPkgDialogShow = true"
-        >{{ t('去上传') }}</bk-button
-      >
+        @click="isSelectPkgDialogShow = true">
+        {{ t('去上传') }}
+      </bk-button>
       <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>

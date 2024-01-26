@@ -203,7 +203,7 @@
         "ignoreUrls": true,
         "ignoreRegExpLiterals": true,
         "ignoreTemplateLiterals": true,
-        "ignoreTrailingComments": true
+        "ignoreComments": true
       }
     ],
     /**
