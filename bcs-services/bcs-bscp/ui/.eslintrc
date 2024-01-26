@@ -29,13 +29,7 @@
     /**
      * 要求箭头函数的参数使用圆括号
      */
-    "arrow-parens": [
-      "warn",
-      "as-needed",
-      {
-        "requireForBlockBody": true
-      }
-    ],
+    "arrow-parens": ["warn", "always"],
     /**
      * 强制箭头函数的箭头前后使用一致的空格
      */
@@ -391,7 +385,6 @@
      * 禁止变量申明时用逗号一次申明多个
      */
     "one-var": ["warn", "never"],
-
     /**
      * 要求或禁止块内填充
      */
@@ -707,6 +700,13 @@
       {
         "singleline": "never",
         "multiline": "never"
+      }
+    ],
+    "vue/first-attribute-linebreak": [
+      "error",
+      {
+        "singleline": "ignore",
+        "multiline": "below"
       }
     ]
   },
