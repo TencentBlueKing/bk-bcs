@@ -37,103 +37,103 @@
   </bk-form>
 </template>
 <script lang="ts" setup>
-import { ref, computed, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { IVariableEditParams } from '../../../../types/variable';
+  import { ref, computed, watch } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { IVariableEditParams } from '../../../../types/variable';
 
-const { t } = useI18n();
-const props = defineProps<{
-  type: string;
-  prefix: string;
-  value: IVariableEditParams;
-}>();
+  const { t } = useI18n();
+  const props = defineProps<{
+    type: string;
+    prefix: string;
+    value: IVariableEditParams;
+  }>();
 
-const emits = defineEmits(['change']);
+  const emits = defineEmits(['change']);
 
-const localVal = ref({
-  name: '',
-  type: 'string',
-  default_val: '',
-  memo: '',
-});
-const localPrefix = ref(props.prefix);
-const formRef = ref();
-const rules = {
-  name: [
-    {
-      required: true,
-      message: t('变量名称不能为空'),
-      trigger: 'blur',
-    },
-    {
-      validator: (value: string) => value.length <= 128,
-      message: t('最大长度128个字符'),
-    },
-    {
-      validator: (value: string) => {
-        if (value.length > 0) {
-          return /^[a-zA-Z_]\w*$/.test(value);
-        }
-        return true;
+  const localVal = ref({
+    name: '',
+    type: 'string',
+    default_val: '',
+    memo: '',
+  });
+  const localPrefix = ref(props.prefix);
+  const formRef = ref();
+  const rules = {
+    name: [
+      {
+        required: true,
+        message: t('变量名称不能为空'),
+        trigger: 'blur',
       },
-      message: t('仅允许使用中文、英文、数字、下划线，且不能以数字开头'),
-      trigger: 'blur',
-    },
-  ],
-  memo: [
-    {
-      validator: (value: string) => value.length <= 200,
-      message: t('最大长度200个字符'),
-    },
-  ],
-  default_val: [
-    {
-      validator: (value: string) => {
-        if (localVal.value.type === 'string') return true;
-        return /^-?\d+(\.\d+)?$/.test(value);
+      {
+        validator: (value: string) => value.length <= 128,
+        message: t('最大长度128个字符'),
       },
-      message: t('无效默认值，类型为number值不为数字'),
+      {
+        validator: (value: string) => {
+          if (value.length > 0) {
+            return /^[a-zA-Z_]\w*$/.test(value);
+          }
+          return true;
+        },
+        message: t('仅允许使用中文、英文、数字、下划线，且不能以数字开头'),
+        trigger: 'blur',
+      },
+    ],
+    memo: [
+      {
+        validator: (value: string) => value.length <= 200,
+        message: t('最大长度200个字符'),
+      },
+    ],
+    default_val: [
+      {
+        validator: (value: string) => {
+          if (localVal.value.type === 'string') return true;
+          return /^-?\d+(\.\d+)?$/.test(value);
+        },
+        message: t('无效默认值，类型为number值不为数字'),
+      },
+    ],
+  };
+
+  const isEditMode = computed(() => props.type === 'edit');
+
+  watch(
+    () => props.value,
+    (val) => {
+      localVal.value = { ...val };
     },
-  ],
-};
+    { immediate: true },
+  );
 
-const isEditMode = computed(() => props.type === 'edit');
+  watch(
+    () => props.prefix,
+    (val) => {
+      localPrefix.value = val;
+    },
+  );
 
-watch(
-  () => props.value,
-  (val) => {
-    localVal.value = { ...val };
-  },
-  { immediate: true },
-);
+  const change = () => {
+    emits('change', { ...localVal.value }, localPrefix.value);
+  };
 
-watch(
-  () => props.prefix,
-  (val) => {
-    localPrefix.value = val;
-  },
-);
+  const validate = () => formRef.value.validate();
 
-const change = () => {
-  emits('change', { ...localVal.value }, localPrefix.value);
-};
-
-const validate = () => formRef.value.validate();
-
-defineExpose({
-  validate,
-});
+  defineExpose({
+    validate,
+  });
 </script>
 <style lang="scss" scoped>
-.prefix-selector {
-  width: 100px;
-  border-right: 1px solid #c4c6cc;
-  :deep(.bk-input) {
-    height: 28px;
-    border: none;
-    .bk-input--text {
-      background: #f5f7fa;
+  .prefix-selector {
+    width: 100px;
+    border-right: 1px solid #c4c6cc;
+    :deep(.bk-input) {
+      height: 28px;
+      border: none;
+      .bk-input--text {
+        background: #f5f7fa;
+      }
     }
   }
-}
 </style>

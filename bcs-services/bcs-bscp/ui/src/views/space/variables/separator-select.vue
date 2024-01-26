@@ -24,104 +24,104 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+  import { computed, ref } from 'vue';
+  import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-const emits = defineEmits(['closed', 'confirm']);
-const allSelect = computed(() => [
-  { id: 0, text: t('空字符'), value: ' ' },
-  { id: 1, text: ',', value: ',' },
-  { id: 2, text: ';', value: ';' },
-  { id: 3, text: '|', value: '|' },
-  { id: 4, text: t('自定义') },
-]);
-const selectSeparatorId = ref(0);
-const formData = ref({
-  separator: '',
-});
-const formRef = ref();
-const regex = /^[\x20-\x7E]*$/;
-const rules = {
-  separator: [
-    {
-      validator: (val: string) => regex.test(val),
-      message: t('您输入的分隔符错误,请重新输入'),
-    },
-    {
-      validator: (val: string) => val.length === 1,
-      message: t('您输入的分隔符过长,请重新输入'),
-    },
-  ],
-};
+  const { t } = useI18n();
+  const emits = defineEmits(['closed', 'confirm']);
+  const allSelect = computed(() => [
+    { id: 0, text: t('空字符'), value: ' ' },
+    { id: 1, text: ',', value: ',' },
+    { id: 2, text: ';', value: ';' },
+    { id: 3, text: '|', value: '|' },
+    { id: 4, text: t('自定义') },
+  ]);
+  const selectSeparatorId = ref(0);
+  const formData = ref({
+    separator: '',
+  });
+  const formRef = ref();
+  const regex = /^[\x20-\x7E]*$/;
+  const rules = {
+    separator: [
+      {
+        validator: (val: string) => regex.test(val),
+        message: t('您输入的分隔符错误,请重新输入'),
+      },
+      {
+        validator: (val: string) => val.length === 1,
+        message: t('您输入的分隔符过长,请重新输入'),
+      },
+    ],
+  };
 
-const handleConfirm = async () => {
-  if (selectSeparatorId.value === 4) {
-    await formRef.value.validate();
-    emits('confirm', formData.value.separator);
-  } else {
-    emits('confirm', allSelect.value[selectSeparatorId.value].value);
-  }
-  emits('closed');
-};
+  const handleConfirm = async () => {
+    if (selectSeparatorId.value === 4) {
+      await formRef.value.validate();
+      emits('confirm', formData.value.separator);
+    } else {
+      emits('confirm', allSelect.value[selectSeparatorId.value].value);
+    }
+    emits('closed');
+  };
 </script>
 
 <style scoped lang="scss">
-.wrap {
-  width: 276px;
-  background: #2e2e2e;
-  border: 1px solid #63656e;
-  box-shadow: 0 2px 6px 0 #0000001a;
-  border-radius: 2px;
-  padding: 16px;
-  padding-bottom: 24px;
-  font-size: 12px;
-  .title {
-    color: #c4c6cc;
-    line-height: 20px;
-  }
-  .select {
-    display: flex;
-    margin: 12px 0 20px;
-    .item {
-      width: 52px;
-      height: 26px;
-      border: 1px solid #8e8e8e;
-      color: #e0e0e0;
-      text-align: center;
-      line-height: 26px;
-      background-color: #2f2f2f;
-      cursor: pointer;
-      &:hover {
+  .wrap {
+    width: 276px;
+    background: #2e2e2e;
+    border: 1px solid #63656e;
+    box-shadow: 0 2px 6px 0 #0000001a;
+    border-radius: 2px;
+    padding: 16px;
+    padding-bottom: 24px;
+    font-size: 12px;
+    .title {
+      color: #c4c6cc;
+      line-height: 20px;
+    }
+    .select {
+      display: flex;
+      margin: 12px 0 20px;
+      .item {
+        width: 52px;
+        height: 26px;
+        border: 1px solid #8e8e8e;
+        color: #e0e0e0;
+        text-align: center;
+        line-height: 26px;
+        background-color: #2f2f2f;
+        cursor: pointer;
+        &:hover {
+          color: #488eff;
+          border-color: #488eff;
+        }
+        &:nth-child(1) {
+          border-radius: 2px 0 0 2px;
+        }
+        &:nth-child(5) {
+          border-radius: 0 2px 2px 0;
+        }
+      }
+
+      .select-item {
         color: #488eff;
         border-color: #488eff;
       }
-      &:nth-child(1) {
-        border-radius: 2px 0 0 2px;
-      }
-      &:nth-child(5) {
-        border-radius: 0 2px 2px 0;
-      }
     }
-
-    .select-item {
-      color: #488eff;
-      border-color: #488eff;
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      margin-left: 132px;
     }
   }
-  .footer {
-    display: flex;
-    justify-content: space-between;
-    margin-left: 132px;
-  }
-}
 </style>
 
 <style lang="scss">
-.custom-input {
-  .bk-input--text {
-    background-color: rgba($color: #000000, $alpha: 0);
-    color: #c4c6cc;
+  .custom-input {
+    .bk-input--text {
+      background-color: rgba($color: #000000, $alpha: 0);
+      color: #c4c6cc;
+    }
   }
-}
 </style>

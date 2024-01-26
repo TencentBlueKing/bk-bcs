@@ -5,9 +5,9 @@
   </bk-table-column>
 </template>
 <script lang="ts" setup>
-defineProps<{
-  config: { label: string; prop: string };
-}>();
-// const renderTh = () => '<bk-checkbox />';
+  defineProps<{
+    config: { label: string; prop: string };
+  }>();
+  // const renderTh = () => '<bk-checkbox />';
 </script>
 <style lang="scss" scoped></style>

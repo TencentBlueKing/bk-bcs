@@ -1,7 +1,14 @@
 @import './font.css';
 
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, Helvetica Neue, Arial, sans-serif;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    PingFang SC,
+    Microsoft YaHei,
+    Helvetica Neue,
+    Arial,
+    sans-serif;
   font-size: 14px;
   font-weight: 400;
   color-scheme: light dark;
@@ -29,18 +36,19 @@ h1 {
   line-height: 1.1;
 }
 
-ul, ol {
+ul,
+ol {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
 li {
-list-style: none;
+  list-style: none;
 }
 
 a {
-  color: #3A84FF;
+  color: #3a84ff;
   text-decoration: none;
 }
 textarea {

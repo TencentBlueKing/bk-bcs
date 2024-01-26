@@ -37,117 +37,117 @@
   </bk-dialog>
 </template>
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { getTemplateVersionsNameByIds } from '../../../../../../../api/template';
-import { updateBoundTemplateVersion } from '../../../../../../../api/config';
-import { ITemplateVersionsName } from '../../../../../../../../types/template';
-import Message from 'bkui-vue/lib/message';
+  import { ref, watch } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { getTemplateVersionsNameByIds } from '../../../../../../../api/template';
+  import { updateBoundTemplateVersion } from '../../../../../../../api/config';
+  import { ITemplateVersionsName } from '../../../../../../../../types/template';
+  import Message from 'bkui-vue/lib/message';
 
-interface ITplVersionItem {
-  id: number;
-  name: string;
-  memo: string;
-  isLatest: boolean;
-}
-
-const props = defineProps<{
-  show: boolean;
-  bkBizId: string;
-  appId: number;
-  pkgId: number;
-  bindingId: number;
-  templateId: number;
-  versionId: number;
-  versionName: string;
-}>();
-
-const { t } = useI18n();
-const emits = defineEmits(['update:show', 'updated']);
-
-const loading = ref(false);
-const versionList = ref<ITplVersionItem[]>([]);
-const selected = ref(props.versionId);
-const formRef = ref();
-const pending = ref(false);
-
-watch(
-  () => props.show,
-  (val) => {
-    if (val) {
-      selected.value = props.versionId;
-      getTemplateVersions();
-    }
-  },
-);
-
-const getTemplateVersions = async () => {
-  loading.value = true;
-  const res = await getTemplateVersionsNameByIds(props.bkBizId, [props.templateId]);
-  const templateVersion: ITemplateVersionsName = res.details[0];
-  const list: ITplVersionItem[] = [];
-  templateVersion.template_revisions.forEach((item) => {
-    const { template_revision_id, template_revision_name, template_revision_memo } = item;
-    list.push({
-      id: template_revision_id,
-      name: template_revision_name,
-      memo: template_revision_memo,
-      isLatest: false,
-    });
-  });
-  const latestVersion = templateVersion.template_revisions.find((version) => {
-    const res =  version.template_revision_id === templateVersion.latest_template_revision_id;
-    return res;
-  });
-  if (latestVersion) {
-    list.unshift({
-      id: latestVersion.template_revision_id,
-      name: `latest（${t('当前最新为')}${latestVersion.template_revision_name}）`,
-      memo: latestVersion.template_revision_memo,
-      isLatest: true,
-    });
-    if (!props.versionId) {
-      selected.value = 0;
-    }
+  interface ITplVersionItem {
+    id: number;
+    name: string;
+    memo: string;
+    isLatest: boolean;
   }
-  versionList.value = list;
-  loading.value = false;
-};
 
-const handleReplaceConfirm = async () => {
-  await formRef.value.validate();
-  const isLatest = selected.value === 0;
-  let versionId = selected.value;
-  if (isLatest) {
-    const id = versionList.value.find(item => item.isLatest)?.id;
-    if (id) {
-      versionId = id;
+  const props = defineProps<{
+    show: boolean;
+    bkBizId: string;
+    appId: number;
+    pkgId: number;
+    bindingId: number;
+    templateId: number;
+    versionId: number;
+    versionName: string;
+  }>();
+
+  const { t } = useI18n();
+  const emits = defineEmits(['update:show', 'updated']);
+
+  const loading = ref(false);
+  const versionList = ref<ITplVersionItem[]>([]);
+  const selected = ref(props.versionId);
+  const formRef = ref();
+  const pending = ref(false);
+
+  watch(
+    () => props.show,
+    (val) => {
+      if (val) {
+        selected.value = props.versionId;
+        getTemplateVersions();
+      }
+    },
+  );
+
+  const getTemplateVersions = async () => {
+    loading.value = true;
+    const res = await getTemplateVersionsNameByIds(props.bkBizId, [props.templateId]);
+    const templateVersion: ITemplateVersionsName = res.details[0];
+    const list: ITplVersionItem[] = [];
+    templateVersion.template_revisions.forEach((item) => {
+      const { template_revision_id, template_revision_name, template_revision_memo } = item;
+      list.push({
+        id: template_revision_id,
+        name: template_revision_name,
+        memo: template_revision_memo,
+        isLatest: false,
+      });
+    });
+    const latestVersion = templateVersion.template_revisions.find((version) => {
+      const res = version.template_revision_id === templateVersion.latest_template_revision_id;
+      return res;
+    });
+    if (latestVersion) {
+      list.unshift({
+        id: latestVersion.template_revision_id,
+        name: `latest（${t('当前最新为')}${latestVersion.template_revision_name}）`,
+        memo: latestVersion.template_revision_memo,
+        isLatest: true,
+      });
+      if (!props.versionId) {
+        selected.value = 0;
+      }
     }
-  }
-  const params = {
-    bindings: [
-      {
-        template_set_id: props.pkgId,
-        template_revisions: [
-          {
-            template_id: props.templateId,
-            template_revision_id: versionId,
-            is_latest: isLatest,
-          },
-        ],
-      },
-    ],
+    versionList.value = list;
+    loading.value = false;
   };
-  await updateBoundTemplateVersion(props.bkBizId, props.appId, props.bindingId, params);
-  emits('updated');
-  close();
-  Message({
-    theme: 'success',
-    message: t('模板版本更新成功'),
-  });
-};
 
-const close = () => {
-  emits('update:show');
-};
+  const handleReplaceConfirm = async () => {
+    await formRef.value.validate();
+    const isLatest = selected.value === 0;
+    let versionId = selected.value;
+    if (isLatest) {
+      const id = versionList.value.find((item) => item.isLatest)?.id;
+      if (id) {
+        versionId = id;
+      }
+    }
+    const params = {
+      bindings: [
+        {
+          template_set_id: props.pkgId,
+          template_revisions: [
+            {
+              template_id: props.templateId,
+              template_revision_id: versionId,
+              is_latest: isLatest,
+            },
+          ],
+        },
+      ],
+    };
+    await updateBoundTemplateVersion(props.bkBizId, props.appId, props.bindingId, params);
+    emits('updated');
+    close();
+    Message({
+      theme: 'success',
+      message: t('模板版本更新成功'),
+    });
+  };
+
+  const close = () => {
+    emits('update:show');
+  };
 </script>

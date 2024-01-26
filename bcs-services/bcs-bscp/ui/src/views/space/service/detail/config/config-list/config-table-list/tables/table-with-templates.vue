@@ -3,13 +3,15 @@
     <table class="config-groups-table">
       <thead>
         <tr class="config-groups-table-tr">
-          <th class="name">{{t('配置文件名称')}}</th>
+          <th class="name">{{ t('配置文件名称') }}</th>
           <th class="version">{{ t('配置模板版本') }}</th>
           <th class="path">{{ t('配置路径') }}</th>
           <th class="user">{{ t('创建人') }}</th>
           <th class="user">{{ t('修改人') }}</th>
           <th class="datetime">{{ t('修改时间') }}</th>
-          <th class="status" v-if="versionData.id === 0">{{ t('变更状态') }}</th>
+          <th class="status" v-if="versionData.id === 0">
+            {{ t('变更状态') }}
+          </th>
           <th class="operation">{{ t('操作') }}</th>
         </tr>
       </thead>
@@ -75,7 +77,9 @@
                         <td class="user">{{ config.creator }}</td>
                         <td class="user">{{ config.reviser }}</td>
                         <td class="datetime">{{ config.update_at }}</td>
-                        <td class="status" v-if="versionData.id === 0"><StatusTag :status="config.file_state" /></td>
+                        <td class="status" v-if="versionData.id === 0">
+                          <StatusTag :status="config.file_state" />
+                        </td>
                         <td class="operation">
                           <div class="config-actions">
                             <!-- 非套餐配置文件 -->
@@ -108,7 +112,9 @@
                                   v-if="versionData.status.publish_status !== 'editing'"
                                   text
                                   theme="primary"
-                                  @click="handleConfigDiff(group.id, config)">{{ t('对比') }}</bk-button>
+                                  @click="handleConfigDiff(group.id, config)">
+                                  {{ t('对比') }}
+                                </bk-button>
                               </template>
                             </template>
                             <!-- 套餐模板 -->
@@ -130,7 +136,9 @@
                                   v-if="versionData.status.publish_status !== 'editing'"
                                   text
                                   theme="primary"
-                                  @click="handleConfigDiff(group.id, config)">{{ t('对比') }}</bk-button>
+                                  @click="handleConfigDiff(group.id, config)">
+                                  {{ t('对比') }}
+                                </bk-button>
                               </template>
                             </template>
                           </div>
@@ -156,13 +164,13 @@
     :config-id="activeConfig"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @confirm="handleEditConfigConfirm"/>
+    @confirm="handleEditConfigConfirm" />
   <ViewConfig
     v-model:show="viewConfigSliderData.open"
     v-bind="viewConfigSliderData.data"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    :version-id="versionData.id"/>
+    :version-id="versionData.id" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config="diffConfig" />
   <ReplaceTemplateVersion
     v-model:show="replaceDialogData.open"
@@ -170,13 +178,13 @@
     :binding-id="bindingId"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @updated="getAllConfigList"/>
+    @updated="getAllConfigList" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
     :title="t('确认删除该配置文件？')"
     @confirm="handleDeleteConfigConfirm">
     <div style="margin-bottom: 8px">
-      {{t('配置文件')}}：<span style="color: #313238">{{ deleteConfig?.name }}</span>
+      {{ t('配置文件') }}：<span style="color: #313238">{{ deleteConfig?.name }}</span>
     </div>
     <div>{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
   </DeleteConfirmDialog>
@@ -186,542 +194,543 @@
     :confirm-text="t('移除')"
     @confirm="handleDeletePkgConfirm">
     <div style="margin-bottom: 8px">
-      {{t('配置模板套餐')}}: <span style="color: #313238">{{ deleteTemplatePkgName }}</span>
+      {{ t('配置模板套餐') }}: <span style="color: #313238">{{ deleteTemplatePkgName }}</span>
     </div>
     <div>{{ t('移除后本服务配置将不再引用该配置模板套餐，以后需要时可以重新从配置模板导入') }}</div>
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { storeToRefs } from 'pinia';
-import Message from 'bkui-vue/lib/message';
-import { DownShape, Close } from 'bkui-vue/lib/icon';
-import useConfigStore from '../../../../../../../../store/config';
-import useServiceStore from '../../../../../../../../store/service';
-import { ICommonQuery } from '../../../../../../../../../types/index';
-import { datetimeFormat } from '../../../../../../../../utils/index';
-import { IConfigItem, IBoundTemplateGroup, IConfigDiffSelected } from '../../../../../../../../../types/config';
-import {
-  getConfigList,
-  getReleasedConfigList,
-  getBoundTemplates,
-  getBoundTemplatesByAppVersion,
-  deleteServiceConfigItem,
-  deleteBoundPkg,
-} from '../../../../../../../../api/config';
-import { getAppPkgBindingRelations } from '../../../../../../../../api/template';
-import StatusTag from './status-tag';
-import EditConfig from '../edit-config.vue';
-import ViewConfig from '../view-config.vue';
-import VersionDiff from '../../../components/version-diff/index.vue';
-import ReplaceTemplateVersion from '../replace-template-version.vue';
-import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
-import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
+  import { ref, computed, watch, onMounted } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { storeToRefs } from 'pinia';
+  import Message from 'bkui-vue/lib/message';
+  import { DownShape, Close } from 'bkui-vue/lib/icon';
+  import useConfigStore from '../../../../../../../../store/config';
+  import useServiceStore from '../../../../../../../../store/service';
+  import { ICommonQuery } from '../../../../../../../../../types/index';
+  import { datetimeFormat } from '../../../../../../../../utils/index';
+  import { IConfigItem, IBoundTemplateGroup, IConfigDiffSelected } from '../../../../../../../../../types/config';
+  import {
+    getConfigList,
+    getReleasedConfigList,
+    getBoundTemplates,
+    getBoundTemplatesByAppVersion,
+    deleteServiceConfigItem,
+    deleteBoundPkg,
+  } from '../../../../../../../../api/config';
+  import { getAppPkgBindingRelations } from '../../../../../../../../api/template';
+  import StatusTag from './status-tag';
+  import EditConfig from '../edit-config.vue';
+  import ViewConfig from '../view-config.vue';
+  import VersionDiff from '../../../components/version-diff/index.vue';
+  import ReplaceTemplateVersion from '../replace-template-version.vue';
+  import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
+  import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
 
-interface IConfigsGroupData {
-  id: number;
-  name: string;
-  expand: boolean;
-  configs: IConfigTableItem[];
-}
+  interface IConfigsGroupData {
+    id: number;
+    name: string;
+    expand: boolean;
+    configs: IConfigTableItem[];
+  }
 
-interface IPermissionType {
-  privilege: string;
-  user: string;
-  user_group: string;
-}
+  interface IPermissionType {
+    privilege: string;
+    user: string;
+    user_group: string;
+  }
 
-interface IConfigTableItem {
-  id: number;
-  name: string;
-  versionId: number;
-  versionName: string;
-  path: string;
-  creator: string;
-  reviser: string;
-  update_at: string;
-  file_state: string;
-  permission?: IPermissionType;
-}
+  interface IConfigTableItem {
+    id: number;
+    name: string;
+    versionId: number;
+    versionName: string;
+    path: string;
+    creator: string;
+    reviser: string;
+    update_at: string;
+    file_state: string;
+    permission?: IPermissionType;
+  }
 
-const { t } = useI18n();
-const configStore = useConfigStore();
-const serviceStore = useServiceStore();
-const { versionData, allConfigCount } = storeToRefs(configStore);
-const { checkPermBeforeOperate } = serviceStore;
-const { permCheckLoading, hasEditServicePerm, batchUploadIds } = storeToRefs(serviceStore);
+  const { t } = useI18n();
+  const configStore = useConfigStore();
+  const serviceStore = useServiceStore();
+  const { versionData, allConfigCount } = storeToRefs(configStore);
+  const { checkPermBeforeOperate } = serviceStore;
+  const { permCheckLoading, hasEditServicePerm, batchUploadIds } = storeToRefs(serviceStore);
 
-const props = defineProps<{
-  bkBizId: string;
-  appId: number;
-  searchStr: string;
-}>();
+  const props = defineProps<{
+    bkBizId: string;
+    appId: number;
+    searchStr: string;
+  }>();
 
-const emits = defineEmits(['clearStr', 'deleteConfig']);
+  const emits = defineEmits(['clearStr', 'deleteConfig']);
 
-const loading = ref(false);
-const commonConfigListLoading = ref(false);
-const bindingId = ref(0);
-const configList = ref<IConfigItem[]>([]); // 非模板配置文件
-const configsCount = ref(0);
-const boundTemplateListLoading = ref(false);
-const templateGroupList = ref<IBoundTemplateGroup[]>([]); // 配置文件模板（按套餐分组）
-const templatesCount = ref(0);
-const tableGroupsData = ref<IConfigsGroupData[]>([]);
-const editPanelShow = ref(false);
-const activeConfig = ref(0);
-const isDiffPanelShow = ref(false);
-const isSearchEmpty = ref(false);
-const isDeleteConfigDialogShow = ref(false);
-const deleteConfig = ref<IConfigTableItem>();
-const isDeletePkgDialogShow = ref(false);
-const deleteTemplatePkgName = ref('');
-const deleteTemplatePkgId = ref(0);
-const viewConfigSliderData = ref({
-  open: false,
-  data: { id: 0, type: '' },
-});
-const replaceDialogData = ref({
-  open: false,
-  data: {
+  const loading = ref(false);
+  const commonConfigListLoading = ref(false);
+  const bindingId = ref(0);
+  const configList = ref<IConfigItem[]>([]); // 非模板配置文件
+  const configsCount = ref(0);
+  const boundTemplateListLoading = ref(false);
+  const templateGroupList = ref<IBoundTemplateGroup[]>([]); // 配置文件模板（按套餐分组）
+  const templatesCount = ref(0);
+  const tableGroupsData = ref<IConfigsGroupData[]>([]);
+  const editPanelShow = ref(false);
+  const activeConfig = ref(0);
+  const isDiffPanelShow = ref(false);
+  const isSearchEmpty = ref(false);
+  const isDeleteConfigDialogShow = ref(false);
+  const deleteConfig = ref<IConfigTableItem>();
+  const isDeletePkgDialogShow = ref(false);
+  const deleteTemplatePkgName = ref('');
+  const deleteTemplatePkgId = ref(0);
+  const viewConfigSliderData = ref({
+    open: false,
+    data: { id: 0, type: '' },
+  });
+  const replaceDialogData = ref({
+    open: false,
+    data: {
+      pkgId: 0,
+      templateId: 0,
+      versionId: 0,
+      versionName: '',
+    },
+  });
+  const diffConfig = ref<IConfigDiffSelected>({
     pkgId: 0,
-    templateId: 0,
-    versionId: 0,
-    versionName: '',
-  },
-});
-const diffConfig = ref<IConfigDiffSelected>({
-  pkgId: 0,
-  id: 0,
-  version: 0,
-});
+    id: 0,
+    version: 0,
+  });
 
-// 是否为未命名版本
-const isUnNamedVersion = computed(() => versionData.value.id === 0);
+  // 是否为未命名版本
+  const isUnNamedVersion = computed(() => versionData.value.id === 0);
 
-watch(
-  () => versionData.value.id,
-  async () => {
+  watch(
+    () => versionData.value.id,
+    async () => {
+      await getBindingId();
+      getAllConfigList();
+    },
+  );
+
+  watch(
+    () => props.searchStr,
+    () => {
+      props.searchStr ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+      getAllConfigList();
+    },
+  );
+
+  watch([() => configsCount.value, () => templatesCount.value], () => {
+    configStore.$patch((state) => {
+      state.allConfigCount = configsCount.value + templatesCount.value;
+    });
+  });
+
+  onMounted(async () => {
     await getBindingId();
     getAllConfigList();
-  },
-);
-
-watch(
-  () => props.searchStr,
-  () => {
-    props.searchStr ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
-    getAllConfigList();
-  },
-);
-
-watch([() => configsCount.value, () => templatesCount.value], () => {
-  configStore.$patch((state) => {
-    state.allConfigCount = configsCount.value + templatesCount.value;
   });
-});
 
-onMounted(async () => {
-  await getBindingId();
-  getAllConfigList();
-});
-
-const getBindingId = async () => {
-  const res = await getAppPkgBindingRelations(props.bkBizId, props.appId);
-  bindingId.value = res.details.length === 1 ? res.details[0].id : 0;
-};
-
-const getAllConfigList = async (isBatchUpload = false) => {
-  await Promise.all([getCommonConfigList(isBatchUpload), getBoundTemplateList()]);
-  tableGroupsData.value = transListToTableData();
-};
-
-// 获取非模板配置文件列表
-const getCommonConfigList = async (isBatchUpload = false) => {
-  commonConfigListLoading.value = true;
-  try {
-    const params: ICommonQuery = {
-      start: 0,
-      all: true,
-    };
-    if (!isBatchUpload) batchUploadIds.value = [];
-    if (batchUploadIds.value.length > 0) params.ids = batchUploadIds.value.join(',');
-    let res;
-    if (isUnNamedVersion.value) {
-      if (props.searchStr) {
-        params.search_fields = 'name,path,memo,creator,reviser';
-        params.search_value = props.searchStr;
-      }
-      res = await getConfigList(props.bkBizId, props.appId, params);
-    } else {
-      if (props.searchStr) {
-        params.search_fields = 'name,path,memo,creator';
-        params.search_value = props.searchStr;
-      }
-      res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params);
-    }
-    configList.value = res.details;
-    configsCount.value = res.count;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    commonConfigListLoading.value = false;
-  }
-};
-
-// 获取模板配置文件列表
-const getBoundTemplateList = async () => {
-  boundTemplateListLoading.value = true;
-  try {
-    const params: ICommonQuery = {
-      start: 0,
-      all: true,
-    };
-    if (props.searchStr) {
-      params.search_fields = 'revision_name,revision_memo,name,path,creator';
-      params.search_value = props.searchStr;
-    }
-
-    let res;
-    if (isUnNamedVersion.value) {
-      res = await getBoundTemplates(props.bkBizId, props.appId, params);
-    } else {
-      res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id, params);
-    }
-    templateGroupList.value = res.details;
-    templatesCount.value = res.details.reduce(
-      (acc: number, crt: IBoundTemplateGroup) => acc + crt.template_revisions.length,
-      0,
-    );
-  } catch (e) {
-    console.error(e);
-  } finally {
-    boundTemplateListLoading.value = false;
-  }
-};
-
-const transListToTableData = () => {
-  const pkgsGroups = groupTplsByPkg(templateGroupList.value);
-  return [
-    { id: 0, name: t('非模板配置'), expand: true, configs: transConfigsToTableItemData(configList.value) },
-    ...pkgsGroups,
-  ];
-};
-
-// 将非模板配置文件数据转为表格数据
-const transConfigsToTableItemData = (list: IConfigItem[]) => list.map((item: IConfigItem) => {
-  const { id, spec, revision, file_state } = item;
-  const { name, path, permission } = spec;
-  const { creator, reviser, update_at, create_at } = revision;
-  return {
-    id,
-    name,
-    versionId: 0,
-    versionName: '--',
-    path,
-    creator,
-    reviser,
-    update_at: datetimeFormat(update_at || create_at),
-    file_state,
-    permission,
+  const getBindingId = async () => {
+    const res = await getAppPkgBindingRelations(props.bkBizId, props.appId);
+    bindingId.value = res.details.length === 1 ? res.details[0].id : 0;
   };
-});
 
-// 将模板按套餐分组，并将模板数据格式转为表格数据
-const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
-  const groups: IConfigsGroupData[] = list.map((groupItem) => {
-    const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem;
-    const group: IConfigsGroupData = {
-      id: template_set_id,
-      name: `${template_space_name} - ${template_set_name}`,
-      expand: true,
-      configs: [],
-    };
-    template_revisions.forEach((tpl) => {
-      const {
-        template_id: id,
-        name,
-        template_revision_id: versionId,
-        template_revision_name: versionName,
-        path,
-        creator,
-        create_at,
-        file_state,
-      } = tpl;
-      group.configs.push({
+  const getAllConfigList = async (isBatchUpload = false) => {
+    await Promise.all([getCommonConfigList(isBatchUpload), getBoundTemplateList()]);
+    tableGroupsData.value = transListToTableData();
+  };
+
+  // 获取非模板配置文件列表
+  const getCommonConfigList = async (isBatchUpload = false) => {
+    commonConfigListLoading.value = true;
+    try {
+      const params: ICommonQuery = {
+        start: 0,
+        all: true,
+      };
+      if (!isBatchUpload) batchUploadIds.value = [];
+      if (batchUploadIds.value.length > 0) params.ids = batchUploadIds.value.join(',');
+      let res;
+      if (isUnNamedVersion.value) {
+        if (props.searchStr) {
+          params.search_fields = 'name,path,memo,creator,reviser';
+          params.search_value = props.searchStr;
+        }
+        res = await getConfigList(props.bkBizId, props.appId, params);
+      } else {
+        if (props.searchStr) {
+          params.search_fields = 'name,path,memo,creator';
+          params.search_value = props.searchStr;
+        }
+        res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params);
+      }
+      configList.value = res.details;
+      configsCount.value = res.count;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      commonConfigListLoading.value = false;
+    }
+  };
+
+  // 获取模板配置文件列表
+  const getBoundTemplateList = async () => {
+    boundTemplateListLoading.value = true;
+    try {
+      const params: ICommonQuery = {
+        start: 0,
+        all: true,
+      };
+      if (props.searchStr) {
+        params.search_fields = 'revision_name,revision_memo,name,path,creator';
+        params.search_value = props.searchStr;
+      }
+
+      let res;
+      if (isUnNamedVersion.value) {
+        res = await getBoundTemplates(props.bkBizId, props.appId, params);
+      } else {
+        res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id, params);
+      }
+      templateGroupList.value = res.details;
+      templatesCount.value = res.details.reduce(
+        (acc: number, crt: IBoundTemplateGroup) => acc + crt.template_revisions.length,
+        0,
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      boundTemplateListLoading.value = false;
+    }
+  };
+
+  const transListToTableData = () => {
+    const pkgsGroups = groupTplsByPkg(templateGroupList.value);
+    return [
+      { id: 0, name: t('非模板配置'), expand: true, configs: transConfigsToTableItemData(configList.value) },
+      ...pkgsGroups,
+    ];
+  };
+
+  // 将非模板配置文件数据转为表格数据
+  const transConfigsToTableItemData = (list: IConfigItem[]) =>
+    list.map((item: IConfigItem) => {
+      const { id, spec, revision, file_state } = item;
+      const { name, path, permission } = spec;
+      const { creator, reviser, update_at, create_at } = revision;
+      return {
         id,
         name,
-        versionId,
-        versionName,
+        versionId: 0,
+        versionName: '--',
         path,
         creator,
-        reviser: creator,
-        update_at: datetimeFormat(create_at),
+        reviser,
+        update_at: datetimeFormat(update_at || create_at),
         file_state,
-      });
+        permission,
+      };
     });
-    return group;
-  });
-  return groups;
-};
 
-const handleEditOpen = (config: IConfigTableItem) => {
-  if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
-    return;
-  }
-  activeConfig.value = config.id;
-  editPanelShow.value = true;
-};
-
-// 编辑模板
-const handleEditConfigConfirm = async () => {
-  await getCommonConfigList();
-  tableGroupsData.value = transListToTableData();
-  emits('deleteConfig');
-};
-
-// 查看配置文件或模板版本
-const handleViewConfig = (id: number, type: string) => {
-  viewConfigSliderData.value = {
-    open: true,
-    data: { id, type },
+  // 将模板按套餐分组，并将模板数据格式转为表格数据
+  const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
+    const groups: IConfigsGroupData[] = list.map((groupItem) => {
+      const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem;
+      const group: IConfigsGroupData = {
+        id: template_set_id,
+        name: `${template_space_name} - ${template_set_name}`,
+        expand: true,
+        configs: [],
+      };
+      template_revisions.forEach((tpl) => {
+        const {
+          template_id: id,
+          name,
+          template_revision_id: versionId,
+          template_revision_name: versionName,
+          path,
+          creator,
+          create_at,
+          file_state,
+        } = tpl;
+        group.configs.push({
+          id,
+          name,
+          versionId,
+          versionName,
+          path,
+          creator,
+          reviser: creator,
+          update_at: datetimeFormat(create_at),
+          file_state,
+        });
+      });
+      return group;
+    });
+    return groups;
   };
-};
 
-const handleOpenReplaceVersionDialog = (pkgId: number, config: IConfigTableItem) => {
-  if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
-    return;
-  }
-  const { id: templateId, versionId, versionName } = config;
-  replaceDialogData.value = {
-    open: true,
-    data: { pkgId, templateId, versionId, versionName },
+  const handleEditOpen = (config: IConfigTableItem) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
+    activeConfig.value = config.id;
+    editPanelShow.value = true;
   };
-};
 
-// 删除模板套餐
-const handleDeletePkg = async (pkgId: number, name: string) => {
-  if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
-    return;
-  }
-  isDeletePkgDialogShow.value = true;
-  deleteTemplatePkgName.value = name;
-  deleteTemplatePkgId.value = pkgId;
-};
-
-const handleDeletePkgConfirm = async () => {
-  await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [deleteTemplatePkgId.value]);
-  await getBoundTemplateList();
-  tableGroupsData.value = transListToTableData();
-  emits('deleteConfig');
-  Message({
-    theme: 'success',
-    message: t('移除模板套餐成功'),
-  });
-  isDeletePkgDialogShow.value = false;
-};
-
-// 非模板配置文件diff
-const handleConfigDiff = (groupId: number, config: IConfigTableItem) => {
-  diffConfig.value = {
-    pkgId: groupId,
-    id: config.id,
-    version: config.versionId,
-    permission: config.permission,
+  // 编辑模板
+  const handleEditConfigConfirm = async () => {
+    await getCommonConfigList();
+    tableGroupsData.value = transListToTableData();
+    emits('deleteConfig');
   };
-  isDiffPanelShow.value = true;
-};
 
-// 删除配置文件
-const handleDel = (config: IConfigTableItem) => {
-  if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
-    return;
-  }
-  isDeleteConfigDialogShow.value = true;
-  deleteConfig.value = config;
-};
+  // 查看配置文件或模板版本
+  const handleViewConfig = (id: number, type: string) => {
+    viewConfigSliderData.value = {
+      open: true,
+      data: { id, type },
+    };
+  };
 
-const handleDeleteConfigConfirm = async () => {
-  await deleteServiceConfigItem(deleteConfig.value!.id, props.bkBizId, props.appId);
-  Message({
-    theme: 'success',
-    message: t('删除配置文件成功'),
+  const handleOpenReplaceVersionDialog = (pkgId: number, config: IConfigTableItem) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
+    const { id: templateId, versionId, versionName } = config;
+    replaceDialogData.value = {
+      open: true,
+      data: { pkgId, templateId, versionId, versionName },
+    };
+  };
+
+  // 删除模板套餐
+  const handleDeletePkg = async (pkgId: number, name: string) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
+    isDeletePkgDialogShow.value = true;
+    deleteTemplatePkgName.value = name;
+    deleteTemplatePkgId.value = pkgId;
+  };
+
+  const handleDeletePkgConfirm = async () => {
+    await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [deleteTemplatePkgId.value]);
+    await getBoundTemplateList();
+    tableGroupsData.value = transListToTableData();
+    emits('deleteConfig');
+    Message({
+      theme: 'success',
+      message: t('移除模板套餐成功'),
+    });
+    isDeletePkgDialogShow.value = false;
+  };
+
+  // 非模板配置文件diff
+  const handleConfigDiff = (groupId: number, config: IConfigTableItem) => {
+    diffConfig.value = {
+      pkgId: groupId,
+      id: config.id,
+      version: config.versionId,
+      permission: config.permission,
+    };
+    isDiffPanelShow.value = true;
+  };
+
+  // 删除配置文件
+  const handleDel = (config: IConfigTableItem) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
+    isDeleteConfigDialogShow.value = true;
+    deleteConfig.value = config;
+  };
+
+  const handleDeleteConfigConfirm = async () => {
+    await deleteServiceConfigItem(deleteConfig.value!.id, props.bkBizId, props.appId);
+    Message({
+      theme: 'success',
+      message: t('删除配置文件成功'),
+    });
+    await getCommonConfigList();
+    emits('deleteConfig');
+    tableGroupsData.value = transListToTableData();
+    isDeleteConfigDialogShow.value = false;
+  };
+
+  // 设置新增行的标记class
+  const getRowCls = (data: IConfigTableItem) => {
+    if (batchUploadIds.value.includes(data.id)) {
+      return 'new-row-marked config-row';
+    }
+    if (data.file_state === 'DELETE') {
+      return 'delete-row config-row';
+    }
+    return 'config-row';
+  };
+  defineExpose({
+    refresh: getAllConfigList,
   });
-  await getCommonConfigList();
-  emits('deleteConfig');
-  tableGroupsData.value = transListToTableData();
-  isDeleteConfigDialogShow.value = false;
-};
-
-// 设置新增行的标记class
-const getRowCls = (data: IConfigTableItem) => {
-  if (batchUploadIds.value.includes(data.id)) {
-    return 'new-row-marked config-row';
-  }
-  if (data.file_state === 'DELETE') {
-    return 'delete-row config-row';
-  }
-  return 'config-row';
-};
-defineExpose({
-  refresh: getAllConfigList,
-});
 </script>
 <style lang="scss" scoped>
-.config-groups-table {
-  width: 100%;
-  border: 1px solid #dedee5;
-  border-collapse: collapse;
-  // table-layout: fixed;
-  .config-groups-table-tr {
-    th {
-      padding: 11px 16px;
-      color: #313238;
-      font-weight: normal;
+  .config-groups-table {
+    width: 100%;
+    border: 1px solid #dedee5;
+    border-collapse: collapse;
+    // table-layout: fixed;
+    .config-groups-table-tr {
+      th {
+        padding: 11px 16px;
+        color: #313238;
+        font-weight: normal;
+        font-size: 12px;
+        line-height: 20px;
+        text-align: left;
+        background: #fafbfd;
+        border-bottom: 1px solid #dedee5;
+      }
+    }
+    .group-title-row:hover {
+      background: #f5f7fa;
+    }
+    .config-groups-table-td {
+      padding: 0;
       font-size: 12px;
       line-height: 20px;
       text-align: left;
-      background: #fafbfd;
       border-bottom: 1px solid #dedee5;
+      color: #63656e;
     }
-  }
-  .group-title-row:hover {
-    background: #f5f7fa;
-  }
-  .config-groups-table-td {
-    padding: 0;
-    font-size: 12px;
-    line-height: 20px;
-    text-align: left;
-    border-bottom: 1px solid #dedee5;
-    color: #63656e;
-  }
-  .configs-group {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px;
-    height: 42px;
-    .name-wrapper {
+    .configs-group {
       display: flex;
       align-items: center;
-      height: 100%;
-      cursor: pointer;
-      .fold-icon {
-        margin-right: 8px;
-        font-size: 14px;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 42px;
+      .name-wrapper {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        cursor: pointer;
+        .fold-icon {
+          margin-right: 8px;
+          font-size: 14px;
+          color: #3a84ff;
+          transition: transform 0.2s ease-in-out;
+          &.fold {
+            color: #c4c6cc;
+            transform: rotate(-90deg);
+          }
+        }
+      }
+      .delete-btn {
+        display: flex;
+        align-items: center;
+        margin-right: 20px;
         color: #3a84ff;
-        transition: transform 0.2s ease-in-out;
-        &.fold {
-          color: #c4c6cc;
-          transform: rotate(-90deg);
+        cursor: pointer;
+        .close-icon {
+          margin-right: 4px;
+          font-size: 14px;
         }
       }
     }
-    .delete-btn {
-      display: flex;
-      align-items: center;
-      margin-right: 20px;
-      color: #3a84ff;
-      cursor: pointer;
-      .close-icon {
-        margin-right: 4px;
-        font-size: 14px;
+    .name {
+      width: 331px;
+    }
+    .version {
+      width: 200px;
+    }
+    .path {
+      width: 331px;
+    }
+    .user {
+      width: 120px;
+    }
+    .datetime {
+      width: 158px;
+    }
+    .status {
+      width: 120px;
+    }
+    .operation {
+      width: 150px;
+    }
+    .exception-tips {
+      margin: 20px 0;
+    }
+  }
+  .configs-list-wrapper {
+    max-height: 420px;
+    overflow: auto;
+  }
+  .config-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    .config-row {
+      &:hover {
+        background: #f5f7fa;
+      }
+      &:last-child td {
+        border: none;
+      }
+    }
+    td {
+      padding: 11px 16px;
+      height: 42px;
+      border-bottom: 1px solid #dedee5;
+      font-size: 12px;
+      line-height: 20px;
+      color: #63656e;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .config-actions {
+      .bk-button:not(:last-child) {
+        margin-right: 8px;
       }
     }
   }
-  .name {
-    width: 331px;
+  .new-row-marked td {
+    background: #f2fff4 !important;
   }
-  .version {
-    width: 200px;
+  .delete-row td {
+    background: #fafbfd !important;
+    color: #c4c6cc !important;
   }
-  .path {
-    width: 331px;
-  }
-  .user {
-    width: 120px;
-  }
-  .datetime {
-    width: 158px;
-  }
-  .status {
-    width: 120px;
-  }
-  .operation {
-    width: 150px;
-  }
-  .exception-tips {
-    margin: 20px 0;
-  }
-}
-.configs-list-wrapper {
-  max-height: 420px;
-  overflow: auto;
-}
-.config-list-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  .config-row {
-    &:hover {
-      background: #f5f7fa;
-    }
-    &:last-child td {
-      border: none;
-    }
-  }
-  td {
-    padding: 11px 16px;
-    height: 42px;
-    border-bottom: 1px solid #dedee5;
-    font-size: 12px;
-    line-height: 20px;
-    color: #63656e;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
-  .config-actions {
-    .bk-button:not(:last-child) {
-      margin-right: 8px;
-    }
-  }
-}
-.new-row-marked td {
-  background: #f2fff4 !important;
-}
-.delete-row td {
-  background: #fafbfd !important;
-  color: #c4c6cc !important;
-}
 </style>
 
 <style lang="scss">
-.delete-template-pkg {
-  .bk-modal-body {
-    padding: 0 !important;
-    .bk-dialog-header {
-      padding: 48px 24px 104px !important;
-      .bk-dialog-title {
-        width: 352px;
-        height: 32px;
-        font-size: 20px;
-        color: #313238;
-        letter-spacing: 0;
-        text-align: center;
-        line-height: 32px;
+  .delete-template-pkg {
+    .bk-modal-body {
+      padding: 0 !important;
+      .bk-dialog-header {
+        padding: 48px 24px 104px !important;
+        .bk-dialog-title {
+          width: 352px;
+          height: 32px;
+          font-size: 20px;
+          color: #313238;
+          letter-spacing: 0;
+          text-align: center;
+          line-height: 32px;
+        }
+      }
+      .bk-modal-content {
+        display: none;
+      }
+      .bk-modal-footer {
+        bottom: 48px !important;
+        border: none !important;
+        background-color: #fff !important;
       }
     }
-    .bk-modal-content {
-      display: none;
-    }
-    .bk-modal-footer {
-      bottom: 48px !important;
-      border: none !important;
-      background-color: #fff !important;
-    }
   }
-}
 </style>

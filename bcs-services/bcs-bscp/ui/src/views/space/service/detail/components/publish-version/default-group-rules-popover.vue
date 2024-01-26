@@ -1,11 +1,8 @@
 <template>
-  <bk-popover
-    ext-cls="default-group-rules-popover"
-    theme="light"
-    placement="top-start">
+  <bk-popover ext-cls="default-group-rules-popover" theme="light" placement="top-start">
     <InfoLine class="default-group-tips-icon" />
     <template #content>
-      <div class="title">{{t('除以下分组之外的所有实例')}}</div>
+      <div class="title">{{ t('除以下分组之外的所有实例') }}</div>
       <div class="exclude-groups">
         <div v-for="excludeItem in props.excludedGroups" class="exclude-item" :key="excludeItem.id">
           <span class="group-name">{{ excludeItem.name }}</span>
@@ -22,14 +19,14 @@
   </bk-popover>
 </template>
 <script setup lang="ts">
-import { InfoLine } from 'bkui-vue/lib/icon';
-import { useI18n } from 'vue-i18n';
-import { IGroupToPublish } from '../../../../../../../types/group';
-import RuleTag from '../../../../groups/components/rule-tag.vue';
+  import { InfoLine } from 'bkui-vue/lib/icon';
+  import { useI18n } from 'vue-i18n';
+  import { IGroupToPublish } from '../../../../../../../types/group';
+  import RuleTag from '../../../../groups/components/rule-tag.vue';
 
-const { t } = useI18n();
-const props = defineProps<{
-    excludedGroups: IGroupToPublish[],
+  const { t } = useI18n();
+  const props = defineProps<{
+    excludedGroups: IGroupToPublish[];
   }>();
 </script>
 <style scoped lang="scss">

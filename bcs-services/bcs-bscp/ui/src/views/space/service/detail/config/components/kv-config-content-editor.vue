@@ -4,7 +4,7 @@
       <div class="editor-title">
         <div class="tips">
           <InfoLine class="info-icon" />
-          {{t('仅支持大小不超过')}}2M
+          {{ t('仅支持大小不超过') }}2M
         </div>
         <div class="btns">
           <FilliscreenLine
@@ -14,7 +14,7 @@
               placement: 'top',
               distance: 20,
             }"
-            @click="handleOpenFullScreen"/>
+            @click="handleOpenFullScreen" />
           <UnfullScreen
             v-else
             v-bk-tooltips="{
@@ -22,7 +22,7 @@
               placement: 'bottom',
               distance: 20,
             }"
-            @click="handleCloseFullScreen"/>
+            @click="handleCloseFullScreen" />
         </div>
       </div>
       <div class="editor-content">
@@ -31,111 +31,110 @@
           :model-value="props.content"
           :editable="editable"
           :language="languages"
-          @update:model-value="emits('change', $event)"/>
+          @update:model-value="emits('change', $event)" />
       </div>
     </div>
   </Teleport>
 </template>
 <script setup lang="ts">
-import { ref, onBeforeUnmount } from 'vue';
-import { useI18n } from 'vue-i18n';
-import BkMessage from 'bkui-vue/lib/message';
-import { InfoLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon';
-import CodeEditor from '../../../../../../components/code-editor/index.vue';
+  import { ref, onBeforeUnmount } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import BkMessage from 'bkui-vue/lib/message';
+  import { InfoLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon';
+  import CodeEditor from '../../../../../../components/code-editor/index.vue';
 
-const { t } = useI18n();
-const props = withDefaults(
-  defineProps<{
-    content: string;
-    languages: string;
-    editable: boolean;
-  }>(),
-  {
-    editable: true,
-  },
-);
+  const { t } = useI18n();
+  const props = withDefaults(
+    defineProps<{
+      content: string;
+      languages: string;
+      editable: boolean;
+    }>(),
+    {
+      editable: true,
+    },
+  );
 
-const emits = defineEmits(['change']);
+  const emits = defineEmits(['change']);
 
-const isOpenFullScreen = ref(false);
-const codeEditorRef = ref();
+  const isOpenFullScreen = ref(false);
+  const codeEditorRef = ref();
 
-onBeforeUnmount(() => {
-  codeEditorRef.value.destroy();
-});
-
-
-// 打开全屏
-const handleOpenFullScreen = () => {
-  isOpenFullScreen.value = true;
-  window.addEventListener('keydown', handleEscClose, { once: true });
-  BkMessage({
-    theme: 'primary',
-    message: t('按 Esc 即可退出全屏模式'),
+  onBeforeUnmount(() => {
+    codeEditorRef.value.destroy();
   });
-};
 
-const handleCloseFullScreen = () => {
-  isOpenFullScreen.value = false;
-  window.removeEventListener('keydown', handleEscClose);
-};
+  // 打开全屏
+  const handleOpenFullScreen = () => {
+    isOpenFullScreen.value = true;
+    window.addEventListener('keydown', handleEscClose, { once: true });
+    BkMessage({
+      theme: 'primary',
+      message: t('按 Esc 即可退出全屏模式'),
+    });
+  };
 
-// Esc按键事件处理
-const handleEscClose = (event: KeyboardEvent) => {
-  if (event.code === 'Escape') {
+  const handleCloseFullScreen = () => {
     isOpenFullScreen.value = false;
-  }
-};
+    window.removeEventListener('keydown', handleEscClose);
+  };
 
-defineExpose({
-  validate: () => {
-    if (codeEditorRef.value) {
-      return codeEditorRef.value.validate(props.content);
+  // Esc按键事件处理
+  const handleEscClose = (event: KeyboardEvent) => {
+    if (event.code === 'Escape') {
+      isOpenFullScreen.value = false;
     }
-  },
-});
+  };
+
+  defineExpose({
+    validate: () => {
+      if (codeEditorRef.value) {
+        return codeEditorRef.value.validate(props.content);
+      }
+    },
+  });
 </script>
 <style lang="scss" scoped>
-.config-content-editor {
-  height: 640px;
-  &.fullscreen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 5000;
-  }
-  .editor-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px;
-    height: 40px;
-    color: #979ba5;
-    background: #2e2e2e;
-    border-radius: 2px 2px 0 0;
-    .tips {
-      display: flex;
-      align-items: center;
-      font-size: 12px;
-      .info-icon {
-        margin-right: 4px;
-      }
+  .config-content-editor {
+    height: 640px;
+    &.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 5000;
     }
-    .btns {
+    .editor-title {
       display: flex;
       align-items: center;
-      & > span {
-        cursor: pointer;
-        &:hover {
-          color: #3a84ff;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 40px;
+      color: #979ba5;
+      background: #2e2e2e;
+      border-radius: 2px 2px 0 0;
+      .tips {
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        .info-icon {
+          margin-right: 4px;
+        }
+      }
+      .btns {
+        display: flex;
+        align-items: center;
+        & > span {
+          cursor: pointer;
+          &:hover {
+            color: #3a84ff;
+          }
         }
       }
     }
+    .editor-content {
+      height: calc(100% - 40px);
+    }
   }
-  .editor-content {
-    height: calc(100% - 40px);
-  }
-}
 </style>

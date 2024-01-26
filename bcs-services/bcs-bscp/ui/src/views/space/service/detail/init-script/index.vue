@@ -11,14 +11,14 @@
               :loading="scriptsLoading"
               :list="scriptsData"
               @change="handleSelectScript"
-              @refresh="getScripts"/>
+              @refresh="getScripts" />
             <bk-button
               class="preview-button"
               text
               theme="primary"
               :disabled="typeof formData.pre.id !== 'number' || formData.pre.id === 0"
               @click="handleOpenPreview('pre')">
-              {{t('预览')}}
+              {{ t('预览') }}
             </bk-button>
           </div>
         </bk-form-item>
@@ -31,7 +31,7 @@
               :loading="scriptsLoading"
               :list="scriptsData"
               @change="handleSelectScript"
-              @refresh="getScripts"/>
+              @refresh="getScripts" />
             <bk-button
               class="preview-button"
               text
@@ -73,228 +73,230 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { storeToRefs } from 'pinia';
-import BkMessage from 'bkui-vue/lib/message';
-import { AngleRight } from 'bkui-vue/lib/icon';
-import { IScriptItem } from '../../../../../../types/script';
-import useGlobalStore from '../../../../../store/global';
-import useServiceStore from '../../../../../store/service';
-import useConfigStore from '../../../../../store/config';
-import { getScriptList, getScriptVersionDetail } from '../../../../../api/script';
-import { getConfigScript, getDefaultConfigScriptData, updateConfigInitScript } from '../../../../../api/config';
-import ScriptEditor from '../../../scripts/components/script-editor.vue';
-import ScriptSelector from './script-selector.vue';
+  import { ref, computed, onMounted, watch } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { storeToRefs } from 'pinia';
+  import BkMessage from 'bkui-vue/lib/message';
+  import { AngleRight } from 'bkui-vue/lib/icon';
+  import { IScriptItem } from '../../../../../../types/script';
+  import useGlobalStore from '../../../../../store/global';
+  import useServiceStore from '../../../../../store/service';
+  import useConfigStore from '../../../../../store/config';
+  import { getScriptList, getScriptVersionDetail } from '../../../../../api/script';
+  import { getConfigScript, getDefaultConfigScriptData, updateConfigInitScript } from '../../../../../api/config';
+  import ScriptEditor from '../../../scripts/components/script-editor.vue';
+  import ScriptSelector from './script-selector.vue';
 
-const { spaceId } = storeToRefs(useGlobalStore());
-const { versionData } = storeToRefs(useConfigStore());
-const serviceStore = useServiceStore();
-const { checkPermBeforeOperate } = serviceStore;
-const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
-const { t } = useI18n();
+  const { spaceId } = storeToRefs(useGlobalStore());
+  const { versionData } = storeToRefs(useConfigStore());
+  const serviceStore = useServiceStore();
+  const { checkPermBeforeOperate } = serviceStore;
+  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
+  const { t } = useI18n();
 
-const props = defineProps<{
-  appId: number;
-}>();
+  const props = defineProps<{
+    appId: number;
+  }>();
 
-const scriptsLoading = ref(false);
-const scriptsData = ref<{ id: number; versionId: number; name: string; type: string }[]>([]);
-const previewConfig = ref({
-  open: false,
-  type: '',
-  name: '',
-  content: '',
-});
-const contentLoading = ref(false);
-const scriptCiteData = ref({
-  pre_hook: getDefaultConfigScriptData(),
-  post_hook: getDefaultConfigScriptData(),
-});
-const scriptCiteDataLoading = ref(false);
-const submitButtonDisabled = ref(true);
-const formData = ref<{ pre: { id: number; versionId: number }; post: { id: number; versionId: number } }>({
-  pre: {
-    id: 0,
-    versionId: 0,
-  },
-  post: {
-    id: 0,
-    versionId: 0,
-  },
-});
-const pending = ref(false);
-
-// 查看模式
-const viewMode = computed(() => typeof versionData.value.id === 'number' && versionData.value.id !== 0);
-
-watch(
-  () => versionData.value.id,
-  () => {
-    getScriptSetting();
-    previewConfig.value.open = false;
-  },
-);
-
-onMounted(() => {
-  getScripts();
-  getScriptSetting();
-});
-// 获取脚本列表
-const getScripts = async () => {
-  scriptsLoading.value = true;
-  const params = {
-    start: 0,
-    all: true,
-  };
-  const res = await getScriptList(spaceId.value, params);
-  const list = (res.details as IScriptItem[]).map(item => ({
-    id: item.hook.id,
-    versionId: item.published_revision_id,
-    name: item.hook.spec.name,
-    type: item.hook.spec.type,
-  })).sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
-  scriptsData.value = [{ id: 0, versionId: 0, name: t('<不使用脚本>'), type: '' }, ...list];
-  scriptsLoading.value = false;
-};
-
-// 获取初始化脚本配置
-const getScriptSetting = async () => {
-  scriptCiteDataLoading.value = true;
-  scriptCiteData.value = await getConfigScript(spaceId.value, props.appId, versionData.value.id);
-  scriptCiteDataLoading.value = false;
-  formData.value = {
+  const scriptsLoading = ref(false);
+  const scriptsData = ref<{ id: number; versionId: number; name: string; type: string }[]>([]);
+  const previewConfig = ref({
+    open: false,
+    type: '',
+    name: '',
+    content: '',
+  });
+  const contentLoading = ref(false);
+  const scriptCiteData = ref({
+    pre_hook: getDefaultConfigScriptData(),
+    post_hook: getDefaultConfigScriptData(),
+  });
+  const scriptCiteDataLoading = ref(false);
+  const submitButtonDisabled = ref(true);
+  const formData = ref<{ pre: { id: number; versionId: number }; post: { id: number; versionId: number } }>({
     pre: {
-      id: scriptCiteData.value.pre_hook.hook_id,
-      versionId: scriptCiteData.value.pre_hook.hook_revision_id,
+      id: 0,
+      versionId: 0,
     },
     post: {
-      id: scriptCiteData.value.post_hook.hook_id,
-      versionId: scriptCiteData.value.post_hook.hook_revision_id,
+      id: 0,
+      versionId: 0,
     },
-  };
-};
+  });
+  const pending = ref(false);
 
-// 获取脚本预览内容
-const getPreviewContent = async (scriptId: number, versionId: number) => {
-  contentLoading.value = true;
-  const res = await getScriptVersionDetail(spaceId.value, scriptId, versionId);
-  previewConfig.value.content = res.spec.content;
-  contentLoading.value = false;
-};
+  // 查看模式
+  const viewMode = computed(() => typeof versionData.value.id === 'number' && versionData.value.id !== 0);
 
-// 选择脚本
-const handleSelectScript = (id: number, type: string) => {
-  const script = scriptsData.value.find(item => item.id === id);
-  if (script) {
-    if (type === 'pre') {
-      formData.value.pre.versionId = script.versionId;
-      formData.value.pre.id = id;
-    } else {
-      formData.value.post.versionId = script.versionId;
-      formData.value.post.id = id;
-    }
-  }
-  submitButtonDisabled.value = false;
-  handleOpenPreview(type);
-};
+  watch(
+    () => versionData.value.id,
+    () => {
+      getScriptSetting();
+      previewConfig.value.open = false;
+    },
+  );
 
-// 点击预览
-const handleOpenPreview = (type: string) => {
-  const id = type === 'pre' ? formData.value.pre.id : formData.value.post.id;
-  const versionId = type === 'pre' ? formData.value.pre.versionId : formData.value.post.versionId;
-  const script = scriptsData.value.find(item => item.id === id);
-  if (script && script.id > 0) {
-    previewConfig.value = {
-      open: true,
-      name: script.name,
-      type: script.type,
-      content: '',
-    };
-    getPreviewContent(script.id, versionId);
-  } else {
-    previewConfig.value.open = false;
-  }
-};
-
-// 保存配置
-const handleSubmit = async () => {
-  if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
-    return;
-  }
-  try {
-    pending.value = true;
-    const { pre, post } = formData.value;
+  onMounted(() => {
+    getScripts();
+    getScriptSetting();
+  });
+  // 获取脚本列表
+  const getScripts = async () => {
+    scriptsLoading.value = true;
     const params = {
-      pre_hook_id: pre.id,
-      post_hook_id: post.id,
+      start: 0,
+      all: true,
     };
-    await updateConfigInitScript(spaceId.value, props.appId, params);
-    BkMessage({
-      theme: 'success',
-      message: t('初始化脚本设置成功'),
-    });
-  } catch (e) {
-    console.error(e);
-  } finally {
-    pending.value = false;
-    submitButtonDisabled.value = true;
-  }
-};
+    const res = await getScriptList(spaceId.value, params);
+    const list = (res.details as IScriptItem[])
+      .map((item) => ({
+        id: item.hook.id,
+        versionId: item.published_revision_id,
+        name: item.hook.spec.name,
+        type: item.hook.spec.type,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
+    scriptsData.value = [{ id: 0, versionId: 0, name: t('<不使用脚本>'), type: '' }, ...list];
+    scriptsLoading.value = false;
+  };
+
+  // 获取初始化脚本配置
+  const getScriptSetting = async () => {
+    scriptCiteDataLoading.value = true;
+    scriptCiteData.value = await getConfigScript(spaceId.value, props.appId, versionData.value.id);
+    scriptCiteDataLoading.value = false;
+    formData.value = {
+      pre: {
+        id: scriptCiteData.value.pre_hook.hook_id,
+        versionId: scriptCiteData.value.pre_hook.hook_revision_id,
+      },
+      post: {
+        id: scriptCiteData.value.post_hook.hook_id,
+        versionId: scriptCiteData.value.post_hook.hook_revision_id,
+      },
+    };
+  };
+
+  // 获取脚本预览内容
+  const getPreviewContent = async (scriptId: number, versionId: number) => {
+    contentLoading.value = true;
+    const res = await getScriptVersionDetail(spaceId.value, scriptId, versionId);
+    previewConfig.value.content = res.spec.content;
+    contentLoading.value = false;
+  };
+
+  // 选择脚本
+  const handleSelectScript = (id: number, type: string) => {
+    const script = scriptsData.value.find((item) => item.id === id);
+    if (script) {
+      if (type === 'pre') {
+        formData.value.pre.versionId = script.versionId;
+        formData.value.pre.id = id;
+      } else {
+        formData.value.post.versionId = script.versionId;
+        formData.value.post.id = id;
+      }
+    }
+    submitButtonDisabled.value = false;
+    handleOpenPreview(type);
+  };
+
+  // 点击预览
+  const handleOpenPreview = (type: string) => {
+    const id = type === 'pre' ? formData.value.pre.id : formData.value.post.id;
+    const versionId = type === 'pre' ? formData.value.pre.versionId : formData.value.post.versionId;
+    const script = scriptsData.value.find((item) => item.id === id);
+    if (script && script.id > 0) {
+      previewConfig.value = {
+        open: true,
+        name: script.name,
+        type: script.type,
+        content: '',
+      };
+      getPreviewContent(script.id, versionId);
+    } else {
+      previewConfig.value.open = false;
+    }
+  };
+
+  // 保存配置
+  const handleSubmit = async () => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
+    try {
+      pending.value = true;
+      const { pre, post } = formData.value;
+      const params = {
+        pre_hook_id: pre.id,
+        post_hook_id: post.id,
+      };
+      await updateConfigInitScript(spaceId.value, props.appId, params);
+      BkMessage({
+        theme: 'success',
+        message: t('初始化脚本设置成功'),
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      pending.value = false;
+      submitButtonDisabled.value = true;
+    }
+  };
 </script>
 <style lang="scss" scoped>
-.init-script-page {
-  display: flex;
-  align-items: top;
-  height: 100%;
-}
-.script-select-area {
-  padding: 24px 32px 24px 24px;
-  width: 528px;
-  height: 100%;
-  .select-wrapper {
+  .init-script-page {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    .bk-select {
-      width: 426px;
+    align-items: top;
+    height: 100%;
+  }
+  .script-select-area {
+    padding: 24px 32px 24px 24px;
+    width: 528px;
+    height: 100%;
+    .select-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      .bk-select {
+        width: 426px;
+      }
     }
   }
-}
-.preview-area {
-  width: calc(100% - 528px);
-  height: 100%;
-}
-.script-preview-title {
-  display: flex;
-  align-items: center;
-  padding-right: 24px;
-  width: 100%;
-  height: 40px;
-  .close-area {
+  .preview-area {
+    width: calc(100% - 528px);
+    height: 100%;
+  }
+  .script-preview-title {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 20px;
+    padding-right: 24px;
+    width: 100%;
+    height: 40px;
+    .close-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 100%;
+      background: #63656e;
+      color: #ffffff;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .title {
+      padding: 0 5px;
+      line-height: 40px;
+      color: #c4c6cc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+  :deep(.script-editor) {
     height: 100%;
-    background: #63656e;
-    color: #ffffff;
-    font-size: 20px;
-    cursor: pointer;
+    .content-wrapper {
+      height: calc(100% - 40px);
+    }
   }
-  .title {
-    padding: 0 5px;
-    line-height: 40px;
-    color: #c4c6cc;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-:deep(.script-editor) {
-  height: 100%;
-  .content-wrapper {
-    height: calc(100% - 40px);
-  }
-}
 </style>

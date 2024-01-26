@@ -25,7 +25,7 @@
     /**
      * 要求箭头函数体使用大括号
      */
-    "arrow-body-style": ["warn", "as-needed"],
+    "arrow-body-style": ["off", "as-needed"],
     /**
      * 要求箭头函数的参数使用圆括号
      */
@@ -97,7 +97,7 @@
     /**
      * 强制在函数括号内使用一致的换行
      */
-    "function-paren-newline": ["warn", "multiline"],
+    "function-paren-newline": "off",
     /**
      * 强制 generator 函数中 * 号周围使用一致的空格
      */
@@ -115,7 +115,7 @@
     /**
      * 强制隐式返回的箭头函数体的位置
      */
-    "implicit-arrow-linebreak": ["warn", "beside"],
+    "implicit-arrow-linebreak": "off",
     /**
      * 使用 2 个空格缩进
      */
@@ -215,7 +215,7 @@
      * 在编写多个方法链式调用(超过两个方法链式调用)时。 使用前导点，强调这行是一个方法调用，而不是一个语句。
      */
     "newline-per-chained-call": [
-      "warn",
+      "off",
       {
         "ignoreChainWithDepth": 2
       }
@@ -708,8 +708,25 @@
         "singleline": "ignore",
         "multiline": "below"
       }
+    ],
+    "vue/script-indent": [
+      "error",
+      2,
+      {
+        "baseIndent": 1,
+        "switchCase": 1,
+        "ignores": []
+      }
     ]
   },
+  "overrides": [
+    {
+      "files": ["*.vue"],
+      "rules": {
+        "indent": "off"
+      }
+    }
+  ],
   "settings": {
     "import/resolver": {
       "node": {

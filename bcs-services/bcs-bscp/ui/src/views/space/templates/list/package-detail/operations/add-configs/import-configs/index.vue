@@ -44,7 +44,7 @@
       <bk-loading :loading="loading">
         <div class="tips" v-if="!loading">
           {{ t('共将导入') }} <span>{{ importConfigList.length }}</span> {{ t('个配置项，其中') }}
-          <span>{{ existConfigList.length }}</span> {{ t('个已存在,导入后将')}}
+          <span>{{ existConfigList.length }}</span> {{ t('个已存在,导入后将') }}
           <span style="color: #ff9c01">{{ t('覆盖原配置') }}</span>
         </div>
         <ConfigTable
@@ -53,14 +53,14 @@
           v-if="nonExistConfigList.length"
           :expand="expandNonExistTable"
           @change-expand="expandNonExistTable = !expandNonExistTable"
-          @change="handleTableChange($event, true)"/>
+          @change="handleTableChange($event, true)" />
         <ConfigTable
           :table-data="existConfigList"
           :is-exsit-table="true"
           v-if="existConfigList.length"
           :expand="!expandNonExistTable"
           @change-expand="expandNonExistTable = !expandNonExistTable"
-          @change="handleTableChange($event, false)"/>
+          @change="handleTableChange($event, false)" />
       </bk-loading>
     </div>
     <div class="action-btns">
@@ -68,161 +68,167 @@
         theme="primary"
         :loading="pending"
         :disabled="!importConfigList.length"
-        @click="isSelectPkgDialogShow = true">{{ t('去上传') }}</bk-button>
+        @click="isSelectPkgDialogShow = true"
+        >{{ t('去上传') }}</bk-button
+      >
       <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
   <SelectPackage v-model:show="isSelectPkgDialogShow" :pending="pending" @confirm="handleImport" />
 </template>
 <script lang="ts" setup>
-import { ref, watch, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { storeToRefs } from 'pinia';
-import useGlobalStore from '../../../../../../../../store/global';
-import useTemplateStore from '../../../../../../../../store/template';
-import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
-import { IConfigImportItem } from '../../../../../../../../../types/config';
-import { importTemplateFile, importTemplateBatchAdd, addTemplateToPackage } from '../../../../../../../../api/template';
-import ConfigTable from './config-table.vue';
-import SelectPackage from './select-package.vue';
-import Message from 'bkui-vue/lib/message';
-import { Upload } from 'bkui-vue/lib/icon';
+  import { ref, watch, computed } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { storeToRefs } from 'pinia';
+  import useGlobalStore from '../../../../../../../../store/global';
+  import useTemplateStore from '../../../../../../../../store/template';
+  import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
+  import { IConfigImportItem } from '../../../../../../../../../types/config';
+  import {
+    importTemplateFile,
+    importTemplateBatchAdd,
+    addTemplateToPackage,
+  } from '../../../../../../../../api/template';
+  import ConfigTable from './config-table.vue';
+  import SelectPackage from './select-package.vue';
+  import Message from 'bkui-vue/lib/message';
+  import { Upload } from 'bkui-vue/lib/icon';
 
-const { t } = useI18n();
-const props = defineProps<{
-  show: boolean;
-}>();
+  const { t } = useI18n();
+  const props = defineProps<{
+    show: boolean;
+  }>();
 
-const emits = defineEmits(['update:show', 'added']);
-const { spaceId } = storeToRefs(useGlobalStore());
-const { currentTemplateSpace, batchUploadIds } = storeToRefs(useTemplateStore());
-const isShow = ref(false);
-const isTableChange = ref(false);
-const pending = ref(false);
-const existConfigList = ref<IConfigImportItem[]>([]);
-const nonExistConfigList = ref<IConfigImportItem[]>([]);
-const loading = ref(false);
-const expandNonExistTable = ref(true);
-const isSelectPkgDialogShow = ref(false);
-const buttonRef = ref();
+  const emits = defineEmits(['update:show', 'added']);
+  const { spaceId } = storeToRefs(useGlobalStore());
+  const { currentTemplateSpace, batchUploadIds } = storeToRefs(useTemplateStore());
+  const isShow = ref(false);
+  const isTableChange = ref(false);
+  const pending = ref(false);
+  const existConfigList = ref<IConfigImportItem[]>([]);
+  const nonExistConfigList = ref<IConfigImportItem[]>([]);
+  const loading = ref(false);
+  const expandNonExistTable = ref(true);
+  const isSelectPkgDialogShow = ref(false);
+  const buttonRef = ref();
 
-watch(
-  () => props.show,
-  (val) => {
-    isShow.value = val;
-    isTableChange.value = false;
-  },
-);
+  watch(
+    () => props.show,
+    (val) => {
+      isShow.value = val;
+      isTableChange.value = false;
+    },
+  );
 
-const importConfigList = computed(() => [...existConfigList.value, ...nonExistConfigList.value]);
+  const importConfigList = computed(() => [...existConfigList.value, ...nonExistConfigList.value]);
 
-const handleFileUpload = async (option: { file: File }) => {
-  clearData();
-  loading.value = true;
-  try {
-    const res = await importTemplateFile(spaceId.value, currentTemplateSpace.value, option.file);
-    existConfigList.value = res.exist;
-    nonExistConfigList.value = res.non_exist;
-    nonExistConfigList.value.forEach((item: IConfigImportItem) => {
-      item.privilege = '644';
-      item.user = 'root';
-      item.user_group = 'root';
-    });
-    if (nonExistConfigList.value.length === 0) expandNonExistTable.value = false;
-    isTableChange.value = false;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const handleBeforeClose = async () => {
-  if (isTableChange.value) {
-    const result = await useModalCloseConfirmation();
-    return result;
-  }
-  return true;
-};
-
-const close = () => {
-  clearData();
-  emits('update:show', false);
-};
-
-const handleImport = async (pkgIds: number[]) => {
-  try {
-    const res = await importTemplateBatchAdd(spaceId.value, currentTemplateSpace.value, [
-      ...existConfigList.value,
-      ...nonExistConfigList.value,
-    ]);
-    // 选择未指定套餐时,不需要调用添加接口
-    if (pkgIds.length > 1 || pkgIds[0] !== 0) {
-      await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, res.ids, pkgIds);
+  const handleFileUpload = async (option: { file: File }) => {
+    clearData();
+    loading.value = true;
+    try {
+      const res = await importTemplateFile(spaceId.value, currentTemplateSpace.value, option.file);
+      existConfigList.value = res.exist;
+      nonExistConfigList.value = res.non_exist;
+      nonExistConfigList.value.forEach((item: IConfigImportItem) => {
+        item.privilege = '644';
+        item.user = 'root';
+        item.user_group = 'root';
+      });
+      if (nonExistConfigList.value.length === 0) expandNonExistTable.value = false;
+      isTableChange.value = false;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loading.value = false;
     }
-    batchUploadIds.value = res.ids;
-    isSelectPkgDialogShow.value = false;
-    emits('added');
-    close();
-    Message({
-      theme: 'success',
-      message: t('导入配置文件成功'),
-    });
-  } catch (e) {
-    console.log(e);
-  } finally {
-    pending.value = false;
-  }
-};
+  };
 
-const handleTableChange = (data: IConfigImportItem[], isNonExistData: boolean) => {
-  if (isNonExistData) {
-    nonExistConfigList.value = data;
-  } else {
-    existConfigList.value = data;
-  }
-  isTableChange.value = true;
-};
+  const handleBeforeClose = async () => {
+    if (isTableChange.value) {
+      const result = await useModalCloseConfirmation();
+      return result;
+    }
+    return true;
+  };
 
-const clearData = () => {
-  nonExistConfigList.value = [];
-  existConfigList.value = [];
-};
+  const close = () => {
+    clearData();
+    emits('update:show', false);
+  };
+
+  const handleImport = async (pkgIds: number[]) => {
+    try {
+      const res = await importTemplateBatchAdd(spaceId.value, currentTemplateSpace.value, [
+        ...existConfigList.value,
+        ...nonExistConfigList.value,
+      ]);
+      // 选择未指定套餐时,不需要调用添加接口
+      if (pkgIds.length > 1 || pkgIds[0] !== 0) {
+        await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, res.ids, pkgIds);
+      }
+      batchUploadIds.value = res.ids;
+      isSelectPkgDialogShow.value = false;
+      emits('added');
+      close();
+      Message({
+        theme: 'success',
+        message: t('导入配置文件成功'),
+      });
+    } catch (e) {
+      console.log(e);
+    } finally {
+      pending.value = false;
+    }
+  };
+
+  const handleTableChange = (data: IConfigImportItem[], isNonExistData: boolean) => {
+    if (isNonExistData) {
+      nonExistConfigList.value = data;
+    } else {
+      existConfigList.value = data;
+    }
+    isTableChange.value = true;
+  };
+
+  const clearData = () => {
+    nonExistConfigList.value = [];
+    existConfigList.value = [];
+  };
 </script>
 <style lang="scss" scoped>
-.slider-content-container {
-  padding: 20px 40px;
-  height: calc(100vh - 101px);
-}
-.upload-button {
-  width: 100px;
-  .text {
-    margin-left: 5px;
+  .slider-content-container {
+    padding: 20px 40px;
+    height: calc(100vh - 101px);
   }
-}
-.upload-tips {
-  margin-left: 8px;
-  font-size: 12px;
-  color: #63656e;
-}
-.action-btns {
-  border-top: 1px solid #dcdee5;
-  padding: 8px 24px;
-  .bk-button {
-    margin-right: 8px;
-    min-width: 88px;
+  .upload-button {
+    width: 100px;
+    .text {
+      margin-left: 5px;
+    }
   }
-}
-.config-uploader {
-  :deep(.bk-upload-list) {
-    display: none;
+  .upload-tips {
+    margin-left: 8px;
+    font-size: 12px;
+    color: #63656e;
   }
-}
-.tips {
-  color: #63656e;
-  margin-bottom: 16px;
-  span {
-    color: #313238;
+  .action-btns {
+    border-top: 1px solid #dcdee5;
+    padding: 8px 24px;
+    .bk-button {
+      margin-right: 8px;
+      min-width: 88px;
+    }
   }
-}
+  .config-uploader {
+    :deep(.bk-upload-list) {
+      display: none;
+    }
+  }
+  .tips {
+    color: #63656e;
+    margin-bottom: 16px;
+    span {
+      color: #313238;
+    }
+  }
 </style>

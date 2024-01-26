@@ -5,37 +5,37 @@
   </bk-button>
 </template>
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { Help } from 'bkui-vue/lib/icon';
-import { cloneDeep } from 'lodash';
-import { IVariableEditParams } from '../../../../../../../../../types/variable';
+  import { ref, watch } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { Help } from 'bkui-vue/lib/icon';
+  import { cloneDeep } from 'lodash';
+  import { IVariableEditParams } from '../../../../../../../../../types/variable';
 
-const { t } = useI18n();
-const props = defineProps<{
-  list: IVariableEditParams[];
-}>();
+  const { t } = useI18n();
+  const props = defineProps<{
+    list: IVariableEditParams[];
+  }>();
 
-const emits = defineEmits(['reset']);
+  const emits = defineEmits(['reset']);
 
-const initialList = ref(cloneDeep(props.list));
+  const initialList = ref(cloneDeep(props.list));
 
-watch(
-  () => props.list,
-  () => {
-    initialList.value = cloneDeep(props.list);
-  },
-);
+  watch(
+    () => props.list,
+    () => {
+      initialList.value = cloneDeep(props.list);
+    },
+  );
 
-const triggerReset = () => {
-  emits('reset', cloneDeep(initialList.value));
-};
+  const triggerReset = () => {
+    emits('reset', cloneDeep(initialList.value));
+  };
 </script>
 <style lang="scss" scoped>
-.reset-default-value-btn {
-  font-size: 12px;
-  .help-icon {
-    margin-left: 4px;
+  .reset-default-value-btn {
+    font-size: 12px;
+    .help-icon {
+      margin-left: 4px;
+    }
   }
-}
 </style>

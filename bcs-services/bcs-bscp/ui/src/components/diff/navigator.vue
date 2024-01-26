@@ -29,152 +29,152 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onBeforeUnmount } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { AngleDown, AngleUp } from 'bkui-vue/lib/icon';
-import * as monaco from 'monaco-editor';
+  import { ref, computed, watch, onBeforeUnmount } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { AngleDown, AngleUp } from 'bkui-vue/lib/icon';
+  import * as monaco from 'monaco-editor';
 
-const { t } = useI18n();
+  const { t } = useI18n();
 
-let contentNavigator: monaco.editor.IDiffNavigator;
-let permissionNavigator: monaco.editor.IDiffNavigator;
-const contentLineChange = ref();
-const contentDiffNumber = ref(0);
-const currentDiffNumber = ref(0);
-const diffNumber = computed(() => contentDiffNumber.value + props.permissionDiffNumber);
+  let contentNavigator: monaco.editor.IDiffNavigator;
+  let permissionNavigator: monaco.editor.IDiffNavigator;
+  const contentLineChange = ref();
+  const contentDiffNumber = ref(0);
+  const currentDiffNumber = ref(0);
+  const diffNumber = computed(() => contentDiffNumber.value + props.permissionDiffNumber);
 
-const props = defineProps<{
-  diffEditor: monaco.editor.IStandaloneDiffEditor;
-  permissionEditor: monaco.editor.IStandaloneDiffEditor;
-  permissionDiffNumber: number;
-}>();
+  const props = defineProps<{
+    diffEditor: monaco.editor.IStandaloneDiffEditor;
+    permissionEditor: monaco.editor.IStandaloneDiffEditor;
+    permissionDiffNumber: number;
+  }>();
 
-watch(
-  () => props.diffEditor,
-  () => {
-    createNavigator();
-    getContentDiffNumber();
-  },
-);
+  watch(
+    () => props.diffEditor,
+    () => {
+      createNavigator();
+      getContentDiffNumber();
+    },
+  );
 
-watch([() => contentDiffNumber.value, () => props.permissionDiffNumber], () => {
-  getCurrentDiffIndex();
-});
-
-onBeforeUnmount(() => {
-  if (contentNavigator) {
-    contentNavigator.dispose();
-  }
-  if (permissionNavigator) {
-    permissionNavigator.dispose();
-  }
-});
-
-// 设置差异导航
-const createNavigator = () => {
-  contentNavigator = monaco.editor.createDiffNavigator(props.diffEditor, {
-    followsCaret: true,
-    ignoreCharChanges: true,
+  watch([() => contentDiffNumber.value, () => props.permissionDiffNumber], () => {
+    getCurrentDiffIndex();
   });
-};
 
-// 获取内容差异个数
-const getContentDiffNumber = () => {
-  props.diffEditor.onDidUpdateDiff(() => {
-    contentLineChange.value = props.diffEditor.getLineChanges();
-    contentDiffNumber.value = contentLineChange.value.length;
-  });
-};
-
-// 获取当前差异行
-const getCurrentDiffIndex = () => {
-  const position = props.diffEditor.getPosition() as monaco.Position;
-  if (contentLineChange.value.length === 0) {
-    currentDiffNumber.value = 0;
-    return;
-  }
-  contentLineChange.value.forEach((item: any, index: number) => {
-    if (item.modifiedStartLineNumber <= position.lineNumber && item.modifiedEndLineNumber >= position.lineNumber) {
-      currentDiffNumber.value = index + 1;
+  onBeforeUnmount(() => {
+    if (contentNavigator) {
+      contentNavigator.dispose();
+    }
+    if (permissionNavigator) {
+      permissionNavigator.dispose();
     }
   });
-};
 
-const previous = () => {
-  contentNavigator.previous();
-  getCurrentDiffIndex();
-};
+  // 设置差异导航
+  const createNavigator = () => {
+    contentNavigator = monaco.editor.createDiffNavigator(props.diffEditor, {
+      followsCaret: true,
+      ignoreCharChanges: true,
+    });
+  };
 
-const next = () => {
-  contentNavigator.next();
-  getCurrentDiffIndex();
-};
+  // 获取内容差异个数
+  const getContentDiffNumber = () => {
+    props.diffEditor.onDidUpdateDiff(() => {
+      contentLineChange.value = props.diffEditor.getLineChanges();
+      contentDiffNumber.value = contentLineChange.value.length;
+    });
+  };
+
+  // 获取当前差异行
+  const getCurrentDiffIndex = () => {
+    const position = props.diffEditor.getPosition() as monaco.Position;
+    if (contentLineChange.value.length === 0) {
+      currentDiffNumber.value = 0;
+      return;
+    }
+    contentLineChange.value.forEach((item: any, index: number) => {
+      if (item.modifiedStartLineNumber <= position.lineNumber && item.modifiedEndLineNumber >= position.lineNumber) {
+        currentDiffNumber.value = index + 1;
+      }
+    });
+  };
+
+  const previous = () => {
+    contentNavigator.previous();
+    getCurrentDiffIndex();
+  };
+
+  const next = () => {
+    contentNavigator.next();
+    getCurrentDiffIndex();
+  };
 </script>
 
 <style scoped lang="scss">
-.navigator-wrap {
-  display: flex;
-  align-items: center;
-  width: 1197.72px;
-  height: 47.5px;
-  background: #1d1d1d;
-  box-shadow: 0 -1px 0 0 #313238;
-  .color-wrapper {
+  .navigator-wrap {
     display: flex;
-    justify-content: space-between;
-    width: 205px;
-    margin: 0 15px;
-    .color-info {
-      display: flex;
-      align-items: center;
-      .color-box {
-        width: 12px;
-        height: 12px;
-        margin-right: 1px;
-      }
-      .color-text {
-        margin-left: 6px;
-      }
-      .red {
-        background: #702622;
-      }
-      .gray {
-        background: #666666;
-      }
-      .green {
-        background: #3d4d1f;
-      }
-    }
-  }
-  .separator-wrapper {
-    display: flex;
-    justify-content: space-evenly;
     align-items: center;
-    width: 121px;
-    height: 32px;
-    background: #63656e;
-    border-radius: 2px;
-    .number {
-      font-family: MicrosoftYaHei;
-      font-size: 12px;
-      color: #c4c6cc;
-    }
-    .line {
-      width: 1px;
-      height: 16px;
-      background: #c4c6cc;
-    }
-    .button {
+    width: 1197.72px;
+    height: 47.5px;
+    background: #1d1d1d;
+    box-shadow: 0 -1px 0 0 #313238;
+    .color-wrapper {
       display: flex;
+      justify-content: space-between;
+      width: 205px;
+      margin: 0 15px;
+      .color-info {
+        display: flex;
+        align-items: center;
+        .color-box {
+          width: 12px;
+          height: 12px;
+          margin-right: 1px;
+        }
+        .color-text {
+          margin-left: 6px;
+        }
+        .red {
+          background: #702622;
+        }
+        .gray {
+          background: #666666;
+        }
+        .green {
+          background: #3d4d1f;
+        }
+      }
+    }
+    .separator-wrapper {
+      display: flex;
+      justify-content: space-evenly;
       align-items: center;
-      font-size: 24px;
-      span {
-        border-radius: 50%;
-        &:hover {
-          background: rgba($color: #928e8e, $alpha: 0.3);
+      width: 121px;
+      height: 32px;
+      background: #63656e;
+      border-radius: 2px;
+      .number {
+        font-family: MicrosoftYaHei;
+        font-size: 12px;
+        color: #c4c6cc;
+      }
+      .line {
+        width: 1px;
+        height: 16px;
+        background: #c4c6cc;
+      }
+      .button {
+        display: flex;
+        align-items: center;
+        font-size: 24px;
+        span {
+          border-radius: 50%;
+          &:hover {
+            background: rgba($color: #928e8e, $alpha: 0.3);
+          }
         }
       }
     }
   }
-}
 </style>

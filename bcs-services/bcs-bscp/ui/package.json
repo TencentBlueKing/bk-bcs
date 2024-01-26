@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --force",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "npx prettier ./ --write"
   },
   "dependencies": {
     "@blueking/notice-component": "^2.0.1",

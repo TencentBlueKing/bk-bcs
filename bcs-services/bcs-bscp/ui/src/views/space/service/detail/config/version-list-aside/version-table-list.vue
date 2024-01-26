@@ -19,7 +19,7 @@
           class="version-search-input"
           :placeholder="t('版本名称/版本说明/修改人')"
           :width="320"
-          @search="handleSearch"/>
+          @search="handleSearch" />
       </div>
       <bk-loading :loading="listLoading">
         <bk-table
@@ -84,17 +84,14 @@
                 <template v-if="currentTab === 'avaliable'">
                   <template v-if="row.status.publish_status === 'editing'">--</template>
                   <div v-else class="actions-wrapper">
-                    <bk-button
-                      text
-                      theme="primary"
-                      @click.stop="handleOpenDiff(row)">
+                    <bk-button text theme="primary" @click.stop="handleOpenDiff(row)">
                       {{ t('版本对比') }}
                     </bk-button>
                     <bk-button
                       v-bk-tooltips="{
                         disabled: row.status.publish_status === 'not_released',
                         placement: 'bottom',
-                        content: t('只支持未上线版本')
+                        content: t('只支持未上线版本'),
                       }"
                       text
                       theme="primary"
@@ -127,346 +124,353 @@
   </section>
 </template>
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useI18n } from 'vue-i18n';
-import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue';
-import useConfigStore from '../../../../../../store/config';
-import { getConfigVersionList, deprecateVersion, undeprecateVersion, deleteVersion } from '../../../../../../api/config';
-import { datetimeFormat } from '../../../../../../utils/index';
-import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
-import { IConfigVersion, IConfigVersionQueryParams, IReleasedGroup } from '../../../../../../../types/config';
-import ServiceSelector from '../../components/service-selector.vue';
-import SearchInput from '../../../../../../components/search-input.vue';
-import VersionDiff from '../../config/components/version-diff/index.vue';
-import tableEmpty from '../../../../../../components/table/table-empty.vue';
-import ReleasedGroupViewer from '../components/released-group-viewer.vue';
-import VersionOperateConfirmDialog from './version-operate-confirm-dialog.vue';
+  import { ref, computed, watch, onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
+  import { useI18n } from 'vue-i18n';
+  import { storeToRefs } from 'pinia';
+  import { Message } from 'bkui-vue';
+  import useConfigStore from '../../../../../../store/config';
+  import {
+    getConfigVersionList,
+    deprecateVersion,
+    undeprecateVersion,
+    deleteVersion,
+  } from '../../../../../../api/config';
+  import { datetimeFormat } from '../../../../../../utils/index';
+  import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
+  import { IConfigVersion, IConfigVersionQueryParams, IReleasedGroup } from '../../../../../../../types/config';
+  import ServiceSelector from '../../components/service-selector.vue';
+  import SearchInput from '../../../../../../components/search-input.vue';
+  import VersionDiff from '../../config/components/version-diff/index.vue';
+  import tableEmpty from '../../../../../../components/table/table-empty.vue';
+  import ReleasedGroupViewer from '../components/released-group-viewer.vue';
+  import VersionOperateConfirmDialog from './version-operate-confirm-dialog.vue';
 
-const configStore = useConfigStore();
-const { versionData } = storeToRefs(configStore);
+  const configStore = useConfigStore();
+  const { versionData } = storeToRefs(configStore);
 
-const router = useRouter();
-const { t } = useI18n();
+  const router = useRouter();
+  const { t } = useI18n();
 
-const props = defineProps<{
-  bkBizId: string;
-  appId: number;
-}>();
+  const props = defineProps<{
+    bkBizId: string;
+    appId: number;
+  }>();
 
-const UN_NAMED_VERSION = GET_UNNAMED_VERSION_DATA();
+  const UN_NAMED_VERSION = GET_UNNAMED_VERSION_DATA();
 
-const listLoading = ref(true);
-const versionList = ref<Array<IConfigVersion>>([]);
-const currentTab = ref('avaliable');
-const searchStr = ref('');
-const showDiffPanel = ref(false);
-const diffVersion = ref();
-const pagination = ref({
-  current: 1,
-  count: 0,
-  limit: 10,
-});
-const isSearchEmpty = ref(false);
-const operateConfirmDialog = ref({
-  open: false,
-  version: UN_NAMED_VERSION,
-  title: '',
-  tips: '',
-  confirmFn: () => {},
-});
-
-// 可用版本非搜索查看视图
-const isAvaliableView = computed(() => currentTab.value === 'avaliable' && searchStr.value === '');
-
-watch(() => props.appId, () => {
-  getVersionList();
-});
-
-onMounted(() => {
-  getVersionList();
-});
-
-const getVersionList = async () => {
-  listLoading.value = true;
-  const { current, limit } = pagination.value;
-  const notFirstPageStart = isAvaliableView.value
-    ? (current - 1) * limit - 1
-    : (current - 1) * limit;
-  const params: IConfigVersionQueryParams = {
-    start: current === 1 ? 0 : notFirstPageStart,
-    limit: current === 1 && isAvaliableView.value ? limit - 1 : limit,
-    deprecated: currentTab.value !== 'avaliable',
-  };
-  if (searchStr.value) {
-    params.searchKey = searchStr.value;
-  }
-  const res = await getConfigVersionList(props.bkBizId, props.appId, params);
-  const count = isAvaliableView.value ? res.data.count + 1 : res.data.count;
-  if (isAvaliableView.value && current === 1) {
-    versionList.value = [UN_NAMED_VERSION, ...res.data.details];
-  } else {
-    versionList.value = res.data.details;
-  }
-  pagination.value.count = count;
-  listLoading.value = false;
-};
-
-const getRowCls = (data: IConfigVersion) => {
-  if (data.id === versionData.value.id) {
-    return 'selected';
-  }
-  return '';
-};
-
-const getGroupNames = (data: IConfigVersion) => {
-  const status = data.status?.publish_status;
-  if (status === 'partial_released') {
-    return data.status.released_groups.map(item => item.name).join('; ');
-  } if (status === 'full_released') {
-    return '全部实例';
-  }
-  return '--';
-};
-
-const isVersionInDefaultGroup = (groups: IReleasedGroup[]) => groups.findIndex(item => item.id === 0) > -1;
-
-const handleTabChange = (tab: string) => {
-  currentTab.value = tab;
-  pagination.value.current = 1;
-  refreshVersionList();
-};
-
-// 选择某个版本
-const handleSelectVersion = (event: Event | undefined, data: IConfigVersion) => {
-  configStore.$patch((state) => {
-    state.versionData = data;
+  const listLoading = ref(true);
+  const versionList = ref<Array<IConfigVersion>>([]);
+  const currentTab = ref('avaliable');
+  const searchStr = ref('');
+  const showDiffPanel = ref(false);
+  const diffVersion = ref();
+  const pagination = ref({
+    current: 1,
+    count: 0,
+    limit: 10,
   });
-  const params: { spaceId: string, appId: number, versionId?: number } = {
-    spaceId: props.bkBizId,
-    appId: props.appId,
-  };
-  if (data.id !== 0) {
-    params.versionId = data.id;
-  }
-  router.push({ name: 'service-config', params });
-};
-
-// 打开版本对比
-const handleOpenDiff = (version: IConfigVersion) => {
-  showDiffPanel.value = true;
-  diffVersion.value = version;
-};
-
-// 废弃
-const handleDeprecate = (version: IConfigVersion) => {
-  operateConfirmDialog.value.open = true;
-  operateConfirmDialog.value.title = '确认废弃该版本';
-  operateConfirmDialog.value.tips = '此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作';
-  operateConfirmDialog.value.version = version;
-  operateConfirmDialog.value.confirmFn = () => new Promise(() => {
-    deprecateVersion(props.bkBizId, props.appId, version.id)
-      .then(() => {
-        operateConfirmDialog.value.open = false;
-        Message({
-          theme: 'success',
-          message: '版本废弃成功',
-        });
-        updateListAndSetVersionAfterOperate(version.id);
-      });
+  const isSearchEmpty = ref(false);
+  const operateConfirmDialog = ref({
+    open: false,
+    version: UN_NAMED_VERSION,
+    title: '',
+    tips: '',
+    confirmFn: () => {},
   });
-};
 
-// 恢复
-const handleUndeprecate = (version: IConfigVersion) => {
-  operateConfirmDialog.value.open = true;
-  operateConfirmDialog.value.title = t('确认恢复该版本');
-  operateConfirmDialog.value.tips = t('此操作会把改版本恢复至可用版本列表');
-  operateConfirmDialog.value.version = version;
-  operateConfirmDialog.value.confirmFn = () => new Promise(() => {
-    undeprecateVersion(props.bkBizId, props.appId, version.id)
-      .then(() => {
-        operateConfirmDialog.value.open = false;
-        Message({
-          theme: 'success',
-          message: t('版本恢复成功'),
-        });
-        updateListAndSetVersionAfterOperate(version.id);
-      });
+  // 可用版本非搜索查看视图
+  const isAvaliableView = computed(() => currentTab.value === 'avaliable' && searchStr.value === '');
+
+  watch(
+    () => props.appId,
+    () => {
+      getVersionList();
+    },
+  );
+
+  onMounted(() => {
+    getVersionList();
   });
-};
 
-// 删除
-const handleDelete = (version: IConfigVersion) => {
-  operateConfirmDialog.value.open = true;
-  operateConfirmDialog.value.title = t('确认删除该版本');
-  operateConfirmDialog.value.tips = t('一旦删除，该操作将无法撤销，请谨慎操作');
-  operateConfirmDialog.value.version = version;
-  operateConfirmDialog.value.confirmFn = () => new Promise(() => {
-    deleteVersion(props.bkBizId, props.appId, version.id)
-      .then(() => {
-        operateConfirmDialog.value.open = false;
-        Message({
-          theme: 'success',
-          message: t('版本删除成功'),
-        });
-        updateListAndSetVersionAfterOperate(version.id);
-      });
-  });
-};
-
-// 更新列表数据以及设置选中版本
-const updateListAndSetVersionAfterOperate = async (id: number) => {
-  const index = versionList.value.findIndex(item => item.id === id);
-  const currentPage = pagination.value.current;
-  pagination.value.current = (versionList.value.length === 1 && currentPage > 1) ? currentPage - 1 : currentPage;
-  await getVersionList();
-  if (id === versionData.value.id) {
-    const len = versionList.value.length;
-    if (len > 0) {
-      const version = len - 1 >= index ? versionList.value[index] : versionList.value[len - 1];
-      handleSelectVersion(undefined, version);
-    } else {
-      handleSelectVersion(undefined, UN_NAMED_VERSION);
+  const getVersionList = async () => {
+    listLoading.value = true;
+    const { current, limit } = pagination.value;
+    const notFirstPageStart = isAvaliableView.value ? (current - 1) * limit - 1 : (current - 1) * limit;
+    const params: IConfigVersionQueryParams = {
+      start: current === 1 ? 0 : notFirstPageStart,
+      limit: current === 1 && isAvaliableView.value ? limit - 1 : limit,
+      deprecated: currentTab.value !== 'avaliable',
+    };
+    if (searchStr.value) {
+      params.searchKey = searchStr.value;
     }
-  }
-};
+    const res = await getConfigVersionList(props.bkBizId, props.appId, params);
+    const count = isAvaliableView.value ? res.data.count + 1 : res.data.count;
+    if (isAvaliableView.value && current === 1) {
+      versionList.value = [UN_NAMED_VERSION, ...res.data.details];
+    } else {
+      versionList.value = res.data.details;
+    }
+    pagination.value.count = count;
+    listLoading.value = false;
+  };
 
-const handlePageLimitChange = (limit: number) => {
-  pagination.value.limit = limit;
-  refreshVersionList();
-};
+  const getRowCls = (data: IConfigVersion) => {
+    if (data.id === versionData.value.id) {
+      return 'selected';
+    }
+    return '';
+  };
 
-const refreshVersionList = (current = 1) => {
-  pagination.value.current = current;
-  getVersionList();
-};
+  const getGroupNames = (data: IConfigVersion) => {
+    const status = data.status?.publish_status;
+    if (status === 'partial_released') {
+      return data.status.released_groups.map((item) => item.name).join('; ');
+    }
+    if (status === 'full_released') {
+      return '全部实例';
+    }
+    return '--';
+  };
 
-const handleSearch = () => {
-  isSearchEmpty.value = true;
-  refreshVersionList();
-};
+  const isVersionInDefaultGroup = (groups: IReleasedGroup[]) => groups.findIndex((item) => item.id === 0) > -1;
 
-const handleClearSearchStr = () => {
-  searchStr.value = '';
-  isSearchEmpty.value = false;
-  refreshVersionList();
-};
+  const handleTabChange = (tab: string) => {
+    currentTab.value = tab;
+    pagination.value.current = 1;
+    refreshVersionList();
+  };
+
+  // 选择某个版本
+  const handleSelectVersion = (event: Event | undefined, data: IConfigVersion) => {
+    configStore.$patch((state) => {
+      state.versionData = data;
+    });
+    const params: { spaceId: string; appId: number; versionId?: number } = {
+      spaceId: props.bkBizId,
+      appId: props.appId,
+    };
+    if (data.id !== 0) {
+      params.versionId = data.id;
+    }
+    router.push({ name: 'service-config', params });
+  };
+
+  // 打开版本对比
+  const handleOpenDiff = (version: IConfigVersion) => {
+    showDiffPanel.value = true;
+    diffVersion.value = version;
+  };
+
+  // 废弃
+  const handleDeprecate = (version: IConfigVersion) => {
+    operateConfirmDialog.value.open = true;
+    operateConfirmDialog.value.title = '确认废弃该版本';
+    operateConfirmDialog.value.tips = '此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作';
+    operateConfirmDialog.value.version = version;
+    operateConfirmDialog.value.confirmFn = () =>
+      new Promise(() => {
+        deprecateVersion(props.bkBizId, props.appId, version.id).then(() => {
+          operateConfirmDialog.value.open = false;
+          Message({
+            theme: 'success',
+            message: '版本废弃成功',
+          });
+          updateListAndSetVersionAfterOperate(version.id);
+        });
+      });
+  };
+
+  // 恢复
+  const handleUndeprecate = (version: IConfigVersion) => {
+    operateConfirmDialog.value.open = true;
+    operateConfirmDialog.value.title = t('确认恢复该版本');
+    operateConfirmDialog.value.tips = t('此操作会把改版本恢复至可用版本列表');
+    operateConfirmDialog.value.version = version;
+    operateConfirmDialog.value.confirmFn = () =>
+      new Promise(() => {
+        undeprecateVersion(props.bkBizId, props.appId, version.id).then(() => {
+          operateConfirmDialog.value.open = false;
+          Message({
+            theme: 'success',
+            message: t('版本恢复成功'),
+          });
+          updateListAndSetVersionAfterOperate(version.id);
+        });
+      });
+  };
+
+  // 删除
+  const handleDelete = (version: IConfigVersion) => {
+    operateConfirmDialog.value.open = true;
+    operateConfirmDialog.value.title = t('确认删除该版本');
+    operateConfirmDialog.value.tips = t('一旦删除，该操作将无法撤销，请谨慎操作');
+    operateConfirmDialog.value.version = version;
+    operateConfirmDialog.value.confirmFn = () =>
+      new Promise(() => {
+        deleteVersion(props.bkBizId, props.appId, version.id).then(() => {
+          operateConfirmDialog.value.open = false;
+          Message({
+            theme: 'success',
+            message: t('版本删除成功'),
+          });
+          updateListAndSetVersionAfterOperate(version.id);
+        });
+      });
+  };
+
+  // 更新列表数据以及设置选中版本
+  const updateListAndSetVersionAfterOperate = async (id: number) => {
+    const index = versionList.value.findIndex((item) => item.id === id);
+    const currentPage = pagination.value.current;
+    pagination.value.current = versionList.value.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
+    await getVersionList();
+    if (id === versionData.value.id) {
+      const len = versionList.value.length;
+      if (len > 0) {
+        const version = len - 1 >= index ? versionList.value[index] : versionList.value[len - 1];
+        handleSelectVersion(undefined, version);
+      } else {
+        handleSelectVersion(undefined, UN_NAMED_VERSION);
+      }
+    }
+  };
+
+  const handlePageLimitChange = (limit: number) => {
+    pagination.value.limit = limit;
+    refreshVersionList();
+  };
+
+  const refreshVersionList = (current = 1) => {
+    pagination.value.current = current;
+    getVersionList();
+  };
+
+  const handleSearch = () => {
+    isSearchEmpty.value = true;
+    refreshVersionList();
+  };
+
+  const handleClearSearchStr = () => {
+    searchStr.value = '';
+    isSearchEmpty.value = false;
+    refreshVersionList();
+  };
 </script>
 <style lang="scss" scoped>
-.version-detail-table {
-  height: 100%;
-  background: #ffffff;
-}
-.service-selector-wrapper {
-  padding: 10px 24px;
-  border-bottom: 1px solid #eaebf0;
-  :deep(.service-selector) {
-    width: 264px;
+  .version-detail-table {
+    height: 100%;
+    background: #ffffff;
   }
-}
-.content-container {
-  padding: 12px 24px;
-  height: calc(100% - 53px);
-  overflow: auto;
-}
-.head-operate-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-.type-tabs {
-  display: flex;
-  align-items: center;
-  padding: 3px 4px;
-  background: #f0f1f5;
-  border-radius: 4px;
-  .tab-item {
-    padding: 6px 14px;
-    font-size: 12px;
-    line-height: 14px;
-    color: #63656e;
-    border-radius: 4px;
-    cursor: pointer;
-    &.active {
-      color: #3a84ff;
-      background: #ffffff;
+  .service-selector-wrapper {
+    padding: 10px 24px;
+    border-bottom: 1px solid #eaebf0;
+    :deep(.service-selector) {
+      width: 264px;
     }
   }
-  .split-line {
-    margin: 0 4px;
-    width: 1px;
-    height: 14px;
-    background: #dcdee5;
+  .content-container {
+    padding: 12px 24px;
+    height: calc(100% - 53px);
+    overflow: auto;
   }
-}
-.bk-table {
-  :deep(.bk-table-body) {
-    tr {
+  .head-operate-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .type-tabs {
+    display: flex;
+    align-items: center;
+    padding: 3px 4px;
+    background: #f0f1f5;
+    border-radius: 4px;
+    .tab-item {
+      padding: 6px 14px;
+      font-size: 12px;
+      line-height: 14px;
+      color: #63656e;
+      border-radius: 4px;
       cursor: pointer;
-      &.selected td {
-        background: #e1ecff !important;
+      &.active {
+        color: #3a84ff;
+        background: #ffffff;
+      }
+    }
+    .split-line {
+      margin: 0 4px;
+      width: 1px;
+      height: 14px;
+      background: #dcdee5;
+    }
+  }
+  .bk-table {
+    :deep(.bk-table-body) {
+      tr {
+        cursor: pointer;
+        &.selected td {
+          background: #e1ecff !important;
+        }
       }
     }
   }
-}
-.status-tag {
-  display: inline-block;
-  padding: 0 10px;
-  line-height: 20px;
-  font-size: 12px;
-  border: 1px solid #cccccc;
-  border-radius: 11px;
-  text-align: center;
-  &.deprecated {
-    color: #ea3536;
-    background-color: #feebea;
-    border-color: #ea35364d;
+  .status-tag {
+    display: inline-block;
+    padding: 0 10px;
+    line-height: 20px;
+    font-size: 12px;
+    border: 1px solid #cccccc;
+    border-radius: 11px;
+    text-align: center;
+    &.deprecated {
+      color: #ea3536;
+      background-color: #feebea;
+      border-color: #ea35364d;
+    }
+    &.not_released {
+      color: #fe9000;
+      background: #ffe8c3;
+      border-color: rgba(254, 156, 0, 0.3);
+    }
+    &.full_released,
+    &.partial_released {
+      color: #14a568;
+      background: #e4faf0;
+      border-color: rgba(20, 165, 104, 0.3);
+    }
   }
-  &.not_released {
-    color: #fe9000;
-    background: #ffe8c3;
-    border-color: rgba(254, 156, 0, 0.3);
+  .actions-wrapper {
+    .bk-button:not(:first-child) {
+      margin-left: 8px;
+    }
   }
-  &.full_released,
-  &.partial_released {
-    color: #14a568;
-    background: #e4faf0;
-    border-color: rgba(20, 165, 104, 0.3);
+  .header-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    height: 100%;
+    font-size: 12px;
+    line-height: 1;
   }
-}
-.actions-wrapper {
-  .bk-button:not(:first-child) {
-    margin-left: 8px;
+  .header-name {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: #3a84ff;
+    cursor: pointer;
   }
-}
-.header-wrapper {
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  height: 100%;
-  font-size: 12px;
-  line-height: 1;
-}
-.header-name {
-  display: flex;
-  align-items: center;
-  font-size: 12px;
-  color: #3a84ff;
-  cursor: pointer;
-}
-.arrow-left {
-  font-size: 26px;
-  color: #3884ff;
-}
-.arrow-right {
-  font-size: 24px;
-  color: #c4c6cc;
-}
-.diff-left-panel-head {
-  padding: 0 24px;
-  font-size: 12px;
-}
+  .arrow-left {
+    font-size: 26px;
+    color: #3884ff;
+  }
+  .arrow-right {
+    font-size: 24px;
+    color: #c4c6cc;
+  }
+  .diff-left-panel-head {
+    padding: 0 24px;
+    font-size: 12px;
+  }
 </style>
