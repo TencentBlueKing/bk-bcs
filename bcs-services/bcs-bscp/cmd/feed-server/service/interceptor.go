@@ -29,9 +29,10 @@ import (
 var (
 	// 兼容老的请求, 只部分方法使用中间件
 	allowMethod = map[string]struct{}{
-		"/pbfs.Upstream/ListApps":   {},
-		"/pbfs.Upstream/PullKvMeta": {},
-		"/pbfs.Upstream/GetKvValue": {},
+		"/pbfs.Upstream/ListApps":    {},
+		"/pbfs.Upstream/PullKvMeta":  {},
+		"/pbfs.Upstream/GetKvValue":  {},
+		"/pbfs.Upstream/GetKvValues": {},
 	}
 )
 

@@ -33,12 +33,12 @@ func (c *client) GetReleasedKv(kt *kit.Kit, bizID uint32, releaseID uint32) (str
 
 	kv, hit, err := c.getReleasedKvFromCache(kt, bizID, releaseID)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	if hit {
 		c.mc.hitCounter.With(prm.Labels{"rsc": releasedKvRes, "biz": tools.Itoa(bizID)}).Inc()
-		return kv, err
+		return kv, nil
 	}
 
 	// do not find released kv in the cache, then try it get from db directly.

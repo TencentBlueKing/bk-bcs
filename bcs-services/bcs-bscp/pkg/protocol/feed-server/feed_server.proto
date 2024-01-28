@@ -19,6 +19,7 @@ service Upstream {
   rpc GetDownloadURL(GetDownloadURLReq) returns (GetDownloadURLResp) {}
   rpc PullKvMeta(PullKvMetaReq) returns (PullKvMetaResp) {}
   rpc GetKvValue(GetKvValueReq) returns (GetKvValueResp) {}
+  rpc GetKvValues(GetKvValuesReq) returns (GetKvValuesResp) {}
   rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
 }
 
@@ -177,4 +178,20 @@ message GetKvValueReq {
 message GetKvValueResp {
   string kv_type = 1;
   string value = 2;
+}
+
+message KV {
+  string key = 1;
+  string kv_type = 2;
+  string value = 3;
+}
+
+message GetKvValuesReq {
+  uint32 biz_id = 1;
+  AppMeta app_meta = 2;
+  repeated string keys = 3;
+}
+
+message GetKvValuesResp {
+  repeated KV kvs = 1;
 }

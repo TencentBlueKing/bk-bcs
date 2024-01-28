@@ -26,6 +26,7 @@ const (
 	Upstream_GetDownloadURL_FullMethodName  = "/pbfs.Upstream/GetDownloadURL"
 	Upstream_PullKvMeta_FullMethodName      = "/pbfs.Upstream/PullKvMeta"
 	Upstream_GetKvValue_FullMethodName      = "/pbfs.Upstream/GetKvValue"
+	Upstream_GetKvValues_FullMethodName     = "/pbfs.Upstream/GetKvValues"
 	Upstream_ListApps_FullMethodName        = "/pbfs.Upstream/ListApps"
 )
 
@@ -41,6 +42,7 @@ type UpstreamClient interface {
 	GetDownloadURL(ctx context.Context, in *GetDownloadURLReq, opts ...grpc.CallOption) (*GetDownloadURLResp, error)
 	PullKvMeta(ctx context.Context, in *PullKvMetaReq, opts ...grpc.CallOption) (*PullKvMetaResp, error)
 	GetKvValue(ctx context.Context, in *GetKvValueReq, opts ...grpc.CallOption) (*GetKvValueResp, error)
+	GetKvValues(ctx context.Context, in *GetKvValuesReq, opts ...grpc.CallOption) (*GetKvValuesResp, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 }
 
@@ -138,6 +140,15 @@ func (c *upstreamClient) GetKvValue(ctx context.Context, in *GetKvValueReq, opts
 	return out, nil
 }
 
+func (c *upstreamClient) GetKvValues(ctx context.Context, in *GetKvValuesReq, opts ...grpc.CallOption) (*GetKvValuesResp, error) {
+	out := new(GetKvValuesResp)
+	err := c.cc.Invoke(ctx, Upstream_GetKvValues_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *upstreamClient) ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error) {
 	out := new(ListAppsResp)
 	err := c.cc.Invoke(ctx, Upstream_ListApps_FullMethodName, in, out, opts...)
@@ -159,6 +170,7 @@ type UpstreamServer interface {
 	GetDownloadURL(context.Context, *GetDownloadURLReq) (*GetDownloadURLResp, error)
 	PullKvMeta(context.Context, *PullKvMetaReq) (*PullKvMetaResp, error)
 	GetKvValue(context.Context, *GetKvValueReq) (*GetKvValueResp, error)
+	GetKvValues(context.Context, *GetKvValuesReq) (*GetKvValuesResp, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 }
 
@@ -186,6 +198,9 @@ func (UnimplementedUpstreamServer) PullKvMeta(context.Context, *PullKvMetaReq) (
 }
 func (UnimplementedUpstreamServer) GetKvValue(context.Context, *GetKvValueReq) (*GetKvValueResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetKvValue not implemented")
+}
+func (UnimplementedUpstreamServer) GetKvValues(context.Context, *GetKvValuesReq) (*GetKvValuesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetKvValues not implemented")
 }
 func (UnimplementedUpstreamServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListApps not implemented")
@@ -331,6 +346,24 @@ func _Upstream_GetKvValue_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Upstream_GetKvValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetKvValuesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UpstreamServer).GetKvValues(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Upstream_GetKvValues_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UpstreamServer).GetKvValues(ctx, req.(*GetKvValuesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Upstream_ListApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListAppsReq)
 	if err := dec(in); err != nil {
@@ -379,6 +412,10 @@ var Upstream_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetKvValue",
 			Handler:    _Upstream_GetKvValue_Handler,
+		},
+		{
+			MethodName: "GetKvValues",
+			Handler:    _Upstream_GetKvValues_Handler,
 		},
 		{
 			MethodName: "ListApps",

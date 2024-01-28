@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"sync"
 
 	prm "github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc/codes"
@@ -467,6 +468,122 @@ func (s *Service) GetKvValue(ctx context.Context, req *pbfs.GetKvValueReq) (*pbf
 	}
 
 	return kv, nil
+}
+
+// GetKvValues gets kv values, get all kv values if keys are empty
+func (s *Service) GetKvValues(ctx context.Context, req *pbfs.GetKvValuesReq) (*pbfs.GetKvValuesResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	if req.GetAppMeta() == nil || req.GetAppMeta().App == "" {
+		return nil, status.Error(codes.InvalidArgument, "app_meta is required")
+	}
+
+	credential := getCredential(ctx)
+	if !credential.MatchApp(req.AppMeta.App) {
+		return nil, status.Errorf(codes.PermissionDenied, "not have app %s permission", req.AppMeta.App)
+	}
+
+	allowedKeys := make([]string, 0)
+	notAllowed := make([]string, 0)
+	if len(req.Keys) > 0 {
+		for _, k := range req.Keys {
+			if !credential.MatchKv(req.AppMeta.App, k) {
+				notAllowed = append(notAllowed, k)
+				continue
+			}
+			allowedKeys = append(allowedKeys, k)
+		}
+
+		if len(notAllowed) > 0 {
+			return nil, status.Error(codes.PermissionDenied, fmt.Sprintf("no permission get value for key in %v",
+				notAllowed))
+		}
+	}
+
+	appID, err := s.bll.AppCache().GetAppID(kt, req.BizId, req.GetAppMeta().App)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
+	}
+
+	app, err := s.bll.AppCache().GetMeta(kt, req.BizId, appID)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app failed, %s", err.Error())
+	}
+
+	if app.ConfigType != table.KV {
+		return nil, status.Errorf(codes.Aborted, "app not %s type", table.KV)
+	}
+
+	meta := &types.AppInstanceMeta{
+		BizID:  req.BizId,
+		App:    req.GetAppMeta().App,
+		AppID:  appID,
+		Uid:    req.AppMeta.Uid,
+		Labels: req.AppMeta.Labels,
+	}
+
+	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(kt, meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// if input keys are empty, use all the keys
+	if len(req.Keys) == 0 {
+		for _, kv := range metas.Kvs {
+			if credential.MatchKv(req.AppMeta.App, kv.Key) {
+				allowedKeys = append(allowedKeys, kv.Key)
+			}
+		}
+		if len(allowedKeys) == 0 {
+			return nil, status.Error(codes.PermissionDenied, "no permission get value for any key")
+		}
+	}
+
+	kvs, hitError := s.getKvValues(kt, req.BizId, appID, metas.ReleaseId, allowedKeys)
+	if hitError != nil {
+		// appid等未找到, 刷新缓存, 客户端重试请求
+		if isAppNotExistErr(hitError) {
+			s.bll.AppCache().RemoveCache(kt, req.BizId, req.GetAppMeta().App)
+		}
+		return nil, status.Errorf(codes.Aborted, hitError.Error())
+	}
+
+	return &pbfs.GetKvValuesResp{
+		Kvs: kvs,
+	}, nil
+}
+
+// getKvValues get kv values concurrently
+func (s *Service) getKvValues(kt *kit.Kit, bizID, appID, releaseID uint32, allowedKeys []string) ([]*pbfs.KV, error) {
+	var hitError error
+	kvs := make([]*pbfs.KV, len(allowedKeys))
+	pipe := make(chan struct{}, 10)
+	wg := sync.WaitGroup{}
+
+	for idx, key := range allowedKeys {
+		wg.Add(1)
+
+		pipe <- struct{}{}
+		go func(idx int, key string) {
+			defer func() {
+				wg.Done()
+				<-pipe
+			}()
+
+			rkv, err := s.bll.RKvCache().GetKvValue(kt, bizID, appID, releaseID, key)
+			if err != nil {
+				hitError = fmt.Errorf("get kv value failed for key: %s, err:%v", key, err)
+				return
+			}
+			kvs[idx] = &pbfs.KV{
+				Key:    rkv.Key,
+				KvType: rkv.KvType,
+				Value:  rkv.Value,
+			}
+		}(idx, key)
+	}
+	wg.Wait()
+
+	return kvs, hitError
 }
 
 // isAppNotExistErr 检测app不存在错误, 有grpc，目前通过 msg 判断
