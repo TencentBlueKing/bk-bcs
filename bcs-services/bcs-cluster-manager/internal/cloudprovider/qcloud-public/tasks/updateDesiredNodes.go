@@ -34,6 +34,7 @@ import (
 
 // ApplyInstanceMachinesTask update desired nodes task
 func ApplyInstanceMachinesTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start update desired nodes")
 	start := time.Now()
 
 	// get task and task current step
@@ -56,6 +57,7 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	nodeNum, _ := strconv.Atoi(desiredNodes)
 	operator := step.Params[cloudprovider.OperatorKey.String()]
 	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(desiredNodes) == 0 || len(operator) == 0 {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "check parameters failed")
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask check parameters failed")
 		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
@@ -85,6 +87,7 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	activity, err := applyInstanceMachines(ctx, dependInfo, uint64(nodeNum))
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "apply instance machines failed")
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: applyInstanceMachines failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed %s", err.Error())
 		if manual == common.True {
@@ -99,6 +102,7 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	// trans success nodes to cm DB and record common paras, not handle error
 	err = recordClusterInstanceToDB(ctx, activity, state, dependInfo, uint64(nodeNum))
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "record cluster instance to db failed")
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: recordClusterInstanceToDB failed: %s",
 			taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed %s", err.Error())
@@ -116,6 +120,8 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 		blog.Infof("ApplyInstanceMachinesTask[%s] begin DeleteVirtualNodes", taskID)
 		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "update desired nodes successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -345,6 +351,7 @@ func getAsgIDByNodePool(ctx context.Context, info *cloudprovider.CloudDependBasi
 // CheckClusterNodesStatusTask check update desired nodes status task. nodes already add to cluster,
 // thus not rollback desiredNum and only record status
 func CheckClusterNodesStatusTask(taskID string, stepName string) error { // nolint
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start check cluster nodes status")
 	start := time.Now()
 
 	// get task and task current step
@@ -388,6 +395,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error { // noli
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	successInstances, failureInstances, err := business.CheckClusterInstanceStatus(ctx, dependInfo, successInstanceID)
 	if err != nil || len(successInstances) == 0 {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "check cluster instance status failed")
 		if manual != common.True {
 			// rollback failed nodes
 			_ = returnInstancesAndCleanNodes(ctx, dependInfo, successInstanceID)
@@ -400,6 +408,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error { // noli
 
 	// rollback abnormal nodes
 	if len(failureInstances) > 0 {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "return instances and clean nodes failed")
 		blog.Errorf("CheckClusterNodesStatusTask[%s] handle failedNodes[%v]", taskID, failureInstances)
 		errMsg := returnInstancesAndCleanNodes(ctx, dependInfo, failureInstances)
 		if errMsg != nil {
@@ -430,6 +439,8 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error { // noli
 		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(ipList, ",")
 		state.Task.NodeIPList = ipList
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "check cluster nodes status successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

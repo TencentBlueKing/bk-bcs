@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -165,7 +166,7 @@ func DeleteClusterExternalNodes(
 // RemoveNodesFromCluster remove nodes from cluster
 func RemoveNodesFromCluster(
 	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs []string) ([]string, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	// filter exist instanceIDs
 	existInClusterNodes, _, err := FilterClusterInstanceFromNodesIDs(ctx, info, nodeIDs)
@@ -192,6 +193,9 @@ func RemoveNodesFromCluster(
 		return nil, err
 	}
 	blog.Infof("removeNodesFromCluster[%s] success, origin[%v] success[%v]", taskID, nodeIDs, success)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("origin [%v] success [%v]", nodeIDs, success))
 
 	return success, nil
 }
@@ -710,7 +714,7 @@ type AddExistedInstanceResult struct {
 func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, options *NodeAdvancedOptions,
 	nodeIDs []string, login *proto.NodeLoginInfo, isNodeGroup bool, idToIP map[string]string,
 	operator string) (*AddExistedInstanceResult, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	tkeCli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
@@ -763,6 +767,9 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 	blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster success[%v] failed[%v]"+
 		"reasons[%v]", taskID, result.SuccessNodes, result.FailedNodes, resp.FailedReasons)
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("success [%v] failed [%v]", result.SuccessNodes, result.FailedNodes))
+
 	return result, nil
 }
 
@@ -774,7 +781,7 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		addFailureNodes = make([]string, 0)
 	)
 
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	// get qcloud client
 	cli, err := api.NewTkeClient(info.CmOption)
@@ -853,6 +860,9 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	}
 	blog.Infof("checkClusterInstanceStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("success [%v] failure [%v]", addSuccessNodes, addFailureNodes))
+
 	// set cluster node status
 	for _, n := range addFailureNodes {
 		err = cloudprovider.UpdateNodeStatus(false, n, common.StatusAddNodesFailed)
@@ -867,7 +877,7 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 // CheckClusterAllInstanceStatus 检测集群所有节点状态
 func CheckClusterAllInstanceStatus(ctx context.Context,
 	info *cloudprovider.CloudDependBasicInfo) ([]string, []string, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	var (
 		addSuccessNodes = make([]string, 0)
@@ -950,6 +960,8 @@ func CheckClusterAllInstanceStatus(ctx context.Context,
 		addFailureNodes = failure
 	}
 	blog.Infof("CheckClusterAllInstanceStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("success [%v] failure [%v]", addSuccessNodes, addFailureNodes))
 
 	return addSuccessNodes, addFailureNodes, nil
 }

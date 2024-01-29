@@ -26,6 +26,7 @@ import (
 
 // RemoveNodesFromClusterTask remove node from cluster
 func RemoveNodesFromClusterTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start remove nodes from cluster")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -48,6 +49,7 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	ipList := strings.Split(step.Params[cloudprovider.NodeIPsKey.String()], ",")
 	idList := strings.Split(step.Params[cloudprovider.NodeIDsKey.String()], ",")
 	if len(idList) != len(ipList) {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "node id is not equal to inner ip")
 		blog.Errorf("RemoveNodesFromClusterTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to "+
 			"InnerIP %d, fatal", taskID, taskID, stepName,
 			len(idList), len(ipList))
@@ -73,6 +75,7 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 
 	deleteResult, err := business.RemoveNodesFromCluster(ctx, dependInfo, idList, false)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "remove nodes from cluster failed")
 		blog.Errorf("RemoveNodesFromClusterTask[%s] RemoveNodesFromCluster failed: %v",
 			taskID, err)
 		retErr := fmt.Errorf("RemoveNodesFromCluster err, %s", err.Error())
@@ -86,6 +89,8 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	}
 	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(deleteResult, ",")
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "remove nodes from cluster successful")
+
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("RemoveNodesFromClusterTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
@@ -97,6 +102,7 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 
 // UpdateRemoveNodeDBInfoTask update remove node DB info
 func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start update remove node db info")
 	start := time.Now()
 
 	// get task and task current step
@@ -118,12 +124,15 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 
 	if len(success) > 0 {
 		for i := range success {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "delete node by node id failed")
 			err = cloudprovider.GetStorageModel().DeleteNode(context.Background(), success[i])
 			if err != nil {
 				blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s deleteNodeByNodeID failed: %v", taskID, taskID, err)
 			}
 		}
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "update remove node db info successful")
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {

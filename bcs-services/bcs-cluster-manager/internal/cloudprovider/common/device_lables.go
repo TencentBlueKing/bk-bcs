@@ -53,6 +53,7 @@ func EmptyAction(taskID, stepName string) error {
 
 // SetResourcePoolDeviceLabels set resourcePool device labels
 func SetResourcePoolDeviceLabels(taskID, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start set resourcePool device labels")
 	start := time.Now()
 
 	// get task and task current step
@@ -107,6 +108,8 @@ func SetResourcePoolDeviceLabels(taskID, stepName string) error {
 				taskID, device.DeviceID, device.InnerIP)
 		}
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "set resource pool device labels successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

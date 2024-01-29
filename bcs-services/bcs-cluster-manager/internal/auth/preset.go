@@ -86,6 +86,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.ListCloudVpcs",
 
 	"ClusterManager.ListOperationLogs",
+	"ClusterManager.ListTaskStepLogs",
 	"ClusterManager.ListResourceSchema",
 	"ClusterManager.GetResourceSchema",
 
@@ -242,6 +243,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListCloudOsImage":        "",
 	"ClusterManager.ListCloudInstances":      "",
 	"ClusterManager.ListOperationLogs":       "",
+	"ClusterManager.ListTaskStepLogs":        "",
 	"ClusterManager.ListResourceSchema":      "",
 	"ClusterManager.GetResourceSchema":       "",
 	"ClusterManager.QueryPermByActionID":     "",

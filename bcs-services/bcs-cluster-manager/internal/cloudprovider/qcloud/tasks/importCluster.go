@@ -31,6 +31,7 @@ import (
 
 // ImportClusterNodesTask call tkeInterface or kubeConfig import cluster nodes
 func ImportClusterNodesTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start import cluster nodes")
 	start := time.Now()
 
 	// get task and task current step
@@ -64,16 +65,23 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	// import cluster instances
 	err = importClusterInstances(basicInfo)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "import cluster instances failed")
 		blog.Errorf("ImportClusterNodesTask[%s]: importClusterInstances failed: %v", taskID, err)
 		retErr := fmt.Errorf("importClusterInstances failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "import cluster instances successful")
+
 	// update cluster masterNodes info
 	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "update cluster master nodes info failed")
 		return err
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "update cluster master nodes info successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -85,6 +93,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 
 // RegisterClusterKubeConfigTask register cluster kubeConfig connection
 func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start register cluster kubeconfig connection")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -121,6 +130,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 		IsExtranet: true,
 	})
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "get tke external cluster endpoint failed")
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getTKEExternalClusterEndpoint failed: %v", taskID, err)
 		retErr := fmt.Errorf("getTKEExternalClusterEndpoint failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -129,11 +139,14 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 
 	err = importClusterCredential(ctx, basicInfo, true, true, "", "")
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "import cluster credential failed")
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: importClusterCredential failed: %v", taskID, err)
 		retErr := fmt.Errorf("importClusterCredential failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "register cluster kubeconfig connection successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

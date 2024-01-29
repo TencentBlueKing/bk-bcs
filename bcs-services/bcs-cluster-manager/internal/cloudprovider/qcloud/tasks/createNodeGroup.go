@@ -35,6 +35,7 @@ import (
 
 // CreateCloudNodeGroupTask create cloud node group task
 func CreateCloudNodeGroupTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start create cloud node group")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -86,6 +87,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	// create cloud nodePool
 	npID, err := tkeCli.CreateClusterNodePool(generateCreateNodePoolInput(dependInfo.NodeGroup, dependInfo.Cluster))
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "create cluster node pool failed")
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool[%s] api in task %s "+
 			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("call CreateClusterNodePool[%s] api err, %s", nodeGroupID, err.Error())
@@ -98,6 +100,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	// update nodegorup cloudNodeGroupID
 	err = updateNodeGroupCloudNodeGroupID(nodeGroupID, dependInfo.NodeGroup)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "update node group cloud node group id failed")
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudNodeGroupID[%s] in task %s "+
 			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudNodeGroupID[%s] "+
@@ -112,6 +115,8 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "create cloud node group successful")
 
 	state.Task.CommonParams["CloudNodeGroupID"] = npID
 	// update step
@@ -156,6 +161,7 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 
 // CheckCloudNodeGroupStatusTask check cloud node group status task
 func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // nolint
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start check cloud node group status")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -197,6 +203,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 	// get as client
 	asCli, err := api.NewASClient(dependInfo.CmOption)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "get cloud as client failed")
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get as client for nodegroup[%s] "+
 			"in task %s step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud as client err, %s", err.Error())
@@ -243,6 +250,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 		}
 	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "describe cluster node pool detail failed")
 		blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail failed: %v", taskID, err)
 		return err
 	}
@@ -250,6 +258,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 	// get asg info
 	asgArr, err := asCli.DescribeAutoScalingGroups(asgID)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "describe auto scaling groups failed")
 		blog.Errorf("taskID[%s] DescribeAutoScalingGroups[%s] failed: %v", taskID, asgID, err)
 		return err
 	}
@@ -257,6 +266,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 	// get launchConfiguration
 	ascArr, err := asCli.DescribeLaunchConfigurations([]string{ascID})
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "describe launch configurations failed")
 		blog.Errorf("taskID[%s] DescribeLaunchConfigurations[%s] failed: %v", taskID, ascID, err)
 		return err
 	}
@@ -266,6 +276,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 		generateNodeGroupFromAsgAndAsc(dependInfo.NodeGroup, cloudNodeGroup, asgArr, ascArr[0],
 			dependInfo.Cluster.BusinessID))
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "update node group failed")
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] "+
 			"in task %s step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] "+
@@ -278,6 +289,8 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "check cloud node group status successful")
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {

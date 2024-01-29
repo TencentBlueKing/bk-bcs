@@ -70,6 +70,7 @@ func BuildInstallGseAgentTaskStep(task *proto.Task, gseInfo *GseInstallInfo) {
 
 // InstallGSEAgentTask install gse agent task
 func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start install gse agent")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -202,6 +203,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	}
 	job, err := nodeManClient.JobInstall(nodeman.InstallAgentJob, hosts)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, fmt.Sprintf("install gse agent job failed [%s]", err))
 		blog.Errorf("InstallGSEAgentTask %s install gse agent job error, %s", taskID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("install gse agent job error, %s", err.Error()))
 		return nil
@@ -220,6 +222,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 		}
 		switch detail.Status {
 		case nodeman.JobRunning:
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "checking job status, waiting")
 			blog.Infof("InstallGSEAgentTask %s checking job status, waiting", taskID)
 			return nil
 		case nodeman.JobSuccess:
@@ -230,10 +233,13 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 		return nil
 	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, fmt.Sprintf("check gse agent install job status failed [%s]", err))
 		blog.Errorf("InstallGSEAgentTask %s check gse agent install job status failed: %v", taskID, err)
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("check gse agent install job status err: %s", err.Error()))
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "install gse agent job successful")
 
 	// update step
 	_ = state.UpdateStepSucc(start, stepName)

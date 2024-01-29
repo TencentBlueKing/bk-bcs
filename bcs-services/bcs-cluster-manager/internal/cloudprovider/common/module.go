@@ -66,6 +66,7 @@ func BuildRemoveHostStep(task *proto.Task, bizID string, nodeIPs []string) {
 
 // TransferHostModuleTask transfer host module task
 func TransferHostModuleTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start transfer host module")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -108,15 +109,18 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 		return nil
 	}
 
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	// check exist master nodes, trans master nodes module if exist
 	if len(masterModuleIDString) != 0 && len(masterIPs) > 0 {
 		masterModuleID, _ := strconv.Atoi(masterModuleIDString)
 		err = transBizNodeModule(ctx, bkBizID, masterModuleID, masterIPs)
 		if err != nil {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, fmt.Sprintf("transfer master host module failed [%d]", err))
 			blog.Errorf("TransferHostModule transBizNodeModule master[%v] failed: %v", masterIPs, err)
 		}
+
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "transfer master host module successful")
 	}
 
 	// transfer nodes
@@ -133,6 +137,7 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 		return filterNodeIps
 	}())
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, fmt.Sprintf("transfer host module failed [%s]", err))
 		blog.Errorf("TransferHostModule %s failed, bkBizID %d, hosts %v, err %s",
 			taskID, bkBizID, nodeIPs, err.Error())
 		_ = state.UpdateStepFailure(start, stepName,
@@ -140,6 +145,7 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 		return nil
 	}
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "transfer host module successful")
 	blog.Infof("TransferHostModule %s successful", taskID)
 
 	// update step
@@ -206,23 +212,28 @@ func transBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) 
 
 // RemoveHostFromCMDBTask remove host from cmdb task
 func RemoveHostFromCMDBTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "remove host from cmdb")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
+
 	if step == nil {
 		return nil
 	}
+
 	nodeManClient := nodeman.GetNodeManClient()
 	if nodeManClient == nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "nodeman client is not init")
 		blog.Errorf("RemoveHostFromCMDBTask %s failed, nodeman client is not init", taskID)
 		_ = state.SkipFailure(start, stepName, fmt.Errorf("nodeman client is not init"))
 		return nil
 	}
 	cmdbClient := cmdb.GetCmdbClient()
 	if cmdbClient == nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "cmdb client is not init")
 		blog.Errorf("RemoveHostFromCMDBTask %s failed, cmdb client is not init", taskID)
 		_ = state.SkipFailure(start, stepName, fmt.Errorf("cmdb client is not init"))
 		return nil
@@ -234,12 +245,14 @@ func RemoveHostFromCMDBTask(taskID string, stepName string) error {
 	nodeIPs := state.Task.CommonParams[cloudprovider.NodeIPsKey.String()]
 
 	if len(nodeIPs) == 0 {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "empty node ip")
 		blog.Infof("RemoveHostFromCMDBTask %s skip, cause of empty node", taskID)
 		_ = state.SkipFailure(start, stepName, fmt.Errorf("empty node ip"))
 		return nil
 	}
 	bkBizID, err := strconv.Atoi(bkBizIDString)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "invalid bk biz id")
 		blog.Errorf("RemoveHostFromCMDBTask %s failed, invalid bkBizID, err %s", taskID, err.Error())
 		_ = state.SkipFailure(start, stepName, fmt.Errorf("invalid bkBizID, err %s", err.Error()))
 		return nil
@@ -249,18 +262,21 @@ func RemoveHostFromCMDBTask(taskID string, stepName string) error {
 	ips := strings.Split(nodeIPs, ",")
 	hostIDs, err := nodeManClient.GetHostIDByIPs(bkBizID, ips)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "list nodeman hosts failed")
 		blog.Errorf("RemoveHostFromCMDBTask %s failed, list nodeman hosts err %s", taskID, err.Error())
 		_ = state.SkipFailure(start, stepName, fmt.Errorf("list nodeman hosts err %s", err.Error()))
 		return nil
 	}
 
 	if len(hostIDs) == 0 {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "empty host")
 		blog.Warnf("RemoveHostFromCMDBTask %s skip, cause of empty host", taskID)
 		_ = state.UpdateStepSucc(start, stepName)
 		return nil
 	}
 
 	if err := cmdbClient.TransferHostToIdleModule(bkBizID, hostIDs); err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "transfer host to idle module failed")
 		blog.Errorf("RemoveHostFromCMDBTask %s TransferHostToIdleModule failed, bkBizID %d, hosts %v, err %s",
 			taskID, bkBizID, hostIDs, err.Error())
 		_ = state.SkipFailure(start, stepName,
@@ -269,6 +285,7 @@ func RemoveHostFromCMDBTask(taskID string, stepName string) error {
 	}
 
 	if err := cmdbClient.TransferHostToResourceModule(bkBizID, hostIDs); err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "transfer host to resource module failed")
 		blog.Errorf("RemoveHostFromCMDBTask %s TransferHostToResourceModule failed, bkBizID %d, hosts %v, err %s",
 			taskID, bkBizID, hostIDs, err.Error())
 		_ = state.SkipFailure(start, stepName,
@@ -278,11 +295,14 @@ func RemoveHostFromCMDBTask(taskID string, stepName string) error {
 	}
 
 	if err := cmdbClient.DeleteHost(hostIDs); err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "remove host from cmdb failed")
 		blog.Errorf("RemoveHostFromCMDBTask %s DeleteHost %v failed, %s", taskID, hostIDs, err.Error())
 		_ = state.SkipFailure(start, stepName, fmt.Errorf("DeleteHost %v failed, %s", hostIDs, err.Error()))
 		return nil
 	}
 	blog.Infof("RemoveHostFromCMDBTask %s successful", taskID)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "remove host from cmdb successful")
 
 	// update step
 	_ = state.UpdateStepSucc(start, stepName)

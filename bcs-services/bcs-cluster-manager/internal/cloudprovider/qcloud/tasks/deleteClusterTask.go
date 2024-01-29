@@ -27,6 +27,7 @@ import (
 
 // DeleteTKEClusterTask delete cluster task
 func DeleteTKEClusterTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start delete tke cluster")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -76,6 +77,7 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 	if dependInfo.Cluster.SystemID != "" {
 		err = cli.DeleteTKECluster(dependInfo.Cluster.SystemID, api.DeleteMode(deleteMode))
 		if err != nil {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "delete tke cluster failed")
 			blog.Errorf("DeleteTKEClusterTask[%s]: task[%s] step[%s] call qcloud DeleteTKECluster failed: %v",
 				taskID, taskID, stepName, err)
 			retErr := fmt.Errorf("call qcloud DeleteTKECluster failed: %s", err.Error())
@@ -86,9 +88,12 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 		blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster[%s] successful",
 			taskID, taskID, dependInfo.Cluster.SystemID)
 	} else {
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName, "skip current step,because system id empty")
 		blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster skip current step "+
 			"because SystemID empty", taskID, taskID)
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "delete tke cluster successful")
 
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("DeleteTKEClusterTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)
@@ -99,6 +104,7 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 
 // CleanClusterDBInfoTask clean cluster DB info
 func CleanClusterDBInfoTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start clean cluster db info")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -117,6 +123,7 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "get cluster information failed")
 		blog.Errorf("CleanClusterDBInfoTask[%s]: get cluster for %s failed", taskID, clusterID)
 		retErr := fmt.Errorf("get cluster information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -126,13 +133,17 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	// delete cluster autoscalingOption
 	err = cloudprovider.GetStorageModel().DeleteAutoScalingOption(context.Background(), cluster.ClusterID)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "delete cluste auto scaling option failed")
 		blog.Errorf("CleanClusterDBInfoTask[%s]: clean cluster[%s] "+
 			"autoscalingOption failed: %v", taskID, cluster.ClusterID, err)
 	}
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "delete cluste autos caling option successful")
+
 	// delete nodes
 	err = cloudprovider.GetStorageModel().DeleteNodesByClusterID(context.Background(), cluster.ClusterID)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "delete nodes failed")
 		blog.Errorf("CleanClusterDBInfoTask[%s]: delete nodes for %s failed", taskID, clusterID)
 		retErr := fmt.Errorf("delete node for %s failed, %s", clusterID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -140,9 +151,12 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	}
 	blog.Infof("CleanClusterDBInfoTask[%s]: delete nodes for cluster[%s] in DB successful", taskID, clusterID)
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "delete nodes successful")
+
 	// delete nodeGroup
 	err = cloudprovider.GetStorageModel().DeleteNodeGroupByClusterID(context.Background(), cluster.ClusterID)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "delete node groups failed")
 		blog.Errorf("CleanClusterDBInfoTask[%s]: delete nodeGroups for %s failed", taskID, clusterID)
 		retErr := fmt.Errorf("delete nodeGroups for %s failed, %s", clusterID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -151,11 +165,15 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	blog.Infof("CleanClusterDBInfoTask[%s]: delete nodeGroups for cluster[%s] in DB successful",
 		taskID, clusterID)
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "delete node groups successful")
+
 	// delete CIDR and only print logInfo
 	err = releaseClusterCIDR(cluster)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "release cluster cidr failed")
 		blog.Errorf("CleanClusterDBInfoTask[%s]: releaseClusterCIDR[%s] cidr failed", taskID, clusterID)
 	} else {
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "release cluster cidr successful")
 		blog.Infof("CleanClusterDBInfoTask[%s]: releaseClusterCIDR[%s] cidr successful", taskID, clusterID)
 	}
 
@@ -163,6 +181,7 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	cluster.Status = icommon.StatusDeleting
 	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cluster)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "delete cluster db info failed")
 		blog.Errorf("CleanClusterDBInfoTask[%s]: delete cluster for %s failed", taskID, clusterID)
 		retErr := fmt.Errorf("delete cluster for %s failed, %s", clusterID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -177,6 +196,8 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	if cluster.ClusterType == icommon.ClusterTypeVirtual {
 		_ = utils.DeleteBcsAgentToken(clusterID)
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "delete cluster db info successful")
 
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)

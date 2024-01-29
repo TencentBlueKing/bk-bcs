@@ -30,6 +30,7 @@ import (
 
 // AddNodesToClusterTask add node to cluster
 func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start add nodes to cluster")
 	start := time.Now()
 
 	// get task and task current step
@@ -90,7 +91,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	existedInstance, notExistedInstance, err := business.FilterClusterInstanceFromNodesIDs(ctx, dependInfo, idList)
 	if err != nil {
@@ -112,6 +113,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 		result, err := business.AddNodesToCluster(ctx, dependInfo, &business.NodeAdvancedOptions{NodeScheduler: schedule}, // nolint
 			notExistedInstance, login, false, idToIPMap, operator)
 		if err != nil {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, fmt.Sprintf("add nodes to cluster failed [%s]", err))
 			blog.Errorf("AddNodesToClusterTask[%s] AddNodesToCluster failed: %v", taskID, err)
 			retErr := fmt.Errorf("AddNodesToCluster err, %s", err.Error())
 			_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -123,6 +125,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	blog.Infof("AddNodesToClusterTask[%s] cluster[%s] success[%v] failed[%v]",
 		taskID, clusterID, successNodes, failedNodes)
 	if len(successNodes) == 0 {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "success nodes empty")
 		blog.Errorf("AddNodesToClusterTask[%s] AddNodesToCluster failed: %v", taskID, err)
 		retErr := fmt.Errorf("AddNodesToCluster err, %s", "successNodes empty")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -130,6 +133,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	}
 
 	if len(idList) == len(successNodes) {
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "add nodes to cluster successful")
 		blog.Infof("AddNodesToClusterTask[%s] cluster[%s] successful", taskID, clusterID)
 	}
 
@@ -153,6 +157,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 
 // CheckAddNodesStatusTask check add node status
 func CheckAddNodesStatusTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start check add nodes status")
 	start := time.Now()
 
 	// get task and task current step
@@ -189,10 +194,12 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	addSuccessNodes, addFailureNodes, err := business.CheckClusterInstanceStatus(ctx, dependInfo, successNodes)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("check cluster instance status failed [%s]", err))
 		blog.Errorf("CheckAddNodesStatusTask[%s] CheckClusterInstanceStatus failed, %s",
 			taskID, err.Error())
 		retErr := fmt.Errorf("CheckClusterInstanceStatus failed, %s", err.Error())
@@ -210,12 +217,15 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(addFailureNodes, ",")
 	}
 	if len(addSuccessNodes) == 0 {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "add success nodes empty")
 		blog.Errorf("CheckAddNodesStatusTask[%s] AddSuccessNodes empty", taskID)
 		retErr := fmt.Errorf("上架节点超时/失败, 请联系管理员")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(addSuccessNodes, ",")
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "check added nodes status successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -228,6 +238,7 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 
 // UpdateNodeDBInfoTask update node DB info
 func UpdateNodeDBInfoTask(taskID string, stepName string) error { // nolint
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start update node db info")
 	start := time.Now()
 
 	// get task and task current step
@@ -311,6 +322,8 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error { // nolint
 			continue
 		}
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "update node db info successful")
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {

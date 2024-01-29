@@ -13,6 +13,7 @@
 package tasks
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -26,12 +27,14 @@ import (
 
 // DeleteCloudNodeGroupTask delete cloud node group task
 func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start delete cloud node group")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
+
 	if step == nil {
 		return nil
 	}
@@ -75,6 +78,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		if errPool != nil {
 			if !(strings.Contains(errPool.Error(), "NotFound") ||
 				strings.Contains(errPool.Error(), "not found")) {
+				cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "describe cluster node pool detail failed")
 				blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] "+
 					"api in task %s step %s failed, %s",
 					taskID, nodeGroupID, taskID, stepName, errPool.Error())
@@ -92,6 +96,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		err = tkeCli.DeleteClusterNodePool(dependInfo.Cluster.SystemID, []string{dependInfo.NodeGroup.CloudNodeGroupID},
 			keepInstance)
 		if err != nil {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "delete cluster node pool failed")
 			blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool[%s] api in "+
 				"task %s step %s failed, %s",
 				taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -106,6 +111,8 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "delete cloud node group successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

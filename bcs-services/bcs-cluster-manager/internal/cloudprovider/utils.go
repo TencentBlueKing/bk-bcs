@@ -96,7 +96,8 @@ const (
 var (
 	defaultTaskID = "qwertyuiop123456"
 	// TaskID inject taskID into ctx
-	TaskID = "taskID"
+	TaskID      = "taskID"
+	StepNameKey = "stepName"
 )
 
 // GetTaskIDFromContext get taskID from context
@@ -112,6 +113,26 @@ func GetTaskIDFromContext(ctx context.Context) string {
 func WithTaskIDForContext(ctx context.Context, taskID string) context.Context {
 	// NOCC:golint/type(设计如此)
 	return context.WithValue(ctx, TaskID, taskID) // nolint
+}
+
+// GetTaskIDAndStepNameFromContext get taskID and stepName from context
+func GetTaskIDAndStepNameFromContext(ctx context.Context) (taskID, stepName string) {
+	if id, ok := ctx.Value(TaskID).(string); ok {
+		taskID = id
+	}
+
+	if name, ok := ctx.Value(StepNameKey).(string); ok {
+		stepName = name
+	}
+
+	return
+}
+
+// WithTaskIDAndStepNameForContext will return a new context wrapped taskID and stepName flag around the original ctx
+func WithTaskIDAndStepNameForContext(ctx context.Context, taskID, stepName string) context.Context {
+	// NOCC:golint/type(设计如此)
+	ctx = context.WithValue(ctx, TaskID, taskID)         // nolint
+	return context.WithValue(ctx, StepNameKey, stepName) // nolint
 }
 
 // CredentialData dependency data
