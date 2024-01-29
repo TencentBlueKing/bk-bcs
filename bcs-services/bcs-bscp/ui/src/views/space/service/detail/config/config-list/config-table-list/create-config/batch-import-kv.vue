@@ -7,8 +7,7 @@
     height="720"
     ext-cls="variable-import-dialog"
     :esc-close="false"
-    @closed="handleClose"
-  >
+    @closed="handleClose">
     <bk-form>
       <!-- <bk-form-item label="导入方式">
         <bk-radio-group v-model="importType">
@@ -18,11 +17,7 @@
         <div class="tips" v-if="importType === 'text'">只支持string、number类型,其他类型请使用文件导入</div>
       </bk-form-item> -->
       <bk-form-item :label="t('配置文件内容')" required>
-        <KvContentEditor
-          v-if="importType === 'text'"
-          ref="editorRef"
-          @trigger="confirmBtnPerm = $event"
-        />
+        <KvContentEditor v-if="importType === 'text'" ref="editorRef" @trigger="confirmBtnPerm = $event" />
         <bk-upload v-else with-credentials>
           <template #tip>
             <div class="upload-tips">
@@ -34,67 +29,68 @@
       </bk-form-item>
     </bk-form>
     <template #footer>
-      <bk-button theme="primary" style="margin-right: 8px" :disabled="!confirmBtnPerm" @click="handleConfirm"
-        >{{ t('导入') }}</bk-button>
+      <bk-button theme="primary" style="margin-right: 8px" :disabled="!confirmBtnPerm" @click="handleConfirm">
+        {{ t('导入') }}
+      </bk-button>
       <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
     </template>
   </bk-dialog>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import KvContentEditor from '../../../components/kv-import-editor.vue';
+  import { ref, watch } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import KvContentEditor from '../../../components/kv-import-editor.vue';
 
-const { t } = useI18n();
-const props = defineProps<{
-  show: boolean;
-  bkBizId: string;
-  appId: number;
-}>();
-const emits = defineEmits(['update:show', 'confirm']);
+  const { t } = useI18n();
+  const props = defineProps<{
+    show: boolean;
+    bkBizId: string;
+    appId: number;
+  }>();
+  const emits = defineEmits(['update:show', 'confirm']);
 
-const editorRef = ref();
-const isFormChange = ref(false);
-const importType = ref('text');
-const confirmBtnPerm = ref(false);
-watch(
-  () => props.show,
-  () => {
-    isFormChange.value = false;
-  },
-);
-const handleClose = () => {
-  emits('update:show', false);
-};
-const handleConfirm = async () => {
-  if (importType.value === 'file') return;
-  await editorRef.value.handleImport();
-  emits('update:show', false);
-  emits('confirm');
-};
+  const editorRef = ref();
+  const isFormChange = ref(false);
+  const importType = ref('text');
+  const confirmBtnPerm = ref(false);
+  watch(
+    () => props.show,
+    () => {
+      isFormChange.value = false;
+    },
+  );
+  const handleClose = () => {
+    emits('update:show', false);
+  };
+  const handleConfirm = async () => {
+    if (importType.value === 'file') return;
+    await editorRef.value.handleImport();
+    emits('update:show', false);
+    emits('confirm');
+  };
 </script>
 
 <style scoped lang="scss">
-.tips {
-  font-size: 12px;
-  color: #979ba5;
-}
-.upload-tips {
-  font-size: 12px;
-  color: #63656e;
-  .sample {
-    margin-left: 2px;
-    color: #3a84ff;
-    cursor: pointer;
+  .tips {
+    font-size: 12px;
+    color: #979ba5;
   }
-}
+  .upload-tips {
+    font-size: 12px;
+    color: #63656e;
+    .sample {
+      margin-left: 2px;
+      color: #3a84ff;
+      cursor: pointer;
+    }
+  }
 </style>
 
 <style lang="scss">
-.variable-import-dialog {
-  .bk-modal-content {
-    overflow: hidden !important;
+  .variable-import-dialog {
+    .bk-modal-content {
+      overflow: hidden !important;
+    }
   }
-}
 </style>

@@ -18,7 +18,7 @@ export interface ICredentialItem {
     enc_credential: string;
     memo: string;
     name: string;
-  },
+  };
   visible?: boolean; // 另外增加，用于在标识是否在界面上展示明文
 }
 
@@ -32,14 +32,14 @@ export interface ICredentialRule {
   attachment: {
     biz_id: number;
     credential_id: number;
-  },
+  };
   revision: {
     creator: string;
     reviser: string;
     create_at: string;
     update_at: string;
     expired_at: string;
-  }
+  };
 }
 
 // 关联规则编辑数据
@@ -56,13 +56,12 @@ export interface IRuleEditing {
 
 // 调用关联规则更新接口参数
 interface IRuleUpdateItem {
-  app: string,
-  scope: string
-  id?: number
+  app: string;
+  scope: string;
+  id?: number;
 }
 export interface IRuleUpdateParams {
   add_scope: IRuleUpdateItem[];
   del_id: number[];
-  alter_scope: IRuleUpdateItem[]
+  alter_scope: IRuleUpdateItem[];
 }
-

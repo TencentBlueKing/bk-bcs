@@ -5,15 +5,14 @@
   </div>
 </template>
 <script setup lang="ts">
-import ConfigSimpleList from './config-simple-list/index.vue';
-import ConfigTableList from './config-table-list/index.vue';
+  import ConfigSimpleList from './config-simple-list/index.vue';
+  import ConfigTableList from './config-table-list/index.vue';
 
-const props = defineProps<{
-    versionDetailView: boolean,
-    bkBizId: string,
-    appId: number,
+  const props = defineProps<{
+    versionDetailView: boolean;
+    bkBizId: string;
+    appId: number;
   }>();
-
 </script>
 <style lang="scss" scoped>
   .config-list-area {

@@ -18,8 +18,5 @@ auth().then(() => {
   app.directive('overflowTitle', overflowTitle);
   app.directive('cursor', cursor);
 
-  app.use(pinia).use(i18n)
-    .use(router)
-    .use(bkui)
-    .mount('#app');
+  app.use(pinia).use(i18n).use(router).use(bkui).mount('#app');
 });

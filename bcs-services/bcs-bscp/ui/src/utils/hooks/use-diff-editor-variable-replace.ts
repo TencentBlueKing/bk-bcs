@@ -25,7 +25,7 @@ class VariableReplace {
   public currentReplacedList: IReplacedVariableItem[] = [];
   public baseReplacedList: IReplacedVariableItem[] = [];
 
-  public  constructor(
+  public constructor(
     editor: monaco.editor.IStandaloneDiffEditor,
     currentVariables: IVariableEditParams[],
     baseVariables: IVariableEditParams[],
@@ -103,7 +103,7 @@ class VariableReplace {
   }
 
   public highlightVariables(editor: monaco.editor.ICodeEditor, replacedList: IReplacedVariableItem[]) {
-    const configs = replacedList.map(variable => ({
+    const configs = replacedList.map((variable) => ({
       range: variable.range,
       options: {
         inlineClassName: 'template-variable-item',
@@ -133,8 +133,9 @@ class VariableReplace {
   }
 
   public getProviderConfig(replacedList: IReplacedVariableItem[] = [], lineNumber: number, column: number) {
-    const variable = replacedList.find(v => v.range.startLineNumber === lineNumber
-      && v.range.startColumn <= column && column <= v.range.endColumn);
+    const variable = replacedList.find(
+      (v) => v.range.startLineNumber === lineNumber && v.range.startColumn <= column && column <= v.range.endColumn,
+    );
     if (variable) {
       return {
         range: variable.range,
