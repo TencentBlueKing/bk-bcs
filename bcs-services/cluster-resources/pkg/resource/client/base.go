@@ -36,6 +36,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
+var defaultLimit = 2000
+
 // NewDynamicClient xxx
 func NewDynamicClient(conf *res.ClusterConf) dynamic.Interface {
 	conf.Rest.Wrap(transport.NewWrapperFunc())
@@ -72,6 +74,27 @@ func (c *ResClient) ListWithoutPerm(
 ) (*unstructured.UnstructuredList, error) {
 	ret, err := c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
 	return ret, c.handleErr(ctx, err)
+}
+
+// ListAllWithoutPerm 获取全部资源列表，不做权限校验
+func (c *ResClient) ListAllWithoutPerm(
+	ctx context.Context, namespace string, opts metav1.ListOptions,
+) ([]unstructured.Unstructured, error) {
+	result := make([]unstructured.Unstructured, 0)
+	opts.Limit = int64(defaultLimit)
+	opts.Continue = ""
+	for {
+		ret, err := c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
+		if err != nil {
+			return nil, c.handleErr(ctx, err)
+		}
+		result = append(result, ret.Items...)
+		if ret.GetContinue() == "" {
+			break
+		}
+		opts.Continue = ret.GetContinue()
+	}
+	return result, c.handleErr(ctx, nil)
 }
 
 // Get 获取单个资源

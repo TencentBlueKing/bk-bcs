@@ -145,7 +145,7 @@ func (dao *credentialDao) BatchListByIDs(kit *kit.Kit, bizID uint32, ids []uint3
 		return nil, errors.New("bizID is empty")
 	}
 	if len(ids) == 0 {
-		return nil, errors.New("credential ids is empty")
+		return []*table.Credential{}, nil
 	}
 
 	m := dao.genQ.Credential
@@ -203,7 +203,7 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 
 	result, count, err := q.Where(m.BizID.Eq(bizID)).
 		Where(conds...).
-		Order(m.ID.Desc()).
+		Order(m.Name).
 		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err

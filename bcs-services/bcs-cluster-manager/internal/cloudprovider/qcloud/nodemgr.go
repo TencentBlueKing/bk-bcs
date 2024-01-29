@@ -47,8 +47,8 @@ type NodeManager struct {
 }
 
 // GetZoneList get zoneList
-func (nm *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.ZoneInfo, error) {
-	client, err := api.GetCVMClient(opt)
+func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*proto.ZoneInfo, error) {
+	client, err := api.GetCVMClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create CVM client when GetZoneList failed: %v", err)
 		return nil, err
@@ -79,28 +79,7 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.Zo
 
 // GetCloudRegions get regionInfo
 func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
-	client, err := api.GetCVMClient(opt)
-	if err != nil {
-		blog.Errorf("create CVM client when GetRegionsInfo failed: %v", err)
-		return nil, err
-	}
-
-	cloudRegions, err := client.GetCloudRegions()
-	if err != nil {
-		blog.Errorf("GetCloudRegions failed, %s", err.Error())
-		return nil, err
-	}
-
-	regions := make([]*proto.RegionInfo, 0)
-	for i := range cloudRegions {
-		regions = append(regions, &proto.RegionInfo{
-			Region:      *cloudRegions[i].Region,
-			RegionName:  *cloudRegions[i].RegionName,
-			RegionState: *cloudRegions[i].RegionState,
-		})
-	}
-
-	return regions, nil
+	return business.GetCloudRegions(opt)
 }
 
 // GetNodeByIP get specified Node by innerIP address
@@ -117,7 +96,7 @@ func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) 
 		return nil, err
 	}
 
-	zoneInfo, err := business.GetZoneInfoByRegion(opt.Common)
+	_, zoneInfo, err := business.GetZoneInfoByRegion(opt.Common)
 	if err != nil {
 		blog.Errorf("cvm client GetNodeByIP failed: %v", err)
 	}

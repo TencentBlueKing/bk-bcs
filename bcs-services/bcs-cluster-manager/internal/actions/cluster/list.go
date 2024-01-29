@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	iauth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
@@ -664,7 +665,7 @@ func (la *ListNodesInClusterAction) listNodes() error {
 }
 
 func (la *ListNodesInClusterAction) getK8sNodes(cmNodes []*cmproto.ClusterNode) []*corev1.Node {
-	if la.cluster.ManageType == common.ClusterManageTypeManaged && len(cmNodes) == 0 {
+	if !autils.CheckIfGetNodesFromCluster(la.cluster, la.cloud, cmNodes) {
 		blog.Infof("ListNodesInClusterAction[%s] getK8sNodes clusterNodes empty", la.req.ClusterID)
 		return nil
 	}
@@ -704,11 +705,37 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-
 	// cloud nodes addition features
-	// la.handleNodes()
+	la.appendCloudNodeInfo()
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}
+
+func (la *ListNodesInClusterAction) appendCloudNodeInfo() {
+	clsMgr, err := cloudprovider.GetClusterMgr(la.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("ListNodesInClusterAction[%s] GetClusterMgr failed, %s", la.cluster.ClusterID,
+			la.cloud.CloudProvider, err.Error())
+		return
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     la.cloud,
+		AccountID: la.cluster.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("ListNodesInClusterAction[%s] GetCredential[%s] failed, %s", la.cluster.ClusterID,
+			la.cloud.CloudID, err.Error())
+		return
+	}
+	cmOption.Region = la.cluster.Region
+
+	err = clsMgr.AppendCloudNodeInfo(la.ctx, la.nodes, cmOption)
+	if err != nil {
+		blog.Errorf("ListNodesInClusterAction[%s] AppendCloudNodeInfo failed: %v", la.cluster.ClusterID, err)
+		return
+	}
+
+	return
 }
 
 // nolint
@@ -772,21 +799,38 @@ func (la *ListMastersInClusterAction) validate() error {
 
 // listNodes list cluster nodes
 func (la *ListMastersInClusterAction) listNodes() error {
-	_, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
+	cls, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
 	if err != nil {
 		blog.Errorf("get cluster %s failed, %s", la.req.ClusterID, err.Error())
 		return err
 	}
-
-	// get cluster masters
-	masters, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
+	cloud, err := la.model.GetCloud(la.ctx, cls.Provider)
 	if err != nil {
-		blog.Warnf("ListClusterNodes %s failed, %s", la.req.ClusterID, err.Error())
+		blog.Errorf("get cloud %s failed, %s", cls.Provider, err.Error())
 		return err
 	}
+	clsNodes, err := getClusterNodes(la.model, cls)
+	if err != nil {
+		blog.Errorf("get cluster %s nodes failed, %s", cls.ClusterID, err.Error())
+	}
 
-	masters = filterNodesRole(masters, true)
-	la.nodes = transK8sNodesToClusterNodes(la.req.ClusterID, masters)
+	if !autils.CheckIfGetNodesFromCluster(cls, cloud, clsNodes) {
+		cmNodes := make([]*cmproto.ClusterNode, 0)
+		for node := range cls.GetMaster() {
+			cmNodes = append(cmNodes, transNodeToClusterNode(la.model, cls.GetMaster()[node]))
+		}
+		la.nodes = cmNodes
+	} else {
+		// get cluster masters
+		masters, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
+		if err != nil {
+			blog.Warnf("ListClusterNodes %s failed, %s", la.req.ClusterID, err.Error())
+			return err
+		}
+
+		masters = filterNodesRole(masters, true)
+		la.nodes = transK8sNodesToClusterNodes(la.req.ClusterID, masters)
+	}
 
 	// append cmdb host info
 	la.appendHostInfo()

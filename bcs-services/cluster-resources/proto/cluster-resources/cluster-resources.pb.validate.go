@@ -11209,6 +11209,30 @@ func (m *FetchMultiClusterResourceReq) validate(all bool) error {
 
 	// no validation rules for Name
 
+	// no validation rules for Ip
+
+	if _, ok := _FetchMultiClusterResourceReq_SortBy_InLookup[m.GetSortBy()]; !ok {
+		err := FetchMultiClusterResourceReqValidationError{
+			field:  "SortBy",
+			reason: "value must be in list [ name namespace age]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _FetchMultiClusterResourceReq_Order_InLookup[m.GetOrder()]; !ok {
+		err := FetchMultiClusterResourceReqValidationError{
+			field:  "Order",
+			reason: "value must be in list [ asc desc]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if val := m.GetLimit(); val < 1 || val > 1000 {
 		err := FetchMultiClusterResourceReqValidationError{
 			field:  "Limit",
@@ -11311,6 +11335,19 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = FetchMultiClusterResourceReqValidationError{}
+
+var _FetchMultiClusterResourceReq_SortBy_InLookup = map[string]struct{}{
+	"":          {},
+	"name":      {},
+	"namespace": {},
+	"age":       {},
+}
+
+var _FetchMultiClusterResourceReq_Order_InLookup = map[string]struct{}{
+	"":     {},
+	"asc":  {},
+	"desc": {},
+}
 
 // Validate checks the field values on FetchMultiClusterCustomResourceReq with
 // the rules defined in the proto definition for this message. If any rules
@@ -11438,6 +11475,30 @@ func (m *FetchMultiClusterCustomResourceReq) validate(all bool) error {
 
 	// no validation rules for Name
 
+	// no validation rules for Ip
+
+	if _, ok := _FetchMultiClusterCustomResourceReq_SortBy_InLookup[m.GetSortBy()]; !ok {
+		err := FetchMultiClusterCustomResourceReqValidationError{
+			field:  "SortBy",
+			reason: "value must be in list [ name namespace age]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _FetchMultiClusterCustomResourceReq_Order_InLookup[m.GetOrder()]; !ok {
+		err := FetchMultiClusterCustomResourceReqValidationError{
+			field:  "Order",
+			reason: "value must be in list [ asc desc]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if val := m.GetLimit(); val < 1 || val > 1000 {
 		err := FetchMultiClusterCustomResourceReqValidationError{
 			field:  "Limit",
@@ -11541,6 +11602,19 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = FetchMultiClusterCustomResourceReqValidationError{}
+
+var _FetchMultiClusterCustomResourceReq_SortBy_InLookup = map[string]struct{}{
+	"":          {},
+	"name":      {},
+	"namespace": {},
+	"age":       {},
+}
+
+var _FetchMultiClusterCustomResourceReq_Order_InLookup = map[string]struct{}{
+	"":     {},
+	"asc":  {},
+	"desc": {},
+}
 
 // Validate checks the field values on MultiClusterResourceCountReq with the
 // rules defined in the proto definition for this message. If any rules are

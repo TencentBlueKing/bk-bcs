@@ -135,6 +135,23 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	return nil
 }
 
+// UpdateClusterCloudInfo update cluster info by cloud
+func (c *CloudInfoManager) UpdateClusterCloudInfo(cls *cmproto.Cluster) error {
+	// call qcloud interface to init cluster defaultConfig
+	if c == nil || cls == nil {
+		return fmt.Errorf("%s UpdateClusterCloudInfo request is empty", cloudName)
+	}
+
+	// cluster cloud advanced setting
+	err := clusterCloudConnectSetting(cls)
+	if err != nil {
+		blog.Errorf("UpdateClusterCloudInfo clusterNetworkSettingByQCloud failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func getCloudClusterInfo(opt *cloudprovider.SyncClusterCloudInfoOption) (
 	*tke.Cluster, map[string]*cmproto.Node, error) {
 	var (
@@ -412,11 +429,7 @@ func clusterCloudNetworkSetting(cls *cmproto.Cluster) error {
 }
 
 func clusterCloudConnectSetting(cls *cmproto.Cluster) error {
-	if cls.GetClusterAdvanceSettings().GetClusterConnectSetting() == nil {
-		return fmt.Errorf("initCloudCluster connect setting empty")
-	}
-
-	if cls.GetClusterAdvanceSettings().GetClusterConnectSetting().IsExtranet {
+	if cls.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet() {
 		if len(cls.GetClusterAdvanceSettings().GetClusterConnectSetting().GetSecurityGroup()) == 0 {
 			return fmt.Errorf("%s clusterCloudConnectSetting securityGroup empty", cloudName)
 		}

@@ -72,6 +72,8 @@ type ApiServerSetting struct {
 	Service      Service                           `yaml:"service"`
 	Log          LogOption                         `yaml:"log"`
 	Repo         Repository                        `yaml:"repository"`
+	BKNotice     BKNotice                          `yaml:"bkNotice"`
+	Esb          Esb                               `yaml:"esb"`
 	FeatureFlags map[FeatureFlag]FeatureFlagOption `yaml:"featureFlags"`
 }
 

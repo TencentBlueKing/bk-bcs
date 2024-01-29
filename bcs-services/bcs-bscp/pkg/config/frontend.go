@@ -22,9 +22,10 @@ type HostConf struct {
 
 // FrontendConf docs and host conf
 type FrontendConf struct {
-	Docs   map[string]string `yaml:"docs"`
-	Host   *HostConf         `yaml:"hosts"`
-	Helper string            `yaml:"helper"` // 白名单对接人员
+	Docs           map[string]string `yaml:"docs"`
+	Host           *HostConf         `yaml:"hosts"`
+	Helper         string            `yaml:"helper"`           // 白名单对接人员
+	EnableBKNotice bool              `yaml:"enable_bk_notice"` // 是否启用蓝鲸通知中心
 }
 
 // defaultFrontendConf 默认配置

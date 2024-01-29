@@ -1,7 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div :class="[
-    'cluster-node bcs-content-wrapper',
+    'cluster-node',
     { 'px-[24px] py-[16px]': !fromCluster }
   ]">
     <bcs-alert type="info" class="cluster-node-tip">
@@ -641,7 +641,12 @@
         @confirm="delNode"
         @cancel="showDeleteDialog = false">
         <div class="flex items-center justify-center mt-[8px]" v-if="curSelectedCluster.provider === 'tencentPublicCloud'">
-          <bcs-checkbox v-model="deleteMode">{{ $t('tke.label.retain') }}</bcs-checkbox>
+          <bcs-checkbox
+            v-model="deleteMode"
+            true-value="terminate"
+            false-value="retain">
+            {{ $t('tke.label.retain') }}
+          </bcs-checkbox>
         </div>
       </DeleteNode>
     </bcs-dialog>

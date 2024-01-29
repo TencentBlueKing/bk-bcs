@@ -170,7 +170,8 @@
           :cloud-i-d="cloudID"
           :value="instanceItem.internetAccess"
           class="mb-[20px]"
-          @change="(v) => instanceItem.internetAccess = v" />
+          @change="(v) => instanceItem.internetAccess = v"
+          @account-type-change="(v) => accountType = v" />
       </bk-form-item>
 
       <bk-form-item :label="$t('tke.label.count')">
@@ -291,6 +292,7 @@ const initData = ref({
   },
 });
 const instanceItem = ref(initData.value);
+const accountType = ref<'STANDARD'|'LEGACY'>();
 const rules = ref({
   zone: [
     {
@@ -326,7 +328,9 @@ const rules = ref({
       trigger: 'custom',
       message: $i18n.t('ca.tips.requiredBandwidthPackage'),
       validator() {
-        if (instanceItem.value.internetAccess.internetChargeType === 'BANDWIDTH_PACKAGE') {
+        if (instanceItem.value.internetAccess.publicIPAssigned
+        && instanceItem.value.internetAccess.internetChargeType === 'BANDWIDTH_PACKAGE'
+        && accountType.value === 'STANDARD') {
           return !!instanceItem.value.internetAccess.bandwidthPackageId;
         }
         return true;

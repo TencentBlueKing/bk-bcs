@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
@@ -45,6 +45,7 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	deleteMode := step.Params[cloudprovider.DeleteModeKey.String()]
+	clusterStatus := step.Params[cloudprovider.LastClusterStatus.String()]
 
 	// only support retain mode
 	if deleteMode != cloudprovider.Retain.String() {
@@ -63,32 +64,50 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// get qcloud client
-	cli, err := api.NewTkeClient(dependInfo.CmOption)
-	if err != nil {
-		blog.Errorf("DeleteTKEClusterTask[%s]: get tke client for cluster[%s] in task %s step %s failed, %s",
-			taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud tke client err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	blog.Infof("DeleteTKEClusterTask[%s]  clusterInfo: %v", taskID, dependInfo.Cluster.GetStatus())
+
+	// need to clean cluster nodes when cluster create or delete failed
+	if (clusterStatus == icommon.StatusCreateClusterFailed ||
+		clusterStatus == icommon.StatusDeleteClusterFailed) && dependInfo.Cluster.GetSystemID() != "" {
+		_, workerNodes, errLocal := getClusterInstancesByClusterID(dependInfo)
+		if errLocal == nil && len(workerNodes) > 0 {
+			nodeIds := make([]string, 0)
+			for i := range workerNodes {
+				nodeIds = append(nodeIds, workerNodes[i].InstanceId)
+			}
+
+			ids, err := business.DeleteClusterInstance(ctx, dependInfo, cloudprovider.Retain.String(), nodeIds)
+			if err != nil {
+				blog.Errorf("DeleteTKEClusterTask[%s] DeleteClusterInstance failed: %v", taskID, err)
+			} else {
+				blog.Infof("DeleteTKEClusterTask[%s] DeleteClusterInstance success: %v", taskID, ids)
+			}
+
+			err = business.CheckClusterDeletedNodes(ctx, dependInfo, nodeIds)
+			if err != nil {
+				blog.Errorf("DeleteTKEClusterTask[%s] CheckClusterDeletedNodes failed: %v", taskID, err)
+			}
+			// this need to wait nodes to deleted status because of tke bug
+			time.Sleep(time.Second * 60)
+		}
 	}
 
-	if dependInfo.Cluster.SystemID != "" {
-		err = cli.DeleteTKECluster(dependInfo.Cluster.SystemID, api.DeleteMode(deleteMode))
-		if err != nil {
-			blog.Errorf("DeleteTKEClusterTask[%s]: task[%s] step[%s] call qcloud DeleteTKECluster failed: %v",
-				taskID, taskID, stepName, err)
-			retErr := fmt.Errorf("call qcloud DeleteTKECluster failed: %s", err.Error())
-			_ = state.UpdateStepFailure(start, stepName, retErr)
-			return retErr
-		}
-		_ = updateClusterSystemID(clusterID, "")
-		blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster[%s] successful",
-			taskID, taskID, dependInfo.Cluster.SystemID)
-	} else {
-		blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster skip current step "+
-			"because SystemID empty", taskID, taskID)
+	err = business.DeleteTkeClusterByClusterId(ctx, dependInfo.CmOption, dependInfo.Cluster.SystemID, deleteMode)
+	if err != nil {
+		blog.Errorf("DeleteTKEClusterTask[%s]: task[%s] step[%s] call qcloud DeleteTKECluster failed: %v",
+			taskID, taskID, stepName, err)
+		retErr := fmt.Errorf("call qcloud DeleteTKECluster failed: %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("delete cluster[%s] failed: %v",
+			dependInfo.Cluster.GetClusterID(), err.Error()))
+
+		return retErr
 	}
+	blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster[%s] successful",
+		taskID, taskID, dependInfo.Cluster.SystemID)
 
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("DeleteTKEClusterTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)

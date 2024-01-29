@@ -40,14 +40,18 @@ const (
 // scenario支持两种配置方式 （允许同时存在）
 // 1. 蓝鲸监控导出 （通过文件夹名称区分不同YAML文件， 例如grafana下认为是告警面板配置）
 // 2. cr模式配置 （通过文件名称区分，例如monitorrule&mr开头文件认为是告警规则配置）
-func (r *MonitorRender) ReadScenario(scenario string) (*Result, error) {
+func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) {
 	res := &Result{}
+	repo, ok := r.repoManager.GetRepo(repoKey)
+	if !ok {
+		return nil, fmt.Errorf("repo[%s] not found", repoKey)
+	}
 
 	// 配置2 读取（cr模式配置）
-	err := filepath.Walk(filepath.Join(r.gitRepo.Directory, scenario), func(path string, info os.FileInfo,
+	err := filepath.Walk(filepath.Join(repo.GetDirectory(), scenario), func(path string, info os.FileInfo,
 		err error) error {
 		if err != nil {
-			blog.Errorf("walk through directory'%s' failed, err: %s", filepath.Join(r.gitRepo.Directory, scenario),
+			blog.Errorf("walk through directory'%s' failed, err: %s", filepath.Join(repo.GetDirectory(), scenario),
 				scenario)
 			return err
 		}
@@ -110,7 +114,7 @@ func (r *MonitorRender) ReadScenario(scenario string) (*Result, error) {
 	}
 
 	// 配置1读取 （蓝鲸监控导出）
-	configMaps, panel, err := r.loadPanel(scenario)
+	configMaps, panel, err := r.loadPanel(repo.GetDirectory(), scenario)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +123,7 @@ func (r *MonitorRender) ReadScenario(scenario string) (*Result, error) {
 		res.Panel = append(res.Panel, panel)
 	}
 
-	mr, err := r.loadRule(scenario)
+	mr, err := r.loadRule(repo.GetDirectory(), scenario)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +131,7 @@ func (r *MonitorRender) ReadScenario(scenario string) (*Result, error) {
 		res.MonitorRule = append(res.MonitorRule, mr)
 	}
 
-	ng, err := r.loadNoticeGroup(scenario)
+	ng, err := r.loadNoticeGroup(repo.GetDirectory(), scenario)
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +142,8 @@ func (r *MonitorRender) ReadScenario(scenario string) (*Result, error) {
 	return res, nil
 }
 
-func (r *MonitorRender) loadRule(scenario string) (*monitorextensionv1.MonitorRule, error) {
-	path := filepath.Join(r.gitRepo.Directory, scenario, "rule")
+func (r *MonitorRender) loadRule(directory, scenario string) (*monitorextensionv1.MonitorRule, error) {
+	path := filepath.Join(directory, scenario, "rule")
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		blog.Infof("empty raw rule, continue...")
 		return nil, nil
@@ -187,8 +191,8 @@ func (r *MonitorRender) loadRule(scenario string) (*monitorextensionv1.MonitorRu
 	return mr, nil
 }
 
-func (r *MonitorRender) loadPanel(scenario string) ([]*v1.ConfigMap, *monitorextensionv1.Panel, error) {
-	path := filepath.Join(r.gitRepo.Directory, scenario, "grafana")
+func (r *MonitorRender) loadPanel(directory, scenario string) ([]*v1.ConfigMap, *monitorextensionv1.Panel, error) {
+	path := filepath.Join(directory, scenario, "grafana")
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		blog.Infof("empty raw grafana panel, continue...")
 		return nil, nil, nil
@@ -252,8 +256,8 @@ func (r *MonitorRender) loadPanel(scenario string) ([]*v1.ConfigMap, *monitorext
 	return configmaps, panel, nil
 }
 
-func (r *MonitorRender) loadNoticeGroup(scenario string) (*monitorextensionv1.NoticeGroup, error) {
-	path := filepath.Join(r.gitRepo.Directory, scenario, "notice")
+func (r *MonitorRender) loadNoticeGroup(directory, scenario string) (*monitorextensionv1.NoticeGroup, error) {
+	path := filepath.Join(directory, scenario, "notice")
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		blog.Infof("empty raw notice , continue...")
 		return nil, nil

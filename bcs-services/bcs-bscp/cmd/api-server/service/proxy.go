@@ -38,10 +38,12 @@ type proxy struct {
 	cfgSvrMux           *runtime.ServeMux
 	authSvrMux          http.Handler
 	repo                *repoService
+	bkNotice            *bkNoticeService
 	state               serviced.State
 	authorizer          auth.Authorizer
 	cfgClient           pbcs.ConfigClient
 	configImportService *configImport
+	kvService           *kvService
 }
 
 // newProxy create new mux proxy.
@@ -71,6 +73,11 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		return nil, err
 	}
 
+	bkNotice, err := newBKNoticeService()
+	if err != nil {
+		return nil, err
+	}
+
 	cfgClient, err := newCfgClient(dis)
 	if err != nil {
 		return nil, err
@@ -81,14 +88,18 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		return nil, err
 	}
 
+	kv := newKvService(authorizer, cfgClient)
+
 	p := &proxy{
 		cfgSvrMux:           cfgSvrMux,
 		repo:                repo,
+		bkNotice:            bkNotice,
 		configImportService: configImportService,
 		state:               state,
 		authorizer:          authorizer,
 		authSvrMux:          authSvrMux,
 		cfgClient:           cfgClient,
+		kvService:           kv,
 	}
 
 	p.initBizsOfTmplSpaces()

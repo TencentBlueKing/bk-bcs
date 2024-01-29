@@ -113,14 +113,14 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 	// check exist master nodes, trans master nodes module if exist
 	if len(masterModuleIDString) != 0 && len(masterIPs) > 0 {
 		masterModuleID, _ := strconv.Atoi(masterModuleIDString)
-		err = transBizNodeModule(ctx, bkBizID, masterModuleID, masterIPs)
+		err = TransBizNodeModule(ctx, bkBizID, masterModuleID, masterIPs)
 		if err != nil {
 			blog.Errorf("TransferHostModule transBizNodeModule master[%v] failed: %v", masterIPs, err)
 		}
 	}
 
 	// transfer nodes
-	err = transBizNodeModule(ctx, bkBizID, moduleID, func() []string {
+	err = TransBizNodeModule(ctx, bkBizID, moduleID, func() []string {
 		filterNodeIps := make([]string, 0)
 		for i := range nodeIPs {
 			if utils.StringInSlice(nodeIPs[i], masterIPs) {
@@ -148,19 +148,19 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 	return nil
 }
 
-// nolint
-func transBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) error {
+// TransBizNodeModule trans hostIPs to module. if module is zero, thus trans hostIPs to idle module
+func TransBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	nodeManClient := nodeman.GetNodeManClient()
 	if nodeManClient == nil {
-		blog.Errorf("transBizNodeModule %s failed, nodeman client is not init", taskID)
+		blog.Errorf("TransBizNodeModule %s failed, nodeman client is not init", taskID)
 		return nil
 	}
 
 	cmdbClient := cmdb.GetCmdbClient()
 	if cmdbClient == nil {
-		blog.Errorf("transBizNodeModule %s failed, cmdb client is not init", taskID)
+		blog.Errorf("TransBizNodeModule %s failed, cmdb client is not init", taskID)
 		return nil
 	}
 
@@ -174,32 +174,34 @@ func transBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) 
 		var errGet error
 		hostIDs, errGet = nodeManClient.GetHostIDByIPs(biz, hostIPs)
 		if errGet != nil {
-			blog.Errorf("transBizNodeModule %v failed, list nodeman hosts err %s", biz, errGet.Error())
+			blog.Errorf("TransBizNodeModule %v failed, list nodeman hosts err %s", biz, errGet.Error())
 			return errGet
 		}
 		if len(hostIDs) == len(hostIPs) {
 			return loop.EndLoop
 		}
-		blog.Infof("transBizNodeModule %s can't get all host id, waiting", taskID)
+		blog.Infof("TransBizNodeModule %s can't get all host id, waiting", taskID)
 		return nil
 	}, loop.LoopInterval(3*time.Second))
 	if err != nil {
-		blog.Errorf("transBizNodeModule %s get host id failed: %v", taskID, err)
-		return nil
+		blog.Errorf("TransBizNodeModule %s get host id failed: %v", taskID, err)
+		return err
 	}
 
 	err = cmdbClient.TransferHostToIdleModule(biz, hostIDs)
 	if err != nil {
-		blog.Errorf("transBizNodeModule %s failed, bkBizID %d, hosts %v, err %s",
+		blog.Errorf("TransBizNodeModule %s failed, bkBizID %d, hosts %v, err %s",
 			taskID, biz, hostIDs, err.Error())
-		return nil
+		return err
 	}
 
-	err = cmdbClient.TransferHostModule(biz, hostIDs, []int{module}, false)
-	if err != nil {
-		blog.Errorf("transBizNodeModule %s failed, bkBizID %d, hosts %v, err %s",
-			taskID, biz, hostIDs, err.Error())
-		return nil
+	if module > 0 {
+		err = cmdbClient.TransferHostModule(biz, hostIDs, []int{module}, false)
+		if err != nil {
+			blog.Errorf("TransBizNodeModule %s failed, bkBizID %d, hosts %v, err %s",
+				taskID, biz, hostIDs, err.Error())
+			return err
+		}
 	}
 
 	return nil
@@ -214,18 +216,6 @@ func RemoveHostFromCMDBTask(taskID string, stepName string) error {
 		return err
 	}
 	if step == nil {
-		return nil
-	}
-	nodeManClient := nodeman.GetNodeManClient()
-	if nodeManClient == nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s failed, nodeman client is not init", taskID)
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("nodeman client is not init"))
-		return nil
-	}
-	cmdbClient := cmdb.GetCmdbClient()
-	if cmdbClient == nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s failed, cmdb client is not init", taskID)
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("cmdb client is not init"))
 		return nil
 	}
 
@@ -246,46 +236,66 @@ func RemoveHostFromCMDBTask(taskID string, stepName string) error {
 		return nil
 	}
 
-	// get host id from host list
-	ips := strings.Split(nodeIPs, ",")
-	hostIDs, err := nodeManClient.GetHostIDByIPs(bkBizID, ips)
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	err = RemoveHostFromCmdb(ctx, bkBizID, nodeIPs)
 	if err != nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s failed, list nodeman hosts err %s", taskID, err.Error())
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("list nodeman hosts err %s", err.Error()))
-		return nil
-	}
-
-	if len(hostIDs) == 0 {
-		blog.Warnf("RemoveHostFromCMDBTask %s skip, cause of empty host", taskID)
-		_ = state.UpdateStepSucc(start, stepName)
-		return nil
-	}
-
-	if err := cmdbClient.TransferHostToIdleModule(bkBizID, hostIDs); err != nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s TransferHostToIdleModule failed, bkBizID %d, hosts %v, err %s",
-			taskID, bkBizID, hostIDs, err.Error())
-		_ = state.SkipFailure(start, stepName,
-			fmt.Errorf("TransferHostToIdleModule failed, bkBizID %d, hosts %v, err %s", bkBizID, hostIDs, err.Error()))
-		return nil
-	}
-
-	if err := cmdbClient.TransferHostToResourceModule(bkBizID, hostIDs); err != nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s TransferHostToResourceModule failed, bkBizID %d, hosts %v, err %s",
-			taskID, bkBizID, hostIDs, err.Error())
-		_ = state.SkipFailure(start, stepName,
-			fmt.Errorf("TransferHostToResourceModule failed, bkBizID %d, hosts %v, err %s",
-				bkBizID, hostIDs, err.Error()))
-		return nil
-	}
-
-	if err := cmdbClient.DeleteHost(hostIDs); err != nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s DeleteHost %v failed, %s", taskID, hostIDs, err.Error())
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("DeleteHost %v failed, %s", hostIDs, err.Error()))
+		blog.Errorf("RemoveHostFromCmdb[%s] failed: %v", taskID, err)
+		_ = state.SkipFailure(start, stepName, err)
 		return nil
 	}
 	blog.Infof("RemoveHostFromCMDBTask %s successful", taskID)
 
 	// update step
 	_ = state.UpdateStepSucc(start, stepName)
+	return nil
+}
+
+// RemoveHostFromCmdb remove host from cmdb
+func RemoveHostFromCmdb(ctx context.Context, biz int, nodeIPs string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	nodeManClient := nodeman.GetNodeManClient()
+	if nodeManClient == nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s failed, nodeman client is not init", taskID)
+		return fmt.Errorf("nodeman client is not init")
+	}
+	cmdbClient := cmdb.GetCmdbClient()
+	if cmdbClient == nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s failed, cmdb client is not init", taskID)
+		return fmt.Errorf("cmdb client is not init")
+	}
+
+	// get host id from host list
+	ips := strings.Split(nodeIPs, ",")
+	hostIDs, err := nodeManClient.GetHostIDByIPs(biz, ips)
+	if err != nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s failed, list nodeman hosts err %s", taskID, err.Error())
+		return fmt.Errorf("list nodeman hosts err %s", err.Error())
+	}
+
+	if len(hostIDs) == 0 {
+		blog.Warnf("RemoveHostFromCMDBTask %s skip, cause of empty host", taskID)
+		return nil
+	}
+
+	if err := cmdbClient.TransferHostToIdleModule(biz, hostIDs); err != nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s TransferHostToIdleModule failed, bkBizID %d, hosts %v, err %s",
+			taskID, biz, hostIDs, err.Error())
+		return fmt.Errorf("TransferHostToIdleModule failed, bkBizID %d, hosts %v, err %s",
+			biz, hostIDs, err.Error())
+	}
+
+	if err := cmdbClient.TransferHostToResourceModule(biz, hostIDs); err != nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s TransferHostToResourceModule failed, bkBizID %d, hosts %v, err %s",
+			taskID, biz, hostIDs, err.Error())
+		return fmt.Errorf("TransferHostToResourceModule failed, bkBizID %d, hosts %v, err %s",
+			biz, hostIDs, err.Error())
+	}
+
+	if err := cmdbClient.DeleteHost(hostIDs); err != nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s DeleteHost %v failed, %s", taskID, hostIDs, err.Error())
+		return fmt.Errorf("DeleteHost %v failed, %s", hostIDs, err.Error())
+	}
+
 	return nil
 }

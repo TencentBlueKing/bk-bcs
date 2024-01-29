@@ -11,12 +11,11 @@
  *
  */
 
-package render
+package repo
 
 import (
-	"context"
-	"encoding/json"
-	"os"
+	"encoding/base64"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"time"
@@ -24,24 +23,12 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/pkg/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/utils"
 )
-
-const (
-	EnvNameGitRepoURL  = "GIT_URL"
-	EnvNameGitUserName = "GIT_USERNAME"
-	EnvNameGitSecret   = "GIT_SECRET"
-)
-
-var errStop = errors.New("stop")
 
 // gitRepo clone git repo and pull in certain freq
 type gitRepo struct {
@@ -51,48 +38,56 @@ type gitRepo struct {
 	Password  string
 	Frequency time.Duration
 
-	cli client.Client
+	Key string
+
+	// TargetRevision defines the revision of the source to sync the application to.
+	// In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD.
+	TargetRevision string `json:"targetRevision,omitempty"`
+
+	cli  client.Client
+	auth *http.BasicAuth
 }
 
-// newGitRepo return new git repo
-func newGitRepo(cli client.Client, opt *option.ControllerOption) (*gitRepo, error) {
+// todo 适配ssh
+// todo 测试同repo 不同targetRevision
+func newGitRepo(URL, username, password, targetRevision, bathPath string) (*gitRepo, error) {
+	repoKey := genRepoKey(URL, targetRevision)
 	repo := &gitRepo{
-		Directory: opt.ScenarioPath,
-		Frequency: opt.ScenarioGitRefreshFreq,
-		cli:       cli,
+		URL:            URL,
+		Directory:      filepath.Join(bathPath, base64.URLEncoding.EncodeToString([]byte(repoKey))),
+		Username:       username,
+		Password:       password,
+		TargetRevision: targetRevision,
+		Key:            repoKey,
+		auth: &http.BasicAuth{
+			Username: username,
+			Password: password,
+		},
 	}
-	repo.loadEnv()
-
-	err := repo.Clone()
-	if err != nil {
-		blog.Errorf("clone git repo(%+v) failed, err: %s", repo, err.Error())
-		return nil, err
+	if err := repo.Clone(); err != nil {
+		return nil, fmt.Errorf("clone git repo(%+v) failed, err: %s", repo, err.Error())
 	}
-
-	ticker := time.NewTicker(repo.Frequency)
-	defer ticker.Stop()
-	go func() {
-		for range ticker.C {
-			repo.StartAutoUpdate()
-		}
-	}()
 
 	return repo, nil
 }
 
-func (gr *gitRepo) loadEnv() {
-	repoURL := os.Getenv(EnvNameGitRepoURL)
-	username := os.Getenv(EnvNameGitUserName)
-	secret := os.Getenv(EnvNameGitSecret)
+func (gr *gitRepo) GetURL() string {
+	return gr.URL
+}
+func (gr *gitRepo) GetDirectory() string {
+	return gr.Directory
+}
 
-	gr.URL = repoURL
-	gr.Username = username
-	gr.Password = secret
+func (gr *gitRepo) GetRepoKey() string {
+	return gr.Key
 }
 
 func (gr *gitRepo) Clone() error {
 	_, err := git.PlainClone(gr.Directory, false, &git.CloneOptions{
-		URL: gr.URL,
+		URL:           gr.URL,
+		ReferenceName: plumbing.NewBranchReferenceName(gr.TargetRevision),
+		SingleBranch:  true,
+		Auth:          gr.auth,
 	})
 	return err
 }
@@ -111,7 +106,10 @@ func (gr *gitRepo) Pull() error {
 	}
 
 	err = worktree.Pull(&git.PullOptions{
-		RemoteURL: gr.URL,
+		RemoteURL:     gr.URL,
+		ReferenceName: plumbing.NewBranchReferenceName(gr.TargetRevision),
+		SingleBranch:  true,
+		Auth:          gr.auth,
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		blog.Errorf("Internal error! pull repo failed, err: %s", err.Error())
@@ -120,23 +118,24 @@ func (gr *gitRepo) Pull() error {
 	return nil
 }
 
-func (gr *gitRepo) StartAutoUpdate() {
+// Reload Pull the latest branch, and return change directories
+func (gr *gitRepo) Reload() ([]string, error) {
 	if err := gr.Pull(); err != nil {
-		blog.Errorf("pull git repo failed! err: %s", err.Error())
 		// DOTO send event
-		return
+		return nil, fmt.Errorf("pull git repo[%s] failed! err: %s", gr.URL,
+			err.Error())
 	}
 
 	changeDirs, err := gr.getChangedDirs()
 	if err != nil {
-		blog.Errorf("get git repo change dirs failed! err: %s", err.Error())
 		// DOTO send event
-		return
+		return nil, fmt.Errorf("get git repo[%s] change dirs failed! err: %s", gr.URL, err.Error())
 	}
-	if len(changeDirs) > 0 {
-		blog.Infof("found update scenario: %s", utils.ToJsonString(changeDirs))
-		_ = gr.resolveChangeScenario(changeDirs)
-	}
+	return changeDirs, nil
+	// if len(changeDirs) > 0 {
+	// 	blog.Infof("found update scenario: %s", utils.ToJsonString(changeDirs))
+	// 	_ = gr.resolveChangeScenario(changeDirs)
+	// }
 }
 
 func (gr *gitRepo) getChangedDirs() ([]string, error) {
@@ -211,69 +210,6 @@ func (gr *gitRepo) getChangedDirs() ([]string, error) {
 	}
 
 	return dirs, nil
-}
-
-func (gr *gitRepo) resolveChangeScenario(scenarios []string) error {
-	for _, scenario := range scenarios {
-		selector, err := metav1.LabelSelectorAsSelector(metav1.SetAsLabelSelector(map[string]string{
-			monitorextensionv1.LabelKeyForScenarioName: scenario,
-		}))
-		if err != nil {
-			blog.Errorf("generate selector for scenario'%s' failed, err: %s", scenario, err.Error())
-			// DOTO 是否continue后 统一成multierror上报
-			return err
-		}
-		appMonitorList := &monitorextensionv1.AppMonitorList{}
-		if inErr := gr.cli.List(context.Background(), appMonitorList, &client.ListOptions{
-			LabelSelector: selector,
-		}); inErr != nil {
-			blog.Errorf("list app monitor for scenario'%s' failed, err: %s", scenario, inErr.Error())
-			// DOTO 同上
-			return inErr
-		}
-
-		for _, appMonitor := range appMonitorList.Items {
-			if inErr := gr.patchAppMonitorAnnotation(&appMonitor, time.Now()); inErr != nil {
-				blog.Errorf("patch app monitor'%s/%s' annotation failed, err: %s", appMonitor.GetNamespace(),
-					appMonitor.GetName(), inErr.Error())
-				return inErr
-			}
-
-			blog.Infof("scenario '%s' related app monitor '%s/%s' updated", scenario, appMonitor.GetNamespace(),
-				appMonitor.GetName())
-		}
-		blog.Infof("scenario '%s' related app monitor all updated", scenario)
-	}
-	return nil
-}
-
-func (gr *gitRepo) patchAppMonitorAnnotation(
-	monitor *monitorextensionv1.AppMonitor, updateTime time.Time,
-) error {
-	patchStruct := map[string]interface{}{
-		"metadata": map[string]interface{}{
-			"annotations": map[string]interface{}{
-				monitorextensionv1.AnnotationScenarioUpdateTimestamp: updateTime.Format(time.RFC3339Nano),
-			},
-		},
-	}
-	patchBytes, err := json.Marshal(patchStruct)
-	if err != nil {
-		return errors.Wrapf(err, "marshal patchStruct for app monitor '%s/%s' failed", monitor.GetNamespace(),
-			monitor.GetName())
-	}
-	rawPatch := client.RawPatch(k8stypes.MergePatchType, patchBytes)
-	updateAppMonitor := &monitorextensionv1.AppMonitor{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      monitor.GetName(),
-			Namespace: monitor.GetNamespace(),
-		},
-	}
-	if inErr := gr.cli.Patch(context.Background(), updateAppMonitor, rawPatch, &client.PatchOptions{}); inErr != nil {
-		return errors.Wrapf(err, "patch app monitor %s/%s annotation failed, patcheStruct: %s",
-			monitor.GetNamespace(), monitor.GetName(), string(patchBytes))
-	}
-	return nil
 }
 
 func compareCommitAndParent(commit *object.Commit) ([]string, error) {

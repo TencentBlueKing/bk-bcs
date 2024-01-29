@@ -12,4 +12,6 @@ declare module '*.md' {
   export default Component;
 }
 
-declare module 'markdown-it'
+declare module 'markdown-it';
+
+declare module '@blueking/notice-component';

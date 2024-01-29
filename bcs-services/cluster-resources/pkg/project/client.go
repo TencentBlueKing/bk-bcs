@@ -45,6 +45,11 @@ func genProjInfoCacheKey(projectID string) string {
 	return ProjectInfoCacheKeyPrefix + "-" + projectID
 }
 
+// genProjNsCacheKey 获取项目命名空间缓存键
+func genProjNsCacheKey(projectID, clusterID string) string {
+	return "bcs_project_ns" + "-" + projectID + "-" + clusterID
+}
+
 // ProjClient xxx
 type ProjClient struct {
 	cache *cache.Cache
@@ -109,4 +114,47 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (*Proj
 	}
 
 	return project, nil
+}
+
+// fetchProjInfoWithCache 获取项目信息（支持缓存）
+func (c *ProjClient) fetchSharedClusterProjNsWitchCache(ctx context.Context, projectID, clusterID string) (
+	[]Namespace, error) {
+	cacheKey := genProjNsCacheKey(projectID, clusterID)
+	if info, ok := c.cache.Get(cacheKey); info != nil && ok {
+		return info.([]Namespace), nil
+	}
+	log.Info(ctx, "project %s cluster %s ns not in cache, start call project manager", projectID, clusterID)
+
+	ns, err := c.fetchSharedClusterProjNs(ctx, projectID, clusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = c.cache.Add(cacheKey, ns, time.Minute); err != nil {
+		log.Warn(ctx, "set project ns to cache failed: %v", err)
+	}
+	return ns, nil
+}
+
+// fetchShardClusterProjNs 获取共享集群项目下的命名空间
+func (c *ProjClient) fetchSharedClusterProjNs(ctx context.Context, projectID, clusterID string) ([]Namespace, error) {
+	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s/clusters/%s/namespaces", config.G.BCSAPIGW.Host,
+		projectID, clusterID)
+
+	resp, err := httpclient.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
+		SetAuthToken(config.G.BCSAPIGW.AuthToken).
+		Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ns := make([]Namespace, 0)
+	if err := httpclient.UnmarshalBKResult(resp, &ns); err != nil {
+		return nil, err
+	}
+
+	return ns, nil
 }

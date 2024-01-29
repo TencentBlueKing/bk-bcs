@@ -110,7 +110,7 @@ const props = defineProps({
     default: () => ({}),
   },
 });
-const emits = defineEmits(['change']);
+const emits = defineEmits(['change', 'account-type-change']);
 
 const internetAccess = ref<IInternetAccess>({
   publicIPAssigned: false,
@@ -137,6 +137,9 @@ watch(internetAccess, () => {
 
 // 账户类型
 const { accountType, getCloudAccountType, getCloudBwps } = useCloud();
+watch(accountType, () => {
+  emits('account-type-change', accountType.value);
+});
 
 // 免费分配公网IP
 watch(() => internetAccess.value.publicIPAssigned, (publicIPAssigned) => {

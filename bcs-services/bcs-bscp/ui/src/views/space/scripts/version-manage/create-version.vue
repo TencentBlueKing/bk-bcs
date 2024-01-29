@@ -6,8 +6,7 @@
     placement="bottom-start"
     :disabled="props.creatable"
     :is-show="popoverShow"
-    @after-hidden="closePopover"
-  >
+    @after-hidden="closePopover">
     <bk-button theme="primary" :disabled="props.disabled" @click="handleCreateClick">
       <Plus class="button-icon" />
       {{ t('新建版本') }}
@@ -31,8 +30,7 @@
     :is-loading="listLoading"
     @value-change="afterDialogShow"
     @confirm="handleLoadScript"
-    @closed="dialogShow = false"
-  >
+    @closed="dialogShow = false">
     <bk-form ref="formRef" form-type="vertical" :model="{ selectedScript }">
       <bk-form-item :label="t('选择载入脚本')" required property="selectedScript">
         <bk-select
@@ -40,117 +38,115 @@
           :loading="listLoading"
           :clearable="false"
           :filterable="true"
-          :input-search="false"
-        >
+          :input-search="false">
           <bk-option
             v-for="option in list"
             v-overflow-title
             :key="option.id"
             :value="option.id"
-            :label="option.name"
-          ></bk-option>
+            :label="option.name"></bk-option>
         </bk-select>
       </bk-form-item>
     </bk-form>
   </bk-dialog>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { Plus } from 'bkui-vue/lib/icon';
-import { storeToRefs } from 'pinia';
-import useGlobalStore from '../../../../store/global';
-import { IScriptVersionListItem, IScriptMapItem } from '../../../../../types/script';
-import { getScriptVersionList } from '../../../../api/script';
+  import { ref } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { Plus } from 'bkui-vue/lib/icon';
+  import { storeToRefs } from 'pinia';
+  import useGlobalStore from '../../../../store/global';
+  import { IScriptVersionListItem, IScriptMapItem } from '../../../../../types/script';
+  import { getScriptVersionList } from '../../../../api/script';
 
-const { spaceId } = storeToRefs(useGlobalStore());
-const { t } = useI18n();
+  const { spaceId } = storeToRefs(useGlobalStore());
+  const { t } = useI18n();
 
-const props = withDefaults(
-  defineProps<{
-    disabled: boolean;
-    creatable?: boolean; // 是否编辑当前未上线版本
-    scriptId: number;
-  }>(),
-  {
-    creatable: false,
-  },
-);
+  const props = withDefaults(
+    defineProps<{
+      disabled: boolean;
+      creatable?: boolean; // 是否编辑当前未上线版本
+      scriptId: number;
+    }>(),
+    {
+      creatable: false,
+    },
+  );
 
-const emits = defineEmits(['create', 'edit']);
+  const emits = defineEmits(['create', 'edit']);
 
-const popoverShow = ref(false);
-const dialogShow = ref(false);
-const list = ref<IScriptMapItem[]>([]);
-const listLoading = ref(false);
-const selectedScript = ref<number | string>('');
-const formRef = ref();
+  const popoverShow = ref(false);
+  const dialogShow = ref(false);
+  const list = ref<IScriptMapItem[]>([]);
+  const listLoading = ref(false);
+  const selectedScript = ref<number | string>('');
+  const formRef = ref();
 
-const afterDialogShow = async (val: boolean) => {
-  if (val) {
-    selectedScript.value = '';
-    listLoading.value = true;
-    const res = await getScriptVersionList(spaceId.value, props.scriptId, { start: 0, all: true });
-    list.value = res.details.map((item: IScriptVersionListItem) => {
-      const { id, spec } = item.hook_revision;
-      const name = spec.memo ? `${spec.name}(${spec.memo})` : spec.name;
-      return { id, name, content: spec.content };
-    });
-    listLoading.value = false;
-    if (list.value.length > 0) {
-      selectedScript.value = list.value[0].id;
+  const afterDialogShow = async (val: boolean) => {
+    if (val) {
+      selectedScript.value = '';
+      listLoading.value = true;
+      const res = await getScriptVersionList(spaceId.value, props.scriptId, { start: 0, all: true });
+      list.value = res.details.map((item: IScriptVersionListItem) => {
+        const { id, spec } = item.hook_revision;
+        const name = spec.memo ? `${spec.name}(${spec.memo})` : spec.name;
+        return { id, name, content: spec.content };
+      });
+      listLoading.value = false;
+      if (list.value.length > 0) {
+        selectedScript.value = list.value[0].id;
+      }
     }
-  }
-};
+  };
 
-const handleCreateClick = () => {
-  if (!props.creatable) {
-    setTimeout(() => {
-      popoverShow.value = true;
-    }, 100);
-    return;
-  }
-  dialogShow.value = true;
-};
+  const handleCreateClick = () => {
+    if (!props.creatable) {
+      setTimeout(() => {
+        popoverShow.value = true;
+      }, 100);
+      return;
+    }
+    dialogShow.value = true;
+  };
 
-const handleEditClick = () => {
-  emits('edit');
-  closePopover();
-};
+  const handleEditClick = () => {
+    emits('edit');
+    closePopover();
+  };
 
-const handleLoadScript = async () => {
-  await formRef.value.validate();
-  const script = list.value.find(item => item.id === selectedScript.value);
-  if (script) {
-    dialogShow.value = false;
-    emits('create', script.content);
-  }
-};
+  const handleLoadScript = async () => {
+    await formRef.value.validate();
+    const script = list.value.find((item) => item.id === selectedScript.value);
+    if (script) {
+      dialogShow.value = false;
+      emits('create', script.content);
+    }
+  };
 
-const closePopover = () => {
-  popoverShow.value = false;
-};
+  const closePopover = () => {
+    popoverShow.value = false;
+  };
 </script>
 <style lang="scss" scoped>
-.button-icon {
-  font-size: 18px;
-}
-.tips {
-  margin: 0 0 16px;
-  line-height: 24px;
-  font-size: 16px;
-  font-weight: normal;
-  color: #313238;
-}
-.actions {
-  text-align: right;
-  .bk-button {
-    margin-left: 8px;
+  .button-icon {
+    font-size: 18px;
   }
-}
+  .tips {
+    margin: 0 0 16px;
+    line-height: 24px;
+    font-size: 16px;
+    font-weight: normal;
+    color: #313238;
+  }
+  .actions {
+    text-align: right;
+    .bk-button {
+      margin-left: 8px;
+    }
+  }
 </style>
 <style lang="scss">
-.create-tips-popover.bk-popover {
-  padding: 16px;
-}
+  .create-tips-popover.bk-popover {
+    padding: 16px;
+  }
 </style>

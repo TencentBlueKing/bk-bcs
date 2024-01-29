@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/repo"
 )
 
 // Result transfer AppMonitor to Sub CR
@@ -39,25 +40,22 @@ type IRender interface {
 	Render(appMonitor *monitorextensionv1.AppMonitor) (*Result, error)
 
 	// ReadScenario return related resource of scenario
-	ReadScenario(scenario string) (*Result, error)
+	ReadScenario(repoKey, scenario string) (*Result, error)
 }
 
 // MonitorRender render monitor
 type MonitorRender struct {
-	gitRepo *gitRepo
-
-	decoder runtime.Decoder
+	// gitRepo *gitRepo
+	repoManager *repo.Manager
+	decoder     runtime.Decoder
 }
 
 // NewMonitorRender return new monitor render
-func NewMonitorRender(scheme *runtime.Scheme, cli client.Client, opt *option.ControllerOption) (*MonitorRender, error) {
-	gr, err := newGitRepo(cli, opt)
-	if err != nil {
-		return nil, err
-	}
+func NewMonitorRender(scheme *runtime.Scheme, cli client.Client, repoManager *repo.Manager,
+	opt *option.ControllerOption) (*MonitorRender, error) {
 	return &MonitorRender{
-		gitRepo: gr,
-		decoder: serializer.NewCodecFactory(scheme).UniversalDeserializer(),
+		repoManager: repoManager,
+		decoder:     serializer.NewCodecFactory(scheme).UniversalDeserializer(),
 	}, nil
 }
 
@@ -67,7 +65,7 @@ func (r *MonitorRender) Render(appMonitor *monitorextensionv1.AppMonitor) (*Resu
 		return nil, fmt.Errorf("nil appMonitor")
 	}
 
-	rawResult, err := r.ReadScenario(appMonitor.Spec.Scenario)
+	rawResult, err := r.ReadScenario(repo.GenRepoKeyFromAppMonitor(appMonitor), appMonitor.Spec.Scenario)
 	if err != nil {
 		return nil, err
 	}

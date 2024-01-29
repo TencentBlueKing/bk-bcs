@@ -189,6 +189,7 @@ units:
     'false': 否
   cores: '{0} 核'
 metrics:
+  usage: '使用率 {0}'
   cpuUsage: CPU使用率
   diskUsage: 磁盘使用率
   memUsage: 内存使用率
@@ -2322,9 +2323,23 @@ logCollector:
   text: 日志采集
   tips:
     oldRuleHasNewRule: '已生成新规则: <br/> {0}<br/>此规则自动清理期限:<br/>{1}'
+    bizPrivateCluster: 业务独享集群
+    privateData: 敏感数据
+    greaterThan100GB: 大于 100GB
+    exceed14d: 超过 14 天
+    storageCluster:
+      text: '容器日志数据默认使用公共集群；有以下情况的建议使用{0}'
+      p1: '容器日志数据内容包含{0}，数据存储需做物理隔离'
+      p2: '容器日志数据量每天{0}'
+      p3: '容器日志数据存储有效期需{0}'
+    volumeOfClusterIsExcessivelyHigh: 此集群日志量过大，建议及时切换为业务独享集群
+    volumeOfPrivateClusterIsExcessivelyHigh: 此集群存储使用率已超过80%，建议扩容或清理集群存储空间
+    disabledEdit: 禁止修改
+    name: '数据名称关联索引和数据源名称，在采集项后{0}'
   placeholder:
     search: 规则名称/命名空间/更新人
     workloadName: '请输入应用名称, 支持正则表达式'
+    multiLabel: '多个值用英文半角逗号(,)分割'
   validate:
     name: '仅支持英文, 数字和下划线, 且长度5~30字符'
     logPath: 仅支持绝对路径
@@ -2335,6 +2350,7 @@ logCollector:
     notEnable: 当前集群日志采集组件未启用
     notEnable1: 当前集群日志采集组件未启用，请联系集群管理员处理
     installFailed: 当前集群日志采集组件安装失败
+    canNotEditBkLogRule: 从日志平台创建的规则暂不支持编辑
     success:
       create: 创建任务提交成功
       update: 修改任务提交成功
@@ -2347,10 +2363,19 @@ logCollector:
     confirmEnable: '确定启用规则 {0}'
     confirmStop: '确定停用规则 {0}'
     confirmDelete: '确定删除规则 {0}'
+    confirmSwitchStorageCluster: 确定切换 ES 存储集群
     selectRange:
       text: 选择容器范围
       desc: 所有选择范围可相互叠加并作用，如果选择所有命名空间，至少添加一种范围
   label:
+    logType:
+      text: 日志类型
+      line: 行日志文件
+      multiline: 段日志文件
+    beginOfLineRegex: 行首正则
+    multilineMaxLineAndTimeout: '最多匹配 {0} 行, 最大耗时 {1} 秒'
+    displayName: 采集项名称
+    name: 数据名称
     newChartVersion: 最新版本号
     newChartDesc: 最新版本描述
     extraLabels: 附加日志标签
@@ -2391,9 +2416,11 @@ logCollector:
         index: '第 {0} 列'
       none: 不过滤
     addPodLabel: 是否自动添加 Pod 中的 labels
+    esStorages: ES 存储集群
   status:
     pending: 下发中
     failed: 下发失败
+    delete: 已删除
   action:
     enable: 启用
     stop: 停用
@@ -2408,6 +2435,7 @@ logCollector:
     queryFileLog: 查询文件日志
     queryStdLog: 查询标准输出日志
     addPodLabel: 自动添加 Pod 中的 labels
+    goBKLog: 去管理业务独享集群
     addRange:
       text: 添加范围
       label:
@@ -2448,7 +2476,7 @@ ca:
     button:
       createBandWidth: 新建带宽包
   tips:
-    requiredBandwidthPackage: ca.tips.requiredBandwidthPackage
+    requiredBandwidthPackage: 带宽包必填
 googleCloud:
   button:
     create: 新建凭证

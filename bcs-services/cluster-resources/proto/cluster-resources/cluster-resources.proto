@@ -3141,10 +3141,22 @@ message FetchMultiClusterResourceReq {
 	string name = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "name"
 	}];
-	uint32 limit = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string ip = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "ip"
+	}];
+	repeated string status = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "status"
+	}];
+	string sortBy = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "sortBy"
+	}, (validate.rules).string = {in : ["", "name", "namespace", "age"]}];
+	string order = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "desc"
+	}, (validate.rules).string = {in : ["", "asc", "desc"]}];
+	uint32 limit = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "limit"
 	}, (validate.rules).uint32 = {gte: 1, lte: 1000}];
-	uint32 offset = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	uint32 offset = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "offset"
 	}, (validate.rules).uint32 = {gte: 0}];
 }
@@ -3171,10 +3183,22 @@ message FetchMultiClusterCustomResourceReq {
 	string name = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "name"
 	}];
-	uint32 limit = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string ip = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "ip"
+	}];
+	repeated string status = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "status"
+	}];
+	string sortBy = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "sortBy"
+	}, (validate.rules).string = {in : ["", "name", "namespace", "age"]}];
+	string order = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "desc"
+	}, (validate.rules).string = {in : ["", "asc", "desc"]}];
+	uint32 limit = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "limit"
 	}, (validate.rules).uint32 = {gte: 1, lte: 1000}];
-	uint32 offset = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	uint32 offset = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "offset"
 	}, (validate.rules).uint32 = {gte: 0}];
 }

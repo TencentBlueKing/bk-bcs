@@ -18,7 +18,6 @@ import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs
 func fetchMockProjectInfo(projectID string) (*Project, error) {
 	return &Project{
 		ID:   projectID,
-		Name: "blueking-proj",
 		Code: envs.TestProjectCode,
 	}, nil
 }

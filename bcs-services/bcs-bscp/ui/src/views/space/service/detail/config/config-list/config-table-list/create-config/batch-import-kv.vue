@@ -7,8 +7,7 @@
     height="720"
     ext-cls="variable-import-dialog"
     :esc-close="false"
-    @closed="handleClose"
-  >
+    @closed="handleClose">
     <bk-form>
       <bk-form-item :label="t('导入方式')">
         <bk-radio-group v-model="importType">
@@ -24,8 +23,7 @@
           class="file-uploader"
           :multiple="false"
           :before-upload="handleSelectFile"
-          :accept="'.json,.yaml,.yml'"
-        >
+          :accept="'.json,.yaml,.yml'">
           <template #tip>
             <div class="upload-tips">
               <span>{{ t('支持 JSON、YAML 等类型文件，后台会自动检测文件类型，配置项格式请参照') }}</span>
@@ -39,7 +37,7 @@
             <TextFill class="file-icon" />
             <div class="name" :title="selectedFile.name">{{ selectedFile.name }}</div>
           </div>
-          <div  v-if="!isFileUploadSuccess" class="file-right">
+          <div v-if="!isFileUploadSuccess" class="file-right">
             <span class="error-msg">{{ t('解析失败，配置项格式不正确') }}</span>
             <span class="del-icon" @click="selectedFile = undefined">
               <Del />
@@ -49,194 +47,193 @@
       </bk-form-item>
     </bk-form>
     <template #footer>
-      <bk-button
-        :loading="loading"
-        :disabled="!confirmBtnPerm"
-        theme="primary"
-        style="margin-right: 8px"
-        @click="handleConfirm"
-        >{{ t('导入') }}</bk-button
-      >
+      <bk-button theme="primary" style="margin-right: 8px" :disabled="!confirmBtnPerm" @click="handleConfirm">
+        {{ t('导入') }}
+      </bk-button>
       <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
     </template>
   </bk-dialog>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, computed, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { Done, TextFill, Del } from 'bkui-vue/lib/icon';
-import KvContentEditor from '../../../components/kv-import-editor.vue';
-import { batchImportKvFile } from '../../../../../../../../api/config';
-import { Message } from 'bkui-vue';
-import createSamplePkg from '../../../../../../../../utils/sample-file-pkg';
+  import { ref, watch, computed, onMounted } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { Done, TextFill, Del } from 'bkui-vue/lib/icon';
+  import KvContentEditor from '../../../components/kv-import-editor.vue';
+  import { batchImportKvFile } from '../../../../../../../../api/config';
+  import { Message } from 'bkui-vue';
+  import createSamplePkg from '../../../../../../../../utils/sample-file-pkg';
 
-const { t } = useI18n();
-const props = defineProps<{
-  show: boolean;
-  bkBizId: string;
-  appId: number;
-}>();
-const emits = defineEmits(['update:show', 'confirm']);
+  const { t } = useI18n();
+  const props = defineProps<{
+    show: boolean;
+    bkBizId: string;
+    appId: number;
+  }>();
+  const emits = defineEmits(['update:show', 'confirm']);
 
-const editorRef = ref();
-const isFormChange = ref(false);
-const importType = ref('text');
-const textConfirmBtnPerm = ref(false);
-const selectedFile = ref<File>();
-const isFileUploadSuccess = ref(true);
-const loading = ref(false);
-const downloadHref = ref('');
-watch(
-  () => props.show,
-  () => {
-    isFormChange.value = false;
-  },
-);
+  const editorRef = ref();
+  const isFormChange = ref(false);
+  const importType = ref('text');
+  const textConfirmBtnPerm = ref(false);
+  const selectedFile = ref<File>();
+  const isFileUploadSuccess = ref(true);
+  const loading = ref(false);
+  const downloadHref = ref('');
+  watch(
+    () => props.show,
+    () => {
+      isFormChange.value = false;
+    },
+  );
 
-onMounted(async () => {
-  downloadHref.value = await createSamplePkg() as string;
-});
+  onMounted(async () => {
+    downloadHref.value = (await createSamplePkg()) as string;
+  });
 
-const confirmBtnPerm = computed(() => {
-  if (importType.value === 'text') return textConfirmBtnPerm.value;
-  return !!selectedFile.value && isFileUploadSuccess.value;
-});
+  const confirmBtnPerm = computed(() => {
+    if (importType.value === 'text') return textConfirmBtnPerm.value;
+    return !!selectedFile.value && isFileUploadSuccess.value;
+  });
 
-const handleClose = () => {
-  selectedFile.value = undefined;
-  isFileUploadSuccess.value = true;
-  emits('update:show', false);
-};
+  const handleClose = () => {
+    selectedFile.value = undefined;
+    isFileUploadSuccess.value = true;
+    emits('update:show', false);
+  };
 
-const handleConfirm = async () => {
-  loading.value = true;
-  if (importType.value === 'file') {
-    try {
-      await batchImportKvFile(props.bkBizId, props.appId, selectedFile.value);
-      Message({
-        theme: 'success',
-        message: t('文件导入成功'),
-      });
-    } catch (error) {
-      console.error(error);
-      isFileUploadSuccess.value = false;
-      return;
-    } finally {
-      loading.value = false;
+  const handleConfirm = async () => {
+    loading.value = true;
+    if (importType.value === 'file') {
+      try {
+        await batchImportKvFile(props.bkBizId, props.appId, selectedFile.value);
+        Message({
+          theme: 'success',
+          message: t('文件导入成功'),
+        });
+      } catch (error) {
+        console.error(error);
+        isFileUploadSuccess.value = false;
+        return;
+      } finally {
+        loading.value = false;
+      }
+    } else {
+      try {
+        await editorRef.value.handleImport();
+        Message({
+          theme: 'success',
+          message: t('文本导入成功'),
+        });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        loading.value = false;
+      }
     }
-  } else {
-    try {
-      await editorRef.value.handleImport();
-      Message({
-        theme: 'success',
-        message: t('文本导入成功'),
-      });
-    } catch (error) {
-      console.error(error);
-    } finally {
-      loading.value = false;
-    }
-  }
-  emits('update:show', false);
-  emits('confirm');
-};
+    emits('update:show', false);
+    emits('confirm');
+  };
 
-const handleSelectFile = (file: File) => {
-  // upload组件只做展示 返回false取消默认上传行为
-  selectedFile.value = file;
-  isFileUploadSuccess.value = true;
-  return false;
-};
+  const handleSelectFile = (file: File) => {
+    // upload组件只做展示 返回false取消默认上传行为
+    selectedFile.value = file;
+    isFileUploadSuccess.value = true;
+    return false;
+  };
 </script>
 
 <style scoped lang="scss">
-.tips {
-  font-size: 12px;
-  color: #979ba5;
-}
-.upload-tips {
-  font-size: 12px;
-  color: #63656e;
-  .sample {
-    margin-left: 2px;
-    color: #3a84ff;
-    cursor: pointer;
-  }
-}
-.file-uploader {
-  :deep(.bk-upload-list__item) {
-    display: none;
-  }
-}
-.file-wrapper {
-  display: flex;
-  width: 492px;
-  justify-content: space-between;
-  color: #979ba5;
-  font-size: 12px;
-  .file-left {
-    display: flex;
-    align-items: center;
-
-    .success-icon {
-      font-size: 20px;
-      color: #2dcb56;
+    .tips {
+      font-size: 12px;
+      color: #979ba5;
     }
-    .file-icon {
-      margin: 0 6px 0 0;
-    }
-    .name {
-      max-width: 360px;
-      margin-right: 4px;
+    .upload-tips {
+      font-size: 12px;
       color: #63656e;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      cursor: pointer;
-    }
-  }
-  .file-right {
-    display: flex;
-    align-items: center;
-    .error-msg {
-      color: #ff5656;
-      margin-right: 10px;
-    }
-    .del-icon {
-      font-size: 13px;
-      color: #63656E;
-      cursor: pointer;
-      vertical-align: middle;
-      &:hover {
+      .sample {
+        margin-left: 2px;
         color: #3a84ff;
+        cursor: pointer;
       }
     }
-    &:hover .del-icon {
-      display: block;
+  <<<<<<< HEAD
+  }
+  .file-uploader {
+    :deep(.bk-upload-list__item) {
+      display: none;
     }
   }
-}
-.error {
-  position: relative;
-  background-color: #fff;
-  border-bottom: 2px solid #f0f1f5;
-  &::before {
-    position: absolute;
-    display: block;
-    content: '';
-    width: 156px;
-    height: 2px;
-    bottom: -2px;
-    background-color: #ff5656;
+  .file-wrapper {
+    display: flex;
+    width: 492px;
+    justify-content: space-between;
+    color: #979ba5;
+    font-size: 12px;
+    .file-left {
+      display: flex;
+      align-items: center;
+
+      .success-icon {
+        font-size: 20px;
+        color: #2dcb56;
+      }
+      .file-icon {
+        margin: 0 6px 0 0;
+      }
+      .name {
+        max-width: 360px;
+        margin-right: 4px;
+        color: #63656e;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        cursor: pointer;
+      }
+    }
+    .file-right {
+      display: flex;
+      align-items: center;
+      .error-msg {
+        color: #ff5656;
+        margin-right: 10px;
+      }
+      .del-icon {
+        font-size: 13px;
+        color: #63656E;
+        cursor: pointer;
+        vertical-align: middle;
+        &:hover {
+          color: #3a84ff;
+        }
+      }
+      &:hover .del-icon {
+        display: block;
+      }
+    }
   }
-}
+  .error {
+    position: relative;
+    background-color: #fff;
+    border-bottom: 2px solid #f0f1f5;
+    &::before {
+      position: absolute;
+      display: block;
+      content: '';
+      width: 156px;
+      height: 2px;
+      bottom: -2px;
+      background-color: #ff5656;
+    }
+  }
+  =======
+  >>>>>>> e811fe496ff96ae64e39c6dab32f538a28ea5a38
 </style>
 
 <style lang="scss">
-.variable-import-dialog {
-  .bk-modal-content {
-    overflow: hidden !important;
+  .variable-import-dialog {
+    .bk-modal-content {
+      overflow: hidden !important;
+    }
   }
-}
 </style>

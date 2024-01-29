@@ -145,6 +145,10 @@ func CheckInstanceStateTask(taskID string, stepName string) error {
 
 	// handle task nodes
 	handleTaskData(state, failedIds)
+	if len(failedIds) > 0 {
+		state.PartFailure = true
+		state.Message = fmt.Sprintf("node[%s] trans vpc failed", strings.Join(failedIds, ","))
+	}
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -454,8 +458,13 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 		insInfos, reason, _ := business.GetFailedNodesReason(ctx, dependInfo, addFailureNodes)
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(addFailureNodes, ",")
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeReasonKey.String()] = reason
-		_ = updateFailedNodeStatusByNodeID(insInfos, common.StatusAddNodesFailed)
+
+		state.PartFailure = true
+		state.Message = reason
+		blog.Errorf("CheckAddNodesStatusTask[%s] failedNodes[%+v] reason[%s]", taskID, insInfos, reason)
+		_ = updateFailedNodeStatusByNodeID(ctx, insInfos, common.StatusAddNodesFailed)
 	}
+
 	if len(addSuccessNodes) == 0 {
 		blog.Errorf("CheckAddNodesStatusTask[%s] AddSuccessNodes empty", taskID)
 		retErr := fmt.Errorf("上架节点超时/失败, 请联系管理员")
@@ -465,7 +474,7 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 
 	nodeIPs := cloudprovider.GetInstanceIPsByID(ctx, addSuccessNodes)
 	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(addSuccessNodes, ",")
-	// state.Task.NodeIPList = nodeIPs
+	state.Task.NodeIPList = nodeIPs
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(nodeIPs, ",")
 	blog.Infof("CheckAddNodesStatusTask[%s] successNodeIds[%v] successNodeIps[%v]",

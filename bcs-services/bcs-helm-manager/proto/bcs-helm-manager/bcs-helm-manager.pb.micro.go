@@ -205,6 +205,12 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "HelmManager.GetReleaseDetailExtend",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/expend"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "HelmManager.GetReleasePods",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods"},
 			Method:  []string{"GET"},
@@ -252,6 +258,7 @@ type HelmManagerService interface {
 	GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, opts ...client.CallOption) (*GetReleaseHistoryResp, error)
 	GetReleaseManifest(ctx context.Context, in *GetReleaseManifestReq, opts ...client.CallOption) (*GetReleaseManifestResp, error)
 	GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, opts ...client.CallOption) (*CommonResp, error)
 	GetReleasePods(ctx context.Context, in *GetReleasePodsReq, opts ...client.CallOption) (*CommonListResp, error)
 	ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, opts ...client.CallOption) (*ImportClusterReleaseResp, error)
 }
@@ -518,6 +525,16 @@ func (c *helmManagerService) GetReleaseStatus(ctx context.Context, in *GetReleas
 	return out, nil
 }
 
+func (c *helmManagerService) GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseDetailExtend", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *helmManagerService) GetReleasePods(ctx context.Context, in *GetReleasePodsReq, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.GetReleasePods", in)
 	out := new(CommonListResp)
@@ -570,6 +587,7 @@ type HelmManagerHandler interface {
 	GetReleaseHistory(context.Context, *GetReleaseHistoryReq, *GetReleaseHistoryResp) error
 	GetReleaseManifest(context.Context, *GetReleaseManifestReq, *GetReleaseManifestResp) error
 	GetReleaseStatus(context.Context, *GetReleaseStatusReq, *CommonListResp) error
+	GetReleaseDetailExtend(context.Context, *GetReleaseDetailExtendReq, *CommonResp) error
 	GetReleasePods(context.Context, *GetReleasePodsReq, *CommonListResp) error
 	ImportClusterRelease(context.Context, *ImportClusterReleaseReq, *ImportClusterReleaseResp) error
 }
@@ -601,6 +619,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, out *GetReleaseHistoryResp) error
 		GetReleaseManifest(ctx context.Context, in *GetReleaseManifestReq, out *GetReleaseManifestResp) error
 		GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, out *CommonListResp) error
+		GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, out *CommonResp) error
 		GetReleasePods(ctx context.Context, in *GetReleasePodsReq, out *CommonListResp) error
 		ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, out *ImportClusterReleaseResp) error
 	}
@@ -771,6 +790,12 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.GetReleaseDetailExtend",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/expend"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.GetReleasePods",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods"},
 		Method:  []string{"GET"},
@@ -888,6 +913,10 @@ func (h *helmManagerHandler) GetReleaseManifest(ctx context.Context, in *GetRele
 
 func (h *helmManagerHandler) GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, out *CommonListResp) error {
 	return h.HelmManagerHandler.GetReleaseStatus(ctx, in, out)
+}
+
+func (h *helmManagerHandler) GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, out *CommonResp) error {
+	return h.HelmManagerHandler.GetReleaseDetailExtend(ctx, in, out)
 }
 
 func (h *helmManagerHandler) GetReleasePods(ctx context.Context, in *GetReleasePodsReq, out *CommonListResp) error {

@@ -550,7 +550,7 @@
           </bcs-table>
         </bk-form-item>
         <bk-form-item :label="$t('dashboard.workload.container.dataDir')">
-          <bcs-input :disabled="isEdit" v-model="nodePoolConfig.nodeTemplate.dockerGraphPath"></bcs-input>
+          <bcs-input disabled v-model="nodePoolConfig.nodeTemplate.dockerGraphPath"></bcs-input>
         </bk-form-item>
         <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')">
           <bk-radio-group v-model="clusterAdvanceSettings.containerRuntime">

@@ -72,6 +72,10 @@ const (
 	TaskStatusRunning = "RUNNING"
 	// TaskStatusSuccess task success
 	TaskStatusSuccess = "SUCCESS"
+	// TaskStatusSkip task skip
+	TaskStatusSkip = "SKIP"
+	// TaskStatusPartFailure task part failure
+	TaskStatusPartFailure = "PART_FAILURE"
 	// TaskStatusFailure task failed
 	TaskStatusFailure = "FAILURE"
 	// TaskStatusTimeout task run timeout
@@ -194,6 +198,13 @@ type ImportClusterOption struct {
 	Operator  string
 }
 
+// GetZoneListOption get zone list option
+type GetZoneListOption struct {
+	CommonOption
+	VpcId string
+	State string
+}
+
 // DeleteMode xxx
 type DeleteMode string
 
@@ -222,6 +233,8 @@ type DeleteClusterOption struct {
 	Cloud *proto.Cloud
 	// Cluster used for cloudprovider
 	Cluster *proto.Cluster
+	// LatsClusterStatus last cluster status
+	LatsClusterStatus string
 }
 
 // DeleteVirtualClusterOption delete virtual cluster option

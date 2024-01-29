@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "vite --force",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "npx prettier ./ --write",
+    "lint": "npx eslint \"./src/**/*.{js,vue,ts}\""
   },
   "dependencies": {
+    "@blueking/notice-component": "^2.0.1",
     "@types/js-cookie": "^3.0.2",
     "@types/lodash.clonedeep": "^4.5.7",
     "axios": "^0.27.2",
@@ -32,8 +35,8 @@
     "@babel/eslint-parser": "^7.22.15",
     "@blueking/eslint-config": "^1.0.6",
     "@types/axios": "^0.14.0",
-    "@typescript-eslint/eslint-plugin": "^6.7.3",
-    "@typescript-eslint/parser": "^6.7.3",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
     "@vitejs/plugin-basic-ssl": "^1.0.1",
     "@vitejs/plugin-vue": "^3.0.3",
     "eslint": "^8.23.0",
@@ -42,6 +45,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-vue": "^9.4.0",
     "prettier": "^3.0.3",
+    "rollup-plugin-visualizer": "^5.12.0",
     "typescript": "^4.6.4",
     "vite": "^3.0.7",
     "vite-plugin-compression": "^0.5.1",

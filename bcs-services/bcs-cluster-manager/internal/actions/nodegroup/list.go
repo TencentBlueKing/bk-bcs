@@ -23,6 +23,7 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -328,6 +329,11 @@ func (la *ListNodesV2Action) listNodesInGroup() error {
 }
 
 func (la *ListNodesV2Action) appendNodeInfo() {
+	connect := autils.CheckClusterConnection(la.k8sOp, la.cluster.ClusterID)
+	if !connect {
+		return
+	}
+
 	k8sNodes, err := la.k8sOp.ListClusterNodes(la.ctx, la.group.ClusterID)
 	if err != nil {
 		blog.Warnf("ListClusterNodes %s failed, %s", la.group.ClusterID, err.Error())

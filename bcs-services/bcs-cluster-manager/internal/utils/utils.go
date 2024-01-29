@@ -519,3 +519,14 @@ func IsMasterNode(labels map[string]string) bool {
 
 	return false
 }
+
+// ExistRunningNodes check exist running nodes
+func ExistRunningNodes(nodes []*proto.ClusterNode) bool {
+	for i := range nodes {
+		if nodes[i].GetStatus() == icommon.StatusRunning {
+			return true
+		}
+	}
+
+	return false
+}

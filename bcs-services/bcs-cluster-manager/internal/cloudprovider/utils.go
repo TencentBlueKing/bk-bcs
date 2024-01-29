@@ -684,6 +684,8 @@ func GetClusterMasterIPList(cluster *proto.Cluster) []string {
 type StepOptions struct {
 	Retry      uint32
 	SkipFailed bool
+	Translate  string
+	AllowSkip  bool
 }
 
 // StepOption xxx
@@ -703,9 +705,28 @@ func WithStepSkipFailed(skip bool) StepOption {
 	}
 }
 
+// WithStepAllowSkip xxx
+func WithStepAllowSkip(allow bool) StepOption {
+	return func(opt *StepOptions) {
+		opt.AllowSkip = allow
+	}
+}
+
+// WithStepTranslate xxx
+func WithStepTranslate(translate string) StepOption {
+	return func(opt *StepOptions) {
+		opt.Translate = translate
+	}
+}
+
 // InitTaskStep init task step
 func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
-	defaultOptions := &StepOptions{Retry: 0, SkipFailed: false}
+	defaultOptions := &StepOptions{
+		Retry:      0,
+		SkipFailed: false,
+		Translate:  "",
+		AllowSkip:  false,
+	}
 	for _, opt := range opts {
 		opt(defaultOptions)
 	}
@@ -721,6 +742,8 @@ func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
 		Status:       TaskStatusNotStarted,
 		TaskMethod:   stepInfo.StepMethod,
 		TaskName:     stepInfo.StepName,
+		Translate:    defaultOptions.Translate,
+		AllowSkip:    defaultOptions.AllowSkip,
 	}
 }
 
@@ -795,6 +818,9 @@ func GetScaleOutModuleID(cls *proto.Cluster, asOption *proto.ClusterAutoScalingO
 	if asOption != nil && asOption.Module != nil && asOption.Module.ScaleOutModuleID != "" {
 		return asOption.Module.ScaleOutModuleID
 	}
+	if cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID() != "" {
+		return cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
+	}
 
 	return ""
 }
@@ -812,7 +838,8 @@ func GetScaleInModuleID(asOption *proto.ClusterAutoScalingOption, template *prot
 }
 
 // GetBusinessID get business id, default cluster business id
-func GetBusinessID(asOption *proto.ClusterAutoScalingOption, template *proto.NodeTemplate, scale bool) string {
+func GetBusinessID(cls *proto.Cluster, asOption *proto.ClusterAutoScalingOption,
+	template *proto.NodeTemplate, scale bool) string {
 	getBizID := func(scale bool, scaleOut, scaleIn string) string {
 		switch scale {
 		case true:
@@ -831,7 +858,7 @@ func GetBusinessID(asOption *proto.ClusterAutoScalingOption, template *proto.Nod
 		return getBizID(scale, asOption.Module.ScaleOutBizID, asOption.Module.ScaleInBizID)
 	}
 
-	return ""
+	return cls.GetBusinessID()
 }
 
 // GetBKCloudName get bk cloud name by id
@@ -840,7 +867,7 @@ func GetBKCloudName(bkCloudID int) string {
 	if cli == nil {
 		return ""
 	}
-	list, err := cli.CloudList()
+	list, err := cli.CloudList(context.Background())
 	if err != nil {
 		blog.Errorf("get cloud list failed, err %s", err.Error())
 		return ""
@@ -1161,11 +1188,29 @@ func GetTaintsByNg(group *proto.NodeGroup) []*proto.Taint {
 }
 
 // GetTransModuleInfo get trans moduleID
-func GetTransModuleInfo(asOption *proto.ClusterAutoScalingOption, group *proto.NodeGroup) string {
+func GetTransModuleInfo(cls *proto.Cluster, asOption *proto.ClusterAutoScalingOption, group *proto.NodeGroup) string {
 	if group != nil && group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
 		return group.NodeTemplate.Module.ScaleOutModuleID
 	}
 
-	return asOption.GetModule().GetScaleOutModuleID()
+	if asOption != nil && asOption.GetModule() != nil && asOption.GetModule().GetScaleInModuleID() != "" {
+		return asOption.GetModule().GetScaleOutModuleID()
+	}
+
+	return cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
+}
+
+// UpdateClusterErrMessage update cluster failed message
+func UpdateClusterErrMessage(clusterId string, message string) error {
+	cluster, errLocal := GetClusterByID(clusterId)
+	if errLocal == nil {
+		// record cluster connect failed reason
+		cluster.Message = message
+		_ = UpdateCluster(cluster)
+
+		return nil
+	}
+
+	return errLocal
 }

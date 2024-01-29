@@ -35,7 +35,7 @@ const (
 	// ClusterInfoCacheKeyPrefix 集群信息缓存键前缀
 	ClusterInfoCacheKeyPrefix = "cluster_manager_cluster_info"
 	// CacheExpireTime 缓存过期时间，单位：min
-	CacheExpireTime = 20
+	CacheExpireTime = 5
 	// PurgeExpiredCacheTime 清理过期缓存时间，单位：min
 	PurgeExpiredCacheTime = 60
 )

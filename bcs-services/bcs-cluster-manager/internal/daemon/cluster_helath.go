@@ -25,14 +25,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
-const (
-	qcloudProvider = "tencentCloud"
-)
-
 func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
-	condCluster := operator.NewLeafCondition(operator.Eq, operator.M{
-		"provider": qcloudProvider,
-		"status":   common.StatusRunning,
+	condCluster := operator.NewLeafCondition(operator.In, operator.M{
+		// common.StatusConnectClusterFailed
+		"status": []string{common.StatusRunning},
 	})
 	clusterList, err := d.model.ListCluster(d.ctx, condCluster, &storeopt.ListOption{All: true})
 	if err != nil {
@@ -56,13 +52,28 @@ func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
 			}
 			_, err = kubeCli.Discovery().ServerVersion()
 			if err != nil {
+				// _ = d.updateClusterStatus(cls.ClusterID, common.StatusConnectClusterFailed)
 				metrics.ReportCloudClusterHealthStatus(cls.Provider, cls.ClusterID, 0)
 				error <- err
 				return
 			}
+			// _ = d.updateClusterStatus(cls.ClusterID, common.StatusRunning)
 			metrics.ReportCloudClusterHealthStatus(cls.Provider, cls.ClusterID, 1)
 		}(clusterList[i])
 	}
 
 	concurency.Wait()
+}
+
+func (d *Daemon) updateClusterStatus(clusterId, status string) error {
+	cluster, err := d.model.GetCluster(d.ctx, clusterId)
+	if err != nil {
+		return err
+	}
+	if cluster.Status == status {
+		return nil
+	}
+	cluster.Status = status
+
+	return d.model.UpdateCluster(d.ctx, cluster)
 }

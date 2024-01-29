@@ -73,7 +73,7 @@ class VariableReplace {
   }
 
   public highlightVariables() {
-    const configs = this.replacedList.map(variable => ({
+    const configs = this.replacedList.map((variable) => ({
       range: variable.range,
       options: {
         inlineClassName: 'template-variable-item',
@@ -90,8 +90,9 @@ class VariableReplace {
     VariableReplace.hoverProvider = monaco.languages.registerHoverProvider('*', {
       provideHover(model, position) {
         const { lineNumber, column } = position;
-        const variable = self.replacedList.find(v => v.range.startLineNumber === lineNumber
-          && v.range.startColumn <= column && column <= v.range.endColumn);
+        const variable = self.replacedList.find(
+          (v) => v.range.startLineNumber === lineNumber && v.range.startColumn <= column && column <= v.range.endColumn,
+        );
         if (variable) {
           return {
             range: variable.range,

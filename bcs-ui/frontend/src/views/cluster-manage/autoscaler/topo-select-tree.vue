@@ -40,6 +40,7 @@ import TopoSelect from 'bk-magic-vue/lib/select';
 import { defineComponent, onMounted, ref } from 'vue';
 
 import { ccTopology } from '@/api/base';
+import { useProject } from '@/composables/use-app';
 import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 
 export default defineComponent({
@@ -77,10 +78,12 @@ export default defineComponent({
           path,
         };
       });
+    const { curProject } = useProject();
     const handleGetTopoData = async () => {
       topoLoading.value = true;
       const data = await ccTopology({
-        $clusterId: props.clusterId,
+        $clusterId: props.clusterId || '-',
+        bizID: curProject.value.businessID,
         filterInter: true,
       });
       topoData.value = addPathToTreeData([data], '');

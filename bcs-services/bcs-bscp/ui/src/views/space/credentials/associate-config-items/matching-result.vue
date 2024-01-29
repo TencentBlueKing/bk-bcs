@@ -12,28 +12,28 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+  import { ref } from 'vue';
 
-const pagination = ref({
-  count: 0,
-  current: 1,
-  limit: 10,
-});
+  const pagination = ref({
+    count: 0,
+    current: 1,
+    limit: 10,
+  });
 </script>
 <style lang="scss" scoped>
-.head-area {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  .title {
-    line-height: 16px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #63656e;
+  .head-area {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    .title {
+      line-height: 16px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #63656e;
+    }
+    .search-input {
+      width: 360px;
+    }
   }
-  .search-input {
-    width: 360px;
-  }
-}
 </style>
