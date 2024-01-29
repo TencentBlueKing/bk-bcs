@@ -66,6 +66,7 @@ func checkPortBindingCreate(cli client.Client, namespace, name string) {
 // checkPortBindingDelete check if related portbinding delete successfully
 func checkPortBindingDelete(cli client.Client, namespace, name string) {
 	blog.Infof("starts to check portbinding %s/%s clean", namespace, name)
+	metrics.CleanPortAllocateMetric(name, namespace)
 	timeout := time.After(time.Minute)
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()

@@ -1,5 +1,5 @@
 <template>
-  <div class="layout-top-bar">
+  <div :class="['layout-top-bar', { 'show-notice': showNotice }]">
     <section class="layout-top-section">
       <slot name="head"></slot>
     </section>
@@ -12,8 +12,13 @@
 </template>
 
 <script setup lang="ts">
-</script>
 
+import { storeToRefs } from 'pinia';
+import useGlobalStore from '../store/global';
+
+const { showNotice } = storeToRefs(useGlobalStore());
+
+</script>
 
 <style lang="scss" scoped>
 .layout-top-bar {
@@ -22,6 +27,9 @@
   background: #f5f7fa;
   height: calc(100vh - 52px);
   width: 100%;
+  &.show-notice {
+    height: calc(100vh - 92px);
+  }
 
   .layout-top-section {
     height: 52px;

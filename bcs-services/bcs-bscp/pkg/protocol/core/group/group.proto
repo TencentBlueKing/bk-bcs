@@ -5,7 +5,7 @@ import "pkg/protocol/core/base/base.proto";
 
 package pbgroup;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group;pbgroup";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group;pbgroup";
 
 // Group source resource reference: pkg/dal/table/group.go
 message Group {

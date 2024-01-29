@@ -1,8 +1,8 @@
 <template>
-  <bk-button @click="handleOpenSlider">查看变量</bk-button>
+  <bk-button @click="handleOpenSlider">{{ t('查看变量') }}</bk-button>
   <bk-sideslider
     width="960"
-    title="查看变量"
+    :title="t('查看变量')"
     :is-show="isSliderShow"
     @closed="close">
     <VariablesTable
@@ -12,16 +12,18 @@
       :editable="false"
       :show-cited="true" />
     <section class="action-btns">
-      <bk-button @click="close">关闭</bk-button>
+      <bk-button @click="close">{{t('关闭')}}</bk-button>
     </section>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import VariablesTable from './variables-table.vue';
 import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
 import { getReleasedAppVariables, getReleasedAppVariablesCitedDetail } from '../../../../../../../../api/variable';
 
+const { t } = useI18n();
 const props = defineProps<{
     bkBizId: string;
     appId: number;

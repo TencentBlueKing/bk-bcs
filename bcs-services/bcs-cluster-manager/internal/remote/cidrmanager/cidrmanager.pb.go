@@ -27,7 +27,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-//* cidr management tenc part
+// * cidr management tenc part
 type CreateSubnetInput struct {
 	CidrType             string   `protobuf:"bytes,1,opt,name=cidrType,proto3" json:"cidrType,omitempty"`
 	Region               string   `protobuf:"bytes,2,opt,name=region,proto3" json:"region,omitempty"`
@@ -665,7 +665,7 @@ func (m *ListSubnetsInput) GetVpcId() string {
 	return ""
 }
 
-//* cidr management bcs part
+// * cidr management bcs part
 type GetClusterCidrRequest struct {
 	Region               string   `protobuf:"bytes,1,opt,name=region,proto3" json:"region,omitempty"`
 	CidrType             string   `protobuf:"bytes,2,opt,name=cidrType,proto3" json:"cidrType,omitempty"`

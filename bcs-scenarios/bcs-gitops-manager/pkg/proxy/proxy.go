@@ -52,6 +52,9 @@ type GitOpsOptions struct {
 	SecretOption *SecretOption
 	TraceOption  *TraceOption
 	DB           dao.Interface
+
+	BCSStorageAPIUrl   string
+	BCSStorageAPIToken string
 }
 
 // TraceOption defines the config of bkmonitor APM

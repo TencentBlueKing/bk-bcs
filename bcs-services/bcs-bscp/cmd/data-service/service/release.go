@@ -21,19 +21,19 @@ import (
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
-	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
-	pbrelease "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
-	pbrkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
-	pbtv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	pbrelease "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
+	pbrkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
+	pbtv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateRelease create release.
@@ -703,6 +703,73 @@ func (s *Service) GetReleaseByName(ctx context.Context, req *pbds.GetReleaseByNa
 	return pbrelease.PbRelease(release), nil
 }
 
+// DeprecateRelease deprecate a release
+func (s *Service) DeprecateRelease(ctx context.Context, req *pbds.DeprecateReleaseReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	// check if release was published
+	rgs, err := s.dao.ReleasedGroup().ListAllByReleaseID(grpcKit, req.ReleaseId, req.BizId)
+	if err != nil {
+		return nil, err
+	}
+	if len(rgs) > 0 {
+		return nil, fmt.Errorf("release %d was published, can not deprecate", req.ReleaseId)
+	}
+	err = s.dao.Release().UpdateDeprecated(grpcKit, req.BizId, req.AppId, req.ReleaseId, true)
+	return new(pbbase.EmptyResp), err
+}
+
+// UnDeprecateRelease undeprecate a release
+func (s *Service) UnDeprecateRelease(ctx context.Context, req *pbds.UnDeprecateReleaseReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	err := s.dao.Release().UpdateDeprecated(grpcKit, req.BizId, req.AppId, req.ReleaseId, false)
+	return new(pbbase.EmptyResp), err
+}
+
+// DeleteRelease delete a release
+func (s *Service) DeleteRelease(ctx context.Context, req *pbds.DeleteReleaseReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	release, err := s.dao.Release().Get(grpcKit, req.BizId, req.AppId, req.ReleaseId)
+	if err != nil {
+		return nil, err
+	}
+	if !release.Spec.Deprecated {
+		return nil, fmt.Errorf("release %d can not delete, you should deprecate it first", req.ReleaseId)
+	}
+
+	// get app type
+	app, err := s.dao.App().Get(grpcKit, req.BizId, req.AppId)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := s.dao.GenQuery().Begin()
+
+	if err := s.deleteReleaseRelatedResources(grpcKit, tx, req.BizId, req.AppId, req.ReleaseId, app); err != nil {
+		logs.Errorf("delete release related resources failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	if err := s.dao.Release().DeleteWithTx(grpcKit, tx, req.BizId, req.AppId, req.ReleaseId); err != nil {
+		logs.Errorf("delete release failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	return new(pbbase.EmptyResp), nil
+}
+
 func (s *Service) queryPublishStatus(gcrs []*table.ReleasedGroup, releaseID uint32) (
 	string, []*table.ReleasedGroup) {
 	var includeDefault = false
@@ -771,7 +838,6 @@ func (s *Service) genCreateKv(kt *kit.Kit, bizID, appID uint32) ([]*pbkv.Kv, err
 		string(table.KvStateAdd),
 		string(table.KvStateRevise),
 		string(table.KvStateUnchange),
-		string(table.KvStateDelete),
 	}
 	details, err := s.dao.Kv().ListAllByAppID(kt, appID, bizID, kvState)
 	if err != nil {
@@ -853,5 +919,34 @@ func (s *Service) cleanUpKV(kt *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) e
 		return e
 	}
 
+	return nil
+}
+
+func (s *Service) deleteReleaseRelatedResources(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32,
+	app *table.App) error {
+	switch app.Spec.ConfigType {
+	case table.File:
+		if err := s.dao.ReleasedAppTemplate().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+		if err := s.dao.ReleasedAppTemplateVariable().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+		if err := s.dao.ReleasedHook().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+		if err := s.dao.ReleasedCI().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+	case table.KV:
+		if err := s.dao.ReleasedKv().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+	}
 	return nil
 }

@@ -18,8 +18,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/promclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // Handler metric handler
@@ -49,4 +51,13 @@ func HandlerFactory(ctx context.Context, clusterID string) (Handler, error) {
 		return NewBKMonitorHandler(cls.BKBizID, clusterID), nil
 	}
 	return NewBCSMonitorHandler(), nil
+}
+
+// GetMasterNodeMatch 按集群node节点正则匹配
+func GetMasterNodeMatch(ctx context.Context, clusterID string) (string, string, error) {
+	nodeList, nodeNameList, err := k8sclient.GetMasterNodeList(ctx, clusterID)
+	if err != nil {
+		return "", "", err
+	}
+	return utils.StringJoinWithRegex(nodeList, "|", ".*"), utils.StringJoinWithRegex(nodeNameList, "|", "$"), nil
 }

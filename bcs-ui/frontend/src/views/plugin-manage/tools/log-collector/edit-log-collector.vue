@@ -98,7 +98,7 @@
                 class="text-[12px]"
                 v-if="activeRow
                   && !activeRow.old
-                  && !['PENDING', 'RUNNING', 'TERMINATED'].includes(activeRow.status || '')"
+                  && !['PENDING', 'RUNNING', 'TERMINATED', 'DELETED'].includes(activeRow.status || '')"
                 @click="setStatusOfEditRule">
                 <span class="flex items-center">
                   <span class="text-[14px] relative top-[-2px]"><i class="bk-icon icon-edit-line"></i></span>

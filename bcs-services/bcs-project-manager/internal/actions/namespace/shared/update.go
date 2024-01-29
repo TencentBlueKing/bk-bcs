@@ -86,7 +86,7 @@ func (a *SharedNamespaceAction) UpdateNamespace(ctx context.Context,
 	itsmResp, err := itsm.SubmitUpdateNamespaceTicket(username,
 		req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
 		int(cpuLimits.Value()), int(memoryLimits.Value()/int64(math.Pow(2, 30))),
-		int(oldCPULimits.Value()), int(oldMemoryLimits.Value()))
+		int(oldCPULimits.Value()), int(oldMemoryLimits.Value()/int64(math.Pow(2, 30))))
 	if err != nil {
 		logging.Error("itsm create ticket failed, err: %s", err.Error())
 		return err

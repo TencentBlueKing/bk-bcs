@@ -64,7 +64,7 @@
           </bcs-select>
         </bk-form-item>
         <bk-form-item :label="$t('importGoogleCloud.label.desc')" property="description" error-display-type="normal">
-          <bcs-input type="textarea" v-model="formData.description"></bcs-input>
+          <bcs-input :maxlength="100" type="textarea" v-model="formData.description"></bcs-input>
         </bk-form-item>
         <bk-form-item>
           <bcs-badge
@@ -106,7 +106,7 @@ import $bkMessage from '@/common/bkmagic';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-import useCloud, { ICloudAccount } from '@/views/project-manage/cloudtoken/use-cloud';
+import useCloud, { ICloudAccount } from '@/views/cluster-manage/use-cloud';
 
 interface IGroup<T = any> {
   id: string

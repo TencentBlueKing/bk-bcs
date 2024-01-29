@@ -16,12 +16,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 )
 
 // CreateKv is used to create key-value data.
@@ -114,6 +114,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbcs.ListKvsReq) (*pbcs.List
 		KvType:     req.KvType,
 		Sort:       req.Sort,
 		Order:      req.Order,
+		TopIds:     req.TopIds,
 	}
 	if !req.All {
 		if req.Limit == 0 {
@@ -198,12 +199,13 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbcs.BatchUpsertKvsRe
 		Kvs:        kvs,
 		ReplaceAll: true,
 	}
-	if _, err := s.client.DS.BatchUpsertKvs(grpcKit.RpcCtx(), r); err != nil {
+	data, err := s.client.DS.BatchUpsertKvs(grpcKit.RpcCtx(), r)
+	if err != nil {
 		logs.Errorf("batch upsert kv failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return &pbcs.BatchUpsertKvsResp{}, nil
+	return &pbcs.BatchUpsertKvsResp{Ids: data.Ids}, nil
 }
 
 // UnDeleteKv reverses the deletion of a key-value pair by reverting the current kvType and value to the previous

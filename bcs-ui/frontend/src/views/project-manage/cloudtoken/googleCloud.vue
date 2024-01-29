@@ -216,8 +216,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 
-import useCloud, { ICloudAccount } from './use-cloud';
-
 import $bkMessage from '@/common/bkmagic';
 // import { exitFullscreen, fullScreen } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
@@ -227,6 +225,7 @@ import usePage from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';
 import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
+import useCloud, { ICloudAccount } from '@/views/cluster-manage/use-cloud';
 
 const {
   cloudAccounts,

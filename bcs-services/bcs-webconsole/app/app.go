@@ -51,7 +51,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/replay"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/perf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
@@ -230,7 +229,6 @@ func (c *WebConsoleManager) initHTTPService() *gin.Engine {
 	router.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
 	}))
-	router.Use(i18n.Localize())
 
 	// 注册模板和静态资源
 	router.SetHTMLTemplate(web.WebTemplate())

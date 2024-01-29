@@ -421,6 +421,8 @@ func (s *Server) initGitOpsProxy(router *mux.Router) error {
 			Endpoint: s.option.TraceConfig.Endpoint,
 			Token:    s.option.TraceConfig.Token,
 		},
+		BCSStorageAPIUrl:   s.option.APIGatewayForCluster,
+		BCSStorageAPIToken: s.option.APIGatewayToken,
 	}
 
 	s.gitops = argocd.NewGitOpsProxy(opt)

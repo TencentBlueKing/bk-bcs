@@ -16,13 +16,14 @@
 import { ref, watch } from 'vue';
 import { Search } from 'bkui-vue/lib/icon';
 import { debounce } from 'lodash';
+import { localT } from '../i18n';
 
 const props = withDefaults(defineProps<{
     modelValue: string;
     placeholder?: string;
     width?: number;
   }>(), {
-  placeholder: '请输入',
+  placeholder: localT('请输入'),
 });
 
 const emits = defineEmits(['update:modelValue', 'search']);

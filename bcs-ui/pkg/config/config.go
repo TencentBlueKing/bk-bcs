@@ -24,6 +24,7 @@ type Configuration struct {
 	Base         *BaseConf                    `yaml:"base_conf"`
 	BCS          *BCSConf                     `yaml:"bcs_conf"`
 	IAM          *IAMConf                     `yaml:"iam_conf"`
+	BKNotice     *BKNoticeConf                `yaml:"bk_notice"`
 	Web          *WebConf                     `yaml:"web"`
 	Tracing      *TracingConf                 `yaml:"tracing"`
 	FrontendConf *FrontendConf                `yaml:"frontend_conf"`

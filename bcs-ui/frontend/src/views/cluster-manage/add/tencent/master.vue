@@ -18,7 +18,7 @@
           {{ $t('bcs.cluster.selfDeployed') }}
         </bk-button>
       </div>
-      <div class="text-[12px]">
+      <div class="text-[12px] leading-[20px] mt-[4px]">
         <span
           v-if="masterConfig.manageType === 'MANAGED_CLUSTER'">
           {{ $t('cluster.create.label.manageType.managed.desc') }}
@@ -48,13 +48,13 @@
             @click="handleChangeClusterScale(item.level)">
             {{ item.level }}
           </bk-button>
+          <!-- 自动升配 -->
           <bk-checkbox disabled v-model="masterConfig.clusterBasicSettings.isAutoUpgradeClusterLevel" class="ml-[24px]">
             <span class="flex items-center">
-              <span class="text-[12px]">{{ $t('cluster.create.label.manageType.managed.automatic.text') }}</span>
               <span
-                class="ml5"
+                class="text-[12px] bcs-border-tips"
                 v-bk-tooltips="{ content: $t('cluster.create.label.manageType.managed.automatic.tips') }">
-                <i class="bcs-icon bcs-icon-question-circle"></i>
+                {{ $t('cluster.create.label.manageType.managed.automatic.text') }}
               </span>
             </span>
           </bk-checkbox>
@@ -73,43 +73,15 @@
         :desc="$t('tke.label.apiServerCLB.desc')"
         property="clusterAdvanceSettings.clusterConnectSetting.securityGroup"
         error-display-type="normal"
+        key="securityGroup"
         required>
-        <bk-radio-group v-model="masterConfig.clusterAdvanceSettings.clusterConnectSetting.isExtranet">
-          <div class="flex items-center mb-[8px] w-full max-w-[500px]">
-            <bk-radio :value="true">
-              {{ $t('tke.label.apiServerCLB.internet') }}
-            </bk-radio>
-            <div class="flex items-center flex-1 ml-[16px]">
-              <span
-                class="prefix"
-                v-bk-tooltips="$t('tke.label.securityGroup.desc')">
-                <span class="bcs-border-tips">{{ $t('tke.label.securityGroup.text') }}</span>
-              </span>
-              <bk-select
-                class="ml-[-1px] flex-1"
-                searchable
-                :loading="securityGroupLoading"
-                :disabled="!masterConfig.clusterAdvanceSettings.clusterConnectSetting.isExtranet"
-                v-model="masterConfig.clusterAdvanceSettings.clusterConnectSetting.securityGroup">
-                <bk-option
-                  v-for="item in securityGroups"
-                  :key="item.securityGroupID"
-                  :id="item.securityGroupID"
-                  :name="`${item.securityGroupName}(${item.securityGroupID})`">
-                </bk-option>
-                <div slot="extension">
-                  <SelectExtension
-                    :link-text="$t('tke.link.securityGroup')"
-                    link="https://console.cloud.tencent.com/vpc/security-group"
-                    @refresh="handleGetSecurityGroups" />
-                </div>
-              </bk-select>
-            </div>
-          </div>
-          <bk-radio :value="false">
-            {{ $t('tke.label.apiServerCLB.intranet') }}
-          </bk-radio>
-        </bk-radio-group>
+        <ApiServer
+          class="max-w-[600px]"
+          :value="masterConfig.clusterAdvanceSettings.clusterConnectSetting"
+          :region="region"
+          :cloud-account-i-d="cloudAccountID"
+          :cloud-i-d="cloudID"
+          @change="(v) => masterConfig.clusterAdvanceSettings.clusterConnectSetting = v" />
       </bk-form-item>
     </template>
     <!-- 独立集群 -->
@@ -120,7 +92,8 @@
         :label="$t('cluster.create.label.hostResource')"
         property="master"
         error-display-type="normal"
-        required>
+        required
+        ref="masterItemRef">
         <bk-radio-group class="flex items-center mb-[6px] h-[32px]" v-model="masterConfig.autoGenerateMasterNodes">
           <bk-radio :value="true">
             {{ $t('cluster.create.label.applyResource') }}
@@ -140,23 +113,17 @@
           v-model="masterConfig.master"
           class="max-w-[80%]"
           v-if="!masterConfig.autoGenerateMasterNodes"
-          @change="validate" />
+          @change="handleValidateMaster" />
       </bk-form-item>
       <!-- 申请主机资源 -->
       <template v-if="masterConfig.autoGenerateMasterNodes">
-        <bcs-divider></bcs-divider>
+        <bcs-divider class="!my-[24px]"></bcs-divider>
         <ApplyHostResource
           class="mt-[8px] mb-[20px]"
           :region="region"
           :cloud-account-i-d="cloudAccountID"
           :cloud-i-d="cloudID"
           :vpc-i-d="vpcID"
-          :os="os"
-          :region-list="regionList"
-          :vpc-list="vpcList"
-          :image-list-by-group="imageListByGroup"
-          :zone-list="zoneList"
-          :security-groups="securityGroups"
           :instances="instanceConfigList"
           :level="level"
           node-role="MASTER_ETCD"
@@ -165,8 +132,7 @@
           @instance-list-change="handleInstanceListChange"
           @common-config-change="handleCommonConfigChange"
           @level-change="handleLevelChange"
-          @delete-instance="handleDeleteInstance"
-          @refresh-security-groups="handleGetSecurityGroups" />
+          @delete-instance="handleDeleteInstance" />
       </template>
       <bk-form-item
         :label="$t('tke.label.masterModule.text')"
@@ -174,7 +140,10 @@
         property="clusterBasicSettings.module.masterModuleID"
         error-display-type="normal"
         required>
-        <TopoSelector v-model="masterConfig.clusterBasicSettings.module.masterModuleID" class="max-w-[500px]" />
+        <TopoSelector
+          v-model="masterConfig.clusterBasicSettings.module.masterModuleID"
+          :placeholder="$t('generic.placeholder.select')"
+          class="max-w-[600px]" />
       </bk-form-item>
       <bk-form-item
         :label="$t('tke.label.apiServerCLB.text')"
@@ -182,42 +151,13 @@
         property="clusterAdvanceSettings.clusterConnectSetting.securityGroup"
         error-display-type="normal"
         required>
-        <bk-radio-group v-model="masterConfig.clusterAdvanceSettings.clusterConnectSetting.isExtranet">
-          <div class="flex items-center mb-[8px] w-full max-w-[500px]">
-            <bk-radio :value="true">
-              {{ $t('tke.label.apiServerCLB.internet') }}
-            </bk-radio>
-            <div class="flex items-center flex-1 ml-[16px]">
-              <span
-                class="prefix"
-                v-bk-tooltips="$t('tke.label.securityGroup.desc')">
-                <span class="bcs-border-tips">{{ $t('tke.label.securityGroup.text') }}</span>
-              </span>
-              <bk-select
-                class="ml-[-1px] flex-1"
-                searchable
-                :clearable="false"
-                :loading="securityGroupLoading"
-                v-model="masterConfig.clusterAdvanceSettings.clusterConnectSetting.securityGroup">
-                <bk-option
-                  v-for="item in securityGroups"
-                  :key="item.securityGroupID"
-                  :id="item.securityGroupID"
-                  :name="`${item.securityGroupName}(${item.securityGroupID})`">
-                </bk-option>
-                <div slot="extension">
-                  <SelectExtension
-                    :link-text="$t('tke.link.securityGroup')"
-                    link="https://console.cloud.tencent.com/vpc/security-group"
-                    @refresh="handleGetSecurityGroups" />
-                </div>
-              </bk-select>
-            </div>
-          </div>
-          <bk-radio :value="false">
-            {{ $t('tke.label.apiServerCLB.intranet') }}
-          </bk-radio>
-        </bk-radio-group>
+        <ApiServer
+          class="max-w-[600px]"
+          :value="masterConfig.clusterAdvanceSettings.clusterConnectSetting"
+          :region="region"
+          :cloud-account-i-d="cloudAccountID"
+          :cloud-i-d="cloudID"
+          @change="(v) => masterConfig.clusterAdvanceSettings.clusterConnectSetting = v" />
       </bk-form-item>
       <!-- 用户名和密码 -->
       <bk-form-item
@@ -232,9 +172,13 @@
           :cloud-account-i-d="cloudAccountID"
           :cloud-i-d="cloudID"
           :value="masterConfig.nodeSettings.masterLogin"
+          init-data
+          @pass-blur="validateLogin('custom')"
+          @confirm-pass-blur="validateLogin('')"
+          @key-secret-blur="validateLogin('')"
           @change="handleLoginValueChange"
           @type-change="(v) => loginType = v"
-          @pass-change="(v) => confirmPassword = v" />
+          @pass-change="handleConfirmPasswordChange" />
       </bk-form-item>
     </template>
     <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] fixed bottom-0 left-0 w-full bcs-border-top">
@@ -251,14 +195,15 @@ import clusterScaleData from '../common/cluster-scale.json';
 import IpSelector from '../common/ip-selector.vue';
 
 import ApplyHostResource from './apply-host-resource.vue';
-import TopoSelector from './topo-selector.vue';
-import { ClusterDataInjectKey, ICloudRegion, IHostNode, IInstanceItem, IScale, ISecurityGroup, IZoneItem } from './types';
+import { ClusterDataInjectKey, IHostNode, IInstanceItem, IScale } from './types';
 
-import { cloudInstanceTypesByLevel, cloudSecurityGroups } from '@/api/modules/cluster-manager';
+import { cloudInstanceTypesByLevel } from '@/api/modules/cluster-manager';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import $i18n from '@/i18n/i18n-setup';
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
+import $store from '@/store';
+import ApiServer from '@/views/cluster-manage/add/form/api-server.vue';
 import LoginType from '@/views/cluster-manage/add/form/login-type.vue';
+import TopoSelector from '@/views/cluster-manage/autoscaler/topo-select-tree.vue';
 
 const props = defineProps({
   region: {
@@ -273,15 +218,7 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  environment: {
-    type: String,
-    default: '',
-  },
   provider: {
-    type: String,
-    default: '',
-  },
-  os: {
     type: String,
     default: '',
   },
@@ -293,28 +230,12 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     default: () => [],
   },
-  regionList: {
-    type: Array as PropType<ICloudRegion[]>,
-    default: () => [],
-  },
-  vpcList: {
-    type: Array as PropType<{
-      name: string
-      vpcId: string
-    }[]>,
-    default: () => [],
-  },
-  imageListByGroup: {
-    type: Object,
-    default: () => ({}),
-  },
-  zoneList: {
-    type: Array as PropType<IZoneItem[]>,
-    default: () => [],
-  },
 });
 
 const emits = defineEmits(['next', 'cancel', 'pre', 'resource-type', 'instances-change']);
+
+const regionList = computed(() => $store.state.cloudMetadata.regionList);
+
 const clusterData = inject(ClusterDataInjectKey);
 const subnetZoneList = computed(() => {
   if (!clusterData || !clusterData.value) return [];
@@ -363,8 +284,14 @@ const masterConfig = ref({
 // 登录方式
 const loginType = ref<'password'|'ssh'>('password');
 const confirmPassword = ref('');
+const validateLogin = (trigger = '') => {
+  formRef.value?.$refs?.loginTypeRef?.validate(trigger);
+};
 const handleLoginValueChange = (value) => {
   masterConfig.value.nodeSettings.masterLogin = value;
+};
+const handleConfirmPasswordChange = (v) => {
+  confirmPassword.value = v;
 };
 // watch([
 //   () => masterConfig.value.nodeSettings.masterLogin.initLoginPassword,
@@ -395,19 +322,29 @@ const masterConfigRules = computed(() => ({
       },
     },
   ],
-  master: [{
-    message: props.environment === 'debug'
-      ? $i18n.t('cluster.create.validate.masterNum35')
-      : $i18n.t('cluster.create.validate.masterNum135'),
-    trigger: 'custom',
-    validator: () => {
-      if (masterConfig.value.autoGenerateMasterNodes) {
-        return true;
-      }
-      const maxMasterNum = props.environment === 'debug' ? [1, 3, 5] : [3, 5];
-      return masterConfig.value.master.length && maxMasterNum.includes(masterConfig.value.master.length);
+  master: [
+    {
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'custom',
+      validator: () => {
+        if (masterConfig.value.autoGenerateMasterNodes) {
+          return true;
+        }
+        return !!masterConfig.value.master.length;
+      },
     },
-  }],
+    {
+      message: $i18n.t('cluster.create.validate.masterNum35'),
+      trigger: 'custom',
+      validator: () => {
+        if (masterConfig.value.autoGenerateMasterNodes) {
+          return true;
+        }
+        const maxMasterNum = [3, 5];
+        return masterConfig.value.master.length && maxMasterNum.includes(masterConfig.value.master.length);
+      },
+    },
+  ],
   'clusterBasicSettings.module.masterModuleID': [
     {
       required: true,
@@ -429,6 +366,27 @@ const masterConfigRules = computed(() => ({
     },
     {
       trigger: 'custom',
+      message: $i18n.t('cluster.ca.nodePool.create.validate.password'),
+      validator() {
+        if (loginType.value === 'password') {
+          const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^]{8,30}$/;
+          return regex.test(masterConfig.value.nodeSettings.masterLogin.initLoginPassword);
+        }
+        return true;
+      },
+    },
+    {
+      trigger: 'custom',
+      message: $i18n.t('tke.validate.passwordNotSame'),
+      validator() {
+        if (loginType.value === 'password' && confirmPassword.value) {
+          return masterConfig.value.nodeSettings.masterLogin.initLoginPassword === confirmPassword.value;
+        }
+        return true;
+      },
+    },
+    {
+      trigger: 'blur',
       message: $i18n.t('tke.validate.passwordNotSame'),
       validator() {
         if (loginType.value === 'password') {
@@ -536,6 +494,9 @@ const handleChangeManageType = (type: 'INDEPENDENT_CLUSTER' | 'MANAGED_CLUSTER')
   masterConfig.value.master = [];
   // validate();
 };
+const handleValidateMaster = () => {
+  formRef.value?.$refs?.masterItemRef?.validate();
+};
 // 托管集群
 const clusterScale = ref<IScale[]>(clusterScaleData.data);
 const curClusterScale = computed<IScale>(() => clusterScale.value
@@ -545,27 +506,6 @@ const curClusterScale = computed<IScale>(() => clusterScale.value
 const handleChangeClusterScale = (scale) => {
   masterConfig.value.clusterBasicSettings.clusterLevel = scale;
 };
-
-// 安全组
-const securityGroupLoading = ref(false);
-const securityGroups = ref<Array<ISecurityGroup>>([]);
-const handleGetSecurityGroups = async () => {
-  if (!props.region || !props.cloudAccountID) return;
-  securityGroupLoading.value = true;
-  securityGroups.value = await cloudSecurityGroups({
-    $cloudId: props.cloudID,
-    accountID: props.cloudAccountID,
-    region: props.region,
-  }).catch(() => []);
-  securityGroupLoading.value = false;
-};
-
-watch([
-  () => props.region,
-  () => props.cloudAccountID,
-], () => {
-  handleGetSecurityGroups();
-});
 
 watch([
   () => props.region,
@@ -590,13 +530,26 @@ const preStep = () => {
 // 下一步
 const nextStep = async () => {
   const result = await validate();
-  result && emits('next', {
-    ...masterConfig.value,
-    master: (masterConfig.value.master as IHostNode[]).map(item => item.ip),
-  });
+  if (result) {
+    emits('next', {
+      ...masterConfig.value,
+      master: (masterConfig.value.master as IHostNode[]).map(item => item.ip),
+    });
+  } else {
+    // 自动滚动到第一个错误的位置
+    const errDom = document.getElementsByClassName('form-error-tip');
+    errDom[0]?.scrollIntoView({
+      block: 'center',
+      behavior: 'smooth',
+    });
+  }
 };
 // 取消
 const handleCancel = () => {
   emits('cancel');
 };
+
+defineExpose({
+  validate,
+});
 </script>

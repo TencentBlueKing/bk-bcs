@@ -3,16 +3,16 @@
     <div class="page-header">
       <ArrowsLeft class="arrow-icon" @click="goToTemplateListPage" />
       <div v-if="templateDetail" class="title-name">
-        版本管理 - {{ templateDetail.spec.name }}
+        {{t('版本管理')}} - {{ templateDetail.spec.name }}
         <span class="path">{{ templateDetail.spec.path }}</span>
       </div>
     </div>
     <div class="operation-area">
       <bk-button theme="primary" @click="openSelectVersionDialog">
         <Plus class="button-icon" />
-        新建版本
+        {{t('新建版本')}}
       </bk-button>
-      <SearchInput v-model="searchStr" placeholder="版本号/版本说明/更新人" :width="320" @search="refreshList()" />
+      <SearchInput v-model="searchStr" :placeholder="t('版本号/版本说明/更新人')" :width="320" @search="refreshList()" />
     </div>
     <div class="version-content-area">
       <VersionFullTable
@@ -42,7 +42,7 @@
       />
     </div>
     <bk-dialog
-      title="新建版本"
+      :title="t('新建版本')"
       width="480"
       dialog-type="operation"
       :is-show="selectVersionDialog.open"
@@ -51,7 +51,7 @@
       @closed="selectVersionDialog.open = false"
     >
       <bk-form ref="selectVersionFormRef" form-type="vertical" :model="{ id: selectVersionDialog.id }">
-        <bk-form-item label="选择载入版本" required property="id">
+        <bk-form-item :label="t('选择载入版本')" required property="id">
           <bk-select v-model="selectVersionDialog.id" :clearable="false" :filterable="true" :input-search="false">
             <bk-option v-for="item in allVersionList" v-overflow-title :key="item.id" :id="item.id" :label="item.name">
             </bk-option>
@@ -63,6 +63,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowsLeft, Plus } from 'bkui-vue/lib/icon';
@@ -79,6 +80,7 @@ import SearchInput from '../../../../components/search-input.vue';
 import VersionFullTable from './version-full-table.vue';
 import VersionDetailTable from './version-detail/version-detail-table.vue';
 
+const { t } = useI18n();
 const getRouteId = (id: string) => {
   if (id && typeof Number(id) === 'number') {
     return Number(id);

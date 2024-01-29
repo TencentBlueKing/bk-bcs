@@ -14,9 +14,9 @@
 package client
 
 import (
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/client/api"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/client/cache"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/client/feed"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/client/api"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/client/cache"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/client/feed"
 )
 
 // Client for suite test.

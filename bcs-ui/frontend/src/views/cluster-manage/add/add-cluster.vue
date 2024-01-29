@@ -328,9 +328,10 @@
           </bk-form-item>
           <bk-form-item :label="$t('cluster.create.label.initNodeTemplate')">
             <TemplateSelector
+              class="max-w-[500px]"
               v-model="nodesConfig.nodeTemplateID"
               :disabled="manageType === 'INDEPENDENT_CLUSTER' && skipAddNodes"
-              is-tke-cluster />
+              provider="tencentCloud" />
           </bk-form-item>
         </bk-form>
       </bcs-tab-panel>

@@ -21,7 +21,7 @@ import (
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc/resolver"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // etcdBuilder creates a resolver that will be used to watch name resolution updates.

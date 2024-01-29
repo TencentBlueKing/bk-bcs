@@ -1,12 +1,19 @@
 <template>
-  <bk-button :disabled="props.configs.length === 0" @click="isDialogShow = true">批量删除</bk-button>
-  <DeleteConfigDialog v-model:show="isDialogShow" :configs="props.configs" @deleted="emits('deleted')" />
+  <bk-button :disabled="props.configs.length === 0" @click="isDialogShow = true">{{t('批量删除')}}</bk-button>
+  <DeleteConfigDialog
+    v-model:show="isDialogShow"
+    :is-batch-delete="true"
+    :configs="props.configs"
+    @deleted="emits('deleted')"
+  />
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ITemplateConfigItem } from '../../../../../../../../types/template';
 import DeleteConfigDialog from './delete-config-dialog.vue';
 
+const { t } = useI18n();
 const props = defineProps<{
   spaceId: string;
   currentTemplateSpace: number;

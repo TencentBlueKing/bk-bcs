@@ -22,7 +22,7 @@ go env -w GO111MODULE="on"
 
 ```shell
 cd $GOPATH/src
-git clone https://github.com/Tencent/bk-bscp.git github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp
+git clone https://github.com/Tencent/bk-bscp.git github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp
 ```
 
 
@@ -32,7 +32,7 @@ git clone https://github.com/Tencent/bk-bscp.git github.com/TencentBlueking/bk-b
 **进入源码根目录：**
 
 ```shell
-cd $GOPATH/src/github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp
+cd $GOPATH/src/github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp
 ```
 
 ### 3.1 编译共有三种模式

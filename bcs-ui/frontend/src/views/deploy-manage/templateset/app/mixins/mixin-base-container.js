@@ -27,7 +27,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Decimal } from 'decimal.js';
 import moment from 'moment';
-import ECharts from 'vue-echarts/components/ECharts.vue';
 
 import { createChartOption } from '../container-chart-opts';
 
@@ -36,6 +35,7 @@ import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
 import { containerDetailChart } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';
+import ECharts from '@/components/echarts';
 
 export default {
   props: {

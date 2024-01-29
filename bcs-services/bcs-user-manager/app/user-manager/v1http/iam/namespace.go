@@ -62,7 +62,7 @@ func (p NamespaceProvider) ListInstance(req resource.Request) resource.Response 
 	projectID := filter.Ancestors[0].ID
 	clusterID := filter.Ancestors[1].ID
 	// get project code from project id
-	project, err := component.GetProject(req.Context, projectID)
+	project, err := component.GetProjectWithCache(req.Context, projectID)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,
@@ -154,7 +154,7 @@ func (p NamespaceProvider) SearchInstance(req resource.Request) resource.Respons
 	projectID := filter.Ancestors[0].ID
 	clusterID := filter.Ancestors[1].ID
 	// get project code from project id
-	project, err := component.GetProject(req.Context, projectID)
+	project, err := component.GetProjectWithCache(req.Context, projectID)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,

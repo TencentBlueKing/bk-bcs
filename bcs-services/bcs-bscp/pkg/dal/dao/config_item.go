@@ -16,15 +16,16 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/samber/lo"
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // ConfigItem supplies all the configItem related operations.
@@ -414,5 +415,33 @@ func (dao *configItemDao) GetCount(kit *kit.Kit, bizID uint32, appId []uint32) (
 		return nil, err
 	}
 
-	return configItem, nil
+	ma := dao.genQ.AppTemplateBinding
+	qa := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
+	result, err := qa.Select(ma.AppID, ma.TemplateIDs, ma.UpdatedAt).Where(
+		ma.BizID.Eq(bizID), ma.AppID.In(appId...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 泛型处理
+	configItemMap := lo.KeyBy(configItem, func(c *table.ListConfigItemCounts) uint32 {
+		return c.AppId
+	})
+
+	// 累加配置模板计数
+	for _, r := range result {
+		appID := r.AppID()
+		if _, ok := configItemMap[appID]; ok {
+			configItemMap[appID].Count += uint32(len(r.Spec.TemplateIDs))
+		} else {
+			configItemMap[appID] = &table.ListConfigItemCounts{
+				AppId:     appID,
+				Count:     uint32(len(r.Spec.TemplateIDs)),
+				UpdatedAt: r.Revision.UpdatedAt,
+			}
+		}
+	}
+
+	v := lo.Values(configItemMap)
+	return v, nil
 }

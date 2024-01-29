@@ -4,6 +4,7 @@
       <span class="break-all">{{ value || '--' }}</span>
       <span
         class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
+        v-if="!disableEdit"
         @click="handleEdit">
         <i class="bk-icon icon-edit-line"></i>
       </span>
@@ -58,6 +59,10 @@ export default defineComponent({
     rules: {
       type: Array,
       default: () => [],
+    },
+    disableEdit: {
+      type: Boolean,
+      default: false,
     },
   },
   setup(props, ctx) {

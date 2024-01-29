@@ -8,57 +8,67 @@
       :pagination="pagination"
       :key="versionData.id"
       :row-class="getRowCls"
-      show-overflow-tooltip
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"
+      @column-sort="handleSort"
+      @column-filter="handleFilter"
     >
-      <bk-table-column label="配置项名称" prop="spec.key" :min-width="240">
+      <bk-table-column :label="t('配置项名称')" prop="spec.key" :min-width="240">
         <template #default="{ row }">
           <bk-button
             v-if="row.spec"
             text
             theme="primary"
             :disabled="row.kv_state === 'DELETE'"
-            @click="handleEdit(row)"
+            @click="handleView(row)"
           >
             {{ row.spec.key }}
           </bk-button>
         </template>
       </bk-table-column>
-      <bk-table-column label="配置项值预览" prop="spec.value"></bk-table-column>
+      <bk-table-column :label="t('配置项值预览')" prop="spec.value">
+        <template #default="{ row }">
+          <div v-if="row.spec" class="preview">
+            <div class="preview-value">{{ row.spec.value }}</div>
+            <Copy @click="handleCopyText(row.spec.value)"/>
+          </div>
+        </template>
+      </bk-table-column>
       <bk-table-column
-        label="数据类型"
+        :label="t('数据类型')"
         prop="spec.kv_type"
-        :filter="{ filterFn: handleFilter, list: filterList }"
+        :filter="{ filterFn: () => true, list: filterList, checked: filterChecked }"
       ></bk-table-column>
-      <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
-      <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
-      <bk-table-column label="修改时间" :sort="{sortFn:(_a:any,_b:any,type:string) => updateSortType = type}" :width="220">
+      <bk-table-column :label="t('创建人')" prop="revision.creator"></bk-table-column>
+      <bk-table-column :label="t('修改人')" prop="revision.reviser"></bk-table-column>
+      <bk-table-column :label="t('修改时间')" :sort="true" :width="220">
         <template #default="{ row }">
           <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column v-if="versionData.id === 0" label="变更状态">
+      <bk-table-column v-if="versionData.id === 0" :label="t('变更状态')">
         <template #default="{ row }">
           <StatusTag :status="row.kv_state" />
         </template>
       </bk-table-column>
-      <bk-table-column label="操作" fixed="right">
+      <bk-table-column :label="t('操作')" fixed="right">
         <template #default="{ row }">
           <div class="operate-action-btns">
-            <bk-button v-if="row.kv_state === 'DELETE'" text theme="primary" @click="handleUndelete(row)">恢复</bk-button>
+            <bk-button v-if="row.kv_state === 'DELETE'" text theme="primary" @click="handleUndelete(row)"
+              >{{ t('恢复') }}</bk-button
+            >
             <template v-else>
-              <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEdit(row)">{{
-                versionData.id === 0 ? '编辑' : '查看'
+              <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEditOrView(row)">{{
+                versionData.id === 0 ? t('编辑') : t('查看')
               }}</bk-button>
               <bk-button
                 v-if="versionData.status.publish_status !== 'editing'"
                 text
                 theme="primary"
                 @click="handleDiff(row)"
-                >对比</bk-button
+                >{{ t('对比') }}</bk-button
               >
-              <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">删除</bk-button>
+              <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">{{ t('删除') }}</bk-button>
             </template>
           </div>
         </template>
@@ -70,48 +80,51 @@
   </bk-loading>
   <edit-config
     v-model:show="editPanelShow"
-    :config="activeConfig as IConfigKvItem"
+    :config="(activeConfig as IConfigKvItem)"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    :editable="editable"
-    :view="!editable"
+    :editable="true"
     @confirm="getListData"
   />
+  <ViewConfigKv v-model:show="viewPanelShow" :config="(activeConfig as IConfigKvItem)" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config-kv="diffConfig" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
-    title="确认删除该配置项？"
+    :title="t('确认删除该配置项？')"
     @confirm="handleDeleteConfigConfirm"
   >
     <div style="margin-bottom: 8px">
-      配置项：<span style="color: #313238">{{ deleteConfig?.key }}</span>
+      {{ t('配置项') }}：<span style="color: #313238">{{ deleteConfig?.spec.key }}</span>
     </div>
-    <div>一旦删除，该操作将无法撤销，请谨慎操作</div>
+    <div>{{ deleteConfigTips }}</div>
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-import { ref, watch, onMounted, computed, toRaw } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../../store/config';
 import useServiceStore from '../../../../../../../../store/service';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
 import { getKvList, deleteKv, getReleaseKvList, undeleteKv } from '../../../../../../../../api/config';
-import { datetimeFormat } from '../../../../../../../../utils/index';
+import { datetimeFormat, copyToClipBoard } from '../../../../../../../../utils/index';
 import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
+import { Copy } from 'bkui-vue/lib/icon';
 import StatusTag from './status-tag';
 import EditConfig from '../edit-config-kv.vue';
+import ViewConfigKv from '../view-config-kv.vue';
 import VersionDiff from '../../../components/version-diff/index.vue';
 import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
-import { Message } from 'bkui-vue';
-import { isEqual } from 'lodash';
+import Message from 'bkui-vue/lib/message';
 
 const configStore = useConfigStore();
 const serviceStore = useServiceStore();
 const { versionData } = storeToRefs(configStore);
 const { checkPermBeforeOperate } = serviceStore;
 const { permCheckLoading } = storeToRefs(serviceStore);
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;
@@ -125,9 +138,9 @@ const loading = ref(false);
 const configList = ref<IConfigKvType[]>([]);
 const configsCount = ref(0);
 const editPanelShow = ref(false);
-const editable = ref(false);
+const viewPanelShow = ref(false);
 const activeConfig = ref<IConfigKvItem>();
-const deleteConfig = ref();
+const deleteConfig = ref<IConfigKvType>();
 const isDiffPanelShow = ref(false);
 const diffConfig = ref(0);
 const isSearchEmpty = ref(false);
@@ -144,8 +157,17 @@ const filterList = computed(() => CONFIG_KV_TYPE.map(item => ({
   text: item.name,
 })));
 
+const deleteConfigTips = computed(() => {
+  if (deleteConfig.value) {
+    return deleteConfig.value.kv_state === 'ADD'
+      ? t('一旦删除，该操作将无法撤销，请谨慎操作')
+      : t('配置项删除后，可以通过恢复按钮撤销删除');
+  }
+  return '';
+});
+
 watch(
-  [() => versionData.value.id, () => updateSortType.value],
+  () => versionData.value.id,
   () => {
     refresh();
   },
@@ -167,17 +189,6 @@ watch(
     });
   },
 );
-
-watch(
-  () => filterChecked.value,
-  (newVal, oldVal) => {
-    if (!isEqual(toRaw(newVal), toRaw(oldVal))) {
-      getListData();
-    }
-  },
-  { deep: true },
-);
-
 
 const isUnNamedVersion = computed(() => versionData.value.id === 0);
 
@@ -220,10 +231,18 @@ const getListData = async () => {
   }
 };
 
-const handleEdit = (config: IConfigKvType) => {
-  editable.value = versionData.value.id === 0;
+const handleEditOrView = (config: IConfigKvType) => {
   activeConfig.value = config.spec;
-  editPanelShow.value = true;
+  if (isUnNamedVersion.value) {
+    editPanelShow.value = true;
+  } else {
+    viewPanelShow.value = true;
+  }
+};
+
+const handleView = (config: IConfigKvType) => {
+  activeConfig.value = config.spec;
+  viewPanelShow.value = true;
 };
 
 const handleDiff = (config: IConfigKvType) => {
@@ -236,17 +255,28 @@ const handleDel = (config: IConfigKvType) => {
     return;
   }
   isDeleteConfigDialogShow.value = true;
-  deleteConfig.value = config.id;
+  deleteConfig.value = config;
+};
+
+const handleCopyText = (text: string) => {
+  copyToClipBoard(text);
+  Message({
+    theme: 'success',
+    message: t('配置项值已复制'),
+  });
 };
 
 const handleDeleteConfigConfirm = async () => {
-  await deleteKv(props.bkBizId, props.appId, deleteConfig.value);
+  if (!deleteConfig.value) {
+    return;
+  }
+  await deleteKv(props.bkBizId, props.appId, deleteConfig.value.id);
   if (configList.value.length === 1 && pagination.value.current > 1) {
     pagination.value.current -= 1;
   }
   Message({
     theme: 'success',
-    message: '删除配置项成功',
+    message: t('删除配置项成功'),
   });
   refresh();
   isDeleteConfigDialogShow.value = false;
@@ -255,7 +285,7 @@ const handleDeleteConfigConfirm = async () => {
 // 撤销删除
 const handleUndelete = async (config: IConfigKvType) => {
   await undeleteKv(props.bkBizId, props.appId, config.spec.key);
-  Message({ theme: 'success', message: '恢复配置项成功' });
+  Message({ theme: 'success', message: t('恢复配置项成功') });
   refresh();
 };
 
@@ -269,9 +299,14 @@ const refresh = (current = 1) => {
   getListData();
 };
 
-const handleFilter = (checked: string[]) => {
+const handleFilter = ({ checked }: any) => {
   filterChecked.value = checked;
-  return true;
+  refresh();
+};
+
+const handleSort = ({ type }: any) => {
+  updateSortType.value = type;
+  refresh();
 };
 
 // 判断当前行是否是删除行
@@ -296,6 +331,23 @@ defineExpose({
       .cell {
         color: #c4c6cc !important;
       }
+    }
+  }
+}
+.preview {
+  display: flex;
+  justify-content: space-between;
+  .preview-value {
+    width: 80%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  span {
+    font-size: 12px;
+    cursor: pointer;
+    &:hover {
+      color: #3a84ff;
     }
   }
 }

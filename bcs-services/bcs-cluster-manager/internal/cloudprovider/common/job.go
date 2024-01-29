@@ -37,8 +37,12 @@ var (
 )
 
 const (
+	// PreInitJob xxx
+	PreInitJob = "preInitJob"
+	// PostInitJob xxx
+	PostInitJob = "postInitJob"
 	// PreInitStepJob xxx
-	PreInitStepJob = "缩容节点清理"
+	PreInitStepJob = "前置初始化作业"
 	// PostInitStepJob xxx
 	PostInitStepJob = "后置初始化作业"
 )
@@ -54,6 +58,7 @@ type JobExecParas struct {
 	StepName string
 	// AllowSkipJobTask 任务失败时候是否允许跳过
 	AllowSkipJobTask bool
+	Translate        string
 }
 
 // BuildJobExecuteScriptStep build job execute script step
@@ -62,7 +67,9 @@ func BuildJobExecuteScriptStep(task *proto.Task, paras JobExecParas) {
 		jobExecuteScriptStep.StepName = paras.StepName
 	}
 	jobScriptStep := cloudprovider.InitTaskStep(jobExecuteScriptStep,
-		cloudprovider.WithStepSkipFailed(paras.AllowSkipJobTask))
+		cloudprovider.WithStepSkipFailed(paras.AllowSkipJobTask),
+		cloudprovider.WithStepTranslate(paras.Translate),
+	)
 
 	if len(paras.NodeIps) == 0 {
 		paras.NodeIps = template.NodeIPList

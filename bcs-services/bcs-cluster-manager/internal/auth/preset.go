@@ -49,6 +49,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.RetryTask",
 	"ClusterManager.GetTask",
 	"ClusterManager.ListTask",
+	"ClusterManager.SkipTask",
 
 	// cluster autoscaling
 	"ClusterManager.GetAutoScalingOption",
@@ -128,6 +129,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DeleteVirtualCluster":      cluster.CanDeleteClusterOperation,
 	"ClusterManager.UpdateVirtualClusterQuota": cluster.CanManageClusterOperation,
 	"ClusterManager.AddSubnetToCluster":        cluster.CanManageClusterOperation,
+	"ClusterManager.UpdateClusterModule":       cluster.CanManageClusterOperation,
 
 	// node
 	"ClusterManager.AddNodesToCluster":           cluster.CanManageClusterOperation,

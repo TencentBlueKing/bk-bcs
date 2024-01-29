@@ -8,7 +8,7 @@
       :disabled="props.permCheckLoading"
       @click="handleBtnClick"
     >
-      上线版本
+      {{ t('上线版本') }}
     </bk-button>
     <Teleport to="body">
       <VersionLayout v-if="isSelectGroupPanelOpen">
@@ -19,13 +19,14 @@
               <span class="service-name">{{ appData.spec.name }}</span>
             </span>
             <AngleRight class="arrow-right" />
-            上线版本：{{ versionData.spec.name }}
+            {{ t('上线版本') }}：{{ versionData.spec.name }}
           </section>
         </template>
         <select-group
           :release-type="releaseType"
           :groups="groups"
           :version-status="versionData.status.publish_status"
+          :release-id="versionData.id"
           @open-preview-version-diff="openPreviewVersionDiff"
           @release-type-change="releaseType = $event"
           @change="groups = $event"
@@ -33,9 +34,9 @@
         <template #footer>
           <section class="actions-wrapper">
             <bk-button class="publish-btn" theme="primary" @click="handleDiffOrPublish">{{
-              versionListByGroup.length ? '对比并上线' : '上线版本'
+              versionListByGroup.length ? t('对比并上线') : t('上线版本')
             }}</bk-button>
-            <bk-button @click="handlePanelClose">取消</bk-button>
+            <bk-button @click="handlePanelClose">{{ t('取消') }}</bk-button>
           </section>
         </template>
       </VersionLayout>
@@ -61,8 +62,9 @@
 </template>
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
-import InfoBox from 'bkui-vue/lib/info-box';
+import { InfoBox } from 'bkui-vue';
 import BkMessage from 'bkui-vue/lib/message';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../../store/global';
@@ -74,7 +76,7 @@ import VersionLayout from '../../config/components/version-layout.vue';
 import ConfirmDialog from './confirm-dialog.vue';
 import SelectGroup from './select-group/index.vue';
 import VersionDiff from '../../config/components/version-diff/index.vue';
-import { useRoute } from 'vue-router';
+import { useRoute,useRouter } from 'vue-router';
 import { getConfigVersionList } from '../../../../../../api/config';
 import { IConfigVersion } from '../../../../../../../types/config';
 
@@ -82,7 +84,8 @@ const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 const serviceStore = useServiceStore();
 const versionStore = useConfigStore();
 const { appData } = storeToRefs(serviceStore);
-const { versionData } = storeToRefs(versionStore);
+const { versionData, publishedVersionId } = storeToRefs(versionStore);
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;
@@ -94,6 +97,7 @@ const props = defineProps<{
 const emit = defineEmits(['confirm']);
 
 const route = useRoute();
+const router = useRouter();
 const bkBizId = String(route.params.spaceId);
 const appId = Number(route.params.appId);
 const versionList = ref<IConfigVersion[]>([]);
@@ -158,7 +162,7 @@ const handleBtnClick = () => {
 
 const handleOpenPublishDialog = () => {
   if (groups.value.length === 0) {
-    BkMessage({ theme: 'error', message: '请选择上线分组' });
+    BkMessage({ theme: 'error', message: t('请选择上线分组') });
     return;
   }
   isConfirmDialogShow.value = true;
@@ -171,16 +175,30 @@ const openPreviewVersionDiff = (id: number) => {
 };
 
 // 版本上线成功
-const handleConfirm = () => {
+const handleConfirm = (haveCredentials: boolean) => {
   isDiffSliderShow.value = false;
+  publishedVersionId.value = versionData.value.id;
   handlePanelClose();
   emit('confirm');
-  InfoBox({
-    // @ts-ignore
-    infoType: 'success',
-    title: '版本已上线',
-    dialogType: 'confirm',
-  });
+  if (haveCredentials) {
+    InfoBox({
+      infoType: 'success',
+      'ext-cls': 'info-box-style',
+      title: t('版本已上线'),
+      dialogType: 'confirm',
+    });
+  } else {
+    InfoBox({
+      infoType: 'success',
+      title: t('版本已上线'),
+      'ext-cls': 'info-box-style',
+      confirmText: t('新增服务密钥'),
+      cancelText: t('稍后再说'),
+      onConfirm: () => {
+        router.push({ name: 'credentials-management' });
+      },
+    });
+  }
 };
 
 const handlePanelClose = () => {

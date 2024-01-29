@@ -15,7 +15,7 @@ package rest
 import (
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
 )
 
 // restMetric is used to collect restfull metrics.

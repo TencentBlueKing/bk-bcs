@@ -80,7 +80,7 @@ func (i *InstallAddonsAction) Handle(ctx context.Context,
 	}
 
 	// 对于非 chart 类型的 addons，直接返回成功
-	if addons.ChartName == "db-privilege" {
+	if isFakeChart(addons.ChartName) {
 		i.setResp(common.ErrHelmManagerSuccess, "ok")
 		return nil
 	}
@@ -117,7 +117,8 @@ func (i *InstallAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 	}
 	createBy := auth.GetUserFromCtx(ctx)
 	status := helmrelease.StatusPendingInstall.String()
-	if chartName == "" {
+	// 对于非 chart 类型的 addons，直接返回成功
+	if isFakeChart(chartName) {
 		status = helmrelease.StatusDeployed.String()
 	}
 	if err := i.model.CreateRelease(ctx, &entity.Release{

@@ -13,15 +13,15 @@
 package dao
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/pkg/errors"
-
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Kv supplies all the kv related operations.
@@ -141,21 +141,26 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int64, error) {
 
 	m := dao.genQ.Kv
+	q := dao.genQ.Kv.WithContext(kit.Ctx)
 
 	orderCol, ok := m.GetFieldByName(opt.Page.Sort)
 	if !ok {
 		return nil, 0, errors.New("user doesn't contains orderColStr")
 	}
 	if opt.Page.Order == types.Descending {
-		orderCol.Desc()
+		q = q.Order(orderCol.Desc())
+	} else if len(opt.TopIDs) != 0 {
+		q = q.Order(utils.NewCustomExpr("CASE WHEN id IN (?) THEN 0 ELSE 1 END,`key` asc", []interface{}{opt.TopIDs}))
+	} else {
+		q = q.Order(orderCol)
 	}
-
-	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).Order(orderCol)
 
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
-		q = q.Where(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))
+		q = q.Where(q.Where(q.Or(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))))
 	}
+
+	q = q.Where(m.BizID.Eq(opt.BizID)).Where(m.AppID.Eq(opt.AppID))
 
 	if len(opt.KvType) > 0 {
 		q = q.Where(m.KvType.In(opt.KvType...))

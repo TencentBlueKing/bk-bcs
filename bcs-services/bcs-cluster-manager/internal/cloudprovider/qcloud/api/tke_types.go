@@ -16,6 +16,7 @@ import (
 	"fmt"
 
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
@@ -156,11 +157,13 @@ const (
 	TKERouteEni = "tke-route-eni"
 	// TKEDirectEni direct-eni
 	TKEDirectEni = "tke-direct-eni"
+	// DefaultRegion for default setting
+	DefaultRegion = regions.Shanghai
 )
 
 // QueryFilter xxx
 type QueryFilter interface {
-	// BuildFilters() build filters
+	// BuildFilters build filters
 	BuildFilters() []*tke.Filter
 }
 

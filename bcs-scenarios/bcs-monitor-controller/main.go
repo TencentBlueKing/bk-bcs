@@ -15,10 +15,9 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
-	"time"
+	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -43,6 +42,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/httpsvr"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/render"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/repo"
 )
 
 var (
@@ -62,43 +62,17 @@ func init() {
 func main() {
 	opts := &option.ControllerOption{}
 
-	var metricsAddr string
-	var enableLeaderElection bool
-	var probeAddr string
-	var verbosity int
-	var scenarioRefreshFreqSec int64
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
-
-	// log config
-	flag.IntVar(&verbosity, "v", 3, "log level for V logs")
-	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
-	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
-	flag.IntVar(&opts.LogMaxNum, "log_max_num", 10, "Max num of log file.")
-	flag.BoolVar(&opts.ToStdErr, "logtostderr", false, "log to standard error instead of files")
-	flag.BoolVar(&opts.AlsoToStdErr, "alsologtostderr", false, "log to standard error as well as files")
-
-	flag.StringVar(&opts.Address, "address", "0.0.0.0", "address for controller")
-	flag.StringVar(&opts.ScenarioPath, "scenario_path", "/data/bcs", "Store scenario templates")
-	flag.Int64Var(&scenarioRefreshFreqSec, "scenario_refresh_req", 60, "refresh frequency ")
-	flag.UintVar(&opts.HttpServerPort, "http_server_port", 8088, "http server port")
-	opts.ScenarioGitRefreshFreq = time.Second * time.Duration(scenarioRefreshFreqSec)
-	opts.Verbosity = int32(verbosity)
-	flag.Parse()
-
+	opts.BindFromCommandLine()
 	blog.InitLogs(opts.LogConfig)
 	defer blog.CloseLogs()
 	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
+		MetricsBindAddress:     opts.Address + ":" + strconv.Itoa(opts.MetricPort),
 		Port:                   9443,
-		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
+		HealthProbeBindAddress: opts.Address + ":" + strconv.Itoa(opts.ProbePort),
+		LeaderElection:         true,
 		LeaderElectionID:       "333fb49e.monitorextension.bkbcs.tencent.com",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
@@ -120,6 +94,11 @@ func main() {
 	ctx := context.Background()
 	monitorCli := apiclient.NewBkmApiClient()
 	fileOp := fileoperator.NewFileOperator(mgr.GetClient())
+	repoManager, err := repo.NewRepoManager(mgr.GetClient(), opts)
+	if err != nil {
+		blog.Errorf("create repoManager failed, err: %s", err.Error())
+		os.Exit(1)
+	}
 	if err = (&controllers.MonitorRuleReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -154,7 +133,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	monitorRender, err := render.NewMonitorRender(scheme, mgr.GetClient(), opts)
+	monitorRender, err := render.NewMonitorRender(scheme, mgr.GetClient(), repoManager, opts)
 	if err != nil {
 		blog.Errorf("new render failed, err: %v", err)
 		os.Exit(1)
@@ -163,8 +142,9 @@ func main() {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 
-		Ctx:    ctx,
-		Render: monitorRender,
+		Ctx:         ctx,
+		Render:      monitorRender,
+		RepoManager: repoManager,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Panel")
 		os.Exit(1)

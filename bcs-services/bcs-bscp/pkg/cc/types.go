@@ -23,9 +23,9 @@ import (
 
 	etcd3 "go.etcd.io/etcd/client/v3"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version"
 )
 
 const (
@@ -1032,4 +1032,10 @@ func (v *Vault) getConfigFromEnv() {
 
 	v.Token = os.Getenv(VaultTokenEnv)
 	v.Address = os.Getenv(VaultAddressEnv)
+}
+
+// BKNotice defines all the bk notice related runtime.
+type BKNotice struct {
+	Enable bool   `yaml:"enable"`
+	Host   string `yaml:"host"`
 }

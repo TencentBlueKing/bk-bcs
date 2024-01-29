@@ -105,7 +105,7 @@ require (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-scenarios/kourse v0.0.0-20231011121510-d30829b961ad
+	github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4 v0.0.0-20240102072303-4173c9729642
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.42.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
 	go.opentelemetry.io/otel v1.20.0

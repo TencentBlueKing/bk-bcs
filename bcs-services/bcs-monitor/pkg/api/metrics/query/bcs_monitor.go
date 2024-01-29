@@ -13,11 +13,10 @@
 package query
 
 import (
-	"time"
-
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/promclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 const (
@@ -75,7 +74,8 @@ func (h BCSMonitorHandler) GetClusterOverview(c *rest.Context) (ClusterOverviewM
 		"pod_total":      `bcs:cluster:pod:total{cluster_id="%<clusterId>s", %<provider>s}`,
 	}
 
-	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params, time.Now())
+	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params,
+		utils.GetNowQueryTime())
 	if err != nil {
 		return ClusterOverviewMetric{}, err
 	}

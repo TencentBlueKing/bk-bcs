@@ -81,14 +81,14 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) { // nolint
 
 	query := &wsQuery{}
 	if e := c.BindQuery(query); e != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(e, i18n.GetMessage(c, "参数不合法")))
+		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(e, i18n.T(c, "参数不合法")))
 		return
 	}
 
 	sessionId := route.GetSessionId(c)
 	podCtx, err := sessions.NewStore().WebSocketScope().Get(ctx, sessionId)
 	if err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, i18n.GetMessage(c, "session不合法")))
+		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, i18n.T(c, "session不合法")))
 		return
 	}
 	// 赋值session id
@@ -97,7 +97,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) { // nolint
 	terminalSize := query.GetTerminalSize()
 	consoleMgr, err := manager.NewConsoleManager(ctx, podCtx, terminalSize)
 	if err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, i18n.GetMessage(c, "初始化session失败")))
+		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, i18n.T(c, "初始化session失败")))
 		return
 	}
 
@@ -157,5 +157,5 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) { // nolint
 	}
 
 	// 正常退出, 如使用 Exit 命令主动退出返回提示
-	manager.GracefulCloseWebSocket(ctx, ws, connected, errors.New(i18n.GetMessage(c, "BCS Console 服务端连接断开，请重新登录")))
+	manager.GracefulCloseWebSocket(ctx, ws, connected, errors.New(i18n.T(c, "BCS Console 服务端连接断开，请重新登录")))
 }

@@ -16,9 +16,19 @@
               :name="diskItem.name">
             </bcs-option>
           </bcs-select>
-          <bcs-input class="max-w-[120px]" type="number" v-model="item.diskSize">
-            <span slot="append" class="group-text !px-[4px]">GB</span>
+          <bcs-input
+            class="max-w-[120px]"
+            type="number"
+            :min="50"
+            :max="16380"
+            v-model="item.diskSize">
           </bcs-input>
+          <span class="suffix ml-[-1px]">GB</span>
+          <p
+            class="bcs-form-error-tip text-[12px] text-[#ea3636] ml-[6px]"
+            v-if="Number(item.diskSize || 0) % 10 !== 0">
+            {{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.dataDisks')}}
+          </p>
         </div>
         <div class="flex items-center mt-[16px]">
           <bk-checkbox v-model="item.autoFormatAndMount" class="mr-[8px]">
@@ -31,6 +41,11 @@
             <bk-input class="flex-1" v-model="item.mountTarget"></bk-input>
           </template>
         </div>
+        <p
+          class="bcs-form-error-tip text-[12px] text-[#ea3636] ml-[6px]"
+          v-if="showRepeatMountTarget(index)">
+          {{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.repeatPath')}}
+        </p>
         <!-- 删除 -->
         <span
           :class="[
@@ -107,4 +122,31 @@ const handleAddDiskData = () => {
     mountTarget: '/data', // 挂载路径
   });
 };
+
+const showRepeatMountTarget = (index) => {
+  const disk = cloudDataDisks.value[index];
+  return disk.autoFormatAndMount
+            && disk.mountTarget
+            && cloudDataDisks.value
+              .filter((item, i) => i !== index && item.autoFormatAndMount)
+              .some(item => item.mountTarget === disk.mountTarget);
+};
+
 </script>
+<style scoped lang="postcss">
+.suffix{
+  line-height: 30px;
+  font-size: 12px;
+  display: inline-block;
+  min-width: 30px;
+  padding: 0 4px 0 4px;
+  height: 32px;
+  border: 1px solid #C4C6CC;
+  text-align: center;
+  border-left: none;
+  background-color: #fafbfd;
+  &.disabled {
+    border-color: #dcdee5;
+  }
+}
+</style>

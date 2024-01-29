@@ -28,6 +28,7 @@ import (
 	"k8s.io/klog/v2"
 
 	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/notice"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/middleware"
@@ -53,6 +54,13 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 	// 初始化版本日志和特性
 	if err := s.initReleaseNote(); err != nil {
 		return nil, err
+	}
+
+	// 注册系统到通知中心
+	if config.G.BKNotice.Enable {
+		if err := notice.RegisterSystem(ctx); err != nil {
+			klog.Infof("register system to notice center failed: %s", err.Error())
+		}
 	}
 
 	srv := &http.Server{Addr: addr, Handler: s.newRouter()}
@@ -124,6 +132,8 @@ func (w *WebServer) subRouter() http.Handler {
 
 	r.With(metrics.RequestCollect("FeatureFlagsHandler"), middleware.NeedProjectAuthorization).
 		Get("/feature_flags", w.FeatureFlagsHandler)
+
+	r.With(metrics.RequestCollect("GetCurrentAnnouncements")).Get("/announcements", w.GetCurrentAnnouncements)
 
 	// 静态资源
 	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)

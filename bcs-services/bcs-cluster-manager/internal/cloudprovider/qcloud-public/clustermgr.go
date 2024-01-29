@@ -16,7 +16,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"sort"
 	"sync"
 
@@ -24,8 +23,10 @@ import (
 	"github.com/avast/retry-go"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
@@ -694,6 +695,40 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 	return projects, nil
 }
 
+// AppendCloudNodeInfo append cloud node detailed info
+func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
+	nodes []*proto.ClusterNode, opt *cloudprovider.CommonOption) error {
+
+	zoneIdMap, zoneMap, err := business.GetZoneInfoByRegion(opt)
+	if err != nil {
+		blog.Errorf("AppendCloudNodeInfo GetZoneInfoByRegion failed: %v", err)
+		return err
+	}
+	// 获取语言
+	lang := i18n.LanguageFromCtx(ctx)
+	// get node zoneName
+	for i := range nodes {
+		zone, ok := zoneIdMap[nodes[i].ZoneName]
+		if ok {
+			nodes[i].ZoneName = zone.GetZoneName()
+			if lang != utils.ZH {
+				nodes[i].ZoneName = zone.GetZone()
+			}
+			continue
+		}
+		zone, ok = zoneMap[nodes[i].ZoneID]
+		if ok {
+			nodes[i].ZoneName = zone.GetZoneName()
+			if lang != utils.ZH {
+				nodes[i].ZoneName = zone.GetZone()
+			}
+			continue
+		}
+	}
+
+	return nil
+}
+
 // AddSubnetsToCluster cluster add subnet
 func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource,
 	opt *cloudprovider.AddSubnetsToClusterOption) error {
@@ -852,7 +887,8 @@ func getZoneSubnets(vpcId string, opt cloudprovider.CommonOption) ([]string, map
 	return snZones, zoneSubnetMap, nil
 }
 
-func getZoneMachineTypes(cpu, mem int, opt cloudprovider.CommonOption) ([]string, map[string][]*proto.InstanceType, error) {
+func getZoneMachineTypes(
+	cpu, mem int, opt cloudprovider.CommonOption) ([]string, map[string][]*proto.InstanceType, error) {
 	var (
 		mtZones = make([]string, 0)
 	)
@@ -880,11 +916,13 @@ func getZoneMachineTypes(cpu, mem int, opt cloudprovider.CommonOption) ([]string
 				if zoneInstanceTypes[instanceTypes[i].Zones[j]] == nil {
 					zoneInstanceTypes[instanceTypes[i].Zones[j]] = make([]*proto.InstanceType, 0)
 				}
-				zoneInstanceTypes[instanceTypes[i].Zones[j]] = append(zoneInstanceTypes[instanceTypes[i].Zones[j]], instanceTypes[i])
+				zoneInstanceTypes[instanceTypes[i].Zones[j]] = append(zoneInstanceTypes[instanceTypes[i].Zones[j]],
+					instanceTypes[i])
 				continue
 			}
 
-			zoneInstanceTypes[instanceTypes[i].Zones[j]] = append(zoneInstanceTypes[instanceTypes[i].Zones[j]], instanceTypes[i])
+			zoneInstanceTypes[instanceTypes[i].Zones[j]] = append(zoneInstanceTypes[instanceTypes[i].Zones[j]],
+				instanceTypes[i])
 		}
 	}
 	// 按照价格排序
@@ -936,6 +974,18 @@ func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	}
 
 	return true, nil
+}
+
+// CheckIfGetNodesFromCluster check cluster if can get nodes from k8s
+func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto.Cluster,
+	nodes []*proto.ClusterNode) bool {
+	if (cluster.ManageType == icommon.ClusterManageTypeManaged ||
+		cluster.ManageType == icommon.ClusterManageTypeIndependent) && !utils.ExistRunningNodes(nodes) {
+		blog.Infof("CheckIfGetNodesFromCluster[%s] successful", cluster.ClusterID)
+		return false
+	}
+
+	return true
 }
 
 func getClusterCidrAvailableIPNum(cls *proto.Cluster) (uint32, error) {

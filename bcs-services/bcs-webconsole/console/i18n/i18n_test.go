@@ -13,29 +13,50 @@
 package i18n
 
 import (
+	"fmt"
+	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
-func TestGetMessage(t *testing.T) {
-	Localize()
+func TestT(t *testing.T) {
 
 	type args struct {
-		messageID string
-		values    []interface{}
+		tags   string
+		format string
+		values interface{}
 	}
 	tests := []struct {
 		name string
 		args args
 		want string
 	}{
-		{name: "empty", args: args{messageID: "empty", values: nil}, want: "empty"},
+		{
+			name: "zh-hans_服务请求失败",
+			args: args{tags: "zh-hans", format: "服务请求失败: %s", values: errors.New("失败")},
+			want: "服务请求失败: 失败",
+		},
+		{
+			name: "en_服务请求失败",
+			args: args{tags: "en", format: "服务请求失败: %s", values: errors.New("失败")},
+			want: "Service request failed: 失败",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetMessage(&gin.Context{}, tt.args.messageID, tt.args.values...); got != tt.want {
-				t.Errorf("GetMessage() = %v, want %v", got, tt.want)
+			ctx := &gin.Context{
+				Request: &http.Request{
+					URL: &url.URL{
+						RawQuery: fmt.Sprintf("lang=%s", tt.args.tags),
+					},
+				},
+			}
+
+			if got := T(ctx, tt.args.format, tt.args.values); got != tt.want {
+				t.Errorf("T() = %v, want %v", got, tt.want)
 			}
 		})
 	}

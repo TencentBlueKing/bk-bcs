@@ -21,7 +21,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"k8s.io/klog/v2"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 )
 
 var (

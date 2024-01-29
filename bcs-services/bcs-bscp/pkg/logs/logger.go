@@ -17,7 +17,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs/glog"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs/glog"
 )
 
 // logPrefix define access log service's log prefix.

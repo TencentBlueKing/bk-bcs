@@ -55,7 +55,12 @@
           @click="handleShowDiff">
           {{$t('generic.button.next')}}
         </bk-button>
-        <span v-bk-tooltips.top="{ disabled: !disableUpdate, content: $t('dashboard.workload.editor.tips.contentUnchanged') }" v-else>
+        <span
+          v-bk-tooltips.top="{
+            disabled: !disableUpdate,
+            content: $t('dashboard.workload.editor.tips.contentUnchanged')
+          }"
+          v-else>
           <bk-button
             class="min-w-[88px]"
             theme="primary"
@@ -67,7 +72,11 @@
         </span>
         <bk-button
           class="min-w-[88px] ml15"
-          @click="handleToggleDiff">{{showDiff ? $t('dashboard.workload.editor.continueEditing') : $t('dashboard.workload.editor.showDifference')}}</bk-button>
+          @click="handleToggleDiff">
+          {{showDiff
+            ? $t('dashboard.workload.editor.continueEditing')
+            : $t('dashboard.workload.editor.showDifference')}}
+        </bk-button>
         <bk-button class="min-w-[88px] ml15" @click="handleCancel">{{$t('generic.button.cancel')}}</bk-button>
       </template>
       <template v-else>
@@ -123,7 +132,6 @@ import Header from '@/components/layout/Header.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
 import $router from '@/router';
-import $store from '@/store';
 
 const BKForm = createForm({
   namespace: 'bcs',
@@ -348,7 +356,7 @@ export default {
         subTitle: this.$t('generic.msg.info.exitEdit.subTitle'),
         defaultInfo: true,
         confirmFn: () => {
-          this.$router.push({ name: this.$store.state.curSideMenu?.route });
+          this.$router.back();
         },
       });
     },
@@ -364,7 +372,7 @@ export default {
           defaultShowExample: true,
         };
       }
-      this.$router.push({
+      this.$router.replace({
         name: 'dashboardResourceUpdate',
         params: {
           ...params,
@@ -435,7 +443,7 @@ export default {
               message: this.$t('generic.msg.success.update'),
             });
             // 跳转回列表页
-            $router.push({ name: $store.state.curSideMenu?.route });
+            $router.back();
           }
         },
       });
@@ -476,7 +484,7 @@ export default {
         });
         this.$store.commit('updateCurNamespace', this.schemaFormData.metadata?.namespace);
         // 跳转回列表页
-        $router.push({ name: $store.state.curSideMenu?.route });
+        $router.back();
       }
     },
     // 表单预览

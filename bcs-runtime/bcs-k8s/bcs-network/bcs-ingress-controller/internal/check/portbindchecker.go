@@ -67,11 +67,14 @@ func (p *PortBindChecker) Run() {
 	// poolNamespace/poolName/poolItemName:port -> [podName...] 记录itemKey+port下有哪些pod发生冲突
 	conflictMap := p.getPortConflictMap(portBindingList)
 
+	metrics.PortBindingConflictGauge.Reset()
 	for conflictKey, conflictNamespaceNameList := range conflictMap {
 		conflictNamespaceNames := strings.Join(conflictNamespaceNameList, ",")
 		msg := fmt.Sprintf("[%s] conflict on pod %s", conflictKey, conflictNamespaceNames)
 		blog.Errorf("port allocate conflict: %s", msg)
 		p.sendEventToPortPool(conflictKey, msg)
+
+		metrics.PortBindingConflictGauge.WithLabelValues(conflictKey).Set(float64(len(conflictNamespaceNameList)))
 	}
 }
 

@@ -3,7 +3,7 @@
     <SearchInput
       v-model="searchStr"
       class="config-search-input"
-      placeholder="配置项名/创建人/修改人"
+      :placeholder="t('配置项名/创建人/修改人')"
       @search="getListData"
     />
     <bk-loading class="loading-wrapper" :loading="loading">
@@ -11,20 +11,22 @@
         <div class="config-name">{{ config.spec.key }}</div>
         <div class="config-type">{{ config.spec.kv_type }}</div>
       </div>
-      <bk-exception v-if="configList.length === 0" scene="part" type="empty" description="暂无配置文件"></bk-exception>
+      <TableEmpty v-if="configList.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch"></TableEmpty>
     </bk-loading>
     <EditConfig
       v-model:show="isShowEdit"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
       :config="(selectedConfig as IConfigKvItem)"
-      :editable="isEditConfig"
-      :view="!isEditConfig"
+      :editable="true"
+      @confirm="getListData"
     />
+    <ViewConfig v-model:show="isShowView" :config="(selectedConfig as IConfigKvItem)" />
   </section>
 </template>
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../store/config';
 import { IConfigKvType, IConfigKvItem } from '../../../../../../../../types/config';
@@ -32,9 +34,12 @@ import { ICommonQuery } from '../../../../../../../../types/index';
 import { getKvList, getReleaseKvList } from '../../../../../../../api/config';
 import SearchInput from '../../../../../../../components/search-input.vue';
 import EditConfig from '../config-table-list/edit-config-kv.vue';
+import ViewConfig from '../config-table-list/view-config-kv.vue';
+import TableEmpty from '../../../../../../../components/table/table-empty.vue';
 
 const store = useConfigStore();
 const { versionData } = storeToRefs(store);
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;
@@ -46,12 +51,20 @@ const configList = ref<IConfigKvType[]>([]);
 const searchStr = ref('');
 const selectedConfig = ref<IConfigKvItem>();
 const isShowEdit = ref(false);
-const isEditConfig = ref(true);
+const isShowView = ref(false);
+const isSearchEmpty = ref(false);
 
 watch(
   () => versionData.value.id,
   () => {
     getListData();
+  },
+);
+
+watch(
+  () => searchStr.value,
+  (val) => {
+    isSearchEmpty.value = !!val;
   },
 );
 
@@ -94,8 +107,16 @@ const getListData = async () => {
 
 const handleConfigClick = (config: IConfigKvType) => {
   selectedConfig.value = config.spec;
-  isEditConfig.value = isUnNamedVersion.value;
-  isShowEdit.value = true;
+  if (isUnNamedVersion.value) {
+    isShowEdit.value = true;
+  } else {
+    isShowView.value = true;
+  }
+};
+
+const clearSearch = () => {
+  searchStr.value = '';
+  getListData();
 };
 </script>
 <style lang="scss" scoped>

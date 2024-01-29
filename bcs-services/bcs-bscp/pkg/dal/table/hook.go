@@ -16,8 +16,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // Hook defines a hook for an app to publish.
@@ -140,7 +140,7 @@ func (s ScriptType) Validate() error {
 
 // ValidateCreate validate hook spec when it is created.
 func (s HookSpec) ValidateCreate() error {
-	if err := validator.ValidateName(s.Name); err != nil {
+	if err := validator.ValidateFileName(s.Name); err != nil {
 		return err
 	}
 

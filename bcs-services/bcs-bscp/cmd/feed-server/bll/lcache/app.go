@@ -22,15 +22,15 @@ import (
 	"github.com/bluele/gcache"
 	prm "github.com/prometheus/client_golang/prometheus"
 
-	clientset "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	clientset "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // newApp create an app meta's cache instance.
@@ -84,6 +84,26 @@ func (ap *App) IsAppExist(kt *kit.Kit, bizID uint32, appIDs ...uint32) (bool, er
 	}
 
 	return true, nil
+}
+
+// RemoveCache 清空app缓存
+func (ap *App) RemoveCache(kt *kit.Kit, bizID uint32, appName string) {
+	key := fmt.Sprintf("%d-%s", bizID, appName)
+	ap.idClient.Remove(key)
+
+	// 强制 cacheserver 刷新缓存
+	opt := &pbcs.GetAppIDReq{
+		BizId:   bizID,
+		AppName: appName,
+		Refresh: true,
+	}
+
+	_, _ = ap.cs.CS().GetAppID(kt.RpcCtx(), opt)
+}
+
+// ListApps 获取App列表, 不缓存，直接透传请求
+func (ap *App) ListApps(kt *kit.Kit, req *pbcs.ListAppsReq) (*pbcs.ListAppsResp, error) {
+	return ap.cs.CS().ListApps(kt.Ctx, req)
 }
 
 // GetAppID get app id by app name.

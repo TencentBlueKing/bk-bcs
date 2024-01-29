@@ -192,6 +192,22 @@ spec:
               override:
                 description: 是否覆盖同名配置，默认为false
                 type: boolean
+              repoRef:
+                description: if set, import Repo from argo
+                properties:
+                  password:
+                    type: string
+                  targetRevision:
+                    description: if not set, use
+                    type: string
+                  url:
+                    type: string
+                  userName:
+                    description: no used
+                    type: string
+                required:
+                - url
+                type: object
               ruleEnhance:
                 description: RuleEnhance 告警规则增强能力
                 properties:

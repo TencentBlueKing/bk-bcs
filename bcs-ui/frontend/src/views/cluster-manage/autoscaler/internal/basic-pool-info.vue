@@ -53,6 +53,18 @@
         class="max-w-[420px]"
         :min-item="0"
         :disable-delete-item="false"
+        :key-rules="[
+          {
+            message: $t('generic.validate.annotations'),
+            validator: '^[A-Za-z0-9. _/-]+$',
+          },
+        ]"
+        :value-rules="[
+          {
+            message: $t('generic.validate.annotations'),
+            validator: '^[A-Za-z0-9. _/-]+$',
+          },
+        ]"
         v-model="nodePoolInfo.nodeTemplate.annotations">
       </KeyValue>
     </bk-form-item>
@@ -200,12 +212,12 @@ export default defineComponent({
             .every(key => !!nodePoolInfo.value.nodeTemplate.annotations[key]),
         },
         {
-          message: $i18n.t('generic.validate.labelKey'),
+          message: $i18n.t('generic.validate.annotations'),
           trigger: 'custom',
           validator: () => {
             const keys = Object.keys(nodePoolInfo.value.nodeTemplate.annotations);
             const values = keys.map(key => nodePoolInfo.value.nodeTemplate.annotations[key]);
-            return keys.every(v => /^[A-Za-z0-9._/-]+$/.test(v)) && values.every(v => /^[A-Za-z0-9._/-]+$/.test(v));
+            return keys.every(v => /^[A-Za-z0-9. _/-]+$/.test(v)) && values.every(v => /^[A-Za-z0-9. _/-]+$/.test(v));
           },
         },
       ],

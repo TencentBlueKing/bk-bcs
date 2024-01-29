@@ -159,7 +159,8 @@ func selectVclusterHostCluster(model store.ClusterManagerModel, filter VClusterH
 
 // getAllMasterIPs get cluster masterIPs
 func getAllMasterIPs(model store.ClusterManagerModel) map[string]clusterInfo {
-	clusterStatus := []string{common.StatusInitialization, common.StatusRunning, common.StatusDeleting}
+	clusterStatus := []string{common.StatusInitialization, common.StatusRunning,
+		common.StatusDeleting, common.StatusDeleteClusterFailed}
 	condStatus := operator.NewLeafCondition(operator.In, operator.M{"status": clusterStatus})
 
 	clusterList, err := model.ListCluster(context.Background(), condStatus, &storeopt.ListOption{All: true})
@@ -448,6 +449,7 @@ func transNodeToClusterNode(model store.ClusterManagerModel, node *proto.Node) *
 		InnerIPv6:     node.InnerIPv6,
 		TaskID:        node.TaskID,
 		ZoneName:      node.ZoneName,
+		FailedReason:  node.FailedReason,
 	}
 }
 
@@ -590,6 +592,7 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 					}
 					return ""
 				}(),
+				FailedReason: n.FailedReason,
 			})
 		} else {
 			nodes2 = append(nodes2, &proto.ClusterNode{
@@ -733,4 +736,148 @@ func GetClusterStatusNodes(
 	}
 
 	return nodes, nil
+}
+
+const (
+	master = "master"
+	worker = "worker"
+)
+
+func updateClusterModule(cluster *proto.Cluster, category, moduleID, moduleName string) {
+	if cluster.GetClusterBasicSettings().GetModule() == nil {
+		cluster.GetClusterBasicSettings().Module = &proto.ClusterModule{}
+	}
+	if moduleID == "" {
+		return
+	}
+
+	bkBizID, _ := strconv.Atoi(cluster.GetBusinessID())
+	bkModuleID, _ := strconv.Atoi(moduleID)
+
+	switch category {
+	case master:
+		cluster.GetClusterBasicSettings().GetModule().MasterModuleID = moduleID
+		if moduleName != "" {
+			cluster.GetClusterBasicSettings().GetModule().MasterModuleName = moduleName
+			break
+		}
+
+		cluster.GetClusterBasicSettings().GetModule().MasterModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+	case worker:
+		cluster.GetClusterBasicSettings().GetModule().WorkerModuleID = moduleID
+		if moduleName != "" {
+			cluster.GetClusterBasicSettings().GetModule().WorkerModuleName = moduleName
+			break
+		}
+		cluster.GetClusterBasicSettings().GetModule().WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+	default:
+	}
+
+	return
+}
+
+func updateAutoScalingModule(cluster *proto.Cluster, option *proto.ClusterAutoScalingOption,
+	moduleID, moduleName string) {
+	if option.GetModule() == nil {
+		option.Module = &proto.ModuleInfo{}
+	}
+	if moduleID == "" {
+		return
+	}
+	bkBizID, _ := strconv.Atoi(cluster.GetBusinessID())
+	bkModuleID, _ := strconv.Atoi(moduleID)
+	option.Module.ScaleOutBizID = cluster.GetBusinessID()
+	option.Module.ScaleOutModuleID = moduleID
+
+	if moduleName != "" {
+		option.Module.ScaleOutModuleName = moduleName
+	} else {
+		option.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+	}
+
+	return
+}
+
+func transClusterNodes(model store.ClusterManagerModel, cluster *proto.Cluster, category, moduleID string) error {
+	bkBizID, _ := strconv.Atoi(cluster.GetBusinessID())
+	bkModuleID, _ := strconv.Atoi(moduleID)
+
+	var (
+		err     error
+		nodeIps []string
+		nodes   []*proto.ClusterNode
+	)
+
+	switch category {
+	case master:
+		nodes, err = getClusterMasterNodes(model, cluster)
+		if err != nil {
+			blog.Errorf("transClusterNodes[%s] getClusterMasterNodes failed: %v", cluster.ClusterID, err)
+			return err
+		}
+	case worker:
+		nodes, err = getClusterNodes(model, cluster)
+		if err != nil {
+			blog.Errorf("transClusterNodes[%s] getClusterNodes failed: %v", cluster.ClusterID, err)
+			return err
+		}
+	default:
+		return fmt.Errorf("not support %s", category)
+	}
+
+	nodeIps = getCmNodeIps(nodes)
+	if len(nodeIps) == 0 {
+		blog.Errorf("transClusterNodes[%s] nodeIps empty", cluster.ClusterID)
+		return nil
+	}
+	
+	err = provider.TransBizNodeModule(context.Background(), bkBizID, bkModuleID, nodeIps)
+	if err != nil {
+		blog.Errorf("transClusterNodes[%s] TransBizNodeModule failed: %v", cluster.ClusterID, err)
+		return err
+	}
+
+	return nil
+}
+
+func getClusterNodes(model store.ClusterManagerModel, cls *proto.Cluster) ([]*proto.ClusterNode, error) {
+	condM := make(operator.M)
+	condM["clusterid"] = cls.ClusterID
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	nodes, err := model.ListNode(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("list nodes in cluster %s failed, %s", cls.ClusterID, err.Error())
+		return nil, err
+	}
+
+	cmNodes := make([]*proto.ClusterNode, 0)
+	for i := range nodes {
+		cmNodes = append(cmNodes, transNodeToClusterNode(model, nodes[i]))
+	}
+
+	return cmNodes, nil
+}
+
+func getClusterMasterNodes(model store.ClusterManagerModel, cls *proto.Cluster) ([]*proto.ClusterNode, error) {
+	if cls == nil || len(cls.GetMaster()) == 0 {
+		return nil, fmt.Errorf("cluster %s master nodes empty", cls.ClusterID)
+	}
+
+	cmNodes := make([]*proto.ClusterNode, 0)
+	for i := range cls.GetMaster() {
+		cmNodes = append(cmNodes, transNodeToClusterNode(model, cls.GetMaster()[i]))
+	}
+
+	return cmNodes, nil
+}
+
+func getCmNodeIps(cmNodes []*proto.ClusterNode) []string {
+	var ips = make([]string, 0)
+	for i := range cmNodes {
+		if cmNodes[i].InnerIP == "" {
+			continue
+		}
+		ips = append(ips, cmNodes[i].InnerIP)
+	}
+	return ips
 }

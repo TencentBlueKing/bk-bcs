@@ -4,7 +4,7 @@ import "pkg/protocol/core/base/base.proto";
 
 package pbtset;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-set;pbtset";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-set;pbtset";
 
 // TemplateSet source resource reference: pkg/dal/table/template_set.go
 message TemplateSet {

@@ -13,23 +13,8 @@
 // Package main is the entry point of the API server.
 package main
 
-import (
-	"fmt"
-	"os"
-
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/api-server/app"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/api-server/options"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-)
+import "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/api-server/cmd"
 
 func main() {
-	cc.InitService(cc.APIServerName)
-
-	opts := options.InitOptions()
-	if err := app.Run(opts); err != nil {
-		fmt.Fprintf(os.Stderr, "start api server failed, err: %v", err)
-		logs.CloseLogs()
-		os.Exit(1)
-	}
+	cmd.Execute()
 }

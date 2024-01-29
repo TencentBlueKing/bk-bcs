@@ -15,12 +15,56 @@ package task
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
+
+func updateTaskDataStatus(model store.ClusterManagerModel, task *proto.Task) error {
+	blog.Infof("updateTaskDataStatus[%s] taskType[%s]", task.TaskID, task.TaskType)
+
+	var err error
+	switch {
+	case strings.Contains(task.TaskType, cloudprovider.CreateCluster.String()),
+		strings.Contains(task.TaskType, cloudprovider.ImportCluster.String()),
+		strings.Contains(task.TaskType, cloudprovider.CreateVirtualCluster.String()):
+		err = updateClusterStatus(model, task.ClusterID, common.StatusInitialization)
+	case strings.Contains(task.TaskType, cloudprovider.DeleteCluster.String()),
+		strings.Contains(task.TaskType, cloudprovider.DeleteVirtualCluster.String()):
+		err = updateClusterStatus(model, task.ClusterID, common.StatusDeleting)
+	case strings.Contains(task.TaskType, cloudprovider.AddNodesToCluster.String()):
+		//err = updateNodeStatus(ua.model, ua.task.NodeIPList, common.StatusInitialization)
+		err = updateNodeStatus(model, cloudprovider.ParseNodeIpOrIdFromCommonMap(task.CommonParams,
+			cloudprovider.NodeIPsKey.String(), ","), common.StatusInitialization)
+	case strings.Contains(task.TaskType, cloudprovider.RemoveNodesFromCluster.String()):
+		err = updateNodeStatus(model, task.NodeIPList, common.StatusDeleting)
+	case strings.Contains(task.TaskType, cloudprovider.CreateNodeGroup.String()):
+		err = updateNodeGroupStatus(model, task.NodeGroupID, common.StatusCreateNodeGroupCreating)
+	case strings.Contains(task.TaskType, cloudprovider.DeleteNodeGroup.String()):
+		err = updateNodeGroupStatus(model, task.NodeGroupID, common.StatusDeleteNodeGroupDeleting)
+	case strings.HasSuffix(task.TaskType, cloudprovider.UpdateNodeGroup.String()):
+		err = updateNodeGroupStatus(model, task.NodeGroupID, common.StatusUpdateNodeGroupUpdating)
+	case strings.HasSuffix(task.TaskType, cloudprovider.UpdateNodeGroupDesiredNode.String()):
+		err = updateNodeStatus(model, cloudprovider.ParseNodeIpOrIdFromCommonMap(task.CommonParams,
+			cloudprovider.NodeIPsKey.String(), ","), common.StatusInitialization)
+	case strings.Contains(task.TaskType, cloudprovider.CleanNodeGroupNodes.String()):
+		err = updateNodeStatus(model, cloudprovider.ParseNodeIpOrIdFromCommonMap(task.CommonParams,
+			cloudprovider.NodeIPsKey.String(), ","), common.StatusInitialization)
+	default:
+		blog.Warnf("updateTaskDataStatus[%s] not support taskType[%s]", task.TaskID, task.TaskType)
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func updateNodeGroupStatus(model store.ClusterManagerModel, nodeGroupID, status string) error {
 	group, err := model.GetNodeGroup(context.Background(), nodeGroupID)
@@ -55,6 +99,7 @@ func updateClusterStatus(model store.ClusterManagerModel, clusterID, status stri
 	}
 
 	cluster.Status = status
+	cluster.Message = ""
 	err = model.UpdateCluster(context.Background(), cluster)
 	if err != nil {
 		blog.Errorf("updateClusterStatus[%s] UpdateCluster failed: %v", clusterID, err)

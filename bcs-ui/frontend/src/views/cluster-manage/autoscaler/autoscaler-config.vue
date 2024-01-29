@@ -40,7 +40,7 @@
         </bk-form-item>
       </LayoutGroup>
       <!-- form-item放在Group内会导致form组件无法注册 -->
-      <bk-form-item
+      <!-- <bk-form-item
         :label="$t('cluster.ca.basic.module.label')"
         :desc="$t('cluster.ca.basic.module.desc')"
         error-display-type="normal"
@@ -53,7 +53,7 @@
           :cluster-id="clusterId"
           class="w-[500px]"
           @node-data-change="handleScaleOutDataChange" />
-      </bk-form-item>
+      </bk-form-item> -->
       <LayoutGroup :title="$t('cluster.ca.unreadyConfig.title')" class="mb10">
         <div class="flex">
           <i18n
@@ -237,8 +237,6 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from 'vue';
 
-import TopoSelectTree from './topo-select-tree.vue';
-
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import { useConfig } from '@/composables/use-app';
@@ -255,7 +253,6 @@ export default defineComponent({
     BcsContent,
     HeaderNav,
     LayoutGroup,
-    TopoSelectTree,
   },
   props: {
     clusterId: {
@@ -266,13 +263,14 @@ export default defineComponent({
   setup(props) {
     const formRef = ref<any>(null);
     const rules = ref({
-      scaleOutModuleID: [
-        {
-          validator: () => !!autoscalerData.value.module?.scaleOutModuleID,
-          message: $i18n.t('generic.validate.required'),
-          trigger: 'blur',
-        },
-      ],
+      // 转移模块放在基本配置里面了
+      // scaleOutModuleID: [
+      //   {
+      //     validator: () => !!autoscalerData.value.module?.scaleOutModuleID,
+      //     message: $i18n.t('generic.validate.required'),
+      //     trigger: 'blur',
+      //   },
+      // ],
     });
     const { clusterList } = useClusterList();
     const navList = computed(() => [

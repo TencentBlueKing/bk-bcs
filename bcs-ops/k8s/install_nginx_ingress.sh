@@ -50,19 +50,10 @@ install_nginx_ingress() {
   local ver=$NGINX_INGRESS_VER
   local namespace=$NAMESPACE
   local chart_path
-  if [[ -n ${BCS_OFFLINE:-} ]]; then
-    chart_path="$(find "${ROOT_DIR}/version-${K8S_VER}/charts/" -iname "ingress-nginx-*.tgz" -type f | head -1)"
+    chart_path="$(find "${ROOT_DIR}/charts/" -name "ingress-nginx-${ver}.tgz" -type f)"
     if [[ -z $chart_path ]]; then
       utils::log "FATAL" "can't find ingress-nginx chart in ${ROOT_DIR}/version-${K8S_VER}/charts/"
     fi
-  else
-    [[ -n ${BKREPO_URL:-} ]] || utils::log "FAIL" "missing bkrepo url ${BKREPO_URL}"
-    if ! k8s::safe_add_helmrepo blueking "${BKREPO_URL}"; then
-      utils::log "WARNING" "something wrong with helm, skip install ingress-nginx"
-      return 1
-    fi
-    chart_path="blueking/ingress-nginx"
-  fi
   local registry
   if [[ -n ${BK_PUBLIC_REPO} ]]; then
     registry="${BK_PUBLIC_REPO}/registry.k8s.io"
@@ -71,6 +62,7 @@ install_nginx_ingress() {
   fi
 
   utils::log "INFO" "installing ingress-nginx"
+
   cat <<EOF | helm upgrade --install ingress-nginx "${chart_path}" --version "$ver" -n $namespace --debug -f -
 controller:
   metrics:

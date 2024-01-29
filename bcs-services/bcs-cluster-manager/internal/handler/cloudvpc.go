@@ -185,7 +185,7 @@ func (cm *ClusterManager) GetCloudBandwidthPackages(ctx context.Context,
 
 	metrics.ReportAPIRequestMetric("GetCloudBandwidthPackages", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: GetCloudBandwidthPackages, req %v, resp.Code %d, "+
-		"resp.Message %s, resp.Data %v", reqID, req, resp.Code, resp.Message, resp.Data)
+		"resp.Message %s, resp.Data %v", reqID, req, resp.Code, resp.Message, resp.Data) // nolint
 	blog.V(5).Infof("reqID: %s, action: GetCloudBandwidthPackages, req %v, resp %v", reqID, req, resp)
 	return nil
 }

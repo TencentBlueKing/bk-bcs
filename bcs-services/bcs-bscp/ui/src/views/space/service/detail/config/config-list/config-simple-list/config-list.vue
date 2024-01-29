@@ -12,13 +12,14 @@
           <div class="config-type">{{ getConfigTypeName(config.spec.file_type) }}</div>
         </div>
       </div>
-      <bk-exception v-else scene="part" type="empty" description="暂无数据"></bk-exception>
+      <bk-exception v-else scene="part" type="empty" :description="t('暂无数据')"></bk-exception>
     </bk-loading>
     <EditConfig v-model:show="editDialogShow" :bk-biz-id="props.bkBizId" :app-id="props.appId" :config-id="configId" />
   </section>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useConfigStore from '../../../../../../../store/config';
 import { ICommonQuery } from '../../../../../../../../types/index';
@@ -29,6 +30,7 @@ import EditConfig from '../config-table-list/edit-config.vue';
 
 const store = useConfigStore();
 const { versionData } = storeToRefs(store);
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;

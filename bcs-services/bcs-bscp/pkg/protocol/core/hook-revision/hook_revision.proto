@@ -4,7 +4,7 @@ package pbhr;
 
 import "pkg/protocol/core/base/base.proto";
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision;pbhr";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision;pbhr";
 
 // HookRevision source resource reference: pkg/dal/table/hook_revision.go
 message HookRevision {

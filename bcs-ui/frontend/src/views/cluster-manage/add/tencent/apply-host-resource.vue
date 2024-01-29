@@ -1,59 +1,25 @@
 <template>
-  <div class="max-w-[750px]">
+  <div>
     <bk-form-item :label="$t('tke.label.region')">
-      <bcs-select
-        class="max-w-[500px]"
+      <Region
+        class="max-w-[600px]"
         :value="region"
-        searchable
-        :clearable="false"
-        disabled>
-        <bcs-option
-          v-for="item in regionList"
-          :key="item.region"
-          :id="item.region"
-          :name="item.regionName">
-        </bcs-option>
-      </bcs-select>
+        :cloud-account-i-d="cloudAccountID"
+        :cloud-i-d="cloudID"
+        disabled />
     </bk-form-item>
     <bk-form-item :label="$t('cluster.create.label.privateNet.text')">
-      <bcs-select
-        class="max-w-[500px]"
+      <Vpc
+        class="max-w-[600px]"
         :value="vpcID"
-        disabled>
-        <bcs-option
-          v-for="item in vpcList"
-          :key="item.vpcId"
-          :id="item.vpcId"
-          :name="`${item.name}(${item.vpcId})`">
-          <div class="flex items-center place-content-between">
-            <span>
-              {{`${item.name}(${item.vpcId})`}}
-              <span class="vpc-id">{{`(${item.vpcId})`}}</span>
-            </span>
-          </div>
-        </bcs-option>
-      </bcs-select>
+        :region="region"
+        :cloud-account-i-d="cloudAccountID"
+        :cloud-i-d="cloudID"
+        disabled />
     </bk-form-item>
     <bk-form-item :label="$t('tke.label.system')">
-      <bcs-select disabled :value="os" class="max-w-[500px]">
-        <bcs-option-group v-for="group in imageListByGroup" :key="group.provider" :name="group.name">
-          <template v-if="group.provider === 'PRIVATE_IMAGE'">
-            <bcs-option
-              v-for="item in group.children"
-              :key="item.imageID"
-              :id="item.imageID"
-              :name="item.alias">
-            </bcs-option>
-          </template>
-          <template v-else>
-            <bcs-option
-              v-for="item in group.children"
-              :key="item.osName"
-              :id="item.osName"
-              :name="item.alias">
-            </bcs-option>
-          </template>
-        </bcs-option-group>
+      <bcs-select disabled :value="imageID" class="max-w-[600px]">
+        <bcs-option v-for="item in imageList" :key="item.imageID" :id="item.imageID" :name="item.alias"></bcs-option>
       </bcs-select>
     </bk-form-item>
     <bk-form-item :label="$t('tke.label.configRec')" v-if="showRecommendedConfig">
@@ -100,7 +66,7 @@
     </bk-form-item>
     <template v-if="instanceCommonConfig.instanceChargeType === 'PREPAID' && instanceCommonConfig.charge">
       <bk-form-item :label="$t('tke.label.period')">
-        <bcs-select :clearable="false" searchable v-model="instanceCommonConfig.charge.period" class="max-w-[500px]">
+        <bcs-select :clearable="false" searchable v-model="instanceCommonConfig.charge.period" class="max-w-[600px]">
           <bcs-option v-for="item in periodList" :key="item.id" :id="item.id" :name="item.name"></bcs-option>
         </bcs-select>
       </bk-form-item>
@@ -119,11 +85,16 @@
       property="instances"
       error-display-type="normal"
       ref="instancesRef">
-      <bk-button theme="primary" icon="plus" outline @click="handleAddInstance">
-        {{ $t('tke.button.addNodeConfig') }}
-      </bk-button>
+      <div class="flex items-center justify-between max-w-[600px]">
+        <bk-button theme="primary" icon="plus" outline @click="handleAddInstance">
+          {{ $t('tke.button.addNodeConfig') }}
+        </bk-button>
+        <i18n path="tke.tips.nodeNum" class="text-[12px]" v-if="applyNum">
+          <span class="text-[#3A84FF] font-bold">{{ applyNum }}</span>
+        </i18n>
+      </div>
       <div
-        class="bg-[#F5F7FA] mt-[16px] p-[8px] rounded text-[12px] relative"
+        class="bg-[#F5F7FA] mt-[16px] p-[8px] rounded text-[12px] relative max-w-[600px]"
         v-for="item, index in instances"
         :key="index">
         <div class="absolute top-[8px] right-[24px] text-[14px]">
@@ -151,12 +122,14 @@
           <label class="node-config-label">{{ $t('tke.label.systemDisk') }}</label>
           {{ `${diskMap[item.systemDisk.diskType]} ${item.systemDisk.diskSize}G` }}
         </div>
-        <div class="flex items-center h-[32px]">
+        <div class="flex items-start min-h-[32px]">
           <label class="node-config-label">{{ $t('tke.label.dataDisk') }}</label>
-          <div>
-            <div v-for="disk, i in item.cloudDataDisks" :key="i">
+          <div class="flex items-start flex-col pt-[5px]">
+            <span
+              v-for="disk, i in item.cloudDataDisks" :key="i"
+              class="bcs-ellipsis flex-1 leading-[20px]">
               {{ `${diskMap[disk.diskType]} ${disk.diskSize}G ${disk.fileSystem} ${disk.mountTarget}` }}
-            </div>
+            </span>
           </div>
         </div>
         <div
@@ -174,25 +147,13 @@
       property="securityGroupIDs"
       error-display-type="normal"
       required>
-      <bk-select
-        class="max-w-[500px]"
-        searchable
+      <SecurityGroups
+        class="max-w-[600px]"
         multiple
-        :clearable="false"
-        v-model="instanceCommonConfig.securityGroupIDs">
-        <bk-option
-          v-for="item in securityGroups"
-          :key="item.securityGroupID"
-          :id="item.securityGroupID"
-          :name="`${item.securityGroupName}(${item.securityGroupID})`">
-        </bk-option>
-        <template slot="extension">
-          <SelectExtension
-            :link-text="$t('tke.link.securityGroup')"
-            link="https://console.cloud.tencent.com/vpc/security-group"
-            @refresh="refreshSecurityGroups" />
-        </template>
-      </bk-select>
+        :region="region"
+        :cloud-account-i-d="cloudAccountID"
+        :cloud-i-d="cloudID"
+        v-model="instanceCommonConfig.securityGroupIDs" />
     </bk-form-item>
     <bcs-sideslider
       :is-show.sync="showNodeConfig"
@@ -203,13 +164,13 @@
         :region="region"
         :account-id="cloudAccountID"
         :vpc-id="vpcID"
-        :zone-list="zoneList"
         :node-role="nodeRole"
         :instance="editInstanceItem"
         :cloud-account-i-d="cloudAccountID"
         :cloud-i-d="cloudID"
         :disable-data-disk="disableDataDisk"
         :disable-internet-access="disableInternetAccess"
+        :max-nodes="maxNodes"
         slot="content"
         @cancel="showNodeConfig = false"
         @confirm="handleNodeConfigConfirm" />
@@ -220,10 +181,13 @@
 import { computed, defineProps, PropType, ref, watch } from 'vue';
 
 import ApplyNodeConfig from './apply-node-config.vue';
-import { ICloudRegion, IInstanceItem, ISecurityGroup, IZoneItem } from './types';
+import { IImageItem, IInstanceItem, IZoneItem } from './types';
 
 import $i18n from '@/i18n/i18n-setup';
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
+import $store from '@/store';
+import Region from '@/views/cluster-manage/add/form/region.vue';
+import SecurityGroups from '@/views/cluster-manage/add/form/security-groups.vue';
+import Vpc from '@/views/cluster-manage/add/form/vpc.vue';
 
 const props = defineProps({
   region: {
@@ -238,36 +202,9 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  os: {
-    type: String,
-    default: '',
-  },
   vpcID: {
     type: String,
     default: '',
-  },
-  regionList: {
-    type: Array as PropType<ICloudRegion[]>,
-    default: () => [],
-  },
-  vpcList: {
-    type: Array as PropType<{
-      name: string
-      vpcId: string
-    }[]>,
-    default: () => [],
-  },
-  imageListByGroup: {
-    type: Object,
-    default: () => ({}),
-  },
-  securityGroups: {
-    type: Array as PropType<ISecurityGroup[]>,
-    default: () => [],
-  },
-  zoneList: {
-    type: Array as PropType<IZoneItem[]>,
-    default: () => [],
   },
   instances: {
     type: Array as PropType<IInstanceItem[]>,
@@ -293,9 +230,19 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  maxNodes: {
+    type: Number,
+    default: 5,
+  },
 });
 
-const emits = defineEmits(['instance-list-change', 'level-change', 'delete-instance', 'common-config-change', 'refresh-security-groups']);
+const emits = defineEmits(['instance-list-change', 'level-change', 'delete-instance', 'common-config-change']);
+
+const imageID = computed(() => $store.state.cloudMetadata.imageID);
+const applyNum = computed(() => props.instances.reduce((pre, item) => {
+  pre += Number(item.applyNum) || 0;
+  return pre;
+}, 0));
 
 const diskMap = ref({
   CLOUD_PREMIUM: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.premium'),
@@ -341,12 +288,13 @@ const periodList = ref([
 const showNodeConfig = ref(false);
 
 // 获取zone name
-const getZoneName = zone => props.zoneList.find(item => item.zone === zone)?.zoneName;
+const zoneList = computed<IZoneItem[]>(() => $store.state.cloudMetadata.zoneList);
+const getZoneName = zone => zoneList.value.find(item => item.zone === zone)?.zoneName;
 
 // 节点公共配置
 const instanceCommonConfig = ref<Partial<IInstanceItem>>({
   nodeRole: props.nodeRole, // MASTER_ETCD WORKER
-  instanceChargeType: 'PREPAID',
+  instanceChargeType: '',
   securityGroupIDs: [],
   isSecurityService: true, // 默认true
   isMonitorService: true, // 默认true
@@ -362,6 +310,9 @@ watch(
   },
   { deep: true, immediate: true },
 );
+
+// 镜像列表
+const imageList = computed<Array<IImageItem>>(() => $store.state.cloudMetadata.osList);
 
 // 计费模式
 const chargeDesc = ref({
@@ -413,15 +364,11 @@ const handleNodeConfigConfirm = async (item: IInstanceItem) => {
   handleLevelChange('');// 重置level
   showNodeConfig.value = false;
 };
-
-const refreshSecurityGroups = () => {
-  emits('refresh-security-groups');
-};
 </script>
 <style scoped lang="postcss">
 .node-config-label {
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
   width: 90px;
   margin-right: 4px;
   &::after {

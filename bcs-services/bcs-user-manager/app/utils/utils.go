@@ -33,6 +33,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
+// TokenStatus is a enum for token status.
+// nolint
+type TokenStatus uint8
+
+const (
+	// TokenStatusExpired mean that token is expired.
+	TokenStatusExpired TokenStatus = iota
+	// TokenStatusActive mean that token is active.
+	TokenStatusActive
+)
+
 // Validate local implementation
 var Validate = validator.New()
 var trans ut.Translator

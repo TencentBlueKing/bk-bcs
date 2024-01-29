@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"helm.sh/helm/v3/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -94,8 +95,8 @@ func (r *ReleaseUninstallAction) Execute(ctx context.Context) error {
 		if errors.Is(err, driver.ErrReleaseNotFound) {
 			return nil
 		}
-		return fmt.Errorf("get %s/%s in cluster %s error, %s",
-			r.namespace, r.name, r.clusterID, err.Error())
+		blog.Warnf("get %s/%s in cluster %s error, %s", r.namespace, r.name, r.clusterID, err.Error())
+		return nil
 	}
 
 	_, err = r.releaseHandler.Cluster(r.clusterID).Uninstall(ctx, release.HelmUninstallConfig{

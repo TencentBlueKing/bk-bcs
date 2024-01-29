@@ -94,6 +94,12 @@ export const updateApp = (params: any) => {
 export const permissionCheck = (params: { resources: IPermissionQueryResourceItem[] }) => http.post('/auth/iam/permission/check', params).then(resp => resp.data);
 
 /**
+ * 获取消息通知信息
+ * @returns
+ */
+export const getNotice = () => http.get('/announcements').then(resp => resp.data);
+
+/**
  * 退出登录
  * @returns
  */

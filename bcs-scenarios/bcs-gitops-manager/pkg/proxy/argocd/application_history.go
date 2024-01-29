@@ -24,8 +24,8 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 )
 
 // ApplicationHistoryManifestResponse defines the response for get history manifests of application
@@ -67,7 +67,8 @@ func (plugin *AppPlugin) applicationHistoryState(r *http.Request) (*http.Request
 			errors.Wrapf(err, "request query param 'historyID' %s not int", historyIDStr))
 	}
 
-	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectEdit)
+	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
+		iamnamespace.NameSpaceScopedView)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check application permission failed"))
 	}

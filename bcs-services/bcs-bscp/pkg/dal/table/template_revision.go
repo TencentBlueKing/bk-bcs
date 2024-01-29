@@ -15,7 +15,7 @@ package table
 import (
 	"errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // TemplateRevision 模版版本
@@ -110,7 +110,7 @@ type TemplateRevisionSpec struct {
 
 // ValidateCreate validate template revision spec when it is created.
 func (t *TemplateRevisionSpec) ValidateCreate() error {
-	if err := validator.ValidateCfgItemName(t.Name); err != nil {
+	if err := validator.ValidateFileName(t.Name); err != nil {
 		return err
 	}
 

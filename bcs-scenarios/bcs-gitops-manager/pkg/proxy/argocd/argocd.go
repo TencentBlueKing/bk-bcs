@@ -13,6 +13,7 @@
 package argocd
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
@@ -100,6 +102,13 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
 		middleware:     middleware,
 		analysisClient: analysis.GetAnalysisClient(),
+		bcsStorage: bcsapi.NewStorage(&bcsapi.Config{
+			Hosts:     []string{ops.option.BCSStorageAPIUrl},
+			AuthToken: ops.option.BCSStorageAPIToken,
+			// just a fake tls config
+			TLSConfig: &tls.Config{},
+			Gateway:   true,
+		}),
 	}
 	appsetPlugin := &ApplicationSetPlugin{
 		storage:    ops.option.Storage,

@@ -20,4 +20,4 @@ package translations
 // -lang 指定要翻译的目标语言，这里是英语en和中文zh，多个语言之间以逗号分隔
 // 最后的参数表示要提取翻译message的包路径，多个包路径以空格分隔（这里使用需要翻译的模块入口所在package，会自动加载这些包的依赖包）
 
-//go:generate gotext -srclang=zh-Hans update -out=catalog.go -lang=en,zh-Hans ../../
+//go:generate gotext -srclang=zh update -out=catalog.go -lang=en,zh ../../../

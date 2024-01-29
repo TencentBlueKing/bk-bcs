@@ -37,10 +37,11 @@
               <bk-input
                 v-else-if="col.prop === 'default_val'"
                 v-model="variable.default_val"
+                :placeholder="t('请输入')"
                 @blur="handleValueChange(variable.type, variable.default_val)"
                 @change="deleteCellError(variable.name, col.prop)"
               />
-              <bk-input v-else-if="col.prop === 'memo'" v-model="variable.memo" @change="change" />
+              <bk-input v-else-if="col.prop === 'memo'" :placeholder="t('请输入')" v-model="variable.memo" @change="change" />
               <div v-else>
                 <bk-overflow-title type="tips">
                   {{ getCellVal(variable, col.prop) }}
@@ -56,7 +57,7 @@
         </tr>
         <tr v-if="props.list.length === 0">
           <td :colspan="cols.length">
-            <bk-exception class="empty-tips" type="empty" scene="part">暂无数据</bk-exception>
+            <bk-exception class="empty-tips" type="empty" scene="part">{{ t('暂无数据') }}</bk-exception>
           </td>
         </tr>
       </tbody>
@@ -65,14 +66,16 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import cloneDeep from 'lodash';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
 
 interface IErrorDetail {
   [key: string]: string[];
 }
 
+const { t } = useI18n();
 const props = withDefaults(
   defineProps<{
     list: IVariableEditParams[];
@@ -95,13 +98,13 @@ const errorDetails = ref<IErrorDetail>({});
 
 const cols = computed(() => {
   const tableCols = [
-    { label: '变量名称', cls: 'name', prop: 'name' },
-    { label: '类型', cls: 'type', prop: 'type' },
-    { label: '变量值', cls: 'default_value', prop: 'default_val' },
-    { label: '变量说明', cls: 'memo', prop: 'memo' },
+    { label: t('变量名称'), cls: 'name', prop: 'name' },
+    { label: t('类型'), cls: 'type', prop: 'type' },
+    { label: t('变量值'), cls: 'default_value', prop: 'default_val' },
+    { label: t('变量说明'), cls: 'memo', prop: 'memo' },
   ];
   if (props.showCited) {
-    tableCols.push({ label: '被引用', cls: 'cited', prop: 'cited' });
+    tableCols.push({ label: t('被引用'), cls: 'cited', prop: 'cited' });
   }
   return tableCols;
 });
@@ -181,7 +184,7 @@ const handleValueChange = (type: string, value: string) => {
   if (type === 'number' && !/^\d*(\.\d+)?$/.test(value)) {
     Message({
       theme: 'error',
-      message: `${value}不是数字类型`,
+      message: `${value}${t('不是数字类型')}`,
     });
   }
 };

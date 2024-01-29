@@ -125,6 +125,11 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 		create = true
 	}
 
+	status := helmrelease.StatusPendingUpgrade.String()
+	// 对于非 chart 类型的 addons，直接返回成功
+	if isFakeChart(chartName) {
+		status = helmrelease.StatusDeployed.String()
+	}
 	createBy := auth.GetUserFromCtx(ctx)
 	if create {
 		u.createBy = createBy
@@ -140,7 +145,7 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 			Values:       []string{u.req.GetValues()},
 			Args:         defaultArgs,
 			CreateBy:     createBy,
-			Status:       helmrelease.StatusPendingUpgrade.String(),
+			Status:       status,
 		}); err != nil {
 			return err
 		}
@@ -160,7 +165,7 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 			entity.FieldKeyValues:       []string{u.req.GetValues()},
 			entity.FieldKeyArgs:         defaultArgs,
 			entity.FieldKeyUpdateBy:     createBy,
-			entity.FieldKeyStatus:       helmrelease.StatusPendingUpgrade.String(),
+			entity.FieldKeyStatus:       status,
 			entity.FieldKeyMessage:      "",
 		}
 		if err := u.model.UpdateRelease(ctx, u.req.GetClusterID(), ns, releaseName, rl); err != nil {

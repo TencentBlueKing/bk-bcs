@@ -1,7 +1,7 @@
 <template>
   <bk-sideslider
     :is-show="props.show"
-    title="版本对比"
+    :title="t('版本对比')"
     ext-cls="config-version-diff-slider"
     :width="1200"
     @closed="handleClose"
@@ -14,6 +14,7 @@
           :un-named-version-variables="props.unNamedVersionVariables"
           :selected-config="props.selectedConfig"
           :selected-config-kv="props.selectedConfigKv"
+          :is-publish="props.showPublishBtn"
           @selected="handleSelectDiffItem"
         />
         <div :class="['diff-content-area', { light: diffDetailData.contentType === 'file' }]">
@@ -21,13 +22,14 @@
             <template #leftHead>
               <slot name="baseHead">
                 <div class="diff-panel-head">
-                  <div class="version-tag base-version">对比版本</div>
+                  <div class="version-tag base-version">{{showPublishBtn ? t('线上版本') : t('对比版本')}}</div>
                   <bk-select
                     :model-value="selectedBaseVersion"
                     style="width: 320px"
                     :loading="versionListLoading"
                     :clearable="false"
-                    no-data-text="暂无数据"
+                    :no-data-text="t('暂无数据')"
+                    :placeholder="t('请选择')"
                     @change="handleSelectVersion"
                   >
                     <bk-option
@@ -44,7 +46,7 @@
             <template #rightHead>
               <slot name="currentHead">
                 <div class="diff-panel-head">
-                  <div class="version-tag">当前版本</div>
+                  <div class="version-tag">{{ t('当前版本') }}</div>
                   <div class="version-name">{{ props.currentVersion.spec.name }}</div>
                 </div>
               </slot>
@@ -57,9 +59,9 @@
       <div class="actions-btns">
         <slot name="footerActions">
           <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')"
-            >上线版本</bk-button
+            >{{ t('上线版本') }}</bk-button
           >
-          <bk-button @click="handleClose">关闭</bk-button>
+          <bk-button @click="handleClose">{{ t('关闭') }}</bk-button>
         </slot>
       </div>
     </template>
@@ -67,6 +69,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { IConfigVersion, IConfigDiffSelected } from '../../../../../../../../types/config';
 import { IDiffDetail } from '../../../../../../../../types/service';
@@ -75,6 +78,7 @@ import { getConfigVersionList } from '../../../../../../../api/config';
 import AsideMenu from './aside-menu/index.vue';
 import Diff from '../../../../../../../components/diff/index.vue';
 
+const { t } = useI18n();
 const props = defineProps<{
   show: boolean;
   showPublishBtn?: boolean; // 是否显示发布按钮
@@ -89,8 +93,8 @@ const props = defineProps<{
 const emits = defineEmits(['update:show', 'publish']);
 
 const route = useRoute();
-const bkBizId = String(route.params.spaceId);
-const appId = Number(route.params.appId);
+const bkBizId = ref(String(route.params.spaceId));
+const appId = ref(Number(route.params.appId));
 const versionList = ref<IConfigVersion[]>([]);
 const versionListLoading = ref(false);
 const selectedBaseVersion = ref(); // 基准版本ID
@@ -122,6 +126,15 @@ watch(
   },
 );
 
+watch(
+  () => route.params.appId,
+  (val) => {
+    if (val) {
+      appId.value = Number(val);
+    }
+  },
+);
+
 // 获取所有对比基准版本
 const getVersionList = async () => {
   try {
@@ -130,7 +143,7 @@ const getVersionList = async () => {
       versionList.value = props.versionDiffList;
       return;
     }
-    const res = await getConfigVersionList(bkBizId, appId, { start: 0, all: true });
+    const res = await getConfigVersionList(bkBizId.value, appId.value, { start: 0, all: true });
     versionList.value = res.data.details.filter((item: IConfigVersion) => item.id !== props.currentVersion.id);
   } catch (e) {
     console.error(e);

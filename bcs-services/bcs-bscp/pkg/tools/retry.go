@@ -67,8 +67,7 @@ func (r *RetryPolicy) Sleep() {
 	defer r.retryCount.Inc()
 
 	if r.retryCount.Load() == 0 {
-		duration := r.retryCount.Load() * uint32(r.rangeMillSeconds[0]) / 2
-		time.Sleep(time.Duration(duration) * time.Millisecond)
+		time.Sleep(time.Duration(uint32(r.rangeMillSeconds[0])/2) * time.Millisecond)
 		return
 	}
 

@@ -17,7 +17,7 @@
       :label="script.name"
     >
       <div
-        v-bk-tooltips="{ disabled: !script.id || script.versionId, content: '该脚本未上线' }"
+        v-bk-tooltips="{ disabled: !script.id || script.versionId, content: t('该脚本未上线') }"
         class="option-wrapper"
         @click="handleScriptOptionClick(script.id, script.versionId, $event)"
       >
@@ -28,7 +28,7 @@
       <div class="selector-extension" @click="goToScriptList">
         <div class="selector-script">
           <i class="bk-bscp-icon icon-setting"></i>
-          <span>脚本管理</span>
+          <span>{{t('脚本管理')}}</span>
         </div>
         <div class="refresh-area" @click.stop="emits('refresh')">
           <RightTurnLine class="refresh-icon" />
@@ -39,12 +39,14 @@
 </template>
 <script lang="ts" setup>
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { RightTurnLine } from 'bkui-vue/lib/icon';
 import useGlobalStore from '../../../../../store/global';
 
 const router = useRouter();
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   id: number;

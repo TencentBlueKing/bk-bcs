@@ -35,14 +35,15 @@ import (
 
 // DeleteAction action for delete cluster
 type DeleteAction struct {
-	ctx        context.Context
-	req        *cmproto.DeleteClusterReq
-	resp       *cmproto.DeleteClusterResp
-	model      store.ClusterManagerModel
-	cluster    *cmproto.Cluster
-	nodes      []*cmproto.Node
-	quotaList  []cmproto.ResourceQuota
-	nodeGroups []cmproto.NodeGroup
+	ctx               context.Context
+	req               *cmproto.DeleteClusterReq
+	resp              *cmproto.DeleteClusterResp
+	model             store.ClusterManagerModel
+	cluster           *cmproto.Cluster
+	nodes             []*cmproto.Node
+	quotaList         []cmproto.ResourceQuota
+	nodeGroups        []cmproto.NodeGroup
+	lastClusterStatus string
 
 	kube *clusterops.K8SOperator
 	// cluster associate ca options
@@ -103,6 +104,8 @@ func (da *DeleteAction) getClusterAndNode() error {
 		return err
 	}
 	da.cluster = cluster
+	// record last cluster status
+	da.lastClusterStatus = cluster.Status
 
 	// get relative nodes by clusterID
 	condM := make(operator.M)
@@ -133,17 +136,12 @@ func (da *DeleteAction) checkRelativeResource() error {
 }
 
 func (da *DeleteAction) canDelete() error {
-	if da.cluster.Status == common.StatusCreateClusterFailed {
+	if da.cluster.Status == common.StatusCreateClusterFailed || da.cluster.Status == common.StatusDeleteClusterFailed {
 		return nil
 	}
-	if len(da.nodeGroups) != 0 {
-		return fmt.Errorf("cannot delete cluster, there is relative NodeGroup running")
-	}
+	// if cluster exist nodes, thus cannot delete cluster
 	if len(da.nodes) != 0 {
 		return fmt.Errorf("cannot delete cluster, there are Nodes in cluster")
-	}
-	if len(da.quotaList) != 0 {
-		return fmt.Errorf("cannot delete cluster, there is quots in cluster")
 	}
 
 	return nil
@@ -489,12 +487,13 @@ func (da *DeleteAction) createDeleteClusterTask(req *cmproto.DeleteClusterReq) e
 
 	// call cloud provider api to delete cluster by async tasks
 	task, err := clsMgr.DeleteCluster(da.cluster, &cloudprovider.DeleteClusterOption{
-		CommonOption: *da.cmOptions,
-		IsForce:      req.IsForced,
-		DeleteMode:   cloudprovider.DeleteMode(req.InstanceDeleteMode),
-		Operator:     req.Operator,
-		Cloud:        da.cloud,
-		Cluster:      da.cluster,
+		CommonOption:      *da.cmOptions,
+		IsForce:           req.IsForced,
+		DeleteMode:        cloudprovider.DeleteMode(req.InstanceDeleteMode),
+		Operator:          req.Operator,
+		Cloud:             da.cloud,
+		Cluster:           da.cluster,
+		LatsClusterStatus: da.lastClusterStatus,
 	})
 	if err != nil {
 		blog.Errorf("delete Cluster %s by cloudprovider %s failed, %s",

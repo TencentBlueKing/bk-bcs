@@ -104,7 +104,9 @@
           <!-- 字符串过滤 -->
           <span
             class="flex items-center"
-            v-if="data.rule.config.conditions.type === 'match' && data.rule.config.conditions.match_content">
+            v-if="data.rule.config.conditions
+              && data.rule.config.conditions.type === 'match'
+              && data.rule.config.conditions.match_content">
             <span class="flex items-center h-[22px] bg-[#F0F1F5] rounded-sm px-[8px] mr-[8px]">
               {{ $t('logCollector.label.matchContent.match.text') }}
             </span>
@@ -119,7 +121,8 @@
           <!-- 分隔符过滤 -->
           <span
             class="flex flex-col mt-[6px]"
-            v-else-if="data.rule.config.conditions.type === 'separator'
+            v-else-if="data.rule.config.conditions
+              && data.rule.config.conditions.type === 'separator'
               && data.rule.config.conditions.separator_filters.length">
             <span class="flex items-center mb-[8px]">
               <span class="flex items-center h-[22px] bg-[#F0F1F5] rounded-sm px-[8px] mr-[8px]">

@@ -5,11 +5,11 @@
     @click="handleOpenSlider"
     :disabled="variableList.length === 0"
   >
-    设置变量
+    {{ t('设置变量') }}
   </bk-button>
-  <bk-sideslider width="960" title="设置变量" :is-show="isSliderShow" :before-close="handleBeforeClose" @closed="close">
+  <bk-sideslider width="960" :title="t('设置变量')" :is-show="isSliderShow" :before-close="handleBeforeClose" @closed="close">
     <bk-loading :loading="loading" class="variables-table-content">
-      <ResetDefaultValue class="reset-default" :list="initialVariables" @reset="handleResetDefault" />
+      <ResetDefaultValue class="reset-default" :bk-biz-id="bkBizId" :list="initialVariables" @reset="handleResetDefault" />
       <VariablesTable
         ref="tableRef"
         :list="variableList"
@@ -20,14 +20,15 @@
       />
     </bk-loading>
     <section class="action-btns">
-      <bk-button theme="primary" :loading="pending" @click="handleSubmit">保存</bk-button>
-      <bk-button @click="close">取消</bk-button>
+      <bk-button theme="primary" :loading="pending" @click="handleSubmit">{{t('保存')}}</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </section>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
-import { Message } from 'bkui-vue';
+import { useI18n } from 'vue-i18n';
+import Message from 'bkui-vue/lib/message';
 import { storeToRefs } from 'pinia';
 import useServiceStore from '../../../../../../../../store/service';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
@@ -43,6 +44,7 @@ import ResetDefaultValue from './reset-default-value.vue';
 const serviceStore = useServiceStore();
 const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
 const { checkPermBeforeOperate } = serviceStore;
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;
@@ -101,7 +103,7 @@ const handleSubmit = async () => {
     close();
     Message({
       theme: 'success',
-      message: '设置变量成功',
+      message: t('设置变量成功'),
     });
   } catch (e) {
     console.log(e);

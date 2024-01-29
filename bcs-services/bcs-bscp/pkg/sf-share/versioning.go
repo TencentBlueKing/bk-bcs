@@ -13,7 +13,7 @@
 package sfs
 
 import (
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 )
 
 // CurrentAPIVersion is the current api version used between sidecar and feed server.

@@ -1,14 +1,13 @@
 <template>
   <bk-dialog
-    :is-show="show"
-    :title="'批量导入'"
+    :is-show="props.show"
+    :title="t('批量导入')"
     :theme="'primary'"
-    @closed="handleClose"
-    @confirm="handleConfirm"
-    confirm-text="导入"
     width="960"
     height="720"
     ext-cls="variable-import-dialog"
+    :esc-close="false"
+    @closed="handleClose"
   >
     <bk-form>
       <!-- <bk-form-item label="导入方式">
@@ -18,8 +17,12 @@
         </bk-radio-group>
         <div class="tips" v-if="importType === 'text'">只支持string、number类型,其他类型请使用文件导入</div>
       </bk-form-item> -->
-      <bk-form-item label="配置文件内容" required>
-        <KvContentEditor v-if="importType === 'text'" ref="editorRef" />
+      <bk-form-item :label="t('配置文件内容')" required>
+        <KvContentEditor
+          v-if="importType === 'text'"
+          ref="editorRef"
+          @trigger="confirmBtnPerm = $event"
+        />
         <bk-upload v-else with-credentials>
           <template #tip>
             <div class="upload-tips">
@@ -30,12 +33,20 @@
         </bk-upload>
       </bk-form-item>
     </bk-form>
+    <template #footer>
+      <bk-button theme="primary" style="margin-right: 8px" :disabled="!confirmBtnPerm" @click="handleConfirm"
+        >{{ t('导入') }}</bk-button>
+      <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
+    </template>
   </bk-dialog>
 </template>
 
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import KvContentEditor from '../../../components/kv-import-editor.vue';
+
+const { t } = useI18n();
 const props = defineProps<{
   show: boolean;
   bkBizId: string;
@@ -46,6 +57,7 @@ const emits = defineEmits(['update:show', 'confirm']);
 const editorRef = ref();
 const isFormChange = ref(false);
 const importType = ref('text');
+const confirmBtnPerm = ref(false);
 watch(
   () => props.show,
   () => {

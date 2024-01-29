@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/avast/retry-go"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -143,11 +144,7 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 		NetworkType: cluster.ClusterAdvanceSettings.NetworkType,
 		ExtraArgs:   &api.ClusterExtraArgs{},
 		IsNonStaticIpMode: func() bool {
-			if cluster.GetNetworkSettings().GetIsStaticIpMode() {
-				return false
-			}
-
-			return true
+			return !cluster.GetNetworkSettings().GetIsStaticIpMode()
 		}(),
 		VpcCniType:         api.TKERouteEni,
 		RuntimeVersion:     cluster.ClusterAdvanceSettings.RuntimeVersion,
@@ -379,6 +376,7 @@ func disksToCVMDisks(disks []*proto.CloudDataDisk) []*cvm.DataDisk {
 }
 
 // generateNewRunInstance run instances by instance template
+// nolint
 func generateNewRunInstance(info *cloudprovider.CloudDependBasicInfo, role string,
 	templates []*proto.InstanceTemplateConfig, operator string) *api.RunInstancesForNode {
 	runInstance := &api.RunInstancesForNode{
@@ -392,7 +390,7 @@ func generateNewRunInstance(info *cloudprovider.CloudDependBasicInfo, role strin
 		// 实例计费类型: 默认值 POSTPAID_BY_HOUR
 		createInsRequest.InstanceChargeType = func() *string {
 			if templates[i].GetInstanceChargeType() == "" {
-				return common.StringPtr(api.POSTPAIDBYHOUR)
+				return common.StringPtr(icommon.POSTPAIDBYHOUR)
 			}
 
 			return common.StringPtr(templates[i].GetInstanceChargeType())
@@ -560,6 +558,7 @@ func generateNewInstanceForDisk(templates []*proto.InstanceTemplateConfig) []*ap
 }
 
 // generateCreateClusterRequest 独立集群 or 托管集群
+// nolint
 func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	masterIps, workerIps []string, operator string) (*api.CreateClusterRequest, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -835,6 +834,9 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 			taskID, clusterID, err.Error())
 		retErr := fmt.Errorf("createTkeCluster err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
+
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("submit createCluster[%s] failed: %v",
+			dependInfo.Cluster.GetClusterID(), err))
 		return retErr
 	}
 
@@ -953,6 +955,10 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 			taskID, clusterID, err)
 		retErr := fmt.Errorf("checkClusterStatus[%s] timeout|abnormal", clusterID)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
+
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("check cluster[%s] status failed: %v",
+			dependInfo.Cluster.GetClusterID(), err))
+
 		return retErr
 	}
 
@@ -1014,6 +1020,10 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error {
 			taskID, err.Error())
 		retErr := fmt.Errorf("CheckClusterInstanceStatus failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
+
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("check cluster[%s] nodes status "+
+			"failed: %v", dependInfo.Cluster.GetClusterID(), err))
+
 		return retErr
 	}
 	blog.Infof("CheckCreateClusterNodeStatusTask[%s] addSuccessNodes[%v] addFailureNodes[%v]",
@@ -1024,16 +1034,26 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error {
 		state.Task.CommonParams = make(map[string]string)
 	}
 	if len(addFailureNodes) > 0 {
-		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(addFailureNodes, ",")
+		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] =
+			strings.Join(business.GetInstanceIDs(addFailureNodes), ",")
 	}
 	if len(addSuccessNodes) == 0 {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "nodes init failed")
 		blog.Errorf("CheckCreateClusterNodeStatusTask[%s] nodes init failed", taskID)
 		retErr := fmt.Errorf("节点初始化失败, 请联系管理员")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
+
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("cluster[%s] all nodes status failed",
+			dependInfo.Cluster.GetClusterID()))
+
 		return retErr
 	}
-	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(addSuccessNodes, ",")
+	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] =
+		strings.Join(business.GetInstanceIDs(addSuccessNodes), ",")
+	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] =
+		strings.Join(business.GetInstanceIPs(addSuccessNodes), ",")
+	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] =
+		strings.Join(business.GetInstanceIPs(addSuccessNodes), ",")
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "check cluster instance status successful")
 
@@ -1069,6 +1089,7 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+
 	nodeIpList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.NodeIPsKey.String(), ",")
 
@@ -1092,7 +1113,6 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 	}
 
 	// wait for cluster stable
-
 	var (
 		subnet = dependInfo.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetSubnetId()
 	)
@@ -1144,12 +1164,17 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 			blog.Infof("RegisterTkeClusterKubeConfigTask[%s] internet[%s]", taskID, string(internetBytes))
 			return string(internetBytes)
 		}(),
-	})
+	}, true)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, fmt.Sprintf("register tke cluster endpoint failed [%s]", err))
 		blog.Errorf("RegisterTkeClusterKubeConfigTask[%s] registerTKEClusterEndpoint failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("registerTKEClusterEndpoint failed, %s", err.Error())
+
 		_ = state.UpdateStepFailure(start, stepName, retErr)
+		step.Params[cloudprovider.ConnectClusterKey.String()] = icommon.True
+
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("RegisterClusterEndpointErr: register endpoint[%s] failed",
+			dependInfo.Cluster.GetSystemID()))
 		return retErr
 	}
 	blog.Infof("RegisterTkeClusterKubeConfigTask[%s] registerTKEClusterEndpoint success", taskID)
@@ -1170,14 +1195,24 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "open cluster admin kubeconfig successful")
 
 	// check cluster connection
-	err = providerutils.CheckClusterConnect(ctx, kube)
+	err = retry.Do(func() error {
+		errLocal := providerutils.CheckClusterConnect(ctx, kube)
+		if errLocal != nil {
+			return errLocal
+		}
+		return nil
+	}, retry.Attempts(5), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second*30))
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, fmt.Sprintf("check cluster connect failed [%s]", err))
 		blog.Errorf("RegisterTkeClusterKubeConfigTask[%s] checkClusterConnect "+
 			"by kubeConfig failed: %v", taskID, err)
-		retErr := fmt.Errorf("checkClusterConnect %v", err)
+		retErr := fmt.Errorf("checkClusterConnect failed: please retry")
 		step.Params[cloudprovider.ConnectClusterKey.String()] = icommon.True
 		_ = state.UpdateStepFailure(start, stepName, retErr)
+
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("ConnectClusterErr: connect "+
+			"cluster[%s] failed", dependInfo.Cluster.GetSystemID()))
+
 		return retErr
 	}
 
@@ -1216,7 +1251,8 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 }
 
 // getRandomSubnetFromNodes get random subnet from nodes
-func getRandomSubnetFromNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIps []string) (string, error) {
+func getRandomSubnetFromNodes(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIps []string) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	cvmClient, err := api.GetCVMClient(info.CmOption)
@@ -1312,17 +1348,36 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// 后面会去除密码
+	// update module name
 	bkBizID, _ := strconv.Atoi(dependInfo.Cluster.GetBusinessID())
 	if dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID() != "" {
 		bkModuleID, _ := strconv.Atoi(dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID())
-		dependInfo.Cluster.GetClusterBasicSettings().GetModule().MasterModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		dependInfo.Cluster.
+			GetClusterBasicSettings().
+			GetModule().MasterModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
 	}
 	if dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID() != "" {
 		bkModuleID, _ := strconv.Atoi(dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID())
-		dependInfo.Cluster.GetClusterBasicSettings().GetModule().WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		dependInfo.Cluster.
+			GetClusterBasicSettings().
+			GetModule().WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
 	}
-	cloudprovider.UpdateCluster(dependInfo.Cluster)
+
+	// delete passwd
+	if dependInfo.Cluster.GetNodeSettings().GetMasterLogin() != nil {
+		dependInfo.Cluster.GetNodeSettings().GetMasterLogin().InitLoginPassword = ""
+		if dependInfo.Cluster.GetNodeSettings().GetMasterLogin().GetKeyPair() != nil {
+			dependInfo.Cluster.GetNodeSettings().GetMasterLogin().GetKeyPair().KeySecret = ""
+		}
+	}
+	if dependInfo.Cluster.GetNodeSettings().GetWorkerLogin() != nil {
+		dependInfo.Cluster.GetNodeSettings().GetWorkerLogin().InitLoginPassword = ""
+		if dependInfo.Cluster.GetNodeSettings().GetWorkerLogin().GetKeyPair() != nil {
+			dependInfo.Cluster.GetNodeSettings().GetWorkerLogin().GetKeyPair().KeySecret = ""
+		}
+	}
+
+	_ = cloudprovider.UpdateCluster(dependInfo.Cluster)
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "update cluster db info successful")
 

@@ -125,3 +125,15 @@ func (c *Cluster) GetMasterSuggestedMachines(level, vpcId string,
 	opt *cloudprovider.GetMasterSuggestedMachinesOption) ([]*proto.InstanceTemplateConfig, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
+
+// AppendCloudNodeInfo append cloud node detailed info
+func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
+	nodes []*proto.ClusterNode, opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
+// CheckIfGetNodesFromCluster check cluster if can get nodes from k8s
+func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto.Cluster,
+	nodes []*proto.ClusterNode) bool {
+	return true
+}

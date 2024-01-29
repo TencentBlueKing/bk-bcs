@@ -41,14 +41,17 @@ for file in "${source_files[@]}"; do
   safe_source "$file"
 done
 
-eval "install -dv  $LOCALPV_DIR/vol{01..$LOCALPV_COUNT}" \
+eval "install -dv $LOCALPV_DIR/vol{01..$LOCALPV_COUNT}" \
+  || utils::log "FATAL" "create mount dir failed"
+
+eval "install -dv $LOCALPV_DST_DIR/vol{01..$LOCALPV_COUNT}" \
   || utils::log "FATAL" "create mount dir failed"
 
 for i in $(seq -w 1 "$LOCALPV_COUNT"); do
   src_dir="$LOCALPV_DIR/vol$i"
-  dst_dir="${src_dir}"
-  if grep -w "$src_dir" /etc/fstab; then
-    utils::log "WARN" "/etc/fstab: [$src_dir] already exists"
+  dst_dir="${LOCALPV_DST_DIR}/vol$i"
+  if grep -wE "$src_dir|$dst_dir" /etc/fstab; then
+    utils::log "WARN" "/etc/fstab: [$src_dir] or [$dst_dir] already exists"
   else
     echo "$src_dir $dst_dir none defaults,bind 0 0" >>/etc/fstab \
       || echo "add /etc/fstab failed"

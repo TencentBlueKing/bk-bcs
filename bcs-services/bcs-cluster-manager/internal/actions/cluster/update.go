@@ -197,6 +197,11 @@ func (ua *UpdateAction) updateCluster() error {
 	ua.validateBaseInfo()
 	// additional info
 	ua.validateAdditionalInfo()
+	// update cluster cloud info
+	err := utils.UpdateClusterCloudInfo(ua.cluster, ua.cloud)
+	if err != nil {
+		return err
+	}
 
 	// trans masterIPs
 	if len(ua.req.Master) > 0 {
@@ -218,7 +223,7 @@ func (ua *UpdateAction) updateCluster() error {
 	ua.cluster.UpdateTime = time.Now().Format(time.RFC3339)
 
 	// update DB clusterInfo & passcc cluster
-	err := ua.model.UpdateCluster(ua.ctx, ua.cluster)
+	err = ua.model.UpdateCluster(ua.ctx, ua.cluster)
 	if err != nil {
 		return err
 	}
@@ -591,9 +596,11 @@ func (ua *AddNodesAction) saveNodesToStorage(status string) error {
 
 // checkManagedClusterNodeNum check managed cluster nodes num
 func (ua *AddNodesAction) checkManagedClusterNodeNum() error {
-	if ua.cluster.ManageType != common.ClusterManageTypeManaged {
-		return nil
-	}
+	/*
+		if ua.cluster.ManageType != common.ClusterManageTypeManaged {
+			return nil
+		}
+	*/
 
 	nodeStatus := []string{common.StatusRunning, common.StatusInitialization}
 	nodes, err := GetClusterStatusNodes(ua.model, ua.cluster, nodeStatus)

@@ -18,11 +18,11 @@ import (
 
 	rawgen "gorm.io/gen"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // App supplies all the app related operations.
@@ -77,7 +77,18 @@ func (dao *appDao) List(kit *kit.Kit, bizList []uint32, name, operator string, o
 		conds = append(conds, m.Name.Like("%"+name+"%"))
 	}
 
-	result, count, err := q.Where(conds...).FindByPage(opt.Offset(), opt.LimitInt())
+	var (
+		result []*table.App
+		count  int64
+		err    error
+	)
+
+	if opt.All {
+		result, err = q.Where(conds...).Find()
+		count = int64(len(result))
+	} else {
+		result, count, err = q.Where(conds...).FindByPage(opt.Offset(), opt.LimitInt())
+	}
 	if err != nil {
 		return nil, 0, err
 	}

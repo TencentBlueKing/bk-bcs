@@ -139,11 +139,10 @@ func (c *Configurations) ReadCred(name string, content []byte) error {
 }
 
 // ValidateCred 校验凭证是否合法
-func (c *Configurations) ValidateCred(credType CredentialType, credName string, scopeType ScopeType,
-	scopeValue string) bool {
+func (c *Configurations) ValidateCred(credType CredentialType, credName string, scopeValues map[ScopeType]string) bool {
 	for _, creds := range c.Credentials {
 		for _, cred := range creds {
-			if cred.Matches(credType, credName, scopeType, scopeValue) {
+			if cred.Matches(credType, credName, scopeValues) {
 				return true
 			}
 		}
@@ -157,11 +156,11 @@ func (c *Configurations) IsManager(username, clusterId string) bool {
 		return true
 	}
 
-	if c.ValidateCred(CredentialManager, username, ScopeClusterId, clusterId) {
-		return true
+	scopeValues := map[ScopeType]string{
+		ScopeClusterId: clusterId,
 	}
 
-	return false
+	return c.ValidateCred(CredentialManager, username, scopeValues)
 }
 
 // ReadFrom : read from file

@@ -13,6 +13,7 @@
           :schema="schema"
           :cluster="curCluster"
           :save-loading="saveLoading"
+          :data="nodePoolData"
           v-if="!isLoading"
           @next="handleNextStep"
           @pre="handlePreStep"
@@ -167,6 +168,7 @@ export default defineComponent({
       curStep,
       curStepItem,
       stepComMap,
+      nodePoolData,
       handleNextStep,
       handlePreStep,
       handleConfirm,

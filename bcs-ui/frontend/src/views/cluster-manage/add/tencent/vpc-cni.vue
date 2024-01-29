@@ -9,19 +9,15 @@
         v-bk-tooltips="$t('tke.tips.subnetZone')">
         <span class="bcs-border-tips">{{ $t('tke.label.zone') }}</span>
       </span>
-      <bcs-select
+      <Zone
         class="flex-1 ml-[-1px] mr-[8px]"
-        searchable
-        :clearable="false"
-        v-model="subnet.zone">
-        <bcs-option
-          v-for="zone in zoneList"
-          :key="zone.zoneID"
-          :id="zone.zone"
-          :name="zone.zoneName"
-          :disabled="disableZoneOption(zone, index)">
-        </bcs-option>
-      </bcs-select>
+        :region="region"
+        :cloud-account-i-d="cloudAccountID"
+        :cloud-i-d="cloudID"
+        :disabled-zone-list="getDisableZoneList(subnet.zone)"
+        :disabled-tips="$t('tke.tips.hasSelected')"
+        :init-data="index === 0"
+        v-model="subnet.zone" />
       <span class="prefix">{{ $t('tke.label.ipNum') }}</span>
       <bcs-select
         class="flex-1 ml-[-1px]"
@@ -48,7 +44,7 @@
 <script setup lang="ts">
 import { PropType, ref, watch } from 'vue';
 
-import { IZoneItem } from './types';
+import Zone from '@/views/cluster-manage/add/form/zone.vue';
 
 const nodePodNumList = ref([128, 256, 512, 1024, 2048, 4096]);
 
@@ -60,9 +56,17 @@ const props = defineProps({
     }>>,
     default: () => [],
   },
-  zoneList: {
-    type: Array as PropType<IZoneItem[]>,
-    default: () => [],
+  cloudAccountID: {
+    type: String,
+    default: '',
+  },
+  cloudID: {
+    type: String,
+    default: '',
+  },
+  region: {
+    type: String,
+    default: '',
   },
 });
 
@@ -94,10 +98,9 @@ watch(subnetSourceNew, () => {
 }, { deep: true });
 
 // 一个可用区只能选择一次
-const disableZoneOption = (zone, i) => {
-  const index = subnetSourceNew.value.findIndex(item => item.zone === zone.zone);
-  return index > -1 && index !== i;
-};
+const getDisableZoneList = (excludeZone: string) => subnetSourceNew.value
+  .filter(item => item.zone !== excludeZone)
+  .map(item => item.zone);
 // vpc-cni 模式ip数量
 const addSubnetSource = () => {
   subnetSourceNew.value.push({

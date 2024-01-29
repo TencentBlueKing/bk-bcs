@@ -7,7 +7,7 @@
     :disabled="(props.hasPerm && allConfigCount === 0) || props.permCheckLoading"
     @click="handleBtnClick"
   >
-    生成版本
+    {{t('生成版本')}}
   </bk-button>
   <CreateVersionSlider
     v-model:show="isVersionSliderShow"
@@ -32,8 +32,9 @@
 </template>
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../../store/global';
 import useConfigStore from '../../../../../../store/config';
 import { IConfigVersion } from '../../../../../../../types/config';
@@ -49,6 +50,7 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits(['confirm']);
+const { t } = useI18n();
 
 const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 const { allConfigCount, versionData } = storeToRefs(useConfigStore());

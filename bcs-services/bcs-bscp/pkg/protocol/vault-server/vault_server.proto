@@ -4,7 +4,7 @@ import "google/api/annotations.proto";
 
 package pbvs;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/vault-server;pbvs";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/vault-server;pbvs";
 
 service Vault {
   // Ping verifies if the grpc connection is still alive.

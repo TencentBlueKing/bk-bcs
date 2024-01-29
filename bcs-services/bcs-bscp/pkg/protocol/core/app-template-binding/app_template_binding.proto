@@ -4,7 +4,7 @@ import "pkg/protocol/core/base/base.proto";
 
 package pbatb;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding;pbatb";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding;pbatb";
 
 // AppTemplateBinding source resource reference: pkg/dal/table/app_template_binding.go
 message AppTemplateBinding {

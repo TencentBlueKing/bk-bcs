@@ -118,8 +118,8 @@ func (os OrderState) String() string {
 }
 
 const (
-	statusOnSale  = "ONSALE"
-	statusNotSale = "NOTSALE"
+	statusOnSale  = "ONSALE"  // nolint
+	statusNotSale = "NOTSALE" // nolint
 )
 
 // PoolLabel xxx

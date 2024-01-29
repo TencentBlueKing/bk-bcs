@@ -18,9 +18,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // ConfigItemColumns defines config item's columns
@@ -34,7 +34,7 @@ var ConfigItemColumnDescriptor = mergeColumnDescriptors("",
 	mergeColumnDescriptors("revision", RevisionColumnDescriptor))
 
 // maxConfigItemsLimitForApp defines the max limit of config item for an app for user to create.
-const maxConfigItemsLimitForApp = 500
+const maxConfigItemsLimitForApp = 2000
 
 // ValidateAppCINumber verify whether the current number of app config items has reached the maximum.
 func ValidateAppCINumber(count int64) error {
@@ -198,7 +198,7 @@ type ConfigItemSpec struct {
 // ValidateCreate validate the config item's specifics
 func (ci ConfigItemSpec) ValidateCreate() error {
 
-	if err := validator.ValidateCfgItemName(ci.Name); err != nil {
+	if err := validator.ValidateFileName(ci.Name); err != nil {
 		return err
 	}
 
@@ -283,7 +283,7 @@ func (f FilePermission) Validate(mode FileMode) error {
 func (ci ConfigItemSpec) ValidateUpdate() error {
 
 	if len(ci.Name) != 0 {
-		if err := validator.ValidateCfgItemName(ci.Name); err != nil {
+		if err := validator.ValidateFileName(ci.Name); err != nil {
 			return err
 		}
 	}

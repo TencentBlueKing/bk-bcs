@@ -51,6 +51,7 @@ func SetupStore(conf *config.UserMgrConfig) error {
 		&models.BcsTokenNotify{},
 		&models.BcsTempToken{},
 		&models.Activity{},
+		&models.BcsClient{},
 	)
 
 	// remove user name Constraints, because we will soft delete token on db when user destroy there token,
@@ -68,6 +69,7 @@ func SetupStore(conf *config.UserMgrConfig) error {
 }
 
 // createBootstrapUsers create the bootstrap users, the bootstrap users can be defined in config files
+// NOCC:golint/fnsize(设计如此)
 func createBootstrapUsers(users []options.BootStrapUser) error {
 	tokenStore := sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor)
 	for _, u := range users {
@@ -178,7 +180,7 @@ func syncTokenToRedis() {
 			blog.Errorf("error creating jwt for user [%s]: %s", v.Name, err.Error())
 			continue
 		}
-		set, err := cache.RDB.SetNX(context.TODO(), constant.TokenKeyPrefix+v.UserToken, jwtString, time.Until(v.ExpiresAt))
+		set, err := cache.RDB.SetNX(context.TODO(), constant.TokenKeyPrefix+v.UserToken, jwtString, time.Until(v.ExpiresAt)) // nolint
 		if err != nil {
 			blog.Errorf("error storing user [%s] jwt: %s", v.Name, err.Error())
 		}
@@ -186,6 +188,29 @@ func syncTokenToRedis() {
 			done++
 		} else {
 			needLess++
+		}
+	}
+
+	// sync client authorize token
+	clients := tokenStore.GetAllClients()
+	for _, v := range clients {
+		for _, user := range v.AuthorityUserList() {
+			userInfo := &jwt.UserInfo{
+				SubType:     jwt.User.String(),
+				UserName:    user,
+				ExpiredTime: int64(time.Until(v.ExpiresAt).Seconds()),
+				Issuer:      jwt.JWTIssuer,
+			}
+			jwtString, err := jwt2.JWTClient.JWTSign(userInfo)
+			if err != nil {
+				blog.Errorf("error creating jwt for user [%s]: %s", v.Name, err.Error())
+				continue
+			}
+			key := fmt.Sprintf("%sop-%s:%s", constant.TokenKeyPrefix, user, v.UserToken)
+			_, err = cache.RDB.SetNX(context.TODO(), key, jwtString, time.Until(v.ExpiresAt))
+			if err != nil {
+				blog.Errorf("error storing user [%s] jwt: %s", v.Name, err.Error())
+			}
 		}
 	}
 	blog.Infof("sync %d token to redis done, %d token not need to sync", done, needLess)

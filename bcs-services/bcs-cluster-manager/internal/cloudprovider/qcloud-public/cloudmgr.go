@@ -122,7 +122,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	// cluster cloud basic setting
 	clusterBasicSettingByQCloud(cls, tkeCluster)
 	// cluster cloud node setting
-	clusterCloudDefaultNodeSetting(cls, false)
+	_ = clusterCloudDefaultNodeSetting(cls, false)
 	// cluster cloud advanced setting
 	clusterAdvancedSettingByQCloud(cls, tkeCluster)
 
@@ -130,6 +130,23 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	err = clusterNetworkSettingByQCloud(cls, tkeCluster)
 	if err != nil {
 		blog.Errorf("SyncClusterCloudInfo clusterNetworkSettingByQCloud failed: %v", err)
+	}
+
+	return nil
+}
+
+// UpdateClusterCloudInfo update cluster info by cloud
+func (c *CloudInfoManager) UpdateClusterCloudInfo(cls *cmproto.Cluster) error {
+	// call qcloud interface to init cluster defaultConfig
+	if c == nil || cls == nil {
+		return fmt.Errorf("%s UpdateClusterCloudInfo request is empty", cloudName)
+	}
+
+	// cluster cloud advanced setting
+	err := clusterCloudConnectSetting(cls)
+	if err != nil {
+		blog.Errorf("UpdateClusterCloudInfo clusterNetworkSettingByQCloud failed: %v", err)
+		return err
 	}
 
 	return nil
@@ -402,7 +419,8 @@ func clusterCloudNetworkSetting(cls *cmproto.Cluster) error {
 		if cls.NetworkSettings.ServiceIPv4CIDR == "" {
 			return fmt.Errorf("network[%s] ServiceIPv4CIDR empty", common.VpcCni)
 		}
-		if cls.NetworkSettings.SubnetSource == nil || (len(cls.NetworkSettings.SubnetSource.New) == 0 && cls.NetworkSettings.SubnetSource.Existed == nil) {
+		if cls.NetworkSettings.SubnetSource == nil ||
+			(len(cls.NetworkSettings.SubnetSource.New) == 0 && cls.NetworkSettings.SubnetSource.Existed == nil) {
 			return fmt.Errorf("network[%s] subnet resource empty", common.VpcCni)
 		}
 	}
@@ -411,11 +429,7 @@ func clusterCloudNetworkSetting(cls *cmproto.Cluster) error {
 }
 
 func clusterCloudConnectSetting(cls *cmproto.Cluster) error {
-	if cls.GetClusterAdvanceSettings().GetClusterConnectSetting() == nil {
-		return fmt.Errorf("initCloudCluster connect setting empty")
-	}
-
-	if cls.GetClusterAdvanceSettings().GetClusterConnectSetting().IsExtranet {
+	if cls.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet() {
 		if len(cls.GetClusterAdvanceSettings().GetClusterConnectSetting().GetSecurityGroup()) == 0 {
 			return fmt.Errorf("%s clusterCloudConnectSetting securityGroup empty", cloudName)
 		}

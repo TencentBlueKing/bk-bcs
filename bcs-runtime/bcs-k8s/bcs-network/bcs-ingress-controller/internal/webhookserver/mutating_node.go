@@ -35,6 +35,7 @@ func (s *Server) mutatingNode(node *k8scorev1.Node) ([]PatchOperation, error) {
 		return nil, fmt.Errorf("node '%s/%s' lack annotation key %s", node.GetNamespace(), node.GetName(),
 			constant.AnnotationForPortPoolPorts)
 	}
+	// Node webhook会处理Creat&Update两种事件， 所以当已有端口信息时需要忽略
 	// injected node should not be injected again
 	if _, pok := node.Annotations[constant.AnnotationForPortPoolBindings]; pok {
 		return nil, nil

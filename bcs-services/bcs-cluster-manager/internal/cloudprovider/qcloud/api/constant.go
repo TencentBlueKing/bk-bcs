@@ -35,14 +35,6 @@ const (
 	InternetChargeTypeTrafficPostpaidByHour = "TRAFFIC_POSTPAID_BY_HOUR"
 )
 
-// InstanceChargeType
-const (
-	// PREPAID xxx
-	PREPAID = "PREPAID" // 预付费，即包年包月
-	// POSTPAIDBYHOUR xxx
-	POSTPAIDBYHOUR = "POSTPAID_BY_HOUR" // 按小时后付费
-)
-
 // Cluster Status
 const (
 	// ClusterStatusRunning running

@@ -71,8 +71,12 @@
       <bcs-table-column
         :label="$t('projects.eventQuery.content')"
         prop="describe"
-        min-width="100"
-        show-overflow-tooltip>
+        min-width="100">
+        <template #default="{ row }">
+          <div class="overflow-auto leading-normal tracking-wide py-[8px]">
+            {{ row.describe || '--' }}
+          </div>
+        </template>
       </bcs-table-column>
       <template #empty>
         <BcsEmptyTableStatus :type="searchEmpty ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />

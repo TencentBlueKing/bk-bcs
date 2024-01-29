@@ -5,7 +5,7 @@
         <VersionListAside :version-detail-view="versionDetailView" :bk-biz-id="bkBizId" :app-id="appId" />
         <div :class="['view-change-trigger', { extend: versionDetailView }]" @click="handleToggleView">
           <AngleDoubleRight class="arrow-icon" />
-          <span class="text">版本详情</span>
+          <span :class="['text',{'en-text': locale === 'en-US'}]">{{ t('版本详情')}} </span>
         </div>
       </div>
       <div class="config-setting-area">
@@ -24,6 +24,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { AngleDoubleRight } from 'bkui-vue/lib/icon';
 import BkMessage from 'bkui-vue/lib/message';
@@ -37,6 +38,7 @@ import { AxiosError } from 'axios';
 
 const route = useRoute();
 const router = useRouter();
+const { t, locale } = useI18n();
 const serviceStore = useServiceStore();
 const configStore = useConfigStore();
 
@@ -116,8 +118,14 @@ const setLastAccessedServiceDetail = () => {
 
 // 切换视图
 const handleToggleView = () => {
+  // 非配置管理tab切换为版本详情视图
   if (!versionDetailView.value && route.name !== 'service-config') {
     router.push({ name: 'service-config', params: { spaceId: bkBizId.value, appId: appId.value } });
+  }
+
+  // 版本详情视图下，选中版本为废弃版本时，切换到配置详情视图，需要默认选中未命名版本
+  if (versionDetailView.value && versionData.value.spec.deprecated) {
+    router.push({ name: 'service-config', params: { spaceId: bkBizId.value, appId: appId.value, versionId: 0 } });
   }
   versionDetailView.value = !versionDetailView.value;
 };
@@ -143,8 +151,8 @@ const handleToggleView = () => {
   position: relative;
   width: 280px;
   height: 100%;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
   z-index: 10;
+  border-right: 1px solid #dcdee5;
   // transition: width 0.1s ease-in-out;
 }
 .config-setting-area {
@@ -153,7 +161,7 @@ const handleToggleView = () => {
   .service-detail-header {
     &.version-detail-header {
       background: #fafbfd;
-      box-shadow: none;
+      border: none;
     }
   }
   .setting-content-container {
@@ -170,6 +178,7 @@ const handleToggleView = () => {
   background: #c4c6cc;
   border-radius: 0 4px 4px 0;
   text-align: center;
+  height: auto;
   cursor: pointer;
   &:hover {
     background: #a3c5fd;
@@ -184,6 +193,9 @@ const handleToggleView = () => {
     margin-top: -8px;
     font-size: 12px;
     transform: scale(0.833);
+  }
+  .en-text {
+    writing-mode: vertical-lr;
   }
   .arrow-icon {
     font-size: 14px;

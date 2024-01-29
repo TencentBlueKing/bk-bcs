@@ -1,11 +1,11 @@
 <template>
-  <bk-sideslider :is-show="props.show" title="版本对比" :width="1200" @closed="handleClose">
+  <bk-sideslider :is-show="props.show" :title="t('版本对比')" :width="1200" @closed="handleClose">
     <div class="diff-content-area">
       <diff :diff="configDiffData" :is-tpl="true" :id="props.templateSpaceId" :loading="false">
         <template #leftHead>
           <slot name="baseHead">
             <div class="diff-panel-head">
-              <div class="version-tag base-version">对比版本</div>
+              <div class="version-tag base-version">{{t('对比版本')}}</div>
               <bk-select
                 :model-value="selectedVersion"
                 style="width: 320px"
@@ -27,7 +27,7 @@
         <template #rightHead>
           <slot name="currentHead">
             <div class="diff-panel-head">
-              <div class="version-tag">当前版本</div>
+              <div class="version-tag">{{t('当前版本')}}</div>
               <div class="version-name">{{ props.crtVersion.name }}</div>
             </div>
           </slot>
@@ -35,12 +35,13 @@
       </diff>
     </div>
     <div class="actions-btn">
-      <bk-button @click="handleClose">关闭</bk-button>
+      <bk-button @click="handleClose">{{t('关闭')}}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ITemplateVersionItem, DiffSliderDataType } from '../../../../../types/template';
 import { IDiffDetail } from '../../../../../types/service';
 import {
@@ -52,6 +53,7 @@ import {
 import { byteUnitConverse } from '../../../../utils';
 import Diff from '../../../../components/diff/index.vue';
 
+const { t } = useI18n();
 const props = defineProps<{
   show: boolean;
   spaceId: string;

@@ -57,7 +57,7 @@ const routes = [
                 component: () => import('./views/space/service/detail/config/index.vue'),
               },
               {
-                path: 'script',
+                path: 'script/:versionId?',
                 name: 'init-script',
                 meta: {
                   navModule: 'service',

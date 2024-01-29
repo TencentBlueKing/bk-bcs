@@ -11,6 +11,11 @@
     @mouseleave="handleMouseLeave">
     <span class="step-number">{{ stepNum }}</span>
     <span>{{ title }}</span>
+    <i
+      class="bk-icon icon-exclamation-circle-shape text-[#EA3636] text-[14px] ml-[8px]"
+      v-bk-tooltips="$t('tke.validate.formErr')"
+      v-if="isError">
+    </i>
   </div>
 </template>
 <script lang="ts">
@@ -33,6 +38,10 @@ export default defineComponent({
     title: {
       type: String,
       default: '',
+    },
+    isError: {
+      type: Boolean,
+      default: false,
     },
   },
   setup(props) {

@@ -22,6 +22,7 @@ local ngx_decode_base64 = ngx.decode_base64
 local RUN_ON_CE = "ce" -- 表示社区版
 local TOKEN_TYPE_APIGW = "apigw"
 local TOKEN_TYPE_BCS = "bcs"
+local OPERATOR_HEADER = "X-BCS-Operator" -- 运维人员头部 header
 
 local bcs_token_user_map_cache = core.lrucache.new(
     {
@@ -145,8 +146,16 @@ function TokenAuthentication:fetch_credential(conf, ctx)
         }
     end
 
+    local user_token = m[1]
+    -- 如果有操作人头部, 使用操作人+token查询
+    local operator = core.request.header(ctx, OPERATOR_HEADER)
+    if operator then
+        user_token = "op-" .. operator .. ":" .. user_token
+        core.log.warn("req use operator instead: ", operator)
+    end
+
     return {
-        user_token = m[1],
+        user_token = user_token,
         token_type = TOKEN_TYPE_BCS,
     }
 end
@@ -275,7 +284,7 @@ function APIGWAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
         retV.usertype = retV.sub_type
     elseif retV.username then
         retV.usertype = "user"
-    else 
+    else
         retV.usertype = "bk_app"
     end
     return retV

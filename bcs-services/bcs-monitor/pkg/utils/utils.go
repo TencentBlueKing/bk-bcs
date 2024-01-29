@@ -17,6 +17,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 )
@@ -24,6 +25,9 @@ import (
 const (
 	podIPsEnv     = "POD_IPs"        // 双栈监听环境变量
 	ipv6Interface = "IPV6_INTERFACE" // ipv6本地网关地址
+
+	// QueryFallbackTime metrics 查询回退时间
+	QueryFallbackTime = time.Minute
 )
 
 // GetIPv6AddrFromEnv 解析ipv6
@@ -94,4 +98,10 @@ func StringJoinIPWithRegex(list []string, sep, reg string) string {
 		ss = append(ss, net.JoinHostPort(list[i], "")+reg)
 	}
 	return strings.Join(ss, sep)
+}
+
+// GetNowQueryTime 获取当前时间
+func GetNowQueryTime() time.Time {
+	// 往前退一分钟, 避免数据上报慢
+	return time.Now().Add(-QueryFallbackTime)
 }

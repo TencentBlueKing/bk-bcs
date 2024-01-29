@@ -10,14 +10,14 @@
       <bk-input
         v-model="privilegeInputVal"
         type="number"
-        placeholder="请输入三位权限数字"
+        :placeholder="t('请输入三位权限数字')"
         :disabled="props.disabled"
         @blur="handleInputBlur"
       />
       <template #content>
-        <div>只能输入三位 0~7 数字</div>
+        <div>{{ t('只能输入三位 0~7 数字') }}</div>
         <div class="privilege-tips-btn-area">
-          <bk-button text theme="primary" @click="showPrivilegeErrorTips = false">我知道了</bk-button>
+          <bk-button text theme="primary" @click="showPrivilegeErrorTips = false">{{ t('我知道了') }}</bk-button>
         </div>
       </template>
     </bk-popover>
@@ -35,9 +35,9 @@
                 :model-value="privilegeGroupsValue[index]"
                 @change="handleSelect(index, $event)"
               >
-                <bk-checkbox size="small" :label="4">读</bk-checkbox>
-                <bk-checkbox size="small" :label="2">写</bk-checkbox>
-                <bk-checkbox size="small" :label="1">执行</bk-checkbox>
+                <bk-checkbox size="small" :label="4">{{ t('读') }}</bk-checkbox>
+                <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
+                <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
               </bk-checkbox-group>
             </div>
           </div>
@@ -48,8 +48,10 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
-const PRIVILEGE_GROUPS = ['属主（own）', '属组（group）', '其他人（other）'];
+const PRIVILEGE_GROUPS = [t('属主（own）'), t('属组（group）'), t('其他人（other）')];
 const PRIVILEGE_VALUE_MAP = {
   0: [],
   1: [1],

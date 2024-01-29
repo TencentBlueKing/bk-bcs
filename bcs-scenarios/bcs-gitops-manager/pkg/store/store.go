@@ -73,6 +73,7 @@ type Store interface {
 	ListRepository(ctx context.Context, projNames []string) (*v1alpha1.RepositoryList, error)
 
 	GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error)
+	GetApplicationRevisionsMetadata(ctx context.Context, repo, revision []string) ([]*v1alpha1.RevisionMetadata, error)
 	GetApplicationResourceTree(ctx context.Context, name string) (*v1alpha1.ApplicationTree, error)
 	ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (*v1alpha1.ApplicationList, error)
 	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application,
@@ -82,6 +83,8 @@ type Store interface {
 		application *v1alpha1.Application) ([]*apiclient.ManifestResponse, error)
 	ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
 		live *unstructured.Unstructured, hideData bool) error
+	UpdateApplicationSpec(ctx context.Context, spec *appclient.ApplicationUpdateSpecRequest) (
+		*v1alpha1.ApplicationSpec, error)
 
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (

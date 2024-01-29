@@ -1,7 +1,8 @@
 <template>
   <bk-dialog
     ext-cls="edit-group-dialog"
-    confirm-text="提交"
+    :confirm-text="t('提交')"
+    :cancel-text="t('取消')"
     :width="640"
     :is-show="props.show"
     :esc-close="false"
@@ -13,7 +14,7 @@
   >
     <div class="group-edit-content">
       <section class="group-form-wrapper">
-        <div class="dialog-title">编辑分组</div>
+        <div class="dialog-title">{{ t('编辑分组') }}</div>
         <div class="group-edit-form">
           <group-edit-form ref="groupFormRef" :group="groupData" @change="updateData"></group-edit-form>
         </div>
@@ -23,13 +24,16 @@
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../store/global';
 import { IGroupEditing, IGroupRuleItem, IGroupItem } from '../../../../types/group';
 import { updateGroup } from '../../../api/group';
 import groupEditForm from './components/group-edit-form.vue';
+import Message from 'bkui-vue/lib/message';
 
 const { spaceId } = storeToRefs(useGlobalStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -87,6 +91,10 @@ const handleConfirm = async () => {
       selector: rule_logic === 'AND' ? { labels_and: rules } : { labels_or: rules },
     };
     await updateGroup(spaceId.value, id as number, params);
+    Message({
+      message: t('编辑分组成功'),
+      theme: 'success',
+    });
     handleClose();
     emits('reload');
   } catch (e) {

@@ -17,7 +17,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // AppTemplateVariable 未命名版本服务的模版变量

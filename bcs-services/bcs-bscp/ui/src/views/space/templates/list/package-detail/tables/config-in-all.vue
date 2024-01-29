@@ -5,7 +5,6 @@
     current-pkg="all"
     :show-cited-by-pkgs-col="true"
     :show-bound-by-apps-col="true"
-    :current-template-space="currentTemplateSpace"
     :get-config-list="getConfigList"
   >
     <template #tableOperations>

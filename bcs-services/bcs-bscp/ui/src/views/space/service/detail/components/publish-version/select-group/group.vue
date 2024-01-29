@@ -1,29 +1,36 @@
 <template>
   <div class="group-select-wrapper">
-    <h3 class="title">选择上线实例范围</h3>
+    <h3 class="title">{{t('选择上线实例范围')}}</h3>
     <div class="select-group-radius">
       <bk-radio-group :model-value="type" @change="handleTypeChange">
         <bk-radio label="all">
-          全部实例上线
+          {{t('全部实例上线')}}
         </bk-radio>
         <bk-radio label="select">
-          选择分组实例上线
+          {{t('选择分组实例上线')}}
           <GroupTree
             v-if="type === 'select'"
             :group-list="props.groupList"
             :group-list-loading="props.groupListLoading"
             :version-list="props.versionList"
             :version-list-loading="props.versionListLoading"
-            :disabled="props.disabled"
+            :released-groups="props.releasedGroups"
             :value="selectedGroup"
             @change="handleSelectGroup">
           </GroupTree>
         </bk-radio>
-        <bk-radio label="exclude" :disabled="props.versionStatus === 'not_released'">
-          排除分组实例上线
+        <bk-radio label="exclude" :disabled="isExcludeModeDisabled">
+          <span
+            v-bk-tooltips="{
+              disabled: !isExcludeModeDisabled,
+              placement: 'top-start',
+              content: t('其它版本没有上线任何分组（默认版本除外），无法使用此选项')
+            }">
+            {{t('排除分组实例上线')}}
+          </span>
           <GroupTree
             v-if="type === 'exclude'"
-            :group-list="props.groupList.filter(item => item.release_id !== 0)"
+            :group-list="props.groupList.filter(item => item.release_id !== 0 && item.release_id !== props.releasedId)"
             :group-list-loading="groupListLoading"
             :version-list="versionList"
             :version-list-loading="versionListLoading"
@@ -37,23 +44,26 @@
 </template>
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { IGroupToPublish } from '../../../../../../../../types/group';
 import { IConfigVersion } from '../../../../../../../../types/config';
 import GroupTree from './tree.vue';
 
+const { t } = useI18n();
 const props = withDefaults(defineProps<{
     groupListLoading: boolean;
     groupList: IGroupToPublish[];
     versionListLoading: boolean;
     versionList: IConfigVersion[];
     versionStatus: string;
-    disabled?: number[];
+    releasedGroups?: number[];
     releaseType: string;
+    releasedId: number;
     value: IGroupToPublish[];
   }>(), {
   groupList: () => [],
   versionList: () => [],
-  disabled: () => [],
+  releasedGroups: () => [],
   value: () => [],
 });
 
@@ -70,13 +80,19 @@ const selectedGroup = computed(() => {
   return props.value;
 });
 
+// 排除分组实例上线逻辑：非当前上线版本下的已上线分组为空
+const isExcludeModeDisabled = computed(() => {
+  const releasedGroups = props.groupList.filter(group => group.id !== 0 && group.release_id > 0 && group.release_id !== props.releasedId);
+  return releasedGroups.length === 0;
+});
+
 // 切换选择分组类型
 const handleTypeChange = (val: string) => {
   type.value = val;
   if (val === 'all') {
     handleSelectGroup(props.groupList);
   } else if (val === 'select') {
-    const list = props.groupList.filter(group => props.disabled.includes(group.id));
+    const list = props.groupList.filter(group => props.releasedGroups.includes(group.id));
     handleSelectGroup(list);
   } else {
     handleSelectGroup([]);
@@ -87,7 +103,7 @@ const handleTypeChange = (val: string) => {
 const handleSelectGroup = (val: IGroupToPublish[]) => {
   if (type.value === 'exclude') {
     // 排除分组实例上线时，实际需要上线的分组为：默认分组和未被排除且已上线的分组
-    const list: IGroupToPublish[] = props.groupList.filter(group => {
+    const list: IGroupToPublish[] = props.groupList.filter((group) => {
       // 默认分组
       if (group.id === 0) {
         return true;
@@ -101,7 +117,7 @@ const handleSelectGroup = (val: IGroupToPublish[]) => {
 };
 
 defineExpose({
-  selectedGroup
+  selectedGroup,
 });
 
 </script>

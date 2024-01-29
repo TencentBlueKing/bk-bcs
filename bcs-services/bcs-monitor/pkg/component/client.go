@@ -52,6 +52,9 @@ var (
 	}
 	clientOnce   sync.Once
 	globalClient *resty.Client
+
+	noTraceClientOnce   sync.Once
+	noTraceGlobalClient *resty.Client
 )
 
 // restyReqToCurl curl 格式的请求日志
@@ -129,7 +132,8 @@ func restyErrHook(r *resty.Request, err error) {
 }
 
 func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
-	klog.Infof("[%s] RESP: %s", store.RequestIDValue(r.Request.Context()), restyResponseToCurl(r))
+	klog.Infof("[%s] [Traceparent: %s] RESP: %s", store.RequestIDValue(r.Request.Context()),
+		r.Request.RawRequest.Header.Get("Traceparent"), restyResponseToCurl(r))
 	return nil
 }
 
@@ -175,6 +179,27 @@ func GetClient() *resty.Client {
 		})
 	}
 	return globalClient
+}
+
+// GetNoTraceClient 监控平台使用 trace id 做了缓存，在并发情况下，相同 trace id 的请求数据可能相同，导致数据不准确，
+// 这种情况不传递 trace id，待监控平台解决后，再传递 trace id
+func GetNoTraceClient() *resty.Client {
+	if noTraceGlobalClient == nil {
+		noTraceClientOnce.Do(func() {
+			noTraceGlobalClient = resty.New().
+				SetTimeout(timeout).
+				SetDebug(false).   // nolint 更多详情, 可以开启为 true
+				SetCookieJar(nil). // 后台API去掉 cookie 记录
+				SetDebugBodyLimit(1024).
+				OnAfterResponse(restyAfterResponseHook).
+				SetPreRequestHook(restyBeforeRequestHook).
+				OnError(restyErrHook).
+				// NOCC:gas/tls(设计如此)
+				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}). // nolint
+				SetHeader("User-Agent", userAgent)
+		})
+	}
+	return noTraceGlobalClient
 }
 
 // AuthInfo auth info, issue https://github.com/TencentBlueKing/blueking-apigateway/issues/325

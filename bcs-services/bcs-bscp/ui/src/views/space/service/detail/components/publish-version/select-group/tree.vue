@@ -2,35 +2,34 @@
   <div class="group-tree-container">
     <div class="operate-actions">
       <div class="btns">
-        <bk-button text theme="primary" @click="handleSelectAll">全选</bk-button>
-        <bk-button text theme="primary" @click="handleClearAll">全不选</bk-button>
+        <bk-button text theme="primary" @click="handleSelectAll">{{t('全选')}}</bk-button>
+        <bk-button text theme="primary" @click="handleClearAll">{{t('全不选')}}</bk-button>
         <bk-select
           class="version-select"
-          empty-text="暂无可上线分组"
+          :no-data-text="t('暂无已上线的可选版本')"
           :multiple="true"
           :filterable="true"
           :input-search="false"
+          :show-select-all="true"
           :popover-min-width="240"
           @change="handleSelectVersion"
-          @toggle="versionSelectorOpen = $event"
-        >
+          @toggle="versionSelectorOpen = $event">
           <template #trigger>
             <bk-button text theme="primary">
-              按版本选择
+              {{ t('按版本选择') }}
               <AngleUp class="arrow-icon" v-if="versionSelectorOpen" />
               <AngleDown class="arrow-icon" v-else />
             </bk-button>
           </template>
-          <bk-option :value="0">全选</bk-option>
+          <!-- <bk-option v-if="props.versionList.length > 0" :value="0">全选</bk-option> -->
           <bk-option
             v-for="version in props.versionList"
             :key="version.id"
             :label="version.spec.name"
-            :value="version.id"
-          ></bk-option>
+            :value="version.id" />
         </bk-select>
       </div>
-      <bk-input v-model="searchStr" class="group-search-input" placeholder="搜索分组名称/标签key" :clearable="true">
+      <bk-input v-model="searchStr" class="group-search-input" :placeholder="t('搜索分组名称/标签key')" :clearable="true">
         <template #suffix>
           <Search class="search-input-icon" />
         </template>
@@ -41,6 +40,7 @@
         ref="treeRef"
         label="name"
         node-key="node_id"
+        :selectable="false"
         :data="searchTreeData"
         :expand-all="false"
         :show-node-type-icon="false"
@@ -52,19 +52,21 @@
               :model-value="node.checked"
               :disabled="node.disabled"
               :indeterminate="node.indeterminate"
-              @change="handleNodeCheckChange(node, $event)"
-            >
+              v-bk-tooltips="{ content: t('已上线分组不可取消选择'),disabled: !node.disabled }"
+              @change="handleNodeCheckChange(node)">
             </bk-checkbox>
-            <div class="node-label">
+            <div class="node-label" @click="handleNodeCheckChange(node)">
               <div class="label">{{ node.name }}</div>
               <span v-if="node.count" class="count">({{ node.count }})</span>
               <template v-if="node.rules">
                 <span class="split-line"> | </span>
                 <div class="rules">
-                  <span v-for="(rule, index) in node.rules" :key="index" class="rule">
-                    <span v-if="index > 0"> & </span>
-                    <rule-tag class="tag-item" :rule="rule" />
-                  </span>
+                  <bk-overflow-title type="tips">
+                    <span v-for="(rule, index) in node.rules" :key="index" class="rule">
+                      <span v-if="index > 0"> & </span>
+                      <rule-tag class="tag-item" :rule="rule" />
+                    </span>
+                  </bk-overflow-title>
                 </div>
               </template>
             </div>
@@ -79,6 +81,7 @@
 </template>
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Search, AngleDown, AngleUp } from 'bkui-vue/lib/icon';
 import { IGroupToPublish } from '../../../../../../../../types/group';
 import { IConfigVersion } from '../../../../../../../../types/config';
@@ -91,6 +94,8 @@ interface IGroupNodeData extends IGroupToPublish {
   disabled: boolean;
 }
 
+const { t } = useI18n();
+
 // 将全量分组数据按照规则key分组，并记录所有分组节点数据
 const categorizingData = (groupList: IGroupToPublish[]) => {
   const nodeItemList: IGroupNodeData[] = [];
@@ -100,7 +105,7 @@ const categorizingData = (groupList: IGroupToPublish[]) => {
       return;
     }
     const checked = props.value.findIndex(item => item.id === group.id) > -1;
-    const disabled = props.disabled.includes(group.id);
+    const disabled = props.releasedGroups.includes(group.id);
     nodeItemList.push({ ...group, node_id: group.id, checked, disabled });
   });
 
@@ -112,10 +117,10 @@ const props = withDefaults(defineProps<{
   groupList: IGroupToPublish[];
   versionListLoading: boolean;
   versionList: IConfigVersion[];
-  disabled?: number[]; // 调整分组上线时，【选择分组上线】已选择分组不可取消
+  releasedGroups?: number[]; // 调整分组上线时，【选择分组上线】已选择分组不可取消
   value: IGroupToPublish[];
 }>(), {
-  disabled: () => [],
+  releasedGroups: () => [],
 });
 
 const emits = defineEmits(['change']);
@@ -125,15 +130,16 @@ const versionSelectorOpen = ref(false);
 const searchStr = ref('');
 const treeRef = ref();
 const isSearchEmpty = ref(false);
+const selectedVersionIds = ref<number[]>([]);
 
 // 节点搜索
 const searchTreeData = computed(() => {
   if (searchStr.value === '') return allGroupNode.value;
   isSearchEmpty.value = true;
-  return allGroupNode.value.filter(node => {
-    const { name, rules } = node
-    const searchText = searchStr.value.toLowerCase()
-    return name.toLowerCase().includes(searchText) || rules.some(rule => rule.key.toLowerCase().includes(searchText))
+  return allGroupNode.value.filter((node) => {
+    const { name, rules } = node;
+    const searchText = searchStr.value.toLowerCase();
+    return name.toLowerCase().includes(searchText) || rules.some(rule => rule.key.toLowerCase().includes(searchText));
   });
 });
 
@@ -151,9 +157,9 @@ watch(
   () => props.value,
   (val) => {
     const ids = val.map(item => item.id);
-    allGroupNode.value.forEach(node => {
+    allGroupNode.value.forEach((node) => {
       node.checked = ids.includes(node.id);
-    })
+    });
   },
 );
 
@@ -163,7 +169,7 @@ const handleSelectAll = () => {
   props.groupList.forEach((group) => {
     const hasGroupChecked = props.value.findIndex(item => item.id === group.id) > -1; // 分组在编辑前是否选中
     const hasAdded = groupList.findIndex(item => item.id === group.id) > -1; // 分组已添加
-    const isDisabled = props.disabled.includes(group.id);
+    const isDisabled = props.releasedGroups.includes(group.id);
     if (group.id !== 0 && !hasAdded && (!isDisabled || hasGroupChecked)) {
       groupList.push(group);
     }
@@ -174,51 +180,53 @@ const handleSelectAll = () => {
 // 全不选
 const handleClearAll = () => {
   const hasCheckedGroups = props.groupList.filter((group) => {
-    const res = props.disabled.includes(group.id) && props.value.findIndex(item => item.id === group.id) > -1;
+    const res = props.releasedGroups.includes(group.id) && props.value.findIndex(item => item.id === group.id) > -1;
     return res;
   });
   emits('change', hasCheckedGroups);
 };
 
 // 按版本选择
-const handleSelectVersion = (versions: number[]) => {
-  const selectedVersion: IConfigVersion[] = [];
+const handleSelectVersion = (val: number[]) => {
   const list: IGroupToPublish[] = [];
-  if (versions.includes(0)) {
-    // 全选
-    selectedVersion.push(...props.versionList);
-  } else {
-    // 选择部分
-    versions.forEach((id) => {
-      const version = props.versionList.find(item => item.id === id);
-      if (version) {
-        selectedVersion.push(version);
-      }
-    });
-  }
-  selectedVersion.forEach((version) => {
-    version.status.released_groups.forEach((releaseItem) => {
-      if (!list.find(item => releaseItem.id === item.id)) {
-        const group = allGroupNode.value.find(groupItem => groupItem.id === releaseItem.id);
-        if (group) {
-          list.push(group);
+  val.forEach((id) => {
+    const version = props.versionList.find(item => item.id === id);
+    if (version) {
+      version.status.released_groups.forEach((releaseItem) => {
+        if (!list.find(item => releaseItem.id === item.id)) {
+          const group = allGroupNode.value.find(groupItem => groupItem.id === releaseItem.id);
+          if (group) {
+            list.push(group);
+          }
         }
+      });
+    }
+  });
+  // 调整分组上线时，当前版本已上线分组不可取消
+  props.releasedGroups.forEach((id) => {
+    if (!list.find(item => item.id === id)) {
+      const group = allGroupNode.value.find(groupItem => groupItem.id === id);
+      if (group) {
+        list.push(group);
       }
-    });
+    }
   });
   emits('change', list);
 };
 
 // 选中/取消选中节点
-const handleNodeCheckChange = (node: IGroupNodeData, checked: boolean) => {
+const handleNodeCheckChange = (node: IGroupNodeData) => {
+  if (node.disabled) {
+    return;
+  }
   const list = props.value.slice();
   // 叶子节点
-  const group = props.groupList.find(group => group.id === (node as IGroupNodeData).id);
+  const group = props.groupList.find(group => group.id === node.id);
   if (group) {
-    if (checked) {
+    const index = list.findIndex(item => item.id === group.id);
+    if (index === -1) {
       list.push(group);
     } else {
-      const index = list.findIndex(item => item.id === group.id);
       list.splice(index, 1);
     }
   }
@@ -275,9 +283,11 @@ const handleClearSearch = () => {
   .node-label {
     display: flex;
     align-items: center;
+    flex: 1;
     padding: 0 8px;
     color: #63656e;
     font-size: 12px;
+    overflow: hidden;
   }
   .count {
     margin-left: 4px;
@@ -287,8 +297,11 @@ const handleClearSearch = () => {
     color: #979ba5;
   }
   .rules {
+    flex: 1;
     min-width: 0;
     color: #979ba5;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 </style>

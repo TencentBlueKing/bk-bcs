@@ -1,31 +1,38 @@
 <template>
   <div class="use-package-apps">
-    <bk-select :value="''" :disabled="tplCounts === 0" :filterable="true" :input-search="false">
+    <bk-select
+      :value="''"
+      :disabled="tplCounts === 0"
+      :filterable="true"
+      :input-search="false"
+      :search-placeholder="$t('请输入关键字')"
+    >
       <template #trigger>
         <div
-            :class="['select-app-trigger', { disabled: tplCounts === 0 }]"
-            v-bk-tooltips="{
-              disabled: tplCounts > 0,
-              content: '该套餐中没有可用配置文件，无法被导入到服务配置中'
-            }">
+          :class="['select-app-trigger', { disabled: tplCounts === 0 }]"
+          v-bk-tooltips="{
+            disabled: tplCounts > 0,
+            content: t('该套餐中没有可用配置文件，无法被导入到服务配置中'),
+          }"
+        >
           <Plus class="plus-icon" />
-          新服务中使用
+          {{ t('新服务中使用') }}
         </div>
       </template>
       <bk-option v-for="app in unBoundApps" :key="app.id" :id="app.id" :label="app.spec.name">
         <div class="app-option" @click="goToConfigPageImport(app.id as number)">
           <div class="name-text">{{ app.spec.name }}</div>
-          <LinkToApp class="link-icon" :id="app.id as number"  />
+          <LinkToApp class="link-icon" :id="app.id as number" />
         </div>
       </bk-option>
     </bk-select>
     <div class="table-wrapper">
       <bk-loading :loading="boundAppsLoading">
         <div class="refresh-header">
-          <span class="text">当前使用此套餐的服务</span>
-          <right-turn-line class="refresh-button" :class="{rotate:boundAppsLoading}"  @click="getBoundApps"/>
+          <span class="text">{{ t('当前使用此套餐的服务') }}</span>
+          <right-turn-line class="refresh-button" :class="{ rotate: boundAppsLoading }" @click="getBoundApps" />
         </div>
-        <bk-table :border="['outer']" :data="boundApps" :thead="{isShow:false}">
+        <bk-table :border="['outer']" :data="boundApps" :thead="{ isShow: false }" :empty-text="t('暂无数据')">
           <bk-table-column label="">
             <template #default="{ row }">
               <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
@@ -43,6 +50,7 @@
 </template>
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Plus, RightTurnLine } from 'bkui-vue/lib/icon';
@@ -56,17 +64,16 @@ import { IPackageCitedByApps } from '../../../../../../types/template';
 import LinkToApp from '../components/link-to-app.vue';
 
 const router = useRouter();
-
-const emits = defineEmits(['toggle-open']);
+const { t } = useI18n();
 
 const { spaceId } = storeToRefs(useGlobalStore());
 // const { userInfo } = storeToRefs(useUserStore());
 const templateStore = useTemplateStore();
 const { currentTemplateSpace, currentPkg } = storeToRefs(templateStore);
 
-const props = defineProps<{
+defineProps<{
   tplCounts: number;
-}>()
+}>();
 
 const userApps = ref<IAppItem[]>([]);
 const userAppListLoading = ref(false);
@@ -181,7 +188,7 @@ const goToConfigPageImport = (id: number) => {
     padding: 0 16px;
     font-size: 12px;
     height: 41px;
-    border: 1px solid #DCDEE5;
+    border: 1px solid #dcdee5;
     border-bottom: none;
     &:hover {
       background-color: #f0f1f5;
@@ -190,7 +197,7 @@ const goToConfigPageImport = (id: number) => {
       margin-right: 16px;
     }
     .refresh-button {
-      color:#3a84ff;
+      color: #3a84ff;
       font-size: 16px;
       cursor: pointer;
     }

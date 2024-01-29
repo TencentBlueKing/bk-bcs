@@ -18,14 +18,14 @@ import (
 
 	rawgen "gorm.io/gen"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Credential supplies all the Credential related operations.
@@ -36,6 +36,8 @@ type Credential interface {
 	GetByCredentialString(kit *kit.Kit, bizID uint32, credential string) (*table.Credential, error)
 	// ListByCredentialString list credential by credential string array
 	ListByCredentialString(kit *kit.Kit, bizID uint32, credentials []string) ([]*table.Credential, error)
+	// BatchListByIDs batch list credential by ids
+	BatchListByIDs(kit *kit.Kit, bizID uint32, ids []uint32) ([]*table.Credential, error)
 	// Create one credential instance.
 	Create(kit *kit.Kit, credential *table.Credential) (uint32, error)
 	// List get credentials
@@ -137,6 +139,20 @@ func (dao *credentialDao) ListByCredentialString(kit *kit.Kit, bizID uint32, str
 	return q.Where(m.BizID.Eq(bizID), m.EncCredential.In(encryptedArr...)).Find()
 }
 
+// BatchListByIDs batch list credential by ids
+func (dao *credentialDao) BatchListByIDs(kit *kit.Kit, bizID uint32, ids []uint32) ([]*table.Credential, error) {
+	if bizID == 0 {
+		return nil, errors.New("bizID is empty")
+	}
+	if len(ids) == 0 {
+		return []*table.Credential{}, nil
+	}
+
+	m := dao.genQ.Credential
+
+	return dao.genQ.Credential.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.ID.In(ids...)).Find()
+}
+
 // Create create credential
 func (dao *credentialDao) Create(kit *kit.Kit, g *table.Credential) (uint32, error) {
 	if err := g.ValidateCreate(); err != nil {
@@ -187,7 +203,7 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 
 	result, count, err := q.Where(m.BizID.Eq(bizID)).
 		Where(conds...).
-		Order(m.ID.Desc()).
+		Order(m.Name).
 		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err

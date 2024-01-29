@@ -488,6 +488,8 @@
   en: "Use storage class to create persistent volume"
 - msgID: 使用已存在的持久卷
   en: "Use existing persistent volume"
+- msgID: 共享集群暂不支持使用已存在的持久卷
+  en: "Use existing persistent volume is unsupported in shared cluster"
 - msgID: 持久卷名称
   en: PersistentVolume
 - msgID: "留空将使用默认 StorageClass"

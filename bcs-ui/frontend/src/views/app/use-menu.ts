@@ -332,6 +332,11 @@ export default function useMenu() {
               route: 'tencentCloud',
             },
             {
+              title: 'Tencent Cloud',
+              id: 'TENCENTPUBLICCLOUD',
+              route: 'tencentPublicCloud',
+            },
+            {
               title: 'Google Cloud',
               id: 'GOOGLECLOUD',
               route: 'googleCloud',

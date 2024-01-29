@@ -490,7 +490,7 @@ func (nc *NodeClient) ModifyInstancesVpcAttribute(vpcId string, subnet string, i
 	}
 
 	if resp.Response == nil {
-		return fmt.Errorf("ModifyInstancesVpcAttribute[%+v] lost validate reponse", instanceIds)
+		return fmt.Errorf("ModifyInstancesVpcAttribute[%+v] lost validate response", instanceIds)
 	}
 
 	blog.Infof("ModifyInstancesVpcAttribute[%+v] vpc[%s] subnet[%s] successful", instanceIds, vpcId, subnet)

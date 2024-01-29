@@ -18,6 +18,11 @@
       :label="$t('cluster.ca.nodePool.create.enableAutoscale.title')"
       :desc="$t('cluster.ca.nodePool.create.enableAutoscale.tips')">
       <bk-checkbox v-model="nodePoolInfo.enableAutoscale" :disabled="isEdit"></bk-checkbox>
+      <p
+        class="text-[#979BA5] leading-4 mt-[4px] text-[12px]"
+        v-if="instanceChargeType === 'PREPAID' && nodePoolInfo.enableAutoscale">
+        {{ $t('tke.tips.prepaidOfEnableCA') }}
+      </p>
     </bk-form-item>
     <bk-form-item :label="$t('k8s.label')" property="labels" error-display-type="normal">
       <KeyValue
@@ -81,7 +86,7 @@
         </span>
       </bk-radio-group>
     </bk-form-item>
-    <bk-form-item
+    <!-- <bk-form-item
       :label="$t('cluster.ca.nodePool.create.cloudArea.title')"
       :desc="$t('cluster.ca.nodePool.create.cloudArea.desc')">
       <bcs-select
@@ -97,14 +102,14 @@
           :name="item.bk_cloud_name">
         </bcs-option>
       </bcs-select>
-    </bk-form-item>
+    </bk-form-item> -->
   </bk-form>
 </template>
 <script lang="ts">
-import { sortBy } from 'lodash';
-import { defineComponent, onMounted, ref, toRefs } from 'vue';
+// import { sortBy } from 'lodash';
+import { computed, defineComponent, ref, toRefs } from 'vue';
 
-import { nodemanCloudList } from '@/api/base';
+// import { nodemanCloudList } from '@/api/base';
 import $i18n from '@/i18n/i18n-setup';
 import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import KeyValue from '@/views/cluster-manage/components/key-value.vue';
@@ -131,9 +136,14 @@ export default defineComponent({
       type: Object,
       default: () => ({}),
     },
+    data: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   setup(props) {
-    const { defaultValues, schema } = toRefs(props);
+    const { defaultValues, schema, isEdit, data } = toRefs(props);
+    const instanceChargeType = computed(() => data.value?.launchTemplate?.instanceChargeType);
     const formRef = ref<any>(null);
     const nodePoolInfo = ref({
       // name: defaultValues.value.name || '', // 节点名称
@@ -144,7 +154,10 @@ export default defineComponent({
         multiZoneSubnetPolicy: defaultValues.value.autoScaling?.multiZoneSubnetPolicy, // 实列创建策略
         retryPolicy: defaultValues.value.autoScaling?.retryPolicy, // 重试策略
       },
-      enableAutoscale: defaultValues.value.enableAutoscale, // 是否开启弹性伸缩
+      // 创建时，当前选择按量计费时默认开启，选择包年包月时默认不开启
+      enableAutoscale: isEdit.value
+        ? defaultValues.value.enableAutoscale
+        : instanceChargeType.value === 'POSTPAID_BY_HOUR', // 是否开启弹性伸缩
       nodeTemplate: {
         unSchedulable: 1, // 是否开启调度 0 代表开启调度，1 不可调度
         labels: defaultValues.value.nodeTemplate?.labels || {}, // 标签
@@ -157,7 +170,7 @@ export default defineComponent({
         //   scaleInModuleName: defaultValues.value.nodeTemplate?.module?.scaleInModuleName || '',
         // },
       },
-      bkCloudID: defaultValues.value.area?.bkCloudID || 0,
+      bkCloudID: isEdit.value ? defaultValues.value.area?.bkCloudID : 0,
       bkCloudName: defaultValues.value.area?.bkCloudName || '',
     });
 
@@ -247,38 +260,39 @@ export default defineComponent({
     const getSchemaByProp = props => Schema.getSchemaByProp(schema.value, props);
 
     // 云区域列表
-    const cloudList = ref<any[]>([]);
-    const cloudLoading = ref(false);
-    const handleGetCloudList = async () => {
-      cloudLoading.value = true;
-      const data = await nodemanCloudList().catch(() => []);
-      cloudList.value = sortBy(data, 'bk_cloud_name').sort((item) => {
-        if (item.bk_cloud_id === 0) return -1;
-        return 0;
-      });
-      cloudLoading.value = false;
-    };
-    const handleCloudIDChange = (id: string) => {
-      const data = cloudList.value.find(item => item.bk_cloud_id === id);
-      if (data) {
-        nodePoolInfo.value.bkCloudName = data.bk_cloud_name;
-      }
-    };
+    // const cloudList = ref<any[]>([]);
+    // const cloudLoading = ref(false);
+    // const handleGetCloudList = async () => {
+    //   cloudLoading.value = true;
+    //   const data = await nodemanCloudList().catch(() => []);
+    //   cloudList.value = sortBy(data, 'bk_cloud_name').sort((item) => {
+    //     if (item.bk_cloud_id === 0) return -1;
+    //     return 0;
+    //   });
+    //   cloudLoading.value = false;
+    // };
+    // const handleCloudIDChange = (id: string) => {
+    //   const data = cloudList.value.find(item => item.bk_cloud_id === id);
+    //   if (data) {
+    //     nodePoolInfo.value.bkCloudName = data.bk_cloud_name;
+    //   }
+    // };
 
-    onMounted(() => {
-      handleGetCloudList();
-    });
+    // onMounted(() => {
+    //   handleGetCloudList();
+    // });
 
     return {
       formRef,
       nodePoolInfo,
       nodePoolInfoRules,
+      instanceChargeType,
       getSchemaByProp,
       handleAddTaints,
       validate,
-      cloudLoading,
-      cloudList,
-      handleCloudIDChange,
+      // cloudLoading,
+      // cloudList,
+      // handleCloudIDChange,
     };
   },
 });

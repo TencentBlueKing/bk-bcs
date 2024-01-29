@@ -22,7 +22,7 @@
       <SearchInput
         v-model="searchStr"
         class="config-search-input"
-        placeholder="配置文件名/创建人/修改人"
+        :placeholder="t('配置文件名/创建人/修改人')"
         :width="280"
       />
     </div>
@@ -59,6 +59,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useI18n } from 'vue-i18n';
 import useConfigStore from '../../../../../../../store/config';
 import useServiceStore from '../../../../../../../store/service';
 import SearchInput from '../../../../../../../components/search-input.vue';
@@ -73,6 +74,7 @@ const configStore = useConfigStore();
 const serviceStore = useServiceStore();
 const { versionData } = storeToRefs(configStore);
 const { isFileType } = storeToRefs(serviceStore);
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;

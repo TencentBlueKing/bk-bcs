@@ -28,6 +28,8 @@ import cookie from 'cookie';
 import Vue from 'vue';
 import Vuex from 'vuex';
 
+import cloudMetadata from './cloud-metadata';
+
 import http from '@/api';
 import { getProject } from '@/api/modules/project';
 import { json2Query } from '@/common/util';
@@ -75,8 +77,10 @@ const store = new Vuex.Store<{
   openSideMenu: boolean
   isEn: boolean
   crdInstanceList: any[]
-  cluster: typeof cluster.state
   globalPageSize: number
+  // 模块
+  cluster: typeof cluster.state
+  cloudMetadata: typeof cloudMetadata.state
 }>({
   // todo 废弃模块
   modules: {
@@ -99,6 +103,7 @@ const store = new Vuex.Store<{
     log,
     clustermanager,
     token,
+    cloudMetadata,
   },
   plugins: [
     VuexStorage({

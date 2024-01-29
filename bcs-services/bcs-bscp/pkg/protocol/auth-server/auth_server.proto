@@ -7,7 +7,7 @@ import "protoc-gen-openapiv2/options/annotations.proto";
 
 package pbas;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server;pbas";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server;pbas";
 
 service Auth {
   // init auth center's auth model.

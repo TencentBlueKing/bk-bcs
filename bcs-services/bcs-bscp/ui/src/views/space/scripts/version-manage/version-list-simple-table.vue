@@ -1,6 +1,6 @@
 <template>
   <bk-table :border="['row']" :data="props.list" :row-class="getRowCls" @row-click="handleSelectVersion">
-    <bk-table-column label="版本号" show-overflow-tooltip>
+    <bk-table-column :label="t('版本号')" show-overflow-tooltip>
       <template #default="{ row }">
         <div v-if="row.hook_revision" class="version-name-wrapper">
           <span :class="['status-dot', row.hook_revision.spec.state]"></span>
@@ -24,6 +24,9 @@
 <script setup lang="ts">
 import { IScriptVersionListItem } from '../../../../../types/script';
 import { IPagination } from '../../../../../types/index';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   list: IScriptVersionListItem[];

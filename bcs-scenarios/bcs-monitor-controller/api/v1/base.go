@@ -45,6 +45,9 @@ const (
 
 	// LabelKeyForScenarioName label key for scenario name
 	LabelKeyForScenarioName = "monitorcontroller.bkbcs.tencent.com/scenario"
+	//// LabelKeyForScenarioRepo label key for scenario repo
+	// LabelKeyForScenarioRepo = "monitorcontroller.bkbcs.tencent.com/scenario-repo"
+
 	// LabelKeyForBizID label key for biz id
 	LabelKeyForBizID = "monitorcontroller.bkbcs.tencent.com/biz_id"
 	// LabelKeyForAppMonitorName label key for app monitor name

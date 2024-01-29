@@ -132,6 +132,10 @@ func (lc *ListenerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}, nil
 	}
 	ehandler.PushQueue(req.NamespacedName)
+	if lc.Option.ListenerAutoReconcileSeconds > 0 {
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * time.Duration(lc.Option.
+			ListenerAutoReconcileSeconds)}, nil
+	}
 	return ctrl.Result{}, nil
 }
 

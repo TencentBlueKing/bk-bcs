@@ -32,6 +32,7 @@ bcs:
     federation: Federation
     kubeConfig: KubeConfig
     cloud: Cloud credential import
+    platform: Platform created
   msg:
     emptyHostResource: >-
       You do not have any host resources under the current business. Please
@@ -104,6 +105,11 @@ k8s:
     partition: Partition rolling update
     podManagementPolicy: POD management strategy
   containerNetwork: Container network
+  deploy:
+    readyTips: >-
+      A Pod instance is considered Ready when it meets the following two
+      conditions <br/> 1.All containers within the Pod are ready. <br/> 2.All
+      conditions in Readiness Gates are True.
 nav:
   dashboard: Dashboard
   namespace: Namespaces
@@ -203,7 +209,7 @@ metrics:
   diskUsage: Disk usage
   memUsage: Memory usage
   memUsage1: Memory usage
-  podUsage: pod Usage
+  podUsage: Pod usage
   cpuRequestUsage:
     text: CPU packing rate
     clusterDesc: >-
@@ -234,6 +240,7 @@ metrics:
     disk:
       read: read
       write: write
+  usage: 'Usage {0}'
 generic:
   msg:
     error:
@@ -293,6 +300,7 @@ generic:
       C &amp; quote; &amp; quote
     searchIp: Search ip
   button:
+    validate: Validate
     confirm: Confirm
     confirm1: Confirm
     cancel: Cancel
@@ -322,7 +330,7 @@ generic:
       subTitle: 'Confirm that you need to expel the POD on the node {IP}'
       subTitle2: 'Confirm that {ip} and other {num} pods on the node node'
     cordon:
-      text: UnCordon
+      text: Cordon
       title: 'Confirm stops scheduling {ip} '
       title1: Confirm batch stop dispatch
       subTitle: >-
@@ -331,7 +339,7 @@ generic:
         LB to NodePort
       subTitle2: 'Please confirm whether to stop {ip} and other {num} IP scheduling'
     uncordon:
-      text: Cordon
+      text: UnCordon
       title: Confirm the allowable scheduling
       title2: Confirm batch dispatch
       subTitle: 'Confirm allows dispatch  {ip}'
@@ -344,6 +352,9 @@ generic:
     create: Create
     submit: SUBMIT
     reload: Reload
+    copyAll: Copy All
+    retry: Retry
+    skip: Skip
   label:
     basicConfig: Basic config
     key: Key
@@ -384,7 +395,7 @@ generic:
     time: Time
     type: Type
     message: message
-    step: step
+    step: Step
     execTime: Started
     execTime2: Time cost
     whenFailed: After failed
@@ -394,6 +405,7 @@ generic:
     start: Start
     stop: Stop
   status:
+    part_failure: Part failure
     support: Support
     unSupport: Not support
     ready: Normal
@@ -428,6 +440,7 @@ generic:
     taskNotEnable: To-Do
     restarting: Restarting
     pending: Pending
+    skip: Skipped
   validate:
     repeatKey: Repeat key
     required: Requiring item
@@ -435,6 +448,7 @@ generic:
     labelKey: 'only support letters, numbers and characters (-_./)'
     required1: TAINTS cannot have vacant fields
     annotationValueEmpty: The annotation value cannot be empty
+    annotations: 'only support letters, numbers, space and characters (-_./)'
     labelKey1: >-
       Only support the letters, numbers and characters (-_./), and need to start
       with the letter number
@@ -448,11 +462,12 @@ generic:
       Only letters, numbers and characters (-) are supported and start with a
       letter
     notRootName: The username cannot be root.
-    cidr: The CIDR format is incorrect
+    cidr: 'The format of CIDR is incorrect, please re-enter, for example: 10.0.0.0/8'
     label: >-
       Tags must be made up of alphanumeric characters, hyphens, underscores, or
       dots.
-    cidrConflict: CIDR conflict
+    cidrConflict: 'CIDR conflicts with {cidr}, please re-enter.'
+    fieldRequired: '{0} required'
   title:
     curVersion: Current
     basicInfo: Basic Information
@@ -554,12 +569,12 @@ cluster:
       It is recommended to use shared clusters.You can add a new cluster if you
       need it
   title:
-    retryCreate: Confirm retrying to create cluster
-    confirmDelete: Confirm the deletion cluster
     clusterInfo: Cluster Info
     clusterConfig: Cluster Config
     operationRecord: Operation Record
     setClusterVar: Set Variables
+    skipTask: Confirm skip current task
+    retryTask: Confirm retry task
   button:
     useSharedCluster: Use shared cluster
     addCluster: Add
@@ -570,7 +585,7 @@ cluster:
     delete:
       title: Are you sure want to delete the cluster?
       article1: >-
-        You are trying to delete the cluster {clustername}, this operation is
+        You are trying to delete the cluster {clusterName}, this operation is
         irreversible, please do it carefully
       article2: Please confirm that all applications have been cleaned up
       article3: >-
@@ -584,7 +599,6 @@ cluster:
         Delete the import cluster and do not clean any resources on the cluster.
         After deleting the cluster, please clean up as depending on the
         situation
-      article7: Please confirm that all applications and nodes have been cleaned up
       article8: >-
         If the cluster is deleted, the server is recycled as soon as possible if
         it is not used to avoid unnecessary costs
@@ -620,8 +634,10 @@ cluster:
   status:
     unknown: Unknown cluster status
     importFailed: Import failed
+    connectFailed: Connect failed
   validate:
     exitNodes: 'There are nodes under the cluster, which cannot be deleted'
+    maxNumberOfDeletion: The maximum number of single deletions is 100
   create:
     title:
       newCluster: New cluster
@@ -670,7 +686,7 @@ cluster:
         kubeletPath: Kubelet data directory
         k8sServiceCIDR: Cluster service network segment
         k8sPodCIDR: Cluster POD network segment
-      region: Area
+      region: Region
       initNodeTemplate: Node initialization template
       Kubernetes:
         text: Provider
@@ -717,7 +733,7 @@ cluster:
         maxNodePodNum: Number of pod ip
         maxServiceNum: Number of service ip
       networkSetting:
-        text: Global route network
+        text: Global router network
         cidrStep:
           text: Total IP
           desc: >-
@@ -757,7 +773,7 @@ cluster:
             TKE based on the underlying private network (VPC), which realizes
             the routing strategy of container network and VPC interoperability.
         vpc-cni:
-          text: Global route with VPC-CNI hybrid mode
+          text: Global router with VPC-CNI hybrid mode
           desc: >-
             The cluster supports the global routing mode and VPC-CNI mode. The
             VPC-CNI network mode is a container network capability implemented
@@ -793,7 +809,7 @@ cluster:
         customNet: Custom network
       defaultNetPlugin: Network plugin
       clusterIPType:
-        text: Cluster ip type
+        text: Cluster IP type
         dual: IPv4/IPv6
         dualSingle: IPv4 or IPv6 single stack (automatically assigned by the platform)
       netSetting: Network setting
@@ -962,9 +978,9 @@ cluster:
       bufferResourceRatio:
         title: Resource threshold (Pods)
         desc: >-
-          The cluster Pod number usage exceeds the threshold to trigger capacity
-          expansion, regardless of whether the CPU/memory resource usage reaches
-          the threshold or not
+          The cluster resource usage of Pod numbers exceeding this threshold
+          will trigger scaling out regardless of whether CPU/memory resource
+          usage has reached the threshold.
       maxNodeProvisionTime:
         title: Provide node maximum time
         desc: >-
@@ -1103,9 +1119,10 @@ cluster:
             mountPath: Format and mount it on
             configurationFee:
               text: Configuration fee
-              unit: '￥ {Price} yuan/hour'
+              unit: '￥ {price} yuan/hour'
           validate:
-            dataDisks: 'Scope: 50 ~ 16380, steppe: 10'
+            dataDisks: 'Scope: 50 ~ 16380, step: 10'
+            systemDisk: 'Scope: 50 ~ 16380, step: 10'
             repeatPath: Directory cannot be repeated
             maxDataDisks: Up to 4 data disks
           button:
@@ -1186,7 +1203,7 @@ cluster:
             The runtime component inherits the TKE cluster and does not support
             modification
         runtimeVersion:
-          title: Container runtime version
+          title: Runtime version
           desc: >-
             The runtime component version inherits the TKE cluster and does not
             support modification
@@ -1422,9 +1439,15 @@ cluster:
     article2: >-
       The number of nodes (including Master) {nodes} has been added to the
       current cluster, and the number of nodes {realRemainNodesCount} can be
-      added. When the container network resources are overused, the container
-      network will be automatically expanded. After the expansion, a maximum of
+      added.
+    article3: >-
+      When the container network resources are overused, the container network
+      will be automatically expanded. After the expansion, a maximum of
       {maxRemainNodesCount} nodes can be added.
+    article4: >-
+      The number of container network segments has reached the maximum limit. If
+      you need to continue expanding the container network, please contact the
+      container platform administrator.
     button:
       selectPage: Selected on this page
       selectAcrossPage: Cross page
@@ -1440,13 +1463,6 @@ cluster:
       cancelSelectAll: Cancel all data
       delete:
         subTitle: 'Confirm whether to delete {ip} and other {num} nodes'
-        article1: >-
-          Containers running on the current node are scheduled to other
-          available nodes
-        article2: Clean up container service system components
-        article3: >-
-          After the node is deleted, the server is recycled as soon as possible
-          if it is not used to avoid unnecessary costs
     msg:
       labelDesc: Tag helps to sort out your resources
       selectedData: 'Selected {num}'
@@ -1478,7 +1494,7 @@ cluster:
       source:
         text: Node source
         add: Manually added
-      nodePool: NodePool
+      nodePool: Node pool
     metric:
       cpuUsageAndRequestUsage: CPU usage rate/packing rate
       memUsageAndRequestUsage: Memory usage/packing rate
@@ -2865,9 +2881,35 @@ logCollector:
     oldRuleHasNewRule: >-
       New rule generated: <br/> {0}<br/>This rule will be automatically cleaned
       up after: <br/>{1}
+    bizPrivateCluster: Business Dedicated Cluster
+    privateData: Sensitive Data
+    greaterThan100GB: Greater than 100GB
+    exceed14d: Exceeds 14 days
+    storageCluster:
+      text: >-
+        Container log data defaults to using a public cluster; it is recommended
+        to use {0} under the following conditions
+      p1: >-
+        Container log data contains {0}, requiring physical isolation for data
+        storage
+      p2: 'Daily volume of container log data is {0}'
+      p3: 'The effective storage period for container log data should be {0}'
+    volumeOfClusterIsExcessivelyHigh: >-
+      The log volume of this cluster is excessively high, it is recommended to
+      promptly switch to a business dedicated cluster
+    volumeOfPrivateClusterIsExcessivelyHigh: >-
+      The storage utilization rate of this cluster has exceeded 80%, it is
+      recommended to expand or clean up cluster storage space
+    disabledEdit: Editing Disabled
+    name: >-
+      Data name related to index and data source names, after the collection
+      item {0}
   placeholder:
     search: Rule name / Namespace / Updated by
     workloadName: 'Please enter the application name, supports regular expressions'
+    multiLabel: >-
+      Separate multiple values with an English comma (,), also known as a
+      half-width comma.
   validate:
     name: >-
       Only supports English, numbers and underscores, and the length is 5~30
@@ -2895,6 +2937,7 @@ logCollector:
       retry: Retry task submitted successfully
       enable: Enabled successfully
       stop: Disabled successfully
+    canNotEditBkLogRule: Rules created from the bk-log currently do not support editing.
   title:
     exitNewRule: '{0} has generated a new rule, do you want to generate it again?'
     confirmRetry: 'Are you sure to retry rule {0}?'
@@ -2906,6 +2949,7 @@ logCollector:
       desc: >-
         All selected ranges can be superimposed and applied to each other. At
         least one range must be added except for the namespace
+    confirmSwitchStorageCluster: Confirm switching to the ES (Elasticsearch) storage cluster.
   label:
     newChartVersion: Latest version
     newChartDesc: Description
@@ -2951,9 +2995,19 @@ logCollector:
     dataID:
       text: DataID
       tips: To BkBase
+    esStorages: ES Storage Cluster
+    displayName: Collection item name
+    name: Name
+    logType:
+      text: Log Type
+      line: Single-line Log File
+      multiline: Multi-line Log File
+    beginOfLineRegex: Beginning of Line Regex
+    multilineMaxLineAndTimeout: 'Match up to {0} lines, with a maximum duration of {1} seconds'
   status:
     pending: Issuing
     failed: Failed
+    delete: Deleted
   action:
     enable: Enable
     stop: Disable
@@ -2977,6 +3031,7 @@ logCollector:
           labels that exist on the Pod will be collected
       workload: Select by workload
       container: Select by container name
+    goBKLog: GO BK-Log
 manualNode:
   title:
     source:
@@ -3013,6 +3068,8 @@ ca:
     bandwidthPackage: Package
     button:
       createBandWidth: Create bandWidth
+  tips:
+    requiredBandwidthPackage: Bandwidth package is required
 googleCloud:
   button:
     create: Create
@@ -3145,6 +3202,7 @@ googleCA:
     vpcRule: VPC Rule
 tke:
   label:
+    ipAndPort: IP and port
     tencentCloud: Tencent cloud
     account: Account
     project:
@@ -3169,10 +3227,10 @@ tke:
         access. Otherwise, you will need to choose public network access. An
         incorrect choice will result in the failure to add the cluster.
     masterModule:
-      text: Master cmdb module
+      text: CMDB
       desc: >-
         Transfer the control plane nodes from the idle machine module of the
-        BlueKing configuration platform to the specified business module.
+        BK-CMDB to the specified business module.
     loginType:
       text: Login type
       password: Password
@@ -3184,15 +3242,15 @@ tke:
     confirmPassword: Confirm password
     publicKey: Public key
     secretKey: Secret key
-    ipNum: Number of IPs
+    ipNum: IPs
     zone: Zone
     staticIpMode: Static ip mode
     enableStaticIpMode: Enable static ip mode
     nodeModule:
-      text: Nodes cmdb module
+      text: CMDB
       desc: >-
-        Transfer the Node nodes from the idle machine module of the BlueKing
-        configuration platform to the specified business module.
+        Transfer the Node from the idle machine module of the BK-CMDB to the
+        specified business module.
     region: Region
     system: System
     configRec: Recommendations
@@ -3228,11 +3286,8 @@ tke:
         Security group inbound rules must allow traffic from the BlueKing
         platform's network egress IP address on TCP port 443; otherwise, adding
         the cluster will fail.
-    serviceIpNum: Service IP
-    podIpNum: Pod IP
-    podCidr: Pod CIDR
+      defaultSecurityGroupTips: ''
     availableIpNum: Available number of IPs
-    port: Port
     serviceCidr: Service CIDR
     subnetID: Subnet ID
     subnetName: Subnet name
@@ -3246,6 +3301,8 @@ tke:
         traffic_postpaid_by_hour: Charge by hour
         bandwidth_prepaid: Charge by bandwidth
       maxBandWidth: Max bandwidth
+    clusterAvailableNodes: Node capacity
+    retain: Destruction node
   title:
     connectFailure:
       text: >-
@@ -3264,6 +3321,13 @@ tke:
       Console to create subnets. If using VPC-CNI network plugin, the
       availability zone of the subnet must be consistent with the availability
       zone subnet of Pod IP of the VPC-CNI network plugin.
+    installGseAgentFailed:
+      text: Install agent failed
+      reason: 'Install agent failed, please change agent area'
+    confirmUpdateMasterCMDBModule: Confirm modification of the CMDB module for the control plane nodes.
+    confirmUpdateMasterCMDBModuleSubTitle: 'Confirm transferring all control plane nodes to {0}.'
+    confirmUpdateNodeCMDBModule: Confirm the modification of the CMDB module where the Worker node resides.
+    confirmUpdateNodeCMDBModuleSubTitle: 'Confirm the transfer of all Worker nodes to {0}.'
   button:
     chargeTypeDiff: Mode Comparison
     addNodeConfig: Add Configuration
@@ -3283,6 +3347,9 @@ tke:
     staticIpMode: Static IP
     cmdb: Go to CMDB
   validate:
+    cidrMaskLen: 'Subnet mask length range: {0}'
+    minPodIP: The Pod IP count must be greater than 0
+    podIPsNeedLessThanVpcIPs: Pod IPs need less than VPC IPs
     passwordNotSame: The passwords entered do not match
     minIpNum: >-
       To ensure that the cluster has enough IPs, the container network segment
@@ -3291,6 +3358,7 @@ tke:
       The container network segment must not have fewer than {0} IPs. Please
       re-enter.
     supportCidrList: 'Supports only network segments between {0}.'
+    formErr: The form was filled in incorrectly. Please modify it
   configRec:
     l100:
       text: Node Count 1~100
@@ -3326,6 +3394,7 @@ tke:
       qGPU: qGPU Shared Scenarios
       privateImage: Custom Image Explanation
   tips:
+    subnetNum: 'available subnet number: {0}'
     nodeNotInSubnetZone: >-
       The availability zone of the server is {0}, which is inconsistent with the
       availability zone for the VPC-CNI Pod IP. Please use a server that is in
@@ -3352,6 +3421,9 @@ tke:
       VPC as the cloud server
     notSupport: Not supported temporarily
     supportCidr: 'Tencent Cloud supports private network range: '
+    ipCannotBeAdjustedWhenCreated2: >-
+      Once {0} is allocated, it will not be adjustable, please evaluate
+      carefully before filling out
     ipCannotBeAdjustedWhenCreated: >-
       Once {0} IP amount is allocated, it will not be adjustable, please
       evaluate carefully before filling out
@@ -3368,6 +3440,28 @@ tke:
         IP. It is not recommended to use fixed IP mode for services without IP
         restrictions, for more details please refer to {0}
     totalIpNum: 'Total {0} IPs'
+    needSameResourceType: >-
+      The Control Plane configuration steps must be consistent with the resource
+      provisioning method used in the Add Node steps (due to Tencent Cloud TKE
+      functionality restrictions).
+    hasSelected: Selected
+    clusterAvailableNodes: Node capacity
+    nodeNum: '{0} nodes have been configured.'
+    maxNodeNum: 'The number of nodes added at one time cannot exceed {0}.'
+    prepaidOfEnableCA: >-
+      The annual/monthly billing mode is suitable for long-term use of nodes and
+      is not applicable to enabling node elastic scaling. If you need to enable
+      scaling, it is recommended to choose the pay-as-you-go billing mode.
+    prepaidOfCA: >-
+      The annual/monthly billing mode is not suitable for scenarios involving
+      elastic scaling of nodes. If you plan to manually adjust the number of
+      nodes in the node pool, please ignore this notice.
+    transferMasterCMDBModule: >-
+      Transfer all control plane node servers to the specified Configuration
+      Management Database (CMDB) module.
+    transferNodeCMDBModule: >-
+      Transfer all Worker node servers to the specified Configuration Management
+      Database (CMDB) module.
   placeholder:
     example: 'Example: {0}'
 tkeCa:
@@ -3392,3 +3486,11 @@ tkeCa:
       more is required.
 provider:
   tencentPublicCloud: TencentPublicCloud
+container:
+  label:
+    restartCnt: Restart count
+    startedAt: Started at
+    lastState: Last state
+    reason: Reason
+    exitCode: Exit code
+    finishedAt: Finished at

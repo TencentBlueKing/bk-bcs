@@ -4,17 +4,17 @@
       <div class="color-info">
         <div class="color-box red"></div>
         <div class="color-box gray"></div>
-        <div class="color-text" style="color: #812c2eff">删除</div>
+        <div class="color-text" style="color: #812c2eff">{{ t('删除') }}</div>
       </div>
       <div class="color-info">
         <div class="color-box red"></div>
         <div class="color-box green"></div>
-        <div class="color-text" style="color: #aeaeaeff">变化</div>
+        <div class="color-text" style="color: #aeaeaeff">{{ t('变化') }}</div>
       </div>
       <div class="color-info">
         <div class="color-box gray"></div>
         <div class="color-box green"></div>
-        <div class="color-text" style="color: #6e963cff">新增</div>
+        <div class="color-text" style="color: #6e963cff">{{ t('新增') }}</div>
       </div>
     </div>
     <div class="separator-wrapper">
@@ -30,8 +30,11 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { AngleDown, AngleUp } from 'bkui-vue/lib/icon';
 import * as monaco from 'monaco-editor';
+
+const { t } = useI18n();
 
 let contentNavigator: monaco.editor.IDiffNavigator;
 let permissionNavigator: monaco.editor.IDiffNavigator;

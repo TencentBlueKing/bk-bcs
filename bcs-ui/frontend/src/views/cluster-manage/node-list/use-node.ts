@@ -19,6 +19,7 @@ export interface INodesParams {
   nodeIP: string[];
   nodes: string[];
   nodeTemplateID?: string;
+  login?: any
 }
 
 export interface INodeCordonParams {
@@ -79,8 +80,8 @@ export default function useNode() {
     });
   };
   // 添加节点
-  const addNode = async (params: Pick<INodesParams, 'clusterId' | 'nodeIps' | 'nodeTemplateID'>) => {
-    const { clusterId, nodeIps = [], nodeTemplateID = '' } = params;
+  const addNode = async (params: Pick<INodesParams, 'clusterId' | 'nodeIps' | 'nodeTemplateID' | 'login'>) => {
+    const { clusterId, nodeIps = [], nodeTemplateID = '', login } = params;
     if (!clusterId || !nodeIps.length) {
       console.warn('clusterId or is nodes is empty');
       return;
@@ -89,6 +90,7 @@ export default function useNode() {
       $clusterId: clusterId,
       nodes: nodeIps,
       nodeTemplateID,
+      login,
       operator: store.state.user?.username,
     });
     result && $bkMessage({
@@ -242,6 +244,7 @@ export default function useNode() {
     nodeIPs?: string
     virtualNodeIDs?: string
     operator: string
+    deleteMode?: 'terminate' | 'retain'
   }) => {
     const result = await batchDeleteNodesAPI(params).catch(() => false);
     return result;

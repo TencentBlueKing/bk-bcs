@@ -426,6 +426,8 @@ func (m *Cluster) validate(all bool) error {
 
 	// no validation rules for CloudAccountID
 
+	// no validation rules for Message
+
 	if len(errors) > 0 {
 		return ClusterMultiError(errors)
 	}
@@ -581,6 +583,8 @@ func (m *Node) validate(all bool) error {
 	// no validation rules for TaskID
 
 	// no validation rules for FailedReason
+
+	// no validation rules for ChargeType
 
 	if len(errors) > 0 {
 		return NodeMultiError(errors)
@@ -3797,17 +3801,6 @@ func (m *CreateCloudAccountRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_CreateCloudAccountRequest_Creator_Pattern.MatchString(m.GetCreator()) {
-		err := CreateCloudAccountRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if utf8.RuneCountInString(m.GetProjectID()) < 2 {
 		err := CreateCloudAccountRequestValidationError{
 			field:  "ProjectID",
@@ -3900,8 +3893,6 @@ var _ interface {
 } = CreateCloudAccountRequestValidationError{}
 
 var _CreateCloudAccountRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CreateCloudAccountRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CreateCloudAccountResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -4152,17 +4143,6 @@ func (m *UpdateCloudAccountRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpdateCloudAccountRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
-		err := UpdateCloudAccountRequestValidationError{
-			field:  "Updater",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if all {
 		switch v := interface{}(m.GetAccount()).(type) {
 		case interface{ ValidateAll() error }:
@@ -4275,8 +4255,6 @@ var _ interface {
 var _UpdateCloudAccountRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _UpdateCloudAccountRequest_AccountID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateCloudAccountRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
 
 // Validate checks the field values on UpdateCloudAccountResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -6226,17 +6204,6 @@ func (m *CreateCloudVPCRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_CreateCloudVPCRequest_Creator_Pattern.MatchString(m.GetCreator()) {
-		err := CreateCloudVPCRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	// no validation rules for ReservedIPNum
 
 	// no validation rules for BusinessID
@@ -6338,8 +6305,6 @@ var _CreateCloudVPCRequest_Available_InLookup = map[string]struct{}{
 	"true":  {},
 	"false": {},
 }
-
-var _CreateCloudVPCRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CreateCloudVPCResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -6545,17 +6510,6 @@ func (m *UpdateCloudVPCRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpdateCloudVPCRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
-		err := UpdateCloudVPCRequestValidationError{
-			field:  "Updater",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if all {
 		switch v := interface{}(m.GetReservedIPNum()).(type) {
 		case interface{ ValidateAll() error }:
@@ -6703,8 +6657,6 @@ var _UpdateCloudVPCRequest_Available_InLookup = map[string]struct{}{
 	"true":  {},
 	"false": {},
 }
-
-var _UpdateCloudVPCRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
 
 // Validate checks the field values on UpdateCloudVPCResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -10556,6 +10508,35 @@ func (m *LaunchConfiguration) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetCharge()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, LaunchConfigurationValidationError{
+					field:  "Charge",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, LaunchConfigurationValidationError{
+					field:  "Charge",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCharge()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return LaunchConfigurationValidationError{
+				field:  "Charge",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return LaunchConfigurationMultiError(errors)
 	}
@@ -12216,17 +12197,6 @@ func (m *CreateNodeTemplateRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_CreateNodeTemplateRequest_Creator_Pattern.MatchString(m.GetCreator()) {
-		err := CreateNodeTemplateRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if all {
 		switch v := interface{}(m.GetRuntime()).(type) {
 		case interface{ ValidateAll() error }:
@@ -12453,8 +12423,6 @@ var _ interface {
 } = CreateNodeTemplateRequestValidationError{}
 
 var _CreateNodeTemplateRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CreateNodeTemplateRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CreateNodeTemplateResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -12803,17 +12771,6 @@ func (m *UpdateNodeTemplateRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpdateNodeTemplateRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
-		err := UpdateNodeTemplateRequestValidationError{
-			field:  "Updater",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if all {
 		switch v := interface{}(m.GetRuntime()).(type) {
 		case interface{ ValidateAll() error }:
@@ -13038,8 +12995,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateNodeTemplateRequestValidationError{}
-
-var _UpdateNodeTemplateRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
 
 // Validate checks the field values on UpdateNodeTemplateResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -14380,6 +14335,10 @@ func (m *Step) validate(all bool) error {
 	// no validation rules for TaskName
 
 	// no validation rules for SkipOnFailed
+
+	// no validation rules for Translate
+
+	// no validation rules for AllowSkip
 
 	if len(errors) > 0 {
 		return StepMultiError(errors)
@@ -17109,6 +17068,8 @@ func (m *ImportCloudMode) validate(all bool) error {
 	// no validation rules for CloudID
 
 	// no validation rules for KubeConfig
+
+	// no validation rules for Inter
 
 	if len(errors) > 0 {
 		return ImportCloudModeMultiError(errors)
@@ -21353,6 +21314,288 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = NodeStatusValidationError{}
+
+// Validate checks the field values on UpdateClusterModuleRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateClusterModuleRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateClusterModuleRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateClusterModuleRequestMultiError, or nil if none found.
+func (m *UpdateClusterModuleRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateClusterModuleRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterID
+
+	if all {
+		switch v := interface{}(m.GetModule()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateClusterModuleRequestValidationError{
+					field:  "Module",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateClusterModuleRequestValidationError{
+					field:  "Module",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetModule()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterModuleRequestValidationError{
+				field:  "Module",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(m.GetOperator()) < 1 {
+		err := UpdateClusterModuleRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be at least 1 bytes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return UpdateClusterModuleRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateClusterModuleRequestMultiError is an error wrapping multiple
+// validation errors returned by UpdateClusterModuleRequest.ValidateAll() if
+// the designated constraints aren't met.
+type UpdateClusterModuleRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateClusterModuleRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateClusterModuleRequestMultiError) AllErrors() []error { return m }
+
+// UpdateClusterModuleRequestValidationError is the validation error returned
+// by UpdateClusterModuleRequest.Validate if the designated constraints aren't met.
+type UpdateClusterModuleRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateClusterModuleRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateClusterModuleRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateClusterModuleRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateClusterModuleRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateClusterModuleRequestValidationError) ErrorName() string {
+	return "UpdateClusterModuleRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateClusterModuleRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateClusterModuleRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateClusterModuleRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateClusterModuleRequestValidationError{}
+
+// Validate checks the field values on UpdateClusterModuleResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateClusterModuleResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateClusterModuleResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateClusterModuleResponseMultiError, or nil if none found.
+func (m *UpdateClusterModuleResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateClusterModuleResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateClusterModuleResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateClusterModuleResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterModuleResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return UpdateClusterModuleResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateClusterModuleResponseMultiError is an error wrapping multiple
+// validation errors returned by UpdateClusterModuleResponse.ValidateAll() if
+// the designated constraints aren't met.
+type UpdateClusterModuleResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateClusterModuleResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateClusterModuleResponseMultiError) AllErrors() []error { return m }
+
+// UpdateClusterModuleResponseValidationError is the validation error returned
+// by UpdateClusterModuleResponse.Validate if the designated constraints
+// aren't met.
+type UpdateClusterModuleResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateClusterModuleResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateClusterModuleResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateClusterModuleResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateClusterModuleResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateClusterModuleResponseValidationError) ErrorName() string {
+	return "UpdateClusterModuleResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateClusterModuleResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateClusterModuleResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateClusterModuleResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateClusterModuleResponseValidationError{}
 
 // Validate checks the field values on RecordNodeInfoRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -26414,17 +26657,6 @@ func (m *CreateCloudRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_CreateCloudRequest_Creator_Pattern.MatchString(m.GetCreator()) {
-		err := CreateCloudRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	// no validation rules for CloudProvider
 
 	// no validation rules for Config
@@ -26576,8 +26808,6 @@ var _ interface {
 } = CreateCloudRequestValidationError{}
 
 var _CreateCloudRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CreateCloudRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CreateCloudResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -26952,17 +27182,6 @@ func (m *UpdateCloudRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpdateCloudRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
-		err := UpdateCloudRequestValidationError{
-			field:  "Updater",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	// no validation rules for CloudProvider
 
 	// no validation rules for Config
@@ -27112,8 +27331,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateCloudRequestValidationError{}
-
-var _UpdateCloudRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
 
 // Validate checks the field values on UpdateCloudResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -28226,17 +28443,6 @@ func (m *CreateNodeGroupRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_CreateNodeGroupRequest_Creator_Pattern.MatchString(m.GetCreator()) {
-		err := CreateNodeGroupRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	// no validation rules for Provider
 
 	// no validation rules for ConsumerID
@@ -28392,8 +28598,6 @@ var _ interface {
 var _CreateNodeGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _CreateNodeGroupRequest_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CreateNodeGroupRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on GroupExtraInfo with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -29031,17 +29235,6 @@ func (m *UpdateNodeGroupRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpdateNodeGroupRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
-		err := UpdateNodeGroupRequestValidationError{
-			field:  "Updater",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	// no validation rules for Provider
 
 	// no validation rules for ConsumerID
@@ -29191,8 +29384,6 @@ var _ interface {
 } = UpdateNodeGroupRequestValidationError{}
 
 var _UpdateNodeGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateNodeGroupRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on UpdateNodeGroupResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -30792,17 +30983,6 @@ func (m *AddNodesRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_AddNodesRequest_Operator_Pattern.MatchString(m.GetOperator()) {
-		err := AddNodesRequestValidationError{
-			field:  "Operator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	// no validation rules for NodeTemplateID
 
 	// no validation rules for IsExternalNode
@@ -30915,8 +31095,6 @@ var _ interface {
 } = AddNodesRequestValidationError{}
 
 var _AddNodesRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _AddNodesRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on AddNodesResponse with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -31152,16 +31330,7 @@ func (m *BatchDeleteClusterNodesRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_BatchDeleteClusterNodesRequest_Operator_Pattern.MatchString(m.GetOperator()) {
-		err := BatchDeleteClusterNodesRequestValidationError{
-			field:  "Operator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for DeleteMode
 
 	if len(errors) > 0 {
 		return BatchDeleteClusterNodesRequestMultiError(errors)
@@ -31245,8 +31414,6 @@ var _ interface {
 } = BatchDeleteClusterNodesRequestValidationError{}
 
 var _BatchDeleteClusterNodesRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _BatchDeleteClusterNodesRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on BatchDeleteClusterNodesResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -31611,17 +31778,6 @@ func (m *DeleteNodesRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_DeleteNodesRequest_Operator_Pattern.MatchString(m.GetOperator()) {
-		err := DeleteNodesRequestValidationError{
-			field:  "Operator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	// no validation rules for OnlyDeleteInfo
 
 	// no validation rules for NodeTemplateID
@@ -31711,8 +31867,6 @@ var _ interface {
 } = DeleteNodesRequestValidationError{}
 
 var _DeleteNodesRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _DeleteNodesRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on DeleteNodesResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -32720,17 +32874,6 @@ func (m *CleanNodesInGroupRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_CleanNodesInGroupRequest_Operator_Pattern.MatchString(m.GetOperator()) {
-		err := CleanNodesInGroupRequestValidationError{
-			field:  "Operator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if len(errors) > 0 {
 		return CleanNodesInGroupRequestMultiError(errors)
 	}
@@ -32814,8 +32957,6 @@ var _ interface {
 var _CleanNodesInGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _CleanNodesInGroupRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CleanNodesInGroupRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CleanNodesInGroupResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -33082,17 +33223,6 @@ func (m *CleanNodesInGroupV2Request) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_CleanNodesInGroupV2Request_Operator_Pattern.MatchString(m.GetOperator()) {
-		err := CleanNodesInGroupV2RequestValidationError{
-			field:  "Operator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if len(errors) > 0 {
 		return CleanNodesInGroupV2RequestMultiError(errors)
 	}
@@ -33176,8 +33306,6 @@ var _ interface {
 var _CleanNodesInGroupV2Request_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _CleanNodesInGroupV2Request_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _CleanNodesInGroupV2Request_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CleanNodesInGroupV2Response with the
 // rules defined in the proto definition for this message. If any rules are
@@ -36053,6 +36181,276 @@ var _ interface {
 	ErrorName() string
 } = RetryTaskResponseValidationError{}
 
+// Validate checks the field values on SkipTaskRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *SkipTaskRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SkipTaskRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SkipTaskRequestMultiError, or nil if none found.
+func (m *SkipTaskRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SkipTaskRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetTaskID()); l < 2 || l > 1024 {
+		err := SkipTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_SkipTaskRequest_TaskID_Pattern.MatchString(m.GetTaskID()) {
+		err := SkipTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 1024 {
+		err := SkipTaskRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return SkipTaskRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// SkipTaskRequestMultiError is an error wrapping multiple validation errors
+// returned by SkipTaskRequest.ValidateAll() if the designated constraints
+// aren't met.
+type SkipTaskRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SkipTaskRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SkipTaskRequestMultiError) AllErrors() []error { return m }
+
+// SkipTaskRequestValidationError is the validation error returned by
+// SkipTaskRequest.Validate if the designated constraints aren't met.
+type SkipTaskRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SkipTaskRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SkipTaskRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SkipTaskRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SkipTaskRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SkipTaskRequestValidationError) ErrorName() string { return "SkipTaskRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SkipTaskRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSkipTaskRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SkipTaskRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SkipTaskRequestValidationError{}
+
+var _SkipTaskRequest_TaskID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on SkipTaskResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *SkipTaskResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SkipTaskResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SkipTaskResponseMultiError, or nil if none found.
+func (m *SkipTaskResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SkipTaskResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SkipTaskResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SkipTaskResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SkipTaskResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return SkipTaskResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// SkipTaskResponseMultiError is an error wrapping multiple validation errors
+// returned by SkipTaskResponse.ValidateAll() if the designated constraints
+// aren't met.
+type SkipTaskResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SkipTaskResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SkipTaskResponseMultiError) AllErrors() []error { return m }
+
+// SkipTaskResponseValidationError is the validation error returned by
+// SkipTaskResponse.Validate if the designated constraints aren't met.
+type SkipTaskResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SkipTaskResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SkipTaskResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SkipTaskResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SkipTaskResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SkipTaskResponseValidationError) ErrorName() string { return "SkipTaskResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SkipTaskResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSkipTaskResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SkipTaskResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SkipTaskResponseValidationError{}
+
 // Validate checks the field values on UpdateTaskRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -36100,7 +36498,7 @@ func (m *UpdateTaskRequest) validate(all bool) error {
 	if _, ok := _UpdateTaskRequest_Status_InLookup[m.GetStatus()]; !ok {
 		err := UpdateTaskRequestValidationError{
 			field:  "Status",
-			reason: "value must be in list [INITIALIZING RUNNING SUCCESS FAILED TIMEOUT]",
+			reason: "value must be in list [INITIALIZING RUNNING SUCCESS FAILURE TIMEOUT]",
 		}
 		if !all {
 			return err
@@ -36270,7 +36668,7 @@ var _UpdateTaskRequest_Status_InLookup = map[string]struct{}{
 	"INITIALIZING": {},
 	"RUNNING":      {},
 	"SUCCESS":      {},
-	"FAILED":       {},
+	"FAILURE":      {},
 	"TIMEOUT":      {},
 }
 
@@ -40827,6 +41225,8 @@ func (m *ZoneInfo) validate(all bool) error {
 
 	// no validation rules for ZoneState
 
+	// no validation rules for SubnetNum
+
 	if len(errors) > 0 {
 		return ZoneInfoMultiError(errors)
 	}
@@ -41337,6 +41737,10 @@ func (m *GetCloudRegionZonesRequest) validate(all bool) error {
 	// no validation rules for Region
 
 	// no validation rules for AccountID
+
+	// no validation rules for VpcId
+
+	// no validation rules for State
 
 	if len(errors) > 0 {
 		return GetCloudRegionZonesRequestMultiError(errors)
@@ -45033,6 +45437,8 @@ func (m *CloudVpc) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for AllocateIpNum
 
 	if len(errors) > 0 {
 		return CloudVpcMultiError(errors)
@@ -50953,21 +51359,10 @@ func (m *ListCCTopologyRequest) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 5 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		err := ListCCTopologyRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 5 and 100 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
-		err := ListCCTopologyRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not have prefix \"BCS-\"",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 		if !all {
 			return err

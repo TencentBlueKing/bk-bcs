@@ -23,14 +23,14 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbas "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/grpcgw"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbas "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/grpcgw"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // proxy all server's mux proxy.
@@ -38,10 +38,12 @@ type proxy struct {
 	cfgSvrMux           *runtime.ServeMux
 	authSvrMux          http.Handler
 	repo                *repoService
+	bkNotice            *bkNoticeService
 	state               serviced.State
 	authorizer          auth.Authorizer
 	cfgClient           pbcs.ConfigClient
 	configImportService *configImport
+	kvService           *kvService
 }
 
 // newProxy create new mux proxy.
@@ -71,6 +73,11 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		return nil, err
 	}
 
+	bkNotice, err := newBKNoticeService()
+	if err != nil {
+		return nil, err
+	}
+
 	cfgClient, err := newCfgClient(dis)
 	if err != nil {
 		return nil, err
@@ -81,14 +88,18 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		return nil, err
 	}
 
+	kv := newKvService(authorizer, cfgClient)
+
 	p := &proxy{
 		cfgSvrMux:           cfgSvrMux,
 		repo:                repo,
+		bkNotice:            bkNotice,
 		configImportService: configImportService,
 		state:               state,
 		authorizer:          authorizer,
 		authSvrMux:          authSvrMux,
 		cfgClient:           cfgClient,
+		kvService:           kv,
 	}
 
 	p.initBizsOfTmplSpaces()

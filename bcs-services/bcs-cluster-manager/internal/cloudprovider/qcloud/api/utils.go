@@ -13,7 +13,9 @@
 package api
 
 import (
+	"errors"
 	"fmt"
+
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
@@ -40,6 +42,11 @@ var (
 	Zone FilterKey = "zone"
 	// InstanceFamily instance-family
 	InstanceFamily FilterKey = "instance-family"
+)
+
+var (
+	// ErrClusterNotFound cluster not found when delete cluster
+	ErrClusterNotFound = errors.New(tke.FAILEDOPERATION_CLUSTERNOTFOUND)
 )
 
 // generateInstanceAdvancedSetting transfer InstanceAdvancedSettings to cloudInstanceAdvancedSettings
@@ -205,6 +212,7 @@ func generateAddExistedInstancesReq(addReq *AddExistedInstanceReq) *tke.AddExist
 }
 
 // generateClusterRequestInfo create cluster request
+// nolint
 func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClusterRequest, error) {
 	if request.Region == "" || request.ClusterType == "" {
 		return nil, fmt.Errorf("CreateClusterRequest invalid region or clusterType info")

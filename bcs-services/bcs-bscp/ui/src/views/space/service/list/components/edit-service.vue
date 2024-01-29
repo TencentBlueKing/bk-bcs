@@ -3,21 +3,23 @@
     <template #header>
       <div class="service-edit-head">
         <span class="title">{{ isViewMode ? t('服务属性') : t('编辑服务') }}</span>
-        <bk-button v-if="isViewMode" class="edit-entry-btn" theme="primary" @click="isViewMode = false">编辑</bk-button>
+        <bk-button v-if="isViewMode" class="edit-entry-btn" theme="primary" @click="isViewMode = false">
+          {{ t('编辑') }}
+        </bk-button>
       </div>
     </template>
     <div class="service-edit-wrapper">
       <bk-form v-if="isViewMode" label-width="100">
-        <bk-form-item :label="t('服务名称')">{{ serviceData!.spec.name }}</bk-form-item>
-        <bk-form-item :label="t('服务别名')">{{ serviceData!.spec.alias }}</bk-form-item>
+        <bk-form-item :label="t('form_服务名称')">{{ serviceData!.spec.name }}</bk-form-item>
+        <bk-form-item :label="t('form_服务别名')">{{ serviceData!.spec.alias }}</bk-form-item>
         <bk-form-item :label="t('服务描述')">
           {{ serviceData!.spec.memo || '--' }}
         </bk-form-item>
         <bk-form-item :label="t('数据格式')">
-          {{ serviceData!.spec.config_type === 'file' ? '文件型' : '键值型' }}
+          {{ serviceData!.spec.config_type === 'file' ? t('文件型') : t('键值型') }}
         </bk-form-item>
         <bk-form-item v-if="serviceData!.spec.config_type !== 'file'" :label="t('数据类型')">
-          {{ serviceData!.spec.data_type === 'any' ? '任意类型' : serviceData!.spec.data_type }}
+          {{ serviceData!.spec.data_type === 'any' ? t('任意类型') : serviceData!.spec.data_type }}
         </bk-form-item>
         <bk-form-item :label="t('创建者')">
           {{ serviceData?.revision.creator }}
@@ -61,7 +63,7 @@ import { IServiceEditForm } from '../../../../../../types/service';
 import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
 import SearviceForm from './service-form.vue';
 import { IConfigKvType } from '../../../../../../types/config';
-import { InfoBox } from 'bkui-vue';
+import { InfoBox, Message } from 'bkui-vue';
 
 const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 
@@ -140,7 +142,6 @@ const handleEditConfirm = async () => {
     openPermApplyDialog();
     return;
   }
-
   await formCompRef.value.validate();
   const { id, biz_id } = props.service;
   if (serviceEditForm.value.data_type !== 'any') {
@@ -149,6 +150,7 @@ const handleEditConfirm = async () => {
     if (res) {
       InfoBox({
         infoType: 'danger',
+        'ext-cls': 'info-box-style',
         title: `调整服务数据类型${serviceEditForm.value.data_type}失败`,
         subTitle: `该服务下存在非${serviceEditForm.value.data_type}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为${serviceEditForm.value.data_type}`,
         dialogType: 'confirm',
@@ -163,8 +165,12 @@ const handleEditConfirm = async () => {
     ...serviceEditForm.value,
   };
 
-  const res =  await updateApp({ id, biz_id, data });
+  const res = await updateApp({ id, biz_id, data });
   serviceData.value = res;
+  Message({
+    theme: 'success',
+    message: '服务属性编辑成功',
+  });
   emits('reload');
   isViewMode.value = true;
 };

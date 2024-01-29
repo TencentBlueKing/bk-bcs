@@ -202,6 +202,15 @@
                 {{handleGetExtData(row.metadata.uid, 'readyCnt')}}/{{handleGetExtData(row.metadata.uid, 'totalCnt')}}
               </template>
             </bcs-table-column>
+            <bcs-table-column label="Readiness Gates">
+              <template #default="{ row }">
+                <span
+                  :class="{ 'bcs-border-tips inline-flex': getReadinessGates(row).content }"
+                  v-bk-tooltips="getReadinessGates(row).content">
+                  {{ getReadinessGates(row).rate }}
+                </span>
+              </template>
+            </bcs-table-column>
             <bcs-table-column label="Restarts" width="100">
               <template #default="{ row }">{{handleGetExtData(row.metadata.uid, 'restartCnt')}}</template>
             </bcs-table-column>
@@ -476,6 +485,16 @@ export default defineComponent({
         ? { pod_name_list: list, $namespaceId: props.namespace, $clusterId: clusterId.value }
         : null;
     });
+    const getReadinessGates = (row) => {
+      const readinessGates = handleGetExtData(row.metadata.uid, 'readinessGates');
+      const keys = Object.keys(readinessGates || {});
+      // <none> 会被当作dom渲染不出来
+      return {
+        rate: `${keys.filter(key => readinessGates[key] === 'True').length}/${keys.length}`,
+        content: keys.map(key => `${key}: ${readinessGates[key] === '<none>' ? 'none' : readinessGates[key]} `)
+          .join('<br/>'),
+      };
+    };
 
     // 跳转pod详情
     const gotoPodDetail = (row) => {
@@ -742,6 +761,7 @@ export default defineComponent({
       currentRow,
       handleShowLog,
       handleSortChange,
+      getReadinessGates,
     };
   },
 });

@@ -5,7 +5,7 @@
         <span class="logo">
           <img src="../assets/logo.svg" alt="" />
         </span>
-        <span class="head-title"> 服务配置中心 </span>
+        <span class="head-title"> {{ t('服务配置中心') }} </span>
       </div>
       <div class="head-routes">
         <router-link
@@ -41,7 +41,7 @@
         <template #extension>
           <div class="create-operation" @click="handleToCMDB">
             <plus />
-            <div class="content">新建业务</div>
+            <div class="content">{{ t('新建业务') }}</div>
           </div>
         </template>
         <bk-option v-for="item in optionList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
@@ -61,6 +61,19 @@
           </div>
         </bk-option>
       </bk-select>
+      <bk-popover ext-cls="login-out-popover" trigger="hover" placement="bottom-center" theme="light" :arrow="false">
+        <div class="international">
+          <span :class="['bk-bscp-icon',locale === 'zh-CN' ? 'icon-lang-cn' : 'icon-lang-en']"></span>
+        </div>
+        <template #content>
+          <div class="international-item" @click="switchLanguage('en-US')">
+            <span class="bk-bscp-icon icon-lang-en"></span> English
+          </div>
+          <div class="international-item" @click="switchLanguage('zh-CN')">
+            <span class="bk-bscp-icon icon-lang-cn"></span> 中文
+          </div>
+        </template>
+      </bk-popover>
       <bk-dropdown trigger="hover" ext-cls="dropdown" :is-show="isShowDropdown" @hide="isShowDropdown = false">
         <bk-button text :class="['dropdown-trigger', isShowDropdown ? 'active' : '']">
           <help-fill width="16" height="16" :fill="isShowDropdown ? '#fff' : '#96a2b9'" />
@@ -78,13 +91,13 @@
           </bk-dropdown-menu>
         </template>
       </bk-dropdown>
-      <bk-popover ext-cls="login-out-popover" placement="bottom-center" theme="light" :arrow="false">
+      <bk-popover ext-cls="login-out-popover" trigger="click" placement="bottom-center" theme="light" :arrow="false">
         <div class="username-wrapper">
           <span class="text">{{ userInfo.username }}</span>
           <DownShape class="arrow-icon" />
         </div>
         <template #content>
-          <div class="login-out-btn" @click="handleLoginOut">退出登录</div>
+          <div class="login-out-btn" @click="handleLoginOut">{{ t('退出登录') }}</div>
         </template>
       </bk-popover>
     </div>
@@ -95,6 +108,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { AngleDown, HelpFill, DownShape, Plus } from 'bkui-vue/lib/icon';
@@ -110,7 +124,9 @@ import MarkdownIt from 'markdown-it';
 
 const route = useRoute();
 const router = useRouter();
-const { bscpVersion, spaceId, spaceList, spaceFeatureFlags, showPermApplyPage, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
+const { t, locale } = useI18n();
+const { bscpVersion, spaceId, spaceList, spaceFeatureFlags, showPermApplyPage, showApplyPermDialog, permissionQuery } =
+  storeToRefs(useGlobalStore());
 const { userInfo } = storeToRefs(useUserStore());
 const templateStore = useTemplateStore();
 const md = new MarkdownIt({
@@ -118,14 +134,14 @@ const md = new MarkdownIt({
   linkify: true,
   typographer: true,
 });
-const navList = [
-  { id: 'service-all', module: 'service', name: '服务管理' },
-  { id: 'groups-management', module: 'groups', name: '分组管理' },
-  { id: 'variables-management', module: 'variables', name: '全局变量' },
-  { id: 'templates-list', module: 'templates', name: '配置模板' },
-  { id: 'script-list', module: 'scripts', name: '脚本管理' },
-  { id: 'credentials-management', module: 'credentials', name: '服务密钥' },
-];
+const navList = computed(() => [
+  { id: 'service-all', module: 'service', name: t('服务管理') },
+  { id: 'groups-management', module: 'groups', name: t('分组管理') },
+  { id: 'variables-management', module: 'variables', name: t('全局变量') },
+  { id: 'templates-list', module: 'templates', name: t('配置模板') },
+  { id: 'script-list', module: 'scripts', name: t('脚本管理') },
+  { id: 'credentials-management', module: 'credentials', name: t('服务密钥') },
+]);
 
 const optionList = ref<ISpaceDetail[]>([]);
 
@@ -201,7 +217,7 @@ const handleSelectSpace = async (id: string) => {
       state.currentTemplateSpace = 0;
       state.currentPkg = '';
     });
-    const nav = navList.find(item => item.module === route.meta.navModule);
+    const nav = navList.value.find(item => item.module === route.meta.navModule);
     if (nav) {
       router.push({ name: nav.id, params: { spaceId: id } });
     } else {
@@ -211,9 +227,9 @@ const handleSelectSpace = async (id: string) => {
 };
 
 // 下拉菜单
-const dropdownList = [
+const dropdownList = computed(() => [
   {
-    title: '产品文档',
+    title: t('产品文档'),
     click() {
       // @ts-ignore
       // eslint-disable-next-line
@@ -221,24 +237,24 @@ const dropdownList = [
     },
   },
   {
-    title: '版本日志',
+    title: t('版本日志'),
     click() {
       isShowVersionLog.value = true;
     },
   },
   {
-    title: '功能特性',
+    title: t('功能特性'),
     click() {
       isShowFeatures.value = true;
     },
   },
   {
-    title: '问题反馈',
+    title: t('问题反馈'),
     click() {
       window.open('https://bk.tencent.com/s-mart/community/question');
     },
   },
-];
+]);
 
 const isShowDropdown = ref(false);
 
@@ -276,6 +292,13 @@ const handleLoginOut = () => {
 const handleToCMDB = () => {
   // @ts-ignore
   window.open(`${BK_CC_HOST}/#/resource/business`); // eslint-disable-line no-undef
+};
+
+// 切换语言
+const switchLanguage = (language: string) => {
+  locale.value = language;
+  localStorage.setItem('language', language);
+  location.reload();
 };
 </script>
 
@@ -322,6 +345,7 @@ const handleToCMDB = () => {
     display: flex;
     align-items: center;
     justify-self: flex-end;
+    justify-content: space-between;
     font-size: 14px;
     color: #979ba5;
   }
@@ -439,6 +463,34 @@ const handleToCMDB = () => {
   display: flex;
   align-items: center;
   cursor: pointer;
+}
+.international {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  &:hover {
+    background-color: #fff;
+    span {
+      color: #3a84ff;
+    }
+  }
+}
+.international-item {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 16px;
+  cursor: pointer;
+  span {
+    font-size: 20px;
+  }
+  &:hover {
+    background-color: #eaf3ff;
+    color: #3a84ff;
+  }
 }
 </style>
 <style lang="scss">

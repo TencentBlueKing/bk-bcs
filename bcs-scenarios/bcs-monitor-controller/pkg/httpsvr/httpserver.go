@@ -39,7 +39,28 @@ func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
 	ws.Route(ws.GET("/api/v1/monitor/{biz_id}").To(httpServerClient.ListAppMonitors))
 	ws.Route(ws.POST("/api/v1/monitor/{biz_id}/{scenario}").To(httpServerClient.CreateOrUpdateAppMonitor))
 	ws.Route(ws.DELETE("/api/v1/monitor/{biz_id}/{scenario}").To(httpServerClient.DeleteAppMonitor))
+
+	// ws.Route(ws.GET("/api/v1/list_argo_repo").To(httpServerClient.GetArgoRepo))
 }
+
+// func (h *HttpServerClient) GetArgoRepo(request *restful.Request, response *restful.Response) {
+// 	argoDB, _, err := repo.NewArgoDB(context.Background(), "default")
+// 	if err != nil {
+// 		blog.Errorf("connect argo failed, err: %s", err.Error())
+// 		_, _ = response.Write(CreateResponseData(err, "", nil))
+// 		return
+// 	}
+//
+// 	repos, err := argoDB.ListRepositories(context.Background())
+// 	if err != nil {
+// 		blog.Errorf("list argo repo failed, err: %s", err.Error())
+// 		_, _ = response.Write(CreateResponseData(err, "", nil))
+// 		return
+// 	}
+// 	_, _ = response.Write(CreateResponseData(nil, "", utils.ToJsonString(repos)))
+// 	return
+// }
+
 func (h *HttpServerClient) ListAppMonitors(request *restful.Request, response *restful.Response) {
 	type InstalledScenarioInfo struct {
 		Name    string `json:"name"`

@@ -93,6 +93,15 @@ func (ia *ImportAction) constructCluster() *cmproto.Cluster {
 		CloudAccountID: ia.req.AccountID,
 	}
 
+	if cls.ExtraInfo == nil {
+		cls.ExtraInfo = make(map[string]string)
+	}
+	// default cloud external import
+	cls.ExtraInfo[common.ImportType] = common.ExternalImport
+	if ia.req.CloudMode.GetInter() {
+		cls.ExtraInfo[common.ImportType] = common.InterImport
+	}
+
 	return cls
 }
 

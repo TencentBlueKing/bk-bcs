@@ -4,7 +4,7 @@
     :data="tableList"
     :row-class="getRowCls"
     @row-click="handleSelectVersion">
-    <bk-table-column label="版本号" show-overflow-tooltip>
+    <bk-table-column :label="t('版本号')" show-overflow-tooltip>
       <template #default="{ row }">
         <div class="version-name-wrapper">
           <div class="name">{{ row.name }}</div>
@@ -26,10 +26,12 @@
 </template>
 <script lang="ts" setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { RightShape } from 'bkui-vue/lib/icon';
 import { IPagination } from '../../../../../../types/index';
 import { ITemplateVersionItem } from '../../../../../../types/template';
 
+const { t } = useI18n();
 const props = defineProps<{
     list: ITemplateVersionItem[];
     pagination: IPagination;
@@ -44,7 +46,7 @@ const tableList = computed(() => {
     return { id, name: spec.revision_name };
   });
   if (props.id === 0) {
-    simpleList.unshift({ id: 0, name: '新建版本' });
+    simpleList.unshift({ id: 0, name: t('新建版本') });
   }
   return simpleList;
 });

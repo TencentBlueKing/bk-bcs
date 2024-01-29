@@ -1,15 +1,16 @@
 <template>
   <div
-    class="item-node-template"
+    class="flex items-center"
     v-bk-tooltips="{
-      disabled: isTkeCluster,
+      disabled: supportNodeTemplate,
       content: $t('cluster.nodeTemplate.tips.tkeClusterCanNotUse')
     }">
     <bcs-select
+      class="flex-1"
       searchable
       :clearable="false"
       placeholder=" "
-      :disabled="!isTkeCluster || disabled"
+      :disabled="!supportNodeTemplate || disabled"
       :loading="loading"
       v-model="nodeTemplateID"
       @change="handleNodeTemplateIDChange">
@@ -20,27 +21,18 @@
         :id="item.nodeTemplateID"
         :name="item.name">
       </bcs-option>
-      <template #extension>
-        <span style="cursor: pointer" @click="handleGotoNodeTemplate">
-          <i class="bcs-icon bcs-icon-fenxiang mr5 !text-[12px]"></i>
-          {{$t('cluster.nodeTemplate.title.templateConfig')}}
-        </span>
-      </template>
+      <SelectExtension
+        slot="extension"
+        :link-text="$t('cluster.nodeTemplate.title.templateConfig')"
+        @link="handleGotoNodeTemplate"
+        @refresh="handleGetNodeTemplateList" />
     </bcs-select>
-    <template v-if="isTkeCluster">
-      <span
-        class="ml10 text-[12px] cursor-pointer"
-        v-bk-tooltips.top="$t('generic.button.refresh')"
-        @click="handleGetNodeTemplateList">
-        <i class="bcs-icon bcs-icon-reset"></i>
-      </span>
-      <span class="text-[12px] cursor-pointer ml15" v-if="nodeTemplateID">
-        <i
-          class="bcs-icon bcs-icon-yulan"
-          v-bk-tooltips.top="$t('generic.title.preview')"
-          @click="handleShowPreview"></i>
-      </span>
-    </template>
+    <span class="text-[12px] cursor-pointer ml10" v-if="nodeTemplateID && supportNodeTemplate && showPreview">
+      <i
+        class="bcs-icon bcs-icon-yulan"
+        v-bk-tooltips.top="$t('generic.title.preview')"
+        @click="handleShowPreview"></i>
+    </span>
     <!-- 节点模板详情 -->
     <bcs-sideslider
       :is-show.sync="showDetail"
@@ -54,17 +46,17 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 
 import { NODE_TEMPLATE_ID } from '@/common/constant';
-import { useConfig } from '@/composables/use-app';
 import $router from '@/router';
 import $store from '@/store/index';
+import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 import NodeTemplateDetail from '@/views/cluster-manage/node-template/node-template-detail.vue';
 
 export default defineComponent({
   name: 'TemplateSelector',
-  components: { NodeTemplateDetail },
+  components: { NodeTemplateDetail, SelectExtension },
   model: {
     prop: 'value',
     event: 'change',
@@ -74,24 +66,28 @@ export default defineComponent({
       type: String,
       default: '',
     },
-    isTkeCluster: {
-      type: Boolean,
-      default: false,
+    provider: {
+      type: String,
+      default: '',
     },
     disabled: {
       type: Boolean,
       default: false,
     },
+    showPreview: {
+      type: Boolean,
+      default: true,
+    },
   },
   setup(props, ctx) {
-    const { isTkeCluster } = toRefs(props);
+    const supportNodeTemplate = computed(() => ['tencentCloud', 'tencentPublicCloud'].includes(props.provider));
     const loading = ref(false);
     const nodeTemplateID = ref(props.value || localStorage.getItem(NODE_TEMPLATE_ID) || '');
     const templateList = ref<any[]>([]);
     const handleGetNodeTemplateList = async () => {
       loading.value = true;
       templateList.value = await $store.dispatch('clustermanager/nodeTemplateList');
-      if (!isTkeCluster.value
+      if (!supportNodeTemplate.value
         || !templateList.value.find(item => item.nodeTemplateID === nodeTemplateID.value)
       ) {
         nodeTemplateID.value = '';
@@ -120,14 +116,14 @@ export default defineComponent({
       ctx.emit('change', value);
     };
 
-    const { _INTERNAL_ } = useConfig();
     onMounted(() => {
-      _INTERNAL_.value && handleGetNodeTemplateList();
+      handleGetNodeTemplateList();
       if (nodeTemplateID.value !== props.value) {
         ctx.emit('change', nodeTemplateID.value);
       }
     });
     return {
+      supportNodeTemplate,
       loading,
       nodeTemplateID,
       currentTemplate,
@@ -141,16 +137,3 @@ export default defineComponent({
   },
 });
 </script>
-<style lang="postcss" scoped>
-.item-node-template {
-  display: flex;
-  max-width: 524px;
-  .bk-select {
-    width: 400px;
-  }
-  .icon:hover {
-    color: #3a84ff;
-    cursor: pointer;
-  }
-}
-</style>

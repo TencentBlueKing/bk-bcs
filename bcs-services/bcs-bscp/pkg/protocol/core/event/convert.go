@@ -13,7 +13,7 @@
 // Package pbevent provides event core protocol struct and convert functions.
 package pbevent
 
-import "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+import "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 
 // PbEventSpec convert event spec to pb event spec
 func PbEventSpec(spec *table.EventSpec) *EventSpec { //nolint:revive

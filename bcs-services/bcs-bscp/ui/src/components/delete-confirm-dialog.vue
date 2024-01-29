@@ -9,23 +9,20 @@
   >
     <slot></slot>
     <template #footer>
-      <bk-button theme="primary" @click="emits('confirm')" style="margin-right: 8px">{{ confirmText }}</bk-button>
-      <bk-button @click="handleClose">取消</bk-button>
+      <bk-button theme="primary" @click="emits('confirm')" style="margin-right: 8px">{{ confirmText || t('删除')}}</bk-button>
+      <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
     </template>
   </bk-dialog>
 </template>
 
 <script lang="ts" setup>
-withDefaults(
-  defineProps<{
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+defineProps<{
     isShow: boolean;
     title: string;
     confirmText?: string;
-  }>(),
-  {
-    confirmText: '删除',
-  },
-);
+}>();
 
 const handleClose = () => {
   emits('close');
@@ -36,11 +33,15 @@ const emits = defineEmits(['update:isShow', 'confirm', 'close']);
 
 <style scoped lang="scss">
 .delete-confirm-dialog {
-  :deep(.bk-modal-footer) {
-    background-color: #fff;
-    border: none;
-    .bk-button {
-      width: 80px;
+  :deep(.bk-modal-body) {
+
+    .bk-modal-footer {
+      background-color: #fff;
+      border: none;
+      padding-bottom: 24px !important;
+      .bk-button {
+        width: 80px;
+      }
     }
   }
 }

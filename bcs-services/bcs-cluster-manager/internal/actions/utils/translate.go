@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -19,15 +19,18 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
-// Translate 处理任务名称
-func Translate(ctx context.Context, taskMethod, taskName string) (content string) {
-	launage := i18n.LanguageFromCtx(ctx)
+// Translate 处理任务名称  // 特殊内容进行替换处理
+func Translate(ctx context.Context, taskMethod, taskName string, translate string) (content string) {
+	language := i18n.LanguageFromCtx(ctx)
 
+	if translate != "" {
+		taskMethod = translate
+	}
 	arr := strings.Split(taskMethod, "-")
 	if len(arr) > 1 {
 		content = i18n.T(ctx, arr[len(arr)-1])
@@ -35,7 +38,7 @@ func Translate(ctx context.Context, taskMethod, taskName string) (content string
 		content = i18n.T(ctx, taskMethod)
 	}
 
-	blog.Infof("Translate %s %s %s %s", launage, taskMethod, taskName, content)
+	blog.Infof("Translate %s %s %s %s", language, taskMethod, taskName, content)
 	if len(content) == 0 || content == taskMethod {
 		return taskName
 	}

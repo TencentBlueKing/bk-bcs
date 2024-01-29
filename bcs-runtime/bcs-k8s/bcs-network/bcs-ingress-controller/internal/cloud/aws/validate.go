@@ -87,7 +87,7 @@ func (e *ElbValidater) validateIngressRule(rule *networkextensionv1.IngressRule)
 		rule.Protocol != ElbProtocolHTTPS &&
 		rule.Protocol != ElbProtocolTCP &&
 		rule.Protocol != ElbProtocolUDP {
-		return false, fmt.Sprintf("invalid protocol %s, available [http, https, tcp, udp]", rule.Protocol)
+		return false, fmt.Sprintf("invalid protocol %s, available [HTTP, HTTPS, TCP, UDP]", rule.Protocol)
 	}
 	if rule.Protocol == ElbProtocolHTTPS {
 		if rule.Certificate == nil {

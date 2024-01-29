@@ -47,6 +47,7 @@ export const clusterConnect = request('get', '/clouds/$cloudId/clusters/$cluster
 export const cloudRegionByAccount = request('get', '/clouds/$cloudId/regions');
 export const cloudClusterList = request('get', '/clouds/$cloudId/clusters');
 export const taskRetry = request('put', '/task/$taskId/retry');
+export const taskSkip = request('put', '/task/$taskId/skip');
 export const cloudDetail = request('get', '/cloud/$cloudId');
 export const cloudNodes = request('get', '/clouds/$cloudId/instances');
 export const cloudKeyPairs = request('get', '/clouds/$cloudId/keypairs');
@@ -99,3 +100,6 @@ export const hostCheck = request('post', '/web/scope/$scope/$biz/host/check');
 export const topologyHostsNodes = request('post', '/web/scope/$scope/$biz/topology/hosts/nodes');
 export const topologyHostIdList = request('post', '/web/scope/$scope/$biz/topology/hostids/nodes');
 export const hostInfoByHostId = request('post', '/web/scope/$scope/$biz/hosts/details');
+
+export const setClusterModule = request('put', '/clusters/$clusterId/module');
+export const ccTopology = request('get', '/cluster/$clusterId/cc/topology');

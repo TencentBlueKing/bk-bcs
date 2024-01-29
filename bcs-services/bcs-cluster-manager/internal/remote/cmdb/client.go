@@ -22,11 +22,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/parnurzeal/gorequest"
 	"github.com/patrickmn/go-cache"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -86,7 +86,7 @@ func NewCmdbClient(options Options) (*Client, error) {
 		serverDebug: options.Debug,
 		// Create a cache with a default expiration time of 10 minutes, and which
 		// purges expired items every 1 hour
-		cache: cache.New(10*time.Minute, 60*time.Minute),
+		cache: cache.New(3*time.Minute, 60*time.Minute),
 	}
 
 	if !options.Enable {

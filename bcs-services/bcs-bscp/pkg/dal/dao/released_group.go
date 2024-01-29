@@ -13,11 +13,11 @@
 package dao
 
 import (
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // ReleasedGroup supplies all the group related operations.
@@ -28,6 +28,8 @@ type ReleasedGroup interface {
 	ListAllByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*table.ReleasedGroup, error)
 	// ListAllByAppID list all released groups by appID
 	ListAllByAppID(kit *kit.Kit, appID, bizID uint32) ([]*table.ReleasedGroup, error)
+	// ListAllByReleaseID list all released groups by releaseID
+	ListAllByReleaseID(kit *kit.Kit, releaseID, bizID uint32) ([]*table.ReleasedGroup, error)
 	// CountGroupsReleasedApps counts each group's published apps.
 	CountGroupsReleasedApps(kit *kit.Kit, opts *types.CountGroupsReleasedAppsOption) (
 		[]*types.GroupPublishedAppsCount, error)
@@ -78,6 +80,20 @@ func (dao *releasedGroupDao) ListAllByAppID(kit *kit.Kit, appID, bizID uint32) (
 
 	m := dao.genQ.ReleasedGroup
 	return m.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Find()
+}
+
+// ListAllByReleaseID list all released groups by releaseID
+func (dao *releasedGroupDao) ListAllByReleaseID(kit *kit.Kit, releaseID, bizID uint32) ([]*table.ReleasedGroup, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+
+	if releaseID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "releaseID is 0")
+	}
+
+	m := dao.genQ.ReleasedGroup
+	return m.WithContext(kit.Ctx).Where(m.ReleaseID.Eq(releaseID), m.BizID.Eq(bizID)).Find()
 }
 
 // CountGroupsReleasedApps counts each group's published apps.

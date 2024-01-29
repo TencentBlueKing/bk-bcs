@@ -3,7 +3,7 @@
     <SearchInput
       v-model="searchStr"
       class="config-search-input"
-      placeholder="配置文件名/创建人/修改人"
+      :placeholder="t('配置文件名/创建人/修改人')"
       @search="getListData"
     />
     <bk-loading class="loading-wrapper" :loading="loading">
@@ -22,12 +22,7 @@
             <div class="config-name">{{ config.name }}</div>
             <div class="config-type">{{ getConfigTypeName(config.file_type) }}</div>
           </div>
-          <bk-exception
-            v-if="group.configs.length === 0"
-            scene="part"
-            type="empty"
-            description="暂无配置文件"
-          ></bk-exception>
+          <TableEmpty v-if="group.configs.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch"></TableEmpty>
         </div>
       </div>
     </bk-loading>
@@ -48,6 +43,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { DownShape } from 'bkui-vue/lib/icon';
 import useConfigStore from '../../../../../../../store/config';
@@ -63,6 +59,7 @@ import { getConfigTypeName } from '../../../../../../../utils/config';
 import SearchInput from '../../../../../../../components/search-input.vue';
 import EditConfig from '../config-table-list/edit-config.vue';
 import ViewConfig from '../config-table-list/view-config.vue';
+import TableEmpty from '../../../../../../../components/table/table-empty.vue';
 
 interface IConfigsGroupData {
   id: number;
@@ -86,6 +83,7 @@ interface IConfigTableItem {
 
 const store = useConfigStore();
 const { versionData } = storeToRefs(store);
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;
@@ -99,6 +97,7 @@ const boundTemplateListLoading = ref(false);
 const templateGroupList = ref<IBoundTemplateGroup[]>([]); // 配置文件模板
 const tableGroupsData = ref<IConfigsGroupData[]>([]);
 const searchStr = ref('');
+const isSearchEmpty = ref(false);
 const editConfigSliderData = ref({
   open: false,
   id: 0,
@@ -112,6 +111,13 @@ watch(
   () => versionData.value.id,
   () => {
     getListData();
+  },
+);
+
+watch(
+  () => searchStr.value,
+  (val) => {
+    isSearchEmpty.value = !!val;
   },
 );
 
@@ -142,7 +148,7 @@ const getCommonConfigList = async () => {
       all: true,
     };
     if (searchStr.value) {
-      params.search_fields = 'revision_name,revision_memo,name,path,creator';
+      params.search_fields = 'name,memo,path,creator,reviser';
       params.search_value = searchStr.value;
     }
 
@@ -170,7 +176,7 @@ const getBoundTemplateList = async () => {
       all: true,
     };
     if (searchStr.value) {
-      params.search_fields = 'revision_name,revision_memo,name,path,creator';
+      params.search_fields = 'name,memo,path,creator,reviser';
       params.search_value = searchStr.value;
     }
 
@@ -191,7 +197,7 @@ const getBoundTemplateList = async () => {
 const transListToTableData = () => {
   const pkgsGroups = groupTplsByPkg(templateGroupList.value);
   return [
-    { id: 0, name: '非模板配置', expand: true, configs: transConfigsToTableItemData(configList.value) },
+    { id: 0, name: t('非模板配置'), expand: true, configs: transConfigsToTableItemData(configList.value) },
     ...pkgsGroups,
   ];
 };
@@ -257,6 +263,11 @@ const handleConfigClick = (config: IConfigTableItem, groupId: number) => {
       data: { id, type },
     };
   }
+};
+
+const clearSearch = () => {
+  searchStr.value = '';
+  getListData();
 };
 </script>
 <style lang="scss" scoped>

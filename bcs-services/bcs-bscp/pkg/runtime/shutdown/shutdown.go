@@ -21,7 +21,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // shutdownNotifier is a notifier which is used to notify all the job/tasks

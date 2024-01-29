@@ -64,7 +64,7 @@ func (n *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto
 }
 
 // GetZoneList get zoneList by region
-func (n *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.ZoneInfo, error) {
+func (n *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*proto.ZoneInfo, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

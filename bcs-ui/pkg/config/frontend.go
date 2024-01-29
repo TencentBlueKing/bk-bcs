@@ -25,6 +25,7 @@ type HostConf struct {
 	BKMonitorHost         string `yaml:"bk_monitor_host"`         // 蓝鲸监控
 	BKSREHOST             string `yaml:"bk_sre_host"`             // 申请服务器地址
 	BKUserHost            string `yaml:"bk_user_host"`            // 用户中心地址
+	BKLogHost             string `yaml:"bk_log_host"`             // 日志平台地址
 	LoginFullURL          string `yaml:"login_full_url"`          // 登录跳转地址
 }
 

@@ -15,7 +15,7 @@ package types
 import (
 	"errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 // CreateReleasedKvOption defines options to create released kv.
@@ -95,11 +95,12 @@ func (o *GetRKvOption) Validate() error {
 type ListRKvOption struct {
 	BizID     uint32    `json:"biz_id"`
 	AppID     uint32    `json:"app_id"`
-	Key       string    `json:"key"`
+	Key       []string  `json:"key"`
 	ReleaseID uint32    `json:"release_id"`
 	SearchKey string    `json:"search_key"`
 	All       bool      `json:"all"`
 	Page      *BasePage `json:"page"`
+	KvType    []string  `json:"kv_type"`
 }
 
 // Validate is used to validate the effectiveness of the ListKvOption structure.

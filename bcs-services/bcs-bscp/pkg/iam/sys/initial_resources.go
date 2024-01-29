@@ -12,7 +12,7 @@
 
 package sys
 
-import "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+import "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
 
 // ResourceTypeIDMap resource type map.
 var ResourceTypeIDMap = map[client.TypeID]string{

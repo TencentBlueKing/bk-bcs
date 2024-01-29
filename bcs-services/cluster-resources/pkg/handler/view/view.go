@@ -112,3 +112,48 @@ func (h *Handler) DeleteViewConfig(
 	}
 	return nil
 }
+
+// ResourceNameSuggest xxx
+func (h *Handler) ResourceNameSuggest(
+	ctx context.Context, req *clusterRes.ViewSuggestReq, resp *clusterRes.CommonResp,
+) error {
+	action := view.NewViewAction(h.model)
+	m, err := action.ResourceNameSuggest(ctx, req.GetClusterNamespaces())
+	if err != nil {
+		return err
+	}
+	if resp.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"values": m}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// LabelSuggest xxx
+func (h *Handler) LabelSuggest(
+	ctx context.Context, req *clusterRes.ViewSuggestReq, resp *clusterRes.CommonResp,
+) error {
+	action := view.NewViewAction(h.model)
+	m, err := action.LabelSuggest(ctx, req.GetClusterNamespaces())
+	if err != nil {
+		return err
+	}
+	if resp.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"values": m}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ValuesSuggest xxx
+func (h *Handler) ValuesSuggest(
+	ctx context.Context, req *clusterRes.ViewSuggestReq, resp *clusterRes.CommonResp,
+) error {
+	action := view.NewViewAction(h.model)
+	m, err := action.ValuesSuggest(ctx, req.GetClusterNamespaces(), req.Label)
+	if err != nil {
+		return err
+	}
+	if resp.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"values": m}); err != nil {
+		return err
+	}
+	return nil
+}

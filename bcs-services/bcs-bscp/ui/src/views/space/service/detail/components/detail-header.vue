@@ -1,7 +1,7 @@
 <template>
   <div class="service-detail-header">
     <section class="summary-wrapper">
-      <div :class="['status-tag', versionData.status.publish_status]">
+      <div :class="['status-tag', versionData.spec.deprecated ? 'deprecated' : versionData.status.publish_status]">
         {{ statusName }}
       </div>
       <div class="version-name" :title="versionData.spec.name">{{ versionData.spec.name }}</div>
@@ -30,7 +30,7 @@
           :is-default-group="hasDefaultGroup"
           :disabled="versionData.status.publish_status === 'full_released'">
           <div class="released-groups">
-            <i class="bk-bscp-icon icon-resources"></i>
+            <i class="bk-bscp-icon icon-resources-fill"></i>
             <div class="groups-tag">
               <div class="first-group-name">{{ firstReleasedGroupName }}</div>
               <div
@@ -70,6 +70,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { InfoLine } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
@@ -84,6 +85,7 @@ import ModifyGroupPublish from './modify-group-publish.vue';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const configStore = useConfigStore();
 const serviceStore = useServiceStore();
@@ -102,8 +104,8 @@ const props = defineProps<{
 }>();
 
 const tabs = ref([
-  { name: 'config', label: '配置管理', routeName: 'service-config' },
-  { name: 'script', label: '前/后置脚本', routeName: 'init-script' },
+  { name: 'config', label: t('配置管理'), routeName: 'service-config' },
+  { name: 'script', label: t('前/后置脚本'), routeName: 'init-script' },
 ]);
 
 const getDefaultTab = () => {
@@ -115,33 +117,31 @@ const publishVersionRef = ref();
 
 const statusName = computed(() => {
   const status = versionData.value.status.publish_status;
-  if (status === 'editing') {
-    return '编辑中';
-  } else if (status === 'not_released') {
-    return '未上线';
-  } else {
-    return '已上线';
+  if (versionData.value.spec.deprecated) {
+    return t('已废弃');
   }
+
+  if (status === 'editing') {
+    return t('编辑中');
+  } if (status === 'not_released') {
+    return t('未上线');
+  }
+  return t('已上线');
 });
 
 // 是否需要展示版本分组信息
-const isShowReleasedGroups = computed(() => {
-  return ['partial_released', 'full_released'].includes(versionData.value.status.publish_status);
-});
+const isShowReleasedGroups = computed(() => ['partial_released', 'full_released'].includes(versionData.value.status.publish_status));
 
 // 当前版本是否上线到默认分组
-const hasDefaultGroup = computed(() => {
-  return versionData.value.status.released_groups.findIndex(item => item.id === 0) > -1;
-});
+const hasDefaultGroup = computed(() => versionData.value.status.released_groups.findIndex(item => item.id === 0) > -1);
 
 // 第一个分组名称
 const firstReleasedGroupName = computed(() => {
   if (isShowReleasedGroups.value) {
     if (versionData.value.status.publish_status === 'full_released') {
-      return '全部实例';
-    } else {
-      return hasDefaultGroup.value ? '默认分组' : versionData.value.status.released_groups[0].name;
+      return t('全部实例');
     }
+    return hasDefaultGroup.value ? t('默认分组') : versionData.value.status.released_groups[0].name;
   }
 });
 
@@ -225,7 +225,7 @@ const handleTabChange = (val: string) => {
   align-items: center;
   padding: 0 24px;
   height: 41px;
-  box-shadow: 0 3px 4px 0 #0000000a;
+  border-bottom: 1px solid #dcdee5;
   z-index: 1;
   .summary-wrapper {
     display: flex;
@@ -240,6 +240,11 @@ const handleTabChange = (val: string) => {
       color: #63656e;
       border: 1px solid rgba(151, 155, 165, 0.3);
       border-radius: 11px;
+      &.deprecated {
+        color: #ea3536;
+        background-color: #feebea;
+        border-color: #ea35364d;
+      }
       &.not_released {
         color: #fe9000;
         background: #ffe8c3;
@@ -290,12 +295,12 @@ const handleTabChange = (val: string) => {
     .released-groups {
       display: flex;
       align-items: center;
-      padding: 5px 8px;
+      padding: 2px 8px;
       background: #F0F1F5;
       border-radius: 2px;
       cursor: pointer;
     }
-    .icon-resources {
+    .icon-resources-fill {
       margin-right: 4px;
       font-size: 14px;
       color: #979BA5;
@@ -303,11 +308,12 @@ const handleTabChange = (val: string) => {
     .groups-tag {
       display: flex;
       align-items: center;
-      line-height: 22px;
+      line-height: 18px;
       font-size: 12px;
       color: #63656e;
       .count {
-        padding: 4px;
+        padding: 2px 4px;
+        line-height: 1;
         background: #FAFBFD;
         border-radius: 2px;
       }

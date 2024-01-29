@@ -15,7 +15,7 @@ package types
 import (
 	"errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 // ListHookRevisionsOption defines the response details of requested ListHookRevisionsOption.
@@ -76,6 +76,7 @@ type ListHookRevisionReferencesDetail struct {
 	ReleaseID    uint32 `gorm:"column:release_id" json:"release_id"`
 	ReleaseName  string `gorm:"column:release_name" json:"release_name"`
 	HookType     string `gorm:"column:hook_type" json:"hook_type"`
+	Deprecated   bool   `gorm:"column:deprecated" json:"deprecated"`
 }
 
 // GetByPubStateOption defines options to get hr by State

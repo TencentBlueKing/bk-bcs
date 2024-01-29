@@ -6,7 +6,7 @@
   quick-close
   :show-footer="false"
   dialog-type="show"
-  title="产品功能特性"
+  :title="t('产品功能特性')"
   @closed="emits('update:isShow', false)"
   header-align="center">
     <div v-html="props.detail" class="markdown-theme-style detail-content"></div>
@@ -14,6 +14,8 @@
 </template>
 
 <script lang="ts" setup>
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const props = withDefaults(
   defineProps<{
       detail: string

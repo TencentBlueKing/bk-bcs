@@ -21,12 +21,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	corev1 "k8s.io/api/core/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
 // PermInfo for perm request
@@ -120,9 +120,9 @@ func GetProjectClusters(ctx context.Context, model store.ClusterManagerModel, pr
 func GetCloudClusters(ctx context.Context, model store.ClusterManagerModel, cloudID, accountID, vpcID string) (
 	[]proto.Cluster, error) {
 	condCluster := operator.NewLeafCondition(operator.Eq, operator.M{
-		"provider":  cloudID,
+		"provider":       cloudID,
 		"cloudaccountid": accountID,
-		"vpcid":     vpcID,
+		"vpcid":          vpcID,
 	})
 	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
 

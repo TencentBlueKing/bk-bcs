@@ -235,8 +235,10 @@ require (
 	github.com/Tencent/bk-bcs/bcs-scenarios/kourse v0.0.0-20231011121510-d30829b961ad
 	github.com/go-redis/redis/extra/redisotel/v8 v8.11.5
 	github.com/googleapis/gnostic v0.5.5
+	github.com/mitchellh/hashstructure/v2 v2.0.2
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.44.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230711160842-782d3b101e98
+	k8s.io/apiextensions-apiserver v0.20.0
 )
 
 require (

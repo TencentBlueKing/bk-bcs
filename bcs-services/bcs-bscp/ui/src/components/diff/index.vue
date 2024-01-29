@@ -22,17 +22,17 @@
         <Text
           v-else-if="props.diff.contentType === 'text'"
           :language="props.diff.current.language"
-          :current="props.diff.current.content as string"
+          :current="(props.diff.current.content as string)"
           :current-variables="props.diff.current.variables"
           :current-permission="currentPermission"
-          :base="props.diff.base.content as string"
+          :base="(props.diff.base.content as string)"
           :base-variables="props.diff.base.variables"
           :base-permission="basePermission"
         />
         <Kv
           v-else
-          :current="props.diff.current.content as string"
-          :base="props.diff.base.content as string"
+          :current="(props.diff.current.content as string)"
+          :base="(props.diff.base.content as string)"
         />
       </div>
     </bk-loading>
@@ -40,12 +40,14 @@
 </template>
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { IDiffDetail } from '../../../types/service';
 import { IFileConfigContentSummary } from '../../../types/config';
 import File from './file.vue';
 import Text from './text.vue';
 import Kv from './kv.vue';
 
+const { t } = useI18n();
 const props = defineProps<{
   panelName?: String;
   diff: IDiffDetail;
@@ -55,15 +57,15 @@ const props = defineProps<{
 
 const currentPermission = computed(() => {
   if (!props.diff.base.permission) return;
-  return `权限:${props.diff.current.permission?.privilege}
-用户:${props.diff.current.permission?.user}
-用户组:${props.diff.current.permission?.user_group}`;
+  return `${t('权限')}:${props.diff.current.permission?.privilege}
+  ${t('用户')}:${props.diff.current.permission?.user}
+  ${t('用户组')}:${props.diff.current.permission?.user_group}`;
 });
 const basePermission = computed(() => {
   if (!props.diff.base.permission) return;
-  return `权限:${props.diff.base.permission?.privilege}
-用户:${props.diff.base.permission?.user}
-用户组:${props.diff.base.permission?.user_group}`;
+  return `${t('权限')}:${props.diff.base.permission?.privilege}
+  ${t('用户')}:${props.diff.base.permission?.user}
+  ${t('用户组')}:${props.diff.base.permission?.user_group}`;
 });
 </script>
 <style lang="scss" scoped>

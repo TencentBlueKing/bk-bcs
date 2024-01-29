@@ -1,5 +1,5 @@
 <template>
-  <bk-button :disabled="props.configs.length === 0" @click="handleClick">批量移出</bk-button>
+  <bk-button :disabled="props.configs.length === 0" @click="handleClick">{{t('批量移出')}}</bk-button>
   <BatchMoveOutFromPkgDialog
     v-model:show="isBatchMoveDialogShow"
     :current-pkg="props.currentPkg"
@@ -16,10 +16,12 @@
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ITemplateConfigItem } from '../../../../../../../../types/template';
 import BatchMoveOutFromPkgDialog from './batch-move-out-from-pkg-dialog.vue';
 import MoveOutFromPkgsDialog from './move-out-from-pkgs-dialog.vue';
 
+const { t } = useI18n();
 const props = defineProps<{
   configs: ITemplateConfigItem[];
   currentPkg: number;

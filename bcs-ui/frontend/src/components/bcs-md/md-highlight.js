@@ -23,7 +23,7 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
-import hljs from 'highlight.js/lib/highlight';
+import hljs from 'highlight.js';
 import yaml from 'highlight.js/lib/languages/yaml';
 
 import 'highlight.js/styles/vs2015.css';

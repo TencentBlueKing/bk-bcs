@@ -6,7 +6,7 @@
         text
         theme="primary"
         @click="handleClose">
-        展开列表
+        {{t('展开列表')}}
         <AngleDoubleRightLine class="arrow-icon" />
       </bk-button>
       <List
@@ -32,6 +32,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { AngleDoubleRightLine } from 'bkui-vue/lib/icon';
 import dayjs from 'dayjs';
 import { IPagination } from '../../../../../../types/index';
@@ -40,6 +41,7 @@ import List from './list.vue';
 import VersionEditor from './version-editor.vue';
 import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
 
+const { t } = useI18n();
 const props = defineProps<{
     spaceId: string;
     templateSpaceId: number;
@@ -123,10 +125,10 @@ const handleSelect = async (id: number) => {
   }
   .close-btn {
     position: absolute;
-    top: 18px;
+    top: 16px;
     right: 10px;
     font-size: 12px;
-    z-index: 1;
+    z-index: 10;
     .arrow-icon {
       margin-left: 4px;
     }

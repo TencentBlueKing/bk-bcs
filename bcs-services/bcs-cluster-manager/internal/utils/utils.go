@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"math/rand"
 	"net"
 	"net/http"
@@ -38,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 const (
@@ -515,6 +515,17 @@ func IsMasterNode(labels map[string]string) bool {
 	_, ok2 := labels[icommon.ControlPlanRole]
 	if ok1 || ok2 {
 		return true
+	}
+
+	return false
+}
+
+// ExistRunningNodes check exist running nodes
+func ExistRunningNodes(nodes []*proto.ClusterNode) bool {
+	for i := range nodes {
+		if nodes[i].GetStatus() == icommon.StatusRunning {
+			return true
+		}
 	}
 
 	return false

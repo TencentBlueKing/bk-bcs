@@ -31,13 +31,6 @@ bcs-ops:
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
 
-    charts:
-      - provisioner-2.4.0.tgz
-      - ingress-nginx-4.2.5.tgz
-
-    rpm:
-      - bash-completion-2.1-8.el7.noarch.rpm
-
   - version: "1.23.17"
     bin-tools:
       k8s: "1.23.17"
@@ -69,13 +62,6 @@ bcs-ops:
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
 
-    charts:
-      - provisioner-2.4.0.tgz
-      - ingress-nginx-4.2.5.tgz
-
-    rpm:
-      - bash-completion-2.1-8.el7.noarch.rpm
-
   - version: "1.24.15"
     bin-tools:
       k8s: "1.24.15"
@@ -106,10 +92,3 @@ bcs-ops:
       - hub.bktencent.com/alpine/helm:3.7.2
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
-
-    charts:
-      - provisioner-2.4.0.tgz
-      - ingress-nginx-4.2.5.tgz
-
-    rpm:
-      - bash-completion-2.1-8.el7.noarch.rpm

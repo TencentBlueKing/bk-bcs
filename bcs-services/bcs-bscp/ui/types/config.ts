@@ -14,6 +14,8 @@ export interface IConfigVersion {
   spec: {
     name: string;
     memo: string;
+    deprecated: boolean;
+    publish_num: number;
   };
   status: {
     publish_status: string;

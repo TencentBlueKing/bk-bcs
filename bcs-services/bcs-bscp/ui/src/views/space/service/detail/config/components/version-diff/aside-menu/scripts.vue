@@ -1,10 +1,11 @@
 <template>
   <div class="scripts-menu">
-    <MenuList title="前/后置脚本" :value="selected" :list="scriptDetailList" @selected="selectScript" />
+    <MenuList :title="t('前/后置脚本')" :value="selected" :list="scriptDetailList" @selected="selectScript" />
   </div>
 </template>
 <script lang="ts" setup>
 import { ref, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import useServiceStore from '../../../../../../../../store/service';
@@ -12,6 +13,7 @@ import { getConfigScript } from '../../../../../../../../api/config';
 import { getDiffType } from '../../../../../../../../utils/index';
 import MenuList from './menu-list.vue';
 
+const { t } = useI18n();
 const route = useRoute();
 const bkBizId = ref(String(route.params.spaceId));
 const { appData } = storeToRefs(useServiceStore());
@@ -27,7 +29,7 @@ const emits = defineEmits(['selected']);
 const scriptDetailList = ref([
   {
     id: 'pre',
-    name: '前置脚本',
+    name: t('前置脚本'),
     type: '',
     current: {
       language: '',
@@ -40,7 +42,7 @@ const scriptDetailList = ref([
   },
   {
     id: 'post',
-    name: '后置脚本',
+    name: t('后置脚本'),
     type: '',
     current: {
       language: '',

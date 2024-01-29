@@ -58,8 +58,8 @@ export default {
     handlerFocus() {
       this.$refs.bcsFormItem.clearValidator();
     },
-    validate() {
-      this.$refs.bcsFormItem.validate();
+    validate(trigger) {
+      this.$refs.bcsFormItem.validate(trigger);
     },
     clearError() {
       this.$refs.bcsFormItem.clearError();

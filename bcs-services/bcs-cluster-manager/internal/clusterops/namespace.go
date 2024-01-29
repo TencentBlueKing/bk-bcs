@@ -14,13 +14,15 @@ package clusterops
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
 
 // NamespaceInfo detailed info
@@ -208,41 +210,42 @@ func (ko *K8SOperator) UpdateResourceQuota(ctx context.Context, clusterID string
 		blog.Errorf("UpdateResourceQuota[%s] GetClusterClient failed: %v", clusterID, err)
 		return err
 	}
-
 	if info.Namespace == "" {
 		info.Namespace = info.Name
 	}
 
-	_, err = clientInterface.CoreV1().ResourceQuotas(info.Namespace).Get(ctx, info.Name, metav1.GetOptions{})
-	if err != nil && !errors.IsNotFound(err) {
+	quota, err := clientInterface.CoreV1().ResourceQuotas(info.Namespace).Get(ctx, info.Name, metav1.GetOptions{})
+	if err != nil {
 		blog.Errorf("UpdateResourceQuota[%s:%s] getNamespaceResourceQuota failed: %v", clusterID, info.Name, err)
 		return err
 	}
-
-	if errors.IsNotFound(err) {
-		blog.Infof("UpdateResourceQuota[%s:%s] notfound", clusterID, info.Name)
-		return fmt.Errorf("resource quotas not found")
-	}
-
-	nsResourceQuota := &apiv1.ResourceQuota{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: info.Name,
-		},
-		Spec: apiv1.ResourceQuotaSpec{
-			Hard: map[apiv1.ResourceName]resource.Quantity{
-				apiv1.ResourceRequestsCPU:    resource.MustParse(info.CpuRequests),
-				apiv1.ResourceLimitsCPU:      resource.MustParse(info.CpuLimits),
-				apiv1.ResourceRequestsMemory: resource.MustParse(info.MemRequests),
-				apiv1.ResourceLimitsMemory:   resource.MustParse(info.MemLimits),
-			},
-		},
-	}
-
-	_, err = clientInterface.CoreV1().ResourceQuotas(info.Namespace).Update(ctx, nsResourceQuota, metav1.UpdateOptions{})
+	oldData, err := json.Marshal(quota)
 	if err != nil {
-		blog.Errorf("UpdateResourceQuota[%s:%s] failed: %v", clusterID, info.Name, err)
 		return err
 	}
+	quota.Spec.Hard[apiv1.ResourceRequestsCPU] = resource.MustParse(info.CpuRequests)
+	quota.Spec.Hard[apiv1.ResourceLimitsCPU] = resource.MustParse(info.CpuLimits)
+	quota.Spec.Hard[apiv1.ResourceRequestsMemory] = resource.MustParse(info.MemRequests)
+	quota.Spec.Hard[apiv1.ResourceLimitsMemory] = resource.MustParse(info.MemLimits)
+
+	newData, err := json.Marshal(quota)
+	if err != nil {
+		return err
+	}
+
+	patchBytes, patchErr := strategicpatch.CreateTwoWayMergePatch(oldData, newData, quota)
+	if patchErr == nil {
+		patchOptions := metav1.PatchOptions{}
+		_, err = clientInterface.CoreV1().ResourceQuotas(info.Namespace).Patch(ctx, info.Name,
+			types.StrategicMergePatchType, patchBytes, patchOptions)
+	} else {
+		updateOptions := metav1.UpdateOptions{}
+		_, err = clientInterface.CoreV1().ResourceQuotas(info.Namespace).Update(ctx, quota, updateOptions)
+	}
+	if err != nil {
+		blog.Errorf("UpdateResourceQuota CreateTwoWayMergePatch[%s] failed: %v", info.Name, err)
+	}
+
 	blog.Infof("UpdateResourceQuota[%s:%s] success", clusterID, info.Name)
 
 	return nil

@@ -121,17 +121,17 @@ var (
 
 	// CreateNodeGroupTask task
 	// nodeGroup manager task
-	CreateNodeGroupTask TaskName = "创建节点规格"
+	CreateNodeGroupTask TaskName = "创建节点池"
 	// UpdateDesiredNodesTask task
-	UpdateDesiredNodesTask TaskName = "扩容节点规格"
+	UpdateDesiredNodesTask TaskName = "扩容节点池"
 	// CleanNodesInGroupTask task
-	CleanNodesInGroupTask TaskName = "缩容节点规格"
+	CleanNodesInGroupTask TaskName = "缩容节点池"
 	// UpdateNodeGroupTask task
-	UpdateNodeGroupTask TaskName = "更新节点规格"
+	UpdateNodeGroupTask TaskName = "更新节点池"
 	// DeleteNodeGroupTask task
-	DeleteNodeGroupTask TaskName = "删除节点规格"
+	DeleteNodeGroupTask TaskName = "删除节点池"
 	// SwitchNodeGroupAutoScalingTask task
-	SwitchNodeGroupAutoScalingTask TaskName = "开启/关闭节点规格"
+	SwitchNodeGroupAutoScalingTask TaskName = "开启/关闭节点池"
 	// UpdateAutoScalingOptionTask task
 	UpdateAutoScalingOptionTask TaskName = "更新集群自动扩缩容配置"
 	// SwitchAutoScalingOptionStatusTask task
@@ -184,6 +184,8 @@ var (
 	SecretKey ParamKey = "secret"
 	// PortKey xxx
 	PortKey ParamKey = "port"
+	// AllowReviseAgent allow revise agent cloudId
+	AllowReviseAgent ParamKey = "allow"
 
 	// ScalingNodesNumKey xxx
 	ScalingNodesNumKey ParamKey = "scalingNodesNum"
@@ -209,6 +211,8 @@ var (
 	DeleteModeKey ParamKey = "deleteMode"
 	// KeepInstanceKey xxx
 	KeepInstanceKey ParamKey = "keepInstance"
+	// LastClusterStatus xxx
+	LastClusterStatus ParamKey = "lastClusterStatus"
 
 	// NodeIPsKey xxx
 	// Task Common Instance
@@ -233,6 +237,11 @@ var (
 	WorkerNodeIPsKey ParamKey = "workerIPs"
 	// VpcKey vpcId
 	VpcKey ParamKey = "vpc"
+
+	// TerminateChargeNodes terminate nodes
+	TerminateChargeNodes ParamKey = "terminateChargeNodes"
+	// RetainChargeNodes retain nodes
+	RetainChargeNodes ParamKey = "retainChargeNodes"
 
 	// NamespaceKey xxx
 	NamespaceKey ParamKey = "namespace"
@@ -303,6 +312,8 @@ var (
 
 	// ConnectClusterKey connect cluster result
 	ConnectClusterKey ParamKey = "connectCluster"
+	// InstallGseAgentKey install gse agent
+	InstallGseAgentKey ParamKey = "installGseAgent"
 
 	// cluster kubeConfig parameters
 

@@ -177,11 +177,13 @@ check_tools() {
     | tr ' ' '\n' \
     | sort \
     | uniq -u)
-  read -ra diff_array <<<"$diff"
-  if [[ -z "${BCS_OFFLINE:-}" ]]; then
-    utils::log "WARN" "$1 : 目前主机未安装(${diff_array[*]})."
-  else
-    utils::log "ERROR" "$1 : 目前主机未安装(${diff_array[*]})."
+  read -r -d '' -a  diff_array <<<"$diff"
+  if ((${#diff_array[@]} > 0)); then
+    if [[ -z "${BCS_OFFLINE:-}" ]]; then
+      utils::log "WARN" "$1 : 目前主机未安装(${diff_array[*]})."
+    else
+      utils::log "ERROR" "$1 : 目前主机未安装(${diff_array[*]})."
+    fi
   fi
 }
 
@@ -221,7 +223,7 @@ if [ "$rerun" == "" ]; then
   exit 1
 else
   for index in "${!CHECK_LIST[@]}"; do
-    index2=$((index+1))
+    index2=$((index + 1))
     utils::log "INFO" "├──[STEP ${index2}/${#CHECK_LIST[@]}] => \
 [${CHECK_LIST[$index]}] - [$(date +'%H:%M:%S')]"
     ${CHECK_LIST[$index]} "${CHECK_LIST[$index]}"

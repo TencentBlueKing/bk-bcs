@@ -1,5 +1,5 @@
 <template>
-  <section class="script-detail-layout">
+  <section :class="['script-detail-layout', { 'show-notice': showNotice }]">
     <header>
       <div class="nav-title">
         <ArrowsLeft class="arrow-icon" @click="emits('close')" />
@@ -16,6 +16,10 @@
 </template>
 <script setup lang="ts">
 import { ArrowsLeft } from 'bkui-vue/lib/icon';
+import { storeToRefs } from 'pinia';
+import useGlobalStore from '../../../../store/global';
+
+const { showNotice } = storeToRefs(useGlobalStore());
 
 const props = withDefaults(defineProps<{
     name: string;
@@ -35,6 +39,10 @@ const emits = defineEmits(['close']);
     height: calc(100vh - 52px);
     background: #ffffff;
     z-index: 2000;
+    &.show-notice {
+      top: 92px;
+      height: calc(100vh - 92px);
+    }
     .nav-title {
       display: flex;
       align-items: center;

@@ -1,19 +1,21 @@
 <template>
   <bk-dialog
-    title="替换版本"
+    :title="t('替换版本')"
     head-align="left"
     footer-align="right"
     width="480"
     :is-show="props.show"
     :is-loading="loading || pending"
+    :confirm-text="t('确定')"
+    :cancel-text="t('取消')"
     @confirm="handleReplaceConfirm"
     @closed="close"
   >
     <bk-form ref="formRef" :model="{ selected }" label-width="120">
-      <bk-form-item label="当前版本">
+      <bk-form-item :label="t('当前版本')">
         <div>{{ props.versionName }}</div>
       </bk-form-item>
-      <bk-form-item label="目标版本" required property="selected">
+      <bk-form-item :label="t('目标版本')" required property="selected">
         <bk-select v-model="selected" :loading="loading" :clearable="false" :filterable="true" :input-search="false">
           <bk-option
             v-for="option in versionList"
@@ -39,10 +41,11 @@
 </template>
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { getTemplateVersionsNameByIds } from '../../../../../../../api/template';
 import { updateBoundTemplateVersion } from '../../../../../../../api/config';
 import { ITemplateVersionsName } from '../../../../../../../../types/template';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 
 interface ITplVersionItem {
   id: number;
@@ -62,6 +65,7 @@ const props = defineProps<{
   versionName: string;
 }>();
 
+const { t } = useI18n();
 const emits = defineEmits(['update:show', 'updated']);
 
 const loading = ref(false);
@@ -101,7 +105,7 @@ const getTemplateVersions = async () => {
   if (latestVersion) {
     list.unshift({
       id: latestVersion.template_revision_id,
-      name: `latest（当前最新为${latestVersion.template_revision_name}）`,
+      name: `latest（${t('当前最新为')}${latestVersion.template_revision_name}）`,
       memo: latestVersion.template_revision_memo,
       isLatest: true,
     });
@@ -142,7 +146,7 @@ const handleReplaceConfirm = async () => {
   close();
   Message({
     theme: 'success',
-    message: '模板版本更新成功',
+    message: t('模板版本更新成功'),
   });
 };
 

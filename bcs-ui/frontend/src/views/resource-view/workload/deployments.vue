@@ -70,7 +70,7 @@
             </LoadingIcon>
           </template>
         </bk-table-column>
-        <bk-table-column label="Ready" width="100" :resizable="false">
+        <bk-table-column label="Ready" width="100" :render-header="renderReadyHeader" :resizable="false">
           <template slot-scope="{ row }">{{row.status.readyReplicas || 0}} / {{row.spec.replicas}}</template>
         </bk-table-column>
         <bk-table-column label="Up-to-date" width="110" :resizable="false">
@@ -156,11 +156,32 @@ import { defineComponent } from 'vue';
 import StatusIcon from '../../../components/status-icon';
 
 import LoadingIcon from '@/components/loading-icon.vue';
+import $i18n from '@/i18n/i18n-setup';
 import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   name: 'DashboardDeploy',
   components: { BaseLayout, StatusIcon, LoadingIcon },
+  setup() {
+    const renderReadyHeader = (h, { column }) => h(
+      'span',
+      {
+        class: 'bcs-border-tips',
+        directives: [
+          {
+            name: 'bkTooltips',
+            value: {
+              content: $i18n.t('k8s.deploy.readyTips'),
+            },
+          },
+        ],
+      },
+      column.label,
+    );
+    return {
+      renderReadyHeader,
+    };
+  },
 });
 </script>
 <style lang="postcss" scoped>

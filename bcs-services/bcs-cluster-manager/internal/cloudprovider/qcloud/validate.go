@@ -23,6 +23,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
@@ -44,7 +45,22 @@ type CloudValidate struct {
 
 // CreateCloudAccountValidate create cloud account validate
 func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
-	return cloudprovider.ErrCloudNotImplemented
+	if c == nil || account == nil {
+		return fmt.Errorf("%s CreateCloudAccountValidate account is null", cloudName)
+	}
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate opt lost valid crendential info", cloudName)
+	}
+
+	_, err := business.GetCloudRegions(&cloudprovider.CommonOption{
+		Account: account,
+		Region:  api.DefaultRegion,
+	})
+	if err != nil {
+		return fmt.Errorf("account check failed: %v", err)
+	}
+
+	return nil
 }
 
 // CreateClusterValidate check createCluster operation

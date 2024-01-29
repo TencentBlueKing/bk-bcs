@@ -26,7 +26,12 @@
         </bk-radio-group>
       </BkFormItem>
       <BkFormItem :label="$t('cluster.create.label.desc1')">
-        <bk-input v-model="importClusterInfo.description" type="textarea"></bk-input>
+        <bcs-input
+          :maxlength="100"
+          class="max-w-[640px]"
+          v-model="importClusterInfo.description"
+          type="textarea">
+        </bcs-input>
       </BkFormItem>
       <template v-if="importClusterInfo.importType === 'provider'">
         <BkFormItem
@@ -165,6 +170,7 @@
           theme="primary"
           class="mr-[5px]"
           :loading="testLoading"
+          :disabled="!importClusterInfo.cloudID || !importClusterInfo.provider"
           @click="handleTest">{{$t('cluster.create.button.textKubeConfig')}}</bk-button>
         <span
           v-bk-tooltips="{
@@ -449,6 +455,7 @@ export default defineComponent({
           cloudID: importClusterInfo.value.importType === 'kubeconfig'
             ? '' : importClusterInfo.value.cloudID,
           kubeConfig: importClusterInfo.value.yaml,
+          inter: importClusterInfo.value.isExtranet === 'false',
         },
         networkType: 'overlay',
         accountID: importClusterInfo.value.importType === 'kubeconfig'

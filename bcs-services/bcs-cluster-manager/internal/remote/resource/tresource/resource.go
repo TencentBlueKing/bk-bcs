@@ -713,12 +713,9 @@ func buildCVMConsumeDeviceDesireReq(desiredNodes uint32, req *resource.ApplyInst
 		Security: &DeviceSecurity{
 			Group: func() *string {
 				var (
-					security    = ""
 					securityIDs = req.SecurityGroupIds
 				)
-				if len(securityIDs) > 0 {
-					security = securityIDs[0]
-				}
+				security := strings.Join(securityIDs, ",")
 
 				return &security
 			}(),

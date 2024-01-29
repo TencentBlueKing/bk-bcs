@@ -28,15 +28,15 @@ export interface ICluster {
   networkSettings: {
     maxNodePodNum: number
     maxServiceNum: number
-    clusterIPv4CIDR: number
-    multiClusterCIDR: number[]
+    clusterIPv4CIDR: string
+    multiClusterCIDR: string[]
     cidrStep: number
     serviceIPv4CIDR: string
     isStaticIpMode: boolean
     eniSubnetIDs: string[]
   }
   master: any
-  provider: string
+  provider: CloudID,
   clusterBasicSettings: any
   environment: 'stag'|'debug'|'prod'
   extraInfo?: Record<string, any>

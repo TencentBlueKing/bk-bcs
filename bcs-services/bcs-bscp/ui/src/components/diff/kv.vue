@@ -1,10 +1,14 @@
 <template>
   <section class="kv-diff">
     <div class="left-version-content">
-      <div class="content-box">{{ base }}</div>
+      <div class="content-box">
+        <bk-overflow-title type="tips">{{ base }}</bk-overflow-title>
+      </div>
     </div>
     <div class="right-version-content">
-      <div class="content-box">{{ current }}</div>
+      <div class="content-box">
+        <bk-overflow-title type="tips">{{ current }}</bk-overflow-title>
+      </div>
     </div>
   </section>
 </template>
@@ -21,7 +25,7 @@ defineProps<{
   display: flex;
   align-items: center;
   height: 100%;
-  background:#F5F7FA;;
+  background: #f5f7fa;
 }
 .left-version-content,
 .right-version-content {

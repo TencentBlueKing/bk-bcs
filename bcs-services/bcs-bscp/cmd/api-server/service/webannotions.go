@@ -14,5 +14,5 @@ package service
 
 // init webannotions  使用
 import (
-	_ "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/service" // 自动注册 webannotations
+	_ "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/service" // 自动注册 webannotations
 )

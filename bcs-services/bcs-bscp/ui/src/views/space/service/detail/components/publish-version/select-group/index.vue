@@ -9,8 +9,9 @@
           :version-list="versionList"
           :version-list-loading="versionListLoading"
           :version-status="props.versionStatus"
-          :disabled="props.disabled"
+          :released-groups="props.releasedGroups"
           :release-type="releaseType"
+          :released-id="props.releaseId"
           :value="props.groups"
           @release-type-change="emits('releaseTypeChange', $event)"
           @change="emits('change', $event)"
@@ -24,7 +25,7 @@
         :version-list="versionList"
         :version-list-loading="versionListLoading"
         :is-default-group-released="isDefaultGroupReleased"
-        :disabled="props.disabled"
+        :released-groups="props.releasedGroups"
         :value="props.groups"
         @diff="emits('openPreviewVersionDiff', $event)"
         @change="emits('change', $event)"
@@ -34,8 +35,9 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { Message } from 'bkui-vue';
+import Message from 'bkui-vue/lib/message';
 import useGlobalStore from '../../../../../../../store/global';
 import useServiceStore from '../../../../../../../store/service';
 import { IConfigVersion } from '../../../../../../../../types/config';
@@ -47,16 +49,19 @@ import Preview from './preview.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 const { appData } = storeToRefs(useServiceStore());
+const { t } = useI18n();
 
 const props = withDefaults(
   defineProps<{
     releaseType?: string;
     groups: IGroupToPublish[];
     versionStatus: string;
-    disabled?: number[];
+    releaseId: number;
+    releasedGroups?: number[];
   }>(),
   {
     releaseType: 'select',
+    releaseId: 0,
   },
 );
 const emits = defineEmits(['openPreviewVersionDiff', 'releaseTypeChange', 'change']);
@@ -83,9 +88,9 @@ const getAllGroupData = async () => {
     const rules = selector.labels_and || selector.labels_or || [];
     return { id: group_id, name: group_name, release_id, release_name, rules };
   });
-  const defaultGroup = groupList.value.find(group => group.id === 0 );
+  const defaultGroup = groupList.value.find(group => group.id === 0);
   if (defaultGroup) {
-    isDefaultGroupReleased.value = defaultGroup.release_id > 0
+    isDefaultGroupReleased.value = defaultGroup.release_id > 0;
   }
   groupListLoading.value = false;
 };
@@ -110,15 +115,15 @@ const validate = () => {
   if (props.releaseType === 'exclude' && groupRef.value.selectedGroup.length === 0) {
     Message({
       theme: 'error',
-      message: '请至少选择一个排除分组实例'
-    })
+      message: t('请至少选择一个排除分组实例'),
+    });
     return false;
   }
   return true;
 };
 
 defineExpose({
-  validate
+  validate,
 });
 </script>
 <style lang="scss" scoped>

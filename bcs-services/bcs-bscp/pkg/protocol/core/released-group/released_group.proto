@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pbrg;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-group;pbrg";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-group;pbrg";
 
 // ReleasedGroup source resource reference: pkg/dal/table/released_group.go
 message ReleasedGroup {

@@ -1,7 +1,7 @@
 <template>
   <bk-dialog
     ext-cls="create-version-confirm-dialog"
-    title="确认更新配置文件版本？"
+    :title="t('确认更新配置文件版本？')"
     header-align="center"
     footer-align="center"
     :width="400"
@@ -10,12 +10,12 @@
     :quick-close="false"
     @closed="close"
   >
-    <p class="tips">以下套餐及服务未命名版本中引用的此配置文件也将更新</p>
+    <p class="tips">{{ t('以下套餐及服务未命名版本中引用的此配置文件也将更新') }}</p>
     <div class="service-table">
       <bk-loading style="min-height: 100px" :loading="loading">
       <bk-table :data="citedList" :max-height="maxTableHeight">
-        <bk-table-column label="所在套餐" prop="template_set_name"></bk-table-column>
-        <bk-table-column label="引用此模板的服务">
+        <bk-table-column :label="t('所在套餐')" prop="template_set_name"></bk-table-column>
+        <bk-table-column :label="t('引用此模板的服务')">
           <template #default="{ row }">
             <div v-if="row.app_id" class="app-info" @click="goToConfigPageImport(row.app_id)">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
@@ -28,14 +28,15 @@
     </div>
     <template #footer>
       <div class="actions-wrapper">
-        <bk-button theme="primary" :loading="pending" @click="emits('confirm')">确定</bk-button>
-        <bk-button @click="close">取消</bk-button>
+        <bk-button theme="primary" :loading="pending" @click="emits('confirm')">{{ t('确定') }}</bk-button>
+        <bk-button @click="close">{{ t('取消') }}</bk-button>
       </div>
     </template>
   </bk-dialog>
 </template>
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { IPackagesCitedByApps } from '../../../../../../types/template';
@@ -44,6 +45,7 @@ import LinkToApp from '../../list/components/link-to-app.vue';
 import useTemplateStore from '../../../../../store/template';
 
 const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;

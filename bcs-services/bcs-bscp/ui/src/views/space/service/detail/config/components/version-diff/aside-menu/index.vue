@@ -8,6 +8,7 @@
         :un-named-version-variables="props.unNamedVersionVariables"
         :selected-config="props.selectedConfig"
         :actived="selectedType === 'config'"
+        :is-publish="props.isPublish"
         @selected="handleSelect($event, 'config')"
       />
       <ConfigsKv
@@ -16,6 +17,7 @@
         :current-version-id="props.currentVersionId"
         :selected-config="props.selectedConfigKv"
         :actived="selectedType === 'config'"
+        :is-publish="props.isPublish"
         @selected="handleSelect($event, 'config')"
       />
     </div>
@@ -49,6 +51,7 @@ const props = defineProps<{
   unNamedVersionVariables?: IVariableEditParams[];
   selectedConfig?: IConfigDiffSelected;
   selectedConfigKv?: number;
+  isPublish: boolean
 }>();
 
 const emits = defineEmits(['selected']);

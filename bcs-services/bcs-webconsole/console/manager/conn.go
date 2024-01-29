@@ -334,10 +334,11 @@ func helloMessage(c *gin.Context, source string) string {
 	var messages []string
 
 	if source == "mgr" {
-		guideMsg = []string{i18n.GetMessage(c, "mgrGuideMessage")}
+		guideMsg = []string{i18n.T(c,
+			"支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab")}
 		guideMsg = append(guideMsg, config.G.WebConsole.GuideDocLinks...)
 	} else {
-		guideMsg = []string{i18n.GetMessage(c, "guideMessage")}
+		guideMsg = []string{i18n.T(c, "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替")}
 		guideMsg = append(guideMsg, config.G.WebConsole.GuideDocLinks...)
 	}
 

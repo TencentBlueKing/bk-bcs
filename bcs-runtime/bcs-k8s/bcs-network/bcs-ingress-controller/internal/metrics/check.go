@@ -32,9 +32,17 @@ var (
 		Name:      "total",
 		Help:      "The total portBinding managed by controller",
 	}, []string{"status"})
+
+	PortBindingConflictGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "bkbcs_ingressctrl",
+		Subsystem: "portbinding",
+		Name:      "conflict",
+		Help:      "The conflict portbinding gauge",
+	}, []string{"conflict_key"})
 )
 
 func init() {
 	metrics.Registry.MustRegister(ListenerTotal)
 	metrics.Registry.MustRegister(PortBindingTotal)
+	metrics.Registry.MustRegister(PortBindingConflictGauge)
 }

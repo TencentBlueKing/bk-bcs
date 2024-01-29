@@ -248,6 +248,7 @@ func (sjr *SyncJobResult) updateClusterResultStatus(isSuccess bool) error {
 	cluster.Status = sjr.Status.Failure
 	if isSuccess {
 		cluster.Status = sjr.Status.Success
+		cluster.Message = ""
 	}
 
 	err = GetStorageModel().UpdateCluster(context.Background(), cluster)

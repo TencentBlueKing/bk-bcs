@@ -71,6 +71,16 @@ type DashBoardEnhance struct {
 	IgnoreChange bool `json:"ignoreChange,omitempty" yaml:"ignoreChange,omitempty"`
 }
 
+// RepoRef 允许用户自定义场景仓库
+type RepoRef struct {
+	URL            string `json:"url" yaml:"url"`
+	TargetRevision string `json:"targetRevision,omitempty" yaml:"targetRevision,omitempty"`
+
+	// no used
+	UserName string `json:"userName,omitempty" yaml:"userName,omitempty"`
+	Password string `json:"password,omitempty" yaml:"password,omitempty"`
+}
+
 // AppMonitorSpec defines the desired state of AppMonitor
 type AppMonitorSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -83,6 +93,8 @@ type AppMonitorSpec struct {
 	// 是否覆盖同名配置，默认为false
 	Override bool `json:"override,omitempty" yaml:"override,omitempty"`
 
+	// if set, import Repo from argo
+	RepoRef            *RepoRef            `json:"repoRef,omitempty" yaml:"repoRef,omitempty"`
 	Labels             map[string]string   `json:"labels,omitempty" yaml:"labels,omitempty"`
 	RuleEnhance        *RuleEnhance        `json:"ruleEnhance,omitempty" yaml:"ruleEnhance,omitempty"`
 	NoticeGroupEnhance *NoticeGroupEnhance `json:"noticeGroupEnhance,omitempty" yaml:"noticeGroupEnhance,omitempty"`

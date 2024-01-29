@@ -15,7 +15,7 @@ package table
 import (
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
 )
 
 // AuditColumns defines all the audit table's columns.

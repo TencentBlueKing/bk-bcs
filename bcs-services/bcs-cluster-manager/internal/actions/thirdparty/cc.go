@@ -65,15 +65,17 @@ func (la *ListCCTopologyAction) filterInter() bool {
 }
 
 func (la *ListCCTopologyAction) listTopology() error {
+	var bizID = ""
 	cluster, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
-	if err != nil {
-		blog.Errorf("GetBizInternalModule get cluster failed, err: %s", err.Error())
-		return fmt.Errorf("get cluster failed, err: %s", err.Error())
-	}
-	bizID := cluster.BusinessID
-	if len(la.req.BizID) > 0 {
+	if err == nil {
+		bizID = cluster.BusinessID
+	} else {
 		bizID = la.req.BizID
 	}
+	if len(bizID) == 0 {
+		return fmt.Errorf("invalid bizID %s", bizID)
+	}
+
 	bkBizID, err := strconv.Atoi(bizID)
 	if err != nil {
 		blog.Errorf("GetBizInternalModule get cluster bkBizID failed, err: %s", err.Error())

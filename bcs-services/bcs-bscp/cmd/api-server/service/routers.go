@@ -18,9 +18,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest/view"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/audit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest/view"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
 )
 
 // routers return router config handler
@@ -32,6 +33,7 @@ func (p *proxy) routers() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(handler.CORS)
+	r.Use(audit.Audit)
 	// r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Get("/-/healthy", p.HealthyHandler)
@@ -158,6 +160,25 @@ func (p *proxy) routers() http.Handler {
 		r.Use(p.authorizer.BizVerified)
 		r.Use(p.HttpServerHandledTotal("", "ConfigFileImport"))
 		r.Post("/", p.configImportService.ConfigFileImport)
+	})
+
+	// 获取通知中心通知列表
+	r.Route("/api/v1/announcements", func(r chi.Router) {
+		r.Get("/", p.bkNotice.GetCurrentAnnouncements)
+	})
+
+	// 导入kv
+	r.Route("/api/v1/biz/{biz_id}/apps/{app_id}/kvs/import", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Post("/", p.kvService.Import)
+	})
+
+	// 导出版本kv
+	r.Route("/api/v1/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs/export", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Get("/", p.kvService.Export)
 	})
 
 	return r

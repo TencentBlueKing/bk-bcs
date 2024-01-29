@@ -1,5 +1,5 @@
 <template>
-  <section :class="['version-layout-container', { 'without-footer': !showFooter }]">
+  <section :class="['version-layout-container', { 'show-notice': showNotice, 'without-footer': !showFooter }]">
     <section class="layout-header">
       <slot name="header"></slot>
     </section>
@@ -12,6 +12,11 @@
   </section>
 </template>
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
+import useGlobalStore from '../../../../../../store/global';
+
+const { showNotice } = storeToRefs(useGlobalStore());
+
 withDefaults(
   defineProps<{
     showFooter?: boolean;
@@ -31,6 +36,13 @@ withDefaults(
   height: calc(100vh - 52px);
   background: #ffffff;
   z-index: 2000;
+  &.show-notice {
+    top: 92px;
+    height: calc(100vh - 92px);
+    &.without-footer {
+      height: calc(100vh - 88px);
+    }
+  }
   &.without-footer {
     .layout-content {
       height: calc(100% - 48px);

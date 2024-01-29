@@ -34,8 +34,9 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 
+	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
@@ -159,8 +160,8 @@ func (plugin *AppPlugin) buildApplicationByDifOrDryRunRequest(ctx context.Contex
 	if req.ApplicationName != "" {
 		var statusCode int
 		var err error
-		application, statusCode, err = plugin.middleware.
-			CheckApplicationPermission(ctx, req.ApplicationName, iam.ProjectView)
+		application, statusCode, err = plugin.middleware.CheckApplicationPermission(ctx, req.ApplicationName,
+			iamnamespace.NameSpaceScopedView)
 		if statusCode != http.StatusOK {
 			return nil, errors.Wrapf(err, "check application permission failed")
 		}

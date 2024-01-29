@@ -96,7 +96,7 @@ func (p ClusterProvider) FetchInstanceInfo(req resource.Request) resource.Respon
 		if !ok {
 			continue
 		}
-		results = append(results, Instance{cls.ClusterID, combineNameID(cls.ClusterID, cls.ClusterName),
+		results = append(results, Instance{cls.ClusterID, combineNameID(cls.ClusterName, cls.ClusterID),
 			[]string{cls.Creator, cls.Updater}})
 	}
 	return resource.Response{

@@ -26,8 +26,18 @@ import (
 // Project BCS 项目
 type Project struct {
 	ID   string `json:"projectID"`
-	Name string `json:"name"`
 	Code string `json:"projectCode"`
+}
+
+// Namespace BCS 命名空间
+type Namespace struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+}
+
+// IsActive 判断命名空间是否为激活状态
+func (n Namespace) IsActive() bool {
+	return n.Status == "Active"
 }
 
 // GetProjectInfo 获取项目信息（bcsProject）
@@ -36,6 +46,11 @@ func GetProjectInfo(ctx context.Context, projectID string) (*Project, error) {
 		return fetchMockProjectInfo(projectID)
 	}
 	return projMgrCli.fetchProjInfoWithCache(ctx, projectID)
+}
+
+// GetProjectNamespace 获取项目命名空间（bcsProjectNamespace）
+func GetProjectNamespace(ctx context.Context, projectID, clusterID string) ([]Namespace, error) {
+	return projMgrCli.fetchSharedClusterProjNsWitchCache(ctx, projectID, clusterID)
 }
 
 // FromContext 通过 Context 获取项目信息

@@ -1,6 +1,6 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div>
+  <div class="create-k8s-cluster">
     <Header :title="$t('cluster.button.addCluster')" :desc="$t('cluster.tips.createK8SCluster')" />
     <div class="pt-[8px] bg-[#f0f1f5]">
       <bcs-tab
@@ -339,7 +339,7 @@
           </bk-form>
         </bcs-tab-panel>
       </bcs-tab>
-      <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] absolute bottom-0 w-full bcs-border-top">
+      <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] absolute bottom-0 w-full bcs-border-top" ref="footerRef">
         <bk-button v-if="activeTabName !== steps[0].name" @click="preStep">{{ $t('generic.button.pre') }}</bk-button>
         <bk-button
           theme="primary"
@@ -373,9 +373,19 @@ import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import DescList from '@/components/desc-list.vue';
 import Header from '@/components/layout/Header.vue';
 import { useProject } from '@/composables/use-app';
+import useCalcHeight from '@/composables/use-calc-height';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
+
+// 设置内容高度
+const footerRef = ref();
+useCalcHeight({
+  prop: 'height',
+  offset: 8, // 顶部波边距
+  el: '.create-k8s-cluster .bk-tab-section',
+  calc: ['#bcs-notice-com', '.content-header', '.create-k8s-cluster .bk-tab-header', '.bk-navigation-header', footerRef],
+});
 
 const $cloudId = 'bluekingCloud';
 const steps = ref([
@@ -785,8 +795,7 @@ onMounted(() => {
 >>> .bk-tab-header {
   padding: 0 8px;
 }
->>> .bk-tab-content {
-  height: calc(100vh - 224px);
+>>> .bk-tab-section {
   overflow: auto;
 }
 

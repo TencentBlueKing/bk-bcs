@@ -8,7 +8,7 @@
       :disabled="props.permCheckLoading"
       @click="handleBtnClick"
     >
-      调整分组上线
+      {{ t('调整分组上线') }}
     </bk-button>
     <Teleport to="body">
       <VersionLayout v-if="isSelectGroupPanelOpen">
@@ -19,7 +19,7 @@
               <span class="service-name">{{ appData.spec.name }}</span>
             </span>
             <AngleRight class="arrow-right" />
-            调整分组上线：{{ versionData.spec.name }}
+            {{ t('调整分组上线') }}：{{ versionData.spec.name }}
           </section>
         </template>
         <select-group
@@ -27,7 +27,8 @@
           :release-type="releaseType"
           :groups="groups"
           :version-status="versionData.status.publish_status"
-          :disabled="currentSelectedGroups"
+          :release-id="versionData.id"
+          :released-groups="releasedGroups"
           @open-preview-version-diff="openPreviewVersionDiff"
           @release-type-change="releaseType = $event"
           @change="groups = $event"
@@ -36,7 +37,7 @@
         <template #footer>
           <section class="actions-wrapper">
             <bk-button class="publish-btn" theme="primary" @click="handleDiffOrPublish">{{
-              versionList.length ? '对比并上线' : '上线版本'
+              versionList.length ? t('对比并上线') : t('上线版本')
             }}</bk-button>
             <bk-button @click="handlePanelClose">取消</bk-button>
           </section>
@@ -64,8 +65,9 @@
 </template>
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
-import InfoBox from 'bkui-vue/lib/info-box';
+import { InfoBox } from 'bkui-vue';
 import BkMessage from 'bkui-vue/lib/message';
 import { storeToRefs } from 'pinia';
 import useGlobalStore from '../../../../../store/global';
@@ -76,7 +78,7 @@ import VersionLayout from '../config/components/version-layout.vue';
 import ConfirmDialog from './publish-version/confirm-dialog.vue';
 import SelectGroup from './publish-version/select-group/index.vue';
 import VersionDiff from '../config/components/version-diff/index.vue';
-import { useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { getConfigVersionList } from '../../../../../api/config';
 import { IConfigVersion } from '../../../../../../types/config';
 
@@ -84,7 +86,8 @@ const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 const serviceStore = useServiceStore();
 const versionStore = useConfigStore();
 const { appData } = storeToRefs(serviceStore);
-const { versionData } = storeToRefs(versionStore);
+const { versionData, publishedVersionId } = storeToRefs(versionStore);
+const { t } = useI18n();
 
 const props = defineProps<{
   bkBizId: string;
@@ -95,9 +98,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['confirm']);
 
-const route = useRoute();
-const bkBizId = String(route.params.spaceId);
-const appId = Number(route.params.appId);
+const router = useRouter();
 const versionList = ref<IConfigVersion[]>([]);
 const isSelectGroupPanelOpen = ref(false);
 const isDiffSliderShow = ref(false);
@@ -107,7 +108,9 @@ const groups = ref<IGroupToPublish[]>([]);
 const baseVersionId = ref(0);
 const selectGroupRef = ref();
 
-const currentSelectedGroups = computed(() => versionData.value.status.released_groups.map(group => group.id));
+
+// 已上线分组
+const releasedGroups = computed(() => versionData.value.status.released_groups.map(group => group.id));
 
 const permissionQueryResource = computed(() => [
   {
@@ -124,6 +127,7 @@ const permissionQueryResource = computed(() => [
 const handleDiffOrPublish = () => {
   if (selectGroupRef.value.validate()) {
     if (versionList.value.length) {
+      baseVersionId.value = versionList.value[0].id;
       isDiffSliderShow.value = true;
       return;
     }
@@ -134,7 +138,7 @@ const handleDiffOrPublish = () => {
 // 获取所有对比基准版本
 const getVersionList = async () => {
   try {
-    const res = await getConfigVersionList(bkBizId, appId, { start: 0, all: true });
+    const res = await getConfigVersionList(props.bkBizId, props.appId, { start: 0, all: true });
     versionList.value = res.data.details.filter((item: IConfigVersion) => item.id !== versionData.value.id && item.status.publish_status === 'partial_released');
   } catch (e) {
     console.error(e);
@@ -185,16 +189,31 @@ const openPreviewVersionDiff = (id: number) => {
 };
 
 // 上线确认
-const handleConfirm = () => {
+const handleConfirm = (haveCredentials: boolean) => {
+  console.log(haveCredentials);
   isDiffSliderShow.value = false;
+  publishedVersionId.value = versionData.value.id;
   handlePanelClose();
   emit('confirm');
-  InfoBox({
-    // @ts-ignore
-    infoType: 'success',
-    title: '调整分组上线成功',
-    dialogType: 'confirm',
-  });
+  if (haveCredentials) {
+    InfoBox({
+      infoType: 'success',
+      'ext-cls': 'info-box-style',
+      title: t('调整分组上线成功'),
+      dialogType: 'confirm',
+    });
+  } else {
+    InfoBox({
+      infoType: 'success',
+      'ext-cls': 'info-box-style',
+      title: t('调整分组上线成功'),
+      confirmText: t('新增服务密钥'),
+      cancelText: t('稍后再说'),
+      onConfirm: () => {
+        router.push({ name: 'credentials-management' });
+      },
+    });
+  }
 };
 
 // 关闭选择分组面板

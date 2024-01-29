@@ -1,47 +1,58 @@
-import { Message } from 'bkui-vue';
 import yaml from 'js-yaml';
+import * as monaco from 'monaco-editor';
 
+// 校验xml返回错误行和错误信息
 export const validateXML = (xmlString: string) => {
-  // 创建一个新的DOMParser实例
   const parser = new DOMParser();
-  // 解析XML字符串
   const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
-  // 检查解析是否出错
-  const parseError = xmlDoc.getElementsByTagName('parsererror');
-  // 如果有错误，返回错误信息
-  if (parseError.length > 0) {
-    Message({
-      message: 'xml格式错误',
-      theme: 'error',
-    });
-    return false; // XML不合法
+  const parserErrors = xmlDoc.getElementsByTagName('parsererror');
+  const markers = [];
+  if (parserErrors.length > 0) {
+    const error = parserErrors[0];
+    const errorMsg = error.textContent!.trim();
+    const match = errorMsg.match(/error on line (\d+) at column (\d+): (.*)/);
+    if (match) {
+      const lineNumber = parseInt(match[1], 10) - 1;
+      const columnNumber = parseInt(match[2], 10);
+      const errorMessage = match[3].trim();
+      markers.push({
+        severity: monaco.MarkerSeverity.Error,
+        message: errorMessage,
+        startLineNumber: lineNumber,
+        startColumn: columnNumber,
+        endLineNumber: lineNumber,
+        endColumn: columnNumber,
+      });
+    }
   }
-  return true; // XML合法
+  return markers;
 };
 
+// 校验json 编辑器自带校验错误行和错误信息 只需返回是否正确
 export const validateJSON = (jsonString: string) => {
   try {
     // 尝试解析JSON文本
     JSON.parse(jsonString);
     return true;
   } catch (e) {
-    Message({
-      message: 'json格式错误',
-      theme: 'error',
-    });
     return false;
   }
 };
 
+// 校验yaml返回错误行和错误信息
 export const validateYAML = (yamlString: string) => {
+  const markers = [];
   try {
     yaml.load(yamlString, 'utf8');
-    return true; // YAML合法
-  } catch (error) {
-    Message({
-      message: 'yaml格式错误',
-      theme: 'error',
+  } catch (e: any) {
+    markers.push({
+      severity: monaco.MarkerSeverity.Error,
+      message: e.reason,
+      startLineNumber: e.mark.line,
+      startColumn: e.mark.column,
+      endLineNumber: e.mark.line,
+      endColumn: e.mark.column,
     });
-    return false; // YAML不合法
   }
+  return markers;
 };

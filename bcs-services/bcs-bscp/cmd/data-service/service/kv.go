@@ -20,13 +20,14 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateKv is used to create key-value data.
@@ -152,6 +153,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		Sort:  req.Sort,
 		Order: types.Order(req.Order),
 	}
+	topIds, _ := tools.StrToUint32Slice(req.TopIds)
 	opt := &types.ListKvOption{
 		BizID:     req.BizId,
 		AppID:     req.AppId,
@@ -160,6 +162,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		All:       req.All,
 		Page:      page,
 		KvType:    req.KvType,
+		TopIDs:    topIds,
 	}
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,
@@ -231,12 +234,20 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbds.DeleteKvReq) (*pbbase.
 }
 
 // BatchUpsertKvs is used to insert or update key-value data in bulk.
-func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsReq) (*pbbase.EmptyResp, error) {
+func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsReq) (*pbds.BatchUpsertKvsResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
 
+	app, err := s.dao.App().Get(kt, req.BizId, req.AppId)
+	if err != nil {
+		return nil, fmt.Errorf("get app fail,err : %v", err)
+	}
+
 	var editingKeyArr []string
 	for _, kv := range req.Kvs {
+		if !checkKVTypeMatch(table.DataType(kv.KvSpec.KvType), app.Spec.DataType) {
+			return nil, fmt.Errorf("kv type does not match the data type defined in the application")
+		}
 		editingKeyArr = append(editingKeyArr, kv.KvSpec.Key)
 	}
 	kvStateArr := []string{
@@ -295,8 +306,18 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
 		return nil, e
 	}
-
-	return new(pbbase.EmptyResp), nil
+	createId := []uint32{}
+	updateId := []uint32{}
+	for _, item := range toCreate {
+		createId = append(createId, item.ID)
+	}
+	for _, item := range toUpdate {
+		updateId = append(updateId, item.ID)
+	}
+	mergedID := append(createId, updateId...) // nolint
+	return &pbds.BatchUpsertKvsResp{
+		Ids: mergedID,
+	}, nil
 }
 
 func (s *Service) getKv(kt *kit.Kit, bizID, appID, version uint32, key string) (table.DataType, string, error) {
@@ -366,10 +387,12 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 				editing.KvState = table.KvStateRevise
 			}
 			toUpdate = append(toUpdate, &table.Kv{
-				ID: editing.ID,
+				ID:      editing.ID,
+				KvState: editing.KvState,
 				Spec: &table.KvSpec{
 					Key:     kv.KvSpec.Key,
 					Version: uint32(version),
+					KvType:  editing.Spec.KvType,
 				},
 				Attachment: &table.KvAttachment{
 					BizID: req.BizId,

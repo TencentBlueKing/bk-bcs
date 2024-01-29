@@ -173,7 +173,7 @@ func QueryByPromQLRaw(ctx context.Context, rawURL, bkBizID string, start, end, s
 		return nil, err
 	}
 
-	resp, err := component.GetClient().R().
+	resp, err := component.GetNoTraceClient().R().
 		SetContext(ctx).
 		SetBody(body).
 		SetHeader("X-Bkapi-Authorization", authInfo).

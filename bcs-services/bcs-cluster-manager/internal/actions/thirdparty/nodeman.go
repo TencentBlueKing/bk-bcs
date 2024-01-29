@@ -51,7 +51,7 @@ func (la *ListBKCloudAction) setResp(code uint32, msg string) {
 
 func (la *ListBKCloudAction) listBKCloud() error {
 	cli := nodeman.GetNodeManClient()
-	clouds, err := cli.CloudList()
+	clouds, err := cli.CloudList(la.ctx)
 	if err != nil {
 		blog.Errorf("list bk cloud failed, err %s", err.Error())
 		return err

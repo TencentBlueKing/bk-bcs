@@ -25,3 +25,9 @@ var defaultArgs = []string{"--wait=true", "--create-namespace=true"}
 const (
 	releaseDefaultTimeout = time.Hour
 )
+
+// 某些组件不需要真实安装，直接返回安装成功，因此 chart 为空
+// db-privilege 组件不需要真实安装
+func isFakeChart(chart string) bool {
+	return chart == "" || chart == "db-privilege"
+}

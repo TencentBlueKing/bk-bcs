@@ -20,6 +20,7 @@
               :default-values="defaultValues"
               :is-edit="isEdit"
               :cluster="cluster"
+              :data="data"
               ref="basicInfoRef">
             </BasicPoolInfo>
           </FormGroup>
@@ -195,6 +196,10 @@ export default defineComponent({
     saveLoading: {
       type: Boolean,
       default: false,
+    },
+    data: {
+      type: Object,
+      default: () => ({}),
     },
   },
   setup(props, ctx) {

@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrtree"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -55,7 +56,7 @@ func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]
 	}
 	result := make([]*proto.CloudVpc, 0)
 	for _, v := range vpcs {
-		result = append(result, &proto.CloudVpc{
+		cloudVpc := &proto.CloudVpc{
 			Name:     utils.StringPtrToString(v.VpcName),
 			VpcId:    utils.StringPtrToString(v.VpcId),
 			Ipv4Cidr: utils.StringPtrToString(v.CidrBlock),
@@ -72,7 +73,25 @@ func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]
 
 				return cidrs
 			}(),
-		})
+		}
+		result = append(result, cloudVpc)
+
+		// get ip number
+		freeIPNets, err := business.GetFreeIPNets(opt, vpcID)
+		if err != nil {
+			blog.Errorf("vpc[%s] GetFreeIPNets failed: %v", err)
+			continue
+		}
+		var ipCnt uint32
+		for i := range freeIPNets {
+			ipNum, err := cidrtree.GetIPNum(freeIPNets[i])
+			if err != nil {
+				blog.Errorf("vpc[%s] GetIPNum failed: %v", err)
+				continue
+			}
+			ipCnt += ipNum
+		}
+		cloudVpc.AllocateIpNum = ipCnt
 	}
 	return result, nil
 }
