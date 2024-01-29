@@ -17,7 +17,7 @@
           :app-id="props.appId"
           :verision-id="versionData.id" />
       </div>
-      <SearchInput v-model="searchStr" class="config-search-input" :placeholder="t('配置文件名/创建人/修改人')" />
+      <SearchInput v-model="searchStr" class="config-search-input" :width="280" :placeholder="t('配置文件名/创建人/修改人')" />
     </div>
     <section class="config-list-table">
       <template v-if="isFileType">

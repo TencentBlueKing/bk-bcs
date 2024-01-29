@@ -157,8 +157,6 @@
         cursor: pointer;
       }
     }
-  <<<<<<< HEAD
-  }
   .file-uploader {
     :deep(.bk-upload-list__item) {
       display: none;
@@ -226,8 +224,6 @@
       background-color: #ff5656;
     }
   }
-  =======
-  >>>>>>> e811fe496ff96ae64e39c6dab32f538a28ea5a38
 </style>
 
 <style lang="scss">

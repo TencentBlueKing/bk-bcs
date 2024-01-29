@@ -468,8 +468,8 @@ export const getReleaseKvList = (bizId: string, appId: number, releaseId: number
  * @param kv 配置键值类型
  * @returns
  */
-export const undeleteKv = (bizId: string, appId: number, key: string) => http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undelete`);
-
+export const undeleteKv = (bizId: string, appId: number, key: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undelete`);
 
 /**
  * 批量导入kv配置文件
@@ -478,4 +478,5 @@ export const undeleteKv = (bizId: string, appId: number, key: string) => http.po
  * @param File 配置文件
  * @returns
  */
-export const batchImportKvFile = (bizId: string, appId: number, File: any) => http.post(`biz/${bizId}/apps/${appId}/kvs/import`, File);
+export const batchImportKvFile = (bizId: string, appId: number, File: any) =>
+  http.post(`biz/${bizId}/apps/${appId}/kvs/import`, File);
