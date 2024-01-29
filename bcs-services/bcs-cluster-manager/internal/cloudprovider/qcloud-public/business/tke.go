@@ -166,7 +166,7 @@ func DeleteClusterExternalNodes(
 // RemoveNodesFromCluster remove nodes from cluster
 func RemoveNodesFromCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	deleteMode string, nodeIDs []string) ([]string, error) {
-	taskID,stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	// filter exist instanceIDs
 	existInClusterNodes, _, err := FilterClusterInstanceFromNodesIDs(ctx, info, nodeIDs)
@@ -929,13 +929,8 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 // CheckClusterAllInstanceStatus 检测集群所有节点状态
 func CheckClusterAllInstanceStatus(ctx context.Context,
-<<<<<<< HEAD
-	info *cloudprovider.CloudDependBasicInfo) ([]string, []string, error) {
-	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
-=======
 	info *cloudprovider.CloudDependBasicInfo) ([]InstanceInfo, []InstanceInfo, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
->>>>>>> master
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	var (
 		addSuccessNodes = make([]InstanceInfo, 0)
