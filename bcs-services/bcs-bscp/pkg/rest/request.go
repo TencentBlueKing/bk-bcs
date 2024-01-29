@@ -306,6 +306,42 @@ func (r *Request) tryThrottle(url string) {
 	}
 }
 
+func toCurlCommand(req *http.Request, body []byte) string {
+	var command []string
+	command = append(command, "curl")
+	command = append(command, fmt.Sprintf("'%s'", req.URL))
+	command = append(command, fmt.Sprintf("-X %s", req.Method))
+
+	for header, values := range req.Header {
+		for _, value := range values {
+			command = append(command, fmt.Sprintf("-H '%s: %s'", header, value))
+		}
+	}
+
+	if len(body) > 0 {
+		command = append(command, fmt.Sprintf("-d '%s'", strings.Replace(string(body), "'", "'\"'\"'", -1)))
+	}
+
+	return strings.Join(command, " ")
+}
+
+func toCurlResponse(resp *http.Response, body []byte) string {
+	var responseHeaders []string
+	for header, values := range resp.Header {
+		for _, value := range values {
+			responseHeaders = append(responseHeaders, fmt.Sprintf("%s: %s", header, value))
+		}
+	}
+	responseHeaderStr := strings.Join(responseHeaders, "\n")
+
+	return fmt.Sprintf("HTTP/1.1 %d %s\n%s\n\n%s",
+		resp.StatusCode,
+		http.StatusText(resp.StatusCode),
+		responseHeaderStr,
+		string(body),
+	)
+}
+
 // Do http request do.
 //
 //nolint:funlen
@@ -363,6 +399,8 @@ func (r *Request) Do() *Result {
 				r.tryThrottle(urlString)
 			}
 
+			logs.V(4).Info(toCurlCommand(req, r.body))
+
 			start := time.Now()
 			resp, err := client.Do(req)
 
@@ -382,6 +420,11 @@ func (r *Request) Do() *Result {
 				time.Sleep(20 * time.Millisecond)
 				continue
 			}
+
+			respBody, _ := io.ReadAll(resp.Body)
+			logs.V(4).Info(toCurlResponse(resp, respBody))
+
+			resp.Body = io.NopCloser(bytes.NewBuffer(respBody))
 
 			// collect request metrics
 			if r.client.requestDuration != nil {
@@ -413,11 +456,6 @@ func (r *Request) Do() *Result {
 					return result
 				}
 				body = data
-			}
-
-			if logs.V(4) {
-				logs.Infof("http request cost: %dms, %s %s with body %s, response status: %s, response body: %s, rid: "+
-					"%s", time.Since(start)/time.Millisecond, string(r.verb), urlString, r.body, resp.Status, body, rid)
 			}
 
 			result.Body = body
