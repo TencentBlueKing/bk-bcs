@@ -13,6 +13,7 @@
 package service
 
 import (
+	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -25,6 +26,7 @@ import (
 	"github.com/xuri/excelize/v2"
 	"gopkg.in/yaml.v3"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
@@ -64,7 +66,14 @@ func (ye *YAMLExporter) Export() ([]byte, error) {
 
 // Export method implements the Exporter interface, exporting data as a byte slice in JSON format.
 func (je *JSONExporter) Export() ([]byte, error) {
-	return json.Marshal(je.OutData)
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(je.OutData)
+	if err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
 }
 
 // Export method implements the Exporter interface, exporting data as a byte slice in XLSX format.
@@ -147,7 +156,6 @@ func (m *kvService) Export(w http.ResponseWriter, r *http.Request) {
 		logs.Errorf("export kv fail, err: %v", err)
 		_ = render.Render(w, r, rest.BadRequest(err))
 	}
-
 	_, err = w.Write(content)
 	if err != nil {
 		logs.Errorf("Error writing response:", err)
@@ -166,9 +174,18 @@ type RkvOutData struct {
 func rkvsToOutData(rkvs []*pbrkv.ReleasedKv) map[string]interface{} {
 	d := map[string]interface{}{}
 	for _, rkv := range rkvs {
+		var value interface{}
+		value = rkv.Spec.Value
+		switch rkv.Spec.KvType {
+		case string(table.KvNumber):
+			i, _ := strconv.Atoi(rkv.Spec.Value)
+			value = i
+		case string(table.KvJson):
+			_ = json.Unmarshal([]byte(rkv.Spec.Value), &value)
+		}
 		d[rkv.Spec.Key] = map[string]interface{}{
 			"kv_type": rkv.Spec.KvType,
-			"value":   rkv.Spec.Value,
+			"value":   value,
 		}
 	}
 
