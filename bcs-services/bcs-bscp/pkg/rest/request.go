@@ -319,7 +319,7 @@ func toCurlCommand(req *http.Request, body []byte) string {
 	}
 
 	if len(body) > 0 {
-		command = append(command, fmt.Sprintf("-d '%s'", strings.Replace(string(body), "'", "'\"'\"'", -1)))
+		command = append(command, fmt.Sprintf("-d '%s'", strings.ReplaceAll(string(body), "'", "'\"'\"'")))
 	}
 
 	return strings.Join(command, " ")
