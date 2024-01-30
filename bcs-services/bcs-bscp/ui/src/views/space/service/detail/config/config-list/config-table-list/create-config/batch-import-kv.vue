@@ -27,7 +27,7 @@
           <template #tip>
             <div class="upload-tips">
               <span>{{ t('支持 JSON、YAML 等类型文件，后台会自动检测文件类型，配置项格式请参照') }}</span>
-              <a class="sample" :href="downloadHref" download="SamplePkg.zip">{{ t('示例文件包') }}</a>
+              <a class="sample" :href="downloadHref" download="bscp_kv_demo.zip">{{ t('示例文件包') }}</a>
             </div>
           </template>
         </bk-upload>
