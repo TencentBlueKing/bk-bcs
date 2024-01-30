@@ -21,6 +21,7 @@
     "highlight.js": "~11.5.0",
     "js-cookie": "^3.0.1",
     "js-yaml": "^4.1.0",
+    "jszip": "^3.10.1",
     "markdown-it": "^13.0.1",
     "monaco-editor": "^0.34.1",
     "pinia": "^2.0.33",

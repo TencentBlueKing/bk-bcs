@@ -115,7 +115,6 @@
     loading.value = true;
     try {
       const res = await importNonTemplateConfigFile(props.bkBizId, props.appId, option.file);
-      console.log(res);
       existConfigList.value = res.exist;
       nonExistConfigList.value = res.non_exist;
       nonExistConfigList.value.forEach((item: IConfigImportItem) => {
