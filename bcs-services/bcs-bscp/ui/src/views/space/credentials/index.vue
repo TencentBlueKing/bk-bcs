@@ -22,7 +22,7 @@
           <bk-input
             v-model="searchStr"
             class="search-group-input"
-            :placeholder="t('说明/更新人')"
+            :placeholder="t('密钥名称/说明/更新人')"
             :clearable="true"
             @clear="refreshListWithLoading()"
             @input="handleSearchInputChange">

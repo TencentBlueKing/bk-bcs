@@ -16,6 +16,7 @@
             v-model="rule.app"
             class="service-select"
             :filterable="true"
+            :input-search="false"
             :disabled="rule.type === 'del'"
             :placeholder="t('请选择服务')"
             @change="handleSelectApp(index)">
