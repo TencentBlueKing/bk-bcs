@@ -29,7 +29,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
 
 // BuildListAPIResp xxx
@@ -206,24 +205,11 @@ func BuildGetContainerAPIResp(
 	state := mapx.GetMap(curContainerStatus, []string{"state"})
 	for i := range state {
 		if value, ok := state[i].(map[string]interface{}); ok {
-			startedAt, _ = timex.NormalizeDatetime(mapx.GetStr(value, "startedAt"))
+			startedAt = mapx.GetStr(value, "startedAt")
 		}
 	}
-	// 转换时间格式lastState格式，lastState有好几种状态但是是单一的，无法确定key，只能遍历
+	// 获取lastState
 	lastState := mapx.GetMap(curContainerStatus, "lastState")
-	for i := range lastState {
-		if value, ok := lastState[i].(map[string]interface{}); ok {
-			lastStateStartedAt, _ := timex.NormalizeDatetime(mapx.GetStr(value, "startedAt"))
-			lastStateFinishedAt, _ := timex.NormalizeDatetime(mapx.GetStr(value, "finishedAt"))
-			// 有才赋值转换时间格式，没有直接原样返回
-			if lastStateStartedAt != "" {
-				lastState[i].(map[string]interface{})["startedAt"] = lastStateStartedAt
-			}
-			if lastStateFinishedAt != "" {
-				lastState[i].(map[string]interface{})["finishedAt"] = lastStateFinishedAt
-			}
-		}
-	}
 
 	// 各项容器数据组装
 	containerInfo := map[string]interface{}{
@@ -314,8 +300,7 @@ func getContainerStatuses(containerStatus interface{}, containerType string) (co
 		status = k
 		reason, _ = mapx.Get(cs, []string{"state", k, "reason"}, k).(string)
 		message, _ = mapx.Get(cs, []string{"state", k, "message"}, k).(string)
-		startedTime, _ := mapx.Get(cs, []string{"state", k, "startedAt"}, k).(string)
-		startedAt, _ = timex.NormalizeDatetime(startedTime)
+		startedAt, _ = mapx.Get(cs, []string{"state", k, "startedAt"}, k).(string)
 	}
 	containers = append(containers, map[string]interface{}{
 		"containerID":    extractContainerID(mapx.GetStr(cs, "containerID")),
