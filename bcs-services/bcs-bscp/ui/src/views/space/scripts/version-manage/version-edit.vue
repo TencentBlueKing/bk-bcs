@@ -22,10 +22,19 @@
       </template>
     </ScriptEditor>
     <div v-if="props.editable" class="action-btns">
-      <bk-button class="submit-btn" theme="primary" :loading="pending" @click="handleSubmit">
-        {{ props.versionData.id ? t('保存') : t('提交') }}
-      </bk-button>
-      <bk-button class="cancel-btn" @click="emits('close')">{{ t('取消') }}</bk-button>
+      <div v-if="!isEditVersion">
+        <bk-button class="submit-btn" theme="primary" :loading="pending" @click="handleSubmit">
+          {{ t('保存') }}
+        </bk-button>
+        <bk-button class="cancel-btn" @click="emits('close')">{{ t('取消') }}</bk-button>
+      </div>
+      <div v-else>
+        <bk-button class="submit-btn" theme="primary" :loading="pending" @click="handleSubmit">
+          {{ t('上线') }}
+        </bk-button>
+        <bk-button class="edit-btn" @click="emits('close')">{{ t('编辑') }}</bk-button>
+        <bk-button class="cancel-btn" @click="emits('close')">{{ t('删除') }}</bk-button>
+      </div>
     </div>
   </section>
 </template>
@@ -87,8 +96,10 @@
     if (!props.editable) {
       return props.versionData.name;
     }
-    return props.versionData.id ? t('编辑版本') : t('新建版本');
+    return isEditVersion.value ? t('编辑版本') : t('新建版本');
   });
+
+  const isEditVersion = computed(() => !!props.versionData.id);
 
   watch(
     () => props.versionData,
@@ -216,6 +227,10 @@
       background: transparent;
       border-color: #979ba5;
       color: #979ba5;
+    }
+    .edit-btn {
+      @extend .cancel-btn;
+      margin-right: 8px;
     }
   }
 </style>

@@ -28,6 +28,9 @@
               :maxlength="200"
               :resize="true" />
           </bk-form-item>
+          <bk-form-item class="fixed-width-form" :label="t('form_版本号')" required>
+            <bk-input v-model="formData.version" :placeholder="t('请输入')"></bk-input>
+          </bk-form-item>
           <bk-form-item :label="t('脚本内容')" property="content" required>
             <div class="script-content-wrapper">
               <ScriptEditor v-model="showContent" :language="formData.type">
@@ -66,6 +69,7 @@
   import { createScript, getScriptTagList } from '../../../../api/script';
   import DetailLayout from '../components/detail-layout.vue';
   import ScriptEditor from '../components/script-editor.vue';
+  import dayjs from 'dayjs';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t } = useI18n();
@@ -88,6 +92,7 @@
     memo: '',
     type: EScriptType.Shell,
     content: '',
+    version: `v${dayjs().format('YYYYMMDDHHmmss')}`,
   });
   const formDataContent = ref({
     shell: '#!/bin/bash',
