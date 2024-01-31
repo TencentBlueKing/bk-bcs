@@ -21,7 +21,7 @@ import (
 // CommonFormatRes 通用资源格式化
 func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 	rawCreateTime, _ := mapx.GetItems(manifest, "metadata.creationTimestamp")
-	createTime, _ := timex.NormalizeDatetime(rawCreateTime.(string))
+	createTime, _ := rawCreateTime.(string)
 	ret := map[string]interface{}{
 		"namespace":  mapx.GetStr(manifest, []string{"metadata", "namespace"}),
 		"age":        timex.CalcAge(rawCreateTime.(string)),

@@ -83,9 +83,9 @@ export interface IConfigEditParams {
 
 // kv配置文件编辑表单参数
 export interface IConfigKvEditParams {
-  key: string,
-  kv_type: string,
-  value: string,
+  key: string;
+  kv_type: string;
+  value: string;
 }
 
 // 文件配置概览内容

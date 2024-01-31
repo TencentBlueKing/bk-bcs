@@ -1,12 +1,12 @@
 export type IPageFilter = {
-  count: Boolean,
-  start: number,
-  limit: number
-}
+  count: Boolean;
+  start: number;
+  limit: number;
+};
 
 export const enum FilterOp {
   AND = 'and',
-  OR = 'or'
+  OR = 'or',
 }
 
 export const enum RuleOp {
@@ -17,16 +17,16 @@ export const enum RuleOp {
   lt = 'lt',
   lte = 'lte',
   in = 'in',
-  nin = 'nin'
+  nin = 'nin',
 }
 
 export type IRequestFilter = {
-  op: FilterOp,
-  rules: IRequestFilterRule[],
-}
+  op: FilterOp;
+  rules: IRequestFilterRule[];
+};
 
 export type IRequestFilterRule = {
-  field: string,
-  op: RuleOp,
-  value: any
-}
+  field: string;
+  op: RuleOp;
+  value: any;
+};
