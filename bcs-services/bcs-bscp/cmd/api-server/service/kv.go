@@ -101,7 +101,7 @@ func (m *kvService) Import(w http.ResponseWriter, r *http.Request) {
 func handleKv(result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, error) {
 	kvMap := []*pbcs.BatchUpsertKvsReq_Kv{}
 	for key, value := range result {
-		KVType := ""
+		var kVType string
 		entry, ok := value.(map[string]interface{})
 		if !ok {
 			// 判断是不是数值类型
@@ -112,11 +112,11 @@ func handleKv(result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, erro
 					KvType: string(table.KvNumber),
 				})
 			} else {
-				KVType = determineType(value.(string))
+				kVType = determineType(value.(string))
 				kvMap = append(kvMap, &pbcs.BatchUpsertKvsReq_Kv{
 					Key:    key,
 					Value:  fmt.Sprintf("%v", value),
-					KvType: KVType,
+					KvType: kVType,
 				})
 			}
 		} else {

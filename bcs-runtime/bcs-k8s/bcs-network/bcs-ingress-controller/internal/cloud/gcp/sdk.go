@@ -92,6 +92,7 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 		return nil, err
 	}
 
+	// NewTokenBucket create new token bucket ratelimiter
 	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
 	return sw, nil
 }
@@ -100,6 +101,7 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 func NewSdkWrapperWithSecretIDKey(credentials []byte) (*SdkWrapper, error) {
 	sw := &SdkWrapper{}
 	sw.credentials = credentials
+	// NewSdkWrapper create a new gcp sdk wrapper
 	return NewSdkWrapper()
 }
 
@@ -211,6 +213,8 @@ func (sw *SdkWrapper) CreateNetworkEndpointGroups(project, zone, name, network, 
 			"CreateNetworkEndpointGroups", ret, startTime)
 	}
 	sw.tryThrottle()
+	// Insert: Creates a network endpoint group in the specified project
+	// using the parameters that are included in the request.
 	op, err := sw.computeService.NetworkEndpointGroups.Insert(project, zone, &compute.NetworkEndpointGroup{
 		Name:                name,
 		NetworkEndpointType: "GCE_VM_IP_PORT",

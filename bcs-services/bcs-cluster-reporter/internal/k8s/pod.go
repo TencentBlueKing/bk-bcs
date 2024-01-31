@@ -33,14 +33,13 @@ func GetPods(clientSet *kubernetes.Clientset, namespace string, opts v1.ListOpti
 
 	if nameRe == "" {
 		return podList.Items, nil
-	} else {
-		re, _ := regexp.Compile(nameRe)
-		result := make([]corev1.Pod, 0, 0)
-		for _, pod := range podList.Items {
-			if re.MatchString(pod.Name) || strings.Contains(pod.Name, nameRe) {
-				result = append(result, pod)
-			}
-		}
-		return result, nil
 	}
+	re, _ := regexp.Compile(nameRe)
+	result := make([]corev1.Pod, 0, 0)
+	for _, pod := range podList.Items {
+		if re.MatchString(pod.Name) || strings.Contains(pod.Name, nameRe) {
+			result = append(result, pod)
+		}
+	}
+	return result, nil
 }

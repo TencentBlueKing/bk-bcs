@@ -73,7 +73,7 @@ func (s *set) GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType table.Dat
 		return "", "", fmt.Errorf("value type assertion failed, err : %v", err)
 	}
 
-	return
+	return kvType, value, nil
 }
 
 // GetKvByVersion 根据版本获取kv
@@ -100,7 +100,7 @@ func (s *set) GetKvByVersion(kit *kit.Kit, opt *types.GetKvByVersion) (kvType ta
 		return "", "", fmt.Errorf("value type assertion failed: err : %v", err)
 	}
 
-	return
+	return kvType, value, nil
 
 }
 

@@ -124,6 +124,8 @@ func (h *handler) Init() error {
 	attrs := make([]attribute.KeyValue, 0)
 	attrs = append(attrs, attribute.String("bk.data.token", h.option.TraceOption.Token))
 	opts = append(opts, trace.ResourceAttrs(attrs))
+	// InitTracingProvider Initializes an OTLP exporter, and configures the corresponding trace and
+	// metric providers.
 	tracer, err := trace.InitTracingProvider("bcs-gitops-manager", opts...)
 	if err != nil {
 		return errors.Wrapf(err, "init tracer failed")
@@ -151,6 +153,7 @@ func (h *handler) HttpWrapper(handler HttpHandler) http.Handler {
 func (h *handler) CheckMultiProjectsPermission(ctx context.Context, projectIDs []string,
 	actions []string) (map[string]map[string]bool, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
+	// GetMultiProjectMultiActionPerm only support same instanceSelection
 	result, err := h.projectPermission.GetMultiProjectMultiActionPerm(
 		user.GetUser(), projectIDs, actions)
 	if err != nil {
@@ -163,6 +166,7 @@ func (h *handler) CheckMultiProjectsPermission(ctx context.Context, projectIDs [
 func (h *handler) CheckMultiClustersPermission(ctx context.Context, projectID string,
 	clusterIDs []string, actions []string) (map[string]map[string]bool, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
+	// GetMultiClusterMultiActionPerm only support same instanceSelection
 	result, err := h.clusterPermission.GetMultiClusterMultiActionPerm(user.GetUser(), projectID,
 		clusterIDs, actions)
 	if err != nil {
@@ -185,12 +189,14 @@ func (h *handler) CheckProjectPermission(ctx context.Context, projectName string
 	if argoProject == nil {
 		return nil, http.StatusNotFound, errors.Errorf("project '%s' not found", projectName)
 	}
+	// GetBCSProjectID get projectID from annotations
 	projectID := common.GetBCSProjectID(argoProject.Annotations)
 	if projectID == "" {
 		return nil, http.StatusForbidden,
 			errors.Errorf("project '%s' got ID failed, not under control", projectName)
 	}
 	var statusCode int
+	// CheckProjectPermissionByID 检查登录态用户对于项目的权限
 	statusCode, err = h.CheckProjectPermissionByID(ctx, projectName, projectID, action)
 	return argoProject, statusCode, err
 }
@@ -206,9 +212,11 @@ func (h *handler) CheckBusinessPermission(ctx context.Context, bizID string, act
 	}
 
 	for _, proj := range projectList.Items {
+		// GetBCSProjectBusinessKey return the business id of project
 		projectBizID := common.GetBCSProjectBusinessKey(proj.Annotations)
 		if projectBizID == bizID {
-			statusCode, err = h.CheckProjectPermissionByID(ctx, proj.Name,
+			// CheckProjectPermissionByID 检查登录态用户对于项目的权限
+			statusCode, _ = h.CheckProjectPermissionByID(ctx, proj.Name,
 				common.GetBCSProjectID(proj.Annotations), action)
 			// 只要拥有一个project的权限，则允许操作
 			if statusCode == http.StatusOK {
@@ -220,6 +228,7 @@ func (h *handler) CheckBusinessPermission(ctx context.Context, bizID string, act
 }
 
 // CheckNamespaceScopedResourcePermission 检查 NamespaceScopedResource 的权限
+// nolint
 func (h *handler) CheckNamespaceScopedResourcePermission(ctx context.Context, projectName, projectID, clusterID,
 	namespace string, action iam.ActionID) (int, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
@@ -368,18 +377,20 @@ func (h *handler) CheckApplicationPermission(ctx context.Context, appName string
 	// 检查是否具备 ProjectView 权限
 	projectID := common.GetBCSProjectID(app.Annotations)
 	if projectID != "" {
+		// CheckProjectPermissionByID 检查登录态用户对于项目的权限
 		statusCode, err := h.CheckProjectPermissionByID(ctx, app.Spec.Project, projectID, iam.ProjectView)
 		if err != nil {
 			return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", projectID)
 		}
 		return app, http.StatusOK, nil
-	} else {
-		argoProject, statusCode, err := h.CheckProjectPermission(ctx, app.Spec.Project, iam.ProjectView)
-		if err != nil {
-			return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", app.Spec.Project)
-		}
-		projectID = common.GetBCSProjectID(argoProject.Annotations)
 	}
+	argoProject, statusCode, err := h.CheckProjectPermission(ctx, app.Spec.Project, iam.ProjectView)
+	if err != nil {
+		return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", app.Spec.Project)
+	}
+	// GetBCSProjectID get projectID from annotations
+	projectID = common.GetBCSProjectID(argoProject.Annotations)
+
 	// 获取集群信息
 	argoCluster, err := h.option.Storage.GetCluster(ctx, &argocluster.ClusterQuery{
 		Server: app.Spec.Destination.Server,
@@ -393,9 +404,9 @@ func (h *handler) CheckApplicationPermission(ctx context.Context, appName string
 	}
 	// 检查是否具备 NamespaceScopedResource 权限
 	if app.Spec.Destination.Namespace == "" {
-		app.Spec.Destination.Namespace = "default"
+		app.Spec.Destination.Namespace = "default" // nolint
 	}
-	statusCode, err := h.CheckNamespaceScopedResourcePermission(ctx, app.Spec.Project, projectID, argoCluster.Name,
+	statusCode, err = h.CheckNamespaceScopedResourcePermission(ctx, app.Spec.Project, projectID, argoCluster.Name,
 		app.Spec.Destination.Namespace, action)
 	if err != nil {
 		return nil, statusCode,
@@ -407,9 +418,10 @@ func (h *handler) CheckApplicationPermission(ctx context.Context, appName string
 // CheckCreateApplication 检查创建某个应用是否具备权限
 func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Application) (int, error) {
 	projectName := app.Spec.Project
-	if projectName == "" || projectName == "default" {
+	if projectName == "" || projectName == "default" { // nolint
 		return http.StatusBadRequest, errors.Errorf("project information lost")
 	}
+	// CheckProjectPermission 检查登录态用户对于项目的权限
 	argoProject, statusCode, err := h.CheckProjectPermission(ctx, projectName, iam.ProjectView)
 	if statusCode != http.StatusOK {
 		return statusCode, errors.Wrapf(err, "check application '%s' permission failed", projectName)
@@ -458,8 +470,9 @@ func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Appl
 	}
 	// 检查是否具备 NamespaceScopedResource 权限
 	if app.Spec.Destination.Namespace == "" {
-		app.Spec.Destination.Namespace = "default"
+		app.Spec.Destination.Namespace = "default" // nolint
 	}
+	// GetBCSProjectID get projectID from annotations
 	projectID := common.GetBCSProjectID(argoProject.Annotations)
 	statusCode, err = h.CheckNamespaceScopedResourcePermission(ctx, app.Spec.Project, projectID, argoCluster.Name,
 		app.Spec.Destination.Namespace, iamnamespace.NameSpaceScopedCreate)

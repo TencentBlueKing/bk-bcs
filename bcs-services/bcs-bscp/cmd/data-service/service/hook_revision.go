@@ -210,7 +210,7 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 	}
 
 	// 2. 上线脚本版本
-	hr, err := s.dao.HookRevision().Get(kt, req.BizId, req.HookId, req.Id)
+	hookRevision, err := s.dao.HookRevision().Get(kt, req.BizId, req.HookId, req.Id)
 	if err != nil {
 		logs.Errorf("get HookRevision failed, err: %v, rid: %s", err, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
@@ -218,9 +218,9 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 		}
 		return nil, err
 	}
-	hr.Revision.Reviser = kt.User
-	hr.Spec.State = table.HookRevisionStatusDeployed
-	if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, hr); e != nil {
+	hookRevision.Revision.Reviser = kt.User
+	hookRevision.Spec.State = table.HookRevisionStatusDeployed
+	if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, hookRevision); e != nil {
 		logs.Errorf("update HookRevision State failed, err: %v, rid: %s", e, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
@@ -230,7 +230,7 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 
 	// 3. 修改未命名版本绑定的脚本版本为上线版本
 	if e := s.dao.ReleasedHook().UpdateHookRevisionByReleaseIDWithTx(kt, tx,
-		req.BizId, 0, req.HookId, hr); e != nil {
+		req.BizId, 0, req.HookId, hookRevision); e != nil {
 		logs.Errorf("update released hook failed, err: %v, rid: %s", e, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)

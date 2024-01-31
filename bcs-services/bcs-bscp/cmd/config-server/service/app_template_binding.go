@@ -31,6 +31,7 @@ import (
 // CreateAppTemplateBinding create an app template binding
 func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.CreateAppTemplateBindingReq) (
 	*pbcs.CreateAppTemplateBindingResp, error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	// validate input param
@@ -39,6 +40,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
+	// SliceRepeatedElements get the repeated elements in a slice, and the keep the sequence of result
 	repeatedTmplSetIDs := tools.SliceRepeatedElements(templateSetIDs)
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
@@ -56,6 +58,8 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
+	// Authorize authorize if user has permission to the resources.
+	// If user is unauthorized, assign apply url and resources into error.
 	if err = s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
@@ -85,6 +89,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 // DeleteAppTemplateBinding delete an app template binding
 func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbcs.DeleteAppTemplateBindingReq) (
 	*pbcs.DeleteAppTemplateBindingResp, error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
@@ -113,6 +118,7 @@ func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbcs.Delete
 // UpdateAppTemplateBinding update an app template binding
 func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.UpdateAppTemplateBindingReq) (
 	*pbcs.UpdateAppTemplateBindingResp, error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	// validate input param
@@ -121,6 +127,7 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 		logs.Errorf("update app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
+	// SliceRepeatedElements get the repeated elements in a slice, and the keep the sequence of result
 	repeatedTmplSetIDs := tools.SliceRepeatedElements(templateSetIDs)
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)

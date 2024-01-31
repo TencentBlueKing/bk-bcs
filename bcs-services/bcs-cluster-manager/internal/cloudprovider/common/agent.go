@@ -57,8 +57,8 @@ type GseInstallInfo struct {
 func BuildInstallGseAgentTaskStep(task *proto.Task, gseInfo *GseInstallInfo, options ...cloudprovider.StepOption) {
 	installGseStep := cloudprovider.InitTaskStep(installGseAgentStep, options...)
 
-	installGseStep.Params[cloudprovider.ClusterIDKey.String()] = gseInfo.ClusterId
-	installGseStep.Params[cloudprovider.NodeGroupIDKey.String()] = gseInfo.NodeGroupId
+	installGseStep.Params[cloudprovider.ClusterIDKey.String()] = gseInfo.ClusterId     // nolint
+	installGseStep.Params[cloudprovider.NodeGroupIDKey.String()] = gseInfo.NodeGroupId // nolint
 
 	installGseStep.Params[cloudprovider.BKBizIDKey.String()] = gseInfo.BusinessId // nolint
 	if gseInfo != nil && gseInfo.CloudArea != nil {                               // nolint

@@ -215,14 +215,15 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, iamSettings cc.IAM, di
 		ReportCaller: false,
 	}
 	bkiamlogger.SetLogger(log)
-	iam := bkiam.NewAPIGatewayIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.APIURL)
+	apiGatewayIAM := bkiam.NewAPIGatewayIAM(
+		sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.APIURL)
 
 	cs := &ClientSet{
 		DS:        ds,
 		sys:       iamSys,
 		auth:      authSdk,
 		Esb:       esbCli,
-		iamClient: iam,
+		iamClient: apiGatewayIAM,
 	}
 	logs.Infof("initialize the client set success.")
 	return cs, nil

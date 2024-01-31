@@ -126,11 +126,11 @@ func main() {
 
 	svr := server.NewHandler("0.0.0.0", "8080", mgr.GetClient())
 	go func() {
-		if err := svr.Init(); err != nil {
+		if err = svr.Init(); err != nil {
 			blog.Fatalf("http server init failed, err: %s", err)
 			return
 		}
-		if err := svr.Run(); err != nil {
+		if err = svr.Run(); err != nil {
 			blog.Fatalf("http server run terminated, err: %s", err)
 			return
 		}

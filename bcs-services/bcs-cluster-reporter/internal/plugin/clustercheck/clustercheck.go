@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package clustercheck
+// Package clustercheck xxx
 package clustercheck
 
 import (
@@ -48,10 +48,14 @@ type Plugin struct {
 }
 
 var (
+	// NewGaugeVec creates a new GaugeVec based on the provided GaugeOpts and
+	// partitioned by the given label names.
 	clusterAvailability = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "cluster_availability",
 		Help: "cluster_availability, 1 means OK",
 	}, []string{"target", "target_biz", "status"})
+	// NewGaugeVec creates a new GaugeVec based on the provided GaugeOpts and
+	// partitioned by the given label names.
 	clusterCheckDuration = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "cluster_check_duration_seconds",
 		Help: "cluster_check_duration_seconds, 1 means OK",
@@ -167,11 +171,6 @@ func (p *Plugin) Check() {
 	// 根据internal来调整超时时间的长短
 	interval := p.opt.Interval
 
-	namespace := unstructuredObj.GetNamespace()
-	if namespace == "" {
-		namespace = "default"
-	}
-
 	wg := sync.WaitGroup{}
 	clusterChecktGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
 	clusterCheckDurationGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
@@ -186,6 +185,7 @@ func (p *Plugin) Check() {
 			defer func() {
 				if r := recover(); r != nil {
 					klog.Errorf("%s clustercheck failed: %s, stack: %v\n", clusterId, r, string(debug.Stack()))
+					// GetClientsetByConfig cluster k8s client
 					clientSet1, _ := k8s.GetClientsetByConfig(config)
 					var responseContentType string
 					body, _ := clientSet1.RESTClient().Get().
@@ -232,7 +232,7 @@ func (p *Plugin) Check() {
 						Help: "cluster_check_duration_seconds",
 					}, []string{"target", "target_biz", "step"}))
 
-				for index, _ := range clusterAvailabilityMap[clusterId] {
+				for index := range clusterAvailabilityMap[clusterId] {
 					metric_manager.MM.RegisterSeperatedMetric(clusterId, clusterAvailabilityMap[clusterId][index])
 				}
 			}
@@ -262,7 +262,7 @@ func (p *Plugin) Check() {
 	metric_manager.SetMetric(clusterCheckDuration, clusterCheckDurationGaugeVecSetList)
 
 	// 去掉已经不存在的集群的指标
-	for clusterId, _ := range clusterAvailabilityMap {
+	for clusterId := range clusterAvailabilityMap {
 		deleted := true
 		for _, cluster := range plugin_manager.Pm.GetConfig().ClusterConfigs {
 			if clusterId == cluster.ClusterID {
@@ -276,13 +276,15 @@ func (p *Plugin) Check() {
 	}
 }
 
+// test ClusterByCreateUnstructuredObj
 func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructured, config *rest.Config, status *string,
 	interval int, clusterID string) (
 	workloadToScheduleCost, workloadToPodCost, worloadToRunningCost time.Duration, err error) {
 	workloadToScheduleCost = time.Duration(0)
 	workloadToPodCost = time.Duration(0)
 	worloadToRunningCost = time.Duration(0)
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(interval/6)*time.Second)
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Duration(interval/6)*time.Second)
+	defer cancelFunc()
 	namespace := unstructuredObj.GetNamespace()
 	if namespace == "" {
 		namespace = "default"
@@ -290,13 +292,13 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 
 	clientSet, err := k8s.GetClientsetByConfig(config)
 	if err != nil {
-		*status = "配置失败"
+		*status = "配置失败" // nolint
 		err = fmt.Errorf("GetClientsetByConfig failed: %s", err.Error())
 		return
 	}
 
 	if clientSet == nil {
-		*status = "配置失败"
+		*status = "配置失败" // nolint
 		err = fmt.Errorf("Get clientSet failed %s", err.Error())
 		return
 	}
@@ -328,22 +330,25 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 		return
 	}
 
+	// Returns copy of current discovery client that will only
+	// receive the legacy discovery format, or pointer to current
+	// discovery client if it does not support legacy-only discovery.
 	discoveryInterface := clientSet.Discovery().WithLegacy()
 	if discoveryInterface == nil {
-		*status = "配置失败"
+		*status = "配置失败" // nolint
 		err = fmt.Errorf("Get discoveryInterface failed %s", err.Error())
 		return
 	}
 	// discoveryInterface.ServerGroupsAndResources()
 	groupResource, err := restmapper.GetAPIGroupResources(discoveryInterface)
 	if err != nil {
-		*status = "配置失败"
+		*status = "配置失败" // nolint
 		err = fmt.Errorf("GetAPIGroupResources failed %s", err.Error())
 	}
 	mapper := restmapper.NewDiscoveryRESTMapper(groupResource)
 	mapping, err := mapper.RESTMapping(clusterGVK.GroupKind(), clusterGVK.Version)
 	if err != nil {
-		*status = "配置失败"
+		*status = "配置失败" // nolint
 		err = fmt.Errorf("RESTMapping failed %s", err.Error())
 		return
 	}
@@ -351,7 +356,7 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 	dynamicConfig, err := dynamic.NewForConfig(config)
 	if err != nil {
 		*status = "配置失败"
-		err = fmt.Errorf("%s Create dynamicConfig %s", err.Error())
+		err = fmt.Errorf("create dynamicConfig %s", err.Error())
 		return
 	}
 	clusterUnstructuredObj.SetName("bcs-blackbox-job-" + time.Now().Format("150405"))
@@ -409,9 +414,11 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 	*status, workloadToScheduleCost, workloadToPodCost, worloadToRunningCost, err =
 		getWatchStatus(clientSet, clusterUnstructuredObj, dri, namespace, interval, clusterID, context.Background())
 
-	return
+	return // nolint
 }
 
+// get Watch Status
+// nolint
 func getWatchStatus(clientSet *kubernetes.Clientset, clusterUnstructuredObj *unstructured.Unstructured,
 	dri dynamic.ResourceInterface, namespace string, interval int, clusterID string, ctx context.Context) (status string,
 	workloadToScheduleCost, workloadToPodCost, worloadToRunningCost time.Duration, err error) {
@@ -518,6 +525,7 @@ func getWatchStatus(clientSet *kubernetes.Clientset, clusterUnstructuredObj *uns
 	}
 }
 
+// get Pod Life Cycle Time Point
 func getPodLifeCycleTimePoint(pod *v1.Pod, createStartTime time.Time) (workloadToScheduleCost, worloadToRunningCost time.Duration) {
 	workloadToScheduleCost = 0
 	worloadToRunningCost = 0
@@ -542,12 +550,13 @@ func getPodLifeCycleTimePoint(pod *v1.Pod, createStartTime time.Time) (workloadT
 		if worloadToRunningCost == 0 {
 			worloadToRunningCost = time.Since(createStartTime)
 		}
-		return
+		return workloadToScheduleCost, worloadToRunningCost
 	}
 
-	return
+	return workloadToScheduleCost, worloadToRunningCost
 }
 
+// update Nested Map
 func updateNestedMap(obj map[string]interface{}, keyPath []string, newValue interface{}) {
 	if len(keyPath) == 1 {
 		obj[keyPath[0]] = newValue

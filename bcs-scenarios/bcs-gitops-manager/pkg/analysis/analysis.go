@@ -11,6 +11,7 @@
  *
  */
 
+// Package analysis xxx
 package analysis
 
 import (
@@ -129,7 +130,7 @@ func (c *AnalysisClient) inClusterClient() error {
 func (c *AnalysisClient) handleActivityUser(item *activityUserItem) {
 	activityUser, err := c.db.GetActivityUser(item.Project, item.User)
 	if err != nil {
-		blog.Errorf("[analysis] get activity user '%s/%s' failed: %s", &item.Project, item.User, err.Error())
+		blog.Errorf("[analysis] get activity user '%s/%s' failed: %s", item.Project, item.User, err.Error())
 		return
 	}
 	if activityUser == nil {
@@ -288,7 +289,7 @@ func (c *AnalysisClient) ApplicationCollect(project, name string) error {
 // ApplicationCancelCollect will cancel collect application
 func (c *AnalysisClient) ApplicationCancelCollect(project, name string) error {
 	if err := c.db.DeleteResourcePreference(project, dao.PreferenceTypeApplication, name); err != nil {
-		return errors.Wrapf(err, "aplication cancel collect '%s/%s' failed", project, name)
+		return errors.Wrapf(err, "application cancel collect '%s/%s' failed", project, name)
 	}
 	return nil
 }

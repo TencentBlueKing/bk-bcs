@@ -504,6 +504,7 @@ func (e *BcsDataManager) GetUserOperationDataList(ctx context.Context,
 	return nil
 }
 
+// GetWorkloadRequestResult get workload request result
 func (e *BcsDataManager) GetWorkloadRequestResult(ctx context.Context, req *bcsdatamanager.GetWorkloadRequestRecommendResultReq,
 	rsp *bcsdatamanager.GetWorkloadRequestRecommendResultRsp) error {
 	blog.Infof("Received GetWorkloadRequestResult.Call request. cluster id: %s, namespace: %s, workloadType:%s"+
@@ -525,6 +526,7 @@ func (e *BcsDataManager) GetWorkloadRequestResult(ctx context.Context, req *bcsd
 	return nil
 }
 
+// GetWorkloadOriginRequestResult get workload origin request result
 func (e *BcsDataManager) GetWorkloadOriginRequestResult(ctx context.Context, req *bcsdatamanager.GetWorkloadOriginRequestResultReq,
 	rsp *bcsdatamanager.GetWorkloadOriginRequestResultRsp) error {
 	blog.Infof("Received GetWorkloadOriginRequestResult.Call request. projectID:%s, cluster id: %s, "+

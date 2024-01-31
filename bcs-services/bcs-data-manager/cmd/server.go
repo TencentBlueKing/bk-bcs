@@ -35,7 +35,7 @@ import (
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql" // nolint
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/jmoiron/sqlx"
@@ -232,10 +232,10 @@ func (s *Server) initModel() error {
 	tspiderDBs := make(map[string]*sqlx.DB, 0)
 	for _, conf := range tspiderConfig {
 		dsn := conf.Connection
-		db, err := sqlx.Connect("mysql", dsn)
-		if err != nil {
-			blog.Errorf("init tspider db(%s) failed, err %s", dsn, err.Error())
-			return err
+		db, errSqlx := sqlx.Connect("mysql", dsn)
+		if errSqlx != nil {
+			blog.Errorf("init tspider db(%s) failed, err %s", dsn, errSqlx.Error())
+			return errSqlx
 		}
 
 		tspiderDBs[conf.StoreName] = db

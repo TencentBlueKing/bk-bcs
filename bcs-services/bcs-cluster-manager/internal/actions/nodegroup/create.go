@@ -98,10 +98,10 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		Creator:         ca.req.Creator,
 		CreateTime:      timeStr,
 		UpdateTime:      timeStr,
-		//Area: &cmproto.CloudArea{
+		// Area: &cmproto.CloudArea{
 		//	BkCloudID:   ca.req.BkCloudID,
 		//	BkCloudName: ca.req.CloudAreaName,
-		//},
+		// },
 		NodeGroupType: func() string {
 			// default cloud nodePool
 			_, ok := common.NodeGroupTypeMap[common.NodeGroupType(ca.req.NodeGroupType)]

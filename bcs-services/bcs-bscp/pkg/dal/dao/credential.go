@@ -255,7 +255,7 @@ func (dao *credentialDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id 
 	}
 	eDecorator := dao.event.Eventf(kit)
 	if err = eDecorator.FireWithTx(tx, one); err != nil {
-		logs.Errorf("fire delete credential: %s event failed, err: %v, rid: %s", id, err, kit.Rid)
+		logs.Errorf("fire delete credential: %d event failed, err: %v, rid: %s", id, err, kit.Rid)
 		return errors.New("fire event failed, " + err.Error())
 	}
 
@@ -362,7 +362,7 @@ func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *gen.QueryTx, bi
 	}
 	eDecorator := dao.event.Eventf(kit)
 	if err = eDecorator.FireWithTx(tx, one); err != nil {
-		logs.Errorf("fire update credential: %s event failed, err: %v, rid: %s", id, err, kit.Rid)
+		logs.Errorf("fire update credential: %d event failed, err: %v, rid: %s", id, err, kit.Rid)
 		return errors.New("fire event failed, " + err.Error())
 	}
 
