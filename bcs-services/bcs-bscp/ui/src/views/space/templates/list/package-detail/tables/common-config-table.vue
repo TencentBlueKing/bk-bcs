@@ -30,14 +30,13 @@
         @selection-change="handleSelectionChange"
         @select-all="handleSelectAll">
         <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
-        <bk-table-column :label="t('配置文件名称')">
+        <bk-table-column :label="t('配置文件绝对路径')">
           <template #default="{ row }">
             <div v-if="row.spec" v-overflow-title class="config-name" @click="goToViewVersionManage(row.id)">
-              {{ row.spec.name }}
+              {{ fileAP(row) }}
             </div>
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('配置文件路径')" prop="spec.path"></bk-table-column>
         <bk-table-column :label="t('配置文件描述')" prop="spec.memo">
           <template #default="{ row }">
             <span v-if="row.spec">{{ row.spec.memo || '--' }}</span>
@@ -130,7 +129,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue';
+  import { onMounted, ref, watch, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRouter } from 'vue-router';
   import { storeToRefs } from 'pinia';
@@ -203,6 +202,15 @@
 
   onMounted(() => {
     loadConfigList();
+  });
+
+  // 配置文件绝对路径
+  const fileAP = computed(() => (config: ITemplateConfigItem) => {
+    const { path, name } = config.spec;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
   });
 
   const loadConfigList = async (isBatchUpload = false) => {

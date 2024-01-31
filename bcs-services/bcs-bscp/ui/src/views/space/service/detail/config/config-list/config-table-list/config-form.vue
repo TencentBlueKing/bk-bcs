@@ -1,25 +1,7 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
-    <bk-form-item :label="t('配置文件名称')" property="name" :required="true">
-      <bk-input
-        v-model="localVal.name"
-        :placeholder="t('请输入1~64个字符，只允许英文、数字、下划线、中划线或点')"
-        :disabled="!editable"
-        @input="change" />
-    </bk-form-item>
-    <bk-form-item :label="t('配置文件路径')" property="path" :required="true">
-      <template #label>
-        <span
-          v-bk-tooltips="{
-            content: t(
-              '客户端拉取配置文件后存放路径为：临时目录/业务ID/服务名称/files/配置文件路径，除了配置文件路径其它参数都在客户端sidecar中配置',
-            ),
-            placement: 'top',
-          }">
-          {{ t('配置文件路径') }}
-        </span>
-      </template>
-      <bk-input v-model="localVal.path" :placeholder="t('请输入绝对路径')" :disabled="!editable" @input="change" />
+    <bk-form-item :label="t('配置文件绝对路径')" property="fileAP" :required="true">
+      <bk-input v-model="localVal.fileAP" :placeholder="t('请输入配置文件的绝对路径')" :disabled="!editable" @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('配置文件描述')" property="memo">
       <bk-input
@@ -190,7 +172,7 @@
   const configContentTip = `配置文件内支持引用全局变量与定义新的BSCP变量，变量规则如下
                           1.需是要go template语法， 例如 {{ .bk_bscp_appid }}
                           2.变量名需以 “bk_bscp_” 或 “BK_BSCP_” 开头`;
-  const localVal = ref({ ...props.config });
+  const localVal = ref({ ...props.config, fileAP: '' });
   const privilegeInputVal = ref('');
   const showPrivilegeErrorTips = ref(false);
   const stringContent = ref('');
@@ -199,15 +181,12 @@
   const uploadPending = ref(false);
   const formRef = ref();
   const rules = {
-    name: [
+    fileAP: [
       {
-        validator: (value: string) => value.length <= 64,
-        message: t('最大长度64个字符'),
-      },
-      {
-        validator: (value: string) =>
-          /^[\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*$/.test(value),
-        message: t('请使用中文、英文、数字、下划线、中划线或点'),
+        validator: (val: string) =>
+          /^\/([\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*\/?)*$/.test(val),
+        message: t('无效的路径,路径不符合Unix文件路径格式规范'),
+        trigger: 'change',
       },
     ],
     privilege: [
@@ -227,19 +206,6 @@
         },
         message: t('文件own必须有读取权限'),
         trigger: 'blur',
-      },
-    ],
-    path: [
-      {
-        validator: (value: string) => value.length <= 1024,
-        message: t('最大长度1024个字符'),
-        trigger: 'change',
-      },
-      {
-        validator: (value: string) =>
-          /^\/([\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*\/?)*$/.test(value),
-        message: t('无效的路径,路径不符合Unix文件路径格式规范'),
-        trigger: 'change',
       },
     ],
     memo: [
@@ -283,6 +249,16 @@
       }
     },
     { immediate: true },
+  );
+
+  watch(
+    () => props.config,
+    () => {
+      const { path, name } = props.config;
+      if (!path) return;
+      localVal.value.fileAP = path.endsWith('/') ? `${path}${name}` : `${path}/${name}`;
+    },
+    { immediate: true, deep: true },
   );
 
   // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
@@ -392,6 +368,10 @@
 
   const change = () => {
     const content = localVal.value.file_type === 'binary' ? fileContent.value : stringContent.value;
+    const { fileAP } = localVal.value;
+    const lastSlashIndex = fileAP.lastIndexOf('/');
+    localVal.value.name = fileAP.slice(lastSlashIndex + 1);
+    localVal.value.path = fileAP.slice(0, lastSlashIndex + 1);
     emits('change', localVal.value, content);
   };
 

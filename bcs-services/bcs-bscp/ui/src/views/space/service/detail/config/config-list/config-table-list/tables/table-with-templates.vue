@@ -3,9 +3,8 @@
     <table class="config-groups-table">
       <thead>
         <tr class="config-groups-table-tr">
-          <th class="name">{{ t('配置文件名称') }}</th>
+          <th class="name">{{ t('配置文件绝对路径') }}</th>
           <th class="version">{{ t('配置模板版本') }}</th>
-          <th class="path">{{ t('配置路径') }}</th>
           <th class="user">{{ t('创建人') }}</th>
           <th class="user">{{ t('修改人') }}</th>
           <th class="datetime">{{ t('修改时间') }}</th>
@@ -52,7 +51,7 @@
                               :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
                               :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
                               @click="handleViewConfig(config.id, 'config')">
-                              {{ config.name }}
+                              {{ fileAP(config) }}
                             </bk-button>
                             <bk-button
                               v-else
@@ -60,7 +59,7 @@
                               theme="primary"
                               :disabled="config.file_state === 'DELETE'"
                               @click="handleViewConfig(config.id, 'config')">
-                              {{ config.name }}
+                              {{ fileAP(config) }}
                             </bk-button>
                           </template>
                           <bk-button
@@ -69,11 +68,10 @@
                             theme="primary"
                             :disabled="config.file_state === 'DELETE'"
                             @click="handleViewConfig(config.versionId, 'template')">
-                            {{ config.name }}
+                            {{ fileAP(config) }}
                           </bk-button>
                         </td>
                         <td class="version">{{ config.versionName }}</td>
-                        <td class="path">{{ config.path }}</td>
                         <td class="user">{{ config.creator }}</td>
                         <td class="user">{{ config.reviser }}</td>
                         <td class="datetime">{{ config.update_at }}</td>
@@ -307,6 +305,15 @@
 
   // 是否为未命名版本
   const isUnNamedVersion = computed(() => versionData.value.id === 0);
+
+  // 配置文件绝对路径
+  const fileAP = computed(() => (config: IConfigTableItem) => {
+    const { path, name } = config;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  });
 
   watch(
     () => versionData.value.id,
