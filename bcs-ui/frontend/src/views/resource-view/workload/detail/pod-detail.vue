@@ -59,7 +59,7 @@
         </div>
         <div class="info-item">
           <span class="label">{{ $t('cluster.labels.createdAt') }}</span>
-          <span class="value">{{ manifestExt.createTime }}</span>
+          <span class="value">{{ timeFormat(manifestExt.createTime) }}</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('k8s.age') }}</span>
@@ -111,7 +111,11 @@
                 <StatusIcon :status="row.status"></StatusIcon>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('container.label.startedAt')" prop="startedAt"></bk-table-column>
+            <bk-table-column :label="$t('container.label.startedAt')" prop="startedAt">
+              <template #default="{ row }">
+                {{ timeFormat(row.startedAt) }}
+              </template>
+            </bk-table-column>
             <bk-table-column :label="$t('container.label.restartCnt')" prop="restartCnt"></bk-table-column>
             <bk-table-column :label="$t('k8s.image')" prop="image"></bk-table-column>
             <bk-table-column
@@ -170,7 +174,7 @@
             </bk-table-column>
             <bk-table-column :label="$t('k8s.lastTransitionTime')" prop="lastTransitionTime">
               <template #default="{ row }">
-                {{ formatTime(row.lastTransitionTime, 'yyyy-MM-dd hh:mm:ss') }}
+                {{ timeFormat(row.lastTransitionTime) }}
               </template>
             </bk-table-column>
             <bk-table-column :label="$t('dashboard.workload.label.reason')">
@@ -326,7 +330,7 @@ import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 import useDetail from './use-detail';
 
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
-import { formatTime, timeZoneTransForm } from '@/common/util';
+import { timeFormat } from '@/common/util';
 import Metric from '@/components/metric.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import StatusIcon from '@/components/status-icon';
@@ -538,12 +542,11 @@ export default defineComponent({
       showYamlPanel,
       isDropdownShow,
       logLinks,
-      timeZoneTransForm,
       handleShowYamlPanel,
       handleGetStorage,
       gotoContainerDetail,
       handleGetExtData,
-      formatTime,
+      timeFormat,
       getImagesTips,
       handleUpdateResource,
       handleDeleteResource,
