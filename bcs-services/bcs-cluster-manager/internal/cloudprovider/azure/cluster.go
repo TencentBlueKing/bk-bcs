@@ -184,4 +184,3 @@ func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto
 	nodes []*proto.ClusterNode) bool {
 	return true
 }
-

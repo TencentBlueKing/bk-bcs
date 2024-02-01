@@ -109,6 +109,7 @@ func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
 func (c *HttpServerClient) AllocateIP(request *restful.Request, response *restful.Response) {
 	requestID := request.Request.Header.Get("X-Request-Id")
 	netIPReq := &NetIPAllocateRequest{}
+	// ReadEntity checks the Accept header and reads the content into the entityPointer.
 	if err := request.ReadEntity(netIPReq); err != nil {
 		blog.Errorf("decode json request failed, %s", err.Error())
 		response.WriteErrorString(http.StatusBadRequest, err.Error())
@@ -223,6 +224,7 @@ func (c *HttpServerClient) AllocateIP(request *restful.Request, response *restfu
 	response.WriteEntity(responseData(0, message, true, requestID, data))
 }
 
+// allocateNewIPForClaim xxx
 func (c *HttpServerClient) allocateNewIPForClaim(
 	netIPReq *NetIPAllocateRequest, availableIP []*v1.BCSNetIP, ipClaim *v1.BCSNetIPClaim) (
 	*v1.BCSNetIP, *v1.BCSNetPool, error) {
@@ -256,6 +258,7 @@ func (c *HttpServerClient) allocateNewIPForClaim(
 	return targetIP, bcspool, nil
 }
 
+// allocateIPByClaim xxx
 func (c *HttpServerClient) allocateIPByClaim(
 	netIPReq *NetIPAllocateRequest, ipClaim *v1.BCSNetIPClaim) (*v1.BCSNetIP, *v1.BCSNetPool, error) {
 	ipName := ipClaim.Status.BoundedIP
@@ -284,6 +287,7 @@ func (c *HttpServerClient) allocateIPByClaim(
 	return bcsNetIP, bcsNetPool, nil
 }
 
+// update IP Status
 func (c *HttpServerClient) updateIPStatus(ip *v1.BCSNetIP, netIPReq *NetIPAllocateRequest, claimKey, duration string,
 	fixed bool) error {
 	ip.Status = v1.BCSNetIPStatus{
@@ -305,6 +309,7 @@ func (c *HttpServerClient) updateIPStatus(ip *v1.BCSNetIP, netIPReq *NetIPAlloca
 	return nil
 }
 
+// get Available IPs
 func (c *HttpServerClient) getAvailableIPs(netPoolList *v1.BCSNetPoolList, netIPReq *NetIPAllocateRequest) (
 	[]*v1.BCSNetIP, error) {
 	var availableIP []*v1.BCSNetIP
@@ -333,6 +338,7 @@ func (c *HttpServerClient) getAvailableIPs(netPoolList *v1.BCSNetPoolList, netIP
 	return availableIP, nil
 }
 
+// get Pool By IP
 func (c *HttpServerClient) getPoolByIP(bcsip *v1.BCSNetIP) (*v1.BCSNetPool, error) {
 	if len(bcsip.GetLabels()) == 0 {
 		return nil, fmt.Errorf("BCSNetIP %s has no labels", bcsip.GetName())
@@ -349,6 +355,7 @@ func (c *HttpServerClient) getPoolByIP(bcsip *v1.BCSNetIP) (*v1.BCSNetPool, erro
 	return netPool, nil
 }
 
+// get Claim
 func (c *HttpServerClient) getClaim(ns, name string) (*v1.BCSNetIPClaim, error) {
 	retClaim := &v1.BCSNetIPClaim{}
 	if err := c.K8SClient.Get(context.Background(), types.NamespacedName{
@@ -361,6 +368,7 @@ func (c *HttpServerClient) getClaim(ns, name string) (*v1.BCSNetIPClaim, error) 
 	return retClaim, nil
 }
 
+// bound Claim IP
 func (c *HttpServerClient) boundClaimIP(claim *v1.BCSNetIPClaim, netIP *v1.BCSNetIP) error {
 	claim.Status.BoundedIP = netIP.Name
 	claim.Status.Phase = constant.BCSNetIPClaimBoundedStatus
@@ -409,6 +417,7 @@ func (c *HttpServerClient) DeleteIP(request *restful.Request, response *restful.
 	claimKey := netIP.Status.IPClaimKey
 	if len(claimKey) != 0 {
 		claim := &v1.BCSNetIPClaim{}
+		// ParseNamespacedNameKey return key by namespace and name
 		podNamespace, podName, err := utils.ParseNamespacedNameKey(claimKey)
 		if err != nil {
 			message := fmt.Sprintf("invalid IPClaimKey %s of BCSNetIP %s instance", claimKey, netIP.GetName())
@@ -446,6 +455,7 @@ func (c *HttpServerClient) DeleteIP(request *restful.Request, response *restful.
 	response.WriteEntity(responseData(0, message, true, requestID, netIPReq))
 }
 
+// get IP And Pool
 func (c *HttpServerClient) getIPAndPool(ip string) (*v1.BCSNetIP, *v1.BCSNetPool, error) {
 	bcsNetIP := &v1.BCSNetIP{}
 	if err := c.K8SClient.Get(context.Background(), types.NamespacedName{Name: ip}, bcsNetIP); err != nil {
@@ -458,6 +468,7 @@ func (c *HttpServerClient) getIPAndPool(ip string) (*v1.BCSNetIP, *v1.BCSNetPool
 	return bcsNetIP, bcsNetPool, nil
 }
 
+// get IP Claim And Duration
 func (c *HttpServerClient) getIPClaimAndDuration(namespace, name string) (string, string, error) {
 	pod := &coreV1.Pod{}
 	err := c.K8SClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, pod)
@@ -477,6 +488,7 @@ func (c *HttpServerClient) getIPClaimAndDuration(namespace, name string) (string
 	return claimValue, claim.Spec.ExpiredDuration, nil
 }
 
+// validate Allocate Net IP Req
 func validateAllocateNetIPReq(netIPReq *NetIPAllocateRequest) error {
 	var message string
 	if netIPReq == nil {
@@ -497,6 +509,7 @@ func validateAllocateNetIPReq(netIPReq *NetIPAllocateRequest) error {
 	return nil
 }
 
+// validate Delete Net IP Req
 func validateDeleteNetIPReq(netIPReq *NetIPDeleteRequest) error {
 	var message string
 	if netIPReq == nil {

@@ -20,10 +20,10 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/avast/retry-go"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
@@ -64,6 +64,7 @@ func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClu
 		return nil, fmt.Errorf("%s CreateCluster opt lost valid crendential info", cloudName)
 	}
 
+	// GetTaskManager for nodegroup manager initialization
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloud %s TaskManager when CreateCluster %d failed, %s",
@@ -99,6 +100,7 @@ func (c *Cluster) CreateVirtualCluster(cls *proto.Cluster,
 		return nil, fmt.Errorf("%s CreateVirtualCluster lost credential info", cloudName)
 	}
 
+	// GetTaskManager for nodegroup manager initialization
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloud %s TaskManager when CreateVirtualCluster %d failed, %s",
@@ -134,6 +136,7 @@ func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
 		return nil, fmt.Errorf("%s DeleteVirtualCluster lost credential info", cloudName)
 	}
 
+	// GetTaskManager for nodegroup manager initialization
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloud %s TaskManager when DeleteVirtualCluster %d failed, %s",
@@ -169,6 +172,7 @@ func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClu
 		return nil, fmt.Errorf("%s CreateCluster opt lost valid crendential info", cloudName)
 	}
 
+	// GetTaskManager for nodegroup manager initialization
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloud %s TaskManager when ImportCluster %d failed, %s",
@@ -177,6 +181,7 @@ func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClu
 		return nil, err
 	}
 
+	// get tke cluster masterIPs && nodeIPs
 	_, nodeIPs, err := getClusterInstancesByClusterID(cls.SystemID, &opt.CommonOption)
 	if err != nil {
 		blog.Errorf("get cloud/cluster %s/%s nodes when ImportCluster %d failed, %s",
@@ -206,6 +211,7 @@ func getClusterInstancesByClusterID(clusterID string, option *cloudprovider.Comm
 		return nil, nil, err
 	}
 
+	// QueryTkeClusterAllInstances query all cluster instances
 	instancesList, err := tkeCli.QueryTkeClusterAllInstances(context.Background(), clusterID, nil)
 	if err != nil {
 		return nil, nil, err
@@ -239,6 +245,7 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 		return nil, fmt.Errorf("%s DeleteCluster cluster lost oprion", cloudName)
 	}
 
+	// GetTaskManager for nodegroup manager initialization
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloud %s TaskManager when DeleteCluster %d failed, %s",
@@ -278,6 +285,7 @@ func getCloudCluster(cloudID string, opt *cloudprovider.CommonOption) (*tke.Clus
 		blog.Errorf("%s getCloudCluster NewTkeClient failed: %v", cloudName, err)
 		return nil, err
 	}
+	// GetTKECluster get tke cluster info
 	cls, err := cli.GetTKECluster(cloudID)
 	if err != nil {
 		blog.Errorf("%s getCloudCluster GetTKECluster failed: %v", cloudName, err)
@@ -303,6 +311,7 @@ func checkClusterOsNameInWhiteImages(cls *proto.Cluster, opt *cloudprovider.Comm
 	// osName maybe is imageID
 	if osName != "" {
 		nodeMgr := &NodeManager{}
+		// GetImageInfoByImageID get image by image
 		image, errGet := nodeMgr.GetImageInfoByImageID(osName, opt)
 		if errGet != nil {
 			blog.Errorf("%s checkClusterOsNameInWhiteImages GetImageInfoByImageID failed: %v", cloudName, errGet)
@@ -359,6 +368,7 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 	return utils.StringInSlice(osName, utils.WhiteImageOsName)
 }
 
+// update ClusterInfo
 func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
 	cls, err := getCloudCluster(cloudID, &opt.CommonOption)
 	if err != nil {
@@ -419,6 +429,7 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 	return transTKEClusterToCloudCluster(opt.Region, tkeClusters), nil
 }
 
+// trans TKEClusterToCloudCluster
 func transTKEClusterToCloudCluster(region string, clusters []*tke.Cluster) []*proto.CloudClusterInfo {
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
 	for _, cls := range clusters {

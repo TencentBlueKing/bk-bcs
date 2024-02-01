@@ -29,7 +29,7 @@ type ModelOperationData struct {
 	Tables map[string]*Public
 }
 
-// NewModelUserOperationDataList new bcs user operation data model
+// NewModelOperationData new bcs user operation data model
 func NewModelOperationData(db drivers.DB, bkbaseConf *types.BkbaseConfig) *ModelOperationData {
 	return &ModelOperationData{}
 }

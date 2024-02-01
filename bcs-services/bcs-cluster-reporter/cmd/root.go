@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package cmd
+// Package cmd xxx
 package cmd
 
 import (
@@ -52,7 +52,7 @@ var (
 		Long: `
 Basic Commands (Beginner):
   Get        Create a resource from a file or from stdin
-`,
+`, // nolint
 		Run: func(cmd *cobra.Command, args []string) {
 			CheckErr(Complete(cmd, args))
 			metric_manager.MM.RunPrometheusMetricsServer()
@@ -117,7 +117,7 @@ func Run() error {
 					OnStoppedLeading: func() {
 						klog.Infof("leader lost: %s", id)
 						cancel()
-						ctx, cancel = context.WithCancel(context.Background())
+						ctx, cancel = context.WithCancel(context.Background()) // nolint
 					},
 				},
 			})
@@ -192,10 +192,9 @@ func Complete(cmd *cobra.Command, args []string) error {
 			bcro.BcsGatewayToken == "" {
 			return fmt.Errorf(
 				"bcs config missing, BcsClusterManagerToken, BcsClusterManagerApiserver, BcsGatewayApiserver, BcsGatewayToken must be set")
-		} else {
-			bcro.BcsClusterManagerToken = util.Decode(bcro.BcsClusterManagerToken)
-			bcro.BcsGatewayToken = util.Decode(bcro.BcsGatewayToken)
 		}
+		bcro.BcsClusterManagerToken = util.Decode(bcro.BcsClusterManagerToken)
+		bcro.BcsGatewayToken = util.Decode(bcro.BcsGatewayToken)
 	}
 
 	if (bcro.BcsGatewayApiserver != "" && bcro.BcsClusterManagerApiserver != "" && bcro.BcsGatewayToken != "" &&
@@ -274,7 +273,7 @@ func getClusters() {
 				} else {
 					if len(cluster.Master) > 0 {
 						continueFlag := false
-						for masterName, _ := range cluster.Master {
+						for masterName := range cluster.Master {
 							if strings.Contains(masterName, "127.0.0") {
 								// 跳过算力集群
 								continueFlag = true

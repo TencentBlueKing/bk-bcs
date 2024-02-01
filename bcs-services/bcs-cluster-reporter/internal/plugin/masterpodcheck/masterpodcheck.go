@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package masterpodcheck
+// Package masterpodcheck xxx
 package masterpodcheck
 
 import (
@@ -44,6 +44,7 @@ import (
 )
 
 var (
+	// master Pod Name List
 	masterPodNameList = []string{
 		"kube-apiserver",
 		"kube-controller-manager",
@@ -61,6 +62,8 @@ type Plugin struct {
 }
 
 var (
+	// NewGaugeVec creates a new GaugeVec based on the provided GaugeOpts and
+	// partitioned by the given label names.
 	masterPodCheck = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "master_pod_check",
 		Help: "the result of master pod configuration consistency check operation, 1 means ok",
@@ -177,17 +180,20 @@ func (p *Plugin) Check() {
 				plugin_manager.Pm.Done()
 			}()
 			klog.V(9).Infof("start masterpodcheck for %s", clusterId)
+			// GetClientsetByConfig cluster k8s client
 			clientSet, err := k8s.GetClientsetByConfig(config)
 			if err != nil {
 				klog.Errorf("%s GetClientsetByClusterId failed: %s", clusterId, err.Error())
 				return
 			}
 
+			// GetK8sVersion get cluster k8s version
 			clusterVersion, err := k8s.GetK8sVersion(clientSet)
 			if err != nil {
 				klog.Errorf("%s GetK8sVersion failed: %s", clusterId, err.Error())
 			}
 
+			// GetPods get namespace pods
 			ALLPodList, err := k8s.GetPods(clientSet, "kube-system", v1.ListOptions{}, "")
 			if err != nil {
 				klog.Errorf("%s GetPods failed: %s", clusterId, err.Error())
@@ -246,6 +252,7 @@ func (p *Plugin) Check() {
 	metric_manager.SetMetric(masterPodCheck, masterPodCheckGaugeVecSetList)
 }
 
+// check Master Pod
 func (p *Plugin) checkMasterPod(clientSet *kubernetes.Clientset, podList []corev1.Pod, podName string,
 	nodeLabelSelector string, clusterId string, clusterBiz string, config *rest.Config) []*metric_manager.GaugeVecSet {
 	result := make([]*metric_manager.GaugeVecSet, 0, 0)
@@ -327,11 +334,13 @@ func (p *Plugin) checkMasterPod(clientSet *kubernetes.Clientset, podList []corev
 	return result
 }
 
+// check Pod Num
 func (p *Plugin) checkPodNum(clientSet *kubernetes.Clientset, nodeLabelSelector string, masterPodList []corev1.Pod,
 	podName string) string {
 	masterPodNum := len(masterPodList)
 
 	// ensure number of master node
+	// nolint
 	if podName != "etcd" {
 		ctx := context.Background()
 		nodeList, err := clientSet.CoreV1().Nodes().List(ctx, v1.ListOptions{
@@ -354,6 +363,7 @@ func (p *Plugin) checkPodNum(clientSet *kubernetes.Clientset, nodeLabelSelector 
 	return "ok"
 }
 
+// check Static Pod Consistency
 func (p *Plugin) checkStaticPodConsistency(podList []corev1.Pod) string {
 	podSpecList := make(map[string]corev1.PodSpec)
 	argsList := make(map[string]map[string][]string)
@@ -375,6 +385,7 @@ func (p *Plugin) checkStaticPodConsistency(podList []corev1.Pod) string {
 	// 对比容器配置以外的spec是否一致
 	var sampleSpec corev1.PodSpec
 	var sampleName string
+	// nolint
 	for podName, spec := range podSpecList {
 		if reflect.DeepEqual(sampleSpec, corev1.PodSpec{}) {
 			sampleSpec = spec
@@ -389,7 +400,7 @@ func (p *Plugin) checkStaticPodConsistency(podList []corev1.Pod) string {
 
 	// 对比容器命令行参数是否一致
 	var samplePodName string
-	for podName, _ := range argsList {
+	for podName := range argsList {
 		if samplePodName == "" {
 			samplePodName = podName
 			break
@@ -404,6 +415,7 @@ func (p *Plugin) checkStaticPodConsistency(podList []corev1.Pod) string {
 			continue
 		}
 
+		// nolint
 		for containerName, args := range containers {
 			if sampleArgs, ok := argsList[samplePodName][containerName]; !ok {
 				klog.Infof("pod %s doesn't have container %s", samplePodName, containerName)
@@ -422,6 +434,7 @@ func (p *Plugin) checkStaticPodConsistency(podList []corev1.Pod) string {
 	return "ok"
 }
 
+// check Arguments
 func checkArguments(argList1 []string, argList2 []string) error {
 	if len(argList1) != len(argList2) {
 		return fmt.Errorf("length not equal")
@@ -444,11 +457,12 @@ func checkArguments(argList1 []string, argList2 []string) error {
 	return nil
 }
 
+// check Scheduler Policy
 func (p *Plugin) checkSchedulerPolicy(clientSet *kubernetes.Clientset, restConfig *rest.Config,
 	podList []corev1.Pod) (string, error) {
 	if len(podList) == 0 {
 		klog.Infof("no kube-scheduler pods were found")
-		return "访问集群失败", nil
+		return "访问集群失败", nil // nolint
 	} else if len(podList) == 1 {
 		return "单实例", nil
 	}
@@ -469,6 +483,7 @@ func (p *Plugin) checkSchedulerPolicy(clientSet *kubernetes.Clientset, restConfi
 	return p.checkPodFileConsistency(restConfig, clientSet, podList, "kube-scheduler", filePath)
 }
 
+// check Pod File Consistency
 func (p *Plugin) checkPodFileConsistency(restConfig *rest.Config, clientSet *kubernetes.Clientset, podList []corev1.Pod,
 	containerName string, filePath string) (string, error) {
 	ctx := context.Background()
@@ -489,7 +504,7 @@ func (p *Plugin) checkPodFileConsistency(restConfig *rest.Config, clientSet *kub
 
 		exec, err := remotecommand.NewSPDYExecutor(restConfig, "POST", req.URL())
 		if err != nil {
-			return "访问集群失败", fmt.Errorf("NewSPDYExecutor failed: %s", err.Error())
+			return "访问集群失败", fmt.Errorf("NewSPDYExecutor failed: %s", err.Error()) // nolint
 		}
 
 		var stdout, stderr bytes.Buffer
@@ -507,10 +522,10 @@ func (p *Plugin) checkPodFileConsistency(restConfig *rest.Config, clientSet *kub
 		execMsg := stdout.String()
 		if errMsg != "" {
 			klog.Infof("Exec failed: %s", errMsg)
-			return "访问集群失败", nil
+			return "访问集群失败", nil // nolint
 		} else if execMsg == "" {
 			klog.Infof("%s is blank", filePath)
-			return "访问集群失败", nil
+			return "访问集群失败", nil // nolint
 		}
 
 		if sampleFile == "" {
@@ -520,13 +535,14 @@ func (p *Plugin) checkPodFileConsistency(restConfig *rest.Config, clientSet *kub
 			if sampleFile != execMsg {
 				klog.Infof("pod %s policy %s doesn't equal pod %s policy %s",
 					sampleName, sampleFile, pod.Name, execMsg)
-				return "配置不一致", nil
+				return "配置不一致", nil // nolint
 			}
 		}
 	}
 	return "ok", nil
 }
 
+// check Pod Config
 func (p *Plugin) checkPodConfig(obj interface{}, path string, regex string) (bool, error) {
 	value := reflect.ValueOf(obj)
 	fields := strings.Split(path, ".")

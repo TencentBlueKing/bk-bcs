@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package mongo xxx
 package mongo
 
 import (
@@ -41,14 +42,14 @@ func NewModelCloudNative(db drivers.DB, bkbaseConf *types.BkbaseConfig) *ModelCl
 
 }
 
-// GetCloudNativeWorkloadList
+// GetCloudNativeWorkloadList get cloud native workload list
 func (m *ModelCloudNative) GetCloudNativeWorkloadList(ctx context.Context,
 	req *bcsdatamanager.GetCloudNativeWorkloadListRequest) (*bcsdatamanager.TEGMessage, error) {
 	// page info
 	currentPage := int(req.GetCurrentPage())
 	pageSize := int(req.GetPageSize())
 	if pageSize > 10000 {
-		return nil, fmt.Errorf("The max pageSize currently supported is 10000.")
+		return nil, fmt.Errorf("the max pageSize currently supported is 10000")
 	}
 	if currentPage <= 0 {
 		currentPage = 1

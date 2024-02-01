@@ -47,7 +47,7 @@ type Kv interface {
 	// BatchUpdateWithTx batch create content instances with transaction.
 	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error
 	// ListAllByAppID list all Kv by appID
-	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32, KvState []string) ([]*table.Kv, error)
+	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32, kvState []string) ([]*table.Kv, error)
 	// GetCount bizID config count
 	GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error)
 	// UpdateSelectedKVStates updates the states of selected kv pairs using a transaction

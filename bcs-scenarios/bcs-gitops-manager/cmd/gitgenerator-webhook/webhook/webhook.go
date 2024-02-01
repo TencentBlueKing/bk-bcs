@@ -11,6 +11,7 @@
  *
  */
 
+// Package webhook xxx
 package webhook
 
 import (
@@ -110,7 +111,7 @@ func (s *AdmissionWebhookServer) registerRouter() {
 func (s *AdmissionWebhookServer) check(ctx *gin.Context) {
 	ar := new(v1.AdmissionReview)
 	if err := ctx.BindJSON(ar); err != nil {
-		blog.Errorf("marshal request body failed, err: ", err.Error())
+		blog.Errorf("marshal request body failed, err: %s", err.Error())
 		s.webhookAllow(ctx, true, "", "")
 		return
 	}

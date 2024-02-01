@@ -315,6 +315,7 @@ func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.
 	}
 }
 
+// ImplementPolicy implement policy
 func (p *WorkloadRequestPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts,
 	clients *types.Clients) {
 	if opts.ClusterType != types.Kubernetes {

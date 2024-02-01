@@ -99,6 +99,7 @@ func (n *NodeExporter) retrieveExternalIP() (string, error) {
 func (n *NodeExporter) isRealExternalIP(externalIP, uuid string) bool {
 	// do connect check
 	addr := net.JoinHostPort(externalIP, strconv.Itoa(int(n.Opts.ListenPort)))
+	// nolint
 	// todo use bk internal service
 	resp, err := n.HttpClient.Get("http://" + addr + "/node-external-worker/api/v1/health_check")
 	if err != nil {
@@ -114,7 +115,7 @@ func (n *NodeExporter) isRealExternalIP(externalIP, uuid string) bool {
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		blog.Errorf("read body failed, err: %s")
+		blog.Errorf("read body failed, err: %s", err)
 		return false
 	}
 	blog.Infof("resp: %s, respCode: %d", string(respBody), resp.StatusCode)

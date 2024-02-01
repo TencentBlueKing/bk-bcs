@@ -31,7 +31,7 @@ type APIRespone struct {
 
 // CreateResponseData common response
 func CreateResponseData(err error, msg string, data interface{}) []byte {
-	resp := &APIRespone{}
+	var resp *APIRespone
 
 	if err != nil {
 		resp = errResponseDefault(err)

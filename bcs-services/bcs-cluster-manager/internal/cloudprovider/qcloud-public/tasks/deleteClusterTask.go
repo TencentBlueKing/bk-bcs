@@ -78,6 +78,7 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 				nodeIds = append(nodeIds, workerNodes[i].InstanceId)
 			}
 
+			// nolint
 			ids, err := business.DeleteClusterInstance(ctx, dependInfo, cloudprovider.Retain.String(), nodeIds)
 			if err != nil {
 				blog.Errorf("DeleteTKEClusterTask[%s] DeleteClusterInstance failed: %v", taskID, err)

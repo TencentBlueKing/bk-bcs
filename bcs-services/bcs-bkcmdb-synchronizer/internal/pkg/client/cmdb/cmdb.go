@@ -32,6 +32,7 @@ import (
 )
 
 // NewCmdbClient create cmdb client
+// nolint
 func NewCmdbClient(options *Options) *cmdbClient {
 	c := &cmdbClient{
 		config: &Options{

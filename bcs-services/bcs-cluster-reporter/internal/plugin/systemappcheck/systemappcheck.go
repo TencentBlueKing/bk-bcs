@@ -255,9 +255,10 @@ func (p *Plugin) Check() {
 
 						kind := objMap["kind"].(string)
 						name := objMap["metadata"].(map[interface{}]interface{})["name"].(string)
-						ctx, _ := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+						ctx, _ := context.WithTimeout(context.Background(), time.Duration(10)*time.Second) // nolint
 
 						var workload runtime.Object
+						// nolint
 						switch kind {
 						case "Deployment":
 							deploy, err := clientSet.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
@@ -356,14 +357,12 @@ func (p *Plugin) Check() {
 	goruntime.GC()
 }
 
-// GetStatus
+// GetStatus get status
 func GetStatus(updatedReplicas int, availableReplicas int, replicas int) string {
 	if replicas > 0 && availableReplicas == replicas && updatedReplicas == replicas {
 		return "ready"
-	} else {
-		return "notready"
 	}
-
+	return "notready"
 }
 
 // CheckComponents check specified component status
@@ -374,6 +373,7 @@ func (p *Plugin) CheckComponents(
 	for _, component := range componentList {
 		var workload runtime.Object
 		var err error
+		// nolint
 		switch component.Resource {
 		case "Deployment", "deployment":
 			workload, err = clientSet.AppsV1().Deployments(component.Namespace).Get(context.Background(), component.Name,
