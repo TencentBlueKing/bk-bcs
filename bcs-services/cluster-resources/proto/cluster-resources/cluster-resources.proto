@@ -1732,6 +1732,18 @@ service TemplateSet {
 		};
 	}
 
+	// 创建模板集
+	rpc CreateTemplateSet(CreateTemplateSetReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/templatesets"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建模板集"
+			summary: "Create template set"
+		};
+	}
+
 	// 获取环境管理详情
 	rpc GetEnvManage(GetEnvManageReq) returns (CommonResp) {
 		option (google.api.http) = {
@@ -3036,6 +3048,54 @@ message DeleteTemplateVersionReq {
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
 	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message CreateTemplateSetReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CreateTemplateSetReq", description: "创建模板集"}
+	};
+	string name = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板集名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string description = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板集描述"
+	}];
+	string projectCode = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string version = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板集版本"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string category = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板集分类"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	repeated string keywords = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板集关键字"
+	}];
+	string readme = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板集 README"
+	}];
+	repeated TemplateID templates = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板集包含的模板"
+	}];
+	string values = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板集默认值"
+	}];
+	bool force = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "是否覆盖"
+	}];
+}
+
+message TemplateID {
+	string templateSpace = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件文件夹名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string templateName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件元数据名称"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string version = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message GetEnvManageReq {

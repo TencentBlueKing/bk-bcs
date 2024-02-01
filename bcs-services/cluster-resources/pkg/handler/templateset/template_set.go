@@ -216,6 +216,17 @@ func (h *Handler) DeleteTemplateVersion(
 	return nil
 }
 
+// CreateTemplateSet xxx
+func (h *Handler) CreateTemplateSet(
+	ctx context.Context, req *clusterRes.CreateTemplateSetReq, resp *clusterRes.CommonResp) error {
+	action := template.NewTemplateAction(h.model)
+	err := action.CreateTemplateSet(ctx, req)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetEnvManage xxx
 func (h *Handler) GetEnvManage(
 	ctx context.Context, req *clusterRes.GetEnvManageReq, resp *clusterRes.CommonResp) error {

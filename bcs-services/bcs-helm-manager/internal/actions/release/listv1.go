@@ -145,6 +145,7 @@ func (l *ListReleaseV1Action) mergeReleases(clusterReleases,
 			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].CreateBy = v.CreateBy
 			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].UpdateBy = v.UpdateBy
 			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Repo = v.Repo
+			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Env = v.Env
 			continue
 		}
 		// 数据库中状态正常的数据，但在集群中不存在，则不展示

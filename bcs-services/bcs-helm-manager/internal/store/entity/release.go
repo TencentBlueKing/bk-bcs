@@ -40,6 +40,7 @@ type Release struct {
 	UpdateTime   int64    `json:"updateTime" bson:"updateTime"`
 	Status       string   `json:"status" bson:"status"`
 	Message      string   `json:"message" bson:"message"`
+	Env          string   `json:"env" bson:"env"`
 }
 
 // Transfer2DetailProto transfer the data into detail protobuf struct
@@ -82,5 +83,6 @@ func (r *Release) Transfer2Proto() *helmmanager.Release {
 		IamNamespaceID: common.GetStringP(utils.CalcIAMNsID(r.ClusterID, r.Namespace)),
 		ProjectCode:    common.GetStringP(r.ProjectCode),
 		ClusterID:      common.GetStringP(r.ClusterID),
+		Env:            common.GetStringP(r.Env),
 	}
 }

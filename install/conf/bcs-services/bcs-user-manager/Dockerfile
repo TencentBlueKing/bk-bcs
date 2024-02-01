@@ -1,6 +1,6 @@
 FROM alpine
 
-RUN apk --update --no-cache add ca-certificates bash vim curl gettext libc6-compat
+RUN apk --update --no-cache add ca-certificates bash vim curl gettext libc6-compat tzdata
 
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
 RUN mkdir -p /data/bcs/bcs-user-manager

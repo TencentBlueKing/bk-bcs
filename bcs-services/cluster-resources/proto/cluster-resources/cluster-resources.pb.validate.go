@@ -10259,6 +10259,326 @@ var _ interface {
 	ErrorName() string
 } = DeleteTemplateVersionReqValidationError{}
 
+// Validate checks the field values on CreateTemplateSetReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateTemplateSetReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateTemplateSetReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateTemplateSetReqMultiError, or nil if none found.
+func (m *CreateTemplateSetReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateTemplateSetReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+		err := CreateTemplateSetReqValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Description
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := CreateTemplateSetReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+		err := CreateTemplateSetReqValidationError{
+			field:  "Version",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetCategory()); l < 1 || l > 64 {
+		err := CreateTemplateSetReqValidationError{
+			field:  "Category",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Readme
+
+	for idx, item := range m.GetTemplates() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CreateTemplateSetReqValidationError{
+						field:  fmt.Sprintf("Templates[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CreateTemplateSetReqValidationError{
+						field:  fmt.Sprintf("Templates[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateTemplateSetReqValidationError{
+					field:  fmt.Sprintf("Templates[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Values
+
+	// no validation rules for Force
+
+	if len(errors) > 0 {
+		return CreateTemplateSetReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateTemplateSetReqMultiError is an error wrapping multiple validation
+// errors returned by CreateTemplateSetReq.ValidateAll() if the designated
+// constraints aren't met.
+type CreateTemplateSetReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateTemplateSetReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateTemplateSetReqMultiError) AllErrors() []error { return m }
+
+// CreateTemplateSetReqValidationError is the validation error returned by
+// CreateTemplateSetReq.Validate if the designated constraints aren't met.
+type CreateTemplateSetReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateTemplateSetReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateTemplateSetReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateTemplateSetReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateTemplateSetReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateTemplateSetReqValidationError) ErrorName() string {
+	return "CreateTemplateSetReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateTemplateSetReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateTemplateSetReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateTemplateSetReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateTemplateSetReqValidationError{}
+
+// Validate checks the field values on TemplateID with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TemplateID) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TemplateID with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TemplateIDMultiError, or
+// nil if none found.
+func (m *TemplateID) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TemplateID) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetTemplateSpace()); l < 1 || l > 64 {
+		err := TemplateIDValidationError{
+			field:  "TemplateSpace",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetTemplateName()); l < 1 || l > 64 {
+		err := TemplateIDValidationError{
+			field:  "TemplateName",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+		err := TemplateIDValidationError{
+			field:  "Version",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return TemplateIDMultiError(errors)
+	}
+
+	return nil
+}
+
+// TemplateIDMultiError is an error wrapping multiple validation errors
+// returned by TemplateID.ValidateAll() if the designated constraints aren't met.
+type TemplateIDMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TemplateIDMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TemplateIDMultiError) AllErrors() []error { return m }
+
+// TemplateIDValidationError is the validation error returned by
+// TemplateID.Validate if the designated constraints aren't met.
+type TemplateIDValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TemplateIDValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TemplateIDValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TemplateIDValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TemplateIDValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TemplateIDValidationError) ErrorName() string { return "TemplateIDValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TemplateIDValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTemplateID.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TemplateIDValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TemplateIDValidationError{}
+
 // Validate checks the field values on GetEnvManageReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.

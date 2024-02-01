@@ -46,3 +46,10 @@ func (t *TemplateVersion) ToMap() map[string]interface{} {
 	m["createAt"] = t.CreateAt
 	return m
 }
+
+// TemplateID 定义了模板文件的唯一标识
+type TemplateID struct {
+	TemplateSpace   string `json:"templateSpace"`
+	TemplateName    string `json:"templateName"`
+	TemplateVersion string `json:"templateVersion"`
+}
