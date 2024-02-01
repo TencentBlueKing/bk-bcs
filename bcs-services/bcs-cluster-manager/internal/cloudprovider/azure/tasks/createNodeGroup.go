@@ -283,9 +283,9 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 	api.SetVmSetSSHPublicKey(group, set)
 
 	// 已经创建了系统盘, 无需再购买
-	//if lc.SystemDisk != nil {
-	//	api.BuySystemDisk(group, set)
-	//}
+	// if lc.SystemDisk != nil {
+	//	 api.BuySystemDisk(group, set)
+	// }
 
 	// 买数据盘
 	if len(lc.DataDisks) != 0 {
@@ -296,7 +296,7 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 	api.SetImageReferenceNull(set)
 
 	// 设置自定义脚本会导致VM加入集群失败!!!
-	//api.SetVmSetCustomScript(group, set)
+	// api.SetVmSetCustomScript(group, set)
 
 	ctx, cancel = context.WithTimeout(rootCtx, 5*time.Minute)
 	defer cancel()
@@ -425,23 +425,10 @@ func cloudDataToNodeGroup(rootCtx context.Context, pool *armcontainerservice.Age
 	_ = client.SetToNodeGroup(set, group)
 	_ = client.AgentPoolToNodeGroup(pool, group)
 	syncSku(rootCtx, client, group)
-	//syncSecurityGroups(rootCtx, client, group)
 	setModuleInfo(group, cluster.BusinessID)
 	group.ClusterID = cluster.ClusterID
 	// 镜像信息/dockerGraphPath节点运行时/runtime(运行时版本信息，RunTimeInfo)
 	return nil
-}
-
-func syncSecurityGroups(ctx context.Context, client api.AksService, group *proto.NodeGroup) {
-	virtualNetworks, err := client.GetVirtualNetworks(ctx, group.AutoScaling.AutoScalingName, group.AutoScaling.VpcID)
-	if err != nil {
-		return
-	}
-	securityGroups := api.ParseSecurityGroupsInVpc(virtualNetworks)
-	if len(securityGroups) == 0 {
-		return
-	}
-	group.LaunchTemplate.SecurityGroupIDs = securityGroups
 }
 
 func syncSku(rootCtx context.Context, client api.AksService, group *proto.NodeGroup) {

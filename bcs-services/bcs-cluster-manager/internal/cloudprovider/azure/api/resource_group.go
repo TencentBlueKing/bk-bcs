@@ -16,7 +16,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2021-04-01/resources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/pkg/errors"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -25,7 +26,7 @@ import (
 // ResourceGroupsClient defines the interface for azure subscription client
 type ResourceGroupsClient struct {
 	subscriptionID string
-	groupClient    resources.GroupsClient
+	groupClient    *armresources.ResourceGroupsClient
 }
 
 // NewResourceGroupsClient create azure api resource group client
@@ -39,28 +40,35 @@ func NewResourceGroupsClient(opt *cloudprovider.CommonOption) (*ResourceGroupsCl
 	}
 
 	// get Authorizer
-	authorizer, err := getAuthorizer(opt.Account.TenantID, opt.Account.ClientID, opt.Account.ClientSecret)
+	cred, err := getClientCredential(opt.Account.TenantID, opt.Account.ClientID, opt.Account.ClientSecret)
 	if err != nil {
 		return nil, fmt.Errorf("get authorizer error: %v", err)
 	}
+	clientFactory, err := armresources.NewClientFactory(opt.Account.SubscriptionID, cred, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create client factory error: %v", err)
+	}
 
-	groupClient := resources.NewGroupsClient(opt.Account.SubscriptionID)
-	groupClient.Authorizer = authorizer
 	return &ResourceGroupsClient{
 		subscriptionID: opt.Account.SubscriptionID,
-		groupClient:    groupClient,
+		groupClient:    clientFactory.NewResourceGroupsClient(),
 	}, nil
 }
 
 // ListResourceGroups get azure resource groups list
 func (group *ResourceGroupsClient) ListResourceGroups(ctx context.Context) ([]*proto.ResourceGroupInfo, error) {
-	groups, err := group.groupClient.List(ctx, "", nil)
-	if err != nil {
-		return nil, fmt.Errorf("list locations error: %v", err)
+	pager := group.groupClient.NewListPager(nil)
+	result := make([]*armresources.ResourceGroup, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list locations")
+		}
+		result = append(result, next.Value...)
 	}
 
 	groupsInfo := make([]*proto.ResourceGroupInfo, 0)
-	for _, g := range groups.Values() {
+	for _, g := range result {
 		groupsInfo = append(groupsInfo, &proto.ResourceGroupInfo{
 			Name:   *g.Name,
 			Region: *g.Location,

@@ -24,7 +24,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/pkg/errors"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -32,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 )
 
 // errors
@@ -474,32 +474,6 @@ func (ng *NodeGroup) updateVMSSProperties(client api.AksService, group *proto.No
 	}
 
 	return nil
-}
-
-// scaleUpPreCheck 扩容前置检查
-func (ng *NodeGroup) scaleUpPreCheck(clusterID, cloudID, nodeGroupID string) error {
-	info, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
-		ClusterID:   clusterID,
-		CloudID:     cloudID,
-		NodeGroupID: nodeGroupID,
-	})
-	if err != nil {
-		return errors.Wrapf(err, "call GetClusterDependBasicInfo failed")
-	}
-
-	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
-	if err != nil {
-		return errors.Wrapf(err, "new azure client failed")
-	}
-
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer cancel()
-	pool, err := client.GetPoolAndReturn(ctx, info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
-	if err != nil {
-		return errors.Wrapf(err, "call GetPoolAndReturn failed")
-	}
-
-	return checkPoolState(pool)
 }
 
 // checkPoolState 更新前，检查节点池的状态

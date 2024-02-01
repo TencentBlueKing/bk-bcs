@@ -15,7 +15,6 @@ package tasks
 import (
 	"context"
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
 	"strconv"
 	"strings"
 	"time"
@@ -28,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/avast/retry-go"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -475,7 +475,6 @@ func checkClusterInstanceStatus(rootCtx context.Context, info *cloudprovider.Clo
 	defer cancel()
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
-
 	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption) // new client
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "checkClusterInstanceStatus[%s] new client failed", taskID)
@@ -484,7 +483,6 @@ func checkClusterInstanceStatus(rootCtx context.Context, info *cloudprovider.Clo
 	// wait all nodes to be ready
 	errLoop := loop.LoopDoFunc(ctx, func() error {
 		running := make([]string, 0)
-
 		nodes, err2 := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID)
 		if err2 != nil {
 			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
@@ -526,36 +524,10 @@ func checkClusterInstanceStatus(rootCtx context.Context, info *cloudprovider.Clo
 
 	// timeout error
 	if errors.Is(errLoop, context.DeadlineExceeded) {
-		running, failure := make([]string, 0), make([]string, 0)
-
-		nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID) // nolint
+		addSuccessNodes, addFailureNodes, err = getVmStatus(k8sOperator, info, client, instanceIDs, taskID)
 		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
 			return nil, nil, err
 		}
-
-		var k8sNodeMap = make(map[string]*corev1.Node, 0)
-		for i := range nodes {
-			k8sNodeMap[nodes[i].Name] = nodes[i]
-		}
-		instanceList, err = client.ListInstanceByIDAndReturn(context.Background(), asg.AutoScalingName,
-			asg.AutoScalingID, instanceIDs)
-		if err != nil {
-			return nil, nil, errors.Wrapf(err, "checkClusterInstanceStatus[%s] ListInstanceByIDAndReturn failed", taskID)
-		}
-
-		for _, ins := range instanceList {
-			id := api.VmIDToNodeID(ins)
-			n, ok := k8sNodeMap[*ins.Properties.OSProfile.ComputerName]
-			if ok && cmutils.CheckNodeIfReady(n) {
-				running = append(running, id)
-			} else {
-				failure = append(failure, id)
-			}
-		}
-
-		addSuccessNodes = running
-		addFailureNodes = failure
 	}
 	blog.Infof("checkClusterInstanceStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
 
@@ -567,4 +539,37 @@ func checkClusterInstanceStatus(rootCtx context.Context, info *cloudprovider.Clo
 	}
 
 	return addSuccessNodes, addFailureNodes, nil
+}
+
+func getVmStatus(k8sOperator *clusterops.K8SOperator, info *cloudprovider.CloudDependBasicInfo,
+	client api.AksService, instanceIDs []string, taskID string) (
+	[]string, []string, error) {
+	running, failure := make([]string, 0), make([]string, 0)
+	nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID) // nolint
+	if err != nil {
+		blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
+		return nil, nil, err
+	}
+
+	var k8sNodeMap = make(map[string]*corev1.Node, 0)
+	for i := range nodes {
+		k8sNodeMap[nodes[i].Name] = nodes[i]
+	}
+	instanceList, err := client.ListInstanceByIDAndReturn(context.Background(), info.NodeGroup.AutoScaling.AutoScalingName,
+		info.NodeGroup.AutoScaling.AutoScalingID, instanceIDs)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "checkClusterInstanceStatus[%s] ListInstanceByIDAndReturn failed", taskID)
+	}
+
+	for _, ins := range instanceList {
+		id := api.VmIDToNodeID(ins)
+		n, ok := k8sNodeMap[*ins.Properties.OSProfile.ComputerName]
+		if ok && cmutils.CheckNodeIfReady(n) {
+			running = append(running, id)
+		} else {
+			failure = append(failure, id)
+		}
+	}
+
+	return running, failure, nil
 }

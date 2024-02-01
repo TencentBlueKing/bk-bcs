@@ -734,8 +734,6 @@ func (la *ListNodesInClusterAction) appendCloudNodeInfo() {
 		blog.Errorf("ListNodesInClusterAction[%s] AppendCloudNodeInfo failed: %v", la.cluster.ClusterID, err)
 		return
 	}
-
-	return
 }
 
 // nolint

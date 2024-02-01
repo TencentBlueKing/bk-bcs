@@ -364,7 +364,8 @@ func (aks *AksServiceImpl) ListOsImage(ctx context.Context, location, publisher,
 }
 
 // ListSSHPublicKeys 获取SSH public keys
-func (aks *AksServiceImpl) ListSSHPublicKeys(ctx context.Context, resourceGroupName string) ([]*armcompute.SSHPublicKeyResource, error) {
+func (aks *AksServiceImpl) ListSSHPublicKeys(ctx context.Context, resourceGroupName string) (
+	[]*armcompute.SSHPublicKeyResource, error) {
 	pager := aks.sshPubKeyClient.NewListByResourceGroupPager(resourceGroupName, nil)
 	result := make([]*armcompute.SSHPublicKeyResource, 0)
 	for pager.More() {

@@ -59,10 +59,10 @@ func (c *nodeGroupToPool) convert() {
 	// 设置机型
 	properties.VMSize = to.Ptr(c.group.LaunchTemplate.InstanceType)
 	// 当前节点池为手动扩缩容模式，不可以指定最大、最小节点数!!!
-	//// 设置最大节点数
-	//properties.MaxCount = to.Ptr(int32(c.group.AutoScaling.MaxSize))
-	//// 设置最小节点数
-	//properties.MinCount = to.Ptr(int32(c.group.AutoScaling.MinSize))
+	// 设置最大节点数
+	// properties.MaxCount = to.Ptr(int32(c.group.AutoScaling.MaxSize))
+	// 设置最小节点数
+	// properties.MinCount = to.Ptr(int32(c.group.AutoScaling.MinSize))
 	// 设置节点池大小
 	properties.Count = to.Ptr(int32(c.group.AutoScaling.DesiredSize))
 	// 设置节点池为用户模式
@@ -566,26 +566,14 @@ func (c *setToNodeGroup) convert() {
 	c.setAutoScalingID()
 	// 设置asg name
 	c.setAutoScalingName()
-	//// 设置VpcID
-	//c.setVpcID()
-	//// 设置subnet id
-	//c.setSubnetIDs()
 	// 系统盘
 	c.setSystemDisk()
 	// 数据盘
 	c.setDataDisks()
-	// 用户数据
-	//c.setUserData()
 	// 设置可用性区域
 	c.setZones()
 	// 设置用户名
 	c.setUsername()
-}
-
-// setSubnetIDs 设置subnet id(子网id)
-func (c *setToNodeGroup) setSubnetIDs() {
-	asg := c.group.AutoScaling
-	asg.SubnetIDs = ParseSetReturnSubnetIDs(c.set)
 }
 
 // setLaunchConfigureName 设置lc name
@@ -638,15 +626,6 @@ func (c *setToNodeGroup) setRegion() {
 	}
 }
 
-// 设置VpcID
-func (c *setToNodeGroup) setVpcID() {
-	asg := c.group.AutoScaling
-	vpcIDs := ParseSetReturnSubnetNames(c.set)
-	if len(vpcIDs) >= 1 {
-		asg.VpcID = vpcIDs[0]
-	}
-}
-
 // setSystemDisk 系统盘
 func (c *setToNodeGroup) setSystemDisk() {
 	lc := c.group.LaunchTemplate
@@ -693,16 +672,6 @@ func (c *setToNodeGroup) setDataDisks() {
 			DiskType: d.DiskType,
 			DiskSize: d.DiskSize,
 		})
-	}
-}
-
-// setUserData 用户数据
-func (c *setToNodeGroup) setUserData() {
-	lc := c.group.LaunchTemplate
-	// VirtualMachineScaleSet.properties.virtualMachineProfile.userData（用户数据）
-	userData := c.set.Properties.VirtualMachineProfile.UserData
-	if userData != nil && len(*userData) != 0 {
-		lc.UserData = *userData
 	}
 }
 

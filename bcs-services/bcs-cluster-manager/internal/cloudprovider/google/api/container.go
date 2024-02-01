@@ -19,7 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"golang.org/x/oauth2"
-	"google.golang.org/api/container/v1"
+	container "google.golang.org/api/container/v1"
 	"google.golang.org/api/option"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
