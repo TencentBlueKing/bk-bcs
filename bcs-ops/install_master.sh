@@ -68,6 +68,11 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   install -dv "$HOME/.kube"
   install -v -m 600 -o "$(id -u)" -g "$(id -g)" \
     /etc/kubernetes/admin.conf "$HOME/.kube/config"
+   # single master cluster
+   if [[ "$BCS_CP_WORKER" != "0" ]];then
+     kubectl taint node -l node-role.kubernetes.io/master= node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule-
+     kubectl taint node -l node-role.kubernetes.io/control-plane= node-role.kubernetes.io/master:NoSchedule- node-role.kubernetes.io/control-plane:NoSchedule-
+   fi
   "${ROOT_DIR}"/k8s/install_cni.sh
   "${ROOT_DIR}"/k8s/operate_metrics_server apply
   "${ROOT_DIR}"/k8s/install_helm
