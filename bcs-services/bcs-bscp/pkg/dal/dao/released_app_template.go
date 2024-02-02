@@ -20,6 +20,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
@@ -140,9 +141,12 @@ func (dao *releasedAppTemplateDao) GetReleasedLately(kit *kit.Kit, bizID, appId 
 	[]*table.ReleasedAppTemplate, error) {
 	m := dao.genQ.ReleasedAppTemplate
 	q := dao.genQ.ReleasedAppTemplate.WithContext(kit.Ctx)
-
 	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId))
-	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).Order(m.ReleaseID.Desc()).Limit(1).Select(m.ReleaseID)
+	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).
+		Order(m.ReleaseID.Desc(), utils.NewCustomExpr("CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,'name') ELSE "+
+			"CONCAT_WS('/', path, 'name') END", nil)).
+		Limit(1).
+		Select(m.ReleaseID)
 	return query.Where(q.Columns(m.ReleaseID).Eq(subQuery)).Find()
 }
 
