@@ -54,7 +54,7 @@ for i in $(seq -w 1 "$LOCALPV_COUNT"); do
     utils::log "WARN" "/etc/fstab: [$src_dir] or [$dst_dir] already exists"
   else
     echo "$src_dir $dst_dir none defaults,bind 0 0" >>/etc/fstab \
-      || echo "add /etc/fstab failed"
+      || echo "add /etc/fstab failed" >&2
   fi
 done
 cat /etc/fstab

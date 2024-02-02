@@ -69,7 +69,7 @@ _on_cloud() {
 
 _on_baremetal() {
   if ! ip route show | grep "default via"; then
-    echo "fail to obtain LAN_IP, default route missing"
+    echo "fail to obtain LAN_IP, default route missing" >&2
     exit 2
   fi
   LAN_IP=$(ip -4 -o route get 10/8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p')
@@ -77,13 +77,13 @@ _on_baremetal() {
     echo "$LAN_IP"
     return 0
   fi
-  echo "fail to obtain LAN_IP"
+  echo "fail to obtain LAN_IP" >&2
   exit 1
 }
 
 _on_baremetal_v6() {
   if ! ip -6 route show | grep "default via"; then
-    echo "fail to obtain LAN_IPv6, default route missing"
+    echo "fail to obtain LAN_IPv6, default route missing" >&2
     exit 2
   fi
   LAN_IPv6=$(ip -6 -o route get fd00::/8 | grep -Po '(?<=src) \K[^ ]+')
