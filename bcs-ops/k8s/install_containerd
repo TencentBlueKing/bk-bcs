@@ -104,7 +104,7 @@ _offline_containerd() {
   if [[ -z ${tar_name} ]]; then
     utils::log "FATAL" "can't find docker installation package in ${bin_path}"
   else
-    tar xvzf "${tar_name}" -C /usr/bin/ --strip-components=1 bin/
+    tar xvzf "${tar_name}" -C /usr/local/bin/ --strip-components=1 bin/
     tar xvzf "${tar_name}" -C /etc/systemd/system/ --strip-components=1 systemd/
   fi
 
