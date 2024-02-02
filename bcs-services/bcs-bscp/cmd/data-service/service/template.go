@@ -661,15 +661,10 @@ func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfT
 	}
 	topId, _ := tools.StrToUint32Slice(req.Ids)
 	sort.SliceStable(details, func(i, j int) bool {
-		// 检测模板id是否在topId中
 		iInTopID := tools.Contains(topId, details[i].Id)
 		jInTopID := tools.Contains(topId, details[j].Id)
-		// 两者都在则按照path+name排序
-		if iInTopID && jInTopID || len(topId) == 0 {
-			if details[i].GetSpec().GetPath() != details[j].GetSpec().GetPath() {
-				return details[i].GetSpec().GetPath() < details[j].GetSpec().GetPath()
-			}
-			return details[i].GetSpec().GetName() < details[j].GetSpec().GetName()
+		if iInTopID && jInTopID {
+			return i < j
 		}
 		if iInTopID {
 			return true
