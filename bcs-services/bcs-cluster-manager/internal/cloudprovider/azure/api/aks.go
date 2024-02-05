@@ -34,9 +34,13 @@ type AksServiceImpl struct {
 	poolClient           *armcontainerservice.AgentPoolsClient
 	setClient            *armcompute.VirtualMachineScaleSetsClient
 	vmClient             *armcompute.VirtualMachineScaleSetVMsClient
+	vmSizeClient         *armcompute.VirtualMachineSizesClient
+	vmImageClient        *armcompute.VirtualMachineImagesClient
 	vnetClient           *armnetwork.VirtualNetworksClient
+	subnetClient         *armnetwork.SubnetsClient
 	clustersClient       *armcontainerservice.ManagedClustersClient
 	securityGroupsClient *armnetwork.SecurityGroupsClient
+	sshPubKeyClient      *armcompute.SSHPublicKeysClient
 }
 
 // NewAksServiceImplWithCommonOption 从 CommonOption 创建 AksService
@@ -94,6 +98,14 @@ func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret, resourc
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create vmScaleSetVMs client,SubscriptionID:%s", subscriptionID)
 	}
+	vmSizeClient, err := armcompute.NewVirtualMachineSizesClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create VMSize client,SubscriptionID:%s", subscriptionID)
+	}
+	vmimageClient, err := armcompute.NewVirtualMachineImagesClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create VMImages client,SubscriptionID:%s", subscriptionID)
+	}
 	netClient, err := armnetwork.NewInterfacesClient(subscriptionID, cred, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create networkInterfaces client,SubscriptionID:%s", subscriptionID)
@@ -107,22 +119,36 @@ func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret, resourc
 		return nil, errors.Wrapf(err, "failed to create virtual networks client,SubscriptionID:%s",
 			subscriptionID)
 	}
+	subnetClient, err := armnetwork.NewSubnetsClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create subnets client,SubscriptionID:%s",
+			subscriptionID)
+	}
 	securityGroupsClient, err := armnetwork.NewSecurityGroupsClient(subscriptionID, cred, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create security groups client,SubscriptionID:%s",
+			subscriptionID)
+	}
+	sshPubKeyClient, err := armcompute.NewSSHPublicKeysClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create ssh public keys client,SubscriptionID:%s",
 			subscriptionID)
 	}
 
 	return &AksServiceImpl{
 		resourcesGroup:       resourceGroupName,
 		vmClient:             vmClient,
+		vmSizeClient:         vmSizeClient,
+		vmImageClient:        vmimageClient,
 		setClient:            setClient,
 		netClient:            netClient,
 		poolClient:           poolClient,
 		clustersClient:       clustersClient,
 		resourceClient:       resourceClient,
 		vnetClient:           vnetClient,
+		subnetClient:         subnetClient,
 		securityGroupsClient: securityGroupsClient,
+		sshPubKeyClient:      sshPubKeyClient,
 	}, nil
 }
 
@@ -301,4 +327,69 @@ func (aks *AksServiceImpl) GetClusterMonitorUserCredWithName(
 		return nil, errors.Wrapf(err, "failed to finish the request")
 	}
 	return credentials.Kubeconfigs, nil
+}
+
+// ListVMSize 获取VM机型(ListVMSize)
+//
+// location - 区域名称
+func (aks *AksServiceImpl) ListVMSize(ctx context.Context, location string) ([]*armcompute.VirtualMachineSize, error) {
+	pager := aks.vmSizeClient.NewListPager(location, nil)
+	result := make([]*armcompute.VirtualMachineSize, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+		result = append(result, next.Value...)
+	}
+
+	return result, nil
+}
+
+// ListOsImage 获取VM操作系统镜像(ListOsImage)
+//
+// location - 区域名称
+//
+// publisher - OS发行商
+//
+// offer - OS提供商.
+func (aks *AksServiceImpl) ListOsImage(ctx context.Context, location, publisher, offer string,
+	options *armcompute.VirtualMachineImagesClientListSKUsOptions) ([]*armcompute.VirtualMachineImageResource, error) {
+	images, err := aks.vmImageClient.ListSKUs(ctx, location, publisher, offer, options)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to finish the request")
+	}
+
+	return images.VirtualMachineImageResourceArray, nil
+}
+
+// ListSSHPublicKeys 获取SSH public keys
+func (aks *AksServiceImpl) ListSSHPublicKeys(ctx context.Context, resourceGroupName string) (
+	[]*armcompute.SSHPublicKeyResource, error) {
+	pager := aks.sshPubKeyClient.NewListByResourceGroupPager(resourceGroupName, nil)
+	result := make([]*armcompute.SSHPublicKeyResource, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+		result = append(result, next.Value...)
+	}
+
+	return result, nil
+}
+
+// ListSSHPublicKeysAll 获取订阅下所有SSH public keys
+func (aks *AksServiceImpl) ListSSHPublicKeysAll(ctx context.Context) ([]*armcompute.SSHPublicKeyResource, error) {
+	pager := aks.sshPubKeyClient.NewListBySubscriptionPager(nil)
+	result := make([]*armcompute.SSHPublicKeyResource, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+		result = append(result, next.Value...)
+	}
+
+	return result, nil
 }

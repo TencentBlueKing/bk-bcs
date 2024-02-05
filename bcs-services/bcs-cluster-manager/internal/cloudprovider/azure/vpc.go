@@ -10,16 +10,18 @@
  * limitations under the License.
  */
 
-package api
+package azure
 
 import (
 	"context"
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 )
 
 var vpcMgr sync.Once
@@ -27,7 +29,7 @@ var vpcMgr sync.Once
 func init() {
 	vpcMgr.Do(func() {
 		// init VPC manager
-		cloudprovider.InitVPCManager("google", &VPCManager{})
+		cloudprovider.InitVPCManager(cloudName, &VPCManager{})
 	})
 }
 
@@ -36,39 +38,70 @@ type VPCManager struct{}
 
 // ListVpcs list vpcs
 func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOption) ([]*proto.CloudVpc, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("ListVpcs create AksService failed, %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	defer cancel()
+
+	vn, err := client.ListVirtualNetwork(ctx, opt.ResourceGroupName)
+	if err != nil {
+		return nil, fmt.Errorf("ListVpcs ListVirtualNetwork failed, err %s", err.Error())
+	}
+
+	result := make([]*proto.CloudVpc, 0)
+	for _, v := range vn {
+		if vpcID != "" && *v.Name != vpcID {
+			continue
+		}
+
+		vpc := &proto.CloudVpc{
+			Name:  *v.Name,
+			VpcId: *v.Name,
+		}
+		if v.Properties != nil && v.Properties.AddressSpace != nil &&
+			len(v.Properties.AddressSpace.AddressPrefixes) > 0 {
+			if !strings.Contains(*v.Properties.AddressSpace.AddressPrefixes[0], ":") {
+				vpc.Ipv4Cidr = *v.Properties.AddressSpace.AddressPrefixes[0]
+			} else {
+				vpc.Ipv6Cidr = *v.Properties.AddressSpace.AddressPrefixes[0]
+			}
+		}
+		result = append(result, vpc)
+	}
+
+	return result, nil
 }
 
 // ListSubnets list vpc subnets
 func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNetworksOption) ([]*proto.Subnet, error) {
-	locationList := strings.Split(opt.Region, "-")
-	if len(locationList) == 3 {
-		opt.Region = strings.Join(locationList[:2], "-")
+	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("ListSubnets create AksService failed, %v", err)
 	}
 
-	client, err := NewComputeServiceClient(&opt.CommonOption)
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	defer cancel()
+
+	subnets, err := client.ListSubnets(ctx, opt.ResourceGroupName, vpcID)
 	if err != nil {
-		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
-	}
-	subnets, err := client.ListSubnetworks(context.Background(), opt.Region)
-	if err != nil {
-		return nil, fmt.Errorf("list subnets failed, err %s", err.Error())
+		return nil, fmt.Errorf("ListSubnets failed, err %s", err.Error())
 	}
 
 	result := make([]*proto.Subnet, 0)
-	for _, v := range subnets.Items {
-		networkInfo := strings.Split(v.Network, "/")
-		if vpcID != "" && vpcID != networkInfo[len(networkInfo)-1] {
-			continue
+	for _, v := range subnets {
+		var cidr string
+		if v.Properties != nil && v.Properties.AddressPrefix != nil {
+			cidr = *v.Properties.AddressPrefix
+
 		}
-		regionInfo := strings.Split(v.Region, "/")
 		result = append(result, &proto.Subnet{
-			VpcID:         networkInfo[len(networkInfo)-1],
-			SubnetID:      v.Name,
-			SubnetName:    v.Name,
-			CidrRange:     v.IpCidrRange,
-			Ipv6CidrRange: v.Ipv6CidrRange,
-			Zone:          regionInfo[len(regionInfo)-1],
+			VpcID:      vpcID,
+			SubnetID:   *v.Name,
+			SubnetName: *v.Name,
+			CidrRange:  cidr,
 		})
 	}
 	return result, nil
@@ -76,7 +109,22 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 
 // ListSecurityGroups list security groups
 func (vm *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) ([]*proto.SecurityGroup, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	cli, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("ListKeyPairs create aks client failed, %v", err)
+	}
+
+	result, err := cli.ListNetworkSecurityGroups(context.Background(), opt.ResourceGroupName)
+	if err != nil {
+		return nil, fmt.Errorf("ListSSHPublicKeys failed, %v", err)
+	}
+
+	groups := make([]*proto.SecurityGroup, 0)
+	for _, v := range result {
+		groups = append(groups, &proto.SecurityGroup{SecurityGroupName: *v.Name})
+	}
+
+	return groups, nil
 }
 
 // GetCloudNetworkAccountType 查询用户网络类型

@@ -14,25 +14,8 @@ package api
 
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/adal"
-	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/pkg/errors"
 )
-
-// getAuthorizer get azure authorizer
-func getAuthorizer(tenantID, clientID, clientSecret string) (autorest.Authorizer, error) {
-	oauthConfig, err := adal.NewOAuthConfig(azure.PublicCloud.ActiveDirectoryEndpoint, tenantID)
-	if err != nil {
-		return nil, err
-	}
-	spToken, err := adal.NewServicePrincipalToken(*oauthConfig, clientID, clientSecret,
-		azure.PublicCloud.ResourceManagerEndpoint)
-	if err != nil {
-		return nil, err
-	}
-	return autorest.NewBearerAuthorizer(spToken), nil
-}
 
 // getClientCredential crate azure SDK authorizer
 func getClientCredential(tenantID, clientID, clientSecret string) (*azidentity.ClientSecretCredential, error) {

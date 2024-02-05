@@ -305,7 +305,10 @@ func (la *ListKeyPairsAction) listKeyPairs() error {
 	cmOption.Region = la.req.Region
 
 	// get key list
-	keys, err := nodeMgr.ListKeyPairs(cmOption)
+	keys, err := nodeMgr.ListKeyPairs(&cloudprovider.ListNetworksOption{
+		CommonOption:      *cmOption,
+		ResourceGroupName: la.req.ResourceGroupName,
+	})
 	if err != nil {
 		return err
 	}
