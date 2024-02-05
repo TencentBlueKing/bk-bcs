@@ -597,7 +597,10 @@ func (ka *CheckKubeConnectAction) Handle(ctx context.Context, req *cmproto.KubeC
 	}
 
 	ok, err := provider.CheckClusterEndpointStatus(req.ClusterID, req.IsExtranet,
-		&cloudprovider.CheckEndpointStatusOption{CommonOption: *cmOption})
+		&cloudprovider.CheckEndpointStatusOption{
+			CommonOption:      *cmOption,
+			ResourceGroupName: req.ResourceGroupName,
+		})
 	if err != nil {
 		ka.setResp(common.BcsErrClusterManagerCheckKubeConnErr, err.Error())
 		return
