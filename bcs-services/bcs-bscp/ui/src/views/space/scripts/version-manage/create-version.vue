@@ -45,7 +45,7 @@
           <template #optionRender="{ item }">
             <span>{{ item.name }}</span>
             <bk-tag :theme="item.isOnline ? 'success' : ''" style="margin-left: 8px">
-              {{ item.isOnline ? t('已上线') : t('未上线') }}
+              {{ item.isOnline ? t('已上线') : t('已下线') }}
             </bk-tag>
           </template>
         </bk-select>

@@ -500,7 +500,7 @@ export default {
   复制并新建: 'Copy and create new',
   '确认删除该脚本版本？': 'Are you sure you want to delete this script version?',
   '确定上线此版本？': 'Are you sure you want to launch this version?',
-  '上线后，之前的线上版本将被置为「已下线」状态': 'After going online, the previous online version will be set to "offline" status',
+  '上线后，之前的线上版本将被置为「已下线」,若要使该版本在现网中生效，需要重新发布引用此脚本的服务': 'After going online, the previous online version will be "offline", and for that version to work on the live network, the service that references this script will need to be republished',
   '当前已有「未上线」版本': 'There is currently a "not online" version',
   前往编辑: 'Go to edit',
   创建版本: 'Create version',
