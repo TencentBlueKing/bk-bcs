@@ -64,6 +64,7 @@
                 class="max-w-[420px]"
                 :disable-delete-item="false"
                 :min-item="0"
+                :value-rules="[]"
                 v-model="formData.annotations.values">
               </KeyValue>
             </bk-form-item>
@@ -96,13 +97,17 @@
                 @row-mouse-enter="handlekubeletMouseEnter"
                 @page-change="pageChange"
                 @page-limit-change="pageSizeChange">
-                <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.argsName')" prop="flagName"></bcs-table-column>
+                <bcs-table-column
+                  :label="$t('cluster.nodeTemplate.kubelet.label.argsName')"
+                  prop="flagName"></bcs-table-column>
                 <bcs-table-column
                   :label="$t('cluster.nodeTemplate.kubelet.label.argsDesc')"
                   prop="flagDesc"
                   show-overflow-tooltip>
                 </bcs-table-column>
-                <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.defaultValue')" prop="defaultValue"></bcs-table-column>
+                <bcs-table-column
+                  :label="$t('cluster.nodeTemplate.kubelet.label.defaultValue')"
+                  prop="defaultValue"></bcs-table-column>
                 <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.curValue')">
                   <template #default="{ row }">
                     <div class="kubelet-value">
@@ -141,7 +146,9 @@
             </div>
           </FormGroup>
           <FormGroup class="mt15" :title="$t('cluster.nodeTemplate.title.initConfig')" :allow-toggle="false">
-            <bk-form-item :label="$t('cluster.nodeTemplate.label.preInstall.title')" :desc="$t('cluster.nodeTemplate.label.preInstall.desc')">
+            <bk-form-item
+              :label="$t('cluster.nodeTemplate.label.preInstall.title')"
+              :desc="$t('cluster.nodeTemplate.label.preInstall.desc')">
               <bcs-input
                 type="textarea"
                 class="mt10 mw524"
@@ -150,7 +157,8 @@
                 v-model="formData.preStartUserScript"></bcs-input>
             </bk-form-item>
             <bk-form-item
-              :label="$t('cluster.nodeTemplate.label.postInstall.title')" :desc="$t('cluster.nodeTemplate.label.postInstall.desc')">
+              :label="$t('cluster.nodeTemplate.label.postInstall.title')"
+              :desc="$t('cluster.nodeTemplate.label.postInstall.desc')">
               <bcs-select class="mw524" :clearable="false" v-model="postActionType">
                 <bcs-option id="simple" :name="$t('cluster.nodeTemplate.label.postInstall.type.scripts')"></bcs-option>
                 <bcs-option id="complex" :name="$t('cluster.nodeTemplate.label.postInstall.type.sops')"></bcs-option>
@@ -196,7 +204,9 @@
               </div>
               <div class="bk-sops-params mw524" v-bkloading="{ isLoading: sopsParamsLoading }">
                 <div class="title">
-                  <span v-bk-tooltips.top="{ content: $t('cluster.nodeTemplate.sops.title.taskArgs.tips') }" class="name">
+                  <span
+                    v-bk-tooltips.top="{ content: $t('cluster.nodeTemplate.sops.title.taskArgs.tips') }"
+                    class="name">
                     {{$t('cluster.nodeTemplate.sops.title.taskArgs.text')}}
                   </span>
                 </div>
@@ -243,13 +253,17 @@
           v-model="showPreview">
           <bcs-table :data="kubeletDiffData" :key="JSON.stringify(kubeletDiffData)">
             <bcs-table-column :label="$t('plugin.tools.toolName')" prop="moduleID"></bcs-table-column>
-            <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.flagName')" prop="flagName"></bcs-table-column>
+            <bcs-table-column
+              :label="$t('cluster.nodeTemplate.kubelet.label.flagName')"
+              prop="flagName"></bcs-table-column>
             <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.beforeEdit')" prop="origin">
               <template #default="{ row }">
                 {{row.origin || '--'}}
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.afterEdit')" prop="value"></bcs-table-column>
+            <bcs-table-column
+              :label="$t('cluster.nodeTemplate.kubelet.label.afterEdit')"
+              prop="value"></bcs-table-column>
           </bcs-table>
         </bcs-dialog>
         <!-- 任务调试状态 -->
@@ -444,8 +458,7 @@ export default defineComponent({
           trigger: 'custom',
           validator: () => {
             const keys = Object.keys(formData.value.annotations.values);
-            const values = keys.map(key => formData.value.annotations.values[key]);
-            return keys.every(v => /^[A-Za-z0-9._/-]+$/.test(v)) && values.every(v => /^[A-Za-z0-9._/-]+$/.test(v));
+            return keys.every(v => /^[A-Za-z0-9._/-]+$/.test(v));
           },
         },
       ],

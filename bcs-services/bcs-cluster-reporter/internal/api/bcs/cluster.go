@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package bcs
+// Package bcs xxx
 package bcs
 
 import (
@@ -65,7 +65,7 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 		}
 
 		if !result.Result {
-			e := errors.New(fmt.Sprintf("cluster response result failed: %s", result.Msg))
+			e := fmt.Errorf("cluster response result failed: %s", result.Msg)
 			klog.V(3).Info(e.Error())
 			return nil, e
 		}
@@ -77,12 +77,11 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 			cluster := cmproto.Cluster{}
 			err = json.Unmarshal(clusterData, &cluster)
 			if err != nil {
-				e := errors.New(fmt.Sprintf("Unmarshal cluster response failed %s", err.Error()))
+				e := fmt.Errorf("unmarshal cluster response failed %s", err.Error())
 				klog.V(3).Info(e.Error())
 				return nil, e
-			} else {
-				clusterList = append(clusterList, cluster)
 			}
+			clusterList = append(clusterList, cluster)
 		}
 		resultList = append(resultList, clusterList...)
 	}
@@ -118,7 +117,7 @@ func (cm *ClusterManager) GetNodesByClusterId(clusterId string) ([]cmproto.Node,
 	}
 
 	if !result.Result {
-		e := errors.New(fmt.Sprintf("cluster response result failed: %s", result.Msg))
+		e := fmt.Errorf("cluster response result failed: %s", result.Msg)
 		klog.V(3).Info(e.Error())
 		return nil, e
 	}
@@ -127,7 +126,7 @@ func (cm *ClusterManager) GetNodesByClusterId(clusterId string) ([]cmproto.Node,
 	nodeList := make([]cmproto.Node, 0, 0)
 	err = json.Unmarshal(nodeData, &nodeList)
 	if err != nil {
-		e := errors.New(fmt.Sprintf("Unmarshal cluster response failed %s", err.Error()))
+		e := fmt.Errorf("unmarshal cluster response failed %s", err.Error())
 		klog.V(3).Info(e.Error())
 		return nil, e
 	}
@@ -160,7 +159,7 @@ func (cm *ClusterManager) GetNode(ip string) (*cmproto.Node, error) {
 	}
 
 	if !result.Result {
-		e := errors.New(fmt.Sprintf("getnode response result failed: %s", result.Msg))
+		e := fmt.Errorf("getnode response result failed: %s", result.Msg)
 		klog.V(3).Info(e.Error())
 		return nil, e
 	}
@@ -169,13 +168,13 @@ func (cm *ClusterManager) GetNode(ip string) (*cmproto.Node, error) {
 	nodeList := make([]cmproto.Node, 0, 0)
 	err = json.Unmarshal(nodeData, &nodeList)
 	if err != nil {
-		e := errors.New(fmt.Sprintf("Unmarshal getnode response failed %s", err.Error()))
+		e := fmt.Errorf("Unmarshal getnode response failed %s", err.Error())
 		klog.V(3).Info(e.Error())
 		return nil, e
 	}
 
 	if len(nodeList) != 1 {
-		e := errors.New(fmt.Sprintf("getnode result num wrong %s", err.Error()))
+		e := fmt.Errorf("getnode result num wrong %s", err.Error())
 		klog.V(3).Info(e.Error())
 		return nil, e
 	}

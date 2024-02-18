@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package k8s
+// Package k8s xxx
 package k8s
 
 import (

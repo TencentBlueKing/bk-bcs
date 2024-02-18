@@ -19,6 +19,7 @@ import (
 
 var auditClient *audit.Client
 
+// Option gateway and token
 type Option struct {
 	Gateway string
 	Token   string

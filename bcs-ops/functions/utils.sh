@@ -68,7 +68,7 @@ utils::color_echo() {
 #	$LOG_FILE | write log to file
 #   $ERR_CODE | fatal exit code, default is 1
 # PrintColor:
-# DEBUG-purple;INFO-yellow;OK-green;WARN-yellow;ERROR-red;FATAL-red
+# DEBUG-purple;INFO-blue;OK-green;WARN-yellow;ERROR-red;FATAL-red
 # Returns:
 # DEBUG-0;INFO-0;OK-0;WARN-0;ERROR-1;FATAL-$ERR_CODE and exit;
 #######################################
@@ -83,9 +83,17 @@ utils::log() {
   if ((${#FUNCNAME[@]} <= 2)); then
     func_name="main"
   else
-    func_name="${FUNCNAME[1]}"
+    if [[ -n ${TRAP_FLAG:-} ]]; then
+      func_name="${FUNCNAME[2]}"
+    else
+      func_name="${FUNCNAME[1]}"
+    fi
   fi
-  format="$timestamp [$level] ${BASH_SOURCE[1]}|${BASH_LINENO[0]}|${func_name}:"
+  if [[ -n ${TRAP_FLAG:-} ]]; then
+    format="$timestamp [$level] ${BASH_SOURCE[2]}|${BASH_LINENO[1]}|${func_name}:"
+  else
+    format="$timestamp [$level] ${BASH_SOURCE[1]}|${BASH_LINENO[0]}|${func_name}:"
+  fi
   case "${level}" in
     "DEBUG")
       if [[ -z ${DEBUG:-} ]]; then
@@ -151,6 +159,7 @@ utils::log() {
 # ######################################
 utils::on_ERR() {
   ERR_CODE=$?
+  export TRAP_FLAG=1
   utils::log FATAL "$(utils::color_echo bwhite "$BASH_COMMAND")"
 }
 

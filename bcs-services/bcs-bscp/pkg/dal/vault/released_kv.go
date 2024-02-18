@@ -64,5 +64,5 @@ func (s *set) GetRKv(kit *kit.Kit, opt *types.GetRKvOption) (kvType table.DataTy
 		return "", "", fmt.Errorf("value type assertion failed: err : %v", err)
 	}
 
-	return
+	return kvType, value, nil
 }

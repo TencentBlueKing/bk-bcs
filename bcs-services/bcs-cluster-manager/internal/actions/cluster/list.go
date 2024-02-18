@@ -714,7 +714,7 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 func (la *ListNodesInClusterAction) appendCloudNodeInfo() {
 	clsMgr, err := cloudprovider.GetClusterMgr(la.cloud.CloudProvider)
 	if err != nil {
-		blog.Errorf("ListNodesInClusterAction[%s] GetClusterMgr failed, %s", la.cluster.ClusterID,
+		blog.Errorf("ListNodesInClusterAction[%s] %s GetClusterMgr failed, %s", la.cluster.ClusterID,
 			la.cloud.CloudProvider, err.Error())
 		return
 	}
@@ -734,8 +734,6 @@ func (la *ListNodesInClusterAction) appendCloudNodeInfo() {
 		blog.Errorf("ListNodesInClusterAction[%s] AppendCloudNodeInfo failed: %v", la.cluster.ClusterID, err)
 		return
 	}
-
-	return
 }
 
 // nolint

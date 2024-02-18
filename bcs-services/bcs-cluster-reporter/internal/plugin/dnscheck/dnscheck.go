@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package dnscheck
+// Package dnscheck xxx
 package dnscheck
 
 import (
@@ -222,8 +222,6 @@ func (p *Plugin) checkDNSEndpoints(ctx context.Context, domainList []string) {
 		if time.Since(start) < time.Second {
 			<-time.After(time.Second - time.Since(start))
 		}
-		start = time.Now()
-
 	}
 
 }

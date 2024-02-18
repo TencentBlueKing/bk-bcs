@@ -132,7 +132,10 @@ func (la *ListSubnetsAction) ListCloudSubnets() error {
 	}
 
 	// get subnet list
-	subnets, err := vpcMgr.ListSubnets(la.req.VpcID, la.req.Zone, cmOption)
+	subnets, err := vpcMgr.ListSubnets(la.req.VpcID, la.req.Zone, &cloudprovider.ListNetworksOption{
+		CommonOption:      *cmOption,
+		ResourceGroupName: la.req.ResourceGroupName,
+	})
 	if err != nil {
 		return err
 	}

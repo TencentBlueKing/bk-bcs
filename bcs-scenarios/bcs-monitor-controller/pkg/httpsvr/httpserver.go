@@ -61,7 +61,9 @@ func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
 // 	return
 // }
 
+// ListAppMonitors list app monitor
 func (h *HttpServerClient) ListAppMonitors(request *restful.Request, response *restful.Response) {
+	// InstalledScenarioInfo install
 	type InstalledScenarioInfo struct {
 		Name    string `json:"name"`
 		Status  string `json:"status"`
@@ -72,6 +74,9 @@ func (h *HttpServerClient) ListAppMonitors(request *restful.Request, response *r
 	}
 	bizID := request.PathParameter("biz_id")
 	appMonitorList := &monitorextensionv1.AppMonitorList{}
+	// LabelSelectorAsSelector converts the LabelSelector api type into a struct that implements
+	// labels.Selector
+	// Note: This function should be kept in sync with the selector methods in pkg/labels/selector.go
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(map[string]string{
 		monitorextensionv1.LabelKeyForBizID: bizID,
 	}))
@@ -97,7 +102,9 @@ func (h *HttpServerClient) ListAppMonitors(request *restful.Request, response *r
 	_, _ = response.Write(CreateResponseData(nil, "", Resp{InstallScenario: infoList}))
 }
 
+// CreateOrUpdateAppMonitor create or update app monitor
 func (h *HttpServerClient) CreateOrUpdateAppMonitor(request *restful.Request, response *restful.Response) {
+	// Req entityPointer req
 	type Req struct {
 		BizID    string `json:"biz_id"`
 		Scenario string `json:"scenario"`
@@ -151,7 +158,9 @@ func (h *HttpServerClient) CreateOrUpdateAppMonitor(request *restful.Request, re
 	}
 }
 
+// DeleteAppMonitor delete app monitor
 func (h *HttpServerClient) DeleteAppMonitor(request *restful.Request, response *restful.Response) {
+	// Req request
 	type Req struct {
 		BizID    string `json:"biz_id"`
 		Scenario string `json:"scenario"`
@@ -175,6 +184,7 @@ func (h *HttpServerClient) DeleteAppMonitor(request *restful.Request, response *
 	return
 }
 
+// do Create Or Update App Monitor
 func (h *HttpServerClient) doCreateOrUpdateAppMonitor(bizID, scenario, values string) (*k8stypes.NamespacedName, error) {
 	var (
 		appMonitor    *monitorextensionv1.AppMonitor
@@ -237,6 +247,7 @@ func (h *HttpServerClient) doCreateOrUpdateAppMonitor(bizID, scenario, values st
 	}, nil
 }
 
+// do Delete App Monitor
 func (h *HttpServerClient) doDeleteAppMonitor(bizID, scenario string) error {
 	appMonitorList := &monitorextensionv1.AppMonitorList{}
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(map[string]string{

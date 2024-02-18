@@ -35,7 +35,7 @@ func init() {
 // mig20231123143015Up for up migration
 func mig20231123143015Up(tx *gorm.DB) error {
 
-	// Applications: 服务
+	// Applications : 服务
 	type Applications struct {
 		Alias    string `gorm:"type:varchar(255) not null;"`
 		DataType string `gorm:"type:varchar(255) not null;"`
@@ -68,7 +68,7 @@ func mig20231123143015Up(tx *gorm.DB) error {
 // mig20231123143015Down for down migration
 func mig20231123143015Down(tx *gorm.DB) error {
 
-	// Applications: 服务
+	// Applications : 服务
 	type Applications struct {
 		Alias    string `gorm:"type:varchar(255) not null;"`
 		DataType string `gorm:"type:varchar(255) not null;"`

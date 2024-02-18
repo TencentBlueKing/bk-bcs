@@ -281,6 +281,7 @@ func (dao *releasedHookDao) DeleteByHookIDAndReleaseIDWithTx(kit *kit.Kit, tx *g
 }
 
 // DeleteByHookRevisionIDAndReleaseIDWithTx deletes the released hook by hook revision id and release id with tx.
+// nolint
 func (dao *releasedHookDao) DeleteByHookRevisionIDAndReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
 	bizID, hookID, hookRevisionID, releaseID uint32) error {
 	if bizID == 0 {

@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RichardKnop/machinery/v2"
+	machinery "github.com/RichardKnop/machinery/v2"
 	"github.com/RichardKnop/machinery/v2/backends/mongo"
 	"github.com/RichardKnop/machinery/v2/brokers/amqp"
 	"github.com/RichardKnop/machinery/v2/config"

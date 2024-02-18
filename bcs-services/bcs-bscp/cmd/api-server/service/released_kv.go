@@ -150,7 +150,7 @@ func (m *kvService) Export(w http.ResponseWriter, r *http.Request) {
 
 	_, err = w.Write(content)
 	if err != nil {
-		logs.Errorf("Error writing response:", err)
+		logs.Errorf("Error writing response:%s", err)
 		_ = render.Render(w, r, rest.BadRequest(err))
 	}
 

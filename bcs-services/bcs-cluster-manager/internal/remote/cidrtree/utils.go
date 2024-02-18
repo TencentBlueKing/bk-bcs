@@ -110,5 +110,5 @@ func GetIPNum(ipnet *net.IPNet) (ipnum uint32, err error) {
 		return
 	}
 	ipnum = uint32(math.Pow(2, float64(totalSize-prefixSize)))
-	return
+	return ipnum, nil
 }

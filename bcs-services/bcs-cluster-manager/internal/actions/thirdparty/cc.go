@@ -65,7 +65,7 @@ func (la *ListCCTopologyAction) filterInter() bool {
 }
 
 func (la *ListCCTopologyAction) listTopology() error {
-	var bizID = ""
+	var bizID string
 	cluster, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
 	if err == nil {
 		bizID = cluster.BusinessID

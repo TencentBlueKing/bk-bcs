@@ -16,12 +16,14 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
@@ -182,6 +184,21 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	nodes, err := kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("list nodes failed, %s", err.Error())
+	}
+
+	// get container runtime info here
+	if len(nodes.Items) > 0 {
+		crv := strings.Split(nodes.Items[0].Status.NodeInfo.ContainerRuntimeVersion, "://")
+		if len(crv) == 2 {
+			data.Cluster.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{
+				ContainerRuntime: crv[0],
+				RuntimeVersion:   crv[1],
+			}
+			err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), data.Cluster)
+			if err != nil {
+				blog.Errorf("importClusterInstances update cluster[%s] failed: %v", data.Cluster.ClusterName, err)
+			}
+		}
 	}
 
 	err = importClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID)

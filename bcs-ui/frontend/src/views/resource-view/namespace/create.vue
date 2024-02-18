@@ -216,7 +216,7 @@ export default defineComponent({
           validator() {
             // eslint-disable-next-line no-eval
             const regx = new RegExp(KEY_REGEXP);
-            return formData.value.labels.every(item => regx.test(item.key) && regx.test(item.value));
+            return formData.value.labels.every(item => item.key && regx.test(item.key) && regx.test(item.value));
           },
           message: $i18n.t('generic.validate.labelKey1'),
           trigger: 'blur',
@@ -227,7 +227,7 @@ export default defineComponent({
           validator() {
             // eslint-disable-next-line no-eval
             const regx = new RegExp(KEY_REGEXP);
-            return formData.value.annotations.every(item => regx.test(item.key) && regx.test(item.value));
+            return formData.value.annotations.every(item => item.key && regx.test(item.key));
           },
           message: $i18n.t('generic.validate.labelKey1'),
           trigger: 'blur',

@@ -75,6 +75,7 @@ const (
 	tableHistoryManifest    = "bcs_gitops_app_history_manifest"
 )
 
+// Interface xxx interface
 type Interface interface {
 	Init() error
 
