@@ -164,6 +164,7 @@ func TestUnmarshalGreaterThanElement(t *testing.T) {
 }
 
 // nolint
+// NOCC:tosa/fn_length(ignore)
 func TestUnmarshalGreaterThanEqualElement(t *testing.T) {
 
 	const geJSON = `

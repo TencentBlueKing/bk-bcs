@@ -45,6 +45,7 @@ type NodeExporter struct {
 	externalIP string
 }
 
+// Watch watch external ip
 func (n *NodeExporter) Watch() {
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()

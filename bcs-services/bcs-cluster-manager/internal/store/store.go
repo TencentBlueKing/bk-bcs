@@ -197,7 +197,7 @@ type ModelSet struct {
 
 // NewModelSet create model set
 func NewModelSet(db drivers.DB) ClusterManagerModel {
-	storeClient = &ModelSet{
+	storeClient = &ModelSet{ // nolint
 		ModelCluster:           cluster.New(db),
 		ModelNode:              node.New(db),
 		ModelClusterCredential: clustercredential.New(db),

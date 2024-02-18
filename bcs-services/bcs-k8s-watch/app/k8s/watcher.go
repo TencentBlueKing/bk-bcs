@@ -124,6 +124,7 @@ func (wo *WatcherOptions) Validate() error {
 }
 
 // NewWatcher creates a new watcher of target type resource.
+// nolint
 func NewWatcher(wo *WatcherOptions) (*Watcher, error) {
 	if wo == nil {
 		return nil, fmt.Errorf("WatcherOptions can not be nil pointer")

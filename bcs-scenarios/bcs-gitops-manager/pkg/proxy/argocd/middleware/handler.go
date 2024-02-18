@@ -431,7 +431,8 @@ func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Appl
 		for i := range app.Spec.Sources {
 			appSource := app.Spec.Sources[i]
 			repoUrl := appSource.RepoURL
-			repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
+			var repoBelong bool
+			repoBelong, err = h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
 			if err != nil {
 				return http.StatusBadRequest,
 					errors.Wrapf(err, "check multi-source repository '%s' permission failed", repoUrl)
@@ -445,7 +446,8 @@ func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Appl
 	} else {
 		if app.Spec.Source != nil {
 			repoUrl := app.Spec.Source.RepoURL
-			repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
+			var repoBelong bool
+			repoBelong, err = h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
 			if err != nil {
 				return http.StatusBadRequest, errors.Wrapf(err, "check repository permission failed")
 			}

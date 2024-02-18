@@ -11,12 +11,14 @@
  *
  */
 
+// Package server implements a http server for bcs-terraform-controller
 package server
 
 import (
-	"github.com/gin-gonic/gin"
 	"net"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"

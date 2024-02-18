@@ -294,7 +294,7 @@ func LogAnalysis(cluster plugin_manager.ClusterConfig) {
 					if index+1 < len(etcdTookTooLongGaugeVecSetList) {
 						etcdTookTooLongGaugeVecSetList = append(etcdTookTooLongGaugeVecSetList[:index+1],
 							append(
-								[]*metric_manager.GaugeVecSet{&metric_manager.GaugeVecSet{Labels: []string{cluster.ClusterID,
+								[]*metric_manager.GaugeVecSet{{Labels: []string{cluster.ClusterID,
 									cluster.BusinessID, request}, Value: float64(size)}},
 								etcdTookTooLongGaugeVecSetList[index+1:]...)...)
 					} else {

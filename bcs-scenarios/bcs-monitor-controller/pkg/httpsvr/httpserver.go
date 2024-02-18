@@ -69,6 +69,7 @@ func (h *HttpServerClient) ListAppMonitors(request *restful.Request, response *r
 		Status  string `json:"status"`
 		Message string `json:"message"`
 	}
+	// Resp response
 	type Resp struct {
 		InstallScenario []InstalledScenarioInfo `json:"install_scenario"`
 	}

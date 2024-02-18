@@ -176,11 +176,13 @@ func validateKvType(kvType string) error {
 }
 
 // 读取json文件
+// NOCC:golint/noptr(误报)
 func readJSONFile(bytes []byte, result *map[string]interface{}) bool {
 	return !json.Valid(bytes) && json.Unmarshal(bytes, &result) == nil
 }
 
 // 读取yaml文件
+// NOCC:golint/noptr(误报)
 func readYAMLFile(bytes []byte, result *map[string]interface{}) bool {
 	return yaml.Unmarshal(bytes, &result) == nil
 }

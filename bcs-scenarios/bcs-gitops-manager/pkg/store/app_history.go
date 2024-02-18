@@ -11,7 +11,6 @@
  *
  */
 
-// Package store xxx
 package store
 
 import (

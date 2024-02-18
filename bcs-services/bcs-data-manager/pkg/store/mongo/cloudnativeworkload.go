@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package mongo xxx
 package mongo
 
 import (

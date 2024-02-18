@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package tools provides bscp common tools.
 package tools
 
 import (

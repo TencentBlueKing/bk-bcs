@@ -11,6 +11,7 @@
  */
 
 // Package handler define methods for handling mq event
+// NOCC:tosa/comment_ratio(ignore),gofmt/notformat(ignore)
 package handler
 
 import (
@@ -23,6 +24,7 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
@@ -91,6 +93,7 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(chn *amqp.Channel, messages <-c
 
 		header := msg.Headers
 
+		// handle header
 		if v, ok := header["resourceType"]; ok {
 			blog.Infof("resourceType: %v", v)
 			switch v.(string) {
@@ -113,6 +116,7 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(chn *amqp.Channel, messages <-c
 			}
 		}
 
+		// ack
 		if err := msg.Ack(false); err != nil {
 			blog.Infof("Unable to acknowledge the message, err: %s", err.Error())
 		}
@@ -132,6 +136,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(msg amqp.Delivery) error {
 		return err
 	}
 
+	// get cluster manager grpc gw client
 	cmCli, err := b.getClusterManagerGrpcGwClient()
 	if err != nil {
 		blog.Errorf("get cluster manager grpc gw client failed, err: %s", err.Error())
@@ -142,6 +147,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(msg amqp.Delivery) error {
 		ClusterID: msgHeader.ClusterId,
 	}
 
+	// list cluster
 	resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
 	if err != nil {
 		blog.Errorf("list cluster failed, err: %s", err.Error())
@@ -163,9 +169,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(msg amqp.Delivery) error {
 		blackList = strings.Split(b.Syncer.BkcmdbSynchronizerOption.Synchronizer.BlackList, ",")
 	}
 
+	// white list
 	blog.Infof("whiteList: %v, len: ", whiteList, len(whiteList))
 	blog.Infof("blackList: %v, len: ", blackList, len(blackList))
 
+	// loop clusters
 	for _, cluster := range clusters {
 		blog.Infof("1cluster: %s", cluster.ClusterID)
 		if len(whiteList) > 0 {
@@ -183,6 +191,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(msg amqp.Delivery) error {
 
 		blog.Infof("3cluster: %s", cluster.ClusterID)
 
+		// virtual cluster
 		if cluster.ClusterType == "virtual" {
 			continue
 		}
@@ -199,6 +208,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(msg amqp.Delivery) error {
 
 	}
 
+	// get bk cluster
 	bkCluster, err := b.Syncer.GetBkCluster(clusterMap[msgHeader.ClusterId])
 	if err != nil {
 		blog.Errorf("handleCluster: Unable to get bkcluster, err: %s", err.Error())
@@ -210,6 +220,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(msg amqp.Delivery) error {
 	return nil
 }
 
+// handle pod
 func (b *BcsBkcmdbSynchronizerHandler) handlePod(msg amqp.Delivery) {
 	blog.Infof("handlePod Message: %v", msg.Headers)
 	msgHeader, err := getMsgHeader(&msg.Headers)
@@ -226,6 +237,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePod(msg amqp.Delivery) {
 		return
 	}
 
+	// handle event
 	switch msgHeader.Event {
 	case "update": // nolint
 		err = b.handlePodUpdate(pod)
@@ -242,6 +254,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePod(msg amqp.Delivery) {
 	}
 }
 
+// handle pod update
 func (b *BcsBkcmdbSynchronizerHandler) handlePodUpdate(pod *corev1.Pod) error {
 	bkPods, err := b.Syncer.GetBkPods(b.BkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
@@ -271,6 +284,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodUpdate(pod *corev1.Pod) error {
 		return fmt.Errorf("len(bkPods) = %d", len(*bkPods))
 	}
 
+	// handle pod create
 	if len(*bkPods) == 0 {
 		err := b.handlePodCreate(pod)
 		if err != nil {
@@ -282,6 +296,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodUpdate(pod *corev1.Pod) error {
 	return nil
 }
 
+// handle pod delete
 func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod) error {
 	bkPods, err := b.Syncer.GetBkPods(b.BkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
@@ -330,6 +345,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod) error {
 	return err
 }
 
+// handle pod create
 func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 	var operator []string
 	cmCli, err := b.getClusterManagerGrpcGwClient()
