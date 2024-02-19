@@ -22,6 +22,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
@@ -41,7 +42,8 @@ type Credential interface {
 	// Create one credential instance.
 	Create(kit *kit.Kit, credential *table.Credential) (uint32, error)
 	// List get credentials
-	List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage) ([]*table.Credential, int64, error)
+	List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage,
+		topIds []uint32) ([]*table.Credential, int64, error)
 	// DeleteWithTx delete credential with transaction
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error
 	// Update update credential
@@ -189,8 +191,8 @@ func (dao *credentialDao) Create(kit *kit.Kit, g *table.Credential) (uint32, err
 }
 
 // List get credentials
-func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage) (
-	[]*table.Credential, int64, error) {
+func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage,
+	topIds []uint32) ([]*table.Credential, int64, error) {
 	m := dao.genQ.Credential
 	q := dao.genQ.Credential.WithContext(kit.Ctx)
 
@@ -198,12 +200,17 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 	if searchKey != "" {
 		searchVal := "%" + searchKey + "%"
 		conds = append(conds, q.Where(m.Memo.Like(searchVal)).Or(m.Reviser.Like(searchVal)).
-			Or(m.Name.Like(searchKey)))
+			Or(m.Name.Like(searchVal)))
+	}
+
+	if len(topIds) != 0 {
+		q = q.Order(utils.NewCustomExpr(`CASE WHEN id IN (?) THEN 0 ELSE 1 END,name ASC`, []interface{}{topIds}))
+	} else {
+		q = q.Order(m.Name)
 	}
 
 	result, count, err := q.Where(m.BizID.Eq(bizID)).
 		Where(conds...).
-		Order(m.Name).
 		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err

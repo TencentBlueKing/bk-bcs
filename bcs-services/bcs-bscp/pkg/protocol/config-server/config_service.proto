@@ -793,6 +793,7 @@ message ListCredentialsReq {
   string searchKey = 2;
   uint32 start = 3;
   uint32 limit = 4;
+  string top_ids = 5;
 }
 
 message ListCredentialsResp {
