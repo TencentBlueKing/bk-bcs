@@ -24,6 +24,19 @@ import (
 type SyncState string
 
 const (
+	// AnnotationKeyOriginal annotation key for original value
+	AnnotationKeyOriginal = "monitorextensions.bkbcs.tencent.com/original"
+
+	// ConflictHandleLocalFirst  if conflict happened, use local config to override remote
+	ConflictHandleLocalFirst = "LOCAL_FIRST"
+	// ConflictHandleRemoteFirst if conflict happened, use remote config to override local
+	ConflictHandleRemoteFirst = "REMOTE_FIRST"
+	// ConflictHandleAutoMerge if conflict happened,
+	// use remote when user changed enable/detect; otherwise use local confict
+	ConflictHandleAutoMerge = "AUTO_MERGE"
+)
+
+const (
 	// SyncStateNeedReSync sync state NeedReSync
 	SyncStateNeedReSync SyncState = "NeedReSync"
 	// SyncStateCompleted sync state Completed
@@ -45,7 +58,7 @@ const (
 
 	// LabelKeyForScenarioName label key for scenario name
 	LabelKeyForScenarioName = "monitorcontroller.bkbcs.tencent.com/scenario"
-	//// LabelKeyForScenarioRepo label key for scenario repo
+	// // LabelKeyForScenarioRepo label key for scenario repo
 	// LabelKeyForScenarioRepo = "monitorcontroller.bkbcs.tencent.com/scenario-repo"
 
 	// LabelKeyForBizID label key for biz id
