@@ -205,7 +205,7 @@ func (m *ModelRepository) GetProjectRepository(ctx context.Context, projectID, n
 
 	if name == common.PublicRepoName {
 		repo := options.GlobalOptions.Repo
-		publicRepoURL := common.GetPublicRepoURL(repo.URL, repo.PublicRepoProject, repo.PublicRepoName)
+		publicRepoURL := common.GetPublicRepoURL(repo.GetRepoBaseURL(), repo.PublicRepoProject, repo.PublicRepoName)
 		return &entity.Repository{
 			ProjectID:   projectID,
 			Name:        name,
