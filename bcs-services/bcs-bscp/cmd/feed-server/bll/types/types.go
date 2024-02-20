@@ -77,6 +77,7 @@ type ReleasedCIMeta struct {
 	CommitSpec           *pbcommit.CommitSpec       `json:"commit_spec,omitempty"`
 	ConfigItemSpec       *pbci.ConfigItemSpec       `json:"config_item_spec,omitempty"`
 	ConfigItemAttachment *pbci.ConfigItemAttachment `json:"config_item_attachment,omitempty"`
+	ConfigItemRevision   *pbbase.Revision           `json:"config_item_revision,omitempty"`
 	RepositorySpec       *RepositorySpec            `json:"repository_spec,omitempty"`
 }
 
