@@ -35,7 +35,7 @@
       <bk-table-column
         :label="t('数据类型')"
         prop="spec.kv_type"
-        :filter="{ filterFn: () => true, list: filterList, checked: filterChecked }"></bk-table-column>
+        :filter="{ filterFn: () => true, list: typeFilterList, checked: typeFilterChecked }"></bk-table-column>
       <bk-table-column :label="t('创建人')" prop="revision.creator"></bk-table-column>
       <bk-table-column :label="t('修改人')" prop="revision.reviser"></bk-table-column>
       <bk-table-column :label="t('修改时间')" :sort="true" :width="220">
@@ -43,7 +43,10 @@
           <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column v-if="versionData.id === 0" :label="t('变更状态')">
+      <bk-table-column
+        v-if="versionData.id === 0"
+        :label="t('变更状态')"
+        :filter="{ filterFn: () => true, list: statusFilterList, checked: statusFilterChecked }">
         <template #default="{ row }">
           <StatusTag :status="row.kv_state" />
         </template>
@@ -142,19 +145,40 @@
   const diffConfig = ref(0);
   const isSearchEmpty = ref(false);
   const isDeleteConfigDialogShow = ref(false);
-  const filterChecked = ref<string[]>([]);
+  const typeFilterChecked = ref<string[]>([]);
+  const statusFilterChecked = ref<string[]>([]);
   const updateSortType = ref('null');
   const pagination = ref({
     current: 1,
     count: 0,
     limit: 10,
   });
-  const filterList = computed(() =>
+  const typeFilterList = computed(() =>
     CONFIG_KV_TYPE.map((item) => ({
       value: item.id,
       text: item.name,
     })),
   );
+  const statusFilterList = computed(() => {
+    return [
+      {
+        value: 'ADD',
+        text: t('新增'),
+      },
+      {
+        value: 'REVISE',
+        text: t('修改'),
+      },
+      {
+        value: 'DELETE',
+        text: t('删除'),
+      },
+      {
+        value: 'UNCHANGE',
+        text: t('无修改'),
+      },
+    ];
+  });
 
   const deleteConfigTips = computed(() => {
     if (deleteConfig.value) {
@@ -207,8 +231,11 @@
         params.search_fields = 'key,revister,creator';
         params.search_key = props.searchStr;
       }
-      if (filterChecked.value!.length > 0) {
-        params.kv_type = filterChecked.value;
+      if (typeFilterChecked.value!.length > 0) {
+        params.kv_type = typeFilterChecked.value;
+      }
+      if (statusFilterChecked.value!.length > 0) {
+        params.status = statusFilterChecked.value;
       }
       if (updateSortType.value !== 'null') {
         params.sort = 'updated_at';
@@ -298,8 +325,15 @@
     getListData();
   };
 
-  const handleFilter = ({ checked }: any) => {
-    filterChecked.value = checked;
+  const handleFilter = ({ checked, index }: any) => {
+    console.log(checked, index);
+    if (index === 2) {
+      // 调整数据类型筛选条件
+      typeFilterChecked.value = checked;
+    } else {
+      // 调整状态筛选条件
+      statusFilterChecked.value = checked;
+    }
     refresh();
   };
 
