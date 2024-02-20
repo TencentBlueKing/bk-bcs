@@ -15,20 +15,23 @@
   </section>
 </template>
 <script setup lang="ts">
-import { ArrowsLeft } from 'bkui-vue/lib/icon';
-import { storeToRefs } from 'pinia';
-import useGlobalStore from '../../../../store/global';
+  import { ArrowsLeft } from 'bkui-vue/lib/icon';
+  import { storeToRefs } from 'pinia';
+  import useGlobalStore from '../../../../store/global';
 
-const { showNotice } = storeToRefs(useGlobalStore());
+  const { showNotice } = storeToRefs(useGlobalStore());
 
-const props = withDefaults(defineProps<{
-    name: string;
-    showFooter?: boolean;
-  }>(), {
-  showFooter: true,
-});
+  const props = withDefaults(
+    defineProps<{
+      name: string;
+      showFooter?: boolean;
+    }>(),
+    {
+      showFooter: true,
+    },
+  );
 
-const emits = defineEmits(['close']);
+  const emits = defineEmits(['close']);
 </script>
 <style lang="scss" scoped>
   .script-detail-layout {

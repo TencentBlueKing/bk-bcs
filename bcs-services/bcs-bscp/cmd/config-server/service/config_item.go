@@ -414,6 +414,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		All:          req.All,
 		Ids:          req.Ids,
 		WithStatus:   req.WithStatus,
+		Status:       req.Status,
 	}
 	rp, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), r)
 	if err != nil {

@@ -99,6 +99,7 @@ func (s *Service) ListCredentials(ctx context.Context,
 		SearchKey: req.SearchKey,
 		Start:     req.Start,
 		Limit:     req.Limit,
+		TopIds:    req.TopIds,
 	}
 
 	rp, err := s.client.DS.ListCredentials(grpcKit.RpcCtx(), r)

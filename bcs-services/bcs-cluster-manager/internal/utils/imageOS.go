@@ -169,3 +169,27 @@ var GkeImageOsList = []*proto.OsImage{
 		Provider:        common.PublicImageProvider,
 	},
 }
+
+// AKSImageOsList gke default images
+var AKSImageOsList = []*proto.OsImage{
+	{
+		Alias:           "",
+		Arch:            "x86_64",
+		ImageID:         "Ubuntu",
+		OsCustomizeType: "GENERAL",
+		OsName:          "Ubuntu",
+		SeriesName:      "",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+	{
+		Alias:           "",
+		Arch:            "x86_64",
+		ImageID:         "AzureLinux",
+		OsCustomizeType: "GENERAL",
+		OsName:          "AzureLinux",
+		SeriesName:      "",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+}

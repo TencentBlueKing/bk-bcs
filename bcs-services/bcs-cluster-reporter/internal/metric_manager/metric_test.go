@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// nolint
 package metric_manager
 
 import (
@@ -28,12 +29,13 @@ func TestSendMessage(t *testing.T) {
 	}, []string{"target", "target_biz", "status"})
 	Register(vec)
 	SetMetric(vec, []*GaugeVecSet{
-		&GaugeVecSet{
+		{
 			Labels: []string{"1", "2", "3"},
 			Value:  1,
 		},
 	})
 
+	// nolint
 	vec = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "cluster_availability",
 		Help: "cluster_availability, 1 means OK",

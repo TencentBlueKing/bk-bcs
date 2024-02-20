@@ -289,6 +289,7 @@ func (dao *templateRevisionDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 }
 
 // ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids
+// nolint
 func (dao *templateRevisionDao) ListLatestRevisionsGroupByTemplateIds(kit *kit.Kit,
 	templateIDs []uint32) ([]*table.TemplateRevision, error) {
 	m := dao.genQ.TemplateRevision

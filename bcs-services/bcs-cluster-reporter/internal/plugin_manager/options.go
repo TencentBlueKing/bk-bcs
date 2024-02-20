@@ -10,7 +10,8 @@
  * limitations under the License.
  */
 
-package plugin_manager
+// Package plugin_manager xxx
+package plugin_manager // nolint
 
 import (
 	"k8s.io/client-go/rest"

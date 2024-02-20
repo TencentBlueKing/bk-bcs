@@ -1356,6 +1356,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. AKS集群所属resource group",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1552,6 +1559,13 @@
           {
             "name": "accountID",
             "description": "accountID. 云凭证ID(非必传,兼容社区版和内部版)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure中的resource group名称",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1794,6 +1808,46 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/resourcegroups": {
+      "get": {
+        "summary": "查询resource groups列表",
+        "description": "查询resource groups列表",
+        "operationId": "ClusterManager_GetResourceGroups",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetResourceGroupsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/securitygroups": {
       "get": {
         "summary": "查询安全组列表",
@@ -1831,6 +1885,13 @@
           {
             "name": "accountID",
             "description": "accountID. 云凭证ID(非必传,兼容社区版和内部版)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure中的resource group名称",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1910,6 +1971,13 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure Cloud中subnet所属resource group名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2190,6 +2258,13 @@
           {
             "name": "vpcID",
             "description": "vpcID. 过滤查询指定vpc的信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure Cloud中Vpc所属的resource group名称",
             "in": "query",
             "required": false,
             "type": "string"
@@ -11543,6 +11618,38 @@
         "message"
       ]
     },
+    "clustermanagerGetResourceGroupsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerResourceGroupInfo"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "获取resource groups列表",
+      "title": "GetResourceGroupsResponse"
+    },
     "clustermanagerGetScopeHostCheckRequest": {
       "type": "object",
       "properties": {
@@ -15460,6 +15567,28 @@
       },
       "description": "节点组移除节点返回，确认节点移除是否成功",
       "title": "RemoveNodesFromGroupResponse"
+    },
+    "clustermanagerResourceGroupInfo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "resource group名称",
+          "title": "name"
+        },
+        "region": {
+          "type": "string",
+          "description": "地域信息",
+          "title": "region"
+        },
+        "provisioningState": {
+          "type": "string",
+          "description": "resource group状态",
+          "title": "provisioningState"
+        }
+      },
+      "description": "resource group信息",
+      "title": "ResourceGroupInfo"
     },
     "clustermanagerRetryCreateClusterReq": {
       "type": "object",

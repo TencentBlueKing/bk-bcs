@@ -1,4 +1,4 @@
-export default  [
+export default [
   { id: 'eq', name: '=' },
   { id: 'ne', name: '!=' },
   { id: 'gt', name: '>' },

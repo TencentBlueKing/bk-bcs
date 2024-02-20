@@ -1,10 +1,6 @@
 <template>
   <bk-button @click="handleOpenSlider">{{ t('查看变量') }}</bk-button>
-  <bk-sideslider
-    width="960"
-    :title="t('查看变量')"
-    :is-show="isSliderShow"
-    @closed="close">
+  <bk-sideslider width="960" :title="t('查看变量')" :is-show="isSliderShow" @closed="close">
     <VariablesTable
       class="variables-table-content"
       :list="variableList"
@@ -12,51 +8,49 @@
       :editable="false"
       :show-cited="true" />
     <section class="action-btns">
-      <bk-button @click="close">{{t('关闭')}}</bk-button>
+      <bk-button @click="close">{{ t('关闭') }}</bk-button>
     </section>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import VariablesTable from './variables-table.vue';
-import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
-import { getReleasedAppVariables, getReleasedAppVariablesCitedDetail } from '../../../../../../../../api/variable';
+  import { ref } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import VariablesTable from './variables-table.vue';
+  import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
+  import { getReleasedAppVariables, getReleasedAppVariablesCitedDetail } from '../../../../../../../../api/variable';
 
-const { t } = useI18n();
-const props = defineProps<{
+  const { t } = useI18n();
+  const props = defineProps<{
     bkBizId: string;
     appId: number;
-    verisionId: number
+    verisionId: number;
   }>();
 
-const isSliderShow = ref(false);
-const loading = ref(false);
-const variableList = ref<IVariableEditParams[]>([]);
-const citedList = ref<IVariableCitedByConfigDetailItem[]>([]);
+  const isSliderShow = ref(false);
+  const loading = ref(false);
+  const variableList = ref<IVariableEditParams[]>([]);
+  const citedList = ref<IVariableCitedByConfigDetailItem[]>([]);
 
+  const getVariableList = async () => {
+    loading.value = true;
+    const [variableListRes, citedListRes] = await Promise.all([
+      getReleasedAppVariables(props.bkBizId, props.appId, props.verisionId),
+      getReleasedAppVariablesCitedDetail(props.bkBizId, props.appId, props.verisionId),
+    ]);
+    variableList.value = variableListRes.details;
+    citedList.value = citedListRes.details;
+    loading.value = false;
+  };
 
-const getVariableList = async () => {
-  loading.value = true;
-  const [variableListRes, citedListRes] = await Promise.all([
-    getReleasedAppVariables(props.bkBizId, props.appId, props.verisionId),
-    getReleasedAppVariablesCitedDetail(props.bkBizId, props.appId, props.verisionId),
-  ]);
-  variableList.value = variableListRes.details;
-  citedList.value = citedListRes.details;
-  loading.value = false;
-};
+  const handleOpenSlider = () => {
+    isSliderShow.value = true;
+    getVariableList();
+  };
 
-const handleOpenSlider = () => {
-  isSliderShow.value = true;
-  getVariableList();
-};
-
-const close = () => {
-  isSliderShow.value = false;
-  variableList.value = [];
-};
-
+  const close = () => {
+    isSliderShow.value = false;
+    variableList.value = [];
+  };
 </script>
 <style lang="scss" scoped>
   .variables-table-content {

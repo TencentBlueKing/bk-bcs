@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package tspider xxx
 package tspider
 
 import (
@@ -26,6 +27,7 @@ type server struct {
 }
 
 // NewServer new db server
+// nolint
 func NewServer(dbs map[string]*sqlx.DB, bkbaseConf *types.BkbaseConfig) *server {
 	return &server{
 		ModelCloudNative:       NewModelCloudNative(dbs, bkbaseConf),

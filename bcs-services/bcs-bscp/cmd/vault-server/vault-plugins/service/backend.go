@@ -40,6 +40,7 @@ type backend struct {
 }
 
 // Backend new backend
+// nolint
 func Backend(ctx context.Context, conf *logical.BackendConfig) *backend {
 
 	b := &backend{}

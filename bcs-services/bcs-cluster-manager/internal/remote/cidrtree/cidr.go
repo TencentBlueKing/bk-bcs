@@ -94,11 +94,13 @@ type cidrTree struct {
 }
 
 // New create a new cidrTree
+// nolint
 func New(cidrBlock *net.IPNet) *cidrTree {
 	return &cidrTree{nil, &node{cidrBlock, NODE_UNUSED}, nil}
 }
 
 // Insert node to cidrTree
+// nolint
 func Insert(t *cidrTree, subnet *net.IPNet) *cidrTree {
 	if cidr.VerifyNoOverlap([]*net.IPNet{subnet}, t.Value.IPNet) != nil {
 		return t

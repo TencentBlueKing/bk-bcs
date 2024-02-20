@@ -263,7 +263,6 @@ func (c *consumer) deleteCredentialCache(kt *kit.Kit, events []*table.Event) err
 func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) error {
 	reminder := make(map[uint32][]uint32, 0)
 	for rlID, bizID := range releaseBizID {
-		// remove useless revision info
 		reminder[bizID] = append(reminder[bizID], rlID)
 	}
 
@@ -283,8 +282,6 @@ func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 
 		ciList := make(map[string][]*table.ReleasedConfigItem)
 		for _, one := range releasedCI {
-			// remove useless revision info
-			one.Revision = nil
 			key := keys.Key.ReleasedCI(one.Attachment.BizID, one.ReleaseID)
 			ciList[key] = append(ciList[key], one)
 		}

@@ -18,79 +18,78 @@
     :limit="props.pagination.limit"
     :show-limit="false"
     :show-total-count="false"
-    @change="emits('pageChange', $event)"
-  />
+    @change="emits('pageChange', $event)" />
 </template>
 <script setup lang="ts">
-import { IScriptVersionListItem } from '../../../../../types/script';
-import { IPagination } from '../../../../../types/index';
-import { useI18n } from 'vue-i18n';
+  import { IScriptVersionListItem } from '../../../../../types/script';
+  import { IPagination } from '../../../../../types/index';
+  import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+  const { t } = useI18n();
 
-const props = defineProps<{
-  list: IScriptVersionListItem[];
-  pagination: IPagination;
-  versionId: number;
-}>();
+  const props = defineProps<{
+    list: IScriptVersionListItem[];
+    pagination: IPagination;
+    versionId: number;
+  }>();
 
-const emits = defineEmits(['pageChange', 'select']);
+  const emits = defineEmits(['pageChange', 'select']);
 
-const getRowCls = (data: IScriptVersionListItem) => {
-  if (data.hook_revision.id === props.versionId) {
-    return 'selected';
-  }
-  return '';
-};
+  const getRowCls = (data: IScriptVersionListItem) => {
+    if (data.hook_revision.id === props.versionId) {
+      return 'selected';
+    }
+    return '';
+  };
 
-const handleSelectVersion = (event: Event | undefined, data: IScriptVersionListItem) => {
-  emits('select', data.hook_revision);
-};
+  const handleSelectVersion = (event: Event | undefined, data: IScriptVersionListItem) => {
+    emits('select', data.hook_revision);
+  };
 </script>
 <style scoped lang="scss">
-.version-name-wrapper {
-  position: relative;
-  width: 100%;
-  padding-right: 5px;
-  .status-dot {
-    position: absolute;
-    top: 17px;
-    left: -12px;
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    border: 1px solid #c4c6cc;
-    background: #f0f1f5;
-    &.deployed {
-      border: 1px solid #3fc06d;
-      background: #e5f6ea;
+  .version-name-wrapper {
+    position: relative;
+    width: 100%;
+    padding-right: 5px;
+    .status-dot {
+      position: absolute;
+      top: 17px;
+      left: -12px;
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1px solid #c4c6cc;
+      background: #f0f1f5;
+      &.deployed {
+        border: 1px solid #3fc06d;
+        background: #e5f6ea;
+      }
+      &.not_deployed {
+        border: 1px solid #ff9c01;
+        background: #ffe8c3;
+      }
     }
-    &.not_deployed {
-      border: 1px solid #ff9c01;
-      background: #ffe8c3;
+    .arrow-icon {
+      position: absolute;
+      top: 15px;
+      right: -10px;
+      font-size: 12px;
+      color: #3a84ff;
     }
   }
-  .arrow-icon {
-    position: absolute;
-    top: 15px;
-    right: -10px;
-    font-size: 12px;
-    color: #3a84ff;
-  }
-}
 
-.bk-table {
-  :deep(.bk-table-body) {
-    tr {
-      cursor: pointer;
-      &.selected td {
-        background: #e1ecff !important;
+  .bk-table {
+    :deep(.bk-table-body) {
+      tr {
+        cursor: pointer;
+        &.selected td {
+          background: #e1ecff !important;
+        }
       }
     }
   }
-}
-.table-compact-pagination {
-  margin-top: 16px;
-}
+  .table-compact-pagination {
+    margin-top: 16px;
+  }
 </style>

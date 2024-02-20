@@ -1,4 +1,3 @@
-
 export interface IVariableItem {
   id: number;
   spec: {
@@ -34,7 +33,7 @@ export interface IVariableCitedByConfigDetailItem {
     template_revision_id: number;
     name: string;
     path: string;
-  }[]
+  }[];
 }
 
 // 批量导入参数

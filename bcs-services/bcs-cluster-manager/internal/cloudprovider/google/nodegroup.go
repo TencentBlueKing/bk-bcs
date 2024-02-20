@@ -19,7 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"google.golang.org/api/compute/v1"
+	compute "google.golang.org/api/compute/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -216,8 +216,9 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	blog.Infof("cluster[%s] nodeGroup[%s] current nodes[%d] desired nodes[%d] needNodes[%s]",
 		group.ClusterID, group.NodeGroupID, group.GetAutoScaling().GetDesiredSize(), desired, needScaleOutNodes)
 
-	if needScaleOutNodes <= 0 {
-		return nil, fmt.Errorf("current nodeCount gt desired nodeCount")
+	if desired <= group.GetAutoScaling().GetDesiredSize() {
+		return nil, fmt.Errorf("NodeGroup %s current nodes %d larger than or equel to desired %d nodes",
+			group.Name, group.GetAutoScaling().GetDesiredSize(), desired)
 	}
 
 	return &cloudprovider.ScalingResponse{

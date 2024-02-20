@@ -9,9 +9,9 @@
     <template #content>
       <bk-loading :loading="loading" :opacity="1" class="groups-content-wrapper">
         <div class="header-area">
-          <h3 class="title">{{t('已上线实例')}}</h3>
+          <h3 class="title">{{ t('已上线实例') }}</h3>
           <template v-if="props.isDefaultGroup">
-            <div class="tips">{{t('除以下分组之外的所有实例')}}</div>
+            <div class="tips">{{ t('除以下分组之外的所有实例') }}</div>
           </template>
         </div>
         <div class="group-list">
@@ -33,48 +33,50 @@
   </bk-popover>
 </template>
 <script setup lang="ts">
-import { ref, withDefaults } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { getServiceGroupList } from '../../../../../../api/group';
-import { IReleasedGroup } from '../../../../../../../types/config';
-import { IGroupItemInService } from '../../../../../../../types/group';
-import RuleTag from '../../../../groups/components/rule-tag.vue';
+  import { ref, withDefaults } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { getServiceGroupList } from '../../../../../../api/group';
+  import { IReleasedGroup } from '../../../../../../../types/config';
+  import { IGroupItemInService } from '../../../../../../../types/group';
+  import RuleTag from '../../../../groups/components/rule-tag.vue';
 
-const { t } = useI18n();
+  const { t } = useI18n();
 
-const props = withDefaults(defineProps<{
-    bkBizId: string;
-    appId: number;
-    isDefaultGroup?: boolean;
-    disabled?: boolean;
-    placement?: string;
-    groups: IReleasedGroup[];
-  }>(), {
-  placement: 'bottom-end',
-  groups: () => [],
-});
+  const props = withDefaults(
+    defineProps<{
+      bkBizId: string;
+      appId: number;
+      isDefaultGroup?: boolean;
+      disabled?: boolean;
+      placement?: string;
+      groups: IReleasedGroup[];
+    }>(),
+    {
+      placement: 'bottom-end',
+      groups: () => [],
+    },
+  );
 
-const loading = ref(false);
-const groupList = ref<IReleasedGroup[]>([]);
+  const loading = ref(false);
+  const groupList = ref<IReleasedGroup[]>([]);
 
-const popoverOpen = () => {
-  if (props.isDefaultGroup) {
-    getExcludeGroups();
-  } else {
-    groupList.value = props.groups;
-  }
-};
+  const popoverOpen = () => {
+    if (props.isDefaultGroup) {
+      getExcludeGroups();
+    } else {
+      groupList.value = props.groups;
+    }
+  };
 
-// 获取默认分组下的排除分组
-const getExcludeGroups = async () => {
-  loading.value = true;
-  const res = await getServiceGroupList(props.bkBizId, props.appId);
-  groupList.value = res.details
-    .filter((item: IGroupItemInService) => item.group_id > 0 && item.release_id > 0)
-    .map((item: IGroupItemInService) => ({ ...item, name: item.group_name, id: item.group_id }));
-  loading.value = false;
-};
-
+  // 获取默认分组下的排除分组
+  const getExcludeGroups = async () => {
+    loading.value = true;
+    const res = await getServiceGroupList(props.bkBizId, props.appId);
+    groupList.value = res.details
+      .filter((item: IGroupItemInService) => item.group_id > 0 && item.release_id > 0)
+      .map((item: IGroupItemInService) => ({ ...item, name: item.group_name, id: item.group_id }));
+    loading.value = false;
+  };
 </script>
 <style scoped lang="scss">
   .groups-content-wrapper {
@@ -100,16 +102,16 @@ const getExcludeGroups = async () => {
       display: flex;
       align-items: center;
       line-height: 20px;
-      color: #63656E;
+      color: #63656e;
       .bk-bscp-icon {
         margin-right: 4px;
-        color: #979BA5;
+        color: #979ba5;
         font-size: 16px;
       }
     }
     .tips {
       line-height: 20px;
-      color: #979BA5;
+      color: #979ba5;
     }
     .group-list {
       padding: 12px 16px 7px;
@@ -128,7 +130,7 @@ const getExcludeGroups = async () => {
       margin-top: 4px;
       padding: 0 8px;
       width: 100%;
-      color: #979BA5;
+      color: #979ba5;
       white-space: normal;
       .tag-item {
         display: inline;

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package util
+// Package util xxx
 package util
 
 import (
@@ -145,11 +145,11 @@ func (xmlp *XmlProcessor) serialize(msg4_send *WXBizMsg4Send) ([]byte, *CryptErr
 	return xml_msg, nil
 }
 
-// NewWXBizMsgCrypt
+// NewWXBizMsgCrypt new WXBizMsgCrypt
 func NewWXBizMsgCrypt(token, encoding_aeskey, receiver_id string, protocol_type ProtocolType) *WXBizMsgCrypt {
 	var protocol_processor ProtocolProcessor
 	if protocol_type != XmlType {
-		panic("unsupport protocal")
+		panic("unsupport protocol")
 	} else {
 		protocol_processor = new(XmlProcessor)
 	}

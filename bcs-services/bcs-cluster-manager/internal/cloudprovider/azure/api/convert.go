@@ -14,6 +14,8 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
@@ -22,6 +24,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 /*
@@ -58,6 +61,16 @@ func (aks *AksServiceImpl) toPoolPreCheck(group *proto.NodeGroup, pool *armconta
 	if group.NodeTemplate == nil {
 		return cloudprovider.ErrNodeGroupNodeTemplateLost
 	}
+
+	// kubelet配置
+	if kubeletConfStr, ok := group.NodeTemplate.ExtraArgs[common.Kubelet]; ok {
+		kubeletConf := &armcontainerservice.KubeletConfig{}
+		err := json.Unmarshal([]byte(kubeletConfStr), kubeletConf)
+		if err != nil {
+			return fmt.Errorf("get nodeGroup[%s] kubelet config failed, %v", group.NodeGroupID, err)
+		}
+	}
+
 	// 机型检查
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer cancel()

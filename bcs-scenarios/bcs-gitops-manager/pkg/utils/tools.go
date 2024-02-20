@@ -61,6 +61,7 @@ func DeepCopyMap(m map[string]string) map[string]string {
 	return r
 }
 
+// DeepCopyHttpRequest Deep Copy Http Request
 func DeepCopyHttpRequest(r *http.Request, newUrl string) (*http.Request, error) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

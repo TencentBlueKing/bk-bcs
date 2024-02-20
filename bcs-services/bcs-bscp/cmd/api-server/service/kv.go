@@ -101,7 +101,7 @@ func (m *kvService) Import(w http.ResponseWriter, r *http.Request) {
 func handleKv(result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, error) {
 	kvMap := []*pbcs.BatchUpsertKvsReq_Kv{}
 	for key, value := range result {
-		KVType := ""
+		var kVType string
 		entry, ok := value.(map[string]interface{})
 		if !ok {
 			// 判断是不是数值类型
@@ -112,11 +112,11 @@ func handleKv(result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, erro
 					KvType: string(table.KvNumber),
 				})
 			} else {
-				KVType = determineType(value.(string))
+				kVType = determineType(value.(string))
 				kvMap = append(kvMap, &pbcs.BatchUpsertKvsReq_Kv{
 					Key:    key,
 					Value:  fmt.Sprintf("%v", value),
-					KvType: KVType,
+					KvType: kVType,
 				})
 			}
 		} else {
@@ -176,11 +176,13 @@ func validateKvType(kvType string) error {
 }
 
 // 读取json文件
+// NOCC:golint/noptr(误报)
 func readJSONFile(bytes []byte, result *map[string]interface{}) bool {
 	return !json.Valid(bytes) && json.Unmarshal(bytes, &result) == nil
 }
 
 // 读取yaml文件
+// NOCC:golint/noptr(误报)
 func readYAMLFile(bytes []byte, result *map[string]interface{}) bool {
 	return yaml.Unmarshal(bytes, &result) == nil
 }

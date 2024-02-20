@@ -61,7 +61,7 @@ func NewClientWithConfiguration(ctx context.Context) *ProjectManagerClient {
 	}
 }
 
-// NewClientWithConfiguration new client with config
+// NewClient new client with config
 func NewClient(ctx context.Context, config *Config) *ProjectManagerClient {
 	return &ProjectManagerClient{
 		ctx:   ctx,

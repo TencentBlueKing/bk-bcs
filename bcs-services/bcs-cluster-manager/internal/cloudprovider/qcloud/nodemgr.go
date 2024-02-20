@@ -410,8 +410,8 @@ func (nm *NodeManager) DescribeKeyPairsByID(keyIDs []string,
 }
 
 // ListKeyPairs describe all ssh keyPairs https://cloud.tencent.com/document/product/213/15699
-func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
-	client, err := api.GetCVMClient(opt)
+func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.ListNetworksOption) ([]*proto.KeyPair, error) {
+	client, err := api.GetCVMClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create CVM client when ListKeyPairs failed: %v", err)
 		return nil, err
@@ -437,6 +437,11 @@ func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.K
 	blog.Infof("ListKeyPairs successful")
 
 	return keyPairs, nil
+}
+
+// GetResourceGroups resource groups list
+func (nm *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*proto.ResourceGroupInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // ListOsImage list image os

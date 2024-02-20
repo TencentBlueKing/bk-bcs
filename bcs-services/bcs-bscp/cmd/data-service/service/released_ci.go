@@ -14,6 +14,8 @@ package service
 
 import (
 	"context"
+	"path"
+	"sort"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -60,7 +62,12 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context,
 		logs.Errorf("list released app bound templates revisions failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-
+	// 先按照path+name排序好
+	sort.SliceStable(details, func(i, j int) bool {
+		iPath := path.Join(details[i].ConfigItemSpec.Path, details[i].ConfigItemSpec.Name)
+		jPath := path.Join(details[j].ConfigItemSpec.Path, details[j].ConfigItemSpec.Name)
+		return iPath < jPath
+	})
 	resp := &pbds.ListReleasedConfigItemsResp{
 		Count:   uint32(count),
 		Details: pbrci.PbReleasedConfigItems(details),

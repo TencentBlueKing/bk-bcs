@@ -1,12 +1,15 @@
 <template>
   <section class="variables-management-page">
-    <bk-alert theme="info"
-      >{{ headInfo }}<span @click="goVariablesDoc" class="hyperlink">{{ t('配置模板与变量') }}</span>
+    <bk-alert theme="info">
+      {{ headInfo }}
+      <span @click="goVariablesDoc" class="hyperlink">{{ t('配置模板与变量') }}</span>
     </bk-alert>
     <div class="operation-area">
       <div class="button">
-        <bk-button theme="primary" @click="isCreateSliderShow = true"
-          ><Plus class="button-icon" />{{ t('新增变量') }}</bk-button>
+        <bk-button theme="primary" @click="isCreateSliderShow = true">
+          <Plus class="button-icon" />
+          {{ t('新增变量') }}
+        </bk-button>
         <bk-button @click="isImportVariableShow = true">{{ t('导入变量') }}</bk-button>
       </div>
       <SearchInput v-model="searchStr" :placeholder="t('请输入变量名称')" :width="320" @search="refreshList()" />
@@ -18,8 +21,7 @@
         :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-value-change="refreshList"
-      >
+        @page-value-change="refreshList">
         <bk-table-column :label="t('变量名称')">
           <template #default="{ row }">
             <bk-button v-if="row.spec" text theme="primary" @click="handleEditVar(row)">{{ row.spec.name }}</bk-button>
@@ -50,15 +52,13 @@
       v-model:show="editSliderData.open"
       :id="editSliderData.id"
       :data="editSliderData.data"
-      @edited="refreshList"
-    />
+      @edited="refreshList" />
     <VariableImport v-model:show="isImportVariableShow" @edited="refreshList" />
   </section>
   <DeleteConfirmDialog
     v-model:isShow="isDeleteVariableDialogShow"
     :title="t('确认删除该全局变量？')"
-    @confirm="handleDeleteVarConfirm"
-  >
+    @confirm="handleDeleteVarConfirm">
     <div style="margin-bottom: 8px">
       {{ t('全局变量') }}: <span style="color: #313238; font-weight: 600">{{ deleteVariableItem?.spec.name }}</span>
     </div>
@@ -66,165 +66,169 @@
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-import { onMounted, ref, watch, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { storeToRefs } from 'pinia';
-import { Plus } from 'bkui-vue/lib/icon';
-import useGlobalStore from '../../../store/global';
-import { ICommonQuery, IPagination } from '../../../../types/index';
-import { IVariableEditParams, IVariableItem } from '../../../../types/variable';
-import { getVariableList, deleteVariable } from '../../../api/variable';
-import VariableCreate from './variable-create.vue';
-import VariableEdit from './variable-edit.vue';
-import VariableImport from './variable-import.vue';
-import SearchInput from '../../../components/search-input.vue';
-import TableEmpty from '../../../components/table/table-empty.vue';
-import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
-import Message from 'bkui-vue/lib/message';
+  import { onMounted, ref, watch, computed } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { storeToRefs } from 'pinia';
+  import { Plus } from 'bkui-vue/lib/icon';
+  import useGlobalStore from '../../../store/global';
+  import { ICommonQuery, IPagination } from '../../../../types/index';
+  import { IVariableEditParams, IVariableItem } from '../../../../types/variable';
+  import { getVariableList, deleteVariable } from '../../../api/variable';
+  import VariableCreate from './variable-create.vue';
+  import VariableEdit from './variable-edit.vue';
+  import VariableImport from './variable-import.vue';
+  import SearchInput from '../../../components/search-input.vue';
+  import TableEmpty from '../../../components/table/table-empty.vue';
+  import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
+  import Message from 'bkui-vue/lib/message';
 
-const { spaceId } = storeToRefs(useGlobalStore());
-const { t } = useI18n();
+  const { spaceId } = storeToRefs(useGlobalStore());
+  const { t } = useI18n();
 
-const loading = ref(false);
-const list = ref<IVariableItem[]>([]);
-const searchStr = ref('');
-const pagination = ref<IPagination>({
-  current: 1,
-  count: 0,
-  limit: 10,
-});
-const isCreateSliderShow = ref(false);
-const isImportVariableShow = ref(false);
-const isDeleteVariableDialogShow = ref(false);
-const deleteVariableItem = ref<IVariableItem>();
-const headInfo = computed(() => t('定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如{{ .bk_bscp_appid }},变量使用详情请参考：'));
-const editSliderData = ref<{ open: boolean; id: number; data: IVariableEditParams }>({
-  open: false,
-  id: 0,
-  data: {
-    name: '',
-    type: '',
-    default_val: '',
-    memo: '',
-  },
-});
-const isSearchEmpty = ref(false);
-watch(
-  () => spaceId.value,
-  () => {
-    refreshList();
-  },
-);
-
-onMounted(() => {
-  getVariables();
-});
-
-const getVariables = async () => {
-  loading.value = true;
-  const params: ICommonQuery = {
-    start: (pagination.value.current - 1) * pagination.value.limit,
-    limit: pagination.value.limit,
-  };
-  if (searchStr.value) {
-    params.search_fields = 'name';
-    params.search_value = searchStr.value;
-  }
-  const res = await getVariableList(spaceId.value, params);
-  list.value = res.details;
-  pagination.value.count = res.count;
-  loading.value = false;
-};
-
-const handleEditVar = (variable: IVariableItem) => {
-  const { id, spec } = variable;
-  editSliderData.value = {
-    open: true,
-    id,
-    data: { ...spec },
-  };
-};
-
-// 删除变量
-const handleDeleteVar = (variable: IVariableItem) => {
-  isDeleteVariableDialogShow.value = true;
-  deleteVariableItem.value = variable;
-};
-
-const handleDeleteVarConfirm = async () => {
-  await deleteVariable(spaceId.value, deleteVariableItem.value!.id);
-  Message({
-    message: t('删除变量成功'),
-    theme: 'success',
+  const loading = ref(false);
+  const list = ref<IVariableItem[]>([]);
+  const searchStr = ref('');
+  const pagination = ref<IPagination>({
+    current: 1,
+    count: 0,
+    limit: 10,
   });
-  if (list.value.length === 1 && pagination.value.current > 1) {
-    pagination.value.current = pagination.value.current - 1;
-  }
-  isDeleteVariableDialogShow.value = false;
-  getVariables();
-};
+  const isCreateSliderShow = ref(false);
+  const isImportVariableShow = ref(false);
+  const isDeleteVariableDialogShow = ref(false);
+  const deleteVariableItem = ref<IVariableItem>();
+  const headInfo = computed(() =>
+    t(
+      '定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如{{ .bk_bscp_appid }},变量使用详情请参考：',
+    ),
+  );
+  const editSliderData = ref<{ open: boolean; id: number; data: IVariableEditParams }>({
+    open: false,
+    id: 0,
+    data: {
+      name: '',
+      type: '',
+      default_val: '',
+      memo: '',
+    },
+  });
+  const isSearchEmpty = ref(false);
+  watch(
+    () => spaceId.value,
+    () => {
+      refreshList();
+    },
+  );
 
-const handlePageLimitChange = (val: number) => {
-  pagination.value.limit = val;
-  refreshList();
-};
+  onMounted(() => {
+    getVariables();
+  });
 
-const refreshList = (current = 1) => {
-  searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
-  pagination.value.current = current;
-  getVariables();
-};
+  const getVariables = async () => {
+    loading.value = true;
+    const params: ICommonQuery = {
+      start: (pagination.value.current - 1) * pagination.value.limit,
+      limit: pagination.value.limit,
+    };
+    if (searchStr.value) {
+      params.search_fields = 'name';
+      params.search_value = searchStr.value;
+    }
+    const res = await getVariableList(spaceId.value, params);
+    list.value = res.details;
+    pagination.value.count = res.count;
+    loading.value = false;
+  };
 
-const clearSearchStr = () => {
-  searchStr.value = '';
-  refreshList();
-};
+  const handleEditVar = (variable: IVariableItem) => {
+    const { id, spec } = variable;
+    editSliderData.value = {
+      open: true,
+      id,
+      data: { ...spec },
+    };
+  };
 
-// @ts-ignore
-// eslint-disable-next-line
-const goVariablesDoc = () => window.open(BSCP_CONFIG.variable_template_doc);
+  // 删除变量
+  const handleDeleteVar = (variable: IVariableItem) => {
+    isDeleteVariableDialogShow.value = true;
+    deleteVariableItem.value = variable;
+  };
+
+  const handleDeleteVarConfirm = async () => {
+    await deleteVariable(spaceId.value, deleteVariableItem.value!.id);
+    Message({
+      message: t('删除变量成功'),
+      theme: 'success',
+    });
+    if (list.value.length === 1 && pagination.value.current > 1) {
+      pagination.value.current = pagination.value.current - 1;
+    }
+    isDeleteVariableDialogShow.value = false;
+    getVariables();
+  };
+
+  const handlePageLimitChange = (val: number) => {
+    pagination.value.limit = val;
+    refreshList();
+  };
+
+  const refreshList = (current = 1) => {
+    searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+    pagination.value.current = current;
+    getVariables();
+  };
+
+  const clearSearchStr = () => {
+    searchStr.value = '';
+    refreshList();
+  };
+
+  // @ts-ignore
+  // eslint-disable-next-line
+  const goVariablesDoc = () => window.open(BSCP_CONFIG.variable_template_doc);
 </script>
 <style lang="scss" scoped>
-.variables-management-page {
-  height: 100%;
-  background: #f5f7fa;
-  .hyperlink {
-    color: #3a84ff;
-    cursor: pointer;
+  .variables-management-page {
+    height: 100%;
+    background: #f5f7fa;
+    .hyperlink {
+      color: #3a84ff;
+      cursor: pointer;
+    }
   }
-}
-.operation-area {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 24px;
-  padding: 0 24px;
-  .button {
+  .operation-area {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    .bk-button {
+    margin-top: 24px;
+    padding: 0 24px;
+    .button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      .bk-button {
+        margin-right: 8px;
+      }
+      .button-icon {
+        font-size: 18px;
+      }
+    }
+    .search-input {
+      width: 320px;
+    }
+    .search-input-icon {
+      padding-right: 10px;
+      color: #979ba5;
+      background: #ffffff;
+    }
+  }
+  .variable-table {
+    padding: 16px 24px 24px;
+  }
+  .action-btns {
+    .bk-button:not(:last-of-type) {
       margin-right: 8px;
     }
-    .button-icon {
-      font-size: 18px;
-    }
   }
-  .search-input {
-    width: 320px;
-  }
-  .search-input-icon {
-    padding-right: 10px;
-    color: #979ba5;
-    background: #ffffff;
-  }
-}
-.variable-table {
-  padding: 16px 24px 24px;
-}
-.action-btns {
-  .bk-button:not(:last-of-type) {
-    margin-right: 8px;
-  }
-}
 </style>

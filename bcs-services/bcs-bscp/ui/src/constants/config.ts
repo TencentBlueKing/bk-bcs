@@ -1,5 +1,5 @@
 import { IConfigVersion } from '../../types/config';
-import  { localT }  from '../i18n';
+import { localT } from '../i18n';
 // kv类型的配置项包含的子类型
 export const CONFIG_KV_TYPE = [
   { id: 'string', name: 'String' },

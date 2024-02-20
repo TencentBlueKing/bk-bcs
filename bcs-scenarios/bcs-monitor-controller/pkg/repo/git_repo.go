@@ -48,12 +48,12 @@ type gitRepo struct {
 	auth *http.BasicAuth
 }
 
-// todo 适配ssh
-// todo 测试同repo 不同targetRevision
-func newGitRepo(URL, username, password, targetRevision, bathPath string) (*gitRepo, error) {
-	repoKey := genRepoKey(URL, targetRevision)
+// doto 适配ssh
+// doto 测试同repo 不同targetRevision
+func newGitRepo(url, username, password, targetRevision, bathPath string) (*gitRepo, error) {
+	repoKey := genRepoKey(url, targetRevision)
 	repo := &gitRepo{
-		URL:            URL,
+		URL:            url,
 		Directory:      filepath.Join(bathPath, base64.URLEncoding.EncodeToString([]byte(repoKey))),
 		Username:       username,
 		Password:       password,

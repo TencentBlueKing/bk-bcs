@@ -16,7 +16,7 @@ package config
 import (
 	"crypto/tls"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"

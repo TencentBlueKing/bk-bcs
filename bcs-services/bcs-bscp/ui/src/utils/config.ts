@@ -2,7 +2,7 @@ import { CONFIG_FILE_TYPE } from '../constants/config';
 
 // 查询配置文件类型名称
 export const getConfigTypeName = (type: string) => {
-  const fileType = CONFIG_FILE_TYPE.find(item => item.id === type);
+  const fileType = CONFIG_FILE_TYPE.find((item) => item.id === type);
   return fileType ? fileType.name : '未知格式';
 };
 

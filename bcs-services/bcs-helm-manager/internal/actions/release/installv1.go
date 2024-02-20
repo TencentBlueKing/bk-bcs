@@ -151,6 +151,7 @@ func (i *InstallReleaseV1Action) saveDB() error {
 		Args:         i.req.GetArgs(),
 		CreateBy:     createBy,
 		Status:       helmrelease.StatusPendingInstall.String(),
+		Env:          i.req.GetEnv(),
 	}); err != nil {
 		return err
 	}

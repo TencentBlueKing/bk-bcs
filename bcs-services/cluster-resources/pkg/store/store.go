@@ -64,6 +64,8 @@ type ClusterResourcesModel interface {
 		ctx context.Context, projectCode, templateName, templateSpace string, templateVersion entity.M) error
 	DeleteTemplateVersion(ctx context.Context, id string) error
 	DeleteTemplateVersionBySpecial(ctx context.Context, projectCode, templateName, templateSpace string) error
+	ListTemplateVersionFromTemplateIDs(ctx context.Context, projectCode string, ids []entity.TemplateID) []*entity.
+		TemplateVersion
 
 	// 环境管理
 	GetEnvManage(ctx context.Context, id string) (*entity.EnvManage, error)

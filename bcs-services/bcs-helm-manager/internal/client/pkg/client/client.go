@@ -40,7 +40,8 @@ type Config struct {
 const (
 	resultCodeSuccess = 0
 
-	urlPrefix = "/helmmanager/v1"
+	urlPrefix            = "/helmmanager/v1"
+	urlUploadChartPrefix = "/helmmanager/api/v1"
 )
 
 // New return a new Client instance
@@ -83,7 +84,7 @@ func (c *Client) request(_ context.Context, method, uri string, header http.Head
 	if header == nil {
 		header = http.Header{}
 	}
-	header.Set("Content-Type", "application/json")
+	header.Add("Content-Type", "application/json")
 	header.Set("Authorization", "Bearer "+c.conf.AuthToken)
 
 	var request func(string, http.Header, []byte) (*httpclient.HttpRespone, error)

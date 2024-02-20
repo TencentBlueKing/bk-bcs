@@ -273,6 +273,7 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 			CommitSpec:           ci.CommitSpec,
 			ConfigItemSpec:       ci.ConfigItemSpec,
 			ConfigItemAttachment: ci.ConfigItemAttachment,
+			ConfigItemRevision:   ci.ConfigItemRevision,
 			RepositorySpec: &pbfs.RepositorySpec{
 				Path: ci.RepositorySpec.Path,
 			},

@@ -503,6 +503,7 @@ func (cd *argo) GetApplicationManifests(ctx context.Context, name, revision stri
 
 // GetApplicationManifestsFromRepoServerWithMultiSources returns the manifests result of application which not
 // created. This function will direct call reposerver of argocd
+// nolint
 func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx context.Context,
 	application *v1alpha1.Application) ([]*apiclient.ManifestResponse, error) {
 	repoUrl := application.Spec.Source.RepoURL

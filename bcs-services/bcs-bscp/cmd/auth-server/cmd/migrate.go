@@ -45,6 +45,8 @@ var migrateInitCmd = &cobra.Command{
 			return
 		}
 
+		logs.InitLogger(cc.AuthServer().Log.Logs())
+
 		iamSys, err := NewIamSys()
 		if err != nil {
 			fmt.Printf("new iam sys failed, err: %v\n", err)

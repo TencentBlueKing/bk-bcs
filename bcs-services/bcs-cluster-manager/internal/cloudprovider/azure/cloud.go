@@ -61,11 +61,11 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster,
 	}
 	cls.SystemID = *cluster.Name
 	// cluster cloud basic setting
-	clusterBasicSettingByQCloud(cls, cluster)
+	clusterBasicSettingByAzure(cls, cluster)
 	// cluster cloud network setting
-	err = clusterNetworkSettingByQCloud(cls, cluster)
+	err = clusterNetworkSettingByAzure(cls, cluster)
 	if err != nil {
-		blog.Errorf("SyncClusterCloudInfo clusterNetworkSettingByQCloud failed: %v", err)
+		blog.Errorf("SyncClusterCloudInfo clusterNetworkSettingByAzure failed: %v", err)
 	}
 
 	return nil
@@ -94,7 +94,7 @@ func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption) (*armcontain
 	return mc, nil
 }
 
-func clusterBasicSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) {
+func clusterBasicSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) {
 	clusterOs := ""
 	if len(cluster.Properties.AgentPoolProfiles) > 0 {
 		p := cluster.Properties.AgentPoolProfiles
@@ -107,16 +107,20 @@ func clusterBasicSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservic
 	}
 }
 
-func clusterNetworkSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) error { // nolint
+func clusterNetworkSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) error { // nolint
 	cidrs := cluster.Properties.NetworkProfile.PodCidrs
 	podCidrs := make([]string, len(cidrs))
 	for i := range cidrs {
 		podCidrs[i] = *cidrs[i]
 	}
 	cls.NetworkSettings = &proto.NetworkSetting{
-		ClusterIPv4CIDR:  *cluster.Properties.NetworkProfile.PodCidr,
 		ServiceIPv4CIDR:  *cluster.Properties.NetworkProfile.ServiceCidr,
 		MultiClusterCIDR: podCidrs,
 	}
+	// 有时cluster不会返回pod cidr
+	if cluster.Properties.NetworkProfile.PodCidr != nil {
+		cls.NetworkSettings.ClusterIPv4CIDR = *cluster.Properties.NetworkProfile.PodCidr
+	}
+
 	return nil
 }

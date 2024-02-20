@@ -22,6 +22,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/bknotice"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 var migrateCmd = &cobra.Command{
@@ -41,6 +42,8 @@ var migrateInitNoticeCmd = &cobra.Command{
 			fmt.Println("load settings from config files failed, err:", err)
 			return
 		}
+
+		logs.InitLogger(cc.ApiServer().Log.Logs())
 
 		if !cc.ApiServer().BKNotice.Enable {
 			fmt.Println("bknotice is disabled, skip init")
@@ -63,6 +66,8 @@ var migrateInitApigatewayCmd = &cobra.Command{
 			fmt.Println("load settings from config files failed, err:", err)
 			return
 		}
+
+		logs.InitLogger(cc.ApiServer().Log.Logs())
 
 		fmt.Println("Need to be implemented")
 	},

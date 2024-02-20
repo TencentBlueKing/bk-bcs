@@ -51,6 +51,7 @@ func NewModelWorkloadRequest(db drivers.DB) *ModelWorkloadRequest {
 	}}
 }
 
+// GetLatestWorkloadRequest get latest workload request
 func (m *ModelWorkloadRequest) GetLatestWorkloadRequest(ctx context.Context,
 	req *datamanager.GetWorkloadRequestRecommendResultReq) (*datamanager.GetWorkloadRequestRecommendResultRsp, error) {
 	err := ensureTable(ctx, &m.Public)

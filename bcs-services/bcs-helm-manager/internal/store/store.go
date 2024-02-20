@@ -16,7 +16,7 @@ package store
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
@@ -75,7 +75,7 @@ type modelSet struct {
 
 // New return a new ResourceManagerModel instance
 func New(db drivers.DB, cryptor encryptv2.Cryptor) HelmManagerModel {
-	return &modelSet{
+	return &modelSet{ // nolint
 		ModelRepository: repository.New(db, cryptor),
 		ModelRelease:    release.New(db),
 	}

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package eventrecorder
+// Package eventrecorder xxx
 package eventrecorder
 
 import (

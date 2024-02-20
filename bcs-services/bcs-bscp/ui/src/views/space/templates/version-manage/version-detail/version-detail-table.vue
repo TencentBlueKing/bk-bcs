@@ -1,12 +1,8 @@
 <template>
   <div class="version-detail-table">
     <div class="version-list-container">
-      <bk-button
-        class="close-btn"
-        text
-        theme="primary"
-        @click="handleClose">
-        {{t('展开列表')}}
+      <bk-button class="close-btn" text theme="primary" @click="handleClose">
+        {{ t('展开列表') }}
         <AngleDoubleRightLine class="arrow-icon" />
       </bk-button>
       <List
@@ -31,18 +27,18 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, computed, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { AngleDoubleRightLine } from 'bkui-vue/lib/icon';
-import dayjs from 'dayjs';
-import { IPagination } from '../../../../../../types/index';
-import { ITemplateVersionItem } from '../../../../../../types/template';
-import List from './list.vue';
-import VersionEditor from './version-editor.vue';
-import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
+  import { ref, computed, watch } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { AngleDoubleRightLine } from 'bkui-vue/lib/icon';
+  import dayjs from 'dayjs';
+  import { IPagination } from '../../../../../../types/index';
+  import { ITemplateVersionItem } from '../../../../../../types/template';
+  import List from './list.vue';
+  import VersionEditor from './version-editor.vue';
+  import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
 
-const { t } = useI18n();
-const props = defineProps<{
+  const { t } = useI18n();
+  const props = defineProps<{
     spaceId: string;
     templateSpaceId: number;
     templateId: number;
@@ -52,61 +48,74 @@ const props = defineProps<{
     versionId: number;
   }>();
 
-const emits = defineEmits(['close', 'select', 'created']);
+  const emits = defineEmits(['close', 'select', 'created']);
 
-const versionName = ref('');
-const templateName = ref('');
+  const versionName = ref('');
+  const templateName = ref('');
 
-const versionEditingData = computed(() => {
-  let data = {
-    revision_name: '',
-    revision_memo: '',
-    file_type: '',
-    file_mode: 'unix',
-    user: '',
-    user_group: '',
-    privilege: '',
-    sign: '',
-    byte_size: 0,
+  const versionEditingData = computed(() => {
+    let data = {
+      revision_name: '',
+      revision_memo: '',
+      file_type: '',
+      file_mode: 'unix',
+      user: '',
+      user_group: '',
+      privilege: '',
+      sign: '',
+      byte_size: 0,
+    };
+    if (props.versionId) {
+      const version = props.list.find((item) => item.id === props.versionId);
+      if (version) {
+        const { revision_memo, file_type, file_mode, content_spec, permission } = version.spec;
+        const { signature: sign, byte_size } = content_spec;
+        const { user, user_group, privilege } = permission;
+        data = {
+          revision_name: `v${dayjs().format('YYYYMMDDHHmmss')}`,
+          revision_memo,
+          file_type,
+          file_mode,
+          user,
+          user_group,
+          privilege,
+          sign,
+          byte_size,
+        };
+      }
+    }
+    return data;
+  });
+
+  watch(
+    () => props.versionId,
+    (val) => {
+      if (val) {
+        const version = props.list.find((item) => item.id === val);
+        if (version) {
+          versionName.value = version.spec.revision_name;
+          templateName.value = version.spec.name;
+        }
+      }
+    },
+    { immediate: true },
+  );
+
+  const handleClose = async () => {
+    if (props.type === 'create') {
+      const result = await useModalCloseConfirmation();
+      if (!result) return;
+    }
+    emits('close');
   };
-  if (props.versionId) {
-    const version = props.list.find(item => item.id === props.versionId);
-    if (version) {
-      const { revision_memo, file_type, file_mode, content_spec, permission } = version.spec;
-      const { signature: sign, byte_size } = content_spec;
-      const { user, user_group, privilege } = permission;
-      data = { revision_name: `v${dayjs().format('YYYYMMDDHHmmss')}`, revision_memo, file_type, file_mode, user, user_group, privilege, sign, byte_size };
+
+  const handleSelect = async (id: number) => {
+    if (props.type === 'create') {
+      const result = await useModalCloseConfirmation();
+      if (!result) return;
     }
-  }
-  return data;
-});
-
-watch(() => props.versionId, (val) => {
-  if (val) {
-    const version = props.list.find(item => item.id === val);
-    if (version) {
-      versionName.value = version.spec.revision_name;
-      templateName.value = version.spec.name;
-    }
-  }
-}, { immediate: true });
-
-const handleClose = async () => {
-  if (props.type === 'create') {
-    const result = await useModalCloseConfirmation();
-    if (!result) return;
-  }
-  emits('close');
-};
-
-const handleSelect = async (id: number) => {
-  if (props.type === 'create') {
-    const result = await useModalCloseConfirmation();
-    if (!result) return;
-  }
-  emits('select', id);
-};
-
+    emits('select', id);
+  };
 </script>
 <style lang="scss" scoped>
   .version-detail-table {

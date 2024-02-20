@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package mongo xxx
 package mongo
 
 import (
@@ -36,15 +37,15 @@ type server struct {
 // NewServer new db server
 func NewServer(db drivers.DB, bkbaseConf *types.BkbaseConfig) store.Server {
 	return &server{
-		ModelCluster:       NewModelCluster(db),
-		ModelNamespace:     NewModelNamespace(db),
-		ModelWorkload:      NewModelWorkload(db),
-		ModelProject:       NewModelProject(db),
-		ModelPublic:        NewModelPublic(db),
-		ModelPodAutoscaler: NewModelPodAutoscaler(db),
-		ModelPowerTrading:  NewModelPowerTrading(db, bkbaseConf),
-		ModelCloudNative:   NewModelCloudNative(db, bkbaseConf),
-		ModelOperationData: NewModelOperationData(db, bkbaseConf),
+		ModelCluster:               NewModelCluster(db),
+		ModelNamespace:             NewModelNamespace(db),
+		ModelWorkload:              NewModelWorkload(db),
+		ModelProject:               NewModelProject(db),
+		ModelPublic:                NewModelPublic(db),
+		ModelPodAutoscaler:         NewModelPodAutoscaler(db),
+		ModelPowerTrading:          NewModelPowerTrading(db, bkbaseConf),
+		ModelCloudNative:           NewModelCloudNative(db, bkbaseConf),
+		ModelOperationData:         NewModelOperationData(db, bkbaseConf),
 		ModelWorkloadRequest:       NewModelWorkloadRequest(db),
 		ModelWorkloadOriginRequest: NewModelWorkloadOriginRequest(db),
 	}

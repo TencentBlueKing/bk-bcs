@@ -100,6 +100,7 @@ message FileMeta {
   pbci.ConfigItemSpec config_item_spec = 4;
   pbci.ConfigItemAttachment config_item_attachment = 5;
   RepositorySpec repository_spec = 6;
+  pbbase.Revision config_item_revision = 7;
 }
 
 message PullAppFileMetaReq {

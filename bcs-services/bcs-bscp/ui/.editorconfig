@@ -1,9 +1,9 @@
 root = true
 
 [*.{js,jsx,ts,tsx,vue}]
-intent_style = space
-indent = 2
-end_of_line = lf
 charset = utf-8
-trim_trailing_whitespace = true     # 不保留行末的空格
+end_of_line = lf
+indent_size = 2
+indent_style = space
 insert_final_newline = true
+trim_trailing_whitespace = true     # 不保留行末的空格

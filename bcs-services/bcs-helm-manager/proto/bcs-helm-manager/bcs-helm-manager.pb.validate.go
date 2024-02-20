@@ -6336,6 +6336,8 @@ func (m *Release) validate(all bool) error {
 
 	// no validation rules for ClusterID
 
+	// no validation rules for Env
+
 	if len(errors) > 0 {
 		return ReleaseMultiError(errors)
 	}
@@ -7258,6 +7260,8 @@ func (m *InstallReleaseV1Req) validate(all bool) error {
 
 	// no validation rules for Operator
 
+	// no validation rules for Env
+
 	if len(errors) > 0 {
 		return InstallReleaseV1ReqMultiError(errors)
 	}
@@ -7837,6 +7841,8 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 	// no validation rules for ValueFile
 
 	// no validation rules for Operator
+
+	// no validation rules for Env
 
 	if len(errors) > 0 {
 		return UpgradeReleaseV1ReqMultiError(errors)

@@ -86,7 +86,7 @@ func ModifyInstancesVpcTask(taskID string, stepName string) error {
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("ModifyInstancesVpcTask[%s] update to storage fatal", taskID, stepName)
+		blog.Errorf("ModifyInstancesVpcTask[%s] update to storage fatal: %s", taskID, stepName)
 		return err
 	}
 	return nil
@@ -168,7 +168,7 @@ func CheckInstanceStateTask(taskID string, stepName string) error {
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("CheckCvmInstanceState[%s] update to storage fatal", taskID, stepName)
+		blog.Errorf("CheckCvmInstanceState[%s] update to storage fatal: %s", taskID, stepName)
 		return err
 	}
 	return nil

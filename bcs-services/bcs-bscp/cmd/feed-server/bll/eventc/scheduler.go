@@ -349,6 +349,12 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,
 			},
+			ConfigItemRevision: &pbbase.Revision{
+				Creator:  one.Revision.Creator,
+				Reviser:  one.Revision.Reviser,
+				CreateAt: one.Revision.CreatedAt.Format(time.RFC3339),
+				UpdateAt: one.Revision.UpdatedAt.Format(time.RFC3339),
+			},
 			RepositoryPath: uriD.Path(one.CommitSpec.Signature),
 		}
 	}

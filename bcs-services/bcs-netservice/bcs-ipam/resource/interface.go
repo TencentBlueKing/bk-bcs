@@ -21,6 +21,6 @@ type IPDriver interface {
 	GetIPAddr(host, containerID, requestIP string) (*types.IPInfo,
 		error) // GetIPAddr get available ip resource for contaienr
 	ReleaseIPAddr(host string, containerID string,
-		ipInfo *types.IPInfo) error                   // ReleaseIPAddr release ip address for container
+		ipInfo *types.IPInfo) error // ReleaseIPAddr release ip address for container
 	GetHostInfo(host string) (*types.HostInfo, error) // Get host info from driver
 }

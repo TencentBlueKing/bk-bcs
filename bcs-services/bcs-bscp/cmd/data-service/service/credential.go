@@ -26,6 +26,7 @@ import (
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbcredential "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/credential"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
@@ -66,7 +67,9 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbds.ListCredentialR
 		return nil, err
 	}
 
-	details, count, err := s.dao.Credential().List(kt, req.BizId, req.SearchKey, opt)
+	// StrToUint32Slice the comma separated string goes to uint32 slice
+	topIds, _ := tools.StrToUint32Slice(req.TopIds)
+	details, count, err := s.dao.Credential().List(kt, req.BizId, req.SearchKey, opt, topIds)
 
 	if err != nil {
 		logs.Errorf("list credential failed, err: %v, rid: %s", err, kt.Rid)

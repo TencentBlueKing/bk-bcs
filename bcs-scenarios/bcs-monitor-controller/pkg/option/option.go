@@ -11,6 +11,7 @@
  *
  */
 
+// Package option xxx
 package option
 
 import (

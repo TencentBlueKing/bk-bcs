@@ -1730,6 +1730,10 @@ message Release {
         title: "clusterID",
         description: "集群 ID"
     }];
+    optional string env = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "env",
+        description: "环境"
+    }];
 }
 
 message ReleaseDetail {
@@ -1983,6 +1987,10 @@ message InstallReleaseV1Req {
         title: "operator",
         description: "操作者"
     }];
+    optional string env = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "env",
+        description: "环境"
+    }];
 }
 
 message InstallReleaseV1Resp {
@@ -2122,6 +2130,10 @@ message UpgradeReleaseV1Req {
     optional string operator = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "操作者"
+    }];
+    optional string env = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "env",
+        description: "环境"
     }];
 }
 

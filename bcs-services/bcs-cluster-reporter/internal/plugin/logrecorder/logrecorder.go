@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package logrecorder
+// Package logrecorder xxx
 package logrecorder
 
 import (
@@ -72,11 +72,6 @@ func (p *Plugin) Setup(configFilePath string) error {
 	}
 
 	p.stopChan = make(chan int)
-
-	interval := p.opt.Interval
-	if interval == 0 {
-		interval = 60
-	}
 
 	cluster := plugin_manager.Pm.GetConfig().InClusterConfig
 	if cluster.Config == nil {
@@ -299,7 +294,7 @@ func LogAnalysis(cluster plugin_manager.ClusterConfig) {
 					if index+1 < len(etcdTookTooLongGaugeVecSetList) {
 						etcdTookTooLongGaugeVecSetList = append(etcdTookTooLongGaugeVecSetList[:index+1],
 							append(
-								[]*metric_manager.GaugeVecSet{&metric_manager.GaugeVecSet{Labels: []string{cluster.ClusterID,
+								[]*metric_manager.GaugeVecSet{{Labels: []string{cluster.ClusterID,
 									cluster.BusinessID, request}, Value: float64(size)}},
 								etcdTookTooLongGaugeVecSetList[index+1:]...)...)
 					} else {

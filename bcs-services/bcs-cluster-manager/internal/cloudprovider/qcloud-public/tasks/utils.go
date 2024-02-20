@@ -27,6 +27,7 @@ import (
 )
 
 // updateClusterSystemID set cluster systemID
+// nolint
 func updateClusterSystemID(clusterID string, systemID string) error {
 	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
 	if err != nil {

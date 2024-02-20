@@ -56,6 +56,7 @@ func ReportPortAllocate(name, namespace string, allocateSuccess bool) {
 	}
 }
 
+// CleanPortAllocateMetric clean allocate metric
 func CleanPortAllocateMetric(name, namespace string) {
 	portAllocateFailedGauge.Delete(prometheus.Labels{"name": name, "namespace": namespace})
 }

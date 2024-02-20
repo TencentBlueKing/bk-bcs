@@ -9,11 +9,10 @@
     :esc-close="false"
     :quick-close="false"
     @confirm="handleEdit"
-    @closed="handleClose"
-  >
+    @closed="handleClose">
     <template #header>
       <div class="header-wrapper">
-        <div class="title">{{t('编辑空间')}}</div>
+        <div class="title">{{ t('编辑空间') }}</div>
         <div class="space-name">{{ props.data.name }}</div>
       </div>
     </template>
@@ -25,77 +24,77 @@
   </bk-dialog>
 </template>
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { storeToRefs } from 'pinia';
-import Message from 'bkui-vue/lib/message';
-import useGlobalStore from '../../../../../store/global';
-import { updateTemplateSpace } from '../../../../../api/template';
+  import { ref, watch } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { storeToRefs } from 'pinia';
+  import Message from 'bkui-vue/lib/message';
+  import useGlobalStore from '../../../../../store/global';
+  import { updateTemplateSpace } from '../../../../../api/template';
 
-const { spaceId } = storeToRefs(useGlobalStore());
-const { t } = useI18n();
+  const { spaceId } = storeToRefs(useGlobalStore());
+  const { t } = useI18n();
 
-const props = defineProps<{
-  show: boolean;
-  data: { id: number; name: string; memo: string };
-}>();
+  const props = defineProps<{
+    show: boolean;
+    data: { id: number; name: string; memo: string };
+  }>();
 
-const emits = defineEmits(['update:show', 'edited']);
+  const emits = defineEmits(['update:show', 'edited']);
 
-const isShow = ref(false);
-const formRef = ref();
-const pending = ref(false);
-const memo = ref('');
+  const isShow = ref(false);
+  const formRef = ref();
+  const pending = ref(false);
+  const memo = ref('');
 
-watch(
-  () => props.show,
-  (val) => {
-    isShow.value = val;
-    if (val) {
-      memo.value = props.data.memo;
-    }
-  },
-);
+  watch(
+    () => props.show,
+    (val) => {
+      isShow.value = val;
+      if (val) {
+        memo.value = props.data.memo;
+      }
+    },
+  );
 
-const handleEdit = () => {
-  formRef.value.validate().then(async () => {
-    try {
-      pending.value = true;
-      await updateTemplateSpace(spaceId.value, props.data.id, { memo: memo.value });
-      handleClose();
-      emits('edited');
-      Message({
-        theme: 'success',
-        message: t('编辑空间成功'),
-      });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      pending.value = false;
-    }
-  });
-};
+  const handleEdit = () => {
+    formRef.value.validate().then(async () => {
+      try {
+        pending.value = true;
+        await updateTemplateSpace(spaceId.value, props.data.id, { memo: memo.value });
+        handleClose();
+        emits('edited');
+        Message({
+          theme: 'success',
+          message: t('编辑空间成功'),
+        });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        pending.value = false;
+      }
+    });
+  };
 
-const handleClose = () => {
-  emits('update:show', false);
-};
+  const handleClose = () => {
+    emits('update:show', false);
+  };
 </script>
 <style lang="postcss" scoped>
-.header-wrapper {
-  display: flex;
-  align-items: center;
-  .title {
-    margin-right: 16px;
-    padding-right: 16px;
-    line-height: 26px;
-    border-right: 1px solid #dcdee5;
+  .header-wrapper {
+    display: flex;
+    align-items: center;
+    .title {
+      margin-right: 16px;
+      padding-right: 16px;
+      line-height: 26px;
+      border-right: 1px solid #dcdee5;
+    }
+    .space-name {
+      flex: 1;
+      line-height: 26px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
   }
-  .space-name {
-    flex: 1;
-    line-height: 26px;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
-}
 </style>

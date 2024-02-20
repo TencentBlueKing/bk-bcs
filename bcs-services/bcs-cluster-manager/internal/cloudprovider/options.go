@@ -368,6 +368,12 @@ type CreateNodeGroupOption struct {
 	OnlyData bool
 }
 
+// ListNetworksOption create list vpcs option
+type ListNetworksOption struct {
+	CommonOption
+	ResourceGroupName string
+}
+
 // ResourcePoolData xxx
 type ResourcePoolData struct {
 	Provider       string
@@ -494,6 +500,7 @@ type UpdateScalingOption struct {
 // CheckEndpointStatusOption check cluster endpoint status option
 type CheckEndpointStatusOption struct {
 	CommonOption
+	ResourceGroupName string
 }
 
 // AddSubnetsToClusterOption add subnet to cluster option

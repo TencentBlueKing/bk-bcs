@@ -247,11 +247,11 @@ type UserInfoResponse struct {
 func (c *UserManagerClient) GetUserInfo() (*UserInfoResponse, error) {
 	data, err := c.do(getUserInfo, http.MethodGet, nil, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "validate user auth token failed: ")
+		return nil, errors.Wrapf(err, "validate user auth token failed: ") // nolint
 	}
 	resp := new(UserInfoResponse)
 	if err := json.Unmarshal(data, resp); err != nil {
-		return nil, errors.Wrapf(err, "Get UserInfo response ",
+		return nil, errors.Wrapf(err, "Get UserInfo response ", // nolint
 			string(data))
 	}
 	return resp, nil

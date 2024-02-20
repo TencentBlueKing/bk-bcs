@@ -139,6 +139,7 @@ type ListKvOption struct {
 	IDs       []uint32  `json:"ids"`
 	KvType    []string  `json:"kv_type"`
 	TopIDs    []uint32  `json:"top_ids"`
+	Status    string    `json:"status"`
 }
 
 // Validate is used to validate the effectiveness of the ListKvOption structure.

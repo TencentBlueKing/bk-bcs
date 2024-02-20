@@ -208,7 +208,7 @@ func (ua *UpdateAction) updateCluster() error {
 		ua.cluster.Master = make(map[string]*cmproto.Node)
 
 		for _, ip := range ua.req.Master {
-			node, err := ua.transNodeIPToCloudNode(ip)
+			node, err := ua.transNodeIPToCloudNode(ip) // nolint
 			if err != nil {
 				blog.Errorf("updateCluster transNodeIPToCloudNode failed: %v", err)
 				ua.cluster.Master[ip] = &cmproto.Node{

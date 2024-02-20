@@ -137,7 +137,7 @@ func (rd *DynamicParams) getParam(key string) (r string) {
 	} else {
 		r = rd.req.QueryParameter(key)
 	}
-	return
+	return r
 }
 
 func (rd *DynamicParams) getQueryParamJSON() []byte {
@@ -266,7 +266,7 @@ func (rd *DynamicParams) get(condition *operator.Condition) (mList []operator.M,
 		return nil, fmt.Errorf("failed to query. err: %v", err)
 	}
 
-	return
+	return mList, nil
 }
 
 func getQueryJSON(s url.Values) (p []byte) {
@@ -277,7 +277,7 @@ func getQueryJSON(s url.Values) (p []byte) {
 		}
 	}
 	_ = codec.EncJson(r, &p)
-	return
+	return p
 }
 
 func urlPath(oldURL string) string {

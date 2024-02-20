@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/container/v1"
+	compute "google.golang.org/api/compute/v1"
+	container "google.golang.org/api/container/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"

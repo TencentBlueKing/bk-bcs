@@ -121,5 +121,5 @@ func getTime(timeStr, layout string) (r interface{}, err error) {
 	} else {
 		r = t.Format(layout)
 	}
-	return
+	return r, nil
 }

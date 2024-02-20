@@ -113,6 +113,7 @@ func (m *ModelWorkloadOriginRequest) CreateWorkloadOriginRequest(ctx context.Con
 	return m.DB.Table(m.TableName).Upsert(ctx, cond, operator.M{"$set": result})
 }
 
+// ListWorkloadOriginRequest list workload origin request
 func (m *ModelWorkloadOriginRequest) ListWorkloadOriginRequest(ctx context.Context,
 	req *datamanager.GetWorkloadOriginRequestResultReq) ([]*datamanager.WorkloadOriginRequestResult, error) {
 	err := ensureTable(ctx, &m.Public)

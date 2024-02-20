@@ -10,7 +10,8 @@
  * limitations under the License.
  */
 
-// Package metric_manager
+// Package metric_manager xxx
+// nolint
 package metric_manager
 
 import (

@@ -1,9 +1,5 @@
 <template>
-  <bk-table
-    :border="['row']"
-    :data="tableList"
-    :row-class="getRowCls"
-    @row-click="handleSelectVersion">
+  <bk-table :border="['row']" :data="tableList" :row-class="getRowCls" @row-click="handleSelectVersion">
     <bk-table-column :label="t('版本号')" show-overflow-tooltip>
       <template #default="{ row }">
         <div class="version-name-wrapper">
@@ -25,43 +21,42 @@
     @change="emits('pageChange', $event)" />
 </template>
 <script lang="ts" setup>
-import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { RightShape } from 'bkui-vue/lib/icon';
-import { IPagination } from '../../../../../../types/index';
-import { ITemplateVersionItem } from '../../../../../../types/template';
+  import { computed } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { RightShape } from 'bkui-vue/lib/icon';
+  import { IPagination } from '../../../../../../types/index';
+  import { ITemplateVersionItem } from '../../../../../../types/template';
 
-const { t } = useI18n();
-const props = defineProps<{
+  const { t } = useI18n();
+  const props = defineProps<{
     list: ITemplateVersionItem[];
     pagination: IPagination;
     id: number;
   }>();
 
-const emits = defineEmits(['pageChange', 'select']);
+  const emits = defineEmits(['pageChange', 'select']);
 
-const tableList = computed(() => {
-  const simpleList = props.list.map((item) => {
-    const { id, spec } = item;
-    return { id, name: spec.revision_name };
+  const tableList = computed(() => {
+    const simpleList = props.list.map((item) => {
+      const { id, spec } = item;
+      return { id, name: spec.revision_name };
+    });
+    if (props.id === 0) {
+      simpleList.unshift({ id: 0, name: t('新建版本') });
+    }
+    return simpleList;
   });
-  if (props.id === 0) {
-    simpleList.unshift({ id: 0, name: t('新建版本') });
-  }
-  return simpleList;
-});
 
-const getRowCls = (data: { id: number; name: string; }) => {
-  if (data.id === props.id) {
-    return 'selected';
-  }
-  return '';
-};
+  const getRowCls = (data: { id: number; name: string }) => {
+    if (data.id === props.id) {
+      return 'selected';
+    }
+    return '';
+  };
 
-const handleSelectVersion = (event: Event|undefined, data: { id: number; name: string; }) => {
-  emits('select', data.id);
-};
-
+  const handleSelectVersion = (event: Event | undefined, data: { id: number; name: string }) => {
+    emits('select', data.id);
+  };
 </script>
 <style scoped lang="scss">
   .version-name-wrapper {

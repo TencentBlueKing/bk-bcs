@@ -47,7 +47,7 @@ type ModelUserOperationData struct {
 	Tables map[string]*Public
 }
 
-// NewModelUserOperationDataList new bcs user operation data model
+// NewModelUserOperationData new bcs user operation data model
 func NewModelUserOperationData(dbs map[string]*sqlx.DB, bkbaseConf *types.BkbaseConfig) *ModelUserOperationData {
 	od := &ModelUserOperationData{
 		Tables: map[string]*Public{},
@@ -176,5 +176,5 @@ func (od *ModelUserOperationData) getBuilders(
 		countBuilder = countBuilder.Where(sq.Eq{NamespaceColumnKey: request.GetNamespace()})
 	}
 
-	return
+	return queryBuilder, countBuilder
 }

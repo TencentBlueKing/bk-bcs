@@ -48,7 +48,7 @@ type SearchBusinessRequest struct {
 	Operator  string                 `json:"operator"`
 }
 
-// SearchBusinessResponse search bussiness resp
+// SearchBusinessResponse search business resp
 type SearchBusinessResponse struct {
 	Code      int          `json:"code"`
 	Result    bool         `json:"result"`

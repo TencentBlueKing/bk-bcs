@@ -4895,6 +4895,12 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "TemplateSet.CreateTemplateSet",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/templatesets"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "TemplateSet.GetEnvManage",
 			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
 			Method:  []string{"GET"},
@@ -4964,6 +4970,8 @@ type TemplateSetService interface {
 	CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error)
 	// 删除模板文件版本
 	DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error)
+	// 创建模板集
+	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取环境管理详情
 	GetEnvManage(ctx context.Context, in *GetEnvManageReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取环境管理列表
@@ -5130,6 +5138,16 @@ func (c *templateSetService) DeleteTemplateVersion(ctx context.Context, in *Dele
 	return out, nil
 }
 
+func (c *templateSetService) CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.CreateTemplateSet", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *templateSetService) GetEnvManage(ctx context.Context, in *GetEnvManageReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "TemplateSet.GetEnvManage", in)
 	out := new(CommonResp)
@@ -5221,6 +5239,8 @@ type TemplateSetHandler interface {
 	CreateTemplateVersion(context.Context, *CreateTemplateVersionReq, *CommonResp) error
 	// 删除模板文件版本
 	DeleteTemplateVersion(context.Context, *DeleteTemplateVersionReq, *CommonResp) error
+	// 创建模板集
+	CreateTemplateSet(context.Context, *CreateTemplateSetReq, *CommonResp) error
 	// 获取环境管理详情
 	GetEnvManage(context.Context, *GetEnvManageReq, *CommonResp) error
 	// 获取环境管理列表
@@ -5251,6 +5271,7 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		ListTemplateVersion(ctx context.Context, in *ListTemplateVersionReq, out *CommonListResp) error
 		CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, out *CommonResp) error
 		DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, out *CommonResp) error
+		CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, out *CommonResp) error
 		GetEnvManage(ctx context.Context, in *GetEnvManageReq, out *CommonResp) error
 		ListEnvManages(ctx context.Context, in *ListEnvManagesReq, out *CommonListResp) error
 		CreateEnvManage(ctx context.Context, in *CreateEnvManageReq, out *CommonResp) error
@@ -5344,6 +5365,12 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		Name:    "TemplateSet.DeleteTemplateVersion",
 		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/versions/{id}"},
 		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.CreateTemplateSet",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/templatesets"},
+		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -5443,6 +5470,10 @@ func (h *templateSetHandler) CreateTemplateVersion(ctx context.Context, in *Crea
 
 func (h *templateSetHandler) DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, out *CommonResp) error {
 	return h.TemplateSetHandler.DeleteTemplateVersion(ctx, in, out)
+}
+
+func (h *templateSetHandler) CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, out *CommonResp) error {
+	return h.TemplateSetHandler.CreateTemplateSet(ctx, in, out)
 }
 
 func (h *templateSetHandler) GetEnvManage(ctx context.Context, in *GetEnvManageReq, out *CommonResp) error {

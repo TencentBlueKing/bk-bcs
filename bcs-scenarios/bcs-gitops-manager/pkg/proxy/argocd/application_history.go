@@ -78,7 +78,7 @@ func (plugin *AppPlugin) applicationHistoryState(r *http.Request) (*http.Request
 	}
 	hm, err := plugin.db.GetApplicationHistoryManifest(appName, applicationUID, historyID)
 	if err != nil {
-		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "get application history manfiest failed"))
+		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "get application history manifest failed"))
 	}
 	if hm == nil {
 		return r, mw.ReturnErrorResponse(http.StatusNotFound,

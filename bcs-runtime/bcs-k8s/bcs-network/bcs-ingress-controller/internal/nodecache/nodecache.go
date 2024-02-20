@@ -197,7 +197,7 @@ func (n *NodeCache) loadNodeInfoFromConfigmap() {
 		node := &corev1.Node{}
 		if err := n.k8sClient.Get(context.Background(), k8stypes.NamespacedName{Name: nodeName},
 			node); err != nil {
-			blog.Errorf("get node '%s' failed, err: %s", err.Error())
+			blog.Errorf("get node failed, err: %s", err.Error())
 			continue
 		}
 

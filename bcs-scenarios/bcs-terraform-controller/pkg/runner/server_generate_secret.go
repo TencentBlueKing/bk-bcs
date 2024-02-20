@@ -67,10 +67,8 @@ func (t *terraformLocalRunner) GenerateSecretForTF(ctx context.Context, workdir 
 				}
 				blog.Info("found placeholder `%s` and replace to `%s` \n", placeholder, string(secretVal))
 				return secretVal
-			} else {
-				blog.Errorf("not match placeholder: `%s` \n", placeholder)
 			}
-
+			blog.Errorf("not match placeholder: `%s` \n", placeholder)
 			return match
 		})
 

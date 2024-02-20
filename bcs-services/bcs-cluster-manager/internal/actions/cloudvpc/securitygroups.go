@@ -117,7 +117,10 @@ func (la *ListSecurityGroupsAction) listCloudSecurityGroups() error {
 	cmOption.Region = la.req.Region
 
 	// get sgs list
-	sgs, err := vpcMgr.ListSecurityGroups(cmOption)
+	sgs, err := vpcMgr.ListSecurityGroups(&cloudprovider.ListNetworksOption{
+		CommonOption:      *cmOption,
+		ResourceGroupName: la.req.ResourceGroupName,
+	})
 	if err != nil {
 		return err
 	}

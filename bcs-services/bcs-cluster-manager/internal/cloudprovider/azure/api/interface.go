@@ -359,6 +359,25 @@ type SetInstanceService interface {
 
 	// CheckInstanceType 检查机型是否存在
 	CheckInstanceType(ctx context.Context, location, instanceType string) (bool, error)
+
+	// ListVMSize 获取VM机型(ListVMSize)
+	//
+	// location - 区域名称
+	ListVMSize(ctx context.Context, location string) ([]*armcompute.VirtualMachineSize, error)
+
+	// ListOsImage 获取VM操作系统镜像(ListOsImage)
+	//
+	// location - 区域名称
+	//
+	// publisher - OS发行商
+	//
+	// offer - OS提供商.
+	ListOsImage(ctx context.Context, location, publisher, offer string,
+		options *armcompute.VirtualMachineImagesClientListSKUsOptions) (
+		[]*armcompute.VirtualMachineImageResource, error)
+
+	// ListSSHPublicKeys 获取SSH public keys
+	ListSSHPublicKeys(ctx context.Context, resourceGroupName string) ([]*armcompute.SSHPublicKeyResource, error)
 }
 
 // NetworkInterfaceService 网络接口(Network Interface)
@@ -388,6 +407,22 @@ type NetworkInterfaceService interface {
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 	ListVirtualNetwork(ctx context.Context, nodeResourceGroup string) ([]*armnetwork.VirtualNetwork, error)
 
+	// ListSubnets 虚拟子网列表
+	//
+	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+	ListSubnets(ctx context.Context, nodeResourceGroup, vpcName string) ([]*armnetwork.Subnet, error)
+
+	// GetSubnet 虚拟子网
+	//
+	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+	GetSubnet(ctx context.Context, nodeResourceGroup, vpcName, subnetName string) (*armnetwork.Subnet, error)
+
+	// UpdateSubnet 创建或更新虚拟子网
+	//
+	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+	UpdateSubnet(ctx context.Context, nodeResourceGroup, vpcName, subnetName string,
+		subnet armnetwork.Subnet) (*armnetwork.Subnet, error)
+
 	// GetNetworkSecurityGroups 查询安全组
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
@@ -396,6 +431,7 @@ type NetworkInterfaceService interface {
 	GetNetworkSecurityGroups(ctx context.Context, nodeResourceGroup, networkSecurityGroupName string) (
 		*armnetwork.SecurityGroup, error)
 
+	ListNetworkSecurityGroups(ctx context.Context, nodeResourceGroup string) ([]*armnetwork.SecurityGroup, error)
 	// ListSetInterfaceAndReturn 查询set中vm的网卡
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).

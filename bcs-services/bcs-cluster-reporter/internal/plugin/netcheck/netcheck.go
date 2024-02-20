@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package netcheck
+// Package netcheck xxx
 package netcheck
 
 import (
@@ -53,22 +53,30 @@ type Plugin struct {
 }
 
 var (
+	// NewGaugeVec creates a new GaugeVec based on the provided GaugeOpts and
+	// partitioned by the given label names.
 	podNetAvailability = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "pod_net_availability",
 		Help: "pod_net_availability, 1 means OK",
 	}, []string{"target", "target_biz", "status"})
 
+	// NewHistogramVec creates a new HistogramVec based on the provided HistogramOpts and
+	// partitioned by the given label names.
 	podNetLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "pod_net_latency",
 		Help:    "pod_net_latency",
 		Buckets: []float64{0.001, 0.01, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2},
 	}, []string{"target", "target_biz"})
 
+	// NewGaugeVec creates a new GaugeVec based on the provided GaugeOpts and
+	// partitioned by the given label names.
 	svcNetAvailability = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "svc_net_availability",
 		Help: "svc_net_availability, 1 means OK",
 	}, []string{"target", "target_biz", "status"})
 
+	// NewHistogramVec creates a new HistogramVec based on the provided HistogramOpts and
+	// partitioned by the given label names.
 	svcNetLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "svc_net_latency",
 		Help:    "pod_net_latency",

@@ -381,7 +381,7 @@ func GrantResourceCreatorActionAncetors(ancetors []*GrantResourceCreatorActionRe
 // to client GrantResourceCreatorActionAncestor
 //
 //nolint:lll
-func GrantResourceCreatorActionAncetor(ancetor *GrantResourceCreatorActionReq_Ancestor) client.GrantResourceCreatorActionAncestor {
+func GrantResourceCreatorActionAncetor(ancetor *GrantResourceCreatorActionReq_Ancestor) client.GrantResourceCreatorActionAncestor { // NOCC:tosa/fn_length(ignore)
 	return client.GrantResourceCreatorActionAncestor{
 		System: ancetor.System,
 		Type:   client.TypeID(ancetor.Type),
@@ -393,7 +393,7 @@ func GrantResourceCreatorActionAncetor(ancetor *GrantResourceCreatorActionReq_An
 // to pb GrantResourceCreatorActionReq_Ancestor
 //
 //nolint:lll
-func PbGrantResourceCreatorActionAncestor(ancetor client.GrantResourceCreatorActionAncestor) *GrantResourceCreatorActionReq_Ancestor {
+func PbGrantResourceCreatorActionAncestor(ancetor client.GrantResourceCreatorActionAncestor) *GrantResourceCreatorActionReq_Ancestor { // NOCC:tosa/fn_length(ignore)
 	return &GrantResourceCreatorActionReq_Ancestor{
 		System: ancetor.System,
 		Type:   string(ancetor.Type),
@@ -405,7 +405,7 @@ func PbGrantResourceCreatorActionAncestor(ancetor client.GrantResourceCreatorAct
 // to pb GrantResourceCreatorActionReq_Ancestor array
 //
 //nolint:lll
-func PbGrantResourceCreatorActionAncestors(ancetors []client.GrantResourceCreatorActionAncestor) []*GrantResourceCreatorActionReq_Ancestor {
+func PbGrantResourceCreatorActionAncestors(ancetors []client.GrantResourceCreatorActionAncestor) []*GrantResourceCreatorActionReq_Ancestor { // NOCC:tosa/fn_length(ignore)
 	result := make([]*GrantResourceCreatorActionReq_Ancestor, len(ancetors))
 
 	if len(ancetors) == 0 {

@@ -14,6 +14,9 @@
 package pbrci
 
 import (
+	"path"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
@@ -131,7 +134,7 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 
 // PbConfigItemState convert config item state
 func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem,
-	commits []*table.Commit) []*pbci.ConfigItem {
+	commits []*table.Commit, status string) []*pbci.ConfigItem {
 	releaseMap := make(map[uint32]*table.ReleasedConfigItem, len(fileRelease))
 	for _, release := range fileRelease {
 		releaseMap[release.ConfigItemID] = release
@@ -164,11 +167,17 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 	for _, file := range releaseMap {
 		result = append(result, PbConfigItem(file, constant.FileStateDelete))
 	}
-	return sortConfigItemsByState(result)
+	// 先按照path+name排序好
+	sort.SliceStable(result, func(i, j int) bool {
+		iPath := path.Join(result[i].Spec.Path, result[i].Spec.Name)
+		jPath := path.Join(result[j].Spec.Path, result[j].Spec.Name)
+		return iPath < jPath
+	})
+	return sortConfigItemsByState(result, status)
 }
 
-// sortConfigItemsByState sort as add > revise > unchange > delete
-func sortConfigItemsByState(cis []*pbci.ConfigItem) []*pbci.ConfigItem {
+// sortConfigItemsByState sort as add > revise > delete >  unchange
+func sortConfigItemsByState(cis []*pbci.ConfigItem, status string) []*pbci.ConfigItem {
 	result := make([]*pbci.ConfigItem, 0)
 	add := make([]*pbci.ConfigItem, 0)
 	del := make([]*pbci.ConfigItem, 0)
@@ -186,9 +195,21 @@ func sortConfigItemsByState(cis []*pbci.ConfigItem) []*pbci.ConfigItem {
 			unchange = append(unchange, ci)
 		}
 	}
+	// 判断是否有过滤
+	switch strings.ToUpper(status) {
+	case constant.FileStateAdd:
+		return add
+	case constant.FileStateDelete:
+		return del
+	case constant.FileStateRevise:
+		return revise
+	case constant.FileStateUnchange:
+		return unchange
+	}
 	result = append(result, add...)
 	result = append(result, revise...)
-	result = append(result, unchange...)
 	result = append(result, del...)
+	result = append(result, unchange...)
+
 	return result
 }

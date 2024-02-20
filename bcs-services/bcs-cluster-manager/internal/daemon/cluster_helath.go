@@ -65,6 +65,7 @@ func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
 	concurency.Wait()
 }
 
+// nolint
 func (d *Daemon) updateClusterStatus(clusterId, status string) error {
 	cluster, err := d.model.GetCluster(d.ctx, clusterId)
 	if err != nil {

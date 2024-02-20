@@ -190,10 +190,9 @@ func (s *Synchronizer) Run() {
 			if errr != nil {
 				blog.Errorf("Error: %v\n", errr)
 				return
-			} else {
-				podIndex = num
-				fmt.Printf("The number is %d\n", podIndex)
 			}
+			podIndex = num
+			fmt.Printf("The number is %d\n", podIndex)
 		}
 	}
 

@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package bkpaas provides bkpaas auth client.
 package bkpaas
 
 import (

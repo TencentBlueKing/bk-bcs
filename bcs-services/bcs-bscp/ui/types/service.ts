@@ -5,7 +5,7 @@ export interface IServiceEditForm {
   name: string;
   alias: string;
   config_type: string;
-  reload_type: string,
+  reload_type: string;
   reload_file_path: string;
   mode: string;
   memo: string;
@@ -14,9 +14,9 @@ export interface IServiceEditForm {
 
 // 版本下的脚本配置
 export interface IDiffDetail {
-  contentType: 'file'|'text';
+  contentType: 'file' | 'text';
   base: {
-    content: string|IFileConfigContentSummary;
+    content: string | IFileConfigContentSummary;
     language?: string;
     variables?: IVariableEditParams[];
     permission?: {
@@ -24,9 +24,9 @@ export interface IDiffDetail {
       user: string;
       user_group: string;
     };
-  },
+  };
   current: {
-    content: string|IFileConfigContentSummary;
+    content: string | IFileConfigContentSummary;
     language?: string;
     variables?: IVariableEditParams[];
     permission?: {
@@ -34,5 +34,5 @@ export interface IDiffDetail {
       user: string;
       user_group: string;
     };
-  }
+  };
 }

@@ -39,7 +39,7 @@ func updateTaskDataStatus(model store.ClusterManagerModel, task *proto.Task) err
 		strings.Contains(task.TaskType, cloudprovider.DeleteVirtualCluster.String()):
 		err = updateClusterStatus(model, task.ClusterID, common.StatusDeleting)
 	case strings.Contains(task.TaskType, cloudprovider.AddNodesToCluster.String()):
-		//err = updateNodeStatus(ua.model, ua.task.NodeIPList, common.StatusInitialization)
+		// err = updateNodeStatus(ua.model, ua.task.NodeIPList, common.StatusInitialization)
 		err = updateNodeStatus(model, cloudprovider.ParseNodeIpOrIdFromCommonMap(task.CommonParams,
 			cloudprovider.NodeIPsKey.String(), ","), common.StatusInitialization)
 	case strings.Contains(task.TaskType, cloudprovider.RemoveNodesFromCluster.String()):

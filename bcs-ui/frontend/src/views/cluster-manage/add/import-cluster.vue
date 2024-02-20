@@ -170,7 +170,9 @@
           theme="primary"
           class="mr-[5px]"
           :loading="testLoading"
-          :disabled="!importClusterInfo.cloudID || !importClusterInfo.provider"
+          :disabled="importClusterInfo.importType === 'provider'
+            ? (!importClusterInfo.cloudID || !importClusterInfo.provider)
+            : !importClusterInfo.yaml"
           @click="handleTest">{{$t('cluster.create.button.textKubeConfig')}}</bk-button>
         <span
           v-bk-tooltips="{

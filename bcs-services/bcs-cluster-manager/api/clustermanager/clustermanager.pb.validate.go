@@ -16747,6 +16747,8 @@ func (m *KubeConfigConnectReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for ResourceGroupName
+
 	if len(errors) > 0 {
 		return KubeConfigConnectReqMultiError(errors)
 	}
@@ -40833,6 +40835,371 @@ var _ interface {
 	ErrorName() string
 } = UpdateAutoScalingStatusResponseValidationError{}
 
+// Validate checks the field values on ResourceGroupInfo with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ResourceGroupInfo) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResourceGroupInfo with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResourceGroupInfoMultiError, or nil if none found.
+func (m *ResourceGroupInfo) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResourceGroupInfo) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	// no validation rules for Region
+
+	// no validation rules for ProvisioningState
+
+	if len(errors) > 0 {
+		return ResourceGroupInfoMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResourceGroupInfoMultiError is an error wrapping multiple validation errors
+// returned by ResourceGroupInfo.ValidateAll() if the designated constraints
+// aren't met.
+type ResourceGroupInfoMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResourceGroupInfoMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResourceGroupInfoMultiError) AllErrors() []error { return m }
+
+// ResourceGroupInfoValidationError is the validation error returned by
+// ResourceGroupInfo.Validate if the designated constraints aren't met.
+type ResourceGroupInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResourceGroupInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResourceGroupInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResourceGroupInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResourceGroupInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResourceGroupInfoValidationError) ErrorName() string {
+	return "ResourceGroupInfoValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResourceGroupInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResourceGroupInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResourceGroupInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResourceGroupInfoValidationError{}
+
+// Validate checks the field values on GetResourceGroupsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetResourceGroupsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetResourceGroupsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetResourceGroupsRequestMultiError, or nil if none found.
+func (m *GetResourceGroupsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetResourceGroupsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetCloudID()) < 2 {
+		err := GetResourceGroupsRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at least 2 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for AccountID
+
+	if len(errors) > 0 {
+		return GetResourceGroupsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetResourceGroupsRequestMultiError is an error wrapping multiple validation
+// errors returned by GetResourceGroupsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetResourceGroupsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetResourceGroupsRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetResourceGroupsRequestMultiError) AllErrors() []error { return m }
+
+// GetResourceGroupsRequestValidationError is the validation error returned by
+// GetResourceGroupsRequest.Validate if the designated constraints aren't met.
+type GetResourceGroupsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetResourceGroupsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetResourceGroupsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetResourceGroupsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetResourceGroupsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetResourceGroupsRequestValidationError) ErrorName() string {
+	return "GetResourceGroupsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetResourceGroupsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetResourceGroupsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetResourceGroupsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetResourceGroupsRequestValidationError{}
+
+// Validate checks the field values on GetResourceGroupsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetResourceGroupsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetResourceGroupsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetResourceGroupsResponseMultiError, or nil if none found.
+func (m *GetResourceGroupsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetResourceGroupsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetResourceGroupsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetResourceGroupsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetResourceGroupsResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetResourceGroupsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetResourceGroupsResponseMultiError is an error wrapping multiple validation
+// errors returned by GetResourceGroupsResponse.ValidateAll() if the
+// designated constraints aren't met.
+type GetResourceGroupsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetResourceGroupsResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetResourceGroupsResponseMultiError) AllErrors() []error { return m }
+
+// GetResourceGroupsResponseValidationError is the validation error returned by
+// GetResourceGroupsResponse.Validate if the designated constraints aren't met.
+type GetResourceGroupsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetResourceGroupsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetResourceGroupsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetResourceGroupsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetResourceGroupsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetResourceGroupsResponseValidationError) ErrorName() string {
+	return "GetResourceGroupsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetResourceGroupsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetResourceGroupsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetResourceGroupsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetResourceGroupsResponseValidationError{}
+
 // Validate checks the field values on RegionInfo with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -45152,6 +45519,8 @@ func (m *ListCloudVpcsRequest) validate(all bool) error {
 
 	// no validation rules for VpcID
 
+	// no validation rules for ResourceGroupName
+
 	if len(errors) > 0 {
 		return ListCloudVpcsRequestMultiError(errors)
 	}
@@ -45674,6 +46043,8 @@ func (m *ListCloudSubnetsRequest) validate(all bool) error {
 	// no validation rules for SubnetID
 
 	// no validation rules for InjectCluster
+
+	// no validation rules for ResourceGroupName
 
 	if len(errors) > 0 {
 		return ListCloudSubnetsRequestMultiError(errors)
@@ -46447,6 +46818,8 @@ func (m *ListCloudSecurityGroupsRequest) validate(all bool) error {
 
 	// no validation rules for AccountID
 
+	// no validation rules for ResourceGroupName
+
 	if len(errors) > 0 {
 		return ListCloudSecurityGroupsRequestMultiError(errors)
 	}
@@ -46707,6 +47080,8 @@ func (m *ListKeyPairsRequest) validate(all bool) error {
 	// no validation rules for Region
 
 	// no validation rules for AccountID
+
+	// no validation rules for ResourceGroupName
 
 	if len(errors) > 0 {
 		return ListKeyPairsRequestMultiError(errors)

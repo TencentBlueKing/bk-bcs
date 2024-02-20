@@ -1,6 +1,6 @@
 export const enum ECategoryType {
   Custom = 'custom',
-  Debug = 'debug'
+  Debug = 'debug',
 }
 
 export const enum EGroupRuleType {
@@ -44,7 +44,7 @@ export interface ICategoryItem {
     reviser: string;
     create_at: string;
     update_at: string;
-  }
+  };
 }
 
 // 分组详情
@@ -59,7 +59,7 @@ export interface IGroupItem {
   selector: {
     labels_and?: IGroupRuleItem[];
     labels_or?: IGroupRuleItem[];
-  }
+  };
 }
 
 // 分组按规则key分类数据
@@ -67,7 +67,7 @@ export interface IGroupCategory {
   name: string;
   show: boolean;
   fold: boolean;
-  children: IGroupCategoryItem[]
+  children: IGroupCategoryItem[];
 }
 
 // 分组按规则key分类的单条表格数据
@@ -83,7 +83,7 @@ export interface IGroupCategoryItem {
   selector?: {
     labels_and?: IGroupRuleItem[];
     labels_or?: IGroupRuleItem[];
-  }
+  };
 }
 
 // 分组编辑数据
@@ -100,23 +100,22 @@ export interface IGroupEditing {
 // 分组规则
 export interface IGroupRuleItem {
   key: string;
-  op: EGroupRuleType|string;
-  value: string|number|string[]
+  op: EGroupRuleType | string;
+  value: string | number | string[];
 }
 
 // 分组新建、编辑提交到接口参数
 export interface IGroupEditArg {
-  id?: number,
+  id?: number;
   name: string;
   group_category_id?: number;
   mode?: ECategoryType;
   selector?: {
     labels_and?: Array<IGroupRuleItem>;
-    labels_or?: Array<IGroupRuleItem>
+    labels_or?: Array<IGroupRuleItem>;
   };
-  uid?: string
+  uid?: string;
 }
-
 
 // 选择上线的分组
 export interface IGroupToPublish {
@@ -146,11 +145,11 @@ export interface IGroupItemInService {
   old_selector: {
     labels_or?: IGroupRuleItem[];
     labels_and?: IGroupRuleItem[];
-  },
+  };
   new_selector: {
     labels_or?: IGroupRuleItem[];
     labels_and?: IGroupRuleItem[];
-  },
+  };
   edited: boolean;
 }
 
@@ -159,5 +158,5 @@ export interface IGroupPreviewItem {
   id: number;
   name: string;
   type: String;
-  children: IGroupToPublish[]
+  children: IGroupToPublish[];
 }

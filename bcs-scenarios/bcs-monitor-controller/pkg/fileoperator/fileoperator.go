@@ -11,6 +11,7 @@
  *
  */
 
+// Package fileoperator xxx
 package fileoperator
 
 import (
@@ -19,7 +20,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mholt/archiver/v3"
 	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 

@@ -772,8 +772,6 @@ func updateClusterModule(cluster *proto.Cluster, category, moduleID, moduleName 
 		cluster.GetClusterBasicSettings().GetModule().WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
 	default:
 	}
-
-	return
 }
 
 func updateAutoScalingModule(cluster *proto.Cluster, option *proto.ClusterAutoScalingOption,
@@ -794,8 +792,6 @@ func updateAutoScalingModule(cluster *proto.Cluster, option *proto.ClusterAutoSc
 	} else {
 		option.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
 	}
-
-	return
 }
 
 func transClusterNodes(model store.ClusterManagerModel, cluster *proto.Cluster, category, moduleID string) error {
@@ -830,7 +826,7 @@ func transClusterNodes(model store.ClusterManagerModel, cluster *proto.Cluster, 
 		blog.Errorf("transClusterNodes[%s] nodeIps empty", cluster.ClusterID)
 		return nil
 	}
-	
+
 	err = provider.TransBizNodeModule(context.Background(), bkBizID, bkModuleID, nodeIps)
 	if err != nil {
 		blog.Errorf("transClusterNodes[%s] TransBizNodeModule failed: %v", cluster.ClusterID, err)

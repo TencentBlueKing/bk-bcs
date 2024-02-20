@@ -48,7 +48,7 @@ func (cs Scope) Split() (app string, scope string, err error) {
 
 	app = string(cs[:index])
 	scope = string(cs[index:])
-	return
+	return app, scope, nil
 }
 
 // MatchApp checks if the credential scope matches the app name.

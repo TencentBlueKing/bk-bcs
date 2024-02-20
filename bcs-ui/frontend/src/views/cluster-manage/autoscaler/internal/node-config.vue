@@ -467,6 +467,8 @@ export default defineComponent({
           message: $i18n.t('generic.validate.fieldRequired', [defaultSecurityGroupName]),
           trigger: 'blur',
           validator: () => {
+            if (isEdit.value) return true;
+
             const defaultSecurityGroup = securityGroupsList.value
               .find(item => item.securityGroupName === defaultSecurityGroupName);
 

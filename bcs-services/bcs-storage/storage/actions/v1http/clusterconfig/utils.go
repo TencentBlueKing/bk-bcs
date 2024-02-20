@@ -98,7 +98,7 @@ func getSvcSet(ctx context.Context, resourceType string, opt *lib.StoreGetOption
 		blog.Errorf("Failed to parse service configSet. err: %v", err)
 		return
 	}
-	return
+	return svcConfigSet, nil
 }
 
 func getClsSet(clsConfig []operator.M) (clusterSet []types.ClusterSet, err error) {
@@ -234,7 +234,7 @@ func wrapIP(s []string, df string) (r []string) {
 		}
 		r = append(r, v)
 	}
-	return
+	return r
 }
 
 func unwrapIP(s []string) (r []string) {
@@ -245,5 +245,5 @@ func unwrapIP(s []string) (r []string) {
 		}
 		r = append(r, v)
 	}
-	return
+	return r
 }

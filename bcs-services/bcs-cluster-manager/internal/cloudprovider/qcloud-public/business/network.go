@@ -164,7 +164,7 @@ func AllocateClusterVpcCniSubnets(ctx context.Context, clusterId, vpcId string,
 	subnetIDs := make([]string, 0)
 
 	for i := range subnets {
-		mask := 0
+		mask := 0 // nolint
 		if subnets[i].Mask > 0 {
 			mask = int(subnets[i].Mask)
 		} else if subnets[i].IpCnt > 0 {

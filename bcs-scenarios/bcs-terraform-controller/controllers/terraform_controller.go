@@ -148,6 +148,7 @@ func (r *TerraformReconciler) handler(ctx context.Context, traceId string, tf *t
 		getTfPlanFlag = true // 假定执行apply失败, 需要进行apply重试, 获取tfplan, 再去执行apply
 
 		if currentCommitId == "refresh" {
+			// nolint
 			// todo: 手动刷新 or 强制刷新?
 			// getTfPlanFlag = true
 		} else if len(tf.Status.LastApplyError) == 0 {
@@ -217,16 +218,15 @@ func (r *TerraformReconciler) handler(ctx context.Context, traceId string, tf *t
 
 // finish 更新tf status至api server
 func (r *TerraformReconciler) finish(ctx context.Context, traceId string, tf *tfv1.Terraform) {
-	tf.Status.ObservedGeneration += 1
+	tf.Status.ObservedGeneration++
 	nn := apitypes.NamespacedName{Namespace: tf.Namespace, Name: tf.Name}
 	//blog.Infof("update tf status before, trace-id: %s, tf-json: %s,", traceId, utils.ToJsonString(tf))
 
 	if err := r.Client.Status().Update(ctx, tf, &client.UpdateOptions{}); err != nil {
 		blog.Errorf("update tf status failed(finish), tf: %s, trace-id: %s, err: %s", nn, traceId, err)
 		return
-	} else {
-		blog.Infof("update tf status success, tf: %s, trace-id: %s", nn, traceId)
 	}
+	blog.Infof("update tf status success, tf: %s, trace-id: %s", nn, traceId)
 }
 
 // updateAnnotations 更新注解

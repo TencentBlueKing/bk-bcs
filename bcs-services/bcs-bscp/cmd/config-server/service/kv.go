@@ -115,6 +115,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbcs.ListKvsReq) (*pbcs.List
 		Sort:       req.Sort,
 		Order:      req.Order,
 		TopIds:     req.TopIds,
+		Status:     req.Status,
 	}
 	if !req.All {
 		if req.Limit == 0 {

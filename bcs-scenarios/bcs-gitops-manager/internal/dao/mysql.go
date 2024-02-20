@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql" // nolint
 	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -36,6 +36,7 @@ var (
 	globalDB *driver
 )
 
+// GlobalDB global db
 func GlobalDB() Interface {
 	return globalDB
 }

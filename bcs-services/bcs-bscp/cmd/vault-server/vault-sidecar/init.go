@@ -31,6 +31,7 @@ const (
 )
 
 // #nosec G101
+// NOCC:tosa/indent(ignore)
 var secretTmpl = `global:
   vault:
     unsealKeys:

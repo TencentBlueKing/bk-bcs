@@ -36,8 +36,8 @@ func init() {
 type VPCManager struct{}
 
 // ListVpcs list vpcs
-func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.CloudVpc, error) {
-	vpcCli, err := api.NewVPCClient(opt)
+func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOption) ([]*proto.CloudVpc, error) {
+	vpcCli, err := api.NewVPCClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create VPC client when failed: %v", err)
 		return nil, err
@@ -77,9 +77,9 @@ func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]
 }
 
 // ListSubnets list vpc subnets
-func (c *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
+func (c *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNetworksOption) ([]*proto.Subnet, error) {
 	blog.Infof("ListSubnets input: vpcID/%s", vpcID)
-	vpcCli, err := api.NewVPCClient(opt)
+	vpcCli, err := api.NewVPCClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create VPC client when failed: %v", err)
 		return nil, err
@@ -111,8 +111,8 @@ func (c *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.CommonOp
 }
 
 // ListSecurityGroups list security groups
-func (c *VPCManager) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*proto.SecurityGroup, error) {
-	vpcCli, err := api.NewVPCClient(opt)
+func (c *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) ([]*proto.SecurityGroup, error) {
+	vpcCli, err := api.NewVPCClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create VPC client when failed: %v", err)
 		return nil, err

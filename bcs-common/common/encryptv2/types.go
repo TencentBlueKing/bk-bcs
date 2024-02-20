@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -62,7 +62,7 @@ var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 func RandomId(n int) string {
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[rand.Intn(len(letters))] // nolint
 	}
 	return string(b)
 }
@@ -71,8 +71,11 @@ func RandomId(n int) string {
 type Algorithm string
 
 const (
-	Sm4    Algorithm = "SM4"
+	// Sm4 SM4 cryptography algorithm
+	Sm4 Algorithm = "SM4"
+	// AesGcm AES-GCM cryptography algorithm
 	AesGcm Algorithm = "AES-GCM"
+	// Normal normal algorithm
 	Normal Algorithm = "normal"
 )
 

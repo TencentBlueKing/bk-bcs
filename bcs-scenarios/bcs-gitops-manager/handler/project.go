@@ -96,11 +96,11 @@ func (e *BcsGitopsHandler) StartupProject(ctx context.Context, req *pb.ProjectSy
 		destPro.ObjectMeta.Annotations[common.SecretKey] = secretAnnotation
 	}
 
-	if err := e.option.Storage.CreateProject(ctx, destPro); err != nil {
+	if err = e.option.Storage.CreateProject(ctx, destPro); err != nil {
 		return e.startProjectResult(resp, failedCode, "",
 			errors.Wrapf(err, "create project '%s' to storage failed", project.ProjectCode))
 	}
-	if err := e.option.ClusterControl.SyncProject(ctx, project.ProjectCode); err != nil {
+	if err = e.option.ClusterControl.SyncProject(ctx, project.ProjectCode); err != nil {
 		return e.startProjectResult(resp, failedCode, "",
 			errors.Wrapf(err, "sync project '%s' clusters failed", project.ProjectCode))
 	}

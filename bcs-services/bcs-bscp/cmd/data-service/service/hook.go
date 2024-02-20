@@ -33,10 +33,12 @@ import (
 func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	// GetByName get hook by name
 	if _, err := s.dao.Hook().GetByName(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
 		return nil, fmt.Errorf("hook name %s already exists", req.Spec.Name)
 	}
 
+	// HookSpec convert pb HookSpec to table HookSpec
 	spec, err := req.Spec.HookSpec()
 	if err != nil {
 		logs.Errorf("get hook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
@@ -56,6 +58,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		Revision:   res,
 	}
 
+	// CreateWithTx create one hook instance with transaction.
 	id, err := s.dao.Hook().CreateWithTx(kt, tx, hook)
 	if err != nil {
 		logs.Errorf("create hook failed, err: %v, rid: %s", err, kt.Rid)
@@ -79,6 +82,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		},
 		Revision: res,
 	}
+	// CreateWithTx create hook revision instance with transaction.
 	_, err = s.dao.HookRevision().CreateWithTx(kt, tx, revision)
 	if err != nil {
 		logs.Errorf("create hook revision failed, err: %v, rid: %s", err, kt.Rid)
@@ -100,6 +104,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 // ListHooks list hooks.
 func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.ListHooksResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	kt := kit.FromGrpcContext(ctx)
 
 	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
@@ -120,6 +125,7 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 		return nil, err
 	}
 
+	// ListWithRefer hooks with refer info.
 	details, count, err := s.dao.Hook().ListWithRefer(kt, opt)
 	if err != nil {
 		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
@@ -193,6 +199,7 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 			BizID: req.BizId,
 		},
 	}
+	// DeleteWithTx delete hook instance with transaction.
 	if e := s.dao.Hook().DeleteWithTx(kt, tx, hook); e != nil {
 		logs.Errorf("delete hook failed, err: %v, rid: %s", e, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
@@ -211,8 +218,10 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 // ListHookTags list tag
 func (s *Service) ListHookTags(ctx context.Context, req *pbds.ListHookTagReq) (*pbds.ListHookTagResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	kt := kit.FromGrpcContext(ctx)
 
+	// CountHookTag count hook tag
 	ht, err := s.dao.Hook().CountHookTag(kt, req.BizId)
 	if err != nil {
 		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
@@ -234,6 +243,7 @@ func (s *Service) ListHookTags(ctx context.Context, req *pbds.ListHookTagReq) (*
 // GetHook get a hook
 func (s *Service) GetHook(ctx context.Context, req *pbds.GetHookReq) (*pbds.GetHookResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	kt := kit.FromGrpcContext(ctx)
 
 	h, err := s.dao.Hook().GetByID(kt, req.BizId, req.HookId)

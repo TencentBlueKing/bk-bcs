@@ -136,12 +136,8 @@ func (c *Client) GetSystemInfo(ctx context.Context, fields []SystemQueryField) (
 	return resp, nil
 }
 
-// UpdateSystemConfig update system config in IAM
-// Note: can only update provider_config.host field.
-func (c *Client) UpdateSystemConfig(ctx context.Context, config *SysConfig) error {
-	sys := new(System)
-	config.Auth = "basic"
-	sys.ProviderConfig = config
+// UpdateSystem update system in IAM
+func (c *Client) UpdateSystem(ctx context.Context, sys System) error {
 	resp := new(BaseResponse)
 	result := c.client.Put().
 		SubResourcef("/api/v1/model/systems/%s", c.config.SystemID).

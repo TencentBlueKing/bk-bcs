@@ -573,8 +573,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 			logs.Errorf("get commit, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
-
-		configItems = pbrci.PbConfigItemState(details, fileReleased, commits)
+		configItems = pbrci.PbConfigItemState(details, fileReleased, commits, req.Status)
 	} else {
 		for _, ci := range details {
 			configItems = append(configItems, pbci.PbConfigItem(ci, ""))
@@ -623,18 +622,14 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 			end = uint32(len(configItems))
 		}
 	}
+
+	// 如果有topID则按照topID排最前面
 	topId, _ := tools.StrToUint32Slice(req.Ids)
 	sort.SliceStable(configItems, func(i, j int) bool {
-		// 检测模板id是否在topId中
 		iInTopID := tools.Contains(topId, configItems[i].Id)
 		jInTopID := tools.Contains(topId, configItems[j].Id)
-		// 两者都在则先path排再name排
-		// 不管topID有没有都要先path排再name排
-		if iInTopID && jInTopID || len(topId) == 0 {
-			if configItems[i].GetSpec().GetPath() != configItems[j].GetSpec().GetPath() {
-				return configItems[i].GetSpec().GetPath() < configItems[j].GetSpec().GetPath()
-			}
-			return configItems[i].GetSpec().GetName() < configItems[j].GetSpec().GetName()
+		if iInTopID && jInTopID {
+			return i < j
 		}
 		if iInTopID {
 			return true

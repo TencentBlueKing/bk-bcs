@@ -13,7 +13,7 @@ export interface ITemplateSpaceItem {
     reviser: string;
     create_at: string;
     update_at: string;
-  }
+  };
 }
 
 // 模板套餐列表单条数据
@@ -35,12 +35,12 @@ export interface ITemplatePackageItem {
     reviser: string;
     create_at: string;
     update_at: string;
-  }
+  };
 }
 
 // 模板套餐左侧菜单单条配置文件
 export interface IPackageMenuItem {
-  id: number|string;
+  id: number | string;
   name: string;
   count: number;
 }
@@ -73,7 +73,7 @@ export interface ITemplateConfigItem {
     reviser: string;
     create_at: string;
     update_at: string;
-  }
+  };
 }
 // 模板被套餐引用详情
 export interface ITemplateCitedByPkgs {
@@ -134,7 +134,7 @@ export interface ITemplateVersionItem {
     content_spec: {
       signature: string;
       byte_size: number;
-    }
+    };
   };
   attachment: {
     biz_id: number;
@@ -144,7 +144,7 @@ export interface ITemplateVersionItem {
   revision: {
     creator: string;
     create_at: string;
-  }
+  };
 }
 
 // 模板版本编辑数据
@@ -169,7 +169,7 @@ export interface IAllPkgsGroupBySpaceInBiz {
     template_set_id: number;
     template_set_name: string;
     is_latest: boolean;
-  }[]
+  }[];
 }
 
 // 业务下所有模板套餐列表树
@@ -191,7 +191,7 @@ export interface ITemplateVersionsName {
     template_revision_id: number;
     template_revision_name: string;
     template_revision_memo: string;
-  }[]
+  }[];
 }
 
 // 版本对比
@@ -204,4 +204,4 @@ export interface DiffSliderDataType {
     user: string;
     user_group: string;
   };
-};
+}

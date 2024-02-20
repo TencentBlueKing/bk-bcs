@@ -47,4 +47,6 @@ const (
 
 	FieldKeyStatus  = "status"
 	FieldKeyMessage = "message"
+
+	FieldKeyEnv = "env"
 )

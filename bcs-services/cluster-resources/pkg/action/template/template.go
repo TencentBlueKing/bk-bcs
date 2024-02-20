@@ -20,11 +20,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/helm"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
 	projectAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/project"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -56,7 +57,7 @@ func (t *TemplateAction) checkAccess(ctx context.Context) error {
 	}
 	// 权限控制为项目查看
 	permCtx := &projectAuth.PermCtx{
-		Username:  ctx.Value(ctxkey.UsernameKey).(string),
+		Username:  ctxkey.GetUsernameFromCtx(ctx),
 		ProjectID: project.ID,
 	}
 	if allow, err := iam.NewProjectPerm().CanView(permCtx); err != nil {
@@ -176,12 +177,12 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 		VersionMode:   0,
 		Version:       req.GetVersion(),
 	}
-	templateId, err := t.model.CreateTemplate(ctx, template)
+	templateID, err := t.model.CreateTemplate(ctx, template)
 	if err != nil {
 		return "", err
 	}
 
-	return templateId, nil
+	return templateID, nil
 }
 
 // Update xxx
@@ -288,5 +289,30 @@ func (t *TemplateAction) Delete(ctx context.Context, id string, isRelateDelete b
 		return err
 	}
 
+	return nil
+}
+
+// CreateTemplateSet create template set
+func (t *TemplateAction) CreateTemplateSet(ctx context.Context, req *clusterRes.CreateTemplateSetReq) error {
+	if err := t.checkAccess(ctx); err != nil {
+		return err
+	}
+
+	p, err := project.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	// 获取 templates
+	tmps := t.model.ListTemplateVersionFromTemplateIDs(ctx, p.Code, toEntityTemplateIDs(req.GetTemplates()))
+
+	// 组装 chart
+	cht := buildChart(tmps, req, ctxkey.GetUsernameFromCtx(ctx))
+
+	// 上传 chart
+	err = helm.UploadChart(ctx, cht, p.Code, req.GetVersion(), req.GetForce())
+	if err != nil {
+		return err
+	}
 	return nil
 }

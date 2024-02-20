@@ -3073,6 +3073,11 @@
           "type": "string",
           "description": "操作者",
           "title": "operator"
+        },
+        "env": {
+          "type": "string",
+          "description": "环境",
+          "title": "env"
         }
       },
       "description": "安装 release 的参数",
@@ -3390,6 +3395,11 @@
           "type": "string",
           "description": "集群 ID",
           "title": "clusterID"
+        },
+        "env": {
+          "type": "string",
+          "description": "环境",
+          "title": "env"
         }
       }
     },
@@ -4241,6 +4251,11 @@
           "type": "string",
           "description": "操作者",
           "title": "operator"
+        },
+        "env": {
+          "type": "string",
+          "description": "环境",
+          "title": "env"
         }
       },
       "description": "升级 release 的参数",

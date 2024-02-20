@@ -1,7 +1,5 @@
 <template>
-  <bk-exception
-    class="exception-apply"
-    type="403">
+  <bk-exception class="exception-apply" type="403">
     <div class="tips-content">
       <div class="title">{{ t('产品仅供内部体验') }}</div>
       <div class="desc">{{ t('如需体验，请联系') }} {{ helper }}</div>
@@ -9,9 +7,9 @@
   </bk-exception>
 </template>
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
-const helper = (window as any).HELPER;
+  import { useI18n } from 'vue-i18n';
+  const { t } = useI18n();
+  const helper = (window as any).HELPER;
 </script>
 <style lang="scss" scoped>
   .exception-apply {

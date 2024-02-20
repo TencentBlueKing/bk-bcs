@@ -152,6 +152,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			Args:         u.req.GetArgs(),
 			CreateBy:     createBy,
 			Status:       helmrelease.StatusPendingUpgrade.String(),
+			Env:          u.req.GetEnv(),
 		}); err != nil {
 			return err
 		}
@@ -177,6 +178,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			entity.FieldKeyUpdateBy:     createBy,
 			entity.FieldKeyStatus:       helmrelease.StatusPendingUpgrade.String(),
 			entity.FieldKeyMessage:      "",
+			entity.FieldKeyEnv:          u.req.GetEnv(),
 		}
 		if err = u.model.UpdateRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(),
 			u.req.GetName(), rl); err != nil {

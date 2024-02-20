@@ -154,6 +154,7 @@ func (plugin *AppPlugin) applicationDryRun(r *http.Request) (*http.Request, *mw.
 	return r, mw.ReturnJSONResponse(resp)
 }
 
+// nolint
 func (plugin *AppPlugin) buildApplicationByDifOrDryRunRequest(ctx context.Context,
 	req *ApplicationDiffOrDryRunRequest) (*v1alpha1.Application, error) {
 	application := new(v1alpha1.Application)
@@ -186,12 +187,11 @@ func (plugin *AppPlugin) buildApplicationByDifOrDryRunRequest(ctx context.Contex
 				len(application.Spec.Sources), len(req.Revisions))
 		}
 		return application, nil
-	} else {
-		if application.Spec.Source == nil {
-			return nil, errors.Errorf("application spec.source is nil")
-		}
-		return application, nil
 	}
+	if application.Spec.Source == nil {
+		return nil, errors.Errorf("application spec.source is nil")
+	}
+	return application, nil
 }
 
 func buildDiffOrDryRunRequest(r *http.Request) (*ApplicationDiffOrDryRunRequest, error) {
