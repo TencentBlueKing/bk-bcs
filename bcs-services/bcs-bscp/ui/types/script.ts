@@ -20,7 +20,7 @@ export interface IScriptEditingForm {
   memo: string;
   type: EScriptType;
   content: string;
-  version: string;
+  revision_name: string;
 }
 
 // 脚本
