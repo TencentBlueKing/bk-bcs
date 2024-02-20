@@ -335,12 +335,15 @@
 
   // 加载密钥列表
   const loadCredentialList = async () => {
-    const query: { limit: number; start: number; searchKey?: string } = {
+    const query: { limit: number; start: number; searchKey?: string; top_ids?: number } = {
       start: pagination.value.limit * (pagination.value.current - 1),
       limit: pagination.value.limit,
     };
     if (searchStr.value) {
       query.searchKey = searchStr.value;
+    }
+    if (newCredentials.value.length > 0) {
+      query.top_ids = newCredentials.value[0];
     }
     const res = await getCredentialList(spaceId.value, query);
     res.details.forEach((item: ICredentialItem) => (item.visible = false));
@@ -414,8 +417,8 @@
         message: t('新建服务密钥成功'),
       });
       pagination.value.current = 1;
-      await loadCredentialList();
       newCredentials.value.push(res.id);
+      await loadCredentialList();
       setTimeout(() => {
         const index = newCredentials.value.indexOf(res.id);
         newCredentials.value.splice(index, 1);
