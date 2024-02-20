@@ -107,7 +107,8 @@ func updateNodesScheduleStatus(ctx context.Context, data scheduleNodesData) erro
 
 // UnCordonNodesTask unCordon cluster nodes
 func UnCordonNodesTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start uncordon nodes")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start uncordon nodes")
 	start := time.Now()
 
 	// get task and task current step
@@ -142,7 +143,8 @@ func UnCordonNodesTask(taskID string, stepName string) error {
 		cordon:    false,
 	})
 
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "uncordon nodes successful")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"uncordon nodes successful")
 
 	blog.Infof("UnCordonNodesTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
 	// update step
@@ -156,7 +158,8 @@ func UnCordonNodesTask(taskID string, stepName string) error {
 
 // CordonNodesTask cordon cluster nodes
 func CordonNodesTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start cordon cluster nodes")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start cordon cluster nodes")
 	start := time.Now()
 
 	// get task and task current step
@@ -192,7 +195,8 @@ func CordonNodesTask(taskID string, stepName string) error {
 		cordon:    true,
 	})
 
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "cordon cluster nodes successful")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"cordon cluster nodes successful")
 
 	blog.Infof("CordonNodesTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
 	// update step

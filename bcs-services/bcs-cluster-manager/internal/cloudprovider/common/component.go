@@ -68,7 +68,8 @@ func BuildWatchComponentTaskStep(task *proto.Task, cls *proto.Cluster, namespace
 
 // EnsureWatchComponentTask deploy bcs-k8s-watch task, if not exist, create it, if exist, update it
 func EnsureWatchComponentTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start ensure watch component")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start ensure watch component")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -88,11 +89,13 @@ func EnsureWatchComponentTask(taskID string, stepName string) error {
 	// InstallWatchComponentByHelm install watch component but not handle error, need user to handle release
 	err = InstallWatchComponentByHelm(ctx, projectID, clusterID, namespaceID)
 	if err != nil {
-		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, fmt.Sprintf("ensure watch component failed [%s]", err))
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("ensure watch component failed [%s]", err))
 		blog.Errorf("EnsureWatchComponentTask[%s] failed: %v", taskID, err)
 	}
 
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "ensure watch component successful")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"ensure watch component successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -129,7 +132,8 @@ func InstallWatchComponentByHelm(ctx context.Context, projectID,
 		blog.Errorf("InstallWatchComponentByHelm[%s] CreateClusterNamespace failed: %v", taskID, err)
 	}
 
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "create cluster namespace successful")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"create cluster namespace successful")
 
 	installer, err := watch.GetWatchInstaller(projectID, namespace)
 	if err != nil {
@@ -222,7 +226,8 @@ func getVClusterAndHostCluster(clusterID, hostClusterID string) (*proto.Cluster,
 
 // InstallVclusterTask install virtual cluster task, if not exist, create it, if exist, update it
 func InstallVclusterTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start install vcluster")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start install vcluster")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -249,7 +254,6 @@ func InstallVclusterTask(taskID string, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	vclusterData, err := buildVClusterInfoByVCluster(cluster, hostCluster)
 	if err != nil {
-		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "build vcluster info by vcluster failed")
 		blog.Errorf("InstallVclusterTask[%s] buildVClusterInfoByVCluster for %s failed: %v", taskID, clusterID, err)
 		retErr := fmt.Errorf("buildVClusterInfoByVCluster failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -257,14 +261,16 @@ func InstallVclusterTask(taskID string, stepName string) error {
 	}
 
 	if err := ensureVclusterWithInstaller(ctx, vclusterData); err != nil {
-		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "install vcluster failed")
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("install vcluster failed [%s]", err))
 		blog.Errorf("InstallVclusterTask[%s] for %s failed", taskID, clusterID)
 		retErr := fmt.Errorf("InstallVclusterTask failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "install vcluster successful")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"install vcluster successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -429,7 +435,8 @@ func BuildUnInstallVclusterTaskStep(task *proto.Task, clusterID, hostClusterID s
 
 // UnInstallVclusterTask delete vcluster
 func UnInstallVclusterTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start delete vcluster")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start delete vcluster")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -458,7 +465,6 @@ func UnInstallVclusterTask(taskID string, stepName string) error {
 
 	vclusterData, err := buildVClusterInfoByVCluster(cluster, hostCluster)
 	if err != nil {
-		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "build vcluster info by vcluster failed")
 		blog.Errorf("UnInstallVclusterTask[%s] buildVClusterInfoByVCluster for %s failed: %v", taskID, clusterID, err)
 		retErr := fmt.Errorf("UnInstallVclusterTask failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -466,14 +472,16 @@ func UnInstallVclusterTask(taskID string, stepName string) error {
 	}
 
 	if err := DeleteVclusterComponentByHelm(ctx, vclusterData); err != nil {
-		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, "delete vcluster failed")
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("delete vcluster failed [%s]", err))
 		blog.Errorf("UnInstallVclusterTask[%s] for %s failed", taskID, clusterID)
 		retErr := fmt.Errorf("UnInstallVclusterTask failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "delete vcluster successful")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"delete vcluster successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -573,7 +581,8 @@ func getClusterNodeGroups(clusterID string) ([]proto.NodeGroup, error) {
 
 // EnsureAutoScalerTask ensure auto scaler task, if not exist, create it, if exist, update it
 func EnsureAutoScalerTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start ensure auto scaler")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start ensure auto scaler")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -616,7 +625,8 @@ func EnsureAutoScalerTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "ensure auto scaler successful")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"ensure auto scaler successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

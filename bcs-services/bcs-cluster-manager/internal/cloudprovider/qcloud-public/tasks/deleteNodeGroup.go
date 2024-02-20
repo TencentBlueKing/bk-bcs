@@ -27,7 +27,8 @@ import (
 
 // DeleteCloudNodeGroupTask delete cloud node group task
 func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start delete cloud nodegroup")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start delete cloud nodegroup")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -114,7 +115,8 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		state.Task.CommonParams = make(map[string]string)
 	}
 
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "delete cloud nodegroup successful")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"delete cloud nodegroup successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

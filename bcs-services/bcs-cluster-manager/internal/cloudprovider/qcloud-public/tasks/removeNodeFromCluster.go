@@ -30,7 +30,8 @@ import (
 
 // RemoveNodesFromClusterTask remove node from cluster
 func RemoveNodesFromClusterTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start remove nodes from cluster")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start remove nodes from cluster")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -98,7 +99,8 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	}
 	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(deleteResult, ",")
 
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "remove nodes from cluster successful")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"remove nodes from cluster successful")
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
@@ -111,7 +113,8 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 
 // UpdateRemoveNodeDBInfoTask update remove node DB info
 func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, "start update remove node db info")
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start update remove node db info")
 	start := time.Now()
 
 	// get task and task current step
@@ -147,20 +150,24 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 		}
 	}
 
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 	// trans host module by cloud nodes chargeType
 	biz, _ := strconv.Atoi(bizIdStr)
 	if len(terminateNodes) > 0 {
-		err = common.RemoveHostFromCmdb(context.Background(), biz, strings.Join(terminateNodes, ","))
+		err = common.RemoveHostFromCmdb(ctx, biz, strings.Join(terminateNodes, ","))
 		if err != nil {
 			blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] RemoveHostFromCmdb failed: %v", taskID, err)
 		}
 	}
 	if len(retainNodes) > 0 {
-		err = common.TransBizNodeModule(context.Background(), biz, 0, retainNodes)
+		err = common.TransBizNodeModule(ctx, biz, 0, retainNodes)
 		if err != nil {
 			blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] RemoveHostFromCmdb failed: %v", taskID, err)
 		}
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"update remove node db info successful")
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
