@@ -222,6 +222,7 @@ export default {
   二进制: 'binary',
   新增: 'New',
   修改: 'Revise',
+  无修改: 'Unchanged',
   灰度中: 'Grayscale',
   搜索结果为空: 'Search results are empty',
   '可以尝试 调整关键词 或': 'You can try adjusting keywords or',

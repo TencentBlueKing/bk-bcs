@@ -234,15 +234,16 @@
       if (typeFilterChecked.value!.length > 0) {
         params.kv_type = typeFilterChecked.value;
       }
-      if (statusFilterChecked.value!.length > 0) {
-        params.status = statusFilterChecked.value;
-      }
+
       if (updateSortType.value !== 'null') {
         params.sort = 'updated_at';
         params.order = updateSortType.value.toUpperCase();
       }
       let res;
       if (isUnNamedVersion.value) {
+        if (statusFilterChecked.value!.length > 0) {
+          params.status = statusFilterChecked.value;
+        }
         res = await getKvList(props.bkBizId, props.appId, params);
       } else {
         res = await getReleaseKvList(props.bkBizId, props.appId, versionData.value.id, params);
