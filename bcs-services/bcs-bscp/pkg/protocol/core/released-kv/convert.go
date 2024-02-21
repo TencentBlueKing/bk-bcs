@@ -19,6 +19,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 )
 
@@ -34,6 +35,10 @@ func PbRKv(k *table.ReleasedKv, value string) *ReleasedKv {
 		Spec:       pbkv.PbKvSpec(k.Spec, value),
 		Attachment: pbkv.PbKvAttachment(k.Attachment),
 		Revision:   pbbase.PbRevision(k.Revision),
+		ContentSpec: &pbcontent.ContentSpec{
+			Signature: k.ContentSpec.Signature,
+			ByteSize:  k.ContentSpec.ByteSize,
+		},
 	}
 }
 
