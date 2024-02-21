@@ -96,7 +96,7 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-	clusters, err := client.ListClusterByResourceGroupName(ctx, opt.Region, opt.Account.ResourceGroupName)
+	clusters, err := client.ListClusterByResourceGroupName(ctx, opt.Region, opt.ResourceGroupName)
 	if err != nil {
 		return nil, fmt.Errorf("list azure cluster failed, err %s", err.Error())
 	}
@@ -108,6 +108,7 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 			ClusterVersion: *v.Properties.CurrentKubernetesVersion,
 			ClusterType:    *v.Type,
 			ClusterStatus:  string(*v.Properties.PowerState.Code),
+			Location:       *v.Location,
 		}
 		if len(v.Properties.AgentPoolProfiles) > 0 {
 			p := v.Properties.AgentPoolProfiles

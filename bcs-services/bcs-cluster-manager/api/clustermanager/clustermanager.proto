@@ -10407,6 +10407,10 @@ message ListCloudRegionClusterRequest {
     title : "accountID",
     description : "云凭证ID"
   },(validate.rules).string = {min_len : 2}];
+  string resourceGroupName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceGroupName",
+    description: "Azure Cloud中集群所属的resource group名称"
+  }];
 }
 
 message ListCloudRegionClusterResponse {
