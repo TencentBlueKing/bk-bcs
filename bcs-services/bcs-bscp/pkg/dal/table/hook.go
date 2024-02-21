@@ -144,6 +144,10 @@ func (s HookSpec) ValidateCreate() error {
 		return err
 	}
 
+	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+		return err
+	}
+
 	if err := s.Type.Validate(); err != nil {
 		return err
 	}

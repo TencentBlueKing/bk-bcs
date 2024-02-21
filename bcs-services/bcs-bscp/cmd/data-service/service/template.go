@@ -74,7 +74,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 
 	// 2. create template revision
 	spec := req.TrSpec.TemplateRevisionSpec()
-	spec.RevisionName = generateRevisionName()
+	spec.RevisionName = tools.GenerateRevisionName()
 	templateRevision := &table.TemplateRevision{
 		Spec: spec,
 		Attachment: &table.TemplateRevisionAttachment{
