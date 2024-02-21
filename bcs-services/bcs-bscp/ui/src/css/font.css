@@ -95,3 +95,12 @@
 .icon-lang-cn:before {
   content: '\e117';
 }
+.icon-json:before {
+  content: '\e118';
+}
+.icon-xml:before {
+  content: '\e119';
+}
+.icon-yaml:before {
+  content: '\e11a';
+}
