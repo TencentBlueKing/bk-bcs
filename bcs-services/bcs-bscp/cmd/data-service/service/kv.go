@@ -190,8 +190,6 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		return nil, err
 	}
 
-	fmt.Println("leijioamin")
-
 	resp := &pbds.ListKvsResp{
 		Count:   uint32(count),
 		Details: kvs,
