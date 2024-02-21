@@ -15,6 +15,7 @@ package dao
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
@@ -147,17 +148,32 @@ func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int6
 	if !ok {
 		return nil, 0, errors.New("user doesn't contains orderColStr")
 	}
+
+	orderStr := "CASE WHEN kv_state = 'ADD' THEN 1 WHEN kv_state = 'REVISE' THEN 2 " +
+		"WHEN kv_state = 'DELETE' THEN 3 WHEN kv_state = 'UNCHANGE' THEN 4 END,`key` asc"
+
 	if opt.Page.Order == types.Descending {
 		q = q.Order(orderCol.Desc())
 	} else if len(opt.TopIDs) != 0 {
-		q = q.Order(utils.NewCustomExpr("CASE WHEN id IN (?) THEN 0 ELSE 1 END,`key` asc", []interface{}{opt.TopIDs}))
+		q = q.Order(utils.NewCustomExpr("CASE WHEN id IN (?) THEN 0 ELSE 1 END, "+orderStr, []interface{}{opt.TopIDs}))
 	} else {
-		q = q.Order(orderCol)
+		q = q.Order(utils.NewCustomExpr(orderStr, nil))
 	}
 
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
 		q = q.Where(q.Where(q.Or(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))))
+	}
+
+	switch strings.ToUpper(opt.Status) {
+	case string(table.KvStateAdd):
+		q = q.Where(m.KvState.Eq(string(table.KvStateAdd)))
+	case string(table.KvStateDelete):
+		q = q.Where(m.KvState.Eq(string(table.KvStateDelete)))
+	case string(table.KvStateRevise):
+		q = q.Where(m.KvState.Eq(string(table.KvStateRevise)))
+	case string(table.KvStateUnchange):
+		q = q.Where(m.KvState.Eq(string(table.KvStateUnchange)))
 	}
 
 	q = q.Where(m.BizID.Eq(opt.BizID)).Where(m.AppID.Eq(opt.AppID))

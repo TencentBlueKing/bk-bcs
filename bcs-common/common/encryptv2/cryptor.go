@@ -1,10 +1,11 @@
+// nolint
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 
-	bkcrypto "github.com/TencentBlueKing/crypto-golang-sdk"
+	bkcrypto "github.com/TencentBlueKing/crypto-golang-sdk" // nolint
 )
 
 // Cryptor 密码器
@@ -110,7 +111,7 @@ func newBkCrypto(conf *Config) (bkcrypto.Crypto, error) {
 type aesGcmCrypto struct {
 	kv       string
 	nonce    string
-	randomIv string
+	randomIv string // nolint
 }
 
 // NewAesGcmCrypto bcs crypto from aesFcm, kv 16,24,32 && nonce 12-16
@@ -183,7 +184,7 @@ func (c *aesGcmCrypto) Decrypt(ciphertext []byte) ([]byte, error) {
 type sm4Crypto struct {
 	kv       string
 	iv       string
-	randomIv string
+	randomIv string // nolint
 }
 
 // NewSm4Crypto bcs crypto from sm4， kv 16 && iv 16

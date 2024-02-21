@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package handler xxx
 package handler
 
 import (

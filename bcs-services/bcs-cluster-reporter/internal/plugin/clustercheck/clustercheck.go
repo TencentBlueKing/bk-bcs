@@ -16,12 +16,13 @@ package clustercheck
 import (
 	"context"
 	"fmt"
-	"k8s.io/client-go/kubernetes"
 	"os"
 	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
+
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
@@ -37,6 +38,10 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/klog"
+)
+
+const (
+	configError = "配置失败"
 )
 
 // Plugin xxx
@@ -101,9 +106,9 @@ func (p *Plugin) Setup(configFilePath string) error {
 		updateNestedMap(objectMap, []string{"spec", "template", "metadata", "labels", "bcs-cluster-reporter"},
 			"bcs-cluster-reporter")
 		//updateNestedMap(objectMap, []string{"spec", "selector", "matchLabels", "bcs-cluster-reporter"},
-		//	"bcs-cluster-reporter")
+		//      "bcs-cluster-reporter")
 		//updateNestedMap(objectMap, []string{"spec", "selector", "matchLabels", "bcs-cluster-reporter"},
-		//	"bcs-cluster-reporter")
+		//      "bcs-cluster-reporter")
 		//klog.Info(objectMap)
 		unstructuredObj.SetUnstructuredContent(objectMap)
 	default:
@@ -239,14 +244,14 @@ func (p *Plugin) Check() {
 			clusterAvailabilityMapLock.Unlock()
 
 			metric_manager.SetMetric(clusterAvailabilityMap[clusterId][0], []*metric_manager.GaugeVecSet{
-				&metric_manager.GaugeVecSet{Labels: []string{clusterId, clusterbiz, status}, Value: float64(1)},
+				{Labels: []string{clusterId, clusterbiz, status}, Value: float64(1)},
 			})
 			metric_manager.SetMetric(clusterAvailabilityMap[clusterId][1], []*metric_manager.GaugeVecSet{
-				&metric_manager.GaugeVecSet{
+				{
 					Labels: []string{clusterId, clusterbiz, "create_pod"}, Value: float64(workloadToPodCost) / 1000000000},
-				&metric_manager.GaugeVecSet{
+				{
 					Labels: []string{clusterId, clusterbiz, "schedule_pod"}, Value: float64(workloadToScheduleCost) / 1000000000},
-				&metric_manager.GaugeVecSet{
+				{
 					Labels: []string{clusterId, clusterbiz, "start_pod"}, Value: float64(worloadToRunningCost) / 1000000000},
 			})
 
@@ -292,13 +297,13 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 
 	clientSet, err := k8s.GetClientsetByConfig(config)
 	if err != nil {
-		*status = "配置失败" // nolint
+		*status = configError
 		err = fmt.Errorf("GetClientsetByConfig failed: %s", err.Error())
 		return
 	}
 
 	if clientSet == nil {
-		*status = "配置失败" // nolint
+		*status = configError
 		err = fmt.Errorf("Get clientSet failed %s", err.Error())
 		return
 	}
@@ -335,27 +340,27 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 	// discovery client if it does not support legacy-only discovery.
 	discoveryInterface := clientSet.Discovery().WithLegacy()
 	if discoveryInterface == nil {
-		*status = "配置失败" // nolint
+		*status = configError
 		err = fmt.Errorf("Get discoveryInterface failed %s", err.Error())
 		return
 	}
 	// discoveryInterface.ServerGroupsAndResources()
 	groupResource, err := restmapper.GetAPIGroupResources(discoveryInterface)
 	if err != nil {
-		*status = "配置失败" // nolint
+		*status = configError
 		err = fmt.Errorf("GetAPIGroupResources failed %s", err.Error())
 	}
 	mapper := restmapper.NewDiscoveryRESTMapper(groupResource)
 	mapping, err := mapper.RESTMapping(clusterGVK.GroupKind(), clusterGVK.Version)
 	if err != nil {
-		*status = "配置失败" // nolint
+		*status = configError
 		err = fmt.Errorf("RESTMapping failed %s", err.Error())
 		return
 	}
 
 	dynamicConfig, err := dynamic.NewForConfig(config)
 	if err != nil {
-		*status = "配置失败"
+		*status = configError
 		err = fmt.Errorf("create dynamicConfig %s", err.Error())
 		return
 	}

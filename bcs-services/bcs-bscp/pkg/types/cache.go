@@ -64,6 +64,7 @@ type ReleaseCICache struct {
 	ConfigItemID   uint32                      `json:"config_item_id"`
 	ConfigItemSpec *ConfigItemSpecCache        `json:"ispec"`
 	Attachment     *table.ConfigItemAttachment `json:"am"`
+	Revision       *table.Revision             `json:"revision"`
 }
 
 // ReleaseKvCache is the release kv info which will be stored in cache.
@@ -124,10 +125,10 @@ type FilePermissionCache struct {
 
 // CredentialCache cache struct.
 type CredentialCache struct {
-	Enabled      bool                `json:"enabled"`
-	Scope        []string            `json:"scope"`
-	scopeMap     map[string][]string `json:"-"` // app:scope nolint
-	isPreprocess bool                `json:"-"` // nolint
+	Enabled      bool     `json:"enabled"`
+	Scope        []string `json:"scope"`
+	scopeMap     map[string][]string
+	isPreprocess bool
 }
 
 // preprocess 预处理数据结构, 格式化为app:scope, 方便鉴权处理
@@ -210,10 +211,8 @@ func ReleaseCICaches(rs []*table.ReleasedConfigItem) []*ReleaseCICache {
 					Privilege: one.ConfigItemSpec.Permission.Privilege,
 				},
 			},
-			Attachment: &table.ConfigItemAttachment{
-				BizID: one.Attachment.BizID,
-				AppID: one.Attachment.AppID,
-			},
+			Attachment: one.Attachment,
+			Revision:   one.Revision,
 		}
 	}
 

@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -139,6 +140,13 @@ func AuthorizationMiddleware(next http.Handler) http.Handler {
 
 		resourceID := options.CredentialScope{}
 		resourceID.ProjectID = contextx.GetProjectIDFromCtx(r.Context())
+		resourceID.ProjectCode = contextx.GetProjectCodeFromCtx(r.Context())
+
+		// client 白名单
+		if skipClient(authUser.ClientName, resourceID) {
+			next.ServeHTTP(w, r)
+			return
+		}
 
 		allow, url, resources, err := auth.CallIAM(authUser.GetUsername(), project.CanViewProjectOperation, resourceID)
 		if err != nil {
@@ -182,4 +190,22 @@ func getRequestID(req *http.Request) string {
 	}
 
 	return requestID
+}
+
+// SkipClient skip client
+func skipClient(client string, resourceID options.CredentialScope) bool {
+	creds := options.GlobalOptions.Credentials
+	for _, v := range creds {
+		if !v.Enable {
+			continue
+		}
+		if v.Name != client {
+			continue
+		}
+		if match, _ := regexp.MatchString(v.Scopes.ProjectCode, resourceID.ProjectCode); match &&
+			len(v.Scopes.ProjectCode) != 0 {
+			return true
+		}
+	}
+	return false
 }

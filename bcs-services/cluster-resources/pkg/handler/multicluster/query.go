@@ -24,12 +24,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
 	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
@@ -61,8 +61,6 @@ func NewStorageQuery(ns []*clusterRes.ClusterNamespaces, filter QueryFilter) Que
 
 // Fetch fetches multicluster resources.
 func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (map[string]interface{}, error) {
-	// nolint
-	// TODO check access
 	var err error
 	if q.ClusterdNamespaces, err = checkMultiClusterAccess(ctx, kind, q.ClusterdNamespaces); err != nil {
 		return nil, err
@@ -109,8 +107,6 @@ func NewAPIServerQuery(ns []*clusterRes.ClusterNamespaces, filter QueryFilter) Q
 
 // Fetch fetches multicluster resources.
 func (q *APIServerQuery) Fetch(ctx context.Context, groupVersion, kind string) (map[string]interface{}, error) {
-	// nolint
-	// TODO check access
 	var err error
 	if q.ClusterdNamespaces, err = checkMultiClusterAccess(ctx, kind, q.ClusterdNamespaces); err != nil {
 		return nil, err

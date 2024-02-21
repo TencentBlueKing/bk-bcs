@@ -65,6 +65,7 @@ func (t *TgzHandler) UnTar(r io.Reader, destPath string) error {
 func (t *TgzHandler) unTarFile(hdr *tar.Header, tr *tar.Reader, fp string) error {
 	parentDir, _ := filepath.Split(fp)
 
+	// NOCC:gas/permission(ignore)
 	if err := os.MkdirAll(parentDir, 0o740); err != nil {
 		return err
 	}

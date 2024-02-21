@@ -7,33 +7,34 @@ replicaCount: 1
 image:
   repository: mirrors.tencent.com/porterlin-test/bcs-monitor-controller
   pullPolicy: Always
-  tag: monitor-user
-
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 200m
-    memory: 256Mi
+  tag: merge-three-way
 
 
 scenarioGitConfig:
-  # 默认场景仓库配置
   URL: ""
   username: ""
-  secreat: ""
+  secret: ""
   refreshFreqSec: 10
   argoAdminNamespace: default
 
 bkmConfig:
   fullAuthToken: ""
   APIDomain: ""
+  configStorePath: "/tmp"
 
-imagePullSecrets: []
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
 
-nodeSelector: {}
 
-tolerations: []
+imagePullSecrets: [ ]
 
-affinity: {}
+nodeSelector: { }
+
+tolerations: [ ]
+
+affinity: { }

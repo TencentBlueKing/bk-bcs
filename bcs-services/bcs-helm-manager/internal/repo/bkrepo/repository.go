@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 )
 
@@ -113,11 +114,7 @@ func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repo
 }
 
 func (rh *repositoryHandler) getRepoURL() string {
-	if rh.repoType == repo.RepositoryTypeOCI {
-		return rh.getOciURL("/" + rh.projectID + "/" + rh.repository)
-	}
-
-	return rh.getURI("/helm/" + rh.projectID + "/" + rh.repository)
+	return fmt.Sprintf("%s/%s/%s", options.GlobalOptions.Repo.GetRepoBaseURL(), rh.projectID, rh.repository)
 }
 
 type repository struct {

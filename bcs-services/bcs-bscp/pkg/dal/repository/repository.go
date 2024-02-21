@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package repository is interface and its implementation for different repositories
 package repository
 
 import (

@@ -30,7 +30,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"

@@ -51,7 +51,7 @@ var (
 		Short: "bcs-cluster-reporter",
 		Long: `
 Basic Commands (Beginner):
-  Get        Create a resource from a file or from stdin
+	Get        Create a resource from a file or from stdin
 `, // nolint
 		Run: func(cmd *cobra.Command, args []string) {
 			CheckErr(Complete(cmd, args))
@@ -117,7 +117,8 @@ func Run() error {
 					OnStoppedLeading: func() {
 						klog.Infof("leader lost: %s", id)
 						cancel()
-						ctx, cancel = context.WithCancel(context.Background()) // nolint
+						ctx, cancel = context.WithCancel(context.Background())
+						// NOCC:vet/vet(忽略)
 					},
 				},
 			})

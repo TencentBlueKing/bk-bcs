@@ -161,6 +161,7 @@ type ConfigItemMetaV1 struct {
 	ContentSpec          *pbcontent.ContentSpec     `json:"contentSpec"`
 	ConfigItemSpec       *pbci.ConfigItemSpec       `json:"configItemSpec"`
 	ConfigItemAttachment *pbci.ConfigItemAttachment `json:"configItemAttachment"`
+	ConfigItemRevision   *pbbase.Revision           `json:"configItemRevision"`
 	RepositoryPath       string                     `json:"repositoryPath"`
 }
 

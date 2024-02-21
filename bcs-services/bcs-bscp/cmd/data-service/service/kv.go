@@ -171,6 +171,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		Page:      page,
 		KvType:    req.KvType,
 		TopIDs:    topIds,
+		Status:    req.Status,
 	}
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,

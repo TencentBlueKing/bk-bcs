@@ -23,7 +23,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/sync/errgroup"
 
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/utils"
 )
@@ -118,6 +120,51 @@ func (m *ModelTemplateVersion) ListTemplateVersion(
 	}
 
 	return t, nil
+}
+
+// ListTemplateVersionFromTemplateIDs get a list of entity.TemplateVersion by condition from database
+func (m *ModelTemplateVersion) ListTemplateVersionFromTemplateIDs(ctx context.Context, projectCode string,
+	ids []entity.TemplateID) []*entity.TemplateVersion {
+	result := make([]*entity.TemplateVersion, 0)
+	eg := errgroup.Group{}
+	eg.SetLimit(10)
+	mux := sync.Mutex{}
+	for _, v := range ids {
+		id := v
+		eg.Go(func() error {
+			tv, err := m.GetTemplateVersionByNameVersion(ctx, projectCode, id.TemplateSpace, id.TemplateName,
+				id.TemplateVersion)
+			if err != nil {
+				log.Error(ctx, "get template version failed, %s", err.Error())
+				return nil
+			}
+			mux.Lock()
+			defer mux.Unlock()
+			result = append(result, tv)
+			return nil
+		})
+	}
+	_ = eg.Wait()
+
+	return result
+}
+
+// GetTemplateVersionByNameVersion get a specific entity.TemplateVersion from database
+func (m *ModelTemplateVersion) GetTemplateVersionByNameVersion(ctx context.Context, projectCode, templateSpace,
+	templateName, version string) (*entity.TemplateVersion, error) {
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   projectCode,
+		entity.FieldKeyTemplateSpace: templateSpace,
+		entity.FieldKeyTemplateName:  templateName,
+		entity.FieldKeyVersion:       version,
+	})
+
+	templateVersion := &entity.TemplateVersion{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, templateVersion); err != nil {
+		return nil, err
+	}
+
+	return templateVersion, nil
 }
 
 // CreateTemplateVersion create a new entity.TemplateVersion into database

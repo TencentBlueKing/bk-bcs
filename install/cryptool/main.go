@@ -8,16 +8,16 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main is the main package of cryptool
 package main
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2" // nolint
 )
 
 func main() {
@@ -68,14 +68,14 @@ func main() {
 				fmt.Printf("%s encrypt from original failed: %s\n", os.Args[1], err.Error())
 				return
 			}
-			fmt.Printf("%s Encrypt text: %s\n", os.Args[1], string(out))
+			fmt.Printf("%s Encrypt text: %s\n", os.Args[1], string(out)) // nolint
 		case "decrypt":
 			out, err := cryptor.Decrypt(os.Args[5])
 			if err != nil {
 				fmt.Printf("%s Decrypt from Base failed: %s\n", os.Args[1], err.Error())
 				return
 			}
-			fmt.Printf("%s Original text: %s\n", os.Args[1], string(out))
+			fmt.Printf("%s Original text: %s\n", os.Args[1], string(out)) // nolint
 		default:
 			fmt.Printf("Unknown action...\n")
 		}
@@ -83,5 +83,5 @@ func main() {
 		fmt.Printf("Unknown Algorithm, please [normal|SM4|AES-GCM]...\n")
 	}
 
-	return
+	return // nolint
 }

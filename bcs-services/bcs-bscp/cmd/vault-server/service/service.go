@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package service provides the functionality for the service layer
 package service
 
 import (

@@ -72,6 +72,7 @@ func (m *RouteMatcher) Match(method, path string) (string, error) {
 
 	for _, pattern := range patterns {
 		// 使用正则表达式查找匹配
+		// NOCC:gas/error(忽略)
 		match, _ := regexp.MatchString("^(/bscp)?"+pattern+"/?$", path)
 
 		// 如果找到匹配并且比当前最长匹配更长，则更新最长匹配

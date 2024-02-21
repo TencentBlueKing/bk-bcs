@@ -11,6 +11,7 @@
  */
 
 // Package syncer define syncer methods
+// NOCC:tosa/comment_ratio(ignore),gofmt/notformat(ignore)
 package syncer
 
 import (
@@ -21,6 +22,7 @@ import (
 	"strconv"
 
 	bkcmdbkube "configcenter/src/kube/types"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
@@ -2856,6 +2858,7 @@ func (s *Syncer) CompareGameDeployment(bkGameDeployment *bkcmdbkube.GameDeployme
 		needToUpdate = true
 	}
 
+	// NOCC:ineffassign/assign(ignore)
 	rud := bkcmdbkube.RollingUpdateGameDeployment{}
 
 	if k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable != nil && k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge != nil {
@@ -3008,6 +3011,7 @@ func (s *Syncer) CompareGameStatefulSet(bkGameStatefulSet *bkcmdbkube.GameStatef
 		needToUpdate = true
 	}
 
+	// NOCC:ineffassign/assign(ignore)
 	rus := bkcmdbkube.RollingUpdateGameStatefulSetStrategy{}
 
 	if k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate != nil {

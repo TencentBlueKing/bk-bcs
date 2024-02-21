@@ -438,18 +438,17 @@ func (p *Plugin) checkStaticPodConsistency(podList []corev1.Pod) string {
 func checkArguments(argList1 []string, argList2 []string) error {
 	if len(argList1) != len(argList2) {
 		return fmt.Errorf("length not equal")
-	} else {
-		for index, arg1 := range argList1 {
-			arg2 := argList2[index]
-			if arg1 != arg2 {
-				// exclude ip address
-				re, _ := regexp.Compile(
-					"(([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])")
-				arg1WithoutIp := re.ReplaceAllString(arg1, "")
-				arg2WithoutIp := re.ReplaceAllString(arg2, "")
-				if arg1WithoutIp != arg2WithoutIp {
-					return fmt.Errorf("arg %s not equal", arg1WithoutIp)
-				}
+	}
+	for index, arg1 := range argList1 {
+		arg2 := argList2[index]
+		if arg1 != arg2 {
+			// exclude ip address
+			re, _ := regexp.Compile(
+				"(([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])")
+			arg1WithoutIp := re.ReplaceAllString(arg1, "")
+			arg2WithoutIp := re.ReplaceAllString(arg2, "")
+			if arg1WithoutIp != arg2WithoutIp {
+				return fmt.Errorf("arg %s not equal", arg1WithoutIp)
 			}
 		}
 	}

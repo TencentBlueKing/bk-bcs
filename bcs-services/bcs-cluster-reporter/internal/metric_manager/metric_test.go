@@ -29,7 +29,7 @@ func TestSendMessage(t *testing.T) {
 	}, []string{"target", "target_biz", "status"})
 	Register(vec)
 	SetMetric(vec, []*GaugeVecSet{
-		&GaugeVecSet{
+		{
 			Labels: []string{"1", "2", "3"},
 			Value:  1,
 		},

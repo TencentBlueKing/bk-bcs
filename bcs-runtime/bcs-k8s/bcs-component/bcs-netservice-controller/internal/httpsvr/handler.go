@@ -234,6 +234,7 @@ func (c *HttpServerClient) allocateNewIPForClaim(
 		blog.Errorf(message)
 		return nil, nil, fmt.Errorf(message)
 	}
+	// update ip status
 	targetIP := availableIP[0]
 	if err := c.updateIPStatus(targetIP, netIPReq,
 		utils.GetNamespacedNameKey(netIPReq.PodNamespace, ipClaim.GetName()), "", true); err != nil {
@@ -241,6 +242,7 @@ func (c *HttpServerClient) allocateNewIPForClaim(
 		blog.Errorf(message)
 		return nil, nil, fmt.Errorf(message)
 	}
+	// bound ip claim
 	if err := c.boundClaimIP(ipClaim, targetIP); err != nil {
 		message := fmt.Sprintf("bound BCSNetIP %s to BCSNetIPClaim %s/%s failed, err %s",
 			targetIP.GetName(), ipClaim.GetNamespace(), ipClaim.GetName(), err.Error())
@@ -249,6 +251,7 @@ func (c *HttpServerClient) allocateNewIPForClaim(
 	}
 	message := fmt.Sprintf("allocate fixed IP [%s] for Host %s success", targetIP.Name, netIPReq.Host)
 	blog.Infof(message)
+	// get pool by ip
 	bcspool, err := c.getPoolByIP(targetIP)
 	if err != nil {
 		message := fmt.Sprintf("get pool failed, err %s", err.Error())
@@ -276,6 +279,7 @@ func (c *HttpServerClient) allocateIPByClaim(
 		blog.Errorf(message)
 		return nil, nil, fmt.Errorf(message)
 	}
+	// update ip status
 	if err := c.updateIPStatus(
 		bcsNetIP, netIPReq, utils.GetNamespacedNameKey(ipClaim.GetNamespace(),
 			ipClaim.GetName()), ipClaim.Spec.ExpiredDuration, true); err != nil {
@@ -329,6 +333,7 @@ func (c *HttpServerClient) getAvailableIPs(netPoolList *v1.BCSNetPoolList, netIP
 			}
 		}
 	}
+	// if host not found in pools, return error
 	if !found {
 		message := fmt.Sprintf("host %s does not exist in pools", netIPReq.Host)
 		blog.Errorf(message)
@@ -393,6 +398,7 @@ func (c *HttpServerClient) DeleteIP(request *restful.Request, response *restful.
 		return
 	}
 
+	// list all BCSNetIP
 	netIPList := &v1.BCSNetIPList{}
 	if err := c.K8SClient.List(context.Background(), netIPList); err != nil {
 		message := fmt.Sprintf("get BCSNetIP list failed, %s", err.Error())
@@ -444,6 +450,7 @@ func (c *HttpServerClient) DeleteIP(request *restful.Request, response *restful.
 		}
 	}
 
+	// update BCSNetIP status
 	if err := c.K8SClient.Status().Update(context.Background(), netIP); err != nil {
 		message := fmt.Sprintf("update IP [%s] status failed", netIP.Name)
 		blog.Errorf(message)

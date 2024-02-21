@@ -222,6 +222,7 @@ export default {
   二进制: 'binary',
   新增: 'New',
   修改: 'Revise',
+  无修改: 'Unchanged',
   灰度中: 'Grayscale',
   搜索结果为空: 'Search results are empty',
   '可以尝试 调整关键词 或': 'You can try adjusting keywords or',
@@ -501,7 +502,7 @@ export default {
   复制并新建: 'Copy and create new',
   '确认删除该脚本版本？': 'Are you sure you want to delete this script version?',
   '确定上线此版本？': 'Are you sure you want to launch this version?',
-  '上线后，之前的线上版本将被置为「已下线」状态': 'After going online, the previous online version will be set to "offline" status',
+  '上线后，之前的线上版本将被置为「已下线」,若要使该版本在现网中生效，需要重新发布引用此脚本的服务': 'After going online, the previous online version will be "offline", and for that version to work on the live network, the service that references this script will need to be republished',
   '当前已有「未上线」版本': 'There is currently a "not online" version',
   前往编辑: 'Go to edit',
   创建版本: 'Create version',
@@ -514,6 +515,7 @@ export default {
   上线: 'Online',
   已下线: 'Offline',
   脚本类型: 'Script type',
+  form_版本号: 'Version number',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
