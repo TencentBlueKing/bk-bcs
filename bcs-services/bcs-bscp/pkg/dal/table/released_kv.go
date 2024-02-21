@@ -21,9 +21,10 @@ type ReleasedKv struct {
 	// ReleaseID is this app's config item's release id
 	ReleaseID uint32 `json:"release_id" gorm:"column:release_id"`
 
-	Spec       *KvSpec       `json:"spec" gorm:"embedded"`
-	Attachment *KvAttachment `json:"attachment" gorm:"embedded"`
-	Revision   *Revision     `json:"revision" gorm:"embedded"`
+	Spec        *KvSpec       `json:"spec" gorm:"embedded"`
+	Attachment  *KvAttachment `json:"attachment" gorm:"embedded"`
+	Revision    *Revision     `json:"revision" gorm:"embedded"`
+	ContentSpec *ContentSpec  `json:"content_spec" gorm:"embedded"`
 }
 
 // TableName is the ReleasedKv's database table name.

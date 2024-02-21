@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
@@ -130,6 +131,8 @@ func (s *Service) ListKvs(ctx context.Context, req *pbcs.ListKvsReq) (*pbcs.List
 		logs.Errorf("list kv failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
+
+	fmt.Println("leijoamin1")
 
 	resp := &pbcs.ListKvsResp{
 		Count:   rp.Count,

@@ -16,6 +16,7 @@ package pbkv
 import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
 )
 
 // Kv convert pb Kv to table Kv
@@ -67,6 +68,10 @@ func PbKv(k *table.Kv, value string) *Kv {
 		Spec:       PbKvSpec(k.Spec, value),
 		Attachment: PbKvAttachment(k.Attachment),
 		Revision:   pbbase.PbRevision(k.Revision),
+		ContentSpec: &pbcontent.ContentSpec{
+			Signature: k.ContentSpec.Signature,
+			ByteSize:  k.ContentSpec.ByteSize,
+		},
 	}
 }
 
