@@ -23,6 +23,7 @@ import (
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	hr "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
@@ -43,6 +44,10 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 	}
 
 	spec, err := req.Spec.HookRevisionSpec()
+	// if no revision name is specified, generate it by system
+	if spec.Name == "" {
+		spec.Name = tools.GenerateRevisionName()
+	}
 	spec.State = table.HookRevisionStatusNotDeployed
 	if err != nil {
 		logs.Errorf("get HookRevisionSpec spec from pb failed, err: %v, rid: %s", err, kt.Rid)

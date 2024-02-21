@@ -1129,6 +1129,7 @@ message CreateHookReq {
   string tag = 4;
   string memo = 5;
   string content = 6;
+  string revision_name = 7;
 }
 
 message CreateHookResp {
@@ -1178,6 +1179,7 @@ message CreateHookRevisionReq {
   uint32 hook_id = 2;
   string memo = 3;
   string content = 4;
+  string name = 5;
 }
 
 message CreateHookRevisionResp {
