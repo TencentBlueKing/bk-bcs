@@ -979,7 +979,7 @@ message ListConfigItemsReq {
   bool all = 8;
   bool with_status = 9;
   // ADD、REVISE、DELETE、UNCHANGE
-  string status = 10;
+  repeated string status = 10;
 }
 
 message ListConfigItemsResp {
@@ -2255,7 +2255,7 @@ message ListKvsReq {
   string order = 13;
   string top_ids = 14;
   // ADD、REVISE、DELETE、UNCHANGE
-  string status = 15;
+  repeated string status = 15;
 }
 
 message ListKvsResp {
