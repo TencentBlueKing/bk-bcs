@@ -123,7 +123,7 @@ func (m *ModelTaskStepLog) CreateTaskStepLogWarn(ctx context.Context, taskID, st
 	return nil
 }
 
-// CreateTaskStepLogError create task step warn log
+// CreateTaskStepLogError create task step error log
 func (m *ModelTaskStepLog) CreateTaskStepLogError(ctx context.Context, taskID, stepName, message string) error {
 	if taskID == "" || stepName == "" || message == "" {
 		return fmt.Errorf("parameter cannot be empty")
