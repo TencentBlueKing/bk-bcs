@@ -4,7 +4,8 @@
     <template #content>
       <div class="export-config-operations">
         <div v-for="item in exportItem" :key="item.value" class="operation-item">
-          <TextFile /><span class="text" @click="handleExport(item.value)">{{ item.text }}</span>
+          <span :class="['bk-bscp-icon', `icon-${item.value}`]" />
+          <span class="text" @click="handleExport(item.value)"> {{ item.text }}</span>
         </div>
       </div>
     </template>
@@ -13,7 +14,6 @@
 
 <script lang="ts" setup>
   import { computed } from 'vue';
-  import { TextFile } from 'bkui-vue/lib/icon';
   import jsyaml from 'js-yaml';
   import { getExportKvFile } from '../../../../../../../api/config';
   const props = defineProps<{
@@ -73,13 +73,15 @@
         height: 32px;
         line-height: 32px;
         color: #63656e;
-        font-size: 12px;
+        font-size: 14px;
+        align-items: center;
         cursor: pointer;
         &:hover {
           background: #f5f7fa;
         }
         .text {
           margin-left: 4px;
+          font-size: 12px;
         }
       }
     }
