@@ -331,6 +331,7 @@ export default {
   '解析失败，配置项格式不正确': 'Parsing failed because the configuration item format is incorrect',
   请选择: 'Please select',
   配置项值已复制: 'The configuration item value has been copied',
+  导出至: 'Export to',
 
   // 分组管理
   新增分组: 'New group',
