@@ -58,6 +58,7 @@
                     text
                     theme="primary"
                     :disabled="!!unPublishVersion"
+                    v-bk-tooltips="{ content: '当前已有「未上线」版本', disabled: !unPublishVersion }"
                     @click="handleCreateVersionClick(data.hook_revision.spec.content)">
                     {{ t('复制并新建') }}
                   </bk-button>
@@ -66,7 +67,7 @@
                     text
                     theme="primary"
                     :disabled="pagination.count <= 1"
-                    @click="handleDelClick(data)">
+                    @click="handleDelClick(data.hook_revision)">
                     {{ t('删除') }}
                   </bk-button>
                 </div>
@@ -81,7 +82,7 @@
                 :version-id="versionEditData.form.id"
                 :list="versionList"
                 :pagination="pagination"
-                @select="handleSelectVersion"
+                @select="handleViewVersionClick"
                 @page-change="refreshList" />
             </template>
           </div>
@@ -91,7 +92,13 @@
               :version-data="versionEditData.form"
               :script-id="scriptId"
               :editable="versionEditData.editable"
+              :hook-revision="versionEditData.hook_revision"
+              :has-unpublish-version="!!unPublishVersion"
               @submitted="handleVersionEditSubmitted"
+              @publish="handlePublishClick"
+              @edit="handleEditVersionClick"
+              @copy-and-create="handleCreateVersionClick"
+              @delete="handleDelClick"
               @close="versionEditData.panelOpen = false" />
           </div>
         </div>
@@ -112,7 +119,7 @@
     <div style="margin-bottom: 8px">
       {{ t('脚本名称') }}:
       <span style="color: #313238; font-weight: 600">
-        {{ deleteScriptVersionItem?.hook_revision.spec.name }}
+        {{ deleteScriptVersionItem?.spec.name }}
       </span>
     </div>
     <div>{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
@@ -129,7 +136,7 @@
   import dayjs from 'dayjs';
   import useGlobalStore from '../../../../store/global';
   import useScriptStore from '../../../../store/script';
-  import { IScriptVersion, IScriptVersionListItem } from '../../../../../types/script';
+  import { IScriptVersion, IScriptVersionListItem, IScriptVersionForm } from '../../../../../types/script';
   import {
     getScriptDetail,
     getScriptVersionList,
@@ -163,10 +170,16 @@
   const crtVersion = ref<IScriptVersion | null>(null);
   const isSearchEmpty = ref(false);
   const isDeleteScriptVersionDialogShow = ref(false);
-  const deleteScriptVersionItem = ref<IScriptVersionListItem>();
-  const versionEditData = ref({
+  const deleteScriptVersionItem = ref<IScriptVersion>();
+  const versionEditData = ref<{
+    panelOpen: boolean;
+    editable: boolean;
+    hook_revision: IScriptVersion | null;
+    form: IScriptVersionForm;
+  }>({
     panelOpen: false,
     editable: true,
+    hook_revision: null,
     form: {
       // 版本编辑、新建、查看数据
       id: 0,
@@ -238,6 +251,7 @@
     versionEditData.value = {
       panelOpen: true,
       editable: true,
+      hook_revision: null,
       form: {
         id: 0,
         name: `v${dayjs().format('YYYYMMDDHHmmss')}`,
@@ -254,6 +268,7 @@
       versionEditData.value = {
         panelOpen: true,
         editable: true,
+        hook_revision: unPublishVersion.value,
         form: {
           id: unPublishVersion.value?.id,
           name,
@@ -266,11 +281,11 @@
 
   // 查看版本
   const handleViewVersionClick = (version: IScriptVersionListItem) => {
-    console.log(version, '查看版本');
     const { name, memo, content } = version.hook_revision.spec;
     versionEditData.value = {
       panelOpen: true,
       editable: false,
+      hook_revision: version.hook_revision,
       form: {
         id: version.hook_revision.id,
         name,
@@ -284,51 +299,38 @@
   const handlePublishClick = (version: IScriptVersion) => {
     InfoBox({
       title: t('确定上线此版本？'),
-      subTitle: t('上线后，之前的线上版本将被置为「已下线」状态'),
+      subTitle: t('上线后，之前的线上版本将被置为「已下线」,若要使该版本在现网中生效，需要重新发布引用此脚本的服务'),
       'ext-cls': 'info-box-style',
       // infoType: 'warning',
       confirmText: t('确定'),
       onConfirm: async () => {
         await publishVersion(spaceId.value, scriptId.value, version.id);
         unPublishVersion.value = null;
+        versionEditData.value.panelOpen = false;
         getVersionList();
       },
     } as any);
   };
 
   // 删除版本
-  const handleDelClick = (version: IScriptVersionListItem) => {
+  const handleDelClick = (version: IScriptVersion) => {
     isDeleteScriptVersionDialogShow.value = true;
     deleteScriptVersionItem.value = version;
   };
 
   const handleDeleteScriptVersionConfirm = async () => {
-    await deleteScriptVersion(spaceId.value, scriptId.value, deleteScriptVersionItem.value!.hook_revision.id);
+    await deleteScriptVersion(spaceId.value, scriptId.value, deleteScriptVersionItem.value!.id);
     if (versionList.value.length === 1 && pagination.value.current > 1) {
       pagination.value.current = pagination.value.current - 1;
     }
     unPublishVersion.value = null;
+    versionEditData.value.panelOpen = false;
     isDeleteScriptVersionDialogShow.value = false;
     getVersionList();
     Message({
       theme: 'success',
       message: t('删除版本成功'),
     });
-  };
-
-  // 宽窄表视图下选择脚本
-  const handleSelectVersion = (version: IScriptVersion) => {
-    const { name, memo, content, state } = version.spec;
-    versionEditData.value = {
-      panelOpen: true,
-      editable: state === 'not_deployed',
-      form: {
-        id: version.id,
-        name,
-        memo,
-        content,
-      },
-    };
   };
 
   // 新建、编辑脚本后回调
@@ -356,6 +358,7 @@
       unPublishVersion.value!.spec.content = content;
       unPublishVersion.value!.spec.name = name;
     }
+    versionEditData.value.editable = false;
   };
 
   // 版本对比
