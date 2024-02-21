@@ -119,6 +119,7 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(chn *amqp.Channel, messages <-c
 	}
 }
 
+// handle cluster
 func (b *BcsBkcmdbSynchronizerHandler) handleCluster(msg amqp.Delivery) error {
 	if b.BkCluster != nil {
 		return nil
@@ -226,12 +227,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePod(msg amqp.Delivery) {
 	}
 
 	switch msgHeader.Event {
-	case "update":
+	case "update": // nolint
 		err = b.handlePodUpdate(pod)
 		if err != nil {
 			blog.Errorf("handlePodUpdate err: %s", err.Error())
 		}
-	case "delete":
+	case "delete": // nolint
 		err = b.handlePodDelete(pod)
 		if err != nil {
 			blog.Errorf("handlePodDelete err: %s", err.Error())
@@ -267,7 +268,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodUpdate(pod *corev1.Pod) error {
 	}
 
 	if len(*bkPods) > 1 {
-		return errors.New(fmt.Sprintf("len(bkPods) = %d", len(*bkPods)))
+		return fmt.Errorf("len(bkPods) = %d", len(*bkPods))
 	}
 
 	if len(*bkPods) == 0 {
@@ -307,11 +308,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod) error {
 	}
 
 	if len(*bkPods) > 1 {
-		return errors.New(fmt.Sprintf("len(bkPods) = %d", len(*bkPods)))
+		return fmt.Errorf("len(bkPods) = %d", len(*bkPods))
 	}
 
 	if len(*bkPods) == 0 {
-		return errors.New(fmt.Sprintf("pod %s not found", pod.Name))
+		return fmt.Errorf("pod %s not found", pod.Name)
 	}
 
 	bkPod := (*bkPods)[0]
@@ -369,7 +370,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 	}
 
 	if len(*bkNamespaces) != 1 {
-		return errors.New(fmt.Sprintf("len(bkNamespaces) = %d", len(*bkNamespaces)))
+		return fmt.Errorf("len(bkNamespaces) = %d", len(*bkNamespaces))
 	}
 
 	bkNamespace := (*bkNamespaces)[0]
@@ -396,7 +397,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 
 	if len(*bkWorkloadPods) != 1 {
 		blog.Errorf("get bk workload pods len is %d", len(*bkWorkloadPods))
-		return errors.New(fmt.Sprintf("len(*bkWorkloadPods) = %d", len(*bkWorkloadPods)))
+		return fmt.Errorf("len(*bkWorkloadPods) = %d", len(*bkWorkloadPods))
 	}
 
 	p := bkcmdbkube.PodsWorkload{}
@@ -419,10 +420,10 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 			}
 			rsList, err := storageCli.QueryK8sReplicaSet(b.BkCluster.Uid, pod.Namespace, ownerRef.Name)
 			if err != nil {
-				return errors.New(fmt.Sprintf("query replicaSet %s failed, err: %s", ownerRef.Name, err.Error()))
+				return fmt.Errorf("query replicaSet %s failed, err: %s", ownerRef.Name, err.Error())
 			}
 			if len(rsList) != 1 {
-				return errors.New(fmt.Sprintf("replicaSet %s not found", ownerRef.Name))
+				return fmt.Errorf("replicaSet %s not found", ownerRef.Name)
 			}
 			rs := rsList[0]
 
@@ -460,11 +461,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 				}
 
 				if len(*bkWorkloads) == 0 {
-					return errors.New(fmt.Sprintf("no workload %s in %s", workloadName, bkNamespace.Name))
+					return fmt.Errorf("no workload %s in %s", workloadName, bkNamespace.Name)
 				}
 
 				if len(*bkWorkloads) > 1 {
-					return errors.New(fmt.Sprintf("len(bkWorkloads) = %d", len(*bkWorkloads)))
+					return fmt.Errorf("len(bkWorkloads) = %d", len(*bkWorkloads))
 				}
 
 				workloadID = (int64)((*bkWorkloads)[0].(map[string]interface{})["id"].(float64))
@@ -480,7 +481,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 					}
 				}
 			default:
-				return errors.New(fmt.Sprintf("kind %s is not supported", rsOwnerRef.Kind))
+				return fmt.Errorf("kind %s is not supported", rsOwnerRef.Kind)
 			}
 
 		} else if exist, _ := common.InArray(ownerRef.Kind, workloadKindList); exist {
@@ -512,11 +513,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 			}
 
 			if len(*bkWorkloads) == 0 {
-				return errors.New(fmt.Sprintf("no workload %s in %s", workloadName, bkNamespace.Name))
+				return fmt.Errorf("no workload %s in %s", workloadName, bkNamespace.Name)
 			}
 
 			if len(*bkWorkloads) > 1 {
-				return errors.New(fmt.Sprintf("len(bkWorkloads) = %d", len(*bkWorkloads)))
+				return fmt.Errorf("len(bkWorkloads) = %d", len(*bkWorkloads))
 			}
 
 			workloadID = (int64)((*bkWorkloads)[0].(map[string]interface{})["id"].(float64))
@@ -532,7 +533,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 				}
 			}
 		} else {
-			return errors.New(fmt.Sprintf("kind %s is not supported", ownerRef.Kind))
+			return fmt.Errorf("kind %s is not supported", ownerRef.Kind)
 
 		}
 	}
@@ -560,7 +561,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 	}
 
 	if len(*bkNodes) != 1 {
-		return errors.New(fmt.Sprintf("len(bkNodes) = %d", len(*bkNodes)))
+		return fmt.Errorf("len(bkNodes) = %d", len(*bkNodes))
 	}
 
 	bkNode := (*bkNodes)[0]
@@ -706,12 +707,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeployment(msg amqp.Delivery) {
 	}
 
 	switch msgHeader.Event {
-	case "update":
+	case "update": // nolint
 		err = b.handleDeploymentUpdate(deployment)
 		if err != nil {
 			blog.Errorf("handleDeploymentUpdate err: %s", err.Error())
 		}
-	case "delete":
+	case "delete": // nolint
 		err = b.handleDeploymentDelete(deployment)
 		if err != nil {
 			blog.Errorf("handleDeploymentDelete err: %s", err.Error())
@@ -801,11 +802,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(deployment *appv1.
 	}
 
 	if len(*bkDeployments) > 1 {
-		return errors.New(fmt.Sprintf("len(bkDeployments) = %d", len(*bkDeployments)))
+		return fmt.Errorf("len(bkDeployments) = %d", len(*bkDeployments))
 	}
 
 	if len(*bkDeployments) == 0 {
-		return errors.New(fmt.Sprintf("deployment %s not found", deployment.Name))
+		return fmt.Errorf("deployment %s not found", deployment.Name)
 	}
 
 	bd := (*bkDeployments)[0]
@@ -850,7 +851,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentCreate(deployment *appv1.
 	}
 
 	if len(*bkNamespaces) != 1 {
-		return errors.New(fmt.Sprintf("len(bkNamespaces) = %d", len(*bkNamespaces)))
+		return fmt.Errorf("len(bkNamespaces) = %d", len(*bkNamespaces))
 	}
 
 	bkNamespace := (*bkNamespaces)[0]
@@ -880,12 +881,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSet(msg amqp.Delivery) {
 	}
 
 	switch msgHeader.Event {
-	case "update":
+	case "update": // nolint
 		err = b.handleStatefulSetUpdate(statefulSet)
 		if err != nil {
 			blog.Errorf("handleStatefulSetUpdate err: %s", err.Error())
 		}
-	case "delete":
+	case "delete": // nolint
 		err = b.handleStatefulSetDelete(statefulSet)
 		if err != nil {
 			blog.Errorf("handleStatefulSetDelete err: %s", err.Error())
@@ -975,11 +976,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetDelete(statefulSet *appv
 	}
 
 	if len(*bkStatefulSets) > 1 {
-		return errors.New(fmt.Sprintf("len(bkStatefulSets) = %d", len(*bkStatefulSets)))
+		return fmt.Errorf("len(bkStatefulSets) = %d", len(*bkStatefulSets))
 	}
 
 	if len(*bkStatefulSets) == 0 {
-		return errors.New(fmt.Sprintf("statefulSet %s not found", statefulSet.Name))
+		return fmt.Errorf("statefulSet %s not found", statefulSet.Name)
 	}
 
 	bs := (*bkStatefulSets)[0]
@@ -1024,7 +1025,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetCreate(statefulSet *appv
 	}
 
 	if len(*bkNamespaces) != 1 {
-		return errors.New(fmt.Sprintf("len(bkNamespaces) = %d", len(*bkNamespaces)))
+		return fmt.Errorf("len(bkNamespaces) = %d", len(*bkNamespaces))
 	}
 
 	bkNamespace := (*bkNamespaces)[0]
@@ -1054,12 +1055,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSet(msg amqp.Delivery) {
 	}
 
 	switch msgHeader.Event {
-	case "update":
+	case "update": // nolint
 		err = b.handleDaemonSetUpdate(daemonSet)
 		if err != nil {
 			blog.Errorf("handleDaemonSetUpdate err: %s", err.Error())
 		}
-	case "delete":
+	case "delete": // nolint
 		err = b.handleDaemonSetDelete(daemonSet)
 		if err != nil {
 			blog.Errorf("handleDaemonSetDelete err: %s", err.Error())
@@ -1149,11 +1150,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetDelete(daemonSet *appv1.Da
 	}
 
 	if len(*bkDaemonSets) > 1 {
-		return errors.New(fmt.Sprintf("len(bkDaemonSets) = %d", len(*bkDaemonSets)))
+		return fmt.Errorf("len(bkDaemonSets) = %d", len(*bkDaemonSets))
 	}
 
 	if len(*bkDaemonSets) == 0 {
-		return errors.New(fmt.Sprintf("daemonSet %s not found", daemonSet.Name))
+		return fmt.Errorf("daemonSet %s not found", daemonSet.Name)
 	}
 
 	bd := (*bkDaemonSets)[0]
@@ -1198,7 +1199,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetCreate(daemonSet *appv1.Da
 	}
 
 	if len(*bkNamespaces) != 1 {
-		return errors.New(fmt.Sprintf("len(bkNamespaces) = %d", len(*bkNamespaces)))
+		return fmt.Errorf("len(bkNamespaces) = %d", len(*bkNamespaces))
 	}
 
 	bkNamespace := (*bkNamespaces)[0]
@@ -1228,12 +1229,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeployment(msg amqp.Delivery) {
 	}
 
 	switch msgHeader.Event {
-	case "update":
+	case "update": // nolint
 		err = b.handleGameDeploymentUpdate(gameDeployment)
 		if err != nil {
 			blog.Errorf("handleGameDeploymentUpdate err: %s", err.Error())
 		}
-	case "delete":
+	case "delete": // nolint
 		err = b.handleGameDeploymentDelete(gameDeployment)
 		if err != nil {
 			blog.Errorf("handleGameDeploymentDelete err: %s", err.Error())
@@ -1247,6 +1248,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeployment(msg amqp.Delivery) {
 	}
 }
 
+// handle GameDeployment Update
 func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentUpdate(gameDeployment *gdv1alpha1.GameDeployment) error {
 	bkGameDeployments, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "gameDeployment", &client.PropertyFilter{
 		Condition: "AND",
@@ -1301,6 +1303,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentUpdate(gameDeployment
 	return nil
 }
 
+// handle GameDeployment Delete
 func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentDelete(gameDeployment *gdv1alpha1.GameDeployment) error {
 	bkGameDeployments, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "gameDeployment", &client.PropertyFilter{
 		Condition: "AND",
@@ -1323,11 +1326,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentDelete(gameDeployment
 	}
 
 	if len(*bkGameDeployments) > 1 {
-		return errors.New(fmt.Sprintf("len(bkGameDeployments) = %d", len(*bkGameDeployments)))
+		return fmt.Errorf("len(bkGameDeployments) = %d", len(*bkGameDeployments))
 	}
 
 	if len(*bkGameDeployments) == 0 {
-		return errors.New(fmt.Sprintf("gameDeployment %s not found", gameDeployment.Name))
+		return fmt.Errorf("gameDeployment %s not found", gameDeployment.Name)
 	}
 
 	bgd := (*bkGameDeployments)[0]
@@ -1351,6 +1354,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentDelete(gameDeployment
 	return err
 }
 
+// handle GameDeployment Create
 func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentCreate(gameDeployment *gdv1alpha1.GameDeployment) error {
 	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
@@ -1372,7 +1376,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentCreate(gameDeployment
 	}
 
 	if len(*bkNamespaces) != 1 {
-		return errors.New(fmt.Sprintf("len(bkNamespaces) = %d", len(*bkNamespaces)))
+		return fmt.Errorf("len(bkNamespaces) = %d", len(*bkNamespaces))
 	}
 
 	bkNamespace := (*bkNamespaces)[0]
@@ -1385,6 +1389,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentCreate(gameDeployment
 	return nil
 }
 
+// handle GameStateful Set
 func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSet(msg amqp.Delivery) {
 	blog.Infof("handleGameStatefulSet Message: %v", msg.Headers)
 	msgHeader, err := getMsgHeader(&msg.Headers)
@@ -1402,12 +1407,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSet(msg amqp.Delivery) 
 	}
 
 	switch msgHeader.Event {
-	case "update":
+	case "update": // nolint
 		err = b.handleGameStatefulSetUpdate(gameStatefulSet)
 		if err != nil {
 			blog.Errorf("handleGameStatefulSetUpdate err: %s", err.Error())
 		}
-	case "delete":
+	case "delete": // nolint
 		err = b.handleGameStatefulSetDelete(gameStatefulSet)
 		if err != nil {
 			blog.Errorf("handleGameStatefulSetDelete err: %s", err.Error())
@@ -1421,7 +1426,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSet(msg amqp.Delivery) 
 	}
 }
 
+// handle GameStateful Set Update
 func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetUpdate(gameStatefulSet *gsv1alpha1.GameStatefulSet) error {
+	// GetBkWorkloads get bkworkloads
 	bkGameStatefulSets, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -1475,6 +1482,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetUpdate(gameStatefulS
 	return nil
 }
 
+// handle GameStateful Set Delete
 func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetDelete(gameStatefulSet *gsv1alpha1.GameStatefulSet) error {
 	bkGameStatefulSets, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
 		Condition: "AND",
@@ -1497,11 +1505,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetDelete(gameStatefulS
 	}
 
 	if len(*bkGameStatefulSets) > 1 {
-		return errors.New(fmt.Sprintf("len(bkGameStatefulSets) = %d", len(*bkGameStatefulSets)))
+		return fmt.Errorf("len(bkGameStatefulSets) = %d", len(*bkGameStatefulSets))
 	}
 
 	if len(*bkGameStatefulSets) == 0 {
-		return errors.New(fmt.Sprintf("gameStatefulSet %s not found", gameStatefulSet.Name))
+		return fmt.Errorf("gameStatefulSet %s not found", gameStatefulSet.Name)
 	}
 
 	bgs := (*bkGameStatefulSets)[0]
@@ -1525,7 +1533,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetDelete(gameStatefulS
 	return err
 }
 
+// handle GameStateful Set Create
 func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetCreate(gameStatefulSet *gsv1alpha1.GameStatefulSet) error {
+	// GetBkNamespaces get bknamespaces
 	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -1546,15 +1556,17 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetCreate(gameStatefulS
 	}
 
 	if len(*bkNamespaces) != 1 {
-		return errors.New(fmt.Sprintf("len(bkNamespaces) = %d", len(*bkNamespaces)))
+		return fmt.Errorf("len(bkNamespaces) = %d", len(*bkNamespaces))
 	}
 
 	bkNamespace := (*bkNamespaces)[0]
 
 	gameStatefulSetToAdd := make(map[int64][]client.CreateBcsWorkloadRequestData, 0)
+	// GenerateBkGameStatefulSet generate bkgamestatefulset from k8sgamestatefulset
 	toAddData := b.Syncer.GenerateBkGameStatefulSet(&bkNamespace, &storage.GameStatefulSet{Data: gameStatefulSet})
 	gameStatefulSetToAdd[bkNamespace.BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
 
+	// CreateBkWorkloads create bkworkloads
 	b.Syncer.CreateBkWorkloads(b.BkCluster, "gameStatefulSet", gameStatefulSetToAdd)
 	return nil
 }
@@ -1576,12 +1588,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespace(msg amqp.Delivery) {
 	}
 
 	switch msgHeader.Event {
-	case "update":
+	case "update": // nolint
 		err = b.handleNamespaceUpdate(namespace)
 		if err != nil {
 			blog.Errorf("handleNamespaceUpdate err: %s", err.Error())
 		}
-	case "delete":
+	case "delete": // nolint
 		err = b.handleNamespaceDelete(namespace)
 		if err != nil {
 			blog.Errorf("handleNamespaceDelete err: %s", err.Error())
@@ -1596,6 +1608,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespace(msg amqp.Delivery) {
 }
 
 func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceUpdate(namespace *corev1.Namespace) error {
+	// GetBkNamespaces get bknamespaces
 	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -1627,6 +1640,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceUpdate(namespace *corev1.N
 	if len(*bkNamespaces) == 1 {
 		bkNamespace := (*bkNamespaces)[0]
 		nsToUpdate := make(map[int64]*client.UpdateBcsNamespaceRequestData, 0)
+		// CompareNamespace compare bkns and k8sns
 		needToUpdate, updateData := b.Syncer.CompareNamespace(&bkNamespace, &storage.Namespace{Data: namespace})
 		if needToUpdate {
 			nsToUpdate[bkNamespace.ID] = updateData
@@ -1643,6 +1657,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceUpdate(namespace *corev1.N
 }
 
 func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceDelete(namespace *corev1.Namespace) error {
+	// GetBkNamespaces get bknamespaces
 	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -1664,11 +1679,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceDelete(namespace *corev1.N
 	}
 
 	if len(*bkNamespaces) > 1 {
-		return errors.New(fmt.Sprintf("len(bkNamespaces) = %d", len(*bkNamespaces)))
+		return fmt.Errorf("len(bkNamespaces) = %d", len(*bkNamespaces))
 	}
 
 	if len(*bkNamespaces) == 0 {
-		return errors.New(fmt.Sprintf("namespace %s not found", namespace.Name))
+		return fmt.Errorf("namespace %s not found", namespace.Name)
 	}
 
 	bkNamespace := (*bkNamespaces)[0]
@@ -1676,6 +1691,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceDelete(namespace *corev1.N
 	//err = b.Syncer.DeleteBkNamespaces(b.BkCluster.BizID, &[]int64{bkNamespace.ID})
 	err = retry.Do(
 		func() error {
+			// DeleteBkNamespaces delete bknamespaces
 			return b.Syncer.DeleteBkNamespaces(b.BkCluster, &[]int64{bkNamespace.ID})
 		},
 		retry.Delay(time.Second*1),
@@ -1686,7 +1702,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceDelete(namespace *corev1.N
 	return err
 }
 
+// handle Namespace Create
 func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceCreate(namespace *corev1.Namespace) error {
+	// GetProjectManagerGrpcGwClient is a function that returns a project manager gRPC gateway client.
 	pmCli, err := b.Syncer.GetProjectManagerGrpcGwClient()
 	if err != nil {
 		blog.Errorf("get project manager grpc gw client failed, err: %s", err.Error())
@@ -1717,10 +1735,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceCreate(namespace *corev1.N
 
 	nsToAdd := make(map[int64][]bkcmdbkube.Namespace, 0)
 	nsToAdd[bizid] = []bkcmdbkube.Namespace{b.Syncer.GenerateBkNsData(b.BkCluster, &storage.Namespace{Data: namespace})}
+	// CreateBkNamespaces create bknamespaces
 	b.Syncer.CreateBkNamespaces(b.BkCluster, nsToAdd)
 	return nil
 }
 
+// Node handle
 func (b *BcsBkcmdbSynchronizerHandler) handleNode(msg amqp.Delivery) {
 	blog.Infof("handleNode Message: %v", msg.Headers)
 	msgHeader, err := getMsgHeader(&msg.Headers)
@@ -1738,12 +1758,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNode(msg amqp.Delivery) {
 	}
 
 	switch msgHeader.Event {
-	case "update":
+	case "update": // nolint
 		err = b.handleNodeUpdate(node)
 		if err != nil {
 			blog.Errorf("handleNodeUpdate err: %s", err.Error())
 		}
-	case "delete":
+	case "delete": // nolint
 		err = b.handleNodeDelete(node)
 		if err != nil {
 			blog.Errorf("handleNodeDelete err: %s", err.Error())
@@ -1758,6 +1778,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNode(msg amqp.Delivery) {
 }
 
 func (b *BcsBkcmdbSynchronizerHandler) handleNodeUpdate(node *corev1.Node) error {
+	// GetBkNodes get bknodes
 	bkNodes, err := b.Syncer.GetBkNodes(b.BkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -1804,7 +1825,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeUpdate(node *corev1.Node) error
 	return nil
 }
 
+// handle Node Delete
 func (b *BcsBkcmdbSynchronizerHandler) handleNodeDelete(node *corev1.Node) error {
+	// GetBkNodes get bknodes
 	bkNodes, err := b.Syncer.GetBkNodes(b.BkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -1826,11 +1849,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeDelete(node *corev1.Node) error
 	}
 
 	if len(*bkNodes) > 1 {
-		return errors.New(fmt.Sprintf("len(bkNodes) = %d", len(*bkNodes)))
+		return fmt.Errorf("len(bkNodes) = %d", len(*bkNodes))
 	}
 
 	if len(*bkNodes) == 0 {
-		return errors.New(fmt.Sprintf("node %s not found", node.Name))
+		return fmt.Errorf("node %s not found", node.Name)
 	}
 
 	bkNode := (*bkNodes)[0]
@@ -1848,6 +1871,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeDelete(node *corev1.Node) error
 	return err
 }
 
+// handle Node Create
 func (b *BcsBkcmdbSynchronizerHandler) handleNodeCreate(node *corev1.Node) error {
 	nodeToAdd := make([]client.CreateBcsNodeRequestData, 0)
 	nodeToAdd = append(nodeToAdd, b.Syncer.GenerateBkNodeData(b.BkCluster, &storage.K8sNode{Data: node}))
@@ -1855,6 +1879,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeCreate(node *corev1.Node) error
 	return nil
 }
 
+// get MsgHeader
 func getMsgHeader(header *amqp.Table) (*MsgHeader, error) {
 	var msgHeader MsgHeader
 	if err := mapstructure.Decode(header, &msgHeader); err != nil {

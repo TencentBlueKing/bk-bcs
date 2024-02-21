@@ -11,6 +11,7 @@
  *
  */
 
+// Package server xxx
 package server
 
 import (
@@ -32,7 +33,7 @@ import (
 func (h *handler) Apply(ctx *gin.Context) {
 	req := new(ApplyRequest)
 	if err := ctx.BindJSON(req); err != nil {
-		blog.Errorf("marshal request body failed(ApplyRequest), err: ", err.Error())
+		blog.Errorf("marshal request body failed(ApplyRequest), err: %s", err.Error())
 		errReply(ctx, "marshal request body failed(ApplyRequest)")
 		return
 	}
@@ -100,7 +101,7 @@ func (h *handler) Apply(ctx *gin.Context) {
 func (h *handler) CreatePlan(ctx *gin.Context) {
 	req := new(CreatePlanRequest)
 	if err := ctx.BindJSON(req); err != nil {
-		blog.Errorf("marshal request body failed(CreatePlanRequest), err: ", err.Error())
+		blog.Errorf("marshal request body failed(CreatePlanRequest), err: %s", err.Error())
 		errReply(ctx, "marshal request body failed(CreatePlanRequest)")
 		return
 	}
@@ -117,7 +118,7 @@ func (h *handler) CreatePlan(ctx *gin.Context) {
 	}
 	tf := new(tfv1.Terraform)
 	if err := h.client.Get(cc, key, tf); err != nil {
-		text := fmt.Sprintf("get tf resource failed, req: %s, err: %s", req, err.Error())
+		text := fmt.Sprintf("get tf resource failed, req: %v, err: %s", req, err.Error())
 		blog.Error(text)
 		errReply(ctx, text)
 		return
@@ -150,7 +151,7 @@ func (h *handler) ListTerraform(ctx *gin.Context) {
 func (h *handler) GetTerraform(ctx *gin.Context) {
 	req := new(GetTerraformRequest)
 	if err := ctx.BindJSON(req); err != nil {
-		blog.Errorf("marshal request body failed(GetTerraformRequest), err: ", err.Error())
+		blog.Errorf("marshal request body failed(GetTerraformRequest), err: %s", err.Error())
 		errReply(ctx, "marshal request body failed(GetTerraformRequest)")
 		return
 	}

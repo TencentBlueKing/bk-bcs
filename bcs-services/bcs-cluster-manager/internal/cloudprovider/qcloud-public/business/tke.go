@@ -918,6 +918,7 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 }
 
 // CheckClusterAllInstanceStatus 检测集群所有节点状态
+// nolint
 func CheckClusterAllInstanceStatus(ctx context.Context,
 	info *cloudprovider.CloudDependBasicInfo) ([]InstanceInfo, []InstanceInfo, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)

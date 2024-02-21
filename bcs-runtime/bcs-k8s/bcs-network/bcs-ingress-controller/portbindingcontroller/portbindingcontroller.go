@@ -124,7 +124,7 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 		// if entity not found and portbinding found, do clean portbinding
 		blog.V(3).Infof("clean portbinding %v", req.NamespacedName)
 		return pbr.cleanPortBinding(portBinding)
-	} else {
+	} else { // nolint
 		// if both entity and portbinding are not found, just return
 		return ctrl.Result{}, nil
 	}

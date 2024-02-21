@@ -82,7 +82,7 @@ func (_m *Client) ListTasks(poolID string, consumerID string, option *resourcemg
 	return r0, r1
 }
 
-func (_m *Client) GetTaskByID(recordID string, opt *resourcemgr.GetOptions) (*storage.ScaleDownTask, error){
+func (_m *Client) GetTaskByID(recordID string, opt *resourcemgr.GetOptions) (*storage.ScaleDownTask, error) {
 	panic("not impleted")
 }
 

@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
+// resource 资源相关信息
 type resource struct {
 	BusinessID     string `json:"businessID" yaml:"businessID"`         // 业务ID
 	ProjectID      string `json:"projectID" yaml:"projectID"`           // 项目ID
@@ -101,6 +102,7 @@ func getResourceID(req server.Request) resource {
 var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.Resource, audit.Action){
 	"ClusterManager.CreateCluster": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.ClusterName, ResourceName: res.ClusterName,
 			ResourceData: res.toMap(),
@@ -109,6 +111,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.RetryCreateClusterTask": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.ClusterID, ResourceName: res.ClusterID,
 			ResourceData: res.toMap(),
@@ -117,6 +120,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.ImportCluster": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.ClusterName, ResourceName: res.ClusterName,
 			ResourceData: res.toMap(),
@@ -125,6 +129,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.UpdateCluster": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.ClusterID, ResourceName: res.ClusterID,
 			ResourceData: res.toMap(),
@@ -133,6 +138,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.DeleteCluster": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.ClusterID, ResourceName: res.ClusterID,
 			ResourceData: res.toMap(),
@@ -141,6 +147,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.AddNodesToCluster": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.ClusterID, ResourceName: res.ClusterID,
 			ResourceData: res.toMap(),
@@ -149,6 +156,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.DeleteNodesFromCluster": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.ClusterID, ResourceName: res.ClusterID,
 			ResourceData: res.toMap(),
@@ -157,6 +165,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.BatchDeleteNodesFromCluster": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.ClusterID, ResourceName: res.ClusterID,
 			ResourceData: res.toMap(),
@@ -165,6 +174,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.CreateNodeGroup": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -173,6 +183,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.UpdateNodeGroup": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.NodeGroupID, ResourceName: res.NodeGroupID,
 			ResourceData: res.toMap(),
@@ -181,6 +192,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.DeleteNodeGroup": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.NodeGroupID, ResourceName: res.NodeGroupID,
 			ResourceData: res.toMap(),
@@ -189,6 +201,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.RemoveNodesFromGroup": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.NodeGroupID, ResourceName: res.NodeGroupID,
 			ResourceData: res.toMap(),
@@ -197,6 +210,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.CleanNodesInGroup": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.NodeGroupID, ResourceName: res.NodeGroupID,
 			ResourceData: res.toMap(),
@@ -205,6 +219,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.CleanNodesInGroupV2": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.NodeGroupID, ResourceName: res.NodeGroupID,
 			ResourceData: res.toMap(),
@@ -213,6 +228,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.EnableNodeGroupAutoScale": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.NodeGroupID, ResourceName: res.NodeGroupID,
 			ResourceData: res.toMap(),
@@ -221,6 +237,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.DisableNodeGroupAutoScale": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.NodeGroupID, ResourceName: res.NodeGroupID,
 			ResourceData: res.toMap(),
@@ -229,6 +246,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.CreateNodeTemplate": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -237,6 +255,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.UpdateNodeTemplate": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.NodeTemplateID, ResourceName: res.NodeTemplateID,
 			ResourceData: res.toMap(),
@@ -245,6 +264,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.DeleteNodeTemplate": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.NodeTemplateID, ResourceName: res.NodeTemplateID,
 			ResourceData: res.toMap(),
@@ -253,6 +273,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.CreateCloudAccount": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.AccountName, ResourceName: res.AccountName,
 			ResourceData: res.toMap(),
@@ -261,6 +282,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.UpdateCloudAccount": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.AccountID, ResourceName: res.AccountID,
 			ResourceData: res.toMap(),
@@ -269,6 +291,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 	"ClusterManager.DeleteCloudAccount": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded.
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeCluster, ResourceID: res.AccountID, ResourceName: res.AccountID,
 			ResourceData: res.toMap(),
@@ -277,6 +300,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 }
 
+// addAudit 添加审计
 func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTime, endTime time.Time) {
 	// get method audit func
 	fn, ok := auditFuncMap[req.Method()]

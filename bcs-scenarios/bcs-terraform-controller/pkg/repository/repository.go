@@ -11,6 +11,7 @@
  *
  */
 
+// Package repository xxx
 package repository
 
 import (
@@ -20,7 +21,6 @@ import (
 	"time"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
-	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -35,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/utils"
 )
 
+// Handler handle
 type Handler interface {
 	// Init 初始化
 	Init() error

@@ -439,7 +439,7 @@ func (s *Server) mutatingNodeWebhook(ar v1.AdmissionReview) (response *v1.Admiss
 	}
 	node := &k8scorev1.Node{}
 	if err := json.Unmarshal(req.Object.Raw, node); err != nil {
-		blog.Errorf("decode %s to node failed, err %s", string(req.Object.Raw), err.Error)
+		blog.Errorf("decode %s to node failed, err %s", string(req.Object.Raw), err.Error())
 		return &v1.AdmissionResponse{Allowed: true}
 	}
 	if len(node.Namespace) == 0 {

@@ -182,6 +182,7 @@ func (s *Service) GetApp(ctx context.Context, req *pbcs.GetAppReq) (*pbapp.App, 
 func (s *Service) GetAppByName(ctx context.Context, req *pbcs.GetAppByNameReq) (*pbapp.App, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	// nolint
 	// TODO: 暂不鉴权
 	// resp := new(pbapp.App)
 

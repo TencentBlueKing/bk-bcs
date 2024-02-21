@@ -79,14 +79,14 @@ func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOptio
 		// get ip number
 		freeIPNets, err := business.GetFreeIPNets(&opt.CommonOption, vpcID)
 		if err != nil {
-			blog.Errorf("vpc[%s] GetFreeIPNets failed: %v", err)
+			blog.Errorf("vpc GetFreeIPNets failed: %v", err)
 			continue
 		}
 		var ipCnt uint32
 		for i := range freeIPNets {
 			ipNum, err := cidrtree.GetIPNum(freeIPNets[i])
 			if err != nil {
-				blog.Errorf("vpc[%s] GetIPNum failed: %v", err)
+				blog.Errorf("vpc GetIPNum failed: %v", err)
 				continue
 			}
 			ipCnt += ipNum

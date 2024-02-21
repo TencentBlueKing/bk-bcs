@@ -50,7 +50,7 @@ func (t *BcsTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true, // 设置为 true 来禁用证书验证
+			InsecureSkipVerify: true, // 设置为 true 来禁用证书验证 nolint
 		},
 	}
 

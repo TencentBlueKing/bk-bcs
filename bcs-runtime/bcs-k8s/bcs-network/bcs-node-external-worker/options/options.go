@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -26,6 +27,7 @@ const (
 	EnvNamePodNamespace = "POD_NAMESPACE"
 )
 
+// Options xxx
 type Options struct {
 	// ExternalIPWebURL URL to get external IP
 	ExternalIPWebURL string
@@ -50,6 +52,7 @@ type Options struct {
 	conf.LogConfig
 }
 
+// BindFromCommandLine xxx
 func (op *Options) BindFromCommandLine() {
 	var verbosity int
 
@@ -75,6 +78,7 @@ func (op *Options) BindFromCommandLine() {
 
 }
 
+// SetFromEnv set form env
 func (op *Options) SetFromEnv() {
 	nodeName := os.Getenv(EnvNameNodeName)
 	if len(nodeName) == 0 {

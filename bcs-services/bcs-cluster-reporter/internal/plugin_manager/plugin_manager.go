@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package plugin_manager
-package plugin_manager
+// Package plugin_manager xxx
+package plugin_manager // nolint
 
 import (
 	"fmt"
@@ -69,9 +69,8 @@ func (pm *pluginManager) Register(plugin Plugin) {
 func (pm *pluginManager) GetPlugin(plugin string) Plugin {
 	if p, ok := pm.plugins[plugin]; ok {
 		return p
-	} else {
-		return nil
 	}
+	return nil
 }
 
 // SetConfig configure pluginmanager by config file
@@ -95,6 +94,8 @@ func (pm *pluginManager) GetConfig() *Config {
 	return pm.config
 }
 
+// SetupPlugin setup plugin
+// nolint
 func (pm *pluginManager) SetupPlugin(plugins string, pluginDir string) error {
 	for _, plugin := range strings.Split(plugins, ",") {
 		if p := pm.GetPlugin(plugin); p == nil {
@@ -125,6 +126,8 @@ func (pm *pluginManager) Done() {
 	pm.routinePool.Done()
 }
 
+// StopPlugin  stop plugin
+// nolint
 func (pm *pluginManager) StopPlugin(plugins string) error {
 	for _, plugin := range strings.Split(plugins, ",") {
 		if p := pm.GetPlugin(plugin); p == nil {
@@ -140,6 +143,7 @@ func (pm *pluginManager) StopPlugin(plugins string) error {
 }
 
 // NewPluginManager xxx
+// nolint
 func NewPluginManager() *pluginManager {
 	return &pluginManager{
 		routinePool: util.NewRoutinePool(40),

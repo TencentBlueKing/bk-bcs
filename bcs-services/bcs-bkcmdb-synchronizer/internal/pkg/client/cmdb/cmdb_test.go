@@ -768,7 +768,7 @@ func Test_cmdbClient_CreateBcsWorkload(t *testing.T) {
 	}
 
 	rudMap := make(map[string]interface{})
-	err = json.Unmarshal(jsonBytes, &rudMap)
+	_ = json.Unmarshal(jsonBytes, &rudMap)
 
 	type fields struct {
 		config   *Options
@@ -1808,6 +1808,7 @@ func Test_getAllByBkBizID(t *testing.T) {
 }
 
 // Test_cmdbClient_UpdateBcsClusterType tests the UpdateBcsClusterType method of the cmdbClient.
+// nolint
 func Test_cmdbClient_UpdateBcsClusterType(t *testing.T) {
 	id := int64(4583)
 	clusterType := "SHARE_CLUSTER"

@@ -16,13 +16,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/avast/retry-go"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 
@@ -215,11 +215,13 @@ func handleClusterMasterNodes(ctx context.Context, req *api.CreateClusterRequest
 // generateMasterExistedInstance cluster master setting
 func generateMasterExistedInstance(role string, instanceIDs []string, manyDisk bool,
 	cls *proto.Cluster) *api.ExistedInstancesForNode {
+	// ExistedInstancesForNode use existed nodes for create cluster or add node
 	existedInstance := &api.ExistedInstancesForNode{
 		NodeRole: role,
 		ExistedInstancesPara: &api.ExistedInstancesPara{
 			InstanceIDs: instanceIDs,
 			LoginSettings: func() *api.LoginSettings {
+				// LoginSettings reset passwd
 				return &api.LoginSettings{
 					Password: func() string {
 						if len(cls.GetNodeSettings().GetMasterLogin().InitLoginPassword) > 0 {
@@ -302,11 +304,13 @@ func handleClusterWorkerNodes(ctx context.Context, req *api.CreateClusterRequest
 // generateWorkerExistedInstance cluster worker setting
 func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nodeIDs, nodeIPs []string,
 	manyDisk bool, operator string) *api.ExistedInstancesForNode {
+	// ExistedInstancesForNode use existed nodes for create cluster or add node
 	existedInstance := &api.ExistedInstancesForNode{
 		NodeRole: api.WORKER.String(),
 		ExistedInstancesPara: &api.ExistedInstancesPara{
 			InstanceIDs: nodeIDs,
 			LoginSettings: func() *api.LoginSettings {
+				// LoginSettings reset passwd
 				return &api.LoginSettings{
 					Password: func() string {
 						if len(info.Cluster.GetNodeSettings().GetWorkerLogin().InitLoginPassword) > 0 {
@@ -620,6 +624,7 @@ func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.Cloud
 			blog.Errorf("generateIndependentClusterRequest[%s] trans2InsIdByInsIp masterIps failed: %v", taskID, err)
 			return nil, err
 		}
+		// handleClusterMasterNodes handle cluster master nodes
 		err = handleClusterMasterNodes(ctx, req, info, masterIds)
 		if err != nil {
 			blog.Errorf("createTkeCluster[%s] handleClusterMasterNodes for cluster[%s] failed: %v",
@@ -635,6 +640,7 @@ func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.Cloud
 				return nil, err
 			}
 
+			// handleClusterWorkerNodes handle cluster worker nodes
 			err = handleClusterWorkerNodes(ctx, req, info, workerIds, operator)
 			if err != nil {
 				blog.Errorf("createTkeCluster[%s] handleClusterWorkerNodes for cluster[%s] failed: %v",
@@ -645,6 +651,7 @@ func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.Cloud
 	case icommon.ClusterManageTypeManaged:
 		// 新增节点模式
 		if req.AddNodeMode {
+			// GetMasterNodeTemplateConfig masters/nodes
 			_, workerNodesTpl := business.GetMasterNodeTemplateConfig(info.Cluster.Template)
 
 			// worker nodes
@@ -655,6 +662,7 @@ func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.Cloud
 				req.InstanceDataDiskMountSettings = make([]*api.InstanceDataDiskMountSetting, 0)
 			}
 
+			// generateNewRunInstance run instances by instance template
 			req.InstanceDataDiskMountSettings = generateNewInstanceForDisk(workerNodesTpl)
 
 			return req, nil
@@ -686,6 +694,7 @@ func generateCreateClusterRequest(ctx context.Context, info *cloudprovider.Cloud
 	return req, nil
 }
 
+// trans2InsIdByInsIp xxx
 func trans2InsIdByInsIp(ips []string, opt *cloudprovider.CommonOption) ([]string, error) {
 	nodes, err := business.ListNodesByIP(ips, &cloudprovider.ListNodesOption{
 		Common: opt,
@@ -1156,8 +1165,9 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		step.Params[cloudprovider.ConnectClusterKey.String()] = icommon.True
 
-		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("RegisterClusterEndpointErr: register endpoint[%s] failed",
-			dependInfo.Cluster.GetSystemID()))
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID,
+			fmt.Sprintf("RegisterClusterEndpointErr: register endpoint[%s] failed",
+				dependInfo.Cluster.GetSystemID()))
 		return retErr
 	}
 	blog.Infof("RegisterTkeClusterKubeConfigTask[%s] registerTKEClusterEndpoint success", taskID)

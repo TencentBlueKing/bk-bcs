@@ -57,7 +57,7 @@ func (plugin *WebhookPlugin) forwardToApplicationSet(r *http.Request, requestID 
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
-		blog.Errorf("RequestID[%s] webhook forward to appset controller resp code %d: %s",
+		blog.Errorf("RequestID[%s] webhook forward to appset controller resp code %d",
 			requestID, resp.StatusCode)
 		return
 	}

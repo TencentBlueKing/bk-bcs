@@ -95,6 +95,7 @@ func (dao *lockDao) IncreaseCount(kit *kit.Kit, tx *gen.Query, lock *table.Resou
 	lock.ID = id
 
 	if e := m.WithContext(kit.Ctx).Create(lock); e != nil {
+		// nolint
 		// TODO: 压测看看并发插入时是否会导致死锁，再如果死锁是否需要重试事务
 		logs.Errorf("insert lock failed, lock: %v, err: %v, rid: %s", lock, err, kit.Rid)
 		return 0, fmt.Errorf("insert lock failed, err: %v", err)

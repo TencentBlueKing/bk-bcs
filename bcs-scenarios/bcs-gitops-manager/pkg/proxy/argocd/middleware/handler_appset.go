@@ -66,7 +66,7 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 			DisableTLS:       false,
 			StrictValidation: false,
 		})
-	argoCDService, err := services.NewArgoCDService(h.option.Storage.GetArgoDB(),
+	argoCDService, _ := services.NewArgoCDService(h.option.Storage.GetArgoDB(),
 		true, repoClientSet, false)
 	// this will render the Applications by ApplicationSet's generators
 	// refer to: https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499

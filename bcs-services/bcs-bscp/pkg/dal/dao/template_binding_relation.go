@@ -124,6 +124,7 @@ func (dao *templateBindingRelationDao) GetTemplateBoundTemplateSetCount(kit *kit
 }
 
 // GetTemplateRevisionBoundUnnamedAppCount get bound unnamed app count of the target template release.
+// nolint
 func (dao *templateBindingRelationDao) GetTemplateRevisionBoundUnnamedAppCount(kit *kit.Kit, bizID,
 	templateRevisionID uint32) (uint32, error) {
 	m := dao.genQ.AppTemplateBinding
@@ -140,6 +141,7 @@ func (dao *templateBindingRelationDao) GetTemplateRevisionBoundUnnamedAppCount(k
 }
 
 // GetTemplateRevisionBoundNamedAppCount get bound named app count of the target template release.
+// nolint
 func (dao *templateBindingRelationDao) GetTemplateRevisionBoundNamedAppCount(kit *kit.Kit, bizID,
 	templateRevisionID uint32) (uint32, error) {
 	m := dao.genQ.ReleasedAppTemplate

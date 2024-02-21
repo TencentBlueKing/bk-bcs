@@ -30,5 +30,5 @@ func GetMasterNodeTemplateConfig(instances []*proto.InstanceTemplateConfig) (
 		}
 	}
 
-	return
+	return master, nodes
 }

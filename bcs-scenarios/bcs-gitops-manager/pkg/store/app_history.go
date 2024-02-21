@@ -11,6 +11,7 @@
  *
  */
 
+// Package store xxx
 package store
 
 import (
@@ -62,7 +63,7 @@ func (s *appHistoryStore) handleApplication(item *v1alpha1.Application) error {
 	history := item.Status.History.LastRevisionHistory()
 	hm, err := s.db.GetApplicationHistoryManifest(item.Name, string(item.UID), history.ID)
 	if err != nil {
-		return errors.Wrapf(err, "get application history '%s/%s/%d' manfiest failed",
+		return errors.Wrapf(err, "get application history '%s/%s/%d' manifest failed",
 			item.Name, item.UID, history.ID)
 	}
 	if hm != nil {

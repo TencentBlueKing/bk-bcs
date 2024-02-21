@@ -17,6 +17,7 @@ import (
 	"strings"
 )
 
+// IsPermissionDenied permission
 func IsPermissionDenied(err error) bool {
 	if err == nil {
 		return false

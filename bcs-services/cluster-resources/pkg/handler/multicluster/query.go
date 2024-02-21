@@ -61,6 +61,7 @@ func NewStorageQuery(ns []*clusterRes.ClusterNamespaces, filter QueryFilter) Que
 
 // Fetch fetches multicluster resources.
 func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (map[string]interface{}, error) {
+	// nolint
 	// TODO check access
 	var err error
 	if q.ClusterdNamespaces, err = checkMultiClusterAccess(ctx, kind, q.ClusterdNamespaces); err != nil {
@@ -108,6 +109,7 @@ func NewAPIServerQuery(ns []*clusterRes.ClusterNamespaces, filter QueryFilter) Q
 
 // Fetch fetches multicluster resources.
 func (q *APIServerQuery) Fetch(ctx context.Context, groupVersion, kind string) (map[string]interface{}, error) {
+	// nolint
 	// TODO check access
 	var err error
 	if q.ClusterdNamespaces, err = checkMultiClusterAccess(ctx, kind, q.ClusterdNamespaces); err != nil {

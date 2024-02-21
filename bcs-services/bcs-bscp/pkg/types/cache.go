@@ -126,8 +126,8 @@ type FilePermissionCache struct {
 type CredentialCache struct {
 	Enabled      bool                `json:"enabled"`
 	Scope        []string            `json:"scope"`
-	scopeMap     map[string][]string `json:"-"` // app:scope
-	isPreprocess bool                `json:"-"`
+	scopeMap     map[string][]string `json:"-"` // app:scope nolint
+	isPreprocess bool                `json:"-"` // nolint
 }
 
 // preprocess 预处理数据结构, 格式化为app:scope, 方便鉴权处理

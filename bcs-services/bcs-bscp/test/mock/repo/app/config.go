@@ -181,7 +181,7 @@ func LoadSettings(sys *cc.SysOption) (*Setting, error) {
 	}
 
 	s := new(Setting)
-	if err := yaml.Unmarshal(file, s); err != nil {
+	if err = yaml.Unmarshal(file, s); err != nil {
 		return nil, fmt.Errorf("unmarshal setting yaml from file: %s failed, err: %v", sys.ConfigFiles[0], err)
 	}
 
