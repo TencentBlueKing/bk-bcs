@@ -479,4 +479,14 @@ export const undeleteKv = (bizId: string, appId: number, key: string) =>
  * @returns
  */
 export const batchImportKvFile = (bizId: string, appId: number, File: any) =>
-  http.post(`biz/${bizId}/apps/${appId}/kvs/import`, File);
+  http.post(`/biz/${bizId}/apps/${appId}/kvs/import`, File);
+
+/**
+ * 导出kv配置文件
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param releaseId 发布版本ID
+ * @returns
+ */
+export const getExportKvFile = (bizId: string, appId: number, releaseId: number, format: string) =>
+  http.get(`biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs/export`, { params: { format } });
