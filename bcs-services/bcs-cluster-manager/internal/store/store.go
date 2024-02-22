@@ -159,9 +159,9 @@ type ClusterManagerModel interface {
 		opt *options.ListOption) ([]types.TaskOperationLog, error)
 
 	// TaskStepLog
-	CreateTaskStepLogInfo(ctx context.Context, taskID, stepName, message string) error
-	CreateTaskStepLogWarn(ctx context.Context, taskID, stepName, message string) error
-	CreateTaskStepLogError(ctx context.Context, taskID, stepName, message string) error
+	CreateTaskStepLogInfo(ctx context.Context, taskID, stepName, message string)
+	CreateTaskStepLogWarn(ctx context.Context, taskID, stepName, message string)
+	CreateTaskStepLogError(ctx context.Context, taskID, stepName, message string)
 	DeleteTaskStepLogByTaskID(ctx context.Context, taskID string) error
 	CountTaskStepLog(ctx context.Context, cond *operator.Condition) (int64, error)
 	ListTaskStepLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.TaskStepLog, error)

@@ -26,7 +26,7 @@ import (
 )
 
 // DeleteTKEClusterTask delete cluster task
-func DeleteTKEClusterTask(taskID string, stepName string) error {
+func DeleteTKEClusterTask(taskID string, stepName string) error { // nolint
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"start delete tke cluster")
 	start := time.Now()
@@ -125,7 +125,7 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 }
 
 // CleanClusterDBInfoTask clean cluster DB info
-func CleanClusterDBInfoTask(taskID string, stepName string) error {
+func CleanClusterDBInfoTask(taskID string, stepName string) error { // nolint
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"start clean cluster db info")
 	start := time.Now()

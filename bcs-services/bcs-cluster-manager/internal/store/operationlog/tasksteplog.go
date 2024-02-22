@@ -15,7 +15,6 @@ package operationlog
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -84,12 +83,12 @@ func (m *ModelTaskStepLog) ensureTable(ctx context.Context) error {
 }
 
 // CreateTaskStepLogInfo create task step info log
-func (m *ModelTaskStepLog) CreateTaskStepLogInfo(ctx context.Context, taskID, stepName, message string) error {
+func (m *ModelTaskStepLog) CreateTaskStepLogInfo(ctx context.Context, taskID, stepName, message string) {
 	if taskID == "" || stepName == "" || message == "" {
-		return fmt.Errorf("parameter cannot be empty")
+		blog.Error("parameter cannot be empty")
 	}
 	if err := m.ensureTable(ctx); err != nil {
-		return err
+		blog.Error(err.Error())
 	}
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{types.TaskStepLog{
 		TaskID:     taskID,
@@ -98,18 +97,17 @@ func (m *ModelTaskStepLog) CreateTaskStepLogInfo(ctx context.Context, taskID, st
 		Message:    message,
 		CreateTime: time.Now().Format(time.RFC3339),
 	}}); err != nil {
-		return err
+		blog.Error(err.Error())
 	}
-	return nil
 }
 
 // CreateTaskStepLogWarn create task step warn log
-func (m *ModelTaskStepLog) CreateTaskStepLogWarn(ctx context.Context, taskID, stepName, message string) error {
+func (m *ModelTaskStepLog) CreateTaskStepLogWarn(ctx context.Context, taskID, stepName, message string) {
 	if taskID == "" || stepName == "" || message == "" {
-		return fmt.Errorf("parameter cannot be empty")
+		blog.Error("parameter cannot be empty")
 	}
 	if err := m.ensureTable(ctx); err != nil {
-		return err
+		blog.Error(err.Error())
 	}
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{types.TaskStepLog{
 		TaskID:     taskID,
@@ -118,18 +116,17 @@ func (m *ModelTaskStepLog) CreateTaskStepLogWarn(ctx context.Context, taskID, st
 		Message:    message,
 		CreateTime: time.Now().Format(time.RFC3339),
 	}}); err != nil {
-		return err
+		blog.Error(err.Error())
 	}
-	return nil
 }
 
 // CreateTaskStepLogError create task step error log
-func (m *ModelTaskStepLog) CreateTaskStepLogError(ctx context.Context, taskID, stepName, message string) error {
+func (m *ModelTaskStepLog) CreateTaskStepLogError(ctx context.Context, taskID, stepName, message string) {
 	if taskID == "" || stepName == "" || message == "" {
-		return fmt.Errorf("parameter cannot be empty")
+		blog.Error("parameter cannot be empty")
 	}
 	if err := m.ensureTable(ctx); err != nil {
-		return err
+		blog.Error(err.Error())
 	}
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{types.TaskStepLog{
 		TaskID:     taskID,
@@ -138,9 +135,8 @@ func (m *ModelTaskStepLog) CreateTaskStepLogError(ctx context.Context, taskID, s
 		Message:    message,
 		CreateTime: time.Now().Format(time.RFC3339),
 	}}); err != nil {
-		return err
+		blog.Error(err.Error())
 	}
-	return nil
 }
 
 // DeleteTaskStepLogByTaskID delete taskStepLog
