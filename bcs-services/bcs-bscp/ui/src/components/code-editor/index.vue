@@ -328,7 +328,7 @@
 </script>
 <style lang="scss" scoped>
   .code-editor-wrapper {
-    height: 100%;
+    height: calc(100% - 10px);
     :deep(.monaco-editor) {
       width: 100%;
       padding-top: 10px;
@@ -340,7 +340,7 @@
     }
   }
   .placeholderBox {
-    height: 100%;
+    height: calc(100% - 10px);;
     background-color: #1e1e1e;
     box-sizing: content-box;
     padding-top: 10px;

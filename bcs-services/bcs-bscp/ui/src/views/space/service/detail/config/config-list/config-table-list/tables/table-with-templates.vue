@@ -10,6 +10,7 @@
           <th class="datetime">{{ t('修改时间') }}</th>
           <th class="status" v-if="versionData.id === 0">
             {{ t('变更状态') }}
+            <TableFilter :filter-list="statusFilterList" @selected="handleStatusFilterSelected" />
           </th>
           <th class="operation">{{ t('操作') }}</th>
         </tr>
@@ -92,6 +93,11 @@
                                   @click="handleEditOpen(config)">
                                   {{ t('编辑') }}
                                 </bk-button>
+                                <DownloadConfigBtn
+                                  type="config"
+                                  :bk-biz-id="props.bkBizId"
+                                  :app-id="props.appId"
+                                  :id="config.id" />
                                 <bk-button
                                   v-cursor="{ active: !hasEditServicePerm }"
                                   text
@@ -113,6 +119,11 @@
                                   @click="handleConfigDiff(group.id, config)">
                                   {{ t('对比') }}
                                 </bk-button>
+                                <DownloadConfigBtn
+                                  type="config"
+                                  :bk-biz-id="props.bkBizId"
+                                  :app-id="props.appId"
+                                  :id="config.id" />
                               </template>
                             </template>
                             <!-- 套餐模板 -->
@@ -138,6 +149,11 @@
                                   {{ t('对比') }}
                                 </bk-button>
                               </template>
+                              <DownloadConfigBtn
+                                type="template"
+                                :bk-biz-id="props.bkBizId"
+                                :app-id="props.appId"
+                                :id="config.versionId" />
                             </template>
                           </div>
                         </td>
@@ -224,6 +240,8 @@
   import ReplaceTemplateVersion from '../replace-template-version.vue';
   import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
   import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
+  import TableFilter from '../../../components/table-filter.vue';
+  import DownloadConfigBtn from '../download-config-btn.vue';
 
   interface IConfigsGroupData {
     id: number;
@@ -284,6 +302,7 @@
   const isDeletePkgDialogShow = ref(false);
   const deleteTemplatePkgName = ref('');
   const deleteTemplatePkgId = ref(0);
+  const statusFilterChecked = ref<string[]>([]);
   const viewConfigSliderData = ref({
     open: false,
     data: { id: 0, type: '' },
@@ -313,6 +332,28 @@
       return `${path}${name}`;
     }
     return `${path}/${name}`;
+  });
+
+  // 状态过滤列表
+  const statusFilterList = computed(() => {
+    return [
+      {
+        value: 'ADD',
+        text: t('新增'),
+      },
+      {
+        value: 'REVISE',
+        text: t('修改'),
+      },
+      {
+        value: 'DELETE',
+        text: t('删除'),
+      },
+      {
+        value: 'UNCHANGE',
+        text: t('无修改'),
+      },
+    ];
   });
 
   watch(
@@ -368,6 +409,7 @@
           params.search_fields = 'name,path,memo,creator,reviser';
           params.search_value = props.searchStr;
         }
+        if (statusFilterChecked.value.length > 0) params.status = statusFilterChecked.value;
         res = await getConfigList(props.bkBizId, props.appId, params);
       } else {
         if (props.searchStr) {
@@ -579,6 +621,12 @@
       return 'delete-row config-row';
     }
     return 'config-row';
+  };
+
+  // 变更状态过滤
+  const handleStatusFilterSelected = (filterStatus: string[]) => {
+    statusFilterChecked.value = filterStatus;
+    getAllConfigList();
   };
   defineExpose({
     refresh: getAllConfigList,

@@ -979,7 +979,7 @@ message ListConfigItemsReq {
   bool all = 8;
   bool with_status = 9;
   // ADD、REVISE、DELETE、UNCHANGE
-  string status = 10;
+  repeated string status = 10;
 }
 
 message ListConfigItemsResp {
@@ -1129,6 +1129,7 @@ message CreateHookReq {
   string tag = 4;
   string memo = 5;
   string content = 6;
+  string revision_name = 7;
 }
 
 message CreateHookResp {
@@ -1178,6 +1179,7 @@ message CreateHookRevisionReq {
   uint32 hook_id = 2;
   string memo = 3;
   string content = 4;
+  string name = 5;
 }
 
 message CreateHookRevisionResp {
@@ -2253,7 +2255,7 @@ message ListKvsReq {
   string order = 13;
   string top_ids = 14;
   // ADD、REVISE、DELETE、UNCHANGE
-  string status = 15;
+  repeated string status = 15;
 }
 
 message ListKvsResp {

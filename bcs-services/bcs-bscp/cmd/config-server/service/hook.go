@@ -42,11 +42,12 @@ func (s *Service) CreateHook(ctx context.Context, req *pbcs.CreateHookReq) (*pbc
 			BizId: grpcKit.BizID,
 		},
 		Spec: &pbhook.HookSpec{
-			Name:    req.Name,
-			Type:    req.Type,
-			Tag:     req.Tag,
-			Memo:    req.Memo,
-			Content: req.Content,
+			Name:         req.Name,
+			Type:         req.Type,
+			Tag:          req.Tag,
+			RevisionName: req.RevisionName,
+			Memo:         req.Memo,
+			Content:      req.Content,
 		},
 	}
 	rp, err := s.client.DS.CreateHook(grpcKit.RpcCtx(), r)
