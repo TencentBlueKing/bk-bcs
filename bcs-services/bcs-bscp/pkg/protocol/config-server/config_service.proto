@@ -1740,6 +1740,8 @@ message ListAppBoundTmplRevisionsReq {
   string search_fields = 3;
   string search_value = 4;
   bool with_status = 5;
+  // ADD、REVISE、DELETE、UNCHANGE
+  repeated string status = 6;
 }
 
 message ListAppBoundTmplRevisionsResp {
