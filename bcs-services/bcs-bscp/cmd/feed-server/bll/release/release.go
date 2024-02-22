@@ -177,6 +177,10 @@ func (rs *ReleasedService) ListAppLatestReleaseKvMeta(kt *kit.Kit, opts *types.A
 				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,
 			},
+			ContentSpec: &pbcontent.ContentSpec{
+				Signature: one.ContentSpec.Signature,
+				ByteSize:  one.ContentSpec.ByteSize,
+			},
 		}
 	}
 	meta.Kvs = kvList

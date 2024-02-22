@@ -69,12 +69,13 @@ type ReleaseCICache struct {
 
 // ReleaseKvCache is the release kv info which will be stored in cache.
 type ReleaseKvCache struct {
-	ID         uint32              `json:"id"`
-	ReleaseID  uint32              `json:"reid"`
-	Key        string              `json:"key"`
-	KvType     string              `json:"kv_type"`
-	Revision   *table.Revision     `json:"revision"`
-	Attachment *table.KvAttachment `json:"am"`
+	ID          uint32              `json:"id"`
+	ReleaseID   uint32              `json:"reid"`
+	Key         string              `json:"key"`
+	KvType      string              `json:"kv_type"`
+	Revision    *table.Revision     `json:"revision"`
+	Attachment  *table.KvAttachment `json:"am"`
+	ContentSpec *table.ContentSpec  `json:"content_spec"`
 }
 
 // ReleasedHooksCache is the released hooks info which will be stored in cache.
