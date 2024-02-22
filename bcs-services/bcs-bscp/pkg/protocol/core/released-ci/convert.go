@@ -187,10 +187,10 @@ func sortConfigItemsByState(cis []*pbci.ConfigItem, status []string) []*pbci.Con
 		switch ci.FileState {
 		case constant.FileStateAdd:
 			add = append(add, ci)
-		case constant.FileStateDelete:
-			del = append(del, ci)
 		case constant.FileStateRevise:
 			revise = append(revise, ci)
+		case constant.FileStateDelete:
+			del = append(del, ci)
 		case constant.FileStateUnchange:
 			unchange = append(unchange, ci)
 		}
@@ -206,10 +206,10 @@ func sortConfigItemsByState(cis []*pbci.ConfigItem, status []string) []*pbci.Con
 			switch strings.ToUpper(v) {
 			case constant.FileStateAdd:
 				result = append(result, add...)
-			case constant.FileStateDelete:
-				result = append(result, del...)
 			case constant.FileStateRevise:
 				result = append(result, revise...)
+			case constant.FileStateDelete:
+				result = append(result, del...)
 			case constant.FileStateUnchange:
 				result = append(result, unchange...)
 			}
