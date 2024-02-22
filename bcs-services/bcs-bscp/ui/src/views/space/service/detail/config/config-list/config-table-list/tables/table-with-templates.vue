@@ -93,6 +93,11 @@
                                   @click="handleEditOpen(config)">
                                   {{ t('编辑') }}
                                 </bk-button>
+                                <DownloadConfigBtn
+                                  type="config"
+                                  :bk-biz-id="props.bkBizId"
+                                  :app-id="props.appId"
+                                  :id="config.id" />
                                 <bk-button
                                   v-cursor="{ active: !hasEditServicePerm }"
                                   text
@@ -114,6 +119,11 @@
                                   @click="handleConfigDiff(group.id, config)">
                                   {{ t('对比') }}
                                 </bk-button>
+                                <DownloadConfigBtn
+                                  type="config"
+                                  :bk-biz-id="props.bkBizId"
+                                  :app-id="props.appId"
+                                  :id="config.id" />
                               </template>
                             </template>
                             <!-- 套餐模板 -->
@@ -139,6 +149,11 @@
                                   {{ t('对比') }}
                                 </bk-button>
                               </template>
+                              <DownloadConfigBtn
+                                type="template"
+                                :bk-biz-id="props.bkBizId"
+                                :app-id="props.appId"
+                                :id="config.versionId" />
                             </template>
                           </div>
                         </td>
@@ -226,6 +241,7 @@
   import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
   import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
   import TableFilter from '../../../components/table-filter.vue';
+  import DownloadConfigBtn from '../download-config-btn.vue';
 
   interface IConfigsGroupData {
     id: number;
