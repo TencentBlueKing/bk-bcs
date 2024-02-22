@@ -517,6 +517,7 @@ export default {
   已下线: 'Offline',
   脚本类型: 'Script type',
   form_版本号: 'Version number',
+  上线版本成功: 'Online version successful',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
