@@ -46,3 +46,25 @@ func ToJsonString(i interface{}) string {
 	}
 	return string(b)
 }
+
+// MergeStringList merge string and remove duplicates
+func MergeStringList(arr1, arr2 []string) []string {
+	keys := make(map[string]bool)
+	var uniqueArray []string
+
+	for _, entry := range arr1 {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			uniqueArray = append(uniqueArray, entry)
+		}
+	}
+
+	for _, entry := range arr2 {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			uniqueArray = append(uniqueArray, entry)
+		}
+	}
+
+	return uniqueArray
+}
