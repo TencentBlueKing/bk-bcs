@@ -76,6 +76,10 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 			Creator: kt.User,
 			Reviser: kt.User,
 		},
+		ContentSpec: &table.ContentSpec{
+			Signature: tools.SHA256(req.Spec.Value),
+			ByteSize:  uint64(len(req.Spec.Value)),
+		},
 	}
 	kv.Spec.Version = uint32(version)
 	kv.KvState = table.KvStateAdd
@@ -136,6 +140,10 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 	}
 
 	kv.Spec.Version = uint32(version)
+	kv.ContentSpec = &table.ContentSpec{
+		Signature: tools.SHA256(req.Spec.Value),
+		ByteSize:  uint64(len(req.Spec.Value)),
+	}
 	if e := s.dao.Kv().Update(kt, kv); e != nil {
 		logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
 		return nil, err
