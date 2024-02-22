@@ -23,6 +23,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/gosimple/slug v1.12.0
 	github.com/hashicorp/go-version v1.4.0
+	github.com/num30/go-cache v1.0.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pborman/ansi v1.0.0
 	github.com/pkg/errors v0.9.1
@@ -47,6 +48,7 @@ require (
 )
 
 require (
+	github.com/BurntSushi/toml v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20220824120805-4b6e5c587895 // indirect
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.5 // indirect
@@ -143,6 +145,7 @@ require (
 	go.uber.org/zap v1.17.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/exp/typeparams v0.0.0-20220218215828-6cf2b201936e // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.15.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
@@ -159,6 +162,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	honnef.co/go/tools v0.3.1 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
