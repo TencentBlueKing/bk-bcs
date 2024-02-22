@@ -96,11 +96,7 @@
   // 加载全量版本列表
   const getAllVersionData = async () => {
     versionListLoading.value = true;
-    const params = {
-      start: 0,
-      limit: 1000,
-    };
-    const res = await getConfigVersionList(spaceId.value, Number(appData.value.id), params);
+    const res = await getConfigVersionList(spaceId.value, Number(appData.value.id), { start: 0, all: true });
     // 只需要已上线版本，且版本中不包含默认分组
     versionList.value = res.data.details.filter((item: IConfigVersion) => {
       const { publish_status, released_groups } = item.status;

@@ -290,10 +290,11 @@
     }
     .version-operations {
       position: absolute;
-      top: 5px;
+      top: 0;
       right: 24px;
       display: flex;
       align-items: center;
+      height: 100%;
       z-index: 10;
       .released-groups {
         display: flex;

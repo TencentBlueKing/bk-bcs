@@ -277,7 +277,7 @@ export default {
   除以下分组之外的所有实例: 'All instances except the following groupings',
   对比并上线: 'Compare and go online',
   版本已上线: 'Version is online',
-  请选择上线分组: 'Please select an online group',
+  请选择分组实例: 'Please select an online group',
   本次上线分组: 'This online group',
   上线说明: 'Online instructions',
   确定上线: 'Confirm to go online',
