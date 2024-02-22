@@ -9778,6 +9778,10 @@
           "type": "string",
           "title": "crd"
         },
+        "viewID": {
+          "type": "string",
+          "title": "viewID"
+        },
         "creator": {
           "type": "array",
           "items": {
@@ -9846,6 +9850,10 @@
         "kind": {
           "type": "string",
           "title": "资源类型"
+        },
+        "viewID": {
+          "type": "string",
+          "title": "viewID"
         },
         "creator": {
           "type": "array",
@@ -9995,6 +10003,10 @@
             "$ref": "#/definitions/clusterresourcesClusterNamespaces"
           },
           "title": "集群和命名空间"
+        },
+        "viewID": {
+          "type": "string",
+          "title": "viewID"
         },
         "creator": {
           "type": "array",

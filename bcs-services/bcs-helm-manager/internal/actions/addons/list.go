@@ -126,6 +126,7 @@ func (l *ListAddonsAction) Handle(ctx context.Context,
 			if clusterRelease != nil && clusterRelease.Revision > revision {
 				addons[i].CurrentVersion = &clusterRelease.ChartVersion
 				addons[i].Status = &clusterRelease.Status
+				addons[i].CurrentValues = &clusterRelease.Values
 				addons[i].Message = &clusterRelease.Description
 			}
 			mux.Unlock()
