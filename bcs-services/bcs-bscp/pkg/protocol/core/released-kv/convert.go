@@ -30,15 +30,12 @@ func PbRKv(k *table.ReleasedKv, value string) *ReleasedKv {
 	}
 
 	return &ReleasedKv{
-		Id:         k.ID,
-		ReleaseId:  k.ReleaseID,
-		Spec:       pbkv.PbKvSpec(k.Spec, value),
-		Attachment: pbkv.PbKvAttachment(k.Attachment),
-		Revision:   pbbase.PbRevision(k.Revision),
-		ContentSpec: &pbcontent.ContentSpec{
-			Signature: k.ContentSpec.Signature,
-			ByteSize:  k.ContentSpec.ByteSize,
-		},
+		Id:          k.ID,
+		ReleaseId:   k.ReleaseID,
+		Spec:        pbkv.PbKvSpec(k.Spec, value),
+		Attachment:  pbkv.PbKvAttachment(k.Attachment),
+		Revision:    pbbase.PbRevision(k.Revision),
+		ContentSpec: pbcontent.PbContentSpec(k.ContentSpec),
 	}
 }
 
@@ -63,6 +60,10 @@ func RKvs(kvs []*pbkv.Kv, versionMap map[string]int, releaseID uint32) ([]*table
 				Reviser:   kv.Revision.Reviser,
 				CreatedAt: createdAt,
 				UpdatedAt: createdAt,
+			},
+			ContentSpec: &table.ContentSpec{
+				Signature: kv.ContentSpec.Signature,
+				ByteSize:  kv.ContentSpec.ByteSize,
 			},
 		}
 		rkv.Spec.Version = uint32(versionMap[kv.Spec.Key])
