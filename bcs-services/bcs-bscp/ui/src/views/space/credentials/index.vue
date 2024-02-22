@@ -111,16 +111,16 @@
           </bk-table-column>
           <bk-table-column :label="t('关联规则')" width="140">
             <template #default="{ row }">
-              <bk-popover v-if="row.rule && row.rule.length" theme="light" :popover-delay="[300, 0]">
-                <div class="table-rule">
-                  {{ row.rule[0].spec.app + row.rule[0].spec.scope }}
-                </div>
-                <template #content>
-                  <div v-for="rule in row.rule" :key="rule.id">
+              <div v-if="row.rule && row.rule.length" class="rule-cell">
+                <span v-for="rule in row.showRules" :key="rule.id" class="rule">
+                  <bk-overflow-title type="tips">
                     {{ rule.spec.app + rule.spec.scope }}
-                  </div>
-                </template>
-              </bk-popover>
+                  </bk-overflow-title>
+                </span>
+                <span v-if="row.rule.length > 3" class="toggle-button" @click="toggleRulesExpanded(row.id)">
+                  {{ row.isExpandedRules ? '收起' : '展开' }}
+                </span>
+              </div>
               <span v-else>--</span>
             </template>
           </bk-table-column>
@@ -354,6 +354,13 @@
     tableData.value.forEach(async (item: any) => {
       const res = await getCredentialScopes(spaceId.value, item.id);
       item.rule = res.details;
+      // 密钥关联规则加工处理 做下拉展示
+      if (item.rule.length > 3) {
+        item.showRules = item.rule.slice(0, 3);
+      } else {
+        item.showRules = item.rule;
+      }
+      item.isExpandedRules = false;
     });
   };
 
@@ -609,6 +616,17 @@
   const goToIAM = () => {
     window.open(`${(window as any).BK_IAM_HOST}/apply-join-user-group`, '__blank');
   };
+
+  // 切换密钥规则展开收起
+  const toggleRulesExpanded = (id: number) => {
+    const credential = tableData.value.find((item: any) => item.id === id);
+    credential.isExpandedRules = !credential.isExpandedRules;
+    if (credential.isExpandedRules) {
+      credential.showRules = credential.rule;
+    } else {
+      credential.showRules = credential.rule.slice(0, 3);
+    }
+  };
 </script>
 <style lang="scss" scoped>
   .alert-tips {
@@ -786,6 +804,16 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .rule-cell {
+    display: flex;
+    flex-direction: column;
+    line-height: 20px;
+    padding: 8px 0;
+    .toggle-button {
+      color: #3a84ff;
+      cursor: pointer;
+    }
   }
 </style>
 
