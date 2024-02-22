@@ -184,7 +184,7 @@
     fileAP: [
       {
         validator: (val: string) =>
-          /^\/([\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*\/?)*$/.test(val),
+          /^\/([\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*\/?)*[^/]$/.test(val),
         message: t('无效的路径,路径不符合Unix文件路径格式规范'),
         trigger: 'change',
       },

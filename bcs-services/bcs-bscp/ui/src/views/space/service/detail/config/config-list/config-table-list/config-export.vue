@@ -35,19 +35,19 @@
 
   const handleExport = async (type: string) => {
     const res = await getExportKvFile(props.bkBizId, props.appId, props.verisionId, type);
-    let content;
-    let mimeType;
-    let extension;
+    let content: string;
+    let mimeType: string;
+    let extension: string;
     if (type === 'json') {
       content = JSON.stringify(res, null, 2);
       mimeType = 'application/json';
       extension = 'json';
-    } else if (type === 'yaml') {
+    } else {
       content = jsyaml.dump(res);
       mimeType = 'text/yaml';
       extension = 'yaml';
     }
-    downloadFile(content, mimeType!, `data.${extension}`);
+    downloadFile(content, mimeType, `data.${extension}`);
   };
 
   const downloadFile = (content: string, mimeType: string, fileName: string) => {
