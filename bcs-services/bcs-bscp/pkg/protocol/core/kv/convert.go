@@ -63,15 +63,12 @@ func PbKv(k *table.Kv, value string) *Kv {
 	}
 
 	return &Kv{
-		Id:         k.ID,
-		KvState:    string(k.KvState),
-		Spec:       PbKvSpec(k.Spec, value),
-		Attachment: PbKvAttachment(k.Attachment),
-		Revision:   pbbase.PbRevision(k.Revision),
-		ContentSpec: &pbcontent.ContentSpec{
-			Signature: k.ContentSpec.Signature,
-			ByteSize:  k.ContentSpec.ByteSize,
-		},
+		Id:          k.ID,
+		KvState:     string(k.KvState),
+		Spec:        PbKvSpec(k.Spec, value),
+		Attachment:  PbKvAttachment(k.Attachment),
+		Revision:    pbbase.PbRevision(k.Revision),
+		ContentSpec: pbcontent.PbContentSpec(k.ContentSpec),
 	}
 }
 
