@@ -696,6 +696,7 @@
     "vue/no-useless-template-attributes": "off",
     "vue/no-deprecated-slot-attribute": "off",
     "vue/attribute-hyphenation": ["error", "always"],
+    "vue/no-dupe-keys": "off",
     "vue/html-closing-bracket-newline": [
       "error",
       {
