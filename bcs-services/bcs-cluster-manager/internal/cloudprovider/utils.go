@@ -96,7 +96,8 @@ const (
 var (
 	defaultTaskID = "qwertyuiop123456"
 	// TaskID inject taskID into ctx
-	TaskID      = "taskID"
+	TaskID = "taskID"
+	// StepNameKey inject stepName into ctx
 	StepNameKey = "stepName"
 )
 

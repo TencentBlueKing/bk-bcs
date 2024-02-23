@@ -79,7 +79,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error { // nolint
 			if !(strings.Contains(errPool.Error(), "NotFound") ||
 				strings.Contains(errPool.Error(), "not found")) {
 				cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
-					fmt.Sprintf("describe cluster nodepool detail failed [%s]"))
+					fmt.Sprintf("describe cluster nodepool detail failed [%s]", errPool))
 				blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] "+
 					"api in task %s step %s failed, %s",
 					taskID, nodeGroupID, taskID, stepName, errPool.Error())
