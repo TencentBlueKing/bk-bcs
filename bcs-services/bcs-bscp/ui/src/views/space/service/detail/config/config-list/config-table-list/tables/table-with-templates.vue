@@ -97,7 +97,8 @@
                                   type="config"
                                   :bk-biz-id="props.bkBizId"
                                   :app-id="props.appId"
-                                  :id="config.id" />
+                                  :id="config.id"
+                                  :disabled="config.file_state === 'DELETE'" />
                                 <bk-button
                                   v-cursor="{ active: !hasEditServicePerm }"
                                   text
@@ -153,7 +154,8 @@
                                 type="template"
                                 :bk-biz-id="props.bkBizId"
                                 :app-id="props.appId"
-                                :id="config.versionId" />
+                                :id="config.versionId"
+                                :disabled="config.file_state === 'DELETE'" />
                             </template>
                           </div>
                         </td>
