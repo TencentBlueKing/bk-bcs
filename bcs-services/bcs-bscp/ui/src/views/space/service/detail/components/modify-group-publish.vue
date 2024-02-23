@@ -34,9 +34,9 @@
         </select-group>
         <template #footer>
           <section class="actions-wrapper">
-            <bk-button class="publish-btn" theme="primary" @click="handleDiffOrPublish">{{
-              versionList.length ? t('对比并上线') : t('上线版本')
-            }}</bk-button>
+            <bk-button class="publish-btn" theme="primary" @click="handlePublishOrOpenDiff">
+              {{ diffableVersionList.length ? t('对比并上线') : t('上线版本') }}
+            </bk-button>
             <bk-button @click="handlePanelClose">取消</bk-button>
           </section>
         </template>
@@ -55,8 +55,8 @@
       :current-version="versionData"
       :base-version-id="baseVersionId"
       :show-publish-btn="true"
-      @publish="handleOpenPublishDialog"
-      :version-diff-list="versionList" />
+      :version-diff-list="diffableVersionList"
+      @publish="handleOpenPublishDialog" />
   </section>
 </template>
 <script setup lang="ts">
@@ -107,6 +107,23 @@
   // 已上线分组
   const releasedGroups = computed(() => versionData.value.status.released_groups.map((group) => group.id));
 
+  // 包含分组变更的版本，用来对比线上版本
+  const diffableVersionList = computed(() => {
+    const list = [] as IConfigVersion[];
+    versionList.value.forEach((version) => {
+      version.status.released_groups.some((group) => {
+        if (
+          group.id === 0 ||
+          groups.value.find((item) => item.id === group.id && !releasedGroups.value.includes(group.id))
+        ) {
+          list.push(version);
+          return true;
+        }
+      });
+    });
+    return list;
+  });
+
   const permissionQueryResource = computed(() => [
     {
       biz_id: props.bkBizId,
@@ -119,10 +136,10 @@
   ]);
 
   // 判断是否需要对比上线版本
-  const handleDiffOrPublish = () => {
+  const handlePublishOrOpenDiff = () => {
     if (selectGroupRef.value.validate()) {
-      if (versionList.value.length) {
-        baseVersionId.value = versionList.value[0].id;
+      if (diffableVersionList.value.length) {
+        baseVersionId.value = diffableVersionList.value[0].id;
         isDiffSliderShow.value = true;
         return;
       }
@@ -130,13 +147,13 @@
     }
   };
 
-  // 获取所有对比基准版本
+  // 获取所有已上线版本（已上线或灰度中）
   const getVersionList = async () => {
     try {
       const res = await getConfigVersionList(props.bkBizId, props.appId, { start: 0, all: true });
       versionList.value = res.data.details.filter((item: IConfigVersion) => {
         const { id, status } = item;
-        return id !== versionData.value.id && status.publish_status === 'partial_released';
+        return id !== versionData.value.id && status.publish_status !== 'not_released';
       });
     } catch (e) {
       console.error(e);
@@ -174,7 +191,7 @@
   // 打开上线版本确认弹窗
   const handleOpenPublishDialog = () => {
     if (groups.value.length === 0) {
-      BkMessage({ theme: 'error', message: '请选择上线分组' });
+      BkMessage({ theme: 'error', message: '请选择分组实例' });
       return;
     }
     isConfirmDialogShow.value = true;
