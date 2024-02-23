@@ -20,7 +20,8 @@
           v-if="!isFileType"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
-          :verision-id="versionData.id" />
+          :version-id="versionData.id"
+          :version-name="versionData.spec.name"/>
       </div>
       <SearchInput
         v-model="searchStr"

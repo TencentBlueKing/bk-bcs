@@ -3,9 +3,9 @@
     <bk-button>{{ $t('导出至') }}</bk-button>
     <template #content>
       <div class="export-config-operations">
-        <div v-for="item in exportItem" :key="item.value" class="operation-item">
+        <div v-for="item in exportItem" :key="item.value" class="operation-item" @click="handleExport(item.value)">
           <span :class="['bk-bscp-icon', `icon-${item.value}`]" />
-          <span class="text" @click="handleExport(item.value)"> {{ item.text }}</span>
+          <span class="text"> {{ item.text }}</span>
         </div>
       </div>
     </template>
@@ -16,10 +16,16 @@
   import { computed } from 'vue';
   import jsyaml from 'js-yaml';
   import { getExportKvFile } from '../../../../../../../api/config';
+  import { storeToRefs } from 'pinia';
+  import useServiceStore from '../../../../../../../store/service';
+  const serviceStore = useServiceStore();
+  const { appData } = storeToRefs(serviceStore);
+
   const props = defineProps<{
     bkBizId: string;
     appId: number;
-    verisionId: number;
+    versionId: number;
+    versionName: string;
   }>();
 
   const exportItem = computed(() => [
@@ -34,20 +40,21 @@
   ]);
 
   const handleExport = async (type: string) => {
-    const res = await getExportKvFile(props.bkBizId, props.appId, props.verisionId, type);
+    const res = await getExportKvFile(props.bkBizId, props.appId, props.versionId, type);
     let content: string;
     let mimeType: string;
     let extension: string;
+    const prefix = props.versionId ? `${appData.value.spec.name}_${props.versionName}` : `${appData.value.spec.name}`;
     if (type === 'json') {
       content = JSON.stringify(res, null, 2);
       mimeType = 'application/json';
       extension = 'json';
     } else {
-      content = jsyaml.dump(res);
+      content = jsyaml.dump(res).replace(/^\|(\s*\n)/, '');
       mimeType = 'text/yaml';
       extension = 'yaml';
     }
-    downloadFile(content, mimeType, `data.${extension}`);
+    downloadFile(content, mimeType, `${prefix}.${extension}`);
   };
 
   const downloadFile = (content: string, mimeType: string, fileName: string) => {
