@@ -50,7 +50,7 @@
       mimeType = 'application/json';
       extension = 'json';
     } else {
-      content = jsyaml.dump(res).replace(/^\|(\s*\n)/, '');
+      content = jsyaml.dump(res).replace(/^\|(\s*\n)|^\s{2}/gm, '');
       mimeType = 'text/yaml';
       extension = 'yaml';
     }
