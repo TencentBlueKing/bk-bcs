@@ -24,7 +24,6 @@ require (
 	github.com/gosimple/slug v1.12.0
 	github.com/hashicorp/go-version v1.4.0
 	github.com/num30/go-cache v1.0.0
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pborman/ansi v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
@@ -116,6 +115,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.3.0 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/parnurzeal/gorequest v0.2.16 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect

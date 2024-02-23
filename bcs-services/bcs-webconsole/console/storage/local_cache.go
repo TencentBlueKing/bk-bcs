@@ -18,13 +18,13 @@ import (
 	"github.com/num30/go-cache"
 )
 
-// SlotCache :
+// SlotCache : slot cache with generics
 type SlotCache[T any] struct {
 	Slot              *cache.Cache[T]
 	DefaultExpiration time.Duration
 }
 
-// NewSlotCache :
+// NewSlotCache : new slot cache with generics
 func NewSlotCache[T any]() *SlotCache[T] {
 	c := SlotCache[T]{
 		Slot:              cache.New[T](5*time.Minute, 10*time.Minute),

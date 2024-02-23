@@ -33,7 +33,7 @@ type Project struct {
 	RawCreateTime string `json:"createTime"`
 }
 
-// localProjectCache :
+// localProjectCache : project cache with generics
 var localProjectCache = storage.NewSlotCache[*Project]()
 
 // String :
