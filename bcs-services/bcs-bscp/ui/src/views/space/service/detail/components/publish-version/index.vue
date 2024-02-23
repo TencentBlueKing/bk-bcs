@@ -59,6 +59,7 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import { useRouter } from 'vue-router';
   import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
   import { InfoBox } from 'bkui-vue';
   import BkMessage from 'bkui-vue/lib/message';
@@ -72,7 +73,6 @@
   import ConfirmDialog from './confirm-dialog.vue';
   import SelectGroup from './select-group/index.vue';
   import VersionDiff from '../../config/components/version-diff/index.vue';
-  import { useRoute, useRouter } from 'vue-router';
   import { getConfigVersionList } from '../../../../../../api/config';
   import { IConfigVersion } from '../../../../../../../types/config';
 
@@ -92,10 +92,7 @@
 
   const emit = defineEmits(['confirm']);
 
-  const route = useRoute();
   const router = useRouter();
-  const bkBizId = String(route.params.spaceId);
-  const appId = Number(route.params.appId);
   const versionList = ref<IConfigVersion[]>([]);
   const isSelectGroupPanelOpen = ref(false);
   const isDiffSliderShow = ref(false);
@@ -150,7 +147,7 @@
   // 获取所有已上线版本（已上线或灰度中）
   const getVersionList = async () => {
     try {
-      const res = await getConfigVersionList(bkBizId, appId, { start: 0, all: true });
+      const res = await getConfigVersionList(props.bkBizId, props.appId, { start: 0, all: true });
       versionList.value = res.data.details.filter((item: IConfigVersion) => {
         const { id, status } = item;
         return id !== versionData.value.id && status.publish_status !== 'not_released';
