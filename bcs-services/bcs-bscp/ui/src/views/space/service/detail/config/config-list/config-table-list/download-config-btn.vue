@@ -26,7 +26,7 @@
     appId: number;
     id: number;
     type: string; // 取值为config/template，分别表示非模板套餐下配置文件和模板套餐下配置文件
-    disabled: boolean;
+    disabled?: boolean;
   }>();
 
   const pending = ref(false);
