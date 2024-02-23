@@ -465,10 +465,7 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbb
 		}
 	}
 
-	kvState = []string{
-		string(table.KvStateDelete),
-	}
-	if err = s.dao.Kv().UpdateSelectedKVStates(kt, tx, req.Attachment.BizId, req.Attachment.AppId, kvState,
+	if err = s.dao.Kv().UpdateStateWithTx(kt, tx, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key,
 		table.KvStateUnchange); err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
