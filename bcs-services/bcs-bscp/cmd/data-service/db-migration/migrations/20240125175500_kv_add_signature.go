@@ -120,7 +120,9 @@ func syncSignature(tx *gorm.DB) error {
 
 		kv.ContentSpec.Signature = tools.SHA256(value)
 		kv.ContentSpec.ByteSize = uint64(len(value))
-		tx.Save(&kv)
+
+		// 只更新必须的字段, 不刷新updated_at
+		tx.Select("Signature", "ByteSize").UpdateColumns(&kv)
 	}
 
 	return nil
@@ -156,7 +158,9 @@ func syncReleaseSignature(tx *gorm.DB) error {
 
 		kv.ContentSpec.Signature = tools.SHA256(value)
 		kv.ContentSpec.ByteSize = uint64(len(value))
-		tx.Save(&kv)
+
+		// 只更新必须的字段, 不刷新updated_at
+		tx.Select("Signature", "ByteSize").UpdateColumns(&kv)
 	}
 
 	return nil
