@@ -418,6 +418,10 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 					AppID: req.AppId,
 				},
 				Revision: editing.Revision,
+				ContentSpec: &table.ContentSpec{
+					Signature: tools.SHA256(kv.KvSpec.Value),
+					ByteSize:  uint64(len(kv.KvSpec.Value)),
+				},
 			})
 
 		} else {
@@ -437,6 +441,10 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 					Reviser:   kt.User,
 					CreatedAt: now,
 					UpdatedAt: now,
+				},
+				ContentSpec: &table.ContentSpec{
+					Signature: tools.SHA256(kv.KvSpec.Value),
+					ByteSize:  uint64(len(kv.KvSpec.Value)),
 				},
 			})
 
