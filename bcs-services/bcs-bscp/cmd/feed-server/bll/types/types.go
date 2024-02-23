@@ -125,5 +125,5 @@ type ReleasedKvMeta struct {
 	KvType       string                 `json:"kv_type,omitempty"`
 	Revision     *pbbase.Revision       `json:"revision,omitempty"`
 	KvAttachment *pbkv.KvAttachment     `json:"kv_attachment,omitempty"`
-	ContentSpec  *pbcontent.ContentSpec `json:"content_spec"`
+	ContentSpec  *pbcontent.ContentSpec `json:"content_spec,omitempty"`
 }
