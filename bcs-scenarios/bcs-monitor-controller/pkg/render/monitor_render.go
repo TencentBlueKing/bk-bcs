@@ -87,6 +87,7 @@ func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMoni
 	namespace := appMonitor.GetNamespace()
 	ignoreChange := appMonitor.Spec.IgnoreChange
 	override := appMonitor.Spec.Override
+	conflictHandle := appMonitor.Spec.ConflictHandle
 	// render monitor rule
 	for _, mr := range rawResult.MonitorRule {
 		mr.SetNamespace(namespace)
@@ -101,6 +102,7 @@ func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMoni
 		mr.Spec.BizToken = bizToken
 		mr.Spec.Scenario = scenario
 		mr.Spec.Override = override
+		mr.Spec.ConflictHandle = conflictHandle
 		if appMonitor.Spec.RuleEnhance != nil {
 			mr.Spec.IgnoreChange = appMonitor.Spec.RuleEnhance.IgnoreChange || ignoreChange
 		} else {

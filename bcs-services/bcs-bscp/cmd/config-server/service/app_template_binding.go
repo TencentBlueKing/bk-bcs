@@ -16,6 +16,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
+	"sort"
+	"strings"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
@@ -274,6 +277,12 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 		}
 
 		revisions := tmplSetMap[tmplSet.TemplateSetId]
+		// 先按照path+name排序好
+		sort.SliceStable(revisions, func(i, j int) bool {
+			iPath := path.Join(revisions[i].Path, revisions[i].Name)
+			jPath := path.Join(revisions[j].Path, revisions[j].Name)
+			return iPath < jPath
+		})
 		for _, r := range revisions {
 			group.TemplateRevisions = append(group.TemplateRevisions,
 				&pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail{
@@ -297,7 +306,7 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 				})
 		}
 		if req.WithStatus {
-			sortFileStateInGroup(group)
+			sortFileStateInGroup(group, req.Status)
 		}
 		details = append(details, group)
 	}
@@ -341,8 +350,8 @@ func (s *Service) getAllAppTmplSets(grpcKit *kit.Kit, bizID, appID uint32) ([]*p
 	return tsbRsp.Details, nil
 }
 
-// sortFileStateInGroup sort as add > revise > unchange > delete
-func sortFileStateInGroup(g *pbatb.AppBoundTmplRevisionGroupBySet) {
+// sortFileStateInGroup sort as add > revise > delete > unchange
+func sortFileStateInGroup(g *pbatb.AppBoundTmplRevisionGroupBySet, status []string) {
 	if len(g.TemplateRevisions) <= 1 {
 		return
 	}
@@ -364,11 +373,26 @@ func sortFileStateInGroup(g *pbatb.AppBoundTmplRevisionGroupBySet) {
 			unchange = append(unchange, ci)
 		}
 	}
-	result = append(result, add...)
-	result = append(result, revise...)
-	result = append(result, unchange...)
-	result = append(result, del...)
 
+	if len(status) == 0 {
+		result = append(result, add...)
+		result = append(result, revise...)
+		result = append(result, del...)
+		result = append(result, unchange...)
+	} else {
+		for _, v := range status {
+			switch strings.ToUpper(v) {
+			case constant.FileStateAdd:
+				result = append(result, add...)
+			case constant.FileStateRevise:
+				result = append(result, revise...)
+			case constant.FileStateDelete:
+				result = append(result, del...)
+			case constant.FileStateUnchange:
+				result = append(result, unchange...)
+			}
+		}
+	}
 	g.TemplateRevisions = result
 }
 

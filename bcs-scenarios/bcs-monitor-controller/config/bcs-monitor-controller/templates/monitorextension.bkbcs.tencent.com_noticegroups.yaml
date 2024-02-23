@@ -48,6 +48,7 @@ spec:
                 type: string
               groups:
                 items:
+                  description: NoticeGroupDetail 告警组配置
                   properties:
                     action:
                       additionalProperties:

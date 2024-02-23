@@ -144,7 +144,7 @@ func (m *ModelTemplateVersion) ListTemplateVersionFromTemplateIDs(ctx context.Co
 			return nil
 		})
 	}
-	eg.Wait()
+	_ = eg.Wait()
 
 	return result
 }

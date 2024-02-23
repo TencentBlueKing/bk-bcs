@@ -259,7 +259,12 @@
       };
     });
     appList.value = Array.from(
-      allAppInfo.reduce((map: Map<number, IAppItem>, obj: IAppItem) => (map.set(obj.app_id, obj), new Map())).values(),
+      allAppInfo
+        .reduce((map: Map<number, IAppItem>, obj: IAppItem) => {
+          map.set(obj.app_id, obj);
+          return map;
+        }, new Map<number, IAppItem>())
+        .values(),
     );
     deleteScriptItem.value = script;
     isDeleteScriptDialogShow.value = true;

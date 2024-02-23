@@ -43,7 +43,7 @@
   };
 
   const handleSelectVersion = (event: Event | undefined, data: IScriptVersionListItem) => {
-    emits('select', data.hook_revision);
+    emits('select', data);
   };
 </script>
 <style scoped lang="scss">

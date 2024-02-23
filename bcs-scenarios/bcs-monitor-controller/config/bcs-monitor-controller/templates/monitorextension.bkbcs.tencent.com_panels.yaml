@@ -46,6 +46,7 @@ spec:
                 type: string
               dashBoard:
                 items:
+                  description: DashBoardConfig 告警面板配置
                   properties:
                     board:
                       type: string

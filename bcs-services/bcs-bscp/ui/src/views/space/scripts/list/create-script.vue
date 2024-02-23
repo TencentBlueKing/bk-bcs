@@ -28,6 +28,9 @@
               :maxlength="200"
               :resize="true" />
           </bk-form-item>
+          <bk-form-item class="fixed-width-form" property="revision_name" :label="t('form_版本号')">
+            <bk-input v-model="formData.revision_name" :placeholder="t('请输入')"></bk-input>
+          </bk-form-item>
           <bk-form-item :label="t('脚本内容')" property="content" required>
             <div class="script-content-wrapper">
               <ScriptEditor v-model="showContent" :language="formData.type">
@@ -66,6 +69,7 @@
   import { createScript, getScriptTagList } from '../../../../api/script';
   import DetailLayout from '../components/detail-layout.vue';
   import ScriptEditor from '../components/script-editor.vue';
+  import dayjs from 'dayjs';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t } = useI18n();
@@ -88,6 +92,7 @@
     memo: '',
     type: EScriptType.Shell,
     content: '',
+    revision_name: `v${dayjs().format('YYYYMMDDHHmmss')}`,
   });
   const formDataContent = ref({
     shell: '#!/bin/bash',
@@ -112,6 +117,21 @@
       {
         validator: (value: string) => value.length <= 200,
         message: t('最大长度200个字符'),
+      },
+    ],
+    revision_name: [
+      {
+        validator: (value: string) => value.length <= 128,
+        message: t('最大长度128个字符'),
+      },
+      {
+        validator: (value: string) => {
+          if (value.length > 0) {
+            return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_-]*[\u4e00-\u9fa5a-zA-Z0-9]?$/.test(value);
+          }
+          return true;
+        },
+        message: t('仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾'),
       },
     ],
   };

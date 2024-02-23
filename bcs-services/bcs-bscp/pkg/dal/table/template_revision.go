@@ -110,6 +110,14 @@ type TemplateRevisionSpec struct {
 
 // ValidateCreate validate template revision spec when it is created.
 func (t *TemplateRevisionSpec) ValidateCreate() error {
+	if err := validator.ValidateReleaseName(t.RevisionName); err != nil {
+		return err
+	}
+
+	if err := validator.ValidateMemo(t.RevisionMemo, false); err != nil {
+		return err
+	}
+
 	if err := validator.ValidateFileName(t.Name); err != nil {
 		return err
 	}

@@ -61,8 +61,8 @@ func init() {
 
 func main() {
 	opts := &option.ControllerOption{}
-
 	opts.BindFromCommandLine()
+
 	blog.InitLogs(opts.LogConfig)
 	defer blog.CloseLogs()
 	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
@@ -92,13 +92,21 @@ func main() {
 	}
 
 	ctx := context.Background()
-	monitorCli := apiclient.NewBkmApiClient()
+	monitorCli := apiclient.NewBkmApiClient(opts)
 	fileOp := fileoperator.NewFileOperator(mgr.GetClient())
+
 	repoManager, err := repo.NewRepoManager(mgr.GetClient(), opts)
 	if err != nil {
 		blog.Errorf("create repoManager failed, err: %s", err.Error())
 		os.Exit(1)
 	}
+
+	monitorRender, err := render.NewMonitorRender(scheme, mgr.GetClient(), repoManager, opts)
+	if err != nil {
+		blog.Errorf("new render failed, err: %v", err)
+		os.Exit(1)
+	}
+
 	if err = (&controllers.MonitorRuleReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -106,6 +114,8 @@ func main() {
 		Ctx:           ctx,
 		FileOp:        fileOp,
 		MonitorApiCli: monitorCli,
+		MonitorRender: monitorRender,
+		Opts:          opts,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MonitorRule")
 		os.Exit(1)
@@ -133,11 +143,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	monitorRender, err := render.NewMonitorRender(scheme, mgr.GetClient(), repoManager, opts)
-	if err != nil {
-		blog.Errorf("new render failed, err: %v", err)
-		os.Exit(1)
-	}
 	if err = (&controllers.AppMonitorReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),

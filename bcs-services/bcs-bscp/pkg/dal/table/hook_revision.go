@@ -97,7 +97,7 @@ func (r *HookRevision) ValidateCreate() error {
 // ValidateCreate validate spec when created.
 func (s *HookRevisionSpec) ValidateCreate() error {
 
-	if err := validator.ValidateName(s.Name); err != nil {
+	if err := validator.ValidateReleaseName(s.Name); err != nil {
 		return err
 	}
 
@@ -115,7 +115,7 @@ func (s *HookRevisionSpec) ValidateCreate() error {
 // ValidateUpdate validate spec when updated.
 func (s *HookRevisionSpec) ValidateUpdate() error {
 
-	if err := validator.ValidateName(s.Name); err != nil {
+	if err := validator.ValidateReleaseName(s.Name); err != nil {
 		return err
 	}
 

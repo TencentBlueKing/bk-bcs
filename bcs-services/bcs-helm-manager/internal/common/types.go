@@ -259,5 +259,5 @@ func toValue(v reflect.Value) *spb.Value { // nolint
 
 // GetPublicRepoURL get public repo url
 func GetPublicRepoURL(url, project, name string) string {
-	return fmt.Sprintf("%s/helm/%s/%s", url, project, name)
+	return fmt.Sprintf("%s/%s/%s", url, project, name)
 }

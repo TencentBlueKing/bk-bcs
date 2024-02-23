@@ -274,6 +274,7 @@ type GetClusterOption struct {
 // ListClusterOption list cluster option
 type ListClusterOption struct {
 	CommonOption
+	ResourceGroupName string
 }
 
 // CheckClusterCIDROption check cluster CIDR

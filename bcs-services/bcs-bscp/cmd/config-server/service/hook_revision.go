@@ -22,7 +22,6 @@ import (
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
 	pbhr "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // CreateHookRevision create hook revision with option
@@ -44,7 +43,7 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 			HookId: req.HookId,
 		},
 		Spec: &pbhr.HookRevisionSpec{
-			Name:    tools.GenerateRevisionName(),
+			Name:    req.Name,
 			Content: req.Content,
 			Memo:    req.Memo,
 		},

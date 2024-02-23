@@ -161,7 +161,7 @@
               </template>
               <template v-if="row.spec">
                 <bk-button text theme="primary" @click="handleOpenAssociate(row)">
-                  <span :class="{ redPoint: newCredentials[0] === row.id }">{{ t('关联服务配置') }}</span>
+                  <span :class="{ redPoint: newCredential === row.id }">{{ t('关联服务配置') }}</span>
                 </bk-button>
                 <div class="delete-btn" v-bk-tooltips="deleteTooltip(hasManagePerm && row.spec.enable)">
                   <bk-button
@@ -264,7 +264,7 @@
   const createCredentialName = ref('');
   const createCredentialMemo = ref('');
   const isCreateCredential = ref(false);
-  const newCredentials = ref<number[]>([]); // 记录新增加的密钥id，实现表格标记效果
+  const newCredential = ref(0); // 记录新增加的密钥id，实现表格标记效果
   const searchStr = ref('');
   const editingMemoId = ref(0); // 记录当前正在编辑说明的密钥id
   const editingNameId = ref(0); // 记录当前正在编辑名称的密钥id
@@ -335,12 +335,15 @@
 
   // 加载密钥列表
   const loadCredentialList = async () => {
-    const query: { limit: number; start: number; searchKey?: string } = {
+    const query: { limit: number; start: number; searchKey?: string; top_ids?: number } = {
       start: pagination.value.limit * (pagination.value.current - 1),
       limit: pagination.value.limit,
     };
     if (searchStr.value) {
       query.searchKey = searchStr.value;
+    }
+    if (newCredential.value) {
+      query.top_ids = newCredential.value;
     }
     const res = await getCredentialList(spaceId.value, query);
     res.details.forEach((item: ICredentialItem) => (item.visible = false));
@@ -370,7 +373,7 @@
 
   // 设置新增行的标记class
   const getRowCls = (data: ICredentialItem) => {
-    if (newCredentials.value.includes(data.id)) {
+    if (newCredential.value === data.id) {
       return 'new-row-marked';
     }
     if (currentCredential.value === data.id) {
@@ -414,12 +417,8 @@
         message: t('新建服务密钥成功'),
       });
       pagination.value.current = 1;
+      newCredential.value = res.id;
       await loadCredentialList();
-      newCredentials.value.push(res.id);
-      setTimeout(() => {
-        const index = newCredentials.value.indexOf(res.id);
-        newCredentials.value.splice(index, 1);
-      }, 3000);
     } catch (e) {
       console.error(e);
     } finally {

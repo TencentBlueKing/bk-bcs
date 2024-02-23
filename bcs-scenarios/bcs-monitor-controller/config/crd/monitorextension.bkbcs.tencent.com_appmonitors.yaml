@@ -44,6 +44,13 @@ spec:
                 type: string
               bizToken:
                 type: string
+              conflictHandle:
+                default: AUTO_MERGE
+                description: 冲突时处理， AUTO_MERGE时，尝试自动合并；LOCAL_FIRST优先采用本地配置
+                enum:
+                - AUTO_MERGE
+                - LOCAL_FIRST
+                type: string
               dashBoardEnhance:
                 description: DashBoardEnhance 监控面板增强能力
                 properties:
@@ -198,7 +205,6 @@ spec:
                   password:
                     type: string
                   targetRevision:
-                    description: if not set, use
                     type: string
                   url:
                     type: string

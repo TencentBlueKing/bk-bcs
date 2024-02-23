@@ -20,6 +20,7 @@ export interface IScriptEditingForm {
   memo: string;
   type: EScriptType;
   content: string;
+  revision_name: string;
 }
 
 // 脚本
@@ -114,4 +115,5 @@ export interface IScriptMapItem {
   id: number;
   name: string;
   content: string;
+  isOnline: string;
 }

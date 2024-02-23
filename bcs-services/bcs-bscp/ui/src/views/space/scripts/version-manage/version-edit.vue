@@ -6,7 +6,10 @@
       :editable="props.editable"
       :upload-icon="props.editable">
       <template #header>
-        <div class="title">{{ title }}</div>
+        <div class="editor-header">
+          <span class="title">{{ title }}</span>
+          <span v-if="!editable" class="version-memo">{{ versionData.memo }}</span>
+        </div>
       </template>
       <template v-if="props.editable" #preContent="{ fullscreen }">
         <div v-show="!fullscreen" class="version-config-form">
@@ -21,11 +24,40 @@
         </div>
       </template>
     </ScriptEditor>
-    <div v-if="props.editable" class="action-btns">
-      <bk-button class="submit-btn" theme="primary" :loading="pending" @click="handleSubmit">
-        {{ props.versionData.id ? t('保存') : t('提交') }}
-      </bk-button>
-      <bk-button class="cancel-btn" @click="emits('close')">{{ t('取消') }}</bk-button>
+    <div class="action-btns">
+      <div v-if="props.editable">
+        <bk-button class="submit-btn" theme="primary" :loading="pending" @click="handleSubmit">
+          {{ t('保存') }}
+        </bk-button>
+        <bk-button class="cancel-btn" @click="emits('close')">{{ t('取消') }}</bk-button>
+      </div>
+      <div v-else>
+        <bk-button
+          v-if="['not_deployed', 'shutdown'].includes(hookRevision!.spec.state)"
+          class="submit-btn"
+          theme="primary"
+          @click="emits('publish', hookRevision)">
+          {{ t('上线') }}
+        </bk-button>
+        <bk-button v-if="hookRevision!.spec.state === 'not_deployed'" class="cancel-btn" @click="emits('edit')">
+          {{ t('编辑') }}
+        </bk-button>
+        <bk-button
+          v-if="hookRevision!.spec.state !== 'not_deployed'"
+          class="submit-btn"
+          theme="primary"
+          :disabled="!!hasUnpublishVersion"
+          v-bk-tooltips="{ content: t('当前已有「未上线」版本'), disabled: !hasUnpublishVersion }"
+          @click="emits('copyAndCreate', hookRevision!.spec.content)">
+          {{ t('复制并新建') }}
+        </bk-button>
+        <bk-button
+          v-if="hookRevision!.spec.state === 'not_deployed'"
+          class="cancel-btn"
+          @click="emits('delete', hookRevision)">
+          {{ t('删除') }}
+        </bk-button>
+      </div>
     </div>
   </section>
 </template>
@@ -35,7 +67,7 @@
   import { storeToRefs } from 'pinia';
   import BkMessage from 'bkui-vue/lib/message';
   import useGlobalStore from '../../../../store/global';
-  import { IScriptVersionForm } from '../../../../../types/script';
+  import { IScriptVersion, IScriptVersionForm } from '../../../../../types/script';
   import { createScriptVersion, updateScriptVersion } from '../../../../api/script';
   import ScriptEditor from '../components/script-editor.vue';
 
@@ -48,23 +80,30 @@
       editable?: boolean;
       scriptId: number;
       versionData: IScriptVersionForm;
+      hookRevision: IScriptVersion | null;
+      hasUnpublishVersion: boolean;
     }>(),
     {
       editable: true,
     },
   );
 
-  const emits = defineEmits(['close', 'submitted']);
+  const emits = defineEmits(['close', 'submitted', 'publish', 'edit', 'copyAndCreate', 'delete']);
 
   const rules = {
     name: [
       {
-        validator: (value: string) =>
-          /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-()\s]*[\u4e00-\u9fa5a-zA-Z0-9]$/.test(value),
-        message: t(
-          '无效名称，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾',
-        ),
-        trigger: 'change',
+        validator: (value: string) => value.length <= 128,
+        message: t('最大长度128个字符'),
+      },
+      {
+        validator: (value: string) => {
+          if (value.length > 0) {
+            return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_-]*[\u4e00-\u9fa5a-zA-Z0-9]?$/.test(value);
+          }
+          return true;
+        },
+        message: t('仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾'),
       },
     ],
     memo: [
@@ -87,8 +126,10 @@
     if (!props.editable) {
       return props.versionData.name;
     }
-    return props.versionData.id ? t('编辑版本') : t('新建版本');
+    return isEditVersion.value ? t('编辑版本') : t('新建版本');
   });
+
+  const isEditVersion = computed(() => !!props.versionData.id);
 
   watch(
     () => props.versionData,
@@ -145,18 +186,24 @@
     }
     &.view-mode {
       :deep(.script-editor) {
-        height: 100%;
         .code-editor-wrapper {
           width: 100%;
         }
       }
     }
   }
-  .title {
+  .editor-header {
     padding: 10px 24px;
     line-height: 20px;
     font-size: 14px;
-    color: #8a8f99;
+    .title {
+      color: #c3c5cb;
+    }
+    .version-memo {
+      font-size: 12px;
+      color: #63656e;
+      margin-left: 16px;
+    }
   }
   .version-config-form {
     padding: 24px 20px 24px;
@@ -216,6 +263,7 @@
       background: transparent;
       border-color: #979ba5;
       color: #979ba5;
+      margin-right: 8px;
     }
   }
 </style>

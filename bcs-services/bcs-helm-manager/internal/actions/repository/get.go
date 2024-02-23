@@ -62,7 +62,7 @@ func (g *GetRepositoryAction) Handle(ctx context.Context,
 }
 
 func (g *GetRepositoryAction) get(projectCode, name string) error {
-	r, err := g.model.GetRepository(g.ctx, projectCode, name)
+	r, err := g.model.GetProjectRepository(g.ctx, projectCode, name)
 	if err != nil {
 		blog.Errorf("get repository failed, %s, project: %s, name: %s", err.Error(), projectCode, name)
 		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)

@@ -21,6 +21,7 @@ message HookSpec {
   string tag = 3;
   string memo = 4;
   string content = 5;
+  string revision_name = 6;
 }
 
 // HookAttachment source resource reference: pkg/dal/table/hook.go

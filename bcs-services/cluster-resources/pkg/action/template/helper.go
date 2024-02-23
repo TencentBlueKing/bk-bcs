@@ -35,7 +35,8 @@ func toEntityTemplateIDs(templateIDs []*clusterRes.TemplateID) []entity.Template
 	return ids
 }
 
-func buildChart(templates []*entity.TemplateVersion, req *clusterRes.CreateTemplateSetReq, creator string) *chart.Chart {
+func buildChart(templates []*entity.TemplateVersion, req *clusterRes.CreateTemplateSetReq,
+	creator string) *chart.Chart {
 	cht := &chart.Chart{
 		Metadata: &chart.Metadata{
 			APIVersion:  "v2",
@@ -56,7 +57,7 @@ func buildChart(templates []*entity.TemplateVersion, req *clusterRes.CreateTempl
 		Data: []byte(req.GetValues()),
 	})
 	for _, template := range templates {
-		cht.Templates = append(cht.Files, &chart.File{
+		cht.Templates = append(cht.Templates, &chart.File{
 			Name: fmt.Sprintf("templates/%s", template.TemplateName),
 			Data: []byte(template.Content),
 		})

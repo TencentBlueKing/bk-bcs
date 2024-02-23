@@ -48,7 +48,6 @@ type ManifestRespBuilder struct {
 // BuildList ...
 func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
 	manifestExt := map[string]interface{}{}
-	manifest := map[string]interface{}{}
 	manifestItems := []interface{}{}
 	// 获取 apiVersion
 	apiVersion := mapx.GetStr(b.manifest, "apiVersion")
@@ -60,8 +59,8 @@ func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
 		manifestExt[uid.(string)] = formatFunc(item.(map[string]interface{}))
 		manifestItems = append(manifestItems, pruneFunc(item.(map[string]interface{})))
 	}
-	manifest["items"] = manifestItems
-	return map[string]interface{}{"manifest": manifest, "manifestExt": manifestExt}, nil
+	b.manifest["items"] = manifestItems
+	return map[string]interface{}{"manifest": b.manifest, "manifestExt": manifestExt}, nil
 }
 
 // Build ...

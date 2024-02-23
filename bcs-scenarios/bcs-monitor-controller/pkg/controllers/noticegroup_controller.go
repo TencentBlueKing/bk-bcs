@@ -88,7 +88,7 @@ func (r *NoticeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}
 		return ctrl.Result{}, err
 	}
-	defer os.Remove(outputPath)
+	defer os.RemoveAll(outputPath)
 
 	if err = r.MonitorApiCli.UploadConfig(noticeGroup.Spec.BizID, noticeGroup.Spec.BizToken, outputPath,
 		r.getAppName(noticeGroup), noticeGroup.Spec.Override); err != nil {

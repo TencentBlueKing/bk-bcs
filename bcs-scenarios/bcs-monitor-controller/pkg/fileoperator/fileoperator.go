@@ -15,13 +15,18 @@
 package fileoperator
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/mholt/archiver/v3"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	v1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
@@ -70,6 +75,38 @@ func (f *FileOperator) Compress(objList ...interface{}) (string, error) {
 		return "", err
 	}
 	return outputPath, nil
+}
+
+func (f *FileOperator) Decompress(path, outputDir string) error {
+	// 打开已下载的 tar.gz 文件
+	file, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("open compress file failed, err: %w", err)
+	}
+	defer file.Close()
+
+	// 解压缩文件
+	gzipReader, err := gzip.NewReader(file)
+	if err != nil {
+		return fmt.Errorf("create gzip reader failed, err: %w", err)
+	}
+	defer gzipReader.Close()
+
+	tarReader := tar.NewReader(gzipReader)
+
+	// 从 tar.gz 中读取文件并将其写入指定目录
+	for {
+		end, inErr := f.exportFileFromTar(tarReader, outputDir)
+		if inErr != nil {
+			return inErr
+		}
+
+		if end {
+			break
+		}
+
+	}
+	return nil
 }
 
 func (f *FileOperator) createDirectoriesAndFile(obj interface{}, basePath string) error {
@@ -197,4 +234,44 @@ func (f *FileOperator) getNameAndSubPath(i interface{}) string {
 	}
 
 	return ""
+}
+
+// return true if end
+func (f *FileOperator) exportFileFromTar(tarReader *tar.Reader, outputDir string) (bool, error) {
+	header, err := tarReader.Next()
+	if err == io.EOF {
+		return true, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("read tar file failed, err: %w", err)
+	}
+
+	target := filepath.Join(outputDir, header.Name)
+	switch header.Typeflag {
+	case tar.TypeDir:
+		if err := os.MkdirAll(target, os.FileMode(header.Mode)); err != nil {
+			return false, fmt.Errorf("create directory failed, err: %w", err)
+		}
+	case tar.TypeReg:
+		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+			return false, fmt.Errorf("create directory failed, err: %w", err)
+		}
+
+		outFile, err := os.Create(target)
+		if err != nil {
+			return false, fmt.Errorf("create output file failed, err: %w", err)
+		}
+		defer outFile.Close()
+
+		if _, err := io.Copy(outFile, tarReader); err != nil {
+			return false, fmt.Errorf("write output file failed, err: %w", err)
+		}
+
+		if err := outFile.Chmod(os.FileMode(header.Mode)); err != nil {
+			return false, fmt.Errorf("change file mode failed, err: %w", err)
+		}
+	default:
+		return false, fmt.Errorf("unknown file type: %v", header.Typeflag)
+	}
+	return false, nil
 }

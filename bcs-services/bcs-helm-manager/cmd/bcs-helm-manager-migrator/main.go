@@ -190,7 +190,7 @@ func migrateRepo(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 		}
 
 		// sync public repo
-		if len(common.GetPublicRepoURL(C.Repo.URL, C.Repo.PublicRepoProject, C.Repo.PublicRepoName)) != 0 {
+		if len(common.GetPublicRepoURL(C.Repo.GetRepoBaseURL(), C.Repo.PublicRepoProject, C.Repo.PublicRepoName)) != 0 {
 			createOrUpdatePublicRepo(model, repo.Name)
 		}
 	}
@@ -246,7 +246,7 @@ func createOrUpdatePublicRepo(model store.HelmManagerModel, projectID string) {
 		DisplayName: common.PublicRepoDisplayName,
 		Public:      true,
 		Type:        "HELM",
-		RepoURL:     common.GetPublicRepoURL(C.Repo.URL, C.Repo.PublicRepoProject, C.Repo.PublicRepoName),
+		RepoURL:     common.GetPublicRepoURL(C.Repo.GetRepoBaseURL(), C.Repo.PublicRepoProject, C.Repo.PublicRepoName),
 		CreateBy:    "admin",
 		UpdateBy:    "admin",
 		CreateTime:  now,

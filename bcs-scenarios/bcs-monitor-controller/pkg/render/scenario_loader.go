@@ -114,7 +114,7 @@ func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) 
 	}
 
 	// 配置1读取 （蓝鲸监控导出）
-	configMaps, panel, err := r.loadPanel(repo.GetDirectory(), scenario)
+	configMaps, panel, err := r.loadPanel(filepath.Join(repo.GetDirectory(), scenario, "grafana"))
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) 
 		res.Panel = append(res.Panel, panel)
 	}
 
-	mr, err := r.loadRule(repo.GetDirectory(), scenario)
+	mr, err := r.LoadRule(filepath.Join(repo.GetDirectory(), scenario, "rule"))
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) 
 		res.MonitorRule = append(res.MonitorRule, mr)
 	}
 
-	ng, err := r.loadNoticeGroup(repo.GetDirectory(), scenario)
+	ng, err := r.loadNoticeGroup(filepath.Join(repo.GetDirectory(), scenario, "notice"))
 	if err != nil {
 		return nil, err
 	}
@@ -142,8 +142,8 @@ func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) 
 	return res, nil
 }
 
-func (r *MonitorRender) loadRule(directory, scenario string) (*monitorextensionv1.MonitorRule, error) {
-	path := filepath.Join(directory, scenario, "rule")
+// LoadRule load rule from certain path, filterFunc 根据告警名判断
+func (r *MonitorRender) LoadRule(path string, filterFunc ...func(string) bool) (*monitorextensionv1.MonitorRule, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		blog.Infof("empty raw rule, continue...")
 		return nil, nil
@@ -153,30 +153,29 @@ func (r *MonitorRender) loadRule(directory, scenario string) (*monitorextensionv
 	err := filepath.Walk(path, func(path string, info os.FileInfo,
 		err error) error {
 		if err != nil {
-			blog.Errorf("walk through directory'%s' failed, err: %s", path, err.Error())
-			return err
+			return fmt.Errorf("walk through directory'%s' failed, err: %w", path, err)
 		}
 
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
-			blog.Infof("scenario '%s' got monitor rule json: %s", scenario, info.Name())
-
+			for _, filter := range filterFunc {
+				if !filter(info.Name()) {
+					return nil
+				}
+			}
 			data, inErr := ioutil.ReadFile(path)
 			if inErr != nil {
-				blog.Errorf("read file'%s' failed, err: %v", path, inErr)
-				return inErr
+				return fmt.Errorf("read file'%s' failed, err: %w", path, inErr)
 			}
 
 			var rule monitorextensionv1.MonitorRuleDetail
 			if inErr = yaml.Unmarshal(data, &rule); inErr != nil {
-				blog.Errorf("unmarshal rule in'%s/%s' failed, err: %s", scenario, info.Name(), inErr.Error())
-				return inErr
+				return fmt.Errorf("unmarshal rule in'%s' failed, err: %w", info.Name(), inErr)
 			}
 			rules = append(rules, &rule)
 		}
 		return nil
 	})
 	if err != nil {
-		blog.Errorf("read rule in scenario'%s' failed, err: %s", scenario, err.Error())
 		return nil, err
 	}
 
@@ -191,8 +190,7 @@ func (r *MonitorRender) loadRule(directory, scenario string) (*monitorextensionv
 	return mr, nil
 }
 
-func (r *MonitorRender) loadPanel(directory, scenario string) ([]*v1.ConfigMap, *monitorextensionv1.Panel, error) {
-	path := filepath.Join(directory, scenario, "grafana")
+func (r *MonitorRender) loadPanel(path string) ([]*v1.ConfigMap, *monitorextensionv1.Panel, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		blog.Infof("empty raw grafana panel, continue...")
 		return nil, nil, nil
@@ -209,19 +207,15 @@ func (r *MonitorRender) loadPanel(directory, scenario string) ([]*v1.ConfigMap, 
 
 		// load grafana panel json config
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".json") {
-			blog.Infof("scenario '%s' got panel json: %s", scenario, info.Name())
-
 			data, inErr := ioutil.ReadFile(path)
 			if inErr != nil {
-				blog.Errorf("read file'%s' failed, err: %v", path, inErr)
-				return inErr
+				return fmt.Errorf("read file'%s' failed, err: %w", path, inErr)
 			}
 			dataMap := make(map[string]string)
 			dataMap["panel"] = string(data)
 
 			splits := strings.Split(info.Name(), ".")
 			if len(splits) != 2 {
-				blog.Errorf("invalid panel Name[%s], should be 'xxx.json'", info.Name())
 				return fmt.Errorf("invalid panel Name[%s], should be 'xxx.json'", info.Name())
 			}
 
@@ -242,7 +236,6 @@ func (r *MonitorRender) loadPanel(directory, scenario string) ([]*v1.ConfigMap, 
 		return nil
 	})
 	if err != nil {
-		blog.Errorf("read rule in scenario'%s' failed, err: %s", scenario, err.Error())
 		return nil, nil, err
 	}
 	panel := &monitorextensionv1.Panel{
@@ -256,8 +249,7 @@ func (r *MonitorRender) loadPanel(directory, scenario string) ([]*v1.ConfigMap, 
 	return configmaps, panel, nil
 }
 
-func (r *MonitorRender) loadNoticeGroup(directory, scenario string) (*monitorextensionv1.NoticeGroup, error) {
-	path := filepath.Join(directory, scenario, "notice")
+func (r *MonitorRender) loadNoticeGroup(path string) (*monitorextensionv1.NoticeGroup, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		blog.Infof("empty raw notice , continue...")
 		return nil, nil
@@ -267,13 +259,11 @@ func (r *MonitorRender) loadNoticeGroup(directory, scenario string) (*monitorext
 	err := filepath.Walk(path, func(path string, info os.FileInfo,
 		err error) error {
 		if err != nil {
-			blog.Errorf("walk through directory'%s' failed, err: %s", path, err.Error())
-			return err
+			return fmt.Errorf("walk through directory'%s' failed, err: %w", path, err)
 		}
 
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
-			blog.Infof("scenario '%s' got notice group json: %s", scenario, info.Name())
-			data, inErr := ioutil.ReadFile(path)
+			data, inErr := os.ReadFile(path)
 			if inErr != nil {
 				blog.Errorf("read file'%s' failed, err: %v", path, inErr)
 				return inErr
@@ -281,15 +271,13 @@ func (r *MonitorRender) loadNoticeGroup(directory, scenario string) (*monitorext
 
 			var ng monitorextensionv1.NoticeGroupDetail
 			if inErr = yaml.Unmarshal(data, &ng); inErr != nil {
-				blog.Errorf("unmarshal notice in'%s/%s' failed, err: %s", scenario, info.Name(), inErr.Error())
-				return inErr
+				return fmt.Errorf("unmarshal notice in'%s' failed, err: %s", info.Name(), inErr.Error())
 			}
 			ngs = append(ngs, &ng)
 		}
 		return nil
 	})
 	if err != nil {
-		blog.Errorf("read rule in scenario'%s' failed, err: %s", scenario, err.Error())
 		return nil, err
 	}
 

@@ -44,6 +44,8 @@ spec:
           - /data/bcs/logs
           - --scenario_refresh_req
           - {{ .Values.scenarioGitConfig.refreshFreqSec | quote }}
+          - --bkm_download_config_path
+          - {{ .Values.bkmConfig.configStorePath | quote}}
           - --argo_admin_namespace
           - "default"
           - --alsologtostderr

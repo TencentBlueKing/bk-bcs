@@ -38,13 +38,16 @@
           :loading="listLoading"
           :clearable="false"
           :filterable="true"
+          :list="list"
+          id-key="id"
+          display-key="name"
           :input-search="false">
-          <bk-option
-            v-for="option in list"
-            v-overflow-title
-            :key="option.id"
-            :value="option.id"
-            :label="option.name"></bk-option>
+          <template #optionRender="{ item }">
+            <span>{{ item.name }}</span>
+            <bk-tag :theme="item.isOnline ? 'success' : ''" style="margin-left: 8px">
+              {{ item.isOnline ? t('已上线') : t('已下线') }}
+            </bk-tag>
+          </template>
         </bk-select>
       </bk-form-item>
     </bk-form>
@@ -90,7 +93,7 @@
       list.value = res.details.map((item: IScriptVersionListItem) => {
         const { id, spec } = item.hook_revision;
         const name = spec.memo ? `${spec.name}(${spec.memo})` : spec.name;
-        return { id, name, content: spec.content };
+        return { id, name, content: spec.content, isOnline: spec.state === 'deployed' };
       });
       listLoading.value = false;
       if (list.value.length > 0) {

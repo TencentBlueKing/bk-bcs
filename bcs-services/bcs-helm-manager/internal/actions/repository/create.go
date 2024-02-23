@@ -174,7 +174,7 @@ func (c *CreateRepositoryAction) createRepository2Repo(
 }
 
 func (c *CreateRepositoryAction) createPublicRepoIfNotExist(data *helmmanager.Repository) error {
-	publicRepo := common.GetPublicRepoURL(c.repo.URL, c.repo.PublicRepoProject, c.repo.PublicRepoName)
+	publicRepo := common.GetPublicRepoURL(c.repo.GetRepoBaseURL(), c.repo.PublicRepoProject, c.repo.PublicRepoName)
 	if len(publicRepo) == 0 {
 		return nil
 	}

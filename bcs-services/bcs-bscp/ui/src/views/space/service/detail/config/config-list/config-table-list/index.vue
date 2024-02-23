@@ -16,8 +16,17 @@
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :verision-id="versionData.id" />
+        <ConfigExport
+          v-if="!isFileType"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :verision-id="versionData.id" />
       </div>
-      <SearchInput v-model="searchStr" class="config-search-input" :width="280" :placeholder="t('配置文件名/创建人/修改人')" />
+      <SearchInput
+        v-model="searchStr"
+        class="config-search-input"
+        :width="280"
+        :placeholder="t('配置文件名/创建人/修改人')" />
     </div>
     <section class="config-list-table">
       <template v-if="isFileType">
@@ -59,6 +68,7 @@
   import TableWithTemplates from './tables/table-with-templates.vue';
   import TableWithPagination from './tables/table-with-pagination.vue';
   import TableWithKv from './tables/table-with-kv.vue';
+  import ConfigExport from './config-export.vue';
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();

@@ -15,7 +15,6 @@ package dao
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
@@ -165,17 +164,9 @@ func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int6
 		q = q.Where(q.Where(q.Or(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))))
 	}
 
-	switch strings.ToUpper(opt.Status) {
-	case string(table.KvStateAdd):
-		q = q.Where(m.KvState.Eq(string(table.KvStateAdd)))
-	case string(table.KvStateDelete):
-		q = q.Where(m.KvState.Eq(string(table.KvStateDelete)))
-	case string(table.KvStateRevise):
-		q = q.Where(m.KvState.Eq(string(table.KvStateRevise)))
-	case string(table.KvStateUnchange):
-		q = q.Where(m.KvState.Eq(string(table.KvStateUnchange)))
+	if len(opt.Status) != 0 {
+		q = q.Where(m.KvState.In(opt.Status...))
 	}
-
 	q = q.Where(m.BizID.Eq(opt.BizID)).Where(m.AppID.Eq(opt.AppID))
 
 	if len(opt.KvType) > 0 {
