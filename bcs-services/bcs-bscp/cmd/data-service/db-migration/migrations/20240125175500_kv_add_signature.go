@@ -141,8 +141,15 @@ func syncReleaseSignature(tx *gorm.DB) error {
 			continue
 		}
 
-		opt := &types.GetLastKvOpt{BizID: kv.Attachment.BizID, AppID: kv.Attachment.AppID, Key: kv.Spec.Key}
-		_, value, err := cli.GetLastKv(kit.New(), opt)
+		// 获取 release 版本的值
+		opt := &types.GetRKvOption{
+			BizID:      kv.Attachment.BizID,
+			AppID:      kv.Attachment.AppID,
+			Key:        kv.Spec.Key,
+			ReleasedID: kv.ReleaseID,
+			Version:    int(kv.Spec.Version),
+		}
+		_, value, err := cli.GetRKv(kit.New(), opt)
 		if err != nil {
 			return err
 		}
