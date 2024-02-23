@@ -60,7 +60,9 @@ func mig20231010143023Up(tx *gorm.DB) error {
 			timeStr := credential.Revision.CreatedAt.Format("20060102150405.000")
 			timeStr = strings.ReplaceAll(timeStr, ".", "")
 			credential.Spec.Name = fmt.Sprintf("token_%s", timeStr)
-			tx.Save(&credentials)
+
+			// 只更新必须的字段, 不刷新updated_at
+			tx.Select("Name").UpdateColumns(&credential)
 		}
 	}
 
