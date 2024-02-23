@@ -442,6 +442,7 @@
 
       let res;
       if (isUnNamedVersion.value) {
+        if (statusFilterChecked.value.length > 0) params.status = statusFilterChecked.value;
         res = await getBoundTemplates(props.bkBizId, props.appId, params);
       } else {
         res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id, params);
