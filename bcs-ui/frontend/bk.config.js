@@ -97,7 +97,7 @@ module.exports = {
       .plugin('braceTheme')
       .use(webpack.ContextReplacementPlugin, [/brace\/theme$/, /^\.\/(monokai)$/]);
 
-   
+
     if (process.env.NODE_ENV === 'production') {
       config
       .plugin('compression')

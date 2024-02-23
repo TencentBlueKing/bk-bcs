@@ -16,13 +16,13 @@ replace (
 )
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.1.1
 	github.com/Azure/azure-sdk-for-go v67.1.0+incompatible
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.2.0
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork v1.1.0
+	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.1.1
 	github.com/Azure/go-autorest/autorest v0.11.18
 	github.com/Azure/go-autorest/autorest/adal v0.9.13
 	github.com/RichardKnop/machinery/v2 v2.0.11
@@ -85,7 +85,7 @@ require (
 require (
 	cloud.google.com/go v0.81.0 // indirect
 	cloud.google.com/go/pubsub v1.10.0 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/internal v1.0.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.2.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest/date v0.3.0 // indirect
@@ -177,7 +177,6 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
@@ -210,7 +209,7 @@ require (
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/term v0.13.0 // indirect

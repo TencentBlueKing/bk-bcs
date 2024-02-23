@@ -1270,7 +1270,7 @@ service ClusterManager {
   // 批量获取多个配置项, 返回配置项内容map
   rpc GetBatchCustomSetting(GetBatchCustomSettingRequest) returns (GetBatchCustomSettingResponse) {
     option (google.api.http) = {
-      post : "/clustermanager/v1/web/customSettings/scope/{scopeType}/{scopeId}/batchGet"
+      post : "/clustermanager/v1/web/projects/{projectID}/customSettings/scope/{scopeType}/{scopeId}/batchGet"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -1281,7 +1281,7 @@ service ClusterManager {
   // 批量获取含各节点主机数量的拓扑树
   rpc GetBizTopologyHost(GetBizTopologyHostRequest) returns (GetBizTopologyHostResponse) {
     option (google.api.http) = {
-      post : "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostCount"
+      post : "/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/topology/hostCount"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -1292,7 +1292,7 @@ service ClusterManager {
   // 根据多个拓扑节点与搜索条件批量分页查询所包含的主机信息(当前仅支持业务拓扑节点)
   rpc GetTopologyNodes(GetTopologyNodesRequest) returns (GetTopologyNodesResponse) {
     option (google.api.http) = {
-      post : "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hosts/nodes"
+      post : "/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/topology/hosts/nodes"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -1303,7 +1303,7 @@ service ClusterManager {
   // 根据多个拓扑节点与搜索条件批量分页查询所包含的主机ID，用于IP选择器全选（当前仅支持业务拓扑节点，业务集仅支持传入业务集根节点）
   rpc GetTopologyHostIdsNodes(GetTopologyHostIdsNodesRequest) returns (GetTopologyHostIdsNodesResponse) {
     option (google.api.http) = {
-      post : "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostids/nodes"
+      post : "/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/topology/hostids/nodes"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -1314,7 +1314,7 @@ service ClusterManager {
   // 根据主机IDs获取机器详情信息
   rpc GetHostsDetails(GetHostsDetailsRequest) returns (GetHostsDetailsResponse) {
     option (google.api.http) = {
-      post : "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/hosts/details"
+      post : "/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/hosts/details"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -1326,7 +1326,7 @@ service ClusterManager {
   // 根据用户手动输入的IP/IPv6/主机名/hostId等关键字信息获取真实存在的机器信息
   rpc GetScopeHostCheck(GetScopeHostCheckRequest) returns (GetScopeHostCheckResponse) {
     option (google.api.http) = {
-      post : "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check"
+      post : "/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/host/check"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -4799,7 +4799,7 @@ message CreateClusterReq {
       title : "clusterName",
       description : "集群名称"
     },
-    (validate.rules).string = {min_len : 1, max_len : 1024}
+    (validate.rules).string = {min_len : 1, max_len : 1024, pattern: "^[^&'<>\"\\r]+$"}
   ];
   string provider = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -5098,7 +5098,7 @@ message CreateVirtualClusterReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterName",
       description : "集群名称"
-    }, (validate.rules).string = {min_len : 1, max_len : 1024}];
+    }, (validate.rules).string = {min_len : 1, max_len : 1024, pattern: "^[^&'<>\"\\r]+$"}];
   string provider = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "provider",
@@ -5405,7 +5405,7 @@ message ImportClusterReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterName",
       description : "集群名称"
-    },(validate.rules).string = {min_len :1, max_len : 1024}
+    },(validate.rules).string = {min_len : 1, max_len : 1024, pattern: "^[^&'<>\"\\r]+$"}
   ];
   string description = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "description",
@@ -5744,7 +5744,9 @@ message UpdateClusterReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterName",
       description : "集群名称"
-    }];
+    },(validate.rules).string = {min_len : 1, max_len : 1024, pattern: "^[^&'<>\"\\r]+$"}
+  ];
+  
   string provider = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "provider",
@@ -12837,6 +12839,10 @@ message GetBatchCustomSettingRequest {
     title: "moduleList",
     description: "moduleList获取配置项的模块列表，不传表示获取所有模块(目前仅支持 ip_selector_host_list)"
   }];
+  string projectID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "集群所关联的项目ID"
+  }];
 }
 
 message GetBatchCustomSettingResponse {
@@ -12891,6 +12897,10 @@ message GetBizTopologyHostRequest {
   repeated ScopeInfo scopeList = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "scopeList",
     description: "要获取拓扑结构的资源范围数组(目前仅支持biz维度的拓扑)"
+  }];
+  string projectID = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "集群所关联的项目ID"
   }];
 }
 
@@ -12957,6 +12967,10 @@ message GetTopologyNodesRequest {
   int32 pageSize = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "pageSize",
     description: "拉取数据数量，最大500，不传默认为20"
+  }];
+  string projectID = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "集群所关联的项目ID"
   }];
 }
 
@@ -13041,6 +13055,10 @@ message GetTopologyHostIdsNodesRequest {
     title: "pageSize",
     description: "拉取数据数量，不传默认拉取所有"
   }];
+  string projectID = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "集群所关联的项目ID"
+  }];
 }
 
 message GetTopologyHostIdsNodesResponse {
@@ -13103,6 +13121,10 @@ message GetHostsDetailsRequest {
   repeated HostIDsNodeData hostList = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "hostList",
     description: "hostIds列表"
+  }];
+  string projectID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "集群所关联的项目ID"
   }];
 }
 
@@ -13167,6 +13189,10 @@ message GetScopeHostCheckRequest {
   repeated string keyList = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "keyList",
     description: "关键字数组, 解析出的主机名/hostId等关键字信息"
+  }];
+  string projectID = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "集群所关联的项目ID"
   }];
 }
 

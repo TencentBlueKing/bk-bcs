@@ -844,42 +844,42 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.GetBatchCustomSetting",
-			Path:    []string{"/clustermanager/v1/web/customSettings/scope/{scopeType}/{scopeId}/batchGet"},
+			Path:    []string{"/clustermanager/v1/web/projects/{projectID}/customSettings/scope/{scopeType}/{scopeId}/batchGet"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.GetBizTopologyHost",
-			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostCount"},
+			Path:    []string{"/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/topology/hostCount"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.GetTopologyNodes",
-			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hosts/nodes"},
+			Path:    []string{"/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/topology/hosts/nodes"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.GetTopologyHostIdsNodes",
-			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostids/nodes"},
+			Path:    []string{"/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/topology/hostids/nodes"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.GetHostsDetails",
-			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/hosts/details"},
+			Path:    []string{"/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/hosts/details"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.GetScopeHostCheck",
-			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check"},
+			Path:    []string{"/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/host/check"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
@@ -3536,42 +3536,42 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetBatchCustomSetting",
-		Path:    []string{"/clustermanager/v1/web/customSettings/scope/{scopeType}/{scopeId}/batchGet"},
+		Path:    []string{"/clustermanager/v1/web/projects/{projectID}/customSettings/scope/{scopeType}/{scopeId}/batchGet"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetBizTopologyHost",
-		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostCount"},
+		Path:    []string{"/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/topology/hostCount"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetTopologyNodes",
-		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hosts/nodes"},
+		Path:    []string{"/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/topology/hosts/nodes"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetTopologyHostIdsNodes",
-		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostids/nodes"},
+		Path:    []string{"/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/topology/hostids/nodes"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetHostsDetails",
-		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/hosts/details"},
+		Path:    []string{"/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/hosts/details"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetScopeHostCheck",
-		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check"},
+		Path:    []string{"/clustermanager/v1/web/projects/{projectID}/scope/{scopeType}/{scopeId}/host/check"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
