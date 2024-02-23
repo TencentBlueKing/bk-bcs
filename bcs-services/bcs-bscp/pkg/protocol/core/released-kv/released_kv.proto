@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "pkg/protocol/core/base/base.proto";
 import "pkg/protocol/core/kv/kvs.proto";
+import "pkg/protocol/core/content/content.proto";
 
 package pbrkv;
 
@@ -14,4 +15,5 @@ message ReleasedKv {
   pbkv.KvSpec spec = 3;
   pbkv.KvAttachment attachment = 4;
   pbbase.Revision revision = 5;
+  pbcontent.ContentSpec content_spec = 6;
 }

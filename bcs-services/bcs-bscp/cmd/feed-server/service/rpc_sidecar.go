@@ -398,6 +398,7 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 				BizId: kv.KvAttachment.BizId,
 				AppId: kv.KvAttachment.AppId,
 			},
+			ContentSpec: kv.ContentSpec,
 		})
 	}
 
