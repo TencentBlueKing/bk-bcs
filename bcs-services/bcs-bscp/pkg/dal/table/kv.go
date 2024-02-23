@@ -265,3 +265,18 @@ const (
 	// KvStateUnchange 不变
 	KvStateUnchange KvState = "UNCHANGE"
 )
+
+// String get string value of KvState
+func (k KvState) String() string {
+	return string(k)
+}
+
+// Validate validate kv state is valid or not.
+func (k KvState) Validate() error {
+	switch k {
+	case KvStateAdd, KvStateDelete, KvStateRevise, KvStateUnchange:
+		return nil
+	default:
+		return errors.New("invalid kv state")
+	}
+}
