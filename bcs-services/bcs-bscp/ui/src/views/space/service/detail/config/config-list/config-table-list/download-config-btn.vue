@@ -1,5 +1,7 @@
 <template>
-  <bk-button text theme="primary" :loading="pending" @click="handleDownloadConfig">{{ $t('下载') }}</bk-button>
+  <bk-button text theme="primary" :loading="pending" :disabled="props.disabled" @click="handleDownloadConfig">
+    {{ $t('下载') }}
+  </bk-button>
 </template>
 <script lang="ts" setup>
   import { storeToRefs } from 'pinia';
@@ -24,6 +26,7 @@
     appId: number;
     id: number;
     type: string; // 取值为config/template，分别表示非模板套餐下配置文件和模板套餐下配置文件
+    disabled: boolean;
   }>();
 
   const pending = ref(false);
