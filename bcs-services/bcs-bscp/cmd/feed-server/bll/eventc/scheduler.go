@@ -331,6 +331,7 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 			ContentSpec: &pbct.ContentSpec{
 				Signature: one.CommitSpec.Signature,
 				ByteSize:  one.CommitSpec.ByteSize,
+				Md5:       one.CommitSpec.Md5,
 			},
 			ConfigItemSpec: &pbci.ConfigItemSpec{
 				Name:     cis.Name,

@@ -174,6 +174,7 @@ func (cim *ConfigItemMetaV1) PbFileMeta() *pbfs.FileMeta {
 			Content: &pbcontent.ContentSpec{
 				Signature: cim.ContentSpec.Signature,
 				ByteSize:  cim.ContentSpec.ByteSize,
+				Md5:       cim.ContentSpec.Md5,
 			},
 		},
 		ConfigItemSpec:       cim.ConfigItemSpec,

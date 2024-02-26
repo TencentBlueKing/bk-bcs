@@ -112,6 +112,7 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 				Content: &pbcontent.ContentSpec{
 					Signature: one.CommitSpec.Signature,
 					ByteSize:  one.CommitSpec.ByteSize,
+					Md5:       one.CommitSpec.Md5,
 				},
 			},
 			ConfigItemSpec: &pbci.ConfigItemSpec{

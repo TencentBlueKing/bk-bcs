@@ -232,6 +232,7 @@ func PbReleasedAppBoundTmplRevision(s *table.ReleasedAppTemplate) *ReleasedAppBo
 		Reviser:              s.Revision.Reviser,
 		CreateAt:             s.Revision.CreatedAt.Format(time.RFC3339),
 		UpdateAt:             s.Revision.UpdatedAt.Format(time.RFC3339),
+		Md5:                  s.Spec.Md5,
 	}
 }
 

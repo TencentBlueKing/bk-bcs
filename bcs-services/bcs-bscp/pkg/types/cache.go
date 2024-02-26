@@ -98,6 +98,7 @@ type CommitSpecCache struct {
 	ContentID uint32 `json:"id"`
 	Signature string `json:"sign"`
 	ByteSize  uint64 `json:"size"`
+	Md5       string `json:"md5"`
 }
 
 // ConfigItemSpecCache cache struct.

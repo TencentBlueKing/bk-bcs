@@ -529,6 +529,7 @@ func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, relea
 				ByteSize:             byteSizeMap[r.TemplateRevisionId],
 				OriginSignature:      r.Signature,
 				OriginByteSize:       r.ByteSize,
+				Md5:                  r.Md5,
 			},
 			Attachment: &table.ReleasedAppTemplateAttachment{
 				BizID: kt.BizID,

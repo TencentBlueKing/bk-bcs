@@ -294,6 +294,7 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 					Creator:              r.Creator,
 					CreateAt:             r.CreateAt,
 					FileState:            r.FileState,
+					Md5:                  r.Md5,
 				})
 		}
 		if req.WithStatus {
@@ -441,6 +442,7 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 					Reviser:              r.Reviser,
 					CreateAt:             r.CreateAt,
 					UpdateAt:             r.UpdateAt,
+					Md5:                  r.Md5,
 				})
 		}
 		details = append(details, group)
