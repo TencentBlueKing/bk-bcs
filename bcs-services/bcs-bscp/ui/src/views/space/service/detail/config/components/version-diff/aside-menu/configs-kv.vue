@@ -159,6 +159,7 @@
     aggregatedList.value.sort((a, b) => a.key.charCodeAt(0) - b.key.charCodeAt(0));
     groupedConfigListOnShow.value = aggregatedList.value.slice();
     setDefaultSelected();
+    handleSearch();
   });
 
   // 获取当前版本和基准版本的所有配置文件列表(非模板配置和套餐下模板)

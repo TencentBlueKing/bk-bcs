@@ -28,11 +28,12 @@ import (
 // Kv defines a basic kv
 type Kv struct {
 	// ID is an auto-increased value, which is a unique identity of a kv.
-	ID         uint32        `json:"id" gorm:"primaryKey"`
-	KvState    KvState       `json:"kv_state" gorm:"column:kv_state"`
-	Spec       *KvSpec       `json:"spec" gorm:"embedded"`
-	Attachment *KvAttachment `json:"attachment" gorm:"embedded"`
-	Revision   *Revision     `json:"revision" gorm:"embedded"`
+	ID          uint32        `json:"id" gorm:"primaryKey"`
+	KvState     KvState       `json:"kv_state" gorm:"column:kv_state"`
+	Spec        *KvSpec       `json:"spec" gorm:"embedded"`
+	Attachment  *KvAttachment `json:"attachment" gorm:"embedded"`
+	Revision    *Revision     `json:"revision" gorm:"embedded"`
+	ContentSpec *ContentSpec  `json:"content_spec" gorm:"embedded"`
 }
 
 // KvSpec is kv specific which is defined by user.
@@ -265,3 +266,18 @@ const (
 	// KvStateUnchange 不变
 	KvStateUnchange KvState = "UNCHANGE"
 )
+
+// String get string value of KvState
+func (k KvState) String() string {
+	return string(k)
+}
+
+// Validate validate kv state is valid or not.
+func (k KvState) Validate() error {
+	switch k {
+	case KvStateAdd, KvStateDelete, KvStateRevise, KvStateUnchange:
+		return nil
+	default:
+		return errors.New("invalid kv state")
+	}
+}

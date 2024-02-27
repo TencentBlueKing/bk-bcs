@@ -308,6 +308,10 @@
         unPublishVersion.value = null;
         versionEditData.value.panelOpen = false;
         getVersionList();
+        Message({
+          theme: 'success',
+          message: t('上线版本成功'),
+        });
       },
     } as any);
   };

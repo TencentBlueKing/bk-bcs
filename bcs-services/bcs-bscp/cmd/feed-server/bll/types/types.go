@@ -21,6 +21,7 @@ import (
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
 	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
 	pbhook "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 )
@@ -120,8 +121,9 @@ type AppLatestReleaseKvMeta struct {
 
 // ReleasedKvMeta defines a release's released kv metadata
 type ReleasedKvMeta struct {
-	Key          string             `json:"key,omitempty"`
-	KvType       string             `json:"kv_type,omitempty"`
-	Revision     *pbbase.Revision   `json:"revision,omitempty"`
-	KvAttachment *pbkv.KvAttachment `json:"kv_attachment,omitempty"`
+	Key          string                 `json:"key,omitempty"`
+	KvType       string                 `json:"kv_type,omitempty"`
+	Revision     *pbbase.Revision       `json:"revision,omitempty"`
+	KvAttachment *pbkv.KvAttachment     `json:"kv_attachment,omitempty"`
+	ContentSpec  *pbcontent.ContentSpec `json:"content_spec,omitempty"`
 }

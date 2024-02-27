@@ -277,7 +277,7 @@ export default {
   除以下分组之外的所有实例: 'All instances except the following groupings',
   对比并上线: 'Compare and go online',
   版本已上线: 'Version is online',
-  请选择上线分组: 'Please select an online group',
+  请选择分组实例: 'Please select an online group',
   本次上线分组: 'This online group',
   上线说明: 'Online instructions',
   确定上线: 'Confirm to go online',
@@ -333,6 +333,7 @@ export default {
   '解析失败，配置项格式不正确': 'Parsing failed because the configuration item format is incorrect',
   请选择: 'Please select',
   配置项值已复制: 'The configuration item value has been copied',
+  导出至: 'Export to',
 
   // 分组管理
   新增分组: 'New group',
@@ -517,6 +518,7 @@ export default {
   已下线: 'Offline',
   脚本类型: 'Script type',
   form_版本号: 'Version number',
+  上线版本成功: 'Online version successful',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
