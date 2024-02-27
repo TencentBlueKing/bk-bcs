@@ -38,8 +38,9 @@ func init() {
 
 // Content: 文件内容
 type Content struct {
-	ID         uint32 `db:"id" json:"id" gorm:"primaryKey"`
-	Signatures string `gorm:"type:varchar(64) not null"`
+	ID        uint32 `gorm:"primaryKey"`
+	BizID     uint32 `gorm:"column:biz_id"`
+	Signature string `gorm:"type:varchar(64) not null"`
 	// Md5 is the md5 value of a configuration file's content.
 	// it can not be updated.
 	Md5 string `gorm:"type:varchar(64) not null"`
@@ -47,31 +48,35 @@ type Content struct {
 
 // Commit: 文件修改记录
 type Commit struct {
-	ID         uint32 `db:"id" json:"id" gorm:"primaryKey"`
-	Signatures string `gorm:"type:varchar(64) not null"`
-	Md5        string `gorm:"type:varchar(64) not null"`
+	ID        uint32 `gorm:"primaryKey"`
+	BizID     uint32 `gorm:"column:biz_id"`
+	Signature string `gorm:"type:varchar(64) not null"`
+	Md5       string `gorm:"type:varchar(64) not null"`
 }
 
 // ReleasedConfigItem 已生成版本的配置项
 type ReleasedConfigItem struct {
-	ID         uint32 `db:"id" json:"id" gorm:"primaryKey"`
-	Signatures string `gorm:"type:varchar(64) not null"`
-	Md5        string `gorm:"type:varchar(64) not null"`
+	ID        uint32 `gorm:"primaryKey"`
+	BizID     uint32 `gorm:"column:biz_id"`
+	Signature string `gorm:"type:varchar(64) not null"`
+	Md5       string `gorm:"type:varchar(64) not null"`
 }
 
 // ReleasedAppTemplate 已生成版本服务的模版
 // 这里只需要DB操作用到的字段
 type ReleasedAppTemplate struct {
-	ID         uint32 `db:"id" json:"id" gorm:"primaryKey"`
-	Signatures string `gorm:"type:varchar(64) not null"`
-	Md5        string `gorm:"type:varchar(64) not null"`
+	ID        uint32 `gorm:"primaryKey"`
+	BizID     uint32 `gorm:"column:biz_id"`
+	Signature string `gorm:"type:varchar(64) not null"`
+	Md5       string `gorm:"type:varchar(64) not null"`
 }
 
 // TemplateRevision 模版版本
 type TemplateRevision struct {
-	ID         uint32 `db:"id" json:"id" gorm:"primaryKey"`
-	Signatures string `gorm:"type:varchar(64) not null"`
-	Md5        string `gorm:"type:varchar(64) not null"`
+	ID        uint32 `gorm:"primaryKey"`
+	BizID     uint32 `gorm:"column:biz_id"`
+	Signature string `gorm:"type:varchar(64) not null"`
+	Md5       string `gorm:"type:varchar(64) not null"`
 }
 
 // mig20240221103509Up for up migration
@@ -136,6 +141,8 @@ func mig20240221103509Up(tx *gorm.DB) error {
 		return err
 	}
 
+	fmt.Printf("len(map): %d", len(md5Map))
+
 	return nil
 
 }
@@ -191,25 +198,27 @@ func batchUpdateContentMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provide
 	successCount := 0
 	failedIDs := []uint32{}
 	for _, content := range contents {
+		kt.BizID = content.BizID
 		if content.Md5 != "" {
 			continue
 		}
 		var md5 string
-		if md5Map[content.Signatures] != "" {
-			md5 = md5Map[content.Signatures]
+		if md5Map[content.Signature] != "" {
+			md5 = md5Map[content.Signature]
 		} else {
-			metadata, err := provider.Metadata(kt, content.Signatures)
+			metadata, err := provider.Metadata(kt, content.Signature)
 			if err != nil {
-				fmt.Printf("get metadata for content %sfailed, err: %s\n", content.Signatures, err.Error())
+				fmt.Printf("get metadata for content %sfailed, err: %s\n", content.Signature, err.Error())
 				failedIDs = append(failedIDs, content.ID)
 				continue
 			}
 			md5 = metadata.Md5
-			md5Map[content.Signatures] = md5
+			md5Map[content.Signature] = md5
 		}
 		if err := tx.Model(&Content{}).Where("id = ?", content.ID).Update("md5", md5).Error; err != nil {
 			fmt.Printf("update content %d md5 failed, err: %s\n", content.ID, err.Error())
 			failedIDs = append(failedIDs, content.ID)
+			continue
 		}
 		successCount++
 	}
@@ -231,24 +240,27 @@ func batchUpdateCommitMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider
 	successCount := 0
 	failedIDs := []uint32{}
 	for _, commit := range commits {
+		kt.BizID = commit.BizID
 		if commit.Md5 != "" {
 			continue
 		}
 		var md5 string
-		if md5Map[commit.Signatures] != "" {
-			md5 = md5Map[commit.Signatures]
+		if md5Map[commit.Signature] != "" {
+			md5 = md5Map[commit.Signature]
 		} else {
-			metadata, err := provider.Metadata(kt, commit.Signatures)
+			metadata, err := provider.Metadata(kt, commit.Signature)
 			if err != nil {
-				fmt.Printf("get metadata for commit %sfailed, err: %s\n", commit.Signatures, err.Error())
+				fmt.Printf("get metadata for commit %sfailed, err: %s\n", commit.Signature, err.Error())
 				failedIDs = append(failedIDs, commit.ID)
+				continue
 			}
 			md5 = metadata.Md5
-			md5Map[commit.Signatures] = md5
+			md5Map[commit.Signature] = md5
 		}
 		if err := tx.Model(&Commit{}).Where("id = ?", commit.ID).Update("md5", md5).Error; err != nil {
 			fmt.Printf("update commit %d md5 failed, err: %s\n", commit.ID, err.Error())
 			failedIDs = append(failedIDs, commit.ID)
+			continue
 		}
 		successCount++
 	}
@@ -270,25 +282,28 @@ func batchUpdateReleasedConfigItemMd5(kt *kit.Kit, tx *gorm.DB, provider reposit
 	successCount := 0
 	failedIDs := []uint32{}
 	for _, releasedCI := range releasedCIs {
+		kt.BizID = releasedCI.BizID
 		if releasedCI.Md5 != "" {
 			continue
 		}
 		var md5 string
-		if md5Map[releasedCI.Signatures] != "" {
-			md5 = md5Map[releasedCI.Signatures]
+		if md5Map[releasedCI.Signature] != "" {
+			md5 = md5Map[releasedCI.Signature]
 		} else {
-			metadata, err := provider.Metadata(kt, releasedCI.Signatures)
+			metadata, err := provider.Metadata(kt, releasedCI.Signature)
 			if err != nil {
 				fmt.Printf("get metadata for released_config_item %sfailed, err: %s\n",
-					releasedCI.Signatures, err.Error())
+					releasedCI.Signature, err.Error())
 				failedIDs = append(failedIDs, releasedCI.ID)
+				continue
 			}
 			md5 = metadata.Md5
-			md5Map[releasedCI.Signatures] = md5
+			md5Map[releasedCI.Signature] = md5
 		}
 		if err := tx.Model(&ReleasedConfigItem{}).Where("id = ?", releasedCI.ID).Update("md5", md5).Error; err != nil {
 			fmt.Printf("update released_config_item %d md5 failed, err: %s\n", releasedCI.ID, err.Error())
 			failedIDs = append(failedIDs, releasedCI.ID)
+			continue
 		}
 		successCount++
 	}
@@ -311,24 +326,27 @@ func batchUpdateReleasedAppTemplateMd5(kt *kit.Kit, tx *gorm.DB, provider reposi
 	successCount := 0
 	failedIDs := []uint32{}
 	for _, releasedAT := range releasedATs {
+		kt.BizID = releasedAT.BizID
 		if releasedAT.Md5 != "" {
 			continue
 		}
 		var md5 string
-		if md5Map[releasedAT.Signatures] != "" {
-			md5 = md5Map[releasedAT.Signatures]
+		if md5Map[releasedAT.Signature] != "" {
+			md5 = md5Map[releasedAT.Signature]
 		} else {
-			metadata, err := provider.Metadata(kt, releasedAT.Signatures)
+			metadata, err := provider.Metadata(kt, releasedAT.Signature)
 			if err != nil {
-				fmt.Printf("get metadata for released_app_template %sfailed, err: %s\n", releasedAT.Signatures, err.Error())
+				fmt.Printf("get metadata for released_app_template %sfailed, err: %s\n", releasedAT.Signature, err.Error())
 				failedIDs = append(failedIDs, releasedAT.ID)
+				continue
 			}
 			md5 = metadata.Md5
-			md5Map[releasedAT.Signatures] = md5
+			md5Map[releasedAT.Signature] = md5
 		}
 		if err := tx.Model(&ReleasedAppTemplate{}).Where("id = ?", releasedAT.ID).Update("md5", md5).Error; err != nil {
 			fmt.Printf("update released_app_template %d md5 failed, err: %s\n", releasedAT.ID, err.Error())
 			failedIDs = append(failedIDs, releasedAT.ID)
+			continue
 		}
 		successCount++
 	}
@@ -350,24 +368,27 @@ func batchUpdateTemplateRevisionMd5(kt *kit.Kit, tx *gorm.DB, provider repositor
 	successCount := 0
 	failedIDs := []uint32{}
 	for _, templateRevision := range templateRevisions {
+		kt.BizID = templateRevision.BizID
 		if templateRevision.Md5 != "" {
 			continue
 		}
 		var md5 string
-		if md5Map[templateRevision.Signatures] != "" {
-			md5 = md5Map[templateRevision.Signatures]
+		if md5Map[templateRevision.Signature] != "" {
+			md5 = md5Map[templateRevision.Signature]
 		} else {
-			metadata, err := provider.Metadata(kt, templateRevision.Signatures)
+			metadata, err := provider.Metadata(kt, templateRevision.Signature)
 			if err != nil {
-				fmt.Printf("get metadata for template_revision %sfailed, err: %s\n", templateRevision.Signatures, err.Error())
+				fmt.Printf("get metadata for template_revision %sfailed, err: %s\n", templateRevision.Signature, err.Error())
 				failedIDs = append(failedIDs, templateRevision.ID)
+				continue
 			}
 			md5 = metadata.Md5
-			md5Map[templateRevision.Signatures] = md5
+			md5Map[templateRevision.Signature] = md5
 		}
 		if err := tx.Model(&TemplateRevision{}).Where("id = ?", templateRevision.ID).Update("md5", md5).Error; err != nil {
 			fmt.Printf("update template_revision %d md5 failed, err: %s\n", templateRevision.ID, err.Error())
 			failedIDs = append(failedIDs, templateRevision.ID)
+			continue
 		}
 		successCount++
 	}
