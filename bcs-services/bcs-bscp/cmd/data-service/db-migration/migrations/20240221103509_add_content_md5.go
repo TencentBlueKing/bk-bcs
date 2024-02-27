@@ -36,7 +36,7 @@ func init() {
 
 // **这里只需要DB操作用到的字段**
 
-// Content: 文件内容
+// Content 文件内容
 type Content struct {
 	ID        uint32 `gorm:"primaryKey"`
 	BizID     uint32 `gorm:"column:biz_id"`
@@ -46,7 +46,7 @@ type Content struct {
 	Md5 string `gorm:"type:varchar(64) not null"`
 }
 
-// Commit: 文件修改记录
+// Commit 文件修改记录
 type Commit struct {
 	ID        uint32 `gorm:"primaryKey"`
 	BizID     uint32 `gorm:"column:biz_id"`
@@ -269,7 +269,8 @@ func batchUpdateCommitMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider
 	return nil
 }
 
-func batchUpdateReleasedConfigItemMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider, md5Map map[string]string) error {
+func batchUpdateReleasedConfigItemMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider,
+	md5Map map[string]string) error {
 	var currentMaxID uint32
 	releasedCIs := []*ReleasedConfigItem{}
 	if err := tx.Model(&ReleasedConfigItem{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
@@ -313,7 +314,8 @@ func batchUpdateReleasedConfigItemMd5(kt *kit.Kit, tx *gorm.DB, provider reposit
 	return nil
 }
 
-func batchUpdateReleasedAppTemplateMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider, md5Map map[string]string) error {
+func batchUpdateReleasedAppTemplateMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider,
+	md5Map map[string]string) error {
 	var currentMaxID uint32
 	releasedATs := []*ReleasedAppTemplate{}
 	if err := tx.Model(&ReleasedAppTemplate{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
@@ -350,12 +352,14 @@ func batchUpdateReleasedAppTemplateMd5(kt *kit.Kit, tx *gorm.DB, provider reposi
 		}
 		successCount++
 	}
-	fmt.Printf("batch update released_app_template md5 success count: %d, failed count: %d\n", successCount, len(failedIDs))
+	fmt.Printf("batch update released_app_template md5 success count: %d, failed count: %d\n",
+		successCount, len(failedIDs))
 	fmt.Printf("failed released_app_template ids: %v\n", failedIDs)
 	return nil
 }
 
-func batchUpdateTemplateRevisionMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider, md5Map map[string]string) error {
+func batchUpdateTemplateRevisionMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider,
+	md5Map map[string]string) error {
 	var currentMaxID uint32
 	templateRevisions := []*TemplateRevision{}
 	if err := tx.Model(&TemplateRevision{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
