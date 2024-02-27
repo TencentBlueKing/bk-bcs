@@ -1,11 +1,3 @@
-### API基本信息
-
-API名称：list_template_revision_name_by_template_id
-
-API Path：/api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids
-
-Method：POST
-
 ### 描述
 
 该接口提供版本：v1.0.0+
