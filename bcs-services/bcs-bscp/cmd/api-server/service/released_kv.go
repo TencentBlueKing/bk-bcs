@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -201,16 +200,9 @@ func rkvsToOutData(details []*pbrkv.ReleasedKv) map[string]interface{} {
 	for _, rkv := range details {
 		var value interface{}
 		value = rkv.Spec.Value
-		switch rkv.Spec.KvType {
-		case string(table.KvNumber):
+		if rkv.Spec.KvType == string(table.KvNumber) {
 			i, _ := strconv.Atoi(rkv.Spec.Value)
 			value = i
-		case string(table.KvJson):
-			_ = json.Unmarshal([]byte(rkv.Spec.Value), &value)
-			if reflect.TypeOf(value).Kind() != reflect.String {
-				jm, _ := json.Marshal(value)
-				value = string(jm)
-			}
 		}
 		d[rkv.Spec.Key] = map[string]interface{}{
 			"kv_type": rkv.Spec.KvType,
@@ -226,16 +218,9 @@ func kvsToOutData(details []*pbkv.Kv) map[string]interface{} {
 	for _, rkv := range details {
 		var value interface{}
 		value = rkv.Spec.Value
-		switch rkv.Spec.KvType {
-		case string(table.KvNumber):
+		if rkv.Spec.KvType == string(table.KvNumber) {
 			i, _ := strconv.Atoi(rkv.Spec.Value)
 			value = i
-		case string(table.KvJson):
-			_ = json.Unmarshal([]byte(rkv.Spec.Value), &value)
-			if reflect.TypeOf(value).Kind() != reflect.String {
-				jm, _ := json.Marshal(value)
-				value = string(jm)
-			}
 		}
 		d[rkv.Spec.Key] = map[string]interface{}{
 			"kv_type": rkv.Spec.KvType,
