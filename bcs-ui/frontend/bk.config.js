@@ -27,7 +27,8 @@ module.exports = {
   },
   configureWebpack() {
     return {
-      devtool: 'eval-source-map',
+      // 生产模式不开启sourcemap
+      devtool: process.env.NODE_ENV === 'production' ? false : 'eval-source-map',
       resolve: {
         fallback: { "url": require.resolve("url") },
         extensions: ['.md'],
