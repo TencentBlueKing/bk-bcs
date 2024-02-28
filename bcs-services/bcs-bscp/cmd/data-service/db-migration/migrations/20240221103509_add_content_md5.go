@@ -36,8 +36,8 @@ func init() {
 
 // **这里只需要DB操作用到的字段**
 
-// Content 文件内容
-type Content struct {
+// Content20240221103509 文件内容
+type Content20240221103509 struct {
 	ID        uint32 `gorm:"primaryKey"`
 	BizID     uint32 `gorm:"column:biz_id"`
 	Signature string `gorm:"type:varchar(64) not null"`
@@ -46,33 +46,33 @@ type Content struct {
 	Md5 string `gorm:"type:varchar(64) not null"`
 }
 
-// Commit 文件修改记录
-type Commit struct {
+// Commit20240221103509 文件修改记录
+type Commit20240221103509 struct {
 	ID        uint32 `gorm:"primaryKey"`
 	BizID     uint32 `gorm:"column:biz_id"`
 	Signature string `gorm:"type:varchar(64) not null"`
 	Md5       string `gorm:"type:varchar(64) not null"`
 }
 
-// ReleasedConfigItem 已生成版本的配置项
-type ReleasedConfigItem struct {
+// ReleasedConfigItem20240221103509 已生成版本的配置项
+type ReleasedConfigItem20240221103509 struct {
 	ID        uint32 `gorm:"primaryKey"`
 	BizID     uint32 `gorm:"column:biz_id"`
 	Signature string `gorm:"type:varchar(64) not null"`
 	Md5       string `gorm:"type:varchar(64) not null"`
 }
 
-// ReleasedAppTemplate 已生成版本服务的模版
+// ReleasedAppTemplate20240221103509 已生成版本服务的模版
 // 这里只需要DB操作用到的字段
-type ReleasedAppTemplate struct {
+type ReleasedAppTemplate20240221103509 struct {
 	ID        uint32 `gorm:"primaryKey"`
 	BizID     uint32 `gorm:"column:biz_id"`
 	Signature string `gorm:"type:varchar(64) not null"`
 	Md5       string `gorm:"type:varchar(64) not null"`
 }
 
-// TemplateRevision 模版版本
-type TemplateRevision struct {
+// TemplateRevision20240221103509 模版版本
+type TemplateRevision20240221103509 struct {
 	ID        uint32 `gorm:"primaryKey"`
 	BizID     uint32 `gorm:"column:biz_id"`
 	Signature string `gorm:"type:varchar(64) not null"`
@@ -83,32 +83,32 @@ type TemplateRevision struct {
 func mig20240221103509Up(tx *gorm.DB) error {
 
 	/*** 字段变更 ***/
-	if !tx.Migrator().HasColumn(&Content{}, "Md5") {
-		if err := tx.Migrator().AddColumn(&Content{}, "Md5"); err != nil {
+	if !tx.Migrator().HasColumn(&Content20240221103509{}, "Md5") {
+		if err := tx.Migrator().AddColumn(&Content20240221103509{}, "Md5"); err != nil {
 			return err
 		}
 	}
 
-	if !tx.Migrator().HasColumn(&Commit{}, "Md5") {
-		if err := tx.Migrator().AddColumn(&Commit{}, "Md5"); err != nil {
+	if !tx.Migrator().HasColumn(&Commit20240221103509{}, "Md5") {
+		if err := tx.Migrator().AddColumn(&Commit20240221103509{}, "Md5"); err != nil {
 			return err
 		}
 	}
 
-	if !tx.Migrator().HasColumn(&ReleasedConfigItem{}, "Md5") {
-		if err := tx.Migrator().AddColumn(&ReleasedConfigItem{}, "Md5"); err != nil {
+	if !tx.Migrator().HasColumn(&ReleasedConfigItem20240221103509{}, "Md5") {
+		if err := tx.Migrator().AddColumn(&ReleasedConfigItem20240221103509{}, "Md5"); err != nil {
 			return err
 		}
 	}
 
-	if !tx.Migrator().HasColumn(&ReleasedAppTemplate{}, "Md5") {
-		if err := tx.Migrator().AddColumn(&ReleasedAppTemplate{}, "Md5"); err != nil {
+	if !tx.Migrator().HasColumn(&ReleasedAppTemplate20240221103509{}, "Md5") {
+		if err := tx.Migrator().AddColumn(&ReleasedAppTemplate20240221103509{}, "Md5"); err != nil {
 			return err
 		}
 	}
 
-	if !tx.Migrator().HasColumn(&TemplateRevision{}, "Md5") {
-		if err := tx.Migrator().AddColumn(&TemplateRevision{}, "Md5"); err != nil {
+	if !tx.Migrator().HasColumn(&TemplateRevision20240221103509{}, "Md5") {
+		if err := tx.Migrator().AddColumn(&TemplateRevision20240221103509{}, "Md5"); err != nil {
 			return err
 		}
 	}
@@ -152,32 +152,32 @@ func mig20240221103509Down(tx *gorm.DB) error {
 
 	/*** 字段变更 ***/
 
-	if tx.Migrator().HasColumn(&Content{}, "Md5") {
-		if err := tx.Migrator().DropColumn(&Content{}, "Md5"); err != nil {
+	if tx.Migrator().HasColumn(&Content20240221103509{}, "Md5") {
+		if err := tx.Migrator().DropColumn(&Content20240221103509{}, "Md5"); err != nil {
 			return err
 		}
 	}
 
-	if tx.Migrator().HasColumn(&Commit{}, "Md5") {
-		if err := tx.Migrator().DropColumn(&Commit{}, "Md5"); err != nil {
+	if tx.Migrator().HasColumn(&Commit20240221103509{}, "Md5") {
+		if err := tx.Migrator().DropColumn(&Commit20240221103509{}, "Md5"); err != nil {
 			return err
 		}
 	}
 
-	if tx.Migrator().HasColumn(&ReleasedConfigItem{}, "Md5") {
-		if err := tx.Migrator().DropColumn(&ReleasedConfigItem{}, "Md5"); err != nil {
+	if tx.Migrator().HasColumn(&ReleasedConfigItem20240221103509{}, "Md5") {
+		if err := tx.Migrator().DropColumn(&ReleasedConfigItem20240221103509{}, "Md5"); err != nil {
 			return err
 		}
 	}
 
-	if tx.Migrator().HasColumn(&ReleasedAppTemplate{}, "Md5") {
-		if err := tx.Migrator().DropColumn(&ReleasedAppTemplate{}, "Md5"); err != nil {
+	if tx.Migrator().HasColumn(&ReleasedAppTemplate20240221103509{}, "Md5") {
+		if err := tx.Migrator().DropColumn(&ReleasedAppTemplate20240221103509{}, "Md5"); err != nil {
 			return err
 		}
 	}
 
-	if tx.Migrator().HasColumn(&TemplateRevision{}, "Md5") {
-		if err := tx.Migrator().DropColumn(&TemplateRevision{}, "Md5"); err != nil {
+	if tx.Migrator().HasColumn(&TemplateRevision20240221103509{}, "Md5") {
+		if err := tx.Migrator().DropColumn(&TemplateRevision20240221103509{}, "Md5"); err != nil {
 			return err
 		}
 	}
@@ -187,11 +187,11 @@ func mig20240221103509Down(tx *gorm.DB) error {
 
 func batchUpdateContentMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider, md5Map map[string]string) error {
 	var currentMaxID uint32
-	contents := []*Content{}
-	if err := tx.Model(&Content{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
+	contents := []*Content20240221103509{}
+	if err := tx.Model(&Content20240221103509{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
 		return err
 	}
-	if err := tx.Model(&Content{}).Where("id <= ?", currentMaxID).Find(&contents).Error; err != nil {
+	if err := tx.Model(&Content20240221103509{}).Where("id <= ?", currentMaxID).Find(&contents).Error; err != nil {
 		return err
 	}
 
@@ -215,7 +215,7 @@ func batchUpdateContentMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provide
 			md5 = metadata.Md5
 			md5Map[content.Signature] = md5
 		}
-		if err := tx.Model(&Content{}).Where("id = ?", content.ID).Update("md5", md5).Error; err != nil {
+		if err := tx.Model(&Content20240221103509{}).Where("id = ?", content.ID).Update("md5", md5).Error; err != nil {
 			fmt.Printf("update content %d md5 failed, err: %s\n", content.ID, err.Error())
 			failedIDs = append(failedIDs, content.ID)
 			continue
@@ -229,11 +229,11 @@ func batchUpdateContentMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provide
 
 func batchUpdateCommitMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider, md5Map map[string]string) error {
 	var currentMaxID uint32
-	commits := []*Commit{}
-	if err := tx.Model(&Commit{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
+	commits := []*Commit20240221103509{}
+	if err := tx.Model(&Commit20240221103509{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
 		return err
 	}
-	if err := tx.Model(&Commit{}).Where("id <= ?", currentMaxID).Find(&commits).Error; err != nil {
+	if err := tx.Model(&Commit20240221103509{}).Where("id <= ?", currentMaxID).Find(&commits).Error; err != nil {
 		return err
 	}
 
@@ -257,7 +257,7 @@ func batchUpdateCommitMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider
 			md5 = metadata.Md5
 			md5Map[commit.Signature] = md5
 		}
-		if err := tx.Model(&Commit{}).Where("id = ?", commit.ID).Update("md5", md5).Error; err != nil {
+		if err := tx.Model(&Commit20240221103509{}).Where("id = ?", commit.ID).Update("md5", md5).Error; err != nil {
 			fmt.Printf("update commit %d md5 failed, err: %s\n", commit.ID, err.Error())
 			failedIDs = append(failedIDs, commit.ID)
 			continue
@@ -272,11 +272,11 @@ func batchUpdateCommitMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider
 func batchUpdateReleasedConfigItemMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider,
 	md5Map map[string]string) error {
 	var currentMaxID uint32
-	releasedCIs := []*ReleasedConfigItem{}
-	if err := tx.Model(&ReleasedConfigItem{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
+	releasedCIs := []*ReleasedConfigItem20240221103509{}
+	if err := tx.Model(&ReleasedConfigItem20240221103509{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
 		return err
 	}
-	if err := tx.Model(&ReleasedConfigItem{}).Where("id <= ?", currentMaxID).Find(&releasedCIs).Error; err != nil {
+	if err := tx.Model(&ReleasedConfigItem20240221103509{}).Where("id <= ?", currentMaxID).Find(&releasedCIs).Error; err != nil {
 		return err
 	}
 
@@ -301,7 +301,7 @@ func batchUpdateReleasedConfigItemMd5(kt *kit.Kit, tx *gorm.DB, provider reposit
 			md5 = metadata.Md5
 			md5Map[releasedCI.Signature] = md5
 		}
-		if err := tx.Model(&ReleasedConfigItem{}).Where("id = ?", releasedCI.ID).Update("md5", md5).Error; err != nil {
+		if err := tx.Model(&ReleasedConfigItem20240221103509{}).Where("id = ?", releasedCI.ID).Update("md5", md5).Error; err != nil {
 			fmt.Printf("update released_config_item %d md5 failed, err: %s\n", releasedCI.ID, err.Error())
 			failedIDs = append(failedIDs, releasedCI.ID)
 			continue
@@ -317,11 +317,11 @@ func batchUpdateReleasedConfigItemMd5(kt *kit.Kit, tx *gorm.DB, provider reposit
 func batchUpdateReleasedAppTemplateMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider,
 	md5Map map[string]string) error {
 	var currentMaxID uint32
-	releasedATs := []*ReleasedAppTemplate{}
-	if err := tx.Model(&ReleasedAppTemplate{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
+	releasedATs := []*ReleasedAppTemplate20240221103509{}
+	if err := tx.Model(&ReleasedAppTemplate20240221103509{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
 		return err
 	}
-	if err := tx.Model(&ReleasedAppTemplate{}).Where("id <= ?", currentMaxID).Find(&releasedATs).Error; err != nil {
+	if err := tx.Model(&ReleasedAppTemplate20240221103509{}).Where("id <= ?", currentMaxID).Find(&releasedATs).Error; err != nil {
 		return err
 	}
 
@@ -345,7 +345,7 @@ func batchUpdateReleasedAppTemplateMd5(kt *kit.Kit, tx *gorm.DB, provider reposi
 			md5 = metadata.Md5
 			md5Map[releasedAT.Signature] = md5
 		}
-		if err := tx.Model(&ReleasedAppTemplate{}).Where("id = ?", releasedAT.ID).Update("md5", md5).Error; err != nil {
+		if err := tx.Model(&ReleasedAppTemplate20240221103509{}).Where("id = ?", releasedAT.ID).Update("md5", md5).Error; err != nil {
 			fmt.Printf("update released_app_template %d md5 failed, err: %s\n", releasedAT.ID, err.Error())
 			failedIDs = append(failedIDs, releasedAT.ID)
 			continue
@@ -361,11 +361,11 @@ func batchUpdateReleasedAppTemplateMd5(kt *kit.Kit, tx *gorm.DB, provider reposi
 func batchUpdateTemplateRevisionMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider,
 	md5Map map[string]string) error {
 	var currentMaxID uint32
-	templateRevisions := []*TemplateRevision{}
-	if err := tx.Model(&TemplateRevision{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
+	templateRevisions := []*TemplateRevision20240221103509{}
+	if err := tx.Model(&TemplateRevision20240221103509{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
 		return err
 	}
-	if err := tx.Model(&TemplateRevision{}).Where("id <= ?", currentMaxID).Find(&templateRevisions).Error; err != nil {
+	if err := tx.Model(&TemplateRevision20240221103509{}).Where("id <= ?", currentMaxID).Find(&templateRevisions).Error; err != nil {
 		return err
 	}
 
@@ -389,7 +389,7 @@ func batchUpdateTemplateRevisionMd5(kt *kit.Kit, tx *gorm.DB, provider repositor
 			md5 = metadata.Md5
 			md5Map[templateRevision.Signature] = md5
 		}
-		if err := tx.Model(&TemplateRevision{}).Where("id = ?", templateRevision.ID).Update("md5", md5).Error; err != nil {
+		if err := tx.Model(&TemplateRevision20240221103509{}).Where("id = ?", templateRevision.ID).Update("md5", md5).Error; err != nil {
 			fmt.Printf("update template_revision %d md5 failed, err: %s\n", templateRevision.ID, err.Error())
 			failedIDs = append(failedIDs, templateRevision.ID)
 			continue
