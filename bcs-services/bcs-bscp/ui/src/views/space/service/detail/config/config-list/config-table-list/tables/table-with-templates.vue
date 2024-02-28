@@ -93,6 +93,16 @@
                                   @click="handleEditOpen(config)">
                                   {{ t('编辑') }}
                                 </bk-button>
+                                <bk-button
+                                  v-if="config.file_state === 'REVISE'"
+                                  v-cursor="{ active: !hasEditServicePerm }"
+                                  text
+                                  theme="primary"
+                                  :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                                  :disabled="!hasEditServicePerm"
+                                  @click="handleUnModify(config.id)">
+                                  {{ t('撤销') }}
+                                </bk-button>
                                 <DownloadConfigBtn
                                   type="config"
                                   :bk-biz-id="props.bkBizId"
@@ -233,6 +243,7 @@
     getBoundTemplatesByAppVersion,
     deleteServiceConfigItem,
     deleteBoundPkg,
+    unModifyConfigItem,
   } from '../../../../../../../../api/config';
   import { getAppPkgBindingRelations } from '../../../../../../../../api/template';
   import StatusTag from './status-tag';
@@ -634,6 +645,12 @@
   defineExpose({
     refresh: getAllConfigList,
   });
+
+  // 配置文件撤销修改
+  const handleUnModify = async (id: number) => {
+    await unModifyConfigItem(props.bkBizId, props.appId, id);
+    getAllConfigList();
+  };
 </script>
 <style lang="scss" scoped>
   .config-groups-table {
