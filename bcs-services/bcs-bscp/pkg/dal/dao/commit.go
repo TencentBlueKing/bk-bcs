@@ -38,6 +38,10 @@ type Commit interface {
 	GetLatestCommit(kit *kit.Kit, bizID, appID, configItemID uint32) (*table.Commit, error)
 	// ListAppLatestCommits list app config items' latest commit.
 	ListAppLatestCommits(kit *kit.Kit, bizID, appID uint32) ([]*table.Commit, error)
+	// BatchDeleteWithTx batch delete commit data instance with transaction.
+	BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, commitIDs []uint32) error
+	// ListCommitsByGtID get list data by greater than ID.
+	ListCommitsByGtID(kit *kit.Kit, commitID, bizID, appID, configItemID uint32) ([]*table.Commit, error)
 }
 
 var _ Commit = new(commitDao)
@@ -46,6 +50,30 @@ type commitDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// ListCommitsByGtID get list data by greater than ID.
+func (dao *commitDao) ListCommitsByGtID(kit *kit.Kit, commitID, bizID, appID, configItemID uint32) (
+	[]*table.Commit, error) {
+
+	m := dao.genQ.Commit
+
+	return dao.genQ.Commit.WithContext(kit.Ctx).
+		Where(m.ID.Gt(commitID), m.BizID.Eq(bizID), m.AppID.Eq(appID),
+			m.ConfigItemID.Eq(configItemID)).Find()
+}
+
+// BatchDeleteWithTx batch delete commit data instance with transaction.
+func (dao *commitDao) BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, commitIDs []uint32) error {
+
+	m := tx.Query.Commit
+	q := tx.Query.Commit.WithContext(kit.Ctx)
+
+	_, err := q.Where(m.ID.In(commitIDs...)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Create one commit instance.

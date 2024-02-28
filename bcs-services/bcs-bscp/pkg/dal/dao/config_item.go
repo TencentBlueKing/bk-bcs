@@ -58,6 +58,10 @@ type ConfigItem interface {
 	GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error)
 	// ListConfigItemByTuple 按照多个字段in查询config item 列表
 	ListConfigItemByTuple(kit *kit.Kit, data [][]interface{}) ([]*table.ConfigItem, error)
+	// RecoverConfigItem 恢复单个配置项(恢复的配置项使用原来的ID)
+	RecoverConfigItem(kit *kit.Kit, tx *gen.QueryTx, configItem *table.ConfigItem) error
+	// UpdateWithTx one configItem instance with transaction.
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItem *table.ConfigItem) error
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -67,6 +71,88 @@ type configItemDao struct {
 	idGen    IDGenInterface
 	auditDao AuditDao
 	lock     LockDao
+}
+
+// UpdateWithTx one configItem instance with transaction.
+func (dao *configItemDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, ci *table.ConfigItem) error {
+	if ci == nil {
+		return errf.New(errf.InvalidParameter, "config item is nil")
+	}
+
+	m := tx.ConfigItem
+	q := tx.ConfigItem.WithContext(kit.Ctx)
+
+	// if file mode not update, need to query this ci's file mode that used to validate unix and win file related info.
+	if ci.Spec != nil && len(ci.Spec.FileMode) == 0 {
+		fileMode, err := dao.queryFileMode(kit, ci.ID, ci.Attachment.BizID)
+		if err != nil {
+			return err
+		}
+
+		ci.Spec.FileMode = fileMode
+	}
+
+	if err := ci.ValidateUpdate(); err != nil {
+		return errf.New(errf.InvalidParameter, err.Error())
+	}
+
+	if err := dao.validateAttachmentAppExist(kit, ci.Attachment); err != nil {
+		return err
+	}
+
+	oldOne, err := q.Where(m.ID.Eq(ci.ID), m.BizID.Eq(ci.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+
+	ad := dao.auditDao.DecoratorV2(kit, ci.Attachment.BizID).PrepareUpdate(ci, oldOne)
+
+	updateTx := func(tx *gen.Query) error {
+		q = tx.ConfigItem.WithContext(kit.Ctx)
+		if _, err = q.Omit(m.ID, m.BizID, m.AppID).
+			Where(m.ID.Eq(ci.ID), m.BizID.Eq(ci.Attachment.BizID)).Updates(ci); err != nil {
+			return err
+		}
+
+		if err = ad.Do(tx); err != nil {
+			return fmt.Errorf("audit update config item failed, err: %v", err)
+		}
+		return nil
+	}
+
+	if err = dao.genQ.Transaction(updateTx); err != nil {
+		logs.Errorf("update config item: %d failed, err: %v, rid: %v", ci.ID, err, kit.Rid)
+		return err
+	}
+
+	return nil
+}
+
+// RecoverConfigItem 恢复单个配置项(恢复的配置项使用原来的ID)
+func (dao *configItemDao) RecoverConfigItem(kit *kit.Kit, tx *gen.QueryTx, ci *table.ConfigItem) error {
+	if ci == nil {
+		return errors.New("config item is nil")
+	}
+
+	if err := ci.ValidateRecover(); err != nil {
+		return err
+	}
+
+	if err := dao.validateAttachmentResExist(kit, ci.Attachment); err != nil {
+		return err
+	}
+
+	ad := dao.auditDao.DecoratorV2(kit, ci.Attachment.BizID).PrepareCreate(ci)
+
+	if err := tx.ConfigItem.WithContext(kit.Ctx).Create(ci); err != nil {
+		return err
+	}
+
+	if err := ad.Do(tx.Query); err != nil {
+		return fmt.Errorf("audit recover config item failed, err: %v", err)
+	}
+
+	return nil
 }
 
 // ListConfigItemByTuple 按照多个字段in查询config item 列表
@@ -230,7 +316,7 @@ func (dao *configItemDao) GetByUniqueKey(kit *kit.Kit, bizID, appID uint32, name
 	configItem, err := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Name.Eq(name),
 		m.Path.Eq(path)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get config item failed, err: %v", err)
+		return nil, err
 	}
 
 	return configItem, nil
