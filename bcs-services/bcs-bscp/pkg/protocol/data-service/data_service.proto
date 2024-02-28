@@ -45,6 +45,8 @@ service Data {
   rpc BatchUpsertConfigItems(BatchUpsertConfigItemsReq) returns (BatchUpsertConfigItemsResp) {}
   rpc UpdateConfigItem(UpdateConfigItemReq) returns (pbbase.EmptyResp) {}
   rpc DeleteConfigItem(DeleteConfigItemReq) returns (pbbase.EmptyResp) {}
+  rpc UnDeleteConfigItem(UnDeleteConfigItemReq) returns (pbbase.EmptyResp) {}
+  rpc UndoConfigItem(UndoConfigItemReq) returns (pbbase.EmptyResp) {}
   rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
 
   rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
@@ -390,6 +392,16 @@ message UpdateConfigItemReq {
 }
 
 message DeleteConfigItemReq {
+  uint32 id = 1;
+  pbci.ConfigItemAttachment attachment = 2;
+}
+
+message UnDeleteConfigItemReq {
+  uint32 id = 1;
+  pbci.ConfigItemAttachment attachment = 2;
+}
+
+message UndoConfigItemReq {
   uint32 id = 1;
   pbci.ConfigItemAttachment attachment = 2;
 }

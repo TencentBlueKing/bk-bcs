@@ -41,6 +41,8 @@ const (
 	Data_BatchUpsertConfigItems_FullMethodName            = "/pbds.Data/BatchUpsertConfigItems"
 	Data_UpdateConfigItem_FullMethodName                  = "/pbds.Data/UpdateConfigItem"
 	Data_DeleteConfigItem_FullMethodName                  = "/pbds.Data/DeleteConfigItem"
+	Data_UnDeleteConfigItem_FullMethodName                = "/pbds.Data/UnDeleteConfigItem"
+	Data_UndoConfigItem_FullMethodName                    = "/pbds.Data/UndoConfigItem"
 	Data_GetConfigItem_FullMethodName                     = "/pbds.Data/GetConfigItem"
 	Data_ListConfigItems_FullMethodName                   = "/pbds.Data/ListConfigItems"
 	Data_ListReleasedConfigItems_FullMethodName           = "/pbds.Data/ListReleasedConfigItems"
@@ -184,6 +186,8 @@ type DataClient interface {
 	BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(ctx context.Context, in *UpdateConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	UnDeleteConfigItem(ctx context.Context, in *UnDeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	UndoConfigItem(ctx context.Context, in *UndoConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*config_item.ConfigItem, error)
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
 	ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error)
@@ -443,6 +447,24 @@ func (c *dataClient) UpdateConfigItem(ctx context.Context, in *UpdateConfigItemR
 func (c *dataClient) DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, Data_DeleteConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UnDeleteConfigItem(ctx context.Context, in *UnDeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UnDeleteConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UndoConfigItem(ctx context.Context, in *UndoConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UndoConfigItem_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1574,6 +1596,8 @@ type DataServer interface {
 	BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*base.EmptyResp, error)
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*base.EmptyResp, error)
+	UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*base.EmptyResp, error)
+	UndoConfigItem(context.Context, *UndoConfigItemReq) (*base.EmptyResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*config_item.ConfigItem, error)
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
 	ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error)
@@ -1762,6 +1786,12 @@ func (UnimplementedDataServer) UpdateConfigItem(context.Context, *UpdateConfigIt
 }
 func (UnimplementedDataServer) DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteConfigItem not implemented")
+}
+func (UnimplementedDataServer) UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteConfigItem not implemented")
+}
+func (UnimplementedDataServer) UndoConfigItem(context.Context, *UndoConfigItemReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UndoConfigItem not implemented")
 }
 func (UnimplementedDataServer) GetConfigItem(context.Context, *GetConfigItemReq) (*config_item.ConfigItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfigItem not implemented")
@@ -2356,6 +2386,42 @@ func _Data_DeleteConfigItem_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).DeleteConfigItem(ctx, req.(*DeleteConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UnDeleteConfigItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnDeleteConfigItemReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UnDeleteConfigItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UnDeleteConfigItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UnDeleteConfigItem(ctx, req.(*UnDeleteConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UndoConfigItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UndoConfigItemReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UndoConfigItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UndoConfigItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UndoConfigItem(ctx, req.(*UndoConfigItemReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4628,6 +4694,14 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteConfigItem",
 			Handler:    _Data_DeleteConfigItem_Handler,
+		},
+		{
+			MethodName: "UnDeleteConfigItem",
+			Handler:    _Data_UnDeleteConfigItem_Handler,
+		},
+		{
+			MethodName: "UndoConfigItem",
+			Handler:    _Data_UndoConfigItem_Handler,
 		},
 		{
 			MethodName: "GetConfigItem",

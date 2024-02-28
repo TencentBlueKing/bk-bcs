@@ -334,7 +334,7 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: post
+          method: get
           path: /api/v1/config/list/app/app/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
@@ -1393,6 +1393,30 @@ paths:
           type: HTTP
           method: post
           path: /api/v1/config/biz/{biz_id}/template_revisions/list_by_ids
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids:
+    post:
+      operationId: list_template_revision_name_by_template_id
+      description: 批量查询模版的版本名称
+      tags:
+        - 模版版本
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids
           matchSubpath: false
           timeout: 0
           upstreams: { }
