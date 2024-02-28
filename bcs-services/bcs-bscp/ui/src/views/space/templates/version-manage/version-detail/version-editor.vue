@@ -263,7 +263,7 @@
   const handleDownloadFile = async () => {
     const { signature, name } = fileContent.value as IFileConfigContentSummary;
     const res = await downloadTemplateContent(props.spaceId, props.templateSpaceId, signature);
-    fileDownload(String(res), `${name}.bin`);
+    fileDownload(String(res), name);
   };
 
   const validate = async () => {

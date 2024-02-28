@@ -66,9 +66,6 @@
       }
       content = await downloadTemplateContent(props.bkBizId, templateSpaceId, signature);
     }
-    if (fileType === 'binary') {
-      fileName += '.bin';
-    }
     fileDownload(content, fileName);
 
     pending.value = false;

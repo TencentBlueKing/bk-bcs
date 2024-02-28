@@ -79,7 +79,7 @@
             </template>
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '140' : '200'" fixed="right">
+        <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '160' : '200'" fixed="right">
           <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
@@ -102,6 +102,12 @@
                         @click="handleOpenMoveOutFromPkgsDialog(row)">
                         {{ t('移出套餐') }}
                       </div>
+                      <DownloadConfig
+                        class="action-item"
+                        theme="default"
+                        :space-id="spaceId"
+                        :template-space-id="currentTemplateSpace"
+                        :template-id="row.id" />
                     </div>
                   </template>
                 </bk-popover>
@@ -134,6 +140,7 @@
   import { useRouter } from 'vue-router';
   import { storeToRefs } from 'pinia';
   import { Ellipsis, Search, Spinner } from 'bkui-vue/lib/icon';
+  import { debounce } from 'lodash';
   import useGlobalStore from '../../../../../../store/global';
   import useTemplateStore from '../../../../../../store/template';
   import { ICommonQuery } from '../../../../../../../types/index';
@@ -149,7 +156,7 @@
   import PkgsTag from '../../components/packages-tag.vue';
   import AppsBoundByTemplate from '../apps-bound-by-template.vue';
   import TableEmpty from '../../../../../../components/table/table-empty.vue';
-  import { debounce } from 'lodash';
+  import DownloadConfig from '../operations/download-config/download-config.vue';
 
   const router = useRouter();
   const { t, locale } = useI18n();
