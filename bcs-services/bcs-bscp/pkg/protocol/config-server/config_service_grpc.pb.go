@@ -35,6 +35,8 @@ const (
 	Config_BatchUpsertConfigItems_FullMethodName            = "/pbcs.Config/BatchUpsertConfigItems"
 	Config_UpdateConfigItem_FullMethodName                  = "/pbcs.Config/UpdateConfigItem"
 	Config_DeleteConfigItem_FullMethodName                  = "/pbcs.Config/DeleteConfigItem"
+	Config_UnDeleteConfigItem_FullMethodName                = "/pbcs.Config/UnDeleteConfigItem"
+	Config_UndoConfigItem_FullMethodName                    = "/pbcs.Config/UndoConfigItem"
 	Config_GetConfigItem_FullMethodName                     = "/pbcs.Config/GetConfigItem"
 	Config_GetReleasedConfigItem_FullMethodName             = "/pbcs.Config/GetReleasedConfigItem"
 	Config_ListConfigItems_FullMethodName                   = "/pbcs.Config/ListConfigItems"
@@ -168,6 +170,8 @@ type ConfigClient interface {
 	BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(ctx context.Context, in *UpdateConfigItemReq, opts ...grpc.CallOption) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error)
+	UnDeleteConfigItem(ctx context.Context, in *UnDeleteConfigItemReq, opts ...grpc.CallOption) (*UnDeleteConfigItemResp, error)
+	UndoConfigItem(ctx context.Context, in *UndoConfigItemReq, opts ...grpc.CallOption) (*UndoConfigItemResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*GetConfigItemResp, error)
 	GetReleasedConfigItem(ctx context.Context, in *GetReleasedConfigItemReq, opts ...grpc.CallOption) (*GetReleasedConfigItemResp, error)
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
@@ -222,12 +226,12 @@ type ConfigClient interface {
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -395,6 +399,24 @@ func (c *configClient) UpdateConfigItem(ctx context.Context, in *UpdateConfigIte
 func (c *configClient) DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error) {
 	out := new(DeleteConfigItemResp)
 	err := c.cc.Invoke(ctx, Config_DeleteConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UnDeleteConfigItem(ctx context.Context, in *UnDeleteConfigItemReq, opts ...grpc.CallOption) (*UnDeleteConfigItemResp, error) {
+	out := new(UnDeleteConfigItemResp)
+	err := c.cc.Invoke(ctx, Config_UnDeleteConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UndoConfigItem(ctx context.Context, in *UndoConfigItemReq, opts ...grpc.CallOption) (*UndoConfigItemResp, error) {
+	out := new(UndoConfigItemResp)
+	err := c.cc.Invoke(ctx, Config_UndoConfigItem_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1444,6 +1466,8 @@ type ConfigServer interface {
 	BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error)
+	UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*UnDeleteConfigItemResp, error)
+	UndoConfigItem(context.Context, *UndoConfigItemReq) (*UndoConfigItemResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error)
 	GetReleasedConfigItem(context.Context, *GetReleasedConfigItemReq) (*GetReleasedConfigItemResp, error)
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
@@ -1498,12 +1522,12 @@ type ConfigServer interface {
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1606,6 +1630,12 @@ func (UnimplementedConfigServer) UpdateConfigItem(context.Context, *UpdateConfig
 }
 func (UnimplementedConfigServer) DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteConfigItem not implemented")
+}
+func (UnimplementedConfigServer) UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*UnDeleteConfigItemResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteConfigItem not implemented")
+}
+func (UnimplementedConfigServer) UndoConfigItem(context.Context, *UndoConfigItemReq) (*UndoConfigItemResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UndoConfigItem not implemented")
 }
 func (UnimplementedConfigServer) GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfigItem not implemented")
@@ -2155,6 +2185,42 @@ func _Config_DeleteConfigItem_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).DeleteConfigItem(ctx, req.(*DeleteConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UnDeleteConfigItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnDeleteConfigItemReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UnDeleteConfigItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UnDeleteConfigItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UnDeleteConfigItem(ctx, req.(*UnDeleteConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UndoConfigItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UndoConfigItemReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UndoConfigItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UndoConfigItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UndoConfigItem(ctx, req.(*UndoConfigItemReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4261,6 +4327,14 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteConfigItem",
 			Handler:    _Config_DeleteConfigItem_Handler,
+		},
+		{
+			MethodName: "UnDeleteConfigItem",
+			Handler:    _Config_UnDeleteConfigItem_Handler,
+		},
+		{
+			MethodName: "UndoConfigItem",
+			Handler:    _Config_UndoConfigItem_Handler,
 		},
 		{
 			MethodName: "GetConfigItem",
