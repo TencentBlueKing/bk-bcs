@@ -204,6 +204,7 @@ service Data {
   rpc ListCredentials(ListCredentialReq) returns (ListCredentialResp) {}
   rpc DeleteCredential(DeleteCredentialReq) returns (pbbase.EmptyResp) {}
   rpc UpdateCredential(UpdateCredentialReq) returns (pbbase.EmptyResp) {}
+  rpc CheckCredentialName(CheckCredentialNameReq) returns (CheckCredentialNameResp) {}
 
   // credential scope related interface
   rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {}
@@ -282,6 +283,15 @@ message UpdateCredentialReq {
   uint32 id = 1;
   pbcredential.CredentialAttachment attachment = 2;
   pbcredential.CredentialSpec spec = 3;
+}
+
+message CheckCredentialNameReq {
+  uint32 biz_id = 1;
+  string credential_name = 2;
+}
+
+message CheckCredentialNameResp {
+  bool exist = 1;
 }
 
 message DeleteCredentialReq {
