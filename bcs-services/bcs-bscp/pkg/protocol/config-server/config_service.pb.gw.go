@@ -920,6 +920,190 @@ func local_request_Config_DeleteConfigItem_0(ctx context.Context, marshaler runt
 
 }
 
+func request_Config_UnDeleteConfigItem_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UnDeleteConfigItemReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+
+	protoReq.Id, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+
+	val, ok = pathParams["app_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
+	}
+
+	protoReq.AppId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
+	}
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
+	msg, err := client.UnDeleteConfigItem(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Config_UnDeleteConfigItem_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UnDeleteConfigItemReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+
+	protoReq.Id, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+
+	val, ok = pathParams["app_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
+	}
+
+	protoReq.AppId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
+	}
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
+	msg, err := server.UnDeleteConfigItem(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Config_UndoConfigItem_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UndoConfigItemReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+
+	protoReq.Id, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+
+	val, ok = pathParams["app_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
+	}
+
+	protoReq.AppId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
+	}
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
+	msg, err := client.UndoConfigItem(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Config_UndoConfigItem_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UndoConfigItemReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+
+	protoReq.Id, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+
+	val, ok = pathParams["app_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
+	}
+
+	protoReq.AppId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
+	}
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
+	msg, err := server.UndoConfigItem(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Config_GetConfigItem_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetConfigItemReq
 	var metadata runtime.ServerMetadata
@@ -10262,6 +10446,78 @@ func local_request_Config_UpdateCredential_0(ctx context.Context, marshaler runt
 
 }
 
+func request_Config_CheckCredentialName_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CheckCredentialNameReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
+	val, ok = pathParams["credential_name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "credential_name")
+	}
+
+	protoReq.CredentialName, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "credential_name", err)
+	}
+
+	msg, err := client.CheckCredentialName(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Config_CheckCredentialName_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CheckCredentialNameReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
+	val, ok = pathParams["credential_name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "credential_name")
+	}
+
+	protoReq.CredentialName, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "credential_name", err)
+	}
+
+	msg, err := server.CheckCredentialName(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Config_ListCredentialScopes_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListCredentialScopesReq
 	var metadata runtime.ServerMetadata
@@ -11258,6 +11514,56 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		}
 
 		forward_Config_DeleteConfigItem_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_Config_UnDeleteConfigItem_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/UnDeleteConfigItem", runtime.WithHTTPPathPattern("/api/v1/config/undelete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Config_UnDeleteConfigItem_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Config_UnDeleteConfigItem_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_Config_UndoConfigItem_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/UndoConfigItem", runtime.WithHTTPPathPattern("/api/v1/config/undo/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Config_UndoConfigItem_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Config_UndoConfigItem_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -13911,6 +14217,31 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
+	mux.Handle("GET", pattern_Config_CheckCredentialName_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/CheckCredentialName", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credential/{credential_name}/check"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Config_CheckCredentialName_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Config_CheckCredentialName_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_Config_ListCredentialScopes_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -14391,6 +14722,50 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		}
 
 		forward_Config_DeleteConfigItem_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_Config_UnDeleteConfigItem_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/UnDeleteConfigItem", runtime.WithHTTPPathPattern("/api/v1/config/undelete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Config_UnDeleteConfigItem_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Config_UnDeleteConfigItem_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_Config_UndoConfigItem_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/UndoConfigItem", runtime.WithHTTPPathPattern("/api/v1/config/undo/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Config_UndoConfigItem_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Config_UndoConfigItem_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -16726,6 +17101,28 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
+	mux.Handle("GET", pattern_Config_CheckCredentialName_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/CheckCredentialName", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credential/{credential_name}/check"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Config_CheckCredentialName_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Config_CheckCredentialName_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_Config_ListCredentialScopes_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -16927,6 +17324,10 @@ var (
 	pattern_Config_UpdateConfigItem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "config", "update", "config_item", "config_item_id", "id", "app_id", "biz_id"}, ""))
 
 	pattern_Config_DeleteConfigItem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "config", "delete", "config_item", "config_item_id", "id", "app_id", "biz_id"}, ""))
+
+	pattern_Config_UnDeleteConfigItem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "config", "undelete", "config_item", "config_item_id", "id", "app_id", "biz_id"}, ""))
+
+	pattern_Config_UndoConfigItem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "config", "undo", "config_item", "config_item_id", "id", "app_id", "biz_id"}, ""))
 
 	pattern_Config_GetConfigItem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "config_items", "config_item_id"}, ""))
 
@@ -17140,6 +17541,8 @@ var (
 
 	pattern_Config_UpdateCredential_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "config", "biz_id", "credential"}, ""))
 
+	pattern_Config_CheckCredentialName_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "config", "biz_id", "credential", "credential_name", "check"}, ""))
+
 	pattern_Config_ListCredentialScopes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "config", "biz_id", "credential", "credential_id", "scopes"}, ""))
 
 	pattern_Config_UpdateCredentialScope_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "config", "biz_id", "credential", "credential_id", "scope"}, ""))
@@ -17179,6 +17582,10 @@ var (
 	forward_Config_UpdateConfigItem_0 = runtime.ForwardResponseMessage
 
 	forward_Config_DeleteConfigItem_0 = runtime.ForwardResponseMessage
+
+	forward_Config_UnDeleteConfigItem_0 = runtime.ForwardResponseMessage
+
+	forward_Config_UndoConfigItem_0 = runtime.ForwardResponseMessage
 
 	forward_Config_GetConfigItem_0 = runtime.ForwardResponseMessage
 
@@ -17391,6 +17798,8 @@ var (
 	forward_Config_DeleteCredential_0 = runtime.ForwardResponseMessage
 
 	forward_Config_UpdateCredential_0 = runtime.ForwardResponseMessage
+
+	forward_Config_CheckCredentialName_0 = runtime.ForwardResponseMessage
 
 	forward_Config_ListCredentialScopes_0 = runtime.ForwardResponseMessage
 

@@ -104,3 +104,6 @@
 .icon-yaml:before {
   content: '\e11a';
 }
+.icon-variable:before {
+  content: '\e11b';
+}

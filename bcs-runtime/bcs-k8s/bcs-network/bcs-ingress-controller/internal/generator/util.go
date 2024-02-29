@@ -66,6 +66,8 @@ func GetListenerName(lbID string, port int) string {
 
 // GetListenerNameWithProtocol generate listener key with lbid, protocol and port number
 func GetListenerNameWithProtocol(lbID, protocol string, port int) string {
+	// for protocol tcp_ssl, '_' is invalid for name
+	protocol = strings.ReplaceAll(protocol, "_", "")
 	// parse arn
 	if a := tryParseARNFromLbID(lbID); len(a) != 0 {
 		lbID = a

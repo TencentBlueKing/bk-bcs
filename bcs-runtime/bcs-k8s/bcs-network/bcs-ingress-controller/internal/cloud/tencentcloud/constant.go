@@ -21,6 +21,8 @@ const (
 	ClbProtocolTCP = "TCP"
 	// ClbProtocolUDP clb udp protocol
 	ClbProtocolUDP = "UDP"
+	// ClbProtocolTCPSSL clb tcp_ssl protocol
+	ClbProtocolTCPSSL = "TCP_SSL"
 	// ClbProtocolGRPC clb grpc protocol
 	ClbProtocolGRPC = "GRPC"
 

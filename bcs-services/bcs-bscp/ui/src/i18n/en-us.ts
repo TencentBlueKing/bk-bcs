@@ -334,6 +334,10 @@ export default {
   请选择: 'Please select',
   配置项值已复制: 'The configuration item value has been copied',
   导出至: 'Export to',
+  撤销: 'Repeal',
+  '配置文件删除后，可以通过恢复按钮撤销删除': 'After the configuration file is deleted, you can undo the deletion by using the Restore button',
+  撤销修改配置文件成功: 'Succeeded in unmodifying the configuration file',
+  恢复配置文件成功: 'Succeeded in Restore the configuration file',
 
   // 分组管理
   新增分组: 'New group',

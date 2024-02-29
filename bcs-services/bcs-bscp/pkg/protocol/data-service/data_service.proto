@@ -45,6 +45,8 @@ service Data {
   rpc BatchUpsertConfigItems(BatchUpsertConfigItemsReq) returns (BatchUpsertConfigItemsResp) {}
   rpc UpdateConfigItem(UpdateConfigItemReq) returns (pbbase.EmptyResp) {}
   rpc DeleteConfigItem(DeleteConfigItemReq) returns (pbbase.EmptyResp) {}
+  rpc UnDeleteConfigItem(UnDeleteConfigItemReq) returns (pbbase.EmptyResp) {}
+  rpc UndoConfigItem(UndoConfigItemReq) returns (pbbase.EmptyResp) {}
   rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
 
   rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
@@ -202,6 +204,7 @@ service Data {
   rpc ListCredentials(ListCredentialReq) returns (ListCredentialResp) {}
   rpc DeleteCredential(DeleteCredentialReq) returns (pbbase.EmptyResp) {}
   rpc UpdateCredential(UpdateCredentialReq) returns (pbbase.EmptyResp) {}
+  rpc CheckCredentialName(CheckCredentialNameReq) returns (CheckCredentialNameResp) {}
 
   // credential scope related interface
   rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {}
@@ -280,6 +283,15 @@ message UpdateCredentialReq {
   uint32 id = 1;
   pbcredential.CredentialAttachment attachment = 2;
   pbcredential.CredentialSpec spec = 3;
+}
+
+message CheckCredentialNameReq {
+  uint32 biz_id = 1;
+  string credential_name = 2;
+}
+
+message CheckCredentialNameResp {
+  bool exist = 1;
 }
 
 message DeleteCredentialReq {
@@ -390,6 +402,16 @@ message UpdateConfigItemReq {
 }
 
 message DeleteConfigItemReq {
+  uint32 id = 1;
+  pbci.ConfigItemAttachment attachment = 2;
+}
+
+message UnDeleteConfigItemReq {
+  uint32 id = 1;
+  pbci.ConfigItemAttachment attachment = 2;
+}
+
+message UndoConfigItemReq {
   uint32 id = 1;
   pbci.ConfigItemAttachment attachment = 2;
 }

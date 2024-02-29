@@ -1,7 +1,11 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item :label="t('配置文件绝对路径')" property="fileAP" :required="true">
-      <bk-input v-model="localVal.fileAP" :placeholder="t('请输入配置文件的绝对路径')" :disabled="!editable" @input="change" />
+      <bk-input
+        v-model="localVal.fileAP"
+        :placeholder="t('请输入配置文件的绝对路径')"
+        :disabled="!editable"
+        @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('配置文件描述')" property="memo">
       <bk-input
@@ -347,7 +351,7 @@
     const { signature, name } = fileContent.value as IFileConfigContentSummary;
     const getContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
     const res = await getContent(props.bkBizId, props.id, signature);
-    fileDownload(res, `${name}.bin`);
+    fileDownload(res, name);
   };
 
   const validate = async () => {

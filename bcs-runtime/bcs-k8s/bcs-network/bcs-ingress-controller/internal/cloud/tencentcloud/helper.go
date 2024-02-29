@@ -24,18 +24,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	qcloud "github.com/Tencent/bk-bcs/bcs-common/pkg/qcloud/clbv2"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // do create listener
 // call next layer function according to listener protocol
 func (c *Clb) createListner(region string, listener *networkextensionv1.Listener) (string, error) {
-	switch listener.Spec.Protocol {
-	case ClbProtocolHTTP, ClbProtocolHTTPS:
+	protocol := listener.Spec.Protocol
+	if common.InLayer7Protocol(protocol) {
 		return c.create7LayerListener(region, listener)
-	case ClbProtocolTCP, ClbProtocolUDP:
+	} else if common.InLayer4Protocol(protocol) {
 		return c.create4LayerListener(region, listener)
-	default:
+	} else {
 		blog.Errorf("invalid protocol %s", listener.Spec.Protocol)
 		return "", fmt.Errorf("invalid protocol %s", listener.Spec.Protocol)
 	}
@@ -242,8 +243,8 @@ func (c *Clb) getListenerBackendsByPort(region, lbID, protocol string, port int)
 	respListener := resp.Response.Listeners[0]
 
 	// for listeners with different protocol, backends info is slightly different
-	switch *respListener.Protocol {
-	case ClbProtocolHTTP, ClbProtocolHTTPS:
+	pro := *respListener.Protocol
+	if common.InLayer7Protocol(pro) {
 		var rules []networkextensionv1.ListenerRule
 		for _, retRule := range respListener.Rules {
 			rules = append(rules, networkextensionv1.ListenerRule{
@@ -254,15 +255,13 @@ func (c *Clb) getListenerBackendsByPort(region, lbID, protocol string, port int)
 			})
 		}
 		return rules, nil, nil
-
-	case ClbProtocolTCP, ClbProtocolUDP:
+	} else if common.InLayer4Protocol(pro) {
 		tg := convertClbBackends(respListener.Targets)
 		return nil, tg, nil
-	default:
+	} else {
 		blog.Errorf("invalid protocol %s listener", *respListener.Protocol)
 		return nil, nil, fmt.Errorf("invalid protocol %s listener", *respListener.Protocol)
 	}
-	// never reached
 }
 
 // delete listener by listener port
@@ -308,16 +307,16 @@ func (c *Clb) deleteListener(region, lbID, protocol string, port int) error {
 // update listener
 // call next layer function according to different listener protocol
 func (c *Clb) updateListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
-	switch ingressListener.Spec.Protocol {
-	case ClbProtocolHTTP, ClbProtocolHTTPS:
+	protocol := ingressListener.Spec.Protocol
+	if common.InLayer7Protocol(protocol) {
 		if err := c.updateHTTPListener(region, ingressListener, cloudListener); err != nil {
 			return err
 		}
-	case ClbProtocolTCP, ClbProtocolUDP:
+	} else if common.InLayer4Protocol(protocol) {
 		if err := c.update4LayerListener(region, ingressListener, cloudListener); err != nil {
 			return err
 		}
-	default:
+	} else {
 		blog.Errorf("invalid listener protocol %s", ingressListener.Spec.Protocol)
 		return fmt.Errorf("invalid listener protocol %s", ingressListener.Spec.Protocol)
 	}
