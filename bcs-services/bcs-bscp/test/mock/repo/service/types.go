@@ -49,7 +49,6 @@ func (r *BaseResp) Err(w http.ResponseWriter, err error) {
 
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Write(marshal)
-	return
 }
 
 // WriteResp write base repo to ResponseWriter with result data.
@@ -63,7 +62,6 @@ func (r *BaseResp) WriteResp(w http.ResponseWriter, data interface{}) {
 	}
 
 	w.Write(marshal)
-	return
 }
 
 func unmarshal(body io.ReadCloser, data interface{}) error {
