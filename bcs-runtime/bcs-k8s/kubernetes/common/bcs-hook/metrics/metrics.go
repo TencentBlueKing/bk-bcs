@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -19,6 +19,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// PromServer xxx
 type PromServer struct{}
 
 var (
@@ -35,6 +36,7 @@ func init() {
 	prometheus.MustRegister(hrCreateDuration)
 }
 
+// CollectHRCreateDurations xxx
 func (p *PromServer) CollectHRCreateDurations(namespace, name, status, action, objectKind string, d time.Duration) {
 	hrCreateDuration.WithLabelValues(namespace, name, status, action, objectKind).Observe(d.Seconds())
 }

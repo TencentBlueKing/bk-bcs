@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1
@@ -41,8 +40,9 @@ const (
 	// WorkloadKindGameStatefulset kind name of workload game statefulset
 	WorkloadKindGameStatefulset = "gamestatefulset"
 
-	// Pod CLB weight annotation key
-	AnnotationKeyForLoadbalanceWeight      = "networkextension.bkbcs.tencent.com/clb-weight"
+	// AnnotationKeyForLoadbalanceWeight Pod CLB weight annotation key
+	AnnotationKeyForLoadbalanceWeight = "networkextension.bkbcs.tencent.com/clb-weight"
+	// AnnotationKeyForLoadbalanceWeightReady xxx
 	AnnotationKeyForLoadbalanceWeightReady = "networkextension.bkbcs.tencent.com/clb-weight-ready"
 
 	// AnnotationKeyForWarnings annotation key for ingress warnings
@@ -115,7 +115,8 @@ type ListenerHealthCheck struct {
 	HealthCheckProtocol string `json:"healthCheckProtocol,omitempty"`
 	// HTTPCodeValues specifies a set of HTTP response status codes of health check.
 	// You can specify multiple values (for example, "200,202") or a range of values
-	// (for example, "200-299"). https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
+	// (for example, "200-299").
+	// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
 	// +optional
 	HTTPCodeValues  string `json:"httpCodeValues,omitempty"`
 	HTTPCheckPath   string `json:"httpCheckPath,omitempty"`
@@ -132,11 +133,12 @@ type IngressListenerAttribute struct {
 	BackendInsecure bool `json:"backendInsecure,omitempty"`
 	// MaxRate specifies the maximum number of connections per second allowed for every target instance.
 	MaxRate int `json:"maxRate,omitempty"`
-	// aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
+	// aws targetGroup attributes,
+	// https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
 	AWSAttributes []AWSAttribute       `json:"awsAttributes,omitempty"`
 	HealthCheck   *ListenerHealthCheck `json:"healthCheck,omitempty"`
 	// 声明7层监听器中，rule的优先级(目前只在aws中使用)
-	Priority int `json:"priority,omitempty""`
+	Priority int `json:"priority,omitempty"`
 }
 
 // AWSAttribute define aws target group attribute
@@ -206,10 +208,12 @@ type IngressLoadBalancer struct {
 	AWSLBType        string   `json:"awsLBType,omitempty"`
 }
 
+// BuildKeyID xxx
 func (in IngressLoadBalancer) BuildKeyID() string {
 	return in.Region + ":" + in.LoadbalancerID
 }
 
+// BuildKeyName xxx
 func (in IngressLoadBalancer) BuildKeyName() string {
 	return in.Region + ":" + in.LoadbalancerName
 }

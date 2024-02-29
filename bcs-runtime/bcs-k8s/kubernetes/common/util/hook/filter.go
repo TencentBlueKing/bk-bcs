@@ -8,16 +8,18 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package hook xxx
 package hook
 
 import (
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 )
 
-func FilterHookRuns(hrs []*hookv1alpha1.HookRun, cond func(hr *hookv1alpha1.HookRun) bool) ([]*hookv1alpha1.HookRun, []*hookv1alpha1.HookRun) {
+// FilterHookRuns xxx
+func FilterHookRuns(hrs []*hookv1alpha1.HookRun, cond func(hr *hookv1alpha1.HookRun) bool) (
+	[]*hookv1alpha1.HookRun, []*hookv1alpha1.HookRun) {
 	condTrue := []*hookv1alpha1.HookRun{}
 	condFalse := []*hookv1alpha1.HookRun{}
 	for _, hr := range hrs {
@@ -33,6 +35,7 @@ func FilterHookRuns(hrs []*hookv1alpha1.HookRun, cond func(hr *hookv1alpha1.Hook
 	return condTrue, condFalse
 }
 
+// FilterHookRunsByName xxx
 func FilterHookRunsByName(hookRuns []*hookv1alpha1.HookRun, name string) *hookv1alpha1.HookRun {
 	hookRunsByName, _ := FilterHookRuns(hookRuns, func(hr *hookv1alpha1.HookRun) bool {
 		return hr.Name == name
@@ -43,6 +46,7 @@ func FilterHookRunsByName(hookRuns []*hookv1alpha1.HookRun, name string) *hookv1
 	return nil
 }
 
+// GetCurrentStepHookRun xxx
 func GetCurrentStepHookRun(currentHrs []*hookv1alpha1.HookRun) *hookv1alpha1.HookRun {
 	for _, hr := range currentHrs {
 		hookRunType, ok := hr.Labels[HookRunTypeLabel]
@@ -53,6 +57,7 @@ func GetCurrentStepHookRun(currentHrs []*hookv1alpha1.HookRun) *hookv1alpha1.Hoo
 	return nil
 }
 
+// FilterHookRunsToDelete xxx
 func FilterHookRunsToDelete(hrs []*hookv1alpha1.HookRun, revision string) []*hookv1alpha1.HookRun {
 	hrsToDelete := []*hookv1alpha1.HookRun{}
 	for _, hr := range hrs {
@@ -64,6 +69,7 @@ func FilterHookRunsToDelete(hrs []*hookv1alpha1.HookRun, revision string) []*hoo
 	return hrsToDelete
 }
 
+// FilterPreDeleteHookRuns xxx
 func FilterPreDeleteHookRuns(hrs []*hookv1alpha1.HookRun) []*hookv1alpha1.HookRun {
 	preDeleteHookRuns := []*hookv1alpha1.HookRun{}
 	for _, hr := range hrs {
@@ -76,6 +82,7 @@ func FilterPreDeleteHookRuns(hrs []*hookv1alpha1.HookRun) []*hookv1alpha1.HookRu
 	return preDeleteHookRuns
 }
 
+// FilterPreInplaceHookRuns xxx
 func FilterPreInplaceHookRuns(hrs []*hookv1alpha1.HookRun) []*hookv1alpha1.HookRun {
 	preInplaceHookRuns := []*hookv1alpha1.HookRun{}
 	for _, hr := range hrs {
