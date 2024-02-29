@@ -136,7 +136,7 @@ func mig20240228173324Up(tx *gorm.DB) error {
 		}
 	}
 
-	// TemplateSets : 模版集
+	// TemplateSets : 模版套餐
 	type TemplateSets struct {
 		Name string `gorm:"type:varchar(255) collate utf8_bin not null"`
 	}
