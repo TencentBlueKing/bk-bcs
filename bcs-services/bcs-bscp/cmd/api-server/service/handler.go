@@ -13,9 +13,11 @@
 package service
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
+	"gopkg.in/yaml.v3"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
@@ -68,7 +70,7 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // FeatureFlags map of feature flags
-type FeatureFlags map[cc.FeatureFlag]bool
+type FeatureFlags map[cc.FeatureFlag]interface{}
 
 // FeatureFlagsHandler 特性开关接口
 func FeatureFlagsHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,19 +78,38 @@ func FeatureFlagsHandler(w http.ResponseWriter, r *http.Request) {
 
 	biz := r.URL.Query().Get("biz")
 	for k, v := range cc.ApiServer().FeatureFlags {
-		// 默认和开关开启保持一致
-		featureFlags[k] = v.Enabled
-
-		if biz == "" {
-			continue
-		}
-
-		// 默认未开启, 设置是白名单模式，否则取反
-		for _, w := range v.List {
-			if biz == w {
-				featureFlags[k] = !v.Enabled
+		switch k {
+		case cc.BizViewFlag:
+			bytes, _ := yaml.Marshal(v)
+			fmt.Println(string(bytes))
+			bizView := &cc.FeatureBizView{}
+			if err := yaml.Unmarshal(bytes, bizView); err != nil {
+				render.Render(w, r, rest.InternalError(fmt.Errorf("invalid feature flag format: %s", k)))
+				return
 			}
+			if enable, exists := bizView.Spec[biz]; exists {
+				featureFlags[k] = enable
+			} else {
+				featureFlags[k] = bizView.Default
+			}
+		case cc.ResourceLimitFlag:
+			bytes, _ := yaml.Marshal(v)
+			fmt.Println(string(bytes))
+			resourceLimitConf := &cc.FeatureResourceLimit{}
+			if err := yaml.Unmarshal(bytes, resourceLimitConf); err != nil {
+				render.Render(w, r, rest.InternalError(fmt.Errorf("invalid feature flag format: %s", k)))
+				return
+			}
+			resourceLimit := resourceLimitConf.Default
+			if resource, exists := resourceLimitConf.Spec[biz]; exists {
+				if resource.MaxConfigItemSize != 0 {
+					resourceLimit.MaxConfigItemSize = resource.MaxConfigItemSize
+				}
+				// TODO： 其他资源限制
+			}
+			featureFlags[k] = resourceLimit
 		}
+		// TODO：其他特性开关
 	}
 
 	render.Render(w, r, rest.OKRender(featureFlags))

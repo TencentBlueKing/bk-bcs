@@ -43,7 +43,29 @@ type FeatureFlag string
 const (
 	// BizViewFlag 业务白名单
 	BizViewFlag FeatureFlag = "BIZ_VIEW"
+	// ResourceLimit 业务资源限制
+	ResourceLimitFlag FeatureFlag = "RESOURCE_LIMIT"
 )
+
+// FeatureBizView 业务白名单
+type FeatureBizView struct {
+	Default bool `yaml:"default"`
+	// map[bizID]true/false
+	Spec map[string]bool `yaml:"spec"`
+}
+
+// FeatureResourceLimit 业务资源限制
+type FeatureResourceLimit struct {
+	Default ResourceLimit            `json:"default" yaml:"default"`
+	// map[bizID]ResourceLimit
+	Spec    map[string]ResourceLimit `json:"spec" yaml:"spec"`
+}
+
+// ResourceLimit 资源限制配置项
+type ResourceLimit struct {
+	// 配置文件大小上限，单位 Mb
+	MaxConfigItemSize uint `json:"maxConfigItemSize" yaml:"maxConfigItemSize"`
+}
 
 // Service defines Setting related runtime.
 type Service struct {
