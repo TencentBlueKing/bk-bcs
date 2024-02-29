@@ -523,6 +523,14 @@ export default {
   脚本类型: 'Script type',
   form_版本号: 'Version number',
   上线版本成功: 'Online version successful',
+  内置变量: 'Internal variables',
+  '客户端配置的配置存放临时目录（temp_dir），默认值为 /data/bscp': 'The client configuration directory is temp dir. The default value is /data/bscp',
+  '蓝鲸配置平台上的业务ID，例如：2': 'Service ID on the bscp, for example, 2',
+  '服务配置中心上的服务名称，例如：demo_service': 'bscp service name, for example, demo service',
+  '单个客户端可使用多个服务的配置，为保证路径唯一，服务配置需存放于：配置根目录/业务ID/服务名称，服务配置存放目录 = 配置存放根目录/业务ID/服务名称': 'A client can use multiple service configurations. To ensure a unique path, service configurations must be saved in the following directory: Configuration root directory/service ID/ service name. Service configuration directory = Configuration root directory/service ID/ service name',
+  配置根目录: 'Configuring the root directory',
+  业务ID: 'BusinessID',
+  服务配置目录: 'Service configuration directory',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
