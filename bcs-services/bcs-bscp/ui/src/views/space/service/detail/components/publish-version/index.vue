@@ -121,6 +121,7 @@
           list.push(version);
           return true;
         }
+        return false;
       });
     });
     return list;
