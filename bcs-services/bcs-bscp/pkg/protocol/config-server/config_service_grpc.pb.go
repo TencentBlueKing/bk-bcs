@@ -143,6 +143,7 @@ const (
 	Config_ListCredentials_FullMethodName                   = "/pbcs.Config/ListCredentials"
 	Config_DeleteCredential_FullMethodName                  = "/pbcs.Config/DeleteCredential"
 	Config_UpdateCredential_FullMethodName                  = "/pbcs.Config/UpdateCredential"
+	Config_CheckCredentialName_FullMethodName               = "/pbcs.Config/CheckCredentialName"
 	Config_ListCredentialScopes_FullMethodName              = "/pbcs.Config/ListCredentialScopes"
 	Config_UpdateCredentialScope_FullMethodName             = "/pbcs.Config/UpdateCredentialScope"
 	Config_CreateKv_FullMethodName                          = "/pbcs.Config/CreateKv"
@@ -226,12 +227,12 @@ type ConfigClient interface {
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete :
-	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete :
+	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -288,6 +289,7 @@ type ConfigClient interface {
 	ListCredentials(ctx context.Context, in *ListCredentialsReq, opts ...grpc.CallOption) (*ListCredentialsResp, error)
 	DeleteCredential(ctx context.Context, in *DeleteCredentialsReq, opts ...grpc.CallOption) (*DeleteCredentialsResp, error)
 	UpdateCredential(ctx context.Context, in *UpdateCredentialsReq, opts ...grpc.CallOption) (*UpdateCredentialsResp, error)
+	CheckCredentialName(ctx context.Context, in *CheckCredentialNameReq, opts ...grpc.CallOption) (*CheckCredentialNameResp, error)
 	ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error)
 	UpdateCredentialScope(ctx context.Context, in *UpdateCredentialScopeReq, opts ...grpc.CallOption) (*UpdateCredentialScopeResp, error)
 	CreateKv(ctx context.Context, in *CreateKvReq, opts ...grpc.CallOption) (*CreateKvResp, error)
@@ -1377,6 +1379,15 @@ func (c *configClient) UpdateCredential(ctx context.Context, in *UpdateCredentia
 	return out, nil
 }
 
+func (c *configClient) CheckCredentialName(ctx context.Context, in *CheckCredentialNameReq, opts ...grpc.CallOption) (*CheckCredentialNameResp, error) {
+	out := new(CheckCredentialNameResp)
+	err := c.cc.Invoke(ctx, Config_CheckCredentialName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error) {
 	out := new(ListCredentialScopesResp)
 	err := c.cc.Invoke(ctx, Config_ListCredentialScopes_FullMethodName, in, out, opts...)
@@ -1522,12 +1533,12 @@ type ConfigServer interface {
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete :
-	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete :
+	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1584,6 +1595,7 @@ type ConfigServer interface {
 	ListCredentials(context.Context, *ListCredentialsReq) (*ListCredentialsResp, error)
 	DeleteCredential(context.Context, *DeleteCredentialsReq) (*DeleteCredentialsResp, error)
 	UpdateCredential(context.Context, *UpdateCredentialsReq) (*UpdateCredentialsResp, error)
+	CheckCredentialName(context.Context, *CheckCredentialNameReq) (*CheckCredentialNameResp, error)
 	ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error)
 	UpdateCredentialScope(context.Context, *UpdateCredentialScopeReq) (*UpdateCredentialScopeResp, error)
 	CreateKv(context.Context, *CreateKvReq) (*CreateKvResp, error)
@@ -1954,6 +1966,9 @@ func (UnimplementedConfigServer) DeleteCredential(context.Context, *DeleteCreden
 }
 func (UnimplementedConfigServer) UpdateCredential(context.Context, *UpdateCredentialsReq) (*UpdateCredentialsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredential not implemented")
+}
+func (UnimplementedConfigServer) CheckCredentialName(context.Context, *CheckCredentialNameReq) (*CheckCredentialNameResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckCredentialName not implemented")
 }
 func (UnimplementedConfigServer) ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCredentialScopes not implemented")
@@ -4133,6 +4148,24 @@ func _Config_UpdateCredential_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CheckCredentialName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckCredentialNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CheckCredentialName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CheckCredentialName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CheckCredentialName(ctx, req.(*CheckCredentialNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_ListCredentialScopes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListCredentialScopesReq)
 	if err := dec(in); err != nil {
@@ -4759,6 +4792,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateCredential",
 			Handler:    _Config_UpdateCredential_Handler,
+		},
+		{
+			MethodName: "CheckCredentialName",
+			Handler:    _Config_CheckCredentialName_Handler,
 		},
 		{
 			MethodName: "ListCredentialScopes",

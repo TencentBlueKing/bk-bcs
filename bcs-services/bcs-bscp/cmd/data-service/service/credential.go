@@ -75,10 +75,36 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbds.ListCredentialR
 		logs.Errorf("list credential failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
+	credentialScopes := map[uint32][]string{}
+	if count > 0 {
+		credentialID := []uint32{}
+		for _, v := range details {
+			credentialID = append(credentialID, v.ID)
+		}
+		// 获取关联规则
+		item, err := s.dao.CredentialScope().ListByCredentialIDs(kt, credentialID, req.BizId)
+		if err != nil {
+			return nil, err
+		}
+		for _, v := range item {
+			app, scope, err := v.Spec.CredentialScope.Split()
+			if err != nil {
+				return nil, err
+			}
+			credentialScopes[v.Attachment.CredentialId] = append(credentialScopes[v.Attachment.CredentialId],
+				fmt.Sprintf("%s%s", app, scope))
+		}
+	}
+
+	data := pbcredential.PbCredentials(details)
+
+	for _, v := range data {
+		v.CredentialScopes = credentialScopes[v.Id]
+	}
 
 	resp := &pbds.ListCredentialResp{
 		Count:   uint32(count),
-		Details: pbcredential.PbCredentials(details),
+		Details: data,
 	}
 	return resp, nil
 }
@@ -141,4 +167,23 @@ func (s *Service) UpdateCredential(ctx context.Context, req *pbds.UpdateCredenti
 	}
 
 	return new(pbbase.EmptyResp), nil
+}
+
+// CheckCredentialName Check if the credential name exists
+func (s *Service) CheckCredentialName(ctx context.Context, req *pbds.CheckCredentialNameReq) (
+	*pbds.CheckCredentialNameResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	credential, err := s.dao.Credential().GetByName(kt, req.BizId, req.CredentialName)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	var exist bool
+	if credential != nil && credential.ID != 0 {
+		exist = true
+	}
+	return &pbds.CheckCredentialNameResp{
+		Exist: exist,
+	}, nil
 }
