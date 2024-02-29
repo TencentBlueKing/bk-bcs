@@ -12,7 +12,7 @@
               placement: 'top',
               distance: 20,
             }"
-            :class="['bk-bscp-icon', 'icon-kv', { 'show-var': isShowVariable }]"
+            :class="['bk-bscp-icon', 'icon-variable', { 'show-var': isShowVariable }]"
             @click="emits('update:isShowVariable',!isShowVariable)"></span>
           <ReadFileContent
             v-if="props.uploadIcon"
@@ -154,6 +154,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    font-size: 12px;
     width: 24px;
     height: 24px;
     margin-right: 10px;
