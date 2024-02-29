@@ -3450,6 +3450,8 @@ func (m *Account) validate(all bool) error {
 
 	// no validation rules for GkeProjectID
 
+	// no validation rules for HwCCEProjectID
+
 	if len(errors) > 0 {
 		return AccountMultiError(errors)
 	}

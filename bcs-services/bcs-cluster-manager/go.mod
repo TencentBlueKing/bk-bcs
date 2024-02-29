@@ -69,6 +69,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20240131080851-5006e27e0a5d
 	github.com/Tencent/bk-bcs/bcs-common/pkg/i18n v0.0.0-20230908142111-fef103db0120
 	github.com/apparentlymart/go-cidr v1.1.0
+	github.com/huaweicloud/huaweicloud-sdk-go-v3 v0.1.83
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tag v1.0.768

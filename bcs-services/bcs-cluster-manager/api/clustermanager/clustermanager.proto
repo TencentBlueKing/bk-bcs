@@ -2165,6 +2165,10 @@ message Account {
     title: "gkeProjectID",
     description: "Google Cloud 项目ID"
   }];
+  string hwCCEProjectID = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "hwCCEProjectID",
+    description: "huawei Cloud CCE 项目ID"
+  }];
 }
 
 // cloud account manage
