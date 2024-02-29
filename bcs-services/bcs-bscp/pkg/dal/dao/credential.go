@@ -195,12 +195,31 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 	topIds []uint32) ([]*table.Credential, int64, error) {
 	m := dao.genQ.Credential
 	q := dao.genQ.Credential.WithContext(kit.Ctx)
+	cs := dao.genQ.CredentialScope
 
 	var conds []rawgen.Condition
 	if searchKey != "" {
 		searchVal := "%" + searchKey + "%"
-		conds = append(conds, q.Where(m.Memo.Like(searchVal)).Or(m.Reviser.Like(searchVal)).
-			Or(m.Name.Like(searchVal)))
+
+		var item []struct {
+			CredentialID uint32
+		}
+		err := cs.WithContext(kit.Ctx).Select(cs.CredentialId).
+			Where(cs.BizID.Eq(bizID), cs.CredentialScope.Like(searchVal)).Group(cs.CredentialId).Scan(&item)
+		if err != nil {
+			return nil, 0, err
+		}
+		if len(item) > 0 {
+			credentialID := []uint32{}
+			for _, v := range item {
+				credentialID = append(credentialID, v.CredentialID)
+			}
+			conds = append(conds, q.Where(m.Memo.Like(searchVal)).Or(m.Reviser.Like(searchVal)).
+				Or(m.Name.Like(searchVal)).Or(m.ID.In(credentialID...)))
+		} else {
+			conds = append(conds, q.Where(m.Memo.Like(searchVal)).Or(m.Reviser.Like(searchVal)).
+				Or(m.Name.Like(searchVal)))
+		}
 	}
 
 	if len(topIds) != 0 {

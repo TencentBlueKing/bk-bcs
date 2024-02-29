@@ -36,6 +36,8 @@ type CredentialScope interface {
 	DeleteByCredentialIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, credentialID uint32) error
 	// BatchDeleteWithTx batch delete credential scope with transaction
 	BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32, ids []uint32) error
+	// ListByCredentialIDs 按多个凭据 ID 列出
+	ListByCredentialIDs(kit *kit.Kit, credentialIDs []uint32, bizID uint32) ([]*table.CredentialScope, error)
 }
 
 var _ CredentialScope = new(credentialScopeDao)
@@ -44,6 +46,16 @@ type credentialScopeDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// ListByCredentialIDs 按多个凭据 ID 列出
+func (dao *credentialScopeDao) ListByCredentialIDs(kit *kit.Kit, credentialIDs []uint32, bizID uint32) (
+	[]*table.CredentialScope, error) {
+	if bizID == 0 {
+		return nil, errors.New("biz id is 0")
+	}
+	m := dao.genQ.CredentialScope
+	return m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.CredentialId.In(credentialIDs...)).Find()
 }
 
 // CreateWithTx create credential scope with transaction
