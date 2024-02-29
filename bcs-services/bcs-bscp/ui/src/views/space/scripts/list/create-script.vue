@@ -28,7 +28,7 @@
               :maxlength="200"
               :resize="true" />
           </bk-form-item>
-          <bk-form-item class="fixed-width-form" property="revision_name" :label="t('form_版本号')">
+          <bk-form-item class="fixed-width-form" property="revision_name" :label="t('form_版本号')" required>
             <bk-input v-model="formData.revision_name" :placeholder="t('请输入')"></bk-input>
           </bk-form-item>
           <bk-form-item :label="t('脚本内容')" property="content" required>
