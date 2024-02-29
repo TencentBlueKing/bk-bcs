@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -121,7 +121,7 @@ func (pc *PortCache) Unlock() {
 // IncPortQuantity increase quantity for certain port
 func (pc *PortCache) IncPortQuantity(port uint64) error {
 	if entry, ok := pc.m[port]; ok {
-		entry.Quantity = entry.Quantity + 1
+		entry.Quantity++
 		heap.Fix(pc.h, entry.Index)
 	}
 	return fmt.Errorf("entry for port %d not found when do increase", port)
@@ -130,7 +130,7 @@ func (pc *PortCache) IncPortQuantity(port uint64) error {
 // DecPortQuantity decrease quantity for certain port
 func (pc *PortCache) DecPortQuantity(port uint64) error {
 	if entry, ok := pc.m[port]; ok {
-		entry.Quantity = entry.Quantity - 1
+		entry.Quantity--
 		heap.Fix(pc.h, entry.Index)
 		return nil
 	}

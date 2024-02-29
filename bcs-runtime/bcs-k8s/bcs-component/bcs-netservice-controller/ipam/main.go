@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -19,20 +19,20 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/containernetworking/cni/pkg/types/current"
 	"github.com/containernetworking/cni/pkg/version"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	ipamtypes "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/ipam/types"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/pkg/client"
 )
 
 var (
-	//default directory for log output
+	// default directory for log output
 	defaultLogDir = "./logs"
 )
 
@@ -82,7 +82,7 @@ func init() {
 
 // cmdAdd handle add command, reply available ip info
 func cmdAdd(args *skel.CmdArgs) error {
-	//loading config from stdin
+	// loading config from stdin
 	netConf, ipamConf, err := LoadBcsIPAMConfig(args.StdinData, args.Args)
 	if err != nil {
 		return err
@@ -130,7 +130,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 	// create results
 	result := &current.Result{}
-	//ip info
+	// ip info
 	ip, ipAddr, _ := net.ParseCIDR(resp.Data.IPAddr + "/" + strconv.Itoa(resp.Data.Mask))
 	iface := 0
 	ipConf := &current.IPConfig{
@@ -140,7 +140,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		Gateway:   net.ParseIP(resp.Data.Gateway),
 	}
 	result.IPs = []*current.IPConfig{ipConf}
-	//route info, if no gateway info ,use ipinfo.Gateway
+	// route info, if no gateway info ,use ipinfo.Gateway
 	for _, configRoute := range ipamConf.Routes {
 		if configRoute.GW == nil {
 			route := &types.Route{
@@ -158,7 +158,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 // cmdDel release ip address
 func cmdDel(args *skel.CmdArgs) error {
-	//loading config from stdin
+	// loading config from stdin
 	_, ipamConf, err := LoadBcsIPAMConfig(args.StdinData, args.Args)
 	if err != nil {
 		return err
@@ -187,7 +187,7 @@ func cmdDel(args *skel.CmdArgs) error {
 		return err
 	}
 
-	//release ip with IPInfo
+	// release ip with IPInfo
 	resp, rErr := nsClient.Release(&client.ReleaseReq{
 		ContainerID:  args.ContainerID,
 		PodName:      string(k8sConf.K8S_POD_NAME),
