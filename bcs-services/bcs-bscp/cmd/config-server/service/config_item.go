@@ -568,13 +568,12 @@ func (s *Service) UndoConfigItem(ctx context.Context, req *pbcs.UndoConfigItemRe
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-
 	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.client.DS.UndoConfigItem(grpcKit.Ctx, &pbds.UndoConfigItemReq{
+	_, err = s.client.DS.UndoConfigItem(grpcKit.RpcCtx(), &pbds.UndoConfigItemReq{
 		Id: req.Id,
 		Attachment: &pbci.ConfigItemAttachment{
 			BizId: req.BizId,
