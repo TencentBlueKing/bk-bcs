@@ -52,11 +52,13 @@ func NewRepoManager(cli client.Client, opt *option.ControllerOption) (*Manager, 
 		repoStore:                make(map[string]Repo),
 		repoMutex:                sync.RWMutex{},
 	}
-	argoDB, _, err := NewArgoDB(context.Background(), opt.ArgoAdminNamespace)
-	if err != nil {
-		return nil, fmt.Errorf("connect to argo failed, err: %w", err)
+	if opt.EnableArgo {
+		argoDB, _, err := NewArgoDB(context.Background(), opt.ArgoAdminNamespace)
+		if err != nil {
+			return nil, fmt.Errorf("connect to argo failed, err: %w", err)
+		}
+		manager.argoDB = argoDB
 	}
-	manager.argoDB = argoDB
 
 	defaultRepoURL, defaultUserName, defaultSecret := loadEnv()
 	defaultRepo, err := newGitRepo(defaultRepoURL, defaultUserName, defaultSecret, "master",
@@ -74,6 +76,9 @@ func NewRepoManager(cli client.Client, opt *option.ControllerOption) (*Manager, 
 
 // RegisterRepoFromArgo register repo into store
 func (m *Manager) RegisterRepoFromArgo(repoURL, targetRevision string) error {
+	if m.argoDB == nil {
+		return fmt.Errorf("argo db not initialized")
+	}
 	blog.Infof("register repo [%s/%s]", repoURL, targetRevision)
 	argoRepo, err := m.argoDB.GetRepository(context.Background(), repoURL)
 	if err != nil {

@@ -74,7 +74,10 @@ func (p *PortBindChecker) Run() {
 		blog.Errorf("port allocate conflict: %s", msg)
 		p.sendEventToPortPool(conflictKey, msg)
 
-		metrics.PortBindingConflictGauge.WithLabelValues(conflictKey).Set(float64(len(conflictNamespaceNameList)))
+		for _, namespacedName := range conflictNamespaceNameList {
+			metrics.PortBindingConflictGauge.WithLabelValues(conflictKey,
+				namespacedName).Set(float64(len(conflictNamespaceNameList)))
+		}
 	}
 }
 

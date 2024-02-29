@@ -127,6 +127,7 @@ func (r *MonitorRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		currentRule, err := r.MonitorRender.LoadRule(filepath.Join(r.Opts.BKMDownloadConfigPath,
 			monitorRule.Spec.BizID, "configs/rule"), func(fileName string) bool {
 			fileRuleName := strings.Split(fileName, ".")
+			// todo bkm支持文件名中多个 '.'   后续如果告警规则中有'.'需要修改
 			if len(fileRuleName) != 2 {
 				blog.Warnf("unknown file name format, file name: %s", fileName)
 				return false

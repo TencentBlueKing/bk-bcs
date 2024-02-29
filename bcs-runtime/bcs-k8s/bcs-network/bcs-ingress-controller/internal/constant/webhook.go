@@ -30,5 +30,5 @@ const (
 	ValidateMsgEmptyWorkload = "port mapping[%d]'s workload not found"
 
 	// PortConflictMsg new create ingress/portpool has port conflict with existed
-	PortConflictMsg = "conflict with kind[%s] namespace[%s] name[%s] on lbID[%s]"
+	PortConflictMsg = "port conflict with kind[%s] namespace[%s] name[%s] on lbID[%s]"
 )
