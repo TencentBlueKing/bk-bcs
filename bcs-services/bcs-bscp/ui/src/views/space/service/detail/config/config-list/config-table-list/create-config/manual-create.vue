@@ -14,6 +14,7 @@
       :editable="true"
       :bk-biz-id="props.bkBizId"
       :id="props.appId"
+      :file-size-limit="spaceFeatureFlags.RESOURCE_LIMIT.maxConfigItemSize"
       @change="handleFormChange" />
     <section class="action-btns">
       <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">
@@ -26,6 +27,7 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import { storeToRefs } from 'pinia';
   import Message from 'bkui-vue/lib/message';
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../../types/config';
   import { createServiceConfigItem, updateConfigContent } from '../../../../../../../../api/config';
@@ -33,7 +35,9 @@
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
   import ConfigForm from '../config-form.vue';
   import useServiceStore from '../../../../../../../../store/service';
-  import { storeToRefs } from 'pinia';
+  import useGlobalStore from '../../../../../../../../store/global';
+
+  const { spaceFeatureFlags } = storeToRefs(useGlobalStore());
 
   const props = defineProps<{
     show: boolean;

@@ -274,8 +274,8 @@
         return false;
       }
     } else if (formData.value.file_type === 'text') {
-      if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * 50) {
-        Message({ theme: 'error', message: t('配置内容不能超过50M') });
+      if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * 100) {
+        Message({ theme: 'error', message: `${t('配置内容不能超过')} 100M` });
         return false;
       }
     }
