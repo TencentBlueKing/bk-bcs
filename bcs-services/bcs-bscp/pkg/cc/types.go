@@ -43,7 +43,7 @@ type FeatureFlag string
 const (
 	// BizViewFlag 业务白名单
 	BizViewFlag FeatureFlag = "BIZ_VIEW"
-	// ResourceLimit 业务资源限制
+	// ResourceLimitFlag 业务资源限制
 	ResourceLimitFlag FeatureFlag = "RESOURCE_LIMIT"
 )
 
@@ -56,9 +56,9 @@ type FeatureBizView struct {
 
 // FeatureResourceLimit 业务资源限制
 type FeatureResourceLimit struct {
-	Default ResourceLimit            `json:"default" yaml:"default"`
+	Default ResourceLimit `json:"default" yaml:"default"`
 	// map[bizID]ResourceLimit
-	Spec    map[string]ResourceLimit `json:"spec" yaml:"spec"`
+	Spec map[string]ResourceLimit `json:"spec" yaml:"spec"`
 }
 
 // ResourceLimit 资源限制配置项
