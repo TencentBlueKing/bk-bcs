@@ -569,6 +569,7 @@ export default {
   '输入的规则有误，请重新确认': 'The entered rules are incorrect, please reconfirm',
   请输入文件路径: 'Please enter file path',
   请输入配置项名称: 'Please enter the configuration item name',
+  密钥名称已存在: 'The credentials name already exists',
 
   // 公共组件
   页面不存在: 'Page does not exist',

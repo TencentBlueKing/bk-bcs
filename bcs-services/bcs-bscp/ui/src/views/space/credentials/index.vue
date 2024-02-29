@@ -46,9 +46,16 @@
             <template #default="{ row, index }">
               <bk-input
                 v-if="index === 0 && isCreateCredential"
+                :class="{ 'input-error': isCreateCredentialNameExist }"
                 :placeholder="t('密钥名称支持中英文')"
                 v-model="createCredentialName"
-                @blur="testCreateCredentialName"></bk-input>
+                @blur="testCreateCredentialName">
+                <template #suffix>
+                  <span v-if="isCreateCredentialNameExist" class="suffix-error-icon">
+                    <Warn v-bk-tooltips="{ content: t('密钥名称已存在') }" />
+                  </span>
+                </template>
+              </bk-input>
               <div v-if="row.spec" class="credential-memo">
                 <div v-if="editingNameId !== row.id" class="memo-content" :title="row.spec.memo || '--'">
                   {{ row.spec.name || '--' }}
@@ -111,13 +118,16 @@
           </bk-table-column>
           <bk-table-column :label="t('关联规则')" width="140">
             <template #default="{ row }">
-              <div v-if="row.rule && row.rule.length" class="rule-cell">
+              <div v-if="row.credential_scopes && row.credential_scopes.length" class="rule-cell">
                 <span v-for="rule in row.showRules" :key="rule.id" class="rule">
                   <bk-overflow-title type="tips">
-                    {{ rule.spec.app + rule.spec.scope }}
+                    {{ rule }}
                   </bk-overflow-title>
                 </span>
-                <span v-if="row.rule.length > 3" class="toggle-button" @click="toggleRulesExpanded(row.id)">
+                <span
+                  v-if="row.credential_scopes.length > 3"
+                  class="toggle-button"
+                  @click="toggleRulesExpanded(row.id)">
                   {{ row.isExpandedRules ? '收起' : '展开' }}
                 </span>
               </div>
@@ -236,7 +246,7 @@
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../store/global';
-  import { Plus, Search, Eye, Unvisible, Copy, EditLine } from 'bkui-vue/lib/icon';
+  import { Plus, Search, Eye, Unvisible, Copy, EditLine, Warn } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import { InfoBox } from 'bkui-vue';
   import { permissionCheck } from '../../../api/index';
@@ -245,7 +255,7 @@
     createCredential,
     updateCredential,
     deleteCredential,
-    getCredentialScopes,
+    getCredentialExist,
   } from '../../../api/credentials';
   import { copyToClipBoard, datetimeFormat } from '../../../utils/index';
   import { ICredentialItem } from '../../../../types/credential';
@@ -282,6 +292,7 @@
   const isShowDeleteDialog = ref(false);
   const dialogInputStr = ref('');
   const deleteCredentialInfo = ref<ICredentialItem>();
+  const isCreateCredentialNameExist = ref(false);
 
   watch(
     () => spaceId.value,
@@ -351,14 +362,12 @@
     tableData.value = res.details;
     pagination.value.count = res.count;
     // 获取密钥关联规则
-    tableData.value.forEach(async (item: any) => {
-      const res = await getCredentialScopes(spaceId.value, item.id);
-      item.rule = res.details;
+    tableData.value.forEach((item: any) => {
       // 密钥关联规则加工处理 做下拉展示
-      if (item.rule.length > 3) {
-        item.showRules = item.rule.slice(0, 3);
+      if (item.credential_scopes.length > 3) {
+        item.showRules = item.credential_scopes.slice(0, 3);
       } else {
-        item.showRules = item.rule;
+        item.showRules = item.credential_scopes;
       }
       item.isExpandedRules = false;
     });
@@ -600,7 +609,7 @@
   };
 
   // 校验新建密钥名称
-  const testCreateCredentialName = () => {
+  const testCreateCredentialName = async () => {
     if (!createCredentialName.value) return;
     const regex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_-]*[\u4e00-\u9fa5a-zA-Z0-9]$/;
     if (!regex.test(createCredentialName.value)) {
@@ -612,7 +621,18 @@
       });
       return Promise.reject();
     }
+    // 校验密钥名称是否已存在
+    const res = await getCredentialExist(spaceId.value, createCredentialName.value);
+    isCreateCredentialNameExist.value = res.data.exist;
+    if (isCreateCredentialNameExist.value) return Promise.reject();
   };
+
+  // // 校验密钥名称是否已存在
+  // const testCredentialNameExist = async () => {
+  //   const res = await getCredentialExist(spaceId.value, createCredentialName.value);
+  //   isCreateCredentialNameExist.value = res.data.exist;
+  // };
+
   const goToIAM = () => {
     window.open(`${(window as any).BK_IAM_HOST}/apply-join-user-group`, '__blank');
   };
@@ -622,9 +642,9 @@
     const credential = tableData.value.find((item: any) => item.id === id);
     credential.isExpandedRules = !credential.isExpandedRules;
     if (credential.isExpandedRules) {
-      credential.showRules = credential.rule;
+      credential.showRules = credential.credential_scopes;
     } else {
-      credential.showRules = credential.rule.slice(0, 3);
+      credential.showRules = credential.credential_scopes.slice(0, 3);
     }
   };
 </script>
@@ -688,6 +708,16 @@
     }
     .delete-btn {
       display: inline-block;
+    }
+    .input-error {
+      border: 1px solid #ea3636;
+    }
+    .suffix-error-icon {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 9px;
+      font-size: 14px;
+      color: #ea3636;
     }
   }
   .credential-text {

@@ -53,3 +53,12 @@ export const getCredentialScopes = (biz_id: string, credential_id: number) =>
  */
 export const updateCredentialScopes = (biz_id: string, credential_id: number, params: IRuleUpdateParams) =>
   http.put(`/config/biz_id/${biz_id}/credential/${credential_id}/scope`, params).then((res) => res.data);
+
+/**
+ * 获取密钥名称是否存在
+ * @param biz_id 空间ID
+ * @param credential_name 密钥名称
+ * @returns
+ */
+export const getCredentialExist = (biz_id: string, credential_name: string) =>
+  http.get(`/config/biz_id/${biz_id}/credential/${credential_name}/check`);
