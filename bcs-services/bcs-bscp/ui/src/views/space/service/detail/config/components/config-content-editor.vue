@@ -4,7 +4,7 @@
       <div class="editor-title">
         <div class="tips">
           <InfoLine class="info-icon" />
-          {{ t('仅支持大小不超过') }}50M
+          {{ t('仅支持大小不超过') }}{{ props.sizeLimit }}M
         </div>
         <div class="btns">
           <ReadFileContent
@@ -58,11 +58,13 @@
     defineProps<{
       content: string;
       variables?: IVariableEditParams[];
+      sizeLimit?: number;
       editable: boolean;
     }>(),
     {
       variables: () => [],
       editable: true,
+      sizeLimit: 100,
     },
   );
 

@@ -706,6 +706,11 @@ service Config {
       body: "*"
     };
   }
+  rpc CheckCredentialName(CheckCredentialNameReq) returns (CheckCredentialNameResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/credential/{credential_name}/check"
+    };
+  }
 
   rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {
     option (google.api.http) = {
@@ -797,6 +802,15 @@ message UpdateCredentialsReq {
 }
 
 message UpdateCredentialsResp {}
+
+message CheckCredentialNameReq {
+  uint32 biz_id = 1;
+  string credential_name = 2;
+}
+
+message CheckCredentialNameResp {
+  bool exist = 1;
+}
 
 message ListCredentialsReq {
   uint32 biz_id = 1;

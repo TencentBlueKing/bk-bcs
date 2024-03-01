@@ -155,6 +155,7 @@ const (
 	Data_ListCredentials_FullMethodName                   = "/pbds.Data/ListCredentials"
 	Data_DeleteCredential_FullMethodName                  = "/pbds.Data/DeleteCredential"
 	Data_UpdateCredential_FullMethodName                  = "/pbds.Data/UpdateCredential"
+	Data_CheckCredentialName_FullMethodName               = "/pbds.Data/CheckCredentialName"
 	Data_ListCredentialScopes_FullMethodName              = "/pbds.Data/ListCredentialScopes"
 	Data_UpdateCredentialScopes_FullMethodName            = "/pbds.Data/UpdateCredentialScopes"
 	Data_CreateKv_FullMethodName                          = "/pbds.Data/CreateKv"
@@ -320,6 +321,7 @@ type DataClient interface {
 	ListCredentials(ctx context.Context, in *ListCredentialReq, opts ...grpc.CallOption) (*ListCredentialResp, error)
 	DeleteCredential(ctx context.Context, in *DeleteCredentialReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	UpdateCredential(ctx context.Context, in *UpdateCredentialReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	CheckCredentialName(ctx context.Context, in *CheckCredentialNameReq, opts ...grpc.CallOption) (*CheckCredentialNameResp, error)
 	// credential scope related interface
 	ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error)
 	UpdateCredentialScopes(ctx context.Context, in *UpdateCredentialScopesReq, opts ...grpc.CallOption) (*UpdateCredentialScopesResp, error)
@@ -1479,6 +1481,15 @@ func (c *dataClient) UpdateCredential(ctx context.Context, in *UpdateCredentialR
 	return out, nil
 }
 
+func (c *dataClient) CheckCredentialName(ctx context.Context, in *CheckCredentialNameReq, opts ...grpc.CallOption) (*CheckCredentialNameResp, error) {
+	out := new(CheckCredentialNameResp)
+	err := c.cc.Invoke(ctx, Data_CheckCredentialName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error) {
 	out := new(ListCredentialScopesResp)
 	err := c.cc.Invoke(ctx, Data_ListCredentialScopes_FullMethodName, in, out, opts...)
@@ -1730,6 +1741,7 @@ type DataServer interface {
 	ListCredentials(context.Context, *ListCredentialReq) (*ListCredentialResp, error)
 	DeleteCredential(context.Context, *DeleteCredentialReq) (*base.EmptyResp, error)
 	UpdateCredential(context.Context, *UpdateCredentialReq) (*base.EmptyResp, error)
+	CheckCredentialName(context.Context, *CheckCredentialNameReq) (*CheckCredentialNameResp, error)
 	// credential scope related interface
 	ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error)
 	UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error)
@@ -2128,6 +2140,9 @@ func (UnimplementedDataServer) DeleteCredential(context.Context, *DeleteCredenti
 }
 func (UnimplementedDataServer) UpdateCredential(context.Context, *UpdateCredentialReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredential not implemented")
+}
+func (UnimplementedDataServer) CheckCredentialName(context.Context, *CheckCredentialNameReq) (*CheckCredentialNameResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckCredentialName not implemented")
 }
 func (UnimplementedDataServer) ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCredentialScopes not implemented")
@@ -4442,6 +4457,24 @@ func _Data_UpdateCredential_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_CheckCredentialName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckCredentialNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CheckCredentialName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CheckCredentialName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CheckCredentialName(ctx, req.(*CheckCredentialNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListCredentialScopes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListCredentialScopesReq)
 	if err := dec(in); err != nil {
@@ -5150,6 +5183,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateCredential",
 			Handler:    _Data_UpdateCredential_Handler,
+		},
+		{
+			MethodName: "CheckCredentialName",
+			Handler:    _Data_CheckCredentialName_Handler,
 		},
 		{
 			MethodName: "ListCredentialScopes",

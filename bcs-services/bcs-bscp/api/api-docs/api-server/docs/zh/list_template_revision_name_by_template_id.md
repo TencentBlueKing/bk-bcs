@@ -33,8 +33,9 @@
           "template_id": 1,
           "template_name": "template001",
           "latest_template_revision_id": 2,
+          "latest_revision_name": "v1",
           "latest_signature": "11e3a57c479ebfae641c5821ee70bf61dca74b8e6596b78950526c397a3b1234",
-          "latest_byte_size": "2067",
+          "latest_byte_size": 2067,
           "template_revisions": [
             {
               "template_revision_id": 1,
@@ -52,8 +53,9 @@
           "template_id": 2,
           "template_name": "template002",
           "latest_template_revision_id": 4,
+          "latest_revision_name": "v2",
           "latest_signature": "22e3a57c479ebfae641c5821ee70bf61dca74b8e6596b78950526c397a3b1253",
-          "latest_byte_size": "1023",          
+          "latest_byte_size": 1023,
           "template_revisions": [
             {
               "template_revision_id": 3,

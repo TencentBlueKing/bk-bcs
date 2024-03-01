@@ -84,29 +84,51 @@
                             <!-- 非套餐配置文件 -->
                             <template v-if="group.id === 0">
                               <template v-if="isUnNamedVersion">
+                                <template v-if="config.file_state !== 'DELETE'">
+                                  <bk-button
+                                    v-cursor="{ active: !hasEditServicePerm }"
+                                    text
+                                    theme="primary"
+                                    :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                                    :disabled="!hasEditServicePerm"
+                                    @click="handleEditOpen(config)">
+                                    {{ t('编辑') }}
+                                  </bk-button>
+                                  <bk-button
+                                    v-if="config.file_state === 'REVISE'"
+                                    v-cursor="{ active: !hasEditServicePerm }"
+                                    text
+                                    theme="primary"
+                                    :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                                    :disabled="!hasEditServicePerm"
+                                    @click="handleUnModify(config.id)">
+                                    {{ t('撤销') }}
+                                  </bk-button>
+                                  <DownloadConfigBtn
+                                    type="config"
+                                    :bk-biz-id="props.bkBizId"
+                                    :app-id="props.appId"
+                                    :id="config.id"
+                                    :disabled="config.file_state === 'DELETE'" />
+                                  <bk-button
+                                    v-cursor="{ active: !hasEditServicePerm }"
+                                    text
+                                    theme="primary"
+                                    :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                                    :disabled="!hasEditServicePerm"
+                                    @click="handleDel(config)">
+                                    {{ t('删除') }}
+                                  </bk-button>
+                                </template>
                                 <bk-button
+                                  v-else
                                   v-cursor="{ active: !hasEditServicePerm }"
                                   text
                                   theme="primary"
                                   :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
-                                  :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
-                                  @click="handleEditOpen(config)">
-                                  {{ t('编辑') }}
-                                </bk-button>
-                                <DownloadConfigBtn
-                                  type="config"
-                                  :bk-biz-id="props.bkBizId"
-                                  :app-id="props.appId"
-                                  :id="config.id"
-                                  :disabled="config.file_state === 'DELETE'" />
-                                <bk-button
-                                  v-cursor="{ active: !hasEditServicePerm }"
-                                  text
-                                  theme="primary"
-                                  :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
-                                  :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
-                                  @click="handleDel(config)">
-                                  {{ t('删除') }}
+                                  :disabled="!hasEditServicePerm"
+                                  @click="handleUnDelete(config.id)">
+                                  {{ t('恢复') }}
                                 </bk-button>
                               </template>
                               <template v-else>
@@ -202,7 +224,7 @@
     <div style="margin-bottom: 8px">
       {{ t('配置文件') }}：<span style="color: #313238">{{ deleteConfig?.name }}</span>
     </div>
-    <div>{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
+    <div>{{ deleteConfigTips }}</div>
   </DeleteConfirmDialog>
   <DeleteConfirmDialog
     v-model:isShow="isDeletePkgDialogShow"
@@ -233,6 +255,8 @@
     getBoundTemplatesByAppVersion,
     deleteServiceConfigItem,
     deleteBoundPkg,
+    unModifyConfigItem,
+    unDeleteConfigItem,
   } from '../../../../../../../../api/config';
   import { getAppPkgBindingRelations } from '../../../../../../../../api/template';
   import StatusTag from './status-tag';
@@ -326,6 +350,15 @@
 
   // 是否为未命名版本
   const isUnNamedVersion = computed(() => versionData.value.id === 0);
+
+  const deleteConfigTips = computed(() => {
+    if (deleteConfig.value) {
+      return deleteConfig.value.file_state === 'ADD'
+        ? t('一旦删除，该操作将无法撤销，请谨慎操作')
+        : t('配置文件删除后，可以通过恢复按钮撤销删除');
+    }
+    return '';
+  });
 
   // 配置文件绝对路径
   const fileAP = computed(() => (config: IConfigTableItem) => {
@@ -634,6 +667,20 @@
   defineExpose({
     refresh: getAllConfigList,
   });
+
+  // 配置文件撤销修改
+  const handleUnModify = async (id: number) => {
+    await unModifyConfigItem(props.bkBizId, props.appId, id);
+    Message({ theme: 'success', message: t('撤销修改配置文件成功') });
+    getAllConfigList();
+  };
+
+  // 配置文件恢复删除
+  const handleUnDelete = async (id: number) => {
+    await unDeleteConfigItem(props.bkBizId, props.appId, id);
+    Message({ theme: 'success', message: t('恢复配置文件成功') });
+    getAllConfigList();
+  };
 </script>
 <style lang="scss" scoped>
   .config-groups-table {

@@ -68,13 +68,13 @@ type Setting interface {
 
 // ApiServerSetting defines api server used setting options.
 type ApiServerSetting struct {
-	Network      Network                           `yaml:"network"`
-	Service      Service                           `yaml:"service"`
-	Log          LogOption                         `yaml:"log"`
-	Repo         Repository                        `yaml:"repository"`
-	BKNotice     BKNotice                          `yaml:"bkNotice"`
-	Esb          Esb                               `yaml:"esb"`
-	FeatureFlags map[FeatureFlag]FeatureFlagOption `yaml:"featureFlags"`
+	Network      Network      `yaml:"network"`
+	Service      Service      `yaml:"service"`
+	Log          LogOption    `yaml:"log"`
+	Repo         Repository   `yaml:"repository"`
+	BKNotice     BKNotice     `yaml:"bkNotice"`
+	Esb          Esb          `yaml:"esb"`
+	FeatureFlags FeatureFlags `yaml:"featureFlags"`
 }
 
 // trySetFlagBindIP try set flag bind ip.

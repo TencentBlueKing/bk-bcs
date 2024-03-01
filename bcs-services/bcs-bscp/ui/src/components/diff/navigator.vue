@@ -155,7 +155,6 @@
       background: #63656e;
       border-radius: 2px;
       .number {
-        font-family: MicrosoftYaHei;
         font-size: 12px;
         color: #c4c6cc;
       }
