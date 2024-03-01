@@ -536,7 +536,7 @@ export default {
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
   蓝鲸权限中心: 'Blue Whale Authority Center',
   新建密钥: 'New Credentials',
-  '密钥名称/说明/更新人': 'Key name/ Description/ Updater',
+  '密钥名称/说明/关联规则/更新人': 'Key name/ Description/ Association rules/ Updater',
   密钥名称: 'Key name',
   密钥名称支持中英文: 'Key name supports Chinese and English',
   密钥: 'Credentials',
@@ -584,6 +584,7 @@ export default {
   '输入的规则有误，请重新确认': 'The entered rules are incorrect, please reconfirm',
   请输入文件路径: 'Please enter file path',
   请输入配置项名称: 'Please enter the configuration item name',
+  密钥名称已存在: 'The credentials name already exists',
 
   // 公共组件
   页面不存在: 'Page does not exist',
