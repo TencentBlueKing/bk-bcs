@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package core
@@ -127,8 +126,8 @@ func calculateScaleUpCoresMemoryTotal(
 		}
 		if currentSize > 0 {
 			nodeCPU, nodeMemory := getNodeInfoCoresAndMemory(nodeInfo)
-			coresTotal = coresTotal + int64(currentSize)*nodeCPU
-			memoryTotal = memoryTotal + int64(currentSize)*nodeMemory
+			coresTotal += int64(currentSize) * nodeCPU
+			memoryTotal += int64(currentSize) * nodeMemory
 		}
 	}
 
@@ -272,6 +271,7 @@ func maxResourceLimitReached(resources []string) *skippedReasons {
 // ScaleUp tries to scale the cluster up. Return true if it found a way to increase the size,
 // false if it didn't and error if an error occurred. Assumes that all nodes in the cluster are
 // ready and in sync with instance groups.
+// nolint
 func ScaleUp(context *contextinternal.Context, processors *ca_processors.AutoscalingProcessors,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, unschedulablePods []*apiv1.Pod, nodes []*apiv1.Node,
 	daemonSets []*appsv1.DaemonSet, nodeInfos map[string]*schedulernodeinfo.NodeInfo,
@@ -527,6 +527,7 @@ func checkPodsSchedulable(nodeGroup cloudprovider.NodeGroup,
 }
 
 // optimizeBestOption generates the best scale up options
+// nolint
 func optimizeBestOption(context *contextinternal.Context, processors *ca_processors.AutoscalingProcessors,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, daemonSets []*appsv1.DaemonSet,
 	nodeInfos map[string]*schedulernodeinfo.NodeInfo, ignoredTaints taintKeySet,
