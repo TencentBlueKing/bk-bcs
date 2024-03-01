@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -20,10 +20,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-
-	"bcs-egress/pkg/apis"
-	"bcs-egress/pkg/controller/bcsegress"
-	"bcs-egress/version"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
@@ -37,6 +33,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+
+	"bcs-egress/pkg/apis"
+	"bcs-egress/pkg/controller/bcsegress"
+	"bcs-egress/version"
 )
 
 // Change below variables to serve metrics on different host or port.
@@ -119,7 +119,7 @@ func addMetrics(ctx context.Context, cfg *rest.Config) {
 		}
 	}
 
-	if err := serveCRMetrics(cfg, operatorNs); err != nil {
+	if err = serveCRMetrics(cfg, operatorNs); err != nil {
 		klog.Info("Could not generate and serve custom resource metrics", "error", err.Error())
 	}
 
@@ -148,7 +148,8 @@ func addMetrics(ctx context.Context, cfg *rest.Config) {
 		// If this operator is deployed to a cluster without the prometheus-operator running, it will return
 		// ErrServiceMonitorNotPresent, which can be used to safely skip ServiceMonitor creation.
 		if err == metrics.ErrServiceMonitorNotPresent {
-			klog.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
+			klog.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error",
+				err.Error())
 		}
 	}
 }
@@ -156,7 +157,8 @@ func addMetrics(ctx context.Context, cfg *rest.Config) {
 // serveCRMetrics gets the Operator/CustomResource GVKs and generates metrics based on those types.
 // It serves those metrics on "http://metricsHost:operatorMetricsPort".
 func serveCRMetrics(cfg *rest.Config, operatorNs string) error {
-	// The function below returns a list of filtered operator/CR specific GVKs. For more control, override the GVK list below
+	// The function below returns a list of filtered operator/CR specific GVKs.
+	// For more control, override the GVK list below
 	// with your own custom logic. Note that if you are adding third party API schemas, probably you will need to
 	// customize this implementation to avoid permissions issues.
 	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(apis.AddToScheme)

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bcsegress
@@ -383,6 +382,7 @@ func md5sum(filename string) (string, error) {
 	}
 	defer config.Close()
 	// NOCC:gas/crypto(设计如此)
+	// nolint
 	md5Block := md5.New()
 	_, err = io.Copy(md5Block, config)
 	if err != nil {
