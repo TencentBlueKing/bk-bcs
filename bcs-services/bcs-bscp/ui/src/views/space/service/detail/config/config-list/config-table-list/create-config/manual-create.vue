@@ -14,7 +14,7 @@
       :editable="true"
       :bk-biz-id="props.bkBizId"
       :id="props.appId"
-      :file-size-limit="spaceFeatureFlags.RESOURCE_LIMIT.maxConfigItemSize"
+      :file-size-limit="spaceFeatureFlags.RESOURCE_LIMIT.maxFileSize"
       @change="handleFormChange" />
     <section class="action-btns">
       <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">
