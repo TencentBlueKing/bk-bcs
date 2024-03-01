@@ -13,8 +13,9 @@
 package storage
 
 import (
-	mesostype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	core "k8s.io/api/core/v1"
+
+	mesostype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 // Pod information from

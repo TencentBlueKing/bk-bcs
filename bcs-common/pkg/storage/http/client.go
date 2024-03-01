@@ -41,7 +41,7 @@ const (
 
 var (
 	// PrevDataErr this error means operation success, but got previous data failed
-	PrevDataErr = errors.New("Previous data err")
+	PrevDataErr = errors.New("Previous data err") // nolint
 )
 
 // Config etcd storage config
@@ -247,7 +247,7 @@ func (s *Client) Watch(_ context.Context, key, _ string, selector storage.Select
 		// fullPath = fullPath + "?labelSelector=" + selector.String() + "&watch=true"
 		fullPath = fullPath + "?" + selector.String() + "&watch=true"
 	} else {
-		fullPath = fullPath + "?watch=true"
+		fullPath += "?watch=true"
 	}
 	request, err := syshttp.NewRequest("GET", fullPath, nil)
 	if err != nil {
