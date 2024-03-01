@@ -79,7 +79,7 @@ set +x
 
 1. 通过`set -a 命令`配置环境变量，环境变量配置见[`环境变量`](#环境变量)
 2. `./bcs-ops -r bcsenv` 在第一台主机（后称中控机）上渲染配置文件 `env/bcs.env`
-3. 在中控机上启动集群控制平面：`./bcs-ops --instal master`，集群启动成功后会显示加入集群的指令
+3. 在中控机上启动集群控制平面：`./bcs-ops --install master`，集群启动成功后会显示加入集群的指令
 4. 集群加入指令有效期为 1 小时，中控机执行 `./bcs-ops --render joincmd` 可再次渲染生成加入集群的指令，渲染结果如下所示
 
    ```plaintext
@@ -196,22 +196,22 @@ set +x
 
 #### apiserver ha 环境变量
 
-| 环境变量                  | 默认值                      | 说明                                                                                                                                                                                                                         |
-| ------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 环境变量                  | 默认值                      | 说明                                                                                                                                                                                                                   |
+| ------------------------- | --------------------------- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `ENABLE_APISERVER_HA`     | `false`                     | apiserver ha 模式，默认关闭。                                                                                                                                                                                                |
-| `APISERVER_HA_MODE`       | `bcs-apiserver-proxy`       | 模式选择，支持 [bcs-apiserver-proxy](https://github.com/TencentBlueKing/bk-bcs/blob/625be3183d99ee3500123016a6dea99d78165565/docs/features/bcs-apiserver-proxy/bcs-apiserver-proxy.md#L1)`​[kube-vip](https://kube-vip.io/)` |
-| `VIP`                     |                             | VIP 地址，可配置与集群内不冲突的 ip 地址                                                                                                                                                                                     |
-| `VS_PORT`                 | `6443`                      | bap 代理端口                                                                                                                                                                                                                 |
-| `APISERVER_PROXY_VERSION` | `v1.29.0-alpha.130-tencent` | bap 镜像版本                                                                                                                                                                                                                 |
-| `PROXY_TOOL_PATH`         | `/usr/bin`                  | bap 工具安装目录                                                                                                                                                                                                             |
-| `PERSIST_DIR`             | `/root/.bcs`                | bap 持久化目录                                                                                                                                                                                                               |
-| `LVS_SCHEDULER`           | `rr`                        | bap 负载均衡策略                                                                                                                                                                                                             |
-| `MANAGER_INTERVAL`        | `10`                        | bap 监听时间                                                                                                                                                                                                                 |
-| `DEBUG_MODE`              | `true`                      | bap DEBUG 模式 默认开启                                                                                                                                                                                                      |
-| `LOG_LEVEL`               | `3`                         | bap 日志等级                                                                                                                                                                                                                 |
-| `KUBE_VIP_VERSION`        | `v0.5.12`                   | kube-vip 镜像版本                                                                                                                                                                                                            |
-| `BIND_INTERFACE`          | `""`                        | kube-vip 绑定网卡名                                                                                                                                                                                                          |
-| `VIP_CIDR`                | `32`                        | VIP CIDR 掩码长度                                                                                                                                                                                                            |
+| `APISERVER_HA_MODE`       | `bcs-apiserver-proxy`       | 模式选择，支持 [bcs-apiserver-proxy](https://github.com/TencentBlueKing/bk-bcs/blob/625be3183d99ee3500123016a6dea99d78165565/docs/features/bcs-apiserver-proxy/bcs-apiserver-proxy.md#L1), [kube-vip](https://kube-vip.io/) |
+| `VIP`                     |                             | VIP 地址，可配置与集群内不冲突的 ip 地址                                                                                                                                                                                             |
+| `VS_PORT`                 | `6443`                      | bap 代理端口                                                                                                                                                                                                             |
+| `APISERVER_PROXY_VERSION` | `v1.29.0-alpha.130-tencent` | bap 镜像版本                                                                                                                                                                                                             |
+| `PROXY_TOOL_PATH`         | `/usr/bin`                  | bap 工具安装目录                                                                                                                                                                                                           |
+| `PERSIST_DIR`             | `/root/.bcs`                | bap 持久化目录                                                                                                                                                                                                            |
+| `LVS_SCHEDULER`           | `rr`                        | bap 负载均衡策略                                                                                                                                                                                                           |
+| `MANAGER_INTERVAL`        | `10`                        | bap 监听时间                                                                                                                                                                                                             |
+| `DEBUG_MODE`              | `true`                      | bap DEBUG 模式 默认开启                                                                                                                                                                                                    |
+| `LOG_LEVEL`               | `3`                         | bap 日志等级                                                                                                                                                                                                             |
+| `KUBE_VIP_VERSION`        | `v0.5.12`                   | kube-vip 镜像版本                                                                                                                                                                                                        |
+| `BIND_INTERFACE`          | `""`                        | kube-vip 绑定网卡名                                                                                                                                                                                                       |
+| `VIP_CIDR`                | `32`                        | VIP CIDR 掩码长度                                                                                                                                                                                                        |
 
 ### 示例
 

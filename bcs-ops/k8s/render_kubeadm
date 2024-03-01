@@ -53,6 +53,23 @@ render_cluster() {
   cat >"${config_file}" <<EOF
 apiVersion: kubeadm.k8s.io/$kubeadm_tag
 apiServer:
+$(
+    if [[ ${ENABLE_APISERVER_HA} == "true" ]] && [[ ${APISERVER_HA_MODE} == "external" ]];then
+    cat <<EXTERNAL_EOF
+  certSANs:
+EXTERNAL_EOF
+      if [[ -n "${VIP}" ]];then
+    cat <<EXTERNAL_EOF
+    - "${VIP}"
+EXTERNAL_EOF
+      fi
+      if [[ -n "${APISERVER_HOST}" ]];then
+cat <<EXTERNAL_EOF
+    - "${APISERVER_HOST}"
+EXTERNAL_EOF
+      fi
+    fi
+)
   extraArgs:
     authorization-mode: Node,RBAC
 $(

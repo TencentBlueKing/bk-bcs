@@ -126,6 +126,7 @@ init_env() {
   ENABLE_APISERVER_HA=${ENABLE_APISERVER_HA:-"false"}
   APISERVER_HA_MODE=${APISERVER_HA_MODE:-"bcs-apiserver-proxy"}
   VIP=${VIP:-}
+  APISERVER_HOST=${APISERVER_HOST:-}
   ## bcs apiserver proxy
   APISERVER_PROXY_VERSION=${APISERVER_PROXY_VERSION:-"v1.29.0-alpha.130-tencent"}
   PROXY_TOOL_PATH=${PROXY_TOOL_PATH:-"/usr/bin"}
@@ -226,6 +227,12 @@ now is ${K8S_IPv6_STATUS}"
 
   [[ -n $K8S_CTRL_IP ]] || K8S_CTRL_IP=$LAN_IP
 
+  if [[ ${ENABLE_APISERVER_HA} == "external" ]];then
+    if [[ -z "${VIP}" ]] && [[ -z "${APISERVER_HOST}" ]];then
+      utils::log "ERROR" \
+        "if ENABLE_APISERVER_HA is ${ENABLE_APISERVER_HA}, VIP or APISERVER_HOST must be set"
+    fi
+  fi
 }
 
 render_env() {
@@ -323,6 +330,7 @@ BKREPO_URL="${BKREPO_URL}"
 ENABLE_APISERVER_HA="${ENABLE_APISERVER_HA}"
 APISERVER_HA_MODE="${APISERVER_HA_MODE}"
 VIP="${VIP}"
+APISERVER_HOST="${APISERVER_HOST}"
 ## bcs apiserver proxy
 APISERVER_PROXY_VERSION="${APISERVER_PROXY_VERSION}"
 PROXY_TOOL_PATH="${PROXY_TOOL_PATH}"
