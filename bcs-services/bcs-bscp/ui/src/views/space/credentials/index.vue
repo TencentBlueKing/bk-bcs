@@ -22,7 +22,7 @@
           <bk-input
             v-model="searchStr"
             class="search-group-input"
-            :placeholder="t('密钥名称/说明/更新人')"
+            :placeholder="t('密钥名称/说明/关联规则/更新人')"
             :clearable="true"
             @clear="refreshListWithLoading()"
             @input="handleSearchInputChange">
@@ -49,7 +49,8 @@
                 :class="{ 'input-error': isCreateCredentialNameExist }"
                 :placeholder="t('密钥名称支持中英文')"
                 v-model="createCredentialName"
-                @blur="testCreateCredentialName">
+                @blur="blurTestCreateCredentialName"
+                @input="changeTestCreateCredentialName">
                 <template #suffix>
                   <span v-if="isCreateCredentialNameExist" class="suffix-error-icon">
                     <Warn v-bk-tooltips="{ content: t('密钥名称已存在') }" />
@@ -423,7 +424,7 @@
       });
       return;
     }
-    await testCreateCredentialName();
+    await blurTestCreateCredentialName();
     try {
       createPending.value = true;
       const params = { memo: createCredentialMemo.value, name: createCredentialName.value };
@@ -608,8 +609,8 @@
     refreshListWithLoading();
   };
 
-  // 校验新建密钥名称
-  const testCreateCredentialName = async () => {
+  // input失焦校验新建密钥名称
+  const blurTestCreateCredentialName = async () => {
     if (!createCredentialName.value) return;
     const regex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_-]*[\u4e00-\u9fa5a-zA-Z0-9]$/;
     if (!regex.test(createCredentialName.value)) {
@@ -621,17 +622,21 @@
       });
       return Promise.reject();
     }
-    // 校验密钥名称是否已存在
-    const res = await getCredentialExist(spaceId.value, createCredentialName.value);
-    isCreateCredentialNameExist.value = res.data.exist;
+    testCredentialNameExist();
     if (isCreateCredentialNameExist.value) return Promise.reject();
   };
 
-  // // 校验密钥名称是否已存在
-  // const testCredentialNameExist = async () => {
-  //   const res = await getCredentialExist(spaceId.value, createCredentialName.value);
-  //   isCreateCredentialNameExist.value = res.data.exist;
-  // };
+  // 校验密钥名称是否已存在
+  const testCredentialNameExist = async () => {
+    const res = await getCredentialExist(spaceId.value, createCredentialName.value);
+    isCreateCredentialNameExist.value = res.data.exist;
+  };
+
+  // 如果密钥名称已存在需进行change校验
+  const changeTestCreateCredentialName = () => {
+    if (!isCreateCredentialNameExist.value) return;
+    testCredentialNameExist();
+  };
 
   const goToIAM = () => {
     window.open(`${(window as any).BK_IAM_HOST}/apply-join-user-group`, '__blank');
