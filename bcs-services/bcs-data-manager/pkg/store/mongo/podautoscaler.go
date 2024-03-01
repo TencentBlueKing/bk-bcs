@@ -379,7 +379,8 @@ func genPodAutoscalerListCond(req *bcsdatamanager.GetPodAutoscalerListRequest) [
 }
 
 // GetRawPodAutoscalerInfo is a function that retrieves raw pod autoscaler data without a time range.
-func (m *ModelPodAutoscaler) GetRawPodAutoscalerInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.PodAutoscalerData, error) {
+func (m *ModelPodAutoscaler) GetRawPodAutoscalerInfo(
+	ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.PodAutoscalerData, error) {
 	// Ensure that the table exists in the database.
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {

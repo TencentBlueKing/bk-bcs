@@ -18,15 +18,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
@@ -267,6 +266,7 @@ func (m *ModelNamespace) GetNamespaceInfoList(ctx context.Context,
 }
 
 // GetNamespaceInfo get namespace data with default time range
+// nolint funlen
 func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 	request *bcsdatamanager.GetNamespaceInfoRequest) (*bcsdatamanager.Namespace, error) {
 	// Ensure that the table exists in the database.
@@ -454,7 +454,7 @@ func (m *ModelNamespace) generateNamespaceResponse(public types.NamespacePublicM
 func (m *ModelNamespace) preAggregate(data *types.NamespaceData, newMetric *types.NamespaceMetrics) {
 	// If data.MaxInstanceTime is nil, update it to newMetric.MaxInstanceTime.
 	// Otherwise, if newMetric.MaxInstanceTime is greater than data.MaxInstanceTime,
-	//update data.MaxInstanceTime to newMetric. MaxInstanceTime.
+	// update data.MaxInstanceTime to newMetric. MaxInstanceTime.
 	if data.MaxInstanceTime == nil {
 		data.MaxInstanceTime = newMetric.MaxInstanceTime
 	} else if newMetric.MaxInstanceTime.Value > data.MaxInstanceTime.Value {
