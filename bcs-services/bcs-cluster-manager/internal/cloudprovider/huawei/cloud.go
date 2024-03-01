@@ -19,10 +19,11 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
 )
 
 var cloudInfoMgr sync.Once
