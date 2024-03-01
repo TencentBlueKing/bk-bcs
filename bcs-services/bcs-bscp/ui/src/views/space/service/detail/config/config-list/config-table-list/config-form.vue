@@ -89,8 +89,8 @@
         class="config-uploader"
         url=""
         theme="button"
-        :tip="t('文件大小100M以内')"
-        :size="100"
+        :tip="t('文件大小{size}M以内', { size: props.fileSizeLimit })"
+        :size="props.fileSizeLimit"
         :disabled="!editable"
         :multiple="false"
         :files="fileList"
@@ -122,6 +122,7 @@
         :content="stringContent"
         :editable="editable"
         :variables="props.variables"
+        :size-limit="props.fileSizeLimit"
         @change="handleStringContentChange" />
     </bk-form-item>
   </bk-form>
@@ -165,10 +166,12 @@
       bkBizId: string;
       id: number; // 服务ID或者模板空间ID
       fileUploading?: boolean;
+      fileSizeLimit?: number;
       isTpl?: boolean; // 是否未模板配置文件，非模板配置文件和模板配置文件的上传、下载接口参数有差异
     }>(),
     {
       editable: true,
+      fileSizeLimit: 100,
     },
   );
 
@@ -362,8 +365,8 @@
         return false;
       }
     } else if (localVal.value.file_type === 'text') {
-      if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * 50) {
-        BkMessage({ theme: 'error', message: t('配置内容不能超过50M') });
+      if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * props.fileSizeLimit) {
+        BkMessage({ theme: 'error', message: t('配置内容不能超过{size}M', { size: props.fileSizeLimit }) });
         return false;
       }
     }

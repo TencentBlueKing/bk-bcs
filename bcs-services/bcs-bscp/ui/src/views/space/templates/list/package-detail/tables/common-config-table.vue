@@ -105,6 +105,7 @@
                       <DownloadConfig
                         class="action-item"
                         theme="default"
+                        :text="$t('下载模板文件')"
                         :space-id="spaceId"
                         :template-space-id="currentTemplateSpace"
                         :template-id="row.id" />
