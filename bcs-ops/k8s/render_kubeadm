@@ -145,6 +145,8 @@ IPv6EOF
   )
 ---
 EOF
+
+  k8s::config_master_vip add false ${EXTERNAL_VIP},${EXTERNAL_HOST} ${config_file}
 }
 
 render_kubelet() {
@@ -315,6 +317,8 @@ safe_source() {
     exit 1
   fi
 }
+
+safe_source "${ROOT_DIR}/functions/k8s.sh"
 
 main() {
   local source_files ipv6_status cri_type

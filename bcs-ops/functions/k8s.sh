@@ -59,6 +59,53 @@ k8s::safe_add_helmrepo() {
 # add vip success - return 0
 # add vip fail - return 1
 #######################################
+k8s::config_master_vip() {
+  op_type=$1
+  excute=$2
+  vips=$3
+  path=$4
+
+  if [[ "${op_type}" == "list" ]];then
+    path=$2
+  fi
+
+  if [[ -z "${path}" ]];then
+    path=$(kubeadm_config_file="/tmp/kubeadm-$(date +%Y-%m-%d).yaml")
+    kubectl -n kube-system get configmap kubeadm-config -o jsonpath='{.data.ClusterConfiguration}' >"${path}"
+  fi
+
+  case "$op_type" in
+    add)
+      for vip in ${vips//,/ };do
+        if [[ -n "${vip}" ]];then
+          yq e -i '(select(.apiServer != null)|.apiServer.certSANs) += ["'${vip}'"]' ${path}
+        fi
+      done
+      ;;
+    delete)
+      for vip in ${vips//,/ };do
+        if [[ -n "${vip}" ]];then
+          yq e 'del(.apiServer.certSANs[] | select(. == "'${vip}'"))' -i ${path}
+        fi
+      done
+      ;;
+    list)
+      yq 'select(.apiServer.certSANs != null)|.apiServer.certSANs' ${path}
+      ;;
+    *)
+      export ERR_CODE=1
+      utils::log "ERROR" "unkown command: $1"
+      ;;
+  esac
+
+  if [[ "${excute}" == "true" ]] && [[ "${op_type}" != "list" ]];then
+    kubeadm init phase certs apiserver --config "${path}" \
+      || utils::log "ERROR" "failed to ${op_type} ${vips} ${path}"
+  fi
+
+  utils::log "OK" "${op_type} ${vips} ${path}"
+}
+
 k8s::add_vip_to_cert() {
   vip=$1
   local kubeadm_config_file
