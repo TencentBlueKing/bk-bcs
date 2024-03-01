@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package metric xxx
@@ -18,13 +17,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // MetricClient is interface for prometheus client
+// nolint
 type MetricClient interface {
 	Start()
 }
