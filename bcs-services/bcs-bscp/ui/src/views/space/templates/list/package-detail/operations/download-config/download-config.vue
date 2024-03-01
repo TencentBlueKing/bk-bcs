@@ -1,14 +1,17 @@
 <template>
   <div class="download-config" @click="handleDownload">
     <slot>
-      <bk-button text :theme="props.theme" :loading="pending">{{ $t('下载') }}</bk-button>
+      <bk-button text :theme="props.theme" :loading="pending">{{ props.text || t('下载') }}</bk-button>
     </slot>
   </div>
 </template>
 <script lang="ts" setup>
   import { ref } from 'vue';
+  import { useI18n } from 'vue-i18n';
   import { getTemplateVersionsNameByIds, downloadTemplateContent } from '../../../../../../../api/template';
   import { fileDownload } from '../../../../../../../utils/file';
+
+  const { t } = useI18n();
 
   const props = withDefaults(
     defineProps<{
@@ -16,6 +19,7 @@
       templateSpaceId: number;
       templateId: number;
       theme: string;
+      text?: string;
     }>(),
     {
       theme: 'primary',
