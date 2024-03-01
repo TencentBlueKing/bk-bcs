@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package main implements e2e test function
@@ -21,8 +20,6 @@ import (
 	"net/http"
 	"time"
 
-	"k8s.io/apimachinery/pkg/types"
-
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 	appsv1 "k8s.io/api/apps/v1"
@@ -31,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apiserver/pkg/server"
@@ -186,7 +184,8 @@ func (tc *testConfig) ScaleDownWorkLoad(deploy *appsv1.Deployment, lister v12.No
 // changeScale change scale
 func (tc *testConfig) changeScale(deploy *appsv1.Deployment, desired int32) error {
 	return wait.PollImmediate(1*time.Second, 5*time.Second, func() (done bool, err error) {
-		scale, err := tc.client.AppsV1().Deployments(deploy.Namespace).GetScale(context.TODO(), deploy.Name, metav1.GetOptions{})
+		scale, err := tc.client.AppsV1().Deployments(deploy.Namespace).GetScale(context.TODO(), deploy.Name,
+			metav1.GetOptions{})
 		if err != nil {
 			return false, nil
 		}
@@ -239,6 +238,7 @@ func (tc *testConfig) DeleteWorkLoad() {
 	defer func() {
 		klog.Infof("E2E finish delete workload %v", tc.name)
 	}()
+	// nolint
 	wait.PollImmediate(1*time.Second, 5*time.Second, func() (done bool, err error) {
 		if err := tc.client.AppsV1().Deployments(tc.namespace).Delete(context.TODO(), tc.name,
 			metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {

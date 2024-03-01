@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package core
@@ -22,11 +21,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
-	cloudproviderapi "k8s.io/cloud-provider/api"
-	klog "k8s.io/klog/v2"
-	nodeLabel "k8s.io/kubernetes/cmd/kubeadm/app/constants"
-	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
-
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate/utils"
@@ -42,6 +36,10 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/scheduler"
 	scheduler_utils "k8s.io/autoscaler/cluster-autoscaler/utils/scheduler"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/taints"
+	cloudproviderapi "k8s.io/cloud-provider/api"
+	klog "k8s.io/klog/v2"
+	nodeLabel "k8s.io/kubernetes/cmd/kubeadm/app/constants"
+	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
 
 	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 )
@@ -176,6 +174,7 @@ func filterOutExpendablePods(pods []*apiv1.Pod, expendablePodsPriorityCutoff int
 // DOTO(mwielgus): This returns map keyed by url, while most code (including scheduler) uses node.Name for a key.
 // DOTO(mwielgus): Review error policy - sometimes we may continue with partial errors.
 // NOCC:golint/fnsize(设计如此)
+// nolint funlen
 func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedulerframework.NodeInfo,
 	cloudProvider cloudprovider.CloudProvider, listers kube_util.ListerRegistry,
 	daemonsets []*appsv1.DaemonSet, predicateChecker simulator.PredicateChecker,
@@ -369,6 +368,7 @@ func filterOutNodesFromNotAutoscaledGroups(nodes []*apiv1.Node, cloudProvider cl
 	return result, nil
 }
 
+// nolint
 func deepCopyNodeInfo(nodeInfo *schedulerframework.NodeInfo) (*schedulerframework.NodeInfo, errors.AutoscalerError) {
 	newPods := make([]*apiv1.Pod, 0)
 	for _, podInfo := range nodeInfo.Pods {
@@ -403,10 +403,11 @@ func sanitizeNodeInfo(nodeInfo *schedulerframework.NodeInfo, nodeGroupName strin
 	return sanitizedNodeInfo, nil
 }
 
+// nolint
 func sanitizeTemplateNode(node *apiv1.Node, nodeGroup string,
 	ignoredTaints taints.TaintKeySet) (*apiv1.Node, errors.AutoscalerError) {
 	newNode := node.DeepCopy()
-	nodeName := fmt.Sprintf("template-node-for-%s-%d", nodeGroup, rand.Int63())
+	nodeName := fmt.Sprintf("template-node-for-%s-%d", nodeGroup, rand.Int63()) // nolint
 	newNode.Labels = make(map[string]string, len(node.Labels))
 	for k, v := range node.Labels {
 		// if !validLabel(k) {
@@ -707,16 +708,16 @@ func substractRescheduledPodResources(leftResources *schedulerframework.Resource
 		}
 	}
 
-	leftResources.AllowedPodNumber = leftResources.AllowedPodNumber - len(podsToReschedule)
-	leftResources.MilliCPU = leftResources.MilliCPU - podResources.MilliCPU
-	leftResources.Memory = leftResources.Memory - podResources.Memory
-	leftResources.EphemeralStorage = leftResources.EphemeralStorage - podResources.EphemeralStorage
+	leftResources.AllowedPodNumber -= len(podsToReschedule)
+	leftResources.MilliCPU -= podResources.MilliCPU
+	leftResources.Memory -= podResources.Memory
+	leftResources.EphemeralStorage -= podResources.EphemeralStorage
 
 	// calculate extend resources
 	for k, v := range podResources.ScalarResources {
 		_, ok := leftResources.ScalarResources[k]
 		if ok {
-			leftResources.ScalarResources[k] = leftResources.ScalarResources[k] - v
+			leftResources.ScalarResources[k] -= v
 		}
 	}
 
@@ -736,17 +737,17 @@ func singleNodeResource(info *schedulerframework.NodeInfo) apiv1.ResourceList {
 		podCount = len(info.Pods)
 	}
 
-	if allocatable == nil {
+	if allocatable == nil { // nolint
 		klog.Warningf("allocatable is nil: %v", info.Node().Name)
 	}
 
-	leftResource.AllowedPodNumber = allocatable.AllowedPodNumber - podCount
-	leftResource.MilliCPU = allocatable.MilliCPU - requested.MilliCPU
-	leftResource.Memory = allocatable.Memory - requested.Memory
-	leftResource.EphemeralStorage = allocatable.EphemeralStorage - requested.EphemeralStorage
+	leftResource.AllowedPodNumber = allocatable.AllowedPodNumber - podCount                   // nolint
+	leftResource.MilliCPU = allocatable.MilliCPU - requested.MilliCPU                         // nolint
+	leftResource.Memory = allocatable.Memory - requested.Memory                               // nolint
+	leftResource.EphemeralStorage = allocatable.EphemeralStorage - requested.EphemeralStorage // nolint
 
 	// calculate extend resources
-	for k, allocatableEx := range allocatable.ScalarResources {
+	for k, allocatableEx := range allocatable.ScalarResources { // nolint
 		requestEx, ok := requested.ScalarResources[k]
 		if !ok {
 			leftResource.ScalarResources[k] = allocatableEx
