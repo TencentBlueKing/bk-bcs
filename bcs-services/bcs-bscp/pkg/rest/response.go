@@ -172,12 +172,6 @@ func BadRequest(err error) render.Renderer {
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusBadRequest}
 }
 
-// InternalError rest 通用内部错误
-func InternalError(err error) render.Renderer {
-	payload := &ErrorPayload{Code: "INTERNAL", Message: err.Error()}
-	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusInternalServerError}
-}
-
 // GRPCErr GRPC-Gateway 错误
 func GRPCErr(err error) *ErrorResponse {
 	s := status.Convert(err)

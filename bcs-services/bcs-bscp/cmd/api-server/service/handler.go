@@ -67,16 +67,17 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, rest.OKRender(user))
 }
 
-// BizFeatureFlags feature flags for business
-type BizFeatureFlags struct {
-	// BizViewFlag 是否开启业务体验
-	BizView       bool             `json:"BIZ_VIEW"`
+// FeatureFlags feature flags
+type FeatureFlags struct {
+	// BizView 是否开启业务体验
+	BizView bool `json:"BIZ_VIEW"`
+	// ResourceLimit 业务资源限制
 	ResourceLimit cc.ResourceLimit `json:"RESOURCE_LIMIT"`
 }
 
 // FeatureFlagsHandler 特性开关接口
 func FeatureFlagsHandler(w http.ResponseWriter, r *http.Request) {
-	featureFlags := BizFeatureFlags{}
+	featureFlags := FeatureFlags{}
 
 	biz := r.URL.Query().Get("biz")
 	// set biz_view feature flag
@@ -90,8 +91,8 @@ func FeatureFlagsHandler(w http.ResponseWriter, r *http.Request) {
 	featureFlags.ResourceLimit = resourceLimitConf.Default
 
 	if resource, ok := resourceLimitConf.Spec[biz]; ok {
-		if resource.MaxConfigItemSize != 0 {
-			featureFlags.ResourceLimit.MaxConfigItemSize = resource.MaxConfigItemSize
+		if resource.MaxFileSize != 0 {
+			featureFlags.ResourceLimit.MaxFileSize = resource.MaxFileSize
 		}
 		// TODO：其他资源限制
 	}

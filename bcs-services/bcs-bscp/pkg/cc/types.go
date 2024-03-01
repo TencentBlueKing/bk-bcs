@@ -62,7 +62,7 @@ type FeatureResourceLimit struct {
 // ResourceLimit 资源限制配置项
 type ResourceLimit struct {
 	// 配置文件大小上限，单位 Mb
-	MaxConfigItemSize uint `json:"maxConfigItemSize" yaml:"maxConfigItemSize"`
+	MaxFileSize uint `json:"maxFileSize" yaml:"maxFileSize"`
 }
 
 // Service defines Setting related runtime.
