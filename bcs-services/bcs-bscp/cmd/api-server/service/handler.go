@@ -13,11 +13,9 @@
 package service
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
-	"gopkg.in/yaml.v3"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
@@ -69,47 +67,33 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, rest.OKRender(user))
 }
 
-// FeatureFlags map of feature flags
-type FeatureFlags map[cc.FeatureFlag]interface{}
+// BizFeatureFlags feature flags for business
+type BizFeatureFlags struct {
+	// BizViewFlag 是否开启业务体验
+	BizView       bool             `json:"BIZ_VIEW"`
+	ResourceLimit cc.ResourceLimit `json:"RESOURCE_LIMIT"`
+}
 
 // FeatureFlagsHandler 特性开关接口
 func FeatureFlagsHandler(w http.ResponseWriter, r *http.Request) {
-	featureFlags := FeatureFlags{}
+	featureFlags := BizFeatureFlags{}
 
 	biz := r.URL.Query().Get("biz")
-	for k, v := range cc.ApiServer().FeatureFlags {
-		switch k {
-		case cc.BizViewFlag:
-			bytes, _ := yaml.Marshal(v)
-			fmt.Println(string(bytes))
-			bizView := &cc.FeatureBizView{}
-			if err := yaml.Unmarshal(bytes, bizView); err != nil {
-				render.Render(w, r, rest.InternalError(fmt.Errorf("invalid feature flag format: %s", k)))
-				return
-			}
-			if enable, exists := bizView.Spec[biz]; exists {
-				featureFlags[k] = enable
-			} else {
-				featureFlags[k] = bizView.Default
-			}
-		case cc.ResourceLimitFlag:
-			bytes, _ := yaml.Marshal(v)
-			fmt.Println(string(bytes))
-			resourceLimitConf := &cc.FeatureResourceLimit{}
-			if err := yaml.Unmarshal(bytes, resourceLimitConf); err != nil {
-				render.Render(w, r, rest.InternalError(fmt.Errorf("invalid feature flag format: %s", k)))
-				return
-			}
-			resourceLimit := resourceLimitConf.Default
-			if resource, exists := resourceLimitConf.Spec[biz]; exists {
-				if resource.MaxConfigItemSize != 0 {
-					resourceLimit.MaxConfigItemSize = resource.MaxConfigItemSize
-				}
-				// TODO： 其他资源限制
-			}
-			featureFlags[k] = resourceLimit
+	// set biz_view feature flag
+	bizViewConf := cc.ApiServer().FeatureFlags.BizView
+	featureFlags.BizView = bizViewConf.Default
+	if enable, ok := bizViewConf.Spec[biz]; ok {
+		featureFlags.BizView = enable
+	}
+	// set biz resource limit
+	resourceLimitConf := cc.ApiServer().FeatureFlags.ResourceLimit
+	featureFlags.ResourceLimit = resourceLimitConf.Default
+
+	if resource, ok := resourceLimitConf.Spec[biz]; ok {
+		if resource.MaxConfigItemSize != 0 {
+			featureFlags.ResourceLimit.MaxConfigItemSize = resource.MaxConfigItemSize
 		}
-		// TODO：其他特性开关
+		// TODO：其他资源限制
 	}
 
 	render.Render(w, r, rest.OKRender(featureFlags))

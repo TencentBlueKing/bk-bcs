@@ -37,15 +37,13 @@ const (
 	RedisClusterMode = "cluster"
 )
 
-// FeatureFlag 枚举类型, 常量使用全部大写表示
-type FeatureFlag string
-
-const (
-	// BizViewFlag 业务白名单
-	BizViewFlag FeatureFlag = "BIZ_VIEW"
-	// ResourceLimitFlag 业务资源限制
-	ResourceLimitFlag FeatureFlag = "RESOURCE_LIMIT"
-)
+// FeatureFlags 特性配置
+type FeatureFlags struct {
+	// BizView 业务白名单
+	BizView FeatureBizView `json:"biz_view" yaml:"BIZ_VIEW"`
+	// ResourceLimit 业务资源限制
+	ResourceLimit FeatureResourceLimit `json:"resource_limit" yaml:"RESOURCE_LIMIT"`
+}
 
 // FeatureBizView 业务白名单
 type FeatureBizView struct {
