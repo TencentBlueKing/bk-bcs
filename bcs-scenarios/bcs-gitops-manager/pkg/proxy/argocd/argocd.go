@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
@@ -41,6 +41,7 @@ func NewGitOpsProxy(opt *proxy.GitOpsOptions) proxy.GitOpsProxy {
 
 // ArgocdProxy simple revese proxy for argocd according kubernetes service.
 // gitops proxy implements http.Handler interface.
+// nolint
 type ArgocdProxy struct {
 	*mux.Router // for http handler implementation
 
@@ -73,6 +74,7 @@ func (ops *ArgocdProxy) Stop() {
 }
 
 // initArgoPathHandler
+// nolint
 func (ops *ArgocdProxy) initArgoPathHandler() error {
 	argoSession := session.NewArgoSession(ops.option)
 	secretSession := session.NewSecretSession(ops.option.SecretOption)

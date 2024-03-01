@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package runner
@@ -22,17 +21,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/options"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/secret"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/options"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/secret"
 	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/option"
 )
@@ -191,7 +190,7 @@ func (t *terraformLocalRunner) ExecPlan(ctx context.Context, req *PlanRequest) (
 		blog.Info("backend seems to be disabled completely, so there will be no plan output file")
 	}
 
-	if req.Refresh == false {
+	if !req.Refresh {
 		planOpt = append(planOpt, tfexec.Refresh(req.Refresh))
 	}
 
@@ -218,20 +217,20 @@ func (t *terraformLocalRunner) ExecPlan(ctx context.Context, req *PlanRequest) (
 	if req.Out != "" {
 		planCreated = true
 
-		//plan, err := t.exec.ShowPlanFile(ctx, req.Out)
-		//if err != nil {
-		//	return nil, err
-		//}
-		////blog.Infof("plan output: %s", utils.ToJsonString(plan))
+		// plan, err := t.exec.ShowPlanFile(ctx, req.Out)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// //blog.Infof("plan output: %s", utils.ToJsonString(plan))
 		//
-		//// This is the case when the plan is empty.
-		//if plan.PlannedValues.Outputs == nil &&
-		//	plan.PlannedValues.RootModule.Resources == nil &&
-		//	plan.ResourceChanges == nil &&
-		//	plan.PriorState == nil &&
-		//	plan.OutputChanges == nil {
-		//	planCreated = false
-		//}
+		// // This is the case when the plan is empty.
+		// if plan.PlannedValues.Outputs == nil &&
+		// 	plan.PlannedValues.RootModule.Resources == nil &&
+		// 	plan.ResourceChanges == nil &&
+		// 	plan.PriorState == nil &&
+		// 	plan.OutputChanges == nil {
+		// 	planCreated = false
+		// }
 
 	}
 	blog.Infof("terraform plan end up, instance-id: %s", t.instanceID)
@@ -283,13 +282,13 @@ func (t *terraformLocalRunner) ExecApply(ctx context.Context, req *ApplyRequest)
 // ExecDestroy terraform destroy命令可以用来销毁并回收所有Terraform管理的基础设施资源。
 // Terraform管理的资源会被销毁，在执行销毁动作前会通过交互式界面征求用户的确认。
 //
-//该命令可以接收所有apply命令的参数，除了不可以指定plan文件。
+// 该命令可以接收所有apply命令的参数，除了不可以指定plan文件。
 //
-//如果-auto-approve参数被设置为true，那么将不会征求用户确认直接销毁。
+// 如果-auto-approve参数被设置为true，那么将不会征求用户确认直接销毁。
 //
-//如果用-target参数指定了某项资源，那么不但会销毁该资源，同时也会销毁一切依赖于该资源的资源。我们会在随后介绍plan命令时详细介绍。
+// 如果用-target参数指定了某项资源，那么不但会销毁该资源，同时也会销毁一切依赖于该资源的资源。我们会在随后介绍plan命令时详细介绍。
 //
-//terraform destroy将执行的所有操作都可以随时通过执行terraform plan -destroy命令来预览。
+// terraform destroy将执行的所有操作都可以随时通过执行terraform plan -destroy命令来预览。
 func (t *terraformLocalRunner) ExecDestroy(ctx context.Context, req *DestroyRequest) (*DestroyReply, error) {
 	defer t.outTfExecLog(DestroyAction)
 	blog.Infof("running destroy, instance-id: %s", t.instanceID)

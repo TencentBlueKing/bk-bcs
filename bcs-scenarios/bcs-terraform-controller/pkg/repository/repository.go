@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package repository xxx
@@ -20,7 +19,10 @@ import (
 	"path"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -28,8 +30,6 @@ import (
 	"github.com/pkg/errors"
 	apiv1 "k8s.io/apimachinery/pkg/types"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/utils"
@@ -79,7 +79,8 @@ type handler struct {
 }
 
 // NewHandler new handler obj
-func NewHandler(ctx context.Context, config tfv1.GitRepository, token, traceId string, nn apiv1.NamespacedName) Handler {
+func NewHandler(
+	ctx context.Context, config tfv1.GitRepository, token, traceId string, nn apiv1.NamespacedName) Handler {
 	return &handler{
 		nn:      nn,
 		ctx:     ctx,

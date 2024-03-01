@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package argocd
@@ -18,14 +17,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"

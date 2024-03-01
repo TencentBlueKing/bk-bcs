@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1
@@ -22,7 +21,7 @@ type Rule struct {
 	Rule        string     `json:"rule" yaml:"rule,omitempty"`
 	Threshold   *Algorithm `json:"threshold,omitempty" yaml:"threshold,omitempty"`
 	NoticeGroup []string   `json:"noticeGroup,omitempty" yaml:"noticeGroup,omitempty"`
-	Trigger     string     `json:"trigger,omitempty" yaml:"trigger,omitempty"` // 触发配置，如 1/5/6表示5个周期内满足1次则告警，连续6个周期内不满足条件则表示恢复
+	Trigger     string     `json:"trigger,omitempty" yaml:"trigger,omitempty"` // nolint 触发配置，如 1/5/6表示5个周期内满足1次则告警，连续6个周期内不满足条件则表示恢复
 }
 
 // NoticeGroupConfig 告警组配置

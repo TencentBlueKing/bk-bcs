@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package secretstore defines the function for vaultplugin
@@ -39,6 +38,7 @@ type secretStore struct {
 }
 
 // SecretStoreOptions defines the options of secret store
+// nolint
 type SecretStoreOptions struct {
 	Address string `json:"address"`
 	Port    string `json:"port"`
