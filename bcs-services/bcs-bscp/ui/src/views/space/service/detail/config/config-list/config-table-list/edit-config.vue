@@ -16,7 +16,7 @@
         :editable="true"
         :bk-biz-id="props.bkBizId"
         :id="props.appId"
-        :file-size-limit="spaceFeatureFlags.RESOURCE_LIMIT.maxConfigItemSize"
+        :file-size-limit="spaceFeatureFlags.RESOURCE_LIMIT.maxFileSize"
         @change="handleChange" />
     </bk-loading>
     <section class="action-btns">
