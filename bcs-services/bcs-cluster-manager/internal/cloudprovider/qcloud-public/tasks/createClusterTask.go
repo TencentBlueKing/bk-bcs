@@ -16,13 +16,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/avast/retry-go"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 
@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -223,7 +224,9 @@ func generateMasterExistedInstance(role string, instanceIDs []string, manyDisk b
 				return &api.LoginSettings{
 					Password: func() string {
 						if len(cls.GetNodeSettings().GetMasterLogin().InitLoginPassword) > 0 {
-							return cls.GetNodeSettings().GetMasterLogin().GetInitLoginPassword()
+							pwd, _ := encrypt.Decrypt(nil,
+								cls.GetNodeSettings().GetMasterLogin().GetInitLoginPassword())
+							return pwd
 						}
 						return ""
 					}(),
@@ -310,7 +313,9 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 				return &api.LoginSettings{
 					Password: func() string {
 						if len(info.Cluster.GetNodeSettings().GetWorkerLogin().InitLoginPassword) > 0 {
-							return info.Cluster.GetNodeSettings().GetWorkerLogin().InitLoginPassword
+							pwd, _ := encrypt.Decrypt(nil,
+								info.Cluster.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword())
+							return pwd
 						}
 						return ""
 					}(),
@@ -475,12 +480,18 @@ func generateNewRunInstance(info *cloudprovider.CloudDependBasicInfo, role strin
 				switch role {
 				case api.MASTER_ETCD.String():
 					if len(info.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword()) > 0 {
-						return common.StringPtr(info.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword())
+						pwd, _ := encrypt.Decrypt(nil,
+							info.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword())
+
+						return common.StringPtr(pwd)
 					}
 					return nil
 				case api.WORKER.String():
 					if len(info.Cluster.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword()) > 0 {
-						return common.StringPtr(info.Cluster.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword())
+						pwd, _ := encrypt.Decrypt(nil,
+							info.Cluster.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword())
+
+						return common.StringPtr(pwd)
 					}
 					return nil
 				default:

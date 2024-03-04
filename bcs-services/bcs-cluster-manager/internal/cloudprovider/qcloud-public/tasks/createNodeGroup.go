@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -529,7 +530,13 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration,
 		InstanceType:            &template.InstanceType,
 		InstanceChargeType:      &template.InstanceChargeType,
 		LoginSettings: &api.LoginSettings{
-			Password: template.InitLoginPassword,
+			Password: func() string {
+				if len(template.InitLoginPassword) == 0 {
+					return ""
+				}
+				passwd, _ := encrypt.Decrypt(nil, template.InitLoginPassword)
+				return passwd
+			}(),
 			KeyIds: func() []string {
 				if template.GetKeyPair() == nil || template.GetKeyPair().GetKeyID() == "" {
 					return nil

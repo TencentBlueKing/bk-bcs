@@ -231,7 +231,9 @@ type NodeManager interface {
 	// ListOsImage get osimage list
 	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
 	// ListKeyPairs list ssh keyPairs
-	ListKeyPairs(opt *CommonOption) ([]*proto.KeyPair, error)
+	ListKeyPairs(opt *ListNetworksOption) ([]*proto.KeyPair, error)
+	// GetResourceGroups resource groups list
+	GetResourceGroups(opt *CommonOption) ([]*proto.ResourceGroupInfo, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo
@@ -365,17 +367,17 @@ type NodeGroupManager interface {
 	DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
 		opt *DeleteExternalNodesOption) (*proto.Task, error)
 	// GetExternalNodeScript get external node script from cluster nodeGroup
-	GetExternalNodeScript(group *proto.NodeGroup) (string, error)
+	GetExternalNodeScript(group *proto.NodeGroup, internal bool) (string, error)
 }
 
 // VPCManager cloud interface for vpc management
 type VPCManager interface {
 	// ListVpcs list cloud vpcs
-	ListVpcs(vpcID string, opt *CommonOption) ([]*proto.CloudVpc, error)
+	ListVpcs(vpcID string, opt *ListNetworksOption) ([]*proto.CloudVpc, error)
 	// ListSubnets list vpc's subnets
-	ListSubnets(vpcID string, zone string, opt *CommonOption) ([]*proto.Subnet, error)
+	ListSubnets(vpcID string, zone string, opt *ListNetworksOption) ([]*proto.Subnet, error)
 	// ListSecurityGroups list security groups
-	ListSecurityGroups(opt *CommonOption) ([]*proto.SecurityGroup, error)
+	ListSecurityGroups(opt *ListNetworksOption) ([]*proto.SecurityGroup, error)
 	// GetCloudNetworkAccountType get cloud account type
 	GetCloudNetworkAccountType(opt *CommonOption) (*proto.CloudAccountType, error)
 	// ListBandwidthPacks list bandWidthPacks

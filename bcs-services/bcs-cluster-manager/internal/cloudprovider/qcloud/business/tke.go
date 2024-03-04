@@ -276,7 +276,8 @@ func DeleteClusterInstance(
 }
 
 // GetClusterExternalNodeScript get cluster externalNode script，获取第三方节点上架脚本
-func GetClusterExternalNodeScript(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (string, error) {
+func GetClusterExternalNodeScript(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	internal bool) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	tkeCli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
@@ -291,6 +292,7 @@ func GetClusterExternalNodeScript(ctx context.Context, info *cloudprovider.Cloud
 	err = retry.Do(func() error {
 		nodeScriptResp, err = tkeCli.DescribeExternalNodeScript(info.Cluster.SystemID, api.DescribeExternalNodeScriptConfig{
 			NodePoolId: info.NodeGroup.CloudNodeGroupID,
+			Internal:   internal,
 		})
 		if err != nil {
 			blog.Errorf("GetClusterExternalNodeScript[%s] DescribeExternalNodeScript failed: %v", taskID, err)
@@ -428,7 +430,7 @@ func generateInstanceAdvanceInfo(cluster *proto.Cluster, options *NodeAdvancedOp
 
 		if kubelet, ok := cluster.NodeSettings.ExtraArgs[common.Kubelet]; ok {
 			paras := strings.Split(kubelet, ";")
-			advanceInfo.ExtraArgs.Kubelet = paras
+			advanceInfo.ExtraArgs.Kubelet = utils.FilterEmptyString(paras)
 		}
 	}
 
@@ -640,11 +642,11 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 		kubeletParams := make([]string, 0)
 		if kubePara, ok := nodeTemplate.ExtraArgs[common.Kubelet]; ok {
 			paras := strings.Split(kubePara, ";")
-			kubeletParams = append(kubeletParams, paras...)
+			kubeletParams = append(kubeletParams, utils.FilterEmptyString(paras)...)
 		}
 		if kubelet, ok := cls.NodeSettings.ExtraArgs[common.Kubelet]; ok {
 			paras := strings.Split(kubelet, ";")
-			kubeletParams = append(kubeletParams, paras...)
+			kubeletParams = append(kubeletParams, utils.FilterEmptyString(paras)...)
 		}
 		advanceInfo.ExtraArgs.Kubelet = kubeletParams
 	}

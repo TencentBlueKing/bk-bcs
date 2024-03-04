@@ -178,6 +178,8 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.EnableNodeGroupAutoScale":       cluster.CanManageClusterOperation,
 	"ClusterManager.DisableNodeGroupAutoScale":      cluster.CanManageClusterOperation,
 	"ClusterManager.GetExternalNodeScriptByGroupID": cluster.CanManageClusterOperation,
+	"ClusterManager.TransNodeGroupToNodeTemplate":   cluster.CanManageClusterOperation,
+	"ClusterManager.CleanDbHistoryData":             "",
 
 	// cloud template
 	"ClusterManager.CreateCloud": "",

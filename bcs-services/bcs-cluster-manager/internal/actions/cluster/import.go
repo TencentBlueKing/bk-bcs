@@ -261,9 +261,10 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 		TaskID:       ia.task.TaskID,
 		Message:      fmt.Sprintf("导入%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ia.cluster.ClusterID,
 		ProjectID:    ia.cluster.ProjectID,
+		ResourceName: cls.GetClusterName(),
 	})
 	if err != nil {
 		blog.Errorf("import cluster[%s] CreateOperationLog failed: %v", cls.ClusterID, err)

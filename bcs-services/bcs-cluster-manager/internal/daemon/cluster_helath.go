@@ -34,6 +34,7 @@ func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
 	if err != nil {
 		blog.Errorf("reportClusterHealthStatus ListCluster failed: %v", err)
 		error <- err
+		return
 	}
 
 	concurency := utils.NewRoutinePool(10)

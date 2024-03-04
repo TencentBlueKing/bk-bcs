@@ -199,7 +199,12 @@ func (n *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.Lis
 }
 
 // ListKeyPairs keyPairs list
-func (n *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
+func (n *NodeManager) ListKeyPairs(opt *cloudprovider.ListNetworksOption) ([]*proto.KeyPair, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetResourceGroups resource groups list
+func (n *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*proto.ResourceGroupInfo, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

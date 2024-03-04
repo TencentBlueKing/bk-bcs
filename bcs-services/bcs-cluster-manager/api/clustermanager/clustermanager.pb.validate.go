@@ -5726,6 +5726,8 @@ func (m *AutoScalingGroup) Validate() error {
 
 	// no validation rules for AutoUpgrade
 
+	// no validation rules for NodeRole
+
 	return nil
 }
 
@@ -9183,6 +9185,21 @@ func (m *CreateClusterReq) Validate() error {
 	// no validation rules for CloudAccountID
 
 	// no validation rules for NodeTemplateID
+
+	for idx, item := range m.GetNodeGroups() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateClusterReqValidationError{
+					field:  fmt.Sprintf("NodeGroups[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	return nil
 }
@@ -17376,6 +17393,8 @@ func (m *GroupExtraInfo) Validate() error {
 
 	// no validation rules for PoolID
 
+	// no validation rules for ScriptType
+
 	return nil
 }
 
@@ -20880,6 +20899,174 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateGroupMinMaxSizeResponseValidationError{}
+
+// Validate checks the field values on TransNodeGroupToNodeTemplateRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *TransNodeGroupToNodeTemplateRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetNodeGroupID()); l < 1 || l > 100 {
+		return TransNodeGroupToNodeTemplateRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+	}
+
+	if !_TransNodeGroupToNodeTemplateRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
+		return TransNodeGroupToNodeTemplateRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// TransNodeGroupToNodeTemplateRequestValidationError is the validation error
+// returned by TransNodeGroupToNodeTemplateRequest.Validate if the designated
+// constraints aren't met.
+type TransNodeGroupToNodeTemplateRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TransNodeGroupToNodeTemplateRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TransNodeGroupToNodeTemplateRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TransNodeGroupToNodeTemplateRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TransNodeGroupToNodeTemplateRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TransNodeGroupToNodeTemplateRequestValidationError) ErrorName() string {
+	return "TransNodeGroupToNodeTemplateRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TransNodeGroupToNodeTemplateRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTransNodeGroupToNodeTemplateRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TransNodeGroupToNodeTemplateRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TransNodeGroupToNodeTemplateRequestValidationError{}
+
+var _TransNodeGroupToNodeTemplateRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on TransNodeGroupToNodeTemplateResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *TransNodeGroupToNodeTemplateResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetTemplate()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return TransNodeGroupToNodeTemplateResponseValidationError{
+				field:  "Template",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// TransNodeGroupToNodeTemplateResponseValidationError is the validation error
+// returned by TransNodeGroupToNodeTemplateResponse.Validate if the designated
+// constraints aren't met.
+type TransNodeGroupToNodeTemplateResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TransNodeGroupToNodeTemplateResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TransNodeGroupToNodeTemplateResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TransNodeGroupToNodeTemplateResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TransNodeGroupToNodeTemplateResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TransNodeGroupToNodeTemplateResponseValidationError) ErrorName() string {
+	return "TransNodeGroupToNodeTemplateResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TransNodeGroupToNodeTemplateResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTransNodeGroupToNodeTemplateResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TransNodeGroupToNodeTemplateResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TransNodeGroupToNodeTemplateResponseValidationError{}
 
 // Validate checks the field values on UpdateGroupDesiredSizeRequest with the
 // rules defined in the proto definition for this message. If any rules are
@@ -24845,6 +25032,243 @@ var _ interface {
 	ErrorName() string
 } = UpdateAutoScalingStatusResponseValidationError{}
 
+// Validate checks the field values on ResourceGroupInfo with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ResourceGroupInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Name
+
+	// no validation rules for Region
+
+	// no validation rules for ProvisioningState
+
+	return nil
+}
+
+// ResourceGroupInfoValidationError is the validation error returned by
+// ResourceGroupInfo.Validate if the designated constraints aren't met.
+type ResourceGroupInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResourceGroupInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResourceGroupInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResourceGroupInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResourceGroupInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResourceGroupInfoValidationError) ErrorName() string {
+	return "ResourceGroupInfoValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResourceGroupInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResourceGroupInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResourceGroupInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResourceGroupInfoValidationError{}
+
+// Validate checks the field values on GetResourceGroupsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetResourceGroupsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetCloudID()) < 2 {
+		return GetResourceGroupsRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at least 2 runes",
+		}
+	}
+
+	// no validation rules for AccountID
+
+	return nil
+}
+
+// GetResourceGroupsRequestValidationError is the validation error returned by
+// GetResourceGroupsRequest.Validate if the designated constraints aren't met.
+type GetResourceGroupsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetResourceGroupsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetResourceGroupsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetResourceGroupsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetResourceGroupsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetResourceGroupsRequestValidationError) ErrorName() string {
+	return "GetResourceGroupsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetResourceGroupsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetResourceGroupsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetResourceGroupsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetResourceGroupsRequestValidationError{}
+
+// Validate checks the field values on GetResourceGroupsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetResourceGroupsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetResourceGroupsResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// GetResourceGroupsResponseValidationError is the validation error returned by
+// GetResourceGroupsResponse.Validate if the designated constraints aren't met.
+type GetResourceGroupsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetResourceGroupsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetResourceGroupsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetResourceGroupsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetResourceGroupsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetResourceGroupsResponseValidationError) ErrorName() string {
+	return "GetResourceGroupsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetResourceGroupsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetResourceGroupsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetResourceGroupsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetResourceGroupsResponseValidationError{}
+
 // Validate checks the field values on RegionInfo with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
 func (m *RegionInfo) Validate() error {
@@ -25265,6 +25689,8 @@ func (m *ListCloudRegionClusterRequest) Validate() error {
 		}
 	}
 
+	// no validation rules for ResourceGroupName
+
 	return nil
 }
 
@@ -25609,6 +26035,8 @@ func (m *OperationLog) Validate() error {
 
 	// no validation rules for ProjectID
 
+	// no validation rules for ResourceName
+
 	return nil
 }
 
@@ -25693,6 +26121,8 @@ func (m *TaskOperationLog) Validate() error {
 	// no validation rules for Status
 
 	// no validation rules for TaskType
+
+	// no validation rules for ResourceName
 
 	return nil
 }
@@ -27591,6 +28021,8 @@ func (m *ListCloudVpcsRequest) Validate() error {
 
 	// no validation rules for VpcID
 
+	// no validation rules for ResourceGroupName
+
 	return nil
 }
 
@@ -27927,6 +28359,8 @@ func (m *ListCloudSubnetsRequest) Validate() error {
 	// no validation rules for SubnetID
 
 	// no validation rules for InjectCluster
+
+	// no validation rules for ResourceGroupName
 
 	return nil
 }
@@ -28421,6 +28855,8 @@ func (m *ListCloudSecurityGroupsRequest) Validate() error {
 
 	// no validation rules for AccountID
 
+	// no validation rules for ResourceGroupName
+
 	return nil
 }
 
@@ -28588,6 +29024,8 @@ func (m *ListKeyPairsRequest) Validate() error {
 	// no validation rules for Region
 
 	// no validation rules for AccountID
+
+	// no validation rules for ResourceGroupName
 
 	return nil
 }
@@ -29137,6 +29575,8 @@ func (m *OperationLogDetail) Validate() error {
 
 	// no validation rules for Status
 
+	// no validation rules for ResourceName
+
 	return nil
 }
 
@@ -29195,6 +29635,162 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = OperationLogDetailValidationError{}
+
+// Validate checks the field values on CleanDbHistoryDataRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CleanDbHistoryDataRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if _, ok := _CleanDbHistoryDataRequest_DataType_InLookup[m.GetDataType()]; !ok {
+		return CleanDbHistoryDataRequestValidationError{
+			field:  "DataType",
+			reason: "value must be in list [task operationlog]",
+		}
+	}
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
+
+	return nil
+}
+
+// CleanDbHistoryDataRequestValidationError is the validation error returned by
+// CleanDbHistoryDataRequest.Validate if the designated constraints aren't met.
+type CleanDbHistoryDataRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CleanDbHistoryDataRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CleanDbHistoryDataRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CleanDbHistoryDataRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CleanDbHistoryDataRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CleanDbHistoryDataRequestValidationError) ErrorName() string {
+	return "CleanDbHistoryDataRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CleanDbHistoryDataRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCleanDbHistoryDataRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CleanDbHistoryDataRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CleanDbHistoryDataRequestValidationError{}
+
+var _CleanDbHistoryDataRequest_DataType_InLookup = map[string]struct{}{
+	"task":         {},
+	"operationlog": {},
+}
+
+// Validate checks the field values on CleanDbHistoryDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CleanDbHistoryDataResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	return nil
+}
+
+// CleanDbHistoryDataResponseValidationError is the validation error returned
+// by CleanDbHistoryDataResponse.Validate if the designated constraints aren't met.
+type CleanDbHistoryDataResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CleanDbHistoryDataResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CleanDbHistoryDataResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CleanDbHistoryDataResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CleanDbHistoryDataResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CleanDbHistoryDataResponseValidationError) ErrorName() string {
+	return "CleanDbHistoryDataResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CleanDbHistoryDataResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCleanDbHistoryDataResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CleanDbHistoryDataResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CleanDbHistoryDataResponseValidationError{}
 
 // Validate checks the field values on SecurityGroup with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
@@ -33400,6 +33996,8 @@ func (m *GetExternalNodeScriptRequest) Validate() error {
 	// no validation rules for NodeGroupID
 
 	// no validation rules for Operator
+
+	// no validation rules for Internal
 
 	return nil
 }

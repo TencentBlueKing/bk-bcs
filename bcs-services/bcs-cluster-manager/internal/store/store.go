@@ -16,16 +16,16 @@ package store
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"go.mongodb.org/mongo-driver/bson"
-
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/account"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cloud"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cloudvpc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/clustercredential"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/machinery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/moduleflag"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/node"
@@ -38,6 +38,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/scalingoption"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/task"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/tke"
+	stypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/types"
+
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 var storeClient ClusterManagerModel
@@ -148,6 +151,9 @@ type ClusterManagerModel interface {
 	DeleteTask(ctx context.Context, taskID string) error
 	GetTask(ctx context.Context, taskID string) (*types.Task, error)
 	ListTask(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Task, error)
+	DeleteFinishedTaskByDate(ctx context.Context, startTime, endTime string) error
+	ListMachineryTasks(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]stypes.Task, error)
+	GetTasksFieldDistinct(ctx context.Context, fieldName string, filter interface{}) ([]string, error)
 
 	// OperationLog
 	CreateOperationLog(ctx context.Context, log *types.OperationLog) error
@@ -157,6 +163,7 @@ type ClusterManagerModel interface {
 	CountOperationLog(ctx context.Context, cond *operator.Condition) (int64, error)
 	ListAggreOperationLog(ctx context.Context, condSrc, condDst []bson.E,
 		opt *options.ListOption) ([]types.TaskOperationLog, error)
+	DeleteOperationLogByDate(ctx context.Context, startTime, endTime string) error
 
 	// project information storage management
 	CreateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error
@@ -193,10 +200,27 @@ type ModelSet struct {
 	*account.ModelCloudAccount
 	*nodetemplate.ModelNodeTemplate
 	*moduleflag.ModelCloudModuleFlag
+	*machinery.ModelMachineryTask
 }
 
 // NewModelSet create model set
-func NewModelSet(db drivers.DB) ClusterManagerModel {
+func NewModelSet(mongoOptions *mongo.Options) (ClusterManagerModel, error) {
+	db, err := mongo.NewDB(mongoOptions)
+	if err != nil {
+		blog.Errorf("init mongo db failed, err %s", err.Error())
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		blog.Errorf("ping mongo db failed, err %s", err.Error())
+		return nil, err
+	}
+	blog.Infof("init mongo db successfully")
+
+	mTaskDb, err := machinery.New(db, mongoOptions)
+	if err != nil {
+		return nil, err
+	}
+
 	storeClient = &ModelSet{
 		ModelCluster:           cluster.New(db),
 		ModelNode:              node.New(db),
@@ -214,9 +238,10 @@ func NewModelSet(db drivers.DB) ClusterManagerModel {
 		ModelCloudAccount:      account.New(db),
 		ModelNodeTemplate:      nodetemplate.New(db),
 		ModelCloudModuleFlag:   moduleflag.New(db),
+		ModelMachineryTask:     mTaskDb,
 	}
 
-	return storeClient
+	return storeClient, nil
 }
 
 // GetStoreModel get store client

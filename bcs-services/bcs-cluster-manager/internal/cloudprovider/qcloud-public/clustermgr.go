@@ -864,7 +864,7 @@ func getZoneSubnets(vpcId string, opt cloudprovider.CommonOption) ([]string, map
 	)
 
 	vpcCli := &VPCManager{}
-	subnets, err := vpcCli.ListSubnets(vpcId, "", &opt)
+	subnets, err := vpcCli.ListSubnets(vpcId, "", &cloudprovider.ListNetworksOption{CommonOption: opt})
 	if err != nil {
 		blog.Errorf("getZoneSubnets ListSubnets failed: %v", err)
 		return nil, nil, err

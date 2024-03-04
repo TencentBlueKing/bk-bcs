@@ -15,18 +15,19 @@ package common
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
+	"github.com/avast/retry-go"
 )
 
 var (
@@ -167,26 +168,25 @@ func TransBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) 
 	// get host id from host list
 	var hostIDs []int
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancel()
-
-	err := loop.LoopDoFunc(ctx, func() error {
+	err := retry.Do(func() error {
 		var errGet error
+		// hostIPs may be notIn biz cmdb && only operate exist hosts
 		hostIDs, errGet = nodeManClient.GetHostIDByIPs(biz, hostIPs)
 		if errGet != nil {
 			blog.Errorf("TransBizNodeModule %v failed, list nodeman hosts err %s", biz, errGet.Error())
 			return errGet
 		}
-		if len(hostIDs) == len(hostIPs) {
-			return loop.EndLoop
-		}
-		blog.Infof("TransBizNodeModule %s can't get all host id, waiting", taskID)
+		blog.Infof("TransBizNodeModule %s get hosts id success", taskID)
 		return nil
-	}, loop.LoopInterval(3*time.Second))
+	}, retry.Attempts(3), retry.Context(ctx), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second))
 	if err != nil {
 		blog.Errorf("TransBizNodeModule %s get host id failed: %v", taskID, err)
 		return err
 	}
+
+	blog.Infof("TransBizNodeModule %s hostIPs(%v) hostIds(%v)", taskID, len(hostIPs), len(hostIDs))
 
 	err = cmdbClient.TransferHostToIdleModule(biz, hostIDs)
 	if err != nil {
@@ -295,6 +295,79 @@ func RemoveHostFromCmdb(ctx context.Context, biz int, nodeIPs string) error {
 	if err := cmdbClient.DeleteHost(hostIDs); err != nil {
 		blog.Errorf("RemoveHostFromCMDBTask %s DeleteHost %v failed, %s", taskID, hostIDs, err.Error())
 		return fmt.Errorf("DeleteHost %v failed, %s", hostIDs, err.Error())
+	}
+
+	return nil
+}
+
+// CheckNodeIpsInCMDBTask check nodes exist in cmdb task
+func CheckNodeIpsInCMDBTask(taskID string, stepName string) error {
+	start := time.Now()
+	// get task information and validate
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	if step == nil {
+		return nil
+	}
+
+	// get nodeIPs
+	nodeIPs := state.Task.CommonParams[cloudprovider.NodeIPsKey.String()]
+	ips := strings.Split(nodeIPs, ",")
+
+	if len(ips) == 0 {
+		blog.Infof("CheckNodeIpsInCMDBTask[%s] nodeIPs empty", taskID)
+		return nil
+	}
+
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	err = CheckIPsInCmdb(ctx, ips)
+	if err != nil {
+		blog.Errorf("CheckNodeIpsInCMDBTask[%s] failed: %v", taskID, err)
+		_ = state.UpdateStepFailure(start, stepName, err)
+		return err
+	}
+	blog.Infof("CheckNodeIpsInCMDBTask %s successful", taskID)
+
+	// update step
+	_ = state.UpdateStepSucc(start, stepName)
+	return nil
+}
+
+// CheckIPsInCmdb check cluster nodeIPs sync to cmdb
+func CheckIPsInCmdb(ctx context.Context, nodeIPs []string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	var err error
+	// check nodeIPs if exist in cmdb
+	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
+	defer cancel()
+
+	err = loop.LoopDoFunc(ctx, func() error {
+		cmdbClient := cmdb.GetCmdbClient()
+		if cmdbClient == nil {
+			blog.Errorf("checkIPsInCmdb[%s] failed, cmdb client is not init", taskID)
+			return nil
+		}
+		detailHosts, errLocal := cmdbClient.QueryAllHostInfoWithoutBiz(nodeIPs)
+		if errLocal != nil {
+			blog.Errorf("checkIPsInCmdb[%s] QueryAllHostInfoWithoutBiz failed: %s", taskID, errLocal.Error())
+			return nil
+		}
+
+		blog.Infof("checkIPsInCmdb[%s] QueryAllHostInfoWithoutBiz sourceIps(%v) cmdb(%v)",
+			taskID, len(nodeIPs), len(detailHosts))
+
+		if len(detailHosts) == len(nodeIPs) {
+			return loop.EndLoop
+		}
+		return nil
+	}, loop.LoopInterval(10*time.Second))
+	if err != nil {
+		blog.Errorf("checkIPsInCmdb[%s] failed: %v", taskID, err)
+		return err
 	}
 
 	return nil

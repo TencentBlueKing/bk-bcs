@@ -80,7 +80,8 @@ func (da *DeleteAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("删除云[%s]模板", req.CloudID),
 		OpUser:       deletedCloud.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ResourceName: deletedCloud.Name,
 	})
 	if err != nil {
 		blog.Errorf("DeleteCloud[%s] CreateOperationLog failed: %v", req.CloudID, err)

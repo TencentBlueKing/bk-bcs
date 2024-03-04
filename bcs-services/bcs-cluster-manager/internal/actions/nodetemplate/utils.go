@@ -25,8 +25,6 @@ import (
 )
 
 const (
-	nodeTemplate = "nt"
-
 	sopsCMTemplate = "CM"
 )
 

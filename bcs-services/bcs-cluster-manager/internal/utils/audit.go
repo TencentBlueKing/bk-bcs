@@ -289,7 +289,7 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 	auditCtx := audit.RecorderContext{
 		Username:  auth.GetUserFromCtx(ctx),
 		SourceIP:  getSourceIPFromCtx(ctx),
-		UserAgent: getUserAgentFromCtx(ctx),
+		UserAgent: GetUserAgentFromCtx(ctx),
 		RequestID: requestIDFromContext(ctx),
 		StartTime: startTime,
 		EndTime:   endTime,
@@ -329,8 +329,8 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 }
 
-// getUserAgentFromCtx 通过 ctx 获取 userAgent
-func getUserAgentFromCtx(ctx context.Context) string {
+// GetUserAgentFromCtx 通过 ctx 获取 userAgent
+func GetUserAgentFromCtx(ctx context.Context) string {
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
 		return ""

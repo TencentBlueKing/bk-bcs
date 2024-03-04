@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"strconv"
 	"strings"
 	"sync"
@@ -368,13 +369,37 @@ func clusterCloudDefaultNodeSetting(cls *cmproto.Cluster, defaultNodeConfig bool
 			return fmt.Errorf("master&node login info empty")
 		}
 
-		if cls.NodeSettings.GetMasterLogin() != nil && cls.NodeSettings.GetMasterLogin().GetKeyPair() != nil {
-			cls.NodeSettings.GetMasterLogin().GetKeyPair().KeySecret = utils.Base64Encode(
-				cls.NodeSettings.GetMasterLogin().GetKeyPair().GetKeySecret())
+		if cls.NodeSettings.GetMasterLogin() != nil {
+			if cls.NodeSettings.GetMasterLogin().GetKeyPair() != nil &&
+				len(cls.NodeSettings.GetMasterLogin().GetKeyPair().GetKeySecret()) > 0 {
+				cls.NodeSettings.GetMasterLogin().GetKeyPair().KeySecret, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetMasterLogin().GetKeyPair().GetKeySecret())
+			}
+			if cls.NodeSettings.GetMasterLogin().GetKeyPair() != nil &&
+				len(cls.NodeSettings.GetMasterLogin().GetKeyPair().GetKeyPublic()) > 0 {
+				cls.NodeSettings.GetMasterLogin().GetKeyPair().KeyPublic, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetMasterLogin().GetKeyPair().GetKeyPublic())
+			}
+			if len(cls.NodeSettings.GetMasterLogin().InitLoginPassword) > 0 {
+				cls.NodeSettings.GetMasterLogin().InitLoginPassword, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetMasterLogin().GetInitLoginPassword())
+			}
 		}
-		if cls.NodeSettings.GetWorkerLogin() != nil && cls.NodeSettings.GetWorkerLogin().GetKeyPair() != nil {
-			cls.NodeSettings.GetWorkerLogin().GetKeyPair().KeySecret = utils.Base64Encode(
-				cls.NodeSettings.GetWorkerLogin().GetKeyPair().GetKeySecret())
+		if cls.NodeSettings.GetWorkerLogin() != nil {
+			if cls.NodeSettings.GetWorkerLogin().GetKeyPair() != nil &&
+				len(cls.NodeSettings.GetWorkerLogin().GetKeyPair().GetKeySecret()) > 0 {
+				cls.NodeSettings.GetWorkerLogin().GetKeyPair().KeySecret, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetWorkerLogin().GetKeyPair().GetKeySecret())
+			}
+			if cls.NodeSettings.GetWorkerLogin().GetKeyPair() != nil &&
+				len(cls.NodeSettings.GetWorkerLogin().GetKeyPair().GetKeyPublic()) > 0 {
+				cls.NodeSettings.GetWorkerLogin().GetKeyPair().KeyPublic, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetWorkerLogin().GetKeyPair().GetKeyPublic())
+			}
+			if len(cls.NodeSettings.GetWorkerLogin().InitLoginPassword) > 0 {
+				cls.NodeSettings.GetWorkerLogin().InitLoginPassword, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetWorkerLogin().GetInitLoginPassword())
+			}
 		}
 	}
 

@@ -1126,6 +1126,9 @@ func (cli *TkeClient) DescribeExternalNodeScript(clusterID string,
 	if len(config.Name) > 0 {
 		req.Name = common.StringPtr(config.Name)
 	}
+	if config.Internal {
+		req.Internal = common.BoolPtr(true)
+	}
 
 	resp, err := cli.tkeCommon.DescribeExternalNodeScript(req)
 	if err != nil {

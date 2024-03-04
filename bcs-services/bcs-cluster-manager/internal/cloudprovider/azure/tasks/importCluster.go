@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
@@ -154,7 +155,7 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 
 	// save cluster kubeConfig
 	kubeConfig := string(credentials[0].Value)
-	data.Cluster.KubeConfig = kubeConfig
+	data.Cluster.KubeConfig, _ = encrypt.Encrypt(nil, kubeConfig)
 	_ = cloudprovider.UpdateCluster(data.Cluster)
 
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
@@ -174,7 +175,9 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 
 func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	// get cluster nodes
-	kubeRet := base64.StdEncoding.EncodeToString([]byte(data.Cluster.KubeConfig))
+	kube, _ := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
+
+	kubeRet := base64.StdEncoding.EncodeToString([]byte(kube))
 	kubeCli, err := clusterops.NewKubeClient(kubeRet)
 	if err != nil {
 		return fmt.Errorf("new kube client failed, %s", err.Error())

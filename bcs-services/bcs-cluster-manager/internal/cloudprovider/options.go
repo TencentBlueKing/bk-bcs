@@ -175,6 +175,7 @@ type CreateClusterOption struct {
 	Cloud        *proto.Cloud
 	WorkerNodes  []string
 	MasterNodes  []string
+	NodeGroupIDs []string
 	NodeTemplate *proto.NodeTemplate
 }
 
@@ -366,6 +367,12 @@ type CreateNodeGroupOption struct {
 	PoolInfo ResourcePoolData
 	// OnlyData only update data, not build task
 	OnlyData bool
+}
+
+// ListNetworksOption create list vpcs option
+type ListNetworksOption struct {
+	CommonOption
+	ResourceGroupName string
 }
 
 // ResourcePoolData xxx

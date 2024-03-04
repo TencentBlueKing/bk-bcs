@@ -25,9 +25,9 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var (
@@ -217,22 +217,30 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 				return nodeman.PasswordAuthType
 			}(),
 			Password: func() string {
-				if cloudprovider.IsMasterIp(v, dependInfo.Cluster) {
-					return dependInfo.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword()
+				if cloudprovider.IsMasterIp(v, dependInfo.Cluster) &&
+					len(dependInfo.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword()) > 0 {
+					pwd, _ := encrypt.Decrypt(nil,
+						dependInfo.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword())
+
+					return pwd
 				}
 
-				return passwd
+				if len(passwd) > 0 {
+					pwd, _ := encrypt.Decrypt(nil, passwd)
+					return pwd
+				}
+				return ""
 			}(),
 			Key: func() string {
 				if cloudprovider.IsMasterIp(v, dependInfo.Cluster) &&
 					len(dependInfo.Cluster.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeySecret()) > 0 {
-					secretStr, _ := utils.Base64Decode(
+					secretStr, _ := encrypt.Decrypt(nil,
 						dependInfo.Cluster.GetNodeSettings().GetMasterLogin().GetKeyPair().GetKeySecret())
 					return secretStr
 				}
 
 				if len(secret) > 0 {
-					secretStr, _ := utils.Base64Decode(secret)
+					secretStr, _ := encrypt.Decrypt(nil, secret)
 					return secretStr
 				}
 				return ""

@@ -16,6 +16,7 @@ package google
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"strings"
 	"sync"
 
@@ -86,7 +87,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	if err != nil {
 		return fmt.Errorf("SyncClusterCloudInfo GetClusterKubeConfig failed: %v", err)
 	}
-	cls.KubeConfig = kubeConfig
+	cls.KubeConfig, _ = encrypt.Encrypt(nil, kubeConfig)
 
 	// cluster cloud basic setting
 	clusterBasicSettingByGKE(cls, cluster)
