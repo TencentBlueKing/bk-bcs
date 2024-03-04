@@ -29,6 +29,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/options"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/service/crontab"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
@@ -132,6 +133,10 @@ func (ds *dataService) prepare(opt *options.Option) error {
 	}
 
 	ds.daoSet = set
+
+	// 同步客户端在线状态
+	state := crontab.NewSyncClientOnlineState(ds.daoSet, ds.sd)
+	state.Run()
 
 	// initial Vault set
 	vaultSet, err := vault.NewSet(cc.DataService().Vault)
