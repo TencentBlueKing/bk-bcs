@@ -318,11 +318,9 @@ safe_source() {
   fi
 }
 
-safe_source "${ROOT_DIR}/functions/k8s.sh"
-
 main() {
   local source_files ipv6_status cri_type
-  source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+  source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env" "${ROOT_DIR}/functions/k8s.sh")
   for file in "${source_files[@]}"; do
     safe_source "$file"
   done

@@ -54,20 +54,19 @@ k8s::safe_add_helmrepo() {
 #######################################
 # add vip to K8S apiserver certs
 # Arguments:
-# $1: vip
+# $1: op_type
+# $2: excute (if op_type is $1, then $2 is path)
+# $3: vips
+# $4: path
 # Return:
-# add vip success - return 0
-# add vip fail - return 1
+# excute success - return 0
+# excute - return 1
 #######################################
 k8s::config_master_vip() {
   op_type=$1
   excute=$2
-  vips=$3
-  path=$4
-
-  if [[ "${op_type}" == "list" ]];then
-    path=$2
-  fi
+  vips=${3:-""}
+  path=${4:-$2}
 
   if [[ -z "${path}" ]];then
     path=$(kubeadm_config_file="/tmp/kubeadm-$(date +%Y-%m-%d).yaml")
@@ -78,7 +77,7 @@ k8s::config_master_vip() {
     add)
       for vip in ${vips//,/ };do
         if [[ -n "${vip}" ]];then
-          yq e -i '(select(.apiServer != null)|.apiServer.certSANs) += ["'${vip}'"]' ${path}
+          yq e -i '(select(.apiServer != null)|.apiServer.certSANs) += ["'${vip}'"]| select(.apiServer != null)|.apiServer.certSANs|= unique' ${path}
         fi
       done
       ;;
@@ -106,6 +105,14 @@ k8s::config_master_vip() {
   utils::log "OK" "${op_type} ${vips} ${path}"
 }
 
+#######################################
+# add vip to K8S apiserver certs
+# Arguments:
+# $1: vip
+# Return:
+# add vip success - return 0
+# add vip fail - return 1
+#######################################
 k8s::add_vip_to_cert() {
   vip=$1
   local kubeadm_config_file
