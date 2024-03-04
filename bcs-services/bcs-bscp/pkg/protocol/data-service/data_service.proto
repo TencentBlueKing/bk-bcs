@@ -4,6 +4,8 @@ import "pkg/protocol/core/app/app.proto";
 import "pkg/protocol/core/app-template-binding/app_template_binding.proto";
 import "pkg/protocol/core/base/base.proto";
 import "pkg/protocol/core/config-item/config_item.proto";
+import "pkg/protocol/core/client/client.proto";
+import "pkg/protocol/core/client-event/client_event.proto";
 import "pkg/protocol/core/commit/commit.proto";
 import "pkg/protocol/core/content/content.proto";
 import "pkg/protocol/core/credential/credential.proto";
@@ -229,6 +231,9 @@ service Data {
       body: "*"
     };
   }
+
+  // client metric related interface
+  rpc BatchUpsertClientMetrics(BatchUpsertClientMetricsReq) returns (BatchUpsertClientMetricsResp) {}
 }
 message UpdateCredentialScopesReq {
   uint32 biz_id = 1;
@@ -1613,3 +1618,10 @@ message UnDeleteKvReq {
   pbkv.KvSpec spec = 2;
   pbkv.KvAttachment attachment = 3;
 }
+
+message BatchUpsertClientMetricsReq {
+  repeated pbclient.Client client_items = 1;
+  repeated pbce.ClientEvent client_event_items = 2;
+}
+
+message BatchUpsertClientMetricsResp {}

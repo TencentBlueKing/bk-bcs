@@ -35,6 +35,7 @@ func NewLocalCache(cs *clientset.ClientSet) (*Cache, error) {
 		ReleasedHook:  newReleasedHook(mc, cs),
 		Credential:    newCredential(mc, cs),
 		Auth:          newAuth(mc, cs.Authorizer()),
+		ClientMetric:  newClientMetric(mc, cs),
 	}, nil
 }
 
@@ -47,6 +48,7 @@ type Cache struct {
 	Credential    *Credential
 	ReleasedHook  *ReleasedHook
 	Auth          *Auth
+	ClientMetric  *ClientMetric
 }
 
 // Purge is used to clean the resource's cache with events.
