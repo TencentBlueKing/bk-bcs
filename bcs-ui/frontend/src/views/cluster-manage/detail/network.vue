@@ -113,7 +113,7 @@
           </bk-form-item>
           <bk-form-item
             :label="$t('cluster.create.label.networkSetting.cidrStep.text')">
-            {{ cidrStep }}
+            {{ clusterIPv4CIDRCount }}
           </bk-form-item>
           <bk-form-item
             :label="$t('cluster.create.label.networkSetting.maxServiceNum.text')">

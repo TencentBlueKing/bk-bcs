@@ -114,7 +114,7 @@ export default defineComponent({
     const isLoading = ref(true);
     // 获取默认值
     const schema = ref({});
-    const handleGetCloudDefaultValues = async () => {
+    const handleGetSchemaData = async () => {
       const data = await $store.dispatch('clustermanager/resourceSchema', {
         $cloudID: curCluster.value.provider,
         $name: 'nodegroup',
@@ -169,7 +169,7 @@ export default defineComponent({
     };
     onMounted(async () => {
       isLoading.value = true;
-      await handleGetCloudDefaultValues();
+      await handleGetSchemaData();
       detailData.value = await handleGetNodeGroupDetail();
       if (!detailData.value.nodeTemplate?.dataDisks?.length) {
         detailData.value.nodeTemplate.dataDisks = detailData.value.launchTemplate.dataDisks.map((item, index) => ({

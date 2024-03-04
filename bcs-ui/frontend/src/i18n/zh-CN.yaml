@@ -888,6 +888,7 @@ cluster:
         'off': 关闭节点池
         'on': 启用节点池
         edit: 编辑节点池
+        clone: 克隆节点池
         delete:
           text: 删除节点池
           title: '确定删除节点池 {name} '
