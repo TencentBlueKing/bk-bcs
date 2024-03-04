@@ -104,6 +104,8 @@ func (plugin *GrpcPlugin) Init() error {
 		"/applicationset.ApplicationSetService/Get":    plugin.handleAppSetGet,
 		"/applicationset.ApplicationSetService/Create": plugin.handleAppSetCreate,
 		"/applicationset.ApplicationSetService/Delete": plugin.handleAppSetDelete,
+
+		"/version.VersionService/Version": plugin.handleVersion,
 	}
 	plugin.Path("").Handler(plugin.middleware.HttpWrapper(plugin.serve))
 	return nil
@@ -763,5 +765,10 @@ func (plugin *GrpcPlugin) handleAppCommon(r *http.Request, appName string,
 			errors.Wrapf(err, "check application '%s' permission failed", appName))
 	}
 	middleware.SetAuditMessage(r, app, middleware.ApplicationGRPCOperate)
+	return r, mw.ReturnArgoReverse()
+}
+
+// handleAppListResourceLinks handle application list resource links
+func (plugin *GrpcPlugin) handleVersion(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	return r, mw.ReturnArgoReverse()
 }

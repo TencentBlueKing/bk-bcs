@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/discovery"
@@ -385,7 +386,7 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 			dryRunManifest.Namespace = localNamespace
 		}
 		_, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
-			Get(context.Background(), localName, metav1.GetOptions{})
+			Get(ctx, localName, metav1.GetOptions{})
 		if err != nil && !k8serrors.IsNotFound(err) {
 			dryRunManifest.IsSucceed = false
 			dryRunManifest.ErrMessage = fmt.Sprintf("get resource '%s' with gvr '%v' from namespace '%s' failed: %s",
@@ -398,15 +399,23 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 		var isExisted bool
 		if k8serrors.IsNotFound(err) {
 			isExisted = false
-			updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
-				Create(context.Background(), local,
-					metav1.CreateOptions{
-						DryRun:       []string{metav1.DryRunAll},
-						FieldManager: "kubectl-client-side-apply",
-					})
-			if err != nil {
-				dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
-					"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
+			if _, err = dynamicClient.Resource(schema.GroupVersionResource{Group: "", Version: "v1",
+				Resource: "namespaces"}).Get(ctx, localNamespace, metav1.GetOptions{}); err != nil {
+				// return local if namespace not exist, no need dry-run it
+				if k8serrors.IsNotFound(err) {
+					updatedObj = local.DeepCopy()
+				} else {
+					updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
+						Create(ctx, local,
+							metav1.CreateOptions{
+								DryRun:       []string{metav1.DryRunAll},
+								FieldManager: "kubectl-client-side-apply",
+							})
+					if err != nil {
+						dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
+							"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
+					}
+				}
 			}
 		} else {
 			var localBS []byte
@@ -418,7 +427,7 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 			updatedObj, err = dynamicClient.
 				Resource(localGVR).
 				Namespace(localNamespace).
-				Patch(context.Background(), local.GetName(), types.MergePatchType,
+				Patch(ctx, local.GetName(), types.MergePatchType,
 					localBS, metav1.PatchOptions{
 						DryRun:       []string{metav1.DryRunAll},
 						FieldManager: "kubectl-client-side-apply",
