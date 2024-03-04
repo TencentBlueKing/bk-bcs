@@ -78,6 +78,12 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
 	if ua.req.ProjectID != "" {
 		conds = append(conds, util.Condition(operator.Eq, "projectid", []string{ua.req.ProjectID}))
 	}
+	if ua.req.TaskID != "" {
+		conds = append(conds, util.Condition(operator.Eq, "taskid", []string{ua.req.TaskID}))
+	}
+	if ua.req.TaskName != "" {
+		conds = append(conds, util.Condition(operator.Eq, "taskname", []string{ua.req.TaskName}))
+	}
 
 	// time range condition
 	start := time.Unix(int64(ua.req.StartTime), 0).Format(time.RFC3339)

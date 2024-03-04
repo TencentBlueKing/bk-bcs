@@ -773,6 +773,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.ListTaskStepLogs",
+			Path:    []string{"/clustermanager/v1/tasksteplogs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ListResourceSchema",
 			Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}"},
 			Method:  []string{"GET"},
@@ -1033,6 +1039,8 @@ type ClusterManagerService interface {
 	GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, opts ...client.CallOption) (*GetCloudBandwidthPackagesResponse, error)
 	// Operation logs
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
+	// Task Step logs
+	ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...client.CallOption) (*ListTaskStepLogsResponse, error)
 	// ** ResourceSchema **
 	// ListResourceSchema
 	ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*CommonListResp, error)
@@ -2191,6 +2199,16 @@ func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListO
 	return out, nil
 }
 
+func (c *clusterManagerService) ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...client.CallOption) (*ListTaskStepLogsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListTaskStepLogs", in)
+	out := new(ListTaskStepLogsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListResourceSchema", in)
 	out := new(CommonListResp)
@@ -2518,6 +2536,8 @@ type ClusterManagerHandler interface {
 	GetCloudBandwidthPackages(context.Context, *GetCloudBandwidthPackagesRequest, *GetCloudBandwidthPackagesResponse) error
 	// Operation logs
 	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
+	// Task Step logs
+	ListTaskStepLogs(context.Context, *ListTaskStepLogsRequest, *ListTaskStepLogsResponse) error
 	// ** ResourceSchema **
 	// ListResourceSchema
 	ListResourceSchema(context.Context, *ListResourceSchemaRequest, *CommonListResp) error
@@ -2667,6 +2687,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error
 		GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error
 		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
+		ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, out *ListTaskStepLogsResponse) error
 		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error
 		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *CommonResp) error
 		QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, out *QueryPermByActionIDResponse) error
@@ -3423,6 +3444,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListTaskStepLogs",
+		Path:    []string{"/clustermanager/v1/tasksteplogs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListResourceSchema",
 		Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}"},
 		Method:  []string{"GET"},
@@ -4002,6 +4029,10 @@ func (h *clusterManagerHandler) GetCloudBandwidthPackages(ctx context.Context, i
 
 func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {
 	return h.ClusterManagerHandler.ListOperationLogs(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, out *ListTaskStepLogsResponse) error {
+	return h.ClusterManagerHandler.ListTaskStepLogs(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error {

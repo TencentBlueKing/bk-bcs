@@ -26,6 +26,8 @@ import (
 
 // RemoveNodesFromClusterTask remove node from cluster
 func RemoveNodesFromClusterTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start remove nodes from cluster")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -69,10 +71,12 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	deleteResult, err := business.RemoveNodesFromCluster(ctx, dependInfo, idList, false)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("remove nodes from cluster failed [%s]", err))
 		blog.Errorf("RemoveNodesFromClusterTask[%s] RemoveNodesFromCluster failed: %v",
 			taskID, err)
 		retErr := fmt.Errorf("RemoveNodesFromCluster err, %s", err.Error())
@@ -86,6 +90,9 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	}
 	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(deleteResult, ",")
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"remove nodes from cluster successful")
+
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("RemoveNodesFromClusterTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
@@ -97,6 +104,8 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 
 // UpdateRemoveNodeDBInfoTask update remove node DB info
 func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start update remove node db info")
 	start := time.Now()
 
 	// get task and task current step
@@ -124,6 +133,9 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 			}
 		}
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"update remove node db info successful")
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
