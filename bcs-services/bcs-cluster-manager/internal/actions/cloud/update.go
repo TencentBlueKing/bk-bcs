@@ -147,7 +147,8 @@ func (ua *UpdateAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("更新云[%s]模板信息", req.CloudID),
 		OpUser:       req.Updater,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ResourceName: destCloud.Name,
 	})
 	if err != nil {
 		blog.Errorf("UpdateCloud[%s] CreateOperationLog failed: %v", req.CloudID, err)

@@ -249,18 +249,12 @@ func (cm *ClusterManager) initModel() error {
 	}
 	cm.mongoOptions = mongoOptions
 
-	mongoDB, err := mongo.NewDB(mongoOptions)
+	modelSet, err := store.NewModelSet(mongoOptions)
 	if err != nil {
-		blog.Errorf("init mongo db failed, err %s", err.Error())
 		return err
 	}
-	if err = mongoDB.Ping(); err != nil {
-		blog.Errorf("ping mongo db failed, err %s", err.Error())
-		return err
-	}
-	blog.Infof("init mongo db successfully")
-	modelSet := store.NewModelSet(mongoDB)
 	cm.model = modelSet
+
 	blog.Infof("init store successfully")
 	return nil
 }

@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -520,7 +521,23 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 	// default reinstall system when add node to cluster
 	task, err := clusterMgr.AddNodesToCluster(ua.cluster, ua.nodes, &cloudprovider.AddNodesOption{
 		CommonOption: *ua.option,
-		Login:        ua.req.GetLogin(),
+		Login: func() *cmproto.NodeLoginInfo {
+			loginInfo := &cmproto.NodeLoginInfo{
+				InitLoginUsername: ua.req.Login.GetInitLoginUsername(),
+				InitLoginPassword: "",
+				KeyPair:           &cmproto.KeyInfo{},
+			}
+			if len(ua.req.Login.GetInitLoginPassword()) > 0 {
+				loginInfo.InitLoginPassword, _ = encrypt.Encrypt(nil, ua.req.Login.GetInitLoginPassword())
+			}
+			if len(ua.req.Login.GetKeyPair().GetKeySecret()) > 0 {
+				loginInfo.KeyPair.KeySecret, _ = encrypt.Encrypt(nil, ua.req.Login.GetKeyPair().GetKeySecret())
+			}
+			if len(ua.req.Login.GetKeyPair().GetKeyPublic()) > 0 {
+				loginInfo.KeyPair.KeyPublic, _ = encrypt.Encrypt(nil, ua.req.Login.GetKeyPair().GetKeyPublic())
+			}
+			return loginInfo
+		}(),
 		Cloud:        ua.cloud,
 		NodeTemplate: ua.nodeTemplate,
 		NodeGroupID:  ua.req.NodeGroupID,
@@ -915,9 +932,10 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesReque
 		TaskID:       ua.task.TaskID,
 		Message:      fmt.Sprintf("集群%s添加节点", ua.cluster.ClusterID),
 		OpUser:       req.Operator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.cluster.ClusterName,
 	})
 	if err != nil {
 		blog.Errorf("AddNodesToCluster[%s] CreateOperationLog failed: %v", ua.cluster.ClusterID, err)

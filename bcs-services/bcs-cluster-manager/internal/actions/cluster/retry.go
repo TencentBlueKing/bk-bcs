@@ -155,9 +155,10 @@ func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreat
 		TaskID:       task.TaskID,
 		Message:      fmt.Sprintf("重试创建%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       req.Operator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    cls.ClusterID,
 		ProjectID:    cls.ProjectID,
+		ResourceName: cls.GetClusterName(),
 	})
 	if err != nil {
 		blog.Errorf("create cluster[%s] CreateOperationLog failed: %v", cls.ClusterID, err)

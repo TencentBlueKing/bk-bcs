@@ -212,34 +212,12 @@ func releaseClusterCIDR(cls *cmproto.Cluster) error {
 			updateCidr := cidr
 			updateCidr.Status = common.TkeCidrStatusAvailable
 			updateCidr.Cluster = ""
-			updateCidr.UpdateTime = time.Now().String()
+			updateCidr.UpdateTime = time.Now().Format(time.RFC3339)
 			err = cloudprovider.GetStorageModel().UpdateTkeCidr(context.Background(), updateCidr)
 			if err != nil {
 				return err
 			}
 		}
-	}
-
-	return nil
-}
-
-// updateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
-func updateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *cmproto.NodeGroup) error {
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
-	if err != nil {
-		return err
-	}
-
-	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
-	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
-		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
-	}
-	if group.LaunchTemplate != nil {
-		group.LaunchTemplate.InstanceChargeType = newGroup.LaunchTemplate.InstanceChargeType
-	}
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -262,4 +240,18 @@ func updateNodeGroupDesiredSize(nodeGroupID string, desiredSize uint32) error {
 	}
 
 	return nil
+}
+
+// GetExternalNgScriptType get external nodeGroup script type (true: inter; false extra)
+func GetExternalNgScriptType(ng *cmproto.NodeGroup) bool {
+	if ng.GetExtraInfo() == nil {
+		return false
+	}
+
+	_, ok := ng.GetExtraInfo()[common.ScriptInterType.String()]
+	if ok {
+		return true
+	}
+
+	return false
 }

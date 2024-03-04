@@ -15,6 +15,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -24,6 +25,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+)
+
+const (
+	nodeTemplate = "nt"
 )
 
 // CheckClusterConnection check cluster connection when delete cluster or other scenes
@@ -173,4 +178,17 @@ func HandleTaskStepData(ctx context.Context, task *proto.Task) {
 			}
 		}
 	}
+}
+
+// GenerateNodeTemplateID generate random nodeTemplateID
+func GenerateNodeTemplateID() string {
+	randomStr := utils.RandomString(8)
+
+	return fmt.Sprintf("BCS-%s-%s", nodeTemplate, randomStr)
+}
+
+// GenerateNodeGroupID build nodegroup id
+func GenerateNodeGroupID() string {
+	str := utils.RandomString(8)
+	return fmt.Sprintf("BCS-ng-%s", str)
 }

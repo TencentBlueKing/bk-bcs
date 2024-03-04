@@ -494,11 +494,12 @@ func (ua *UpdateAction) Handle(
 			}
 			return ua.task.TaskID
 		}(),
-		Message:    fmt.Sprintf("集群%s节点池%s更新配置信息", ua.req.ClusterID, ua.req.NodeGroupID),
-		OpUser:     req.Updater,
-		CreateTime: time.Now().Format(time.RFC3339),
-		ClusterID:  ua.cluster.ClusterID,
-		ProjectID:  ua.cluster.ProjectID,
+		Message:      fmt.Sprintf("集群%s节点池%s更新配置信息", ua.req.ClusterID, ua.req.NodeGroupID),
+		OpUser:       req.Updater,
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.cluster.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.group.GetName(),
 	}); err != nil {
 		blog.Errorf("UpdateNodeGroup[%s] CreateOperationLog failed: %v", ua.req.NodeGroupID, err)
 	}
@@ -642,6 +643,7 @@ func (ua *MoveNodeAction) Handle(
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.group.ClusterID,
 		ProjectID:    ua.group.ProjectID,
+		ResourceName: ua.group.GetName(),
 	})
 	if err != nil {
 		blog.Errorf("MoveNodesToGroup[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
@@ -1017,6 +1019,7 @@ func (ua *UpdateDesiredNodeAction) Handle(
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.group.GetName(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateDesiredNode[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
@@ -1110,6 +1113,7 @@ func (ua *UpdateDesiredSizeAction) Handle(
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    destGroup.ClusterID,
 		ProjectID:    destGroup.ProjectID,
+		ResourceName: destGroup.GetName(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateGroupDesiredSize[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)

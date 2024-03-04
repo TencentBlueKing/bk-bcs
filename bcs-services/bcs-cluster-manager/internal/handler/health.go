@@ -24,7 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 )
 
-// Health implements interface cmproto.Health
+// Health implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) Health(ctx context.Context,
 	req *cmproto.HealthRequest, resp *cmproto.HealthResponse) error {
 	reqID, err := requestIDFromContext(ctx)
@@ -38,6 +38,25 @@ func (cm *ClusterManager) Health(ctx context.Context,
 	blog.Infof("reqID: %s, action: Health, req %v, resp.Code %d, resp.Message %s",
 		reqID, req, resp.Code, resp.Message)
 	blog.V(5).Infof("reqID: %s, action: Health, req %v, resp %v",
+		reqID, req, resp)
+
+	return nil
+}
+
+// CleanDbHistoryData implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) CleanDbHistoryData(ctx context.Context,
+	req *cmproto.CleanDbHistoryDataRequest, resp *cmproto.CleanDbHistoryDataResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := health.NewCleanDBDataAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("CleanDbHistoryData", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: CleanDbHistoryData, req %v, resp.Code %d, resp.Message %s",
+		reqID, req, resp.Code, resp.Message)
+	blog.V(5).Infof("reqID: %s, action: CleanDbHistoryData, req %v, resp %v",
 		reqID, req, resp)
 
 	return nil

@@ -79,6 +79,10 @@ func (d *Daemon) InitDaemon(ctx context.Context) {
 		d.reportClusterGroupNodeNum(errChan)
 	}, 60)
 
+	go d.simpleDaemon(ctx, &wg, func() {
+		d.reportMachineryTaskNum(errChan)
+	}, 60)
+
 	wg.Wait()
 }
 
