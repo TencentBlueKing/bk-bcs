@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"golang.org/x/sync/errgroup"
 
@@ -476,6 +477,7 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 		return nil, err
 	}
 	items := make([]*pbds.BatchUpsertTemplatesReq_Item, 0, len(req.Items))
+	var mu sync.Mutex
 	var g errgroup.Group
 	g.SetLimit(constant.MaxConcurrentUpload)
 	for _, item := range req.Items {
@@ -487,6 +489,7 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 				logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
 				return err
 			}
+			mu.Lock()
 			items = append(items, &pbds.BatchUpsertTemplatesReq_Item{
 				Template: &pbtemplate.Template{
 					Id: i.Id,
@@ -523,6 +526,7 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 					},
 				},
 			})
+			mu.Unlock()
 			return nil
 		})
 	}
