@@ -58,6 +58,7 @@ func (m *ReleasedContentSpec) ReleasedContentSpec() *table.ReleasedContentSpec {
 		ByteSize:        m.ByteSize,
 		OriginSignature: m.OriginSignature,
 		OriginByteSize:  m.OriginByteSize,
+		Md5:             m.Md5,
 	}
 }
 
@@ -72,6 +73,7 @@ func PbReleasedContentSpec(spec *table.ReleasedContentSpec) *ReleasedContentSpec
 		ByteSize:        spec.ByteSize,
 		OriginSignature: spec.OriginSignature,
 		OriginByteSize:  spec.OriginByteSize,
+		Md5:             spec.Md5,
 	}
 }
 

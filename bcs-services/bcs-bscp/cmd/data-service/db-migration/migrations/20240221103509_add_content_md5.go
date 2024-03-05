@@ -46,6 +46,11 @@ type Content20240221103509 struct {
 	Md5 string `gorm:"type:varchar(64) not null"`
 }
 
+// TableName return table name
+func (Content20240221103509) TableName() string {
+	return "contents"
+}
+
 // Commit20240221103509 文件修改记录
 type Commit20240221103509 struct {
 	ID        uint32 `gorm:"primaryKey"`
@@ -54,12 +59,22 @@ type Commit20240221103509 struct {
 	Md5       string `gorm:"type:varchar(64) not null"`
 }
 
+// TableName return table name
+func (Commit20240221103509) TableName() string {
+	return "commits"
+}
+
 // ReleasedConfigItem20240221103509 已生成版本的配置项
 type ReleasedConfigItem20240221103509 struct {
 	ID        uint32 `gorm:"primaryKey"`
 	BizID     uint32 `gorm:"column:biz_id"`
 	Signature string `gorm:"type:varchar(64) not null"`
 	Md5       string `gorm:"type:varchar(64) not null"`
+}
+
+// TableName return table name
+func (ReleasedConfigItem20240221103509) TableName() string {
+	return "released_config_items"
 }
 
 // ReleasedAppTemplate20240221103509 已生成版本服务的模版
@@ -71,12 +86,22 @@ type ReleasedAppTemplate20240221103509 struct {
 	Md5       string `gorm:"type:varchar(64) not null"`
 }
 
+// TableName return table name
+func (ReleasedAppTemplate20240221103509) TableName() string {
+	return "released_app_templates"
+}
+
 // TemplateRevision20240221103509 模版版本
 type TemplateRevision20240221103509 struct {
 	ID        uint32 `gorm:"primaryKey"`
 	BizID     uint32 `gorm:"column:biz_id"`
 	Signature string `gorm:"type:varchar(64) not null"`
 	Md5       string `gorm:"type:varchar(64) not null"`
+}
+
+// TableName return table name
+func (TemplateRevision20240221103509) TableName() string {
+	return "template_revisions"
 }
 
 // mig20240221103509Up for up migration
@@ -140,8 +165,6 @@ func mig20240221103509Up(tx *gorm.DB) error {
 	if err := batchUpdateTemplateRevisionMd5(kt, tx, provider, md5Map); err != nil {
 		return err
 	}
-
-	fmt.Printf("len(map): %d", len(md5Map))
 
 	return nil
 
@@ -208,7 +231,7 @@ func batchUpdateContentMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provide
 		} else {
 			metadata, err := provider.Metadata(kt, content.Signature)
 			if err != nil {
-				fmt.Printf("get metadata for content %sfailed, err: %s\n", content.Signature, err.Error())
+				fmt.Printf("get metadata for content %s failed, err: %s\n", content.Signature, err.Error())
 				failedIDs = append(failedIDs, content.ID)
 				continue
 			}
@@ -223,7 +246,9 @@ func batchUpdateContentMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provide
 		successCount++
 	}
 	fmt.Printf("batch update content md5 success count: %d, failed count: %d\n", successCount, len(failedIDs))
-	fmt.Printf("failed content ids: %v\n", failedIDs)
+	if len(failedIDs) > 0 {
+		fmt.Printf("failed content ids: %v\n", failedIDs)
+	}
 	return nil
 }
 
@@ -250,7 +275,7 @@ func batchUpdateCommitMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider
 		} else {
 			metadata, err := provider.Metadata(kt, commit.Signature)
 			if err != nil {
-				fmt.Printf("get metadata for commit %sfailed, err: %s\n", commit.Signature, err.Error())
+				fmt.Printf("get metadata for commit %s failed, err: %s\n", commit.Signature, err.Error())
 				failedIDs = append(failedIDs, commit.ID)
 				continue
 			}
@@ -265,7 +290,9 @@ func batchUpdateCommitMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider
 		successCount++
 	}
 	fmt.Printf("batch update commit md5 success count: %d, failed count: %d\n", successCount, len(failedIDs))
-	fmt.Printf("failed commit ids: %v\n", failedIDs)
+	if len(failedIDs) > 0 {
+		fmt.Printf("failed commit ids: %v\n", failedIDs)
+	}
 	return nil
 }
 
@@ -273,10 +300,12 @@ func batchUpdateReleasedConfigItemMd5(kt *kit.Kit, tx *gorm.DB, provider reposit
 	md5Map map[string]string) error {
 	var currentMaxID uint32
 	releasedCIs := []*ReleasedConfigItem20240221103509{}
-	if err := tx.Model(&ReleasedConfigItem20240221103509{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
+	if err := tx.Model(&ReleasedConfigItem20240221103509{}).Select("max(id) as max_id").Row().
+		Scan(&currentMaxID); err != nil {
 		return err
 	}
-	if err := tx.Model(&ReleasedConfigItem20240221103509{}).Where("id <= ?", currentMaxID).Find(&releasedCIs).Error; err != nil {
+	if err := tx.Model(&ReleasedConfigItem20240221103509{}).Where("id <= ?", currentMaxID).
+		Find(&releasedCIs).Error; err != nil {
 		return err
 	}
 
@@ -293,7 +322,7 @@ func batchUpdateReleasedConfigItemMd5(kt *kit.Kit, tx *gorm.DB, provider reposit
 		} else {
 			metadata, err := provider.Metadata(kt, releasedCI.Signature)
 			if err != nil {
-				fmt.Printf("get metadata for released_config_item %sfailed, err: %s\n",
+				fmt.Printf("get metadata for released_config_item %s failed, err: %s\n",
 					releasedCI.Signature, err.Error())
 				failedIDs = append(failedIDs, releasedCI.ID)
 				continue
@@ -301,16 +330,19 @@ func batchUpdateReleasedConfigItemMd5(kt *kit.Kit, tx *gorm.DB, provider reposit
 			md5 = metadata.Md5
 			md5Map[releasedCI.Signature] = md5
 		}
-		if err := tx.Model(&ReleasedConfigItem20240221103509{}).Where("id = ?", releasedCI.ID).Update("md5", md5).Error; err != nil {
+		if err := tx.Model(&ReleasedConfigItem20240221103509{}).Where("id = ?", releasedCI.ID).
+			Update("md5", md5).Error; err != nil {
 			fmt.Printf("update released_config_item %d md5 failed, err: %s\n", releasedCI.ID, err.Error())
 			failedIDs = append(failedIDs, releasedCI.ID)
 			continue
 		}
 		successCount++
 	}
-	fmt.Printf("batch update commireleased_config_itemt md5 success count: %d, failed count: %d\n",
+	fmt.Printf("batch update released_config_itemt md5 success count: %d, failed count: %d\n",
 		successCount, len(failedIDs))
-	fmt.Printf("failed released_config_item ids: %v\n", failedIDs)
+	if len(failedIDs) > 0 {
+		fmt.Printf("failed released_config_item ids: %v\n", failedIDs)
+	}
 	return nil
 }
 
@@ -318,10 +350,12 @@ func batchUpdateReleasedAppTemplateMd5(kt *kit.Kit, tx *gorm.DB, provider reposi
 	md5Map map[string]string) error {
 	var currentMaxID uint32
 	releasedATs := []*ReleasedAppTemplate20240221103509{}
-	if err := tx.Model(&ReleasedAppTemplate20240221103509{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
+	if err := tx.Model(&ReleasedAppTemplate20240221103509{}).Select("max(id) as max_id").Row().
+		Scan(&currentMaxID); err != nil {
 		return err
 	}
-	if err := tx.Model(&ReleasedAppTemplate20240221103509{}).Where("id <= ?", currentMaxID).Find(&releasedATs).Error; err != nil {
+	if err := tx.Model(&ReleasedAppTemplate20240221103509{}).Where("id <= ?", currentMaxID).
+		Find(&releasedATs).Error; err != nil {
 		return err
 	}
 
@@ -338,14 +372,16 @@ func batchUpdateReleasedAppTemplateMd5(kt *kit.Kit, tx *gorm.DB, provider reposi
 		} else {
 			metadata, err := provider.Metadata(kt, releasedAT.Signature)
 			if err != nil {
-				fmt.Printf("get metadata for released_app_template %sfailed, err: %s\n", releasedAT.Signature, err.Error())
+				fmt.Printf("get metadata for released_app_template %s failed, err: %s\n",
+					releasedAT.Signature, err.Error())
 				failedIDs = append(failedIDs, releasedAT.ID)
 				continue
 			}
 			md5 = metadata.Md5
 			md5Map[releasedAT.Signature] = md5
 		}
-		if err := tx.Model(&ReleasedAppTemplate20240221103509{}).Where("id = ?", releasedAT.ID).Update("md5", md5).Error; err != nil {
+		if err := tx.Model(&ReleasedAppTemplate20240221103509{}).Where("id = ?", releasedAT.ID).
+			Update("md5", md5).Error; err != nil {
 			fmt.Printf("update released_app_template %d md5 failed, err: %s\n", releasedAT.ID, err.Error())
 			failedIDs = append(failedIDs, releasedAT.ID)
 			continue
@@ -354,7 +390,9 @@ func batchUpdateReleasedAppTemplateMd5(kt *kit.Kit, tx *gorm.DB, provider reposi
 	}
 	fmt.Printf("batch update released_app_template md5 success count: %d, failed count: %d\n",
 		successCount, len(failedIDs))
-	fmt.Printf("failed released_app_template ids: %v\n", failedIDs)
+	if len(failedIDs) > 0 {
+		fmt.Printf("failed released_app_template ids: %v\n", failedIDs)
+	}
 	return nil
 }
 
@@ -362,10 +400,12 @@ func batchUpdateTemplateRevisionMd5(kt *kit.Kit, tx *gorm.DB, provider repositor
 	md5Map map[string]string) error {
 	var currentMaxID uint32
 	templateRevisions := []*TemplateRevision20240221103509{}
-	if err := tx.Model(&TemplateRevision20240221103509{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
+	if err := tx.Model(&TemplateRevision20240221103509{}).Select("max(id) as max_id").Row().
+		Scan(&currentMaxID); err != nil {
 		return err
 	}
-	if err := tx.Model(&TemplateRevision20240221103509{}).Where("id <= ?", currentMaxID).Find(&templateRevisions).Error; err != nil {
+	if err := tx.Model(&TemplateRevision20240221103509{}).Where("id <= ?", currentMaxID).
+		Find(&templateRevisions).Error; err != nil {
 		return err
 	}
 
@@ -382,21 +422,26 @@ func batchUpdateTemplateRevisionMd5(kt *kit.Kit, tx *gorm.DB, provider repositor
 		} else {
 			metadata, err := provider.Metadata(kt, templateRevision.Signature)
 			if err != nil {
-				fmt.Printf("get metadata for template_revision %sfailed, err: %s\n", templateRevision.Signature, err.Error())
+				fmt.Printf("get metadata for template_revision %s failed, err: %s\n",
+					templateRevision.Signature, err.Error())
 				failedIDs = append(failedIDs, templateRevision.ID)
 				continue
 			}
 			md5 = metadata.Md5
 			md5Map[templateRevision.Signature] = md5
 		}
-		if err := tx.Model(&TemplateRevision20240221103509{}).Where("id = ?", templateRevision.ID).Update("md5", md5).Error; err != nil {
+		if err := tx.Model(&TemplateRevision20240221103509{}).Where("id = ?", templateRevision.ID).
+			Update("md5", md5).Error; err != nil {
 			fmt.Printf("update template_revision %d md5 failed, err: %s\n", templateRevision.ID, err.Error())
 			failedIDs = append(failedIDs, templateRevision.ID)
 			continue
 		}
 		successCount++
 	}
-	fmt.Printf("batch update template_revision md5 success count: %d, failed count: %d\n", successCount, len(failedIDs))
-	fmt.Printf("failed template_revision ids: %v\n", failedIDs)
+	fmt.Printf("batch update template_revision md5 success count: %d, failed count: %d\n",
+		successCount, len(failedIDs))
+	if len(failedIDs) > 0 {
+		fmt.Printf("failed template_revision ids: %v\n", failedIDs)
+	}
 	return nil
 }
