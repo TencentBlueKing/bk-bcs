@@ -76,6 +76,10 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 			Creator: kt.User,
 			Reviser: kt.User,
 		},
+		ContentSpec: &table.ContentSpec{
+			Signature: tools.SHA256(req.Spec.Value),
+			ByteSize:  uint64(len(req.Spec.Value)),
+		},
 	}
 	kv.Spec.Version = uint32(version)
 	kv.KvState = table.KvStateAdd
@@ -136,6 +140,10 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 	}
 
 	kv.Spec.Version = uint32(version)
+	kv.ContentSpec = &table.ContentSpec{
+		Signature: tools.SHA256(req.Spec.Value),
+		ByteSize:  uint64(len(req.Spec.Value)),
+	}
 	if e := s.dao.Kv().Update(kt, kv); e != nil {
 		logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
 		return nil, err
@@ -410,6 +418,10 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 					AppID: req.AppId,
 				},
 				Revision: editing.Revision,
+				ContentSpec: &table.ContentSpec{
+					Signature: tools.SHA256(kv.KvSpec.Value),
+					ByteSize:  uint64(len(kv.KvSpec.Value)),
+				},
 			})
 
 		} else {
@@ -429,6 +441,10 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 					Reviser:   kt.User,
 					CreatedAt: now,
 					UpdatedAt: now,
+				},
+				ContentSpec: &table.ContentSpec{
+					Signature: tools.SHA256(kv.KvSpec.Value),
+					ByteSize:  uint64(len(kv.KvSpec.Value)),
 				},
 			})
 
@@ -465,10 +481,7 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbb
 		}
 	}
 
-	kvState = []string{
-		string(table.KvStateDelete),
-	}
-	if err = s.dao.Kv().UpdateSelectedKVStates(kt, tx, req.Attachment.BizId, req.Attachment.AppId, kvState,
+	if err = s.dao.Kv().UpdateStateWithTx(kt, tx, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key,
 		table.KvStateUnchange); err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)

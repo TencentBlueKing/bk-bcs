@@ -190,3 +190,29 @@ func (s *Service) UpdateCredential(ctx context.Context,
 
 	return resp, nil
 }
+
+// CheckCredentialName Check if the credential name exists
+func (s *Service) CheckCredentialName(ctx context.Context, req *pbcs.CheckCredentialNameReq) (
+	*pbcs.CheckCredentialNameResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Credential, Action: meta.View}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(grpcKit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	credential, err := s.client.DS.CheckCredentialName(grpcKit.Ctx, &pbds.CheckCredentialNameReq{
+		BizId:          req.BizId,
+		CredentialName: req.CredentialName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.CheckCredentialNameResp{Exist: credential.Exist}, nil
+}

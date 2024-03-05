@@ -441,6 +441,7 @@ func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.R
 				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,
 			},
+			ContentSpec: pbct.PbContentSpec(one.ContentSpec),
 		}
 	}
 

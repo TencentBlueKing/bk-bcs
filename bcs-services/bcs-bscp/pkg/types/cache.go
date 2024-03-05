@@ -18,6 +18,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
+
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
 )
@@ -69,12 +71,13 @@ type ReleaseCICache struct {
 
 // ReleaseKvCache is the release kv info which will be stored in cache.
 type ReleaseKvCache struct {
-	ID         uint32              `json:"id"`
-	ReleaseID  uint32              `json:"reid"`
-	Key        string              `json:"key"`
-	KvType     string              `json:"kv_type"`
-	Revision   *table.Revision     `json:"revision"`
-	Attachment *table.KvAttachment `json:"am"`
+	ID          uint32              `json:"id"`
+	ReleaseID   uint32              `json:"reid"`
+	Key         string              `json:"key"`
+	KvType      string              `json:"kv_type"`
+	Revision    *table.Revision     `json:"revision"`
+	Attachment  *table.KvAttachment `json:"am"`
+	ContentSpec *table.ContentSpec  `json:"content_spec"`
 }
 
 // ReleasedHooksCache is the released hooks info which will be stored in cache.
@@ -222,21 +225,18 @@ func ReleaseCICaches(rs []*table.ReleasedConfigItem) []*ReleaseCICache {
 
 // ReleaseKvCaches convert ReleasedConfigItem to ReleaseKvCache.
 func ReleaseKvCaches(rs []*table.ReleasedKv) []*ReleaseKvCache {
-	list := make([]*ReleaseKvCache, len(rs))
-
-	for index, one := range rs {
-		list[index] = &ReleaseKvCache{
-			ID:        one.ID,
-			ReleaseID: one.ReleaseID,
-			Key:       one.Spec.Key,
-			KvType:    string(one.Spec.KvType),
-			Revision:  one.Revision,
-			Attachment: &table.KvAttachment{
-				BizID: one.Attachment.BizID,
-				AppID: one.Attachment.AppID,
-			},
+	// 泛型转换处理
+	list := lo.Map(rs, func(one *table.ReleasedKv, idnex int) *ReleaseKvCache {
+		return &ReleaseKvCache{
+			ID:          one.ID,
+			ReleaseID:   one.ReleaseID,
+			Key:         one.Spec.Key,
+			KvType:      string(one.Spec.KvType),
+			Revision:    one.Revision,
+			Attachment:  one.Attachment,
+			ContentSpec: one.ContentSpec,
 		}
-	}
+	})
 
 	return list
 }

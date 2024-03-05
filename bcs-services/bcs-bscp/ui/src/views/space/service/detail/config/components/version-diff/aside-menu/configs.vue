@@ -233,6 +233,7 @@
     aggregatedList.value = calcDiff();
     groupedConfigListOnShow.value = aggregatedList.value.slice();
     setDefaultSelected();
+    handleSearch();
   });
 
   // 判断版本是否为未命名版本

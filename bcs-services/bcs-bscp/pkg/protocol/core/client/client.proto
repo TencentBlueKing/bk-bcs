@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package pbclient;
+
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client;pbclient";
+
+// Client source resource reference: pkg/dal/table/client.go
+message Client {
+  uint32 id = 1;
+  ClientSpec spec = 2;
+  ClientAttachment attachment = 3;
+  string message_type = 4;
+}
+
+// ClientSpec source resource reference: pkg/dal/table/client.go
+message ClientSpec {
+  string client_version = 1;
+  string ip = 2;
+  string labels = 3;
+  string annotations = 4;
+  google.protobuf.Timestamp first_connect_time = 5;
+  google.protobuf.Timestamp last_heartbeat_time = 6;
+  string online_status = 7;
+  ClientResource resource = 8;
+  uint32 current_release_id = 9;
+  uint32 target_release_id = 10;
+  string release_change_status = 11;
+  string release_change_failed_reason = 12;
+  string failed_detail_reason = 13;
+  string client_type = 14;
+}
+
+// ClientAttachment source resource reference: pkg/dal/table/client.go
+message ClientAttachment {
+  string uid = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+// ClientResource source resource reference: pkg/dal/table/client.go
+message ClientResource {
+  double cpu_usage = 1;
+  double cpu_max_usage = 2;
+  uint64 memory_usage = 3;
+  uint64 memory_max_usage = 4;
+}

@@ -7,6 +7,7 @@ import "pkg/protocol/core/commit/commit.proto";
 import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/hook/hook.proto";
 import "pkg/protocol/core/kv/kvs.proto";
+import "pkg/protocol/core/content/content.proto";
 
 option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server;pbfs";
 
@@ -167,6 +168,7 @@ message KvMeta {
   string kv_type = 2;
   pbbase.Revision revision = 3;
   pbkv.KvAttachment kv_attachment = 4;
+  pbcontent.ContentSpec content_spec = 5;
 }
 
 message GetKvValueReq {

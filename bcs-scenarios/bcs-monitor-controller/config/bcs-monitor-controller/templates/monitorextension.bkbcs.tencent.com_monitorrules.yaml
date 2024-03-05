@@ -46,6 +46,12 @@ spec:
                 type: string
               bizToken:
                 type: string
+              conflictHandle:
+                default: AUTO_MERGE
+                enum:
+                - AUTO_MERGE
+                - LOCAL_FIRST
+                type: string
               ignoreChange:
                 description: if true, controller will ignore resource's change
                 type: boolean
@@ -54,6 +60,7 @@ spec:
                 type: boolean
               rules:
                 items:
+                  description: MonitorRuleDetail 告警规则配置
                   properties:
                     active_calendar:
                       items:
@@ -291,7 +298,6 @@ spec:
                       required:
                       - data_source
                       - data_type
-                      - expression
                       - query_configs
                       type: object
                   type: object

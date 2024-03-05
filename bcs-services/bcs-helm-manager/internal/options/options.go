@@ -13,6 +13,8 @@
 // Package options xxx
 package options
 
+import "fmt"
+
 // EtcdOption option for etcd
 type EtcdOption struct {
 	EtcdEndpoints string `json:"endpoints" yaml:"endpoints" value:"" usage:"endpoints of etcd"`
@@ -65,7 +67,10 @@ type MongoConfig struct {
 
 // RepoConfig option for repo platform
 type RepoConfig struct {
-	URL               string `json:"url" yaml:"url"`
+	// bkrepo api url
+	URL string `json:"url" yaml:"url"`
+	// repo base url
+	BaseURL           string `json:"baseURL" yaml:"baseURL"`
 	UID               string `json:"uid" yaml:"uid"`
 	Username          string `json:"username" yaml:"username"`
 	Password          string `json:"password" yaml:"password"`
@@ -73,6 +78,14 @@ type RepoConfig struct {
 	PublicRepoProject string `json:"publicRepoProject" yaml:"publicRepoProject"`
 	PublicRepoName    string `json:"publicRepoName" yaml:"publicRepoName"`
 	Encrypted         bool   `json:"encrypted" yaml:"encrypted"`
+}
+
+// GetRepoBaseURL get repo base url
+func (r *RepoConfig) GetRepoBaseURL() string {
+	if r.BaseURL != "" {
+		return r.BaseURL
+	}
+	return fmt.Sprintf("%s/helm", r.URL)
 }
 
 // ReleaseConfig option for helm release handler

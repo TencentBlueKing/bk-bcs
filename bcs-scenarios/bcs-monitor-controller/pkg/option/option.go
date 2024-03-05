@@ -62,11 +62,16 @@ type ControllerOption struct {
 	// ScenarioGitSecret secret for git
 	ScenarioGitSecret string
 
+	// TODO load from flag
+	// BKMDownloadConfigPath directory path to store bkm download config
+	BKMDownloadConfigPath string
 	// RepoRefreshFreq 根据集群内AppMonitor刷新Repo缓存 (如某个Repo已经不被任何AppMonitor引用，则从缓存中删除)
 	RepoRefreshFreq time.Duration
 
 	// ArgoAdminNamespace admin namespace for argo
 	ArgoAdminNamespace string
+	// EnableArgo
+	EnableArgo bool
 }
 
 // BindFromCommandLine bind from
@@ -91,7 +96,10 @@ func (c *ControllerOption) BindFromCommandLine() {
 	flag.UintVar(&c.HttpServerPort, "http_server_port", 8088, "http server port")
 
 	flag.Int64Var(&repoRefreshFreqSec, "repo_refresh_req", 600, "refresh frequency ")
+	flag.StringVar(&c.BKMDownloadConfigPath, "bkm_download_config_path", "/tmp",
+		"directory path to store bkm download config")
 	flag.StringVar(&c.ArgoAdminNamespace, "argo_admin_namespace", "default", "argo admin namespace")
+	flag.BoolVar(&c.EnableArgo, "enable_argo", false, "enable argo")
 	c.ScenarioGitRefreshFreq = time.Second * time.Duration(scenarioRefreshFreqSec)
 	c.RepoRefreshFreq = time.Second * time.Duration(repoRefreshFreqSec)
 	c.Verbosity = int32(verbosity)

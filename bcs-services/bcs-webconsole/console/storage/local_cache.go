@@ -15,23 +15,20 @@ package storage
 import (
 	"time"
 
-	"github.com/patrickmn/go-cache"
+	"github.com/num30/go-cache"
 )
 
-// SlotCache :
-type SlotCache struct {
-	Slot              *cache.Cache
+// SlotCache : slot cache with generics
+type SlotCache[T any] struct {
+	Slot              *cache.Cache[T]
 	DefaultExpiration time.Duration
 }
 
-// NewSlotCache :
-func NewSlotCache() (*SlotCache, error) {
-	c := SlotCache{
-		Slot:              cache.New(5*time.Minute, 10*time.Minute),
+// NewSlotCache : new slot cache with generics
+func NewSlotCache[T any]() *SlotCache[T] {
+	c := SlotCache[T]{
+		Slot:              cache.New[T](5*time.Minute, 10*time.Minute),
 		DefaultExpiration: cache.DefaultExpiration,
 	}
-	return &c, nil
+	return &c
 }
-
-// LocalCache :
-var LocalCache, _ = NewSlotCache()

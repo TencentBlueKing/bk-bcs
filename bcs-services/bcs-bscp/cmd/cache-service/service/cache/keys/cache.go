@@ -48,6 +48,7 @@ const (
 	appMeta             namespace = "app-meta"
 	appID               namespace = "app-id"
 	releasedKv          namespace = "released-kv"
+	clientMetric        namespace = "client-metric"
 )
 
 type keyGenerator struct {
@@ -60,6 +61,15 @@ type keyGenerator struct {
 	releasedHookTTLRange        [2]int
 	appMetaTTLRange             [2]int
 	appHasRITTLRange            [2]int
+}
+
+// ClientMetricKey generate the client metric cache key.
+func (k keyGenerator) ClientMetricKey(bizID uint32, appID uint32) string {
+	return element{
+		biz: bizID,
+		ns:  clientMetric,
+		key: strconv.FormatUint(uint64(appID), 10),
+	}.String()
 }
 
 // ReleasedGroup generate a release's released group cache key to save all the released groups under this release

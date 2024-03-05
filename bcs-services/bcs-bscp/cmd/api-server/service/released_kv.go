@@ -26,10 +26,12 @@ import (
 	"github.com/xuri/excelize/v2"
 	"gopkg.in/yaml.v3"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	pbrkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 )
@@ -61,7 +63,15 @@ type XMLExporter struct {
 
 // Export method implements the Exporter interface, exporting data as a byte slice in YAML format.
 func (ye *YAMLExporter) Export() ([]byte, error) {
-	return yaml.Marshal(ye.OutData)
+	buffer := &bytes.Buffer{}
+	encoder := yaml.NewEncoder(buffer)
+	// 设置缩进
+	encoder.SetIndent(2)
+	defer func() {
+		_ = encoder.Close()
+	}()
+	err := encoder.Encode(ye.OutData)
+	return buffer.Bytes(), err
 }
 
 // Export method implements the Exporter interface, exporting data as a byte slice in JSON format.
@@ -114,37 +124,51 @@ func (m *kvService) Export(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, rest.BadRequest(errors.New("validation parameter fail")))
 		return
 	}
-
+	format := r.URL.Query().Get("format")
 	releaseIDStr := chi.URLParam(r, "release_id")
 	releaseID, _ := strconv.Atoi(releaseIDStr)
+
+	var outData map[string]interface{}
+	// 如果releaseID等于0 获取未命名版本
 	if releaseID == 0 {
-		_ = render.Render(w, r, rest.BadRequest(errors.New("validation parameter fail")))
-		return
-	}
-
-	format := r.URL.Query().Get("format")
-
-	req := &pbcs.ListReleasedKvsReq{
-		BizId:     kt.BizID,
-		AppId:     uint32(appId),
-		ReleaseId: uint32(releaseID),
-		All:       true,
-	}
-	rkvs, err := m.cfgClient.ListReleasedKvs(kt.RpcCtx(), req)
-	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
-		return
+		req := &pbcs.ListKvsReq{
+			BizId:      kt.BizID,
+			AppId:      uint32(appId),
+			All:        true,
+			WithStatus: true,
+			Status: []string{constant.FileStateAdd, constant.FileStateRevise,
+				constant.FileStateUnchange},
+		}
+		kvs, err := m.cfgClient.ListKvs(kt.RpcCtx(), req)
+		if err != nil {
+			_ = render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+		outData = kvsToOutData(kvs.Details)
+	} else {
+		req := &pbcs.ListReleasedKvsReq{
+			BizId:     kt.BizID,
+			AppId:     uint32(appId),
+			ReleaseId: uint32(releaseID),
+			All:       true,
+		}
+		rkvs, err := m.cfgClient.ListReleasedKvs(kt.RpcCtx(), req)
+		if err != nil {
+			_ = render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+		outData = rkvsToOutData(rkvs.Details)
 	}
 
 	var exporter Exporter
 
 	switch format {
 	case "yaml":
-		exporter = &YAMLExporter{OutData: rkvsToOutData(rkvs.Details)}
+		exporter = &YAMLExporter{OutData: outData}
 		w.Header().Set("Content-Disposition", "attachment; filename=output.yaml")
 		w.Header().Set("Content-Type", "application/x-yaml")
 	case "json":
-		exporter = &JSONExporter{OutData: rkvsToOutData(rkvs.Details)}
+		exporter = &JSONExporter{OutData: outData}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Content-Disposition", "attachment; filename=output.json")
 	default:
@@ -171,17 +195,32 @@ type RkvOutData struct {
 	Value  string `json:"value" yaml:"value" xml:"value"`
 }
 
-func rkvsToOutData(rkvs []*pbrkv.ReleasedKv) map[string]interface{} {
+func rkvsToOutData(details []*pbrkv.ReleasedKv) map[string]interface{} {
 	d := map[string]interface{}{}
-	for _, rkv := range rkvs {
+	for _, rkv := range details {
 		var value interface{}
 		value = rkv.Spec.Value
-		switch rkv.Spec.KvType {
-		case string(table.KvNumber):
+		if rkv.Spec.KvType == string(table.KvNumber) {
 			i, _ := strconv.Atoi(rkv.Spec.Value)
 			value = i
-		case string(table.KvJson):
-			_ = json.Unmarshal([]byte(rkv.Spec.Value), &value)
+		}
+		d[rkv.Spec.Key] = map[string]interface{}{
+			"kv_type": rkv.Spec.KvType,
+			"value":   value,
+		}
+	}
+
+	return d
+}
+
+func kvsToOutData(details []*pbkv.Kv) map[string]interface{} {
+	d := map[string]interface{}{}
+	for _, rkv := range details {
+		var value interface{}
+		value = rkv.Spec.Value
+		if rkv.Spec.KvType == string(table.KvNumber) {
+			i, _ := strconv.Atoi(rkv.Spec.Value)
+			value = i
 		}
 		d[rkv.Spec.Key] = map[string]interface{}{
 			"kv_type": rkv.Spec.KvType,

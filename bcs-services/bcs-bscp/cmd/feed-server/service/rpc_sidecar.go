@@ -16,7 +16,9 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
+	"time"
 
 	prm "github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc/codes"
@@ -180,7 +182,7 @@ func (s *Service) Watch(swm *pbfs.SideWatchMeta, fws pbfs.Upstream_WatchServer) 
 }
 
 // Messaging received messages delivered from sidecar.
-func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs.MessagingResp, error) {
+func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs.MessagingResp, error) { // nolint
 	im, err := sfs.ParseFeedIncomingContext(ctx)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -196,6 +198,79 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		return nil, status.Errorf(codes.PermissionDenied, "no permission to access bscp server")
 	}
 
+	clientMetricData := make(map[string]*sfs.ClientMetricData)
+	// 按照服务级别上报数据
+	// 上报的事件分两种 心跳事件、变更事件
+	switch sfs.MessagingType(msg.Type) {
+	case sfs.VersionChangeMessage:
+		vc := new(sfs.VersionChangePayload)
+		err = vc.Decode(msg.Payload)
+		if err != nil {
+			logs.Errorf("version change message decoding failed, %s", err.Error())
+			return nil, err
+		}
+		// 处理 心跳时间和在线状态
+		vc.BasicData.HeartbeatTime = time.Now()
+		vc.BasicData.OnlineStatus = sfs.Online
+		payload, errE := vc.Encode()
+		if errE != nil {
+			logs.Errorf("version change message encoding failed, %s", err.Error())
+			return nil, err
+		}
+		s.handleResourceUsageMetrics(vc.BasicData.BizID, vc.Application.App, vc.ResourceUsage)
+		clientMetricData[vc.Application.App] = &sfs.ClientMetricData{
+			MessagingType: msg.Type,
+			Payload:       payload,
+		}
+	case sfs.Heartbeat:
+		hb := new(sfs.HeartbeatPayload)
+		err = hb.Decode(msg.Payload)
+		if err != nil {
+			return nil, err
+		}
+		heartbeatTime := time.Now()
+		onlineStatus := sfs.Online
+		for _, item := range hb.Applications {
+			s.handleResourceUsageMetrics(hb.BasicData.BizID, item.App, hb.ResourceUsage)
+			hb.BasicData.HeartbeatTime = heartbeatTime
+			hb.BasicData.OnlineStatus = onlineStatus
+			oneData := sfs.HeartbeatItem{
+				BasicData:     hb.BasicData,
+				Application:   item,
+				ResourceUsage: hb.ResourceUsage,
+			}
+			marshal, errHb := jsoni.Marshal(oneData)
+			if errHb != nil {
+				return nil, errHb
+			}
+			clientMetricData[item.App] = &sfs.ClientMetricData{
+				MessagingType: msg.Type,
+				Payload:       marshal,
+			}
+		}
+	}
+
+	for appName, v := range clientMetricData {
+		appID, err := s.bll.AppCache().GetAppID(im.Kit, im.Meta.BizID, appName)
+		if err != nil {
+			logs.Errorf("get app id failed, %s", err.Error())
+			continue
+		}
+		v.AppID = appID
+		payload, err := jsoni.Marshal(v)
+		if err != nil {
+			logs.Errorf("failed to serialize clientMetricData, err: %s", err.Error())
+			continue
+		}
+		if im.Meta.BizID != 0 && len(payload) != 0 {
+			err = s.bll.ClientMetric().Set(im.Kit, im.Meta.BizID, appID, payload)
+			if err != nil {
+				logs.Errorf("send %d biz %s message, payload: %s, rid: %s", im.Meta.BizID, im.Meta.Fingerprint,
+					payload, msg.Rid)
+				continue
+			}
+		}
+	}
 	logs.V(3).Infof("receive %d biz %s sidecar %s message, payload: %s, rid: %s", im.Meta.BizID, im.Meta.Fingerprint,
 		sfs.MessagingType(msg.Type).String(), msg.Payload, msg.Rid)
 	return new(pbfs.MessagingResp), nil
@@ -398,6 +473,7 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 				BizId: kv.KvAttachment.BizId,
 				AppId: kv.KvAttachment.AppId,
 			},
+			ContentSpec: kv.ContentSpec,
 		})
 	}
 
@@ -531,6 +607,13 @@ func matchPattern(name string, match []string) bool {
 			return true
 		}
 	}
-
 	return false
+}
+
+func (s *Service) handleResourceUsageMetrics(bizID uint32, appName string, resource sfs.ResourceUsage) {
+	s.mc.clientMaxCPUUsage.WithLabelValues(strconv.Itoa(int(bizID)), appName).Set(resource.CpuMaxUsage)
+	s.mc.clientCurrentCPUUsage.WithLabelValues(strconv.Itoa(int(bizID)), appName).Set(resource.CpuUsage)
+	s.mc.clientMaxMemUsage.WithLabelValues(strconv.Itoa(int(bizID)), appName).Set(float64(resource.MemoryMaxUsage))
+	s.mc.clientCurrentMemUsage.WithLabelValues(strconv.Itoa(int(bizID)), appName).Set(float64(resource.MemoryUsage))
+
 }

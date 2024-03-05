@@ -31,9 +31,9 @@
           @change="groups = $event" />
         <template #footer>
           <section class="actions-wrapper">
-            <bk-button class="publish-btn" theme="primary" @click="handleDiffOrPublish">{{
-              versionListByGroup.length ? t('对比并上线') : t('上线版本')
-            }}</bk-button>
+            <bk-button class="publish-btn" theme="primary" @click="handlePublishOrOpenDiff">
+              {{ diffableVersionList.length ? t('对比并上线') : t('上线版本') }}
+            </bk-button>
             <bk-button @click="handlePanelClose">{{ t('取消') }}</bk-button>
           </section>
         </template>
@@ -52,13 +52,14 @@
       :current-version="versionData"
       :base-version-id="baseVersionId"
       :show-publish-btn="true"
-      @publish="handleOpenPublishDialog"
-      :version-diff-list="versionListByGroup" />
+      :version-diff-list="diffableVersionList"
+      @publish="handleOpenPublishDialog" />
   </section>
 </template>
 <script setup lang="ts">
   import { ref, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import { useRouter } from 'vue-router';
   import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
   import { InfoBox } from 'bkui-vue';
   import BkMessage from 'bkui-vue/lib/message';
@@ -72,7 +73,6 @@
   import ConfirmDialog from './confirm-dialog.vue';
   import SelectGroup from './select-group/index.vue';
   import VersionDiff from '../../config/components/version-diff/index.vue';
-  import { useRoute, useRouter } from 'vue-router';
   import { getConfigVersionList } from '../../../../../../api/config';
   import { IConfigVersion } from '../../../../../../../types/config';
 
@@ -92,10 +92,7 @@
 
   const emit = defineEmits(['confirm']);
 
-  const route = useRoute();
   const router = useRouter();
-  const bkBizId = String(route.params.spaceId);
-  const appId = Number(route.params.appId);
   const versionList = ref<IConfigVersion[]>([]);
   const isSelectGroupPanelOpen = ref(false);
   const isDiffSliderShow = ref(false);
@@ -115,34 +112,46 @@
     },
   ]);
 
-  // 获取所有选择上线范围的上线版本
-  const versionListByGroup = computed(() => {
+  // 包含分组变更的版本，用来对比线上版本
+  const diffableVersionList = computed(() => {
     const list = [] as IConfigVersion[];
     versionList.value.forEach((version) => {
-      groups.value.forEach((group) => {
-        if (version.spec.name === group.release_name && !list.includes(version)) list.push(version);
+      version.status.released_groups.some((group) => {
+        if (group.id === 0 || groups.value.findIndex((item) => item.id === group.id)) {
+          list.push(version);
+          return true;
+        }
+        return false;
       });
     });
     return list;
   });
 
-  // 判断是否需要对比上线版本
-  const handleDiffOrPublish = () => {
-    if (versionListByGroup.value.length) {
-      baseVersionId.value = versionListByGroup.value[0].id;
+  /**
+   * @description 直接上线或先对比再上线
+   * 所有分组都为首次上线，则直接上线，反之先对比再上线
+   */
+  const handlePublishOrOpenDiff = () => {
+    if (groups.value.length === 0) {
+      BkMessage({ theme: 'error', message: t('请选择分组实例') });
+      return;
+    }
+
+    if (diffableVersionList.value.length) {
+      baseVersionId.value = diffableVersionList.value[0].id;
       isDiffSliderShow.value = true;
       return;
     }
     handleOpenPublishDialog();
   };
 
-  // 获取所有对比基准版本
+  // 获取所有已上线版本（已上线或灰度中）
   const getVersionList = async () => {
     try {
-      const res = await getConfigVersionList(bkBizId, appId, { start: 0, all: true });
+      const res = await getConfigVersionList(props.bkBizId, props.appId, { start: 0, all: true });
       versionList.value = res.data.details.filter((item: IConfigVersion) => {
         const { id, status } = item;
-        return id !== versionData.value.id && status.publish_status === 'partial_released';
+        return id !== versionData.value.id && status.publish_status !== 'not_released';
       });
     } catch (e) {
       console.error(e);
@@ -160,10 +169,6 @@
   };
 
   const handleOpenPublishDialog = () => {
-    if (groups.value.length === 0) {
-      BkMessage({ theme: 'error', message: t('请选择上线分组') });
-      return;
-    }
     isConfirmDialogShow.value = true;
   };
 

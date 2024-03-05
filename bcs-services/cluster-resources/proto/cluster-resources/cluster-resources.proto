@@ -2802,7 +2802,7 @@ message LabelSelector {
 	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
 	string op = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "op"
-	}, (validate.rules).string = {in : ["=", "In", "NotIn", "Exists", "DoesNotExist"]}];
+	}, (validate.rules).string = {in : ["=", "!=", "In", "NotIn", "Exists", "DoesNotExist"]}];
 	repeated string values = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "values"
 	}];
@@ -3192,31 +3192,34 @@ message FetchMultiClusterResourceReq {
 	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源类型"
 	}, (validate.rules).string = {min_len: 1}];
-	repeated string creator = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string viewID = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "viewID"
+	}];
+	repeated string creator = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "creator"
 	}];
-	repeated LabelSelector labelSelector = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	repeated LabelSelector labelSelector = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
 	}];
-	string name = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string name = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "name"
 	}];
-	string ip = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string ip = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "ip"
 	}];
-	repeated string status = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	repeated string status = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "status"
 	}];
-	string sortBy = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string sortBy = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "sortBy"
 	}, (validate.rules).string = {in : ["", "name", "namespace", "age"]}];
-	string order = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string order = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "desc"
 	}, (validate.rules).string = {in : ["", "asc", "desc"]}];
-	uint32 limit = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	uint32 limit = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "limit"
 	}, (validate.rules).uint32 = {gte: 1, lte: 1000}];
-	uint32 offset = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	uint32 offset = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "offset"
 	}, (validate.rules).uint32 = {gte: 0}];
 }
@@ -3234,31 +3237,34 @@ message FetchMultiClusterCustomResourceReq {
 	string crd = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "crd"
 	}, (validate.rules).string = {min_len: 1}];
-	repeated string creator = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string viewID = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "viewID"
+	}];
+	repeated string creator = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "creator"
 	}];
-	repeated LabelSelector labelSelector = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	repeated LabelSelector labelSelector = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
 	}];
-	string name = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string name = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "name"
 	}];
-	string ip = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string ip = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "ip"
 	}];
-	repeated string status = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	repeated string status = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "status"
 	}];
-	string sortBy = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string sortBy = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "sortBy"
 	}, (validate.rules).string = {in : ["", "name", "namespace", "age"]}];
-	string order = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string order = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "desc"
 	}, (validate.rules).string = {in : ["", "asc", "desc"]}];
-	uint32 limit = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	uint32 limit = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "limit"
 	}, (validate.rules).uint32 = {gte: 1, lte: 1000}];
-	uint32 offset = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	uint32 offset = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "offset"
 	}, (validate.rules).uint32 = {gte: 0}];
 }
@@ -3273,13 +3279,16 @@ message MultiClusterResourceCountReq {
 	repeated ClusterNamespaces clusterNamespaces = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群和命名空间"
 	}, (validate.rules).repeated = {min_items: 1}];
-	repeated string creator = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string viewID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "viewID"
+	}];
+	repeated string creator = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "creator"
 	}];
-	repeated LabelSelector labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	repeated LabelSelector labelSelector = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
 	}];
-	string name = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string name = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "name"
 	}];
 }

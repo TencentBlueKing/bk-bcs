@@ -27,6 +27,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	pbrelease "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
 	pbrkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
@@ -855,9 +856,10 @@ func (s *Service) genCreateKv(kt *kit.Kit, bizID, appID uint32) ([]*pbkv.Kv, err
 			return nil, err
 		}
 		kvs = append(kvs, &pbkv.Kv{
-			Spec:       pbkv.PbKvSpec(detail.Spec, value),
-			Attachment: pbkv.PbKvAttachment(detail.Attachment),
-			Revision:   pbbase.PbRevision(detail.Revision),
+			Spec:        pbkv.PbKvSpec(detail.Spec, value),
+			Attachment:  pbkv.PbKvAttachment(detail.Attachment),
+			Revision:    pbbase.PbRevision(detail.Revision),
+			ContentSpec: pbcontent.PbContentSpec(detail.ContentSpec),
 		})
 	}
 

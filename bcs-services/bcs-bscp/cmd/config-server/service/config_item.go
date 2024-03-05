@@ -517,3 +517,57 @@ func (s *Service) ListConfigItemByTuple(ctx context.Context, req *pbcs.ListConfi
 	resp := &pbcs.ListConfigItemByTupleResp{Details: tuple.GetConfigItems()}
 	return resp, nil
 }
+
+// UnDeleteConfigItem 配置项未命名版本恢复
+func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbcs.UnDeleteConfigItemReq) (
+	*pbcs.UnDeleteConfigItemResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.client.DS.UnDeleteConfigItem(grpcKit.RpcCtx(), &pbds.UnDeleteConfigItemReq{
+		Id: req.Id,
+		Attachment: &pbci.ConfigItemAttachment{
+			BizId: req.BizId,
+			AppId: req.AppId,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.UnDeleteConfigItemResp{}, nil
+}
+
+// UndoConfigItem 撤消配置项
+func (s *Service) UndoConfigItem(ctx context.Context, req *pbcs.UndoConfigItemReq) (*pbcs.UndoConfigItemResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.client.DS.UndoConfigItem(grpcKit.RpcCtx(), &pbds.UndoConfigItemReq{
+		Id: req.Id,
+		Attachment: &pbci.ConfigItemAttachment{
+			BizId: req.BizId,
+			AppId: req.AppId,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &pbcs.UndoConfigItemResp{}, nil
+}

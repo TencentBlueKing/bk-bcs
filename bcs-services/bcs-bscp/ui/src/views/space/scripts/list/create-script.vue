@@ -28,9 +28,12 @@
               :maxlength="200"
               :resize="true" />
           </bk-form-item>
+          <bk-form-item class="fixed-width-form" property="revision_name" :label="t('form_版本号')" required>
+            <bk-input v-model="formData.revision_name" :placeholder="t('请输入')"></bk-input>
+          </bk-form-item>
           <bk-form-item :label="t('脚本内容')" property="content" required>
-            <div class="script-content-wrapper">
-              <ScriptEditor v-model="showContent" :language="formData.type">
+            <div :class="['script-content-wrapper', { 'show-variable': isShowVariable }]">
+              <ScriptEditor v-model="showContent" :language="formData.type" v-model:is-show-variable="isShowVariable">
                 <template #header>
                   <div class="language-tabs">
                     <div
@@ -41,6 +44,9 @@
                       {{ item.name }}
                     </div>
                   </div>
+                </template>
+                <template #sufContent>
+                  <InternalVariable v-if="isShowVariable" :language="formData.type"/>
                 </template>
               </ScriptEditor>
             </div>
@@ -66,6 +72,8 @@
   import { createScript, getScriptTagList } from '../../../../api/script';
   import DetailLayout from '../components/detail-layout.vue';
   import ScriptEditor from '../components/script-editor.vue';
+  import InternalVariable from '../components/internal-variable.vue';
+  import dayjs from 'dayjs';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t } = useI18n();
@@ -88,10 +96,11 @@
     memo: '',
     type: EScriptType.Shell,
     content: '',
+    revision_name: `v${dayjs().format('YYYYMMDDHHmmss')}`,
   });
   const formDataContent = ref({
-    shell: '#!/bin/bash',
-    python: '#!/usr/bin/env python\n# -*- coding: utf8 -*-',
+    shell: '#!/bin/bash\n##### 进入配置文件存放目录： cd ${bk_bscp_app_temp_dir}/files\n##### 进入前/后置脚本存放目录： cd ${bk_bscp_app_temp_dir}/hooks',
+    python: '#!/usr/bin/env python\n# -*- coding: utf8 -*-\n##### 进入配置文件存放目录： config_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/files”;os.chdir(config_dir)\n##### 进入前/后置脚本存放目录： hook_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/hooks”;os.chdir(hook_dir)',
   });
   const showContent = computed({
     get: () => (formData.value.type === 'shell' ? formDataContent.value.shell : formDataContent.value.python),
@@ -99,6 +108,7 @@
       formData.value.type === 'shell' ? (formDataContent.value.shell = val) : (formDataContent.value.python = val);
     },
   });
+  const isShowVariable = ref(true);
 
   const rules = {
     name: [
@@ -112,6 +122,21 @@
       {
         validator: (value: string) => value.length <= 200,
         message: t('最大长度200个字符'),
+      },
+    ],
+    revision_name: [
+      {
+        validator: (value: string) => value.length <= 128,
+        message: t('最大长度128个字符'),
+      },
+      {
+        validator: (value: string) => {
+          if (value.length > 0) {
+            return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_-]*[\u4e00-\u9fa5a-zA-Z0-9]?$/.test(value);
+          }
+          return true;
+        },
+        message: t('仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾'),
       },
     ],
   };
@@ -169,6 +194,13 @@
   .script-content-wrapper {
     min-width: 520px;
   }
+  .show-variable {
+    :deep(.script-editor) {
+      .code-editor-wrapper {
+        width: calc(100% - 272px);
+      }
+    }
+  }
 
   .language-tabs {
     display: flex;
@@ -193,6 +225,15 @@
     .bk-button {
       margin-right: 8px;
       min-width: 88px;
+    }
+  }
+
+  :deep(.script-editor) {
+    .content-wrapper {
+      display: flex;
+    }
+    .code-editor-wrapper {
+      width: 100%;
     }
   }
 </style>

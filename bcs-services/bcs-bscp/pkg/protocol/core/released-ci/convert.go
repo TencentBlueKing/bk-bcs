@@ -134,7 +134,7 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 
 // PbConfigItemState convert config item state
 func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem,
-	commits []*table.Commit, status string) []*pbci.ConfigItem {
+	commits []*table.Commit, status []string) []*pbci.ConfigItem {
 	releaseMap := make(map[uint32]*table.ReleasedConfigItem, len(fileRelease))
 	for _, release := range fileRelease {
 		releaseMap[release.ConfigItemID] = release
@@ -177,7 +177,7 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 }
 
 // sortConfigItemsByState sort as add > revise > delete >  unchange
-func sortConfigItemsByState(cis []*pbci.ConfigItem, status string) []*pbci.ConfigItem {
+func sortConfigItemsByState(cis []*pbci.ConfigItem, status []string) []*pbci.ConfigItem {
 	result := make([]*pbci.ConfigItem, 0)
 	add := make([]*pbci.ConfigItem, 0)
 	del := make([]*pbci.ConfigItem, 0)
@@ -187,29 +187,34 @@ func sortConfigItemsByState(cis []*pbci.ConfigItem, status string) []*pbci.Confi
 		switch ci.FileState {
 		case constant.FileStateAdd:
 			add = append(add, ci)
-		case constant.FileStateDelete:
-			del = append(del, ci)
 		case constant.FileStateRevise:
 			revise = append(revise, ci)
+		case constant.FileStateDelete:
+			del = append(del, ci)
 		case constant.FileStateUnchange:
 			unchange = append(unchange, ci)
 		}
 	}
-	// 判断是否有过滤
-	switch strings.ToUpper(status) {
-	case constant.FileStateAdd:
-		return add
-	case constant.FileStateDelete:
-		return del
-	case constant.FileStateRevise:
-		return revise
-	case constant.FileStateUnchange:
-		return unchange
+
+	if len(status) == 0 {
+		result = append(result, add...)
+		result = append(result, revise...)
+		result = append(result, del...)
+		result = append(result, unchange...)
+	} else {
+		for _, v := range status {
+			switch strings.ToUpper(v) {
+			case constant.FileStateAdd:
+				result = append(result, add...)
+			case constant.FileStateRevise:
+				result = append(result, revise...)
+			case constant.FileStateDelete:
+				result = append(result, del...)
+			case constant.FileStateUnchange:
+				result = append(result, unchange...)
+			}
+		}
 	}
-	result = append(result, add...)
-	result = append(result, revise...)
-	result = append(result, del...)
-	result = append(result, unchange...)
 
 	return result
 }

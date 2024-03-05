@@ -181,12 +181,21 @@ type QueryConfig struct {
 type MonitorRuleDetail struct {
 	Name           string   `json:"name,omitempty" yaml:"name,omitempty"`
 	Labels         []string `json:"labels,omitempty" yaml:"labels,omitempty"`
-	Enabled        bool     `json:"enabled,omitempty" yaml:"enabled,omitempty"`
+	Enabled        *bool    `json:"enabled,omitempty" yaml:"enabled,omitempty"`
 	ActiveTime     string   `json:"active_time,omitempty" yaml:"active_time,omitempty"`
 	ActiveCalendar []int    `json:"active_calendar,omitempty" yaml:"active_calendar,omitempty"`
-	Detect         *Detect  `json:"detect,omitempty" yaml:"detect,omitempty"`
-	Notice         *Notice  `json:"notice,omitempty" yaml:"notice,omitempty"`
-	Query          *Query   `json:"query,omitempty" yaml:"query,omitempty"`
+	Detect         *Detect  `json:"detect,omitempty" yaml:"detect,omitempty" patchStrategy:"replace" `
+	Notice         *Notice  `json:"notice,omitempty" yaml:"notice,omitempty" patchStrategy:"replace"`
+	Query          *Query   `json:"query,omitempty" yaml:"query,omitempty" patchStrategy:"replace"`
+}
+
+// IsEnabled return true if ptr is null
+func (m *MonitorRuleDetail) IsEnabled() bool {
+	if m.Enabled == nil {
+		return true
+	}
+
+	return *m.Enabled
 }
 
 // MonitorRuleSpec defines the desired state of MonitorRule
@@ -200,8 +209,12 @@ type MonitorRuleSpec struct {
 	// 是否覆盖同名配置，默认为false
 	Override bool `json:"override,omitempty"`
 
+	// +kubebuilder:default=AUTO_MERGE
+	// +kubebuilder:validation:Enum=AUTO_MERGE;LOCAL_FIRST
+	ConflictHandle string `json:"conflictHandle,omitempty"`
+
 	Scenario string               `json:"scenario,omitempty"`
-	Rules    []*MonitorRuleDetail `json:"rules" yaml:"rules"`
+	Rules    []*MonitorRuleDetail `json:"rules" yaml:"rules" patchStrategy:"merge" patchMergeKey:"name"`
 }
 
 // MonitorRuleStatus defines the observed state of MonitorRule

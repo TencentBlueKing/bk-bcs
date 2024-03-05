@@ -85,6 +85,30 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubenretes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
+	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("create azure client failed, %v", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	// get vpcID for cluster
+	ng, ok := opt.Cluster.ExtraInfo[api.NodeResourceGroup]
+	if !ok {
+		return nil, fmt.Errorf("get azure nodeResourceGroup failed,"+
+			" no such info in cluster[%s] extraInfo", opt.Cluster.ClusterID)
+	}
+	vn, err := client.ListVirtualNetwork(ctx, ng)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(vn) == 0 {
+		return nil, fmt.Errorf("get VPC failed for cluster[%s], empty response", opt.Cluster.ClusterID)
+	}
+
+	opt.Cluster.VpcID = *vn[0].Name
+
 	return opt.Cluster, nil
 }
 
@@ -92,13 +116,13 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.CloudClusterInfo, error) {
 	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
 	if err != nil {
-		return nil, fmt.Errorf("create azure client failed, err %s", err.Error())
+		return nil, fmt.Errorf("create azure client failed, %v", err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-	clusters, err := client.ListClusterByResourceGroupName(ctx, opt.Region, opt.Account.ResourceGroupName)
+	clusters, err := client.ListClusterByResourceGroupName(ctx, opt.Region, opt.ResourceGroupName)
 	if err != nil {
-		return nil, fmt.Errorf("list azure cluster failed, err %s", err.Error())
+		return nil, fmt.Errorf("list azure cluster failed, %v", err)
 	}
 	result := make([]*proto.CloudClusterInfo, 0)
 	for _, v := range clusters {
@@ -108,6 +132,7 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 			ClusterVersion: *v.Properties.CurrentKubernetesVersion,
 			ClusterType:    *v.Type,
 			ClusterStatus:  string(*v.Properties.PowerState.Code),
+			Location:       *v.Location,
 		}
 		if len(v.Properties.AgentPoolProfiles) > 0 {
 			p := v.Properties.AgentPoolProfiles

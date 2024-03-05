@@ -1291,6 +1291,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure Cloud中集群所属的resource group名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [

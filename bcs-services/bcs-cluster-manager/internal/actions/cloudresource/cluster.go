@@ -62,6 +62,7 @@ func (la *ListCloudClusterAction) listCloudClusters() error {
 				MachineDomain:       la.cloud.ConfInfo.MachineDomain,
 			},
 		},
+		ResourceGroupName: la.req.ResourceGroupName,
 	})
 	if err != nil {
 		return err

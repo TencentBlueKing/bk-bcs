@@ -15,7 +15,6 @@ package dao
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
@@ -54,6 +53,8 @@ type Kv interface {
 	// UpdateSelectedKVStates updates the states of selected kv pairs using a transaction
 	UpdateSelectedKVStates(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32, targetKVStates []string,
 		newKVStates table.KvState) error
+	// UpdateStateWithTx updates the state of a kv pair with transaction
+	UpdateStateWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32, key string, state table.KvState) error
 	// DeleteByStateWithTx deletes kv pairs with a specific state using a transaction
 	DeleteByStateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
 }
@@ -122,7 +123,7 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Kv.WithContext(kit.Ctx)
 		if _, e := q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Select(m.Version, m.UpdatedAt,
-			m.Reviser, m.KvState).Updates(kv); e != nil {
+			m.Reviser, m.KvState, m.Signature, m.ByteSize).Updates(kv); e != nil {
 			return e
 		}
 
@@ -165,17 +166,9 @@ func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int6
 		q = q.Where(q.Where(q.Or(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))))
 	}
 
-	switch strings.ToUpper(opt.Status) {
-	case string(table.KvStateAdd):
-		q = q.Where(m.KvState.Eq(string(table.KvStateAdd)))
-	case string(table.KvStateDelete):
-		q = q.Where(m.KvState.Eq(string(table.KvStateDelete)))
-	case string(table.KvStateRevise):
-		q = q.Where(m.KvState.Eq(string(table.KvStateRevise)))
-	case string(table.KvStateUnchange):
-		q = q.Where(m.KvState.Eq(string(table.KvStateUnchange)))
+	if len(opt.Status) != 0 {
+		q = q.Where(m.KvState.In(opt.Status...))
 	}
-
 	q = q.Where(m.BizID.Eq(opt.BizID)).Where(m.AppID.Eq(opt.AppID))
 
 	if len(opt.KvType) > 0 {
@@ -422,6 +415,30 @@ func (dao *kvDao) UpdateSelectedKVStates(kit *kit.Kit, tx *gen.QueryTx, bizID, a
 	}
 
 	return nil
+}
+
+// UpdateStateWithTx updates the state of a kv pair with transaction
+func (dao *kvDao) UpdateStateWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32, key string,
+	state table.KvState) error {
+	if bizID <= 0 {
+		return errors.New("biz id should be set")
+	}
+
+	if appID <= 0 {
+		return errors.New("app id should be set")
+	}
+
+	if key == "" {
+		return errors.New("key cannot be empty")
+	}
+
+	if state.String() == "" {
+		return errors.New("state cannot be empty")
+	}
+
+	m := tx.Kv
+	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Key.Eq(key)).Update(m.KvState, state)
+	return err
 }
 
 // ListAllByAppID list all Kv by appID

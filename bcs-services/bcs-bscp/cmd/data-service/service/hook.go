@@ -69,9 +69,13 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 	}
 
 	// 2. create hook revision
+	// it must be the first hook revision, so no need to check the revision name uniqueness
+	if req.Spec.RevisionName == "" {
+		req.Spec.RevisionName = tools.GenerateRevisionName()
+	}
 	revision := &table.HookRevision{
 		Spec: &table.HookRevisionSpec{
-			Name:    tools.GenerateRevisionName(),
+			Name:    req.Spec.RevisionName,
 			Content: req.Spec.Content,
 			Memo:    req.Spec.Memo,
 			State:   table.HookRevisionStatusDeployed,

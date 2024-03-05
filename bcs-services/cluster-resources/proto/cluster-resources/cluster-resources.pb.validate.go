@@ -8298,7 +8298,7 @@ func (m *LabelSelector) validate(all bool) error {
 	if _, ok := _LabelSelector_Op_InLookup[m.GetOp()]; !ok {
 		err := LabelSelectorValidationError{
 			field:  "Op",
-			reason: "value must be in list [= In NotIn Exists DoesNotExist]",
+			reason: "value must be in list [= != In NotIn Exists DoesNotExist]",
 		}
 		if !all {
 			return err
@@ -8386,6 +8386,7 @@ var _ interface {
 
 var _LabelSelector_Op_InLookup = map[string]struct{}{
 	"=":            {},
+	"!=":           {},
 	"In":           {},
 	"NotIn":        {},
 	"Exists":       {},
@@ -11493,6 +11494,8 @@ func (m *FetchMultiClusterResourceReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for ViewID
+
 	for idx, item := range m.GetLabelSelector() {
 		_, _ = idx, item
 
@@ -11759,6 +11762,8 @@ func (m *FetchMultiClusterCustomResourceReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for ViewID
+
 	for idx, item := range m.GetLabelSelector() {
 		_, _ = idx, item
 
@@ -12013,6 +12018,8 @@ func (m *MultiClusterResourceCountReq) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for ViewID
 
 	for idx, item := range m.GetLabelSelector() {
 		_, _ = idx, item

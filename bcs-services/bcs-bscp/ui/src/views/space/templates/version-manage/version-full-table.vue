@@ -41,10 +41,11 @@
         </template>
       </template>
     </bk-table-column>
-    <bk-table-column :label="t('操作')" width="180">
+    <bk-table-column :label="t('操作')" width="220">
       <template #default="{ row }">
         <div class="actions-wrapper">
           <bk-button text theme="primary" @click="handleOpenDiffSlider(row)">{{ t('版本对比') }}</bk-button>
+          <bk-button text theme="primary" @click="handleDownload(row)">{{ t('下载') }}</bk-button>
           <!-- <bk-button text theme="primary" :disabled="pagination.count === 1" @click="handleDeleteVersion(row)"
             >删除</bk-button
           > -->
@@ -74,6 +75,8 @@
     DiffSliderDataType,
   } from '../../../../../types/template';
   import { datetimeFormat } from '../../../../utils/index';
+  import { fileDownload } from '../../../../utils/file';
+  import { downloadTemplateContent } from '../../../../api/template';
   import VersionBoundByAppsDetail from './version-bound-by-apps-detail.vue';
   import TemplateVersionDiff from './template-version-diff.vue';
 
@@ -113,6 +116,12 @@
       open: true,
       data: { id: props.templateId, versionId: id, name: spec.revision_name, permission: spec.permission },
     };
+  };
+
+  const handleDownload = async (version: ITemplateVersionItem) => {
+    const { name, revision_name, content_spec } = version.spec;
+    const content = await downloadTemplateContent(props.spaceId, props.templateSpaceId, content_spec.signature);
+    fileDownload(content, `${name}_${revision_name}`);
   };
 
   // const handleDeleteVersion = (version: ITemplateVersionItem) => {

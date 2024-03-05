@@ -140,7 +140,16 @@ func handleKv(result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, erro
 				if err != nil {
 					return nil, fmt.Errorf("key: %s json marshal error", key)
 				}
-				val = string(mv)
+				// 需要处理转义符
+				var data interface{}
+				err = json.Unmarshal(mv, &data)
+				if err != nil {
+					return nil, fmt.Errorf("key: %s json unmarshal error", key)
+				}
+				val, ok = data.(string)
+				if !ok {
+					return nil, fmt.Errorf("key: %s format error", key)
+				}
 			} else if kvType == string(table.KvYAML) {
 				_, ok := kvValue.(string)
 				if !ok {

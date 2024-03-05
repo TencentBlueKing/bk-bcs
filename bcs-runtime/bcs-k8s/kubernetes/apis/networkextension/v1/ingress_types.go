@@ -26,6 +26,8 @@ const (
 	ProtocolTCP = "tcp"
 	// ProtocolUDP name of udp protocol
 	ProtocolUDP = "udp"
+	// ProtocolTCPSSL name of TCP_SSL protocol
+	ProtocolTCPSSL = "tcp_ssl"
 
 	// AnnotationKeyForLoadbalanceIDs annotation key for cloud lb ids
 	AnnotationKeyForLoadbalanceIDs = "networkextension.bkbcs.tencent.com/lbids"

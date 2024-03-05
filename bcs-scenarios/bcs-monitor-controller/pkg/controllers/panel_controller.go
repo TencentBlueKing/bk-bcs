@@ -93,7 +93,7 @@ func (r *PanelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		return ctrl.Result{}, err
 	}
-	defer os.Remove(outputPath)
+	defer os.RemoveAll(outputPath)
 
 	if err = r.MonitorApiCli.UploadConfig(panel.Spec.BizID, panel.Spec.BizToken, outputPath,
 		r.getAppName(panel), panel.Spec.Override); err != nil {

@@ -92,6 +92,10 @@ type AppMonitorSpec struct {
 	IgnoreChange bool `json:"ignoreChange,omitempty" yaml:"ignoreChange,omitempty"`
 	// 是否覆盖同名配置，默认为false
 	Override bool `json:"override,omitempty" yaml:"override,omitempty"`
+	// 冲突时处理， AUTO_MERGE时，尝试自动合并；LOCAL_FIRST优先采用本地配置
+	// +kubebuilder:default=AUTO_MERGE
+	// +kubebuilder:validation:Enum=AUTO_MERGE;LOCAL_FIRST
+	ConflictHandle string `json:"conflictHandle,omitempty"`
 
 	// if set, import Repo from argo
 	RepoRef            *RepoRef            `json:"repoRef,omitempty" yaml:"repoRef,omitempty"`

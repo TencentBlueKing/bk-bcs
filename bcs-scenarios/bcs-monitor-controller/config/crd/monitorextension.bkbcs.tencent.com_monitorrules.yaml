@@ -46,6 +46,12 @@ spec:
                 type: string
               bizToken:
                 type: string
+              conflictHandle:
+                default: AUTO_MERGE
+                enum:
+                - AUTO_MERGE
+                - LOCAL_FIRST
+                type: string
               ignoreChange:
                 description: if true, controller will ignore resource's change
                 type: boolean

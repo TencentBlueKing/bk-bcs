@@ -410,3 +410,122 @@ func (bs *bedis) Healthz() error {
 
 	return nil
 }
+
+// LPush 将一个或多个值插入到列表头部
+func (bs *bedis) LPush(ctx context.Context, key string, values ...interface{}) error {
+	start := time.Now()
+	_, err := bs.client.LPush(ctx, key, values).Result()
+	if err != nil {
+		bs.mc.errCounter.With(prm.Labels{"cmd": "lpush"}).Inc()
+		return err
+	}
+	bs.logSlowCmd(ctx, key, time.Since(start))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "lpush"}).Observe(float64(time.Since(start).Milliseconds()))
+	return nil
+}
+
+// LRange 获取列表指定范围内的元素
+func (bs *bedis) LRange(ctx context.Context, key string, start, stop int64) ([]string, error) {
+	startTime := time.Now()
+	list, err := bs.client.LRange(ctx, key, start, stop).Result()
+	if err != nil {
+		if IsNilError(err) {
+			return nil, nil
+		}
+		bs.mc.errCounter.With(prm.Labels{"cmd": "lrange"}).Inc()
+		return nil, err
+	}
+	values := make([]string, 0)
+	for _, val := range list {
+		if val == "" {
+			continue
+		}
+		if len(val) == 0 {
+			continue
+		}
+
+		values = append(values, val)
+	}
+	bs.logSlowCmd(ctx, "", time.Since(startTime))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "lrange"}).Observe(float64(time.Since(startTime).Milliseconds()))
+	return values, nil
+}
+
+// RPop 移除列表的最后一个元素，返回值为移除的元素
+func (bs *bedis) RPop(ctx context.Context, key string) (string, error) {
+	start := time.Now()
+	value, err := bs.client.RPop(ctx, key).Result()
+	if err != nil {
+		if IsNilError(err) {
+			return "", nil
+		}
+		bs.mc.errCounter.With(prm.Labels{"cmd": "rpop"}).Inc()
+		return "", err
+	}
+	bs.logSlowCmd(ctx, "", time.Since(start))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "rpop"}).Observe(float64(time.Since(start).Milliseconds()))
+
+	return value, nil
+}
+
+// Keys finds all keys that match a given pattern
+func (bs *bedis) Keys(ctx context.Context, pattern string) ([]string, error) {
+	start := time.Now()
+	list, err := bs.client.Keys(ctx, pattern).Result()
+	if err != nil {
+		if IsNilError(err) {
+			return nil, nil
+		}
+		bs.mc.errCounter.With(prm.Labels{"cmd": "keys"}).Inc()
+		return nil, err
+	}
+	values := make([]string, 0)
+	for _, val := range list {
+		if val == "" {
+			continue
+		}
+		if len(val) == 0 {
+			continue
+		}
+
+		values = append(values, val)
+	}
+	bs.logSlowCmd(ctx, "", time.Since(start))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "keys"}).Observe(float64(time.Since(start).Milliseconds()))
+	return values, nil
+}
+
+// LLen get list length
+func (bs *bedis) LLen(ctx context.Context, key string) (int64, error) {
+	start := time.Now()
+	value, err := bs.client.LLen(ctx, key).Result()
+	if err != nil {
+		if IsNilError(err) {
+			return 0, nil
+		}
+		bs.mc.errCounter.With(prm.Labels{"cmd": "llen"}).Inc()
+		return 0, err
+	}
+	bs.logSlowCmd(ctx, "", time.Since(start))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "llen"}).Observe(float64(time.Since(start).Milliseconds()))
+
+	return value, nil
+}
+
+// LTrim trim a list, that is, make the list keep only the elements within the specified interval,
+// and the elements that are not within the specified interval are deleted.
+func (bs *bedis) LTrim(ctx context.Context, key string, start, stop int64) (string, error) {
+	startTime := time.Now()
+	value, err := bs.client.LTrim(ctx, key, start, stop).Result()
+	if err != nil {
+		if IsNilError(err) {
+			return "", nil
+		}
+		bs.mc.errCounter.With(prm.Labels{"cmd": "ltrim"}).Inc()
+		return "", err
+	}
+	bs.logSlowCmd(ctx, "", time.Since(startTime))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "ltrim"}).Observe(float64(time.Since(startTime).Milliseconds()))
+
+	return value, nil
+}

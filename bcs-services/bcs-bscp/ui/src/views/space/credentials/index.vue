@@ -22,7 +22,7 @@
           <bk-input
             v-model="searchStr"
             class="search-group-input"
-            :placeholder="t('密钥名称/说明/更新人')"
+            :placeholder="t('密钥名称/说明/关联规则/更新人')"
             :clearable="true"
             @clear="refreshListWithLoading()"
             @input="handleSearchInputChange">
@@ -46,9 +46,17 @@
             <template #default="{ row, index }">
               <bk-input
                 v-if="index === 0 && isCreateCredential"
+                :class="{ 'input-error': isCreateCredentialNameExist }"
                 :placeholder="t('密钥名称支持中英文')"
                 v-model="createCredentialName"
-                @blur="testCreateCredentialName"></bk-input>
+                @blur="blurTestCreateCredentialName"
+                @input="changeTestCreateCredentialName">
+                <template #suffix>
+                  <span v-if="isCreateCredentialNameExist" class="suffix-error-icon">
+                    <Warn v-bk-tooltips="{ content: t('密钥名称已存在') }" />
+                  </span>
+                </template>
+              </bk-input>
               <div v-if="row.spec" class="credential-memo">
                 <div v-if="editingNameId !== row.id" class="memo-content" :title="row.spec.memo || '--'">
                   {{ row.spec.name || '--' }}
@@ -111,16 +119,19 @@
           </bk-table-column>
           <bk-table-column :label="t('关联规则')" width="140">
             <template #default="{ row }">
-              <bk-popover v-if="row.rule && row.rule.length" theme="light" :popover-delay="[300, 0]">
-                <div class="table-rule">
-                  {{ row.rule[0].spec.app + row.rule[0].spec.scope }}
-                </div>
-                <template #content>
-                  <div v-for="rule in row.rule" :key="rule.id">
-                    {{ rule.spec.app + rule.spec.scope }}
-                  </div>
-                </template>
-              </bk-popover>
+              <div v-if="row.credential_scopes && row.credential_scopes.length" class="rule-cell">
+                <span v-for="rule in row.showRules" :key="rule.id" class="rule">
+                  <bk-overflow-title type="tips">
+                    {{ rule }}
+                  </bk-overflow-title>
+                </span>
+                <span
+                  v-if="row.credential_scopes.length > 3"
+                  class="toggle-button"
+                  @click="toggleRulesExpanded(row.id)">
+                  {{ row.isExpandedRules ? '收起' : '展开' }}
+                </span>
+              </div>
               <span v-else>--</span>
             </template>
           </bk-table-column>
@@ -161,7 +172,7 @@
               </template>
               <template v-if="row.spec">
                 <bk-button text theme="primary" @click="handleOpenAssociate(row)">
-                  <span :class="{ redPoint: newCredentials[0] === row.id }">{{ t('关联服务配置') }}</span>
+                  <span :class="{ redPoint: newCredential === row.id }">{{ t('关联服务配置') }}</span>
                 </bk-button>
                 <div class="delete-btn" v-bk-tooltips="deleteTooltip(hasManagePerm && row.spec.enable)">
                   <bk-button
@@ -236,7 +247,7 @@
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../store/global';
-  import { Plus, Search, Eye, Unvisible, Copy, EditLine } from 'bkui-vue/lib/icon';
+  import { Plus, Search, Eye, Unvisible, Copy, EditLine, Warn } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import { InfoBox } from 'bkui-vue';
   import { permissionCheck } from '../../../api/index';
@@ -245,7 +256,7 @@
     createCredential,
     updateCredential,
     deleteCredential,
-    getCredentialScopes,
+    getCredentialExist,
   } from '../../../api/credentials';
   import { copyToClipBoard, datetimeFormat } from '../../../utils/index';
   import { ICredentialItem } from '../../../../types/credential';
@@ -264,7 +275,7 @@
   const createCredentialName = ref('');
   const createCredentialMemo = ref('');
   const isCreateCredential = ref(false);
-  const newCredentials = ref<number[]>([]); // 记录新增加的密钥id，实现表格标记效果
+  const newCredential = ref(0); // 记录新增加的密钥id，实现表格标记效果
   const searchStr = ref('');
   const editingMemoId = ref(0); // 记录当前正在编辑说明的密钥id
   const editingNameId = ref(0); // 记录当前正在编辑名称的密钥id
@@ -282,6 +293,7 @@
   const isShowDeleteDialog = ref(false);
   const dialogInputStr = ref('');
   const deleteCredentialInfo = ref<ICredentialItem>();
+  const isCreateCredentialNameExist = ref(false);
 
   watch(
     () => spaceId.value,
@@ -335,12 +347,15 @@
 
   // 加载密钥列表
   const loadCredentialList = async () => {
-    const query: { limit: number; start: number; searchKey?: string } = {
+    const query: { limit: number; start: number; searchKey?: string; top_ids?: number } = {
       start: pagination.value.limit * (pagination.value.current - 1),
       limit: pagination.value.limit,
     };
     if (searchStr.value) {
       query.searchKey = searchStr.value;
+    }
+    if (newCredential.value) {
+      query.top_ids = newCredential.value;
     }
     const res = await getCredentialList(spaceId.value, query);
     res.details.forEach((item: ICredentialItem) => (item.visible = false));
@@ -348,9 +363,14 @@
     tableData.value = res.details;
     pagination.value.count = res.count;
     // 获取密钥关联规则
-    tableData.value.forEach(async (item: any) => {
-      const res = await getCredentialScopes(spaceId.value, item.id);
-      item.rule = res.details;
+    tableData.value.forEach((item: any) => {
+      // 密钥关联规则加工处理 做下拉展示
+      if (item.credential_scopes.length > 3) {
+        item.showRules = item.credential_scopes.slice(0, 3);
+      } else {
+        item.showRules = item.credential_scopes;
+      }
+      item.isExpandedRules = false;
     });
   };
 
@@ -370,7 +390,7 @@
 
   // 设置新增行的标记class
   const getRowCls = (data: ICredentialItem) => {
-    if (newCredentials.value.includes(data.id)) {
+    if (newCredential.value === data.id) {
       return 'new-row-marked';
     }
     if (currentCredential.value === data.id) {
@@ -404,7 +424,7 @@
       });
       return;
     }
-    await testCreateCredentialName();
+    await blurTestCreateCredentialName();
     try {
       createPending.value = true;
       const params = { memo: createCredentialMemo.value, name: createCredentialName.value };
@@ -414,12 +434,8 @@
         message: t('新建服务密钥成功'),
       });
       pagination.value.current = 1;
+      newCredential.value = res.id;
       await loadCredentialList();
-      newCredentials.value.push(res.id);
-      setTimeout(() => {
-        const index = newCredentials.value.indexOf(res.id);
-        newCredentials.value.splice(index, 1);
-      }, 3000);
     } catch (e) {
       console.error(e);
     } finally {
@@ -593,8 +609,8 @@
     refreshListWithLoading();
   };
 
-  // 校验新建密钥名称
-  const testCreateCredentialName = () => {
+  // input失焦校验新建密钥名称
+  const blurTestCreateCredentialName = async () => {
     if (!createCredentialName.value) return;
     const regex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_-]*[\u4e00-\u9fa5a-zA-Z0-9]$/;
     if (!regex.test(createCredentialName.value)) {
@@ -606,9 +622,35 @@
       });
       return Promise.reject();
     }
+    testCredentialNameExist();
+    if (isCreateCredentialNameExist.value) return Promise.reject();
   };
+
+  // 校验密钥名称是否已存在
+  const testCredentialNameExist = async () => {
+    const res = await getCredentialExist(spaceId.value, createCredentialName.value);
+    isCreateCredentialNameExist.value = res.data.exist;
+  };
+
+  // 如果密钥名称已存在需进行change校验
+  const changeTestCreateCredentialName = () => {
+    if (!isCreateCredentialNameExist.value) return;
+    testCredentialNameExist();
+  };
+
   const goToIAM = () => {
     window.open(`${(window as any).BK_IAM_HOST}/apply-join-user-group`, '__blank');
+  };
+
+  // 切换密钥规则展开收起
+  const toggleRulesExpanded = (id: number) => {
+    const credential = tableData.value.find((item: any) => item.id === id);
+    credential.isExpandedRules = !credential.isExpandedRules;
+    if (credential.isExpandedRules) {
+      credential.showRules = credential.credential_scopes;
+    } else {
+      credential.showRules = credential.credential_scopes.slice(0, 3);
+    }
   };
 </script>
 <style lang="scss" scoped>
@@ -671,6 +713,16 @@
     }
     .delete-btn {
       display: inline-block;
+    }
+    .input-error {
+      border: 1px solid #ea3636;
+    }
+    .suffix-error-icon {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 9px;
+      font-size: 14px;
+      color: #ea3636;
     }
   }
   .credential-text {
@@ -787,6 +839,16 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .rule-cell {
+    display: flex;
+    flex-direction: column;
+    line-height: 20px;
+    padding: 8px 0;
+    .toggle-button {
+      color: #3a84ff;
+      cursor: pointer;
+    }
   }
 </style>
 
