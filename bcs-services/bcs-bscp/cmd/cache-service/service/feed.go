@@ -226,3 +226,14 @@ func (s *Service) ListEventsMeta(ctx context.Context, req *pbcs.ListEventsReq) (
 
 	return &pbcs.ListEventsResp{List: pbcs.PbEventMeta(metas)}, nil
 }
+
+// SetClientMetric set client metric
+func (s *Service) SetClientMetric(ctx context.Context, req *pbcs.SetClientMetricReq) (*pbcs.SetClientMetricResp,
+	error) {
+	kt := kit.FromGrpcContext(ctx)
+	err := s.op.SetClientMetric(kt, req.BizId, req.AppId, req.Payload)
+	if err != nil {
+		return nil, err
+	}
+	return &pbcs.SetClientMetricResp{}, nil
+}
