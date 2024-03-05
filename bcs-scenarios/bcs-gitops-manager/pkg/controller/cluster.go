@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package controller xxx
 package controller
 
 import (
@@ -18,18 +19,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
+	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
+	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
-
-	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
@@ -64,9 +63,9 @@ func (control *cluster) Init() error {
 	if control.option == nil {
 		return fmt.Errorf("cluster controller lost options")
 	}
-	//if control.option.Mode == common.ModeService {
+	// if control.option.Mode == common.ModeService {
 	//	return fmt.Errorf("service mode is not implenmented")
-	//}
+	// }
 	// init with raw grpc connection
 	if err := control.initClient(); err != nil {
 		return err
@@ -107,6 +106,7 @@ func (control *cluster) SingleStart(ctx context.Context) {
 }
 
 // ForceSync specified cluster information
+// nolint funlen
 func (control *cluster) ForceSync(projectCode, clusterID string) {
 	control.Lock()
 	defer control.Unlock()
@@ -161,7 +161,7 @@ func (control *cluster) ForceSync(projectCode, clusterID string) {
 }
 
 func (control *cluster) initClient() error {
-	//create grpc connection
+	// create grpc connection
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
@@ -204,9 +204,9 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 	// list all cluster for every project
 	for proID, appPro := range controlledProjects {
 		blog.Infof("syncing clusters for project [%s]%s", appPro.Name, proID)
-		if err := control.syncClustersByProject(ctx, proID, appPro); err != nil {
+		if err = control.syncClustersByProject(ctx, proID, appPro); err != nil {
 			blog.Errorf("sync clusters for project [%s]%s failed: %s", appPro.Name, proID, err.Error())
-			//continue
+			// continue
 		}
 		blog.Infof("sync clusters for project [%s]%s complete, next...", appPro.Name, proID)
 
@@ -221,7 +221,7 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 		blog.Infof("init project [%s]%s secrets complete", appPro.Name, proID)
 
 		// sync secret info to pro annotations
-		//secretVal := vaultcommon.GetVaultSecForProAnno(appPro.Name)
+		// secretVal := vaultcommon.GetVaultSecForProAnno(appPro.Name)
 		secretVal, err := control.option.Secret.GetProjectSecret(ctx, appPro.Name)
 		if err != nil {
 			blog.Errorf("[getErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
@@ -233,12 +233,10 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 			if err := control.option.Storage.UpdateProject(ctx, appPro); err != nil {
 				blog.Errorf("[existErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
 			}
-		} else {
-			if secretVal != actualVal {
-				appPro.Annotations[common.SecretKey] = secretVal
-				if err := control.option.Storage.UpdateProject(ctx, appPro); err != nil {
-					blog.Errorf("[valErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
-				}
+		} else if secretVal != actualVal {
+			appPro.Annotations[common.SecretKey] = secretVal
+			if err := control.option.Storage.UpdateProject(ctx, appPro); err != nil {
+				blog.Errorf("[valErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
 			}
 		}
 		blog.Infof("sync secret info to pro annotations[val:%s] [%s]%s complete. next...", secretVal, appPro.Name, proID)

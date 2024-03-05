@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package repo
@@ -20,14 +19,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // gitRepo clone git repo and pull in certain freq
@@ -44,7 +42,7 @@ type gitRepo struct {
 	// In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD.
 	TargetRevision string `json:"targetRevision,omitempty"`
 
-	cli  client.Client
+	cli  client.Client // nolint unused
 	auth *http.BasicAuth
 }
 
@@ -252,15 +250,13 @@ func compareCommitAndParent(commit *object.Commit) ([]string, error) {
 			if !contains(changedDirs, dir) {
 				changedDirs = append(changedDirs, dir)
 			}
-		} else {
-			if file.Hash != parentFile.Hash {
-				dir, inErr := getTopDir(file.Name)
-				if inErr != nil {
-					return inErr
-				}
-				if !contains(changedDirs, dir) {
-					changedDirs = append(changedDirs, dir)
-				}
+		} else if file.Hash != parentFile.Hash {
+			dir, inErr := getTopDir(file.Name)
+			if inErr != nil {
+				return inErr
+			}
+			if !contains(changedDirs, dir) {
+				changedDirs = append(changedDirs, dir)
 			}
 		}
 		return nil

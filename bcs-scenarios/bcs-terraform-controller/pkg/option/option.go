@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package option include controller options from command line and env
@@ -16,12 +15,12 @@ package option
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-exec/tfexec"
-	"github.com/pkg/errors"
 	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/hashicorp/terraform-exec/tfexec"
+	"github.com/pkg/errors"
 )
 
 var (

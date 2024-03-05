@@ -23,14 +23,14 @@ import (
 	"sync"
 	"time"
 
-	"go-micro.dev/v4/registry"
-	"k8s.io/apimachinery/pkg/util/proxy"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
+	"go-micro.dev/v4/registry"
+	"k8s.io/apimachinery/pkg/util/proxy"
 )
 
 // TunnelOptions for manage tunnel server
+// nolint
 type TunnelOptions struct {
 	Context context.Context
 	// ID to identify tunnel instance
@@ -87,7 +87,7 @@ func NewTunnelManager(opt *TunnelOptions) *TunnelManager {
 }
 
 // TunnelManager holds tunnel and manage tunnel entry points(tranport).
-//
+// nolint
 type TunnelManager struct {
 	option *TunnelOptions
 	// peer manager handle proxy mutual discovery
@@ -141,7 +141,7 @@ func (tm *TunnelManager) GetTunnelServer() *websocketDialer.Server {
 
 // ServeHTTP proxy specific flow to tunnel
 func (tm *TunnelManager) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	//feature(DeveloperJim): ClusterID indexer for multiple cluster selection
+	// feature(DeveloperJim): ClusterID indexer for multiple cluster selection
 	clusterID, err := tm.option.Indexer(req)
 	if err != nil {
 		blog.Errorf("TunnelManager indexer clusterID failed, %s", err.Error())
@@ -176,7 +176,7 @@ func (tm *TunnelManager) lookupBackendEntryPoint(clusterID string) (*proxy.Upgra
 	if !ok {
 		return nil, fmt.Errorf("no session proxy in tunnel")
 	}
-	//check transport in cache, build it if transport lost
+	// check transport in cache, build it if transport lost
 	if cluster.MiddleTransport == nil {
 		dialer := tm.tunnelSvr.Dialer(clusterID, time.Second*15)
 		transport := &http.Transport{
@@ -193,7 +193,7 @@ func (tm *TunnelManager) lookupBackendEntryPoint(clusterID string) (*proxy.Upgra
 	// wrap transport with UpgradeHandler
 	reqLocation := cluster.ServerAddress
 	if !strings.HasSuffix(reqLocation, "/") {
-		reqLocation = reqLocation + "/"
+		reqLocation += "/"
 	}
 	reqURL, err := url.Parse(reqLocation)
 	if err != nil {

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package hotpatchupdate
@@ -22,11 +21,12 @@ const (
 	// The value of annotation is HotPatchUpdateState.
 	HotPatchUpdateStateKey string = "hotpatch-update-state"
 
-	//hot-patch annotation
+	// PodHotpatchContainerKey hot-patch annotation
 	PodHotpatchContainerKey = "io.kubernetes.hotpatch.container"
 )
 
 // HotPatchUpdateState records latest hotpatch-update state, including old statuses of containers.
+// nolint
 type HotPatchUpdateState struct {
 	// Revision is the updated revision hash.
 	Revision string `json:"revision"`
@@ -41,6 +41,7 @@ type HotPatchUpdateState struct {
 
 // HotPatchUpdateContainerStatus records the statuses of the container that are mainly used
 // to determine whether the HotPatchUpdate is completed.
+// nolint
 type HotPatchUpdateContainerStatus struct {
 	ImageID string `json:"imageID,omitempty"`
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package builder
@@ -34,7 +33,7 @@ func NewCloudProvider(opts scalingconfig.Options) cloudprovider.CloudProvider {
 
 	if opts.CloudProviderName == "" {
 		// Ideally this would be an error, but several unit tests of the
-		// StaticAutoscaler depend on this behaviour.
+		// StaticAutoscaler depend on this behavior.
 		klog.Warning("Returning a nil cloud provider")
 		return nil
 	}

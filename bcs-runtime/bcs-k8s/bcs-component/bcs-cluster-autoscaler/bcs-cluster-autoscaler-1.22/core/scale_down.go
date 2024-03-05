@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package core
@@ -24,8 +23,12 @@ import (
 	"sync"
 	"time"
 
-	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
-
+	apiv1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1beta1"
+	kube_errors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/context"
@@ -33,27 +36,22 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/metrics"
 	"k8s.io/autoscaler/cluster-autoscaler/processors"
 	"k8s.io/autoscaler/cluster-autoscaler/processors/customresources"
+	"k8s.io/autoscaler/cluster-autoscaler/processors/status"
 	"k8s.io/autoscaler/cluster-autoscaler/simulator"
 	"k8s.io/autoscaler/cluster-autoscaler/utils"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/daemonset"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/drain"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
+	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	kube_util "k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
-	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
-
-	apiv1 "k8s.io/api/core/v1"
-	policyv1 "k8s.io/api/policy/v1beta1"
-	kube_errors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/autoscaler/cluster-autoscaler/processors/status"
-	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	kube_client "k8s.io/client-go/kubernetes"
 	kube_record "k8s.io/client-go/tools/record"
 	klog "k8s.io/klog/v2"
+	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
+
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 )
 
 const (
@@ -158,7 +156,7 @@ type NodeDeletionTracker struct {
 }
 
 // Get current time. Proxy for unit tests.
-var now func() time.Time = time.Now
+var now func() time.Time = time.Now // nolint
 
 // NewNodeDeletionTracker creates new NodeDeletionTracker.
 func NewNodeDeletionTracker() *NodeDeletionTracker {
@@ -332,7 +330,7 @@ func (sd *ScaleDown) calculateScaleDownCustomResourcesTotal(nodes []*apiv1.Node,
 			// - hence the reflection check.
 			// See https://golang.org/doc/faq#nil_error
 			// DOTO[lukaszos] consider creating cloud_provider sanitizer which will wrap cloud provider
-			// and ensure sane behaviour.
+			// and ensure sane behavior.
 			nodeGroup = nil
 		}
 
@@ -382,6 +380,7 @@ func copyScaleDownResourcesLimits(source scaleDownResourcesLimits) scaleDownReso
 	return copy
 }
 
+// nolint
 func (sd *ScaleDown) computeScaleDownResourcesDelta(cp cloudprovider.CloudProvider,
 	node *apiv1.Node,
 	nodeGroup cloudprovider.NodeGroup,
@@ -577,6 +576,7 @@ func (sd *ScaleDown) checkNodeUtilization(timestamp time.Time, node *apiv1.Node,
 // * timestamp is the current timestamp.
 // * pdbs is a list of pod disruption budgets.
 // NOCC:golint/fnsize(设计如此)
+// nolint funlen
 func (sd *ScaleDown) UpdateUnneededNodes(
 	destinationNodes []*apiv1.Node,
 	scaleDownCandidates []*apiv1.Node,
@@ -758,6 +758,7 @@ func (sd *ScaleDown) checkScaleDownCandidates(scaleDownCandidates []*apiv1.Node,
 	return skipped, utilizationMap, currentlyUnneededNodeNames
 }
 
+// nolint
 func (sd *ScaleDown) findAdditionalCandidates(allNodeInfos []*schedulerframework.NodeInfo,
 	currentCandidates, currentNonCandidates []string, destinations []string,
 	timestamp time.Time, pdbs []*policyv1.PodDisruptionBudget,
@@ -839,7 +840,7 @@ func (sd *ScaleDown) isNodeBelowUtilizationThreshold(node *apiv1.Node, nodeGroup
 // state of the cluster. Removes from the map nodes that are no longer in the
 // nodes list.
 func (sd *ScaleDown) updateUnremovableNodes(timestamp time.Time) {
-	if len(sd.unremovableNodes) <= 0 {
+	if len(sd.unremovableNodes) == 0 {
 		return
 	}
 	newUnremovableNodes := make(map[string]time.Time, len(sd.unremovableNodes))
@@ -973,6 +974,7 @@ func (sd *ScaleDown) SoftTaintUnneededNodes(allNodes []*apiv1.Node) (errors []er
 // TryToScaleDown tries to scale down the cluster. It returns a result inside a ScaleDownStatus indicating
 // if any node was removed and error if such occurred.
 // NOCC:golint/fnsize(设计如此)
+// nolint funlen
 func (sd *ScaleDown) TryToScaleDown(
 	currentTime time.Time,
 	pdbs []*policyv1.PodDisruptionBudget,
@@ -1185,6 +1187,7 @@ func (sd *ScaleDown) filterNode(nodes []*apiv1.Node,
 }
 
 // NOCC:golint/fnsize(设计如此)
+// nolint
 func (sd *ScaleDown) checkNodeRemovable(nodeName string,
 	unneededSince time.Time, currentTime time.Time,
 	nodeGroupSize map[string]int, resourceLimiter *cloudprovider.ResourceLimiter,
@@ -1652,6 +1655,7 @@ func evictPod(podToEvict *apiv1.Pod, isDaemonSetPod bool, client kube_client.Int
 // Performs drain logic on the node. Marks the node as unschedulable and later removes all pods, giving
 // them up to MaxGracefulTerminationTime to finish.
 // NOCC:golint/fnsize(设计如此)
+// nolint funlen
 func drainNode(node *apiv1.Node, pods []*apiv1.Pod, daemonSetPods []*apiv1.Pod,
 	client kube_client.Interface, recorder kube_record.EventRecorder,
 	maxGracefulTerminationSec int, maxPodEvictionTime time.Duration, waitBetweenRetries time.Duration,
@@ -1688,7 +1692,7 @@ func drainNode(node *apiv1.Node, pods []*apiv1.Pod, daemonSetPods []*apiv1.Pod,
 				metrics.RegisterEvictions(1)
 			}
 		case <-daemonSetConfirmations:
-		case <-time.After(retryUntil.Sub(time.Now()) + 5*time.Second):
+		case <-time.After(retryUntil.Sub(time.Now()) + 5*time.Second): // nolint
 			if podsEvictionCounter < len(pods) {
 				// All pods initially had results with TimedOut set to true, so the ones that
 				// didn't receive an actual result are correctly marked as timed out.

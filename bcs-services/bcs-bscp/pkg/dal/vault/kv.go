@@ -63,6 +63,7 @@ func (s *set) GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType table.Dat
 
 	kvTypeStr, ok := kv.Data["kv_type"].(string)
 	if !ok {
+		// nolint goconst
 		return "", "", fmt.Errorf("failed to get 'kv_type' as a string from kv.Data,"+
 			" err : %v", err)
 	}

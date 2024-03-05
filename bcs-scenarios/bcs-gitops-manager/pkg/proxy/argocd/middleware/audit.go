@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package middleware
@@ -18,40 +17,62 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/component"
 )
 
 var (
-	ApplicationCreate          = "application_create"
-	ApplicationUpdate          = "application_update"
-	ApplicationSync            = "application_sync"
-	ApplicationRollback        = "application_rollback"
-	ApplicationDelete          = "application_delete"
-	ApplicationPatchResource   = "application_patch_resource"
-	ApplicationDeleteResource  = "application_resource_delete"
-	ApplicationClean           = "application_clean"
+	// ApplicationCreate xxx
+	ApplicationCreate = "application_create"
+	// ApplicationUpdate xxx
+	ApplicationUpdate = "application_update"
+	// ApplicationSync xxx
+	ApplicationSync = "application_sync"
+	// ApplicationRollback xxx
+	ApplicationRollback = "application_rollback"
+	// ApplicationDelete xxx
+	ApplicationDelete = "application_delete"
+	// ApplicationPatchResource xxx
+	ApplicationPatchResource = "application_patch_resource"
+	// ApplicationDeleteResource xxx
+	ApplicationDeleteResource = "application_resource_delete"
+	// ApplicationClean xxx
+	ApplicationClean = "application_clean"
+	// ApplicationDeleteResources xxx
 	ApplicationDeleteResources = "application_multiple_resources_delete"
-	ApplicationGRPCOperate     = "application_grpc_operate"
+	// ApplicationGRPCOperate xxx
+	ApplicationGRPCOperate = "application_grpc_operate"
 
+	// ApplicationSetCreateOrUpdate xxx
 	ApplicationSetCreateOrUpdate = "applicationset_create_or_update"
-	ApplicationSetDelete         = "applicationset_delete"
-	ApplicationSetGenerate       = "applicationset_generate"
+	// ApplicationSetDelete xxx
+	ApplicationSetDelete = "applicationset_delete"
+	// ApplicationSetGenerate xxx
+	ApplicationSetGenerate = "applicationset_generate"
 
+	// ProjectOpen xxx
 	ProjectOpen = "project_open"
 
+	// RepositoryCreate xxx
 	RepositoryCreate = "repository_create"
+	// RepositoryDelete xxx
 	RepositoryDelete = "repository_delete"
+	// RepositoryUpdate xxx
 	RepositoryUpdate = "repository_update"
 
-	SecretCreate   = "secret_create"
-	SecretUpdate   = "secret_update"
-	SecretDelete   = "secret_delete"
+	// SecretCreate xxx
+	SecretCreate = "secret_create"
+	// SecretUpdate xxx
+	SecretUpdate = "secret_update"
+	// SecretDelete xxx
+	SecretDelete = "secret_delete"
+	// SecretRollback xxx
 	SecretRollback = "secret_rollback"
 
+	// WebhookTriggered xxx
 	WebhookTriggered = "webhook_triggered"
 )
 
@@ -78,6 +99,7 @@ func getRequestSourceIP(req *http.Request) string {
 	return ip
 }
 
+// nolint
 func handleAudit(req *http.Request, resp *HttpResponse, start, end time.Time) {
 	method := req.Method
 	if method != http.MethodPost && method != http.MethodPut && method != http.MethodDelete {

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package apiclient
@@ -27,6 +26,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/utils"
 )
@@ -41,7 +41,7 @@ const (
 )
 
 const (
-	envNameBKMFullAuthToken = "BKM_FULL_AUTH_TOKEN"
+	envNameBKMFullAuthToken = "BKM_FULL_AUTH_TOKEN" // nolint
 	envNameBKMAPIDomain     = "BKM_API_DOMAIN"
 )
 
@@ -152,16 +152,16 @@ func (b *BkmApiClient) UploadConfig(bizID, bizToken, configPath, app string, ove
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("file", filepath.Base(configPath))
+	part, _ := writer.CreateFormFile("file", filepath.Base(configPath))
 	_, _ = io.Copy(part, request)
 
 	_ = writer.WriteField(fieldBkBizID, bizID)
 	_ = writer.WriteField(fieldApp, app)
 	_ = writer.WriteField(fieldOverwrite, strconv.FormatBool(overwrite))
-	writer.Close()
+	writer.Close() // nolint not checked
 
 	url := fmt.Sprintf("%s/rest/v2/as_code/import_config_file/", b.MonitorURL)
-	req, err := http.NewRequest("POST", url, body)
+	req, _ := http.NewRequest("POST", url, body)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", bizToken))
 	req.Header.Add("Content-Type", writer.FormDataContentType())
 	req.Header.Add("X-Async-Task", "True")
@@ -236,7 +236,7 @@ func (b *BkmApiClient) DownloadConfig(bizID, bizToken string) error {
 		mf(StatusErr)
 		return fmt.Errorf("json marshal failed, raw value: %s, err: %w", string(respBody), err)
 	}
-	if downloadConfigResp.Code != http.StatusOK || downloadConfigResp.Result != true {
+	if downloadConfigResp.Code != http.StatusOK || !downloadConfigResp.Result {
 		mf(StatusErr)
 		return fmt.Errorf("error status, resp: %s", string(respBody))
 	}

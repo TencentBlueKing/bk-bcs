@@ -17,14 +17,14 @@ import (
 	"fmt"
 	"strings"
 
-	blog "k8s.io/klog/v2"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/storage"
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
+	blog "k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/storage"
 )
 
 const (
@@ -119,7 +119,7 @@ type StorageCli struct {
 
 // QueryK8sReplicaSet query k8s replicaset in specified cluster and namespace
 func (c *StorageCli) QueryK8sReplicaSet(cluster, namespace, name string) ([]*storage.ReplicaSet, error) {
-	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/ReplicaSet?"
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/ReplicaSet?" // nolint
 	if name != "" {
 		subPath += "resourceName=" + name + "&"
 	}

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package dao
@@ -17,12 +16,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	_ "github.com/go-sql-driver/mysql" // nolint
 	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao/mysqlrate"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
@@ -111,7 +110,7 @@ func (d *driver) ListActivityUser(project string) ([]ActivityUser, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "query activity users failed")
 	}
-	defer rows.Close()
+	defer rows.Close() // nolint
 
 	result := make([]ActivityUser, 0)
 	for rows.Next() {
@@ -136,7 +135,7 @@ func (d *driver) GetActivityUser(project, user string) (*ActivityUser, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "get activity user failed")
 	}
-	defer rows.Close()
+	defer rows.Close() // nolint
 
 	result := make([]*ActivityUser, 0)
 	for rows.Next() {
@@ -169,7 +168,7 @@ func (d *driver) ListSyncInfosForProject(project string) ([]SyncInfo, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "query resource preferences failed")
 	}
-	defer rows.Close()
+	defer rows.Close() // nolint
 
 	result := make([]SyncInfo, 0)
 	for rows.Next() {
@@ -191,7 +190,7 @@ func (d *driver) GetSyncInfo(project, cluster, app, phase string) (*SyncInfo, er
 	if err != nil {
 		return nil, errors.Wrapf(err, "get syncinfo failed")
 	}
-	defer rows.Close()
+	defer rows.Close() // nolint
 
 	result := make([]SyncInfo, 0)
 	for rows.Next() {
@@ -244,7 +243,7 @@ func (d *driver) ListResourcePreferences(project, resourceType string) ([]Resour
 	if err != nil {
 		return nil, errors.Wrapf(err, "query resource preferences failed")
 	}
-	defer rows.Close()
+	defer rows.Close() // nolint
 
 	result := make([]ResourcePreference, 0)
 	for rows.Next() {
@@ -271,7 +270,7 @@ func (d *driver) GetApplicationHistoryManifest(appName, appUID string,
 	if err != nil {
 		return nil, errors.Wrapf(err, "get application history manifest failed")
 	}
-	defer rows.Close()
+	defer rows.Close() // nolint
 
 	result := make([]ApplicationHistoryManifest, 0)
 	for rows.Next() {

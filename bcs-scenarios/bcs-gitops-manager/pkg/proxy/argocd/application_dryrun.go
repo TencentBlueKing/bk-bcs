@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package argocd
@@ -21,6 +20,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	"github.com/pkg/errors"
@@ -34,9 +35,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 
-	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
@@ -209,6 +207,7 @@ func buildDiffOrDryRunRequest(r *http.Request) (*ApplicationDiffOrDryRunRequest,
 	return req, nil
 }
 
+// nolint
 func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context, req *ApplicationDiffOrDryRunRequest,
 	application *v1alpha1.Application, isDryRun bool) ([]*Manifest, error) {
 	originalApplication := application.DeepCopy()
@@ -333,6 +332,7 @@ func decodeManifest(application *v1alpha1.Application,
 // manifestDryRun will check every resource's manifest existed in Kubernetes cluster.
 // If not exist, just save the manifest and no need to compare. If existed, there need
 // to compare with live.
+// nolint
 func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Application,
 	manifests []*Manifest) ([]*Manifest, error) {
 	clusterServer := app.Spec.Destination.Server

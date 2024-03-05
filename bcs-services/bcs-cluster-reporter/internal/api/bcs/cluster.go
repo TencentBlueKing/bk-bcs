@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -23,9 +23,10 @@ import (
 	"time"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/rest"
 	k8srest "k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/rest"
 )
 
 // GetClusters get clustermanager clusters by ids
@@ -45,7 +46,7 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 		clusterIds = append(clusterIds, "")
 	}
 
-	resultList := make([]cmproto.Cluster, 0, 0)
+	resultList := make([]cmproto.Cluster, 0)
 	for _, clusterId := range clusterIds {
 		svcUrl, _ := url.Parse(cm.url + _urlMap["GetClusters"])
 		if clusterId != "" {
@@ -71,7 +72,7 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 		}
 
 		clusterData, _ := json.Marshal(result.Data)
-		clusterList := make([]cmproto.Cluster, 0, 0)
+		clusterList := make([]cmproto.Cluster, 0)
 		err = json.Unmarshal(clusterData, &clusterList)
 		if err != nil {
 			cluster := cmproto.Cluster{}
@@ -123,7 +124,7 @@ func (cm *ClusterManager) GetNodesByClusterId(clusterId string) ([]cmproto.Node,
 	}
 
 	nodeData, _ := json.Marshal(result.Data)
-	nodeList := make([]cmproto.Node, 0, 0)
+	nodeList := make([]cmproto.Node, 0)
 	err = json.Unmarshal(nodeData, &nodeList)
 	if err != nil {
 		e := fmt.Errorf("unmarshal cluster response failed %s", err.Error())
@@ -165,7 +166,7 @@ func (cm *ClusterManager) GetNode(ip string) (*cmproto.Node, error) {
 	}
 
 	nodeData, _ := json.Marshal(result.Data)
-	nodeList := make([]cmproto.Node, 0, 0)
+	nodeList := make([]cmproto.Node, 0)
 	err = json.Unmarshal(nodeData, &nodeList)
 	if err != nil {
 		e := fmt.Errorf("Unmarshal getnode response failed %s", err.Error())

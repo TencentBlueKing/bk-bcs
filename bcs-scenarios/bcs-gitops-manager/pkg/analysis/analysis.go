@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package analysis xxx
@@ -21,18 +20,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 )
 
 // AnalysisInterface defines the analysis data interface
+// nolint
 type AnalysisInterface interface {
 	Init() error
 	Start(ctx context.Context) error
@@ -48,6 +48,7 @@ type AnalysisInterface interface {
 }
 
 // AnalysisClient defines the client that to handle analysis data
+// nolint
 type AnalysisClient struct {
 	db           dao.Interface
 	metricConfig *common.MetricConfig
@@ -192,6 +193,7 @@ var (
 
 // parseAppMetrics will get the argocd application-controller's metrics, and then parse
 // them to get the sync info of every application and cluster
+// nolint funlen
 func (c *AnalysisClient) parseAppMetrics(ctx context.Context) []*dao.SyncInfo {
 	ns := c.metricConfig.AppMetricNamespace
 	name := c.metricConfig.AppMetricName

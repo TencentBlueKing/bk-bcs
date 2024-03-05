@@ -36,7 +36,7 @@ const (
 	DefaultBcsEndpoints = "bcsdefault"
 	// EndpointsEventKindLabelKey xxx
 	// values should be AlarmType's values
-	EndpointsEventKindLabelKey = "bcs-endpoints-event-kind"
+	EndpointsEventKindLabelKey = "bcs-endpoints-event-kind" // nolint
 	// DataIDLabelKey xxx
 	DataIDLabelKey = "bcs-health-dataid"
 )

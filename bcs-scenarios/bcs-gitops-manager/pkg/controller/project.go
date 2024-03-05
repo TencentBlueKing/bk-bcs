@@ -16,12 +16,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
 )
 
 // ProjectControl for bcs project data sync
@@ -48,9 +47,9 @@ type project struct {
 
 // Init controller
 func (control *project) Init() error {
-	//if control.option.Mode == common.ModeService {
+	// if control.option.Mode == common.ModeService {
 	//	return fmt.Errorf("service mode is not implenmented")
-	//}
+	// }
 	// init with raw grpc connection
 	if err := control.initClient(); err != nil {
 		return err
@@ -93,7 +92,7 @@ func (control *project) GetProject(ctx context.Context, projectCode string) (*bc
 }
 
 func (control *project) initClient() error {
-	//create grpc connection
+	// create grpc connection
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",

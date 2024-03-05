@@ -158,6 +158,7 @@ func (n *Node) Stop() {
 // selfLoop check self node & ends
 // for zookeeper, it's not easy to iterate all data when Synchronization,
 // so after watch data nodes, we decide to force sync datas every 45 seconds
+// nolint
 func (n *Node) selfLoop() {
 	if n.isStopped {
 		return

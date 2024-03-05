@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package runner
@@ -20,16 +19,16 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/secret"
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/utils"
 )
 
 // var genericPlaceholder, _ = regexp.Compile(`(?mU)<(.*)>`)
-var specificPathPlaceholder, _ = regexp.Compile(`(?mU)<path:([^#]+)#([^#]+)(?:#([^#]+))?>`)
-var indivPlaceholderSyntax, _ = regexp.Compile(`(?mU)path:(?P<project>[^/]+)/data/(?P<path>[^#]+?)#(?P<key>[^#]+?)(?:#(?P<version>.+?))??`)
+var specificPathPlaceholder, _ = regexp.Compile(`(?mU)<path:([^#]+)#([^#]+)(?:#([^#]+))?>`)                                                 // nolint
+var indivPlaceholderSyntax, _ = regexp.Compile(`(?mU)path:(?P<project>[^/]+)/data/(?P<path>[^#]+?)#(?P<key>[^#]+?)(?:#(?P<version>.+?))??`) // nolint
 
 // GenerateSecretForTF 通过GitOps密钥管理接口渲染provider声明的vault格式AKSK
 func (t *terraformLocalRunner) GenerateSecretForTF(ctx context.Context, workdir string) error {

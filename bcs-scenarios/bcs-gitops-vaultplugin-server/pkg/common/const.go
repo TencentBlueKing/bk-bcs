@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package common xxx
 package common
 
 const (
@@ -20,38 +21,38 @@ const (
 	}
 	`
 
-	//VaultVersion vault engine version, for secret version management and control.
+	// VaultVersion vault engine version, for secret version management and control.
 	VaultVersion = "2"
 
 	// default secret plugin type
-	secretTypeEnvKey  = "secretType"
-	defaultSecretType = "vault"
+	secretTypeEnvKey  = "secretType" // nolint unused
+	defaultSecretType = "vault"      // nolint unused
 
 	// default secret plugin addr
-	secretEndpointEnvKey = "secretEndpoints"
+	secretEndpointEnvKey = "secretEndpoints" // nolint unused
 	// NOCC:gas/crypto(工具误报)
-	defaultSecretEndpoint = "https://bcs-gitops-vault.default.svc.cluster.local:8200"
+	defaultSecretEndpoint = "https://bcs-gitops-vault.default.svc.cluster.local:8200" // nolint unused
 
 	// default secret car dir
-	secretCaDirEnvKey  = "vaultCacert"
-	defaultSecretCaDir = "/data/bcs/certs/vaultca"
+	secretCaDirEnvKey  = "vaultCacert"             // nolint unused
+	defaultSecretCaDir = "/data/bcs/certs/vaultca" // nolint
 
 	// default vault secret namespace
-	vaultSecretNamespaceEnvKey  = "vaultSecretNamespace"
-	defaultVaultSecretNamespace = "default"
+	vaultSecretNamespaceEnvKey  = "vaultSecretNamespace" // nolint unused
+	defaultVaultSecretNamespace = "default"              // nolint unused
 
 	defaultProjectSecretName = "vault-secret-%s"
 	// VaultSecretPattern vault token info for project, mounts, token, ca
 	VaultSecretPattern = "%s:%s"
 
-	vaultTokenForServerEnvKey = "secretToken"
+	vaultTokenForServerEnvKey = "secretToken" // nolint unused
 
 	// GitopsServiceEnvKey gitops service name environment
-	GitopsServiceEnvKey = "GITOPS_SERVICE"
+	GitopsServiceEnvKey = "GITOPS_SERVICE" // nolint unused
 	// GitopsUser gitops service user name environment
-	GitopsUser = "GITOPS_USER"
+	GitopsUser = "GITOPS_USER" // nolint unused
 	// GitopsPassword gitops service password environment
-	GitopsPassword = "GITOPS_PASSWORD"
+	GitopsPassword = "GITOPS_PASSWORD" // nolint unused
 	// GitopsAdminNamespace gitops service namespace environment
-	GitopsAdminNamespace = "GITOPS_ADMIN_NAMESPACE"
+	GitopsAdminNamespace = "GITOPS_ADMIN_NAMESPACE" // nolint unused
 )

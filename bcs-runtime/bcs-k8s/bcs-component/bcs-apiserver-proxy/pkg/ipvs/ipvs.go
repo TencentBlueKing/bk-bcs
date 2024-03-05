@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package ipvs xxx
@@ -30,12 +29,14 @@ type Interface interface {
 	Flush() error
 	// AddVirtualServer creates the specified virtual server.
 	AddVirtualServer(*VirtualServer) error
-	// UpdateVirtualServer updates an already existing virtual server.  If the virtual server does not exist, return error.
+	// UpdateVirtualServer updates an already existing virtual server.
+	// If the virtual server does not exist, return error.
 	UpdateVirtualServer(*VirtualServer) error
 	// DeleteVirtualServer deletes the specified virtual server.  If the virtual server does not exist, return error.
 	DeleteVirtualServer(*VirtualServer) error
 	// GetVirtualServer xxx
-	// Given a partial virtual server, IsVirtualServerAvailable will return the specified virtual server information in the system.
+	// Given a partial virtual server,
+	// IsVirtualServerAvailable will return the specified virtual server information in the system.
 	GetVirtualServer(*VirtualServer) (*VirtualServer, error)
 	// GetVirtualServers lists all virtual servers in the system.
 	GetVirtualServers() ([]*VirtualServer, error)

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package app xxx
@@ -67,7 +66,7 @@ func initConfig() error {
 	}
 
 	zapProd, _ := zap.NewProduction()
-	defer zapProd.Sync() // flushes buffer, if any
+	defer zapProd.Sync() // nolint flushes buffer, if any
 	logger := zapProd.Sugar()
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -125,7 +124,7 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 // Run 运行服务
 func Run(bindAddress string) error {
 	logger, _ := zap.NewProduction()
-	defer logger.Sync()
+	defer logger.Sync() // nolint
 	zap.ReplaceGlobals(logger)
 
 	sugar := logger.Sugar()
@@ -139,7 +138,7 @@ func Run(bindAddress string) error {
 	if err != nil {
 		return err
 	}
-	defer ln.Close()
+	defer ln.Close() // nolint
 
 	r := mux.NewRouter()
 

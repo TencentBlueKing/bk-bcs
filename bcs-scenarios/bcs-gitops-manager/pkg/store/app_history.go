@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package store
@@ -19,11 +18,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 )
 
@@ -54,6 +53,7 @@ func (s *appHistoryStore) handle(ch chan *v1alpha1.Application) {
 	}
 }
 
+// nolint funlen
 func (s *appHistoryStore) handleApplication(item *v1alpha1.Application) error {
 	if len(item.Status.History) == 0 {
 		blog.Warnf("[HistoryStore] application '%s' have not history", item.Name)

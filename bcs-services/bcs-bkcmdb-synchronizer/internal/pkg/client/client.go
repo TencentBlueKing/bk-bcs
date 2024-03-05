@@ -16,7 +16,7 @@ package client
 import (
 	"context"
 
-	bkcmdbkube "configcenter/src/kube/types"
+	bkcmdbkube "configcenter/src/kube/types" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"

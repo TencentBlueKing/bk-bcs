@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package main xxx
 package main
 
 import (
@@ -59,6 +60,7 @@ var (
 	metricPort          uint
 )
 
+// nolint funlen
 func main() {
 	runConfig := app.NewServerRunOptions()
 	options := validator.NewServerRunOptions()
@@ -76,7 +78,7 @@ func main() {
 	klog.Infof("starting validator server.")
 	if err := options.Validate(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+		os.Exit(1) // nolint
 	}
 	go func() {
 		if err := validator.Run(options); err != nil {
@@ -111,7 +113,7 @@ func main() {
 	scaleKindResolver := scale.NewDiscoveryScaleKindResolver(client.Discovery())
 	scaleClient, err := scale.NewForConfig(kubeconfig, restMapper, dynamic.LegacyAPIPathResolverFunc, scaleKindResolver)
 	if err != nil {
-		klog.Fatal("Failed to build scale client %v", err)
+		klog.Fatalf("Failed to build scale client %v", err)
 	}
 
 	apiVersionsGetter := custom_metrics.NewAvailableAPIsGetter(gpaClient.Discovery())
