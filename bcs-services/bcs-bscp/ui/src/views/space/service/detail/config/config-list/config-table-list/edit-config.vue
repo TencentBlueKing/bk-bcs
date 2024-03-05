@@ -16,6 +16,7 @@
         :editable="true"
         :bk-biz-id="props.bkBizId"
         :id="props.appId"
+        :file-size-limit="spaceFeatureFlags.RESOURCE_LIMIT.maxFileSize"
         @change="handleChange" />
     </bk-loading>
     <section class="action-btns">
@@ -45,10 +46,12 @@
   } from '../../../../../../../api/config';
   import { getConfigEditParams } from '../../../../../../../utils/config';
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
+  import useGlobalStore from '../../../../../../../store/global';
   import useConfigStore from '../../../../../../../store/config';
   import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
 
   const { t } = useI18n();
+  const { spaceFeatureFlags } = storeToRefs(useGlobalStore());
   const { versionData } = storeToRefs(useConfigStore());
 
   const props = defineProps<{

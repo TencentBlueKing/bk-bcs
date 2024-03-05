@@ -1,7 +1,11 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item :label="t('配置文件绝对路径')" property="fileAP" :required="true">
-      <bk-input v-model="localVal.fileAP" :placeholder="t('请输入配置文件的绝对路径')" :disabled="!editable" @input="change" />
+      <bk-input
+        v-model="localVal.fileAP"
+        :placeholder="t('请输入配置文件的绝对路径')"
+        :disabled="!editable"
+        @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('配置文件描述')" property="memo">
       <bk-input
@@ -85,8 +89,8 @@
         class="config-uploader"
         url=""
         theme="button"
-        :tip="t('文件大小100M以内')"
-        :size="100"
+        :tip="t('文件大小{size}M以内', { size: props.fileSizeLimit })"
+        :size="props.fileSizeLimit"
         :disabled="!editable"
         :multiple="false"
         :files="fileList"
@@ -118,6 +122,7 @@
         :content="stringContent"
         :editable="editable"
         :variables="props.variables"
+        :size-limit="props.fileSizeLimit"
         @change="handleStringContentChange" />
     </bk-form-item>
   </bk-form>
@@ -161,10 +166,12 @@
       bkBizId: string;
       id: number; // 服务ID或者模板空间ID
       fileUploading?: boolean;
+      fileSizeLimit?: number;
       isTpl?: boolean; // 是否未模板配置文件，非模板配置文件和模板配置文件的上传、下载接口参数有差异
     }>(),
     {
       editable: true,
+      fileSizeLimit: 100,
     },
   );
 
@@ -347,7 +354,7 @@
     const { signature, name } = fileContent.value as IFileConfigContentSummary;
     const getContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
     const res = await getContent(props.bkBizId, props.id, signature);
-    fileDownload(res, `${name}.bin`);
+    fileDownload(res, name);
   };
 
   const validate = async () => {
@@ -358,8 +365,8 @@
         return false;
       }
     } else if (localVal.value.file_type === 'text') {
-      if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * 50) {
-        BkMessage({ theme: 'error', message: t('配置内容不能超过50M') });
+      if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * props.fileSizeLimit) {
+        BkMessage({ theme: 'error', message: t('配置内容不能超过{size}M', { size: props.fileSizeLimit }) });
         return false;
       }
     }

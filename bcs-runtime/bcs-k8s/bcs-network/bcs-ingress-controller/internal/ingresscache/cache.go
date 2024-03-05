@@ -21,6 +21,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -42,7 +43,7 @@ func NewDefaultCache() *Cache {
 func (c *Cache) Add(ingress *networkextensionv1.Ingress) {
 	ingressKey := buildIngressKey(ingress.GetNamespace(), ingress.GetName())
 	for _, rule := range ingress.Spec.Rules {
-		if strings.ToLower(rule.Protocol) == "tcp" || strings.ToLower(rule.Protocol) == "udp" {
+		if common.InLayer4Protocol(rule.Protocol) {
 			for _, route := range rule.Services {
 				ns := route.ServiceNamespace
 				if ns == "" {
@@ -52,7 +53,7 @@ func (c *Cache) Add(ingress *networkextensionv1.Ingress) {
 				c.serviceCache.add(svcKey, ingressKey)
 			}
 		}
-		if strings.ToLower(rule.Protocol) == "http" || strings.ToLower(rule.Protocol) == "https" {
+		if common.InLayer7Protocol(rule.Protocol) {
 			for _, httpRoute := range rule.Routes {
 				for _, route := range httpRoute.Services {
 					ns := route.ServiceNamespace
@@ -75,7 +76,7 @@ func (c *Cache) Add(ingress *networkextensionv1.Ingress) {
 func (c *Cache) Remove(ingress *networkextensionv1.Ingress) {
 	ingressKey := buildIngressKey(ingress.GetNamespace(), ingress.GetName())
 	for _, rule := range ingress.Spec.Rules {
-		if strings.ToLower(rule.Protocol) == "tcp" || strings.ToLower(rule.Protocol) == "udp" {
+		if common.InLayer4Protocol(rule.Protocol) {
 			for _, route := range rule.Services {
 				ns := route.ServiceNamespace
 				if ns == "" {
@@ -85,7 +86,7 @@ func (c *Cache) Remove(ingress *networkextensionv1.Ingress) {
 				c.serviceCache.remove(svcKey, ingressKey)
 			}
 		}
-		if strings.ToLower(rule.Protocol) == "http" || strings.ToLower(rule.Protocol) == "https" {
+		if common.InLayer7Protocol(rule.Protocol) {
 			for _, httpRoute := range rule.Routes {
 				for _, route := range httpRoute.Services {
 					ns := route.ServiceNamespace

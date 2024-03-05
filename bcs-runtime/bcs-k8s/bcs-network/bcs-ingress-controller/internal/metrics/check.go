@@ -37,7 +37,7 @@ var (
 		Subsystem: "portbinding",
 		Name:      "conflict",
 		Help:      "The conflict portbinding gauge",
-	}, []string{"conflict_key"})
+	}, []string{"conflict_key", "namespaced_name"})
 )
 
 func init() {

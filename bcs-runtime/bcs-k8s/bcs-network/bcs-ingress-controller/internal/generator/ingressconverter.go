@@ -534,7 +534,7 @@ func (g *IngressConverter) CheckIngressServiceAvailable(ingress *networkextensio
 	msgSet := make(map[string]struct{})
 	for i, rule := range ingress.Spec.Rules {
 		protocol := strings.ToLower(rule.Protocol)
-		if protocol == networkextensionv1.ProtocolUDP || protocol == networkextensionv1.ProtocolTCP {
+		if common.InLayer4Protocol(protocol) {
 			if len(rule.Services) == 0 {
 				msgSet[fmt.Sprintf(constant.ValidateMsgEmptySvc, i+1)] = struct{}{}
 				continue
@@ -555,7 +555,7 @@ func (g *IngressConverter) CheckIngressServiceAvailable(ingress *networkextensio
 			}
 		}
 
-		if protocol == networkextensionv1.ProtocolHTTP || protocol == networkextensionv1.ProtocolHTTPS {
+		if common.InLayer7Protocol(protocol) {
 			for j, route := range rule.Routes {
 				if len(route.Services) == 0 {
 					msgSet[fmt.Sprintf(constant.ValidateRouteMsgEmptySvc, i+1, j+1)] = struct{}{}

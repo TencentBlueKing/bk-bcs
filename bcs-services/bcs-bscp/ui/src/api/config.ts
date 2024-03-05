@@ -490,3 +490,23 @@ export const batchImportKvFile = (bizId: string, appId: number, File: any) =>
  */
 export const getExportKvFile = (bizId: string, appId: number, releaseId: number, format: string) =>
   http.get(`biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs/export`, { params: { format } });
+
+/**
+ * 撤销修改配置文件
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param id 配置文件ID
+ * @returns
+ */
+export const unModifyConfigItem = (bizId: string, appId: number, id: number) =>
+  http.post(`/config/undo/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`);
+
+/**
+ * 恢复删除配置文件
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param id 配置文件ID
+ * @returns
+ */
+export const unDeleteConfigItem = (bizId: string, appId: number, id: number) =>
+  http.post(`/config/undelete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`);

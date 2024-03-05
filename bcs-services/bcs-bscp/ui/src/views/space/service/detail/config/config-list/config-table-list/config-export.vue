@@ -1,5 +1,12 @@
 <template>
-  <bk-popover :arrow="false" placement="bottom-start" theme="light export-config-button-popover">
+  <bk-popover
+    ref="buttonRef"
+    :arrow="false"
+    placement="bottom-start"
+    theme="light export-config-button-popover"
+    trigger="click"
+    @after-show="isPopoverOpen = true"
+    @after-hidden="isPopoverOpen = false">
     <bk-button>{{ $t('导出至') }}</bk-button>
     <template #content>
       <div class="export-config-operations">
@@ -13,8 +20,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue';
-  import jsyaml from 'js-yaml';
+  import { computed, ref } from 'vue';
   import { getExportKvFile } from '../../../../../../../api/config';
   import { storeToRefs } from 'pinia';
   import useServiceStore from '../../../../../../../store/service';
@@ -27,6 +33,9 @@
     versionId: number;
     versionName: string;
   }>();
+
+  const buttonRef = ref();
+  const isPopoverOpen = ref(false);
 
   const exportItem = computed(() => [
     {
@@ -41,7 +50,7 @@
 
   const handleExport = async (type: string) => {
     const res = await getExportKvFile(props.bkBizId, props.appId, props.versionId, type);
-    let content: string;
+    let content: any;
     let mimeType: string;
     let extension: string;
     const prefix = props.versionId ? `${appData.value.spec.name}_${props.versionName}` : `${appData.value.spec.name}`;
@@ -50,14 +59,15 @@
       mimeType = 'application/json';
       extension = 'json';
     } else {
-      content = jsyaml.dump(res).replace(/^\|(\s*\n)/, '');
+      content = res;
       mimeType = 'text/yaml';
       extension = 'yaml';
     }
+    buttonRef.value.hide();
     downloadFile(content, mimeType, `${prefix}.${extension}`);
   };
 
-  const downloadFile = (content: string, mimeType: string, fileName: string) => {
+  const downloadFile = (content: any, mimeType: string, fileName: string) => {
     const blob = new Blob([content], { type: mimeType });
     const downloadUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');

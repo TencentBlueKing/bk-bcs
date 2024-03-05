@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
-	"strings"
 
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -29,6 +28,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
@@ -91,8 +91,8 @@ func (rc *RuleConverter) SetTCPUDPPortReuse(isTCPUDPPortReuse bool) {
 // DoConvert do convert action
 func (rc *RuleConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 	var retListeners []networkextensionv1.Listener
-	switch strings.ToLower(rc.rule.Protocol) {
-	case networkextensionv1.ProtocolHTTP, networkextensionv1.ProtocolHTTPS:
+	protocol := rc.rule.Protocol
+	if common.InLayer7Protocol(protocol) {
 		for _, lb := range rc.lbs {
 			listener, err := rc.generate7LayerListener(lb.Region, lb.LbID)
 			if err != nil {
@@ -100,7 +100,7 @@ func (rc *RuleConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 			}
 			retListeners = append(retListeners, *listener)
 		}
-	case networkextensionv1.ProtocolTCP, networkextensionv1.ProtocolUDP:
+	} else if common.InLayer4Protocol(protocol) {
 		for _, lb := range rc.lbs {
 			listener, err := rc.generate4LayerListener(lb.Region, lb.LbID)
 			if err != nil {
@@ -108,7 +108,7 @@ func (rc *RuleConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 			}
 			retListeners = append(retListeners, *listener)
 		}
-	default:
+	} else {
 		blog.Errorf("invalid protocol %s", rc.rule.Protocol)
 		return nil, fmt.Errorf("invalid protocol %s", rc.rule.Protocol)
 	}
@@ -279,7 +279,8 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 		blog.Warnf("port %d is not found in service %s/%s",
 			svcRoute.ServicePort, svcRoute.ServiceName, svcNamespace)
 		rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
-			fmt.Sprintf("port %d is not found in service %s/%s", svcRoute.ServicePort, svcRoute.ServiceName, svcNamespace))
+			fmt.Sprintf("port %d is not found in service %s/%s, please add port definition on service",
+				svcRoute.ServicePort, svcRoute.ServiceName, svcNamespace))
 		return nil, nil
 	}
 
@@ -410,7 +411,8 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 		}
 		if !found {
 			rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
-				fmt.Sprintf("port %s is not found in pod %s/%s", svcPort.TargetPort.String(), pod.Namespace, pod.Name))
+				fmt.Sprintf("port %s is not found in pod %s/%s, please add port definition on pod(containerPort)",
+					svcPort.TargetPort.String(), pod.Namespace, pod.Name))
 		}
 	}
 	return retBackends, nil
@@ -424,6 +426,10 @@ func (rc *RuleConverter) getNodePortBackends(
 	if svcPort.NodePort <= 0 {
 		blog.Warnf("get no node port of service %s/%s 's port %+v",
 			svc.GetNamespace(), svc.GetName(), svcPort)
+		rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+			fmt.Sprintf("get no node port of service %s/%s 's port %+v, "+
+				"please check if service type is NodePort or LoadBalancer",
+				svc.GetNamespace(), svc.GetName(), svcPort))
 		return nil, nil
 	}
 

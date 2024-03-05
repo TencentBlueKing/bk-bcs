@@ -15,8 +15,15 @@
         @deleted="handleConfigsDeleted" />
     </template>
     <template #columnOperations="{ config }">
-      <bk-button theme="primary" text @click="handleAddToPkgsClick(config)">{{ t('添加至') }}</bk-button>
-      <bk-button class="delete-btn" theme="primary" text @click="handleDeleteClick(config)">{{ t('删除') }}</bk-button>
+      <bk-button class="opt-btn" theme="primary" text @click="handleAddToPkgsClick(config)">
+        {{ t('添加至') }}
+      </bk-button>
+      <bk-button class="opt-btn" theme="primary" text @click="handleDeleteClick(config)">{{ t('删除') }}</bk-button>
+      <DownloadConfig
+        class="opt-btn"
+        :space-id="spaceId"
+        :template-space-id="currentTemplateSpace"
+        :template-id="config.id" />
     </template>
   </CommonConfigTable>
   <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="selectedConfigs" @added="refreshConfigList" />
@@ -39,6 +46,7 @@
   import AddToDialog from '../operations/add-to-pkgs/add-to-dialog.vue';
   import DeleteConfigs from '../operations/delete-configs/delete-button.vue';
   import DeleteConfigDialog from '../operations/delete-configs/delete-config-dialog.vue';
+  import DownloadConfig from '../operations/download-config/download-config.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
@@ -83,7 +91,7 @@
   };
 </script>
 <style lang="scss" scoped>
-  .delete-btn {
+  .opt-btn:not(:first-child) {
     margin-left: 16px;
   }
 </style>

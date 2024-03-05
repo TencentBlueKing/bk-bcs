@@ -64,12 +64,12 @@ func (l *ListenerChecker) setMetric(listenerList *networkextensionv1.ListenerLis
 		status := listener.Status.Status
 
 		targetGroupType := networkextensionv1.LabelValueForTargetGroupNormal
-		switch strings.ToLower(listener.Spec.Protocol) {
-		case networkextensionv1.ProtocolTCP, networkextensionv1.ProtocolUDP:
+		protocol := listener.Spec.Protocol
+		if common.InLayer4Protocol(protocol) {
 			if listener.Spec.TargetGroup == nil || len(listener.Spec.TargetGroup.Backends) == 0 {
 				targetGroupType = networkextensionv1.LabelValueForTargetGroupEmpty
 			}
-		case networkextensionv1.ProtocolHTTP, networkextensionv1.ProtocolHTTPS:
+		} else if common.InLayer7Protocol(protocol) {
 			for _, rule := range listener.Spec.Rules {
 				if rule.TargetGroup == nil || len(rule.TargetGroup.Backends) == 0 {
 					targetGroupType = networkextensionv1.LabelValueForTargetGroupEmpty

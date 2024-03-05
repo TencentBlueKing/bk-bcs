@@ -234,7 +234,7 @@ func (crSvc *clusterResourcesService) initHandler() error { // nolint:cyclop
 		crSvc.microSvc.Server(), templateSetHdlr.New(crSvc.model)); err != nil {
 		return err
 	}
-	if err := clusterRes.RegisterMultiClusterHandler(crSvc.microSvc.Server(), multiHdlr.New()); err != nil {
+	if err := clusterRes.RegisterMultiClusterHandler(crSvc.microSvc.Server(), multiHdlr.New(crSvc.model)); err != nil {
 		return err
 	}
 	return nil

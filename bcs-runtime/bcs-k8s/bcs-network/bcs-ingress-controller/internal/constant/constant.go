@@ -13,6 +13,14 @@
 // Package constant variables
 package constant
 
+var (
+	// Layer4Protocol 四层协议
+	Layer4Protocol = []string{ProtocolTCP, ProtocolUDP, ProtocolTCPSSL}
+
+	// Layer7Protocol 七层协议
+	Layer7Protocol = []string{ProtocolHTTP, ProtocolHTTPS}
+)
+
 const (
 	// ProtocolTCP protocol of TCP
 	ProtocolTCP = "TCP"
@@ -22,6 +30,8 @@ const (
 	ProtocolHTTPS = "HTTPS"
 	// ProtocolHTTP protocol of HTTP
 	ProtocolHTTP = "HTTP"
+	// ProtocolTCPSSL protocol of TCP_SSL
+	ProtocolTCPSSL = "TCP_SSL"
 
 	// LoadBalancerTypeLoadBalancer default type load balancer
 	LoadBalancerTypeLoadBalancer = "loadbalancer"

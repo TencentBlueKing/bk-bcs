@@ -63,7 +63,15 @@ type XMLExporter struct {
 
 // Export method implements the Exporter interface, exporting data as a byte slice in YAML format.
 func (ye *YAMLExporter) Export() ([]byte, error) {
-	return yaml.Marshal(ye.OutData)
+	buffer := &bytes.Buffer{}
+	encoder := yaml.NewEncoder(buffer)
+	// 设置缩进
+	encoder.SetIndent(2)
+	defer func() {
+		_ = encoder.Close()
+	}()
+	err := encoder.Encode(ye.OutData)
+	return buffer.Bytes(), err
 }
 
 // Export method implements the Exporter interface, exporting data as a byte slice in JSON format.
@@ -192,12 +200,9 @@ func rkvsToOutData(details []*pbrkv.ReleasedKv) map[string]interface{} {
 	for _, rkv := range details {
 		var value interface{}
 		value = rkv.Spec.Value
-		switch rkv.Spec.KvType {
-		case string(table.KvNumber):
+		if rkv.Spec.KvType == string(table.KvNumber) {
 			i, _ := strconv.Atoi(rkv.Spec.Value)
 			value = i
-		case string(table.KvJson):
-			_ = json.Unmarshal([]byte(rkv.Spec.Value), &value)
 		}
 		d[rkv.Spec.Key] = map[string]interface{}{
 			"kv_type": rkv.Spec.KvType,
@@ -213,12 +218,9 @@ func kvsToOutData(details []*pbkv.Kv) map[string]interface{} {
 	for _, rkv := range details {
 		var value interface{}
 		value = rkv.Spec.Value
-		switch rkv.Spec.KvType {
-		case string(table.KvNumber):
+		if rkv.Spec.KvType == string(table.KvNumber) {
 			i, _ := strconv.Atoi(rkv.Spec.Value)
 			value = i
-		case string(table.KvJson):
-			_ = json.Unmarshal([]byte(rkv.Spec.Value), &value)
 		}
 		d[rkv.Spec.Key] = map[string]interface{}{
 			"kv_type": rkv.Spec.KvType,

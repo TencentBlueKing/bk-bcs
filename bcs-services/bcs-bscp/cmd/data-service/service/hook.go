@@ -25,6 +25,7 @@ import (
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbhook "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
@@ -68,6 +69,10 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 	}
 
 	// 2. create hook revision
+	// it must be the first hook revision, so no need to check the revision name uniqueness
+	if req.Spec.RevisionName == "" {
+		req.Spec.RevisionName = tools.GenerateRevisionName()
+	}
 	revision := &table.HookRevision{
 		Spec: &table.HookRevisionSpec{
 			Name:    req.Spec.RevisionName,

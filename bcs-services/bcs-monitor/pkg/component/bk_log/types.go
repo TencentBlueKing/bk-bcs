@@ -190,6 +190,8 @@ type ListBCSCollectorRespData struct {
 	STDIndexSetID         int               `json:"std_index_set_id"`
 	RuleFileIndexSetID    int               `json:"rule_file_index_set_id"`
 	RuleSTDIndexSetID     int               `json:"rule_std_index_set_id"`
+	IsSTDDeleted          bool              `json:"is_std_deleted"`
+	IsFileDeleted         bool              `json:"is_file_deleted"`
 	Creator               string            `json:"created_by"`
 	Updator               string            `json:"updated_by"`
 	CreatedAt             time.Time         `json:"created_at"`

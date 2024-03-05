@@ -117,18 +117,18 @@ func GetIngressProtocolLayer(ingress *networkextensionv1.Ingress) string {
 	transportCnt := 0
 	applicationCnt := 0
 	for _, rule := range ingress.Spec.Rules {
-		switch strings.ToLower(rule.Protocol) {
-		case "tcp", "udp":
+		if InLayer7Protocol(rule.Protocol) {
 			transportCnt++
-		case "http", "https":
+		}
+		if InLayer7Protocol(rule.Protocol) {
 			applicationCnt++
 		}
 	}
 	for _, portMapping := range ingress.Spec.PortMappings {
-		switch strings.ToLower(portMapping.Protocol) {
-		case "tcp", "udp":
+		if InLayer7Protocol(portMapping.Protocol) {
 			transportCnt++
-		case "http", "https":
+		}
+		if InLayer7Protocol(portMapping.Protocol) {
 			applicationCnt++
 		}
 	}
@@ -153,4 +153,28 @@ func GetPortPoolItemProtocols(itemProtocol string) []string {
 	}
 
 	return protocolList
+}
+
+// InLayer4Protocol return true if protocol in layer4 protocol list
+func InLayer4Protocol(protocol string) bool {
+	upper := strings.ToUpper(protocol)
+	for _, p := range constant.Layer4Protocol {
+		if strings.EqualFold(p, upper) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// InLayer7Protocol return true if protocol in layer7 protocol list
+func InLayer7Protocol(protocol string) bool {
+	upper := strings.ToUpper(protocol)
+	for _, p := range constant.Layer7Protocol {
+		if strings.EqualFold(p, upper) {
+			return true
+		}
+	}
+
+	return false
 }

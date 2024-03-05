@@ -94,6 +94,13 @@ service Cache {
       body: "*"
     };
   }
+
+  rpc SetClientMetric(SetClientMetricReq) returns (SetClientMetricResp) {
+    option (google.api.http) = {
+      post: "/api/v1/cache/biz/{biz_id}/apps/{app_id}/client_metric"
+      body: "*"
+    };
+  }
 }
 
 message JsonRawResp {
@@ -217,3 +224,11 @@ message GetReleasedKvValueReq {
   uint32 app_id = 3;
   string key = 4;
 }
+
+message SetClientMetricReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  bytes payload = 3;
+}
+
+message SetClientMetricResp {}

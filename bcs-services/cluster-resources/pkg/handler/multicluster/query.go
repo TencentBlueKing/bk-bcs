@@ -34,6 +34,7 @@ import (
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -49,13 +50,15 @@ type Query interface {
 type StorageQuery struct {
 	ClusterdNamespaces []*clusterRes.ClusterNamespaces
 	QueryFilter        QueryFilter
+	ViewFilter         QueryFilter
 }
 
 // NewStorageQuery creates a new query for multicluster resources.
-func NewStorageQuery(ns []*clusterRes.ClusterNamespaces, filter QueryFilter) Query {
+func NewStorageQuery(ns []*clusterRes.ClusterNamespaces, queryFilter, viewFilter QueryFilter) Query {
 	return &StorageQuery{
 		ClusterdNamespaces: ns,
-		QueryFilter:        filter,
+		QueryFilter:        queryFilter,
+		ViewFilter:         viewFilter,
 	}
 }
 
@@ -76,12 +79,14 @@ func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (ma
 	resources, err := storage.ListAllMultiClusterResources(ctx, storage.ListMultiClusterResourcesReq{
 		Kind:                kind,
 		ClusteredNamespaces: clusteredNamespaces,
-		Conditions:          q.QueryFilter.ToConditions(),
+		Conditions:          q.ViewFilter.ToConditions(),
 	})
 	if err != nil {
 		return nil, err
 	}
-	resources = ApplyFilter(resources, q.QueryFilter.StatusFilter, q.QueryFilter.IPFilter)
+	// 第二次过滤
+	resources = ApplyFilter(resources, q.QueryFilter.CreatorFilter, q.QueryFilter.NameFilter,
+		q.QueryFilter.StatusFilter, q.QueryFilter.LabelSelectorFilter, q.QueryFilter.IPFilter)
 	total := len(resources)
 	resources = q.QueryFilter.Page(resources)
 	resp := buildList(resources)
@@ -93,15 +98,15 @@ func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (ma
 type APIServerQuery struct {
 	ClusterdNamespaces []*clusterRes.ClusterNamespaces
 	QueryFilter        QueryFilter
-	Limit              int
-	Offset             int
+	ViewFilter         QueryFilter
 }
 
 // NewAPIServerQuery creates a new query for multicluster resources.
-func NewAPIServerQuery(ns []*clusterRes.ClusterNamespaces, filter QueryFilter) Query {
+func NewAPIServerQuery(ns []*clusterRes.ClusterNamespaces, queryFilter, viewFilter QueryFilter) Query {
 	return &APIServerQuery{
 		ClusterdNamespaces: ns,
-		QueryFilter:        filter,
+		QueryFilter:        queryFilter,
+		ViewFilter:         viewFilter,
 	}
 }
 
@@ -113,12 +118,14 @@ func (q *APIServerQuery) Fetch(ctx context.Context, groupVersion, kind string) (
 	}
 	log.Info(ctx, "fetch multi cluster resources, kind: %s, clusterdNamespaces: %v", kind, q.ClusterdNamespaces)
 	resources, err := listResource(ctx, q.ClusterdNamespaces, groupVersion, kind, metav1.ListOptions{
-		LabelSelector: q.QueryFilter.LabelSelectorString()})
+		LabelSelector: q.ViewFilter.LabelSelectorString()})
 	if err != nil {
 		return nil, err
 	}
+	resources = ApplyFilter(resources, q.ViewFilter.CreatorFilter, q.ViewFilter.NameFilter)
+	// 第二次过滤
 	resources = ApplyFilter(resources, q.QueryFilter.CreatorFilter, q.QueryFilter.NameFilter,
-		q.QueryFilter.StatusFilter, q.QueryFilter.IPFilter)
+		q.QueryFilter.StatusFilter, q.QueryFilter.LabelSelectorFilter, q.QueryFilter.IPFilter)
 	total := len(resources)
 	resources = q.QueryFilter.Page(resources)
 	resp := buildList(resources)
@@ -339,4 +346,24 @@ func filterClusteredNamespace(clusterNs []*clusterRes.ClusterNamespaces,
 		newClusterNs = append(newClusterNs, &clusterRes.ClusterNamespaces{ClusterID: v.ClusterID})
 	}
 	return newClusterNs
+}
+
+// viewQueryToQueryFilter transform view filter to query filter
+func viewQueryToQueryFilter(filter *entity.ViewFilter) QueryFilter {
+	if filter == nil {
+		return QueryFilter{}
+	}
+	ls := make([]*clusterRes.LabelSelector, 0, len(filter.LabelSelector))
+	for _, v := range filter.LabelSelector {
+		ls = append(ls, &clusterRes.LabelSelector{
+			Key:    v.Key,
+			Op:     v.Op,
+			Values: v.Values,
+		})
+	}
+	return QueryFilter{
+		Creator:       filter.Creator,
+		Name:          filter.Name,
+		LabelSelector: ls,
+	}
 }

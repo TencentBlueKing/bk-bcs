@@ -137,6 +137,7 @@ build.yml
 # bscp 软连接
 bcs-services/bscp.io
 .vscode
+__debug_*
 
 bcs-scenarios/bcs-kourse-rollout/bin/*
 

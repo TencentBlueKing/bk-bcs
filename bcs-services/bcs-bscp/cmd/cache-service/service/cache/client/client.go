@@ -16,11 +16,14 @@ package client
 import (
 	"context"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/service/cache/keys"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/bedis"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbclient "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client"
+	pbce "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client-event"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/lock"
@@ -37,6 +40,8 @@ type Interface interface {
 	RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error
 	GetReleasedKv(kt *kit.Kit, bizID uint32, releaseID uint32) (string, error)
 	GetReleasedKvValue(kt *kit.Kit, bizID, appID, releaseID uint32, key string) (string, error)
+	SetClientMetric(kt *kit.Kit, bizID, appID uint32, payload []byte) error
+	BatchUpsertClientMetrics(kt *kit.Kit, clientData []*pbclient.Client, clientEventData []*pbce.ClientEvent) error
 }
 
 // New initialize a cache client.
@@ -101,5 +106,27 @@ func (c *client) RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error 
 		kt.Ctx = context.TODO()
 	}
 
+	return nil
+}
+
+// SetClientMetric set client metric data
+func (c *client) SetClientMetric(kt *kit.Kit, bizID, appID uint32, payload []byte) error {
+	if err := c.bds.LPush(kt.Ctx, keys.Key.ClientMetricKey(bizID, appID), payload); err != nil {
+		return err
+	}
+	return nil
+}
+
+// BatchUpsertClientMetrics batch upsert client metrics data
+func (c *client) BatchUpsertClientMetrics(kt *kit.Kit, clientData []*pbclient.Client,
+	clientEventData []*pbce.ClientEvent) error {
+	in := &pbds.BatchUpsertClientMetricsReq{
+		ClientItems:      clientData,
+		ClientEventItems: clientEventData,
+	}
+	_, err := c.db.BatchUpsertClientMetrics(kt.Ctx, in)
+	if err != nil {
+		return err
+	}
 	return nil
 }
