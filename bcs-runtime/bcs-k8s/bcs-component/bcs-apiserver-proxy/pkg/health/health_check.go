@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package health xxx
 package health
 
 import (
@@ -30,6 +30,7 @@ var (
 )
 
 // HealthCheck is interface for check addr:port health
+// nolint
 type HealthCheck interface {
 	IsHTTPAPIHealth(addr string, port uint32) bool
 }
@@ -61,6 +62,7 @@ func NewHealthConfig(scheme string, path string) (HealthCheck, error) {
 }
 
 // HealthConfig conf immutable schem/path
+// nolint
 type HealthConfig struct {
 	Shem string
 	Path string
@@ -76,6 +78,7 @@ func (hc *HealthConfig) IsHTTPAPIHealth(addr string, port uint32) bool {
 	url := fmt.Sprintf("%s://%s:%d%s", hc.Shem, addr, port, hc.Path)
 	client := &http.Client{
 		Transport: &http.Transport{
+			// nolint
 			TLSClientConfig: &tls.Config{
 				// NOCC:gas/tls(设计如此)
 				InsecureSkipVerify: true,
@@ -95,7 +98,7 @@ func (hc *HealthConfig) IsHTTPAPIHealth(addr string, port uint32) bool {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK { // nolint
 		return false
 	}
 

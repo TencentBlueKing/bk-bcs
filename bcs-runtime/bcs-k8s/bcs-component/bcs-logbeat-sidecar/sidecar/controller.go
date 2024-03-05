@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package sidecar
@@ -28,10 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
 	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/listers/bkbcs/v1"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar/config"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar/metric"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar/types"
-
 	dockerapi "github.com/docker/docker/api"
 	dockertypes "github.com/docker/docker/api/types"
 	dockerevents "github.com/docker/docker/api/types/events"
@@ -42,6 +37,10 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	corev1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar/config"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar/metric"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar/types"
 )
 
 const (
@@ -53,7 +52,8 @@ const (
 	ContainerLabelK8sPodNameSpace = "io.kubernetes.pod.namespace"
 )
 
-// SidecarController controls the behaviour of BcsLogConfig CRD
+// SidecarController controls the behavior of BcsLogConfig CRD
+// nolint
 type SidecarController struct {
 	sync.RWMutex
 
@@ -98,8 +98,8 @@ type LogConfParameter struct {
 	// custom label
 	CustemLabel string
 
-	stdout         bool
-	nonstandardLog string
+	stdout         bool   // nolint unused
+	nonstandardLog string // nolint unused
 }
 
 // NewSidecarController returns a new bcslogconfigs controller
@@ -163,7 +163,7 @@ func makeProperDockerClient(dockerhost string) (*docker.Client, error) {
 }
 
 func getDockerClientVersion(errString string) string {
-	r := regexp.MustCompile("\\d\\.\\d\\d")
+	r := regexp.MustCompile("\\d\\.\\d\\d") // nolint
 	versions := r.FindAllString(errString, -1)
 	if len(versions) != 2 {
 		blog.Errorf("Extract server version from docker daemon failed. Use min version instead")
@@ -209,7 +209,7 @@ func (s *SidecarController) listenerDockerEvent() {
 		select {
 		case message = <-eventChan:
 			blog.V(3).Infof("receive docker event action %s container %s", message.Action, message.ID)
-		case err := <-errChan:
+		case err = <-errChan:
 			blog.Fatalf("Docker event channal return error: %s", err.Error())
 		}
 
@@ -298,7 +298,7 @@ func (s *SidecarController) syncLogConfs() {
 		podName := c.Config.Labels[ContainerLabelK8sPodName]
 		podNameSpace := c.Config.Labels[ContainerLabelK8sPodNameSpace]
 		// NOCC:vetshadow/shadow(设计如此:可以覆盖err)
-		pod, err := s.podLister.Pods(podNameSpace).Get(podName)
+		pod, err := s.podLister.Pods(podNameSpace).Get(podName) // nolint
 		if err != nil {
 			blog.Errorf("list pod(%s/%s) failed: %s", podNameSpace, podName, err.Error())
 			continue
@@ -459,7 +459,7 @@ func (s *SidecarController) writeLogConfFile(key string, y *types.Yaml) {
 	}
 	// if log config exist, and not changed
 	s.RLock()
-	logConf, _ := s.logConfs[key]
+	logConf := s.logConfs[key]
 	s.RUnlock()
 	if logConf != nil {
 		if logConf.yamlData != nil && logConf.yamlData.BCSLogConfigKey != "" && logConf.yamlData.BCSLogConfigKey !=
@@ -533,7 +533,7 @@ func (s *SidecarController) deleteContainerLogConf(containerID string) {
 		return
 	}
 	if logConf.yamlData != nil {
-		logConf.yamlData.Metric.Delete()
+		logConf.yamlData.Metric.Delete() // nolint error not checked
 	}
 	delete(s.logConfs, key)
 	blog.Infof("delete container %s log config success", containerID)
@@ -542,6 +542,7 @@ func (s *SidecarController) deleteContainerLogConf(containerID string) {
 // produceLogConfParameterV2 xxx
 // if need to collect the container logs, return true
 // else return false
+// nolint funlen
 func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.ContainerJSON) (*types.Yaml, bool) {
 	// if container is network, ignore
 	name := container.Config.Labels[ContainerLabelK8sContainerName]
@@ -590,7 +591,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.Con
 	var (
 		stdoutDataid = ""
 		// NOCC:ineffassign/assign(设计如此:仅初始化赋值为空字符串)
-		referenceKind = ""
+		referenceKind = "" // nolint  ineffectual assignment to referenceKind
 		referenceName = ""
 	)
 	if len(pod.OwnerReferences) != 0 {
@@ -612,6 +613,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.Con
 		if !container.State.Running && container.State.Status != "created" {
 			var closeEOF = true
 			para.CloseEOF = &closeEOF
+			// nolint
 			para.CloseTimeout = time.Duration(time.Duration(logConf.Spec.ExitedContainerLogCloseTimeout) * time.Second).String()
 		}
 		if conf.Multiline != nil && conf.Multiline.Type != "" {
@@ -636,7 +638,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.Con
 		}
 		// custom log tags
 		for k, v := range conf.LogTags {
-			para.ExtMeta[fmt.Sprintf("%s", strings.ReplaceAll(k, ".", "_"))] = v
+			para.ExtMeta[strings.ReplaceAll(k, ".", "_")] = v
 		}
 		// generate std output log collection config
 		if stdoutDataid == "" && conf.Stdout && conf.StdDataId != "" {

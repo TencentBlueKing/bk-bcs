@@ -33,7 +33,6 @@ package glog
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -115,6 +114,7 @@ type logKeeper struct {
 	total    int
 }
 
+// nolint result `ok` is always `false`
 func (lk *logKeeper) add(newBlock *fileBlock) (ok bool) {
 	block := lk.tail
 	if block == nil {
@@ -133,6 +133,7 @@ func (lk *logKeeper) add(newBlock *fileBlock) (ok bool) {
 	return ok
 }
 
+// nolint result `ok` is always `false`
 func (lk *logKeeper) remove() (ok bool) {
 	if lk.header == nil || lk.total == 0 {
 		return
@@ -152,7 +153,7 @@ func (lk *logKeeper) removeFile(name string) error {
 }
 
 func (lk *logKeeper) load() {
-	_dir, err := ioutil.ReadDir(lk.dir)
+	_dir, err := os.ReadDir(lk.dir)
 	if err != nil {
 		return
 	}
@@ -237,7 +238,7 @@ func init() {
 	}
 
 	// Sanitize userName since it may contain filepath separators on Windows.
-	userName = strings.Replace(userName, `\`, "_", -1)
+	userName = strings.ReplaceAll(userName, `\`, "_")
 }
 
 // shortHostname returns its argument, truncating at the first period.
@@ -330,7 +331,7 @@ func create(t time.Time) (f *os.File, filename string, filesize uint32, err erro
 		}
 
 		if !needCreate {
-			return
+			return // nolint naked return
 		}
 
 		fname := filepath.Join(lk.dir, name)

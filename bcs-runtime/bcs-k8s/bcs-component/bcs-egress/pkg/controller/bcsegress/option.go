@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bcsegress
@@ -22,14 +21,14 @@ func init() {
 	// init all flags
 	viper.SetEnvPrefix("BCS")
 	pflag.String("namespace", "bcs-system", "namespace that BCSEgress controller is running in")
-	viper.BindEnv("namespace")
+	viper.BindEnv("namespace") // nolint
 	pflag.String("name", "egress-controller", "name that BCSEgress controller is running in with")
-	viper.BindEnv("name")
+	viper.BindEnv("name") // nolint
 	pflag.String("tamplate", "./template/nginx-template.conf", "tamplate use for proxy configuration generation")
-	viper.BindEnv("tamplate")
+	viper.BindEnv("tamplate") // nolint
 	pflag.String("generate_dir", "./generate/", "directory for configuration generating")
-	viper.BindEnv("generate_dir")
-	viper.BindPFlags(pflag.CommandLine)
+	viper.BindEnv("generate_dir") // nolint
+	viper.BindPFlags(pflag.CommandLine) // nolint
 }
 
 // NewOptionFromFlagAndEnv create option from env or command line

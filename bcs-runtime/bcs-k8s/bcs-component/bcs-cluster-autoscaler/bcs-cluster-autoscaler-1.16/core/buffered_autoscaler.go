@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package core implements the core methods of cluster autoscaler
@@ -18,11 +17,6 @@ import (
 	"fmt"
 	"sort"
 	"time"
-
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
-	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
-	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
 
 	apiv1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -45,6 +39,11 @@ import (
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
+
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
 )
 
 // BufferedAutoscaler is an autoscaler which has all the core functionality of a CA
@@ -209,6 +208,7 @@ func (b *BufferedAutoscaler) cleanUpIfRequired() {
 }
 
 // RunOnce iterates over node groups and scales them up/down if necessary
+// nolint
 func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerError {
 	stateUpdateStart := time.Now()
 	allNodes, readyNodes, typedErr := b.preRun(currentTime)
@@ -394,6 +394,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 	return nil
 }
 
+// nolint
 func (b *BufferedAutoscaler) doScaleDown(autoscalingContext *context.AutoscalingContext,
 	currentTime time.Time, allNodes []*corev1.Node, scheduledPods []*corev1.Pod) (
 	*status.ScaleDownStatus, bool, errors.AutoscalerError) {
@@ -543,6 +544,7 @@ func (b *BufferedAutoscaler) processNodes(autoscalingContext *context.Autoscalin
 	return scaleDownCandidates, podDestinations, temporaryNodes, nil
 }
 
+// nolint
 func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Context,
 	currentTime time.Time, allNodes []*corev1.Node, readyNodes []*corev1.Node,
 	originalScheduledPods []*corev1.Pod, nodeInfosForGroups map[string]*schedulernodeinfo.NodeInfo) (

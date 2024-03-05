@@ -39,7 +39,7 @@ func FireLoadTest(f func() error) Metrics {
 	timeout := make(chan bool)
 	if TotalRequest == 0 {
 		go func() {
-			select {
+			select { // nolint
 			case <-time.After(time.Duration(SustainSeconds) * time.Second):
 				close(timeout)
 			}
