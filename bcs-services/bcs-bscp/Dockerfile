@@ -10,6 +10,6 @@ COPY build/bk-bscp/bk-bscp-feedserver/bk-bscp-feedserver /bk-bscp/
 COPY build/bk-bscp/bk-bscp-vaultserver/bk-bscp-vaultserver /bk-bscp/
 COPY build/bk-bscp/bk-bscp-vaultserver/vault /bk-bscp/
 COPY build/bk-bscp/bk-bscp-vaultserver/vault-sidecar /bk-bscp/
-COPY build/bk-bscp/bk-bscp-vaultserver/vault-plugins/bk-bscp-secret /bk-bscp/
+COPY build/bk-bscp/bk-bscp-vaultserver/vault-plugins/bk-bscp-secret /etc/vault/vault-plugins/
 ENTRYPOINT ["/bscp-ui"]
 CMD []
