@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package httpsvr xxx
 package httpsvr
 
 import (
@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/emicklei/go-restful"
 	"gopkg.in/yaml.v3"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,7 +26,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 )
 
@@ -182,11 +182,11 @@ func (h *HttpServerClient) DeleteAppMonitor(request *restful.Request, response *
 		return
 	}
 	_, _ = response.Write(CreateResponseData(nil, "success", struct{}{}))
-	return
 }
 
 // do Create Or Update App Monitor
-func (h *HttpServerClient) doCreateOrUpdateAppMonitor(bizID, scenario, values string) (*k8stypes.NamespacedName, error) {
+func (h *HttpServerClient) doCreateOrUpdateAppMonitor(
+	bizID, scenario, values string) (*k8stypes.NamespacedName, error) {
 	var (
 		appMonitor    *monitorextensionv1.AppMonitor
 		foundPrevious bool

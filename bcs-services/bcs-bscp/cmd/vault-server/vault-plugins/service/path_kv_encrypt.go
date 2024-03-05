@@ -25,7 +25,7 @@ import (
 
 func (b *backend) pathKvEncrypt() *framework.Path {
 	return &framework.Path{
-		Pattern: "apps/" + framework.GenericNameRegex("app_id") + "/kvs/" +
+		Pattern: "apps/" + framework.GenericNameRegex("app_id") + "/kvs/" + // nolint goconst
 			framework.GenericNameRegex("name") + "/encrypt",
 		Fields: map[string]*framework.FieldSchema{
 			"app_id": {

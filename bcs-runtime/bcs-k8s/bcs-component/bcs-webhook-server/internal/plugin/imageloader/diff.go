@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -31,7 +31,7 @@ func diff(oldMeta, newMeta metav1.ObjectMeta,
 	}
 	updatePatchStr := fmt.Sprintf("[%s]", strings.Join(updatePatch, ","))
 	// set patch to annotations and append annotions patch
-	revertPatch := append(revertMeta, revertCon...)
+	revertPatch := append(revertMeta, revertCon...) // nolint
 	revertPatch = append(revertPatch, fmt.Sprintf(
 		"{\"op\":\"add\",\"path\":\"/metadata/annotations/%s\",\"value\":\"%s\"}",
 		imageUpdateAnno, strings.ReplaceAll(updatePatchStr, "\"", "\\\"")))
@@ -46,9 +46,9 @@ func metaDiff(oldMeta, newMeta metav1.ObjectMeta) ([]string, []string) {
 	revertLabelPatch, updateLabelPatch := labelDiff(oldMeta, newMeta)
 	revertAnnoPatch, updateAnnoPatch := annoDiff(oldMeta, newMeta)
 
-	revertPatch := append(revertLabelPatch, revertAnnoPatch...)
+	revertPatch := append(revertLabelPatch, revertAnnoPatch...) // nolint
 
-	updatePatch := append(updateLabelPatch, updateAnnoPatch...)
+	updatePatch := append(updateLabelPatch, updateAnnoPatch...) // nolint
 	return revertPatch, updatePatch
 }
 
@@ -114,7 +114,7 @@ func imageDiff(oldContainers, newContainers []corev1.Container) ([]string, []str
 					Name:            c.Name,
 					Image:           c.Image,
 					ImagePullPolicy: corev1.PullIfNotPresent,
-					Command:         []string{"echo", "pull " + c.Image}})
+					Command:         []string{"echo", "pull " + c.Image}}) // nolint
 		}
 	}
 	return revertPatch, updatePatch, retContainers

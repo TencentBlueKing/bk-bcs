@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -76,7 +76,7 @@ func (h *PodHandler) Serve(c *rest.RequestContext) error {
 		obj, err = h.handler.Delete(ctx, c.Namespace, c.Name, *c.Options.DeleteOptions)
 	case rest.GetLogsVerb: // 处理 Pod 日志流
 		// NOCC:vetshadow/shadow(设计如此:需要初始化restReq并且err可以被覆盖)
-		restReq, err := h.handler.GetLogs(ctx, c.Namespace, c.Name, c.Options.PodLogOptions)
+		restReq, err := h.handler.GetLogs(ctx, c.Namespace, c.Name, c.Options.PodLogOptions) // nolint
 		if err != nil {
 			return err
 		}
@@ -91,7 +91,7 @@ func (h *PodHandler) Serve(c *rest.RequestContext) error {
 	case rest.WatchVerb:
 		// watch 需要特殊处理 chunk
 		// NOCC:vetshadow/shadow(设计如此:需要初始化watch并且err可以被覆盖)
-		watch, err := h.handler.Watch(ctx, c.Namespace, *c.Options.ListOptions)
+		watch, err := h.handler.Watch(ctx, c.Namespace, *c.Options.ListOptions) // nolint
 		if err != nil {
 			return err
 		}
@@ -108,7 +108,7 @@ func (h *PodHandler) Serve(c *rest.RequestContext) error {
 	case rest.ExecVerb:
 		// remotecommand 直接使用透明代理
 		// NOCC:vetshadow/shadow(设计如此:需要初始化proxy并且err可以被覆盖)
-		proxy, err := h.handler.Exec(ctx, c.Namespace, c.Name, *c.Options.GetOptions)
+		proxy, err := h.handler.Exec(ctx, c.Namespace, c.Name, *c.Options.GetOptions) // nolint
 		if err != nil {
 			return err
 		}

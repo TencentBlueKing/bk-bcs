@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package runner
@@ -44,7 +43,7 @@ func (t *terraformLocalRunner) forceUpdateBackendConfig(content []byte) ([]byte,
 	// 解析文件内容
 	file, diags := parser.ParseHCL(content, fmt.Sprintf("%s-example.tf", t.instanceID)) // 名称任意即可
 	if diags.HasErrors() {
-		return nil, errors.Errorf("failed to parse HCL: %s\n", diags.Error())
+		return nil, errors.Errorf("failed to parse HCL: %s", diags.Error())
 	}
 	// 类型转换
 	body, err := typeConversion(file.Body)

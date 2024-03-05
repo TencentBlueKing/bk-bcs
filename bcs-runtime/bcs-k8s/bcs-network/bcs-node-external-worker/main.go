@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -19,12 +19,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-node-external-worker/exporter"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-node-external-worker/httpsvr"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-node-external-worker/options"
@@ -54,7 +54,7 @@ func main() {
 	})
 	if err != nil {
 		blog.Fatalf("start ctrl manager failed, err: %s", err.Error())
-		os.Exit(1)
+		os.Exit(1) // nolint
 	}
 
 	blog.Infof("node-external-worker start...")
@@ -62,7 +62,7 @@ func main() {
 	httpServer := &httpsvr.HttpServerClient{Ops: opts}
 	if err = httpServer.Init(); err != nil {
 		blog.Fatalf("init http sever failed, err: %s", err.Error())
-		os.Exit(1)
+		os.Exit(1) // nolint
 	}
 
 	nodeExporter := exporter.NodeExporter{
@@ -76,6 +76,6 @@ func main() {
 
 	if err = mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		blog.Errorf("problem running manager, err %s", err.Error())
-		os.Exit(1)
+		os.Exit(1) // nolint
 	}
 }

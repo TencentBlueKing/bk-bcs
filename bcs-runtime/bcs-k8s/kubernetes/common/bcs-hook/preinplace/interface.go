@@ -8,19 +8,23 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package preinplace xxx
 package preinplace
 
 import (
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 )
 
+// PreInplaceHookObjectInterface xxx
+// nolint
 type PreInplaceHookObjectInterface interface {
 	GetPreInplaceHook() *hookv1alpha1.HookStep
 }
 
+// PreInplaceHookStatusInterface xxx
+// nolint
 type PreInplaceHookStatusInterface interface {
 	GetPreInplaceHookConditions() []hookv1alpha1.PreInplaceHookCondition
 	SetPreInplaceHookConditions([]hookv1alpha1.PreInplaceHookCondition)

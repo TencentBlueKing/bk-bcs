@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package runner
@@ -17,6 +16,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/api/v1"
 )
 
@@ -41,7 +41,7 @@ type InitRequest struct {
 // InitReply terraform init reply
 type InitReply struct {
 	Message             string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	StateLockIdentifier string `protobuf:"bytes,2,opt,name=stateLockIdentifier,proto3" json:"stateLockIdentifier,omitempty"`
+	StateLockIdentifier string `protobuf:"bytes,2,opt,name=stateLockIdentifier,proto3" json:"stateLockIdentifier,omitempty"` // nolint
 }
 
 // NewTerraformRequest new terraform request
@@ -71,7 +71,7 @@ type PlanRequest struct {
 type PlanReply struct {
 	Drifted             bool   `protobuf:"varint,1,opt,name=drifted,proto3" json:"drifted,omitempty"`
 	Message             string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	StateLockIdentifier string `protobuf:"bytes,3,opt,name=stateLockIdentifier,proto3" json:"stateLockIdentifier,omitempty"`
+	StateLockIdentifier string `protobuf:"bytes,3,opt,name=stateLockIdentifier,proto3" json:"stateLockIdentifier,omitempty"` // nolint
 	PlanCreated         bool   `protobuf:"varint,4,opt,name=planCreated,proto3" json:"planCreated,omitempty"`
 }
 
@@ -79,7 +79,7 @@ type PlanReply struct {
 type ApplyRequest struct {
 	TfInstance         string   `protobuf:"bytes,1,opt,name=tfInstance,proto3" json:"tfInstance,omitempty"`
 	DirOrPlan          string   `protobuf:"bytes,2,opt,name=dirOrPlan,proto3" json:"dirOrPlan,omitempty"`
-	RefreshBeforeApply bool     `protobuf:"varint,3,opt,name=refreshBeforeApply,proto3" json:"refreshBeforeApply,omitempty"`
+	RefreshBeforeApply bool     `protobuf:"varint,3,opt,name=refreshBeforeApply,proto3" json:"refreshBeforeApply,omitempty"` // nolint
 	Targets            []string `protobuf:"bytes,4,rep,name=targets,proto3" json:"targets,omitempty"`
 	Parallelism        int32    `protobuf:"varint,5,opt,name=parallelism,proto3" json:"parallelism,omitempty"`
 }
@@ -87,7 +87,7 @@ type ApplyRequest struct {
 // ApplyReply apply terraform reply
 type ApplyReply struct {
 	Message             string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	StateLockIdentifier string `protobuf:"bytes,2,opt,name=stateLockIdentifier,proto3" json:"stateLockIdentifier,omitempty"`
+	StateLockIdentifier string `protobuf:"bytes,2,opt,name=stateLockIdentifier,proto3" json:"stateLockIdentifier,omitempty"` // nolint
 }
 
 // DestroyRequest destroy terraform request
@@ -99,7 +99,7 @@ type DestroyRequest struct {
 // DestroyReply destroy terraform reply
 type DestroyReply struct {
 	Message             string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	StateLockIdentifier string `protobuf:"bytes,2,opt,name=stateLockIdentifier,proto3" json:"stateLockIdentifier,omitempty"`
+	StateLockIdentifier string `protobuf:"bytes,2,opt,name=stateLockIdentifier,proto3" json:"stateLockIdentifier,omitempty"` // nolint
 }
 
 // localPrintfer 本地化的输出对象

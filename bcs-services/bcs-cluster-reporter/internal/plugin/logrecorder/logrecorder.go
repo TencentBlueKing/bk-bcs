@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -24,15 +24,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-
 	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 )
 
 // Plugin xxx
@@ -143,10 +143,12 @@ func getLogRecord(cluster plugin_manager.ClusterConfig) {
 		_, ok := logCache[pod.Name]
 		if !ok {
 			logCache[pod.Name] = make(map[string][]PodLog)
-			logCache[pod.Name]["etcd"] = make([]PodLog, 0, 0)
+			logCache[pod.Name]["etcd"] = make([]PodLog, 0)
 		}
 
-		logsStream, err := clientSet.CoreV1().Pods("kube-system").GetLogs(pod.Name, logOptions).Stream(context.Background())
+		// nolint
+		logsStream, err := clientSet.CoreV1().Pods("kube-system").GetLogs(pod.Name, logOptions).
+			Stream(context.Background())
 		if err != nil {
 			klog.Fatal(err.Error())
 		}
@@ -166,7 +168,9 @@ func getLogRecord(cluster plugin_manager.ClusterConfig) {
 					}
 					// 重建链接
 					logsStream.Close()
-					logsStream, err = clientSet.CoreV1().Pods("kube-system").GetLogs(pod.Name, logOptions).Stream(context.Background())
+					// nolint
+					logsStream, err = clientSet.CoreV1().Pods("kube-system").GetLogs(pod.Name, logOptions).
+						Stream(context.Background())
 					if err != nil {
 						klog.Fatalf(err.Error())
 					}
@@ -183,6 +187,7 @@ func getLogRecord(cluster plugin_manager.ClusterConfig) {
 	}
 
 	go func() {
+		// nolint  use time.Sleep instead of
 		for {
 			select {
 			case <-time.After(1 * time.Minute):
@@ -195,7 +200,7 @@ func getLogRecord(cluster plugin_manager.ClusterConfig) {
 func cleanPodLogCache() {
 	for podName, podLogs := range logCache {
 		for containerName, logList := range podLogs {
-			newLogList := make([]PodLog, 0, 0)
+			newLogList := make([]PodLog, 0)
 			for _, logItem := range logList {
 				if !logItem.LogTime.Before(time.Now().Add(-5 * time.Minute)) {
 					newLogList = append(newLogList, logItem)
@@ -233,7 +238,7 @@ func LogAnalysis(cluster plugin_manager.ClusterConfig) {
 		logCacheLock.RUnlock()
 	}()
 
-	etcdTookTooLongGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	etcdTookTooLongGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0)
 
 	tookToLongList := make(map[string]int)
 
@@ -242,7 +247,7 @@ func LogAnalysis(cluster plugin_manager.ClusterConfig) {
 			if strings.Contains(podName, "etcd") && containerName == "etcd" {
 				for _, logItem := range logList {
 					logMap := make(map[string]interface{})
-					err := json.Unmarshal([]byte(strings.Replace(logItem.Log, "-", "", -1)), &logMap)
+					err := json.Unmarshal([]byte(strings.ReplaceAll(logItem.Log, "-", "")), &logMap)
 					if err != nil {
 						klog.Errorf("unmarshal failed: %s, %s", err.Error(), logItem.Log)
 						break
@@ -251,8 +256,8 @@ func LogAnalysis(cluster plugin_manager.ClusterConfig) {
 						var requestPath string
 						for _, str := range strings.Split(logMap["request"].(string), " ") {
 							if strings.Contains(str, "key:") {
-								requestPath = strings.Replace(str, "key:", "", -1)
-								requestPath = strings.Replace(requestPath, "\"", "", -1)
+								requestPath = strings.ReplaceAll(str, "key:", "")
+								requestPath = strings.ReplaceAll(requestPath, "\"", "")
 								break
 							}
 
@@ -260,10 +265,10 @@ func LogAnalysis(cluster plugin_manager.ClusterConfig) {
 
 						var responseSize string
 						if strings.Contains(logMap["response"].(string), " ") {
-							responseSize = strings.Replace(
-								strings.Split(logMap["response"].(string), " ")[1], "size:", "", -1)
+							responseSize = strings.ReplaceAll(
+								strings.Split(logMap["response"].(string), " ")[1], "size:", "")
 						} else {
-							responseSize = strings.Replace(logMap["response"].(string), "size:", "", -1)
+							responseSize = strings.ReplaceAll(logMap["response"].(string), "size:", "")
 						}
 
 						size, err := strconv.Atoi(responseSize)

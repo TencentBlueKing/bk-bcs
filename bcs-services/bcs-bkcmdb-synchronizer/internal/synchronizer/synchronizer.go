@@ -39,6 +39,7 @@ import (
 )
 
 const (
+	// FullSynchronizationTicker xxx
 	FullSynchronizationTicker = 100000
 )
 
@@ -49,7 +50,7 @@ type Synchronizer struct {
 	BkcmdbSynchronizerOption *option.BkcmdbSynchronizerOption
 	ClientTls                *tls.Config
 	MQ                       mq.MQ
-	//CMDBClient               client.CMDBClient
+	// CMDBClient               client.CMDBClient
 }
 
 // ClusterList the cluster list
@@ -65,7 +66,8 @@ func (s ClusterList) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-// Less is a method that compares two elements in the ClusterList and returns true if the element at index i is less than the element at index j.
+// Less is a method that compares two elements in the ClusterList and
+// returns true if the element at index i is less than the element at index j.
 func (s ClusterList) Less(i, j int) bool {
 	// Split the elements at index i and j by "-".
 	is := strings.Split(s[i], "-")
@@ -94,10 +96,10 @@ func (s *Synchronizer) Init() {
 		blog.Errorf("init tls config failed, err: %s", err.Error())
 	}
 	//
-	//err = s.initCMDBClient()
-	//if err != nil {
+	// err = s.initCMDBClient()
+	// if err != nil {
 	//	blog.Errorf("init cmdb client failed, err: %s", err.Error())
-	//}
+	// }
 
 	err = s.initSyncer()
 	if err != nil {
@@ -126,7 +128,7 @@ func (s *Synchronizer) initTlsConfig() error {
 			s.BkcmdbSynchronizerOption.Client.ClientKey,
 			s.BkcmdbSynchronizerOption.Client.ClientCrtPwd,
 		)
-		//static.ClientCertPwd)
+		// static.ClientCertPwd)
 		if err != nil {
 			blog.Errorf("init tls config failed, err: %s", err.Error())
 			return err
@@ -138,6 +140,7 @@ func (s *Synchronizer) initTlsConfig() error {
 	return nil
 }
 
+// nolint (error) is always nil
 func (s *Synchronizer) initSyncer() error {
 	s.Syncer = syncer.NewSyncer(
 		s.BkcmdbSynchronizerOption,
@@ -147,11 +150,13 @@ func (s *Synchronizer) initSyncer() error {
 	return nil
 }
 
+// nolint (error) is always nil
 func (s *Synchronizer) initHandler() error {
 	s.Handler = handler.NewBcsBkcmdbSynchronizerHandler(s.Syncer)
 	return nil
 }
 
+// nolint (error) is always nil
 func (s *Synchronizer) initMQ() error {
 	s.MQ = rabbitmq.NewRabbitMQ(&s.BkcmdbSynchronizerOption.RabbitMQ)
 
@@ -159,6 +164,7 @@ func (s *Synchronizer) initMQ() error {
 }
 
 // Run run the synchronizer
+// nolint funlen
 func (s *Synchronizer) Run() {
 	//rabbit := rabbitmq.NewRabbitMQ(&s.BkcmdbSynchronizerOption.RabbitMQ)
 	//s.Rabbit = rabbit
@@ -298,7 +304,7 @@ func (s *Synchronizer) Run() {
 // Sync sync clusters
 func (s *Synchronizer) Sync(cluster *cmp.Cluster) {
 	go s.sync(cluster)
-	//go common.Recoverer(1, func() { s.syncMQ(cluster) })
+	// go common.Recoverer(1, func() { s.syncMQ(cluster) })
 }
 
 // Sync sync the cluster
@@ -309,9 +315,9 @@ func (s *Synchronizer) sync(cluster *cmp.Cluster) {
 	}
 	blog.Infof("sync cluster: %s", cluster.ClusterID)
 
-	chn, err := s.MQ.GetChannel()
+	chn, _ := s.MQ.GetChannel()
 
-	err = s.MQ.DeclareQueue(chn, cluster.ClusterID, amqp.Table{})
+	err := s.MQ.DeclareQueue(chn, cluster.ClusterID, amqp.Table{})
 	if err != nil {
 		blog.Errorf("declare queue failed, err: %s", err.Error())
 		return
@@ -370,7 +376,7 @@ func (s *Synchronizer) sync(cluster *cmp.Cluster) {
 		return
 	}
 
-	//h := handler.NewBcsBkcmdbSynchronizerHandler(s.Syncer)
+	// h := handler.NewBcsBkcmdbSynchronizerHandler(s.Syncer)
 	err = s.MQ.StartConsumer(
 		chn,
 		cluster.ClusterID,
@@ -395,6 +401,7 @@ func (s *Synchronizer) getClusterManagerGrpcGwClient() (cmCli *client.ClusterMan
 	return cmCli, err
 }
 
+// nolint
 func (s *Synchronizer) getProjectManagerGrpcGwClient() (pmCli *client.ProjectManagerClientWithHeader, err error) {
 	opts := &pm.Options{
 		Module:          pm.ModuleProjectManager,

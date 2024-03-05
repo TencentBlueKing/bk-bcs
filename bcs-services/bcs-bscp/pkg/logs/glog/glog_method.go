@@ -35,7 +35,7 @@ import (
 
 // SetV set the level of logging.
 func SetV(level Level) {
-	logging.verbosity.Set(strconv.Itoa(int(level)))
+	logging.verbosity.Set(strconv.Itoa(int(level))) // nolint error not checked
 }
 
 // GetV get the level of logging.
@@ -51,10 +51,10 @@ func InitLogs(toStderr, alsoToStderr, restartScrolling bool, verbose int32, stdE
 	once.Do(func() {
 		logging.toStderr = toStderr
 		logging.alsoToStderr = alsoToStderr
-		logging.verbosity.Set(strconv.Itoa(int(verbose)))
-		logging.stderrThreshold.Set(stdErrThreshold)
-		logging.vmodule.Set(vModule)
-		logging.traceLocation.Set(traceLocation)
+		logging.verbosity.Set(strconv.Itoa(int(verbose))) // nolint error not checked
+		logging.stderrThreshold.Set(stdErrThreshold)      // nolint error not checked
+		logging.vmodule.Set(vModule)                      // nolint error not checked
+		logging.traceLocation.Set(traceLocation)          // nolint error not checked
 
 		logNoScrolling = restartScrolling
 		lineMaxSize = maxLineSize * 1024

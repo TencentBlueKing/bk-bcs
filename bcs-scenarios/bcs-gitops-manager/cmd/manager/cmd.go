@@ -10,15 +10,16 @@
  * limitations under the License.
  */
 
+// Package manager xxx
 package manager
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/spf13/cobra"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
 
@@ -36,7 +37,7 @@ func NewCommand() *cobra.Command {
 		Short: "bcs-gitops-manager is a bcs-service for gitops",
 		Long:  `bcs-gitops-manager integrates gitops sulotion into bcs-services.`,
 		RunE: func(cmd *cobra.Command, args []string) error { // nolint
-			//loading configuration file for options
+			// loading configuration file for options
 			if err := common.LoadConfigFile(configFile, option); err != nil {
 				fmt.Fprintf(os.Stderr, "server load json config file failure, %s\n", err.Error())
 				return err
@@ -62,7 +63,7 @@ func NewCommand() *cobra.Command {
 			return serv.Run()
 		},
 	}
-	//setting server configuration flag
+	// setting server configuration flag
 	cmd.Flags().StringVarP(&configFile, "config", "c", configFile, "manager configuration json file")
 	return cmd
 }

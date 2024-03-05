@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package server implements a http server for bcs-terraform-controller
@@ -18,10 +17,9 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // Handler server

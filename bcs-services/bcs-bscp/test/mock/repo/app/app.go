@@ -93,7 +93,7 @@ func (rp *repoMock) listenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
+		select { // nolint
 		case <-notifier.Signal:
 			defer notifier.Done()
 
@@ -140,5 +140,4 @@ func (rp *repoMock) listenAndServe() error {
 }
 
 func (rp *repoMock) finalizer() {
-	return
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package imageacceleration
@@ -23,7 +22,7 @@ const (
 	// configMapName defines the name of configmap that can enable image acceleration
 	configMapName = "bcs-image-acceleration"
 	// secretImagePullItem defines the image pull data of secret
-	secretImagePullItem = ".dockerconfigjson" // // NOCC:gas/crypto(设计如此)
+	secretImagePullItem = ".dockerconfigjson" // nolint NOCC:gas/crypto(设计如此)
 
 	// configMapKeyEnabled key of configmap, namespace will enable image acceleration if value is "true"
 	configMapKeyEnabled = "enabled"

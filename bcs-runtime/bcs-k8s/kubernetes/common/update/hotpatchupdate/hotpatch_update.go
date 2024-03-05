@@ -8,21 +8,22 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package hotpatchupdate xxx
 package hotpatchupdate
 
 import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update"
 )
 
 // Interface for managing pods in-place update.
@@ -37,6 +38,7 @@ type realControl struct {
 	now func() metav1.Time
 }
 
+// NewForTypedClient xxx
 func NewForTypedClient(c clientset.Interface, revisionKey string) Interface {
 	return &realControl{adp: &update.AdapterTypedClient{Client: c}, revisionKey: revisionKey, now: metav1.Now}
 }
@@ -46,7 +48,8 @@ func (c *realControl) Update(pod *v1.Pod, oldRevision, newRevision *apps.Control
 	spec := update.CalculateInPlaceUpdateSpec(oldRevision, newRevision)
 
 	if spec == nil {
-		return fmt.Errorf("find Pod %s update strategy is HotPatch, but the diff not only contains replace operation of spec.containers[x].image", pod)
+		return fmt.Errorf("find Pod %s update strategy is HotPatch,"+
+			"but the diff not only contains replace operation of spec.containers[x].image", pod)
 	}
 
 	return c.updatePodHotPatch(pod, spec)

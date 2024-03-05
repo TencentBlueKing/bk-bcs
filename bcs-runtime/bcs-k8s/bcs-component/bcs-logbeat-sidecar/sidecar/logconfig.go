@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package sidecar
@@ -27,7 +26,6 @@ import (
 	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/informers/externalversions"
 	dockertypes "github.com/docker/docker/api/types"
-
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -188,6 +186,7 @@ func (s *SidecarController) getPodLogConfigCrd(container *dockertypes.ContainerJ
 // BcsLogConfig parameter WorkloadType、WorkloadName、WorkloadNamespace matched, increased 2 score
 // BcsLogConfig parameter ContainerName matched, increased 10 score
 // finally, the above scores will be accumulated to be the BcsLogConfig final score
+// nolint funlen
 func (s *SidecarController) scoreBcsLogConfig(container *dockertypes.ContainerJSON, pod *corev1.Pod,
 	bcsLogConf *bcsv1.BcsLogConfig) int {
 	// do not select ConfigType == host
@@ -242,7 +241,8 @@ func (s *SidecarController) scoreBcsLogConfig(container *dockertypes.ContainerJS
 	if bcsLogConf.Spec.WorkloadType != "" {
 		if len(pod.OwnerReferences) == 0 {
 			blog.Warnf(
-				"container %s pod(%s) not match BcsLogConfig(%s:%s) WorkloadType %s, because of lacking onwer reference information",
+				"container %s pod(%s) not match BcsLogConfig(%s:%s) WorkloadType %s, "+
+					"because of lacking onwer reference information",
 				container.ID, pod.Name, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadType)
 			return 0
 		}
@@ -266,6 +266,7 @@ func (s *SidecarController) scoreBcsLogConfig(container *dockertypes.ContainerJS
 		}
 	}
 	if bcsLogConf.Spec.WorkloadNamespace != "" {
+		// nolint
 		if pod.Namespace == bcsLogConf.Spec.WorkloadNamespace {
 			score += 2
 			// not matched, return 0 score
@@ -278,7 +279,8 @@ func (s *SidecarController) scoreBcsLogConfig(container *dockertypes.ContainerJS
 	if bcsLogConf.Spec.WorkloadName != "" {
 		if len(pod.OwnerReferences) == 0 {
 			blog.Warnf(
-				"container %s pod(%s) not match BcsLogConfig(%s:%s) WorkloadName %s, because of lacking onwer reference information",
+				"container %s pod(%s) not match BcsLogConfig(%s:%s) WorkloadName %s, "+
+					"because of lacking onwer reference information",
 				container.ID, pod.Name, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadName)
 			return 0
 		}
@@ -422,7 +424,8 @@ func (s *SidecarController) createCrdV1(bcsLogConfigPlural, bcsLogConfigFullName
 			},
 		},
 	}
-	_, err := s.extensionClientset.ApiextensionsV1().CustomResourceDefinitions().Create(context.Background(), crd, metav1.CreateOptions{TypeMeta: crd.TypeMeta})
+	_, err := s.extensionClientset.ApiextensionsV1().CustomResourceDefinitions().Create(context.Background(), crd,
+		metav1.CreateOptions{TypeMeta: crd.TypeMeta})
 	return err
 }
 
@@ -442,6 +445,7 @@ func (s *SidecarController) createCrdV1Beta1(bcsLogConfigPlural, bcsLogConfigFul
 			},
 		},
 	}
-	_, err := s.extensionClientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd, metav1.CreateOptions{TypeMeta: crd.TypeMeta})
+	_, err := s.extensionClientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(),
+		crd, metav1.CreateOptions{TypeMeta: crd.TypeMeta})
 	return err
 }

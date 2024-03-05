@@ -136,50 +136,50 @@ type clusterManagerClient struct {
 
 // GetCMDBClient returns a CMDB client instance.
 func (cm *clusterManagerClient) GetCMDBClient() (client.CMDBClient, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetProjectManagerConnWithURL returns a gRPC client connection with URL.
 func (cm *clusterManagerClient) GetProjectManagerConnWithURL() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetProjectManagerClient returns a project manager client instance.
 func (cm *clusterManagerClient) GetProjectManagerClient() (pmp.BCSProjectClient, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetProjectManagerConn returns a gRPC client connection for project manager.
 func (cm *clusterManagerClient) GetProjectManagerConn() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // NewPMGrpcClientWithHeader creates a new project manager gRPC client with header.
 func (cm *clusterManagerClient) NewPMGrpcClientWithHeader(ctx context.Context,
 	conn *grpc.ClientConn) *client.ProjectManagerClientWithHeader {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetStorageClient returns a storage client instance.
 func (cm *clusterManagerClient) GetStorageClient() (bcsapi.Storage, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetDataManagerConnWithURL returns a gRPC client connection with URL for data manager.
 func (cm *clusterManagerClient) GetDataManagerConnWithURL() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetDataManagerConn returns a gRPC client connection for data manager.
 func (cm *clusterManagerClient) GetDataManagerConn() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
@@ -285,7 +285,7 @@ func NewClusterManager(config *client.Config) cmp.ClusterManagerClient {
 		//! pay more attention for nil return
 		return nil
 	}
-	//create grpc connection
+	// create grpc connection
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
@@ -305,7 +305,7 @@ func NewClusterManager(config *client.Config) cmp.ClusterManagerClient {
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
-		selected := rand.Intn(1024) % len(config.Hosts)
+		selected := rand.Intn(1024) % len(config.Hosts) // nolint
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
@@ -320,7 +320,7 @@ func NewClusterManager(config *client.Config) cmp.ClusterManagerClient {
 		blog.Errorf("create no cluster manager client after all instance tries")
 		return nil
 	}
-	//init cluster manager client
+	// init cluster manager client
 	return cmp.NewClusterManagerClient(conn)
 }
 
