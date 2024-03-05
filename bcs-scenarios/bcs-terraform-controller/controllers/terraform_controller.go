@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package controllers
@@ -19,6 +18,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/google/uuid"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/core"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/option"
@@ -48,7 +47,8 @@ type TerraformReconciler struct {
 }
 
 // Reconcile reconcile terraform
-// +kubebuilder:rbac:groups=terraformextesions.bkbcs.tencent.com,resources=terraforms,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=terraformextesions.bkbcs.tencent.com,
+// resources=terraforms,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=terraformextesions.bkbcs.tencent.com,resources=terraforms/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=terraformextesions.bkbcs.tencent.com,resources=terraforms/finalizers,verbs=update
 func (r *TerraformReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -64,16 +64,16 @@ func (r *TerraformReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	blog.Infof("reconcile receive terraform, tf: %s, trace-id: %s", nn, traceId)
 
 	if terraform.DeletionTimestamp != nil { // note: 禁用删除功能
-		//blog.Infof("delete terraform: %s, trace-id: %s", utils.ToJsonString(terraform), traceId)
-		//if err := handler.Init(); err != nil {
+		// blog.Infof("delete terraform: %s, trace-id: %s", utils.ToJsonString(terraform), traceId)
+		// if err := handler.Init(); err != nil {
 		//	blog.Errorf("core handler init failed, err: %s", err.Error())
 		//	return ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, err
-		//}
-		//if err := handler.Delete(); err != nil {
+		// }
+		// if err := handler.Delete(); err != nil {
 		//	blog.Errorf("core handler delete terraform resource failed, err: %s", err.Error())
 		//	return ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, err
-		//}
-		////defer r.clean(handler)
+		// }
+		// //defer r.clean(handler)
 		terraform.Finalizers = utils.RemoveString(terraform.Finalizers, tfv1.TerraformFinalizer)
 		if err := r.Client.Update(ctx, &terraform, &client.UpdateOptions{}); err != nil {
 			blog.Errorf("remove finalizer for terraform failed, terraform: %s, trace-id: %s, err: %s",
@@ -97,6 +97,7 @@ func (r *TerraformReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 }
 
 // handler 核心逻辑
+// nolint funlen
 func (r *TerraformReconciler) handler(ctx context.Context, traceId string, tf *tfv1.Terraform) (ctrl.Result, error) {
 	currentCommitId, currentCommitIdOk := tf.Annotations[tfv1.TerraformManualAnnotation]
 	if utils.RemoveManualAnnotation(tf) {
@@ -220,7 +221,7 @@ func (r *TerraformReconciler) handler(ctx context.Context, traceId string, tf *t
 func (r *TerraformReconciler) finish(ctx context.Context, traceId string, tf *tfv1.Terraform) {
 	tf.Status.ObservedGeneration++
 	nn := apitypes.NamespacedName{Namespace: tf.Namespace, Name: tf.Name}
-	//blog.Infof("update tf status before, trace-id: %s, tf-json: %s,", traceId, utils.ToJsonString(tf))
+	// blog.Infof("update tf status before, trace-id: %s, tf-json: %s,", traceId, utils.ToJsonString(tf))
 
 	if err := r.Client.Status().Update(ctx, tf, &client.UpdateOptions{}); err != nil {
 		blog.Errorf("update tf status failed(finish), tf: %s, trace-id: %s, err: %s", nn, traceId, err)
@@ -232,7 +233,7 @@ func (r *TerraformReconciler) finish(ctx context.Context, traceId string, tf *tf
 // updateAnnotations 更新注解
 func (r *TerraformReconciler) updateAnnotations(ctx context.Context, traceId, id string, tf *tfv1.Terraform) error {
 	nn := apitypes.NamespacedName{Namespace: tf.Namespace, Name: tf.Name}
-	//blog.Infof("updateAnnotations to tf, trace-id: %s, tf-json: %s,", traceId, utils.ToJsonString(tf))
+	// blog.Infof("updateAnnotations to tf, trace-id: %s, tf-json: %s,", traceId, utils.ToJsonString(tf))
 
 	if err := r.Client.Update(ctx, tf); err != nil {
 		// 移除annotations失败
@@ -311,8 +312,9 @@ func (r *TerraformReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-//// noChanges 没有变化, 执行完成, 进入收尾
-//func (r *TerraformReconciler) noChanges(ctx context.Context, traceId string, tf *tfv1.Terraform) (ctrl.Result, error) {
+// // noChanges 没有变化, 执行完成, 进入收尾
+// func (r *TerraformReconciler) noChanges(
+// ctx context.Context, traceId string, tf *tfv1.Terraform) (ctrl.Result, error) {
 //	if !utils.RemoveManualAnnotation(tf) { // 没有annotations
 //		return ctrl.Result{Requeue: true, RequeueAfter: 180 * time.Second}, nil
 //	}
@@ -329,4 +331,4 @@ func (r *TerraformReconciler) SetupWithManager(mgr ctrl.Manager) error {
 //		tf.Namespace, tf.Name, traceId)
 //
 //	return ctrl.Result{Requeue: true, RequeueAfter: 180 * time.Second}, nil
-//}
+// }

@@ -18,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
@@ -42,6 +43,7 @@ func NewModelCloudNative(db drivers.DB, bkbaseConf *types.BkbaseConfig) *ModelCl
 }
 
 // GetCloudNativeWorkloadList get cloud native workload list
+// nolint funlen
 func (m *ModelCloudNative) GetCloudNativeWorkloadList(ctx context.Context,
 	req *bcsdatamanager.GetCloudNativeWorkloadListRequest) (*bcsdatamanager.TEGMessage, error) {
 	// page info

@@ -26,12 +26,20 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	api "github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
+	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
+	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
+	clusterpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/project"
+	projectpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/project"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
+	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	argoutil "github.com/argoproj/argo-cd/v2/util/argo"
 	utilargo "github.com/argoproj/argo-cd/v2/util/argo"
 	"github.com/argoproj/argo-cd/v2/util/argo/normalizers"
@@ -46,16 +54,6 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
-	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
-	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
-	clusterpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
-	projectpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/project"
-	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
-
-	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
@@ -448,7 +446,7 @@ func (cd *argo) GetApplicationRevisionsMetadata(ctx context.Context, repos,
 	if err != nil {
 		return nil, errors.Wrapf(err, "create reposerver client failed")
 	}
-	defer repoCloser.Close()
+	defer repoCloser.Close() // nolint
 
 	result := make([]*v1alpha1.RevisionMetadata, 0, len(repos))
 	for i, repo := range repos {
@@ -470,7 +468,8 @@ func (cd *argo) GetApplicationRevisionsMetadata(ctx context.Context, repos,
 }
 
 // UpdateApplicationSpec will return application by name
-func (cd *argo) UpdateApplicationSpec(ctx context.Context, spec *applicationpkg.ApplicationUpdateSpecRequest) (*v1alpha1.ApplicationSpec, error) {
+func (cd *argo) UpdateApplicationSpec(
+	ctx context.Context, spec *applicationpkg.ApplicationUpdateSpecRequest) (*v1alpha1.ApplicationSpec, error) {
 	resp, err := cd.appClient.UpdateSpec(ctx, spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "update application spec '%s' failed", *spec.Name)
@@ -490,7 +489,8 @@ func (cd *argo) GetApplicationResourceTree(ctx context.Context, name string) (*v
 }
 
 // GetApplicationManifests returns the manifests result of application
-func (cd *argo) GetApplicationManifests(ctx context.Context, name, revision string) (*apiclient.ManifestResponse, error) {
+func (cd *argo) GetApplicationManifests(
+	ctx context.Context, name, revision string) (*apiclient.ManifestResponse, error) {
 	resp, err := cd.appClient.GetManifests(ctx, &appclient.ApplicationManifestQuery{
 		Name:     &name,
 		Revision: &revision,
@@ -603,10 +603,8 @@ func (cd *argo) ListApplications(ctx context.Context, query *appclient.Applicati
 					if !consistent {
 						continue
 					}
-				} else {
-					if queryRepo != v.Spec.Source.RepoURL {
-						continue
-					}
+				} else if queryRepo != v.Spec.Source.RepoURL {
+					continue
 				}
 			}
 			if query.AppNamespace != nil && (*query.AppNamespace != "" && *query.AppNamespace !=
@@ -642,6 +640,7 @@ type ApplicationDeleteResourceResult struct {
 	ErrMessage string `json:"errMessage"`
 }
 
+// nolint unused
 func buildResourceKeyWithResourceStatus(resource *v1alpha1.ResourceStatus) string {
 	return strings.Join([]string{resource.Kind, resource.Namespace, resource.Group,
 		resource.Version, resource.Name}, "/")
@@ -709,6 +708,7 @@ func (cd *argo) deleteApplicationResource(ctx context.Context, application *v1al
 	})
 	if err != nil {
 		if resource.Status != v1alpha1.SyncStatusCodeSynced {
+			// nolint goconst
 			blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
 				"with status '%s', noneed care: %s",
 				requestID, resource.Group, resource.Kind, resource.Name,
@@ -785,7 +785,7 @@ func (cd *argo) initAppHistoryStore() error {
 
 func (cd *argo) initToken() error {
 	// authorization doc: https://argo-cd.readthedocs.io/en/stable/developer-guide/api-docs/
-	//$ curl $ARGOCD_SERVER/api/v1/session -d $'{"username":"admin","password":"password"}'
+	// $ curl $ARGOCD_SERVER/api/v1/session -d $'{"username":"admin","password":"password"}'
 	// {"token":"...jwttoken info..."}
 	// set token to http request header
 	req := map[string]string{

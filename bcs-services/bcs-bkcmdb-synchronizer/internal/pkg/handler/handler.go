@@ -23,8 +23,7 @@ import (
 	"strings"
 	"time"
 
-	bkcmdbkube "configcenter/src/kube/types"
-
+	bkcmdbkube "configcenter/src/kube/types" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
@@ -50,7 +49,7 @@ type ClusterList []string
 
 // BcsBkcmdbSynchronizerHandler is the handler of bcs-bkcmdb-synchronizer
 type BcsBkcmdbSynchronizerHandler struct {
-	//BkcmdbSynchronizerOption *option.BkcmdbSynchronizerOption
+	// BkcmdbSynchronizerOption *option.BkcmdbSynchronizerOption
 	Syncer    *syncer.Syncer
 	BkCluster *bkcmdbkube.Cluster
 	Chn       *amqp.Channel
@@ -82,8 +81,8 @@ func NewBcsBkcmdbSynchronizerHandler(sync *syncer.Syncer) *BcsBkcmdbSynchronizer
 func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(chn *amqp.Channel, messages <-chan amqp.Delivery) {
 	b.Chn = chn
 	for msg := range messages {
-		//blog.Infof("Received a message")
-		//blog.Infof("Message: %v", msg.Headers)
+		// blog.Infof("Received a message")
+		// blog.Infof("Message: %v", msg.Headers)
 
 		err := b.handleCluster(msg)
 		if err != nil {
@@ -124,6 +123,7 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(chn *amqp.Channel, messages <-c
 }
 
 // handle cluster
+// nolint funlen
 func (b *BcsBkcmdbSynchronizerHandler) handleCluster(msg amqp.Delivery) error {
 	if b.BkCluster != nil {
 		return nil
@@ -332,7 +332,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod) error {
 
 	bkPod := (*bkPods)[0]
 
-	//b.Syncer.DeleteBkPods(b.BkCluster.BizID, &[]int64{bkPod.ID})
+	// b.Syncer.DeleteBkPods(b.BkCluster.BizID, &[]int64{bkPod.ID})
 	err = retry.Do(
 		func() error {
 			return b.Syncer.DeleteBkPods(b.BkCluster, &[]int64{bkPod.ID})
@@ -346,6 +346,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod) error {
 }
 
 // handle pod create
+// nolint funlen
 func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 	var operator []string
 	cmCli, err := b.getClusterManagerGrpcGwClient()
@@ -833,7 +834,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(deployment *appv1.
 		return err
 	}
 
-	//err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "deployment", &[]int64{bkDeployment.ID})
+	// err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "deployment", &[]int64{bkDeployment.ID})
 	err = retry.Do(
 		func() error {
 			return b.Syncer.DeleteBkWorkloads(b.BkCluster, "deployment", &[]int64{bkDeployment.ID})
@@ -1007,7 +1008,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetDelete(statefulSet *appv
 		return err
 	}
 
-	//err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "statefulSet", &[]int64{bkStatefulSet.ID})
+	// err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "statefulSet", &[]int64{bkStatefulSet.ID})
 	err = retry.Do(
 		func() error {
 			return b.Syncer.DeleteBkWorkloads(b.BkCluster, "statefulSet", &[]int64{bkStatefulSet.ID})
@@ -1181,7 +1182,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetDelete(daemonSet *appv1.Da
 		return err
 	}
 
-	//err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "daemonSet", &[]int64{bkDaemonSet.ID})
+	// err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "daemonSet", &[]int64{bkDaemonSet.ID})
 	err = retry.Do(
 		func() error {
 			return b.Syncer.DeleteBkWorkloads(b.BkCluster, "daemonSet", &[]int64{bkDaemonSet.ID})
@@ -1304,7 +1305,8 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentUpdate(gameDeployment
 		}
 
 		gameDeploymentToUpdate := make(map[int64]*client.UpdateBcsWorkloadRequestData, 0)
-		needToUpdate, updateData := b.Syncer.CompareGameDeployment(&bkGameDeployment, &storage.GameDeployment{Data: gameDeployment})
+		needToUpdate, updateData := b.Syncer.CompareGameDeployment(&bkGameDeployment,
+			&storage.GameDeployment{Data: gameDeployment})
 		if needToUpdate {
 			gameDeploymentToUpdate[bkGameDeployment.ID] = updateData
 			b.Syncer.UpdateBkWorkloads(b.BkCluster, "gameDeployment", &gameDeploymentToUpdate)
@@ -1357,7 +1359,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentDelete(gameDeployment
 		return err
 	}
 
-	//err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "gameDeployment", &[]int64{bkGameDeployment.ID})
+	// err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "gameDeployment", &[]int64{bkGameDeployment.ID})
 	err = retry.Do(
 		func() error {
 			return b.Syncer.DeleteBkWorkloads(b.BkCluster, "gameDeployment", &[]int64{bkGameDeployment.ID})
@@ -1483,7 +1485,8 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetUpdate(gameStatefulS
 		}
 
 		gameStatefulSetToUpdate := make(map[int64]*client.UpdateBcsWorkloadRequestData, 0)
-		needToUpdate, updateData := b.Syncer.CompareGameStatefulSet(&bkGameStatefulSet, &storage.GameStatefulSet{Data: gameStatefulSet})
+		needToUpdate, updateData := b.Syncer.CompareGameStatefulSet(&bkGameStatefulSet,
+			&storage.GameStatefulSet{Data: gameStatefulSet})
 		if needToUpdate {
 			gameStatefulSetToUpdate[bkGameStatefulSet.ID] = updateData
 			b.Syncer.UpdateBkWorkloads(b.BkCluster, "gameStatefulSet", &gameStatefulSetToUpdate)
@@ -1536,7 +1539,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetDelete(gameStatefulS
 		return err
 	}
 
-	//err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "gameStatefulSet", &[]int64{bkGameStatefulSet.ID})
+	// err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "gameStatefulSet", &[]int64{bkGameStatefulSet.ID})
 	err = retry.Do(
 		func() error {
 			return b.Syncer.DeleteBkWorkloads(b.BkCluster, "gameStatefulSet", &[]int64{bkGameStatefulSet.ID})
@@ -1704,7 +1707,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceDelete(namespace *corev1.N
 
 	bkNamespace := (*bkNamespaces)[0]
 
-	//err = b.Syncer.DeleteBkNamespaces(b.BkCluster.BizID, &[]int64{bkNamespace.ID})
+	// err = b.Syncer.DeleteBkNamespaces(b.BkCluster.BizID, &[]int64{bkNamespace.ID})
 	err = retry.Do(
 		func() error {
 			// DeleteBkNamespaces delete bknamespaces
@@ -1874,7 +1877,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeDelete(node *corev1.Node) error
 
 	bkNode := (*bkNodes)[0]
 
-	//b.Syncer.DeleteBkNodes(b.BkCluster.BizID, &[]int64{bkNode.ID})
+	// b.Syncer.DeleteBkNodes(b.BkCluster.BizID, &[]int64{bkNode.ID})
 	err = retry.Do(
 		func() error {
 			return b.Syncer.DeleteBkNodes(b.BkCluster, &[]int64{bkNode.ID})
@@ -1917,13 +1920,12 @@ func (b *BcsBkcmdbSynchronizerHandler) PublishMsg(msg amqp.Delivery) error {
 		msg.Headers["republish"] = 1
 	} else {
 		// If it has been republished before, check if the republish count is less than 100.
-		if republish.(int32) < 100 {
-			// If it is, increment the republish count.
-			msg.Headers["republish"] = republish.(int32) + 1
-		} else {
+		if !(republish.(int32) < 100) {
 			// If it has been republished more than 100 times, return an error.
 			return errors.New("no need to publish")
 		}
+		// If it is, increment the republish count.
+		msg.Headers["republish"] = republish.(int32) + 1
 	}
 
 	// Publish the message to the exchange with the specified routing key.
@@ -1949,7 +1951,8 @@ func (b *BcsBkcmdbSynchronizerHandler) PublishMsg(msg amqp.Delivery) error {
 	return err
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) getClusterManagerGrpcGwClient() (cmCli *client.ClusterManagerClientWithHeader, err error) {
+func (b *BcsBkcmdbSynchronizerHandler) getClusterManagerGrpcGwClient() (
+	cmCli *client.ClusterManagerClientWithHeader, err error) {
 	opts := &cm.Options{
 		Module:          cm.ModuleClusterManager,
 		Address:         b.Syncer.BkcmdbSynchronizerOption.Bcsapi.GrpcAddr,

@@ -20,12 +20,12 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
@@ -78,6 +78,7 @@ func (plugin *RepositoryPlugin) listRepositoryHandler(r *http.Request) (*http.Re
 }
 
 // repository only for local json parse
+// nolint unused
 type repository struct {
 	// Repo contains the URL to the remote repository
 	Repo string `json:"repo"`

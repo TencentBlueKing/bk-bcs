@@ -8,15 +8,15 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package patch xxx
 package patch
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	v1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/utils"
 )
@@ -76,7 +76,8 @@ func ThreeWayMergeMonitorRule(original, current, modified []*v1.MonitorRuleDetai
 	}
 
 	blog.Infof("original rule: %s, \ncurrent rule: %s, \nmodified rule: %s, \nmerged rule: %s",
-		utils.ToJsonString(original), utils.ToJsonString(current), utils.ToJsonString(modified), utils.ToJsonString(mergeResult))
+		utils.ToJsonString(original), utils.ToJsonString(current), utils.ToJsonString(modified),
+		utils.ToJsonString(mergeResult))
 	return mergeResult
 }
 

@@ -16,7 +16,7 @@ import (
 	"context"
 	"crypto/tls"
 
-	bkcmdbkube "configcenter/src/kube/types"
+	bkcmdbkube "configcenter/src/kube/types" // nolint
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	bcsregistry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
@@ -109,13 +109,16 @@ type HostData struct {
 }
 
 const (
-	KeyBizID          = "BsiId"
-	methodBusiness    = "Business"
-	methodServer      = "Server"
+	// KeyBizID xxx
+	KeyBizID       = "BsiId"
+	methodBusiness = "Business"
+	methodServer   = "Server"
+	// MethodBusinessRaw xxx
 	MethodBusinessRaw = "BusinessRaw"
 )
 
 var (
+	// ReqColumns xxx
 	ReqColumns = []string{"BsiId", "BsipId", "BsiProductName", "BsiProductId", "BsiName", "BsiL1", "BsiL2"}
 )
 
@@ -233,9 +236,9 @@ type CreateBcsClusterRequest struct {
 	Network          *[]string `json:"network"`
 	Type             *string   `json:"type"`
 	Environment      *string   `json:"environment"`
-	//BKProjectID      *string   `json:"bk_project_id"`
-	//BKProjectName    *string   `json:"bk_project_name"`
-	//BKProjectCode    *string   `json:"bk_project_code"`
+	// BKProjectID      *string   `json:"bk_project_id"`
+	// BKProjectName    *string   `json:"bk_project_name"`
+	// BKProjectCode    *string   `json:"bk_project_code"`
 }
 
 // CreateBcsClusterResponse defines the response structure for creating a BCS cluster.
@@ -364,7 +367,7 @@ type GetBcsNamespaceResponseData struct {
 // CreateBcsNamespaceRequest represents the request for creating a BCS namespace
 type CreateBcsNamespaceRequest struct {
 	BKBizID *int64 `json:"bk_biz_id"`
-	//Data    []CreateBcsNamespaceRequestData `json:"data"`
+	// Data    []CreateBcsNamespaceRequestData `json:"data"`
 	Data *[]bkcmdbkube.Namespace `json:"data"`
 }
 
@@ -413,7 +416,7 @@ type CreateBcsWorkloadRequestData struct {
 	Replicas              *int64                    `json:"replicas,omitempty" bson:"replicas"`
 	MinReadySeconds       *int64                    `json:"min_ready_seconds,omitempty" bson:"min_ready_seconds"`
 	StrategyType          *string                   `json:"strategy_type,omitempty" bson:"strategy_type"`
-	RollingUpdateStrategy *map[string]interface{}   `json:"rolling_update_strategy,omitempty" bson:"rolling_update_strategy"`
+	RollingUpdateStrategy *map[string]interface{}   `json:"rolling_update_strategy,omitempty" bson:"rolling_update_strategy"` // nolint
 }
 
 // CreateBcsWorkloadResponse defines the structure of the response for creating a BCS workload.
@@ -442,7 +445,7 @@ type UpdateBcsWorkloadRequestData struct {
 	Replicas              *int64                    `json:"replicas,omitempty" bson:"replicas"`
 	MinReadySeconds       *int64                    `json:"min_ready_seconds,omitempty" bson:"min_ready_seconds"`
 	StrategyType          *string                   `json:"strategy_type,omitempty" bson:"strategy_type"`
-	RollingUpdateStrategy *map[string]interface{}   `json:"rolling_update_strategy,omitempty" bson:"rolling_update_strategy"`
+	RollingUpdateStrategy *map[string]interface{}   `json:"rolling_update_strategy,omitempty" bson:"rolling_update_strategy"` // nolint
 }
 
 // UpdateBcsWorkloadResponse defines the structure of the response for updating a BCS workload.

@@ -15,8 +15,9 @@ package protocol
 import (
 	"bytes"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"io"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // protocolBuffer 网络数据解析

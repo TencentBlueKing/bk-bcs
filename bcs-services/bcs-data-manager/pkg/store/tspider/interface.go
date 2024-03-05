@@ -34,117 +34,140 @@ func NewModelInterface() *ModelInterface {
 }
 
 // GetProjectList is not implemented.
-func (s *ModelInterface) GetProjectList(ctx context.Context, req *datamanager.GetAllProjectListRequest) ([]*datamanager.Project, int64, error) {
+func (s *ModelInterface) GetProjectList(
+	ctx context.Context, req *datamanager.GetAllProjectListRequest) ([]*datamanager.Project, int64, error) {
 	return nil, 0, ErrNotImplemented
 }
 
 // GetProjectInfo is not implemented.
-func (s *ModelInterface) GetProjectInfo(ctx context.Context, req *datamanager.GetProjectInfoRequest) (*datamanager.Project, error) {
+func (s *ModelInterface) GetProjectInfo(
+	ctx context.Context, req *datamanager.GetProjectInfoRequest) (*datamanager.Project, error) {
 	return nil, ErrNotImplemented
 }
 
 // GetClusterInfoList is not implemented.
-func (s *ModelInterface) GetClusterInfoList(ctx context.Context, req *datamanager.GetClusterListRequest) ([]*datamanager.Cluster, int64, error) {
+func (s *ModelInterface) GetClusterInfoList(
+	ctx context.Context, req *datamanager.GetClusterListRequest) ([]*datamanager.Cluster, int64, error) {
 	return nil, 0, ErrNotImplemented
 }
 
 // GetClusterInfo is not implemented.
-func (s *ModelInterface) GetClusterInfo(ctx context.Context, req *datamanager.GetClusterInfoRequest) (*datamanager.Cluster, error) {
+func (s *ModelInterface) GetClusterInfo(
+	ctx context.Context, req *datamanager.GetClusterInfoRequest) (*datamanager.Cluster, error) {
 	return nil, ErrNotImplemented
 }
 
 // GetNamespaceInfoList is not implemented.
-func (s *ModelInterface) GetNamespaceInfoList(ctx context.Context, req *datamanager.GetNamespaceInfoListRequest) ([]*datamanager.Namespace, int64, error) {
+func (s *ModelInterface) GetNamespaceInfoList(
+	ctx context.Context, req *datamanager.GetNamespaceInfoListRequest) ([]*datamanager.Namespace, int64, error) {
 	return nil, 0, ErrNotImplemented
 }
 
 // GetNamespaceInfo is not implemented.
-func (s *ModelInterface) GetNamespaceInfo(ctx context.Context, req *datamanager.GetNamespaceInfoRequest) (*datamanager.Namespace, error) {
+func (s *ModelInterface) GetNamespaceInfo(
+	ctx context.Context, req *datamanager.GetNamespaceInfoRequest) (*datamanager.Namespace, error) {
 	return nil, ErrNotImplemented
 }
 
 // GetWorkloadInfoList is not implemented.
-func (s *ModelInterface) GetWorkloadInfoList(ctx context.Context, req *datamanager.GetWorkloadInfoListRequest) ([]*datamanager.Workload, int64, error) {
+func (s *ModelInterface) GetWorkloadInfoList(
+	ctx context.Context, req *datamanager.GetWorkloadInfoListRequest) ([]*datamanager.Workload, int64, error) {
 	return nil, 0, ErrNotImplemented
 }
 
 // GetWorkloadInfo is not implemented.
-func (s *ModelInterface) GetWorkloadInfo(ctx context.Context, req *datamanager.GetWorkloadInfoRequest) (*datamanager.Workload, error) {
+func (s *ModelInterface) GetWorkloadInfo(
+	ctx context.Context, req *datamanager.GetWorkloadInfoRequest) (*datamanager.Workload, error) {
 	return nil, ErrNotImplemented
 }
 
 // GetRawPublicInfo is not implemented.
-func (s *ModelInterface) GetRawPublicInfo(ctx context.Context, opts *types.JobCommonOpts) ([]*types.PublicData, error) {
+func (s *ModelInterface) GetRawPublicInfo(
+	ctx context.Context, opts *types.JobCommonOpts) ([]*types.PublicData, error) {
 	return nil, ErrNotImplemented
 }
 
 // GetRawProjectInfo is not implemented.
-func (s *ModelInterface) GetRawProjectInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.ProjectData, error) {
+func (s *ModelInterface) GetRawProjectInfo(
+	ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.ProjectData, error) {
 	return nil, ErrNotImplemented
 }
 
 // GetRawClusterInfo is not implemented.
-func (s *ModelInterface) GetRawClusterInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.ClusterData, error) {
+func (s *ModelInterface) GetRawClusterInfo(
+	ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.ClusterData, error) {
 	return nil, ErrNotImplemented
 }
 
 // GetRawNamespaceInfo is not implemented.
-func (s *ModelInterface) GetRawNamespaceInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.NamespaceData, error) {
+func (s *ModelInterface) GetRawNamespaceInfo(
+	ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.NamespaceData, error) {
 	return nil, ErrNotImplemented
 }
 
 // GetRawWorkloadInfo is not implemented.
-func (s *ModelInterface) GetRawWorkloadInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.WorkloadData, error) {
+func (s *ModelInterface) GetRawWorkloadInfo(
+	ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.WorkloadData, error) {
 	return nil, ErrNotImplemented
 }
 
 // InsertProjectInfo is not implemented.
-func (s *ModelInterface) InsertProjectInfo(ctx context.Context, metrics *types.ProjectMetrics, opts *types.JobCommonOpts) error {
+func (s *ModelInterface) InsertProjectInfo(
+	ctx context.Context, metrics *types.ProjectMetrics, opts *types.JobCommonOpts) error {
 	return ErrNotImplemented
 }
 
 // InsertClusterInfo is not implemented.
-func (s *ModelInterface) InsertClusterInfo(ctx context.Context, metrics *types.ClusterMetrics, opts *types.JobCommonOpts) error {
+func (s *ModelInterface) InsertClusterInfo(
+	ctx context.Context, metrics *types.ClusterMetrics, opts *types.JobCommonOpts) error {
 	return ErrNotImplemented
 }
 
 // InsertNamespaceInfo is not implemented.
-func (s *ModelInterface) InsertNamespaceInfo(ctx context.Context, metrics *types.NamespaceMetrics, opts *types.JobCommonOpts) error {
+func (s *ModelInterface) InsertNamespaceInfo(
+	ctx context.Context, metrics *types.NamespaceMetrics, opts *types.JobCommonOpts) error {
 	return ErrNotImplemented
 }
 
 // InsertWorkloadInfo is not implemented.
-func (s *ModelInterface) InsertWorkloadInfo(ctx context.Context, metrics *types.WorkloadMetrics, opts *types.JobCommonOpts) error {
+func (s *ModelInterface) InsertWorkloadInfo(
+	ctx context.Context, metrics *types.WorkloadMetrics, opts *types.JobCommonOpts) error {
 	return ErrNotImplemented
 }
 
 // GetWorkloadCount is not implemented.
-func (s *ModelInterface) GetWorkloadCount(ctx context.Context, opts *types.JobCommonOpts, bucket string, after time.Time) (int64, error) {
+func (s *ModelInterface) GetWorkloadCount(
+	ctx context.Context, opts *types.JobCommonOpts, bucket string, after time.Time) (int64, error) {
 	return 0, ErrNotImplemented
 }
 
 // InsertPublicInfo is not implemented.
-func (s *ModelInterface) InsertPublicInfo(ctx context.Context, metrics *types.PublicData, opts *types.JobCommonOpts) error {
+func (s *ModelInterface) InsertPublicInfo(
+	ctx context.Context, metrics *types.PublicData, opts *types.JobCommonOpts) error {
 	return ErrNotImplemented
 }
 
 // InsertPodAutoscalerInfo is not implemented.
-func (s *ModelInterface) InsertPodAutoscalerInfo(ctx context.Context, metrics *types.PodAutoscalerMetrics, opts *types.JobCommonOpts) error {
+func (s *ModelInterface) InsertPodAutoscalerInfo(
+	ctx context.Context, metrics *types.PodAutoscalerMetrics, opts *types.JobCommonOpts) error {
 	return ErrNotImplemented
 }
 
 // GetPodAutoscalerList is not implemented.
-func (s *ModelInterface) GetPodAutoscalerList(ctx context.Context, request *datamanager.GetPodAutoscalerListRequest) ([]*datamanager.PodAutoscaler, int64, error) {
+func (s *ModelInterface) GetPodAutoscalerList(
+	ctx context.Context, request *datamanager.GetPodAutoscalerListRequest) ([]*datamanager.PodAutoscaler, int64, error) {
 	return nil, 0, ErrNotImplemented
 }
 
 // GetPodAutoscalerInfo is not implemented.
-func (s *ModelInterface) GetPodAutoscalerInfo(ctx context.Context, request *datamanager.GetPodAutoscalerRequest) (*datamanager.PodAutoscaler, error) {
+func (s *ModelInterface) GetPodAutoscalerInfo(
+	ctx context.Context, request *datamanager.GetPodAutoscalerRequest) (*datamanager.PodAutoscaler, error) {
 	return nil, ErrNotImplemented
 }
 
 // GetRawPodAutoscalerInfo is not implemented.
-func (s *ModelInterface) GetRawPodAutoscalerInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.PodAutoscalerData, error) {
+func (s *ModelInterface) GetRawPodAutoscalerInfo(
+	ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.PodAutoscalerData, error) {
 	return nil, ErrNotImplemented
 }
 
@@ -155,7 +178,8 @@ func (s *ModelInterface) GetLatestWorkloadRequest(ctx context.Context,
 }
 
 // CreateWorkloadOriginRequest is not implemented.
-func (s *ModelInterface) CreateWorkloadOriginRequest(ctx context.Context, result *types.WorkloadOriginRequestResult) error {
+func (s *ModelInterface) CreateWorkloadOriginRequest(
+	ctx context.Context, result *types.WorkloadOriginRequestResult) error {
 	return ErrNotImplemented
 }
 
