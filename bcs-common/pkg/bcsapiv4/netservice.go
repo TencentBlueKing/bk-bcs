@@ -27,11 +27,11 @@ import (
 	"strings"
 	"time"
 
-	blog "k8s.io/klog/v2"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
+	blog "k8s.io/klog/v2"
+
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/netservice"
 )
 
@@ -222,7 +222,7 @@ func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	blog.Info("udpate pool string:%s", reqDatas)
 	seq := nc.random.Perm(len(nc.netSvrs))
 	httpClient, prefix := nc.getHTTPClient(nc.httpClientTimeout)
-	uri := prefix + nc.netSvrs[seq[0]] + "/v1/pool/" + pool.Cluster + "/" + pool.Net
+	uri := prefix + nc.netSvrs[seq[0]] + "/v1/pool/" + pool.Cluster + "/" + pool.Net // nolint
 	request, err := http.NewRequest("PUT", uri, bytes.NewBuffer(reqDatas))
 	if err != nil {
 		return fmt.Errorf("update pool create http request failed, %s", err.Error())

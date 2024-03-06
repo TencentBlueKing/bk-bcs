@@ -167,6 +167,7 @@ const (
 	Data_ListInstances_FullMethodName                     = "/pbds.Data/ListInstances"
 	Data_FetchInstanceInfo_FullMethodName                 = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
+	Data_BatchUpsertClientMetrics_FullMethodName          = "/pbds.Data/BatchUpsertClientMetrics"
 )
 
 // DataClient is the client API for Data service.
@@ -337,6 +338,8 @@ type DataClient interface {
 	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
 	// Ping verifies if the grpc connection is still alive.
 	Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOption) (*PingMsg, error)
+	// client metric related interface
+	BatchUpsertClientMetrics(ctx context.Context, in *BatchUpsertClientMetricsReq, opts ...grpc.CallOption) (*BatchUpsertClientMetricsResp, error)
 }
 
 type dataClient struct {
@@ -1589,6 +1592,15 @@ func (c *dataClient) Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOpt
 	return out, nil
 }
 
+func (c *dataClient) BatchUpsertClientMetrics(ctx context.Context, in *BatchUpsertClientMetricsReq, opts ...grpc.CallOption) (*BatchUpsertClientMetricsResp, error) {
+	out := new(BatchUpsertClientMetricsResp)
+	err := c.cc.Invoke(ctx, Data_BatchUpsertClientMetrics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DataServer is the server API for Data service.
 // All implementations should embed UnimplementedDataServer
 // for forward compatibility
@@ -1757,6 +1769,8 @@ type DataServer interface {
 	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
 	// Ping verifies if the grpc connection is still alive.
 	Ping(context.Context, *PingMsg) (*PingMsg, error)
+	// client metric related interface
+	BatchUpsertClientMetrics(context.Context, *BatchUpsertClientMetricsReq) (*BatchUpsertClientMetricsResp, error)
 }
 
 // UnimplementedDataServer should be embedded to have forward compatible implementations.
@@ -2176,6 +2190,9 @@ func (UnimplementedDataServer) FetchInstanceInfo(context.Context, *FetchInstance
 }
 func (UnimplementedDataServer) Ping(context.Context, *PingMsg) (*PingMsg, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedDataServer) BatchUpsertClientMetrics(context.Context, *BatchUpsertClientMetricsReq) (*BatchUpsertClientMetricsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertClientMetrics not implemented")
 }
 
 // UnsafeDataServer may be embedded to opt out of forward compatibility for this service.
@@ -4673,6 +4690,24 @@ func _Data_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_BatchUpsertClientMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpsertClientMetricsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).BatchUpsertClientMetrics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_BatchUpsertClientMetrics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).BatchUpsertClientMetrics(ctx, req.(*BatchUpsertClientMetricsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Data_ServiceDesc is the grpc.ServiceDesc for Data service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -5231,6 +5266,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Ping",
 			Handler:    _Data_Ping_Handler,
+		},
+		{
+			MethodName: "BatchUpsertClientMetrics",
+			Handler:    _Data_BatchUpsertClientMetrics_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	bkcmdbkube "configcenter/src/kube/types"
+	bkcmdbkube "configcenter/src/kube/types" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
@@ -87,69 +87,69 @@ type cmdbClient struct {
 
 // GetDataManagerConnWithURL returns a gRPC client connection with URL for data manager.
 func (c *cmdbClient) GetDataManagerConnWithURL() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetDataManagerConn returns a gRPC client connection for data manager.
 func (c *cmdbClient) GetDataManagerConn() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetClusterManagerConnWithURL returns a gRPC client connection with URL for cluster manager.
 func (c *cmdbClient) GetClusterManagerConnWithURL() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetClusterManagerClient returns a cluster manager client instance.
 func (c *cmdbClient) GetClusterManagerClient() (cmp.ClusterManagerClient, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetClusterManagerConn returns a gRPC client connection for cluster manager.
 func (c *cmdbClient) GetClusterManagerConn() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // NewCMGrpcClientWithHeader creates a new cluster manager gRPC client with header.
 func (c *cmdbClient) NewCMGrpcClientWithHeader(ctx context.Context,
 	conn *grpc.ClientConn) *client.ClusterManagerClientWithHeader {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetProjectManagerConnWithURL returns a gRPC client connection with URL for project manager.
 func (c *cmdbClient) GetProjectManagerConnWithURL() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetProjectManagerClient returns a project manager client instance.
 func (c *cmdbClient) GetProjectManagerClient() (pmp.BCSProjectClient, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetProjectManagerConn returns a gRPC client connection for project manager.
 func (c *cmdbClient) GetProjectManagerConn() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // NewPMGrpcClientWithHeader creates a new project manager gRPC client with header.
 func (c *cmdbClient) NewPMGrpcClientWithHeader(ctx context.Context,
 	conn *grpc.ClientConn) *client.ProjectManagerClientWithHeader {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetStorageClient returns a storage client instance.
 func (c *cmdbClient) GetStorageClient() (bcsapi.Storage, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
@@ -207,7 +207,7 @@ func (c *cmdbClient) GetBS2IDByBizID(bizID int64) (int, error) {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
 		return 0, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Info) > 0 {
@@ -253,7 +253,7 @@ func (c *cmdbClient) GetBizInfo(bizID int64) (*client.Business, error) {
 		blog.Errorf("call api GetBizInfo failed: %v", respData.Message)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api GetBizInfo with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Data) > 0 {
@@ -331,7 +331,7 @@ func (c *cmdbClient) GetHostInfo(hostIP []string) (*[]client.HostData, error) {
 			blog.Errorf("call api QueryHost failed: %v", respData.Message)
 			return nil, fmt.Errorf(respData.Message)
 		}
-		//successfully request
+		// successfully request
 		blog.Infof("call api QueryHost with url(%s) successfully", reqURL)
 
 		hostData = append(hostData, respData.Data.Info...)

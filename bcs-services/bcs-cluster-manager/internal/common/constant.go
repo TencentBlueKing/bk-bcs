@@ -84,6 +84,32 @@ var (
 	External NodeGroupType = "external"
 )
 
+// ScriptType external nodeGroup script type
+type ScriptType string
+
+// String xxx
+func (st ScriptType) String() string {
+	return string(st)
+}
+
+// IsInterType inter
+func (st ScriptType) IsInterType() bool {
+	return st == ScriptInterType
+}
+
+// IsExtraType extra
+func (st ScriptType) IsExtraType() bool {
+	return st == ScriptExtraType
+}
+
+// external nodeGroup script type
+var (
+	// ScriptInterType inter type
+	ScriptInterType ScriptType = "inter"
+	// ScriptExtraType extra type
+	ScriptExtraType ScriptType = "extra"
+)
+
 const (
 	// MasterRole label
 	MasterRole = "node-role.kubernetes.io/master"
@@ -191,6 +217,18 @@ const (
 	// Zones gke zone cluster
 	Zones = "zones"
 
+	// CloudClusterTypeKey cloud cluster type
+	CloudClusterTypeKey = "CloudClusterType"
+	// CloudClusterTypeEdge cloud cluster type for ECK EDGE
+	CloudClusterTypeEdge = "K8SEXTENSION_EDGE"
+	// CloudClusterTypeNative cloud cluster type for ECK native
+	CloudClusterTypeNative = "K8SEXTENSION_NATIVE"
+
+	// NodeRoleMaster node role master
+	NodeRoleMaster = "MASTER_ETCD"
+	// NodeRoleWorker node role worker
+	NodeRoleWorker = "WORKER"
+
 	// ClusterAddNodesLimit cluster addNodes limit
 	ClusterAddNodesLimit = 100
 	// ClusterManagerServiceDomain domain name for service
@@ -222,6 +260,8 @@ const (
 
 	// DefaultImageName default image name
 	DefaultImageName = "TencentOS Server 2.6 (TK4)"
+	// DefaultECKImageName default ECK image name
+	DefaultECKImageName = "CentOS-7.6-BITS64"
 
 	// DockerContainerRuntime runtime
 	DockerContainerRuntime = "docker"
@@ -278,7 +318,7 @@ const (
 	// TagClusterResourceKey resource tag key
 	TagClusterResourceKey = "cluster"
 
-	// StatusInitialization node/cluster/nodegroup status
+	// StatusInitialization node/cluster/nodegroup/task status
 	StatusInitialization = "INITIALIZATION"
 	// StatusCreateClusterFailed status create failed
 	StatusCreateClusterFailed = "CREATE-FAILURE"
@@ -340,6 +380,13 @@ const (
 	StatusAutoScalingOptionUpdateFailed = "UPDATE-FAILURE"
 	// StatusAutoScalingOptionStopped stopped status
 	StatusAutoScalingOptionStopped = "STOPPED"
+
+	// TaskStatusSuccess task success
+	TaskStatusSuccess = "SUCCESS"
+	// TaskStatusFailure task failed
+	TaskStatusFailure = "FAILURE"
+	// TaskStatusTimeout task run timeout
+	TaskStatusTimeout = "TIMEOUT"
 )
 
 const (

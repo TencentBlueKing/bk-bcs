@@ -33,7 +33,7 @@ func init() {
 }
 
 func (t defaultTemplate) render(wr io.Writer, results []*StatisticalResults) {
-	t.engine.Execute(wr, map[string][]*StatisticalResults{
+	t.engine.Execute(wr, map[string][]*StatisticalResults{ // nolint error not checked
 		"Results": results,
 	})
 }

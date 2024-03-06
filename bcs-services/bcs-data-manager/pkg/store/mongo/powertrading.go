@@ -19,11 +19,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/golang/protobuf/ptypes/any"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
@@ -56,7 +56,8 @@ func NewModelPowerTrading(db drivers.DB, bkbaseConf *types.BkbaseConfig) *ModelP
 }
 
 // GetPowerTradingInfo get operation data for power trading
-func (pt *ModelPowerTrading) GetPowerTradingInfo(ctx context.Context, request *datamanager.GetPowerTradingDataRequest) ([]*any.Any, int64, error) {
+func (pt *ModelPowerTrading) GetPowerTradingInfo(
+	ctx context.Context, request *datamanager.GetPowerTradingDataRequest) ([]*any.Any, int64, error) {
 	var total int64
 	tableIndex := request.GetTable()
 	public, ok := pt.Tables[tableIndex]

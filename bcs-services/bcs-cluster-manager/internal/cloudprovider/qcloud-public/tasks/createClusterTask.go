@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -225,7 +226,9 @@ func generateMasterExistedInstance(role string, instanceIDs []string, manyDisk b
 				return &api.LoginSettings{
 					Password: func() string {
 						if len(cls.GetNodeSettings().GetMasterLogin().InitLoginPassword) > 0 {
-							return cls.GetNodeSettings().GetMasterLogin().GetInitLoginPassword()
+							pwd, _ := encrypt.Decrypt(nil,
+								cls.GetNodeSettings().GetMasterLogin().GetInitLoginPassword())
+							return pwd
 						}
 						return ""
 					}(),
@@ -314,7 +317,9 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 				return &api.LoginSettings{
 					Password: func() string {
 						if len(info.Cluster.GetNodeSettings().GetWorkerLogin().InitLoginPassword) > 0 {
-							return info.Cluster.GetNodeSettings().GetWorkerLogin().InitLoginPassword
+							pwd, _ := encrypt.Decrypt(nil,
+								info.Cluster.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword())
+							return pwd
 						}
 						return ""
 					}(),
@@ -479,12 +484,18 @@ func generateNewRunInstance(info *cloudprovider.CloudDependBasicInfo, role strin
 				switch role {
 				case api.MASTER_ETCD.String():
 					if len(info.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword()) > 0 {
-						return common.StringPtr(info.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword())
+						pwd, _ := encrypt.Decrypt(nil,
+							info.Cluster.GetNodeSettings().GetMasterLogin().GetInitLoginPassword())
+
+						return common.StringPtr(pwd)
 					}
 					return nil
 				case api.WORKER.String():
 					if len(info.Cluster.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword()) > 0 {
-						return common.StringPtr(info.Cluster.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword())
+						pwd, _ := encrypt.Decrypt(nil,
+							info.Cluster.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword())
+
+						return common.StringPtr(pwd)
 					}
 					return nil
 				default:

@@ -22,14 +22,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
 	grpcproto "google.golang.org/grpc/encoding/proto"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
@@ -113,8 +113,10 @@ func (user *UserInfo) GetUser() string {
 
 const (
 	headerBKUserName = "bkUserName"
-	AdminClientUser  = "admin"
-	AdminGitOpsUser  = "bcs-gitops-manager"
+	// AdminClientUser xxx
+	AdminClientUser = "admin"
+	// AdminGitOpsUser xxx
+	AdminGitOpsUser = "bcs-gitops-manager"
 )
 
 // GetJWTInfo from request

@@ -139,7 +139,7 @@ func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
 	blog.Infof("RemoveExternalNodesFromClusterTask[%s] removeNodes[%v]", taskID, ipList)
 
 	// get add external nodes script from cluster
-	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo)
+	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo, false)
 	if err != nil {
 		blog.Errorf("RemoveExternalNodesFromClusterTask[%s]: GetClusterExternalNodeScript for cluster[%s] failed, %s",
 			taskID, clusterID, err.Error())

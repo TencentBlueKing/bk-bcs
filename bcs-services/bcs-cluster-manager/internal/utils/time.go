@@ -29,3 +29,15 @@ func TransTimeFormat(input string) string {
 
 	return formatTime.Format(format)
 }
+
+// TransTsToTime trans timestamp to time
+func TransTsToTime(timestamp int64) time.Time {
+	return time.Unix(timestamp, 0)
+}
+
+// TransTsToStr trans timestamp to time string
+func TransTsToStr(timestamp int64) string {
+	t := TransTsToTime(timestamp)
+	formattedTime := t.Format(time.RFC3339)
+	return formattedTime
+}

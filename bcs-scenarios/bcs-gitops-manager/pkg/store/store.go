@@ -26,7 +26,6 @@ import (
 	settings_util "github.com/argoproj/argo-cd/v2/util/settings"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )

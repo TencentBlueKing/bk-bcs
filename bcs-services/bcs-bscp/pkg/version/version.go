@@ -57,6 +57,9 @@ var (
 	// DEBUG if enable debug.
 	DEBUG = "false"
 
+	// CLIENTTYPE client type (agent、sidecar、sdk、command).
+	CLIENTTYPE = "sdk"
+
 	// GoVersion Go 版本号
 	GoVersion = runtime.Version()
 
@@ -84,10 +87,11 @@ func FormatVersion(prefix string, format Format) string {
 	if prefix != "" {
 		prefix += " "
 	}
-	rawFormat := fmt.Sprintf("%sVersion  : %s\nBuildTime: %s\nGitHash  : %s\nGoVersion: %s",
-		prefix, VERSION, BUILDTIME, GITHASH, GoVersion)
-	jsonFormat := fmt.Sprintf(`%s{"Version": "%s", "BuildTime": "%s", "GitHash": "%s", "GoVersion": "%s"}`,
-		prefix, VERSION, BUILDTIME, GITHASH, GoVersion)
+	rawFormat := fmt.Sprintf("%sVersion  : %s\nBuildTime: %s\nGitHash  : %s\nGoVersion: %s\nClientType: %s",
+		prefix, VERSION, BUILDTIME, GITHASH, GoVersion, CLIENTTYPE)
+	jsonFormat := fmt.Sprintf(`%s{"Version": "%s", "BuildTime": "%s", "GitHash": "%s", "GoVersion": "%s",
+	 "ClientType": "%s"}`,
+		prefix, VERSION, BUILDTIME, GITHASH, GoVersion, CLIENTTYPE)
 
 	switch format {
 	case Row:
@@ -108,10 +112,11 @@ func GetStartInfo() string {
 // Version NOTES
 func Version() *SysVersion {
 	return &SysVersion{
-		Version:   VERSION,
-		Hash:      GITHASH,
-		Time:      BUILDTIME,
-		GoVersion: GoVersion,
+		Version:    VERSION,
+		Hash:       GITHASH,
+		Time:       BUILDTIME,
+		GoVersion:  GoVersion,
+		ClientType: CLIENTTYPE,
 	}
 }
 
@@ -146,8 +151,9 @@ func parseVersion(v string) ([3]uint32, error) {
 
 // SysVersion describe a binary version
 type SysVersion struct {
-	Version   string `json:"version"`
-	Hash      string `json:"hash"`
-	Time      string `json:"time"`
-	GoVersion string `json:"go_version"`
+	Version    string `json:"version"`
+	Hash       string `json:"hash"`
+	Time       string `json:"time"`
+	GoVersion  string `json:"go_version"`
+	ClientType string `json:"client_type"`
 }

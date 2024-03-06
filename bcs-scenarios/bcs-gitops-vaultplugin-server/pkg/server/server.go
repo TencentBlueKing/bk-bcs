@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package server defines the vaultplugin server
@@ -24,14 +23,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/secret"
@@ -130,7 +129,7 @@ func (s *Server) initHTTPService() error {
 			if requestID == "" {
 				requestID = uuid.New().String()
 			}
-			r = r.WithContext(context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID))
+			r = r.WithContext(context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID)) // nolint
 			next.ServeHTTP(w, r)
 			endTime := time.Now()
 			cost := endTime.Sub(startTime).Seconds()

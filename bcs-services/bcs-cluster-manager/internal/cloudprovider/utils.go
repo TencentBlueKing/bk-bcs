@@ -271,6 +271,22 @@ func UpdateClusterStatus(clusterID string, status string) (*proto.Cluster, error
 	return cluster, nil
 }
 
+// UpdateNodeGroupStatus set nodegroup status
+func UpdateNodeGroupStatus(nodeGroupID, status string) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	group.Status = status
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetClusterByID get cluster by clusterID
 func GetClusterByID(clusterID string) (*proto.Cluster, error) {
 	return GetStorageModel().GetCluster(context.Background(), clusterID)
@@ -1213,4 +1229,26 @@ func UpdateClusterErrMessage(clusterId string, message string) error {
 	}
 
 	return errLocal
+}
+
+// UpdateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
+func UpdateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *proto.NodeGroup) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
+	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
+		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
+	}
+	if group.LaunchTemplate != nil {
+		group.LaunchTemplate.InstanceChargeType = newGroup.LaunchTemplate.InstanceChargeType
+	}
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

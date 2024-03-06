@@ -175,6 +175,7 @@ type CreateClusterOption struct {
 	Cloud        *proto.Cloud
 	WorkerNodes  []string
 	MasterNodes  []string
+	NodeGroupIDs []string
 	NodeTemplate *proto.NodeTemplate
 }
 

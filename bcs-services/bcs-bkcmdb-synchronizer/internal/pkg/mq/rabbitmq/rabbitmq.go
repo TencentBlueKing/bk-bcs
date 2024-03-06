@@ -90,7 +90,7 @@ func (r *RabbitMQ) EnsureExchange(chn *amqp.Channel) error {
 		return err
 	}
 
-	err = chn.ExchangeBind(
+	_ = chn.ExchangeBind(
 		exchangeName,
 		"*",
 		r.config.SourceExchange,
@@ -114,7 +114,7 @@ func (r *RabbitMQ) DeclareQueue(chn *amqp.Channel, queueName string, args amqp.T
 		true,
 		false,
 		args,
-		//amqp.Table{"x-expires": 60000},
+		// amqp.Table{"x-expires": 60000},
 	)
 	if err != nil {
 		fmt.Printf("Error creating queue with name: %s, err: %s", queueName, err.Error())

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package argoconn xxx
 package argoconn
 
 import (
@@ -69,8 +69,7 @@ func NewConn(op *api.ClientOptions) (*grpc.ClientConn, io.Closer, error) {
 	serverAddr := op.ServerAddr
 	network := "tcp"
 
-	var creds credentials.TransportCredentials
-	creds = credentials.NewTLS(&tls.Config{
+	var creds = credentials.NewTLS(&tls.Config{
 		InsecureSkipVerify: true, // nolint
 	})
 

@@ -247,6 +247,10 @@ const (
 	TemplateRevisionsTable Name = "template_revisions"
 	// ReleasedKvTable is released kv table's name
 	ReleasedKvTable Name = "released_kvs"
+	// ClientTable is clients table's name
+	ClientTable Name = "clients"
+	// ClientEventTable is client_events table's name
+	ClientEventTable Name = "client_events"
 )
 
 // RevisionColumns defines all the Revision table's columns.

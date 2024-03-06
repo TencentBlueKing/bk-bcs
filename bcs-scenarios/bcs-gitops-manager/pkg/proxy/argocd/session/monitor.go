@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package session
@@ -23,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
@@ -60,7 +60,7 @@ func (s *MonitorSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			request.URL = newURL
 		},
 		ErrorHandler: func(res http.ResponseWriter, request *http.Request, e error) {
-			if !utils.IsContextCanceled(e) {
+			if !utils.IsContextCanceled(e) { // nolint  empty branch (staticcheck)
 				// metric.ManagerSecretProxyFailed.WithLabelValues().Inc()
 			}
 			blog.Errorf("RequestID[%s] monitor session proxy '%s' with header '%s' failure: %s",

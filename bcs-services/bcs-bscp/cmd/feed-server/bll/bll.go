@@ -107,3 +107,8 @@ func (b *BLL) AppCache() *lcache.App {
 func (b *BLL) RKvCache() *lcache.ReleasedKv {
 	return b.cache.ReleasedKv
 }
+
+// ClientMetric return the client metric instance.
+func (b *BLL) ClientMetric() *lcache.ClientMetric {
+	return b.cache.ClientMetric
+}

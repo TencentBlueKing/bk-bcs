@@ -60,6 +60,8 @@ func main() {
 		table.ReleasedAppTemplateVariable{},
 		table.Kv{},
 		table.ReleasedKv{},
+		table.Client{},
+		table.ClientEvent{},
 	)
 
 	g.Execute()

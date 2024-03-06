@@ -65,7 +65,7 @@ func statisticsResult(one *Result) *StatisticalResults {
 				continue
 			}
 
-			failedMap[line].Total = failedMap[line].Total + 1
+			failedMap[line].Total++
 		}
 	}
 
@@ -125,7 +125,7 @@ func getResultFromContent(content string) ([]*Result, error) {
 		}
 
 		if one[len(one)-1] != '}' {
-			one = one + "}"
+			one += "}"
 		}
 
 		r := new(Result)
@@ -215,6 +215,6 @@ func compressStr(str, err string) string {
 		return "" + err
 	}
 
-	reg := regexp.MustCompile("\\s+")
+	reg := regexp.MustCompile("\\s+") // nolint
 	return reg.ReplaceAllString(str, " ") + err
 }

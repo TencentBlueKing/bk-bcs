@@ -137,10 +137,13 @@ func (c *cosClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) 
 		return nil, errors.Errorf("metadata status %d != 200", resp.StatusCode)
 	}
 
+	md5 := strings.Trim(resp.Header.Get("Etag"), "\"")
+
 	// cos only have etag, not for validate
 	metadata := &ObjectMetadata{
 		ByteSize: resp.ContentLength,
 		Sha256:   sign,
+		Md5:      md5,
 	}
 
 	return metadata, nil

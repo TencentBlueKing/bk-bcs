@@ -22,6 +22,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
@@ -38,8 +39,21 @@ func init() {
 type CloudValidate struct {
 }
 
-// CreateClusterValidate check createCluster operation
+// CreateClusterValidate create cluster validate
 func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
+	// kubernetes version
+	if len(req.ClusterBasicSettings.Version) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate lost kubernetes version in request", cloudName)
+	}
+
+	// check masterIP
+	if req.ManageType == common.ClusterManageTypeIndependent && len(req.Master) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate lost kubernetes cluster masterIP", cloudName)
+	}
+
+	// default not handle systemReinstall
+	req.SystemReinstall = true
+
 	return nil
 }
 

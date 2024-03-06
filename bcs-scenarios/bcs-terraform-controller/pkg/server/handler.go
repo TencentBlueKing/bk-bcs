@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package server xxx
@@ -17,16 +16,16 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/core"
-	"github.com/google/uuid"
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/api/v1"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/core"
 )
 
 // Apply 执行tf apply命令
@@ -57,8 +56,8 @@ func (h *handler) Apply(ctx *gin.Context) {
 		return
 	}
 
-	traceId := uuid.NewString() // tf-cr实例、tf-cr代码路径
-	task := core.NewTask(nil, traceId, tf, h.client)
+	traceId := uuid.NewString()                      // tf-cr实例、tf-cr代码路径
+	task := core.NewTask(nil, traceId, tf, h.client) // nolint do not pass a nil Context
 	if err := task.Init(); err != nil {
 		text := fmt.Sprintf("init task failed, req: %s, err: %s", req, err.Error())
 		blog.Error(text)
@@ -80,8 +79,8 @@ func (h *handler) Apply(ctx *gin.Context) {
 		return
 	}
 	// note: 事件、状态
-	//task.SyncEvent()
-	//task.SyncStatus()
+	// task.SyncEvent()
+	// task.SyncStatus()
 
 	detail := new(TaskApplyResult)
 	detail.Result = true
@@ -124,10 +123,10 @@ func (h *handler) CreatePlan(ctx *gin.Context) {
 		return
 	}
 
-	//task := core.NewTask(req.ID, tf, h.client)
-	//task.SetHook(req.Hook)
-	//go task.Handler()
-	//h.pool.Store(req.ID, task)
+	// task := core.NewTask(req.ID, tf, h.client)
+	// task.SetHook(req.Hook)
+	// go task.Handler()
+	// h.pool.Store(req.ID, task)
 
 	reply(ctx, nil)
 }

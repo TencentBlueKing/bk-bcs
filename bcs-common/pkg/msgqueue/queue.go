@@ -17,8 +17,8 @@ import (
 	"fmt"
 
 	"github.com/micro/go-micro/v2/broker"
-	"github.com/micro/go-plugins/broker/rabbitmq/v2"
-	"github.com/micro/go-plugins/broker/stan/v2"
+	rabbitmqv2 "github.com/micro/go-plugins/broker/rabbitmq/v2"
+	stanv2 "github.com/micro/go-plugins/broker/stan/v2"
 	natstan "github.com/nats-io/stan.go"
 	"github.com/pkg/errors"
 
@@ -99,7 +99,7 @@ func (mq *MsgQueue) Publish(data *broker.Message) error {
 
 	switch mq.queueOptions.CommonOptions.QueueKind {
 	case RABBITMQ:
-		err = mq.broker.Publish(queueName, data, rabbitmq.DeliveryMode(mq.queueOptions.PublishOptions.DeliveryMode))
+		err = mq.broker.Publish(queueName, data, rabbitmqv2.DeliveryMode(mq.queueOptions.PublishOptions.DeliveryMode))
 	case NATSTREAMING:
 		err = mq.broker.Publish(queueName, data)
 	default:
@@ -191,19 +191,19 @@ func (mq *MsgQueue) getSubOptions(queueName string) ([]broker.SubscribeOption, e
 		subOptions = append(subOptions, broker.DisableAutoAck())
 	}
 	if mq.queueOptions.SubscribeOptions.AckOnSuccess {
-		subOptions = append(subOptions, rabbitmq.AckOnSuccess())
+		subOptions = append(subOptions, rabbitmqv2.AckOnSuccess())
 	}
 
 	switch mq.queueOptions.CommonOptions.QueueKind {
 	case RABBITMQ:
 		if mq.queueOptions.SubscribeOptions.Durable {
-			subOptions = append(subOptions, rabbitmq.DurableQueue())
+			subOptions = append(subOptions, rabbitmqv2.DurableQueue())
 		}
 		if mq.queueOptions.SubscribeOptions.RequeueOnError {
-			subOptions = append(subOptions, rabbitmq.RequeueOnError())
+			subOptions = append(subOptions, rabbitmqv2.RequeueOnError())
 		}
 		if len(mq.queueOptions.SubscribeOptions.QueueArguments) > 0 {
-			subOptions = append(subOptions, rabbitmq.QueueArguments(mq.queueOptions.SubscribeOptions.QueueArguments))
+			subOptions = append(subOptions, rabbitmqv2.QueueArguments(mq.queueOptions.SubscribeOptions.QueueArguments))
 		}
 	case NATSTREAMING:
 		var natsopts []natstan.SubscriptionOption
@@ -222,7 +222,7 @@ func (mq *MsgQueue) getSubOptions(queueName string) ([]broker.SubscribeOption, e
 		if mq.queueOptions.SubscribeOptions.MaxInFlight != 0 {
 			natsopts = append(natsopts, natstan.MaxInflight(mq.queueOptions.SubscribeOptions.MaxInFlight))
 		}
-		subOptions = append(subOptions, stan.SubscribeOption(natsopts...))
+		subOptions = append(subOptions, stanv2.SubscribeOption(natsopts...))
 	default:
 		return nil, errors.New("unsupported queue kind")
 	}

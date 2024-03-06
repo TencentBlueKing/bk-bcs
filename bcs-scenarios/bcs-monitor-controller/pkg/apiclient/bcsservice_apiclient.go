@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package apiclient xxx
 package apiclient
 
 import (
@@ -25,6 +25,7 @@ import (
 )
 
 const (
+	// APIPathListCluster xxx
 	APIPathListCluster = "clustermanager/v1/cluster"
 )
 
@@ -79,7 +80,7 @@ func (c *BcsServiceApiClient) ListCluster() {
 	}
 	log.Printf("%d", len(listClusterResp.Data))
 
-	log.Printf(string(res))
+	log.Print(string(res))
 }
 
 func (c *BcsServiceApiClient) doRequest(urlStr string, params url.Values,

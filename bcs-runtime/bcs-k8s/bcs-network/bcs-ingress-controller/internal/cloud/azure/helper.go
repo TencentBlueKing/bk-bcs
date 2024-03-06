@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package azure
@@ -38,9 +37,10 @@ import (
 // - probe
 // - loadBalancingRules (can be seen as listener)
 // (LoadBalancer listener)   --> LoadBalancingRule --> backendAddressPool   --> backend1
-// 																		   |--> backend2
-//																		   |--> ...
-//							|--> ...
+//
+//												   |--> backend2
+//												   |--> ...
+//	|--> ...
 func (a *Alb) ensureLoadBalancerListener(region string, listeners []*networkextensionv1.Listener) (map[string]cloud.
 	Result, error) {
 	if len(listeners) == 0 {

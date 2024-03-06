@@ -88,16 +88,16 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
 	if !ua.req.TaskIDNull {
 		conds = append(conds, util.Condition(operator.Ne, "taskid", []string{""}))
 	}
-	if ua.req.Status != "" {
-		conds = append(conds, util.Condition(operator.Eq, "status", []string{ua.req.Status}))
-	}
-	if ua.req.TaskType != "" {
-		conds = append(conds, util.Condition(util.Regex, "tasktype", []string{ua.req.TaskType}))
-	}
 
 	if len(ua.req.IpList) > 0 {
 		ipList := strings.Split(ua.req.IpList, ",")
 		condDst = append(condDst, util.Condition(operator.In, "nodeiplist", ipList))
+	}
+	if ua.req.Status != "" {
+		condDst = append(condDst, util.Condition(operator.Eq, "status", []string{ua.req.Status}))
+	}
+	if ua.req.TaskType != "" {
+		condDst = append(condDst, util.Condition(util.Regex, "tasktype", []string{ua.req.TaskType}))
 	}
 
 	sumLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, condDst, &options.ListOption{
@@ -138,6 +138,7 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
 			CreateTime:   createTime,
 			TaskType:     v.TaskType,
 			Status:       v.Status,
+			ResourceName: v.GetResourceName(),
 		})
 	}
 
@@ -208,6 +209,7 @@ func (ua *ListOperationLogsAction) fetchV1OperationLogs() error {
 			Message:      v.Message,
 			OpUser:       v.OpUser,
 			CreateTime:   createTime,
+			ResourceName: v.ResourceName,
 		})
 	}
 

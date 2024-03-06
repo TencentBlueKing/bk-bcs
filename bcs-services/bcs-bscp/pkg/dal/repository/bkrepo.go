@@ -319,9 +319,17 @@ func (c *bkrepoClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, erro
 		return nil, errors.Errorf("metadata status %d != 200", resp.StatusCode)
 	}
 
+	sha256 := resp.Header.Get("X-Checksum-Sha256")
+	md5 := resp.Header.Get("X-Checksum-Md5")
+
+	if sha256 != sign {
+		return nil, errors.Errorf("metadata sha256 [%s] does not match the given signature [%s]", sha256, sign)
+	}
+
 	metadata := &ObjectMetadata{
 		ByteSize: resp.ContentLength,
 		Sha256:   sign,
+		Md5:      md5,
 	}
 
 	return metadata, nil

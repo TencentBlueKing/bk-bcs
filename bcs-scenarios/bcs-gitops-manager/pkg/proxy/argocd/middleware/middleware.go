@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package middleware defines the middleware for gitops
@@ -20,18 +19,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/tracing"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/tracing"
 )
 
+// HttpHandler xxx
 type HttpHandler func(r *http.Request) (*http.Request, *HttpResponse)
 
 type httpWrapper struct {
@@ -76,7 +76,7 @@ func (p *httpWrapper) setContext(rw http.ResponseWriter, r *http.Request) (conte
 	} else {
 		requestID = uuid.New().String()
 	}
-	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID)
+	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID) // nolint staticcheck
 	ctx = tracing.ContextWithRequestID(ctx, requestID)
 	rw.Header().Set(traceconst.RequestIDHeaderKey, requestID)
 

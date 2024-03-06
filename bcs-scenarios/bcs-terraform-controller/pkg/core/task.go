@@ -8,18 +8,19 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package core xxx
 package core
 
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	corev1 "k8s.io/api/core/v1"
@@ -28,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/repository"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/runner"
@@ -266,13 +266,13 @@ func (h *task) Plan() (string, error) {
 	return logs, nil
 }
 
-//  saveTfPlanToSecret 保存结果到 secret
+// saveTfPlanToSecret 保存结果到 secret
 func (h *task) saveTfPlanToSecret() error {
-	tfPlanBytes, err := ioutil.ReadFile(h.runner.GetPlanOutFile())
+	tfPlanBytes, err := os.ReadFile(h.runner.GetPlanOutFile())
 	if err != nil {
 		return errors.Wrapf(err, "read tf plan failed, tf: %s, trace-id: %s", h.nn, h.traceId)
 	}
-	//blog.Infof("tfPlanBytes: %d", len(tfPlanBytes)) //
+	// blog.Infof("tfPlanBytes: %d", len(tfPlanBytes)) //
 
 	tfplanSecretExists := true
 	tfplanSecret := new(corev1.Secret)
@@ -282,12 +282,11 @@ func (h *task) saveTfPlanToSecret() error {
 	defer cancel()
 
 	if err = h.client.Get(ctx, tfplanObjectKey, tfplanSecret); err != nil {
-		if apierrors.IsNotFound(err) {
-			tfplanSecretExists = false
-			//blog.Info("secret not exists, name: %s", secretName)
-		} else {
+		if !apierrors.IsNotFound(err) {
 			return errors.Wrapf(err, "unable to get the plan secret, tf: %s, trace-id: %s", h.nn, h.traceId)
 		}
+		tfplanSecretExists = false
+		// blog.Info("secret not exists, name: %s", secretName)
 	}
 	if tfplanSecretExists {
 		ctx, cancel := context.WithTimeout(h.rootCtx, 15*time.Second)
@@ -337,7 +336,7 @@ func (h *task) saveTfPlanToSecret() error {
 	return nil
 }
 
-//  saveTfPlanToConfigMap 保存明文结果到configmap
+// saveTfPlanToConfigMap 保存明文结果到configmap
 func (h *task) saveTfPlanToConfigMap(raw string) error {
 	tfplanCMExists := true
 	tfplanCM := new(corev1.ConfigMap)
@@ -347,11 +346,10 @@ func (h *task) saveTfPlanToConfigMap(raw string) error {
 	defer cancel()
 
 	if err := h.client.Get(ctx, tfplanObjectKey, tfplanCM); err != nil {
-		if apierrors.IsNotFound(err) {
-			tfplanCMExists = false
-		} else {
+		if !apierrors.IsNotFound(err) {
 			return errors.Wrapf(err, "unable to get the plan configmap, tf: %s, trace-id: %s", h.nn, h.traceId)
 		}
+		tfplanCMExists = false
 	}
 
 	if tfplanCMExists {
@@ -444,11 +442,10 @@ func (h *task) SaveApplyOutputToConfigMap(raw string) error {
 	defer cancel()
 
 	if err := h.client.Get(ctx, tfplanObjectKey, tfplanCM); err != nil {
-		if apierrors.IsNotFound(err) {
-			tfplanCMExists = false
-		} else {
+		if !apierrors.IsNotFound(err) {
 			return errors.Wrapf(err, "unable to get the plan configmap, tf: %s, trace-id: %s", h.nn, h.traceId)
 		}
+		tfplanCMExists = false
 	}
 
 	if tfplanCMExists {
@@ -496,9 +493,9 @@ func (h *task) SaveApplyOutputToConfigMap(raw string) error {
 // Clean repository
 func (h *task) Clean() {
 	// note: 调试过程中，先注释掉
-	//if err := h.repo.Clean(); err != nil {
+	// if err := h.repo.Clean(); err != nil {
 	//	blog.Errorf("core handler clean repository failed, err: %s", err.Error())
-	//}
+	// }
 }
 
 // Stop 停止执行
@@ -550,7 +547,7 @@ func (h *task) getRepoToken() error {
 //// Delete terraform
 //// 1. new terraform
 //// 1. destroy terraform
-//func (h *task) Delete() error {
+// func (h *task) Delete() error {
 //	req := &runner.DestroyRequest{
 //		TfInstance: h.traceId,
 //		Targets:    h.terraform.Spec.Targets,
@@ -561,4 +558,4 @@ func (h *task) getRepoToken() error {
 //	blog.Info("destroy terraform success, terraform: %s", h.nn)
 //
 //	return nil
-//}
+// }
