@@ -36,6 +36,7 @@ func newReleasedConfigItem(db *gorm.DB, opts ...gen.DOOption) releasedConfigItem
 	_releasedConfigItem.ByteSize = field.NewUint64(tableName, "byte_size")
 	_releasedConfigItem.OriginSignature = field.NewString(tableName, "origin_signature")
 	_releasedConfigItem.OriginByteSize = field.NewUint64(tableName, "origin_byte_size")
+	_releasedConfigItem.Md5 = field.NewString(tableName, "md5")
 	_releasedConfigItem.Memo = field.NewString(tableName, "memo")
 	_releasedConfigItem.Name = field.NewString(tableName, "name")
 	_releasedConfigItem.Path = field.NewString(tableName, "path")
@@ -69,6 +70,7 @@ type releasedConfigItem struct {
 	ByteSize        field.Uint64
 	OriginSignature field.String
 	OriginByteSize  field.Uint64
+	Md5             field.String
 	Memo            field.String
 	Name            field.String
 	Path            field.String
@@ -108,6 +110,7 @@ func (r *releasedConfigItem) updateTableName(table string) *releasedConfigItem {
 	r.ByteSize = field.NewUint64(table, "byte_size")
 	r.OriginSignature = field.NewString(table, "origin_signature")
 	r.OriginByteSize = field.NewUint64(table, "origin_byte_size")
+	r.Md5 = field.NewString(table, "md5")
 	r.Memo = field.NewString(table, "memo")
 	r.Name = field.NewString(table, "name")
 	r.Path = field.NewString(table, "path")
@@ -150,7 +153,7 @@ func (r *releasedConfigItem) GetFieldByName(fieldName string) (field.OrderExpr, 
 }
 
 func (r *releasedConfigItem) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 23)
+	r.fieldMap = make(map[string]field.Expr, 24)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["release_id"] = r.ReleaseID
 	r.fieldMap["commit_id"] = r.CommitID
@@ -160,6 +163,7 @@ func (r *releasedConfigItem) fillFieldMap() {
 	r.fieldMap["byte_size"] = r.ByteSize
 	r.fieldMap["origin_signature"] = r.OriginSignature
 	r.fieldMap["origin_byte_size"] = r.OriginByteSize
+	r.fieldMap["md5"] = r.Md5
 	r.fieldMap["memo"] = r.Memo
 	r.fieldMap["name"] = r.Name
 	r.fieldMap["path"] = r.Path
