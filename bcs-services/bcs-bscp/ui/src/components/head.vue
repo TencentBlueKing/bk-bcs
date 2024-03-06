@@ -144,6 +144,7 @@
     { id: 'templates-list', module: 'templates', name: t('配置模板') },
     { id: 'script-list', module: 'scripts', name: t('脚本管理') },
     { id: 'credentials-management', module: 'credentials', name: t('服务密钥') },
+    { id: 'client-manage', module: 'client', name: t('客户端管理') },
   ]);
 
   const optionList = ref<ISpaceDetail[]>([]);

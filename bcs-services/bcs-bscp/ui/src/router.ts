@@ -142,6 +142,14 @@ const routes = [
         },
         component: () => import('./views/space/credentials/index.vue'),
       },
+      {
+        path: 'client/:appId?',
+        name: 'client-manage',
+        meta: {
+          navModule: 'client',
+        },
+        component: () => import('./views/space/client/index.vue'),
+      },
     ],
   },
   {

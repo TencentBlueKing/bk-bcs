@@ -72,6 +72,7 @@ export default {
   问题反馈: 'Problem Feedback',
   退出登录: 'Log out',
   新建业务: 'New Business Creation',
+  客户端管理: 'Client manage',
 
   // 配置管理
   版本名称: 'Version Name',
