@@ -1,3 +1,5 @@
+// +build tools
+
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -8,19 +10,10 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package option
+// This package imports things required by build scripts, to force `go mod` to see them as dependencies
+package tools
 
-const (
-	// TerraformBinPath  terraform 命令存放目录
-	TerraformBinPath = "/usr/local/bin/terraform"
-
-	// RepositoryStorePath 代码存储路径
-	RepositoryStorePath = "/data/bcs/terraform"
-)
-
-// GetRepoStoragePath 返回仓库的存储位置
-func GetRepoStoragePath(tfName, tfUID string) string {
-	return RepositoryStorePath + "/" + tfName + "/" + tfUID
-}
+import _ "k8s.io/code-generator"

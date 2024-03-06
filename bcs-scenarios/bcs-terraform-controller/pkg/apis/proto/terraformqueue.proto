@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package terraformqueue;
+
+option go_package = "./pkg/apis/proto;terraformqueue";
+
+service Queue {
+  rpc Poll (PollRequest) returns (PollResponse) {}
+}
+
+message PollRequest {
+  int32 index = 1;
+}
+
+message PollResponse {
+  bytes data = 1;
+}

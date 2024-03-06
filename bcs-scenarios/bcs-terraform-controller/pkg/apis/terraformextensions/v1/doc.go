@@ -10,17 +10,13 @@
  * limitations under the License.
  */
 
-package option
+// +k8s:deepcopy-gen=package,register
+// +k8s:openapi-gen=true
+// +k8s:defaulter-gen=TypeMeta
+// +k8s:client-gen=true
+// +k8s:informer-gen=true
+// +k8s:lister-gen=true
+// +groupName=terraformextensions.bkbcs.tencent.com
 
-const (
-	// TerraformBinPath  terraform 命令存放目录
-	TerraformBinPath = "/usr/local/bin/terraform"
-
-	// RepositoryStorePath 代码存储路径
-	RepositoryStorePath = "/data/bcs/terraform"
-)
-
-// GetRepoStoragePath 返回仓库的存储位置
-func GetRepoStoragePath(tfName, tfUID string) string {
-	return RepositoryStorePath + "/" + tfName + "/" + tfUID
-}
+// Package v1 is the v1 version of the API.
+package v1

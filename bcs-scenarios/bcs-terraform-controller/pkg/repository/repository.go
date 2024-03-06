@@ -8,249 +8,138 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-// Package repository xxx
 package repository
 
 import (
 	"context"
 	"os"
-	"path"
-	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
-	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v2/util/db"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/pkg/errors"
-	apiv1 "k8s.io/apimachinery/pkg/types"
 
-	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/api/v1"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/option"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/internal/logctx"
+	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/apis/terraformextensions/v1"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/utils"
 )
 
-// Handler handle
+// Handler 定义用来进行仓库相关操作的接口
 type Handler interface {
-	// Init 初始化
-	Init() error
-	// GetLastCommitId 拉取
-	GetLastCommitId() (string, error)
-	// Pull 拉取代码
-	Pull() error
-	// Clean 清理本地代码
-	Clean() error
-	// GetExecutePath tf执行路径路径
-	GetExecutePath() string
-	// GetCommitId 获取commit-id, 必须pull成功后才能拿到commit-id
-	GetCommitId() string
+	GetLastCommitId(ctx context.Context, repo *tfv1.GitRepository) (string, error)
+	CheckoutCommit(ctx context.Context, repo *tfv1.GitRepository, commitID, path string) (string, error)
 }
 
-// handler git工具, 可以拉远程仓库的代码到本地
 type handler struct {
-	// traceId trace id
-	traceId string
-	// ctx context
-	ctx context.Context
-	// config 仓库配置信息
-	config tfv1.GitRepository
-	// nn namespaced and name
-	nn apiv1.NamespacedName
-	// token 密钥
-	token string
-
-	// gitClient git store
-	gitClient store.Store
-	// rootPath git项目根目录
-	rootPath string
-	// executePath tf执行路径路径
-	executePath string
-	// repoInfo 从bcs-gitops-manager拉取到仓库源信息
-	repoInfo *v1alpha1.Repository
-	// commitId 提交id
-	commitId string
-	// lastCommitId 该分支最后的commit-id
-	lastCommitId string
+	argoDB db.ArgoDB
 }
 
-// NewHandler new handler obj
-func NewHandler(
-	ctx context.Context, config tfv1.GitRepository, token, traceId string, nn apiv1.NamespacedName) Handler {
+// NewRepositoryHandler 创建 Repository Handler 的实例
+func NewRepositoryHandler(argoDB db.ArgoDB) Handler {
 	return &handler{
-		nn:      nn,
-		ctx:     ctx,
-		token:   token,
-		config:  config,
-		traceId: traceId,
+		argoDB: argoDB,
 	}
 }
 
-// Init 前置检查 + 获取密钥
-func (g *handler) Init() error {
-	if err := g.checkGitRepository(); err != nil { // 为空检查
-		return errors.Wrapf(err, "check terraform '%s' failed, traceId: %s", g.nn.String(), g.traceId)
-	}
-	g.gitClient = store.NewStore(option.GlobalGitopsOpt)
-	if err := g.gitClient.Init(); err != nil {
-		return errors.Wrapf(err, "init git client failed, terraform: %s, traceId: %s", g.nn.String(), g.traceId)
-	}
-	ctx, cancel := context.WithTimeout(g.ctx, 30*time.Second) // 设置超时时间为30秒
-	defer cancel()
-
-	repository, err := g.gitClient.GetRepository(ctx, g.config.Repo) // 从gitopts获取git repository
+func (h *handler) buildRepoAuth(ctx context.Context, repoUrl string) (transport.AuthMethod, error) {
+	argoRepo, err := h.argoDB.GetRepository(ctx, repoUrl)
 	if err != nil {
-		return errors.Wrapf(err, "get repository failed, terraform: %s, traceId: %s", g.nn.String(), g.traceId)
+		return nil, errors.Wrapf(err, "get repository '%s' from argo db failed", repoUrl)
 	}
-	if repository == nil {
-		return errors.Errorf("repository '%s' is nil, traceId: %s", g.config.Repo, g.traceId)
+	if argoRepo == nil {
+		return nil, errors.Errorf("repository '%s' not found", repoUrl)
 	}
-	blog.Infof("query '%s' repository: %s", g.config.Repo, utils.ToJsonString(repository))
-
-	g.repoInfo = repository
-	g.rootPath = path.Join(option.RepositoryStorePath, g.traceId)
-	blog.Infof("terraform: %s, save path: %s, repo: %s", g.nn.String(), g.rootPath, g.config.Repo)
-
-	return nil
+	if argoRepo.Username != "" && argoRepo.Password != "" {
+		return &http.BasicAuth{
+			Username: argoRepo.Username,
+			Password: argoRepo.Password,
+		}, nil
+	}
+	if argoRepo.SSHPrivateKey != "" {
+		publicKeys, err := ssh.NewPublicKeys("git", []byte(argoRepo.SSHPrivateKey), "")
+		if err != nil {
+			return nil, errors.Wrapf(err, "create public keys failed")
+		}
+		return publicKeys, nil
+	}
+	return nil, errors.Errorf("not https/ssh authentication")
 }
 
-// GetLastCommitId 拉取
-// 仅用作快速验证
-func (g *handler) GetLastCommitId() (string, error) {
-	if len(g.lastCommitId) != 0 {
-		return g.lastCommitId, nil
-	}
-	storer := memory.NewStorage()
-	remoteRepo := git.NewRemote(storer, &config.RemoteConfig{
-		Name: g.config.TargetRevision,
-		URLs: []string{g.config.Repo},
+// GetLastCommitId 获取仓库的最后一次提交 CommitID
+func (h *handler) GetLastCommitId(ctx context.Context, repo *tfv1.GitRepository) (string, error) {
+	memStore := memory.NewStorage()
+	remoteRepo := git.NewRemote(memStore, &config.RemoteConfig{
+		Name: repo.Repo,
+		URLs: []string{repo.Repo},
 	})
+	auth, err := h.buildRepoAuth(ctx, repo.Repo)
+	if err != nil {
+		return "", errors.Wrapf(err, "repository build authencation failed")
+	}
 
-	// 拉取远程仓库的引用信息
 	refs, err := remoteRepo.List(&git.ListOptions{
-		Auth: &http.BasicAuth{
-			Username: g.repoInfo.Username,
-			Password: g.token,
-		},
+		Auth: auth,
 	})
 	if err != nil {
-		return "", errors.Wrapf(err, "Failed to list references: %s, tf: %s", g.config.TargetRevision, g.nn)
+		return "", errors.Wrapf(err, "failed to list references")
 	}
-
-	// 遍历引用信息，打印分支名和commit ID
+	refRevisions := make(map[string]string)
+	var targetRefName string
 	for _, ref := range refs {
-		if ref.Name().IsBranch() && ref.Name().Short() == g.config.TargetRevision {
-			g.lastCommitId = ref.Hash().String()
-			return g.lastCommitId, nil
+		if ref.Type() == plumbing.HashReference {
+			refRevisions[ref.Name().String()] = ref.Hash().String()
+		}
+		if ref.Name().Short() == repo.TargetRevision {
+			if ref.Type() == plumbing.HashReference {
+				return ref.Hash().String(), nil
+			}
+			if ref.Type() == plumbing.SymbolicReference {
+				targetRefName = ref.Target().String()
+			}
 		}
 	}
-
-	return "", errors.Errorf("not found branch, target: %s, tf: %s", g.config.TargetRevision, g.nn)
+	hash, ok := refRevisions[targetRefName]
+	if ok {
+		return hash, nil
+	}
+	return "", errors.Errorf("not found branch '%s'", repo.TargetRevision)
 }
 
-// Pull repository to local
-func (g *handler) Pull() error {
-	opt := &git.CloneOptions{
-		URL: g.repoInfo.Repo,
-		Auth: &http.BasicAuth{
-			Username: g.repoInfo.Username,
-			Password: g.token,
-		},
-	}
-
-	repo, err := git.PlainClone(g.rootPath, false, opt)
+// CheckoutCommit 将目录中的代码仓库 checkout 到对应的 commit
+func (h *handler) CheckoutCommit(ctx context.Context, repo *tfv1.GitRepository, commitID, path string) (string, error) {
+	repoName := utils.ParseGitRepoName(repo.Repo)
+	repoPath := path + "/" + repoName
+	auth, err := h.buildRepoAuth(ctx, repo.Repo)
 	if err != nil {
-		return errors.Wrapf(err, "pull repository failed, repo: %s, terraform: %s, traceId: %s",
-			g.repoInfo.Proxy, g.nn.String(), g.traceId)
+		return "", errors.Wrapf(err, "repository build authencation failed")
 	}
-	blog.Infof("git clone success, repo: %s", g.repoInfo.Repo)
-
-	head, err := repo.Head()
+	if err := os.RemoveAll(repoPath); err != nil {
+		return "", errors.Wrapf(err, "remove repo '%s' failed", repoPath)
+	}
+	gitRepo, err := git.PlainClone(repoPath, false, &git.CloneOptions{
+		URL:  repo.Repo,
+		Auth: auth,
+	})
 	if err != nil {
-		return errors.Wrapf(err, "get git repositroy head info failed, repo: %s, terraform: %s, traceId: %s",
-			g.repoInfo.Proxy, g.nn.String(), g.traceId)
+		return repoPath, errors.Wrapf(err, "clone repository failed")
 	}
-
-	g.executePath = path.Join(g.rootPath, g.config.Path)
-	if len(g.config.TargetRevision) == 0 {
-		blog.Infof("current branch info: %s, execute path: %s", head.String(), g.executePath)
-		return nil
-	}
-
-	if err = g.checkoutRevision(repo); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Clean 及时清理本地仓库
-func (g *handler) Clean() error {
-	var err error
-	if len(g.rootPath) == 0 {
-		return nil
-	}
-	if err = os.RemoveAll(g.rootPath); err == nil {
-		blog.Infof("remove '%s' path success, terraform: %s", g.rootPath, g.nn.String())
-		return nil
-	}
-
-	return errors.Wrapf(err, "remove '%s' path failed, terraform: %s, traceId: %s", g.rootPath,
-		g.nn.String(), g.traceId)
-}
-
-// GetExecutePath tf执行路径路径
-func (g *handler) GetExecutePath() string {
-	return g.executePath
-}
-
-// GetCommitId 获取commit-id, 必须pull成功后才能拿到commit-id
-func (g *handler) GetCommitId() string {
-	return g.commitId
-}
-
-// checkGitRepository 检查repository是否为空
-func (g *handler) checkGitRepository() error {
-	if len(g.config.Repo) == 0 {
-		return errors.New("repo address is nil")
-	}
-	return nil
-}
-
-// checkoutRevision git checkout revision
-func (g *handler) checkoutRevision(repo *git.Repository) error {
-	if repo == nil {
-		return nil
-	}
-
-	// resolve revision
-	hash, err := repo.ResolveRevision(plumbing.Revision(g.config.TargetRevision))
+	logctx.Infof(ctx, "clone repository success")
+	worktree, err := gitRepo.Worktree()
 	if err != nil {
-		return errors.Wrapf(err, "revisoin not foud, repo: %s, revision: %s",
-			g.config.Repo, g.config.TargetRevision)
+		return repoPath, errors.Wrapf(err, "repository get worktree failed")
 	}
-
-	// get work tree
-	worktree, err := repo.Worktree()
-	if err != nil {
-		return errors.Wrapf(err, "getting worktree failed, repo: %s, revision: %s",
-			g.config.Repo, g.config.TargetRevision)
+	if err = worktree.Checkout(&git.CheckoutOptions{
+		Hash: plumbing.NewHash(commitID),
+	}); err != nil {
+		return repoPath, errors.Wrapf(err, "repository checkout commit '%s' failed", commitID)
 	}
-
-	// checkout out revision
-	if err = worktree.Checkout(&git.CheckoutOptions{Hash: *hash}); err != nil {
-		return errors.Wrapf(err, "checkout out revision failed, repo: %s, revision: %s",
-			g.config.Repo, g.config.TargetRevision)
-	}
-
-	blog.Infof("checkout revision success, repo: %s, current revision: %s, commit-id: %s, execute path: %s",
-		g.config.Repo, g.config.TargetRevision, hash.String(), g.executePath)
-
-	g.commitId = hash.String()
-
-	return nil
+	return repoPath, nil
 }
