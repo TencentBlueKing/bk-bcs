@@ -43,6 +43,7 @@ type proxy struct {
 	authorizer          auth.Authorizer
 	cfgClient           pbcs.ConfigClient
 	configImportService *configImport
+	configExportService *configExport
 	kvService           *kvService
 }
 
@@ -88,6 +89,11 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		return nil, err
 	}
 
+	configExportService, err := newConfigExportService(cc.ApiServer().Repo, authorizer, cfgClient)
+	if err != nil {
+		return nil, err
+	}
+
 	kv := newKvService(authorizer, cfgClient)
 
 	p := &proxy{
@@ -95,6 +101,7 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		repo:                repo,
 		bkNotice:            bkNotice,
 		configImportService: configImportService,
+		configExportService: configExportService,
 		state:               state,
 		authorizer:          authorizer,
 		authSvrMux:          authSvrMux,
