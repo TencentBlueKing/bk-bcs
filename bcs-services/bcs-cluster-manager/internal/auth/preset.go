@@ -99,14 +99,8 @@ var NoAuthMethod = []string{
 	"ClusterManager.DebugBkSopsTask",
 	"ClusterManager.Health",
 
-	"ClusterManager.GetBatchCustomSetting",
-	"ClusterManager.GetBizTopologyHost",
-	"ClusterManager.GetTopologyNodes",
-	"ClusterManager.GetScopeHostCheck",
 	"ClusterManager.GetCloudAccountType",
 	"ClusterManager.GetCloudBandwidthPackages",
-	"ClusterManager.GetTopologyHostIdsNodes",
-	"ClusterManager.GetHostsDetails",
 	"ClusterManager.VerifyCloudAccount",
 	"ClusterManager.CheckCidrConflictFromVpc",
 	"ClusterManager.GetMasterSuggestedMachines",
@@ -258,4 +252,12 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DebugBkSopsTask":        "",
 
 	"ClusterManager.Health": "",
+
+	// cmdb
+	"ClusterManager.GetBatchCustomSetting":   project.CanViewProjectOperation,
+	"ClusterManager.GetBizTopologyHost":      project.CanViewProjectOperation,
+	"ClusterManager.GetTopologyNodes":        project.CanViewProjectOperation,
+	"ClusterManager.GetTopologyHostIdsNodes": project.CanViewProjectOperation,
+	"ClusterManager.GetHostsDetails":         project.CanViewProjectOperation,
+	"ClusterManager.GetScopeHostCheck":       project.CanViewProjectOperation,
 }
