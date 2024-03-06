@@ -358,6 +358,10 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 			RepositoryPath: uriD.Path(one.CommitSpec.Signature),
 		}
 	}
+	var releaseName string
+	if len(ciList) > 0 {
+		releaseName = ciList[0].ReleaseName
+	}
 	var preHook, postHook *pbhook.HookSpec
 	if pre != nil {
 		preHook = &pbhook.HookSpec{
@@ -374,10 +378,11 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 
 	return &Event{
 		Change: &sfs.ReleaseEventMetaV1{
-			App:       inst.App,
-			AppID:     inst.AppID,
-			ReleaseID: releaseID,
-			CIMetas:   ciMeta,
+			App:         inst.App,
+			AppID:       inst.AppID,
+			ReleaseID:   releaseID,
+			ReleaseName: releaseName,
+			CIMetas:     ciMeta,
 			Repository: &sfs.RepositoryV1{
 				Root: uriD.Root(),
 				Url:  uriD.Url(),

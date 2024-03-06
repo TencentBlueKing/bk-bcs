@@ -61,6 +61,7 @@ type EventMeta struct {
 type ReleaseCICache struct {
 	ID             uint32                      `json:"id"`
 	ReleaseID      uint32                      `json:"reid"`
+	ReleaseName    string                      `json:"release_name"`
 	CommitID       uint32                      `json:"cid"`
 	CommitSpec     *CommitSpecCache            `json:"cspec"`
 	ConfigItemID   uint32                      `json:"config_item_id"`
@@ -189,13 +190,14 @@ func (c *CredentialCache) MatchKv(app, key string) bool {
 }
 
 // ReleaseCICaches convert ReleasedConfigItem to ReleaseCICache.
-func ReleaseCICaches(rs []*table.ReleasedConfigItem) []*ReleaseCICache {
+func ReleaseCICaches(rs []*table.ReleasedConfigItem, releaseName string) []*ReleaseCICache {
 	list := make([]*ReleaseCICache, len(rs))
 
 	for index, one := range rs {
 		list[index] = &ReleaseCICache{
 			ID:           one.ID,
 			ReleaseID:    one.ReleaseID,
+			ReleaseName:  releaseName,
 			CommitID:     one.CommitID,
 			ConfigItemID: one.ConfigItemID,
 			CommitSpec: &CommitSpecCache{
@@ -225,7 +227,7 @@ func ReleaseCICaches(rs []*table.ReleasedConfigItem) []*ReleaseCICache {
 // ReleaseKvCaches convert ReleasedConfigItem to ReleaseKvCache.
 func ReleaseKvCaches(rs []*table.ReleasedKv) []*ReleaseKvCache {
 	// 泛型转换处理
-	list := lo.Map(rs, func(one *table.ReleasedKv, idnex int) *ReleaseKvCache {
+	list := lo.Map(rs, func(one *table.ReleasedKv, index int) *ReleaseKvCache {
 		return &ReleaseKvCache{
 			ID:          one.ID,
 			ReleaseID:   one.ReleaseID,
