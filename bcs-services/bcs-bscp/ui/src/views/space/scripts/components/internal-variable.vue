@@ -54,6 +54,14 @@
         '单个客户端可使用多个服务的配置，为保证路径唯一，服务配置需存放于：配置根目录/业务ID/服务名称，服务配置存放目录 = 配置存放根目录/业务ID/服务名称',
       ),
     },
+    {
+      cnName: t('当前配置版本名称'),
+      shellVar: '${bk_bscp_current_version_name}',
+      pythonVar: 'os.environn.get( \'bk_bscp_current_version_name\' )',
+      tips: t(
+        '当前客户端最近一次成功拉取的服务配置版本名称，如 V1，通常会在后置脚本中为服务配置版本添加标识，以表示配置文件已经完成拉取',
+      ),
+    },
   ];
 
   const handleCopyVar = (text: string) => {
