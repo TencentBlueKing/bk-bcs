@@ -75,6 +75,7 @@
     origin_byte_size?: string;
     signature: string;
     origin_signature?: string;
+    md5: string;
     create_at: string;
     creator: string;
     update_at?: string;
@@ -107,6 +108,7 @@
     file_type: '',
     byte_size: '',
     signature: '',
+    md5: '',
     create_at: '',
     creator: '',
     user: '',
@@ -149,7 +151,7 @@
       if (versionData.value.id) {
         const res = await getReleasedConfigItemDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
         const { content, memo } = res.config_item.commit_spec;
-        const { byte_size, origin_byte_size, signature, origin_signature } = content;
+        const { byte_size, origin_byte_size, signature, origin_signature, md5 } = content;
         const { create_at, creator, update_at, reviser } = res.config_item.revision;
         const { name, path, file_type, file_mode, permission } = res.config_item.spec;
         const { user, user_group, privilege } = permission;
@@ -163,6 +165,7 @@
           origin_byte_size,
           signature,
           origin_signature,
+          md5,
           create_at,
           creator,
           update_at,
@@ -176,7 +179,7 @@
         const { create_at, creator, update_at, reviser } = res.config_item.revision;
         const { name, memo, path, file_type, file_mode, permission } = res.config_item.spec;
         const { user, user_group, privilege } = permission;
-        const { byte_size, signature } = res.content;
+        const { byte_size, signature, md5 } = res.content;
         configDetail.value = {
           name,
           path,
@@ -185,6 +188,7 @@
           memo,
           byte_size,
           signature,
+          md5,
           create_at,
           creator,
           update_at,
@@ -224,7 +228,7 @@
         const { revision, spec } = res.details[0];
         const { creator, create_at } = revision;
         const { content_spec, file_mode, file_type, name, revision_memo, revision_version, path, permission } = spec;
-        const { byte_size, signature } = content_spec;
+        const { byte_size, signature, md5 } = content_spec;
         const { user, user_group, privilege } = permission;
         template_space_id = res.details[0].attachment?.template_space_id;
         configDetail.value = {
@@ -236,6 +240,7 @@
           revision_version,
           byte_size,
           signature,
+          md5,
           create_at,
           creator,
           user,
