@@ -56,18 +56,21 @@ class VariableReplace {
   // 递归匹配文本中变量名，逐一替换为变量值，并计算文本替换后的变量值所在新内容的行、列位置以及替换后的文本
   public getReplacedData(text: string, variablesMap: { [key: string]: string }) {
     let replacedText = text;
-    const reg = new RegExp('{{\\s*\\.([bB][kK]_[bB][sS][cC][pP]_[A-Za-z0-9_]*)\\s*}}');
+    const varRegStr = '{{\\s*\\.([bB][kK]_[bB][sS][cC][pP]_[A-Za-z0-9_]*)\\s*}}';
+    const reg = new RegExp(varRegStr, 'g');
     const variablePos: { name: string; start: number; end: number }[] = [];
-    let match = text.match(reg);
+    let match = reg.exec(text);
+
     while (match && match.length > 0) {
       const name = match[1];
       if (name in variablesMap) {
         const val = variablesMap[name];
         const index = (match.index as number) + 1;
-        replacedText = replacedText.replace(reg, val);
+        replacedText = replacedText.replace(new RegExp(varRegStr), val);
         variablePos.push({ name, start: index, end: index + val.length });
-        match = replacedText.match(reg);
+        reg.lastIndex = index + val.length;
       }
+      match = reg.exec(replacedText);
     }
     return { replacedText, variablePos };
   }
