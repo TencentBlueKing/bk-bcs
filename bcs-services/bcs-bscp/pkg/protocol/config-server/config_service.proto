@@ -171,6 +171,11 @@ service Config {
       get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/query/name/{release_name}"
     };
   }
+  rpc GetRelease(GetReleaseReq) returns (pbrelease.Release) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}"
+    };
+  }
   rpc DeprecateRelease(DeprecateReleaseReq) returns (DeprecateReleaseResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/deprecate"
@@ -1136,6 +1141,12 @@ message GetReleaseByNameReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   string release_name = 3;
+}
+
+message GetReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
 }
 
 message DeprecateReleaseReq {
