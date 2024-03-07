@@ -46,8 +46,8 @@ export PACKAGEPATH=./build/bcs.${VERSION}
 export SCENARIOSPACKAGE=${WORKSPACE}/${PACKAGEPATH}/bcs-scenarios
 
 # bscp 应用自定义
-export BSCP_LDFLAG=-ldflags "-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
-	-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH}"
+export BSCP_LDFLAG=-ldflags "-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
+	-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH}"
 
 # tongsuo related environment variables
 export TONGSUO_PATH?=$(WORKSPACE)/build/bcs.${VERSION}/tongsuo
@@ -318,6 +318,12 @@ bscp:pre
 	cd bcs-services/bcs-bscp/cmd/vault-server/vault-plugins && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-secret *.go
 	# alias docker image name to bk-bscp-hyper
 	touch ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-hyper && chmod a+x ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-hyper && ls -la ${PACKAGEPATH}/bcs-services/bcs-bscp/hyper
+
+busybox:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-busybox
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-busybox ${PACKAGEPATH}/bcs-services
+	# alias docker image name to bcs-busybox
+	touch ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-busybox/bcs-busybox && chmod a+x ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-busybox/bcs-busybox
 
 k8s-watch:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
