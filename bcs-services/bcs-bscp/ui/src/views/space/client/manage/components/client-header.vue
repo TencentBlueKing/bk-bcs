@@ -54,9 +54,9 @@
   import { useRoute } from 'vue-router';
   import { storeToRefs } from 'pinia';
   import { AngleUpFill, Search } from 'bkui-vue/lib/icon';
-  import { getAppList } from '../../../../api';
-  import { IAppItem } from '../../../../../types/app';
-  import useClientStore from '../../../../store/client';
+  import { getAppList } from '../../../../../api';
+  import { IAppItem } from '../../../../../../types/app';
+  import useClientStore from '../../../../../store/client';
 
   const clientStore = useClientStore();
   const { appData } = storeToRefs(clientStore);

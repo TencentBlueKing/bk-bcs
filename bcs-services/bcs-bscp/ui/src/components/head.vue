@@ -8,14 +8,32 @@
         <span class="head-title"> {{ t('服务配置中心') }} </span>
       </div>
       <div class="head-routes">
-        <router-link
-          v-for="nav in navList"
-          :class="['nav-item', { actived: isNavActived(nav.module) }]"
-          :key="nav.id"
-          :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }"
-          @click="handleNavClick(nav.id)">
-          {{ nav.name }}
-        </router-link>
+        <div v-for="nav in navList" :key="nav.id" :class="['nav-item', { actived: isFirstNavActived(nav.module) }]">
+          <bk-popover
+            v-if="nav.children"
+            ext-cls="nav-popover"
+            placement="bottom"
+            :arrow="false"
+            :offset="0"
+            popover-delay="0">
+            <div :class="['firstNav-item', { actived: isFirstNavActived(nav.module) }]">{{ nav.name }}</div>
+            <template #content>
+              <div
+                v-for="secondNav in nav.children"
+                :key="secondNav.id"
+                :class="['secondNav-item', { actived: isSecondNavActived(secondNav.module) }]">
+                <router-link
+                  :to="{ name: secondNav.id, params: { spaceId: spaceId || 0 } }"
+                  @click="handleNavClick(secondNav.id)">
+                  {{ secondNav.name }}
+                </router-link>
+              </div>
+            </template>
+          </bk-popover>
+          <router-link v-else :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }" @click="handleNavClick(nav.id)">
+            {{ nav.name }}
+          </router-link>
+        </div>
       </div>
     </div>
     <div class="head-right">
@@ -140,11 +158,27 @@
   const navList = computed(() => [
     { id: 'service-all', module: 'service', name: t('服务管理') },
     { id: 'groups-management', module: 'groups', name: t('分组管理') },
-    { id: 'variables-management', module: 'variables', name: t('全局变量') },
-    { id: 'templates-list', module: 'templates', name: t('配置模板') },
     { id: 'script-list', module: 'scripts', name: t('脚本管理') },
-    { id: 'credentials-management', module: 'credentials', name: t('服务密钥') },
-    { id: 'client-manage', module: 'client', name: t('客户端管理') },
+    {
+      id: 'templates-and-variables',
+      module: 'templates-and-variables',
+      name: t('模板与变量'),
+      children: [
+        { id: 'templates-list', module: 'templates', name: t('模板管理') },
+        { id: 'variables-management', module: 'variables', name: t('变量管理') },
+      ],
+    },
+
+    {
+      id: 'client-manage',
+      module: 'client',
+      name: t('客户端管理'),
+      children: [
+        { id: 'client-statistics', module: 'client-statistics', name: t('客户端统计') },
+        { id: 'client-search', module: 'client-search', name: t('客户端查询') },
+        { id: 'credentials-management', module: 'credentials', name: t('客户端密钥') },
+      ],
+    },
   ]);
 
   const optionList = ref<ISpaceDetail[]>([]);
@@ -167,8 +201,21 @@
     },
   );
 
-  const isNavActived = (name: string) =>
-    spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === name;
+  const isFirstNavActived = (name: string) => {
+    const nav = navList.value.find((item) => item.module === name);
+    if (nav!.children) {
+      return (
+        spaceFeatureFlags.value.BIZ_VIEW &&
+        !showPermApplyPage.value &&
+        nav!.children.find((item) => item.module === route.meta.navModule)
+      );
+    }
+    return spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === name;
+  };
+
+  const isSecondNavActived = (secondNavName: string) => {
+    return spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === secondNavName;
+  };
 
   const handleNavClick = (navId: String) => {
     if (navId === 'service-all') {
@@ -325,14 +372,30 @@
         height: 30px;
       }
       .head-routes {
-        padding-left: 112px;
+        display: flex;
+        padding-left: 90px;
         font-size: 14px;
         .nav-item {
-          margin-left: 32px;
-          color: #96a2b9;
+          display: flex;
+          align-items: center;
+          height: 52px;
+          padding: 0 16px;
           font-size: 14px;
+          color: #96a2b9;
+          a {
+            color: #96a2b9;
+          }
           &.actived {
             color: #ffffff;
+            a {
+              color: #ffffff;
+            }
+          }
+          .firstNav-item {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            cursor: default;
           }
         }
       }
@@ -538,5 +601,26 @@
   }
   .login-out-popover.bk-popover.bk-pop2-content {
     padding: 4px 0;
+  }
+  .nav-popover.bk-popover.bk-pop2-content {
+    padding: 4px 1px;
+    background: #182132;
+    border-radius: 0 0 2px 2px;
+    .secondNav-item {
+      width: 102px;
+      height: 40px;
+      text-align: center;
+      line-height: 40px;
+      font-size: 14px;
+      a {
+        color: #96a2b9;
+      }
+      &.actived {
+        background: #2f3746;
+        a {
+          color: #fff;
+        }
+      }
+    }
   }
 </style>
