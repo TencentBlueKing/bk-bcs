@@ -23,16 +23,16 @@ import (
 func init() {
 	// add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
-		Version: "20231212174648",
-		Name:    "20231212174648_add_client",
+		Version: "20240307105336",
+		Name:    "20240307105336_add_client",
 		Mode:    migrator.GormMode,
-		Up:      mig20231212174648Up,
-		Down:    mig20231212174648Down,
+		Up:      mig20240307105336Up,
+		Down:    mig20240307105336Down,
 	})
 }
 
-// mig20231212174648Up for up migration
-func mig20231212174648Up(tx *gorm.DB) error {
+// mig20240307105336Up for up migration
+func mig20240307105336Up(tx *gorm.DB) error {
 	// Clients : client
 	type Clients struct {
 		ID uint `gorm:"column:id;type:bigint(1) unsigned;primary_key;autoIncrement:false"`
@@ -83,8 +83,8 @@ func mig20231212174648Up(tx *gorm.DB) error {
 
 }
 
-// mig20231212174648Down for down migration
-func mig20231212174648Down(tx *gorm.DB) error {
+// mig20240307105336Down for down migration
+func mig20240307105336Down(tx *gorm.DB) error {
 	if err := tx.Migrator().DropTable("model_example"); err != nil {
 		return err
 	}
