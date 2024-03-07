@@ -90,6 +90,9 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 			Root: uriDec.Root(),
 		},
 	}
+	if len(rci) > 0 {
+		meta.ReleaseName = rci[0].ReleaseName
+	}
 	if pre != nil {
 		meta.PreHook = &pbhook.HookSpec{
 			Type:    pre.Type.String(),
