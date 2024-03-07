@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package logctx provides a way to log with context
 package logctx
 
 import (
@@ -22,7 +22,9 @@ import (
 )
 
 const (
-	TraceKey  = "t-trace"
+	// TraceKey 用于记录日志的 Trace ID
+	TraceKey = "t-trace"
+	// ObjectKey 用于记录日志的 Object ID
 	ObjectKey = "t-object"
 )
 

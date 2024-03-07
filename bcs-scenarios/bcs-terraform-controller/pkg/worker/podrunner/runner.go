@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package podrunner 定义 terraform-worker 的接口
 package podrunner
 
 import (
@@ -29,6 +29,7 @@ import (
 )
 
 const (
+	// EnvPodIndex 环境变量中的 Pod 索引
 	EnvPodIndex = "POD_INDEX"
 )
 

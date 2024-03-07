@@ -257,7 +257,7 @@ func (cf *configmapFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingI
 
 	scenarioName, ok := newCm.GetLabels()[monitorextensionv1.LabelKeyForScenarioName]
 	if !ok {
-		blog.V(4).Infof("cm '%s/%s' not found related scenario, break...")
+		blog.V(4).Infof("cm '%s/%s' not found related scenario, break...", newCm.GetNamespace(), newCm.GetName())
 		return
 	}
 	selector, err := metav1.LabelSelectorAsSelector(metav1.SetAsLabelSelector(map[string]string{

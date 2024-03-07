@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -41,7 +40,7 @@ func truncateString(s string, maxLength int) string {
 	}
 
 	h := sha256.New()
-	io.WriteString(h, s)
+	_, _ = io.WriteString(h, s)
 	hash := fmt.Sprintf("%x", h.Sum(nil))
 
 	// Ensure the hash fits into the maxLength.

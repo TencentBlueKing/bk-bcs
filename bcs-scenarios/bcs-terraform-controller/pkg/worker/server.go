@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package worker 定义 Terraform 处理队列，提供 Push 消息到对应 bucket 队列桶能力
 package worker
 
 import (

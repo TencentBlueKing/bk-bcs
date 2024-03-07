@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package controllers include terraform controller
 package controllers
 
 import (
@@ -18,6 +18,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8stypes "k8s.io/apimachinery/pkg/types"
@@ -27,7 +28,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/internal/logctx"
 	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/apis/terraformextensions/v1"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/option"
@@ -50,12 +50,13 @@ type TerraformReconciler struct {
 }
 
 // Reconcile reconcile terraform
+// nolint
 // +kubebuilder:rbac:groups=terraformextensions.bkbcs.tencent.com,resources=terraforms,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=terraformextensions.bkbcs.tencent.com,resources=terraforms/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=terraformextensions.bkbcs.tencent.com,resources=terraforms/finalizers,verbs=update
 func (r *TerraformReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	nn := req.NamespacedName.String()
-	ctx = context.WithValue(ctx, logctx.ObjectKey, nn)
+	ctx = context.WithValue(ctx, logctx.ObjectKey, nn) // nolint
 	logctx.Infof(ctx, "reconcile received terraform '%s'", nn)
 	var terraform = new(tfv1.Terraform)
 	if err := r.Get(ctx, req.NamespacedName, terraform); err != nil {

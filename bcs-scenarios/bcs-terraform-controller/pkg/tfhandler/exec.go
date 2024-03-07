@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package tfhandler 执行实际的 Terraform 操作
 package tfhandler
 
 import (
@@ -78,10 +78,10 @@ func (t *TerraformExec) ExecInit(ctx context.Context) error {
 		option.GetConsulPath(t.tf.Namespace, t.tf.Name, string(t.tf.UID)),
 	}...); err != nil {
 		logctx.Errorf(ctx, "terraform init failed: stdout[%s], stderr[%s], cost[%v]",
-			t.GetStdoutBuffer().String(), t.GetStdoutBuffer().String(), time.Now().Sub(startTime))
+			t.GetStdoutBuffer().String(), t.GetStdoutBuffer().String(), time.Since(startTime))
 		return errors.Wrapf(err, "terraform init for '%s' failed", t.workerPath)
 	}
-	logctx.Infof(ctx, "terraform init success, cost[%v]", time.Now().Sub(startTime))
+	logctx.Infof(ctx, "terraform init success, cost[%v]", time.Since(startTime))
 	return nil
 }
 
@@ -93,10 +93,10 @@ func (t *TerraformExec) ExecPlan(ctx context.Context) (string, bool, error) {
 	hasChanged, err := t.exec.Plan(ctx)
 	if err != nil {
 		logctx.Errorf(ctx, "terraform plan failed: stdout[%s], stderr[%s], cost[%v]",
-			t.GetStdoutBuffer().String(), t.GetStdoutBuffer().String(), time.Now().Sub(startTime))
+			t.GetStdoutBuffer().String(), t.GetStdoutBuffer().String(), time.Since(startTime))
 		return "", false, errors.Wrapf(err, "terraform plan for '%s' failed", t.workerPath)
 	}
-	logctx.Infof(ctx, "terraform plan success, changed[%v], cost[%v]", hasChanged, time.Now().Sub(startTime))
+	logctx.Infof(ctx, "terraform plan success, changed[%v], cost[%v]", hasChanged, time.Since(startTime))
 	if hasChanged {
 		return t.GetStdoutBuffer().String(), true, nil
 	}
@@ -109,15 +109,15 @@ func (t *TerraformExec) ExecApply(ctx context.Context, destroy bool) (string, er
 
 	startTime := time.Now()
 	applyOps := make([]tfexec.ApplyOption, 0)
-	if destroy == true {
+	if destroy {
 		applyOps = append(applyOps, tfexec.Destroy(destroy))
 	}
 	if err := t.exec.Apply(ctx, applyOps...); err != nil {
 		logctx.Errorf(ctx, "terraform apply failed: stdout[%s], stderr[%s], cost[%v]",
-			t.GetStdoutBuffer().String(), t.GetStdoutBuffer().String(), time.Now().Sub(startTime))
+			t.GetStdoutBuffer().String(), t.GetStdoutBuffer().String(), time.Since(startTime))
 		return "", errors.Wrapf(err, "terraform apply for '%s' failed", t.workerPath)
 	}
-	logctx.Infof(ctx, "terraform apply success, cost[%v]", time.Now().Sub(startTime))
+	logctx.Infof(ctx, "terraform apply success, cost[%v]", time.Since(startTime))
 	return t.GetStdoutBuffer().String(), nil
 }
 

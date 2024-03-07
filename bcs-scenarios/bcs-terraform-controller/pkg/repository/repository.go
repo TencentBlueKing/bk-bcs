@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package repository 定义用来进行仓库相关操作的接口
 package repository
 
 import (
@@ -121,7 +121,7 @@ func (h *handler) CheckoutCommit(ctx context.Context, repo *tfv1.GitRepository, 
 	if err != nil {
 		return "", errors.Wrapf(err, "repository build authencation failed")
 	}
-	if err := os.RemoveAll(repoPath); err != nil {
+	if err = os.RemoveAll(repoPath); err != nil {
 		return "", errors.Wrapf(err, "remove repo '%s' failed", repoPath)
 	}
 	gitRepo, err := git.PlainClone(repoPath, false, &git.CloneOptions{

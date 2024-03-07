@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package worker
@@ -22,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/argoproj/argo-cd/v2/util/db"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -33,7 +33,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/internal/logctx"
 	tfproto "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/apis/proto"
 	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/apis/terraformextensions/v1"
@@ -122,8 +121,8 @@ func (w *TerraformWorker) Start(ctx context.Context) {
 				time.Sleep(5 * time.Second)
 				continue
 			}
-			ctx = context.WithValue(ctx, logctx.TraceKey, uuid.New().String())
-			ctx = context.WithValue(ctx, logctx.ObjectKey, terraform.Namespace+"/"+terraform.Name)
+			ctx = context.WithValue(ctx, logctx.TraceKey, uuid.New().String())                     // nolint
+			ctx = context.WithValue(ctx, logctx.ObjectKey, terraform.Namespace+"/"+terraform.Name) // nolint
 			if err = w.handler(ctx, terraform); err != nil {
 				terraform.Status.OperationStatus = tfv1.OperationStatus{
 					Message: err.Error(),
@@ -360,6 +359,6 @@ func (w *TerraformWorker) patchDeleteTerraformOperation(ctx context.Context,
 	if err != nil {
 		return errors.Wrapf(err, "patch delete operation '%s' failed", operation)
 	}
-	logctx.Infof(ctx, "patch delete operation annotation sucess")
+	logctx.Infof(ctx, "patch delete operation annotation success")
 	return nil
 }
