@@ -355,7 +355,8 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 		})
 	}
 	resp := &pbfs.PullAppFileMetaResp{
-		ReleaseId: metas.ReleaseId,
+		ReleaseId:   metas.ReleaseId,
+		ReleaseName: metas.ReleaseName,
 		Repository: &pbfs.Repository{
 			Root: metas.Repository.Root,
 		},

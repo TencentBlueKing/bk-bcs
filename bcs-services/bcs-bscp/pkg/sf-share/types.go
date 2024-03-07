@@ -220,14 +220,15 @@ func (cim *ConfigItemMetaV1) PbFileMeta() *pbfs.FileMeta {
 // ReleaseEventMetaV1 defines the event details when the sidecar watch the feed server to
 // get the latest release.
 type ReleaseEventMetaV1 struct {
-	AppID      uint32              `json:"appID"`
-	App        string              `json:"app"`
-	ReleaseID  uint32              `json:"releaseID"`
-	CIMetas    []*ConfigItemMetaV1 `json:"ciMetas"`
-	KvMetas    []*KvMetaV1         `json:"kvMetas"`
-	Repository *RepositoryV1       `json:"repository"`
-	PreHook    *pbhook.HookSpec    `json:"preHook"`
-	PostHook   *pbhook.HookSpec    `json:"postHook"`
+	AppID       uint32              `json:"appID"`
+	App         string              `json:"app"`
+	ReleaseID   uint32              `json:"releaseID"`
+	ReleaseName string              `json:"releaseName"`
+	CIMetas     []*ConfigItemMetaV1 `json:"ciMetas"`
+	KvMetas     []*KvMetaV1         `json:"kvMetas"`
+	Repository  *RepositoryV1       `json:"repository"`
+	PreHook     *pbhook.HookSpec    `json:"preHook"`
+	PostHook    *pbhook.HookSpec    `json:"postHook"`
 }
 
 // InstanceSpec defines the specifics for an app instance to watch the event.
