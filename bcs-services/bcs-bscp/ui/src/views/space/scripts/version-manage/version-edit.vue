@@ -1,7 +1,8 @@
 <template>
-  <section :class="['script-content', { 'view-mode': !props.editable }]">
+  <section :class="['script-content', { 'view-mode': !props.editable }, { 'show-variable': isShowVariable }]">
     <ScriptEditor
       v-model="localVal.content"
+      v-model:is-show-variable="isShowVariable"
       :language="props.type"
       :editable="props.editable"
       :upload-icon="props.editable">
@@ -22,6 +23,9 @@
             </bk-form-item>
           </bk-form>
         </div>
+      </template>
+      <template #sufContent>
+        <InternalVariable v-show="isShowVariable" :language="props.type" />
       </template>
     </ScriptEditor>
     <div class="action-btns">
@@ -70,6 +74,7 @@
   import { IScriptVersion, IScriptVersionForm } from '../../../../../types/script';
   import { createScriptVersion, updateScriptVersion } from '../../../../api/script';
   import ScriptEditor from '../components/script-editor.vue';
+  import InternalVariable from '../components/internal-variable.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t } = useI18n();
@@ -121,6 +126,7 @@
   });
   const formRef = ref();
   const pending = ref(false);
+  const isShowVariable = ref(true);
 
   const title = computed(() => {
     if (!props.editable) {
@@ -184,10 +190,24 @@
     :deep(.script-editor) {
       height: calc(100% - 46px);
     }
-    &.view-mode {
+    &.view-mode:not(.show-variable) {
       :deep(.script-editor) {
         .code-editor-wrapper {
           width: 100%;
+        }
+      }
+    }
+    &.show-variable:not(.view-mode) {
+      :deep(.script-editor) {
+        .code-editor-wrapper {
+          width: calc(100% - 272px - 260px);
+        }
+      }
+    }
+    &.show-variable.view-mode {
+      :deep(.script-editor) {
+        .code-editor-wrapper {
+          width: calc(100% - 272px);
         }
       }
     }
@@ -242,7 +262,6 @@
   :deep(.script-editor) {
     .content-wrapper {
       display: flex;
-      align-items: flex-start;
       justify-content: space-between;
       height: calc(100% - 40px);
     }

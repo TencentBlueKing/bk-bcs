@@ -84,13 +84,26 @@ func (c *configExport) ConfigFileExport(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var downloads []*download
+	var fileName string
 	if releaseID > 0 {
+		// 获取发布信息
+		release, errR := c.cfgClient.GetRelease(kt.RpcCtx(), &pbcs.GetReleaseReq{
+			BizId:     kt.BizID,
+			AppId:     kt.AppID,
+			ReleaseId: uint32(releaseID),
+		})
+		if errR != nil {
+			_ = render.Render(w, r, rest.BadRequest(errR))
+			return
+		}
+		fileName = fmt.Sprintf("%s_%s.zip", app.GetSpec().Name, release.Spec.Name)
 		downloads, err = c.getPublishedConfigItems(kt, uint32(releaseID))
 		if err != nil {
 			_ = render.Render(w, r, rest.BadRequest(err))
 			return
 		}
 	} else {
+		fileName = fmt.Sprintf("%s.zip", app.GetSpec().Name)
 		downloads, err = c.getUnPublishedConfigItems(kt)
 		if err != nil {
 			_ = render.Render(w, r, rest.BadRequest(err))
@@ -103,7 +116,6 @@ func (c *configExport) ConfigFileExport(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	fileName := fmt.Sprintf("%s.zip", app.GetSpec().Name)
 	w.Header().Set("Content-Disposition", "attachment; filename="+fileName)
 	w.Header().Set("Content-Type", "application/zip")
 	w.WriteHeader(http.StatusOK)

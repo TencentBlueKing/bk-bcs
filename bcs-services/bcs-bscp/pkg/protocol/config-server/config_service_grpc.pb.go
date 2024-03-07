@@ -49,6 +49,7 @@ const (
 	Config_CreateRelease_FullMethodName                     = "/pbcs.Config/CreateRelease"
 	Config_ListReleases_FullMethodName                      = "/pbcs.Config/ListReleases"
 	Config_GetReleaseByName_FullMethodName                  = "/pbcs.Config/GetReleaseByName"
+	Config_GetRelease_FullMethodName                        = "/pbcs.Config/GetRelease"
 	Config_DeprecateRelease_FullMethodName                  = "/pbcs.Config/DeprecateRelease"
 	Config_UnDeprecateRelease_FullMethodName                = "/pbcs.Config/UnDeprecateRelease"
 	Config_DeleteRelease_FullMethodName                     = "/pbcs.Config/DeleteRelease"
@@ -186,6 +187,7 @@ type ConfigClient interface {
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
 	GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error)
+	GetRelease(ctx context.Context, in *GetReleaseReq, opts ...grpc.CallOption) (*release.Release, error)
 	DeprecateRelease(ctx context.Context, in *DeprecateReleaseReq, opts ...grpc.CallOption) (*DeprecateReleaseResp, error)
 	UnDeprecateRelease(ctx context.Context, in *UnDeprecateReleaseReq, opts ...grpc.CallOption) (*UnDeprecateReleaseResp, error)
 	DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*DeleteReleaseResp, error)
@@ -227,12 +229,12 @@ type ConfigClient interface {
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -527,6 +529,15 @@ func (c *configClient) ListReleases(ctx context.Context, in *ListReleasesReq, op
 func (c *configClient) GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error) {
 	out := new(release.Release)
 	err := c.cc.Invoke(ctx, Config_GetReleaseByName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetRelease(ctx context.Context, in *GetReleaseReq, opts ...grpc.CallOption) (*release.Release, error) {
+	out := new(release.Release)
+	err := c.cc.Invoke(ctx, Config_GetRelease_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1492,6 +1503,7 @@ type ConfigServer interface {
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
 	GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error)
+	GetRelease(context.Context, *GetReleaseReq) (*release.Release, error)
 	DeprecateRelease(context.Context, *DeprecateReleaseReq) (*DeprecateReleaseResp, error)
 	UnDeprecateRelease(context.Context, *UnDeprecateReleaseReq) (*UnDeprecateReleaseResp, error)
 	DeleteRelease(context.Context, *DeleteReleaseReq) (*DeleteReleaseResp, error)
@@ -1533,12 +1545,12 @@ type ConfigServer interface {
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1684,6 +1696,9 @@ func (UnimplementedConfigServer) ListReleases(context.Context, *ListReleasesReq)
 }
 func (UnimplementedConfigServer) GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleaseByName not implemented")
+}
+func (UnimplementedConfigServer) GetRelease(context.Context, *GetReleaseReq) (*release.Release, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRelease not implemented")
 }
 func (UnimplementedConfigServer) DeprecateRelease(context.Context, *DeprecateReleaseReq) (*DeprecateReleaseResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeprecateRelease not implemented")
@@ -2452,6 +2467,24 @@ func _Config_GetReleaseByName_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).GetReleaseByName(ctx, req.(*GetReleaseByNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleaseReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetRelease(ctx, req.(*GetReleaseReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4416,6 +4449,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReleaseByName",
 			Handler:    _Config_GetReleaseByName_Handler,
+		},
+		{
+			MethodName: "GetRelease",
+			Handler:    _Config_GetRelease_Handler,
 		},
 		{
 			MethodName: "DeprecateRelease",

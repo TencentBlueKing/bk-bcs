@@ -705,6 +705,19 @@ func (s *Service) GetReleaseByName(ctx context.Context, req *pbds.GetReleaseByNa
 	return pbrelease.PbRelease(release), nil
 }
 
+// GetRelease get release
+func (s *Service) GetRelease(ctx context.Context, req *pbds.GetReleaseReq) (*pbrelease.Release, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	release, err := s.dao.Release().Get(grpcKit, req.GetBizId(), req.GetAppId(), req.GetReleaseId())
+	if err != nil {
+		logs.Errorf("get release failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, fmt.Errorf("query release %d failed", req.GetReleaseId())
+	}
+
+	return pbrelease.PbRelease(release), nil
+}
+
 // DeprecateRelease deprecate a release
 func (s *Service) DeprecateRelease(ctx context.Context, req *pbds.DeprecateReleaseReq) (*pbbase.EmptyResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)

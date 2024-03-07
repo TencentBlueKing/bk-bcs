@@ -56,6 +56,7 @@ const (
 	Data_CreateRelease_FullMethodName                     = "/pbds.Data/CreateRelease"
 	Data_ListReleases_FullMethodName                      = "/pbds.Data/ListReleases"
 	Data_GetReleaseByName_FullMethodName                  = "/pbds.Data/GetReleaseByName"
+	Data_GetRelease_FullMethodName                        = "/pbds.Data/GetRelease"
 	Data_DeprecateRelease_FullMethodName                  = "/pbds.Data/DeprecateRelease"
 	Data_UnDeprecateRelease_FullMethodName                = "/pbds.Data/UnDeprecateRelease"
 	Data_DeleteRelease_FullMethodName                     = "/pbds.Data/DeleteRelease"
@@ -207,6 +208,7 @@ type DataClient interface {
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
 	GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error)
+	GetRelease(ctx context.Context, in *GetReleaseReq, opts ...grpc.CallOption) (*release.Release, error)
 	DeprecateRelease(ctx context.Context, in *DeprecateReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	UnDeprecateRelease(ctx context.Context, in *UnDeprecateReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
@@ -587,6 +589,15 @@ func (c *dataClient) ListReleases(ctx context.Context, in *ListReleasesReq, opts
 func (c *dataClient) GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error) {
 	out := new(release.Release)
 	err := c.cc.Invoke(ctx, Data_GetReleaseByName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetRelease(ctx context.Context, in *GetReleaseReq, opts ...grpc.CallOption) (*release.Release, error) {
+	out := new(release.Release)
+	err := c.cc.Invoke(ctx, Data_GetRelease_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1638,6 +1649,7 @@ type DataServer interface {
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
 	GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error)
+	GetRelease(context.Context, *GetReleaseReq) (*release.Release, error)
 	DeprecateRelease(context.Context, *DeprecateReleaseReq) (*base.EmptyResp, error)
 	UnDeprecateRelease(context.Context, *UnDeprecateReleaseReq) (*base.EmptyResp, error)
 	DeleteRelease(context.Context, *DeleteReleaseReq) (*base.EmptyResp, error)
@@ -1857,6 +1869,9 @@ func (UnimplementedDataServer) ListReleases(context.Context, *ListReleasesReq) (
 }
 func (UnimplementedDataServer) GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleaseByName not implemented")
+}
+func (UnimplementedDataServer) GetRelease(context.Context, *GetReleaseReq) (*release.Release, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRelease not implemented")
 }
 func (UnimplementedDataServer) DeprecateRelease(context.Context, *DeprecateReleaseReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeprecateRelease not implemented")
@@ -2688,6 +2703,24 @@ func _Data_GetReleaseByName_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).GetReleaseByName(ctx, req.(*GetReleaseByNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleaseReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetRelease(ctx, req.(*GetReleaseReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4822,6 +4855,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReleaseByName",
 			Handler:    _Data_GetReleaseByName_Handler,
+		},
+		{
+			MethodName: "GetRelease",
+			Handler:    _Data_GetRelease_Handler,
 		},
 		{
 			MethodName: "DeprecateRelease",

@@ -17,7 +17,6 @@
           :app-id="props.appId"
           :verision-id="versionData.id" />
         <ConfigExport
-          v-if="!isFileType"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :version-id="versionData.id"

@@ -71,6 +71,7 @@ service Data {
   rpc CreateRelease(CreateReleaseReq) returns (CreateResp) {}
   rpc ListReleases(ListReleasesReq) returns (ListReleasesResp) {}
   rpc GetReleaseByName(GetReleaseByNameReq) returns (pbrelease.Release) {}
+  rpc GetRelease(GetReleaseReq) returns (pbrelease.Release) {}
   rpc DeprecateRelease(DeprecateReleaseReq) returns (pbbase.EmptyResp) {}
   rpc UnDeprecateRelease(UnDeprecateReleaseReq) returns (pbbase.EmptyResp) {}
   rpc DeleteRelease(DeleteReleaseReq) returns (pbbase.EmptyResp) {}
@@ -533,6 +534,12 @@ message GetReleaseByNameReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   string release_name = 3;
+}
+
+message GetReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
 }
 
 message DeprecateReleaseReq {
