@@ -21,19 +21,19 @@ import (
 func init() {
 	// add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
-		Version: "20240228173324",
-		Name:    "20240228173324_modify_name_column",
+		Version: "20240308173324",
+		Name:    "20240308173324_modify_name_column",
 		Mode:    migrator.GormMode,
-		Up:      mig20240228173324Up,
-		Down:    mig20240228173324Down,
+		Up:      mig20240308173324Up,
+		Down:    mig20240308173324Down,
 	})
 }
 
-// mig20240228173324Up for up migration
+// mig20240308173324Up for up migration
 // 字段变更，设置为collate为utf8mb4_bin，查询时区分大小写，场景如：字段唯一性校验时，字符串"App"和"app"能区分为不同
 //
-//nolint:funlen
-func mig20240228173324Up(tx *gorm.DB) error {
+//nolint:funlen,gocyclo
+func mig20240308173324Up(tx *gorm.DB) error {
 	// Applications : 服务
 	type Applications struct {
 		Name  string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -126,6 +126,16 @@ func mig20240228173324Up(tx *gorm.DB) error {
 		}
 	}
 
+	// ReleasedKvs : 已发布Kvs
+	type ReleasedKvs struct {
+		Key string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
+	}
+	if tx.Migrator().HasColumn(&ReleasedKvs{}, "Key") {
+		if err := tx.Migrator().AlterColumn(&ReleasedKvs{}, "Key"); err != nil {
+			return err
+		}
+	}
+
 	// TemplateRevisions : 模版版本
 	type TemplateRevisions struct {
 		RevisionName string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -186,7 +196,7 @@ func mig20240228173324Up(tx *gorm.DB) error {
 
 }
 
-// mig20240228173324Down for down migration
-func mig20240228173324Down(tx *gorm.DB) error {
+// mig20240308173324Down for down migration
+func mig20240308173324Down(tx *gorm.DB) error {
 	return nil
 }
