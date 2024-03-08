@@ -15,7 +15,7 @@
             placement="bottom"
             :arrow="false"
             :offset="0"
-            popover-delay="0">
+            :popover-delay="0">
             <div :class="['firstNav-item', { actived: isFirstNavActived(nav.module) }]">{{ nav.name }}</div>
             <template #content>
               <div

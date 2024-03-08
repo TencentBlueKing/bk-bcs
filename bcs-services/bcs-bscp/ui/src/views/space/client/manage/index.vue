@@ -1,14 +1,14 @@
 <template>
   <section class="client-manege-page">
     <div class="management-data-container">
-      <ClientHeader />
+      <ClientHeader title="客户端统计" />
       <VersionRelease />
     </div>
   </section>
 </template>
 
 <script lang="ts" setup>
-  import ClientHeader from './components/client-header.vue';
+  import ClientHeader from '../components/client-header.vue';
   import VersionRelease from './section/version-release.vue';
 </script>
 

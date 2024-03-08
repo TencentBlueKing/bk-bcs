@@ -1,7 +1,7 @@
 <template>
   <div class="head">
     <div class="head-left">
-      <span class="title">客户端统计</span>
+      <span class="title">{{ title }}</span>
       <bk-select
         v-model="localApp"
         ref="selectorRef"
@@ -36,15 +36,8 @@
       <bk-select v-model="heartbeatTime" class="heartbeat-selector" :clearable="false">
         <bk-option v-for="item in heartbeatTimeList" :id="item.value" :key="item.value" :name="item.label" />
       </bk-select>
-      <bk-input
-        v-model="searchStr"
-        class="search-client-input"
-        :placeholder="'UID/IP/标签/当前配置版本/目标配置版本/最近一次拉取配置状态/附加信息/在线状态/客户端组件版本'"
-        :clearable="true">
-        <template #suffix>
-          <Search class="search-input-icon" />
-        </template>
-      </bk-input>
+      <SearchSelector/>
+      <bk-button theme="primary" style="margin-left: 8px;"><Search class="search-icon" />查询</bk-button>
     </div>
   </div>
 </template>
@@ -54,9 +47,14 @@
   import { useRoute } from 'vue-router';
   import { storeToRefs } from 'pinia';
   import { AngleUpFill, Search } from 'bkui-vue/lib/icon';
-  import { getAppList } from '../../../../../api';
-  import { IAppItem } from '../../../../../../types/app';
-  import useClientStore from '../../../../../store/client';
+  import { getAppList } from '../../../../api';
+  import { IAppItem } from '../../../../../types/app';
+  import useClientStore from '../../../../store/client';
+  import SearchSelector from './search-selector.vue';
+
+  defineProps<{
+    title: string;
+  }>();
 
   const clientStore = useClientStore();
   const { appData } = storeToRefs(clientStore);
@@ -80,7 +78,6 @@
       label: '近3分钟',
     },
   ]);
-  const searchStr = ref('');
   const selectorRef = ref();
 
   const bizId = route.params.spaceId as string;
@@ -120,7 +117,6 @@
     font-size: 20px;
     line-height: 28px;
     height: 32px;
-    margin-bottom: 24px;
     .head-left {
       display: flex;
       align-items: center;
@@ -182,13 +178,8 @@
         width: 112px;
         margin-right: 8px;
       }
-      .search-client-input {
-        width: 600px;
-      }
-      .search-input-icon {
-        padding-right: 10px;
-        color: #979ba5;
-        background: #ffffff;
+      .search-icon {
+        margin-right: 8px;
       }
     }
   }
