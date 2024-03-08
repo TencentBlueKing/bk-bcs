@@ -113,9 +113,11 @@
     () => props.show,
     async (val) => {
       if (val) {
-        getVersionList();
+        await getVersionList();
         if (props.baseVersionId) {
           selectedBaseVersion.value = props.baseVersionId;
+        } else if (versionList.value.length > 0) {
+          selectedBaseVersion.value = versionList.value[0].id;
         }
       }
     },
