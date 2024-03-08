@@ -119,7 +119,7 @@ func (m *BKMonitor) GetClusterCPUTotal(ctx context.Context, projectID, clusterID
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
 		`sum(avg_over_time(kube_node_status_allocatable_cpu_cores{%<cluster>s, ` +
-			`job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
+			`job="kube-state-metrics", node!="", node=~"%<node>s", %<provider>s}[1m]))`
 	// NOCC:goconst/string(设计如此)
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -153,7 +153,7 @@ func (m *BKMonitor) GetClusterPodUsed(ctx context.Context, projectID, clusterID 
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	// 获取pod使用率
 	promql :=
-		`sum (kubelet_running_pods{%<cluster>s, node=~"%<node>s", %<provider>s})`
+		`sum (kubelet_running_pods{%<cluster>s, node!="", node=~"%<node>s", %<provider>s})`
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
 
@@ -197,7 +197,7 @@ func (m *BKMonitor) GetClusterCPURequest(ctx context.Context, projectID, cluster
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
 		sum(avg_over_time(kube_pod_container_resource_requests_cpu_cores{%<cluster>s, job="kube-state-metrics", ` +
-		`node=~"%<node>s", %<provider>s}[1m]))`
+		`node!="", node=~"%<node>s", %<provider>s}[1m]))`
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -223,7 +223,7 @@ func (m *BKMonitor) GetClusterMemoryTotal(ctx context.Context, projectID, cluste
 	// NOCC:goconst/string(设计如此)
 	promql :=
 		`sum(avg_over_time(kube_node_status_allocatable_memory_bytes{%<cluster>s, ` +
-			`job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
+			`job="kube-state-metrics", node!="", node=~"%<node>s", %<provider>s}[1m]))`
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -261,7 +261,7 @@ func (m *BKMonitor) GetClusterMemoryRequest(ctx context.Context, projectID, clus
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
 		sum(avg_over_time(kube_pod_container_resource_requests_memory_bytes{%<cluster>s, job="kube-state-metrics", ` +
-		`node=~"%<node>s", %<provider>s}[1m]))`
+		`node!="", node=~"%<node>s", %<provider>s}[1m]))`
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
