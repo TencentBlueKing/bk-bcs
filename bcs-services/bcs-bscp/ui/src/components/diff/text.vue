@@ -258,6 +258,9 @@
     position: sticky;
     bottom: 0px;
     overflow: hidden;
+    :deep(.navigator-wrap) {
+      width: 100%;
+    }
   }
   .diff-wrapper {
     display: flex;
