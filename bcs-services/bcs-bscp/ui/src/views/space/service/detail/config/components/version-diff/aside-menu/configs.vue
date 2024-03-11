@@ -38,7 +38,7 @@
                 permission: config.permission,
               })
             ">
-            <i v-if="config.diff_type" :class="['status-icon', config.diff_type]"></i>
+            <i v-if="config.diffType" :class="['status-icon', config.diffType]"></i>
             {{ config.name }}
           </div>
         </div>
@@ -103,7 +103,7 @@
   }
 
   interface IConfigDiffItem extends IConfigMenuItem {
-    diff_type: string;
+    diffType: string;
     current: string;
     base: string;
     currentPermission?: IPermissionType;
@@ -166,7 +166,7 @@
   const aggregatedListOfDiff = computed(() => {
     const list: IDiffGroupData[] = [];
     aggregatedList.value.forEach((group) => {
-      const configs = group.configs.filter((item) => item.diff_type !== '');
+      const configs = group.configs.filter((item) => item.diffType !== '');
       if (configs.length > 0) {
         list.push({
           ...group,
@@ -373,7 +373,7 @@
           // 修改项
           const diffConfig = {
             ...crtItem,
-            diff_type: '',
+            diffType: '',
             base: baseItem.signature,
             basePermission: baseItem.permission,
             baseContent: baseItem.diffSignature,
@@ -390,7 +390,7 @@
             diffConfig.currentContent !== diffConfig.baseContent
           ) {
             diffCount.value += 1;
-            diffConfig.diff_type = isBaseVersionExist.value ? 'modify' : '';
+            diffConfig.diffType = isBaseVersionExist.value ? 'modify' : '';
           }
           diffGroup.configs.push(diffConfig);
         } else {
@@ -398,7 +398,7 @@
           diffCount.value += 1;
           diffGroup.configs.push({
             ...crtItem,
-            diff_type: isBaseVersionExist.value ? 'add' : '',
+            diffType: isBaseVersionExist.value ? 'add' : '',
             current: crtItem.signature,
             currentPermission: crtItem.permission,
             base: '',
@@ -435,7 +435,7 @@
           diffCount.value += 1;
           diffGroup.configs.push({
             ...baseItem,
-            diff_type: isBaseVersionExist.value ? 'delete' : '',
+            diffType: isBaseVersionExist.value ? 'delete' : '',
             current: '',
             currentPermission: { privilege: '', user: '', user_group: '' },
             base: baseItem.signature,
@@ -459,7 +459,7 @@
         const configs = group.configs.filter((item) => {
           const isSearchHit = item.name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase());
           if (isOnlyShowDiff.value) {
-            return item.diff_type !== '' && isSearchHit;
+            return item.diffType !== '' && isSearchHit;
           }
           return isSearchHit;
         });

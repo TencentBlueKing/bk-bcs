@@ -46,7 +46,9 @@
             :base="props.diff.base.content as string"
             :base-variables="props.diff.base.variables"
             :base-permission="basePermission" />
-          <Kv v-else :current="props.diff.current.content as string" :base="props.diff.base.content as string" />
+          <template v-else-if="props.diff.contentType === 'singleLineKV'">
+            <SingleLineKV v-if="props.diff.singleLineKVDiff" :diff-configs="props.diff.singleLineKVDiff" />
+          </template>
         </div>
       </bk-loading>
     </section>
@@ -61,7 +63,7 @@
   import { IFileConfigContentSummary } from '../../../types/config';
   import File from './file.vue';
   import Text from './text.vue';
-  import Kv from './kv.vue';
+  import SingleLineKV from './single-line-kv.vue';
 
   const { t } = useI18n();
   const props = defineProps<{

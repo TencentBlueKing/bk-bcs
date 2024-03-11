@@ -616,4 +616,6 @@ export default {
   产品官网: 'Product official website',
   请输入: 'Please enter',
   确认: 'Confirm',
+  单行配置: 'Single-row config',
+  多行配置: 'Multi-row config',
 };
