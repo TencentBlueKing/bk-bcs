@@ -47,7 +47,10 @@
             :base-variables="props.diff.base.variables"
             :base-permission="basePermission" />
           <template v-else-if="props.diff.contentType === 'singleLineKV'">
-            <SingleLineKV v-if="props.diff.singleLineKVDiff" :diff-configs="props.diff.singleLineKVDiff" />
+            <SingleLineKV
+              v-if="props.diff.singleLineKVDiff"
+              :diff-configs="props.diff.singleLineKVDiff"
+              :selected-id="props.selectedKvConfigId" />
           </template>
         </div>
       </bk-loading>
@@ -71,6 +74,7 @@
     diff: IDiffDetail;
     id: number; // 服务ID或模板空间ID
     loading: boolean;
+    selectedKvConfigId?: number; // 选中的kv类型配置id
   }>();
 
   const isFullScreen = ref(false);

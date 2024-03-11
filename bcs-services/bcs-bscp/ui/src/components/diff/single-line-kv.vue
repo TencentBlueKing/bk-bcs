@@ -5,7 +5,7 @@
         <div :class="['diff-header', diffItem.diffType]">
           <span class="config-name">{{ diffItem.name }}</span>
         </div>
-        <div class="diff-content">
+        <div :class="['diff-content', { selected: props.selectedId === diffItem.id }]">
           <div class="left-version-content">
             <div class="content-box">
               {{ diffItem.base.content }}
@@ -26,8 +26,9 @@
 <script lang="ts" setup>
   import { ISingleLineKVDIffItem } from '../../../types/service';
 
-  defineProps<{
+  const props = defineProps<{
     diffConfigs: ISingleLineKVDIffItem[];
+    selectedId?: number;
   }>();
 </script>
 
@@ -82,6 +83,9 @@
   .diff-content {
     display: flex;
     align-items: flex-start;
+    &.selected {
+      background: #f0f1f5;
+    }
   }
   .left-version-content,
   .right-version-content {

@@ -27,6 +27,7 @@ export interface ISingleLineKVDIffItem {
 // 版本下的脚本配置
 export interface IDiffDetail {
   contentType: 'file' | 'text' | 'singleLineKV';
+  id: number | string;
   base: {
     content: string | IFileConfigContentSummary;
     language?: string;

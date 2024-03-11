@@ -76,11 +76,11 @@
     defineProps<{
       currentVersionId: number;
       baseVersionId: number | undefined;
-      selectedConfig: number;
+      selectedId: number;
       actived: boolean;
     }>(),
     {
-      selectedConfig: 0,
+      selectedId: 0,
     },
   );
 
@@ -121,7 +121,7 @@
 
   // 当前版本默认选中的配置文件
   watch(
-    () => props.selectedConfig,
+    () => props.selectedId,
     (val) => {
       if (val) {
         selected.value = val;
@@ -241,8 +241,8 @@
   // 如果选中项有值，保持上一次选中项
   // 否则取第一个非空分组的第一个配置文件
   const setDefaultSelected = () => {
-    if (props.selectedConfig) {
-      handleSelectItem(props.selectedConfig);
+    if (props.selectedId) {
+      handleSelectItem(props.selectedId);
     } else if (aggregatedList.value.find((item) => item.id === selected.value)) {
       handleSelectItem(selected.value);
     } else {
@@ -262,10 +262,10 @@
   };
 
   // 选择对比配置文件后，加载配置文件详情，组装对比数据
-  const handleSelectItem = async (selectedConfig: number) => {
-    const config = aggregatedList.value.find((item) => item.id === selectedConfig);
+  const handleSelectItem = async (selectedId: number) => {
+    const config = aggregatedList.value.find((item) => item.id === selectedId);
     if (config) {
-      selected.value = selectedConfig;
+      selected.value = selectedId;
       const data = getConfigDiffDetail(config);
       emits('selected', data);
     }
@@ -291,12 +291,14 @@
       });
       return {
         contentType: 'singleLineKV',
+        id: config.id,
         singleLineKVDiff: configs,
       };
     }
     // 多行配置
     return {
       contentType: 'text',
+      id: config.id,
       base: {
         content: config.baseContent,
         variables: [],

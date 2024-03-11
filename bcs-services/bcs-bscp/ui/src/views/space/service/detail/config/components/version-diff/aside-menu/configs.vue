@@ -581,6 +581,7 @@
     }
 
     return {
+      id,
       contentType: config.file_type === 'binary' ? 'file' : 'text',
       base: {
         content: baseConfigContent,
