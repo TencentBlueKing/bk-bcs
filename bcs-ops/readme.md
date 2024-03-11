@@ -20,6 +20,10 @@ Usage:
 
 ## 准备环境（可选）
 
+### linux 内核版本要求
+对于 ipv4 集群，linux 内核至少为 `3.10.0`
+对于 ipv6 集群，linux 内核版本至少为 `4.19.1`
+
 ### iptables 策略
 
 > 在安装的过程中`bcs-ops`会关闭机器的防火墙，`systemctl stop firewalld;systemctl disable firewalld`。
