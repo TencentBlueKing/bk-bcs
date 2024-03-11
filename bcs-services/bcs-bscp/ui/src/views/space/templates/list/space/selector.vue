@@ -112,11 +112,20 @@
   const initData = async () => {
     await loadList();
     if (!currentTemplateSpace.value) {
-      const spaceId = spaceList.value[0].id;
-      if (spaceId) {
+      let tplSpaceId = 0;
+      const lastAccessedTplSpaceDetail = localStorage.getItem('lastAccessedTplSpaceDetail');
+      const id = lastAccessedTplSpaceDetail ? JSON.parse(lastAccessedTplSpaceDetail)?.id : 0;
+      // 当前业务下是否存在改模板空间
+      const isTplSpaceExist = spaceList.value.some((item) => item.id === id);
+      if (isTplSpaceExist) {
+        tplSpaceId = id;
+      } else if (spaceList.value.length > 0) {
+        tplSpaceId = spaceList.value[0].id;
+      }
+      if (tplSpaceId) {
         // url中没有模版空间id，且空间列表不为空时，默认选中第一个空间
-        setTemplateSpace(spaceId);
-        updateRouter(spaceId);
+        setTemplateSpace(tplSpaceId);
+        updateRouter(tplSpaceId);
       }
     } else {
       setTemplateSpace(currentTemplateSpace.value);
@@ -231,6 +240,7 @@
   };
 
   const setTemplateSpace = (id: number) => {
+    localStorage.setItem('lastAccessedTplSpaceDetail', JSON.stringify({ id }));
     templateStore.$patch((state) => {
       state.currentTemplateSpace = id;
     });
