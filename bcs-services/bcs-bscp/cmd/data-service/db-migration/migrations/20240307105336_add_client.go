@@ -103,7 +103,6 @@ func mig20240307105336Up(tx *gorm.DB) error {
 	if result := tx.Create([]IDGenerators{
 		{Resource: "clients", MaxID: 0, UpdatedAt: now},
 		{Resource: "client_events", MaxID: 0, UpdatedAt: now},
-
 	}); result.Error != nil {
 		return result.Error
 	}
