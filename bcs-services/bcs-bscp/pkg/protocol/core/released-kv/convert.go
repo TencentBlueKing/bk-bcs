@@ -63,6 +63,7 @@ func RKvs(kvs []*pbkv.Kv, versionMap map[string]int, releaseID uint32) ([]*table
 			},
 			ContentSpec: &table.ContentSpec{
 				Signature: kv.ContentSpec.Signature,
+				Md5:       kv.ContentSpec.Md5,
 				ByteSize:  kv.ContentSpec.ByteSize,
 			},
 		}
