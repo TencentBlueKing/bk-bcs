@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package main implements e2e test function
@@ -17,7 +16,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"k8s.io/apimachinery/pkg/types"
 	"net/http"
 	"time"
 
@@ -29,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apiserver/pkg/server"
@@ -231,6 +230,7 @@ func (tc *testConfig) DeleteWorkLoad() {
 	defer func() {
 		klog.Infof("E2E finish delete workload %v", tc.name)
 	}()
+	// nolint
 	wait.PollImmediate(1*time.Second, 5*time.Second, func() (done bool, err error) {
 		if err := tc.client.AppsV1().Deployments(tc.namespace).Delete(tc.name,
 			&metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
@@ -280,7 +280,7 @@ func main() {
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
 	go func() {
-		http.Handle("/metrics", prometheus.Handler())
+		http.Handle("/metrics", prometheus.Handler()) // nolint  prometheus.Handler is deprecated
 		err := http.ListenAndServe(*address, nil)
 		klog.Fatalf("Failed to start metrics: %v", err)
 	}()

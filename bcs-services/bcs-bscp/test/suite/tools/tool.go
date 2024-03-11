@@ -50,12 +50,10 @@ func main() {
 
 		results, err := statistics(path)
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatalln(err) // nolint
 		}
 
 		tp.render(write, results)
-		write.Flush()
+		write.Flush() // nolint error not checked
 	}
-
-	return
 }

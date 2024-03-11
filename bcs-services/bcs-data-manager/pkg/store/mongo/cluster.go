@@ -18,15 +18,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
@@ -39,7 +38,7 @@ var (
 			Name: CreateTimeKey + "_1",
 		},
 		{
-			Name: types.ClusterTableName + "_idx",
+			Name: types.ClusterTableName + "_idx", // nolint
 			Key: bson.D{
 				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: ClusterIDKey, Value: 1},
@@ -49,7 +48,7 @@ var (
 			Unique: true,
 		},
 		{
-			Name: types.ClusterTableName + "_list_idx",
+			Name: types.ClusterTableName + "_list_idx", // nolint
 			Key: bson.D{
 				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: DimensionKey, Value: 1},
@@ -57,7 +56,7 @@ var (
 			},
 		},
 		{
-			Name: types.ClusterTableName + "_list_idx2",
+			Name: types.ClusterTableName + "_list_idx2", // nolint
 			Key: bson.D{
 				bson.E{Key: BusinessIDKey, Value: 1},
 				bson.E{Key: DimensionKey, Value: 1},
@@ -66,7 +65,7 @@ var (
 			Background: true,
 		},
 		{
-			Name: types.ClusterTableName + "_list_idx3",
+			Name: types.ClusterTableName + "_list_idx3", // nolint
 			Key: bson.D{
 				bson.E{Key: DimensionKey, Value: 1},
 				bson.E{Key: MetricTimeKey, Value: 1},
@@ -74,7 +73,7 @@ var (
 			Background: true,
 		},
 		{
-			Name: types.ClusterTableName + "_get_idx",
+			Name: types.ClusterTableName + "_get_idx", // nolint
 			Key: bson.D{
 				bson.E{Key: DimensionKey, Value: 1},
 				bson.E{Key: ClusterIDKey, Value: 1},
@@ -368,19 +367,22 @@ func (m *ModelCluster) GetRawClusterInfo(ctx context.Context, opts *types.JobCom
 	}
 	// Create a slice of conditions to filter the database query.
 	cond := make([]*operator.Condition, 0)
-	// Add a condition that checks for equality between the ProjectIDKey and DimensionKey fields of opts and the corresponding fields in the database.
+	// Add a condition that checks for equality between the ProjectIDKey
+	// and DimensionKey fields of opts and the corresponding fields in the database.
 	cond1 := operator.NewLeafCondition(operator.Eq, operator.M{
 		ProjectIDKey: opts.ProjectID,
 		DimensionKey: opts.Dimension,
 	})
 	cond = append(cond, cond1)
-	// If opts.ClusterID is not an empty string, add a condition that checks for equality between the ClusterIDKey field in the database and opts.ClusterID.
+	// If opts.ClusterID is not an empty string,
+	// add a condition that checks for equality between the ClusterIDKey field in the database and opts.ClusterID.
 	if opts.ClusterID != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 			ClusterIDKey: opts.ClusterID,
 		}))
 	}
-	// If bucket is not an empty string, add a condition that checks for equality between the BucketTimeKey field in the database and bucket.
+	// If bucket is not an empty string,
+	// add a condition that checks for equality between the BucketTimeKey field in the database and bucket.
 	if bucket != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 			BucketTimeKey: bucket,

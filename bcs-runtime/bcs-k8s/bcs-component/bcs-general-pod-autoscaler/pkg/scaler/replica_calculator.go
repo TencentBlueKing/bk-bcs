@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -59,6 +59,7 @@ func NewReplicaCalculator(metricsClient metricsclient.MetricsClient, podLister c
 
 // GetResourceReplicas calculates the desired replica count based on a target resource utilization percentage
 // of the given resource for pods matching the given selector in the given namespace, and the current replica count
+// nolint
 func (c *ReplicaCalculator) GetResourceReplicas(currentReplicas int32, targetUtilization int32,
 	resource v1.ResourceName, namespace string, selector labels.Selector, container string,
 	computeResourceUtilizationRatioByLimits bool) (replicaCount int32, utilization int32, rawUtilization int64,
@@ -164,7 +165,8 @@ func (c *ReplicaCalculator) GetResourceReplicas(currentReplicas int32, targetUti
 	return newReplicas, utilization, rawUtilization, timestamp, nil
 }
 
-// GetRawResourceReplicas calculates the desired replica count based on a target resource utilization (as a raw milli-value)
+// GetRawResourceReplicas calculates the desired replica count
+// based on a target resource utilization (as a raw milli-value)
 // for pods matching the given selector in the given namespace, and the current replica count
 func (c *ReplicaCalculator) GetRawResourceReplicas(currentReplicas int32, targetUtilization int64,
 	resource v1.ResourceName, namespace string, selector labels.Selector, container string) (replicaCount int32,
@@ -292,6 +294,7 @@ func (c *ReplicaCalculator) GetObjectMetricReplicas(currentReplicas int32, targe
 
 // getUsageRatioReplicaCount calculates the desired replica count based on usageRatio and ready pods count.
 // For currentReplicas=0 doesn't take into account ready pods count and tolerance to support scaling to zero pods.
+// nolint
 func (c *ReplicaCalculator) getUsageRatioReplicaCount(currentReplicas int32, usageRatio float64, namespace string,
 	selector labels.Selector) (replicaCount int32, timestamp time.Time, err error) {
 	if currentReplicas != 0 {
@@ -312,7 +315,8 @@ func (c *ReplicaCalculator) getUsageRatioReplicaCount(currentReplicas int32, usa
 	return replicaCount, timestamp, err
 }
 
-// GetObjectPerPodMetricReplicas calculates the desired replica count based on a target metric utilization (as a milli-value)
+// GetObjectPerPodMetricReplicas calculates the desired replica count
+// based on a target metric utilization (as a milli-value)
 // for the given object in the given namespace, and the current replica count.
 func (c *ReplicaCalculator) GetObjectPerPodMetricReplicas(statusReplicas int32, targetAverageUtilization int64,
 	metricName string, namespace string, objectRef *autoscaling.CrossVersionObjectReference,
@@ -377,7 +381,7 @@ func (c *ReplicaCalculator) GetExternalMetricReplicas(currentReplicas int32, tar
 	}
 	utilization = 0
 	for _, val := range metrics {
-		utilization = utilization + val
+		utilization += val
 	}
 
 	usageRatio := float64(utilization) / float64(targetUtilization)
@@ -403,7 +407,7 @@ func (c *ReplicaCalculator) GetExternalPerPodMetricReplicas(statusReplicas int32
 	}
 	utilization = 0
 	for _, val := range metrics {
-		utilization = utilization + val
+		utilization += val
 	}
 
 	replicaCount = statusReplicas
@@ -478,7 +482,7 @@ func calculatePodRequests(pods []*v1.Pod, resource v1.ResourceName, containerNam
 			if containerName != "" && container.Name != containerName {
 				continue
 			}
-			if containerRequest, ok := container.Resources.Requests[resource]; ok {
+			if containerRequest, ok := container.Resources.Requests[resource]; ok { // nolint
 				podSum += containerRequest.MilliValue()
 			} else {
 				return nil, fmt.Errorf("missing request for %s", resource)
@@ -497,7 +501,7 @@ func calculatePodLimits(pods []*v1.Pod, resource v1.ResourceName, containerName 
 			if containerName != "" && container.Name != containerName {
 				continue
 			}
-			if containerLimit, ok := container.Resources.Limits[resource]; ok {
+			if containerLimit, ok := container.Resources.Limits[resource]; ok { // nolint
 				podSum += containerLimit.MilliValue()
 			} else {
 				return nil, fmt.Errorf("missing limit for %s", resource)

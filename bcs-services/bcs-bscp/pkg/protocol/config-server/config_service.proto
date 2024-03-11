@@ -93,6 +93,16 @@ service Config {
       delete: "/api/v1/config/delete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
     };
   }
+  rpc UnDeleteConfigItem(UnDeleteConfigItemReq) returns (UnDeleteConfigItemResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/undelete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+    };
+  }
+  rpc UndoConfigItem(UndoConfigItemReq) returns (UndoConfigItemResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/undo/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+    };
+  }
   rpc GetConfigItem(GetConfigItemReq) returns (GetConfigItemResp) {
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/{config_item_id}"
@@ -159,6 +169,11 @@ service Config {
   rpc GetReleaseByName(GetReleaseByNameReq) returns (pbrelease.Release) {
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/query/name/{release_name}"
+    };
+  }
+  rpc GetRelease(GetReleaseReq) returns (pbrelease.Release) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}"
     };
   }
   rpc DeprecateRelease(DeprecateReleaseReq) returns (DeprecateReleaseResp) {
@@ -696,6 +711,11 @@ service Config {
       body: "*"
     };
   }
+  rpc CheckCredentialName(CheckCredentialNameReq) returns (CheckCredentialNameResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/credential/{credential_name}/check"
+    };
+  }
 
   rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {
     option (google.api.http) = {
@@ -787,6 +807,15 @@ message UpdateCredentialsReq {
 }
 
 message UpdateCredentialsResp {}
+
+message CheckCredentialNameReq {
+  uint32 biz_id = 1;
+  string credential_name = 2;
+}
+
+message CheckCredentialNameResp {
+  bool exist = 1;
+}
 
 message ListCredentialsReq {
   uint32 biz_id = 1;
@@ -946,6 +975,22 @@ message DeleteConfigItemReq {
 
 message DeleteConfigItemResp {}
 
+message UnDeleteConfigItemReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message UnDeleteConfigItemResp {}
+
+message UndoConfigItemReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message UndoConfigItemResp {}
+
 message GetConfigItemReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -1096,6 +1141,12 @@ message GetReleaseByNameReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   string release_name = 3;
+}
+
+message GetReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
 }
 
 message DeprecateReleaseReq {

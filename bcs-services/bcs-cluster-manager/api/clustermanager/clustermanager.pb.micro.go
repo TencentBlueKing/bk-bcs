@@ -105,12 +105,6 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
-			Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
-			Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
 			Name:    "ClusterManager.ListNodesInCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
 			Method:  []string{"GET"},
@@ -476,6 +470,19 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
+			Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.TransNodeGroupToNodeTemplate",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/template"},
+			Method:  []string{"POST"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.EnableNodeGroupAutoScale",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/enable"},
 			Method:  []string{"POST"},
@@ -773,6 +780,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.CleanDbHistoryData",
+			Path:    []string{"/clustermanager/v1/dbdatas/{dataType}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ListResourceSchema",
 			Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}"},
 			Method:  []string{"GET"},
@@ -919,7 +933,6 @@ type ClusterManagerService interface {
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
 	DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...client.CallOption) (*DeleteNodesResponse, error)
 	BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...client.CallOption) (*BatchDeleteClusterNodesResponse, error)
-	GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error)
 	ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error)
 	ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...client.CallOption) (*ListMastersInClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...client.CallOption) (*DeleteClusterResp, error)
@@ -981,6 +994,8 @@ type ClusterManagerService interface {
 	UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, opts ...client.CallOption) (*UpdateGroupDesiredNodeResponse, error)
 	UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...client.CallOption) (*UpdateGroupDesiredSizeResponse, error)
 	UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, opts ...client.CallOption) (*UpdateGroupMinMaxSizeResponse, error)
+	GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error)
+	TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, opts ...client.CallOption) (*TransNodeGroupToNodeTemplateResponse, error)
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*DisableNodeGroupAutoScaleResponse, error)
 	//* Task information management *
@@ -1033,6 +1048,8 @@ type ClusterManagerService interface {
 	GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, opts ...client.CallOption) (*GetCloudBandwidthPackagesResponse, error)
 	// Operation logs
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
+	// CleanDbHistoryData clean DB history data
+	CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, opts ...client.CallOption) (*CleanDbHistoryDataResponse, error)
 	// ** ResourceSchema **
 	// ListResourceSchema
 	ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*CommonListResp, error)
@@ -1164,16 +1181,6 @@ func (c *clusterManagerService) DeleteNodesFromCluster(ctx context.Context, in *
 func (c *clusterManagerService) BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...client.CallOption) (*BatchDeleteClusterNodesResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.BatchDeleteNodesFromCluster", in)
 	out := new(BatchDeleteClusterNodesResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.GetExternalNodeScriptByGroupID", in)
-	out := new(GetExternalNodeScriptResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1731,6 +1738,26 @@ func (c *clusterManagerService) UpdateGroupMinMaxSize(ctx context.Context, in *U
 	return out, nil
 }
 
+func (c *clusterManagerService) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetExternalNodeScriptByGroupID", in)
+	out := new(GetExternalNodeScriptResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, opts ...client.CallOption) (*TransNodeGroupToNodeTemplateResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.TransNodeGroupToNodeTemplate", in)
+	out := new(TransNodeGroupToNodeTemplateResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.EnableNodeGroupAutoScale", in)
 	out := new(EnableNodeGroupAutoScaleResponse)
@@ -2191,6 +2218,16 @@ func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListO
 	return out, nil
 }
 
+func (c *clusterManagerService) CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, opts ...client.CallOption) (*CleanDbHistoryDataResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CleanDbHistoryData", in)
+	out := new(CleanDbHistoryDataResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListResourceSchema", in)
 	out := new(CommonListResp)
@@ -2404,7 +2441,6 @@ type ClusterManagerHandler interface {
 	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
 	DeleteNodesFromCluster(context.Context, *DeleteNodesRequest, *DeleteNodesResponse) error
 	BatchDeleteNodesFromCluster(context.Context, *BatchDeleteClusterNodesRequest, *BatchDeleteClusterNodesResponse) error
-	GetExternalNodeScriptByGroupID(context.Context, *GetExternalNodeScriptRequest, *GetExternalNodeScriptResponse) error
 	ListNodesInCluster(context.Context, *ListNodesInClusterRequest, *ListNodesInClusterResponse) error
 	ListMastersInCluster(context.Context, *ListMastersInClusterRequest, *ListMastersInClusterResponse) error
 	DeleteCluster(context.Context, *DeleteClusterReq, *DeleteClusterResp) error
@@ -2466,6 +2502,8 @@ type ClusterManagerHandler interface {
 	UpdateGroupDesiredNode(context.Context, *UpdateGroupDesiredNodeRequest, *UpdateGroupDesiredNodeResponse) error
 	UpdateGroupDesiredSize(context.Context, *UpdateGroupDesiredSizeRequest, *UpdateGroupDesiredSizeResponse) error
 	UpdateGroupMinMaxSize(context.Context, *UpdateGroupMinMaxSizeRequest, *UpdateGroupMinMaxSizeResponse) error
+	GetExternalNodeScriptByGroupID(context.Context, *GetExternalNodeScriptRequest, *GetExternalNodeScriptResponse) error
+	TransNodeGroupToNodeTemplate(context.Context, *TransNodeGroupToNodeTemplateRequest, *TransNodeGroupToNodeTemplateResponse) error
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest, *EnableNodeGroupAutoScaleResponse) error
 	DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest, *DisableNodeGroupAutoScaleResponse) error
 	//* Task information management *
@@ -2518,6 +2556,8 @@ type ClusterManagerHandler interface {
 	GetCloudBandwidthPackages(context.Context, *GetCloudBandwidthPackagesRequest, *GetCloudBandwidthPackagesResponse) error
 	// Operation logs
 	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
+	// CleanDbHistoryData clean DB history data
+	CleanDbHistoryData(context.Context, *CleanDbHistoryDataRequest, *CleanDbHistoryDataResponse) error
 	// ** ResourceSchema **
 	// ListResourceSchema
 	ListResourceSchema(context.Context, *ListResourceSchemaRequest, *CommonListResp) error
@@ -2565,7 +2605,6 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
 		DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, out *DeleteNodesResponse) error
 		BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, out *BatchDeleteClusterNodesResponse) error
-		GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error
 		ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error
 		ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, out *ListMastersInClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error
@@ -2621,6 +2660,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, out *UpdateGroupDesiredNodeResponse) error
 		UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, out *UpdateGroupDesiredSizeResponse) error
 		UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, out *UpdateGroupMinMaxSizeResponse) error
+		GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error
+		TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, out *TransNodeGroupToNodeTemplateResponse) error
 		EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error
 		DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, out *DisableNodeGroupAutoScaleResponse) error
 		CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error
@@ -2667,6 +2708,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error
 		GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error
 		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
+		CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, out *CleanDbHistoryDataResponse) error
 		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error
 		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *CommonResp) error
 		QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, out *QueryPermByActionIDResponse) error
@@ -2752,12 +2794,6 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes/-/batch"},
 		Method:  []string{"DELETE"},
 		Body:    "",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
-		Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
-		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3126,6 +3162,19 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
+		Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.TransNodeGroupToNodeTemplate",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/template"},
+		Method:  []string{"POST"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.EnableNodeGroupAutoScale",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/enable"},
 		Method:  []string{"POST"},
@@ -3423,6 +3472,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CleanDbHistoryData",
+		Path:    []string{"/clustermanager/v1/dbdatas/{dataType}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListResourceSchema",
 		Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}"},
 		Method:  []string{"GET"},
@@ -3594,10 +3650,6 @@ func (h *clusterManagerHandler) DeleteNodesFromCluster(ctx context.Context, in *
 
 func (h *clusterManagerHandler) BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, out *BatchDeleteClusterNodesResponse) error {
 	return h.ClusterManagerHandler.BatchDeleteNodesFromCluster(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error {
-	return h.ClusterManagerHandler.GetExternalNodeScriptByGroupID(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error {
@@ -3820,6 +3872,14 @@ func (h *clusterManagerHandler) UpdateGroupMinMaxSize(ctx context.Context, in *U
 	return h.ClusterManagerHandler.UpdateGroupMinMaxSize(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error {
+	return h.ClusterManagerHandler.GetExternalNodeScriptByGroupID(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, out *TransNodeGroupToNodeTemplateResponse) error {
+	return h.ClusterManagerHandler.TransNodeGroupToNodeTemplate(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error {
 	return h.ClusterManagerHandler.EnableNodeGroupAutoScale(ctx, in, out)
 }
@@ -4002,6 +4062,10 @@ func (h *clusterManagerHandler) GetCloudBandwidthPackages(ctx context.Context, i
 
 func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {
 	return h.ClusterManagerHandler.ListOperationLogs(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, out *CleanDbHistoryDataResponse) error {
+	return h.ClusterManagerHandler.CleanDbHistoryData(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error {

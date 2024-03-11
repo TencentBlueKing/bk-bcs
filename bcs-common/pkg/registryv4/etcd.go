@@ -30,19 +30,19 @@ import (
 
 // NewEtcdRegistry create etcd registry instance
 func NewEtcdRegistry(option *Options) Registry {
-	//setting default options
+	// setting default options
 	if option.TTL == time.Duration(0) {
-		option.TTL = time.Duration(time.Second * 40)
+		option.TTL = time.Second * 40
 	}
 	if option.Interval == time.Duration(0) {
-		option.Interval = time.Duration(time.Second * 30)
+		option.Interval = time.Second * 30
 	}
-	//create etcd registry
+	// create etcd registry
 	r := etcd.NewRegistry(
 		registry.Addrs(option.RegistryAddr...),
 		registry.TLSConfig(option.Config),
 	)
-	//creat local service
+	// creat local service
 	option.id = uuid.New().String()
 	if option.Meta == nil {
 		option.Meta = make(map[string]string)
@@ -69,15 +69,15 @@ func NewEtcdRegistry(option *Options) Registry {
 		localCache:   make(map[string]*registry.Service),
 		registered:   false,
 	}
-	//check event handler
+	// check event handler
 	if len(option.Modules) != 0 {
-		//setting module that watch
+		// setting module that watch
 		e.localModules = make(map[string]bool)
 		for _, name := range option.Modules {
 			e.localModules[name] = true
 			_, _ = e.innerGet(name)
 		}
-		//start to watch all event
+		// start to watch all event
 		go e.innerWatch(e.ctx)
 	}
 	return e
@@ -107,7 +107,7 @@ func (e *etcdRegister) Register() error {
 		return err
 	}
 	e.registered = true
-	//start background goroutine for interval keep alive
+	// start background goroutine for interval keep alive
 	// because we setting ttl for register
 	go func() {
 		tick := time.NewTicker(e.option.Interval)
@@ -115,7 +115,7 @@ func (e *etcdRegister) Register() error {
 		for {
 			select {
 			case <-tick.C:
-				//ready to keepAlive registered node information
+				// ready to keepAlive registered node information
 				if err := e.innerRegister(); err != nil {
 					blog.Errorf("register %s information %++v failed, %s", e.localService.Name, e.localService, err.Error())
 					blog.Warnf("try register next tick...")
@@ -131,13 +131,13 @@ func (e *etcdRegister) Register() error {
 func (e *etcdRegister) innerRegister() (err error) {
 	for i := 0; i < 3; i++ {
 		if err = e.etcdregistry.Register(e.localService, registry.RegisterTTL(e.option.TTL)); err != nil {
-			//try again until max failed
+			// try again until max failed
 			roption := e.etcdregistry.Options()
 			blog.Errorf("etcd registry register err, %s, options: %+v\n", err.Error(), roption)
 			time.Sleep(backoff.Do(i + 1))
 			continue
 		}
-		//register success, clean error
+		// register success, clean error
 		err = nil
 		break
 	}
@@ -146,9 +146,9 @@ func (e *etcdRegister) innerRegister() (err error) {
 
 // Deregister clean service information from registry
 func (e *etcdRegister) Deregister() error {
-	//stop background keepalive goroutine
+	// stop background keepalive goroutine
 	e.stop()
-	//clean registered node information
+	// clean registered node information
 	if err := e.etcdregistry.Deregister(e.localService); err != nil {
 		blog.Warnf("Deregister %s information %++v failed, %s", e.localService.Name, e.localService, err.Error())
 	}
@@ -171,8 +171,9 @@ func (e *etcdRegister) Get(name string) (*registry.Service, error) {
 	return svc, nil
 }
 
+// nolint
 func (e *etcdRegister) innerGet(name string) (*registry.Service, error) {
-	//first, get details from registry
+	// first, get details from registry
 	svcs, err := e.etcdregistry.GetService(name)
 	if err == registry.ErrNotFound {
 		blog.Warnf("registry found no module %s under registry, clean local cache.", name)
@@ -207,7 +208,7 @@ func (e *etcdRegister) innerGet(name string) (*registry.Service, error) {
 }
 
 func (e *etcdRegister) innerWatch(ctx context.Context) {
-	//check if discovery is stopped
+	// check if discovery is stopped
 	select {
 	case <-ctx.Done():
 		blog.Infof("registry is ready to exit...")
@@ -219,7 +220,7 @@ func (e *etcdRegister) innerWatch(ctx context.Context) {
 	watcher, err := e.etcdregistry.Watch(registry.WatchContext(ctx))
 	if err != nil {
 		blog.Errorf("registry create watcher for all registry modules failed, %s. retry after a tick", err.Error())
-		//retry after
+		// retry after
 		<-time.After(time.Second * 3)
 		go e.innerWatch(ctx)
 		return
@@ -261,7 +262,7 @@ func (e *etcdRegister) handleEvent(r *registry.Result) {
 		blog.Errorf("registry get module %s information failed, %s", fullName, err.Error())
 		return
 	}
-	//check event handler
+	// check event handler
 	if e.option.EvtHandler != nil {
 		e.option.EvtHandler(fullName)
 	}

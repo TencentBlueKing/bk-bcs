@@ -18,6 +18,8 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/storage"
@@ -35,6 +37,8 @@ const (
 
 	// OpEQ 等于
 	OpEQ = "="
+	// OpNotEQ 不等于
+	OpNotEQ = "!="
 	// OpIn 包含
 	OpIn = "In"
 	// OpNotIn 不包含
@@ -99,6 +103,8 @@ func (f *QueryFilter) LabelSelectorString() string {
 		switch v.Op {
 		case OpEQ:
 			ls = append(ls, fmt.Sprintf("%s=%s", v.Key, v.Values[0]))
+		case OpNotEQ:
+			ls = append(ls, fmt.Sprintf("%s!=%s", v.Key, v.Values[0]))
 		case OpIn:
 			values := strings.Join(v.Values, ",")
 			ls = append(ls, fmt.Sprintf("%s in (%s)", v.Key, values))
@@ -153,6 +159,10 @@ func (f *QueryFilter) ToConditions() []*operator.Condition {
 		case OpEQ:
 			conditions = append(conditions, operator.NewLeafCondition(
 				operator.Eq, map[string]interface{}{
+					fmt.Sprintf("data.metadata.labels.%s", mapx.ConvertPath(v.Key)): v.Values[0]}))
+		case OpNotEQ:
+			conditions = append(conditions, operator.NewLeafCondition(
+				operator.Not, map[string]interface{}{
 					fmt.Sprintf("data.metadata.labels.%s", mapx.ConvertPath(v.Key)): v.Values[0]}))
 		case OpIn:
 			conditions = append(conditions, operator.NewLeafCondition(
@@ -219,6 +229,56 @@ func (f *QueryFilter) NameFilter(resources []*storage.Resource) []*storage.Resou
 		}
 	}
 	return result
+}
+
+// LabelSelectorFilter 标签选择器过滤器
+func (f *QueryFilter) LabelSelectorFilter(resources []*storage.Resource) []*storage.Resource {
+	result := []*storage.Resource{}
+	if len(f.LabelSelector) == 0 {
+		return resources
+	}
+	var requirements []*labels.Requirement
+	for _, v := range f.LabelSelector {
+		rq, err := labels.NewRequirement(v.Key, transOperator(v.Op), v.Values)
+		if err != nil {
+			continue
+		}
+		requirements = append(requirements, rq)
+	}
+	selector := labels.NewSelector()
+	for _, rq := range requirements {
+		selector = selector.Add(*rq)
+	}
+	for _, v := range resources {
+		lbs := make(map[string]string)
+		for k, v := range mapx.GetMap(v.Data, "metadata.labels") {
+			lbs[k] = fmt.Sprintf("%v", v)
+		}
+		if !selector.Matches(labels.Set(lbs)) {
+			continue
+		}
+		result = append(result, v)
+	}
+	return result
+}
+
+func transOperator(op string) selection.Operator {
+	switch op {
+	case OpEQ:
+		return selection.Equals
+	case OpNotEQ:
+		return selection.NotEquals
+	case OpIn:
+		return selection.In
+	case OpNotIn:
+		return selection.NotIn
+	case OpExists:
+		return selection.Exists
+	case OpDoesNotExist:
+		return selection.DoesNotExist
+	default:
+		return selection.Equals
+	}
 }
 
 // StatusFilter 状态过滤器

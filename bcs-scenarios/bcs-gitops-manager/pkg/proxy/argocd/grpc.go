@@ -21,6 +21,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
@@ -32,13 +35,10 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
-	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 )
 
 var (
@@ -65,10 +65,10 @@ func (plugin *GrpcPlugin) Init() error {
 		"/repository.RepositoryService/ValidateAccess":   plugin.handleRepoAccess,
 		"/repository.RepositoryService/CreateRepository": plugin.handleRepoCreate,
 		"/repository.RepositoryService/DeleteRepository": plugin.handleRepoDelete,
-		//"/repository.RepositoryService/ListRefs":         nil,
-		//"/repository.RepositoryService/ListApps":         nil,
-		//"/repository.RepositoryService/GetAppDetails":    nil,
-		//"/repository.RepositoryService/GetHelmCharts":    nil,
+		// "/repository.RepositoryService/ListRefs":         nil,
+		// "/repository.RepositoryService/ListApps":         nil,
+		// "/repository.RepositoryService/GetAppDetails":    nil,
+		// "/repository.RepositoryService/GetHelmCharts":    nil,
 
 		"/cluster.ClusterService/List": plugin.handleClusterList,
 		"/cluster.SettingsService/Get": plugin.handleClusterSettingGet,
@@ -104,6 +104,8 @@ func (plugin *GrpcPlugin) Init() error {
 		"/applicationset.ApplicationSetService/Get":    plugin.handleAppSetGet,
 		"/applicationset.ApplicationSetService/Create": plugin.handleAppSetCreate,
 		"/applicationset.ApplicationSetService/Delete": plugin.handleAppSetDelete,
+
+		"/version.VersionService/Version": plugin.handleVersion,
 	}
 	plugin.Path("").Handler(plugin.middleware.HttpWrapper(plugin.serve))
 	return nil
@@ -186,7 +188,8 @@ func (plugin *GrpcPlugin) handleProjectGet(r *http.Request) (*http.Request, *mw.
 	}
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), query.Name, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check project '%s' view permission failed", query.Name))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err,
+			"check project '%s' view permission failed", query.Name))
 	}
 	return r, mw.ReturnArgoReverse()
 }
@@ -276,6 +279,7 @@ func (plugin *GrpcPlugin) handleRepoDelete(r *http.Request) (*http.Request, *mw.
 }
 
 // handleRepoListRefs will list repo refs from argocd
+// nolint unused
 func (plugin *GrpcPlugin) handleRepoListRefs(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoQuery{}
 	if err := plugin.readRequestBody(r, query); err != nil {
@@ -293,6 +297,7 @@ func (plugin *GrpcPlugin) handleRepoListRefs(r *http.Request) (*http.Request, *m
 }
 
 // handleRepoListApps will handle repo list apps
+// nolint unused
 func (plugin *GrpcPlugin) handleRepoListApps(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoAppsQuery{}
 	if err := plugin.readRequestBody(r, query); err != nil {
@@ -310,6 +315,7 @@ func (plugin *GrpcPlugin) handleRepoListApps(r *http.Request) (*http.Request, *m
 }
 
 // handleRepoGetAppDetails will handle repo get application details
+// nolint unused
 func (plugin *GrpcPlugin) handleRepoGetAppDetails(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoAppDetailsQuery{}
 	if err := plugin.readRequestBody(r, query); err != nil {
@@ -327,6 +333,7 @@ func (plugin *GrpcPlugin) handleRepoGetAppDetails(r *http.Request) (*http.Reques
 }
 
 // handleRepoGetHelmCharts will handle repo get helm charts
+// nolint unused
 func (plugin *GrpcPlugin) handleRepoGetHelmCharts(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoQuery{}
 	if err := plugin.readRequestBody(r, query); err != nil {
@@ -361,6 +368,7 @@ func (plugin *GrpcPlugin) handleClusterList(r *http.Request) (*http.Request, *mw
 }
 
 // parseClusterName will parse cluster name and check it
+// nolint unused
 func (plugin *GrpcPlugin) parseClusterName(server string) (string, error) {
 	arr := strings.Split(server, "/")
 	clusterID := arr[len(arr)-1]
@@ -378,7 +386,8 @@ func (plugin *GrpcPlugin) handleClusterGet(r *http.Request) (*http.Request, *mw.
 	}
 	statusCode, err := plugin.middleware.CheckClusterPermission(r.Context(), query, iam.ClusterView)
 	if err != nil {
-		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check application '%s' permission failed", query.Name))
+		return r, mw.ReturnGRPCErrorResponse(statusCode,
+			errors.Wrapf(err, "check application '%s' permission failed", query.Name))
 	}
 	return r, mw.ReturnArgoReverse()
 }
@@ -396,7 +405,7 @@ func (plugin *GrpcPlugin) handleAppSetList(r *http.Request) (*http.Request, *mw.
 		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
 	query := new(applicationset.ApplicationSetListQuery)
-	if err := plugin.readRequestBody(r, query); err != nil {
+	if err = plugin.readRequestBody(r, query); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	names := make([]string, 0, len(projectList.Items))
@@ -424,10 +433,7 @@ func (plugin *GrpcPlugin) handleAppSetList(r *http.Request) (*http.Request, *mw.
 			errors.Wrapf(err, "list applicationsets by project '%s' from storage failed", names))
 	}
 	result := make([]v1alpha1.ApplicationSet, 0, len(appsetList.Items))
-	for i := range appsetList.Items {
-		item := appsetList.Items[i]
-		result = append(result, item)
-	}
+	result = append(result, appsetList.Items...)
 	appsetList.Items = result
 	return r, mw.ReturnGRPCResponse(appsetList)
 }
@@ -487,7 +493,7 @@ func (plugin *GrpcPlugin) handleAppList(r *http.Request) (*http.Request, *mw.Htt
 		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
 	query := new(application.ApplicationQuery)
-	if err := plugin.readRequestBody(r, query); err != nil {
+	if err = plugin.readRequestBody(r, query); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	names := make([]string, 0, len(projectList.Items))
@@ -759,5 +765,10 @@ func (plugin *GrpcPlugin) handleAppCommon(r *http.Request, appName string,
 			errors.Wrapf(err, "check application '%s' permission failed", appName))
 	}
 	middleware.SetAuditMessage(r, app, middleware.ApplicationGRPCOperate)
+	return r, mw.ReturnArgoReverse()
+}
+
+// handleAppListResourceLinks handle application list resource links
+func (plugin *GrpcPlugin) handleVersion(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	return r, mw.ReturnArgoReverse()
 }

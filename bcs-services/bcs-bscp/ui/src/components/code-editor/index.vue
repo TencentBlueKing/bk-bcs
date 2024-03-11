@@ -81,6 +81,7 @@
     (val) => {
       if (val !== localVal.value) {
         editor.setValue(val);
+        editorHoverProvider = useEditorVariableReplace(editor, props.variables);
       }
     },
   );
@@ -340,7 +341,7 @@
     }
   }
   .placeholderBox {
-    height: calc(100% - 10px);;
+    height: calc(100% - 10px);
     background-color: #1e1e1e;
     box-sizing: content-box;
     padding-top: 10px;

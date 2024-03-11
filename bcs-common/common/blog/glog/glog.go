@@ -1214,3 +1214,13 @@ func Exitf(format string, args ...interface{}) {
 	atomic.StoreUint32(&fatalNoStacks, 1)
 	logging.printf(fatalLog, format, args...)
 }
+
+// LogKit 适配 https://github.com/go-kit/log 接口
+type LogKit struct {
+}
+
+// Log gokit log 实现
+func (l LogKit) Log(keyvals ...interface{}) error {
+	logging.println(infoLog, keyvals...)
+	return nil
+}

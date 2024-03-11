@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package sidecar xxx
 package sidecar
 
 import (
@@ -27,7 +27,7 @@ func (s *SidecarController) syncContainerCache() {
 		blog.Infof("Start sync containerInfoCache periodly")
 		ticker := time.NewTicker(time.Hour)
 		defer ticker.Stop()
-		for {
+		for { // nolint
 			select {
 			case <-ticker.C:
 				s.syncContainerCacheOnce()
@@ -63,7 +63,7 @@ func (s *SidecarController) inspectContainer(id string) *dockertypes.ContainerJS
 	inspectChan := make(chan interface{}, 1)
 	timer := time.NewTimer(3 * time.Second)
 	// NOCC:vet/vet(工具误报:函数末尾有用到cancelFunc)
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithCancel(context.Background()) // nolint cancelFunc is not used on all paths
 	go func() {
 		defer close(inspectChan)
 		c, err := s.client.ContainerInspect(ctx, id)
@@ -83,12 +83,12 @@ func (s *SidecarController) inspectContainer(id string) *dockertypes.ContainerJS
 		if ok {
 			blog.Errorf("docker InspectContainer %s failed: %s", id, err.Error())
 			// NOCC:vet/vet(设计如此:不需要使用cancelFunc)
-			return nil
+			return nil // nolint without using the cancelFunc
 		}
 		c, ok := obj.(dockertypes.ContainerJSON)
 		if !ok {
 			blog.Errorf("docker InspectContainer %s failed with type(%T) returned, expected dockertypes.ContainerJSON", id, obj)
-			return nil
+			return nil // nolint without using the cancelFunc
 		}
 		return &c
 	case <-timer.C:

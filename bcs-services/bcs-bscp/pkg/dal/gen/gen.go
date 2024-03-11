@@ -22,6 +22,8 @@ var (
 	AppTemplateVariable         *appTemplateVariable
 	ArchivedApp                 *archivedApp
 	Audit                       *audit
+	Client                      *client
+	ClientEvent                 *clientEvent
 	Commit                      *commit
 	ConfigItem                  *configItem
 	Content                     *content
@@ -57,6 +59,8 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	AppTemplateVariable = &Q.AppTemplateVariable
 	ArchivedApp = &Q.ArchivedApp
 	Audit = &Q.Audit
+	Client = &Q.Client
+	ClientEvent = &Q.ClientEvent
 	Commit = &Q.Commit
 	ConfigItem = &Q.ConfigItem
 	Content = &Q.Content
@@ -93,6 +97,8 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		AppTemplateVariable:         newAppTemplateVariable(db, opts...),
 		ArchivedApp:                 newArchivedApp(db, opts...),
 		Audit:                       newAudit(db, opts...),
+		Client:                      newClient(db, opts...),
+		ClientEvent:                 newClientEvent(db, opts...),
 		Commit:                      newCommit(db, opts...),
 		ConfigItem:                  newConfigItem(db, opts...),
 		Content:                     newContent(db, opts...),
@@ -130,6 +136,8 @@ type Query struct {
 	AppTemplateVariable         appTemplateVariable
 	ArchivedApp                 archivedApp
 	Audit                       audit
+	Client                      client
+	ClientEvent                 clientEvent
 	Commit                      commit
 	ConfigItem                  configItem
 	Content                     content
@@ -168,6 +176,8 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		AppTemplateVariable:         q.AppTemplateVariable.clone(db),
 		ArchivedApp:                 q.ArchivedApp.clone(db),
 		Audit:                       q.Audit.clone(db),
+		Client:                      q.Client.clone(db),
+		ClientEvent:                 q.ClientEvent.clone(db),
 		Commit:                      q.Commit.clone(db),
 		ConfigItem:                  q.ConfigItem.clone(db),
 		Content:                     q.Content.clone(db),
@@ -213,6 +223,8 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		AppTemplateVariable:         q.AppTemplateVariable.replaceDB(db),
 		ArchivedApp:                 q.ArchivedApp.replaceDB(db),
 		Audit:                       q.Audit.replaceDB(db),
+		Client:                      q.Client.replaceDB(db),
+		ClientEvent:                 q.ClientEvent.replaceDB(db),
 		Commit:                      q.Commit.replaceDB(db),
 		ConfigItem:                  q.ConfigItem.replaceDB(db),
 		Content:                     q.Content.replaceDB(db),
@@ -248,6 +260,8 @@ type queryCtx struct {
 	AppTemplateVariable         IAppTemplateVariableDo
 	ArchivedApp                 IArchivedAppDo
 	Audit                       IAuditDo
+	Client                      IClientDo
+	ClientEvent                 IClientEventDo
 	Commit                      ICommitDo
 	ConfigItem                  IConfigItemDo
 	Content                     IContentDo
@@ -283,6 +297,8 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		AppTemplateVariable:         q.AppTemplateVariable.WithContext(ctx),
 		ArchivedApp:                 q.ArchivedApp.WithContext(ctx),
 		Audit:                       q.Audit.WithContext(ctx),
+		Client:                      q.Client.WithContext(ctx),
+		ClientEvent:                 q.ClientEvent.WithContext(ctx),
 		Commit:                      q.Commit.WithContext(ctx),
 		ConfigItem:                  q.ConfigItem.WithContext(ctx),
 		Content:                     q.Content.WithContext(ctx),

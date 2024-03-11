@@ -3,8 +3,10 @@
     <div :class="['config-content-editor', { fullscreen: isOpenFullScreen }]">
       <div class="editor-title">
         <div class="tips">
-          <InfoLine class="info-icon" />
-          {{ t('仅支持大小不超过') }}50M
+          <template v-if="props.showTips">
+            <InfoLine class="info-icon" />
+            {{ t('仅支持大小不超过') }}{{ props.sizeLimit }}M
+          </template>
         </div>
         <div class="btns">
           <ReadFileContent
@@ -39,6 +41,7 @@
           :model-value="props.content"
           :variables="props.variables"
           :editable="editable"
+          :language="props.language"
           @update:model-value="emits('change', $event)" />
       </div>
     </div>
@@ -57,12 +60,18 @@
   const props = withDefaults(
     defineProps<{
       content: string;
-      variables?: IVariableEditParams[];
       editable: boolean;
+      variables?: IVariableEditParams[];
+      sizeLimit?: number;
+      language?: string;
+      showTips?: boolean;
     }>(),
     {
       variables: () => [],
       editable: true,
+      sizeLimit: 100,
+      language: '',
+      showTips: true,
     },
   );
 

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package controllers
@@ -20,6 +19,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,7 +34,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/apiclient"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/fileoperator"
@@ -51,7 +50,8 @@ type PanelReconciler struct {
 	MonitorApiCli apiclient.IMonitorApiClient
 }
 
-// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=panels,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,
+// resources=panels,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=panels/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=panels/finalizers,verbs=update
 
@@ -120,7 +120,8 @@ func (r *PanelReconciler) eventPredicate() predicate.Predicate {
 			if !ok {
 				return true
 			}
-			if panel.DeletionTimestamp == nil && panel.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted && panel.Spec.IgnoreChange == true {
+			if panel.DeletionTimestamp == nil &&
+				panel.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted && panel.Spec.IgnoreChange {
 				blog.V(3).Infof("panel '%s/%s' got create event, but is synced and ignore change",
 					panel.GetNamespace(), panel.GetName())
 				return false
@@ -141,7 +142,7 @@ func (r *PanelReconciler) eventPredicate() predicate.Predicate {
 				return false
 			}
 			if newPanel.DeletionTimestamp == nil && newPanel.Status.
-				SyncStatus.State == monitorextensionv1.SyncStateCompleted && newPanel.Spec.IgnoreChange == true {
+				SyncStatus.State == monitorextensionv1.SyncStateCompleted && newPanel.Spec.IgnoreChange {
 				blog.V(3).Infof("panel '%s/%s' updated, but is synced and ignore change",
 					newPanel.GetNamespace(), newPanel.GetName())
 				return false
@@ -239,7 +240,6 @@ type configmapFilter struct {
 
 // Create implement EventFilter
 func (cf *configmapFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterface) {
-	return
 }
 
 // Update implement EventFilter
@@ -257,7 +257,7 @@ func (cf *configmapFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingI
 
 	scenarioName, ok := newCm.GetLabels()[monitorextensionv1.LabelKeyForScenarioName]
 	if !ok {
-		blog.V(4).Infof("cm '%s/%s' not found related scenario, break...")
+		blog.V(4).Infof("cm '%s/%s' not found related scenario, break...", newCm.GetNamespace(), newCm.GetName())
 		return
 	}
 	selector, err := metav1.LabelSelectorAsSelector(metav1.SetAsLabelSelector(map[string]string{
@@ -288,10 +288,8 @@ func (cf *configmapFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingI
 
 // Delete implement EventFilter
 func (cf *configmapFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterface) {
-	return
 }
 
 // Generic implement EventFilter
 func (cf *configmapFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInterface) {
-	return
 }

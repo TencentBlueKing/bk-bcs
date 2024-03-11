@@ -154,6 +154,39 @@ func (c ConfigItem) ValidateDelete() error {
 	return nil
 }
 
+// ValidateRecover validate the config item's specific when recover it.
+func (c ConfigItem) ValidateRecover() error {
+	if c.ID == 0 {
+		return errors.New("config item id can not be set")
+	}
+
+	if c.Spec == nil {
+		return errors.New("spec should be set")
+	}
+
+	if err := c.Spec.ValidateCreate(); err != nil {
+		return err
+	}
+
+	if c.Attachment == nil {
+		return errors.New("attachment should be set")
+	}
+
+	if err := c.Attachment.Validate(); err != nil {
+		return err
+	}
+
+	if c.Revision == nil {
+		return errors.New("revision should be set")
+	}
+
+	if err := c.Revision.ValidateCreate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ConfigItemSpecColumns defines commit attachment's columns
 var ConfigItemSpecColumns = mergeColumns(CISpecColumnDescriptor)
 

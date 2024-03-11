@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package repo
@@ -20,11 +19,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/argoproj/argo-cd/v2/util/db"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/utils"
@@ -52,11 +51,13 @@ func NewRepoManager(cli client.Client, opt *option.ControllerOption) (*Manager, 
 		repoStore:                make(map[string]Repo),
 		repoMutex:                sync.RWMutex{},
 	}
-	argoDB, _, err := NewArgoDB(context.Background(), opt.ArgoAdminNamespace)
-	if err != nil {
-		return nil, fmt.Errorf("connect to argo failed, err: %w", err)
+	if opt.EnableArgo {
+		argoDB, _, err := NewArgoDB(context.Background(), opt.ArgoAdminNamespace)
+		if err != nil {
+			return nil, fmt.Errorf("connect to argo failed, err: %w", err)
+		}
+		manager.argoDB = argoDB
 	}
-	manager.argoDB = argoDB
 
 	defaultRepoURL, defaultUserName, defaultSecret := loadEnv()
 	defaultRepo, err := newGitRepo(defaultRepoURL, defaultUserName, defaultSecret, "master",
@@ -74,6 +75,9 @@ func NewRepoManager(cli client.Client, opt *option.ControllerOption) (*Manager, 
 
 // RegisterRepoFromArgo register repo into store
 func (m *Manager) RegisterRepoFromArgo(repoURL, targetRevision string) error {
+	if m.argoDB == nil {
+		return fmt.Errorf("argo db not initialized")
+	}
 	blog.Infof("register repo [%s/%s]", repoURL, targetRevision)
 	argoRepo, err := m.argoDB.GetRepository(context.Background(), repoURL)
 	if err != nil {

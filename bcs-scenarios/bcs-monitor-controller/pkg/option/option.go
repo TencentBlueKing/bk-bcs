@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package option xxx
@@ -70,6 +69,8 @@ type ControllerOption struct {
 
 	// ArgoAdminNamespace admin namespace for argo
 	ArgoAdminNamespace string
+	// EnableArgo
+	EnableArgo bool
 }
 
 // BindFromCommandLine bind from
@@ -97,6 +98,7 @@ func (c *ControllerOption) BindFromCommandLine() {
 	flag.StringVar(&c.BKMDownloadConfigPath, "bkm_download_config_path", "/tmp",
 		"directory path to store bkm download config")
 	flag.StringVar(&c.ArgoAdminNamespace, "argo_admin_namespace", "default", "argo admin namespace")
+	flag.BoolVar(&c.EnableArgo, "enable_argo", false, "enable argo")
 	c.ScenarioGitRefreshFreq = time.Second * time.Duration(scenarioRefreshFreqSec)
 	c.RepoRefreshFreq = time.Second * time.Duration(repoRefreshFreqSec)
 	c.Verbosity = int32(verbosity)

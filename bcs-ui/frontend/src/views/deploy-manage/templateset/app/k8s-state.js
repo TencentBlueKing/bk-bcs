@@ -136,6 +136,10 @@ export default class State {
               showLoading: true,
             });
           }
+          if (operType === 'rollingupdate') {
+            ret.rollingupdate = 1;
+            ret.scale = 1;
+          }
         } else if (operType === 'create' || operType === 'scale' || operType === 'rebuild') {
           // 允许删除、重建
           ret = Object.assign({}, OPERATE_MAP, {

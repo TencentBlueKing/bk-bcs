@@ -40,6 +40,7 @@ func newKv(db *gorm.DB, opts ...gen.DOOption) kv {
 	_kv.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_kv.Signature = field.NewString(tableName, "signature")
 	_kv.ByteSize = field.NewUint64(tableName, "byte_size")
+	_kv.Md5 = field.NewString(tableName, "md5")
 
 	_kv.fillFieldMap()
 
@@ -63,6 +64,7 @@ type kv struct {
 	UpdatedAt field.Time
 	Signature field.String
 	ByteSize  field.Uint64
+	Md5       field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -92,6 +94,7 @@ func (k *kv) updateTableName(table string) *kv {
 	k.UpdatedAt = field.NewTime(table, "updated_at")
 	k.Signature = field.NewString(table, "signature")
 	k.ByteSize = field.NewUint64(table, "byte_size")
+	k.Md5 = field.NewString(table, "md5")
 
 	k.fillFieldMap()
 
@@ -116,7 +119,7 @@ func (k *kv) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (k *kv) fillFieldMap() {
-	k.fieldMap = make(map[string]field.Expr, 13)
+	k.fieldMap = make(map[string]field.Expr, 14)
 	k.fieldMap["id"] = k.ID
 	k.fieldMap["kv_state"] = k.KvState
 	k.fieldMap["key"] = k.Key
@@ -130,6 +133,7 @@ func (k *kv) fillFieldMap() {
 	k.fieldMap["updated_at"] = k.UpdatedAt
 	k.fieldMap["signature"] = k.Signature
 	k.fieldMap["byte_size"] = k.ByteSize
+	k.fieldMap["md5"] = k.Md5
 }
 
 func (k kv) clone(db *gorm.DB) kv {

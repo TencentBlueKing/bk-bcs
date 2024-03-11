@@ -30,7 +30,7 @@ type BkbaseTable struct {
 
 // CloudNativeConfig config for cloud native score
 type CloudNativeConfig struct {
-	Bkbase   BkbaseTable `json:"bkbase,omitepty"`
+	Bkbase   BkbaseTable `json:"bkbase,omitempty"`
 	Platform uint32      `json:"platform,omitempty"`
 	AppId    string      `json:"appid,omitempty"`
 }

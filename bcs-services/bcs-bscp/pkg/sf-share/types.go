@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
@@ -66,6 +67,12 @@ const (
 	SidecarOffline MessagingType = 1
 	// Heartbeat means the sidecar is online, to tell feed server this sidecar is live.
 	Heartbeat MessagingType = 2
+	// VersionChangeMessage the version change event was reported. Procedure
+	VersionChangeMessage MessagingType = 3
+	// PullStatus the current pull status is reported
+	PullStatus MessagingType = 4
+	// ClientInfo report basic information about the client when the client first connects to the client
+	ClientInfo MessagingType = 5
 )
 
 // Validate the messaging type is valid or not.
@@ -73,6 +80,9 @@ func (sm MessagingType) Validate() error {
 	switch sm {
 	case SidecarOffline:
 	case Heartbeat:
+	case VersionChangeMessage:
+	case PullStatus:
+	case ClientInfo:
 	default:
 		return fmt.Errorf("unknown %d sidecar message type", sm)
 	}
@@ -87,6 +97,12 @@ func (sm MessagingType) String() string {
 		return "SidecarOffline"
 	case Heartbeat:
 		return "Heartbeat"
+	case VersionChangeMessage:
+		return "VersionChange"
+	case PullStatus:
+		return "PullStatus"
+	case ClientInfo:
+		return "ClientInfo"
 	default:
 		return "Unknown"
 	}
@@ -132,6 +148,25 @@ type SideAppMeta struct {
 	CurrentReleaseID uint32 `json:"currentReleaseID"`
 	// sidecar's current cursor id
 	CurrentCursorID uint32 `json:"currentCursorID"`
+	// TargetReleaseID is sidecar's target release id
+	TargetReleaseID uint32 `json:"targetReleaseID"`
+	// TotalFileSize 总文件大小
+	TotalFileSize uint64 `json:"totalFileSize"`
+	// SuccessFileSize 下载文件大小
+	DownloadFileSize uint64 `json:"downloadFileSize"`
+	// TotalFileNum 总文件数量
+	TotalFileNum int `json:"totalFileNum"`
+	// DownloadFileNum 下载文件数量
+	DownloadFileNum int32 `json:"downloadFileNum"`
+	// CursorID 事件ID
+	CursorID string `json:"cursorID"`
+	// ReleaseChangeStatus 变更状态
+	ReleaseChangeStatus Status       `json:"releaseChangeStatus"`
+	FailedReason        FailedReason `json:"failedReason"`
+	FailedDetailReason  string       `json:"failedDetailReason"`
+	StartTime           time.Time    `json:"startTime"`
+	EndTime             time.Time    `json:"endTime"`
+	TotalSeconds        float64      `json:"totalSeconds"`
 }
 
 // Validate the sidecar's app meta is valid or not.
@@ -174,6 +209,7 @@ func (cim *ConfigItemMetaV1) PbFileMeta() *pbfs.FileMeta {
 			Content: &pbcontent.ContentSpec{
 				Signature: cim.ContentSpec.Signature,
 				ByteSize:  cim.ContentSpec.ByteSize,
+				Md5:       cim.ContentSpec.Md5,
 			},
 		},
 		ConfigItemSpec:       cim.ConfigItemSpec,
@@ -184,14 +220,15 @@ func (cim *ConfigItemMetaV1) PbFileMeta() *pbfs.FileMeta {
 // ReleaseEventMetaV1 defines the event details when the sidecar watch the feed server to
 // get the latest release.
 type ReleaseEventMetaV1 struct {
-	AppID      uint32              `json:"appID"`
-	App        string              `json:"app"`
-	ReleaseID  uint32              `json:"releaseID"`
-	CIMetas    []*ConfigItemMetaV1 `json:"ciMetas"`
-	KvMetas    []*KvMetaV1         `json:"kvMetas"`
-	Repository *RepositoryV1       `json:"repository"`
-	PreHook    *pbhook.HookSpec    `json:"preHook"`
-	PostHook   *pbhook.HookSpec    `json:"postHook"`
+	AppID       uint32              `json:"appID"`
+	App         string              `json:"app"`
+	ReleaseID   uint32              `json:"releaseID"`
+	ReleaseName string              `json:"releaseName"`
+	CIMetas     []*ConfigItemMetaV1 `json:"ciMetas"`
+	KvMetas     []*KvMetaV1         `json:"kvMetas"`
+	Repository  *RepositoryV1       `json:"repository"`
+	PreHook     *pbhook.HookSpec    `json:"preHook"`
+	PostHook    *pbhook.HookSpec    `json:"postHook"`
 }
 
 // InstanceSpec defines the specifics for an app instance to watch the event.
@@ -455,10 +492,11 @@ func (o *OfflinePayload) Encode() ([]byte, error) {
 
 // HeartbeatPayload defines sdk heartbeat to send payload to feed server.
 type HeartbeatPayload struct {
-	// FingerPrint sdk instance fingerprint, reference: pkg/dal/sf-share/fingerprint.go
-	FingerPrint string `json:"fingerprint"`
+	BasicData BasicData `json:"basicData"`
 	// Applications sdk instance bind app meta info,include app,namespace,uid,labels and app current release id.
 	Applications []SideAppMeta `json:"applications"`
+	// ResourceUsage 资源相关信息：例如 cpu、内存等
+	ResourceUsage ResourceUsage `json:"resourceUsage"`
 }
 
 // MessagingType return the payload related sidecar message type.
@@ -475,6 +513,19 @@ func (h *HeartbeatPayload) Encode() ([]byte, error) {
 	return jsoni.Marshal(h)
 }
 
+// Decode the HeartbeatPayload to bytes.
+func (h *HeartbeatPayload) Decode(data []byte) error {
+	if len(data) == 0 {
+		return errors.New("HeartbeatPayload is nil, can not be decoded")
+	}
+
+	err := jsoni.Unmarshal(data, h)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // KvMetaV1 defines the released kv metadata.
 type KvMetaV1 struct {
 	// ID is released configuration item identity id.
@@ -485,3 +536,270 @@ type KvMetaV1 struct {
 	KvAttachment *pbkv.KvAttachment     `json:"kv_attachment"`
 	ContentSpec  *pbcontent.ContentSpec `json:"content_spec"`
 }
+
+// BasicData 上报时基础数据
+type BasicData struct {
+	// BizID xxx
+	BizID uint32 `json:"bizID"`
+	// ClientMode 客户端模式 pull、watch
+	ClientMode ClientMode `json:"clientMode"`
+	// HeartbeatTime 心跳时间
+	HeartbeatTime time.Time `json:"heartbeatTime"`
+	// OnlineStatus 在线状态，枚举类型：online, offline
+	OnlineStatus OnlineStatus `json:"onlineStatus"`
+	// 客户端版本
+	ClientVersion string `json:"clientVersion"`
+	// IP client ip
+	IP string `json:"ip"`
+	// Annotations Additional info (Platform information such as cluster ID, agent ID, host ID, etc.)
+	Annotations map[string]interface{} `json:"annotations"`
+	// ClientType client type (agent、sidecar、sdk、command)
+	ClientType ClientType `json:"clientType"`
+}
+
+// Validate the instance spec is valid or not
+func (bd BasicData) Validate() error {
+	if bd.BizID <= 0 {
+		return errors.New("invalid biz id")
+	}
+
+	return nil
+}
+
+// ResourceUsage Resource utilization rate
+type ResourceUsage struct {
+	CpuMaxUsage    float64 `json:"cpuMaxUsage"`
+	CpuUsage       float64 `json:"cpuUsage"`
+	MemoryUsage    uint64  `json:"memoryUsage"`
+	MemoryMaxUsage uint64  `json:"memoryMaxUsage"`
+}
+
+// VersionChangePayload defines sdk version change to send payload to feed server.
+type VersionChangePayload struct {
+	// BasicData 基础信息：例如客户端唯一标识、bizID、客户端模式
+	BasicData *BasicData `json:"basicData"`
+	// Application app相关信息：例如 appName、appID、currentReleaseID等
+	Application *SideAppMeta `json:"application"`
+	// ResourceUsage 资源相关信息：例如 cpu、内存等
+	ResourceUsage ResourceUsage `json:"resourceUsage"`
+}
+
+// MessagingType return the payload related sidecar message type.
+func (v *VersionChangePayload) MessagingType() MessagingType {
+	return VersionChangeMessage
+}
+
+// Encode the VersionChangePayload to bytes.
+func (v *VersionChangePayload) Encode() ([]byte, error) {
+	if v == nil {
+		return nil, errors.New("VersionChangePayload is nil, can not be encoded")
+	}
+
+	return jsoni.Marshal(v)
+}
+
+// Decode the VersionChangePayload to bytes.
+func (v *VersionChangePayload) Decode(data []byte) error {
+	if len(data) == 0 {
+		return errors.New("VersionChangePayload is nil, can not be decoded")
+	}
+	err := jsoni.Unmarshal(data, v)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// OnlineStatus define the online status structure
+type OnlineStatus uint32
+
+const (
+	// Online 在线
+	Online OnlineStatus = 1
+	// Offline 离线
+	Offline OnlineStatus = 2
+)
+
+// Validate the online status is valid or not.
+func (cm OnlineStatus) Validate() error {
+	switch cm {
+	case Online:
+	case Offline:
+	default:
+		return fmt.Errorf("unknown %d sidecar online status", cm)
+	}
+
+	return nil
+}
+
+// String return the corresponding string type
+func (cm OnlineStatus) String() string {
+	switch cm {
+	case Online:
+		return "online"
+	case Offline:
+		return "offline"
+	default:
+		return ""
+	}
+}
+
+// Status define the status structure
+type Status uint32
+
+const (
+	// Success xxx
+	Success Status = 1
+	// Failed xxx
+	Failed Status = 2
+	// Processing xxx
+	Processing Status = 3
+)
+
+// Validate the status is valid or not.
+func (rs Status) Validate() error {
+	switch rs {
+	case Success:
+	case Failed:
+	case Processing:
+	default:
+		return fmt.Errorf("unknown %d sidecar version change status", rs)
+	}
+	return nil
+}
+
+// String return the corresponding string type
+func (rs Status) String() string {
+	switch rs {
+	case Success:
+		return "Success"
+	case Failed:
+		return "Failed"
+	case Processing:
+		return "Processing"
+	default:
+		return ""
+	}
+}
+
+// FailedReason define the failure cause structure
+type FailedReason uint32
+
+const (
+	// PreHookFailed pre hook failed
+	PreHookFailed FailedReason = 1
+	// PostHookFailed post hook failed
+	PostHookFailed FailedReason = 2
+	// DownloadFailed download failed
+	DownloadFailed FailedReason = 3
+	// SkipFailed skip failed
+	SkipFailed FailedReason = 4
+	// ClearOldFilesFailed Clear old files failed
+	ClearOldFilesFailed FailedReason = 5
+	// UpdateMetadataFailed Update Metadata failed
+	UpdateMetadataFailed FailedReason = 6
+)
+
+// Validate the failed reason is valid or not.
+func (fr FailedReason) Validate() error {
+	switch fr {
+	case PreHookFailed:
+	case PostHookFailed:
+	case DownloadFailed:
+	case SkipFailed:
+	default:
+		return fmt.Errorf("unknown %d sidecar failed reason", fr)
+	}
+
+	return nil
+}
+
+// String return the corresponding string type
+func (fr FailedReason) String() string {
+	switch fr {
+	case PreHookFailed:
+		return "PreHookFailed"
+	case PostHookFailed:
+		return "PostHookFailed"
+	case DownloadFailed:
+		return "DownloadFailed"
+	case SkipFailed:
+		return "SkipFailed"
+	default:
+		return ""
+	}
+}
+
+// ClientMode define the client mode structure
+type ClientMode uint32
+
+const (
+	// Pull xxx
+	Pull ClientMode = 1
+	// Watch xxx
+	Watch ClientMode = 2
+)
+
+// Validate the client mode is valid or not.
+func (cm ClientMode) Validate() error {
+	switch cm {
+	case Pull:
+	case Watch:
+	default:
+		return fmt.Errorf("unknown %d sidecar client mode", cm)
+	}
+
+	return nil
+}
+
+// String return the corresponding string type
+func (cm ClientMode) String() string {
+	switch cm {
+	case Pull:
+		return "Pull"
+	case Watch:
+		return "Watch"
+	default:
+		return ""
+	}
+}
+
+// ClientMetricData feed-server 和 cache-service 通信的结构体
+type ClientMetricData struct {
+	AppID         uint32
+	MessagingType uint32
+	Payload       []byte
+}
+
+// // ClientInfoItem 单个客户端连接信息
+// type ClientInfoItem struct {
+// 	// BasicData 基础信息：例如客户端唯一标识、bizID、客户端模式
+// 	BasicData BasicData `json:"basic_data"`
+// 	// Applications app相关信息：例如 appName、appID、currentReleaseID等
+// 	Application SideAppMeta `json:"application"`
+// }
+
+// HeartbeatItem 单个服务心跳数据
+type HeartbeatItem struct {
+	BasicData BasicData `json:"basicData"`
+	// Applications sdk instance bind app meta info,include app,namespace,uid,labels and app current release id.
+	Application SideAppMeta `json:"application"`
+	// ResourceUsage 资源相关信息：例如 cpu、内存等
+	ResourceUsage ResourceUsage `json:"resourceUsage"`
+}
+
+// ClientType client type (agent、sidecar、sdk、command).
+type ClientType string
+
+const (
+	// SDK xxx
+	SDK ClientType = "sdk"
+	// Sidecar xxx
+	Sidecar ClientType = "sidecar"
+	// Agent xxx
+	Agent ClientType = "agent"
+	// Command xxx
+	Command ClientType = "command"
+	// Unknown xxx
+	Unknown ClientType = "unknown"
+)

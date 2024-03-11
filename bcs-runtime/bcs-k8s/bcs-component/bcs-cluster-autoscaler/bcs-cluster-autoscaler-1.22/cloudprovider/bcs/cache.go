@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package bcs xxx
 package bcs
 
 import (
@@ -108,7 +108,7 @@ func (m *NodeGroupCache) CheckInstancesTerminateByAs(instances []*InstanceRef) b
 
 	for _, ins := range instances {
 		if m.instanceToCreationType[*ins] != CreationTypeAuto {
-			klog.V(4).Infof("ins %s, CreationType %s,terminate by as direct", (*ins).Name, CreationTypeManual)
+			klog.V(4).Infof("ins %s, CreationType %s,terminate by as direct", ins.Name, CreationTypeManual)
 			return true
 		}
 	}

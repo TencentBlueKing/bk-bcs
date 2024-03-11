@@ -58,6 +58,7 @@ type Kvs20240125175500 struct {
 	UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
 
 	Signature string `gorm:"type:varchar(64) not null"`
+	Md5       string `gorm:"type:varchar(64) not null"`
 	ByteSize  uint   `gorm:"type:bigint(1) unsigned not null"`
 }
 
@@ -88,6 +89,7 @@ type ReleasedKvs20240125175500 struct {
 	UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
 
 	Signature string `gorm:"type:varchar(64) not null"`
+	Md5       string `gorm:"type:varchar(64) not null"`
 	ByteSize  uint   `gorm:"type:bigint(1) unsigned not null"`
 }
 
@@ -108,7 +110,7 @@ func syncSignature(tx *gorm.DB) error {
 	}
 
 	for _, kv := range kvs {
-		if kv.ContentSpec.Signature != "" {
+		if kv.ContentSpec.Signature != "" && kv.ContentSpec.Md5 != "" {
 			continue
 		}
 
@@ -119,10 +121,11 @@ func syncSignature(tx *gorm.DB) error {
 		}
 
 		kv.ContentSpec.Signature = tools.SHA256(value)
+		kv.ContentSpec.Md5 = tools.MD5(value)
 		kv.ContentSpec.ByteSize = uint64(len(value))
 
 		// 只更新必须的字段, 不刷新updated_at
-		tx.Select("Signature", "ByteSize").UpdateColumns(&kv)
+		tx.Select("Signature", "ByteSize", "Md5").UpdateColumns(&kv)
 	}
 
 	return nil
@@ -139,7 +142,7 @@ func syncReleaseSignature(tx *gorm.DB) error {
 	}
 
 	for _, kv := range kvs {
-		if kv.ContentSpec.Signature != "" {
+		if kv.ContentSpec.Signature != "" && kv.ContentSpec.Md5 != "" {
 			continue
 		}
 
@@ -158,9 +161,10 @@ func syncReleaseSignature(tx *gorm.DB) error {
 
 		kv.ContentSpec.Signature = tools.SHA256(value)
 		kv.ContentSpec.ByteSize = uint64(len(value))
+		kv.ContentSpec.Md5 = tools.MD5(value)
 
 		// 只更新必须的字段, 不刷新updated_at
-		tx.Select("Signature", "ByteSize").UpdateColumns(&kv)
+		tx.Select("Signature", "ByteSize", "Md5").UpdateColumns(&kv)
 	}
 
 	return nil
@@ -202,6 +206,11 @@ func mig20240125175500Down(tx *gorm.DB) error {
 			return err
 		}
 	}
+	if tx.Migrator().HasColumn(&Kvs20240125175500{}, "Md5") {
+		if err := tx.Migrator().DropColumn(&Kvs20240125175500{}, "Md5"); err != nil {
+			return err
+		}
+	}
 
 	// delete release_kvs old column
 	if tx.Migrator().HasColumn(&ReleasedKvs20240125175500{}, "Signature") {
@@ -211,6 +220,11 @@ func mig20240125175500Down(tx *gorm.DB) error {
 	}
 	if tx.Migrator().HasColumn(&ReleasedKvs20240125175500{}, "ByteSize") {
 		if err := tx.Migrator().DropColumn(&ReleasedKvs20240125175500{}, "ByteSize"); err != nil {
+			return err
+		}
+	}
+	if tx.Migrator().HasColumn(&ReleasedKvs20240125175500{}, "Md5") {
+		if err := tx.Migrator().DropColumn(&Kvs20240125175500{}, "Md5"); err != nil {
 			return err
 		}
 	}

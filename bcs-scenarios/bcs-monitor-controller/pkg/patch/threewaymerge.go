@@ -8,15 +8,15 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package patch xxx
 package patch
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	v1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/utils"
 )
@@ -65,7 +65,7 @@ func ThreeWayMergeMonitorRule(original, current, modified []*v1.MonitorRuleDetai
 			// 相同说明用户没有在面板上进行修改
 			mergeRule = modifiedRule
 			// 告警组配置以用户设置为准
-			mergeRule.Notice = currentRule.Notice
+			mergeRule.Notice = mergeNoticeGroup(currentRule.Notice, modifiedRule.Notice)
 		} else {
 			blog.Infof("changed Rule..")
 			// 用户进行了修改， 不做变更
@@ -76,7 +76,8 @@ func ThreeWayMergeMonitorRule(original, current, modified []*v1.MonitorRuleDetai
 	}
 
 	blog.Infof("original rule: %s, \ncurrent rule: %s, \nmodified rule: %s, \nmerged rule: %s",
-		utils.ToJsonString(original), utils.ToJsonString(current), utils.ToJsonString(modified), utils.ToJsonString(mergeResult))
+		utils.ToJsonString(original), utils.ToJsonString(current), utils.ToJsonString(modified),
+		utils.ToJsonString(mergeResult))
 	return mergeResult
 }
 
@@ -101,4 +102,12 @@ func compareMonitorRule(mr1, mr2 *v1.MonitorRuleDetail) bool {
 	}
 
 	return true
+}
+
+func mergeNoticeGroup(currentRule *v1.Notice, modifiedRule *v1.Notice) *v1.Notice {
+	result := currentRule.DeepCopy()
+	// 仅merge告警组配置， 其他以用户配置为准
+
+	result.UserGroups = utils.MergeStringList(currentRule.UserGroups, modifiedRule.UserGroups)
+	return result
 }

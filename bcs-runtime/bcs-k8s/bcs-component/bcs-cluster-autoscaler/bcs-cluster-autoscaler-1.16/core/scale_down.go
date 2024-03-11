@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package core
@@ -269,9 +268,11 @@ func calculateScaleDownGpusTotal(nodes []*apiv1.Node, cp cloudprovider.CloudProv
 				"can not get node group for node %v when calculating cluster gpu usage", node.Name)
 		}
 		if nodeGroup == nil || reflect.ValueOf(nodeGroup).IsNil() {
-			// We do not trust cloud providers to return properly constructed nil for interface type - hence the reflection check
+			// We do not trust cloud providers to return properly constructed nil for interface type -
+			// hence the reflection check
 			// See https://golang.org/doc/faq#nil_error
-			// DOTO[lukaszos] consider creating cloud_provider sanitizer which will wrap cloud provider and ensure sane behaviour
+			// DOTO[lukaszos] consider creating cloud_provider sanitizer which will wrap cloud provider and
+			// ensure sane behavior
 			nodeGroup = nil
 		}
 
@@ -448,6 +449,7 @@ func (sd *ScaleDown) CleanUpUnneededNodes() {
 // * timestamp is the current timestamp.
 // * pdbs is a list of pod disruption budgets.
 // * tempNodesPerNodeGroup is a map of node group id and the number of temporary nodes that node group contains.
+// nolint
 func (sd *ScaleDown) UpdateUnneededNodes(
 	allNodes []*apiv1.Node,
 	destinationNodes []*apiv1.Node,
@@ -624,6 +626,7 @@ func (sd *ScaleDown) checkFilteredNodes(filteredNodesToCheck []*apiv1.Node, time
 	return utilizationMap, currentlyUnneededNodes
 }
 
+// nolint `currentCandidates` is unused
 func (sd *ScaleDown) findAdditionalCandidates(nodesToRemove []simulator.NodeToBeRemoved,
 	unremovable []*simulator.UnremovableNode, currentCandidates []*apiv1.Node,
 	currentNonCandidates []*apiv1.Node, allNodes []*apiv1.Node, destinationNodes []*apiv1.Node,
@@ -683,7 +686,7 @@ func (sd *ScaleDown) isNodeBelowUtilzationThreshold(node *apiv1.Node, utilInfo s
 // state of the cluster. Removes from the map nodes that are no longer in the
 // nodes list.
 func (sd *ScaleDown) updateUnremovableNodes(nodes []*apiv1.Node) {
-	if len(sd.unremovableNodes) <= 0 {
+	if len(sd.unremovableNodes) == 0 {
 		return
 	}
 	// A set of nodes to delete from unremovableNodes map.
@@ -793,6 +796,7 @@ func (sd *ScaleDown) SoftTaintUnneededNodes(allNodes []*apiv1.Node) (errors []er
 
 // TryToScaleDown tries to scale down the cluster. It returns a result inside a ScaleDownStatus indicating
 // if any node was removed and error if such occurred.
+// nolint
 func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 	pdbs []*policyv1.PodDisruptionBudget, currentTime time.Time, tempNodes []*apiv1.Node,
 	tempNodesPerNodeGroup map[string]int) (*status.ScaleDownStatus, errors.AutoscalerError) {
@@ -1008,6 +1012,7 @@ func getTempNodesPerNodeGroup(cp cloudprovider.CloudProvider, tempNodes []*apiv1
 	return tempNodesPerNg
 }
 
+// nolint `resourceLimiter` is unused
 func (sd *ScaleDown) checkNodeRemovable(node *apiv1.Node,
 	val time.Time, currentTime time.Time,
 	nodeGroupSize map[string]int, resourceLimiter *cloudprovider.ResourceLimiter,

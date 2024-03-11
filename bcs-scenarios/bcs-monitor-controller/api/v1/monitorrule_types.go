@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1
@@ -25,7 +24,7 @@ import (
 type Detect struct {
 	Algorithm *Algorithm `json:"algorithm" yaml:"algorithm"`               // 告警检测算法
 	Nodata    *Nodata    `json:"nodata,omitempty" yaml:"nodata,omitempty"` // 无数据告警配置
-	Trigger   string     `json:"trigger" yaml:"trigger"`                   // 触发配置，如 1/5/6表示5个周期内满足1次则告警，连续6个周期内不满足条件则表示恢复
+	Trigger   string     `json:"trigger" yaml:"trigger"`                   // nolint 触发配置，如 1/5/6表示5个周期内满足1次则告警，连续6个周期内不满足条件则表示恢复
 }
 
 // Algorithm 告警检测算法
@@ -40,7 +39,7 @@ type Algorithm struct {
 type AlgorithmConfig struct {
 	ConfigStr string                `json:"config,omitempty" yaml:"-"`            // 告警检测配置，仅当检测算法为Threshold时使用
 	ConfigObj AlgorithmConfigStruct `json:"configObj,omitempty" yaml:"-"`         // 告警检测配置
-	Type      string                `json:"type,omitempty" yaml:"type,omitempty"` // 告警检测算法， 如Threshold/ RingRatioAmplitude/ YearRoundRange...
+	Type      string                `json:"type,omitempty" yaml:"type,omitempty"` // nolint 告警检测算法， 如Threshold/ RingRatioAmplitude/ YearRoundRange...
 }
 
 // AlgorithmConfigStruct 检测算法详细配置
@@ -133,7 +132,7 @@ type Notice struct {
 	UserGroups  []string       `json:"user_groups,omitempty" yaml:"user_groups,omitempty"`   // 告警用户组
 	NoiseReduce NoiseReduce    `json:"noise_reduce,omitempty" yaml:"noise_reduce,omitempty"` // 降噪配置
 	Interval    int            `json:"interval,omitempty" yaml:"interval,omitempty"`         // 通知间隔（分钟），默认120
-	Template    NoticeTemplate `json:"template,omitempty" yaml:"template,omitempty"`         // 告警通知模板，非必填，默认使用默认模板
+	Template    NoticeTemplate `json:"template,omitempty" yaml:"template,omitempty"`         // 告警通知模板，非必填，默认使用默认模板 nolint
 }
 
 // NoiseReduce 降噪配置

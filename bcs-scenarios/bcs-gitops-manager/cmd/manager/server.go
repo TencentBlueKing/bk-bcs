@@ -26,6 +26,10 @@ import (
 	ossync "sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	etcdsync "github.com/asim/go-micro/plugins/sync/etcd/v4"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
@@ -34,18 +38,13 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/sync"
 	"go-micro.dev/v4/util/file"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"go-micro.dev/v4"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/handler"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
@@ -585,7 +584,6 @@ func (s *Server) startAnalysis() {
 		blog.Fatalf("start analysis failed: %s", err.Error())
 	}
 	blog.Infof("analysis started")
-	return
 }
 
 func (s *Server) startSignalHandler() {

@@ -309,7 +309,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 		}
 		if !exist {
 			blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] not exist "+
-				"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
+				"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID) // nolint goconst
 			return false, nil
 		}
 		blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] exist "+

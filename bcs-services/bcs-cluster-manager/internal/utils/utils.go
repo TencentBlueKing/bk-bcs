@@ -530,3 +530,16 @@ func ExistRunningNodes(nodes []*proto.ClusterNode) bool {
 
 	return false
 }
+
+// FilterEmptyString filter empty string
+func FilterEmptyString(strList []string) []string {
+	filterStrings := make([]string, 0)
+
+	for i := range strList {
+		if len(strList[i]) > 0 {
+			filterStrings = append(filterStrings, strList[i])
+		}
+	}
+
+	return filterStrings
+}

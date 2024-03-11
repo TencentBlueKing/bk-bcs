@@ -503,7 +503,7 @@ type BKBaseRequestRecommendResult struct {
 	DTEventTimeStamp int64     `json:"dtEventTimeStamp" bson:"dt_event_time_stamp"`
 	TheDate          int64     `json:"thedate" bson:"the_date"`
 	LocalTime        string    `json:"localTime" bson:"local_time"`
-	CreateAt         time.Time `json:"createAt" json:"create_at"`
+	CreateAt         time.Time `json:"createAt" bson:"create_at"`
 }
 
 // WorkloadOriginRequestContainer container request limit

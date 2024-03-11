@@ -40,6 +40,7 @@ func newReleasedKv(db *gorm.DB, opts ...gen.DOOption) releasedKv {
 	_releasedKv.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_releasedKv.Signature = field.NewString(tableName, "signature")
 	_releasedKv.ByteSize = field.NewUint64(tableName, "byte_size")
+	_releasedKv.Md5 = field.NewString(tableName, "md5")
 
 	_releasedKv.fillFieldMap()
 
@@ -63,6 +64,7 @@ type releasedKv struct {
 	UpdatedAt field.Time
 	Signature field.String
 	ByteSize  field.Uint64
+	Md5       field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -92,6 +94,7 @@ func (r *releasedKv) updateTableName(table string) *releasedKv {
 	r.UpdatedAt = field.NewTime(table, "updated_at")
 	r.Signature = field.NewString(table, "signature")
 	r.ByteSize = field.NewUint64(table, "byte_size")
+	r.Md5 = field.NewString(table, "md5")
 
 	r.fillFieldMap()
 
@@ -118,7 +121,7 @@ func (r *releasedKv) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *releasedKv) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 13)
+	r.fieldMap = make(map[string]field.Expr, 14)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["release_id"] = r.ReleaseID
 	r.fieldMap["key"] = r.Key
@@ -132,6 +135,7 @@ func (r *releasedKv) fillFieldMap() {
 	r.fieldMap["updated_at"] = r.UpdatedAt
 	r.fieldMap["signature"] = r.Signature
 	r.fieldMap["byte_size"] = r.ByteSize
+	r.fieldMap["md5"] = r.Md5
 }
 
 func (r releasedKv) clone(db *gorm.DB) releasedKv {

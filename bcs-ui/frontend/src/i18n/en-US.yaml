@@ -1082,6 +1082,7 @@ cluster:
         'off': Close
         'on': Enable
         edit: Edit
+        clone: Clone
         delete:
           text: Delete
           title: 'Determine delete node pool {name}'

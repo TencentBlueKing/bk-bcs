@@ -25,7 +25,7 @@ import (
 
 func (b *backend) pathKvEncrypt() *framework.Path {
 	return &framework.Path{
-		Pattern: "apps/" + framework.GenericNameRegex("app_id") + "/kvs/" +
+		Pattern: "apps/" + framework.GenericNameRegex("app_id") + "/kvs/" + // nolint goconst
 			framework.GenericNameRegex("name") + "/encrypt",
 		Fields: map[string]*framework.FieldSchema{
 			"app_id": {
@@ -98,7 +98,7 @@ func (b *backend) pathEncryptWrite(ctx context.Context, req *logical.Request,
 		return nil, err
 	}
 	name := d.Get("name").(string)
-	if err := b.ValidateAppID(name); err != nil {
+	if err := b.ValidateName(name); err != nil {
 		return nil, err
 	}
 	kv, err := b.getKvStorage(ctx, req.Storage, appID, name)

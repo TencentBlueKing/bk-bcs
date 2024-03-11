@@ -69,7 +69,7 @@
         :loading="pending"
         :disabled="!importConfigList.length"
         @click="isSelectPkgDialogShow = true">
-        {{ t('去上传') }}
+        {{ t('确认') }}
       </bk-button>
       <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>

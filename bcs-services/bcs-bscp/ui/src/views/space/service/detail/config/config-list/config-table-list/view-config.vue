@@ -1,16 +1,39 @@
 <template>
-  <bk-sideslider width="640" :title="t('查看配置文件')" :is-show="props.show" @closed="close">
+  <bk-sideslider width="640" :title="t('查看配置文件')" :quick-close="true" :is-show="props.show" @closed="close">
     <bk-loading :loading="detailLoading" class="config-loading-container">
-      <ConfigForm
-        v-if="props.show && !detailLoading"
-        class="config-form-wrapper"
-        :editable="false"
-        :config="configForm"
-        :content="content"
-        :variables="variables"
-        :bk-biz-id="props.bkBizId"
-        :is-tpl="props.type === 'template'"
-        :id="props.type === 'template' ? tplSpaceId : props.appId" />
+      <bk-tab v-model:active="activeTab" type="card-grid" ext-cls="view-config-tab">
+        <bk-tab-panel name="content" label="配置项信息">
+          <bk-form label-width="100" form-type="vertical">
+            <bk-form-item label="配置项名称">{{ configDetail.name }}</bk-form-item>
+            <bk-form-item label="配置项路径">{{ configDetail.path }}</bk-form-item>
+            <bk-form-item label="配置项内容">
+              <div v-if="configDetail.file_type === 'binary'" class="binary-file-card" @click="handleDownloadFile">
+                <div class="basic-info">
+                  <TextFill class="file-icon" />
+                  <div class="content">
+                    <div class="name">{{ configDetail.name }}</div>
+                    <div class="time">{{ datetimeFormat(configDetail.update_at || configDetail.create_at) }}</div>
+                  </div>
+                  <div class="size">{{ byteUnitConverse(Number(configDetail.byte_size)) }}</div>
+                </div>
+              </div>
+              <ConfigContentEditor
+                v-else
+                :content="content as string"
+                :editable="false"
+                :show-tips="false"
+                :variables="variables" />
+            </bk-form-item>
+          </bk-form>
+        </bk-tab-panel>
+        <bk-tab-panel name="meta" label="元数据">
+          <ConfigContentEditor
+            language="json"
+            :content="JSON.stringify(configDetail, null, 2)"
+            :editable="false"
+            :show-tips="false" />
+        </bk-tab-panel>
+      </bk-tab>
     </bk-loading>
     <section class="action-btns">
       <bk-button @click="close">{{ t('关闭') }}</bk-button>
@@ -21,7 +44,8 @@
   import { ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
-  import ConfigForm from './config-form.vue';
+  import { TextFill } from 'bkui-vue/lib/icon';
+  import ConfigContentEditor from '../../components/config-content-editor.vue';
   import {
     getConfigItemDetail,
     getReleasedConfigItemDetail,
@@ -32,11 +56,34 @@
     getTemplateVersionDetail,
     downloadTemplateContent,
   } from '../../../../../../../api/template';
-  import { getConfigEditParams } from '../../../../../../../utils/config';
+  import { byteUnitConverse, datetimeFormat } from '../../../../../../../utils/index';
+  import { fileDownload } from '../../../../../../../utils/file';
   import { IVariableEditParams } from '../../../../../../../../types/variable';
-  import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
+  import { IFileConfigContentSummary } from '../../../../../../../../types/config';
   import { getReleasedAppVariables } from '../../../../../../../api/variable';
   import useConfigStore from '../../../../../../../store/config';
+
+  interface IConfigMeta {
+    name: string;
+    path: string;
+    file_mode: string;
+    file_type: string;
+    memo?: string;
+    revision_memo?: string;
+    revision_version?: string;
+    byte_size: string;
+    origin_byte_size?: string;
+    signature: string;
+    origin_signature?: string;
+    md5: string;
+    create_at: string;
+    creator: string;
+    update_at?: string;
+    reviser?: string;
+    user: string;
+    user_group: string;
+    privilege: string;
+  }
 
   const { versionData } = storeToRefs(useConfigStore());
   const { t } = useI18n();
@@ -53,7 +100,21 @@
   const emits = defineEmits(['update:show']);
 
   const detailLoading = ref(true);
-  const configForm = ref<IConfigEditParams>(getConfigEditParams());
+  const activeTab = ref('content');
+  const configDetail = ref<IConfigMeta>({
+    name: '',
+    path: '',
+    file_mode: '',
+    file_type: '',
+    byte_size: '',
+    signature: '',
+    md5: '',
+    create_at: '',
+    creator: '',
+    user: '',
+    user_group: '',
+    privilege: '',
+  });
   const content = ref<string | IFileConfigContentSummary>('');
   const variables = ref<IVariableEditParams[]>([]);
   const variablesLoading = ref(false);
@@ -64,6 +125,8 @@
     (val) => {
       if (val) {
         getDetailData();
+        content.value = '';
+        activeTab.value = 'content';
         variables.value = [];
       }
     },
@@ -85,23 +148,61 @@
   // 获取非模板套餐下配置文件详情配置，非文件类型配置文件内容下载内容，文件类型手动点击时再下载
   const getConfigDetail = async () => {
     try {
-      let detail;
-      let signature;
-      let byte_size;
       if (versionData.value.id) {
-        detail = await getReleasedConfigItemDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
-        const { origin_byte_size, origin_signature } = detail.config_item.commit_spec.content;
-        byte_size = origin_byte_size;
-        signature = origin_signature;
+        const res = await getReleasedConfigItemDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
+        const { content, memo } = res.config_item.commit_spec;
+        const { byte_size, origin_byte_size, signature, origin_signature, md5 } = content;
+        const { create_at, creator, update_at, reviser } = res.config_item.revision;
+        const { name, path, file_type, file_mode, permission } = res.config_item.spec;
+        const { user, user_group, privilege } = permission;
+        configDetail.value = {
+          name,
+          path,
+          file_type,
+          file_mode,
+          memo,
+          byte_size,
+          origin_byte_size,
+          signature,
+          origin_signature,
+          md5,
+          create_at,
+          creator,
+          update_at,
+          reviser,
+          user,
+          user_group,
+          privilege,
+        };
       } else {
-        detail = await getConfigItemDetail(props.bkBizId, props.id, props.appId);
-        byte_size = detail.content.byte_size;
-        signature = detail.content.signature;
+        const res = await getConfigItemDetail(props.bkBizId, props.id, props.appId);
+        const { create_at, creator, update_at, reviser } = res.config_item.revision;
+        const { name, memo, path, file_type, file_mode, permission } = res.config_item.spec;
+        const { user, user_group, privilege } = permission;
+        const { byte_size, signature, md5 } = res.content;
+        configDetail.value = {
+          name,
+          path,
+          file_type,
+          file_mode,
+          memo,
+          byte_size,
+          signature,
+          md5,
+          create_at,
+          creator,
+          update_at,
+          reviser,
+          user,
+          user_group,
+          privilege,
+        };
       }
-      const { name, memo, path, file_type, permission } = detail.config_item.spec;
-      configForm.value = { id: props.id, name, memo, file_type, path, ...permission };
-      if (file_type === 'binary') {
-        content.value = { name, signature, size: byte_size };
+      const signature = versionData.value.id
+        ? (configDetail.value.origin_signature as string)
+        : configDetail.value.signature;
+      if (configDetail.value.file_type === 'binary') {
+        content.value = { name: configDetail.value.name, size: configDetail.value.byte_size, signature };
       } else {
         const configContent = await downloadConfigContent(props.bkBizId, props.appId, signature);
         content.value = String(configContent);
@@ -117,44 +218,47 @@
   const getTemplateDetail = async () => {
     try {
       detailLoading.value = true;
-      let detail;
-      let name;
-      let revision_memo;
-      let file_type;
-      let path;
       let template_space_id;
-      let byte_size;
-      let signature;
-      let permission;
       if (versionData.value.id) {
         const res = await getTemplateVersionDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
-        detail = res.detail;
-        name = detail.name;
-        path = detail.path;
-        revision_memo = detail.template_revision_name;
-        file_type = detail.file_type;
-        permission = { privilege: detail.privilege, user: detail.user, user_group: detail.user_group };
-        signature = detail.origin_signature;
-        byte_size = detail.origin_byte_size;
-        template_space_id = detail.template_space_id;
+        configDetail.value = { ...res.detail };
+        template_space_id = res.detail.template_space_id;
       } else {
         const res = await getTemplateVersionsDetailByIds(props.bkBizId, [props.id]);
-        detail = res.details[0];
-        const { attachment, spec } = detail;
-        name = spec.name;
-        path = spec.path;
-        revision_memo = spec.revision_name;
-        file_type = spec.file_type;
-        permission = spec.permission;
-        signature = spec.content_spec.signature;
-        byte_size = spec.content_spec.byte_size;
-        template_space_id = attachment.template_space_id;
+        const { revision, spec } = res.details[0];
+        const { creator, create_at } = revision;
+        const { content_spec, file_mode, file_type, name, revision_memo, revision_version, path, permission } = spec;
+        const { byte_size, signature, md5 } = content_spec;
+        const { user, user_group, privilege } = permission;
+        template_space_id = res.details[0].attachment?.template_space_id;
+        configDetail.value = {
+          name,
+          path,
+          file_type,
+          file_mode,
+          revision_memo,
+          revision_version,
+          byte_size,
+          signature,
+          md5,
+          create_at,
+          creator,
+          user,
+          user_group,
+          privilege,
+        };
       }
 
-      configForm.value = { id: props.id, name, memo: revision_memo, file_type, path, ...permission };
       tplSpaceId.value = template_space_id;
-      if (file_type === 'binary') {
-        content.value = { name, signature, size: String(byte_size) };
+      const signature = versionData.value.id
+        ? (configDetail.value.origin_signature as string)
+        : configDetail.value.signature;
+      if (configDetail.value.file_type === 'binary') {
+        content.value = {
+          name: configDetail.value.name,
+          signature,
+          size: String(configDetail.value.byte_size),
+        };
       } else {
         const configContent = await downloadTemplateContent(props.bkBizId, template_space_id, signature);
         content.value = String(configContent);
@@ -173,6 +277,13 @@
     variablesLoading.value = false;
   };
 
+  const handleDownloadFile = async () => {
+    const { signature, name } = content.value as IFileConfigContentSummary;
+    const getContent = props.type === 'template' ? downloadTemplateContent : downloadConfigContent;
+    const res = await getContent(props.bkBizId, props.id, signature);
+    fileDownload(res, name);
+  };
+
   const close = () => {
     emits('update:show', false);
   };
@@ -184,6 +295,61 @@
     .config-form-wrapper {
       padding: 20px 40px;
       height: 100%;
+    }
+  }
+  .view-config-tab {
+    :deep(.bk-tab-header) {
+      padding: 8px 24px 0;
+      background: #eaebf0;
+    }
+    :deep(.bk-tab-content) {
+      padding: 24px 40px;
+      box-shadow: none;
+    }
+    :deep(.bk-form-label) {
+      color: #979ba5;
+      font-size: 12px;
+    }
+    :deep(.bk-form-content) {
+      color: #313238;
+      font-size: 12px;
+    }
+  }
+  .binary-file-card {
+    padding: 12px 16px;
+    background: #ffffff;
+    font-size: 12px;
+    border: 1px solid #c4c6cc;
+    border-radius: 2px;
+    .basic-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .file-icon {
+      margin-right: 17px;
+      font-size: 28px;
+      color: #63656e;
+    }
+    .content {
+      flex: 1;
+      .name {
+        color: #63656e;
+        line-height: 20px;
+        cursor: pointer;
+        &:hover {
+          color: #3a84ff;
+        }
+      }
+      .time {
+        margin-top: 2px;
+        color: #979ba5;
+        line-height: 16px;
+      }
+    }
+    .size {
+      color: #63656e;
+      font-weight: 700;
     }
   }
   .action-btns {

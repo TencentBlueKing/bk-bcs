@@ -41,6 +41,8 @@ const (
 	Data_BatchUpsertConfigItems_FullMethodName            = "/pbds.Data/BatchUpsertConfigItems"
 	Data_UpdateConfigItem_FullMethodName                  = "/pbds.Data/UpdateConfigItem"
 	Data_DeleteConfigItem_FullMethodName                  = "/pbds.Data/DeleteConfigItem"
+	Data_UnDeleteConfigItem_FullMethodName                = "/pbds.Data/UnDeleteConfigItem"
+	Data_UndoConfigItem_FullMethodName                    = "/pbds.Data/UndoConfigItem"
 	Data_GetConfigItem_FullMethodName                     = "/pbds.Data/GetConfigItem"
 	Data_ListConfigItems_FullMethodName                   = "/pbds.Data/ListConfigItems"
 	Data_ListReleasedConfigItems_FullMethodName           = "/pbds.Data/ListReleasedConfigItems"
@@ -54,6 +56,7 @@ const (
 	Data_CreateRelease_FullMethodName                     = "/pbds.Data/CreateRelease"
 	Data_ListReleases_FullMethodName                      = "/pbds.Data/ListReleases"
 	Data_GetReleaseByName_FullMethodName                  = "/pbds.Data/GetReleaseByName"
+	Data_GetRelease_FullMethodName                        = "/pbds.Data/GetRelease"
 	Data_DeprecateRelease_FullMethodName                  = "/pbds.Data/DeprecateRelease"
 	Data_UnDeprecateRelease_FullMethodName                = "/pbds.Data/UnDeprecateRelease"
 	Data_DeleteRelease_FullMethodName                     = "/pbds.Data/DeleteRelease"
@@ -153,6 +156,7 @@ const (
 	Data_ListCredentials_FullMethodName                   = "/pbds.Data/ListCredentials"
 	Data_DeleteCredential_FullMethodName                  = "/pbds.Data/DeleteCredential"
 	Data_UpdateCredential_FullMethodName                  = "/pbds.Data/UpdateCredential"
+	Data_CheckCredentialName_FullMethodName               = "/pbds.Data/CheckCredentialName"
 	Data_ListCredentialScopes_FullMethodName              = "/pbds.Data/ListCredentialScopes"
 	Data_UpdateCredentialScopes_FullMethodName            = "/pbds.Data/UpdateCredentialScopes"
 	Data_CreateKv_FullMethodName                          = "/pbds.Data/CreateKv"
@@ -164,6 +168,7 @@ const (
 	Data_ListInstances_FullMethodName                     = "/pbds.Data/ListInstances"
 	Data_FetchInstanceInfo_FullMethodName                 = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
+	Data_BatchUpsertClientMetrics_FullMethodName          = "/pbds.Data/BatchUpsertClientMetrics"
 )
 
 // DataClient is the client API for Data service.
@@ -184,6 +189,8 @@ type DataClient interface {
 	BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(ctx context.Context, in *UpdateConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	UnDeleteConfigItem(ctx context.Context, in *UnDeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	UndoConfigItem(ctx context.Context, in *UndoConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*config_item.ConfigItem, error)
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
 	ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error)
@@ -201,6 +208,7 @@ type DataClient interface {
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
 	GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error)
+	GetRelease(ctx context.Context, in *GetReleaseReq, opts ...grpc.CallOption) (*release.Release, error)
 	DeprecateRelease(ctx context.Context, in *DeprecateReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	UnDeprecateRelease(ctx context.Context, in *UnDeprecateReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
@@ -316,6 +324,7 @@ type DataClient interface {
 	ListCredentials(ctx context.Context, in *ListCredentialReq, opts ...grpc.CallOption) (*ListCredentialResp, error)
 	DeleteCredential(ctx context.Context, in *DeleteCredentialReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	UpdateCredential(ctx context.Context, in *UpdateCredentialReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	CheckCredentialName(ctx context.Context, in *CheckCredentialNameReq, opts ...grpc.CallOption) (*CheckCredentialNameResp, error)
 	// credential scope related interface
 	ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error)
 	UpdateCredentialScopes(ctx context.Context, in *UpdateCredentialScopesReq, opts ...grpc.CallOption) (*UpdateCredentialScopesResp, error)
@@ -331,6 +340,8 @@ type DataClient interface {
 	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
 	// Ping verifies if the grpc connection is still alive.
 	Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOption) (*PingMsg, error)
+	// client metric related interface
+	BatchUpsertClientMetrics(ctx context.Context, in *BatchUpsertClientMetricsReq, opts ...grpc.CallOption) (*BatchUpsertClientMetricsResp, error)
 }
 
 type dataClient struct {
@@ -449,6 +460,24 @@ func (c *dataClient) DeleteConfigItem(ctx context.Context, in *DeleteConfigItemR
 	return out, nil
 }
 
+func (c *dataClient) UnDeleteConfigItem(ctx context.Context, in *UnDeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UnDeleteConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UndoConfigItem(ctx context.Context, in *UndoConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UndoConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*config_item.ConfigItem, error) {
 	out := new(config_item.ConfigItem)
 	err := c.cc.Invoke(ctx, Data_GetConfigItem_FullMethodName, in, out, opts...)
@@ -560,6 +589,15 @@ func (c *dataClient) ListReleases(ctx context.Context, in *ListReleasesReq, opts
 func (c *dataClient) GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error) {
 	out := new(release.Release)
 	err := c.cc.Invoke(ctx, Data_GetReleaseByName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetRelease(ctx context.Context, in *GetReleaseReq, opts ...grpc.CallOption) (*release.Release, error) {
+	out := new(release.Release)
+	err := c.cc.Invoke(ctx, Data_GetRelease_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1457,6 +1495,15 @@ func (c *dataClient) UpdateCredential(ctx context.Context, in *UpdateCredentialR
 	return out, nil
 }
 
+func (c *dataClient) CheckCredentialName(ctx context.Context, in *CheckCredentialNameReq, opts ...grpc.CallOption) (*CheckCredentialNameResp, error) {
+	out := new(CheckCredentialNameResp)
+	err := c.cc.Invoke(ctx, Data_CheckCredentialName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error) {
 	out := new(ListCredentialScopesResp)
 	err := c.cc.Invoke(ctx, Data_ListCredentialScopes_FullMethodName, in, out, opts...)
@@ -1556,6 +1603,15 @@ func (c *dataClient) Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOpt
 	return out, nil
 }
 
+func (c *dataClient) BatchUpsertClientMetrics(ctx context.Context, in *BatchUpsertClientMetricsReq, opts ...grpc.CallOption) (*BatchUpsertClientMetricsResp, error) {
+	out := new(BatchUpsertClientMetricsResp)
+	err := c.cc.Invoke(ctx, Data_BatchUpsertClientMetrics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DataServer is the server API for Data service.
 // All implementations should embed UnimplementedDataServer
 // for forward compatibility
@@ -1574,6 +1630,8 @@ type DataServer interface {
 	BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*base.EmptyResp, error)
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*base.EmptyResp, error)
+	UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*base.EmptyResp, error)
+	UndoConfigItem(context.Context, *UndoConfigItemReq) (*base.EmptyResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*config_item.ConfigItem, error)
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
 	ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error)
@@ -1591,6 +1649,7 @@ type DataServer interface {
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
 	GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error)
+	GetRelease(context.Context, *GetReleaseReq) (*release.Release, error)
 	DeprecateRelease(context.Context, *DeprecateReleaseReq) (*base.EmptyResp, error)
 	UnDeprecateRelease(context.Context, *UnDeprecateReleaseReq) (*base.EmptyResp, error)
 	DeleteRelease(context.Context, *DeleteReleaseReq) (*base.EmptyResp, error)
@@ -1706,6 +1765,7 @@ type DataServer interface {
 	ListCredentials(context.Context, *ListCredentialReq) (*ListCredentialResp, error)
 	DeleteCredential(context.Context, *DeleteCredentialReq) (*base.EmptyResp, error)
 	UpdateCredential(context.Context, *UpdateCredentialReq) (*base.EmptyResp, error)
+	CheckCredentialName(context.Context, *CheckCredentialNameReq) (*CheckCredentialNameResp, error)
 	// credential scope related interface
 	ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error)
 	UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error)
@@ -1721,6 +1781,8 @@ type DataServer interface {
 	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
 	// Ping verifies if the grpc connection is still alive.
 	Ping(context.Context, *PingMsg) (*PingMsg, error)
+	// client metric related interface
+	BatchUpsertClientMetrics(context.Context, *BatchUpsertClientMetricsReq) (*BatchUpsertClientMetricsResp, error)
 }
 
 // UnimplementedDataServer should be embedded to have forward compatible implementations.
@@ -1763,6 +1825,12 @@ func (UnimplementedDataServer) UpdateConfigItem(context.Context, *UpdateConfigIt
 func (UnimplementedDataServer) DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteConfigItem not implemented")
 }
+func (UnimplementedDataServer) UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteConfigItem not implemented")
+}
+func (UnimplementedDataServer) UndoConfigItem(context.Context, *UndoConfigItemReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UndoConfigItem not implemented")
+}
 func (UnimplementedDataServer) GetConfigItem(context.Context, *GetConfigItemReq) (*config_item.ConfigItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfigItem not implemented")
 }
@@ -1801,6 +1869,9 @@ func (UnimplementedDataServer) ListReleases(context.Context, *ListReleasesReq) (
 }
 func (UnimplementedDataServer) GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleaseByName not implemented")
+}
+func (UnimplementedDataServer) GetRelease(context.Context, *GetReleaseReq) (*release.Release, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRelease not implemented")
 }
 func (UnimplementedDataServer) DeprecateRelease(context.Context, *DeprecateReleaseReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeprecateRelease not implemented")
@@ -2099,6 +2170,9 @@ func (UnimplementedDataServer) DeleteCredential(context.Context, *DeleteCredenti
 func (UnimplementedDataServer) UpdateCredential(context.Context, *UpdateCredentialReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredential not implemented")
 }
+func (UnimplementedDataServer) CheckCredentialName(context.Context, *CheckCredentialNameReq) (*CheckCredentialNameResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckCredentialName not implemented")
+}
 func (UnimplementedDataServer) ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCredentialScopes not implemented")
 }
@@ -2131,6 +2205,9 @@ func (UnimplementedDataServer) FetchInstanceInfo(context.Context, *FetchInstance
 }
 func (UnimplementedDataServer) Ping(context.Context, *PingMsg) (*PingMsg, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedDataServer) BatchUpsertClientMetrics(context.Context, *BatchUpsertClientMetricsReq) (*BatchUpsertClientMetricsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertClientMetrics not implemented")
 }
 
 // UnsafeDataServer may be embedded to opt out of forward compatibility for this service.
@@ -2356,6 +2433,42 @@ func _Data_DeleteConfigItem_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).DeleteConfigItem(ctx, req.(*DeleteConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UnDeleteConfigItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnDeleteConfigItemReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UnDeleteConfigItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UnDeleteConfigItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UnDeleteConfigItem(ctx, req.(*UnDeleteConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UndoConfigItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UndoConfigItemReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UndoConfigItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UndoConfigItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UndoConfigItem(ctx, req.(*UndoConfigItemReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2590,6 +2703,24 @@ func _Data_GetReleaseByName_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).GetReleaseByName(ctx, req.(*GetReleaseByNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleaseReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetRelease(ctx, req.(*GetReleaseReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4376,6 +4507,24 @@ func _Data_UpdateCredential_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_CheckCredentialName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckCredentialNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CheckCredentialName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CheckCredentialName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CheckCredentialName(ctx, req.(*CheckCredentialNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListCredentialScopes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListCredentialScopesReq)
 	if err := dec(in); err != nil {
@@ -4574,6 +4723,24 @@ func _Data_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_BatchUpsertClientMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpsertClientMetricsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).BatchUpsertClientMetrics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_BatchUpsertClientMetrics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).BatchUpsertClientMetrics(ctx, req.(*BatchUpsertClientMetricsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Data_ServiceDesc is the grpc.ServiceDesc for Data service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -4630,6 +4797,14 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_DeleteConfigItem_Handler,
 		},
 		{
+			MethodName: "UnDeleteConfigItem",
+			Handler:    _Data_UnDeleteConfigItem_Handler,
+		},
+		{
+			MethodName: "UndoConfigItem",
+			Handler:    _Data_UndoConfigItem_Handler,
+		},
+		{
 			MethodName: "GetConfigItem",
 			Handler:    _Data_GetConfigItem_Handler,
 		},
@@ -4680,6 +4855,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReleaseByName",
 			Handler:    _Data_GetReleaseByName_Handler,
+		},
+		{
+			MethodName: "GetRelease",
+			Handler:    _Data_GetRelease_Handler,
 		},
 		{
 			MethodName: "DeprecateRelease",
@@ -5078,6 +5257,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_UpdateCredential_Handler,
 		},
 		{
+			MethodName: "CheckCredentialName",
+			Handler:    _Data_CheckCredentialName_Handler,
+		},
+		{
 			MethodName: "ListCredentialScopes",
 			Handler:    _Data_ListCredentialScopes_Handler,
 		},
@@ -5120,6 +5303,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Ping",
 			Handler:    _Data_Ping_Handler,
+		},
+		{
+			MethodName: "BatchUpsertClientMetrics",
+			Handler:    _Data_BatchUpsertClientMetrics_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

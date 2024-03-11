@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package common xxx
 package common
 
 const (
@@ -23,7 +24,7 @@ const (
 	ServiceName = "gitopsmanager.bkbcs.tencent.com"
 	// MetaHTTPKey key for http port
 	MetaHTTPKey = "httpport"
-	// ConnectURL for peer interconnection
+	// ConnectURI for peer interconnection
 	ConnectURI = "/gitopsmanager/websocket/connect"
 	// GatewayURL for gitops manager connect through bcs gateway
 	GatewayURL = "/bcsapi/v4" + ConnectURI
@@ -32,7 +33,7 @@ const (
 	GitOpsProxyURL = "/gitopsmanager/proxy"
 
 	// HeaderServerAddressKey header key for cluster info in websocket tunnel
-	HeaderServerAddressKey = "BCS-GITOPS-ServerAddress"
+	HeaderServerAddressKey = "BCS-GITOPS-ServerAddress" // nolint
 	// HeaderBCSClient header for bcs client
 	HeaderBCSClient = "X-BCS-Client"
 	// ServiceNameShort used for bcs-client header
@@ -60,5 +61,5 @@ const (
 
 	// SecretKey defines the secretManager k8s secret namespace:name
 	// NOCC:gas/crypto(工具误报)
-	SecretKey = "bkbcs.tencent.com/secretManager"
+	SecretKey = "bkbcs.tencent.com/secretManager" // nolint
 )

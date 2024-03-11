@@ -82,12 +82,12 @@
   </bk-loading>
   <edit-config
     v-model:show="editPanelShow"
-    :config="activeConfig as IConfigKvItem"
+    :config="activeConfig.spec as IConfigKvItem"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     :editable="true"
     @confirm="getListData" />
-  <ViewConfigKv v-model:show="viewPanelShow" :config="activeConfig as IConfigKvItem" />
+  <ViewConfigKv v-model:show="viewPanelShow" :config="activeConfig" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config-kv="diffConfig" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
@@ -109,6 +109,7 @@
   import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
   import { getKvList, deleteKv, getReleaseKvList, undeleteKv } from '../../../../../../../../api/config';
   import { datetimeFormat, copyToClipBoard } from '../../../../../../../../utils/index';
+  import { getDefaultKvItem } from '../../../../../../../../utils/config';
   import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
   import { Copy } from 'bkui-vue/lib/icon';
   import StatusTag from './status-tag';
@@ -139,7 +140,7 @@
   const configsCount = ref(0);
   const editPanelShow = ref(false);
   const viewPanelShow = ref(false);
-  const activeConfig = ref<IConfigKvItem>();
+  const activeConfig = ref<IConfigKvType>(getDefaultKvItem());
   const deleteConfig = ref<IConfigKvType>();
   const isDiffPanelShow = ref(false);
   const diffConfig = ref(0);
@@ -259,7 +260,7 @@
   };
 
   const handleEditOrView = (config: IConfigKvType) => {
-    activeConfig.value = config.spec;
+    activeConfig.value = config;
     if (isUnNamedVersion.value) {
       editPanelShow.value = true;
     } else {
@@ -268,7 +269,7 @@
   };
 
   const handleView = (config: IConfigKvType) => {
-    activeConfig.value = config.spec;
+    activeConfig.value = config;
     viewPanelShow.value = true;
   };
 

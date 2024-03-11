@@ -98,7 +98,8 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("创建云[%s]vpc网络[%s]", req.CloudID, req.VpcID),
 		OpUser:       req.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ResourceName: ca.req.GetVpcName(),
 	})
 	if err != nil {
 		blog.Errorf("CreateCloudVPC[%s] CreateOperationLog failed: %v", req.VpcID, err)

@@ -423,6 +423,9 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 			if v.Message() != "" {
 				resp.Message = v.Message()
 			}
+			if v.IsFileDeleted || v.IsSTDDeleted {
+				resp.Status = entity.DeletedStatus
+			}
 			break
 		}
 	}

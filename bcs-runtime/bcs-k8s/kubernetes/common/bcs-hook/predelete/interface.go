@@ -8,19 +8,23 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package predelete xxx
 package predelete
 
 import (
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 )
 
+// PreDeleteHookObjectInterface xxx
+// nolint
 type PreDeleteHookObjectInterface interface {
 	GetPreDeleteHook() *hookv1alpha1.HookStep
 }
 
+// PreDeleteHookStatusInterface xxx
+// nolint
 type PreDeleteHookStatusInterface interface {
 	GetPreDeleteHookConditions() []hookv1alpha1.PreDeleteHookCondition
 	SetPreDeleteHookConditions([]hookv1alpha1.PreDeleteHookCondition)

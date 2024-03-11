@@ -3661,6 +3661,55 @@
         ]
       }
     },
+    "/clustermanager/v1/dbdatas/{dataType}": {
+      "delete": {
+        "summary": "清理历史任务/操作记录日志记录",
+        "description": "根据时间条件 或者 排序删除历史n条数据",
+        "operationId": "ClusterManager_CleanDbHistoryData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCleanDbHistoryDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "dataType",
+            "description": "数据类型, 目前仅支持task,operationLog等表数据类型",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间戳",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间戳",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/health": {
       "get": {
         "summary": "服务健康检查接口",
@@ -4682,6 +4731,39 @@
         ]
       }
     },
+    "/clustermanager/v1/nodegroup/{nodeGroupID}/template": {
+      "post": {
+        "summary": "节点池转换为节点模板",
+        "description": "节点池转换为节点模版详情",
+        "operationId": "ClusterManager_TransNodeGroupToNodeTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerTransNodeGroupToNodeTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "nodeGroupID",
+            "description": "nodeGroupID节点池ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/nodegroups/{nodeGroupID}/script": {
       "get": {
         "summary": "获取节点组的第三方节点上架脚本",
@@ -4715,6 +4797,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "internal",
+            "description": "internal. 获取内网或外网脚本, 默认外网脚本",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -6523,6 +6613,11 @@
           "format": "boolean",
           "description": "开启自动升级GKE版本功能,如果集群为发布版本,则强制开启",
           "title": "autoUpgrade"
+        },
+        "nodeRole": {
+          "type": "string",
+          "description": "创建eks节点池时指定的iam角色名称",
+          "title": "nodeRole"
         }
       },
       "title": "AutoScalingGroup define auto scaling information"
@@ -6729,6 +6824,28 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerCleanDbHistoryDataResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      }
     },
     "clustermanagerCleanNodesInGroupRequest": {
       "type": "object",
@@ -9363,6 +9480,14 @@
           "type": "string",
           "description": "创建集群上架节点时的节点模板",
           "title": "nodeTemplateID"
+        },
+        "nodeGroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeGroup"
+          },
+          "description": "创建集群时的节点池信息",
+          "title": "nodeGroups"
         }
       },
       "description": "创建集群请求，如果集群已经存在，直接报错。更新集群信息请使用Update接口",
@@ -11947,6 +12072,9 @@
         },
         "poolID": {
           "type": "string"
+        },
+        "scriptType": {
+          "type": "string"
         }
       }
     },
@@ -12346,7 +12474,7 @@
         },
         "instanceChargeType": {
           "type": "string",
-          "description": "机型计费模型，POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。如不设置，BCS暂时默认提供包年包月的类型",
+          "description": "机型计费模型，tencentCloud包含POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。aws包含ON_DEMAND按需付费,SPOT竞价付费。如不设置，BCS暂时默认提供包年包月的类型",
           "title": "instanceChargeType"
         },
         "systemDisk": {
@@ -15199,6 +15327,11 @@
           "type": "string",
           "description": "任务状态",
           "title": "status"
+        },
+        "resourceName": {
+          "type": "string",
+          "description": "资源名称",
+          "title": "resourceName"
         }
       }
     },
@@ -16293,6 +16426,35 @@
       },
       "description": "autoScale定时扩缩配置",
       "title": "TimeRange"
+    },
+    "clustermanagerTransNodeGroupToNodeTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "template": {
+          "$ref": "#/definitions/clustermanagerNodeTemplate",
+          "description": "template转换的节点模板详情",
+          "title": "template"
+        }
+      },
+      "description": "节点池转换为节点模板结果",
+      "title": "TransNodeGroupToNodeTemplateResponse"
     },
     "clustermanagerUnCordonNodeRequest": {
       "type": "object",

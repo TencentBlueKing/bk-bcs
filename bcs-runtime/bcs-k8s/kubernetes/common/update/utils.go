@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package update
@@ -21,13 +20,14 @@ import (
 
 	"github.com/mattbaird/jsonpatch"
 	apps "k8s.io/api/apps/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
 
 var inPlaceUpdatePatchRexp = regexp.MustCompile("^/spec/containers/([0-9]+)/image$")
 
 // UpdateSpec records the images of containers which need to in-place update.
+// nolint
 type UpdateSpec struct {
 	Revision    string            `json:"revision"`
 	Annotations map[string]string `json:"annotations,omitempty"`
@@ -40,7 +40,7 @@ type UpdateSpec struct {
 	NewTemplate *v1.PodTemplateSpec `json:"newTemplate,omitempty"`
 }
 
-// calculateInPlaceUpdateSpec calculates diff between old and update revisions.
+// CalculateInPlaceUpdateSpec calculates diff between old and update revisions.
 // If the diff just contains replace operation of spec.containers[x].image, it will returns an UpdateSpec.
 // Otherwise, it returns nil which means can not use in-place update.
 func CalculateInPlaceUpdateSpec(oldRevision, newRevision *apps.ControllerRevision) *UpdateSpec {

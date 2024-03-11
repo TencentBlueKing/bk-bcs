@@ -35,39 +35,32 @@
     let signature;
     let content;
     let fileName;
-    let fileType;
     pending.value = true;
     if (props.type === 'config') {
       let res;
       if (versionData.value.id) {
         res = await getReleasedConfigItemDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
-        signature = res.config_item.commit_spec.content.origin_signature;
+        signature = res.config_item.commit_spec.content.signature;
       } else {
         res = await getConfigItemDetail(props.bkBizId, props.id, props.appId);
         signature = res.content.signature;
       }
       fileName = res.config_item.spec.name;
-      fileType = res.config_item.spec.file_type;
       content = await downloadConfigContent(props.bkBizId, props.appId, signature);
     } else {
       let templateSpaceId;
       if (versionData.value.id) {
         const res = await getTemplateVersionDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
-        signature = res.detail.origin_signature;
+        signature = res.detail.signature;
         fileName = res.detail.name;
-        fileType = res.detail.file_type;
         templateSpaceId = res.detail.template_space_id;
       } else {
         const res = await getTemplateVersionsDetailByIds(props.bkBizId, [props.id]);
         signature = res.details[0].spec.content_spec.signature;
         fileName = res.details[0].spec.name;
-        fileType = res.details[0].spec.file_type;
         templateSpaceId = res.details[0].attachment.template_space_id;
       }
       content = await downloadTemplateContent(props.bkBizId, templateSpaceId, signature);
-    }
-    if (fileType === 'binary') {
-      fileName += '.bin';
     }
     fileDownload(content, fileName);
 

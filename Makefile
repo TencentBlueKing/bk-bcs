@@ -46,8 +46,8 @@ export PACKAGEPATH=./build/bcs.${VERSION}
 export SCENARIOSPACKAGE=${WORKSPACE}/${PACKAGEPATH}/bcs-scenarios
 
 # bscp 应用自定义
-export BSCP_LDFLAG=-ldflags "-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
-	-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH}"
+export BSCP_LDFLAG=-ldflags "-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
+	-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH}"
 
 # tongsuo related environment variables
 export TONGSUO_PATH?=$(WORKSPACE)/build/bcs.${VERSION}/tongsuo
@@ -319,6 +319,12 @@ bscp:pre
 	# alias docker image name to bk-bscp-hyper
 	touch ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-hyper && chmod a+x ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-hyper && ls -la ${PACKAGEPATH}/bcs-services/bcs-bscp/hyper
 
+busybox:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-busybox
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-busybox ${PACKAGEPATH}/bcs-services
+	# alias docker image name to bcs-busybox
+	touch ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-busybox/bcs-busybox && chmod a+x ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-busybox/bcs-busybox
+
 k8s-watch:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-k8s-watch ${PACKAGEPATH}/bcs-services
@@ -508,6 +514,10 @@ gitops-vaultplugin-server:
 gitops-gitgenerator-webhook:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-gitgenerator-webhook
 	cd bcs-scenarios/bcs-gitops-manager && make gitgenerator-webhook && cd -
+
+terraform-controller:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-terraform-controller
+	cd bcs-scenarios/bcs-terraform-controller && make terraform-controller && cd -
 
 test: test-bcs-runtime
 
