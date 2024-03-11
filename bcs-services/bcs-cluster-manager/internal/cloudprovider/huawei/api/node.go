@@ -14,14 +14,16 @@
 package api
 
 import (
+	"fmt"
 	"sync"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/global"
 	iam "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/region"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
 var nodeMgr sync.Once
@@ -43,7 +45,7 @@ func GetIamClient(opt *cloudprovider.CommonOption) (*iam.IamClient, error) {
 
 	// 创建IAM client
 	return iam.NewIamClient(
-		iam.IamClientBuilder().WithCredential(auth).WithRegion(region.ValueOf("cn-north-4")).Build(),
+		iam.IamClientBuilder().WithCredential(auth).WithRegion(region.ValueOf("cn-north-1")).Build(),
 	), nil
 }
 
@@ -113,7 +115,20 @@ func (nm *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*pr
 
 // GetZoneList get zoneList
 func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*proto.ZoneInfo, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	zoneInfos := make([]*proto.ZoneInfo, 0)
+	for _, v := range Zones {
+		for x, y := range v {
+			zone := proto.ZoneInfo{
+				ZoneID:    y,
+				Zone:      fmt.Sprintf("%d", x+1),
+				ZoneName:  fmt.Sprintf("可用区%d", x+1),
+				ZoneState: "AVAILABLE",
+			}
+			zoneInfos = append(zoneInfos, &zone)
+		}
+	}
+
+	return zoneInfos, nil
 }
 
 // ListNodeInstanceType list node type by zone and node family

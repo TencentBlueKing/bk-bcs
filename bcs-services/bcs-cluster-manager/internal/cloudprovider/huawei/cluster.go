@@ -22,10 +22,11 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 func init() {
-	cloudprovider.InitClusterManager("huawei", &Cluster{})
+	cloudprovider.InitClusterManager(cloudName, &Cluster{})
 }
 
 // Cluster blueking kubernetes cluster management implementation
@@ -79,7 +80,7 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubenretes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	return opt.Cluster, nil
 }
 
 // ListCluster get cloud cluster list by region
@@ -101,8 +102,13 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
 	for _, v := range *rsp.Items {
 		cloudClusterList = append(cloudClusterList, &proto.CloudClusterInfo{
-			ClusterID:   *v.Metadata.Uid,
-			ClusterName: v.Metadata.Name,
+			ClusterID:          *v.Metadata.Uid,
+			ClusterName:        v.Metadata.Name,
+			ClusterDescription: *v.Metadata.Alias,
+			ClusterVersion:     *v.Spec.Version,
+			ClusterOS:          v.Spec.Type.Value(),
+			ClusterStatus:      *v.Status.Phase,
+			Location:           opt.Region,
 		})
 	}
 
@@ -118,7 +124,7 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 // AppendCloudNodeInfo append cloud node detailed info
 func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
 	nodes []*proto.ClusterNode, opt *cloudprovider.CommonOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+	return nil
 }
 
 // CheckClusterEndpointStatus check cluster endpoint status
@@ -144,18 +150,13 @@ func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 		return false, fmt.Errorf("cluster endpoint status is not created")
 	}
 
-	// 查找是否有内网地址
+	kubeConfig := ""
+	// 获取内网的kubeconfig
 	if !isExtranet {
-		for _, v := range *cluster.Status.Endpoints {
-			if *v.Type == "Internal" && *v.Url != "" {
-				return true, nil
-			}
-		}
-
-		return false, fmt.Errorf("internal url not found")
+		kubeConfig, err = api.GetInternalClusterKubeConfig(cli, clusterID)
+	} else {
+		kubeConfig, err = api.GetClusterKubeConfig(cli, clusterID)
 	}
-
-	kubeConfig, err := api.GetClusterKubeConfig(cli, clusterID)
 	if err != nil {
 		return false, err
 	}
@@ -193,7 +194,7 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 // CheckIfGetNodesFromCluster check cluster if can get nodes from k8s
 func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto.Cluster,
 	nodes []*proto.ClusterNode) bool {
-	return false
+	return true
 }
 
 // CreateVirtualCluster create virtual cluster by cloud provider
@@ -210,7 +211,7 @@ func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
 
 // EnableExternalNodeSupport enable cluster support external node
 func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovider.EnableExternalNodeOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+	return nil
 }
 
 // GetMasterSuggestedMachines get master suggested machines
@@ -227,14 +228,15 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
 func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool,
 	error) {
-	if cls == nil || opt == nil {
-		return true, nil
-	}
-
 	return true, nil
 }
 
 // ListOsImage list image os
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	if opt == nil || opt.Account == nil || len(opt.Account.ServiceAccountSecret) == 0 ||
+		len(opt.Account.GkeProjectID) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("google ListOsImage lost authoration")
+	}
+
+	return utils.CCEImageOsList, nil
 }

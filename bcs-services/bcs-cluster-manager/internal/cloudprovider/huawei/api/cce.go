@@ -22,8 +22,13 @@ func NewCceClient(opt *cloudprovider.CommonOption) (*CceClient, error) {
 		return nil, cloudprovider.ErrCloudRegionLost
 	}
 
+	projectID, err := GetProjectIDByRegion(opt)
+	if err != nil {
+		return nil, err
+	}
+
 	auth := basic.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).
-		WithProjectId(opt.Account.HwCCEProjectID).Build()
+		WithProjectId(projectID).Build()
 	// 创建CCE client
 	client := cce.NewCceClient(
 		cce.CceClientBuilder().WithCredential(auth).WithRegion(region.ValueOf(opt.Region)).Build(),

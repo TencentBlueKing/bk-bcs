@@ -6176,11 +6176,6 @@
           "type": "string",
           "description": "Google Cloud 项目ID",
           "title": "gkeProjectID"
-        },
-        "hwCCEProjectID": {
-          "type": "string",
-          "description": "huawei Cloud CCE 项目ID",
-          "title": "hwCCEProjectID"
         }
       },
       "description": "用于存储不同cloud的账号信息，不同cloud格式兼容处理",

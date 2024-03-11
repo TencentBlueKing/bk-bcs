@@ -18,9 +18,11 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
@@ -53,8 +55,8 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 		return fmt.Errorf("%s ImportClusterValidate request lost valid crendential info", cloudName)
 	}
 
-	if len(opt.Account.HwCCEProjectID) == 0 {
-		return fmt.Errorf("%s ImportClusterValidate request lost valid HwCCEProjectID info", cloudName)
+	if len(opt.Region) == 0 {
+		return fmt.Errorf("%s ImportClusterValidate request lost valid region info", cloudName)
 	}
 
 	if req.CloudMode.CloudID == "" && req.CloudMode.KubeConfig == "" {
@@ -90,6 +92,14 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 // ImportCloudAccountValidate create cloudAccount account validation
 func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error {
 	// call cloud interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ImportCloudAccountValidate request is empty", cloudName)
+	}
+
+	if account.SecretID == "" || account.SecretKey == "" {
+		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid crendential info", cloudName)
+	}
+
 	return nil
 }
 
@@ -97,6 +107,14 @@ func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error
 func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest,
 	account *proto.Account) error {
 	// call cloud interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request is empty", cloudName)
+	}
+
+	if account.SecretID == "" || account.SecretKey == "" {
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid crendential info", cloudName)
+	}
+
 	return nil
 }
 
@@ -109,11 +127,7 @@ func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegio
 	}
 
 	if account.SecretID == "" && account.SecretKey == "" {
-		return fmt.Errorf("%s ImportClusterValidate request lost valid crendential info", cloudName)
-	}
-
-	if len(account.HwCCEProjectID) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid HwCCEProjectID info", cloudName)
+		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(req.Region) == 0 {
@@ -126,6 +140,18 @@ func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegio
 // ListCloudSubnetsValidate xxx
 func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error {
 	// call cloud interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request is empty", cloudName)
+	}
+
+	if account.SecretID == "" && account.SecretKey == "" {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid region info", cloudName)
+	}
+
 	return nil
 }
 
@@ -133,62 +159,94 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest,
 	account *proto.Account) error {
 	// call cloud interface to check account
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // ListInstanceTypeValidate xxx
 func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest,
 	account *proto.Account) error {
 	// call cloud interface to check account
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // ListCloudOsImageValidate xxx
 func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error {
 	// call cloud interface to check account
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // CreateNodeGroupValidate xxx
 func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest,
 	opt *cloudprovider.CommonOption) error {
 	// call cloud interface to check account
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // AddNodesToClusterValidate xxx
 func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest, opt *cloudprovider.CommonOption) error {
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // CreateCloudAccountValidate create cloud account validate
 func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
+	// call cloud interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s CreateCloudAccountValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s CreateCloudAccountValidate request lost valid crendential info", cloudName)
+	}
+
+	client, err := api.GetIamClient(&cloudprovider.CommonOption{Account: account})
+	if err != nil {
+		return err
+	}
+
+	req := model.KeystoneListRegionsRequest{}
+	_, err = client.KeystoneListRegions(&req)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // CreateClusterValidate check createCluster operation
 func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // DeleteNodesFromClusterValidate xxx
 func (c *CloudValidate) DeleteNodesFromClusterValidate(req *proto.DeleteNodesRequest,
 	opt *cloudprovider.CommonOption) error {
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // ListCloudVpcsValidate xxx
 func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
 	account *proto.Account) error {
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListCloudVpcsValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListCloudVpcsValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudVpcsValidate request lost valid region info", cloudName)
+	}
+
 	return nil
 }
 
 // ListInstancesValidate xxx
 func (c *CloudValidate) ListInstancesValidate(req *proto.ListCloudInstancesRequest, account *proto.Account) error {
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // ListKeyPairsValidate list key pairs validate
 func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, account *proto.Account) error {
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }

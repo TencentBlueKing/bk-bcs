@@ -73,7 +73,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	}
 
 	cls.KubeConfig = kubeConfig
-	cls.SystemID = cluster.Metadata.Name
+	cls.SystemID = *cluster.Metadata.Uid
 	cls.VpcID = cluster.Spec.HostNetwork.Vpc
 
 	// cluster cloud basic setting

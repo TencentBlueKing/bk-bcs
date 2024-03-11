@@ -28,6 +28,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -180,7 +181,20 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 
 func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error {
 	for _, n := range nodes {
-		nodeZone := ""
+		var (
+			nodeRegion, nodeZone string
+			node                 = &proto.Node{}
+		)
+
+		region, ok := n.Labels[utils.RegionKubernetesFlag]
+		if ok {
+			nodeRegion = region
+		}
+		region, ok = n.Labels[utils.RegionTopologyFlag]
+		if ok && nodeZone == "" {
+			nodeRegion = region
+		}
+
 		zone, ok := n.Labels[utils.ZoneKubernetesFlag]
 		if ok {
 			nodeZone = zone
@@ -190,16 +204,27 @@ func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, cluster
 			nodeZone = zone
 		}
 
-		var (
-			node = &proto.Node{}
-		)
-
 		ipv4, ipv6 := utils.GetNodeIPAddress(&n)
-		node.ZoneName = nodeZone
+		node.ZoneID = nodeZone
 		node.InnerIP = utils.SliceToString(ipv4)
 		node.InnerIPv6 = utils.SliceToString(ipv6)
 		node.ClusterID = clusterID
 		node.Status = common.StatusRunning
+		node.NodeID = n.Spec.ProviderID
+		node.NodeName = n.Name
+		node.InstanceType = n.Labels[utils.NodeInstanceTypeFlag]
+
+		if nodeRegion != "" && nodeZone != "" {
+			zones, ok := api.Zones[region]
+			if ok {
+				for k, v := range zones {
+					if v == nodeZone {
+						node.Zone = uint32(k)
+						node.ZoneName = fmt.Sprintf("可用区%d", k)
+					}
+				}
+			}
+		}
 
 		err := cloudprovider.GetStorageModel().CreateNode(ctx, node)
 		if err != nil {
