@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package huawei xxx
 package huawei
 
 import "fmt"

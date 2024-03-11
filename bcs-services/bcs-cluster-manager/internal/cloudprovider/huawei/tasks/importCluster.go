@@ -219,8 +219,8 @@ func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, cluster
 			if ok {
 				for k, v := range zones {
 					if v == nodeZone {
-						node.Zone = uint32(k)
-						node.ZoneName = fmt.Sprintf("可用区%d", k)
+						node.Zone = uint32(k + 1)
+						node.ZoneName = fmt.Sprintf("可用区%d", k+1)
 					}
 				}
 			}

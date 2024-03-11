@@ -8,21 +8,21 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package api xxx
 package api
 
 import (
 	"fmt"
 	"sync"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/global"
 	iam "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/region"
 
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
@@ -35,7 +35,7 @@ func init() {
 	})
 }
 
-// GetEc2Client get ec2 client from common option
+// GetIamClient get iam client from common option
 func GetIamClient(opt *cloudprovider.CommonOption) (*iam.IamClient, error) {
 	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
