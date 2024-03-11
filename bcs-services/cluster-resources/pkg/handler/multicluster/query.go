@@ -367,3 +367,13 @@ func viewQueryToQueryFilter(filter *entity.ViewFilter) QueryFilter {
 		LabelSelector: ls,
 	}
 }
+
+// 检查集群是否在黑名单中，如果在黑名单中，则禁止从 api server 查询
+func inBlackList(clusterIDs []*clusterRes.ClusterNamespaces) bool {
+	for _, v := range clusterIDs {
+		if slice.StringInSlice(v.ClusterID, config.G.MultiCluster.BlacklistForAPIServerQuery) {
+			return true
+		}
+	}
+	return false
+}
