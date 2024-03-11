@@ -45,7 +45,7 @@ func mig20240221103510Down(tx *gorm.DB) error {
 		}
 	}
 	if tx.Migrator().HasColumn(&ReleasedKvs20240125175500{}, "Md5") {
-		if err := tx.Migrator().DropColumn(&Kvs20240125175500{}, "Md5"); err != nil {
+		if err := tx.Migrator().DropColumn(&ReleasedKvs20240125175500{}, "Md5"); err != nil {
 			return err
 		}
 	}
