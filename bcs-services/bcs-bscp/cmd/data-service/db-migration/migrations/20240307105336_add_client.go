@@ -94,12 +94,7 @@ func mig20240307105336Up(tx *gorm.DB) error {
 	}
 
 	if err := tx.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").
-		AutoMigrate(&Clients{}); err != nil {
-		return err
-	}
-
-	if err := tx.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").
-		AutoMigrate(&ClientEvents{}); err != nil {
+		AutoMigrate(&Clients{}, &ClientEvents{}); err != nil {
 		return err
 	}
 
@@ -107,15 +102,12 @@ func mig20240307105336Up(tx *gorm.DB) error {
 
 	if result := tx.Create([]IDGenerators{
 		{Resource: "clients", MaxID: 0, UpdatedAt: now},
+		{Resource: "client_events", MaxID: 0, UpdatedAt: now},
+
 	}); result.Error != nil {
 		return result.Error
 	}
 
-	if result := tx.Create([]IDGenerators{
-		{Resource: "client_events", MaxID: 0, UpdatedAt: now},
-	}); result.Error != nil {
-		return result.Error
-	}
 	return nil
 
 }
