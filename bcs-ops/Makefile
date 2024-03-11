@@ -24,3 +24,7 @@ build_offline_pkg:clean
 		mv $f bcs-ops-offline-release-$(VER)-k8s-${f##*-}
 	done
 	md5sum bcs-ops-offline-release-$(VER)-k8s-*.tgz >> MD5SUMS
+
+
+build_image:clean
+	docker build -f docker/Dockerfile -t bcs-ops-upload:test .
