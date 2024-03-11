@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -21,17 +21,17 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
-
 	"github.com/avast/retry-go"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/eks"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 )
 
 // ApplyInstanceMachinesTask update desired nodes task
@@ -299,9 +299,9 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 	// wait all nodes to be ready
 	err = loop.LoopDoFunc(timeCtx, func() error {
-		instances, err := ec2Cli.DescribeInstances(&ec2.DescribeInstancesInput{InstanceIds: aws.StringSlice(instanceIDs)})
-		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] DescribeInstances failed: %v", taskID, err)
+		instances, desErr := ec2Cli.DescribeInstances(&ec2.DescribeInstancesInput{InstanceIds: aws.StringSlice(instanceIDs)})
+		if desErr != nil {
+			blog.Errorf("checkClusterInstanceStatus[%s] DescribeInstances failed: %v", taskID, desErr)
 			return nil
 		}
 		index := 0
@@ -335,10 +335,10 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	// timeout error
 	if errors.Is(err, context.DeadlineExceeded) {
 		running, failure := make([]string, 0), make([]string, 0)
-		instances, err := ec2Cli.DescribeInstances(&ec2.DescribeInstancesInput{InstanceIds: aws.StringSlice(instanceIDs)})
-		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] DescribeInstances failed: %v", taskID, err)
-			return nil, nil, err
+		instances, desErr := ec2Cli.DescribeInstances(&ec2.DescribeInstancesInput{InstanceIds: aws.StringSlice(instanceIDs)})
+		if desErr != nil {
+			blog.Errorf("checkClusterInstanceStatus[%s] DescribeInstances failed: %v", taskID, desErr)
+			return nil, nil, desErr
 		}
 
 		for _, inst := range instances {

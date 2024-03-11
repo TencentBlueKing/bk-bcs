@@ -16,7 +16,6 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"strconv"
 	"strings"
 	"time"
@@ -30,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -552,7 +552,7 @@ func getDefaultNodePath(cluster *proto.Cluster) (string, string) {
 
 // getNodeCommonLabels common labels
 // nolint
-func getNodeCommonLabels(cls *proto.Cluster, group *proto.NodeGroup) []*api.KeyValue {
+func getNodeCommonLabels(cls *proto.Cluster, group *proto.NodeGroup) []*api.KeyValue { // nolint
 	labels := make([]*api.KeyValue, 0)
 
 	if group != nil {

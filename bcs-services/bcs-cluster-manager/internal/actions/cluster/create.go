@@ -425,7 +425,7 @@ func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
 					ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
 					return err
 				}
-				//other db operation error
+				// other db operation error
 				ca.resp.Data = cls
 				ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 				return err
@@ -437,7 +437,7 @@ func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
 }
 
 // Handle create cluster request
-func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterReq, resp *cmproto.CreateClusterResp) {
+func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterReq, resp *cmproto.CreateClusterResp) { // nolint
 	if req == nil || resp == nil {
 		blog.Errorf("create cluster failed, req or resp is empty")
 		return

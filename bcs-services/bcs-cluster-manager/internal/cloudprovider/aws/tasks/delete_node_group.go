@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,10 +18,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/aws/aws-sdk-go/service/eks"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
-
-	"github.com/aws/aws-sdk-go/service/eks"
 )
 
 // DeleteCloudNodeGroupTask delete cloud node group task
@@ -67,17 +67,17 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 	found := true
 	if group.CloudNodeGroupID != "" {
-		_, err := eksCli.DescribeNodegroup(&group.CloudNodeGroupID, &cluster.SystemID)
-		if err != nil {
-			if strings.Contains(err.Error(), "ResourceNotFoundException") {
+		_, desErr := eksCli.DescribeNodegroup(&group.CloudNodeGroupID, &cluster.SystemID)
+		if desErr != nil {
+			if strings.Contains(desErr.Error(), "ResourceNotFoundException") { // nolint
 				blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
 					taskID, nodeGroupID, group.CloudNodeGroupID, stepName, stepName)
 				found = false
 			} else {
 				blog.Errorf(
 					"DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] api in task %s step %s failed, %s",
-					taskID, nodeGroupID, taskID, stepName, err.Error())
-				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID, err.Error())
+					taskID, nodeGroupID, taskID, stepName, desErr.Error())
+				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID, desErr.Error())
 				_ = state.UpdateStepFailure(start, stepName, retErr)
 				return retErr
 			}
