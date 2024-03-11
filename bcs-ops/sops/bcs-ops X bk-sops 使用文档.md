@@ -12,16 +12,17 @@ bcs-ops 借助 bk-sops 的编排能力，实现原生集群的流程化创建、
 # check
 ✦ ➜  docker run --rm --entrypoint /bin/ls bcs-ops-upload:test
 bcs-ops.tar.gz # 脚本包
-bcs_bk_sops_common.dat # bcs-ops x 标准运维 公众流程模板
-upload.pydocker # 导入脚本
+bcs_bk_sops_common.dat # bcs-ops x 标准运维 公共流程模板
+upload.py # 导入脚本
 ```
 
 ### 镜像使用说明
 
 注意[导入事项](#导入事项)
+env 文件配置见[envfile 示例](#envfile%20示例)
 
 ```bash
-# 上传脚本包至 bkrepo
+# 上传脚本包至 bkrepo, env 文件见下文
 ✦ ➜  docker run --env-file env bcs-ops-upload:test upload bkrepo
 DEBUG:root:bkrepo_url: http://bkrepo.example.com/generic/blueking/bcs-ops/scripts/bcs-ops.tar.gz
 DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): bkrepo.example.com:80
@@ -38,6 +39,8 @@ INFO:root:Upload succeeded: bcs_bk_sops_common.dat
 ```
 
 #### envfile 示例
+
+容器运行需要配置如下环境变量至`env`文件中，在容器运行时使用`--env-file`指定
 
 ```plaintext
 BKAPI_HOST=bkapi.example.com // 环境的bkapi host
@@ -56,13 +59,15 @@ LOG_LEVEL=DEBUG // 日志等级
 
 ## 标准运维
 
-### bcs 公众流程模板制作说明
+### bcs 公共流程模板制作说明
 
 #### 模板编写规范
 
-1. 流程文件路径，必须暴露可修改的变量。
+1. 流程中的文件路径，必须暴露为可修改的变量。
 2. 文件模板名为【BCS】xxxx
-3. 新增的流程 id 按下面的序列自增，在文档中说明（不得有重复）。默认情况下，标准运维公众流程只能从 10000 后创建，按如下操作修改其 id。
+3. 新增流程，其 id 按[已有的公共流程模板](#公共流程模板使用说明)进行序列自增（不能用重复），并在文档中说明用法。
+
+   > 默认情况下，标准运维公共流程只能从 10000 后创建。bcs 按照约定，固定使用预留给 bcs 使用模板 id（从 10 开始）。页面上手动新增的流程必然是 10000+的，请按如下操作修改其 id 至预留范围内。
 
    ```sql
    -- 进入 sops 的数据库，若已知，则无需考虑
@@ -75,7 +80,7 @@ LOG_LEVEL=DEBUG // 日志等级
 
 #### 模板导出（**必看**）
 
-1. 必须使用 dat 格式导出
+1. 必须使用 dat 格式导出（yaml 格式无法调用接口）
 2. 脚本包路径处理：对于[id10 脚本包分发流程](#id10)，导出时会包含该环境的存放在`bkrepo`的脚本包下载地址，这个下载地址对于各个蓝鲸环境而是不同的，需要将这个路径替换为`SCRIPT_URL_PLACEHOLDER`。
 
    ```bash
@@ -86,7 +91,7 @@ LOG_LEVEL=DEBUG // 日志等级
 #### 导入注意事项（**必看**）<a id="导入事项"></a>
 
 1. 必须始终用<u>覆盖相同 id </u>方式导入！
-2. 导入的环境中可能存在 id 不同，但 template_id 相同模板（比如一个环境同时以覆盖和新增的方式导入了两次）。执行导入动作后，会导致标准运维产生脏数据而不可使用（页面显示系统出现异常），可按照下面的步骤修复
+2. 导入的环境中可能存在 id 不同，但 template_id 相同模板（比如一个环境同时以覆盖和新增的方式导入了两次）。执行导入动作后，若出现标准运维页面显示"系统出现异常"，可按照下面的步骤清理脏数据进行修复
 
    ```sql
    -- 进入 sops 的数据库，若已知，则无需考虑
@@ -97,10 +102,10 @@ LOG_LEVEL=DEBUG // 日志等级
    SELECT id FROM template_commontemplate AS a JOIN (SELECT  pipeline_template_id , count(*) AS cnt FROM template_commontemplate GROUP BY pipeline_template_id HAVING cnt > 1) AS b on a.pipeline_template_id = b.pipeline_template_id; -- 查看重复id
 
    -- 生产环境执行删除动作前，最好先备份数据库/表，除非有十足的把握。
-   DELETE FROM template_commontemplate WHERE id in (SELECT id FROM template_commontemplate AS a JOIN (SELECT  pipeline_template_id , count(*) AS cnt FROM template_commontemplate GROUP BY pipeline_template_id HAVING cnt > 1) AS b on a.pipeline_template_id = b.pipeline_template_id WHERE id > 10000); --这里 id > 10000，是因为默认情况下创建的流程 id 必然大于 10000。
+   DELETE FROM template_commontemplate WHERE id in (SELECT id FROM template_commontemplate AS a JOIN (SELECT  pipeline_template_id , count(*) AS cnt FROM template_commontemplate GROUP BY pipeline_template_id HAVING cnt > 1) AS b on a.pipeline_template_id = b.pipeline_template_id WHERE id > 10000); --这里 id > 10000，是因为默认情况下创建的流程 id 必然大于 10000。而覆盖导入的bcs-ops 流程id默认小于 10000。
    ```
 
-### 公众流程模板使用说明
+### 公共流程模板使用说明
 
 #### id10.【BCS】bcsops distribute <a id="id10"></a>
 
