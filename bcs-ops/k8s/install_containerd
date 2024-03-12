@@ -23,7 +23,7 @@ safe_source() {
     #shellcheck source=/dev/null
     source "${source_file}"
   else
-    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    echo "[ERROR]: FAIL to source, missing ${source_file}" >&2
     exit 1
   fi
   return 0
@@ -104,7 +104,7 @@ _offline_containerd() {
   if [[ -z ${tar_name} ]]; then
     utils::log "FATAL" "can't find docker installation package in ${bin_path}"
   else
-    tar xvzf "${tar_name}" -C /usr/bin/ --strip-components=1 bin/
+    tar xvzf "${tar_name}" -C /usr/local/bin/ --strip-components=1 bin/
     tar xvzf "${tar_name}" -C /etc/systemd/system/ --strip-components=1 systemd/
   fi
 
@@ -234,9 +234,11 @@ main() {
   test_img_url=${BK_PUBLIC_REPO:-"docker.io"}/library/hello-world:latest
   utils::log "DEBUG" "hello-world: ${test_img_url}"
 
-  if ! (ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "$test_img_url" \
+  if ! ctr -n k8s.io i list|grep ${test_img_url};then
+    if ! (ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "$test_img_url" \
     && ctr -n k8s.io run --rm "$test_img_url" hello-world."$(date +%s)"); then
-    utils::log "ERROR" "Could not get containerd to run ${test_img_url}"
+      utils::log "ERROR" "Could not get containerd to run ${test_img_url}"
+    fi
   fi
   return 0
 }
