@@ -106,7 +106,8 @@ func runServerCmd() error {
 
 			klog.InfoS("try unseal vault")
 			if err := tryUnseal(conf); err != nil {
-				klog.Warningf("unseal vault failed, err: %s", err)
+				klog.Warningf("unseal vault failed, will try later, err: %s", err)
+				continue
 			}
 
 			klog.Info("unseal vault done")
