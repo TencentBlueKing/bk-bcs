@@ -1475,7 +1475,6 @@ cluster:
       max10NodeDrain: 'At most, it can only expel 10 nodes in batches'
     tips:
       disableImportClusterAction: 'Kubeconfig imports cluster, node management function is unavailable'
-      hasNotNodePoolNode: There are nodes added by non-node pools among the selected nodes.
       disableImportClusterAddNode: Importing a cluster does not support adding nodes from existing servers.
     placeholder:
       searchNode: 'Search for IP, label, taints, annotations, status, node source, nodePool'
@@ -3117,6 +3116,7 @@ importGoogleCloud:
     region: Region
     clusterID: Cluster ID
     desc: Description
+    nodemanArea: NodeMan area
   button:
     test: Test
     import: Import

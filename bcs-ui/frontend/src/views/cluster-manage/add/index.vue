@@ -1,5 +1,5 @@
 <template>
-  <BcsContent>
+  <BcsContent :title="$t('cluster.button.addCluster')">
     <div class="flex flex-col items-center justify-center">
       <div
         v-for="card, index in cardGroupList"
@@ -72,8 +72,7 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from 'vue';
 
-import BcsContent from '../components/bcs-content.vue';
-
+import BcsContent from '@/components/layout/Content.vue';
 import { useAppData, useConfig } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import amazonLogo from '@/images/amazon.png';
