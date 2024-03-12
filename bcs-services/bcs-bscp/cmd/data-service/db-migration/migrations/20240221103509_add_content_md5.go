@@ -211,7 +211,7 @@ func mig20240221103509Down(tx *gorm.DB) error {
 func batchUpdateContentMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider, md5Map map[string]string) error {
 	var currentMaxID uint32
 	contents := []*Content20240221103509{}
-	if err := tx.Model(&Content20240221103509{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
+	if err := tx.Model(&Content20240221103509{}).Select("COALESCE(MAX(id), 0)").Row().Scan(&currentMaxID); err != nil {
 		return err
 	}
 	if err := tx.Model(&Content20240221103509{}).Where("id <= ?", currentMaxID).Find(&contents).Error; err != nil {
@@ -255,7 +255,7 @@ func batchUpdateContentMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provide
 func batchUpdateCommitMd5(kt *kit.Kit, tx *gorm.DB, provider repository.Provider, md5Map map[string]string) error {
 	var currentMaxID uint32
 	commits := []*Commit20240221103509{}
-	if err := tx.Model(&Commit20240221103509{}).Select("max(id) as max_id").Row().Scan(&currentMaxID); err != nil {
+	if err := tx.Model(&Commit20240221103509{}).Select("COALESCE(MAX(id), 0)").Row().Scan(&currentMaxID); err != nil {
 		return err
 	}
 	if err := tx.Model(&Commit20240221103509{}).Where("id <= ?", currentMaxID).Find(&commits).Error; err != nil {
@@ -300,7 +300,7 @@ func batchUpdateReleasedConfigItemMd5(kt *kit.Kit, tx *gorm.DB, provider reposit
 	md5Map map[string]string) error {
 	var currentMaxID uint32
 	releasedCIs := []*ReleasedConfigItem20240221103509{}
-	if err := tx.Model(&ReleasedConfigItem20240221103509{}).Select("max(id) as max_id").Row().
+	if err := tx.Model(&ReleasedConfigItem20240221103509{}).Select("COALESCE(MAX(id), 0)").Row().
 		Scan(&currentMaxID); err != nil {
 		return err
 	}
@@ -350,7 +350,7 @@ func batchUpdateReleasedAppTemplateMd5(kt *kit.Kit, tx *gorm.DB, provider reposi
 	md5Map map[string]string) error {
 	var currentMaxID uint32
 	releasedATs := []*ReleasedAppTemplate20240221103509{}
-	if err := tx.Model(&ReleasedAppTemplate20240221103509{}).Select("max(id) as max_id").Row().
+	if err := tx.Model(&ReleasedAppTemplate20240221103509{}).Select("COALESCE(MAX(id), 0)").Row().
 		Scan(&currentMaxID); err != nil {
 		return err
 	}
@@ -400,7 +400,7 @@ func batchUpdateTemplateRevisionMd5(kt *kit.Kit, tx *gorm.DB, provider repositor
 	md5Map map[string]string) error {
 	var currentMaxID uint32
 	templateRevisions := []*TemplateRevision20240221103509{}
-	if err := tx.Model(&TemplateRevision20240221103509{}).Select("max(id) as max_id").Row().
+	if err := tx.Model(&TemplateRevision20240221103509{}).Select("COALESCE(MAX(id), 0)").Row().
 		Scan(&currentMaxID); err != nil {
 		return err
 	}
