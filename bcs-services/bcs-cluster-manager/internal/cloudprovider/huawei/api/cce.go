@@ -41,15 +41,25 @@ func NewCceClient(opt *cloudprovider.CommonOption) (*CceClient, error) {
 		return nil, err
 	}
 
-	auth := basic.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).
-		WithProjectId(projectID).Build()
+	auth, err := basic.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).
+		WithProjectId(projectID).SafeBuild()
+	if err != nil {
+		return nil, err
+	}
+
+	rn, err := region.SafeValueOf(opt.Region)
+	if err != nil {
+		return nil, err
+	}
+
 	// 创建CCE client
-	client := cce.NewCceClient(
-		cce.CceClientBuilder().WithCredential(auth).WithRegion(region.ValueOf(opt.Region)).Build(),
-	)
+	hcClient, err := cce.CceClientBuilder().WithCredential(auth).WithRegion(rn).SafeBuild()
+	if err != nil {
+		return nil, err
+	}
 
 	return &CceClient{
-		CceClient: client,
+		CceClient: cce.NewCceClient(hcClient),
 	}, nil
 }
 

@@ -41,11 +41,24 @@ func GetVpcClient(opt *cloudprovider.CommonOption) (*vpc.VpcClient, error) {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 
-	auth := basic.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).Build()
+	auth, err := basic.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).SafeBuild()
+	if err != nil {
+		return nil, err
+	}
+
+	rn, err := region.SafeValueOf(opt.Region)
+	if err != nil {
+		return nil, err
+	}
+
+	hcClient, err := vpc.VpcClientBuilder().WithCredential(auth).WithRegion(rn).SafeBuild()
+	if err != nil {
+		return nil, err
+	}
 
 	// 创建IAM client
 	return vpc.NewVpcClient(
-		vpc.VpcClientBuilder().WithCredential(auth).WithRegion(region.ValueOf(opt.Region)).Build(),
+		hcClient,
 	), nil
 }
 

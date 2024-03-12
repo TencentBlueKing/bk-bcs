@@ -41,11 +41,21 @@ func GetIamClient(opt *cloudprovider.CommonOption) (*iam.IamClient, error) {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 
-	auth := global.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).Build()
+	auth, err := global.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).SafeBuild()
+	if err != nil {
+		return nil, err
+	}
+
+	rn, err := region.SafeValueOf("cn-north-1")
+	if err != nil {
+		return nil, err
+	}
+
+	hcClient, err := iam.IamClientBuilder().WithCredential(auth).WithRegion(rn).SafeBuild()
 
 	// 创建IAM client
 	return iam.NewIamClient(
-		iam.IamClientBuilder().WithCredential(auth).WithRegion(region.ValueOf("cn-north-1")).Build(),
+		hcClient,
 	), nil
 }
 
