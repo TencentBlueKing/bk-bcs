@@ -98,19 +98,18 @@ func runServerCmd() error {
 		defer tick.Stop()
 
 		for range tick.C {
-			klog.InfoS("try unseal vault")
-			if err := tryUnseal(conf); err != nil {
-				klog.Warningf("unseal vault failed,err: %s", err)
-			}
-
 			// already unsealed
-			if err := checkVaultStatus(); err != nil {
-				klog.InfoS("check vault status not ready", "reason", err)
+			if err := checkVaultStatus(); err == nil {
+				klog.InfoS("check vault status already initialized and unsealed, continue")
 				continue
 			}
 
+			klog.InfoS("try unseal vault")
+			if err := tryUnseal(conf); err != nil {
+				klog.Warningf("unseal vault failed, err: %s", err)
+			}
+
 			klog.Info("unseal vault done")
-			return
 		}
 	}()
 
