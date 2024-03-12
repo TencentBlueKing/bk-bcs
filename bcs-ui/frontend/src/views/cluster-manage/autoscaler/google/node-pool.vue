@@ -65,15 +65,16 @@ export default defineComponent({
         {
           title: clusterList.value.find(item => item.clusterID === clusterId.value)?.clusterName,
           link: {
-            name: 'clusterDetail',
+            name: 'clusterMain',
           },
         },
         {
           title: 'Cluster Autoscaler',
           link: {
-            name: 'clusterDetail',
+            name: 'clusterMain',
             query: {
               active: 'autoscaler',
+              clusterId: props.clusterId,
             },
           },
         },
@@ -151,10 +152,11 @@ export default defineComponent({
       const result = await $store.dispatch('clustermanager/createNodeGroup', data);
       if (result) {
         $router.push({
-          name: 'clusterDetail',
+          name: 'clusterMain',
           query: {
             active: 'autoscaler',
             scrollToBottom: true,
+            clusterId: props.clusterId,
           },
         });
       }

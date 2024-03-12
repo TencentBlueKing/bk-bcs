@@ -54,7 +54,6 @@ export default [
     component: ClusterCreate,
     meta: {
       menuId: 'CLUSTER',
-      title: window.i18n.t('cluster.button.addCluster'),
       hideMenu: true,
     },
   },

@@ -252,8 +252,16 @@ export default defineComponent({
     };
     // 前往节点池详情
     const handleGotoNodePool = (id: string) => {
+      let name = '';
+      switch (clusterData.value?.provider) {
+        case 'gcpCloud':
+          name = 'googleNodePoolDetail';
+          break;
+        default:
+          name = 'nodePoolDetail';
+      }
       const { href } = $router.resolve({
-        name: 'nodePoolDetail',
+        name,
         params: {
           clusterId: props.clusterId,
           nodeGroupID: id,
