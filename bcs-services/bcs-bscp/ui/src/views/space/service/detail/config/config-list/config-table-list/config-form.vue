@@ -346,6 +346,7 @@
       }
       return (fileContent.value as IFileConfigContentSummary).signature;
     }
+    if (!stringContent.value.endsWith('\n')) stringContent.value += '\n';
     return SHA256(stringContent.value).toString();
   };
 
