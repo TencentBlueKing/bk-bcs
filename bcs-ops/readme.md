@@ -153,13 +153,13 @@ set +x
 
 #### k8s 基础环境变量
 
-| 环境变量         | 默认值                                            | 说明                                                                                  |
-| ---------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `K8S_VER`        | `1.20.15`                                         | k8s 版本，现支持 `1.20.151.23.171.24.15`                                              |
-| `ETCD_LIB`       | `${BK_HOME}/lib/etcd`                             | 控制平面 etcd 根目录                                                                  |
-| `KUBELET_LIB`    | `${BK_HOME}/lib/kubelet`                          | kubelet 根目录                                                                        |
-| `K8S_EXTRA_ARGS` | `allowed-unsafe-sysctls: 'net.ipv4.tcp_tw_reuse'` | [cluster sysctl](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/) |
-| `BCS_CP_WORKER`  | `0`                                               | 是否单节点集群，`0`关闭，`1`开启，开启后控制平面污点取消                              |
+| 环境变量         | 默认值                                            | 说明                                                                                                                |
+| ---------------- | ------------------------------------------------- |-------------------------------------------------------------------------------------------------------------------|
+| `K8S_VER`        | `1.20.15`                                         | k8s 版本，现支持 `1.20.151.23.171.24.15`                                                                                |
+| `ETCD_LIB`       | `${BK_HOME}/lib/etcd`                             | 控制平面 etcd 根目录                                                                                                     |
+| `KUBELET_LIB`    | `${BK_HOME}/lib/kubelet`                          | kubelet 根目录                                                                                                       |
+| `K8S_EXTRA_ARGS` | `allowed-unsafe-sysctls: 'net.ipv4.tcp_tw_reuse'` | 配置kubelet自定义参数，格式为A: B, C: D[cluster sysctl](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/) |
+| `BCS_CP_WORKER`  | `0`                                               | 是否单节点集群，`0`关闭，`1`开启，开启后控制平面污点取消                                                                                   |
 
 #### k8s 网络配置
 
