@@ -1,5 +1,12 @@
 <template>
-  <bk-button v-if="isFileType" style="margin-left: 8px;" @click="handleExportFile">{{ $t('打包下载') }}</bk-button>
+  <bk-button
+    v-if="isFileType"
+    :key="appData.id"
+    style="margin-left: 8px"
+    :disabled="allConfigCount === 0"
+    @click="handleExportFile">
+    {{ $t('打包下载') }}
+  </bk-button>
   <bk-popover
     v-else
     ref="buttonRef"
@@ -26,8 +33,11 @@
   import { getExportKvFile } from '../../../../../../../api/config';
   import { storeToRefs } from 'pinia';
   import useServiceStore from '../../../../../../../store/service';
+  import useConfigStore from '../../../../../../../store/config';
   const serviceStore = useServiceStore();
+  const configStore = useConfigStore();
   const { appData, isFileType } = storeToRefs(serviceStore);
+  const { allConfigCount } = storeToRefs(configStore);
 
   const props = defineProps<{
     bkBizId: string;
@@ -82,7 +92,9 @@
   // 导出文件型服务配置
   const handleExportFile = async () => {
     const link = document.createElement('a');
-    link.href = `${(window as any).BK_BCS_BSCP_API}/api/v1/config/biz/${props.bkBizId}/apps/${props.appId}/releases/${props.versionId}/config_item/export`;
+    link.href = `${(window as any).BK_BCS_BSCP_API}/api/v1/config/biz/${props.bkBizId}/apps/${props.appId}/releases/${
+      props.versionId
+    }/config_item/export`;
     link.click();
   };
 </script>

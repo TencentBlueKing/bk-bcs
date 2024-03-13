@@ -116,7 +116,7 @@
   const selectScript = (id: string) => {
     const script = id === 'pre' ? scriptDetailList.value[0] : scriptDetailList.value[1];
     const { base, current } = script;
-    const diffData = { contentType: 'text', base, current };
+    const diffData = { id, contentType: 'text', base, current };
     selected.value = id;
     emits('selected', diffData);
   };

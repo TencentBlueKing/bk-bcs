@@ -96,7 +96,7 @@
         :files="fileList"
         :custom-request="handleFileUpload">
         <template #file="{ file }">
-          <div>
+          <div style="width: 100%">
             <div class="file-wrapper">
               <div class="status-icon-area">
                 <Done v-if="file.status === 'success'" class="success-icon" />
@@ -106,6 +106,7 @@
               <div class="name" :title="file.name" @click="handleDownloadFile">{{ file.name }}</div>
               ({{ file.status === 'fail' ? byteUnitConverse(file.size) : file.size }})
             </div>
+            <div :class="{ 'progress-bar': uploadPending }"></div>
             <div v-if="file.status === 'fail'" class="error-msg">{{ file.statusText }}</div>
           </div>
         </template>
@@ -346,6 +347,7 @@
       }
       return (fileContent.value as IFileConfigContentSummary).signature;
     }
+    if (!stringContent.value.endsWith('\n')) stringContent.value += '\n';
     return SHA256(stringContent.value).toString();
   };
 
@@ -521,6 +523,20 @@
     align-items: center;
     span {
       margin-right: 5px;
+    }
+  }
+  .progress-bar {
+    width: 0;
+    height: 2px;
+    background-color: #3a84ff;
+    animation: progressAnimation 1s ease-in-out forwards;
+  }
+  @keyframes progressAnimation {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
     }
   }
 </style>

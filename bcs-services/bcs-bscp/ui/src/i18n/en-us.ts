@@ -617,4 +617,6 @@ export default {
   请输入: 'Please enter',
   确认: 'Confirm',
   变量名称已复制: 'The variable name has been copied',
+  单行配置: 'Single-row config',
+  多行配置: 'Multi-row config',
 };

@@ -345,4 +345,5 @@ type SharedClusterConf struct {
 type MultiClusterConf struct {
 	EnabledQueryFromStorageKinds []string `yaml:"enabledQueryFromStorageKinds" usage:"支持从 storage 中查询的资源 Kind"`
 	EnabledCountKinds            []string `yaml:"enabledCountKinds" usage:"支持从 storage 中查询 count 的资源 Kind"`
+	BlacklistForAPIServerQuery   []string `yaml:"blacklistForAPIServerQuery" usage:"禁止从 apiserver 查询的集群"`
 }
