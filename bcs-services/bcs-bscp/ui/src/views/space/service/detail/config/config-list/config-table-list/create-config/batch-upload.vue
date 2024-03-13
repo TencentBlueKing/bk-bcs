@@ -65,7 +65,7 @@
     </div>
     <div class="action-btns">
       <bk-button theme="primary" :loading="pending" :disabled="!importConfigList.length" @click="handleImport">{{
-        t('确认')
+        t('确定')
       }}</bk-button>
       <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
