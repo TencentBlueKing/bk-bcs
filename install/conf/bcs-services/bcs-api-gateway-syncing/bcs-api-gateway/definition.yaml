@@ -1,0 +1,52 @@
+release:
+  # 发布版本号，
+  # 资源配置更新，需更新此版本号才会发布资源版本，此版本号和 sdk 版本号一致，错误设置会影响调用方使用
+  version: "{{ environ.BKAPI_RELEASE_VERSION }}"
+  # 版本描述
+  comment: "{{ environ.BKAPI_RELEASE_COMMENT }}"
+
+apigateway:
+  description: "{{ environ.BKAPI_DESCRIPTION }}"
+  is_public: false
+  maintainers:
+    - "admin"
+  {% for user in settings.BK_APIGW_MANAGERS %}
+    - "{{ user }}"
+  {% endfor %}
+
+stage:
+  name: "prod"
+  # 环境变量
+  vars: {}
+  # 代理配置
+  proxy_http:
+    timeout: 60
+    # 负载均衡类型 + Hosts
+    upstreams:
+      loadbalance: "roundrobin"
+      hosts:
+        - host: "{{ environ.BKAPI_STAGE_HOST }}"
+          weight: 100
+  # 流量控制
+  rate_limit:
+    enabled: false
+    rate:
+      tokens: 5000
+      period: 60
+
+# 主动授权，网关主动给应用，添加访问网关所有资源的权限
+grant_permissions:
+  - bk_app_code: "{{ settings.BK_APP_CODE }}"
+  {% for app in settings.BK_API_GRANT_PERMISSIONS_APPS %}
+  - bk_app_code: "{{ app }}"
+  {% endfor %}
+
+# 应用申请指定网关所有资源的权限，待网关管理员审批后，应用才可访问网关资源
+apply_permissions:
+  {% for gw in settings.BK_API_APPLY_PERMISSIONS_GATEWAYS %}
+  - api_name: "{{ gw }}"
+  {% endfor %}
+
+resource_docs:
+  # 资源文档目录，basedir 与 archivefile 二者至少一个有效，若同时存在，则 archivefile 优先
+  basedir: "{{ settings.BK_APIGW_RESOURCE_DOCS_BASE_DIR }}"
