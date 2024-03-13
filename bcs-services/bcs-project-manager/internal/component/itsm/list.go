@@ -33,10 +33,8 @@ var (
 
 // ListTicketsResp itsm list tickets resp
 type ListTicketsResp struct {
-	Code    int             `json:"code"`
-	Result  bool            `json:"result"`
-	Message string          `json:"message"`
-	Data    ListTicketsData `json:"data"`
+	component.CommonResp
+	Data ListTicketsData `json:"data"`
 }
 
 // ListTicketsData list tickets data
@@ -78,19 +76,16 @@ func ListTickets(snList []string) ([]TicketsItem, error) {
 	var page = 1
 	for {
 		reqURL := fmt.Sprintf("%s%s?page=%d&page_size=%d", itsmConf.GatewayHost, listTicketsPath, page, limit)
-		headers := map[string]string{"Content-Type": "application/json"}
 		req := gorequest.SuperAgent{
 			Url:    reqURL,
 			Method: "POST",
 			Data: map[string]interface{}{
-				"bk_app_code":   config.GlobalConf.App.Code,
-				"bk_app_secret": config.GlobalConf.App.Secret,
-				"sns":           snList,
+				"sns": snList,
 			},
 		}
 		// 请求API
 		proxy := ""
-		body, err := component.Request(req, timeout, proxy, headers)
+		body, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
 		if err != nil {
 			logging.Error("request list itsm tickets %v failed, %s", snList, err.Error())
 			return nil, errorx.NewRequestITSMErr(err.Error())
