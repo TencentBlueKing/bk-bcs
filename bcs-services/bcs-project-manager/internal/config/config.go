@@ -110,10 +110,12 @@ type IAMConfig struct {
 // ITSMConfig itsm操作需要的配置
 type ITSMConfig struct {
 	Enable                   bool   `yaml:"enable" usage:"enable ITSM sync"`
+	AutoRegister             bool   `yaml:"autoRegister" usage:"auto register itsm services"`
 	GatewayHost              string `yaml:"gatewayHost" usage:"gateway host"`
 	CreateNamespaceServiceID int    `yaml:"createNsSvcID" usage:"service id for create ns service"`
 	UpdateNamespaceServiceID int    `yaml:"updateNsSvcID" usage:"service id for update ns service"`
 	DeleteNamespaceServiceID int    `yaml:"deleteNsSvcID" usage:"service id for delete ns service"`
+	Approvers                string `yaml:"approvers" usage:"approvers for itsm"`
 }
 
 // BkMonitorConfig 蓝鲸监控操作需要的配置
