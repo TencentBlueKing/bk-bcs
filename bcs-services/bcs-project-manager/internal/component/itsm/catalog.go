@@ -27,8 +27,8 @@ import (
 )
 
 var (
-	createCatalogPath = "/v2/itsm/create_service_catalog/"
-	getCatalogsPath   = "/v2/itsm/get_service_catalogs/"
+	createCatalogPath = "/itsm/create_service_catalog/"
+	getCatalogsPath   = "/itsm/get_service_catalogs/"
 )
 
 // CreateCatalogReq 创建服务目录请求
@@ -57,8 +57,12 @@ type CreateCatalogData struct {
 // CreateCatalog 创建服务目录，返回目录ID
 func CreateCatalog(data CreateCatalogReq) (uint32, error) {
 	itsmConf := config.GlobalConf.ITSM
-	// 使用网关访问
-	reqURL := fmt.Sprintf("%s%s", itsmConf.GatewayHost, createCatalogPath)
+	// 默认使用网关访问，如果为外部版，则使用ESB访问
+	host := itsmConf.GatewayHost
+	if itsmConf.External {
+		host = itsmConf.Host
+	}
+	reqURL := fmt.Sprintf("%s%s", host, createCatalogPath)
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "POST",
@@ -113,8 +117,12 @@ type ListCatalogsResp struct {
 // ListCatalogs 获取服务目录列表
 func ListCatalogs() ([]Catalog, error) {
 	itsmConf := config.GlobalConf.ITSM
-	// 使用网关访问
-	reqURL := fmt.Sprintf("%s%s?project_key=0", itsmConf.GatewayHost, getCatalogsPath)
+	// 默认使用网关访问，如果为外部版，则使用ESB访问
+	host := itsmConf.GatewayHost
+	if itsmConf.External {
+		host = itsmConf.Host
+	}
+	reqURL := fmt.Sprintf("%s%s?project_key=0", host, getCatalogsPath)
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "GET",

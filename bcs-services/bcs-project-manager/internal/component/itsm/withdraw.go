@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	operateTicketPath = "/v2/itsm/operate_ticket/"
+	operateTicketPath = "/itsm/operate_ticket/"
 )
 
 // OperateTicketResp itsm operate ticket resp
@@ -39,8 +39,12 @@ type OperateTicketResp struct {
 // WithdrawTicket withdraw itsm ticket
 func WithdrawTicket(username, sn string) error {
 	itsmConf := config.GlobalConf.ITSM
-	// 使用网关访问
-	reqURL := fmt.Sprintf("%s%s", itsmConf.GatewayHost, operateTicketPath)
+	// 默认使用网关访问，如果为外部版，则使用ESB访问
+	host := itsmConf.GatewayHost
+	if itsmConf.External {
+		host = itsmConf.Host
+	}
+	reqURL := fmt.Sprintf("%s%s", host, operateTicketPath)
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "POST",

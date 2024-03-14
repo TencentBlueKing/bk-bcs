@@ -111,7 +111,9 @@ type IAMConfig struct {
 type ITSMConfig struct {
 	Enable                   bool   `yaml:"enable" usage:"enable ITSM sync"`
 	AutoRegister             bool   `yaml:"autoRegister" usage:"auto register itsm services"`
+	External                 bool   `yaml:"external" usage:"use itsm as external"`
 	GatewayHost              string `yaml:"gatewayHost" usage:"gateway host"`
+	Host                     string `yaml:"host" usage:"itsm esb host"`
 	CreateNamespaceServiceID int    `yaml:"createNsSvcID" usage:"service id for create ns service"`
 	UpdateNamespaceServiceID int    `yaml:"updateNsSvcID" usage:"service id for update ns service"`
 	DeleteNamespaceServiceID int    `yaml:"deleteNsSvcID" usage:"service id for delete ns service"`

@@ -27,9 +27,9 @@ import (
 )
 
 var (
-	listServicesPath  = "/v2/itsm/get_services/"
-	importServicePath = "/v2/itsm/import_service/"
-	updateServicePath = "/v2/itsm/update_service/"
+	listServicesPath  = "/itsm/get_services/"
+	importServicePath = "/itsm/import_service/"
+	updateServicePath = "/itsm/update_service/"
 )
 
 // ListServicesResp itsm list services resp
@@ -49,8 +49,12 @@ type Service struct {
 // ListServices list itsm services by catalog id
 func ListServices(catalogID uint32) ([]Service, error) {
 	itsmConf := config.GlobalConf.ITSM
-	// 使用网关访问
-	reqURL := fmt.Sprintf("%s%s?catalog_id=%d", itsmConf.GatewayHost, listServicesPath, catalogID)
+	// 默认使用网关访问，如果为外部版，则使用ESB访问
+	host := itsmConf.GatewayHost
+	if itsmConf.External {
+		host = itsmConf.Host
+	}
+	reqURL := fmt.Sprintf("%s%s?catalog_id=%d", host, listServicesPath, catalogID)
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "GET",
@@ -117,8 +121,12 @@ type ImportServiceData struct {
 // ImportService import itsm service
 func ImportService(data ImportServiceReq) (int, error) {
 	itsmConf := config.GlobalConf.ITSM
-	// 使用网关访问
-	reqURL := fmt.Sprintf("%s%s", itsmConf.GatewayHost, importServicePath)
+	// 默认使用网关访问，如果为外部版，则使用ESB访问
+	host := itsmConf.GatewayHost
+	if itsmConf.External {
+		host = itsmConf.Host
+	}
+	reqURL := fmt.Sprintf("%s%s", host, importServicePath)
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "POST",
@@ -165,8 +173,12 @@ type UpdateServiceReq struct {
 // UpdateService update itsm service
 func UpdateService(data UpdateServiceReq) error {
 	itsmConf := config.GlobalConf.ITSM
-	// 使用网关访问
-	reqURL := fmt.Sprintf("%s%s", itsmConf.GatewayHost, updateServicePath)
+	// 默认使用网关访问，如果为外部版，则使用ESB访问
+	host := itsmConf.GatewayHost
+	if itsmConf.External {
+		host = itsmConf.Host
+	}
+	reqURL := fmt.Sprintf("%s%s", host, updateServicePath)
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "POST",

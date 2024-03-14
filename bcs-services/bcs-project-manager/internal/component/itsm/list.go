@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	listTicketsPath = "/v2/itsm/get_tickets/"
+	listTicketsPath = "/itsm/get_tickets/"
 	limit           = 100
 )
 
@@ -71,11 +71,15 @@ type TicketsItem struct {
 // ListTickets list itsm tickets by sn list
 func ListTickets(snList []string) ([]TicketsItem, error) {
 	itsmConf := config.GlobalConf.ITSM
-	// 使用网关访问
+	// 默认使用网关访问，如果为外部版，则使用ESB访问
+	host := itsmConf.GatewayHost
+	if itsmConf.External {
+		host = itsmConf.Host
+	}
 	tickets := []TicketsItem{}
 	var page = 1
 	for {
-		reqURL := fmt.Sprintf("%s%s?page=%d&page_size=%d", itsmConf.GatewayHost, listTicketsPath, page, limit)
+		reqURL := fmt.Sprintf("%s%s?page=%d&page_size=%d", host, listTicketsPath, page, limit)
 		req := gorequest.SuperAgent{
 			Url:    reqURL,
 			Method: "POST",

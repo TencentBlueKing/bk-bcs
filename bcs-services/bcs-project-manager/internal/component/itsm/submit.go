@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	createTicketPath = "/v2/itsm/create_ticket/"
+	createTicketPath = "/itsm/create_ticket/"
 	timeout          = 10
 )
 
@@ -52,8 +52,12 @@ type CreateTicketData struct {
 // CreateTicket create itsm ticket
 func CreateTicket(username string, serviceID int, fields []map[string]interface{}) (*CreateTicketData, error) {
 	itsmConf := config.GlobalConf.ITSM
-	// 使用网关访问
-	reqURL := fmt.Sprintf("%s%s", itsmConf.GatewayHost, createTicketPath)
+	// 默认使用网关访问，如果为外部版，则使用ESB访问
+	host := itsmConf.GatewayHost
+	if itsmConf.External {
+		host = itsmConf.Host
+	}
+	reqURL := fmt.Sprintf("%s%s", host, createTicketPath)
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "POST",
