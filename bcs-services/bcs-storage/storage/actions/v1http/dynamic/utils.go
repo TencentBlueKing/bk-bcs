@@ -53,6 +53,7 @@ const (
 	updateTimeTag = "updateTime"
 	createTimeTag = "createTime"
 	eventTimeTag  = "eventTime"
+	indexIdTag    = "_id"
 
 	applicationTypeName = "application"
 	processTypeName     = "process"
@@ -469,8 +470,10 @@ func getMulticlusterStoreOption(req *restful.Request) (*lib.StoreGetOption, erro
 	// option
 	return &lib.StoreGetOption{
 		Fields: fields,
+		// Note: do not use non-indexed fields for sorting
+		// otherwise it will exceed the sorting RAM limit in mongoDB.
 		Sort: map[string]int{
-			updateTimeTag: -1,
+			indexIdTag: -1,
 		},
 		Cond:   condition,
 		Offset: multiClusterReq.Offset,
