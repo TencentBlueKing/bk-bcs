@@ -28,7 +28,7 @@
   import { useI18n } from 'vue-i18n';
   import { IGroupToPublish } from '../../../../../../../../types/group';
   import { IConfigVersion } from '../../../../../../../../types/config';
-  import GroupTree from './tree.vue';
+  import GroupTree from './group-tree.vue';
 
   const { t } = useI18n();
   const props = withDefaults(
@@ -37,10 +37,8 @@
       groupList: IGroupToPublish[];
       versionListLoading: boolean;
       versionList: IConfigVersion[];
-      versionStatus: string;
       releasedGroups?: number[];
       releaseType: string;
-      releasedId: number;
       value: IGroupToPublish[];
     }>(),
     {

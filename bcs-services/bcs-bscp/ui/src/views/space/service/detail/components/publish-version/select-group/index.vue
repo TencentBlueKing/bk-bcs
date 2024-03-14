@@ -8,7 +8,6 @@
         :group-list-loading="groupListLoading"
         :version-list="versionList"
         :version-list-loading="versionListLoading"
-        :version-status="props.versionStatus"
         :released-groups="props.releasedGroups"
         :release-type="releaseType"
         :released-id="props.releaseId"
