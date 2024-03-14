@@ -1215,12 +1215,105 @@ func Exitf(format string, args ...interface{}) {
 	logging.printf(fatalLog, format, args...)
 }
 
+// MissingValuePrompt is the missing prompt
+var MissingValuePrompt = "(MISSING)"
+
+// IgnoredValuePrompt is the ignore prompt
+var IgnoredValuePrompt = "\"Ignored key without a value.\""
+
+// Levelw only include info warn error fatal
+type Levelw int
+
+// Levelw key-values 方式输出等级，支持info、warn、error、fatal
+const (
+	Infow Levelw = iota
+	Warnw
+	Errorw
+	Fatalw
+)
+
 // LogKit 适配 https://github.com/go-kit/log 接口
 type LogKit struct {
 }
 
-// Log gokit log 实现
+// Log https://github.com/go-kit/log log方法实现
 func (l LogKit) Log(keyvals ...interface{}) error {
-	logging.println(infoLog, keyvals...)
+	if len(keyvals)%2 != 0 {
+		keyvals = append(keyvals, MissingValuePrompt)
+	}
+
+	var levelw string
+
+	// 第一个位置留给msg，必定是奇数个
+	keysAndValues := make([]interface{}, 0, len(keyvals)+1)
+	keysAndValues = append(keysAndValues, "msg=")
+
+	// 通过for循环生成的格式：msg=value, key2=value2, key3=value3
+	for i := 0; i+2 <= len(keyvals); i += 2 {
+		key := fmt.Sprintf("%s", keyvals[i])
+
+		if key == "level" {
+			levelw = fmt.Sprintf("%s", keyvals[i+1])
+		} else if key == "msg" {
+			keysAndValues[0] = fmt.Sprintf("msg=%s", keyvals[i+1])
+		} else {
+			keysAndValues = append(keysAndValues, fmt.Sprintf(", %s=", keyvals[i]), keyvals[i+1])
+		}
+	}
+
+	var logLevel severity
+
+	switch levelw {
+	case "info":
+		logLevel = infoLog
+	case "warn":
+		logLevel = warningLog
+	case "error":
+		logLevel = errorLog
+	case "fatal":
+		logLevel = fatalLog
+	default:
+		logLevel = infoLog
+	}
+
+	logging.print(logLevel, keysAndValues...)
 	return nil
+}
+
+// LogFormatw : 以键值对的方式打印，打印格式：msg=value, key2=value2, key3=value3
+func (l Levelw) LogFormatw(args ...interface{}) {
+
+	if len(args) == 0 {
+		return
+	}
+
+	// 必须是奇数，如果是偶数则最后一个值忽略
+	if len(args)%2 != 1 {
+		logging.print(errorLog, fmt.Sprintf("msg=%s ignored=%s", IgnoredValuePrompt, args[len(args)-1]))
+		args = args[0 : len(args)-1]
+	}
+
+	// 第一个key加上msg, eg：msg=value, key2=value2, key3=value3
+	args[0] = fmt.Sprintf("msg=%v", args[0])
+
+	// 从第二个开始，双数加上逗号、空格和等号 eg: msg=value, key2=value2, key3=value3
+	for i := 1; i+1 < len(args); i += 2 {
+		args[i] = fmt.Sprintf(", %v=", args[i])
+	}
+
+	var logLevel severity
+
+	switch l {
+	case Infow:
+		logLevel = infoLog
+	case Warnw:
+		logLevel = warningLog
+	case Errorw:
+		logLevel = errorLog
+	case Fatalw:
+		logLevel = fatalLog
+	default:
+		logLevel = infoLog
+	}
+	logging.print(logLevel, args...)
 }
