@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
 
 package pbclient;
 
@@ -30,6 +31,7 @@ message ClientSpec {
   string release_change_failed_reason = 12;
   string failed_detail_reason = 13;
   string client_type = 14;
+  string current_release_name = 15;
 }
 
 // ClientAttachment source resource reference: pkg/dal/table/client.go
@@ -45,4 +47,17 @@ message ClientResource {
   double cpu_max_usage = 2;
   uint64 memory_usage = 3;
   uint64 memory_max_usage = 4;
+}
+
+// ClientMetricQueryCondition 客户端指标查询条件
+message ClientMetricQueryCondition {
+  string uid = 1;
+  string ip = 2;
+  google.protobuf.Struct label = 3;           // 标签
+  string current_release_name = 4;            // 当前版本
+  string target_release_name = 5;             // 目标版本
+  repeated string release_change_status = 6;  // 最近一次拉取状态：Success、Failed、Processing、Skip
+  google.protobuf.Struct annotations = 7;     // 附加信息
+  repeated string online_status = 8;          // 在线状态：online、offline
+  string client_version = 9;                  // 客户端组件版本
 }

@@ -10,10 +10,12 @@
  * limitations under the License.
  */
 
-// Package pbclient xxx
+// Package pbclient xxx.
 package pbclient
 
 import (
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
@@ -49,6 +51,35 @@ func (c *ClientSpec) ClientSpec() *table.ClientSpec {
 	}
 }
 
+// PbClientSpec convert table ClientSpec to pb ClientSpec
+func PbClientSpec(spec *table.ClientSpec) *ClientSpec { //nolint:revive
+	if spec == nil {
+		return nil
+	}
+
+	return &ClientSpec{
+		ClientVersion:     spec.ClientVersion,
+		Ip:                spec.Ip,
+		Labels:            spec.Labels,
+		Annotations:       spec.Annotations,
+		FirstConnectTime:  timestamppb.New(spec.FirstConnectTime),
+		LastHeartbeatTime: timestamppb.New(spec.LastHeartbeatTime),
+		OnlineStatus:      string(spec.OnlineStatus),
+		Resource: &ClientResource{
+			CpuUsage:       spec.Resource.CpuUsage,
+			CpuMaxUsage:    spec.Resource.CpuMaxUsage,
+			MemoryUsage:    spec.Resource.MemoryUsage,
+			MemoryMaxUsage: spec.Resource.MemoryMaxUsage,
+		},
+		CurrentReleaseId:          spec.CurrentReleaseID,
+		TargetReleaseId:           spec.TargetReleaseID,
+		ReleaseChangeStatus:       string(spec.ReleaseChangeStatus),
+		ReleaseChangeFailedReason: string(spec.ReleaseChangeFailedReason),
+		FailedDetailReason:        spec.FailedDetailReason,
+		ClientType:                string(spec.ClientType),
+	}
+}
+
 // ClientAttachment convert pb ClientAttachment to table ClientAttachment
 func (c *ClientAttachment) ClientAttachment() *table.ClientAttachment {
 	return &table.ClientAttachment{
@@ -68,4 +99,29 @@ func PbClientAttachment(attachment *table.ClientAttachment) *ClientAttachment { 
 		BizId: attachment.BizID,
 		AppId: attachment.AppID,
 	}
+}
+
+// PbClient convert table Client to pb Client
+func PbClient(c *table.Client) *Client {
+	if c == nil {
+		return nil
+	}
+
+	return &Client{
+		Id:         c.ID,
+		Spec:       PbClientSpec(c.Spec),
+		Attachment: PbClientAttachment(c.Attachment),
+	}
+}
+
+// PbClients convert table Client to pb Client
+func PbClients(c []*table.Client) []*Client {
+	if c == nil {
+		return make([]*Client, 0)
+	}
+	result := make([]*Client, 0)
+	for _, v := range c {
+		result = append(result, PbClient(v))
+	}
+	return result
 }

@@ -165,6 +165,12 @@ const (
 	Data_DeleteKv_FullMethodName                          = "/pbds.Data/DeleteKv"
 	Data_BatchUpsertKvs_FullMethodName                    = "/pbds.Data/BatchUpsertKvs"
 	Data_UnDeleteKv_FullMethodName                        = "/pbds.Data/UnDeleteKv"
+	Data_ListClientMetrics_FullMethodName                 = "/pbds.Data/ListClientMetrics"
+	Data_ListClientMetricEvents_FullMethodName            = "/pbds.Data/ListClientMetricEvents"
+	Data_ListClientQuerys_FullMethodName                  = "/pbds.Data/ListClientQuerys"
+	Data_CreateClientQuery_FullMethodName                 = "/pbds.Data/CreateClientQuery"
+	Data_UpdateClientQuery_FullMethodName                 = "/pbds.Data/UpdateClientQuery"
+	Data_DeleteClientQuery_FullMethodName                 = "/pbds.Data/DeleteClientQuery"
 	Data_ListInstances_FullMethodName                     = "/pbds.Data/ListInstances"
 	Data_FetchInstanceInfo_FullMethodName                 = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
@@ -335,6 +341,15 @@ type DataClient interface {
 	DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	// client metric related interface
+	ListClientMetrics(ctx context.Context, in *ListClientMetricsReq, opts ...grpc.CallOption) (*ListClientMetricsResp, error)
+	// client metric event related interface
+	ListClientMetricEvents(ctx context.Context, in *ListClientMetricEventsReq, opts ...grpc.CallOption) (*ListClientMetricEventsResp, error)
+	// client query related interface
+	ListClientQuerys(ctx context.Context, in *ListClientQuerysReq, opts ...grpc.CallOption) (*ListClientQuerysResp, error)
+	CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error)
+	UpdateClientQuery(ctx context.Context, in *UpdateClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
 	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
@@ -1576,6 +1591,60 @@ func (c *dataClient) UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...
 	return out, nil
 }
 
+func (c *dataClient) ListClientMetrics(ctx context.Context, in *ListClientMetricsReq, opts ...grpc.CallOption) (*ListClientMetricsResp, error) {
+	out := new(ListClientMetricsResp)
+	err := c.cc.Invoke(ctx, Data_ListClientMetrics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListClientMetricEvents(ctx context.Context, in *ListClientMetricEventsReq, opts ...grpc.CallOption) (*ListClientMetricEventsResp, error) {
+	out := new(ListClientMetricEventsResp)
+	err := c.cc.Invoke(ctx, Data_ListClientMetricEvents_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListClientQuerys(ctx context.Context, in *ListClientQuerysReq, opts ...grpc.CallOption) (*ListClientQuerysResp, error) {
+	out := new(ListClientQuerysResp)
+	err := c.cc.Invoke(ctx, Data_ListClientQuerys_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error) {
+	out := new(CreateClientQueryResp)
+	err := c.cc.Invoke(ctx, Data_CreateClientQuery_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UpdateClientQuery(ctx context.Context, in *UpdateClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UpdateClientQuery_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_DeleteClientQuery_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error) {
 	out := new(ListInstancesResp)
 	err := c.cc.Invoke(ctx, Data_ListInstances_FullMethodName, in, out, opts...)
@@ -1776,6 +1845,15 @@ type DataServer interface {
 	DeleteKv(context.Context, *DeleteKvReq) (*base.EmptyResp, error)
 	BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(context.Context, *UnDeleteKvReq) (*base.EmptyResp, error)
+	// client metric related interface
+	ListClientMetrics(context.Context, *ListClientMetricsReq) (*ListClientMetricsResp, error)
+	// client metric event related interface
+	ListClientMetricEvents(context.Context, *ListClientMetricEventsReq) (*ListClientMetricEventsResp, error)
+	// client query related interface
+	ListClientQuerys(context.Context, *ListClientQuerysReq) (*ListClientQuerysResp, error)
+	CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error)
+	UpdateClientQuery(context.Context, *UpdateClientQueryReq) (*base.EmptyResp, error)
+	DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*base.EmptyResp, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
 	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
@@ -2196,6 +2274,24 @@ func (UnimplementedDataServer) BatchUpsertKvs(context.Context, *BatchUpsertKvsRe
 }
 func (UnimplementedDataServer) UnDeleteKv(context.Context, *UnDeleteKvReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteKv not implemented")
+}
+func (UnimplementedDataServer) ListClientMetrics(context.Context, *ListClientMetricsReq) (*ListClientMetricsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClientMetrics not implemented")
+}
+func (UnimplementedDataServer) ListClientMetricEvents(context.Context, *ListClientMetricEventsReq) (*ListClientMetricEventsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClientMetricEvents not implemented")
+}
+func (UnimplementedDataServer) ListClientQuerys(context.Context, *ListClientQuerysReq) (*ListClientQuerysResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClientQuerys not implemented")
+}
+func (UnimplementedDataServer) CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateClientQuery not implemented")
+}
+func (UnimplementedDataServer) UpdateClientQuery(context.Context, *UpdateClientQueryReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateClientQuery not implemented")
+}
+func (UnimplementedDataServer) DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteClientQuery not implemented")
 }
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
@@ -4669,6 +4765,114 @@ func _Data_UnDeleteKv_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListClientMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClientMetricsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListClientMetrics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListClientMetrics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListClientMetrics(ctx, req.(*ListClientMetricsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListClientMetricEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClientMetricEventsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListClientMetricEvents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListClientMetricEvents_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListClientMetricEvents(ctx, req.(*ListClientMetricEventsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListClientQuerys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClientQuerysReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListClientQuerys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListClientQuerys_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListClientQuerys(ctx, req.(*ListClientQuerysReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_CreateClientQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateClientQueryReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CreateClientQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CreateClientQuery_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CreateClientQuery(ctx, req.(*CreateClientQueryReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UpdateClientQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateClientQueryReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateClientQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UpdateClientQuery_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateClientQuery(ctx, req.(*UpdateClientQueryReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_DeleteClientQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteClientQueryReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).DeleteClientQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_DeleteClientQuery_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).DeleteClientQuery(ctx, req.(*DeleteClientQueryReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListInstancesReq)
 	if err := dec(in); err != nil {
@@ -5291,6 +5495,30 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnDeleteKv",
 			Handler:    _Data_UnDeleteKv_Handler,
+		},
+		{
+			MethodName: "ListClientMetrics",
+			Handler:    _Data_ListClientMetrics_Handler,
+		},
+		{
+			MethodName: "ListClientMetricEvents",
+			Handler:    _Data_ListClientMetricEvents_Handler,
+		},
+		{
+			MethodName: "ListClientQuerys",
+			Handler:    _Data_ListClientQuerys_Handler,
+		},
+		{
+			MethodName: "CreateClientQuery",
+			Handler:    _Data_CreateClientQuery_Handler,
+		},
+		{
+			MethodName: "UpdateClientQuery",
+			Handler:    _Data_UpdateClientQuery_Handler,
+		},
+		{
+			MethodName: "DeleteClientQuery",
+			Handler:    _Data_DeleteClientQuery_Handler,
 		},
 		{
 			MethodName: "ListInstances",

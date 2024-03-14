@@ -13,13 +13,17 @@
 package service
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	pbce "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client-event"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 func (s *Service) doBatchCreateClientEvents(kt *kit.Kit, tx *gen.QueryTx, clientEvents []*pbce.ClientEvent, // nolint
@@ -181,4 +185,78 @@ func (s *Service) handleBatchCreateClientEvents(clientEventsData []*pbce.ClientE
 	}
 	clientEUpdateData = append(clientEUpdateData, otherCreateData...)
 	return toCreate, clientEUpdateData
+}
+
+// ListClientMetricEvents List client metric details query
+func (s *Service) ListClientMetricEvents(ctx context.Context, req *pbds.ListClientMetricEventsReq) (
+	*pbds.ListClientMetricEventsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	var err error
+	var starTime, endTime time.Time
+	if len(req.GetStartTime()) > 0 {
+		starTime, err = time.Parse("2006-01-02", req.GetStartTime())
+		if err != nil {
+			return nil, err
+		}
+	}
+	if len(req.GetEndTime()) > 0 {
+		endTime, err = time.Parse("2006-01-02", req.GetEndTime())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	items, count, err := s.dao.ClientEvent().List(grpcKit, req.GetBizId(), req.GetAppId(), req.GetClientMetricsId(),
+		starTime,
+		endTime,
+		req.GetSearchValue(),
+		req.GetOrder(),
+		&types.BasePage{
+			Start: req.GetStart(),
+			Limit: uint(req.GetLimit()),
+			All:   req.GetAll(),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	// 处理当前和目标版本名称
+	releaseMap := make(map[uint32]struct{})
+	for _, v := range items {
+		if v.Spec.OriginalReleaseID > 0 {
+			releaseMap[v.Spec.OriginalReleaseID] = struct{}{}
+		}
+	}
+	for _, v := range items {
+		if v.Spec.TargetReleaseID > 0 {
+			releaseMap[v.Spec.TargetReleaseID] = struct{}{}
+		}
+	}
+
+	releaseIDs := make([]uint32, 0, len(releaseMap))
+	for id := range releaseMap {
+		releaseIDs = append(releaseIDs, id)
+	}
+	releases, err := s.dao.Release().ListAllByIDs(grpcKit, releaseIDs, req.BizId)
+	if err != nil {
+		return nil, err
+	}
+
+	releaseNames := map[uint32]string{}
+	for _, v := range releases {
+		releaseNames[v.ID] = v.Spec.Name
+	}
+
+	data := pbce.PbClientEvents(items)
+	for _, v := range data {
+		v.OriginalReleaseName = releaseNames[v.Spec.OriginalReleaseId]
+		v.TargetReleaseName = releaseNames[v.Spec.TargetReleaseId]
+	}
+
+	resp := &pbds.ListClientMetricEventsResp{
+		Count:   uint32(count),
+		Details: data,
+	}
+	return resp, nil
 }
