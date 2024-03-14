@@ -4,30 +4,6 @@
       <div class="btns">
         <bk-button text theme="primary" @click="handleSelectAll">{{ t('全选') }}</bk-button>
         <bk-button text theme="primary" @click="handleClearAll">{{ t('全不选') }}</bk-button>
-        <bk-select
-          class="version-select"
-          :no-data-text="t('暂无已上线的可选版本')"
-          :multiple="true"
-          :filterable="true"
-          :input-search="false"
-          :show-select-all="true"
-          :popover-min-width="240"
-          @change="handleSelectVersion"
-          @toggle="versionSelectorOpen = $event">
-          <template #trigger>
-            <bk-button text theme="primary">
-              {{ t('按版本选择') }}
-              <AngleUp class="arrow-icon" v-if="versionSelectorOpen" />
-              <AngleDown class="arrow-icon" v-else />
-            </bk-button>
-          </template>
-          <!-- <bk-option v-if="props.versionList.length > 0" :value="0">全选</bk-option> -->
-          <bk-option
-            v-for="version in props.versionList"
-            :key="version.id"
-            :label="version.spec.name"
-            :value="version.id" />
-        </bk-select>
       </div>
       <bk-input
         v-model="searchStr"
@@ -85,7 +61,7 @@
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { Search, AngleDown, AngleUp } from 'bkui-vue/lib/icon';
+  import { Search } from 'bkui-vue/lib/icon';
   import { IGroupToPublish } from '../../../../../../../../types/group';
   import { IConfigVersion } from '../../../../../../../../types/config';
   import RuleTag from '../../../../../groups/components/rule-tag.vue';
@@ -132,7 +108,6 @@
   const emits = defineEmits(['change']);
 
   const allGroupNode = ref<IGroupNodeData[]>([]); // 树中所有的分组叶子节点
-  const versionSelectorOpen = ref(false);
   const searchStr = ref('');
   const treeRef = ref();
   const isSearchEmpty = ref(false);
@@ -191,34 +166,6 @@
       return res;
     });
     emits('change', hasCheckedGroups);
-  };
-
-  // 按版本选择
-  const handleSelectVersion = (val: number[]) => {
-    const list: IGroupToPublish[] = [];
-    val.forEach((id) => {
-      const version = props.versionList.find((item) => item.id === id);
-      if (version) {
-        version.status.released_groups.forEach((releaseItem) => {
-          if (!list.find((item) => releaseItem.id === item.id)) {
-            const group = allGroupNode.value.find((groupItem) => groupItem.id === releaseItem.id);
-            if (group) {
-              list.push(group);
-            }
-          }
-        });
-      }
-    });
-    // 调整分组上线时，当前版本已上线分组不可取消
-    props.releasedGroups.forEach((id) => {
-      if (!list.find((item) => item.id === id)) {
-        const group = allGroupNode.value.find((groupItem) => groupItem.id === id);
-        if (group) {
-          list.push(group);
-        }
-      }
-    });
-    emits('change', list);
   };
 
   // 选中/取消选中节点

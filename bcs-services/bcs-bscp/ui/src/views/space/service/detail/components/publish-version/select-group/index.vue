@@ -33,9 +33,7 @@
 </template>
 <script setup lang="ts">
   import { ref, onMounted } from 'vue';
-  import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
-  import Message from 'bkui-vue/lib/message';
   import useGlobalStore from '../../../../../../../store/global';
   import useServiceStore from '../../../../../../../store/service';
   import { IConfigVersion } from '../../../../../../../../types/config';
@@ -47,7 +45,6 @@
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { appData } = storeToRefs(useServiceStore());
-  const { t } = useI18n();
 
   const props = withDefaults(
     defineProps<{
@@ -106,13 +103,6 @@
   };
 
   const validate = () => {
-    if (props.releaseType === 'exclude' && groupRef.value.selectedGroup.length === 0) {
-      Message({
-        theme: 'error',
-        message: t('请至少选择一个排除分组实例'),
-      });
-      return false;
-    }
     return true;
   };
 

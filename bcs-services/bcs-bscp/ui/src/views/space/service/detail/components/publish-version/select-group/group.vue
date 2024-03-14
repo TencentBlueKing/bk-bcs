@@ -19,27 +19,6 @@
             @change="handleSelectGroup">
           </GroupTree>
         </bk-radio>
-        <bk-radio label="exclude" :disabled="isExcludeModeDisabled">
-          <span
-            v-bk-tooltips="{
-              disabled: !isExcludeModeDisabled,
-              placement: 'top-start',
-              content: t('其它版本没有上线任何分组（默认版本除外），无法使用此选项'),
-            }">
-            {{ t('排除分组实例上线') }}
-          </span>
-          <GroupTree
-            v-if="type === 'exclude'"
-            :group-list="
-              props.groupList.filter((item) => item.release_id !== 0 && item.release_id !== props.releasedId)
-            "
-            :group-list-loading="groupListLoading"
-            :version-list="versionList"
-            :version-list-loading="versionListLoading"
-            :value="selectedGroup"
-            @change="handleSelectGroup">
-          </GroupTree>
-        </bk-radio>
       </bk-radio-group>
     </div>
   </div>
@@ -77,23 +56,8 @@
   const type = ref(props.releaseType);
 
   // 节点树中选中的分组节点
-  // 排除分组实例上线时，选中的分组节点为：非默认节点&&不在待上线分组列表中&&在其他版本中上线的分组
   const selectedGroup = computed(() => {
-    if (type.value === 'exclude') {
-      return props.groupList.filter((group) => {
-        if (group.id === 0 || group.release_id === 0) {
-          return false;
-        }
-        return props.value.findIndex((item) => item.id === group.id) === -1;
-      });
-    }
     return props.value;
-  });
-
-  // 排除分组实例上线逻辑：非当前上线版本下的已上线分组为空
-  const isExcludeModeDisabled = computed(() => {
-    const groups = props.groupList.filter((g) => g.id !== 0 && g.release_id > 0 && g.release_id !== props.releasedId);
-    return groups.length === 0;
   });
 
   // 切换选择分组类型
@@ -104,26 +68,12 @@
     } else if (val === 'select') {
       const list = props.groupList.filter((group) => props.releasedGroups.includes(group.id));
       handleSelectGroup(list);
-    } else {
-      handleSelectGroup([]);
     }
     emits('releaseTypeChange', val);
   };
 
   const handleSelectGroup = (val: IGroupToPublish[]) => {
-    if (type.value === 'exclude') {
-      // 排除分组实例上线时，实际需要上线的分组为：默认分组和未被排除且已上线的分组
-      const list: IGroupToPublish[] = props.groupList.filter((group) => {
-        // 默认分组
-        if (group.id === 0) {
-          return true;
-        }
-        return group.release_id > 0 && val.findIndex((item) => item.id === group.id) === -1;
-      });
-      emits('change', list);
-    } else {
-      emits('change', val);
-    }
+    emits('change', val);
   };
 
   defineExpose({
