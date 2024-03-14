@@ -378,7 +378,7 @@ export default {
   描述: 'description',
   '确认删除该全局变量？': 'Are you sure to delete this global variable?',
   '一旦删除，该操作将无法撤销，服务配置文件中不可再引用该全局变量，请谨慎操作': 'Once deleted, the operation cannot be undone, and the global variable can no longer be referenced in the service configuration file. Please operate with caution.',
-  '定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如{{ .bk_bscp_appid }},变量使用详情请参考：': 'After defining global variables, they can be referenced by all service configuration files under the business. Use go template syntax for reference, such as {{ .bk_bscp_appid }}. For details on variable usage, please refer to:',
+  '定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如,变量使用详情请参考：': 'After defining global variables, they can be referenced by all service configuration files under the business. Use go template syntax for reference, such as {var}. For details on variable usage, please refer to:',
   删除变量成功: 'Delete variable successfully',
   创建: 'Create',
   创建变量成功: 'Variable created successfully',
@@ -616,4 +616,7 @@ export default {
   产品官网: 'Product official website',
   请输入: 'Please enter',
   确认: 'Confirm',
+  变量名称已复制: 'The variable name has been copied',
+  单行配置: 'Single-row config',
+  多行配置: 'Multi-row config',
 };

@@ -139,7 +139,7 @@
       const key = variablesContent[0];
       const type = variablesContent[1];
       const value = variablesContent[2];
-      if (variablesContent.length < 3 || variablesContent.length > 4) {
+      if (variablesContent.length < 3) {
         errorLine.value.push({
           errorInfo: t('请检查是否已正确使用分隔符'),
           lineNumber: index + 1,

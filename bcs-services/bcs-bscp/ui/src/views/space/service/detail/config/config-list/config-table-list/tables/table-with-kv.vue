@@ -88,7 +88,7 @@
     :editable="true"
     @confirm="getListData" />
   <ViewConfigKv v-model:show="viewPanelShow" :config="activeConfig" />
-  <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config-kv="diffConfig" />
+  <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-kv-config-id="diffConfig" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
     :title="t('确认删除该配置项？')"
