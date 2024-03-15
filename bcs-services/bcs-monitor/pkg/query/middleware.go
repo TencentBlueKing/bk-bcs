@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql/parser"
@@ -77,7 +77,7 @@ func (t *TenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 
 		scopeClusteID := r.Header.Get("X-Scope-ClusterId")
 		requestID := tracing.RequestIDValue(r, true)
-		logger.Infow("handle request",
+		blog.Infow("handle request",
 			"request_id", requestID,
 			"handler_name", handlerName,
 			"label_matchers", fmt.Sprintf("%s", labelMatchers),

@@ -19,7 +19,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/prompb"
@@ -170,7 +170,7 @@ func (s *StaticMetricsStore) SendSeries(
 
 // Series 需要继承函数实现
 func (s *StaticMetricsStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
-	logger.Infow("Series func not implemented", "PromQL", clientutil.DumpPromQL(r), "minTime", r.MinTime, "maxTime",
+	blog.Infow("Series func not implemented", "PromQL", clientutil.DumpPromQL(r), "minTime", r.MinTime, "maxTime",
 		r.MaxTime)
 	return nil
 }
