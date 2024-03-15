@@ -1,33 +1,27 @@
 <template>
-  <div v-bkloading="{ loading: groupListLoading, opacity: 1 }" class="select-group-wrapper">
-    <div class="group-tree-area">
-      <Group
-        v-if="!groupListLoading"
-        ref="groupRef"
-        :group-list="groupList"
-        :group-list-loading="groupListLoading"
-        :version-list="versionList"
-        :version-list-loading="versionListLoading"
-        :released-groups="props.releasedGroups"
-        :release-type="releaseType"
-        :released-id="props.releaseId"
-        :value="props.groups"
-        @release-type-change="emits('releaseTypeChange', $event)"
-        @change="emits('change', $event)" />
-    </div>
-    <div class="preview-area">
-      <Preview
-        :group-list="groupList"
-        :group-list-loading="groupListLoading"
-        :release-type="releaseType"
-        :version-list="versionList"
-        :version-list-loading="versionListLoading"
-        :is-default-group-released="isDefaultGroupReleased"
-        :released-groups="props.releasedGroups"
-        :value="props.groups"
-        @diff="emits('openPreviewVersionDiff', $event)"
-        @change="emits('change', $event)" />
-    </div>
+  <div v-bkloading="{ loading: groupListLoading || versionListLoading, opacity: 1 }" class="select-group-wrapper">
+    <template v-if="!groupListLoading && !versionListLoading">
+      <div class="group-tree-area">
+        <Group
+          :group-list="groupList"
+          :version-list="versionList"
+          :released-groups="props.releasedGroups"
+          :release-type="releaseType"
+          :disable-select="props.disableSelect"
+          :value="props.groups"
+          @release-type-change="emits('releaseTypeChange', $event)"
+          @change="emits('change', $event)" />
+      </div>
+      <div class="preview-area">
+        <Preview
+          :group-list="groupList"
+          :release-type="releaseType"
+          :released-groups="props.releasedGroups"
+          :value="props.groups"
+          @diff="emits('openPreviewVersionDiff', $event)"
+          @change="emits('change', $event)" />
+      </div>
+    </template>
   </div>
 </template>
 <script setup lang="ts">
@@ -48,31 +42,28 @@
   const props = withDefaults(
     defineProps<{
       releaseType?: string;
-      groups: IGroupToPublish[];
-      versionStatus: string;
-      releaseId: number;
       releasedGroups?: number[];
+      groups: IGroupToPublish[];
+      disableSelect?: boolean; // 是否隐藏【选择分组实例上线】方式
     }>(),
     {
       releaseType: 'select',
-      releaseId: 0,
+      disableSelect: false,
     },
   );
   const emits = defineEmits(['openPreviewVersionDiff', 'releaseTypeChange', 'change']);
 
   const groupListLoading = ref(true);
   const groupList = ref<IGroupToPublish[]>([]);
-  const isDefaultGroupReleased = ref(false); // 默认分组是否已上线
   const versionListLoading = ref(true);
   const versionList = ref<IConfigVersion[]>([]);
-  const groupRef = ref();
 
   onMounted(() => {
     getAllGroupData();
     getAllVersionData();
   });
 
-  // 获取所有分组，并转化为tree组件需要的结构
+  // 获取所有分组，并组装tree组件节点需要的数据
   const getAllGroupData = async () => {
     groupListLoading.value = true;
     const res = await getServiceGroupList(spaceId.value, appData.value.id as number);
@@ -82,10 +73,7 @@
       const rules = selector.labels_and || selector.labels_or || [];
       return { id: group_id, name: group_name, release_id, release_name, rules };
     });
-    const defaultGroup = groupList.value.find((group) => group.id === 0);
-    if (defaultGroup) {
-      isDefaultGroupReleased.value = defaultGroup.release_id > 0;
-    }
+
     groupListLoading.value = false;
   };
 
@@ -93,21 +81,12 @@
   const getAllVersionData = async () => {
     versionListLoading.value = true;
     const res = await getConfigVersionList(spaceId.value, Number(appData.value.id), { start: 0, all: true });
-    // 只需要已上线版本，且版本中不包含默认分组
+    // 只需要已上线版本
     versionList.value = res.data.details.filter((item: IConfigVersion) => {
-      const { publish_status, released_groups } = item.status;
-      return publish_status !== 'not_released' && released_groups.findIndex((group) => group.id === 0) === -1;
+      return item.status.publish_status !== 'not_released';
     });
     versionListLoading.value = false;
   };
-
-  const validate = () => {
-    return true;
-  };
-
-  defineExpose({
-    validate,
-  });
 </script>
 <style lang="scss" scoped>
   .select-group-wrapper {

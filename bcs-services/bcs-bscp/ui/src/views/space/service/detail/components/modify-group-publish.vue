@@ -23,11 +23,10 @@
         </template>
         <select-group
           ref="selectGroupRef"
-          :release-type="releaseType"
           :groups="groups"
-          :version-status="versionData.status.publish_status"
-          :release-id="versionData.id"
+          :release-type="releaseType"
           :released-groups="releasedGroups"
+          :disable-select="disableSelect"
           @open-preview-version-diff="openPreviewVersionDiff"
           @release-type-change="releaseType = $event"
           @change="groups = $event">
@@ -60,7 +59,7 @@
   </section>
 </template>
 <script setup lang="ts">
-  import { ref, computed } from 'vue';
+  import { ref, computed, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
   import { InfoBox } from 'bkui-vue';
@@ -100,11 +99,12 @@
   const isDiffSliderShow = ref(false);
   const isConfirmDialogShow = ref(false);
   const releaseType = ref('select');
+  const disableSelect = ref(false);
   const groups = ref<IGroupToPublish[]>([]);
   const baseVersionId = ref(0);
   const selectGroupRef = ref();
 
-  // 已上线分组
+  // 当前版本已上线分组id集合
   const releasedGroups = computed(() => versionData.value.status.released_groups.map((group) => group.id));
 
   // 包含分组变更的版本，用来对比线上版本
@@ -136,16 +136,27 @@
     },
   ]);
 
+  watch(
+    () => versionData.value,
+    () => {
+      if (versionData.value.status.released_groups.some((group) => group.id === 0)) {
+        releaseType.value = 'all';
+        disableSelect.value = true;
+      } else {
+        releaseType.value = 'select';
+        disableSelect.value = false;
+      }
+    },
+  );
+
   // 判断是否需要对比上线版本
   const handlePublishOrOpenDiff = () => {
-    if (selectGroupRef.value.validate()) {
-      if (diffableVersionList.value.length) {
-        baseVersionId.value = diffableVersionList.value[0].id;
-        isDiffSliderShow.value = true;
-        return;
-      }
-      handleOpenPublishDialog();
+    if (diffableVersionList.value.length) {
+      baseVersionId.value = diffableVersionList.value[0].id;
+      isDiffSliderShow.value = true;
+      return;
     }
+    handleOpenPublishDialog();
   };
 
   // 获取所有已上线版本（已上线或灰度中）

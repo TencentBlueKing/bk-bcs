@@ -24,8 +24,6 @@
         <select-group
           :release-type="releaseType"
           :groups="groups"
-          :version-status="versionData.status.publish_status"
-          :release-id="versionData.id"
           @open-preview-version-diff="openPreviewVersionDiff"
           @release-type-change="releaseType = $event"
           @change="groups = $event" />
@@ -68,7 +66,6 @@
   import { IGroupToPublish } from '../../../../../../../types/group';
   import useServiceStore from '../../../../../../store/service';
   import useConfigStore from '../../../../../../store/config';
-  // import { permissionCheck } from '../../../../../../api/index';
   import VersionLayout from '../../config/components/version-layout.vue';
   import ConfirmDialog from './confirm-dialog.vue';
   import SelectGroup from './select-group/index.vue';
