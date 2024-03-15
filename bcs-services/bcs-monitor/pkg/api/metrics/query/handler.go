@@ -16,6 +16,9 @@ package query
 import (
 	"context"
 
+	"github.com/thanos-io/thanos/pkg/store"
+	"k8s.io/klog/v2"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
@@ -60,4 +63,15 @@ func GetMasterNodeMatch(ctx context.Context, clusterID string) (string, string, 
 		return "", "", err
 	}
 	return utils.StringJoinWithRegex(nodeList, "|", ".*"), utils.StringJoinWithRegex(nodeNameList, "|", "$"), nil
+}
+
+// GetMasterNodeMatchIgnoreErr 按集群node节点正则匹配
+func GetMasterNodeMatchIgnoreErr(ctx context.Context, clusterID string) (string, string, bool) {
+	nodeList, nodeNameList, err := GetMasterNodeMatch(ctx, clusterID)
+	if err != nil {
+		klog.InfoS("get node error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
+			"err", err.Error())
+		return "", "", false
+	}
+	return nodeList, nodeNameList, true
 }

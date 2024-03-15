@@ -20,7 +20,11 @@ import (
 
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
+	"github.com/thanos-io/thanos/pkg/store"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/klog/v2"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
@@ -229,6 +233,86 @@ func GetNodeMatchWithScale(ctx context.Context, clusterId string, scale int) ([]
 	}
 	resslice := chunkSlice(nodeList, nodeNameList, scale)
 	return resslice, nil
+}
+
+// GetNodeMatchIgnoreErr 按集群node节点正则匹配
+func GetNodeMatchIgnoreErr(ctx context.Context, clusterID string) (string, string, bool) {
+	if !isClusterRunning(clusterID) {
+		return "", "", false
+	}
+	nodeList, nodeNameList, err := GetNodeMatch(ctx, clusterID)
+	if err != nil {
+		return "", "", false
+	}
+	return nodeList, nodeNameList, true
+}
+
+// GetNodeInfoIngoreErr 获取节点信息 返回相应的节点对象
+func GetNodeInfoIngoreErr(ctx context.Context, clusterID, nodeName string) (*v1.Node, bool) {
+	if !isClusterRunning(clusterID) {
+		return nil, false
+	}
+	node, err := k8sclient.GetNodeInfo(ctx, clusterID, nodeName)
+	if err != nil {
+		klog.InfoS("get node info error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
+			"node", node, "err", err)
+		return nil, false
+	}
+	return node, true
+}
+
+// GetNodeCRVersionByNameIngErr 通过节点名称获取容器运行时版本
+func GetNodeCRVersionByNameIngErr(ctx context.Context, clusterID, nodeName string) (string, bool) {
+	if !isClusterRunning(clusterID) {
+		return "", false
+	}
+	version, err := GetNodeCRVersionByName(ctx, clusterID, nodeName)
+	if err != nil {
+		klog.InfoS("get node cr version error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
+			"node_name", nodeName, "err", err)
+		return "", false
+	}
+	return version, true
+}
+
+// GetNodeMatchByNameIngErr 按集群node节点正则匹配
+func GetNodeMatchByNameIngErr(ctx context.Context, clusterID, nodeName string) (string, string, bool) {
+	if !isClusterRunning(clusterID) {
+		return "", "", false
+	}
+	ipReg, ip, err := GetNodeMatchByName(ctx, clusterID, nodeName)
+	if err != nil {
+		klog.InfoS("get cluster nodes error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
+			"err", err)
+		return "", "", false
+	}
+	return ipReg, ip, true
+}
+
+// GetNodeMatchWithScaleIngErr 处理集群的节点列表，按照给定的粒度划分
+func GetNodeMatchWithScaleIngErr(ctx context.Context, clusterID string, scale int) ([]*ResultTuple, bool) {
+	if !isClusterRunning(clusterID) {
+		return nil, false
+	}
+	resslice, err := GetNodeMatchWithScale(ctx, clusterID, scale)
+	if err != nil {
+		klog.InfoS("get cluster nodes error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
+			"err", err)
+		return nil, false
+	}
+	return resslice, true
+}
+
+// isClusterRunning 判断集群是否运行中
+func isClusterRunning(clusterID string) bool {
+	cls, err := bcs.GetCluster(clusterID)
+	if err != nil {
+		return false
+	}
+	if cls.Status != "RUNNING" {
+		return false
+	}
+	return true
 }
 
 func chunkSlice(nodeList []string, nodeNameList []string, chunkSize int) []*ResultTuple {
