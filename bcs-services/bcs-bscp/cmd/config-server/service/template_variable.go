@@ -192,13 +192,14 @@ func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbcs.ImportT
 
 		var fields []string
 		if req.Separator == whiteSpace {
-			fields = strings.Fields(line)
+			fields = strings.SplitN(line, " ", 4)
 		} else {
-			fields = strings.Split(line, req.Separator)
+			fields = strings.SplitN(line, req.Separator, 4)
 		}
+
 		// validate variables content
-		if len(fields) != 3 && len(fields) != 4 {
-			return nil, fmt.Errorf("the line [%s] is not valid, which must be 3 or 4 fields", line)
+		if len(fields) < 3 {
+			return nil, fmt.Errorf("the line [%s] is not valid, minimum is 3 fields", line)
 		}
 		if !strings.HasPrefix(strings.ToLower(fields[0]), constant.TemplateVariablePrefix) {
 			return nil, fmt.Errorf("template variable name must start with %s", constant.TemplateVariablePrefix)
@@ -209,9 +210,11 @@ func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbcs.ImportT
 			Type:       strings.TrimSpace(fields[1]),
 			DefaultVal: strings.TrimSpace(fields[2]),
 		}
-		if len(fields) == 4 {
+
+		if len(fields) > 3 {
 			v.Memo = strings.TrimSpace(fields[3])
 		}
+
 		vars = append(vars, v)
 	}
 
