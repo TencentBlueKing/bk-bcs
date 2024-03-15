@@ -55,9 +55,9 @@ func NewBKMonitor() *BKMonitor {
 // HandleBKMonitorClusterMetric bkmonitor metrics 处理
 func HandleBKMonitorClusterMetric(ctx context.Context, projectID, clusterID string, promql string, start,
 	end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	nodeSlice, err := base.GetNodeMatchWithScale(ctx, clusterID, scale)
-	if err != nil {
-		return nil, err
+	nodeSlice, ok := base.GetNodeMatchWithScaleIngErr(ctx, clusterID, scale)
+	if !ok {
+		return nil, nil
 	}
 	if len(nodeSlice) == 0 {
 		return nil, nil

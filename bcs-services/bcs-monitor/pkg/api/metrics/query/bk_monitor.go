@@ -45,9 +45,9 @@ func (h BKMonitorHandler) handleBKMonitorClusterMetric(c *rest.Context, promql s
 		return promclient.ResultData{}, err
 	}
 
-	_, nodeNameMatch, err := GetMasterNodeMatch(c.Request.Context(), c.ClusterId)
-	if err != nil {
-		return promclient.ResultData{}, err
+	_, nodeNameMatch, ok := GetMasterNodeMatchIgnoreErr(c.Request.Context(), c.ClusterId)
+	if !ok {
+		return promclient.ResultData{}, nil
 	}
 
 	nodeFormat := ""
@@ -77,9 +77,9 @@ func (h BKMonitorHandler) handleBKMonitorClusterMetric(c *rest.Context, promql s
 // GetClusterOverview 获取集群概览
 // nolint
 func (h BKMonitorHandler) GetClusterOverview(c *rest.Context) (ClusterOverviewMetric, error) {
-	_, nodeNameMatch, err := GetMasterNodeMatch(c.Request.Context(), c.ClusterId)
-	if err != nil {
-		return ClusterOverviewMetric{}, err
+	_, nodeNameMatch, ok := GetMasterNodeMatchIgnoreErr(c.Request.Context(), c.ClusterId)
+	if !ok {
+		return ClusterOverviewMetric{}, nil
 	}
 
 	nodeFormat := ""
