@@ -312,6 +312,10 @@ const (
 	CloudImport = "cloud"
 	// ImportType cloud import type
 	ImportType = "importType"
+	// ClusterResourceGroup cluster resource group
+	ClusterResourceGroup = "clusterResourceGroup"
+	// NodeResourceGroup xxx
+	NodeResourceGroup = "nodeResourceGroup"
 
 	// CloudProjectId cloud project id
 	CloudProjectId = "cloudProjectId"

@@ -23,6 +23,8 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var clusterMgr sync.Once
@@ -82,9 +84,33 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// GetCluster get kubenretes cluster detail information according cloudprovider
+// GetCluster get kubernetes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("create azure client failed, %v", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	// get vpcID for cluster
+	ng, ok := opt.Cluster.ExtraInfo[common.NodeResourceGroup]
+	if !ok {
+		return nil, fmt.Errorf("get azure nodeResourceGroup failed,"+
+			" no such info in cluster[%s] extraInfo", opt.Cluster.ClusterID)
+	}
+	vn, err := client.ListVirtualNetwork(ctx, ng)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(vn) == 0 {
+		return nil, fmt.Errorf("get VPC failed for cluster[%s], empty response", opt.Cluster.ClusterID)
+	}
+
+	opt.Cluster.VpcID = *vn[0].Name
+
+	return opt.Cluster, nil
 }
 
 // ListCluster get cloud cluster list by region
@@ -147,7 +173,16 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 
 // ListOsImage list image os
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	if opt == nil || opt.Account == nil {
+		return nil, cloudprovider.ErrCloudCredentialLost
+	}
+	account := opt.Account
+	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 ||
+		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 {
+		return nil, fmt.Errorf("azure ListOsImage lost authoration")
+	}
+
+	return utils.AKSImageOsList, nil
 }
 
 // AddSubnetsToCluster add subnets to cluster
@@ -184,4 +219,3 @@ func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto
 	nodes []*proto.ClusterNode) bool {
 	return true
 }
-

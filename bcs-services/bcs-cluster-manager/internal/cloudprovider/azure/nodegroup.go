@@ -450,7 +450,7 @@ func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *p
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	pool, err := client.GetPoolAndReturn(ctx, cluster.SystemID, group.CloudNodeGroupID)
+	pool, err := client.GetPoolAndReturn(ctx, "", cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {
 		return errors.Wrapf(err, "UpdateNodeGroup: call GetAgentPool api failed")
 	}
@@ -464,7 +464,7 @@ func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *p
 	// update agent pool
 	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	if _, err = client.UpdatePoolAndReturn(ctx, pool, cluster.SystemID, *pool.Name); err != nil {
+	if _, err = client.UpdatePoolAndReturn(ctx, pool, "", cluster.SystemID, *pool.Name); err != nil {
 		return errors.Wrapf(err, "UpdateNodeGroup: call UpdateAgentPool api failed")
 	}
 
@@ -515,7 +515,7 @@ func (ng *NodeGroup) scaleUpPreCheck(clusterID, cloudID, nodeGroupID string) err
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer cancel()
-	pool, err := client.GetPoolAndReturn(ctx, info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
+	pool, err := client.GetPoolAndReturn(ctx, "", info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
 	if err != nil {
 		return errors.Wrapf(err, "call GetPoolAndReturn failed")
 	}

@@ -90,7 +90,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	cls.KubeConfig, _ = encrypt.Encrypt(nil, kubeConfig)
 
 	// cluster cloud basic setting
-	clusterBasicSettingByGKE(cls, cluster)
+	clusterBasicSettingByGKE(cls, cluster, opt)
 	// cluster cloud network setting
 	clusterNetworkSettingByGKE(cls, cluster)
 	// cluster cloud advanced setting
@@ -122,10 +122,12 @@ func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption, clusterName 
 	return cluster, nil
 }
 
-func clusterBasicSettingByGKE(cls *cmproto.Cluster, cluster *container.Cluster) {
+func clusterBasicSettingByGKE(cls *cmproto.Cluster, cluster *container.Cluster,
+	opt *cloudprovider.SyncClusterCloudInfoOption) {
 	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
 		Version:     cluster.CurrentMasterVersion,
 		VersionName: cluster.CurrentMasterVersion,
+		Area:        opt.Area,
 	}
 	if cluster.NodeConfig != nil {
 		cls.ClusterBasicSettings.OS = cluster.NodeConfig.ImageType

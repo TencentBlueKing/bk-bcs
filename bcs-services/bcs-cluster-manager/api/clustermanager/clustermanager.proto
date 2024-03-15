@@ -5374,6 +5374,10 @@ message ImportCloudMode {
     title: "inter",
     description: "默认外网方式导入, 为true时候以内网方式导入. 该字段仅对云导入生效"
   }];
+  string resourceGroup = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceGroup",
+    description: "集群所在的资源组(azure云)"
+  }];
 }
 
 message ImportClusterReq {
@@ -5509,6 +5513,10 @@ message ImportClusterReq {
     title: "accountID",
     description: "导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息"
   },(validate.rules).string = {max_len : 1024}];
+  CloudArea area = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "area",
+    description: "集群维度的云区域信息(用户不指定, 则使用默认云区域 0)"
+  }];
 }
 
 message ImportClusterResp {

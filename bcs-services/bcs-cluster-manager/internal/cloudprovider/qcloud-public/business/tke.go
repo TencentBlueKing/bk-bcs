@@ -16,7 +16,6 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"strconv"
 	"strings"
 	"time"
@@ -24,12 +23,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
 	qcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -1049,4 +1050,24 @@ func DeleteTkeClusterByClusterId(ctx context.Context, opt *cloudprovider.CommonO
 	blog.Infof("DeleteTkeClusterByClusterId[%s] deleteCluster[%s] success", taskID, clsId)
 
 	return nil
+}
+
+// UpdateNodePoolScheduleStatus update nodePool schedule state 默认值为0，表示参与调度；非0表示不参与调度
+func UpdateNodePoolScheduleStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeSchedule int64) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	tkeCli, err := api.NewTkeClient(info.CmOption)
+	if err != nil {
+		blog.Errorf("DeleteTkeClusterByClusterId[%s] init tkeClient failed: %v", taskID, err)
+		return err
+	}
+
+	req := tke.NewModifyClusterNodePoolRequest()
+
+	req.ClusterId = qcommon.StringPtr(info.Cluster.GetSystemID())
+	req.NodePoolId = qcommon.StringPtr(info.NodeGroup.GetCloudNodeGroupID())
+	req.Unschedulable = qcommon.Int64Ptr(nodeSchedule)
+
+	// 设置加入的节点是否参与调度，
+	return tkeCli.ModifyClusterNodePool(req)
 }

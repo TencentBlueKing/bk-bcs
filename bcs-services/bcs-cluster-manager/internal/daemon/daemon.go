@@ -73,7 +73,7 @@ func (d *Daemon) InitDaemon(ctx context.Context) {
 
 	go d.simpleDaemon(ctx, &wg, func() {
 		d.reportClusterHealthStatus(errChan)
-	}, 60)
+	}, 30)
 
 	go d.simpleDaemon(ctx, &wg, func() {
 		d.reportClusterGroupNodeNum(errChan)

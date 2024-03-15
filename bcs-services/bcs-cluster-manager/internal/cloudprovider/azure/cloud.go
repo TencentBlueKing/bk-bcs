@@ -55,13 +55,13 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster,
 		return fmt.Errorf("%s SyncClusterCloudInfo option is empty", cloudName)
 	}
 	// get cloud cluster
-	cluster, err := getCloudCluster(opt)
+	cluster, err := getCloudCluster(opt, opt.ImportMode.GetResourceGroup())
 	if err != nil {
 		return fmt.Errorf("SyncClusterCloudInfo failed: %v", err)
 	}
 	cls.SystemID = *cluster.Name
 	// cluster cloud basic setting
-	clusterBasicSettingByQCloud(cls, cluster)
+	clusterBasicSettingByAzure(cls, cluster, opt)
 	// cluster cloud network setting
 	err = clusterNetworkSettingByQCloud(cls, cluster)
 	if err != nil {
@@ -81,12 +81,13 @@ func (c *CloudInfoManager) UpdateClusterCloudInfo(cls *proto.Cluster) error {
 	return nil
 }
 
-func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption) (*armcontainerservice.ManagedCluster, error) {
+func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption,
+	resourceGroupName string) (*armcontainerservice.ManagedCluster, error) {
 	client, err := api.NewAksServiceImplWithCommonOption(opt.Common)
 	if err != nil {
 		return nil, fmt.Errorf("%s getCloudCluster NewContainerServiceClient failed: %v", cloudName, err)
 	}
-	mc, err := client.GetClusterWithName(context.Background(), opt.Common.Account.ResourceGroupName,
+	mc, err := client.GetClusterWithName(context.Background(), resourceGroupName,
 		opt.ImportMode.CloudID)
 	if err != nil {
 		return nil, fmt.Errorf("%s getCloudCluster GetCluster failed: %v", cloudName, err)
@@ -94,7 +95,8 @@ func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption) (*armcontain
 	return mc, nil
 }
 
-func clusterBasicSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) {
+func clusterBasicSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster,
+	opt *cloudprovider.SyncClusterCloudInfoOption) {
 	clusterOs := ""
 	if len(cluster.Properties.AgentPoolProfiles) > 0 {
 		p := cluster.Properties.AgentPoolProfiles
@@ -104,6 +106,7 @@ func clusterBasicSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservic
 		OS:          clusterOs,
 		Version:     *cluster.Properties.CurrentKubernetesVersion,
 		VersionName: *cluster.Properties.CurrentKubernetesVersion,
+		Area:        opt.Area,
 	}
 }
 

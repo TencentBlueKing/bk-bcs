@@ -143,7 +143,8 @@ func preCheckAgentPool(rootCtx context.Context, client api.AksService, info *clo
 	defer cancel()
 	err = retry.Do(
 		func() error {
-			if agentPool, err = client.GetPoolAndReturn(ctx, info.Cluster.SystemID, group.CloudNodeGroupID); err != nil {
+			if agentPool, err = client.GetPoolAndReturn(ctx, getNodeResourceGroup(info.Cluster),
+				info.Cluster.SystemID, group.CloudNodeGroupID); err != nil {
 				return err
 			}
 			return nil
@@ -168,7 +169,7 @@ func scaleUpNodePool(rootCtx context.Context, client api.AksService, info *cloud
 	defer cancel()
 
 	err := loop.LoopDoFunc(ctx, func() error {
-		pool, err := client.UpdatePoolAndReturn(ctx, targetPool, cluster.SystemID, *targetPool.Name)
+		pool, err := client.UpdatePoolAndReturn(ctx, targetPool, getNodeResourceGroup(info.Cluster), cluster.SystemID, *targetPool.Name)
 		if err == nil { // 扩容完成
 			targetPool.Properties = pool.Properties
 			return loop.EndLoop
@@ -198,7 +199,8 @@ func checkScaleUp(rootCtx context.Context, client api.AksService, info *cloudpro
 	defer cancel()
 
 	err := loop.LoopDoFunc(ctx, func() error {
-		agentPool, err := client.GetPoolAndReturn(ctx, info.Cluster.SystemID, group.CloudNodeGroupID)
+		agentPool, err := client.GetPoolAndReturn(ctx, getNodeResourceGroup(info.Cluster),
+			info.Cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
 			return errors.Wrapf(err, "checkScaleUp[%s] call GetPoolAndReturn failed", taskID)
 		}

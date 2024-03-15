@@ -54,6 +54,7 @@ func newtask() *Task {
 	task.works[addNodesToClusterStep.StepMethod] = tasks.AddNodesToClusterTask
 	task.works[checkClusterNodeStatusStep.StepMethod] = tasks.CheckClusterNodeStatusTask
 	task.works[checkClusterNodesInCMDBStep.StepMethod] = tasks.CheckClusterNodesInCMDBTask
+	task.works[syncClusterNodesToCMDBStep.StepMethod] = tasks.SyncClusterNodesToCMDBTask
 	// task.works[resourcePoolLabelStep.StepMethod] = tasks.SetResourcePoolDeviceLabels
 
 	// delete nodeGroup task
@@ -337,7 +338,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	// step3: check nodes status
 	updateDesiredNodes.BuildCheckClusterNodeStatusStep(task)
 	// step4: check nodes if sync to cmdb
-	updateDesiredNodes.BuildCheckClusterNodesInCMDBStep(task)
+	// updateDesiredNodes.BuildCheckClusterNodesInCMDBStep(task)
+	updateDesiredNodes.BuildSyncClusterNodesToCMDBStep(task)
 	// platform define sops task
 	if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil &&
 		opt.Cloud.NodeGroupManagement.UpdateDesiredNodes != nil {

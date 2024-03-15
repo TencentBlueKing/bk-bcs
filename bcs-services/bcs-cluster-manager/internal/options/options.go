@@ -89,6 +89,7 @@ type BrokerConfig struct {
 
 // BKOpsConfig for call bkops job
 type BKOpsConfig struct {
+	EsbServer   string `json:"esbServer"`
 	Server      string `json:"server"`
 	AppCode     string `json:"appCode"`
 	AppSecret   string `json:"appSecret"`

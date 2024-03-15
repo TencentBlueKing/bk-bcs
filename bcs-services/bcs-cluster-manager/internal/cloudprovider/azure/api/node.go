@@ -59,7 +59,8 @@ func (aks *AksServiceImpl) DeleteInstanceWithName(ctx context.Context, nodeResou
 func (aks *AksServiceImpl) UpdateInstance(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	node *proto.Node) (*proto.Node, error) {
 	var (
-		asg               = info.NodeGroup.AutoScaling
+		asg = info.NodeGroup.AutoScaling
+		// attention
 		nodeResourceGroup = asg.AutoScalingName
 		setName           = asg.AutoScalingID
 		id                = node.NodeID

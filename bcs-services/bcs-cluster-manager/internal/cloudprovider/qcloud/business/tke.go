@@ -21,9 +21,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/avast/retry-go"
-	qcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
@@ -31,6 +28,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	"github.com/avast/retry-go"
+
+	qcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 )
 
 // 集群下架节点

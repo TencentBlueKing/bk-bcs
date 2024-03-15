@@ -131,6 +131,8 @@ type SyncClusterCloudInfoOption struct {
 	Cloud *proto.Cloud
 	// ImportMode import mode
 	ImportMode *proto.ImportCloudMode
+	// Area cloud area info
+	Area *proto.CloudArea
 	// ClusterVersion for cluster version
 	ClusterVersion string
 }
@@ -466,6 +468,8 @@ type UpdateDesiredNodeOption struct {
 	AsOption *proto.ClusterAutoScalingOption
 	Operator string
 	Manual   bool
+	// node scheduler status
+	NodeSchedule bool
 }
 
 // SwitchNodeGroupAutoScalingOption switch nodegroup auto scaling

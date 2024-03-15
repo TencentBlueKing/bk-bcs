@@ -151,6 +151,10 @@ type TemplateListPathPara struct {
 
 // TemplateRequest body parameter
 type TemplateRequest struct {
+	// BkBizID template bizID
+	BkBizID string `json:"bk_biz_id,omitempty"`
+	// TemplateID template id
+	TemplateID string `json:"template_id,omitempty"`
 	// TemplateSource 模版来源(business/common)
 	TemplateSource string `json:"template_source"`
 	// Scope bk_biz_id 检索的作用域。默认为 cmdb_biz，此时检索的是绑定的 CMDB 业务 ID 为 bk_biz_id 的项目；
@@ -243,6 +247,12 @@ type ConstantValue struct {
 	CustomType string `json:"custom_type"`
 }
 
+// UserProjectRequest project req
+type UserProjectRequest struct {
+	BizId string `json:"bk_biz_id"`
+	Scope Scope  `json:"scope"`
+}
+
 // UserProjectResponse project info
 type UserProjectResponse struct {
 	Result  bool        `json:"result"`
@@ -261,4 +271,37 @@ type ProjectInfo struct {
 	BkBizMaintainer string `json:"bk_biz_maintainer"`
 	BkBizTester     string `json:"bk_biz_tester"`
 	BkBizProductor  string `json:"bk_biz_productor"`
+}
+
+// Action bkops task action
+type Action string
+
+// String toString
+func (ac Action) String() string {
+	return string(ac)
+}
+
+const (
+	// Start action  开始任务，等效于调用 start_task 接口
+	Start Action = "start"
+	// Pause action 暂停任务，任务处于执行状态时调用
+	Pause Action = "pause"
+	// Resume action 继续任务，任务处于暂停状态时调用	失败
+	Resume Action = "resume"
+	// Revoke action 终止任务
+	Revoke TaskState = "revoke"
+)
+
+// OperateTaskRequest operate task request
+type OperateTaskRequest struct {
+	BizId  string `json:"bk_biz_id,omitempty"`
+	TaskId string `json:"task_id,omitempty"`
+	Action string `json:"action"`
+	Scope  Scope  `json:"scope"`
+}
+
+// OperateTaskResponse operate task response
+type OperateTaskResponse struct {
+	Result  bool   `json:"result"`
+	Message string `json:"message"`
 }

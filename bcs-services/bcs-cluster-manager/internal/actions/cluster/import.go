@@ -101,6 +101,9 @@ func (ia *ImportAction) constructCluster() *cmproto.Cluster {
 	if ia.req.CloudMode.GetInter() {
 		cls.ExtraInfo[common.ImportType] = common.InterImport
 	}
+	if ia.req.GetCloudMode().GetResourceGroup() != "" {
+		cls.ExtraInfo[common.ClusterResourceGroup] = ia.req.GetCloudMode().GetResourceGroup()
+	}
 
 	return cls
 }
@@ -160,6 +163,7 @@ func (ia *ImportAction) syncClusterCloudConfig(cls *cmproto.Cluster) error {
 		Common:         cmOption,
 		Cloud:          ia.cloud,
 		ImportMode:     ia.req.CloudMode,
+		Area:           ia.req.GetArea(),
 		ClusterVersion: ia.req.Version,
 	})
 	if err != nil {
@@ -373,6 +377,9 @@ func (ia *ImportAction) commonValidate(req *cmproto.ImportClusterReq) error {
 	}
 	if req.ClusterCategory == "" {
 		req.ClusterCategory = common.Importer
+	}
+	if req.Area == nil {
+		req.Area = &cmproto.CloudArea{BkCloudID: 0}
 	}
 
 	if req.CloudMode == nil {
