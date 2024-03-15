@@ -1476,6 +1476,7 @@ cluster:
     tips:
       disableImportClusterAction: 'Kubeconfig imports cluster, node management function is unavailable'
       disableImportClusterAddNode: Importing a cluster does not support adding nodes from existing servers.
+      hasNotNodePoolNode: There are nodes added by non-node pools among the selected nodes.
     placeholder:
       searchNode: 'Search for IP, label, taints, annotations, status, node source, nodePool'
     title:

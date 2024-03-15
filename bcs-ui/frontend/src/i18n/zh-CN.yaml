@@ -1192,6 +1192,7 @@ cluster:
     tips:
       disableImportClusterAction: 导入集群，节点管理功能不可用
       disableImportClusterAddNode: 导入集群不支持从已有服务器添加节点
+      hasNotNodePoolNode: 选择的节点中有非节点池添加的节点
     placeholder:
       searchNode: 搜索IP、标签、污点、注解、状态、可用区、节点来源、所属节点池
     title:

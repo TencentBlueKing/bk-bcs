@@ -239,7 +239,6 @@ export default defineComponent({
     };
     // 跳转集群预览界面
     const goOverview = async (cluster) => {
-      if (cluster.status !== 'RUNNING') return;
       handleChangeDetail(cluster.clusterID, 'overview');
     };
     // 跳转集群信息界面

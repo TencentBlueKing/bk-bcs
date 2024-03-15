@@ -1088,6 +1088,7 @@ export default defineComponent({
     const { clusterList } = useClusterList();
     const curSelectedCluster = computed<Partial<ICluster>>(() => clusterList.value
       .find(item => item.clusterID === localClusterId.value) || {});
+    const isImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer');
     // kubeConfig导入集群
     const isKubeConfigImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer'
       && curSelectedCluster.value.importCategory === 'kubeConfig');
@@ -1250,11 +1251,15 @@ export default defineComponent({
     });
     // kubeConfig导入、选中节点含有运行中状态、含有非节点池节点不让删除
     const disableBatchDelete = computed(() => isKubeConfigImportCluster.value
-    || selections.value.some(item => item.status === 'RUNNING'));
+    || selections.value.some(item => item.status === 'RUNNING')
+    || (isImportCluster.value && selections.value.some(item => !item.nodeGroupID)));
 
     const disableBatchDeleteTips = computed(() => {
       if (isKubeConfigImportCluster.value) {
         return $i18n.t('cluster.nodeList.tips.disableImportClusterAction');
+      }
+      if ((isImportCluster.value && selections.value.some(item => !item.nodeGroupID))) {
+        return $i18n.t('cluster.nodeList.tips.hasNotNodePoolNode');
       }
       return $i18n.t('cluster.ca.nodePool.nodes.action.delete.tips');
     });
