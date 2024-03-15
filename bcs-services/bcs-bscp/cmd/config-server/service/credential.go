@@ -216,3 +216,42 @@ func (s *Service) CheckCredentialName(ctx context.Context, req *pbcs.CheckCreden
 
 	return &pbcs.CheckCredentialNameResp{Exist: credential.Exist}, nil
 }
+
+// CredentialScopePreview 关联规则预览配置项
+func (s *Service) CredentialScopePreview(ctx context.Context, req *pbcs.CredentialScopePreviewReq) (
+	*pbcs.CredentialScopePreviewResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	resp := new(pbcs.CredentialScopePreviewResp)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Credential, Action: meta.View}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := s.client.DS.CredentialScopePreview(grpcKit.RpcCtx(), &pbds.CredentialScopePreviewReq{
+		BizId:       req.BizId,
+		AppName:     req.AppName,
+		Scope:       req.Scope,
+		Limit:       req.Limit,
+		Start:       req.Start,
+		SearchValue: req.SearchValue,
+	})
+	if err != nil {
+		return resp, err
+	}
+
+	items := make([]*pbcs.CredentialScopePreviewResp_Detail, 0)
+	for _, v := range data.Details {
+		items = append(items, &pbcs.CredentialScopePreviewResp_Detail{
+			Name: v.Name,
+		})
+	}
+	resp.Details = items
+	resp.Count = data.Count
+	return resp, nil
+}
