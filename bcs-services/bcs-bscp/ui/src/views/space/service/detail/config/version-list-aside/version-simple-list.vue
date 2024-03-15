@@ -141,6 +141,7 @@
   const init = async () => {
     await getVersionList();
     if (route.params.versionId) {
+      console.log(1);
       const version = versionList.value.find((item) => item.id === Number(route.params.versionId));
       if (version) {
         versionData.value = version;

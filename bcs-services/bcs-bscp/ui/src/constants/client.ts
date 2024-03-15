@@ -41,10 +41,10 @@ export const CLIENT_SEARCH_DATA = [
       },
     ],
   },
-  {
-    name: '附加信息',
-    value: 'annotations',
-  },
+  // {
+  //   name: '附加信息',
+  //   value: 'annotations',
+  // },
   {
     name: '在线状态',
     value: 'online_status',
@@ -62,5 +62,57 @@ export const CLIENT_SEARCH_DATA = [
   {
     name: '客户端组件版本',
     value: 'client_version',
+  },
+];
+
+export const CLIENT_STATUS_MAP = {
+  Success: '成功',
+  Failed: '失败',
+  Processing: '拉取中',
+  Skip: '跳过',
+  online: '在线',
+  offline: '离线',
+};
+
+export const CLIENT_HEARTBEAT_LIST = [
+  {
+    value: 1,
+    label: '近1分钟',
+  },
+  {
+    value: 5,
+    label: '近5分钟',
+  },
+  {
+    value: 60,
+    label: '近1小时',
+  },
+  {
+    value: 360,
+    label: '近6小时',
+  },
+  {
+    value: 720,
+    label: '近12小时',
+  },
+  {
+    value: 1440,
+    label: '近1天',
+  },
+  {
+    value: 4320,
+    label: '近3天',
+  },
+  {
+    value: 10080,
+    label: '近7天',
+  },
+  {
+    value: 20160,
+    label: '近15天',
+  },
+  {
+    value: 43200,
+    label: '近30天',
   },
 ];

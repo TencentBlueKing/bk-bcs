@@ -22,9 +22,7 @@
                 v-for="secondNav in nav.children"
                 :key="secondNav.id"
                 :class="['secondNav-item', { actived: isSecondNavActived(secondNav.module) }]">
-                <router-link
-                  :to="{ name: secondNav.id, params: { spaceId: spaceId || 0 } }"
-                  @click="handleNavClick(secondNav.id)">
+                <router-link :to="getRoute(secondNav.id) as RouteLocationRaw">
                   {{ secondNav.name }}
                 </router-link>
               </div>
@@ -123,7 +121,7 @@
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { useRoute, useRouter } from 'vue-router';
+  import { useRoute, useRouter, RouteLocationRaw } from 'vue-router';
   import { storeToRefs } from 'pinia';
   import { AngleDown, HelpFill, DownShape, Plus } from 'bkui-vue/lib/icon';
   import useGlobalStore from '../store/global';
@@ -228,6 +226,19 @@
         }
       }
     }
+  };
+  const getRoute = (navId: string) => {
+    if (navId === 'client-statistics' || navId === 'client-search') {
+      const lastSelectedClientService = localStorage.getItem('lastSelectedClientService');
+      if (lastSelectedClientService) {
+        const detail = JSON.parse(lastSelectedClientService);
+        if (detail.spaceId === spaceId.value) {
+          return { name: navId, params: { spaceId: detail.spaceId, appId: detail.appId } };
+        }
+      }
+      return { name: navId, params: { spaceId: spaceId.value || 0, appId: 1 } };
+    }
+    return { name: navId, params: { spaceId: spaceId.value || 0 } };
   };
 
   const handleSpaceSearch = (searchStr: string) => {

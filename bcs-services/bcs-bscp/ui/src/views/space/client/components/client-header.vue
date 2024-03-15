@@ -3,7 +3,7 @@
     <div class="head-left">
       <span class="title">{{ title }}</span>
       <bk-select
-        v-model="localApp"
+        v-model="localApp.id"
         ref="selectorRef"
         class="service-selector"
         :popover-options="{ theme: 'light bk-select-popover service-selector-popover' }"
@@ -16,7 +16,7 @@
         @change="handleAppChange">
         <template #trigger>
           <div class="selector-trigger">
-            <span class="app-name">{{ appData?.spec.name }}</span>
+            <span class="app-name">{{ localApp?.name }}</span>
             <AngleUpFill class="arrow-icon arrow-fill" />
           </div>
         </template>
@@ -33,21 +33,28 @@
     </div>
     <div class="head-right">
       <div class="selector-tips">最后心跳时间</div>
-      <bk-select v-model="heartbeatTime" class="heartbeat-selector" :clearable="false">
+      <bk-select
+        v-model="heartbeatTime"
+        class="heartbeat-selector"
+        :clearable="false"
+        @change="handleHeartbeatTimeChange">
         <bk-option v-for="item in heartbeatTimeList" :id="item.value" :key="item.value" :name="item.label" />
       </bk-select>
-      <SearchSelector/>
-      <bk-button theme="primary" style="margin-left: 8px;"><Search class="search-icon" />查询</bk-button>
+      <SearchSelector :bk-biz-id="bizId" :app-id="localApp.id" />
+      <bk-button theme="primary" style="margin-left: 8px" @click="emits('search')">
+        <Search class="search-icon" />查询
+      </bk-button>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue';
-  import { useRoute } from 'vue-router';
+  import { useRoute, useRouter } from 'vue-router';
   import { storeToRefs } from 'pinia';
   import { AngleUpFill, Search } from 'bkui-vue/lib/icon';
   import { getAppList } from '../../../../api';
+  import { CLIENT_HEARTBEAT_LIST } from '../../../../constants/client';
   import { IAppItem } from '../../../../../types/app';
   import useClientStore from '../../../../store/client';
   import SearchSelector from './search-selector.vue';
@@ -56,34 +63,37 @@
     title: string;
   }>();
 
+  const emits = defineEmits(['search']);
+
   const clientStore = useClientStore();
-  const { appData } = storeToRefs(clientStore);
+  const { searchQuery } = storeToRefs(clientStore);
   const route = useRoute();
+  const router = useRouter();
 
   const loading = ref(false);
-  const localApp = ref(appData.value.id);
+  const localApp = ref({
+    name: '',
+    id: 0,
+  });
   const serviceList = ref<IAppItem[]>([]);
-  const heartbeatTime = ref('1');
-  const heartbeatTimeList = ref([
-    {
-      value: '1',
-      label: '近1分钟',
-    },
-    {
-      value: '2',
-      label: '近2分钟',
-    },
-    {
-      value: '3',
-      label: '近3分钟',
-    },
-  ]);
+  const heartbeatTime = ref(searchQuery.value.last_heartbeat_time);
+  const heartbeatTimeList = ref(CLIENT_HEARTBEAT_LIST);
   const selectorRef = ref();
 
-  const bizId = route.params.spaceId as string;
+  const bizId = ref(String(route.params.spaceId));
 
-  onMounted(() => {
-    loadServiceList();
+  onMounted(async () => {
+    await loadServiceList();
+    const service = serviceList.value.find((service) => service.id === Number(route.params.appId));
+    if (service) {
+      localApp.value = {
+        name: service.spec.name,
+        id: service.id!,
+      };
+      emits('search');
+    } else {
+      handleAppChange(serviceList.value[0].id!);
+    }
   });
 
   const loadServiceList = async () => {
@@ -93,7 +103,7 @@
         start: 0,
         all: true,
       };
-      const resp = await getAppList(bizId, query);
+      const resp = await getAppList(bizId.value, query);
       serviceList.value = resp.details;
     } catch (e) {
       console.error(e);
@@ -102,10 +112,28 @@
     }
   };
 
-  const handleAppChange = (id: number) => {
-    const service = serviceList.value.find((service) => service.id === id);
-    appData.value.id = service!.id as number;
-    appData.value.spec = service!.spec;
+  const handleAppChange = (appId: number) => {
+    const service = serviceList.value.find((service) => service.id === appId);
+    if (service) {
+      localApp.value = {
+        name: service.spec.name,
+        id: service.id!,
+      };
+    }
+    setLastSelectedClientService(appId);
+    router.push({ name: route.name!, params: { spaceId: bizId.value, appId } });
+    emits('search');
+  };
+
+  const handleHeartbeatTimeChange = (value: number) => {
+    clientStore.$patch((state) => {
+      state.searchQuery.last_heartbeat_time = value;
+    });
+    emits('search');
+  };
+
+  const setLastSelectedClientService = (appId: number) => {
+    localStorage.setItem('lastSelectedClientService', JSON.stringify({ spaceId: bizId.value, appId }));
   };
 </script>
 
