@@ -20,8 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
-	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/oklog/run"
 	"github.com/opentracing/opentracing-go"
@@ -56,7 +55,7 @@ type DiscoveryClient struct {
 
 // NewDiscoveryClient xxx
 func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer opentracing.Tracer,
-	kitLogger gokit.Logger, strictStoreList []string, storeList []string, httpSDURLs []string,
+	logKit blog.GlogKit, strictStoreList []string, storeList []string, httpSDURLs []string,
 	g *run.Group) (*DiscoveryClient, error) {
 
 	// 检查静态 store 配置
@@ -68,12 +67,12 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 	}
 
 	dnsStoreProvider := dns.NewProvider(
-		kitLogger,
+		logKit,
 		extprom.WrapRegistererWithPrefix("bcs_monitor_query_store_apis_", reg),
 		dns.MiekgdnsResolverType,
 	)
 
-	dialOpts, err := extgrpc.StoreClientGRPCOpts(kitLogger, reg, tracer, false, false, "", "", "", "")
+	dialOpts, err := extgrpc.StoreClientGRPCOpts(logKit, reg, tracer, false, false, "", "", "", "")
 	// 高可用 添加重试逻辑
 	opts := []grpc_retry.CallOption{
 		grpc_retry.WithCodes(codes.Unavailable),
@@ -90,7 +89,7 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 		return nil, errors.Wrap(err, "building gRPC client")
 	}
 
-	endpoints := getEndpoints(kitLogger, reg, strictStoreList, dnsStoreProvider, dialOpts)
+	endpoints := getEndpoints(logKit, reg, strictStoreList, dnsStoreProvider, dialOpts)
 	client := &DiscoveryClient{
 		reg:                  reg,
 		endpoints:            endpoints,
@@ -125,13 +124,13 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 	}
 
 	for _, conf := range httpSDConfs {
-		if err := client.addHTTPDiscovery(ctx, kitLogger, conf, g); err != nil {
+		if err := client.addHTTPDiscovery(ctx, logKit, conf, g); err != nil {
 			return nil, err
 		}
 	}
 
 	for _, conf := range config.G.QueryStore.HTTPSDConfigs {
-		if err := client.addHTTPDiscovery(ctx, kitLogger, conf, g); err != nil {
+		if err := client.addHTTPDiscovery(ctx, logKit, conf, g); err != nil {
 			return nil, err
 		}
 	}
@@ -149,7 +148,7 @@ func resolveStoreProvider(ctxm context.Context, g *run.Group, dnsStoreProvider *
 			resolveCtx, resolveCancel := context.WithTimeout(ctx, time.Second*30)
 			defer resolveCancel()
 			if err := dnsStoreProvider.Resolve(resolveCtx, client.Addresses()); err != nil {
-				logger.Errorw("failed to resolve addresses for storeAPIs", "err", err)
+				blog.Errorw("failed to resolve addresses for storeAPIs", "err", err)
 			}
 			return nil
 		})
@@ -158,10 +157,10 @@ func resolveStoreProvider(ctxm context.Context, g *run.Group, dnsStoreProvider *
 	})
 }
 
-func getEndpoints(kitLogger gokit.Logger, reg *prometheus.Registry, strictStoreList []string,
+func getEndpoints(logKit blog.GlogKit, reg *prometheus.Registry, strictStoreList []string,
 	dnsStoreProvider *dns.Provider, dialOpts []grpc.DialOption) *query.EndpointSet {
 	return query.NewEndpointSet(
-		kitLogger,
+		logKit,
 		reg,
 		func() (specs []*query.GRPCEndpointSpec) {
 			// Add strict & static nodes.
@@ -190,9 +189,9 @@ func (c *DiscoveryClient) addStaticDiscovery(name string, tgs []*targetgroup.Gro
 	httpSDCache.Update(tgs)
 }
 
-func (c *DiscoveryClient) addHTTPDiscovery(ctx context.Context, kitLogger gokit.Logger, conf *httpdiscovery.SDConfig,
-	g *run.Group) error {
-	client, err := NewHTTPSDClientGroup(ctx, kitLogger, c.reg, conf, g, c.ForceRefreshEndpoints)
+func (c *DiscoveryClient) addHTTPDiscovery(
+	ctx context.Context, logKit blog.GlogKit, conf *httpdiscovery.SDConfig, g *run.Group) error {
+	client, err := NewHTTPSDClientGroup(ctx, logKit, c.reg, conf, g, c.ForceRefreshEndpoints)
 	if err != nil {
 		return err
 	}
@@ -209,7 +208,7 @@ func (c *DiscoveryClient) ForceRefreshEndpoints(ctx context.Context) {
 	c.endpoints.Update(ctx)
 
 	if err := c.dnsStoreProvider.Resolve(ctx, c.Addresses()); err != nil {
-		logger.Errorw("force reresh endpoints failed to resolve addresses for storeAPIs", "err", err)
+		blog.Errorw("force reresh endpoints failed to resolve addresses for storeAPIs", "err", err)
 	}
 }
 
@@ -238,14 +237,14 @@ func (c *DiscoveryClient) Endpoints() *query.EndpointSet {
 type HTTPSDClientGroup struct {
 	mtx             sync.RWMutex
 	id              string
-	kitLogger       gokit.Logger
+	logKit          blog.GlogKit
 	ctx             context.Context
 	reg             *prometheus.Registry
 	httpSDClientMap map[string]*HTTPSDClient
 }
 
 // NewHTTPSDClientGroup xxx
-func NewHTTPSDClientGroup(ctx context.Context, kitLogger gokit.Logger, reg *prometheus.Registry,
+func NewHTTPSDClientGroup(ctx context.Context, logKit blog.GlogKit, reg *prometheus.Registry,
 	conf *httpdiscovery.SDConfig, g *run.Group, forceRefreshFunc func(ctx context.Context)) (*HTTPSDClientGroup, error) {
 	id := fmt.Sprintf("%s:%s", conf.Name(), conf.URL)
 
@@ -253,7 +252,7 @@ func NewHTTPSDClientGroup(ctx context.Context, kitLogger gokit.Logger, reg *prom
 
 	c := &HTTPSDClientGroup{
 		ctx:             ctx,
-		kitLogger:       kitLogger,
+		logKit:          logKit,
 		reg:             reg,
 		id:              id,
 		httpSDClientMap: httpSDClientMap,
@@ -274,7 +273,7 @@ func NewHTTPSDClientGroup(ctx context.Context, kitLogger gokit.Logger, reg *prom
 				if ok {
 					continue
 				}
-				s, err := NewHTTPSDClient(updateCtx, kitLogger, *conf, addr, *u, forceRefreshFunc)
+				s, err := NewHTTPSDClient(updateCtx, logKit, *conf, addr, *u, forceRefreshFunc)
 				if err != nil {
 					klog.ErrorS(err, "create http sd client failed", "url", conf.URL, "addr", addr)
 					continue
@@ -305,7 +304,7 @@ func NewHTTPSDClientGroup(ctx context.Context, kitLogger gokit.Logger, reg *prom
 
 func (c *HTTPSDClientGroup) parseURLHost(rawURL string) (map[string]*url.URL, error) {
 	dnsStoreProvider := dns.NewProvider(
-		c.kitLogger,
+		c.logKit,
 		nil,
 		dns.MiekgdnsResolverType,
 	)
@@ -367,12 +366,13 @@ type HTTPSDClient struct {
 }
 
 // NewHTTPSDClient xxx
-func NewHTTPSDClient(ctx context.Context, kitLogger gokit.Logger, conf httpdiscovery.SDConfig, addr string, u url.URL,
+func NewHTTPSDClient(
+	ctx context.Context, logKit blog.GlogKit, conf httpdiscovery.SDConfig, addr string, u url.URL,
 	forceRefreshFunc func(ctx context.Context)) (*HTTPSDClient, error) {
 	// Run File Service Discovery and update the store set when the files are modified.
 	u.Host = addr
 	conf.URL = u.String()
-	sdClient, err := httpdiscovery.NewDiscovery(&conf, kitLogger)
+	sdClient, err := httpdiscovery.NewDiscovery(&conf, logKit)
 	if err != nil {
 		return nil, err
 	}

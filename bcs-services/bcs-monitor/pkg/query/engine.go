@@ -17,7 +17,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/promql"
 	"github.com/thanos-io/thanos/pkg/compact/downsample"
@@ -28,13 +28,13 @@ import (
 )
 
 // NewQueryableCreator xxx
-func NewQueryableCreator(reg *prometheus.Registry, kitLogger gokit.Logger,
+func NewQueryableCreator(reg *prometheus.Registry, logKit blog.GlogKit,
 	discoveryClient *DiscoveryClient) query.QueryableCreator {
-	proxy := store.NewProxyStore(kitLogger, reg, discoveryClient.Endpoints().GetStoreClients, component.Query, nil,
+	proxy := store.NewProxyStore(logKit, reg, discoveryClient.Endpoints().GetStoreClients, component.Query, nil,
 		storeResponseTimeout)
 
 	queryableCreator := query.NewQueryableCreator(
-		kitLogger,
+		logKit,
 		extprom.WrapRegistererWithPrefix("bcs_monitor_query_", reg),
 		proxy,
 		maxConcurrentSelects,
@@ -44,9 +44,9 @@ func NewQueryableCreator(reg *prometheus.Registry, kitLogger gokit.Logger,
 }
 
 // NewQueryEngine xxx
-func NewQueryEngine(reg *prometheus.Registry, kitLogger gokit.Logger) func(int64) *promql.Engine {
+func NewQueryEngine(reg *prometheus.Registry, logKit blog.GlogKit) func(int64) *promql.Engine {
 	engineOpts := promql.EngineOpts{
-		Logger:        kitLogger,
+		Logger:        logKit,
 		Reg:           reg,
 		MaxSamples:    math.MaxInt32,
 		Timeout:       queryTimeout,
