@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package core
@@ -268,6 +267,7 @@ func (c *podsSchedulableOnNodeChecker) checkPodsSchedulableOnNode(nodeGroupID st
 // It also returns a node group to sample node mapping.
 // DOTO(mwielgus): This returns map keyed by url, while most code (including scheduler) uses node.Name for a key.
 // DOTO(mwielgus): Review error policy - sometimes we may continue with partial errors.
+// nolint
 func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedulernodeinfo.NodeInfo,
 	cloudProvider cloudprovider.CloudProvider, listers kube_util.ListerRegistry,
 	daemonsets []*appsv1.DaemonSet, predicateChecker *simulator.PredicateChecker,
@@ -515,10 +515,11 @@ func sanitizeNodeInfo(nodeInfo *schedulernodeinfo.NodeInfo, nodeGroupName string
 	return sanitizedNodeInfo, nil
 }
 
+// nolint result 1 (error) is always nil
 func sanitizeTemplateNode(node *apiv1.Node, nodeGroup string,
 	ignoredTaints taintKeySet) (*apiv1.Node, errors.AutoscalerError) {
 	newNode := node.DeepCopy()
-	nodeName := fmt.Sprintf("template-node-for-%s-%d", nodeGroup, rand.Int63())
+	nodeName := fmt.Sprintf("template-node-for-%s-%d", nodeGroup, rand.Int63()) // nolint
 	newNode.Labels = make(map[string]string, len(node.Labels))
 	for k, v := range node.Labels {
 		// if !validLabel(k) {
@@ -850,16 +851,16 @@ func substractRescheduledPodResources(leftResourcesList schedulernodeinfo.Resour
 		}
 	}
 
-	leftResourcesList.AllowedPodNumber = leftResourcesList.AllowedPodNumber - len(podsToReschedule)
-	leftResourcesList.MilliCPU = leftResourcesList.MilliCPU - podResources.MilliCPU
-	leftResourcesList.Memory = leftResourcesList.Memory - podResources.Memory
-	leftResourcesList.EphemeralStorage = leftResourcesList.EphemeralStorage - podResources.EphemeralStorage
+	leftResourcesList.AllowedPodNumber -= len(podsToReschedule)
+	leftResourcesList.MilliCPU -= podResources.MilliCPU
+	leftResourcesList.Memory -= podResources.Memory
+	leftResourcesList.EphemeralStorage -= podResources.EphemeralStorage
 
 	// calculate extend resources
 	for k, v := range podResources.ScalarResources {
 		_, ok := leftResourcesList.ScalarResources[k]
 		if ok {
-			leftResourcesList.ScalarResources[k] = leftResourcesList.ScalarResources[k] - v
+			leftResourcesList.ScalarResources[k] -= v
 		}
 	}
 

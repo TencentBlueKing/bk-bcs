@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	qualifiedUidFmt   string = "(" + qnameExtUidFmt + qnameExtUidSuffix + "*)?" + qnameExtUidFmt
+	qualifiedUidFmt   string = "(" + qnameExtUidFmt + qnameExtUidSuffix + "*)?" + qnameExtUidFmt // nolint goconst
 	qnameExtUidFmt    string = "[A-Za-z0-9]"
 	qnameExtUidSuffix string = "[A-Za-z0-9-_:]"
 )

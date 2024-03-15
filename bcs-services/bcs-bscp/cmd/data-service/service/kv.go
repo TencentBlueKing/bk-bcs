@@ -78,6 +78,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 		},
 		ContentSpec: &table.ContentSpec{
 			Signature: tools.SHA256(req.Spec.Value),
+			Md5:       tools.MD5(req.Spec.Value),
 			ByteSize:  uint64(len(req.Spec.Value)),
 		},
 	}
@@ -142,6 +143,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 	kv.Spec.Version = uint32(version)
 	kv.ContentSpec = &table.ContentSpec{
 		Signature: tools.SHA256(req.Spec.Value),
+		Md5:       tools.MD5(req.Spec.Value),
 		ByteSize:  uint64(len(req.Spec.Value)),
 	}
 	if e := s.dao.Kv().Update(kt, kv); e != nil {
@@ -420,6 +422,7 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 				Revision: editing.Revision,
 				ContentSpec: &table.ContentSpec{
 					Signature: tools.SHA256(kv.KvSpec.Value),
+					Md5:       tools.MD5(kv.KvSpec.Value),
 					ByteSize:  uint64(len(kv.KvSpec.Value)),
 				},
 			})
@@ -444,6 +447,7 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 				},
 				ContentSpec: &table.ContentSpec{
 					Signature: tools.SHA256(kv.KvSpec.Value),
+					Md5:       tools.MD5(kv.KvSpec.Value),
 					ByteSize:  uint64(len(kv.KvSpec.Value)),
 				},
 			})

@@ -20,7 +20,7 @@
       </div>
     </bcs-alert>
     <!-- 修改节点转移模块 -->
-    <template v-if="['tencentCloud', 'tencentPublicCloud'].includes(curSelectedCluster.provider || '')">
+    <template v-if="['tencentCloud', 'tencentPublicCloud', 'gcpCloud'].includes(curSelectedCluster.provider || '')">
       <div class="flex items-center text-[12px]">
         <div class="text-[#979BA5] bcs-border-tips" v-bk-tooltips="$t('tke.tips.transferNodeCMDBModule')">
           {{ $t('tke.label.nodeModule.text') }}
@@ -65,7 +65,7 @@
       <div class="left">
         <template v-if="fromCluster">
           <span v-bk-tooltips="{
-            disabled: !isKubeConfig,
+            disabled: !isKubeConfigImportCluster,
             content: $t('cluster.nodeList.tips.disableImportClusterAction')
           }">
             <bcs-button
@@ -83,7 +83,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isKubeConfig"
+              :disabled="isKubeConfigImportCluster"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
@@ -128,9 +128,10 @@
             <li @click="handleBatchStopNodes">{{$t('generic.button.cordon.text')}}</li>
             <!-- 'REMOVE-FAILURE', 'ADD-FAILURE' 才支持删除 -->
             <li
-              :disabled="isImportCluster || selections.some(item => !['REMOVE-FAILURE', 'ADD-FAILURE'].includes(item.status))"
+              :disabled="isKubeConfigImportCluster
+                || selections.some(item => !['REMOVE-FAILURE', 'ADD-FAILURE'].includes(item.status))"
               v-bk-tooltips="{
-                disabled: !isImportCluster,
+                disabled: !isKubeConfigImportCluster,
                 content: $t('cluster.nodeList.tips.disableImportClusterAction')
               }"
               @click="handleBatchReAddNodes">{{$t('cluster.nodeList.button.retry')}}</li>
@@ -490,7 +491,7 @@
                 text
                 class="mr10"
                 v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
-                :disabled="!row.inner_ip"
+                :disabled="!row.inner_ip || isGcpCloudSelfNode(row)"
                 @click="handleRetry(row)"
               >{{ $t('cluster.ca.nodePool.records.action.retry') }}</bk-button>
               <bk-popover
@@ -513,9 +514,9 @@
                       </li>
                     </template>
                     <li
-                      :class="['bcs-dropdown-item', { disabled: isImportCluster && !row.nodeGroupID }]"
+                      :class="['bcs-dropdown-item', { disabled: isKubeConfigImportCluster || isGcpCloudSelfNode(row) }]"
                       v-bk-tooltips="{
-                        disabled: !isImportCluster || row.nodeGroupID,
+                        disabled: !isKubeConfigImportCluster && !isGcpCloudSelfNode(row),
                         content: $t('cluster.nodeList.tips.disableImportClusterAction'),
                         placement: 'right'
                       }"
@@ -1087,9 +1088,13 @@ export default defineComponent({
     const { clusterList } = useClusterList();
     const curSelectedCluster = computed<Partial<ICluster>>(() => clusterList.value
       .find(item => item.clusterID === localClusterId.value) || {});
-    // 导入集群
-    const isImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer');
-    const isKubeConfig = computed(() => isImportCluster.value && curSelectedCluster.value.importCategory === 'kubeConfig');
+    // kubeConfig导入集群
+    const isKubeConfigImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer'
+      && curSelectedCluster.value.importCategory === 'kubeConfig');
+    // gcpCloud私有节点
+    const isGcpCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
+      && curSelectedCluster.value.provider === 'gcpCloud'
+      && !row.nodeGroupID;
     // 全量表格数据
     const tableData = ref<any[]>([]);
 
@@ -1244,16 +1249,12 @@ export default defineComponent({
       curPageData: filterFailureCurTableData,
     });
     // kubeConfig导入、选中节点含有运行中状态、含有非节点池节点不让删除
-    const disableBatchDelete = computed(() => isKubeConfig.value
-    || selections.value.some(item => item.status === 'RUNNING')
-    || (isImportCluster.value && selections.value.some(item => !item.nodeGroupID)));
+    const disableBatchDelete = computed(() => isKubeConfigImportCluster.value
+    || selections.value.some(item => item.status === 'RUNNING'));
 
     const disableBatchDeleteTips = computed(() => {
-      if (isKubeConfig.value) {
+      if (isKubeConfigImportCluster.value) {
         return $i18n.t('cluster.nodeList.tips.disableImportClusterAction');
-      }
-      if ((isImportCluster.value && selections.value.some(item => !item.nodeGroupID))) {
-        return $i18n.t('cluster.nodeList.tips.hasNotNodePoolNode');
       }
       return $i18n.t('cluster.ca.nodePool.nodes.action.delete.tips');
     });
@@ -1512,7 +1513,7 @@ export default defineComponent({
       curCheckedNodes.value = [];
     };
     const handleDeleteNode = async (row) => {
-      if (isImportCluster.value && !row.nodeGroupID) return;
+      if (isKubeConfigImportCluster.value || isGcpCloudSelfNode(row)) return;
 
       curCheckedNodes.value = [row];
       showDeleteDialog.value = true;
@@ -1670,7 +1671,7 @@ export default defineComponent({
     // 重新添加节点
     const handleBatchReAddNodes = () => {
       if (!selections.value.length
-      || isImportCluster.value
+      || isKubeConfigImportCluster.value
       || selections.value.some(item => !['REMOVE-FAILURE', 'ADD-FAILURE'].includes(item.status))) return;
 
       bkComfirmInfo({
@@ -2010,8 +2011,7 @@ export default defineComponent({
       podDisabled,
       webAnnotations,
       curProject,
-      isImportCluster,
-      isKubeConfig,
+      isKubeConfigImportCluster,
       KEY_REGEXP,
       VALUE_REGEXP,
       showBatchMenu,
@@ -2032,6 +2032,7 @@ export default defineComponent({
       delNode,
       deleteMode,
       deleting,
+      isGcpCloudSelfNode,
     };
   },
 });

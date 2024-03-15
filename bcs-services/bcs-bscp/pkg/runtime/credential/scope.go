@@ -58,7 +58,11 @@ func (cs Scope) MatchApp(name string) (bool, error) {
 	}
 
 	appPattern := strings.Split(string(cs), "/")[0]
-	return glob.MustCompile(appPattern).Match(name), nil
+	g, err := glob.Compile(appPattern)
+	if err != nil {
+		return false, err
+	}
+	return g.Match(name), nil
 }
 
 // MatchConfigItem checks if the credential scope matches the config item.
@@ -67,7 +71,11 @@ func (cs Scope) MatchConfigItem(path, name string) (bool, error) {
 		return false, err
 	}
 	configItemPattern := strings.SplitN(string(cs), "/", 2)[1]
-	return tools.MatchConfigItem(configItemPattern, path, name), nil
+	ok, err := tools.MatchConfigItem(configItemPattern, path, name)
+	if err != nil {
+		return false, err
+	}
+	return ok, nil
 }
 
 // New 通过 app scope 组装

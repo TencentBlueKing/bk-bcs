@@ -19,9 +19,9 @@ import (
 	"net/http"
 	"path"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	ginTracing "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
@@ -81,14 +81,14 @@ func (a *APIServer) Run() error {
 	if err := dualStackListener.AddListenerWithAddr(utils.GetListenAddr(a.addr, a.port)); err != nil {
 		return err
 	}
-	logger.Infow("listening for requests and metrics", "address", addr)
+	blog.Infow("listening for requests and metrics", "address", addr)
 
 	if a.addrIPv6 != "" && a.addrIPv6 != a.addr {
 		v6Addr := utils.GetListenAddr(a.addrIPv6, a.port)
 		if err := dualStackListener.AddListenerWithAddr(v6Addr); err != nil {
 			return err
 		}
-		logger.Infof("api serve dualStackListener with ipv6: %s", v6Addr)
+		blog.Infof("api serve dualStackListener with ipv6: %s", v6Addr)
 	}
 
 	return a.srv.Serve(dualStackListener)

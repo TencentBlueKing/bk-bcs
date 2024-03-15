@@ -18,11 +18,11 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"math/rand"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/micro/go-micro/v2/registry"
@@ -288,7 +288,7 @@ func NewProjectManager(config *client.Config) pmp.BCSProjectClient {
 		//! pay more attention for nil return
 		return nil
 	}
-	//create grpc connection
+	// create grpc connection
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
@@ -309,7 +309,7 @@ func NewProjectManager(config *client.Config) pmp.BCSProjectClient {
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
-		selected := rand.Intn(1024) % len(config.Hosts)
+		selected := rand.Intn(1024) % len(config.Hosts) // nolint math/rand instead of crypto/rand
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
@@ -324,7 +324,7 @@ func NewProjectManager(config *client.Config) pmp.BCSProjectClient {
 		blog.Errorf("create no project manager client after all instance tries")
 		return nil
 	}
-	//init cluster manager client
+	// init cluster manager client
 	return pmp.NewBCSProjectClient(conn)
 }
 

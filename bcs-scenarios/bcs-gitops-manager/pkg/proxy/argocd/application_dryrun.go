@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package argocd
@@ -21,6 +20,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	"github.com/pkg/errors"
@@ -28,15 +29,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 
-	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
@@ -209,6 +208,7 @@ func buildDiffOrDryRunRequest(r *http.Request) (*ApplicationDiffOrDryRunRequest,
 	return req, nil
 }
 
+// nolint
 func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context, req *ApplicationDiffOrDryRunRequest,
 	application *v1alpha1.Application, isDryRun bool) ([]*Manifest, error) {
 	originalApplication := application.DeepCopy()
@@ -333,6 +333,7 @@ func decodeManifest(application *v1alpha1.Application,
 // manifestDryRun will check every resource's manifest existed in Kubernetes cluster.
 // If not exist, just save the manifest and no need to compare. If existed, there need
 // to compare with live.
+// nolint
 func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Application,
 	manifests []*Manifest) ([]*Manifest, error) {
 	clusterServer := app.Spec.Destination.Server
@@ -385,7 +386,7 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 			dryRunManifest.Namespace = localNamespace
 		}
 		_, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
-			Get(context.Background(), localName, metav1.GetOptions{})
+			Get(ctx, localName, metav1.GetOptions{})
 		if err != nil && !k8serrors.IsNotFound(err) {
 			dryRunManifest.IsSucceed = false
 			dryRunManifest.ErrMessage = fmt.Sprintf("get resource '%s' with gvr '%v' from namespace '%s' failed: %s",
@@ -398,15 +399,23 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 		var isExisted bool
 		if k8serrors.IsNotFound(err) {
 			isExisted = false
-			updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
-				Create(context.Background(), local,
-					metav1.CreateOptions{
-						DryRun:       []string{metav1.DryRunAll},
-						FieldManager: "kubectl-client-side-apply",
-					})
-			if err != nil {
-				dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
-					"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
+			if _, err = dynamicClient.Resource(schema.GroupVersionResource{Group: "", Version: "v1",
+				Resource: "namespaces"}).Get(ctx, localNamespace, metav1.GetOptions{}); err != nil {
+				// return local if namespace not exist, no need dry-run it
+				if k8serrors.IsNotFound(err) {
+					updatedObj = local.DeepCopy()
+				} else {
+					updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
+						Create(ctx, local,
+							metav1.CreateOptions{
+								DryRun:       []string{metav1.DryRunAll},
+								FieldManager: "kubectl-client-side-apply",
+							})
+					if err != nil {
+						dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
+							"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
+					}
+				}
 			}
 		} else {
 			var localBS []byte
@@ -418,7 +427,7 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 			updatedObj, err = dynamicClient.
 				Resource(localGVR).
 				Namespace(localNamespace).
-				Patch(context.Background(), local.GetName(), types.MergePatchType,
+				Patch(ctx, local.GetName(), types.MergePatchType,
 					localBS, metav1.PatchOptions{
 						DryRun:       []string{metav1.DryRunAll},
 						FieldManager: "kubectl-client-side-apply",

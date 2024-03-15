@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package preinplace
@@ -22,12 +21,6 @@ import (
 	"strings"
 	"time"
 
-	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
-	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
-	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/metrics"
-	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
-
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,18 +30,33 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
+
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
+	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/metrics"
+	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
 )
 
 const (
-	PodNameArgKey      = "PodName"
-	NamespaceArgKey    = "PodNamespace"
-	PodIPArgKey        = "PodIP"
-	PodImageArgKey     = "PodContainer"
-	ModifiedArgKey     = "ModifiedContainer"
-	HostArgKey         = "HostIP"
+	// PodNameArgKey xxx
+	PodNameArgKey = "PodName"
+	// NamespaceArgKey xxx
+	NamespaceArgKey = "PodNamespace"
+	// PodIPArgKey xxx
+	PodIPArgKey = "PodIP"
+	// PodImageArgKey xxx
+	PodImageArgKey = "PodContainer"
+	// ModifiedArgKey xxx
+	ModifiedArgKey = "ModifiedContainer"
+	// HostArgKey xxx
+	HostArgKey = "HostIP"
+	// DeletingAnnotation xxx
 	DeletingAnnotation = "io.tencent.bcs.dev/game-pod-deleting"
 )
 
+// PreInplaceInterface xxx
+// nolint
 type PreInplaceInterface interface {
 	CheckInplace(obj PreInplaceHookObjectInterface,
 		pod *v1.Pod,
@@ -57,6 +65,8 @@ type PreInplaceInterface interface {
 		podNameLabelKey string) (bool, error)
 }
 
+// PreInplaceControl xxx
+// nolint
 type PreInplaceControl struct {
 	kubeClient         clientset.Interface
 	hookClient         hookclientset.Interface
@@ -65,6 +75,7 @@ type PreInplaceControl struct {
 	hookTemplateLister hooklister.HookTemplateLister
 }
 
+// New xxx
 func New(kubeClient clientset.Interface, hookClient hookclientset.Interface, recorder record.EventRecorder,
 	hookRunLister hooklister.HookRunLister, hookTemplateLister hooklister.HookTemplateLister) PreInplaceInterface {
 	return &PreInplaceControl{kubeClient: kubeClient, hookClient: hookClient, recorder: recorder,
@@ -72,8 +83,8 @@ func New(kubeClient clientset.Interface, hookClient hookclientset.Interface, rec
 }
 
 // CheckInplace check whether the pod can be deleted safely
-func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod *v1.Pod, podTemplate *v1.PodTemplateSpec,
-	newStatus PreInplaceHookStatusInterface, podNameLabelKey string) (bool, error) {
+func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod *v1.Pod,
+	podTemplate *v1.PodTemplateSpec, newStatus PreInplaceHookStatusInterface, podNameLabelKey string) (bool, error) {
 	if pod.Status.Phase != v1.PodRunning {
 		return true, nil
 	}
@@ -116,7 +127,7 @@ func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod 
 	if len(existHookRuns) == 0 {
 		var ps metrics.PromServer
 		startTime := time.Now()
-		preInplaceHookRun, err := p.createHookRun(metaObj, runtimeObj,
+		preInplaceHookRun, err := p.createHookRun(metaObj, runtimeObj, // nolint
 			preInplaceHook, pod, podTemplate, preInplaceLabels, podNameLabelKey)
 		if err != nil {
 			ps.CollectHRCreateDurations(namespace, name, "failure", "preinplace", objectKind, time.Since(startTime))
@@ -135,7 +146,7 @@ func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod 
 		return false, nil
 	}
 	if existHookRuns[0].Status.Phase == hookv1alpha1.HookPhaseSuccessful {
-		err := deletePreInplaceHookCondition(newStatus, pod.Name)
+		err = deletePreInplaceHookCondition(newStatus, pod.Name)
 		if err != nil {
 			klog.Warningf("expected the %s %s/%s exists a PreInplaceHookCondition for pod %s, but got an error: %s",
 				objectKind, namespace, name, pod.Name, err.Error())
@@ -258,7 +269,7 @@ func deletePreInplaceHookCondition(status PreInplaceHookStatusInterface, podName
 		return fmt.Errorf("no PreInplaceHookCondition to delete")
 	}
 
-	newConditions := append(conditions[:index], conditions[index+1:]...)
+	newConditions := append(conditions[:index], conditions[index+1:]...) // nolint
 	status.SetPreInplaceHookConditions(newConditions)
 	return nil
 }
@@ -328,6 +339,7 @@ func (p *PreInplaceControl) injectPodDeletingAnnotation(pod *v1.Pod) error {
 }
 
 // findModifiedContainers returns names of containers which image are modified when inplace updating
+// nolint result 1 (error) is always nil
 func findModifiedContainers(podTemplate *v1.PodTemplateSpec, pod *v1.Pod) ([]hookv1alpha1.Argument, error) {
 	oldImages := make(map[string]string)
 	for _, container := range pod.Spec.Containers {

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package middleware
@@ -19,6 +18,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/argoproj/argo-cd/v2/applicationset/generators"
 	"github.com/argoproj/argo-cd/v2/applicationset/services"
 	"github.com/argoproj/argo-cd/v2/applicationset/utils"
@@ -27,8 +28,6 @@ import (
 	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
 
@@ -69,7 +68,8 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 	argoCDService, _ := services.NewArgoCDService(h.option.Storage.GetArgoDB(),
 		true, repoClientSet, false)
 	// this will render the Applications by ApplicationSet's generators
-	// refer to: https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
+	// refer to:
+	// https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
 	results := make([]*v1alpha1.Application, 0)
 	for i := range appset.Spec.Generators {
 		generator := appset.Spec.Generators[i]
@@ -171,7 +171,8 @@ func (h *handler) checkApplicationSetGenerator(ctx context.Context, appset *v1al
 	return nil
 }
 
-// refer to: https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L487
+// refer to:
+// https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L487
 func getTempApplication(applicationSetTemplate v1alpha1.ApplicationSetTemplate) *v1alpha1.Application {
 	var tmplApplication v1alpha1.Application
 	tmplApplication.Annotations = applicationSetTemplate.Annotations

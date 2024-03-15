@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // +kubebuilder:validation:Optional
@@ -223,7 +222,8 @@ type WebMetricHeader struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:printcolumn:JSONPath=.status.phase,name=PHASE,type=string,description=The phase of hookruns.
-// +kubebuilder:printcolumn:JSONPath=.metadata.creationTimestamp,name=AGE,type=date,description= CreationTimestamp is a timestamp representing the server time when this object was created.
+// +kubebuilder:printcolumn:JSONPath=.metadata.creationTimestamp,name=AGE,type=date,
+// description= CreationTimestamp is a timestamp representing the server time when this object was created.
 // +kubebuilder:subresource:status
 type HookRun struct {
 	metav1.TypeMeta   `json:",inline"`

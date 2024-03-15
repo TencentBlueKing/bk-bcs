@@ -79,7 +79,8 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 			return false, nil
 		}
 		for _, s := range c.Scope {
-			if tools.MatchAppConfigItem(s, app, path, name) {
+			ok, _ := tools.MatchAppConfigItem(s, app, path, name)
+			if ok {
 				return true, nil
 			}
 		}
@@ -111,7 +112,8 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 		if !c.Enabled {
 			return false, nil
 		}
-		if tools.MatchAppConfigItem(s, app, path, name) {
+		ok, _ := tools.MatchAppConfigItem(s, app, path, name)
+		if ok {
 			return true, nil
 		}
 	}

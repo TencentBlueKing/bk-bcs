@@ -74,7 +74,8 @@
       header-align="center"
       footer-align="center"
       @value-change="dialogInputStr = ''"
-      :draggable="false">
+      :draggable="false"
+      :quick-close="false">
       <div class="dialog-content">
         <div class="dialog-title">确认删除服务？</div>
         <div class="dialog-input">

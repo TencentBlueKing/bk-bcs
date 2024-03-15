@@ -8,13 +8,13 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1
 
 import (
 	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -32,10 +32,12 @@ type ServiceMonitorSpec struct {
 	Selector  LabelSelector `json:"selector,omitempty"`
 }
 
+// LabelSelector xxx
 type LabelSelector struct {
 	MatchLabels map[string]string `json:"matchLabels,omitempty"`
 }
 
+// Endpoint xxx
 type Endpoint struct {
 	Port     string              `json:"port,omitempty"`
 	Path     string              `json:"path,omitempty"`
@@ -62,10 +64,12 @@ type ServiceMonitor struct {
 	Status ServiceMonitorStatus `json:"status,omitempty"`
 }
 
+// GetUuid xxx
 func (s *ServiceMonitor) GetUuid() string {
 	return fmt.Sprintf("%s.%s", s.Namespace, s.Name)
 }
 
+// GetSelector xxx
 func (s *ServiceMonitor) GetSelector() labels.Requirements {
 	rms := labels.Requirements{}
 	for k, v := range s.Spec.Selector.MatchLabels {

@@ -12,11 +12,11 @@
           :current-version-id="currentVersion.id"
           :un-named-version-variables="props.unNamedVersionVariables"
           :selected-config="props.selectedConfig"
-          :selected-config-kv="props.selectedConfigKv"
+          :selected-kv-config-id="selectedKV"
           :is-publish="props.showPublishBtn"
           @selected="handleSelectDiffItem" />
         <div :class="['diff-content-area', { light: diffDetailData.contentType === 'file' }]">
-          <diff :diff="diffDetailData" :id="appId" :loading="false">
+          <diff :diff="diffDetailData" :id="appId" :selected-kv-config-id="selectedKV" :loading="false">
             <template #leftHead>
               <slot name="baseHead">
                 <div class="diff-panel-head">
@@ -81,9 +81,9 @@
     currentVersion: IConfigVersion; // 当前版本详情
     unNamedVersionVariables?: IVariableEditParams[];
     baseVersionId?: number; // 默认选中的基准版本id
-    selectedConfig?: IConfigDiffSelected; // 默认选中的配置文件id
+    selectedConfig?: IConfigDiffSelected; // 默认选中的配置文件
     versionDiffList?: IConfigVersion[];
-    selectedConfigKv?: number; // 默认选中的文件id
+    selectedKvConfigId?: number; // 选中的kv类型配置id
   }>();
 
   const emits = defineEmits(['update:show', 'publish']);
@@ -94,8 +94,10 @@
   const versionList = ref<IConfigVersion[]>([]);
   const versionListLoading = ref(false);
   const selectedBaseVersion = ref(); // 基准版本ID
+  const selectedKV = ref(props.selectedKvConfigId);
   const diffDetailData = ref<IDiffDetail>({
     // 差异详情数据
+    id: 0,
     contentType: 'text',
     current: {
       language: '',
@@ -113,9 +115,11 @@
     () => props.show,
     async (val) => {
       if (val) {
-        getVersionList();
+        await getVersionList();
         if (props.baseVersionId) {
           selectedBaseVersion.value = props.baseVersionId;
+        } else if (versionList.value.length > 0) {
+          selectedBaseVersion.value = versionList.value[0].id;
         }
       }
     },
@@ -127,6 +131,13 @@
       if (val) {
         appId.value = Number(val);
       }
+    },
+  );
+
+  watch(
+    () => props.selectedKvConfigId,
+    (val) => {
+      selectedKV.value = val;
     },
   );
 
@@ -155,6 +166,9 @@
   // 选中对比对象，配置或者脚本
   const handleSelectDiffItem = (data: IDiffDetail) => {
     diffDetailData.value = data;
+    if (data.contentType === 'singleLineKV') {
+      selectedKV.value = data.id as number;
+    }
   };
 
   const handleClose = () => {

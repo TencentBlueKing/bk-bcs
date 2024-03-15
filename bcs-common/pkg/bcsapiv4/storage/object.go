@@ -15,16 +15,16 @@ package storage
 import (
 	"time"
 
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	schedtype "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/types"
 	appv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 
-	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/storage/tkex/gamedeployment/v1alpha1"
 	gsv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/storage/tkex/gamestatefulset/v1alpha1"
 	gpav1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/storage/tkex/generalpodautoscaler/v1alpha1"
-	schedtype "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/types"
 )
 
 // Namespace is k8s namespace

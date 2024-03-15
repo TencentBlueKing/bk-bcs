@@ -343,6 +343,7 @@ export default {
   '配置文件删除后，可以通过恢复按钮撤销删除': 'After the configuration file is deleted, you can undo the deletion by using the Restore button',
   撤销修改配置文件成功: 'Succeeded in unmodifying the configuration file',
   恢复配置文件成功: 'Succeeded in Restore the configuration file',
+  打包下载: 'Package download',
 
   // 分组管理
   新增分组: 'New group',
@@ -381,7 +382,7 @@ export default {
   描述: 'description',
   '确认删除该全局变量？': 'Are you sure to delete this global variable?',
   '一旦删除，该操作将无法撤销，服务配置文件中不可再引用该全局变量，请谨慎操作': 'Once deleted, the operation cannot be undone, and the global variable can no longer be referenced in the service configuration file. Please operate with caution.',
-  '定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如{{ .bk_bscp_appid }},变量使用详情请参考：': 'After defining global variables, they can be referenced by all service configuration files under the business. Use go template syntax for reference, such as {{ .bk_bscp_appid }}. For details on variable usage, please refer to:',
+  '定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如,变量使用详情请参考：': 'After defining global variables, they can be referenced by all service configuration files under the business. Use go template syntax for reference, such as {var}. For details on variable usage, please refer to:',
   删除变量成功: 'Delete variable successfully',
   创建: 'Create',
   创建变量成功: 'Variable created successfully',
@@ -533,9 +534,11 @@ export default {
   '蓝鲸配置平台上的业务ID，例如：2': 'Service ID on the bscp, for example, 2',
   '服务配置中心上的服务名称，例如：demo_service': 'bscp service name, for example, demo service',
   '单个客户端可使用多个服务的配置，为保证路径唯一，服务配置需存放于：配置根目录/业务ID/服务名称，服务配置存放目录 = 配置存放根目录/业务ID/服务名称': 'A client can use multiple service configurations. To ensure a unique path, service configurations must be saved in the following directory: Configuration root directory/service ID/ service name. Service configuration directory = Configuration root directory/service ID/ service name',
+  '当前客户端最近一次成功拉取的服务配置版本名称，如 V1，通常会在后置脚本中为服务配置版本添加标识，以表示配置文件已经完成拉取': 'The name of the service configuration version successfully pulled by the current client, such as V1, usually adds an identifier for the service configuration version in the post-script to indicate that the configuration file has been pulled',
   配置根目录: 'Configuring the root directory',
   业务ID: 'BusinessID',
   服务配置目录: 'Service configuration directory',
+  当前配置版本名称: 'Current configuration version name',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
@@ -617,4 +620,7 @@ export default {
   产品官网: 'Product official website',
   请输入: 'Please enter',
   确认: 'Confirm',
+  变量名称已复制: 'The variable name has been copied',
+  单行配置: 'Single-row config',
+  多行配置: 'Multi-row config',
 };

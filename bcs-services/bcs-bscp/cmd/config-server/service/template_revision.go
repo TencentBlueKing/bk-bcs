@@ -40,6 +40,12 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbcs.CreateTe
 		return nil, err
 	}
 
+	metadata, err := s.client.provider.Metadata(grpcKit, req.Sign)
+	if err != nil {
+		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
 	r := &pbds.CreateTemplateRevisionReq{
 		Attachment: &pbtr.TemplateRevisionAttachment{
 			BizId:           grpcKit.BizID,
@@ -61,6 +67,7 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbcs.CreateTe
 			ContentSpec: &pbcontent.ContentSpec{
 				Signature: req.Sign,
 				ByteSize:  req.ByteSize,
+				Md5:       metadata.Md5,
 			},
 		},
 	}

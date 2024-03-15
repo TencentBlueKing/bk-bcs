@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package util provides some util functions
@@ -78,7 +77,8 @@ func NewListerRegistry(allNode kube_util.NodeLister, readyNode kube_util.NodeLis
 }
 
 // NewListerRegistryWithDefaultListers returns a registry filled with listers of the default implementations
-func NewListerRegistryWithDefaultListers(kubeClient client.Interface, stopChannel <-chan struct{}) ListerRegistryExtend {
+func NewListerRegistryWithDefaultListers(
+	kubeClient client.Interface, stopChannel <-chan struct{}) ListerRegistryExtend {
 	unschedulablePodLister := kube_util.NewUnschedulablePodLister(kubeClient, stopChannel)
 	scheduledPodLister := kube_util.NewScheduledPodLister(kubeClient, stopChannel)
 	readyNodeLister := kube_util.NewReadyNodeLister(kubeClient, stopChannel)

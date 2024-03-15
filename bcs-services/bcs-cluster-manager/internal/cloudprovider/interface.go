@@ -367,7 +367,7 @@ type NodeGroupManager interface {
 	DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
 		opt *DeleteExternalNodesOption) (*proto.Task, error)
 	// GetExternalNodeScript get external node script from cluster nodeGroup
-	GetExternalNodeScript(group *proto.NodeGroup) (string, error)
+	GetExternalNodeScript(group *proto.NodeGroup, internal bool) (string, error)
 }
 
 // VPCManager cloud interface for vpc management

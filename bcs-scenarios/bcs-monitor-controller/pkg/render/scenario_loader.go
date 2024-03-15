@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package render
@@ -20,19 +19,23 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 )
 
 const (
-	GenerateMonitorRuleName       = "auto-generate-monitor-rule"
-	GeneratePanelName             = "auto-generate-monitor-panel"
-	GenerateNoticeGroupName       = "auto-generate-monitor-notice-group"
+	// GenerateMonitorRuleName xxx
+	GenerateMonitorRuleName = "auto-generate-monitor-rule"
+	// GeneratePanelName xxx
+	GeneratePanelName = "auto-generate-monitor-panel"
+	// GenerateNoticeGroupName xxx
+	GenerateNoticeGroupName = "auto-generate-monitor-notice-group"
+	// GenerateAppendNoticeGroupName xxx
 	GenerateAppendNoticeGroupName = "auto-generate-monitor-append-ng"
 )
 
@@ -40,6 +43,7 @@ const (
 // scenario支持两种配置方式 （允许同时存在）
 // 1. 蓝鲸监控导出 （通过文件夹名称区分不同YAML文件， 例如grafana下认为是告警面板配置）
 // 2. cr模式配置 （通过文件名称区分，例如monitorrule&mr开头文件认为是告警规则配置）
+// nolint funlen
 func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) {
 	res := &Result{}
 	repo, ok := r.repoManager.GetRepo(repoKey)
@@ -143,7 +147,8 @@ func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) 
 }
 
 // LoadRule load rule from certain path, filterFunc 根据告警名判断
-func (r *MonitorRender) LoadRule(path string, filterFunc ...func(string) bool) (*monitorextensionv1.MonitorRule, error) {
+func (r *MonitorRender) LoadRule(
+	path string, filterFunc ...func(string) bool) (*monitorextensionv1.MonitorRule, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		blog.Infof("empty raw rule, continue...")
 		return nil, nil

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package main implements main function
@@ -27,11 +26,6 @@ import (
 	"syscall"
 	"time"
 
-	cloudBuilder "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/builder"
-	coreinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core"
-	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,6 +51,12 @@ import (
 	componentbaseconfig "k8s.io/component-base/config"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/client/leaderelectionconfig"
+
+	cloudBuilder "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/builder"
+	coreinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
 )
 
 // MultiStringFlag is a flag for passing multiple parameters using same flag
@@ -196,6 +196,7 @@ var (
 	nodeGroupsFlag = multiStringFlag("nodes",
 		"sets min,max size and other configuration data for a node group in a format accepted by cloud provider."+
 			"Can be used multiple times. Format: <min>:<max>:<other...>")
+	// nolint
 	nodeGroupAutoDiscoveryFlag = multiStringFlag(
 		"node-group-auto-discovery",
 		"One or more definition(s) of node group auto-discovery. "+
@@ -239,6 +240,7 @@ var (
 	regional           = flag.Bool("regional", false, "Cluster is regional.")
 	newPodScaleUpDelay = flag.Duration("new-pod-scale-up-delay", 0*time.Second,
 		"Pods less than this old will not be considered for scale-up.")
+	// nolint
 	filterOutSchedulablePodsUsesPacking = flag.Bool("filter-out-schedulable-pods-uses-packing", true,
 		"Filtering out schedulable pods before CA scale up by trying to pack the schedulable pods on free capacity on existing nodes."+
 			"Setting it to false employs a more lenient filtering approach that does not try to pack the pods on the nodes."+
@@ -278,8 +280,8 @@ func createAutoscalingOptions() scalingconfig.Options {
 		klog.Fatalf("Failed to parse flags: %v", err)
 	}
 	// Convert memory limits to bytes.
-	minMemoryTotal = minMemoryTotal * units.GiB
-	maxMemoryTotal = maxMemoryTotal * units.GiB
+	minMemoryTotal *= units.GiB
+	maxMemoryTotal *= units.GiB
 
 	parsedGpuTotal, err := parseMultipleGpuLimits(*gpuTotal)
 	if err != nil {
@@ -383,7 +385,7 @@ func createKubeClient(kubeConfig *rest.Config) kube_client.Interface {
 
 func registerSignalHandlers(autoscaler core.Autoscaler) {
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGQUIT)
+	signal.Notify(sigs, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGQUIT) // nolint
 	klog.V(1).Info("Registered cleanup signal handler")
 
 	go func() {
@@ -445,6 +447,7 @@ func run(healthCheck *metrics.HealthCheck) {
 	}
 
 	// Autoscale ad infinitum.
+	// nolint
 	for {
 		select {
 		case <-time.After(*scanInterval):

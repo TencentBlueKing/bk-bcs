@@ -1,6 +1,6 @@
 <template>
   <bk-loading :loading="loading" style="height: 100%">
-    <table class="config-groups-table">
+    <table class="config-groups-table" :key="appId">
       <thead>
         <tr class="config-groups-table-tr">
           <th class="name">{{ t('配置文件绝对路径') }}</th>
@@ -407,11 +407,15 @@
     },
   );
 
-  watch([() => configsCount.value, () => templatesCount.value], () => {
-    configStore.$patch((state) => {
-      state.allConfigCount = configsCount.value + templatesCount.value;
-    });
-  });
+  watch(
+    [() => configsCount.value, () => templatesCount.value],
+    () => {
+      configStore.$patch((state) => {
+        state.allConfigCount = configsCount.value + templatesCount.value;
+      });
+    },
+    { immediate: true },
+  );
 
   onMounted(async () => {
     await getBindingId();

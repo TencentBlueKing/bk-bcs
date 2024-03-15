@@ -22,8 +22,10 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
@@ -79,7 +81,7 @@ func (ca *CreateAction) getRelativeResource() error {
 func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 	timeStr := time.Now().Format(time.RFC3339)
 	group := &cmproto.NodeGroup{
-		NodeGroupID:     ca.generateNodeGroupID(),
+		NodeGroupID:     autils.GenerateNodeGroupID(),
 		Name:            ca.req.Name,
 		ClusterID:       ca.req.ClusterID,
 		Region:          ca.req.Region,
@@ -114,6 +116,10 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 			extra := make(map[string]string, 0)
 			extra[resource.ResourcePoolType] = ca.req.GetExtra().GetProvider()
 			extra[resource.DevicePoolIds] = ca.req.GetExtra().GetPoolID()
+			if ca.req.NodeGroupType == common.External.String() && ca.req.GetExtra().GetScriptType() != "" {
+				extra[ca.req.GetExtra().GetScriptType()] = ""
+			}
+
 			return extra
 		}(),
 	}
@@ -131,11 +137,14 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 	// base64 encode secret file
 	if group.LaunchTemplate != nil && group.LaunchTemplate.KeyPair != nil {
 		if len(group.LaunchTemplate.KeyPair.KeySecret) > 0 {
-			group.LaunchTemplate.KeyPair.KeySecret = utils.Base64Encode(group.LaunchTemplate.KeyPair.KeySecret)
+			group.LaunchTemplate.KeyPair.KeySecret, _ = encrypt.Encrypt(nil, group.LaunchTemplate.KeyPair.KeySecret)
 		}
 		if len(group.LaunchTemplate.KeyPair.KeyPublic) > 0 {
-			group.LaunchTemplate.KeyPair.KeyPublic = utils.Base64Encode(group.LaunchTemplate.KeyPair.KeyPublic)
+			group.LaunchTemplate.KeyPair.KeyPublic, _ = encrypt.Encrypt(nil, group.LaunchTemplate.KeyPair.KeyPublic)
 		}
+	}
+	if group.LaunchTemplate != nil && group.LaunchTemplate.InitLoginPassword != "" {
+		group.LaunchTemplate.InitLoginPassword, _ = encrypt.Encrypt(nil, group.LaunchTemplate.InitLoginPassword)
 	}
 
 	// base64 encode script file
@@ -153,11 +162,6 @@ func (ca *CreateAction) setResp(code uint32, msg string) {
 	ca.resp.Code = code
 	ca.resp.Message = msg
 	ca.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-}
-
-func (ca *CreateAction) generateNodeGroupID() string {
-	str := utils.RandomString(8)
-	return fmt.Sprintf("BCS-ng-%s", str)
 }
 
 func (ca *CreateAction) validate() error {
@@ -308,6 +312,7 @@ func (ca *CreateAction) createNodeGroup() error {
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ca.cluster.ClusterID,
 		ProjectID:    ca.cluster.ProjectID,
+		ResourceName: ca.group.Name,
 	})
 	if err != nil {
 		blog.Errorf("CreateNodeGroup[%s] CreateOperationLog failed: %v", ca.cluster.ClusterID, err)

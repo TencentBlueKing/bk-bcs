@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	tcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -78,7 +79,11 @@ func ApplyCVMFromResourcePoolTask(taskID, stepName string) error { // nolint
 		state.Task.CommonParams = make(map[string]string)
 	}
 
-	recordInstanceList, orderID, err := applyInstanceFromResourcePool(ctx, dependInfo, scalingNum, operator)
+	// get task old orderId
+	oldOrderId := state.Task.CommonParams[cloudprovider.DeviceRecordIDKey.String()]
+
+	recordInstanceList, orderID, err := applyInstanceFromResourcePool(ctx, dependInfo, state,
+		oldOrderId, scalingNum, operator)
 	if err != nil {
 		blog.Errorf("ApplyCVMFromResourcePoolTask[%s] applyInstanceFromResourcePool for group %s orderID %s failed, %s",
 			taskID, nodeGroupID, orderID, err.Error())
@@ -406,5 +411,64 @@ func CheckClusterNodeStatusTask(taskID, stepName string) error { // nolint
 		return err
 	}
 
+	return nil
+}
+
+// CheckClusterNodesInCMDBTask check nodes exist in cmdb task
+func CheckClusterNodesInCMDBTask(taskID string, stepName string) error {
+	start := time.Now()
+	// get task information and validate
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	if step == nil {
+		return nil
+	}
+
+	// extract parameter && check validate
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	operator := step.Params[cloudprovider.OperatorKey.String()]
+	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
+
+	// cluster basic depend info
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
+	if err != nil {
+		blog.Errorf("CheckClusterNodesInCMDBTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
+		retErr := fmt.Errorf("CheckClusterNodesInCMDBTask GetClusterDependBasicInfo failed")
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	// get nodeIPs
+	nodeIPs := state.Task.CommonParams[cloudprovider.NodeIPsKey.String()]
+	ips := strings.Split(nodeIPs, ",")
+	nodeIds := state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()]
+	ids := strings.Split(nodeIds, ",")
+
+	if len(ips) == 0 {
+		blog.Infof("CheckNodeIpsInCMDBTask[%s] nodeIPs empty", taskID)
+		return nil
+	}
+
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	err = tcommon.CheckIPsInCmdb(ctx, ips)
+	if err != nil {
+		blog.Errorf("CheckNodeIpsInCMDBTask[%s] failed: %v", taskID, err)
+		if manual != common.True {
+			_ = returnDevicesToRMAndCleanNodes(ctx, dependInfo, ids, true, operator)
+		}
+		_ = state.UpdateStepFailure(start, stepName, err)
+		return err
+	}
+	blog.Infof("CheckNodeIpsInCMDBTask %s successful", taskID)
+
+	// update step
+	_ = state.UpdateStepSucc(start, stepName)
 	return nil
 }

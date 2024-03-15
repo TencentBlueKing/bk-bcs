@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2023 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package filterclb filters invalid cloud loadbalance
@@ -20,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -31,7 +31,6 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginutil"
@@ -130,11 +129,11 @@ func (h *Handler) Handle(review v1beta1.AdmissionReview) *v1beta1.AdmissionRespo
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
 
-	//只处理创建和更新
+	// 只处理创建和更新
 	if req.Operation != v1beta1.Create && req.Operation != v1beta1.Update {
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
-	//含有特定annotations 也过滤
+	// 含有特定annotations 也过滤
 	started := time.Now()
 	blog.Infof("filterclb: %s %s/%s", req.Operation, req.Namespace, req.Name)
 	if req.Kind.Kind == "Service" {
@@ -150,7 +149,8 @@ func (h *Handler) Handle(review v1beta1.AdmissionReview) *v1beta1.AdmissionRespo
 		if h.DenyService(svc) {
 			blog.Infof("filterclb: %s %s/%s deny service", req.Operation, req.Namespace, req.Name)
 			metrics.ReportBcsWebhookServerPluginLantency(pluginName, metrics.StatusFailure, started)
-			return pluginutil.ToAdmissionResponse(fmt.Errorf("service %s/%s is not allowed to create, It is forbidden to directly create external network clb", req.Namespace, req.Name))
+			return pluginutil.ToAdmissionResponse(fmt.Errorf("service %s/%s is not allowed to create, "+
+				"It is forbidden to directly create external network clb", req.Namespace, req.Name))
 		}
 
 		// pass
@@ -171,7 +171,8 @@ func (h *Handler) Handle(review v1beta1.AdmissionReview) *v1beta1.AdmissionRespo
 		if h.DenyIngress(ingress) {
 			blog.Infof("filterclb: %s %s/%s deny ingress", req.Operation, req.Namespace, req.Name)
 			metrics.ReportBcsWebhookServerPluginLantency(pluginName, metrics.StatusFailure, started)
-			return pluginutil.ToAdmissionResponse(fmt.Errorf("ingress %s/%s is not allowed to create, It is forbidden to directly create external network clb", req.Namespace, req.Name))
+			return pluginutil.ToAdmissionResponse(fmt.Errorf("ingress %s/%s is not allowed to create, "+
+				"It is forbidden to directly create external network clb", req.Namespace, req.Name))
 		}
 
 		// pass
@@ -212,7 +213,8 @@ func (h *Handler) DenyIngress(ingress *v1.Ingress) bool {
 	if ingress.Annotations[annotationIngressExistLbID] != "" {
 		return false
 	}
-	if ingress.Annotations[annotationsIngressClass] != "" && ingress.Annotations[annotationsIngressClass] != ingressClassQcloud {
+	if ingress.Annotations[annotationsIngressClass] != "" &&
+		ingress.Annotations[annotationsIngressClass] != ingressClassQcloud {
 		return false
 	}
 	if ingress.Spec.IngressClassName != nil && *ingress.Spec.IngressClassName != ingressClassQcloud {
@@ -220,25 +222,28 @@ func (h *Handler) DenyIngress(ingress *v1.Ingress) bool {
 	}
 
 	if h.supportIngressClass {
-		ingressClassList, err := h.kubeClient.NetworkingV1().IngressClasses().List(context.Background(), metav1.ListOptions{})
+		ingressClassList, err := h.kubeClient.NetworkingV1().IngressClasses().List(context.Background(),
+			metav1.ListOptions{})
 		if err != nil {
 			blog.Errorf("get ingress class list failed, err %s", err.Error())
 			return true
 		}
-		//只有一个，并且不是qcloud，不需要拦截
+		// 只有一个，并且不是qcloud，不需要拦截
 		if len(ingressClassList.Items) == 1 && ingressClassList.Items[0].Name != ingressClassQcloud {
 			return false
 		}
-		//默认的是非qcloud，不需要拦截
+		// 默认的是非qcloud，不需要拦截
 		for _, ingressClass := range ingressClassList.Items {
 			// 也许可能存在多个默认，但是就必须指定ingressClassName了（k8s设定）
-			if ingressClass.Annotations[annotationIngressClassDefaultKey] == constStringTrue && ingressClass.Name != ingressClassQcloud {
+			if ingressClass.Annotations[annotationIngressClassDefaultKey] == constStringTrue &&
+				ingressClass.Name != ingressClassQcloud {
 				return false
 			}
 		}
 	} else {
-		//1.18以下版本，判断是否存在deploy l7-lb-controller
-		_, err := h.kubeClient.ExtensionsV1beta1().Deployments("kube-system").Get(context.Background(), l7LbControllerName, metav1.GetOptions{})
+		// 1.18以下版本，判断是否存在deploy l7-lb-controller
+		_, err := h.kubeClient.ExtensionsV1beta1().Deployments("kube-system").Get(context.Background(),
+			l7LbControllerName, metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				blog.Infof("get deploy %s not found, skip filter clb", l7LbControllerName)

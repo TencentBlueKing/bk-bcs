@@ -14,6 +14,7 @@ package qcloud
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"strconv"
 	"strings"
 	"sync"
@@ -170,9 +171,6 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 
 	// init instance passwd
 	passwd := utils.BuildInstancePwd()
-	if opt.InitPassword != "" {
-		passwd = opt.InitPassword
-	}
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
 	// setting all steps details
@@ -614,7 +612,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	// init instance passwd
 	passwd := utils.BuildInstancePwd()
 	if opt.Login != nil && opt.Login.GetInitLoginPassword() != "" {
-		passwd = opt.Login.GetInitLoginPassword()
+		passwd, _ = encrypt.Decrypt(nil, opt.Login.GetInitLoginPassword())
 	}
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
@@ -951,7 +949,14 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
 	// instance passwd
-	passwd := group.LaunchTemplate.InitLoginPassword
+	passwd := func() string {
+		if len(group.LaunchTemplate.InitLoginPassword) == 0 {
+			return group.LaunchTemplate.InitLoginPassword
+		}
+
+		pwd, _ := encrypt.Decrypt(nil, group.LaunchTemplate.InitLoginPassword)
+		return pwd
+	}()
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
 	// setting all steps details
@@ -1177,7 +1182,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	taskName := fmt.Sprintf(updateNodeGroupDesiredNodeTemplate, group.ClusterID, group.Name)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	passwd := group.LaunchTemplate.InitLoginPassword
+	passwd := group.LaunchTemplate.GetInitLoginPassword()
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
 	// setting all steps details

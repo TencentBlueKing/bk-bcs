@@ -31,27 +31,35 @@
     {
       cnName: t('配置根目录'),
       shellVar: '${bk_bscp_temp_dir}',
-      pythonVar: 'os.environn.get( \'bk_bscp_temp_dir\' )',
+      pythonVar: 'os.environ.get( \'bk_bscp_temp_dir\' )',
       tips: t('客户端配置的配置存放临时目录（temp_dir），默认值为 /data/bscp'),
     },
     {
       cnName: t('业务ID'),
       shellVar: '${bk_bscp_biz}',
-      pythonVar: 'os.environn.get( \'bk_bscp_biz\' )',
+      pythonVar: 'os.environ.get( \'bk_bscp_biz\' )',
       tips: t('蓝鲸配置平台上的业务ID，例如：2'),
     },
     {
       cnName: t('服务名称'),
       shellVar: '${bk_bscp_app}',
-      pythonVar: 'os.environn.get( \'bk_bscp_app\' )',
+      pythonVar: 'os.environ.get( \'bk_bscp_app\' )',
       tips: t('服务配置中心上的服务名称，例如：demo_service'),
     },
     {
       cnName: t('服务配置目录'),
       shellVar: '${bk_bscp_app_temp_dir}',
-      pythonVar: 'os.environn.get( \'bk_bscp_app_temp_dir\' )',
+      pythonVar: 'os.environ.get( \'bk_bscp_app_temp_dir\' )',
       tips: t(
         '单个客户端可使用多个服务的配置，为保证路径唯一，服务配置需存放于：配置根目录/业务ID/服务名称，服务配置存放目录 = 配置存放根目录/业务ID/服务名称',
+      ),
+    },
+    {
+      cnName: t('当前配置版本名称'),
+      shellVar: '${bk_bscp_current_version_name}',
+      pythonVar: 'os.environ.get( \'bk_bscp_current_version_name\' )',
+      tips: t(
+        '当前客户端最近一次成功拉取的服务配置版本名称，如 V1，通常会在后置脚本中为服务配置版本添加标识，以表示配置文件已经完成拉取',
       ),
     },
   ];

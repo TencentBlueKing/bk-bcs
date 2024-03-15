@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package middleware
@@ -22,9 +21,16 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
+	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
-
+	argocluster "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
@@ -32,23 +38,15 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/exp/slices"
 
-	argocluster "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
-	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
 )
 
 // MiddlewareInterface defines the middleware interface
+// nolint
 type MiddlewareInterface interface {
 	Init() error
 
@@ -378,7 +376,7 @@ func (h *handler) CheckApplicationPermission(ctx context.Context, appName string
 	projectID := common.GetBCSProjectID(app.Annotations)
 	if projectID != "" {
 		// CheckProjectPermissionByID 检查登录态用户对于项目的权限
-		statusCode, err := h.CheckProjectPermissionByID(ctx, app.Spec.Project, projectID, iam.ProjectView)
+		statusCode, err := h.CheckProjectPermissionByID(ctx, app.Spec.Project, projectID, iam.ProjectView) // nolint
 		if err != nil {
 			return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", projectID)
 		}
@@ -443,20 +441,18 @@ func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Appl
 			}
 			blog.Infof("RequestID[%s] check multi-source repo '%s' success", RequestID(ctx), repoUrl)
 		}
-	} else {
-		if app.Spec.Source != nil {
-			repoUrl := app.Spec.Source.RepoURL
-			var repoBelong bool
-			repoBelong, err = h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
-			if err != nil {
-				return http.StatusBadRequest, errors.Wrapf(err, "check repository permission failed")
-			}
-			if !repoBelong {
-				return http.StatusForbidden, errors.Errorf("repo '%s' not belong to project '%s'",
-					repoUrl, projectName)
-			}
-			blog.Infof("RequestID[%s] check source repo '%s' success", RequestID(ctx), repoUrl)
+	} else if app.Spec.Source != nil {
+		repoUrl := app.Spec.Source.RepoURL
+		var repoBelong bool
+		repoBelong, err = h.checkRepositoryBelongProject(ctx, repoUrl, projectName)
+		if err != nil {
+			return http.StatusBadRequest, errors.Wrapf(err, "check repository permission failed")
 		}
+		if !repoBelong {
+			return http.StatusForbidden, errors.Errorf("repo '%s' not belong to project '%s'",
+				repoUrl, projectName)
+		}
+		blog.Infof("RequestID[%s] check source repo '%s' success", RequestID(ctx), repoUrl)
 	}
 
 	clusterQuery := clusterclient.ClusterQuery{

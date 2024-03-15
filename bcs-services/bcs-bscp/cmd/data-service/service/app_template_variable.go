@@ -133,6 +133,7 @@ func getTmplRevisionsFromReleased(releasedTmpls []*table.ReleasedAppTemplate) []
 				ContentSpec: &table.ContentSpec{
 					Signature: r.Spec.OriginSignature,
 					ByteSize:  r.Spec.OriginByteSize,
+					Md5:       r.Spec.Md5,
 				},
 			},
 			Attachment: &table.TemplateRevisionAttachment{
@@ -171,6 +172,7 @@ func getPbConfigItemsFromReleased(releasedCIs []*table.ReleasedConfigItem) []*pb
 				Content: &pbcontent.ContentSpec{
 					Signature: r.CommitSpec.Content.OriginSignature,
 					ByteSize:  r.CommitSpec.Content.OriginByteSize,
+					Md5:       r.CommitSpec.Content.Md5,
 				},
 				Memo: r.CommitSpec.Memo,
 			},

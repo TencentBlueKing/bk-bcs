@@ -34,6 +34,32 @@ export function getDefaultConfigItem() {
   };
 }
 
+export function getDefaultKvItem() {
+  return {
+    id: 0,
+    spec: {
+      kv_type: '',
+      key: '',
+      value: '',
+    },
+    content_spec: {
+      byte_size: '',
+      signature: '',
+    },
+    kv_state: '',
+    attachment: {
+      biz_id: 0,
+      app_id: 0,
+    },
+    revision: {
+      creator: '',
+      create_at: '',
+      reviser: '',
+      update_at: '',
+    },
+  };
+}
+
 // 配置文件编辑参数
 export function getConfigEditParams() {
   return {

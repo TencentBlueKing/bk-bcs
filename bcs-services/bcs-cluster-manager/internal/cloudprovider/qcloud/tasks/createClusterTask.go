@@ -219,7 +219,7 @@ func generateInstanceAdvanceInfo(cluster *proto.Cluster,
 
 		if kubelet, ok := cluster.NodeSettings.ExtraArgs[icommon.Kubelet]; ok {
 			paras := strings.Split(kubelet, ";")
-			advanceInfo.ExtraArgs.Kubelet = paras
+			advanceInfo.ExtraArgs.Kubelet = utils.FilterEmptyString(paras)
 		}
 	}
 
@@ -1096,21 +1096,22 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 	blog.Infof("RegisterManageClusterKubeConfigTask[%s] registerTKEClusterEndpoint success", taskID)
 
 	// 开启admin权限, 并生成kubeconfig
-	kube, err := openClusterAdminKubeConfig(ctx, dependInfo)
+	clusterKube, connectKube, err := openClusterAdminKubeConfig(ctx, dependInfo)
 	if err != nil {
 		blog.Errorf("RegisterManageClusterKubeConfigTask[%s] registerTKEClusterEndpoint failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("registerTKEClusterEndpoint failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	blog.Infof("RegisterManageClusterKubeConfigTask[%s] openClusterAdminKubeConfig[%s] success", taskID, kube)
+	blog.Infof("RegisterManageClusterKubeConfigTask[%s] openClusterAdminKubeConfig[%s] [%s] success",
+		taskID, clusterKube, connectKube)
 
 	// retry 重试生成jwt token
 	var (
 		token string
 	)
 	err = retry.Do(func() error {
-		token, err = providerutils.GenerateSATokenByKubeConfig(ctx, kube)
+		token, err = providerutils.GenerateSATokenByKubeConfig(ctx, connectKube)
 		if err != nil {
 			return err
 		}
@@ -1129,7 +1130,7 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 	// import cluster credential
 	err = importClusterCredential(ctx, dependInfo, func() bool {
 		return isExtranet == icommon.True
-	}(), false, token, kube)
+	}(), false, token, clusterKube)
 	if err != nil {
 		blog.Errorf("RegisterManageClusterKubeConfigTask[%s] importClusterCredential failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("importClusterCredential failed %s", err.Error())
@@ -1143,7 +1144,7 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
-	state.Task.CommonParams[cloudprovider.DynamicClusterKubeConfigKey.String()] = kube
+	state.Task.CommonParams[cloudprovider.DynamicClusterKubeConfigKey.String()] = clusterKube
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
@@ -1190,48 +1191,53 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 }
 
 // openClusterAdminKubeConfig open account cluster admin perm
-func openClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (string, error) {
+func openClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (string, string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	tkeCli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
 		blog.Errorf("openClusterAdminKubeConfig[%s] NewTkeClient failed: %v", taskID, err)
-		return "", err
+		return "", "", err
 	}
 
 	// get qcloud account clusterAdminRole
 	err = tkeCli.AcquireClusterAdminRole(info.Cluster.SystemID)
 	if err != nil {
 		blog.Errorf("openClusterAdminKubeConfig[%s] AcquireClusterAdminRole failed: %v", taskID, err)
-		return "", err
+		return "", "", err
 	}
 
 	// get qcloud cluster endpoint
 	ep, err := tkeCli.DescribeClusterEndpoints(info.Cluster.SystemID)
 	if err != nil {
 		blog.Errorf("openClusterAdminKubeConfig[%s] DescribeClusterEndpoints failed: %v", taskID, err)
-		return "", err
+		return "", "", err
 	}
 
 	if ep.ClusterIntranetDomain == "" {
-		return tkeCli.GetTKEClusterKubeConfig(info.Cluster.SystemID, false)
+		clusterKube, errLocal := tkeCli.GetTKEClusterKubeConfig(info.Cluster.SystemID, false)
+		if errLocal != nil {
+			return "", "", errLocal
+		}
+
+		return clusterKube, clusterKube, errLocal
 	}
 
 	kube, err := tkeCli.GetTKEClusterKubeConfig(info.Cluster.SystemID, false)
 	if err != nil {
 		blog.Errorf("openClusterAdminKubeConfig[%s] GetTKEClusterKubeConfig failed: %v", taskID, err)
-		return "", err
+		return "", "", err
 	}
 	kubeConfig, _ := base64.StdEncoding.DecodeString(kube)
 	// parse kubeConfig to Config
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{YamlContent: string(kubeConfig)})
 	if err != nil {
 		blog.Errorf("openClusterAdminKubeConfig[%s] GetKubeConfigFromYAMLBody failed: %v", taskID, err)
-		return "", err
+		return "", "", err
 	}
 
 	if len(config.Clusters) == 0 {
-		return "", fmt.Errorf("openClusterAdminKubeConfig[%s] yamlConfig[%s] cluster emptp",
+		return "", "", fmt.Errorf("openClusterAdminKubeConfig[%s] yamlConfig[%s] cluster emptp",
 			taskID, info.Cluster.SystemID)
 	}
 
@@ -1239,12 +1245,15 @@ func openClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDe
 	if strings.Contains(config.Clusters[0].Cluster.Server, ep.ClusterIntranetDomain) {
 		config.Clusters[0].Cluster.Server = fmt.Sprintf("https://%s", ep.ClusterIntranetEndpoint)
 	}
+	clusterKubeBytes, _ := yaml.Marshal(config)
 
 	config.Clusters[0].Cluster.InsecureSkipTLSVerify = true
+	config.Clusters[0].Cluster.CertificateAuthority = ""
+	config.Clusters[0].Cluster.CertificateAuthorityData = []byte("")
 
-	newKubeBytes, _ := yaml.Marshal(config)
+	connectKubeBytes, _ := yaml.Marshal(config)
 
-	return base64.StdEncoding.EncodeToString(newKubeBytes), nil
+	return base64.StdEncoding.EncodeToString(clusterKubeBytes), base64.StdEncoding.EncodeToString(connectKubeBytes), nil
 }
 
 // UpdateCreateClusterDBInfoTask update cluster DB info

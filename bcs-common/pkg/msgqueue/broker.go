@@ -17,8 +17,8 @@ import (
 	"time"
 
 	"github.com/micro/go-micro/v2/broker"
-	"github.com/micro/go-plugins/broker/rabbitmq/v2"
-	"github.com/micro/go-plugins/broker/stan/v2"
+	rabbitmqv2 "github.com/micro/go-plugins/broker/rabbitmq/v2"
+	stanv2 "github.com/micro/go-plugins/broker/stan/v2"
 	"github.com/pkg/errors"
 )
 
@@ -26,18 +26,18 @@ import (
 // rabbitmq broker init: brokerOptions/init/connect
 func rabbitmqBroker(q *QueueOptions) (broker.Broker, error) {
 	var brokerOpts []broker.Option
-	brokerOpts = append(brokerOpts, broker.Addrs(q.CommonOptions.Address), rabbitmq.ExchangeName(q.Exchange.Name),
-		rabbitmq.PrefetchCount(q.Exchange.PrefetchCount))
+	brokerOpts = append(brokerOpts, broker.Addrs(q.CommonOptions.Address), rabbitmqv2.ExchangeName(q.Exchange.Name),
+		rabbitmqv2.PrefetchCount(q.Exchange.PrefetchCount))
 	// exchange durable feature
 	if q.Exchange.Durable {
-		brokerOpts = append(brokerOpts, rabbitmq.DurableExchange())
+		brokerOpts = append(brokerOpts, rabbitmqv2.DurableExchange())
 	}
 	// prefetchGlobal feature
 	if q.Exchange.PrefetchGlobal {
-		brokerOpts = append(brokerOpts, rabbitmq.PrefetchGlobal())
+		brokerOpts = append(brokerOpts, rabbitmqv2.PrefetchGlobal())
 	}
 
-	brokerRabbit := rabbitmq.NewBroker(brokerOpts...)
+	brokerRabbit := rabbitmqv2.NewBroker(brokerOpts...)
 
 	// init rabbitmq broker
 	err := brokerRabbit.Init()
@@ -56,13 +56,13 @@ func rabbitmqBroker(q *QueueOptions) (broker.Broker, error) {
 // natstreamingBroker broker init: natsreaming options/init/connect
 func natstreamingBroker(q *QueueOptions) (broker.Broker, error) {
 	var brokerOpts []broker.Option
-	brokerOpts = append(brokerOpts, stan.ClusterID(q.NatsOptions.ClusterID), broker.Addrs(q.CommonOptions.Address))
+	brokerOpts = append(brokerOpts, stanv2.ClusterID(q.NatsOptions.ClusterID), broker.Addrs(q.CommonOptions.Address))
 	// exchange durable feature
 	if q.NatsOptions.ConnectRetry {
-		brokerOpts = append(brokerOpts, stan.ConnectTimeout(time.Minute*5), stan.ConnectRetry(true))
+		brokerOpts = append(brokerOpts, stanv2.ConnectTimeout(time.Minute*5), stanv2.ConnectRetry(true))
 	}
 
-	brokerNatstreaming := stan.NewBroker(brokerOpts...)
+	brokerNatstreaming := stanv2.NewBroker(brokerOpts...)
 
 	// init natstreaming broker
 	err := brokerNatstreaming.Init()

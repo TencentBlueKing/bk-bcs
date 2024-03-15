@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package dao xxx
 package dao
 
 import (
@@ -39,6 +39,7 @@ type SyncInfo struct {
 }
 
 const (
+	// PreferenceTypeApplication xxx
 	PreferenceTypeApplication = "application"
 )
 
@@ -56,20 +57,20 @@ type ApplicationHistoryManifest struct {
 	ID                     int64     `json:"id" gorm:"column:id;primaryKey;type:int(11) AUTO_INCREMENT NOT NULL"`
 	Project                string    `json:"project" gorm:"index:idx_proj;column:project;type:varchar(256) NOT NULL"`
 	Name                   string    `json:"name" gorm:"index:idx_name;column:name;type:varchar(128) NOT NULL"`
-	ApplicationUID         string    `json:"applicationUID" gorm:"index:idx_uid;column:applicationUID;type:varchar(64) NOT NULL"`
+	ApplicationUID         string    `json:"applicationUID" gorm:"index:idx_uid;column:applicationUID;type:varchar(64) NOT NULL"` // nolint
 	ApplicationYaml        string    `json:"applicationYaml" gorm:"column:applicationYaml;type:longtext NOT NULL"`
 	Revision               string    `json:"revision" gorm:"column:revision;type:varchar(256) DEFAULT NULL"`
 	Revisions              string    `json:"revisions" gorm:"column:revisions;type:varchar(512) DEFAULT NULL"`
 	ManagedResources       string    `json:"managedResources" gorm:"column:managedResources;type:longtext NOT NULL"`
 	HistoryID              int64     `json:"historyID" gorm:"column:historyID;type:int(11) NOT NULL"`
-	HistoryDeployStartedAt time.Time `json:"historyDeployStartedAt" gorm:"column:historyDeployStartedAt;type:datetime NOT NULL"`
+	HistoryDeployStartedAt time.Time `json:"historyDeployStartedAt" gorm:"column:historyDeployStartedAt;type:datetime NOT NULL"` // nolint
 	HistoryDeployedAt      time.Time `json:"historyDeployedAt" gorm:"column:historyDeployedAt;type:datetime NOT NULL"`
 	HistorySource          string    `json:"historySource" gorm:"column:historySource;type:longtext NOT NULL"`
 	HistorySources         string    `json:"historySources" gorm:"column:historySources;type:longtext NOT NULL"`
 }
 
 const (
-	tableActivityUser       = "bcs_gitops_activity_user"
+	tableActivityUser       = "bcs_gitops_activity_user" // nolint
 	tableSyncInfo           = "bcs_gitops_sync_info"
 	tableResourcePreference = "bcs_gitops_resource_preference"
 	tableHistoryManifest    = "bcs_gitops_app_history_manifest"

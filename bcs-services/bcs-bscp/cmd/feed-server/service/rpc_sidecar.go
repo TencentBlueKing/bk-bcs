@@ -330,7 +330,8 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 
 	fileMetas := make([]*pbfs.FileMeta, 0, len(metas.ConfigItems))
 	for _, ci := range metas.ConfigItems {
-		if req.Key != "" && !tools.MatchConfigItem(req.Key, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name) {
+		ok, _ := tools.MatchConfigItem(req.Key, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
+		if req.Key != "" && !ok {
 			continue
 		}
 		app, err := s.bll.AppCache().GetMeta(im.Kit, req.BizId, ci.ConfigItemAttachment.AppId)
@@ -355,7 +356,8 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 		})
 	}
 	resp := &pbfs.PullAppFileMetaResp{
-		ReleaseId: metas.ReleaseId,
+		ReleaseId:   metas.ReleaseId,
+		ReleaseName: metas.ReleaseName,
 		Repository: &pbfs.Repository{
 			Root: metas.Repository.Root,
 		},

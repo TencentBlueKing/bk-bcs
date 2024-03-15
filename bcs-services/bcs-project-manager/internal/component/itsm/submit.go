@@ -14,28 +14,30 @@
 package itsm
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	configm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
 
 var (
-	createTicketPath = "/v2/itsm/create_ticket/"
+	createTicketPath = "/itsm/create_ticket/"
 	timeout          = 10
 )
 
 // CreateTicketResp itsm create ticket resp
 type CreateTicketResp struct {
-	Code      int              `json:"code"`
-	Result    bool             `json:"result"`
-	Message   string           `json:"message"`
+	component.CommonResp
 	RequestID string           `json:"request_id"`
 	Data      CreateTicketData `json:"data"`
 }
@@ -50,23 +52,24 @@ type CreateTicketData struct {
 // CreateTicket create itsm ticket
 func CreateTicket(username string, serviceID int, fields []map[string]interface{}) (*CreateTicketData, error) {
 	itsmConf := config.GlobalConf.ITSM
-	// 使用网关访问
-	reqURL := fmt.Sprintf("%s%s", itsmConf.GatewayHost, createTicketPath)
-	headers := map[string]string{"Content-Type": "application/json"}
+	// 默认使用网关访问，如果为外部版，则使用ESB访问
+	host := itsmConf.GatewayHost
+	if itsmConf.External {
+		host = itsmConf.Host
+	}
+	reqURL := fmt.Sprintf("%s%s", host, createTicketPath)
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "POST",
 		Data: map[string]interface{}{
-			"bk_app_code":   config.GlobalConf.App.Code,
-			"bk_app_secret": config.GlobalConf.App.Secret,
-			"creator":       username,
-			"service_id":    serviceID,
-			"fields":        fields,
+			"creator":    username,
+			"service_id": serviceID,
+			"fields":     fields,
 		},
 	}
 	// 请求API
 	proxy := ""
-	body, err := component.Request(req, timeout, proxy, headers)
+	body, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
 	if err != nil {
 		logging.Error("request itsm create ticket failed, %s", err.Error())
 		return nil, errorx.NewRequestITSMErr(err.Error())
@@ -87,7 +90,21 @@ func CreateTicket(username string, serviceID int, fields []map[string]interface{
 // SubmitCreateNamespaceTicket create new itsm create namespace ticket
 func SubmitCreateNamespaceTicket(username, projectCode, clusterID, namespace string,
 	cpuLimits, memoryLimits int) (*CreateTicketData, error) {
+	var serviceID int
 	itsmConf := config.GlobalConf.ITSM
+	if itsmConf.AutoRegister {
+		serviceIDStr, err := store.GetModel().GetConfig(context.Background(),
+			configm.ConfigKeyCreateNamespaceItsmServiceID)
+		if err != nil {
+			return nil, err
+		}
+		serviceID, err = strconv.Atoi(serviceIDStr)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		serviceID = itsmConf.CreateNamespaceServiceID
+	}
 	fields := []map[string]interface{}{
 		{
 			"key":   "title",
@@ -114,13 +131,27 @@ func SubmitCreateNamespaceTicket(username, projectCode, clusterID, namespace str
 			"value": memoryLimits,
 		},
 	}
-	return CreateTicket(username, itsmConf.CreateNamespaceServiceID, fields)
+	return CreateTicket(username, serviceID, fields)
 }
 
 // SubmitUpdateNamespaceTicket create new itsm update namespace ticket
 func SubmitUpdateNamespaceTicket(username, projectCode, clusterID, namespace string,
 	cpuLimits, memoryLimits, oldCPULimits, oldMemoryLimits int) (*CreateTicketData, error) {
+	var serviceID int
 	itsmConf := config.GlobalConf.ITSM
+	if itsmConf.AutoRegister {
+		serviceIDStr, err := store.GetModel().GetConfig(context.Background(),
+			configm.ConfigKeyUpdateNamespaceItsmServiceID)
+		if err != nil {
+			return nil, err
+		}
+		serviceID, err = strconv.Atoi(serviceIDStr)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		serviceID = itsmConf.UpdateNamespaceServiceID
+	}
 	fields := []map[string]interface{}{
 		{
 			"key":   "title",
@@ -155,12 +186,26 @@ func SubmitUpdateNamespaceTicket(username, projectCode, clusterID, namespace str
 			"value": oldMemoryLimits,
 		},
 	}
-	return CreateTicket(username, itsmConf.UpdateNamespaceServiceID, fields)
+	return CreateTicket(username, serviceID, fields)
 }
 
 // SubmitDeleteNamespaceTicket create new itsm delete namespace ticket
 func SubmitDeleteNamespaceTicket(username, projectCode, clusterID, namespace string) (*CreateTicketData, error) {
+	var serviceID int
 	itsmConf := config.GlobalConf.ITSM
+	if itsmConf.AutoRegister {
+		serviceIDStr, err := store.GetModel().GetConfig(context.Background(),
+			configm.ConfigKeyDeleteNamespaceItsmServiceID)
+		if err != nil {
+			return nil, err
+		}
+		serviceID, err = strconv.Atoi(serviceIDStr)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		serviceID = itsmConf.DeleteNamespaceServiceID
+	}
 	fields := []map[string]interface{}{
 		{
 			"key":   "title",
@@ -179,5 +224,5 @@ func SubmitDeleteNamespaceTicket(username, projectCode, clusterID, namespace str
 			"value": namespace,
 		},
 	}
-	return CreateTicket(username, itsmConf.DeleteNamespaceServiceID, fields)
+	return CreateTicket(username, serviceID, fields)
 }

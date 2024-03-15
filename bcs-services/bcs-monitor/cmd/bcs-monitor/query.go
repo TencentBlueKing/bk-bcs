@@ -16,9 +16,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
-	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -57,11 +56,11 @@ func QueryCmd() *cobra.Command {
 }
 
 func runQuery(ctx context.Context, g *run.Group, opt *option) error {
-	kitLogger := gokit.NewLogger(logger.StandardLogger())
+	logKit := blog.LogKit
 
-	logger.Infow("listening for requests and metrics", "service", "query", "address", bindAddress)
+	blog.Infow("listening for requests and metrics", "service", "query", "address", bindAddress)
 	addrIPv6 := utils.GetIPv6AddrFromEnv()
-	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, bindAddress, httpPort, addrIPv6,
+	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, logKit, bindAddress, httpPort, addrIPv6,
 		strictStoreList, storeList, httpSDURLs, g)
 	if err != nil {
 		return errors.Wrap(err, "query")

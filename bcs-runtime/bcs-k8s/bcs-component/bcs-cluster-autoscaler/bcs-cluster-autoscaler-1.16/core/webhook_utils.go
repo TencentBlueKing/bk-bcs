@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,9 +18,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
-	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v2"
@@ -41,6 +38,9 @@ import (
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/kubelet/types"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
+
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 )
 
 type priorities map[string]int
@@ -142,7 +142,7 @@ func HandleResponse(review ClusterAutoscalerReview, nodes []*corev1.Node,
 // handleScaleUpResponse abstracts options of scale up from response
 func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) (ScaleUpOptions, error) {
 	options := make(ScaleUpOptions, 0)
-	if len(policies) <= 0 {
+	if len(policies) == 0 {
 		return options, nil
 	}
 	for _, policy := range policies {
@@ -170,7 +170,7 @@ func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo, sd *ScaleDown,
 	scaleDownDelay time.Duration) (ScaleDownCandidates, error) {
 	candidates := make(ScaleDownCandidates, 0)
-	if len(policies) <= 0 {
+	if len(policies) == 0 {
 		return candidates, nil
 	}
 	for _, policy := range policies {
@@ -532,7 +532,7 @@ func processMultiNodeGroupWithPriority(req *AutoscalerRequest, policy *ScaleUpPo
 			break
 		} else {
 			options[nodeGroups[i].NodeGroupID] = nodeGroups[i].MaxSize
-			diff = diff - (nodeGroups[i].MaxSize - nodeGroups[i].DesiredSize)
+			diff -= (nodeGroups[i].MaxSize - nodeGroups[i].DesiredSize)
 		}
 	}
 	return options, nil
@@ -614,8 +614,8 @@ func calculateWebhookScaleUpCoresMemoryTotal(options ScaleUpOptions,
 				"Failed to get node template of %v: %v", nodeGroup.Id(), err)
 		}
 		nodes := int64(options[nodeGroup.Id()])
-		coresTotal = coresTotal + int64(template.AllocatableResource().MilliCPU/1000)*nodes
-		memoryTotal = memoryTotal + int64(template.AllocatableResource().Memory)*nodes
+		coresTotal += template.AllocatableResource().MilliCPU / 1000 * nodes
+		memoryTotal += template.AllocatableResource().Memory * nodes
 	}
 
 	// nodes from not autoscaled group
@@ -670,6 +670,7 @@ func checkScaleDownResourcesLimits(candidates ScaleDownCandidates,
 
 // calculateWebhookScaleDownCoresMemoryTotal return the total resources after scaling down
 // NOCC:tosa/fn_length(设计如此)
+// nolint `cp` is unused, `candidates` is unused
 func calculateWebhookScaleDownCoresMemoryTotal(candidates ScaleDownCandidates, nodes []*corev1.Node,
 	cp cloudprovider.CloudProvider) (int64, int64, errors.AutoscalerError) {
 	timestamp := time.Now()

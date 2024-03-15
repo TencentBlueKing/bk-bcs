@@ -113,7 +113,7 @@
           </bk-form-item>
           <bk-form-item
             :label="$t('cluster.create.label.networkSetting.cidrStep.text')">
-            {{ cidrStep }}
+            {{ clusterIPv4CIDRCount }}
           </bk-form-item>
           <bk-form-item
             :label="$t('cluster.create.label.networkSetting.maxServiceNum.text')">
@@ -298,7 +298,7 @@ export default defineComponent({
       }).then(() => true)
         .catch(() => false);
       if (result) {
-        await getClusterDetail(props.clusterId);
+        await getClusterDetail(props.clusterId, true);
         await handleGetSubnets();
         showSubnets.value = false;
       }
@@ -347,7 +347,7 @@ export default defineComponent({
     });
 
     onMounted(async () => {
-      await getClusterDetail(props.clusterId);
+      await getClusterDetail(props.clusterId, true);
       await Promise.all([
         handleGetSubnets(),
         handleGetRegionList({
