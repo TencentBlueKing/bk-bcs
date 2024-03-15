@@ -3,13 +3,12 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-monitor
 go 1.20
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230920065036-5ec367ec2378
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240315030619-2c36b15d2127
 	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20231027074658-46b201bef8d8
-	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230918042150-6020611e4f01
+	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20231130061921-aba183933987
 	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230901032130-5c3e207129c5
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20230506100250-1d5620f4abf4
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230602131736-2c6f5ea23f31
-	github.com/TencentBlueKing/bkmonitor-kits v0.2.0
 	github.com/chonla/format v0.0.0-20220105105701-1119f4a3f36f
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fsnotify/fsnotify v1.6.0
@@ -61,7 +60,6 @@ require (
 
 require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.5 // indirect
 	github.com/TencentBlueKing/gopkg v1.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.21.0 // indirect
@@ -244,7 +242,7 @@ require (
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
+	golang.org/x/time v0.1.0 // indirect
 	golang.org/x/tools v0.9.3 // indirect
 	google.golang.org/api v0.114.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -252,7 +250,6 @@ require (
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	helm.sh/helm/v3 v3.8.2 // indirect

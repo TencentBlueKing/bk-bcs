@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"syscall"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/oklog/run"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -53,7 +53,7 @@ type CmdFunc func(context.Context, *run.Group, *option) error
 // runCmd 启动命令
 func runCmd(cmd *cobra.Command, cmdFunc CmdFunc) {
 	if err := cmdFunc(cmdOption(cmd)); err != nil {
-		logger.Fatalw("start server failed", "server", cmd.Name(), "err", err.Error())
+		blog.Fatalw("start server failed", "server", cmd.Name(), "err", err.Error())
 	}
 }
 
@@ -68,7 +68,7 @@ type option struct {
 	g      *run.Group
 	reg    *prometheus.Registry
 	tracer opentracing.Tracer
-	logger logger.Logger // nolint
+	logger blog.GlogKit // nolint
 	ctx    context.Context
 	cancel func()
 }
@@ -137,12 +137,12 @@ func main() {
 	// 初始化 Tracer
 	shutdown, errorInitTracing := tracing.InitTracing(config.G.TracingConf)
 	if errorInitTracing != nil {
-		logger.Info(errorInitTracing.Error())
+		blog.Info(errorInitTracing.Error())
 	}
 	if shutdown != nil {
 		defer func() {
 			if err := shutdown(context.Background()); err != nil {
-				logger.Infof("failed to shutdown TracerProvider: %s", err.Error())
+				blog.Infof("failed to shutdown TracerProvider: %s", err.Error())
 			}
 		}()
 	}
@@ -150,19 +150,19 @@ func main() {
 	// Running in container with limits but with empty/wrong value of GOMAXPROCS env var could lead to throttling by cpu
 	// maxprocs will automate adjustment by using cgroups info about cpu limit if it set as value for runtime.GOMAXPROCS.
 	if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) {
-		logger.Infof(template, args)
+		blog.Infof(template, args)
 	})); err != nil {
-		logger.Warnw("Failed to set GOMAXPROCS automatically", "err", err)
+		blog.Warnw("Failed to set GOMAXPROCS automatically", "err", err)
 	}
 	if err := g.Run(); err != nil && err != ctx.Err() {
 		// Use %+v for github.com/pkg/errors error to print with stack.
-		logger.Errorw("err", fmt.Sprintf("%+v", errors.Wrap(err, "run command failed")))
+		blog.Errorw("err", fmt.Sprintf("%+v", errors.Wrap(err, "run command failed")))
 		stop()
 		os.Exit(1)
 	}
 
 	if ctx.Err() == nil {
-		logger.Info("exiting")
+		blog.Info("exiting")
 	}
 
 }
