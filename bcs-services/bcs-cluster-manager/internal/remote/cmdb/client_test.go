@@ -52,7 +52,7 @@ func TestClient_QueryHostInfoWithoutBiz(t *testing.T) {
 	cli := getNewClient()
 
 	ips := []string{"x"}
-	hostList, err := cli.QueryHostInfoWithoutBiz(ips, Page{
+	hostList, err := cli.QueryHostInfoWithoutBiz(FieldHostIP, ips, Page{
 		Start: 0,
 		Limit: len(ips),
 	})

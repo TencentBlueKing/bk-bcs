@@ -196,7 +196,7 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 
 // releaseClusterCIDR release cluster CIDR
 func releaseClusterCIDR(cls *cmproto.Cluster) error {
-	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 {
+	if len(cls.GetNetworkSettings().GetClusterIPv4CIDR()) > 0 {
 		cidr, err := cloudprovider.GetStorageModel().GetTkeCidr(context.Background(),
 			cls.VpcID, cls.NetworkSettings.ClusterIPv4CIDR)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {

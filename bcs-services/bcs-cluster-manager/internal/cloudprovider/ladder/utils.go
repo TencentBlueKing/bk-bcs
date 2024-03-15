@@ -74,6 +74,10 @@ var (
 		StepMethod: fmt.Sprintf("%s-CheckClusterNodesInCMDBStep", cloudName),
 		StepName:   "检测节点同步至cmdb",
 	}
+	syncClusterNodesToCMDBStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-SyncClusterNodesToCMDBStep", cloudName),
+		StepName:   "同步节点至bkcc",
+	}
 
 	// delete nodeGroup task: stepName and stepMethod
 	checkCleanDBDataStep = cloudprovider.StepInfo{
@@ -203,10 +207,24 @@ func (ud *UpdateDesiredNodesTaskOption) BuildCheckClusterNodesInCMDBStep(task *p
 
 	checkCmdbStep.Params[cloudprovider.CloudIDKey.String()] = ud.Cluster.Provider
 	checkCmdbStep.Params[cloudprovider.ClusterIDKey.String()] = ud.NodeGroup.ClusterID
+	checkCmdbStep.Params[cloudprovider.NodeGroupIDKey.String()] = ud.NodeGroup.NodeGroupID
 	checkCmdbStep.Params[cloudprovider.OperatorKey.String()] = ud.Operator
 
 	task.Steps[checkClusterNodesInCMDBStep.StepMethod] = checkCmdbStep
 	task.StepSequence = append(task.StepSequence, checkClusterNodesInCMDBStep.StepMethod)
+}
+
+// BuildSyncClusterNodesToCMDBStep sync cluster nodes to cmdb step
+func (ud *UpdateDesiredNodesTaskOption) BuildSyncClusterNodesToCMDBStep(task *proto.Task) {
+	syncCmdbStep := cloudprovider.InitTaskStep(syncClusterNodesToCMDBStep)
+
+	syncCmdbStep.Params[cloudprovider.CloudIDKey.String()] = ud.Cluster.Provider
+	syncCmdbStep.Params[cloudprovider.ClusterIDKey.String()] = ud.NodeGroup.ClusterID
+	syncCmdbStep.Params[cloudprovider.NodeGroupIDKey.String()] = ud.NodeGroup.NodeGroupID
+	syncCmdbStep.Params[cloudprovider.OperatorKey.String()] = ud.Operator
+
+	task.Steps[syncClusterNodesToCMDBStep.StepMethod] = syncCmdbStep
+	task.StepSequence = append(task.StepSequence, syncClusterNodesToCMDBStep.StepMethod)
 }
 
 // BuildNodeAnnotationsStep set node annotations

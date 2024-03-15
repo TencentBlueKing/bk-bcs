@@ -76,7 +76,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	// }
 
 	// delete agentPool
-	if err = deleteAgentPool(ctx, dependInfo, stepName); err != nil {
+	if err = deleteAgentPool(ctx, dependInfo); err != nil {
 		blog.Errorf("DeleteCloudNodeGroupTask[%s]: deleteAgentPool[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("call deleteAgentPool[%s] api err, %s", nodeGroupID, err.Error())
@@ -98,7 +98,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 }
 
 // deleteAgentPool 删除节点池
-func deleteAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo, stepName string) error {
+func deleteAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
 	var (
 		group       = info.NodeGroup
 		cluster     = info.Cluster
@@ -112,18 +112,19 @@ func deleteAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBas
 		return errors.Wrapf(err, "call NewAgentPoolClientWithOpt[%s] falied", taskID)
 	}
 
-	if _, err = client.GetPoolAndReturn(ctx, cluster.SystemID, group.CloudNodeGroupID); err != nil {
+	if _, err = client.GetPoolAndReturn(ctx, getNodeResourceGroup(info.Cluster),
+		cluster.SystemID, group.CloudNodeGroupID); err != nil {
 		if !(strings.Contains(err.Error(), "NotFound") || strings.Contains(err.Error(), "not found")) {
 			return errors.Wrapf(err, "deleteAgentPool[%s]: call GetPoolAndReturn[%s][%s] failed", taskID,
 				cluster.SystemID, group.CloudNodeGroupID)
 		}
-		blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
-			taskID, group.CloudNodeGroupID, group.CloudNodeGroupID, stepName, stepName)
+		blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] not found, skip delete",
+			taskID, group.CloudNodeGroupID, group.CloudNodeGroupID)
 	}
 
 	ctx, cancel = context.WithTimeout(rootCtx, 20*time.Minute)
 	defer cancel()
-	if err = client.DeletePool(ctx, info); err != nil {
+	if err = client.DeletePool(ctx, info, ""); err != nil {
 		return errors.Wrapf(err, "deleteAgentPool[%s]: call DeletePool[%s][%s] failed", taskID,
 			cluster.SystemID, group.CloudNodeGroupID)
 	}
