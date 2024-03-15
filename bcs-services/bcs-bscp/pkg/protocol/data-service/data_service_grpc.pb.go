@@ -159,6 +159,7 @@ const (
 	Data_CheckCredentialName_FullMethodName               = "/pbds.Data/CheckCredentialName"
 	Data_ListCredentialScopes_FullMethodName              = "/pbds.Data/ListCredentialScopes"
 	Data_UpdateCredentialScopes_FullMethodName            = "/pbds.Data/UpdateCredentialScopes"
+	Data_CredentialScopePreview_FullMethodName            = "/pbds.Data/CredentialScopePreview"
 	Data_CreateKv_FullMethodName                          = "/pbds.Data/CreateKv"
 	Data_UpdateKv_FullMethodName                          = "/pbds.Data/UpdateKv"
 	Data_ListKvs_FullMethodName                           = "/pbds.Data/ListKvs"
@@ -328,6 +329,7 @@ type DataClient interface {
 	// credential scope related interface
 	ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error)
 	UpdateCredentialScopes(ctx context.Context, in *UpdateCredentialScopesReq, opts ...grpc.CallOption) (*UpdateCredentialScopesResp, error)
+	CredentialScopePreview(ctx context.Context, in *CredentialScopePreviewReq, opts ...grpc.CallOption) (*CredentialScopePreviewResp, error)
 	// kv related interface
 	CreateKv(ctx context.Context, in *CreateKvReq, opts ...grpc.CallOption) (*CreateResp, error)
 	UpdateKv(ctx context.Context, in *UpdateKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
@@ -1522,6 +1524,15 @@ func (c *dataClient) UpdateCredentialScopes(ctx context.Context, in *UpdateCrede
 	return out, nil
 }
 
+func (c *dataClient) CredentialScopePreview(ctx context.Context, in *CredentialScopePreviewReq, opts ...grpc.CallOption) (*CredentialScopePreviewResp, error) {
+	out := new(CredentialScopePreviewResp)
+	err := c.cc.Invoke(ctx, Data_CredentialScopePreview_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) CreateKv(ctx context.Context, in *CreateKvReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateKv_FullMethodName, in, out, opts...)
@@ -1769,6 +1780,7 @@ type DataServer interface {
 	// credential scope related interface
 	ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error)
 	UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error)
+	CredentialScopePreview(context.Context, *CredentialScopePreviewReq) (*CredentialScopePreviewResp, error)
 	// kv related interface
 	CreateKv(context.Context, *CreateKvReq) (*CreateResp, error)
 	UpdateKv(context.Context, *UpdateKvReq) (*base.EmptyResp, error)
@@ -2178,6 +2190,9 @@ func (UnimplementedDataServer) ListCredentialScopes(context.Context, *ListCreden
 }
 func (UnimplementedDataServer) UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredentialScopes not implemented")
+}
+func (UnimplementedDataServer) CredentialScopePreview(context.Context, *CredentialScopePreviewReq) (*CredentialScopePreviewResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CredentialScopePreview not implemented")
 }
 func (UnimplementedDataServer) CreateKv(context.Context, *CreateKvReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateKv not implemented")
@@ -4561,6 +4576,24 @@ func _Data_UpdateCredentialScopes_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_CredentialScopePreview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CredentialScopePreviewReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CredentialScopePreview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CredentialScopePreview_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CredentialScopePreview(ctx, req.(*CredentialScopePreviewReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_CreateKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateKvReq)
 	if err := dec(in); err != nil {
@@ -5267,6 +5300,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateCredentialScopes",
 			Handler:    _Data_UpdateCredentialScopes_Handler,
+		},
+		{
+			MethodName: "CredentialScopePreview",
+			Handler:    _Data_CredentialScopePreview_Handler,
 		},
 		{
 			MethodName: "CreateKv",
