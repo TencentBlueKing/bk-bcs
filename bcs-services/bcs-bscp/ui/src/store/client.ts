@@ -3,11 +3,11 @@ import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { IClientSearchParams } from '../../types/client';
 
-export default defineStore('config', () => {
+export default defineStore('client', () => {
   // 选择的查询条件
   const searchQuery = ref<{
     last_heartbeat_time: number;
-    search?: IClientSearchParams;
+    search: IClientSearchParams;
   }>({
     last_heartbeat_time: 60,
     search: {},

@@ -31,10 +31,10 @@
         </div>
         <div
           v-if="searchConditionList.length"
-          class="set-used"
+          :class="['set-used', { light: isCommonlyUsed }]"
           v-bk-tooltips="{ content: '设为常用' }"
           @click.stop="handleOpenSetCommonlyDialg(true)">
-          <span class="bk-bscp-icon icon-lang-en"></span>
+          <span class="bk-bscp-icon icon-star-fill"></span>
         </div>
       </div>
       <template #content>
@@ -67,7 +67,7 @@
                 v-for="item in recentSearchList"
                 :key="item.id"
                 class="search-item"
-                @click="searchConditionList = item.search_condition">
+                @click="searchConditionList = cloneDeep(item.search_condition)">
                 <bk-overflow-title type="tips">{{ item.spec.search_name }}</bk-overflow-title>
               </div>
             </bk-loading>
@@ -81,7 +81,7 @@
           v-if="index < 5"
           :commonly-search-item="item"
           @update="handleOpenSetCommonlyDialg(false, item)"
-          @click="searchConditionList = item.search_condition"
+          @click="searchConditionList = cloneDeep(item.search_condition)"
           @delete="handleConfirmDeleteCommonlyUsed(item.id)" />
       </template>
       <bk-popover ext-cls="all-commonly-search-popover" placement="bottom" theme="light" :arrow="false">
@@ -95,7 +95,7 @@
             <div class="name">
               <bk-overflow-title>{{ item.spec.search_name }}</bk-overflow-title>
             </div>
-            <div class="action-icon">
+            <div class="action-icon" v-if="item.spec.creator !== 'system'">
               <EditLine class="icon edit" @click.stop="handleOpenSetCommonlyDialg(false, item)" />
               <CloseLine class="icon close" @click.stop="handleConfirmDeleteCommonlyUsed(item.id)" />
             </div>
@@ -105,7 +105,7 @@
     </div>
     <SetCommonlyDialog
       :is-show="isShowSetCommonlyDialog"
-      :title="setCommonlyDialogTitle"
+      :is-create="isCreateCommonlyUsed"
       @create="handleConfirmCreateCommonlyUsed"
       @update="handleConfirmUpdateCommonlyUsed"
       @close="isShowSetCommonlyDialog = false" />
@@ -128,6 +128,7 @@
   import SetCommonlyDialog from './set-commonly-dialog.vue';
   import CommonlyUsedTag from './commonly-used-tag.vue';
   import { Message } from 'bkui-vue';
+  import { cloneDeep } from 'lodash';
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -144,9 +145,10 @@
   const commonlySearchList = ref<ICommonlyUsedItem[]>([]);
   const inputFocus = ref(false);
   const isShowSetCommonlyDialog = ref(false);
-  const setCommonlyDialogTitle = ref('设为常用');
+  const isCreateCommonlyUsed = ref(true);
   const selectedCommomlyItem = ref<ICommonlyUsedItem>();
   const isShowSetCommonlyDropdown = ref(false);
+  const isCommonlyUsed = ref(false);
 
   const props = defineProps<{
     bkBizId: string;
@@ -161,6 +163,8 @@
   watch(
     () => searchConditionList.value,
     () => {
+      isCommonlyUsed.value = false;
+      if (searchConditionList.value.length === 0) return;
       handleSearchConditionChangeQuery();
     },
     { deep: true },
@@ -170,6 +174,15 @@
     () => props.appId,
     () => {
       handleGetSearchList('common');
+    },
+  );
+
+  watch(
+    () => searchQuery.value.search,
+    (val) => {
+      if (Object.keys(val!).length === 0) {
+        searchConditionList.value = [];
+      }
     },
   );
 
@@ -189,8 +202,6 @@
   // 选择子选择器
   const handleSelectChild = (childrenSelectoreItem: ISelectorItem) => {
     showChildSelector.value = false;
-    const index = searchConditionList.value.findIndex((item) => item.key === parentSelecte.value?.value);
-    if (index > -1) handleConditionClose(index);
     searchConditionList.value.push({
       key: parentSelecte.value!.value,
       value: childrenSelectoreItem.value,
@@ -269,6 +280,7 @@
       });
       isShowSetCommonlyDialog.value = false;
       handleGetSearchList('common');
+      isCommonlyUsed.value = true;
       Message({
         theme: 'success',
         message: '常用查询添加成功',
@@ -278,6 +290,7 @@
     }
   };
 
+  // 更新常用查询
   const handleConfirmUpdateCommonlyUsed = async (search_name: string) => {
     try {
       await updateClientSearchRecord(props.bkBizId, props.appId, selectedCommomlyItem.value!.id, {
@@ -296,6 +309,7 @@
     }
   };
 
+  // 删除常用查询
   const handleConfirmDeleteCommonlyUsed = async (id: number) => {
     try {
       await deleteClientSearchRecord(props.bkBizId, props.appId, id);
@@ -311,9 +325,9 @@
 
   const handleOpenSetCommonlyDialg = (isCreate: boolean, item?: ICommonlyUsedItem) => {
     if (isCreate) {
-      setCommonlyDialogTitle.value = '设为常用';
+      isCreateCommonlyUsed.value = true;
     } else {
-      setCommonlyDialogTitle.value = '重命名';
+      isCreateCommonlyUsed.value = false;
       selectedCommomlyItem.value = item;
     }
     isShowSetCommonlyDialog.value = true;
@@ -330,7 +344,11 @@
         label[labelValue[0]] = labelValue[1];
         query[item.key] = label;
       } else if (item.key === 'online_status' || item.key === 'release_change_status') {
-        query[item.key] = [item.value];
+        if (query[item.key]) {
+          query[item.key].push(item.value);
+        } else {
+          query[item.key] = [item.value];
+        }
       } else {
         query[item.key] = item.value;
       }
@@ -429,6 +447,9 @@
       border-radius: 2px;
       color: #c4c6cc;
       font-size: 14px;
+      &.light span {
+        color: #ff9c01;
+      }
     }
   }
   .menu-wrap {
@@ -456,6 +477,7 @@
     }
   }
   .commonly-warp {
+    height: 26px;
     display: flex;
     margin-top: 6px;
   }
@@ -482,7 +504,7 @@
   .all-commonly-search-popover.bk-popover.bk-pop2-content {
     padding: 4px 0;
     max-height: 168px;
-    overflow-y: scroll;
+    overflow-y: auto;
     .search-item {
       display: flex;
       align-items: center;

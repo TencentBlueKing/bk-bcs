@@ -4,7 +4,8 @@
       <ClientHeader title="客户端查询" @search="loadList" />
     </div>
     <div class="content">
-      <bk-button style="margin-bottom: 16px" :disabled="!selectedClient.length">批量重试</bk-button>
+      <!-- @todo 重试功能待接口支持 -->
+      <!-- <bk-button style="margin-bottom: 16px" :disabled="!selectedClient.length">批量重试</bk-button> -->
       <bk-loading style="min-height: 100px" :loading="listLoading">
         <bk-table
           :data="tableData"
@@ -14,11 +15,10 @@
           :key="appId"
           :checked="selectedClient"
           :is-row-select-enable="isRowSelectEnable"
-          @selection-change="handleSelectionChange"
-          @select-all="handleSelectAll"
           @page-limit-change="handlePageLimitChange"
-          @page-value-change="loadList">
-          <bk-table-column type="selection" :min-width="40" :width="40"> </bk-table-column>
+          @page-value-change="loadList"
+          @column-filter="handleFilter">
+          <!-- <bk-table-column type="selection" :min-width="40" :width="40"> </bk-table-column> -->
           <bk-table-column label="UID" :width="254" prop="attachment.uid"></bk-table-column>
           <bk-table-column label="IP" :width="120" prop="spec.ip"></bk-table-column>
           <bk-table-column label="客户端标签" :min-width="296">
@@ -47,7 +47,14 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column label="最近一次拉取配置状态" :width="168">
+          <bk-table-column
+            label="最近一次拉取配置状态"
+            :width="178"
+            :filter="{
+              filterFn: () => true,
+              list: releaseChangeStatusFilterList,
+              checked: releaseChangeStatusFilterChecked,
+            }">
             <template #default="{ row }">
               <div v-if="row.spec" class="release_change_status">
                 <Spinner v-if="row.spec.release_change_status === 'Sikp'" class="spinner-icon" fill="#3A84FF" />
@@ -62,7 +69,14 @@
             </template>
           </bk-table-column>
           <!-- <bk-table-column label="附加信息" :width="244"></bk-table-column> -->
-          <bk-table-column label="在线状态" :width="94">
+          <bk-table-column
+            label="在线状态"
+            :width="94"
+            :filter="{
+              filterFn: () => true,
+              list: onlineStatusFilterList,
+              checked: onlineStatusFilterChecked,
+            }">
             <template #default="{ row }">
               <div v-if="row.spec" class="online-status">
                 <div :class="['dot', row.spec.online_status]"></div>
@@ -106,17 +120,20 @@
                 <bk-button theme="primary" text @click="handleShowPullRecord(row.attachment.uid, row.id)">
                   配置拉取记录
                 </bk-button>
-                <bk-button
+                <!-- <bk-button
                   v-if="row.spec.release_change_status === 'Failed'"
                   style="margin-left: 18px"
                   theme="primary"
                   text
                   @click="console.log(row)">
                   重试
-                </bk-button>
+                </bk-button> -->
               </div>
             </template>
           </bk-table-column>
+          <template #empty>
+            <TableEmpty :is-search-empty="isSearchEmpty" @clear="handleClearConditionalList" />
+          </template>
         </bk-table>
       </bk-loading>
     </div>
@@ -143,6 +160,7 @@
   import { CLIENT_STATUS_MAP } from '../../../../constants/client';
   import { IClinetCommonQuery } from '../../../../../types/client';
   import useClientStore from '../../../../store/client';
+  import TableEmpty from '../../../../components/table/table-empty.vue';
 
   interface IResourseType {
     cpu_usage: number;
@@ -162,16 +180,44 @@
   const viewPullRecordClientUid = ref('');
   const listLoading = ref(false);
   const selectedClient = ref([]);
-
+  const isSearchEmpty = ref(false);
+  const isShowPullRecordSlider = ref(false);
+  const tableData = ref();
   const pagination = ref({
     count: 0,
     current: 1,
     limit: 10,
   });
-
-  const isShowPullRecordSlider = ref(false);
-  const tableData = ref();
-
+  const releaseChangeStatusFilterList = [
+    {
+      text: '成功',
+      value: 'Success',
+    },
+    {
+      text: '失败',
+      value: 'Failed',
+    },
+    {
+      text: '处理中',
+      value: 'Processing',
+    },
+    {
+      text: '跳过',
+      value: 'Skip',
+    },
+  ];
+  const releaseChangeStatusFilterChecked = ref<string[]>([]);
+  const onlineStatusFilterList = [
+    {
+      text: '在线',
+      value: 'online',
+    },
+    {
+      text: '未在线',
+      value: 'offline',
+    },
+  ];
+  const onlineStatusFilterChecked = ref<string[]>([]);
   watch(
     () => route.params.appId,
     (val) => {
@@ -184,9 +230,11 @@
 
   watch(
     () => searchQuery.value.search,
-    () => {
+    (val) => {
+      Object.keys(val!).length === 0 ? (isSearchEmpty.value = false) : (isSearchEmpty.value = true);
       loadList();
     },
+    { deep: true },
   );
 
   const showResourse = (resourse: IResourseType) => {
@@ -236,8 +284,7 @@
   };
 
   const linkToApp = (versionId: number) => {
-    console.log(versionId);
-    router.push({ name: 'service-config', params: { spaceId: bkBizId.value, appId: appId.value, versionId: 0 } });
+    router.push({ name: 'service-config', params: { spaceId: bkBizId.value, appId: appId.value, versionId } });
   };
 
   const handleShowPullRecord = (uid: string, id: number) => {
@@ -250,32 +297,32 @@
     isShowPullRecordSlider.value = false;
   };
 
-  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: any }) => {
-    console.log(checked, row);
-    // if (checked) {
-    //   if (!selectedClient.value.find((item: any) => item.id === row.id)) {
-    //     selectedClient.value.push(row);
-    //   }
-    // } else {
-    //   const index = selectedClient.value.findIndex((item: any) => item.id === row.id);
-    //   if (index > -1) {
-    //     selectedClient.value.splice(index, 1);
-    //   }
-    // }
-  };
-
-  const handleSelectAll = ({ checked }: { checked: boolean }) => {
-    if (checked) {
-      selectedClient.value = tableData.value.filter((item: any) => item.spec.release_change_status === 'Failed');
-    } else {
-      selectedClient.value = [];
-    }
+  const handleClearConditionalList = () => {
+    clientStore.$patch((state) => {
+      state.searchQuery.search = {};
+    });
+    releaseChangeStatusFilterChecked.value = [];
+    onlineStatusFilterChecked.value = [];
   };
 
   // 更改每页条数
   const handlePageLimitChange = (val: number) => {
     pagination.value.limit = val;
     loadList();
+  };
+
+  const handleFilter = ({ checked, index }: any) => {
+    if (index === 4) {
+      // 调整最近一次拉取配置筛选条件
+      clientStore.$patch((state) => {
+        state.searchQuery.search.release_change_status = [...checked];
+      });
+    } else {
+      // 调整在线状态筛选条件
+      clientStore.$patch((state) => {
+        state.searchQuery.search.online_status = [...checked];
+      });
+    }
   };
 </script>
 

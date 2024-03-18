@@ -1,7 +1,7 @@
 <template>
   <bk-dialog
     :is-show="isShow"
-    :title="title"
+    :title="isCreate ? '设为常用' : '重命名'"
     theme="primary"
     confirm-text="保存"
     @closed="handleClose"
@@ -15,10 +15,10 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
+  import { ref, watch } from 'vue';
   const props = defineProps<{
     isShow: boolean;
-    title: string;
+    isCreate: boolean;
   }>();
   const emits = defineEmits(['close', 'update', 'create']);
 
@@ -27,15 +27,21 @@
   });
   const formRef = ref();
 
+  watch(
+    () => props.isShow,
+    (val) => {
+      if (val) formData.value.name = '';
+    },
+  );
+
   const handleConfirm = async () => {
     const isValid = await formRef.value.validate();
     if (!isValid) return;
-    props.title === '设为常用' ? emits('create', formData.value.name) : emits('update', formData.value.name);
+    props.isCreate ? emits('create', formData.value.name) : emits('update', formData.value.name);
   };
 
   const handleClose = () => {
     emits('close');
-    formData.value.name = '';
   };
 </script>
 

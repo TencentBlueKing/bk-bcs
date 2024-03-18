@@ -51,7 +51,6 @@
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { storeToRefs } from 'pinia';
   import { AngleUpFill, Search } from 'bkui-vue/lib/icon';
   import { getAppList } from '../../../../api';
   import { CLIENT_HEARTBEAT_LIST } from '../../../../constants/client';
@@ -66,7 +65,6 @@
   const emits = defineEmits(['search']);
 
   const clientStore = useClientStore();
-  const { searchQuery } = storeToRefs(clientStore);
   const route = useRoute();
   const router = useRouter();
 
@@ -76,7 +74,7 @@
     id: 0,
   });
   const serviceList = ref<IAppItem[]>([]);
-  const heartbeatTime = ref(searchQuery.value.last_heartbeat_time);
+  const heartbeatTime = ref(60);
   const heartbeatTimeList = ref(CLIENT_HEARTBEAT_LIST);
   const selectorRef = ref();
 
@@ -112,7 +110,7 @@
     }
   };
 
-  const handleAppChange = (appId: number) => {
+  const handleAppChange = async (appId: number) => {
     const service = serviceList.value.find((service) => service.id === appId);
     if (service) {
       localApp.value = {
@@ -121,7 +119,7 @@
       };
     }
     setLastSelectedClientService(appId);
-    router.push({ name: route.name!, params: { spaceId: bizId.value, appId } });
+    await router.push({ name: route.name!, params: { spaceId: bizId.value, appId } });
     emits('search');
   };
 
