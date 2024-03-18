@@ -1,33 +1,23 @@
-### 查询服务可见的模版套餐
-
-#### API基本信息
-
-API名称：list_app_template_set
-
-API Path：/api/v1/config/biz/{biz_id}/apps/{app_id}/template_sets
-
-Method：GET
-
-#### 描述
+### 描述
 
 该接口提供版本：v1.0.0+
 
 查询服务可见的所有模版套餐列表
 
-#### 输入参数
+### 输入参数
 
 | 参数名称 | 参数类型 | 必选 | 描述   |
 | -------- | -------- | ---- | ------ |
 | biz_id   | uint32   | 是   | 业务ID |
 | app_id   | uint32   | 是   | 应用ID |
 
-#### 调用示例
+### 调用示例
 
 ```json
 
 ```
 
-#### 响应示例
+### 响应示例
 
 ```json
 {
@@ -61,7 +51,7 @@ Method：GET
 }
 ```
 
-#### 响应参数说明
+### 响应参数说明
 
 | 参数名称 | 参数类型 | 描述     |
 | -------- | -------- | -------- |
@@ -109,3 +99,4 @@ Method：GET
 | reviser   | string   | 最后一次修改的修改者 |
 | create_at | string   | 创建时间             |
 | update_at | string   | 最后一次修改时间     |
+

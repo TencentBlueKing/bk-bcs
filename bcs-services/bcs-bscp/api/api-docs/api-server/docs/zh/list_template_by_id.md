@@ -1,25 +1,17 @@
-#### API基本信息
-
-API名称：list_template_by_id
-
-API Path：/api/v1/config/biz/{biz_id}/templates/list_by_ids
-
-Method：POST
-
-#### 描述
+### 描述
 
 该接口提供版本：v1.0.0+
 
-查询模版列表
+根据ID查询模版
 
-#### 输入参数
+### 输入参数
 
 | 参数名称 | 参数类型 | 必选 | 描述                  |
 | -------- | -------- | ---- | --------------------- |
 | biz_id   | uint32   | 是   | 业务ID                |
 | ids      | []uint32 | 是   | 模版ID列表，最多200个 |
 
-#### 调用示例
+### 调用示例
 
 ```json
 {
@@ -30,7 +22,7 @@ Method：POST
 }
 ```
 
-#### 响应示例
+### 响应示例
 
 ```json
 {
@@ -59,7 +51,7 @@ Method：POST
 }
 ```
 
-#### 响应参数说明
+### 响应参数说明
 
 | 参数名称 | 参数类型 | 描述     |
 | -------- | -------- | -------- |
@@ -83,11 +75,11 @@ Method：POST
 
 #### spec
 
-| 参数名称     | 参数类型 | 描述         |
-| ------------ | -------- | ------------ |
-| name         | string   | 模版名称     |
-| path | string   | 模版路径 |
-| memo | string   | 模版描述 |
+| 参数名称 | 参数类型 | 描述     |
+| -------- | -------- | -------- |
+| name     | string   | 模版名称 |
+| path     | string   | 模版路径 |
+| memo     | string   | 模版描述 |
 
 #### attachment
 
@@ -104,3 +96,4 @@ Method：POST
 | reviser   | string   | 最后一次修改的修改者 |
 | create_at | string   | 创建时间             |
 | update_at | string   | 最后一次修改时间     |
+

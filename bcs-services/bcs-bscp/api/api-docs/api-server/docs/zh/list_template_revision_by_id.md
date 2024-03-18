@@ -1,25 +1,17 @@
-#### API基本信息
-
-API名称：list_template_revision_by_id
-
-API Path：/api/v1/config/biz/{biz_id}/template_revisions/list_by_ids
-
-Method：POST
-
-#### 描述
+### 描述
 
 该接口提供版本：v1.0.0+
 
-查询模版版本列表
+根据ID查询模版版本
 
-#### 输入参数
+### 输入参数
 
 | 参数名称 | 参数类型 | 必选 | 描述                      |
 | -------- | -------- | ---- | ------------------------- |
 | biz_id   | uint32   | 是   | 业务ID                    |
 | ids      | []uint32 | 是   | 模版版本ID列表，最多200个 |
 
-#### 调用示例
+### 调用示例
 
 ```json
 {
@@ -30,7 +22,7 @@ Method：POST
 }
 ```
 
-#### 响应示例
+### 响应示例
 
 ```json
 {
@@ -41,8 +33,8 @@ Method：POST
         "spec": {
           "revision_name": "v20230712150315",
           "revision_memo": "my second version",
-          "name": "server11.yaml",
-          "path": "/etc11",
+          "name": "server.yaml",
+          "path": "/etc",
           "file_type": "json",
           "file_mode": "unix",
           "permission": {
@@ -70,7 +62,7 @@ Method：POST
 }
 ```
 
-#### 响应参数说明
+### 响应参数说明
 
 | 参数名称 | 参数类型 | 描述     |
 | -------- | -------- | -------- |
