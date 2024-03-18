@@ -28,10 +28,6 @@ import (
 type AppCacheMeta struct {
 	Name       string           `json:"name"`
 	ConfigType table.ConfigType `json:"cft"`
-	// the current effected strategy set's type under this app.
-	// only one strategy set is effected at one time.
-	Mode   table.AppMode `json:"mod"`
-	Reload *table.Reload `json:"reload"`
 }
 
 // ReleasedGroupCache is the released group info which will be stored in cache.

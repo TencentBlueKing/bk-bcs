@@ -17,9 +17,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
 )
@@ -56,25 +54,6 @@ func (s GrayPublishMode) Validate() error {
 		return fmt.Errorf("unsupported publish mode: %s", s)
 	}
 
-	return nil
-}
-
-// ValidateAppStrategyNumber verify whether the current number of app strategies have reached the maximum.
-func ValidateAppStrategyNumber(count uint32, mode AppMode) error {
-	switch mode {
-	case Normal:
-		if count >= maxNormalStrategiesLimitForApp {
-			return errf.New(errf.InvalidParameter, fmt.Sprintf("an application only create %d normal strategies",
-				maxNormalStrategiesLimitForApp))
-		}
-	case Namespace:
-		if count >= maxNamespaceStrategiesLimitForApp {
-			return errf.New(errf.InvalidParameter, fmt.Sprintf("an application only create %d namespace strategies",
-				maxNamespaceStrategiesLimitForApp))
-		}
-	default:
-		return fmt.Errorf("unsupported strategy set mode: %s", mode)
-	}
 	return nil
 }
 
@@ -238,11 +217,6 @@ type StrategySpec struct {
 	// Scope must not be empty when this strategy is not a default strategy.
 	Scope *Scope `db:"scope" json:"scope" gorm:"column:scope;type:json"`
 
-	// Mode defines what mode of this strategy works at, it is succeeded from
-	// this strategy's app's mode.
-	// it can not be updated once it is created.
-	Mode AppMode `db:"mode" json:"mode" gorm:"column:mode"`
-
 	// Namespace defines which namespace this strategy works at.
 	// It has the following features:
 	// 1. if a strategy set works at namespace mode, then all the strategy
@@ -279,47 +253,6 @@ func (s StrategySpec) ValidateCreate() error {
 		}
 	}
 
-	if err := s.Mode.Validate(); err != nil {
-		return err
-	}
-
-	switch s.Mode {
-	case Normal:
-
-		if len(s.Namespace) != 0 {
-			return errors.New("strategy set works at normal mode, namespace should be empty")
-		}
-
-	case Namespace:
-
-		if s.AsDefault {
-			// this strategy is a default strategy, then its namespace will be set by system
-			// automatically. user can not set it.
-			if len(s.Namespace) != 0 {
-				return errors.New("strategy set works at namespace mode, but this is a default strategy, " +
-					"namespace should be empty")
-			}
-		} else {
-			// if the strategy set works at namespace mode, but not the default strategy,
-			// then the strategy's namespace should be configured.
-			if len(s.Namespace) == 0 {
-				return errors.New("strategy set works at namespace mode, namespace is required, can not be empty")
-			}
-
-			if err := validator.ValidateNamespace(s.Namespace); err != nil {
-				return err
-			}
-		}
-
-		if strings.HasPrefix(strings.ToLower(s.Namespace), ReservedNamespacePrefix) {
-			return fmt.Errorf("namespace prefixed with %s is the system reserved namespaces, can not be used",
-				ReservedNamespacePrefix)
-		}
-
-	default:
-		return fmt.Errorf("unsupported strategy set's type: %s", s.Mode)
-	}
-
 	if err := validator.ValidateMemo(s.Memo, false); err != nil {
 		return err
 	}
@@ -338,10 +271,6 @@ func (s StrategySpec) ValidateUpdate(asDefault bool, namespaced bool) error {
 
 	if s.ReleaseID <= 0 {
 		return errors.New("release id should be set")
-	}
-
-	if len(s.Mode) != 0 {
-		return errors.New("strategy's mode can not be updated")
 	}
 
 	if len(s.Namespace) != 0 {

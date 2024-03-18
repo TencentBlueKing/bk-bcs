@@ -139,7 +139,6 @@ func genStrategy(kit *kit.Kit, opt *types.PublishOption, stgID uint32, groups []
 			Scope: &table.Scope{
 				Groups: groups,
 			},
-			Mode: table.Normal,
 			Memo: opt.Memo,
 		},
 		State: &table.StrategyState{
