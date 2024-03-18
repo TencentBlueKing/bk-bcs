@@ -259,10 +259,9 @@ func (ng *NodeGroup) updateNormalNodePool(
 		}
 	*/
 	// update bkCloudName
-	if group.Area == nil {
-		group.Area = &proto.CloudArea{}
+	if group.Area != nil {
+		group.Area.BkCloudName = cloudprovider.GetBKCloudName(int(group.Area.BkCloudID))
 	}
-	group.Area.BkCloudName = cloudprovider.GetBKCloudName(int(group.Area.BkCloudID))
 
 	// module info
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&

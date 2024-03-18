@@ -407,6 +407,7 @@ func (s *Server) initGitOpsProxy(router *mux.Router) error {
 		RepoServerUrl:  s.option.GitOps.RepoServer,
 		AppSetWebhook:  s.option.GitOps.AppsetControllerWebhook,
 		PublicProjects: s.option.PublicProjects,
+		AdminUsers:     s.option.AdminUsers,
 		PathPrefix:     common.GitOpsProxyURL,
 		JWTDecoder:     s.jwtClient,
 		IAMClient:      s.iamClient,

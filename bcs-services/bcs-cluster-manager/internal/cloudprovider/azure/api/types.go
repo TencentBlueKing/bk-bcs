@@ -63,8 +63,6 @@ var (
 )
 
 const (
-	// NodeResourceGroup xxx
-	NodeResourceGroup  = "nodeResourceGroup"
 	aksManagedPoolName = "aks-managed-poolName"
 )
 

@@ -131,10 +131,16 @@
                   @click.stop="handleGotoClusterDetail(row, 'info')">{{ $t('generic.title.basicInfo1') }}</li>
                 <li
                   class="bcs-dropdown-item"
-                  @click.stop="handleGotoClusterDetail(row, 'network')">{{ $t('cluster.detail.title.network') }}</li>
+                  v-if="!(row.clusterCategory === 'importer' && row.importCategory === 'kubeConfig')"
+                  @click.stop="handleGotoClusterDetail(row, 'network')">
+                  {{ $t('cluster.detail.title.network') }}
+                </li>
                 <li
                   class="bcs-dropdown-item"
-                  @click.stop="handleGotoClusterDetail(row, 'master')">{{ $t('cluster.detail.title.master') }}</li>
+                  v-if="!(row.clusterCategory === 'importer' && row.importCategory === 'kubeConfig')"
+                  @click.stop="handleGotoClusterDetail(row, 'master')">
+                  {{ $t('cluster.detail.title.master') }}
+                </li>
                 <li
                   class="bcs-dropdown-item"
                   v-authority="{
@@ -201,10 +207,16 @@
                 <template v-else>
                   <li
                     class="bcs-dropdown-item"
-                    @click.stop="handleGotoClusterDetail(row, 'network')">{{ $t('cluster.detail.title.network') }}</li>
+                    v-if="!(row.clusterCategory === 'importer' && row.importCategory === 'kubeConfig')"
+                    @click.stop="handleGotoClusterDetail(row, 'network')">
+                    {{ $t('cluster.detail.title.network') }}
+                  </li>
                   <li
                     class="bcs-dropdown-item"
-                    @click.stop="handleGotoClusterDetail(row, 'master')">{{ $t('cluster.detail.title.master') }}</li>
+                    v-if="!(row.clusterCategory === 'importer' && row.importCategory === 'kubeConfig')"
+                    @click.stop="handleGotoClusterDetail(row, 'master')">
+                    {{ $t('cluster.detail.title.master') }}
+                  </li>
                   <li
                     class="bcs-dropdown-item"
                     v-if="clusterExtraInfo
@@ -409,7 +421,6 @@ export default defineComponent({
     };
     // 跳转集群概览界面
     const handleGotoClusterOverview = (cluster) => {
-      if (cluster.status !== 'RUNNING') return;
       ctx.emit('overview', cluster);
     };
     // 跳转集群详情页
@@ -418,7 +429,6 @@ export default defineComponent({
     };
     // 跳转集群节点页
     const handleGotoClusterNode = (cluster) => {
-      if (cluster.status !== 'RUNNING') return;
       ctx.emit('node', cluster);
     };
     // 跳转集群自动扩缩容
