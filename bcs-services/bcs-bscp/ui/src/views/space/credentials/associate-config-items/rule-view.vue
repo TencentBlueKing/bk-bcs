@@ -6,7 +6,16 @@
       {{ t('项关联规则') }}
     </p>
     <div v-if="props.rules.length > 0" class="rule-list">
-      <div v-for="rule in rules" :key="rule.id" class="rule-item">{{ rule.spec.app + rule.spec.scope }}</div>
+      <div
+        v-for="rule in rules"
+        :key="rule.id"
+        :class="['rule-item', { 'current-rule-item': previewRule?.id === rule.id }]"
+        @click="handlePreviewRule(rule)">
+        {{ rule.spec.app + rule.spec.scope }}
+        <span class="arrow-icon">
+          <PlayShape v-if="previewRule?.id === rule.id" />
+        </span>
+      </div>
     </div>
     <bk-exception v-else scene="part" type="empty">
       <p class="empty-tips">{{ t('暂未设置关联规则') }}</p>
@@ -18,15 +27,26 @@
 </template>
 
 <script setup lang="ts">
-  import { ICredentialRule } from '../../../../../types/credential';
+  import { ICredentialRule, IPreviewRule } from '../../../../../types/credential';
   import { useI18n } from 'vue-i18n';
+  import { PlayShape } from 'bkui-vue/lib/icon';
 
   const { t } = useI18n();
   const props = defineProps<{
     rules: ICredentialRule[];
+    previewRule: IPreviewRule | null;
   }>();
 
-  const emits = defineEmits(['edit']);
+  const emits = defineEmits(['edit', 'update:previewRule']);
+
+  const handlePreviewRule = (rule: ICredentialRule) => {
+    const previewRule = {
+      id: rule.id,
+      appName: rule.spec.app,
+      scopeContent: rule.spec.scope,
+    };
+    emits('update:previewRule', previewRule);
+  };
 </script>
 <style lang="scss" scoped>
   .title {
@@ -52,6 +72,21 @@
       border-radius: 2px;
       &:not(:last-child) {
         margin-bottom: 8px;
+      }
+    }
+    .current-rule-item {
+      position: relative;
+      background: #e1ecff;
+      border: 1px solid #699df4;
+      border-radius: 2px;
+      color: #3a84ff;
+      & .arrow-icon {
+        position: absolute;
+        font-size: 14px;
+        right: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #699df4;
       }
     }
   }
