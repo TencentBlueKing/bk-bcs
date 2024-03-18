@@ -107,3 +107,9 @@
 .icon-variable:before {
   content: '\e11b';
 }
+.icon-star:before {
+  content: '\e11c';
+}
+.icon-star-fill:before {
+  content: '\e11d';
+}
