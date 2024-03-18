@@ -4799,7 +4799,7 @@ message CreateClusterReq {
       title : "clusterName",
       description : "集群名称"
     },
-    (validate.rules).string = {min_len : 1, max_len : 1024}
+    (validate.rules).string = {min_len : 1, max_len : 1024, pattern: "^[^&'<>\"\\r]+$"}
   ];
   string provider = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -5098,7 +5098,7 @@ message CreateVirtualClusterReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterName",
       description : "集群名称"
-    }, (validate.rules).string = {min_len : 1, max_len : 1024}];
+    }, (validate.rules).string = {min_len : 1, max_len : 1024, pattern : "^[0-9a-zA-Z-]+$"}];
   string provider = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "provider",
@@ -5409,7 +5409,7 @@ message ImportClusterReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterName",
       description : "集群名称"
-    },(validate.rules).string = {min_len :1, max_len : 1024}
+    },(validate.rules).string = {min_len :1, max_len : 1024, pattern: "^[^&'<>\"\\r]+$"}
   ];
   string description = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "description",
