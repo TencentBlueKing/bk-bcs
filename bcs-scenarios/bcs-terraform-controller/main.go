@@ -14,44 +14,40 @@
 package main
 
 import (
-	"flag"
-	"os"
+	"context"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them. nolint
+	// to ensure that exec-entrypoint and run can make use of them.
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	// +kubebuilder:scaffold:imports nolint
-	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/api/v1"
+	// +kubebuilder:scaffold:imports
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/controllers"
+	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/apis/terraformextensions/v1"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/option"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/server"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/repository"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/tfhandler"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/worker"
 )
 
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
-)
-var (
-	// verbosity
-	verbosity int
-	// probeAddr addr
-	probeAddr string
-	// metricsAddr m addr
-	metricsAddr string
-	// enableLeaderElection election
-	enableLeaderElection bool
-	// opts global config
-	opts = &option.ControllerOption{}
 )
 
 // 端口变更！参考deployment.yaml
@@ -60,52 +56,90 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	// git.Repository的ResolveRevision()方法描述与实际实现不同，缺少origin的情况的实现，故在这里加上origin条件
 	plumbing.RefRevParseRules = append(plumbing.RefRevParseRules, "refs/remotes/origin/%s")
-
-	// metrics config
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8081", "The address the metric endpoint binds to.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8082", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false, "Enable leader election for controller manager. "+
-		"Enabling this will ensure there is only one active controller manager.")
-	// log config
-	flag.IntVar(&verbosity, "v", 3, "log level for V logs")
-	flag.StringVar(&opts.LogDir, "log_dir", "/data/bcs/logs", "If non-empty, write log files in this directory")
-	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
-	flag.IntVar(&opts.LogMaxNum, "log_max_num", 10, "Max num of log file.")
-	flag.BoolVar(&opts.ToStdErr, "logtostderr", false, "log to standard error instead of files")
-	flag.BoolVar(&opts.AlsoToStdErr, "alsologtostderr", true, "log to standard error as well as files")
-	opts.Verbosity = int32(verbosity)
-	// consul config
-	flag.StringVar(&opts.ConsulScheme, "consul_scheme", "", "tf cli backend consul scheme")
-	flag.StringVar(&opts.ConsulAddress, "consul_address", "", "tf cli backend consul address")
-	flag.StringVar(&opts.ConsulPath, "consul_path", "", "tf cli backend consul path")
-	// consul config
-	flag.StringVar(&opts.GitopsHost, "gitops_host", "", "gitops host")
-	flag.StringVar(&opts.GitopsUsername, "gitops_username", "", "gitops username")
-	flag.StringVar(&opts.GitopsPassword, "gitops_password", "", "gitops password")
-	// vault
-	flag.StringVar(&opts.VaultCaPath, "vault_ca_path", "/data/bcs/cert/vault/vaultca", "vault private ca path")
-	flag.Parse()
-
-	blog.InitLogs(opts.LogConfig)
-
-	blog.Infof("controller config: %s", utils.ToJsonString(opts))
-	if err := option.CheckControllerOption(opts); err != nil {
-		blog.Fatalf("check controllerOption failed, err: %s", err)
-		return
-	}
-	// +kubebuilder:scaffold:scheme
 }
 
 func main() {
+	if err := option.Parse(); err != nil {
+		panic(err)
+	}
+	op := option.GlobalOption()
+	blog.InitLogs(op.LogConfig)
 	defer blog.CloseLogs()
+	blog.Infof("option: %v", utils.ToJsonString(op))
+
+	ctx := ctrl.SetupSignalHandler()
+	if !op.IsWorker {
+		startController(ctx, op)
+	} else {
+		startWorker(ctx, op)
+	}
+}
+
+func startWorker(ctx context.Context, op *option.ControllerOption) { // nolint
+	tfWorker := &worker.TerraformWorker{}
+	if err := tfWorker.Init(ctx); err != nil {
+		blog.Fatalf("init terraform worker failed: %s", err.Error())
+	}
+	tfWorker.Start(ctx)
+	blog.Warnf("terraform worker is finished")
+}
+
+// startController 运行 controller:
+// - ControllerManager: 接收 terraform cr 事件，并做对应处理
+// - TerraformServer: 运行 grpc server, 负责分配处理 cr 的队列
+func startController(ctx context.Context, op *option.ControllerOption) {
+	tfServer := worker.NewTerraformServer()
+	if err := tfServer.Init(ctx); err != nil {
+		blog.Fatalf("init terraform server failed: %s", err.Error())
+	}
+	defer tfServer.Stop()
+	mgr, err := buildControllerManager(ctx, op, tfServer)
+	if err != nil {
+		blog.Fatalf("build controller manager failed: %s", err.Error())
+	}
+
+	closeCh := make(chan struct{})
+	go runControllerManager(ctx, mgr, closeCh)
+	go runTerraformServer(ctx, tfServer, closeCh)
+	select {
+	case <-ctx.Done():
+		blog.Warnf("received shutdown signal")
+	case _, ok := <-closeCh:
+		if !ok {
+			blog.Errorf("close channel is closed")
+			break
+		}
+		blog.Infof("received from close channel")
+	}
+}
+
+func runControllerManager(ctx context.Context, mgr manager.Manager, closeCh chan struct{}) {
+	setupLog.Info("starting manager")
+	if err := mgr.Start(ctx); err != nil {
+		blog.Errorf("controller manager running occurred an err: %s", err.Error())
+	}
+	blog.Infof("controller manager is stopped")
+	closeCh <- struct{}{}
+}
+
+func runTerraformServer(ctx context.Context, tfServer *worker.TerraformServer, closeCh chan struct{}) {
+	if err := tfServer.Start(ctx); err != nil {
+		blog.Errorf("terraform rpc server start failed: %s", err.Error())
+	}
+	blog.Infof("tfWorker is stopped")
+	closeCh <- struct{}{}
+}
+
+func buildControllerManager(ctx context.Context, op *option.ControllerOption,
+	tfServer *worker.TerraformServer) (manager.Manager, error) {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   9443,
-		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "333fb49e.bkbcs.tencent.com",
+		Scheme: scheme,
+		// Metrics:
+		// Port:                   9443,
+		HealthProbeBindAddress: "0.0.0.0:8083",
+		LeaderElection:         op.EnableLeaderElection,
+		LeaderElectionID:       "gitops-terraform.bkbcs.tencent.com",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
@@ -117,46 +151,60 @@ func main() {
 		// if you are doing or is intended to do any operation such as perform cleanups
 		// after the manager stops then its usage might be unsafe.
 		// LeaderElectionReleaseOnCancel: true,
+		NewClient: func(cache cache.Cache, config *rest.Config, options client.Options,
+			uncachedObjects ...client.Object) (client.Client, error) {
+			config.QPS = float32(op.KubernetesQPS)
+			config.Burst = op.KubernetesBurst
+			// Create the Client for Write operations.
+			c, err := client.New(config, options)
+			if err != nil {
+				return nil, err
+			}
+			return c, nil
+		},
 	})
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
-		os.Exit(1) // nolint
+		return nil, errors.Wrapf(err, "create controller manager failed")
 	}
 
-	svr := server.NewHandler("0.0.0.0", "8080", mgr.GetClient())
-	go func() {
-		if err = svr.Init(); err != nil {
-			blog.Fatalf("http server init failed, err: %s", err)
-			return
-		}
-		if err = svr.Run(); err != nil {
-			blog.Fatalf("http server run terminated, err: %s", err)
-			return
-		}
-	}()
-
+	tfHandler, err := buildTerraformHandler(ctx)
+	if err != nil {
+		return nil, errors.Wrapf(err, "build terraform handler failed")
+	}
 	if err = (&controllers.TerraformReconciler{
-		Config: opts,
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Config:    op,
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Queue:     tfServer,
+		TFHandler: tfHandler,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Terraform")
-		os.Exit(1)
+		return nil, errors.Wrapf(err, "setup controller manager failed")
 	}
 	// +kubebuilder:scaffold:builder
 
 	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up health check")
-		os.Exit(1)
+		return nil, errors.Wrapf(err, "unable to set up health check")
 	}
 	if err = mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up ready check")
-		os.Exit(1)
+		return nil, errors.Wrapf(err, "unable to set up ready check")
 	}
+	return mgr, nil
+}
 
-	setupLog.Info("starting manager")
-	if err = mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
-		os.Exit(1)
+func buildTerraformHandler(ctx context.Context) (tfhandler.TerraformHandler, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, errors.Wrapf(err, "get in-cluster config failed")
 	}
+	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, errors.Wrapf(err, "create in-cluster client failed")
+	}
+	argoDB, _, err := store.NewArgoDB(ctx, option.GlobalOption().ArgoAdminNamespace)
+	if err != nil {
+		return nil, errors.Wrapf(err, "create argo db failed")
+	}
+	repoHandler := repository.NewRepositoryHandler(argoDB)
+	tfHandler := tfhandler.NewTerraformHandler(repoHandler, k8sClient)
+	return tfHandler, nil
 }

@@ -49,6 +49,7 @@ const (
 	Config_CreateRelease_FullMethodName                     = "/pbcs.Config/CreateRelease"
 	Config_ListReleases_FullMethodName                      = "/pbcs.Config/ListReleases"
 	Config_GetReleaseByName_FullMethodName                  = "/pbcs.Config/GetReleaseByName"
+	Config_GetRelease_FullMethodName                        = "/pbcs.Config/GetRelease"
 	Config_DeprecateRelease_FullMethodName                  = "/pbcs.Config/DeprecateRelease"
 	Config_UnDeprecateRelease_FullMethodName                = "/pbcs.Config/UnDeprecateRelease"
 	Config_DeleteRelease_FullMethodName                     = "/pbcs.Config/DeleteRelease"
@@ -146,6 +147,7 @@ const (
 	Config_CheckCredentialName_FullMethodName               = "/pbcs.Config/CheckCredentialName"
 	Config_ListCredentialScopes_FullMethodName              = "/pbcs.Config/ListCredentialScopes"
 	Config_UpdateCredentialScope_FullMethodName             = "/pbcs.Config/UpdateCredentialScope"
+	Config_CredentialScopePreview_FullMethodName            = "/pbcs.Config/CredentialScopePreview"
 	Config_CreateKv_FullMethodName                          = "/pbcs.Config/CreateKv"
 	Config_UpdateKv_FullMethodName                          = "/pbcs.Config/UpdateKv"
 	Config_ListKvs_FullMethodName                           = "/pbcs.Config/ListKvs"
@@ -186,6 +188,7 @@ type ConfigClient interface {
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
 	GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error)
+	GetRelease(ctx context.Context, in *GetReleaseReq, opts ...grpc.CallOption) (*release.Release, error)
 	DeprecateRelease(ctx context.Context, in *DeprecateReleaseReq, opts ...grpc.CallOption) (*DeprecateReleaseResp, error)
 	UnDeprecateRelease(ctx context.Context, in *UnDeprecateReleaseReq, opts ...grpc.CallOption) (*UnDeprecateReleaseResp, error)
 	DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*DeleteReleaseResp, error)
@@ -292,6 +295,7 @@ type ConfigClient interface {
 	CheckCredentialName(ctx context.Context, in *CheckCredentialNameReq, opts ...grpc.CallOption) (*CheckCredentialNameResp, error)
 	ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error)
 	UpdateCredentialScope(ctx context.Context, in *UpdateCredentialScopeReq, opts ...grpc.CallOption) (*UpdateCredentialScopeResp, error)
+	CredentialScopePreview(ctx context.Context, in *CredentialScopePreviewReq, opts ...grpc.CallOption) (*CredentialScopePreviewResp, error)
 	CreateKv(ctx context.Context, in *CreateKvReq, opts ...grpc.CallOption) (*CreateKvResp, error)
 	UpdateKv(ctx context.Context, in *UpdateKvReq, opts ...grpc.CallOption) (*UpdateKvResp, error)
 	ListKvs(ctx context.Context, in *ListKvsReq, opts ...grpc.CallOption) (*ListKvsResp, error)
@@ -527,6 +531,15 @@ func (c *configClient) ListReleases(ctx context.Context, in *ListReleasesReq, op
 func (c *configClient) GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error) {
 	out := new(release.Release)
 	err := c.cc.Invoke(ctx, Config_GetReleaseByName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetRelease(ctx context.Context, in *GetReleaseReq, opts ...grpc.CallOption) (*release.Release, error) {
+	out := new(release.Release)
+	err := c.cc.Invoke(ctx, Config_GetRelease_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1406,6 +1419,15 @@ func (c *configClient) UpdateCredentialScope(ctx context.Context, in *UpdateCred
 	return out, nil
 }
 
+func (c *configClient) CredentialScopePreview(ctx context.Context, in *CredentialScopePreviewReq, opts ...grpc.CallOption) (*CredentialScopePreviewResp, error) {
+	out := new(CredentialScopePreviewResp)
+	err := c.cc.Invoke(ctx, Config_CredentialScopePreview_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateKv(ctx context.Context, in *CreateKvReq, opts ...grpc.CallOption) (*CreateKvResp, error) {
 	out := new(CreateKvResp)
 	err := c.cc.Invoke(ctx, Config_CreateKv_FullMethodName, in, out, opts...)
@@ -1492,6 +1514,7 @@ type ConfigServer interface {
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
 	GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error)
+	GetRelease(context.Context, *GetReleaseReq) (*release.Release, error)
 	DeprecateRelease(context.Context, *DeprecateReleaseReq) (*DeprecateReleaseResp, error)
 	UnDeprecateRelease(context.Context, *UnDeprecateReleaseReq) (*UnDeprecateReleaseResp, error)
 	DeleteRelease(context.Context, *DeleteReleaseReq) (*DeleteReleaseResp, error)
@@ -1598,6 +1621,7 @@ type ConfigServer interface {
 	CheckCredentialName(context.Context, *CheckCredentialNameReq) (*CheckCredentialNameResp, error)
 	ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error)
 	UpdateCredentialScope(context.Context, *UpdateCredentialScopeReq) (*UpdateCredentialScopeResp, error)
+	CredentialScopePreview(context.Context, *CredentialScopePreviewReq) (*CredentialScopePreviewResp, error)
 	CreateKv(context.Context, *CreateKvReq) (*CreateKvResp, error)
 	UpdateKv(context.Context, *UpdateKvReq) (*UpdateKvResp, error)
 	ListKvs(context.Context, *ListKvsReq) (*ListKvsResp, error)
@@ -1684,6 +1708,9 @@ func (UnimplementedConfigServer) ListReleases(context.Context, *ListReleasesReq)
 }
 func (UnimplementedConfigServer) GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleaseByName not implemented")
+}
+func (UnimplementedConfigServer) GetRelease(context.Context, *GetReleaseReq) (*release.Release, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRelease not implemented")
 }
 func (UnimplementedConfigServer) DeprecateRelease(context.Context, *DeprecateReleaseReq) (*DeprecateReleaseResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeprecateRelease not implemented")
@@ -1975,6 +2002,9 @@ func (UnimplementedConfigServer) ListCredentialScopes(context.Context, *ListCred
 }
 func (UnimplementedConfigServer) UpdateCredentialScope(context.Context, *UpdateCredentialScopeReq) (*UpdateCredentialScopeResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredentialScope not implemented")
+}
+func (UnimplementedConfigServer) CredentialScopePreview(context.Context, *CredentialScopePreviewReq) (*CredentialScopePreviewResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CredentialScopePreview not implemented")
 }
 func (UnimplementedConfigServer) CreateKv(context.Context, *CreateKvReq) (*CreateKvResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateKv not implemented")
@@ -2452,6 +2482,24 @@ func _Config_GetReleaseByName_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).GetReleaseByName(ctx, req.(*GetReleaseByNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleaseReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetRelease(ctx, req.(*GetReleaseReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4202,6 +4250,24 @@ func _Config_UpdateCredentialScope_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CredentialScopePreview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CredentialScopePreviewReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CredentialScopePreview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CredentialScopePreview_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CredentialScopePreview(ctx, req.(*CredentialScopePreviewReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateKvReq)
 	if err := dec(in); err != nil {
@@ -4416,6 +4482,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReleaseByName",
 			Handler:    _Config_GetReleaseByName_Handler,
+		},
+		{
+			MethodName: "GetRelease",
+			Handler:    _Config_GetRelease_Handler,
 		},
 		{
 			MethodName: "DeprecateRelease",
@@ -4804,6 +4874,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateCredentialScope",
 			Handler:    _Config_UpdateCredentialScope_Handler,
+		},
+		{
+			MethodName: "CredentialScopePreview",
+			Handler:    _Config_CredentialScopePreview_Handler,
 		},
 		{
 			MethodName: "CreateKv",

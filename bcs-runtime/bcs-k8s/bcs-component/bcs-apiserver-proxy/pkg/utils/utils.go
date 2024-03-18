@@ -59,7 +59,7 @@ func SplitServer(server string) (string, uint32) {
 		blog.Errorf("SplitServer error: %s", err.Error())
 		return "", 0
 	}
-	blog.V(5).Infof("SplitServer debug: IP: %s, Port: %s", s[0], s[1])
+	blog.V(5).Infof("SplitServer debug: IP: %s, Port: %s", s, p)
 
 	return s, uint32(port)
 }

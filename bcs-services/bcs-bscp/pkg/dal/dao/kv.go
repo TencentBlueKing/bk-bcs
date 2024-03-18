@@ -123,7 +123,7 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Kv.WithContext(kit.Ctx)
 		if _, e := q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Select(m.Version, m.UpdatedAt,
-			m.Reviser, m.KvState, m.Signature, m.ByteSize).Updates(kv); e != nil {
+			m.Reviser, m.KvState, m.Signature, m.Md5, m.ByteSize).Updates(kv); e != nil {
 			return e
 		}
 

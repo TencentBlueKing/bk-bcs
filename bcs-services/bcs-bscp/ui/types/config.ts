@@ -211,6 +211,10 @@ export interface IConfigKvItem {
 export interface IConfigKvType {
   id: number;
   spec: IConfigKvItem;
+  content_spec: {
+    signature: string;
+    byte_size: string;
+  };
   kv_state: string;
   attachment: {
     biz_id: number;

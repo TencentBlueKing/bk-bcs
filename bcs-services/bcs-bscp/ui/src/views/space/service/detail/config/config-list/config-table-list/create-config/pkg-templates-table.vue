@@ -14,8 +14,7 @@
     <table v-if="expand" v-bkloading="{ loading: listLoading }" class="template-table">
       <thead>
         <tr>
-          <th>{{ t('模板名称') }}</th>
-          <th>{{ t('模板路径') }}</th>
+          <th>{{ t('配置文件绝对路径') }}</th>
           <th>{{ t('版本号') }}</th>
         </tr>
       </thead>
@@ -26,11 +25,9 @@
             :key="tpl.id"
             :class="{ 'has-conflict': props.conflictTpls.includes(tpl.id) }">
             <td>
-              <bk-overflow-title class="cell" type="tips">{{ tpl.spec.name }}</bk-overflow-title>
+              <bk-overflow-title class="cell" type="tips">{{ fileAP(tpl) }}</bk-overflow-title>
             </td>
-            <td>
-              <bk-overflow-title class="cell" type="tips" :resizeable="true">{{ tpl.spec.path }}</bk-overflow-title>
-            </td>
+
             <td class="select-version">
               <bk-select
                 :clearable="false"
@@ -65,7 +62,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { RightShape, ExclamationCircleShape, Close } from 'bkui-vue/lib/icon';
   import {
@@ -114,6 +111,15 @@
     );
     await getTemplateList();
     setTemplatesDefaultVersion();
+  });
+
+  // 配置文件绝对路径
+  const fileAP = computed(() => (config: ITemplateConfigWithVersions) => {
+    const { path, name } = config.spec;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
   });
 
   // 获取模板及对应版本列表

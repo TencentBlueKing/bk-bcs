@@ -1,6 +1,6 @@
 <template>
   <div class="page-content-container">
-    <notice-component v-if="showNotice" :api-url="noticeApiURL" @show-alert-change="showNotice = $event" />
+    <notice-component v-if="enableNotice" :api-url="noticeApiURL" @show-alert-change="showNotice = $event" />
     <Header></Header>
     <div :class="['content', { 'show-notice': showNotice }]">
       <router-view></router-view>
@@ -27,6 +27,8 @@
 
   // @ts-ignore
   const noticeApiURL = `${window.BK_BCS_BSCP_API}/api/v1/announcements`;
+  // @ts-ignore
+  const enableNotice = window.ENABLE_BK_NOTICE === 'true';
 
   watch(
     () => showLoginModal.value,

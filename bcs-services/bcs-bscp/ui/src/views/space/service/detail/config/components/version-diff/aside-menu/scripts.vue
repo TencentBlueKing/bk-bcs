@@ -59,7 +59,8 @@
   watch(
     () => props.baseVersionId,
     async (val) => {
-      await updateDiff(val, 'base');
+      await getScriptDetail(val, 'base');
+      updateDiff();
       if (typeof selected.value === 'string') {
         selectScript(selected.value);
       }
@@ -78,12 +79,16 @@
     },
   );
 
-  onMounted(() => {
-    updateDiff(props.currentVersionId, 'current');
+  onMounted(async () => {
+    await getScriptDetail(props.currentVersionId, 'current');
+    // 选择基准版本后才计算变更状态
+    if (props.baseVersionId) {
+      await getScriptDetail(props.baseVersionId, 'base');
+      updateDiff();
+    }
   });
 
-  // 计算前置脚本或后置脚本差异
-  const updateDiff = async (id: number, type: 'current' | 'base') => {
+  const getScriptDetail = async (id: number, type: 'current' | 'base') => {
     const scriptSetting = await getConfigScript(bkBizId.value, appData.value.id as number, id);
     const { pre_hook, post_hook } = scriptSetting;
     scriptDetailList.value[0][type] = {
@@ -94,25 +99,25 @@
       language: post_hook.type,
       content: post_hook.content,
     };
-    // 选择基准版本后才计算变更状态
-    if (props.baseVersionId) {
-      scriptDetailList.value[0].type = getDiffType(
-        scriptDetailList.value[0].base.content,
-        scriptDetailList.value[0].current.content,
-      );
-      scriptDetailList.value[1].type = getDiffType(
-        scriptDetailList.value[1].base.content,
-        scriptDetailList.value[1].current.content,
-      );
-    }
+  };
+
+  // 计算前置脚本或后置脚本差异
+  const updateDiff = async () => {
+    scriptDetailList.value[0].type = getDiffType(
+      scriptDetailList.value[0].base.content,
+      scriptDetailList.value[0].current.content,
+    );
+    scriptDetailList.value[1].type = getDiffType(
+      scriptDetailList.value[1].base.content,
+      scriptDetailList.value[1].current.content,
+    );
   };
 
   const selectScript = (id: string) => {
     const script = id === 'pre' ? scriptDetailList.value[0] : scriptDetailList.value[1];
     const { base, current } = script;
-    const diffData = { contentType: 'text', base, current };
+    const diffData = { id, contentType: 'text', base, current };
     selected.value = id;
     emits('selected', diffData);
   };
 </script>
-<style lang="scss" scoped></style>

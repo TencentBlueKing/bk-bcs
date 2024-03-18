@@ -23,7 +23,7 @@ safe_source() {
     #shellcheck source=/dev/null
     source "${source_file}"
   else
-    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    echo "[ERROR]: FAIL to source, missing ${source_file}" >&2
     exit 1
   fi
   return 0
@@ -40,8 +40,13 @@ _yum_docker() {
     curl -fsSL "$yum_repo" \
       | sed "s#https://download.docker.com#${MIRROR_URL}/docker-ce#g" \
       | tee "${repo_file}"
-    [[ ! -f /etc/tlinux-release ]] \
-      || sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
+    if [[ -f /etc/tlinux-release ]];then
+      if grep "TencentOS Server 3.[0-9]*" /etc/tlinux-release;then
+        sed -i "s/\$releasever/8/g" "$ROOT_DIR/docker-ce.repo"
+      elif grep "TencentOS Server 2.[0-9]*" /etc/tlinux-release;then
+        sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
+      fi
+    fi
   else
     yum_repo="https://download.docker.com/linux/centos/docker-ce.repo"
     utils::log "DEBUG" "docker yum repo: ${yum_repo}"

@@ -61,9 +61,6 @@ func SyncNamespace(projectCode, clusterID string, namespaces []corev1.Namespace)
 		return err
 	}
 	creator := cluster.GetCreator()
-	if err != nil {
-		return errorx.NewClusterErr(err.Error())
-	}
 	ccNsList, err := bcscc.ListNamespaces(projectCode, clusterID)
 	if err != nil {
 		return errorx.NewRequestBCSCCErr(err.Error())

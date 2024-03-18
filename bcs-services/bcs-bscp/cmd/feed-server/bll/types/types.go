@@ -92,6 +92,7 @@ type RepositorySpec struct {
 type AppLatestReleaseMeta struct {
 	// ReleaseId the app's latest release's id.
 	ReleaseId   uint32            `json:"release_id,omitempty"`
+	ReleaseName string            `json:"release_name,omitempty"`
 	Repository  *Repository       `json:"repository,omitempty"`
 	ConfigItems []*ReleasedCIMeta `json:"config_items,omitempty"`
 	PreHook     *pbhook.HookSpec  `json:"pre_hook,omitempty"`

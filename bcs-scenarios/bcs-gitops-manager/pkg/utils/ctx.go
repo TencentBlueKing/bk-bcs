@@ -17,6 +17,14 @@ import (
 	"strings"
 )
 
+// IsUnauthenticated unauthenticated
+func IsUnauthenticated(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "Unauthenticated")
+}
+
 // IsPermissionDenied permission
 func IsPermissionDenied(err error) bool {
 	if err == nil {

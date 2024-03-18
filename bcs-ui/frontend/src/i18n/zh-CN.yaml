@@ -2518,6 +2518,7 @@ importGoogleCloud:
     region: 所属区域
     clusterID: 云集群 ID
     desc: 集群描述
+    nodemanArea: 管控区域
   button:
     test: 连通性测试
     import: 导入

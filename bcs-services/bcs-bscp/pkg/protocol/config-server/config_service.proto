@@ -171,6 +171,11 @@ service Config {
       get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/query/name/{release_name}"
     };
   }
+  rpc GetRelease(GetReleaseReq) returns (pbrelease.Release) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}"
+    };
+  }
   rpc DeprecateRelease(DeprecateReleaseReq) returns (DeprecateReleaseResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/deprecate"
@@ -723,6 +728,11 @@ service Config {
       body: "*"
     };
   }
+  rpc CredentialScopePreview(CredentialScopePreviewReq) returns (CredentialScopePreviewResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/credential/scope/preview"
+    };
+  }
 
   rpc CreateKv(CreateKvReq) returns (CreateKvResp) {
     option (google.api.http) = {
@@ -768,6 +778,23 @@ message UpdateCredentialScopeReq {
 }
 
 message UpdateCredentialScopeResp {}
+
+message CredentialScopePreviewReq {
+  uint32 biz_id = 1;
+  string app_name = 2;
+  string scope = 3;
+  string search_value = 4;
+  uint32 start = 5;
+  uint32 limit = 6;
+}
+
+message CredentialScopePreviewResp {
+  message Detail {
+    string name = 1;
+  }
+  uint32 count = 1;
+  repeated Detail details = 2;
+}
 
 message ListCredentialScopesReq {
   uint32 biz_id = 1;
@@ -1136,6 +1163,12 @@ message GetReleaseByNameReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   string release_name = 3;
+}
+
+message GetReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
 }
 
 message DeprecateReleaseReq {

@@ -59,6 +59,7 @@ var (
 type ObjectMetadata struct {
 	ByteSize int64  `json:"byte_size"`
 	Sha256   string `json:"sha256"`
+	Md5      string `json:"md5"`
 }
 
 // DecoratorInter ..

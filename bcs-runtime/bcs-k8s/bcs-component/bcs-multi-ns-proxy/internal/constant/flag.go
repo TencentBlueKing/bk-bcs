@@ -34,7 +34,7 @@ const (
 	// FlagKeyKubeconfigDefaultNs is the default namespace to use for non-namespaced api resource
 	FlagKeyKubeconfigDefaultNs = "kubeconfig-defaultns"
 	// FlagKeyKubeconfigCheckDuration interval for checking kubeconfig directory
-	FlagKeyKubeconfigCheckDuration = "kubeconfig-checkduration"
+	FlagKeyKubeconfigCheckDuration = "kubeconfig-checkduration" // nolint
 	// FlagKeyConfigPath is config file path
 	FlagKeyConfigPath = "config-path"
 	// FlagKeyConfigName is config file name

@@ -1,6 +1,7 @@
 node_modules/
 webpack_cache/
-dist/
+dist/*
+!dist/gitkeep
 output/
 test/unit/coverage
 *.bak*

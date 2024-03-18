@@ -65,10 +65,18 @@
         <VClusterQuota class="p-[20px]" :cluster-id="clusterId" />
       </bcs-tab-panel>
       <template v-else>
-        <bcs-tab-panel name="network" :label="$t('cluster.detail.title.network')" render-directive="if">
+        <bcs-tab-panel
+          name="network"
+          :label="$t('cluster.detail.title.network')"
+          render-directive="if"
+          v-if="!isKubeConfigImportCluster">
           <Network class="p-[20px]" :cluster-id="clusterId" />
         </bcs-tab-panel>
-        <bcs-tab-panel name="master" :label="$t('cluster.detail.title.controlConfig')" render-directive="if">
+        <bcs-tab-panel
+          name="master"
+          :label="$t('cluster.detail.title.controlConfig')"
+          render-directive="if"
+          v-if="!isKubeConfigImportCluster">
           <Master class="p-[20px]" :cluster-id="clusterId" />
         </bcs-tab-panel>
         <bcs-tab-panel
@@ -160,6 +168,9 @@ watch(activeTabName, () => {
 const { clusterList } = useCluster();
 const curCluster = computed<Partial<ICluster>>(() => clusterList.value
   .find(item => item.clusterID === props.clusterId) || {});
+  // kubeConfig导入集群
+const isKubeConfigImportCluster = computed(() => curCluster.value.clusterCategory === 'importer'
+      && curCluster.value.importCategory === 'kubeConfig');
 // // 云区域详情
 // const cloudDetail = ref<Record<string, any>|null>(null);
 // const handleGetCloudDetail = async () => {
@@ -193,6 +204,11 @@ watch(
       if (!normalStatusList.value.includes(curCluster.value.status || '')
         && !['info', 'network', 'master'].includes(activeTabName.value)) {
         activeTabName.value = 'info';
+      }
+
+      // kubeconfig集群只有总揽、基本信息、节点列表
+      if (isKubeConfigImportCluster.value && !['overview', 'info', 'node'].includes(activeTabName.value)) {
+        activeTabName.value = 'overview';
       }
     });
   },

@@ -544,13 +544,13 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	updateDesired.BuildCheckClusterNodeStatusStep(task)
 	// install gse agent
 	common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
-		ClusterId:  opt.Cluster.ClusterID,
-		BusinessId: opt.Cluster.BusinessID,
-		CloudArea:  group.GetArea(),
-		User:       group.GetLaunchTemplate().GetInitLoginUsername(),
-		Passwd:     passwd,
-		KeyInfo:    group.GetLaunchTemplate().GetKeyPair(),
-		Port:       "",
+		ClusterId:   opt.Cluster.ClusterID,
+		NodeGroupId: group.NodeGroupID,
+		BusinessId:  opt.Cluster.BusinessID,
+		User:        group.GetLaunchTemplate().GetInitLoginUsername(),
+		Passwd:      passwd,
+		KeyInfo:     group.GetLaunchTemplate().GetKeyPair(),
+		Port:        "",
 	})
 	// transfer host module
 	moduleID := cloudprovider.GetTransModuleInfo(opt.Cluster, opt.AsOption, opt.NodeGroup)

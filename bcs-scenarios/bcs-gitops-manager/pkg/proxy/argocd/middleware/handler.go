@@ -230,6 +230,9 @@ func (h *handler) CheckBusinessPermission(ctx context.Context, bizID string, act
 func (h *handler) CheckNamespaceScopedResourcePermission(ctx context.Context, projectName, projectID, clusterID,
 	namespace string, action iam.ActionID) (int, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
+	if h.isAdminUser(user.GetUser()) {
+		return http.StatusOK, nil
+	}
 	var permit bool
 	var err error
 	switch action {
@@ -263,6 +266,9 @@ func (h *handler) CheckProjectPermissionByID(ctx context.Context, projectName, p
 	action iam.ActionID) (int, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 	h.analysisClient.UpdateActivityUser(projectName, user.GetUser())
+	if h.isAdminUser(user.GetUser()) {
+		return http.StatusOK, nil
+	}
 	var permit bool
 	var err error
 	switch action {
@@ -290,6 +296,9 @@ func (h *handler) CheckProjectPermissionByID(ctx context.Context, projectName, p
 func (h *handler) CheckClusterPermission(ctx context.Context, query *clusterclient.ClusterQuery,
 	action iam.ActionID) (statusCode int, err error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
+	if h.isAdminUser(user.GetUser()) {
+		return http.StatusOK, nil
+	}
 	argoCluster, err := h.option.Storage.GetCluster(ctx, query)
 	if err != nil {
 		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster from storage failure")
@@ -350,11 +359,10 @@ func (h *handler) checkRepositoryBelongProject(ctx context.Context, repoUrl, pro
 		return false, fmt.Errorf("repo '%s' not found", repoUrl)
 	}
 	// passthrough if repository's project equal to public projects
-	for i := range h.option.PublicProjects {
-		if repo.Project == h.option.PublicProjects[i] {
-			return true, nil
-		}
+	if slices.Contains[string](h.option.PublicProjects, repo.Project) {
+		return true, nil
 	}
+
 	if repo.Project != project {
 		return false, nil
 	}
@@ -651,4 +659,8 @@ func (h *handler) ListApplications(ctx context.Context, query *appclient.Applica
 	}
 	apps.Items = result
 	return apps, nil
+}
+
+func (h *handler) isAdminUser(user string) bool {
+	return slices.Contains[string](h.option.AdminUsers, user)
 }

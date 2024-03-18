@@ -21,6 +21,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/pkg/errors"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -87,7 +88,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// update nodeGorup cloudNodeGroupID
+	// update nodeGroup cloudNodeGroupID
 	if err = updateCloudNodeGroupIDInNodeGroup(nodeGroupID, dependInfo.NodeGroup); err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateCloudNodeGroupIDInNodeGroup[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -102,7 +103,6 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	if state.Task.CommonParams == nil { // update response information to task common params
 		state.Task.CommonParams = make(map[string]string)
 	}
-	state.Task.CommonParams["CloudNodeGroupID"] = dependInfo.NodeGroup.CloudNodeGroupID
 
 	if err = state.UpdateStepSucc(start, stepName); err != nil { // update step
 		return errors.Wrapf(err, "CreateCloudNodeGroupTask[%s] task %s %s update to storage fatal",
@@ -194,7 +194,9 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 func createAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
 	group := info.NodeGroup
 	cluster := info.Cluster
+
 	taskID := cloudprovider.GetTaskIDFromContext(rootCtx)
+
 	// new Azure client
 	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
 	if err != nil {
@@ -213,7 +215,9 @@ func createAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBas
 	if err = client.NodeGroupToAgentPool(group, pool); err != nil {
 		return errors.Wrapf(err, "createAgentPool[%s]: call NodeGroupToAgentPool failed", taskID)
 	}
-	if _, err = client.CreatePoolAndReturn(ctx, pool, cluster.SystemID, group.CloudNodeGroupID); err != nil {
+	_, err = client.CreatePoolAndReturn(ctx, pool, getClusterResourceGroup(info.Cluster),
+		cluster.SystemID, group.CloudNodeGroupID)
+	if err != nil {
 		return errors.Wrapf(err, "createAgentPool[%s]: call CreatePoolAndReturn[%s][%s] falied", taskID,
 			cluster.ClusterID, group.CloudNodeGroupID)
 	}
@@ -249,13 +253,15 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 		return errors.Wrapf(err, "call NewAgentPoolClientWithOpt[%s] falied", taskID)
 	}
 
-	nodeGroupResource, ok := info.Cluster.ExtraInfo[api.NodeResourceGroup]
+	nodeGroupResource, ok := info.Cluster.ExtraInfo[common.NodeResourceGroup]
 	if !ok {
 		ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
 		defer cancel()
 
 		var cloudCluster *armcontainerservice.ManagedCluster
-		cloudCluster, err = client.GetCluster(ctx, info)
+
+		clsResourceGroup := getClusterResourceGroup(info.Cluster)
+		cloudCluster, err = client.GetCluster(ctx, info, clsResourceGroup)
 		if err != nil {
 			return errors.Wrapf(err, "createAgentPool[%s]: call GetCluster falied", taskID)
 		}
@@ -357,7 +363,8 @@ func checkNodeGroup(rootCtx context.Context, info *cloudprovider.CloudDependBasi
 	ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
 	defer cancel()
 	err = loop.LoopDoFunc(ctx, func() error {
-		pool, err = client.GetPoolAndReturn(ctx, cluster.SystemID, group.CloudNodeGroupID)
+		pool, err = client.GetPoolAndReturn(ctx, getNodeResourceGroup(info.Cluster),
+			cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
 			blog.Errorf("checkNodeGroup[%s] poll GetAgentPool[%s][%s] failed: %v", taskID, cluster.SystemID,
 				group.CloudNodeGroupID, err)
@@ -405,9 +412,9 @@ func cloudDataToNodeGroup(rootCtx context.Context, pool *armcontainerservice.Age
 	}
 
 	// 尝试获取nodeGroupResource
-	nodeGroupResource, ok := info.Cluster.ExtraInfo[api.NodeResourceGroup]
+	nodeGroupResource, ok := info.Cluster.ExtraInfo[common.NodeResourceGroup]
 	if !ok {
-		cloudCluster, err := client.GetCluster(ctx, info)
+		cloudCluster, err := client.GetCluster(ctx, info, nodeGroupResource)
 		if err != nil {
 			return errors.Wrapf(err, "checkNodeGroup[%s]: call GetCluster falied", taskID)
 		}

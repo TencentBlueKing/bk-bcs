@@ -35,6 +35,7 @@
   "apiconnecturl": "${bcsGitOpsManagerAPIConnectURL}",
   "clustersyncinterval": ${bcsGitOpsManagerClusterSyncInterval},
   "publicProjects": "${bcsGitOpsPublicProjects}",
+  "adminUsers": "${bcsGitOpsAdminUsers}",
   "gitops": {
     "service": "${bcsGitOpsManagerService}",
     "user": "${bcsGitOpsManagerServiceUser}",

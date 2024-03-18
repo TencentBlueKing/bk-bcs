@@ -1,5 +1,14 @@
 <template>
+  <bk-button
+    v-if="isFileType"
+    :key="appData.id"
+    style="margin-left: 8px"
+    :disabled="allConfigCount === 0"
+    @click="handleExportFile">
+    {{ $t('打包下载') }}
+  </bk-button>
   <bk-popover
+    v-else
     ref="buttonRef"
     :arrow="false"
     placement="bottom-start"
@@ -10,7 +19,7 @@
     <bk-button>{{ $t('导出至') }}</bk-button>
     <template #content>
       <div class="export-config-operations">
-        <div v-for="item in exportItem" :key="item.value" class="operation-item" @click="handleExport(item.value)">
+        <div v-for="item in exportItem" :key="item.value" class="operation-item" @click="handleExportKv(item.value)">
           <span :class="['bk-bscp-icon', `icon-${item.value}`]" />
           <span class="text"> {{ item.text }}</span>
         </div>
@@ -24,8 +33,11 @@
   import { getExportKvFile } from '../../../../../../../api/config';
   import { storeToRefs } from 'pinia';
   import useServiceStore from '../../../../../../../store/service';
+  import useConfigStore from '../../../../../../../store/config';
   const serviceStore = useServiceStore();
-  const { appData } = storeToRefs(serviceStore);
+  const configStore = useConfigStore();
+  const { appData, isFileType } = storeToRefs(serviceStore);
+  const { allConfigCount } = storeToRefs(configStore);
 
   const props = defineProps<{
     bkBizId: string;
@@ -48,7 +60,7 @@
     },
   ]);
 
-  const handleExport = async (type: string) => {
+  const handleExportKv = async (type: string) => {
     const res = await getExportKvFile(props.bkBizId, props.appId, props.versionId, type);
     let content: any;
     let mimeType: string;
@@ -75,6 +87,15 @@
     link.download = fileName;
     link.click();
     URL.revokeObjectURL(downloadUrl);
+  };
+
+  // 导出文件型服务配置
+  const handleExportFile = async () => {
+    const link = document.createElement('a');
+    link.href = `${(window as any).BK_BCS_BSCP_API}/api/v1/config/biz/${props.bkBizId}/apps/${props.appId}/releases/${
+      props.versionId
+    }/config_item/export`;
+    link.click();
   };
 </script>
 

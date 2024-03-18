@@ -305,7 +305,6 @@
   };
 
   // 搜索
-  // @todo 规则搜索交互确定
   const handleSearch = debounce(() => {
     if (!searchInfo.value) {
       searchGroupList.value = groupList.value;
@@ -313,7 +312,7 @@
     } else {
       const lowercaseSearchStr = searchInfo.value.toLowerCase().replace(/\s/g, '');
       // 分组名称过滤出来的数据
-      const groupNameList = groupList.value.filter((item) => item.name.includes(lowercaseSearchStr));
+      const groupNameList = groupList.value.filter((item) => item.name.toLowerCase().includes(lowercaseSearchStr));
       // 分组规则过滤出来的数据
       const groupRuleList = groupList.value.filter((item) => {
         let groupRuleMatch = false;

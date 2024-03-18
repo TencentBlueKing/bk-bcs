@@ -15,6 +15,7 @@ package qcloud
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"sync"
@@ -381,6 +382,7 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 	if opt.Cluster.ClusterAdvanceSettings != nil {
 		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = *cls.ContainerRuntime
 		opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = *cls.RuntimeVersion
+		opt.Cluster.ClusterAdvanceSettings.NetworkType = getTkeClusterNetworkType(cls)
 	}
 	if opt.Cluster.ClusterBasicSettings != nil {
 		opt.Cluster.ClusterBasicSettings.Version = *cls.ClusterVersion
@@ -1102,6 +1104,25 @@ func autoScaleClusterCidr(cls *proto.Cluster, needIPNum uint32) ([]string, error
 	}
 
 	return cidrList, nil
+}
+
+func getTkeClusterNetworkType(cluster *tke.Cluster) string {
+	property := *cluster.Property
+
+	propertyInfo := make(map[string]interface{})
+	err := json.Unmarshal([]byte(property), &propertyInfo)
+	if err != nil {
+		return ""
+	}
+	nType, ok := propertyInfo["NetworkType"]
+	if ok {
+		v, ok1 := nType.(string)
+		if ok1 {
+			return v
+		}
+	}
+
+	return ""
 }
 
 func getSurplusCidrList(mulList []string, step uint32) []uint32 {

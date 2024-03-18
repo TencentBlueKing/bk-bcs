@@ -274,12 +274,6 @@ func getMatcher(matchers []storepb.LabelMatcher, metricName string, cluster *bcs
 
 		newMatchers = append(newMatchers, m)
 	}
-	bkBizIDMatcher := storepb.LabelMatcher{
-		Type:  storepb.LabelMatcher_EQ,
-		Name:  "bk_biz_id",
-		Value: cluster.BKBizID,
-	}
-	newMatchers = append(newMatchers, bkBizIDMatcher)
 	newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: cluster.ClusterID})
 	return newMatchers
 }

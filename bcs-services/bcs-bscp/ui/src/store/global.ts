@@ -9,7 +9,7 @@ export default defineStore('global', () => {
   const spaceFeatureFlags = ref<{ [key: string]: any }>({}); // 空间的配置开关
   const spaceList = ref<ISpaceDetail[]>([]);
   // @ts-ignore
-  const showNotice = ref(window.ENABLE_BK_NOTICE === 'true'); // 是否展示消息通知
+  const showNotice = ref(false); // 是否展示消息通知
   const showApplyPermDialog = ref(false); // 资源无权限申请弹窗
   const showPermApplyPage = ref(false); // 无业务查看权限时，申请页面
   const applyPermUrl = ref(''); // 跳转到权限中心的申请链接

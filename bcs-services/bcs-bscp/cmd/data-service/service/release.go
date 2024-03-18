@@ -530,6 +530,7 @@ func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, relea
 				ByteSize:             byteSizeMap[r.TemplateRevisionId],
 				OriginSignature:      r.Signature,
 				OriginByteSize:       r.ByteSize,
+				Md5:                  r.Md5,
 			},
 			Attachment: &table.ReleasedAppTemplateAttachment{
 				BizID: kt.BizID,
@@ -699,6 +700,19 @@ func (s *Service) GetReleaseByName(ctx context.Context, req *pbds.GetReleaseByNa
 	if err != nil {
 		logs.Errorf("get release by name failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, fmt.Errorf("query release by name %s failed", req.GetReleaseName())
+	}
+
+	return pbrelease.PbRelease(release), nil
+}
+
+// GetRelease get release
+func (s *Service) GetRelease(ctx context.Context, req *pbds.GetReleaseReq) (*pbrelease.Release, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	release, err := s.dao.Release().Get(grpcKit, req.GetBizId(), req.GetAppId(), req.GetReleaseId())
+	if err != nil {
+		logs.Errorf("get release failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, fmt.Errorf("query release %d failed", req.GetReleaseId())
 	}
 
 	return pbrelease.PbRelease(release), nil

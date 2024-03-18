@@ -42,6 +42,7 @@ type GitOpsOptions struct {
 	RepoServerUrl  string
 	AppSetWebhook  string
 	PublicProjects []string
+	AdminUsers     []string
 	// URL prefix like /gitopsmanager/proxy/
 	PathPrefix string
 	// storage interface for access gitops data

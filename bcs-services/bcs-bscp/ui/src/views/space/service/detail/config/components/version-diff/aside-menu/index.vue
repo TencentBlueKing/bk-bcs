@@ -14,7 +14,7 @@
         v-else
         :base-version-id="props.baseVersionId"
         :current-version-id="props.currentVersionId"
-        :selected-config="props.selectedConfigKv"
+        :selected-id="props.selectedKvConfigId"
         :actived="selectedType === 'config'"
         :is-publish="props.isPublish"
         @selected="handleSelect($event, 'config')" />
@@ -47,7 +47,7 @@
     currentVersionId: number;
     unNamedVersionVariables?: IVariableEditParams[];
     selectedConfig?: IConfigDiffSelected;
-    selectedConfigKv?: number;
+    selectedKvConfigId?: number;
     isPublish: boolean;
   }>();
 

@@ -221,7 +221,7 @@ func NewModelSet(mongoOptions *mongo.Options) (ClusterManagerModel, error) {
 		return nil, err
 	}
 
-	storeClient = &ModelSet{
+	storeClient = &ModelSet{ // nolint
 		ModelCluster:           cluster.New(db),
 		ModelNode:              node.New(db),
 		ModelClusterCredential: clustercredential.New(db),

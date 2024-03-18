@@ -37,7 +37,7 @@ type RecordConfig struct {
 
 const (
 	// BkBcsK8sCustomScheduler for bcs-k8s-customscheduler module metrics prefix
-	BkBcsK8sCustomScheduler = "bkbcs_k8scustomscheduler"
+	BkBcsK8sCustomScheduler = "bkbcs_k8scustomscheduler" // nolint
 )
 
 var (

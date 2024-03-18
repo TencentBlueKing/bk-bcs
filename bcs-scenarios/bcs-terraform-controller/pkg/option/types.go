@@ -17,5 +17,10 @@ const (
 	TerraformBinPath = "/usr/local/bin/terraform"
 
 	// RepositoryStorePath 代码存储路径
-	RepositoryStorePath = "/data/bcs/terraform/repository"
+	RepositoryStorePath = "/data/bcs/terraform"
 )
+
+// GetRepoStoragePath 返回仓库的存储位置
+func GetRepoStoragePath(tfName, tfUID string) string {
+	return RepositoryStorePath + "/" + tfName + "/" + tfUID
+}

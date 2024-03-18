@@ -11,7 +11,7 @@
           <div class="section-title">{{ t('版本信息') }}</div>
           <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="formData">
             <bk-form-item :label="t('版本名称')" property="name" :required="true">
-              <bk-input v-model="formData.name" :placeholder="t('请输入')" @change="formChange" />
+              <bk-input v-model="formData.name" :placeholder="t('请输入')" @input="formChange" />
             </bk-form-item>
             <bk-form-item :label="t('版本描述')" property="memo">
               <bk-input
@@ -19,7 +19,7 @@
                 type="textarea"
                 :placeholder="t('请输入')"
                 :maxlength="200"
-                @change="formChange"
+                @input="formChange"
                 :resize="true" />
             </bk-form-item>
             <bk-checkbox v-model="isPublish" :true-label="true" :false-label="false" @change="formChange">

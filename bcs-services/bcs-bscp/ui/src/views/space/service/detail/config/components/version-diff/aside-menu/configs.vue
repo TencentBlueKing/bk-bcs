@@ -7,7 +7,7 @@
           v-if="isBaseVersionExist"
           v-model="isOnlyShowDiff"
           class="view-diff-checkbox"
-          @change="handleSearch">
+          @change="handleToggleShowDiff">
           {{ t('只查看差异文件') }}({{ diffCount }})
         </bk-checkbox>
         <div :class="['search-trigger', { actived: isOpenSearch }]" @click="isOpenSearch = !isOpenSearch">
@@ -38,7 +38,7 @@
                 permission: config.permission,
               })
             ">
-            <i v-if="config.diff_type" :class="['status-icon', config.diff_type]"></i>
+            <i v-if="config.diffType" :class="['status-icon', config.diffType]"></i>
             {{ config.name }}
           </div>
         </div>
@@ -103,7 +103,7 @@
   }
 
   interface IConfigDiffItem extends IConfigMenuItem {
-    diff_type: string;
+    diffType: string;
     current: string;
     base: string;
     currentPermission?: IPermissionType;
@@ -152,6 +152,7 @@
   const baseVariables = ref<IVariableEditParams[]>([]);
   // 汇总的配置文件列表，包含未修改、增加、删除、修改的所有配置文件
   const aggregatedList = ref<IDiffGroupData[]>([]);
+  // 分组后需要展示的配置文件列表
   const groupedConfigListOnShow = ref<IDiffGroupData[]>([]);
   const isOnlyShowDiff = ref(true); // 只显示差异项
   const isOpenSearch = ref(false);
@@ -161,6 +162,21 @@
   // 是否实际选择了对比的基准版本，为了区分的未命名版本id为0的情况
   const isBaseVersionExist = computed(() => typeof props.baseVersionId === 'number');
 
+  // 只包含差异文件的配置文件列表
+  const aggregatedListOfDiff = computed(() => {
+    const list: IDiffGroupData[] = [];
+    aggregatedList.value.forEach((group) => {
+      const configs = group.configs.filter((item) => item.diffType !== '');
+      if (configs.length > 0) {
+        list.push({
+          ...group,
+          configs,
+        });
+      }
+    });
+    return list;
+  });
+
   // 基准版本变化，更新选中对比项
   watch(
     () => props.baseVersionId,
@@ -168,9 +184,8 @@
       baseGroupList.value = await getConfigsOfVersion(props.baseVersionId);
       baseVariables.value = await getVariableList(props.baseVersionId);
       aggregatedList.value = calcDiff();
-      groupedConfigListOnShow.value = aggregatedList.value.slice();
+      groupedConfigListOnShow.value = getMenuList();
       setDefaultSelected();
-      isOnlyShowDiff.value && handleSearch();
     },
   );
 
@@ -187,40 +202,6 @@
     },
   );
 
-  watch(
-    () => isOnlyShowDiff.value,
-    () => {
-      let hasSelectConfig = false;
-      groupedConfigListOnShow.value.forEach((group) => {
-        group.configs.forEach((config) => {
-          if (config.id === selected.value.id) {
-            hasSelectConfig = true;
-            handleSelectItem({
-              pkgId: group.id,
-              id: config.id,
-              version: config.template_revision_id,
-              permission: config.permission,
-            });
-          }
-        });
-      });
-      if (!hasSelectConfig) {
-        emits('selected', {
-          contentType: 'text',
-          base: { content: '', variables: '' },
-          current: { content: '', variables: '' },
-        });
-      }
-    },
-  );
-
-  watch(
-    () => searchStr.value,
-    (val) => {
-      isSearchEmpty.value = !!val;
-    },
-  );
-
   onMounted(async () => {
     await getAllConfigList();
     // 未命名版本变量取正在编辑中的变量列表
@@ -231,9 +212,9 @@
     }
     baseVariables.value = await getVariableList(props.baseVersionId);
     aggregatedList.value = calcDiff();
-    groupedConfigListOnShow.value = aggregatedList.value.slice();
+    isOnlyShowDiff.value = aggregatedListOfDiff.value.length > 0;
+    groupedConfigListOnShow.value = getMenuList();
     setDefaultSelected();
-    handleSearch();
   });
 
   // 判断版本是否为未命名版本
@@ -392,13 +373,13 @@
           // 修改项
           const diffConfig = {
             ...crtItem,
-            diff_type: '',
-            current: crtItem.signature,
+            diffType: '',
             base: baseItem.signature,
             basePermission: baseItem.permission,
+            baseContent: baseItem.diffSignature,
+            current: crtItem.signature,
             currentPermission: crtItem.permission,
             currentContent: crtItem.diffSignature,
-            baseContent: baseItem.diffSignature,
           };
           if (
             crtItem.template_revision_id !== baseItem.template_revision_id ||
@@ -409,7 +390,7 @@
             diffConfig.currentContent !== diffConfig.baseContent
           ) {
             diffCount.value += 1;
-            diffConfig.diff_type = isBaseVersionExist.value ? 'modify' : '';
+            diffConfig.diffType = isBaseVersionExist.value ? 'modify' : '';
           }
           diffGroup.configs.push(diffConfig);
         } else {
@@ -417,10 +398,11 @@
           diffCount.value += 1;
           diffGroup.configs.push({
             ...crtItem,
-            diff_type: isBaseVersionExist.value ? 'add' : '',
+            diffType: isBaseVersionExist.value ? 'add' : '',
             current: crtItem.signature,
-            base: '',
             currentPermission: crtItem.permission,
+            base: '',
+            basePermission: { privilege: '', user: '', user_group: '' },
           });
         }
       });
@@ -453,8 +435,9 @@
           diffCount.value += 1;
           diffGroup.configs.push({
             ...baseItem,
-            diff_type: isBaseVersionExist.value ? 'delete' : '',
+            diffType: isBaseVersionExist.value ? 'delete' : '',
             current: '',
+            currentPermission: { privilege: '', user: '', user_group: '' },
             base: baseItem.signature,
             basePermission: baseItem.permission,
           });
@@ -466,6 +449,30 @@
       }
     });
     return list;
+  };
+
+  const getMenuList = () => {
+    const fullList = isOnlyShowDiff.value ? aggregatedListOfDiff.value : aggregatedList.value;
+    if (searchStr.value !== '') {
+      const searchedList: IDiffGroupData[] = [];
+      fullList.forEach((group) => {
+        const configs = group.configs.filter((item) => {
+          const isSearchHit = item.name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase());
+          if (isOnlyShowDiff.value) {
+            return item.diffType !== '' && isSearchHit;
+          }
+          return isSearchHit;
+        });
+        if (configs.length > 0) {
+          searchedList.push({
+            ...group,
+            configs,
+          });
+        }
+      });
+      return searchedList;
+    }
+    return fullList.slice();
   };
 
   // 设置默认选中的配置文件
@@ -488,44 +495,21 @@
           return;
         }
       }
-      const group = aggregatedList.value.find((group) => group.configs.length > 0);
+      const group = groupedConfigListOnShow.value.find((group) => group.configs.length > 0);
       if (group) {
-        handleSelectItem({ pkgId: group.id, id: group.configs[0].id, version: group.configs[0].template_revision_id });
+        handleSelectItem({
+          pkgId: group.id,
+          id: group.configs[0].id,
+          version: group.configs[0].template_revision_id,
+          permission: group.configs[0].permission,
+        });
       }
     }
   };
 
   const handleSearch = () => {
-    if (!searchStr.value && !isOnlyShowDiff.value) {
-      groupedConfigListOnShow.value = aggregatedList.value.slice();
-    } else {
-      const list: IDiffGroupData[] = [];
-      aggregatedList.value.forEach((group) => {
-        const configs = group.configs.filter((item) => {
-          const isSearchHit = item.name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase());
-          if (isOnlyShowDiff.value) {
-            return item.diff_type !== '' && isSearchHit;
-          }
-          return isSearchHit;
-        });
-        if (configs.length > 0) {
-          list.push({
-            ...group,
-            configs,
-          });
-        }
-      });
-      // 点击只查看配置文件 默认展示第一个
-      groupedConfigListOnShow.value = list;
-      if (list.length === 0) return;
-      list[0].expand = true;
-      handleSelectItem({
-        pkgId: list[0].id,
-        id: list[0].configs[0].id,
-        version: list[0].configs[0].template_revision_id,
-        permission: list[0].configs[0].permission,
-      });
-    }
+    groupedConfigListOnShow.value = getMenuList();
+    isSearchEmpty.value = searchStr.value !== '' && groupedConfigListOnShow.value.length === 0;
   };
 
   const getItemSelectedStatus = (pkgId: number, config: IConfigDiffItem) => {
@@ -552,6 +536,11 @@
         emits('selected', data);
       }
     }
+  };
+
+  // 切换“只查看差异文件”
+  const handleToggleShowDiff = () => {
+    groupedConfigListOnShow.value = getMenuList();
   };
 
   const getConfigDiffDetail = async (config: IConfigDiffItem) => {
@@ -592,6 +581,7 @@
     }
 
     return {
+      id,
       contentType: config.file_type === 'binary' ? 'file' : 'text',
       base: {
         content: baseConfigContent,

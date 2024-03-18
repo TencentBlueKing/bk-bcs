@@ -415,6 +415,7 @@ func (cm *ClusterManager) initAlarmClient() error {
 // init bk-ops client
 func (cm *ClusterManager) initBKOpsClient() error {
 	err := common.SetBKOpsClient(common.Options{
+		EsbServer:  cm.opt.BKOps.EsbServer,
 		Server:     cm.opt.BKOps.Server,
 		AppCode:    cm.opt.BKOps.AppCode,
 		AppSecret:  cm.opt.BKOps.AppSecret,

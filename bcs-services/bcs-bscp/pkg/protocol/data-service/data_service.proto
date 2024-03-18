@@ -71,6 +71,7 @@ service Data {
   rpc CreateRelease(CreateReleaseReq) returns (CreateResp) {}
   rpc ListReleases(ListReleasesReq) returns (ListReleasesResp) {}
   rpc GetReleaseByName(GetReleaseByNameReq) returns (pbrelease.Release) {}
+  rpc GetRelease(GetReleaseReq) returns (pbrelease.Release) {}
   rpc DeprecateRelease(DeprecateReleaseReq) returns (pbbase.EmptyResp) {}
   rpc UnDeprecateRelease(UnDeprecateReleaseReq) returns (pbbase.EmptyResp) {}
   rpc DeleteRelease(DeleteReleaseReq) returns (pbbase.EmptyResp) {}
@@ -211,6 +212,7 @@ service Data {
   // credential scope related interface
   rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {}
   rpc UpdateCredentialScopes(UpdateCredentialScopesReq) returns (UpdateCredentialScopesResp) {}
+  rpc CredentialScopePreview(CredentialScopePreviewReq) returns (CredentialScopePreviewResp) {}
 
   // kv related interface
   rpc CreateKv(CreateKvReq) returns (CreateResp) {};
@@ -243,6 +245,23 @@ message UpdateCredentialScopesReq {
   repeated uint32 deleted = 5;
 }
 message UpdateCredentialScopesResp {}
+
+message CredentialScopePreviewReq {
+  uint32 biz_id = 1;
+  string app_name = 2;
+  string scope = 3;
+  string search_value = 4;
+  uint32 start = 5;
+  uint32 limit = 6;
+}
+
+message CredentialScopePreviewResp {
+  message Detail {
+    string name = 1;
+  }
+  uint32 count = 1;
+  repeated Detail details = 2;
+}
 
 message DeleteCredentialScopesReq {
   repeated uint32 id = 1;
@@ -533,6 +552,12 @@ message GetReleaseByNameReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   string release_name = 3;
+}
+
+message GetReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
 }
 
 message DeprecateReleaseReq {
