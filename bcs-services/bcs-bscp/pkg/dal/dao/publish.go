@@ -216,7 +216,7 @@ func (dao *pubDao) publish(kit *kit.Kit, tx *gen.QueryTx, opt *types.PublishOpti
 	}
 
 	// add release publish num
-	if err := dao.increaseReleasePublishNum(kit, tx.Query, stg.Spec.ReleaseID); err != nil {
+	if err := dao.updateReleasePublishInfo(kit, tx.Query, opt); err != nil {
 		logs.Errorf("increate release publish num failed, err: %v, rid: %s", err, kit.Rid)
 		return 0, err
 	}
@@ -245,13 +245,22 @@ func (dao *pubDao) publish(kit *kit.Kit, tx *gen.QueryTx, opt *types.PublishOpti
 	return stgID, nil
 }
 
-// increaseReleasePublishNum increase release publish num by 1
-func (dao *pubDao) increaseReleasePublishNum(kit *kit.Kit, tx *gen.Query, releaseID uint32) error {
+// updateReleasePublishInfo update release publish info, include publish num and fully released status.
+func (dao *pubDao) updateReleasePublishInfo(kit *kit.Kit, tx *gen.Query, opt *types.PublishOption) error {
 	m := tx.Release
 	q := tx.Release.WithContext(kit.Ctx)
-	if _, err := q.Where(m.ID.Eq(releaseID)).UpdateSimple(m.PublishNum.Add(1)); err != nil {
-		logs.Errorf("increase release publish num failed, err: %v, rid: %s", err, kit.Rid)
-		return err
+	// if publish all or publish default group, then set fully released to true.
+	if opt.All || opt.Default {
+		if _, err := q.Where(m.ID.Eq(opt.ReleaseID)).UpdateSimple(m.PublishNum.Add(1),
+			m.FullyReleased.Value(true)); err != nil {
+			logs.Errorf("update release publish info failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
+	} else {
+		if _, err := q.Where(m.ID.Eq(opt.ReleaseID)).UpdateSimple(m.PublishNum.Add(1)); err != nil {
+			logs.Errorf("update release publish info failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
 	}
 	return nil
 }
