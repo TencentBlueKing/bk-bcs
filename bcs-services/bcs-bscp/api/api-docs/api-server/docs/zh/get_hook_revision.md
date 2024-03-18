@@ -30,7 +30,7 @@
                     "content": "#!/bin/bash\n\nnow=$(date +'%Y-%m-%d %H:%M:%S')\necho \"hello, start at $now\"\n",
                     "publish_num": 21,
                     "state" : "deployed",
-                    "momo": "v2 memo",
+                    "momo": "v2 memo"
                 },
                 "attachment": {
                     "biz_id": 5,
