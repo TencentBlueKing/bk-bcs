@@ -110,7 +110,7 @@ func GetAuditClient() *audit.Client {
 func GetAuthHeader() map[string]string {
 	return map[string]string{
 		"Content-Type": "application/json",
-		"X-Bkapi-Authorization": fmt.Sprintf(`{"bk_app_code": "%s", "bk_app_secret": "%s"}`,
-			config.GlobalConf.App.Code, config.GlobalConf.App.Secret),
+		"X-Bkapi-Authorization": fmt.Sprintf(`{"bk_app_code": "%s", "bk_app_secret": "%s", "bk_username": "%s"}`,
+			config.GlobalConf.App.Code, config.GlobalConf.App.Secret, config.GlobalConf.App.BkUsername),
 	}
 }

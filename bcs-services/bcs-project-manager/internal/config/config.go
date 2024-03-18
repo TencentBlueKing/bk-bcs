@@ -94,8 +94,9 @@ type JWTConfig struct {
 
 // AppConfig  app code and secret for requesting third service api
 type AppConfig struct {
-	Code   string `yaml:"code" usage:"app code"`
-	Secret string `yaml:"secret" usage:"app secret"`
+	Code       string `yaml:"code" usage:"app code"`
+	Secret     string `yaml:"secret" usage:"app secret"`
+	BkUsername string `yaml:"bkUsername" usage:"blueking username"`
 }
 
 // IAMConfig iam操作需要的配置
