@@ -819,31 +819,18 @@ func CheckECKClusterNodesStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
-	systemID string, nodeGroupIDs []string) ([]string, []string, error) {
-	var (
-		totalNodesNum   uint32
-		addSuccessNodes = make([]string, 0)
-		addFailureNodes = make([]string, 0)
-	)
-
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+func getNodePools(cli *api.CTClient, systemID string, nodeGroupIDs []string) (
+	uint32, []string, *api.NodePoolV2, error) {
+	var totalNodesNum uint32
 
 	nodePoolList := make([]string, 0)
 	for _, ngID := range nodeGroupIDs {
 		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if err != nil {
-			return nil, nil, fmt.Errorf("get nodegroup information failed, %s", err.Error())
+			return 0, nil, nil, fmt.Errorf("get nodegroup information failed, %s", err.Error())
 		}
 		totalNodesNum += nodeGroup.AutoScaling.DesiredSize
 		nodePoolList = append(nodePoolList, nodeGroup.CloudNodeGroupID)
-	}
-
-	// get eopCloud client
-	cli, err := api.NewCTClient(info.CmOption)
-	if err != nil {
-		blog.Errorf("checkClusterNodesStatus[%s] get eck client failed: %s", taskID, err.Error())
-		return nil, nil, fmt.Errorf("get cloud eck client err, %s", err.Error())
 	}
 
 	result, err := cli.ListNodePool(&api.ListNodePoolReq{
@@ -852,34 +839,47 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 		RetainSystemNodePool: true,
 	})
 	if err != nil {
-		blog.Errorf("checkClusterNodesStatus[%s] failed: %v", taskID, err)
-		return nil, nil, err
+		blog.Errorf("checkClusterNodesStatus failed: %v", err)
+		return 0, nil, nil, err
 	}
 	if len(result) == 0 {
-		blog.Errorf("checkClusterNodesStatus[%s] failed, master node pool not found", taskID)
-		return nil, nil, fmt.Errorf("checkClusterNodesStatus[%s] failed, master node pool not found", taskID)
+		blog.Errorf("checkClusterNodesStatus failed, master node pool not found")
+		return 0, nil, nil, fmt.Errorf("checkClusterNodesStatus failed, master node pool not found")
 	}
 
-	// add master node num
+	return totalNodesNum, nodePoolList, result[0], nil
+
+}
+
+func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	systemID string, nodeGroupIDs []string) ([]string, []string, error) {
+	addSuccessNodes, addFailureNodes := make([]string, 0), make([]string, 0)
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	cli, err := api.NewCTClient(info.CmOption)
+	if err != nil {
+		blog.Errorf("checkClusterNodesStatus[%s] get eck client failed: %s", taskID, err.Error())
+		return nil, nil, fmt.Errorf("get cloud eck client err, %s", err.Error())
+	}
+
+	totalNodesNum, nodePoolList, result, err := getNodePools(cli, systemID, nodeGroupIDs)
+	if err != nil {
+		blog.Errorf("checkClusterNodesStatus[%s] getNodePools failed: %s", taskID, err.Error())
+		return nil, nil, fmt.Errorf("getNodePools err, %s", err.Error())
+	}
+
 	totalNodesNum += info.Cluster.Template[0].ApplyNum
-	// master节点的节点池由ecp自动创建, 有默认名称
-	nodePoolList = append(nodePoolList, result[0].NodePoolId)
+	nodePoolList = append(nodePoolList, result.NodePoolId)
 
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
-	// loop cluster status
 	err = loop.LoopDoFunc(ctx, func() error {
-		nodes, errGet := cli.ListNodes(&api.ListNodeReq{
-			ClusterID: systemID,
-			Page:      1,
-			PerPage:   totalNodesNum,
-		})
+		nodes, errGet := cli.ListNodes(&api.ListNodeReq{ClusterID: systemID, Page: 1, PerPage: totalNodesNum})
 		if errGet != nil {
 			blog.Errorf("checkClusterNodesStatus[%s] failed: %v", taskID, errGet)
 			return nil
 		}
-
 		blog.Infof("checkClusterNodesStatus[%s] expected nodes %d , current nodes %d ",
 			taskID, totalNodesNum, len(nodes))
 
@@ -899,30 +899,22 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 				index++
 			}
 		}
-
 		if index == int(totalNodesNum) {
 			addSuccessNodes = running
 			addFailureNodes = failure
 			return loop.EndLoop
 		}
-
 		return nil
 	}, loop.LoopInterval(10*time.Second))
-	// other error
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		blog.Errorf("checkClusterNodesStatus[%s] ListNodes failed: %v", taskID, err)
 		return nil, nil, err
 	}
-	// timeout error
 	if errors.Is(err, context.DeadlineExceeded) {
 		blog.Errorf("checkClusterNodesStatus[%s] ListNodes failed: %v", taskID, err)
 
 		running, failure := make([]string, 0), make([]string, 0)
-		nodes, errQuery := cli.ListNodes(&api.ListNodeReq{
-			ClusterID: systemID,
-			Page:      1,
-			PerPage:   totalNodesNum,
-		})
+		nodes, errQuery := cli.ListNodes(&api.ListNodeReq{ClusterID: systemID, Page: 1, PerPage: totalNodesNum})
 		if errQuery != nil {
 			blog.Errorf("checkClusterNodesStatus[%s] ListNodes failed: %v", taskID, errQuery)
 			return nil, nil, errQuery
@@ -940,15 +932,12 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 		addFailureNodes = failure
 	}
 	blog.Infof("checkClusterNodesStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
-
-	// set cluster node status
 	for _, n := range addFailureNodes {
 		err = cloudprovider.UpdateNodeStatus(false, n, common.StatusAddNodesFailed)
 		if err != nil {
 			blog.Errorf("checkClusterNodesStatus[%s] UpdateNodeStatus[%s] failed: %v", taskID, n, err)
 		}
 	}
-
 	return addSuccessNodes, addFailureNodes, nil
 }
 
