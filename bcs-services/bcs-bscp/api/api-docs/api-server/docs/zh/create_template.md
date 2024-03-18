@@ -14,7 +14,7 @@
 | path              | string   | 是   | 配置项存储的绝对路径。最大长度256个字符，目前仅支持linux路径校验。 |
 | memo              | string   | 否   | 模版描述。最大长度256个字符，仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾 |
 | revision_memo     | string   | 否   | 版本描述。最大长度256个字符，仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾 |
-| file_type         | string   | 是   | 文件格式（枚举值：json、yaml、xml、binary）                  |
+| file_type         | string   | 是   | 文件格式（枚举值：text、binary）                  |
 | file_mode         | string   | 是   | 文件模式（枚举值：win、unix）                                |
 | user              | string   | 是   | 文件所属的用户, 例如root                                     |
 | user_group        | string   | 是   | 文件所属的用户组, 例如root                                   |
@@ -32,7 +32,7 @@
   "path": "/etc",
   "memo": "my first template",
   "revision_memo": "my first version",
-  "file_type": "yaml",
+  "file_type": "text",
   "file_mode": "unix",
   "user": "root",
   "user_group": "root",

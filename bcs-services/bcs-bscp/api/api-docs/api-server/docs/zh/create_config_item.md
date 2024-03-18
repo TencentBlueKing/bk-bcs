@@ -13,7 +13,7 @@
 | app_id         | uint32       | 是     | 应用ID     |
 | name         | string       | 是     | 配置项名称。最大长度64个字符，仅允许使用英文、数字、下划线、中划线、点，且必须以英文、数字开头和结尾    |
 | path         | string       | 是     | 配置项存储的绝对路径。最大长度256个字符，目前仅支持linux路径校验。    |
-| file_type         | string       | 是     | 文件格式（枚举值：json、yaml、xml、binary）    |
+| file_type         | string       | 是     | 文件格式（枚举值：text、binary）    |
 | file_mode         | string       | 是     | 文件模式（枚举值：win、unix）     |
 | user         | string       | 是     | 文件所属的用户, 例如root    |
 | user_group         | string       | 是     | 文件所属的用户组, 例如root     |
@@ -26,7 +26,7 @@
 {
 	"name": "server.yaml",
 	"path": "/etc",
-	"file_type": "yaml",
+	"file_type": "text",
 	"file_mode": "unix",
 	"user": "root",
 	"user_group": "root",
