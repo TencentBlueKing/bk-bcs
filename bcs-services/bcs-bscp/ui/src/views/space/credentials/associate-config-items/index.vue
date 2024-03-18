@@ -31,7 +31,7 @@
         <RuleView v-else v-model:preview-rule="previewRule" :rules="rules" @edit="isRuleEdit = true" />
       </div>
       <div v-if="rules.length || isRuleEdit" class="results-wrapper">
-        <MatchingResult :rule="previewRule" />
+        <MatchingResult :rule="previewRule" :bk-biz-id="spaceId"/>
       </div>
     </section>
     <div class="action-btns">

@@ -73,3 +73,11 @@ export interface IPreviewRule {
   scopeContent: string; // 规则内容
   appName: string; // 服务名称
 }
+
+export interface IPreviewRuleParams {
+  start: number;
+  limit: number;
+  app_name: string;
+  scope: string;
+  search_value: string;
+}

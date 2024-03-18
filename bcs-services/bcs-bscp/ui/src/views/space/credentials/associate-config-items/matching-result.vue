@@ -7,32 +7,71 @@
         </bk-overflow-title>
         <span class="result">匹配结果</span>
       </div>
-      <div class="totle">共{{ 0 }}项</div>
+      <div class="totle">共 {{ 0 }} 项</div>
     </div>
-    <bk-input class="search-input" placeholder="配置项名称">
-      <template #suffix>
-        <Search class="search-input-icon" />
-      </template>
-    </bk-input>
-    <bk-table empty-text="请先在左侧表单设置关联规则并预览" :border="['outer']" :pagination="pagination">
-      <bk-table-column label="配置项"></bk-table-column>
+    <SearchInput v-model="searchStr" :placeholder="'请输入配置项名称'" @search="loadCredentialRulePreviewList" />
+    <bk-table
+      :empty-text="tableEmptyText"
+      :data="tableData"
+      :border="['outer']"
+      :remote-pagination="true"
+      :pagination="pagination"
+      @page-limit-change="handlePageLimitChange"
+      @page-value-change="loadCredentialRulePreviewList">
+      <bk-table-column label="配置项" prop="name"></bk-table-column>
     </bk-table>
   </div>
 </template>
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { IPreviewRule } from '../../../../../types/credential';
-  import { Search } from 'bkui-vue/lib/icon';
+  import { getCredentialPreview } from '../../../../api/credentials';
+  import SearchInput from '../../../../components/search-input.vue';
 
-  defineProps<{
+  const props = defineProps<{
     rule: IPreviewRule | null;
+    bkBizId: string;
   }>();
 
+  watch(
+    () => props.rule?.id,
+    () => {
+      loadCredentialRulePreviewList();
+    },
+  );
+
+  const tableEmptyText = computed(() => (props.rule?.id ? '暂无数据' : '请先在左侧表单设置关联规则并预览'));
+
+  const searchStr = ref('');
+  const tableData = ref();
   const pagination = ref({
     count: 0,
     current: 1,
     limit: 10,
+    small: true,
+    showTotalCount: false,
+    showLimit: false,
+    align: 'center',
   });
+
+  const loadCredentialRulePreviewList = async () => {
+    const params = {
+      start: (pagination.value.current - 1) * pagination.value.limit,
+      limit: pagination.value.limit,
+      app_name: props.rule!.appName,
+      scope: props.rule!.scopeContent,
+      search_value: searchStr.value,
+    };
+    const res = await getCredentialPreview(props.bkBizId, params);
+    pagination.value.count = res.data.count;
+    tableData.value = res.data.details;
+  };
+
+  // 更改每页条数
+  const handlePageLimitChange = (val: number) => {
+    pagination.value.limit = val;
+    loadCredentialRulePreviewList();
+  };
 </script>
 <style lang="scss" scoped>
   .matching-result {
