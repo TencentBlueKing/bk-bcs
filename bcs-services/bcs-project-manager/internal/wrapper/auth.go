@@ -40,12 +40,7 @@ import (
 var NoAuthEndpoints = []string{
 	"Healthz.Ping",
 	"Healthz.Healthz",
-	"BCSProject.ListAuthorizedProjects",
-	"BCSProject.ListProjects",
-	"Business.ListBusiness",
-	"Namespace.ListNamespaces",
 	"Namespace.WithdrawNamespace",
-	"Namespace.SyncNamespace",
 }
 
 // NoNeedCheckResourceIDEndpoints 不需要校验或转换 resourceID 的方法
