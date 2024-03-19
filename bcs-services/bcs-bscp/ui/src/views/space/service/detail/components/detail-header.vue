@@ -143,7 +143,7 @@
       if (versionData.value.status.publish_status === 'full_released') {
         return t('全部实例');
       }
-      return hasDefaultGroup.value ? t('默认分组') : versionData.value.status.released_groups[0].name;
+      return hasDefaultGroup.value ? t('全部实例') : versionData.value.status.released_groups[0].name;
     }
     return '';
   });

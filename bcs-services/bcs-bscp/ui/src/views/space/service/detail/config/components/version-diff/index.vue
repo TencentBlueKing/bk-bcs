@@ -42,7 +42,7 @@
             <template #rightHead>
               <slot name="currentHead">
                 <div class="diff-panel-head">
-                  <div class="version-tag">{{ t('当前版本') }}</div>
+                  <div class="version-tag">{{ showPublishBtn ? t('待上线版本') : t('当前版本') }}</div>
                   <div class="version-name">{{ props.currentVersion.spec.name }}</div>
                 </div>
               </slot>
