@@ -85,6 +85,17 @@ var (
 	}
 )
 
+var nodeInfoCacheExpiredTime = 10 * time.Minute
+
+type cacheItem struct {
+	*schedulernodeinfo.NodeInfo
+	added time.Time
+}
+
+func isCacheItemExpired(added time.Time) bool {
+	return time.Since(added) > nodeInfoCacheExpiredTime
+}
+
 // Following data structure is used to avoid running predicates #pending_pods * #nodes
 // times (which turned out to be very expensive if there are thousands of pending pods).
 // This optimization is based on the assumption that if there are that many pods they're
@@ -268,7 +279,7 @@ func (c *podsSchedulableOnNodeChecker) checkPodsSchedulableOnNode(nodeGroupID st
 // DOTO(mwielgus): This returns map keyed by url, while most code (including scheduler) uses node.Name for a key.
 // DOTO(mwielgus): Review error policy - sometimes we may continue with partial errors.
 // nolint
-func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedulernodeinfo.NodeInfo,
+func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]cacheItem,
 	cloudProvider cloudprovider.CloudProvider, listers kube_util.ListerRegistry,
 	daemonsets []*appsv1.DaemonSet, predicateChecker *simulator.PredicateChecker,
 	ignoredTaints taintKeySet) (map[string]*schedulernodeinfo.NodeInfo, errors.AutoscalerError) {
@@ -331,7 +342,7 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 		// DOTO: support node pool label update
 		if added && nodeInfoCache != nil {
 			if nodeInfoCopy, err := deepCopyNodeInfo(result[id]); err == nil {
-				nodeInfoCache[id] = nodeInfoCopy
+				nodeInfoCache[id] = cacheItem{NodeInfo: nodeInfoCopy, added: time.Now()}
 			}
 		}
 	}
@@ -366,7 +377,7 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 }
 
 func generateNodeInfos(cloudProvider cloudprovider.CloudProvider,
-	nodeInfoCache map[string]*schedulernodeinfo.NodeInfo,
+	nodeInfoCache map[string]cacheItem,
 	daemonsets []*appsv1.DaemonSet, predicateChecker *simulator.PredicateChecker,
 	ignoredTaints taintKeySet, seenGroups map[string]bool,
 	result map[string]*schedulernodeinfo.NodeInfo) (map[string]bool,
@@ -380,8 +391,10 @@ func generateNodeInfos(cloudProvider cloudprovider.CloudProvider,
 
 		// No good template, check cache of previously running nodes.
 		if nodeInfoCache != nil {
-			if nodeInfo, found := nodeInfoCache[id]; found {
-				if nodeInfoCopy, err := deepCopyNodeInfo(nodeInfo); err == nil {
+			if item, found := nodeInfoCache[id]; found {
+				if isCacheItemExpired(item.added) {
+					delete(nodeInfoCache, id)
+				} else if nodeInfoCopy, err := deepCopyNodeInfo(item.NodeInfo); err == nil {
 					result[id] = nodeInfoCopy
 					continue
 				}

@@ -22,13 +22,14 @@ import (
 // Options are the option of autoscaler
 type Options struct {
 	config.AutoscalingOptions
-	BufferedCPURatio      float64
-	BufferedMemRatio      float64
-	BufferedResourceRatio float64
-	WebhookMode           string
-	WebhookModeConfig     string
-	WebhookModeToken      string
-	MaxBulkScaleUpCount   int
-	ScanInterval          time.Duration
-	EvictLatest           bool
+	BufferedCPURatio          float64
+	BufferedMemRatio          float64
+	BufferedResourceRatio     float64
+	WebhookMode               string
+	WebhookModeConfig         string
+	WebhookModeToken          string
+	MaxBulkScaleUpCount       int
+	ScanInterval              time.Duration
+	EvictLatest               bool
+	ScaleDownDelayAfterRemove time.Duration
 }
