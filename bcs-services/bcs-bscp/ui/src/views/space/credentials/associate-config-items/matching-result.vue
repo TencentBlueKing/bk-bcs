@@ -7,7 +7,7 @@
         </bk-overflow-title>
         <span class="result">匹配结果</span>
       </div>
-      <div class="totle">共 {{ 0 }} 项</div>
+      <div class="totle">共 {{ pagination.count }} 项</div>
     </div>
     <SearchInput v-model="searchStr" :placeholder="'请输入配置项名称'" @search="loadCredentialRulePreviewList" />
     <bk-table
@@ -34,10 +34,11 @@
   }>();
 
   watch(
-    () => props.rule?.id,
+    () => props.rule,
     () => {
       loadCredentialRulePreviewList();
     },
+    { deep: true },
   );
 
   const tableEmptyText = computed(() => (props.rule?.id ? '暂无数据' : '请先在左侧表单设置关联规则并预览'));
@@ -86,8 +87,8 @@
       .head-left {
         display: flex;
         align-items: center;
+        line-height: 16px;
         .rule {
-          line-height: 16px;
           max-width: 150px;
         }
         .result {

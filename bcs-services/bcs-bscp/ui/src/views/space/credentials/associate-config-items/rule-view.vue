@@ -12,9 +12,7 @@
         :class="['rule-item', { 'current-rule-item': previewRule?.id === rule.id }]"
         @click="handlePreviewRule(rule)">
         {{ rule.spec.app + rule.spec.scope }}
-        <span class="arrow-icon">
-          <PlayShape v-if="previewRule?.id === rule.id" />
-        </span>
+        <div v-if="previewRule?.id === rule.id" class="arrow-icon"></div>
       </div>
     </div>
     <bk-exception v-else scene="part" type="empty">
@@ -29,7 +27,6 @@
 <script setup lang="ts">
   import { ICredentialRule, IPreviewRule } from '../../../../../types/credential';
   import { useI18n } from 'vue-i18n';
-  import { PlayShape } from 'bkui-vue/lib/icon';
 
   const { t } = useI18n();
   const props = defineProps<{
@@ -83,10 +80,15 @@
       & .arrow-icon {
         position: absolute;
         font-size: 14px;
-        right: -12px;
+        right: -8px;
         top: 50%;
         transform: translateY(-50%);
         color: #699df4;
+        width: 0;
+        height: 0;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-left: 8px solid #699DF4;
       }
     }
   }
