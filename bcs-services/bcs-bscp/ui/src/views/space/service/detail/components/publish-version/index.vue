@@ -22,10 +22,11 @@
           </section>
         </template>
         <select-group
+          :loading="versionListLoading || groupListLoading"
+          :group-list="treeNodeGroups"
+          :version-list="versionList"
           :release-type="releaseType"
           :groups="groups"
-          :version-status="versionData.status.publish_status"
-          :release-id="versionData.id"
           @open-preview-version-diff="openPreviewVersionDiff"
           @release-type-change="releaseType = $event"
           @change="groups = $event" />
@@ -43,17 +44,21 @@
       v-model:show="isConfirmDialogShow"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
-      :release-id="versionData.id"
+      :group-list="treeNodeGroups"
+      :version-list="versionList"
       :release-type="releaseType"
       :groups="groups"
       @confirm="handleConfirm" />
-    <VersionDiff
-      v-model:show="isDiffSliderShow"
+    <PublishVersionDiff
+      :bk-biz-id="props.bkBizId"
+      :app-id="props.appId"
+      :show="isDiffSliderShow"
       :current-version="versionData"
       :base-version-id="baseVersionId"
-      :show-publish-btn="true"
-      :version-diff-list="diffableVersionList"
-      @publish="handleOpenPublishDialog" />
+      :version-list="diffableVersionList"
+      :current-version-groups="groupsPendingtoPublish"
+      @publish="handleOpenPublishDialog"
+      @close="isDiffSliderShow = false" />
   </section>
 </template>
 <script setup lang="ts">
@@ -65,16 +70,16 @@
   import BkMessage from 'bkui-vue/lib/message';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../../../../store/global';
-  import { IGroupToPublish } from '../../../../../../../types/group';
+  import { IGroupToPublish, IGroupItemInService } from '../../../../../../../types/group';
   import useServiceStore from '../../../../../../store/service';
   import useConfigStore from '../../../../../../store/config';
-  // import { permissionCheck } from '../../../../../../api/index';
+  import { getConfigVersionList } from '../../../../../../api/config';
+  import { getServiceGroupList } from '../../../../../../api/group';
+  import { IConfigVersion, IReleasedGroup } from '../../../../../../../types/config';
   import VersionLayout from '../../config/components/version-layout.vue';
   import ConfirmDialog from './confirm-dialog.vue';
   import SelectGroup from './select-group/index.vue';
-  import VersionDiff from '../../config/components/version-diff/index.vue';
-  import { getConfigVersionList } from '../../../../../../api/config';
-  import { IConfigVersion } from '../../../../../../../types/config';
+  import PublishVersionDiff from '../publish-version-diff.vue';
 
   const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
   const serviceStore = useServiceStore();
@@ -94,6 +99,10 @@
 
   const router = useRouter();
   const versionList = ref<IConfigVersion[]>([]);
+  const versionListLoading = ref(true);
+  const groupList = ref<IGroupItemInService[]>([]);
+  const groupListLoading = ref(true);
+  const treeNodeGroups = ref<IGroupToPublish[]>([]);
   const isSelectGroupPanelOpen = ref(false);
   const isDiffSliderShow = ref(false);
   const isConfirmDialogShow = ref(false);
@@ -112,6 +121,27 @@
     },
   ]);
 
+  // 待上线分组实例
+  const groupsPendingtoPublish = computed(() => {
+    const list: IReleasedGroup[] = [];
+    groups.value.forEach((item) => {
+      const group = groupList.value.find((g) => g.group_id === item.id);
+      if (group) {
+        const { group_id, group_name, new_selector, old_selector, edited } = group;
+        list.push({
+          id: group_id,
+          name: group_name,
+          new_selector,
+          old_selector,
+          edited,
+          uid: '',
+          mode: '',
+        });
+      }
+    });
+    return list;
+  });
+
   // 包含分组变更的版本，用来对比线上版本
   const diffableVersionList = computed(() => {
     const list = [] as IConfigVersion[];
@@ -126,6 +156,21 @@
     });
     return list;
   });
+
+  // 获取所有分组，并组装tree组件节点需要的数据
+  const getAllGroupData = async () => {
+    groupListLoading.value = true;
+    const res = await getServiceGroupList(props.bkBizId, appData.value.id as number);
+    groupList.value = res.details;
+    treeNodeGroups.value = res.details.map((group: IGroupItemInService) => {
+      const { group_id, group_name, release_id, release_name } = group;
+      const selector = group.new_selector;
+      const rules = selector.labels_and || selector.labels_or || [];
+      return { id: group_id, name: group_name, release_id, release_name, rules };
+    });
+
+    groupListLoading.value = false;
+  };
 
   /**
    * @description 直接上线或先对比再上线
@@ -148,11 +193,13 @@
   // 获取所有已上线版本（已上线或灰度中）
   const getVersionList = async () => {
     try {
+      versionListLoading.value = true;
       const res = await getConfigVersionList(props.bkBizId, props.appId, { start: 0, all: true });
       versionList.value = res.data.details.filter((item: IConfigVersion) => {
         const { id, status } = item;
         return id !== versionData.value.id && status.publish_status !== 'not_released';
       });
+      versionListLoading.value = false;
     } catch (e) {
       console.error(e);
     }
@@ -160,6 +207,7 @@
 
   const handleBtnClick = () => {
     getVersionList();
+    getAllGroupData();
     if (props.hasPerm) {
       isSelectGroupPanelOpen.value = true;
     } else {

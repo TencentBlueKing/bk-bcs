@@ -157,6 +157,6 @@ export interface IGroupItemInService {
 export interface IGroupPreviewItem {
   id: number;
   name: string;
-  type: String;
+  type: string;
   children: IGroupToPublish[];
 }

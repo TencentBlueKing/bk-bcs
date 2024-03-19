@@ -22,7 +22,7 @@
                 @input="formChange"
                 :resize="true" />
             </bk-form-item>
-            <bk-checkbox v-model="isPublish" :true-label="true" :false-label="false" @change="formChange">
+            <bk-checkbox v-model="goToPublish" :true-label="true" :false-label="false" @change="formChange">
               <span style="font-size: 12px">{{ t('同时上线版本') }}</span>
             </bk-checkbox>
           </bk-form>
@@ -75,7 +75,7 @@
     name: '',
     memo: '',
   });
-  const isPublish = ref(false);
+  const goToPublish = ref(false);
   const loading = ref(false);
   const initialVariables = ref<IVariableEditParams[]>([]);
   const variableList = ref<IVariableEditParams[]>([]);
@@ -111,7 +111,7 @@
           name: '',
           memo: '',
         };
-        isPublish.value = false;
+        goToPublish.value = false;
         getVariableList();
       }
     },
@@ -134,14 +134,6 @@
     variableList.value = variables;
   };
 
-  // const handleOpenDiff = async () => {
-  //   await formRef.value.validate();
-  //   if (!tableRef.value.validate()) {
-  //     return;
-  //   }
-  //   emits('open-diff', variableList.value);
-  // };
-
   const confirm = async () => {
     if (!formRef.value.validate() || (isFileType.value && !tableRef.value.validate())) return;
     try {
@@ -158,7 +150,7 @@
         id: res.data.id,
         spec: { name: formData.value.name, memo: formData.value.memo },
       });
-      emits('created', newVersionData, isPublish.value);
+      emits('created', newVersionData, goToPublish.value);
     } catch (e) {
       Promise.reject(e);
     } finally {
