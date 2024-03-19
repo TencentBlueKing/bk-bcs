@@ -23,13 +23,6 @@ import (
 )
 
 const (
-	// maxNormalStrategiesLimitForApp defines the max limit of normal type strategy for an app for user to create.
-	maxNormalStrategiesLimitForApp = 5
-	// maxNormalStrategiesLimitForApp defines the max limit of namespace type strategy for an app for user to create.
-	maxNamespaceStrategiesLimitForApp = 200
-)
-
-const (
 	// PublishByGroups means that publish given groups.
 	PublishByGroups GrayPublishMode = "publish_by_groups"
 
