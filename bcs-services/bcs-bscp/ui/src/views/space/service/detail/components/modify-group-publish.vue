@@ -23,6 +23,9 @@
         </template>
         <select-group
           ref="selectGroupRef"
+          :loading="versionListLoading || groupListLoading"
+          :group-list="groupList"
+          :version-list="versionList"
           :groups="groups"
           :release-type="releaseType"
           :released-groups="releasedGroups"
@@ -45,9 +48,11 @@
       v-model:show="isConfirmDialogShow"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
-      :release-id="versionData.id"
+      :group-list="groupList"
+      :version-list="versionList"
       :release-type="releaseType"
       :groups="groups"
+      :released-groups="releasedGroups"
       @confirm="handleConfirm" />
     <VersionDiff
       v-model:show="isDiffSliderShow"
@@ -68,13 +73,14 @@
   import useGlobalStore from '../../../../../store/global';
   import useServiceStore from '../../../../../store/service';
   import useConfigStore from '../../../../../store/config';
-  import { IGroupToPublish } from '../../../../../../types/group';
+  import { IGroupToPublish, IGroupItemInService } from '../../../../../../types/group';
   import VersionLayout from '../config/components/version-layout.vue';
   import ConfirmDialog from './publish-version/confirm-dialog.vue';
   import SelectGroup from './publish-version/select-group/index.vue';
   import VersionDiff from '../config/components/version-diff/index.vue';
   import { useRouter } from 'vue-router';
   import { getConfigVersionList } from '../../../../../api/config';
+  import { getServiceGroupList } from '../../../../../api/group';
   import { IConfigVersion } from '../../../../../../types/config';
 
   const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
@@ -95,6 +101,9 @@
 
   const router = useRouter();
   const versionList = ref<IConfigVersion[]>([]);
+  const versionListLoading = ref(true);
+  const groupList = ref<IGroupToPublish[]>([]);
+  const groupListLoading = ref(true);
   const isSelectGroupPanelOpen = ref(false);
   const isDiffSliderShow = ref(false);
   const isConfirmDialogShow = ref(false);
@@ -139,13 +148,7 @@
   watch(
     () => versionData.value,
     () => {
-      if (versionData.value.status.released_groups.some((group) => group.id === 0)) {
-        releaseType.value = 'all';
-        disableSelect.value = true;
-      } else {
-        releaseType.value = 'select';
-        disableSelect.value = false;
-      }
+      setReleaseData();
     },
   );
 
@@ -162,19 +165,36 @@
   // 获取所有已上线版本（已上线或灰度中）
   const getVersionList = async () => {
     try {
+      versionListLoading.value = true;
       const res = await getConfigVersionList(props.bkBizId, props.appId, { start: 0, all: true });
       versionList.value = res.data.details.filter((item: IConfigVersion) => {
-        const { id, status } = item;
-        return id !== versionData.value.id && status.publish_status !== 'not_released';
+        return item.status.publish_status !== 'not_released';
       });
+      versionListLoading.value = false;
     } catch (e) {
       console.error(e);
     }
   };
 
+  // 获取所有分组，并组装tree组件节点需要的数据
+  const getAllGroupData = async () => {
+    groupListLoading.value = true;
+    const res = await getServiceGroupList(props.bkBizId, appData.value.id as number);
+    groupList.value = res.details.map((group: IGroupItemInService) => {
+      const { group_id, group_name, release_id, release_name } = group;
+      const selector = group.new_selector;
+      const rules = selector.labels_and || selector.labels_or || [];
+      return { id: group_id, name: group_name, release_id, release_name, rules };
+    });
+
+    groupListLoading.value = false;
+  };
+
   const handleBtnClick = () => {
-    getVersionList();
     if (props.hasPerm) {
+      getVersionList();
+      getAllGroupData();
+      setReleaseData();
       openSelectGroupPanel();
     } else {
       permissionQuery.value = { resources: permissionQueryResource.value };
@@ -198,6 +218,16 @@
         rules,
       };
     });
+  };
+
+  const setReleaseData = () => {
+    if (versionData.value.status.released_groups.some((group) => group.id === 0)) {
+      releaseType.value = 'all';
+      disableSelect.value = true;
+    } else {
+      releaseType.value = 'select';
+      disableSelect.value = false;
+    }
   };
 
   // 打开上线版本确认弹窗
@@ -245,7 +275,7 @@
 
   // 关闭选择分组面板
   const handlePanelClose = () => {
-    releaseType.value = 'select';
+    releaseType.value = 'all';
     isSelectGroupPanelOpen.value = false;
     groups.value = [];
   };

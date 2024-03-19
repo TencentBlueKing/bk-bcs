@@ -87,5 +87,8 @@
     &:last-of-type {
       margin-bottom: 0;
     }
+    :deep(.bk-radio-label) {
+      font-size: 12px;
+    }
   }
 </style>

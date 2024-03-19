@@ -10,8 +10,14 @@
     </h3>
     <bk-exception v-if="previewData.length === 0" scene="part" type="empty">
       <div class="empty-tips">
-        {{ t('暂无预览') }}
-        <p>{{ t('请先从左侧选择待上线的分组范围') }}</p>
+        {{ isDefaultGroupReleasedOnCrtVersion ? t('全部实例已上线') : t('暂无预览') }}
+        <p>
+          {{
+            isDefaultGroupReleasedOnCrtVersion
+              ? t('除以下分组之外的所有实例已上线当前版本')
+              : t('请先从左侧选择待上线的分组范围')
+          }}
+        </p>
       </div>
     </bk-exception>
     <template v-else>
@@ -55,6 +61,7 @@
   import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../../types/group';
   import { storeToRefs } from 'pinia';
   import useConfigStore from '../../../../../../../store/config';
+  import { aggregatePreviewData, aggregateExcludedData } from '../../hooks/aggegate-groups';
   import PreviewSectionItem from './preview-section-item.vue';
 
   const versionStore = useConfigStore();
@@ -65,112 +72,10 @@
     return props.groupList.find((group) => group.id === 0);
   });
 
-  // 全部实例分组是否已上线
-  const isDefaultGroupReleased = computed(() => {
-    return defaultGroup.value && defaultGroup.value.release_id > 0;
-  });
-
   // 全部实例分组是否已上线在当前版本
   const isDefaultGroupReleasedOnCrtVersion = computed(() => {
     return defaultGroup.value && defaultGroup.value.release_id === versionData.value.id;
   });
-
-  // 聚合预览数据
-  const aggregatePreviewData = () => {
-    const list: IGroupPreviewItem[] = [];
-    // 首次上线
-    // 1. 全部实例分组：当前选中全部实例上线方式，且全部实例分组未在其他线上版本
-    // 2. 普通分组：当前选中选择分组上线方式，且全部实例分组未在其他线上版本
-    const initialRelease: IGroupPreviewItem = { id: 0, name: t('首次上线'), type: 'plain', children: [] };
-    // 变更版本
-    // 1. 全部实例分组：当前选中全部实例上线方式，且全部实例分组已在其他线上版本
-    // 2. 普通分组：
-    //    a. 当前选中选择分组上线方式，且当前分组在其他线上版本或全部实例分组已在其他线上版本
-    //    b. 当前选中全部实例上线方式，且全部实例分组已在线上版本时，取消排除的分组
-    const modifyReleases: IGroupPreviewItem[] = [];
-    props.value
-      .filter((group) => !props.releasedGroups.includes(group.id))
-      .forEach((group) => {
-        // 全部实例分组
-        if (group.id === 0) {
-          if (props.releaseType === 'all') {
-            if (!isDefaultGroupReleased.value) {
-              // 首次上线：当前选中全部实例上线方式，且全部实例分组未在其他线上版本
-              initialRelease.children.push(group);
-            } else if (isDefaultGroupReleased.value && !isDefaultGroupReleasedOnCrtVersion.value) {
-              // 变更版本：当前选中全部实例上线方式，且全部实例分组已在其他线上版本
-              pushItemToAggegateData(group, group.release_name, 'modify', modifyReleases);
-            }
-          }
-        } else {
-          // 普通分组
-          if (props.releaseType === 'select') {
-            if (!isDefaultGroupReleased.value) {
-              // 首次上线：当前选中选择分组上线方式，且全部实例分组未在其他线上版本
-              if (group.release_id === 0) {
-                initialRelease.children.push(group);
-              } else {
-                pushItemToAggegateData(group, group.release_name, 'modify', modifyReleases);
-              }
-            } else if (
-              (group.release_id > 0 && group.release_id !== versionData.value.id) ||
-              !isDefaultGroupReleasedOnCrtVersion.value
-            ) {
-              // 变更版本：当前选中选择分组上线方式，当前分组在其他线上版本或全部实例分组已在其他线上版本
-              const name =
-                group.release_id === 0 ? (defaultGroup.value as IGroupToPublish).release_name : group.release_name;
-              pushItemToAggegateData(group, name, 'modify', modifyReleases);
-            }
-          } else if (props.releaseType === 'all' && group.release_id > 0 && group.release_id !== versionData.value.id) {
-            // 变更版本：当前选中全部实例上线方式，当前分组在其他线上版本或全部实例分组已在其他线上版本
-            const name =
-              group.release_id === 0 ? (defaultGroup.value as IGroupToPublish).release_name : group.release_name;
-            pushItemToAggegateData(group, name, 'modify', modifyReleases);
-          }
-        }
-      });
-    list.push(...modifyReleases);
-    if (initialRelease.children.length > 0) {
-      list.unshift(initialRelease);
-    }
-    previewData.value = list;
-  };
-
-  // 聚合排除数据
-  const aggregateExcludedData = () => {
-    const list: IGroupPreviewItem[] = [];
-    if (props.releaseType === 'all') {
-      const groupsOnOtherRelease = props.groupList.filter(
-        (group) =>
-          group.release_id > 0 &&
-          group.release_id !== versionData.value.id &&
-          props.value.findIndex((item) => item.id === group.id) === -1,
-      );
-      groupsOnOtherRelease.forEach((group) => {
-        pushItemToAggegateData(group, group.release_name, 'retain', list);
-      });
-    }
-    excludeData.value = list;
-  };
-
-  const pushItemToAggegateData = (
-    group: IGroupToPublish,
-    releaseName: string,
-    type: string,
-    data: IGroupPreviewItem[],
-  ) => {
-    const release = data.find((item) => item.id === group.release_id);
-    if (release) {
-      release.children.push(group);
-    } else {
-      data.push({
-        id: group.release_id,
-        name: releaseName,
-        type,
-        children: [group],
-      });
-    }
-  };
 
   const props = withDefaults(
     defineProps<{
@@ -192,8 +97,14 @@
   watch(
     () => props.value,
     () => {
-      aggregatePreviewData();
-      aggregateExcludedData();
+      previewData.value = aggregatePreviewData(
+        props.value,
+        props.groupList,
+        props.releasedGroups,
+        props.releaseType,
+        versionData.value.id,
+      );
+      excludeData.value = aggregateExcludedData(props.value, props.groupList, props.releaseType, versionData.value.id);
     },
     { immediate: true },
   );
@@ -211,6 +122,7 @@
     font-weight: 700;
     color: #63656e;
     .tips {
+      display: inline-flex;
       margin-left: 16px;
       line-height: 20px;
       color: #979ba5;

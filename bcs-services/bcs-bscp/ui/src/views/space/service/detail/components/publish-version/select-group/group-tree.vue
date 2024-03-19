@@ -302,30 +302,34 @@
     margin-top: 8px;
     max-height: 450px;
     overflow: auto;
+    :deep(.bk-node-prefix) {
+      &:hover {
+        color: #3a84ff;
+      }
+    }
     .node-item-wrapper {
-      display: flex;
-      align-items: center;
-      overflow: hidden;
+      :deep(.bk-checkbox) {
+        display: flex;
+        .bk-checkbox-input {
+          flex-shrink: 0;
+        }
+        .bk-checkbox-label {
+          overflow: hidden;
+        }
+      }
     }
     .node-label {
       display: flex;
       align-items: center;
-      flex: 1;
-      padding: 0 8px;
       color: #63656e;
       font-size: 12px;
-      overflow: hidden;
     }
     .split-line {
       margin: 0 4px;
       color: #979ba5;
     }
     .rules {
-      flex: 1;
-      min-width: 0;
-      color: #979ba5;
       overflow: hidden;
-      text-overflow: ellipsis;
     }
   }
 </style>

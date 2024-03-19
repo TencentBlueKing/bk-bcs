@@ -221,6 +221,7 @@
         font-size: 12px;
         color: #979ba5;
         white-space: nowrap;
+        overflow: hidden;
       }
       .group-operations {
         display: inline-flex;

@@ -628,4 +628,6 @@ export default {
   变量名称已复制: 'The variable name has been copied',
   单行配置: 'Single-row config',
   多行配置: 'Multi-row config',
+  全部实例已上线: 'All instances have been deployed.',
+  除以下分组之外的所有实例已上线当前版本: 'All instances except for the following groups have been deployed to the current version.',
 };
