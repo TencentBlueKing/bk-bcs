@@ -26,7 +26,6 @@
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :groups="versionData.status.released_groups"
-          :is-default-group="hasDefaultGroup"
           :disabled="publishStatus === 'full_released'">
           <div class="released-groups">
             <i class="bk-bscp-icon icon-resources-fill"></i>

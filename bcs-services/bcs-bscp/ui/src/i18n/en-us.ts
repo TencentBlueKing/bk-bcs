@@ -630,4 +630,13 @@ export default {
   多行配置: 'Multi-row config',
   全部实例已上线: 'All instances have been deployed.',
   除以下分组之外的所有实例已上线当前版本: 'All instances except for the following groups have been deployed to the current version.',
+  待上线版本: 'Pending Release',
+  '确认上线后，以下分组的客户端实例将上线当前版本配置': 'After confirmation of deployment, client instances of the following groups will be deployed with the current version configuration.',
+  以下分组将变更版本: 'The following groups will change versions.',
+  '确认上线后，': 'After confirmation of deployment, ',
+  全部: 'all',
+  客户端实例将上线当前版本配置: ' client instances will be deployed with the current version configuration',
+  '确认上线后，以下分组': 'After confirmation of deployment, ',
+  以外: 'client instances outside of the following groups',
+  的客户端实例将上线当前版本配置: ' will be deployed with the current version configuration.',
 };

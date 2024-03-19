@@ -23,7 +23,7 @@
         </template>
         <select-group
           :loading="versionListLoading || groupListLoading"
-          :group-list="groupList"
+          :group-list="treeNodeGroups"
           :version-list="versionList"
           :release-type="releaseType"
           :groups="groups"
@@ -44,18 +44,21 @@
       v-model:show="isConfirmDialogShow"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
-      :group-list="groupList"
+      :group-list="treeNodeGroups"
       :version-list="versionList"
       :release-type="releaseType"
       :groups="groups"
       @confirm="handleConfirm" />
-    <VersionDiff
-      v-model:show="isDiffSliderShow"
+    <PublishVersionDiff
+      :bk-biz-id="props.bkBizId"
+      :app-id="props.appId"
+      :show="isDiffSliderShow"
       :current-version="versionData"
       :base-version-id="baseVersionId"
-      :show-publish-btn="true"
-      :version-diff-list="diffableVersionList"
-      @publish="handleOpenPublishDialog" />
+      :version-list="diffableVersionList"
+      :current-version-groups="groupsPendingtoPublish"
+      @publish="handleOpenPublishDialog"
+      @close="isDiffSliderShow = false" />
   </section>
 </template>
 <script setup lang="ts">
@@ -70,13 +73,13 @@
   import { IGroupToPublish, IGroupItemInService } from '../../../../../../../types/group';
   import useServiceStore from '../../../../../../store/service';
   import useConfigStore from '../../../../../../store/config';
+  import { getConfigVersionList } from '../../../../../../api/config';
+  import { getServiceGroupList } from '../../../../../../api/group';
+  import { IConfigVersion, IReleasedGroup } from '../../../../../../../types/config';
   import VersionLayout from '../../config/components/version-layout.vue';
   import ConfirmDialog from './confirm-dialog.vue';
   import SelectGroup from './select-group/index.vue';
-  import VersionDiff from '../../config/components/version-diff/index.vue';
-  import { getConfigVersionList } from '../../../../../../api/config';
-  import { getServiceGroupList } from '../../../../../../api/group';
-  import { IConfigVersion } from '../../../../../../../types/config';
+  import PublishVersionDiff from '../publish-version-diff.vue';
 
   const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
   const serviceStore = useServiceStore();
@@ -97,8 +100,9 @@
   const router = useRouter();
   const versionList = ref<IConfigVersion[]>([]);
   const versionListLoading = ref(true);
-  const groupList = ref<IGroupToPublish[]>([]);
+  const groupList = ref<IGroupItemInService[]>([]);
   const groupListLoading = ref(true);
+  const treeNodeGroups = ref<IGroupToPublish[]>([]);
   const isSelectGroupPanelOpen = ref(false);
   const isDiffSliderShow = ref(false);
   const isConfirmDialogShow = ref(false);
@@ -116,6 +120,27 @@
       },
     },
   ]);
+
+  // 待上线分组实例
+  const groupsPendingtoPublish = computed(() => {
+    const list: IReleasedGroup[] = [];
+    groups.value.forEach((item) => {
+      const group = groupList.value.find((g) => g.group_id === item.id);
+      if (group) {
+        const { group_id, group_name, new_selector, old_selector, edited } = group;
+        list.push({
+          id: group_id,
+          name: group_name,
+          new_selector,
+          old_selector,
+          edited,
+          uid: '',
+          mode: '',
+        });
+      }
+    });
+    return list;
+  });
 
   // 包含分组变更的版本，用来对比线上版本
   const diffableVersionList = computed(() => {
@@ -136,7 +161,8 @@
   const getAllGroupData = async () => {
     groupListLoading.value = true;
     const res = await getServiceGroupList(props.bkBizId, appData.value.id as number);
-    groupList.value = res.details.map((group: IGroupItemInService) => {
+    groupList.value = res.details;
+    treeNodeGroups.value = res.details.map((group: IGroupItemInService) => {
       const { group_id, group_name, release_id, release_name } = group;
       const selector = group.new_selector;
       const rules = selector.labels_and || selector.labels_or || [];

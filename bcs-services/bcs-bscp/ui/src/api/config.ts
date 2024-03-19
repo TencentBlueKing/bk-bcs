@@ -210,7 +210,6 @@ export const getConfigVersionList = (bizId: string, appId: number, params: IConf
         defaultGroup.name = '全部实例';
       }
     });
-    debugger; // eslint-disable-line
     return res;
   });
 

@@ -126,7 +126,7 @@
       versionList: IConfigVersion[];
       groupList: IGroupToPublish[];
       releaseType: string;
-      releasedGroups: number[];
+      releasedGroups?: number[];
       groups: IGroupToPublish[];
     }>(),
     {

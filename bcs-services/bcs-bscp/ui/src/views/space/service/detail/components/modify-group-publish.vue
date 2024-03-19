@@ -24,7 +24,7 @@
         <select-group
           ref="selectGroupRef"
           :loading="versionListLoading || groupListLoading"
-          :group-list="groupList"
+          :group-list="treeNodeGroups"
           :version-list="versionList"
           :groups="groups"
           :release-type="releaseType"
@@ -48,28 +48,35 @@
       v-model:show="isConfirmDialogShow"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
-      :group-list="groupList"
+      :group-list="treeNodeGroups"
       :version-list="versionList"
       :release-type="releaseType"
       :groups="groups"
       :released-groups="releasedGroups"
       @confirm="handleConfirm" />
-    <VersionDiff
-      v-model:show="isDiffSliderShow"
+    <PublishVersionDiff
+      :bk-biz-id="props.bkBizId"
+      :app-id="props.appId"
+      :show="isDiffSliderShow"
       :current-version="versionData"
       :base-version-id="baseVersionId"
-      :show-publish-btn="true"
-      :version-diff-list="diffableVersionList"
-      @publish="handleOpenPublishDialog" />
+      :version-list="diffableVersionList"
+      :current-version-groups="groupsPendingtoPublish"
+      @publish="handleOpenPublishDialog"
+      @close="isDiffSliderShow = false" />
   </section>
 </template>
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import { useRouter } from 'vue-router';
   import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
   import { InfoBox } from 'bkui-vue';
   import BkMessage from 'bkui-vue/lib/message';
   import { storeToRefs } from 'pinia';
+  import { getConfigVersionList } from '../../../../../api/config';
+  import { getServiceGroupList } from '../../../../../api/group';
+  import { IConfigVersion, IReleasedGroup } from '../../../../../../types/config';
   import useGlobalStore from '../../../../../store/global';
   import useServiceStore from '../../../../../store/service';
   import useConfigStore from '../../../../../store/config';
@@ -77,11 +84,7 @@
   import VersionLayout from '../config/components/version-layout.vue';
   import ConfirmDialog from './publish-version/confirm-dialog.vue';
   import SelectGroup from './publish-version/select-group/index.vue';
-  import VersionDiff from '../config/components/version-diff/index.vue';
-  import { useRouter } from 'vue-router';
-  import { getConfigVersionList } from '../../../../../api/config';
-  import { getServiceGroupList } from '../../../../../api/group';
-  import { IConfigVersion } from '../../../../../../types/config';
+  import PublishVersionDiff from './publish-version-diff.vue';
 
   const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
   const serviceStore = useServiceStore();
@@ -102,8 +105,9 @@
   const router = useRouter();
   const versionList = ref<IConfigVersion[]>([]);
   const versionListLoading = ref(true);
-  const groupList = ref<IGroupToPublish[]>([]);
+  const groupList = ref<IGroupItemInService[]>([]);
   const groupListLoading = ref(true);
+  const treeNodeGroups = ref<IGroupToPublish[]>([]);
   const isSelectGroupPanelOpen = ref(false);
   const isDiffSliderShow = ref(false);
   const isConfirmDialogShow = ref(false);
@@ -120,6 +124,7 @@
   const diffableVersionList = computed(() => {
     const list = [] as IConfigVersion[];
     versionList.value.forEach((version) => {
+      if (version.id === versionData.value.id) return; // 当前版本排除掉
       version.status.released_groups.some((group) => {
         if (
           group.id === 0 ||
@@ -144,6 +149,28 @@
       },
     },
   ]);
+
+  // 待上线分组实例
+  const groupsPendingtoPublish = computed(() => {
+    const list: IReleasedGroup[] = [];
+    groups.value.forEach((item) => {
+      if (releasedGroups.value.includes(item.id)) return;
+      const group = groupList.value.find((g) => g.group_id === item.id);
+      if (group) {
+        const { group_id, group_name, new_selector, old_selector, edited } = group;
+        list.push({
+          id: group_id,
+          name: group_name,
+          new_selector,
+          old_selector,
+          edited,
+          uid: '',
+          mode: '',
+        });
+      }
+    });
+    return list;
+  });
 
   watch(
     () => versionData.value,
@@ -180,7 +207,8 @@
   const getAllGroupData = async () => {
     groupListLoading.value = true;
     const res = await getServiceGroupList(props.bkBizId, appData.value.id as number);
-    groupList.value = res.details.map((group: IGroupItemInService) => {
+    groupList.value = res.details;
+    treeNodeGroups.value = res.details.map((group: IGroupItemInService) => {
       const { group_id, group_name, release_id, release_name } = group;
       const selector = group.new_selector;
       const rules = selector.labels_and || selector.labels_or || [];
