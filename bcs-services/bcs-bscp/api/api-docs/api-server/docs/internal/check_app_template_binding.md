@@ -88,10 +88,14 @@ type TemplateRevisionBinding struct {
       }
     ]
   }
-}@
+}
 ```
 
 ### 响应参数说明
+
+| 参数名称 | 参数类型 | 描述     |
+| -------- | -------- | -------- |
+| data     | object   | 响应数据 |
 
 #### data
 
