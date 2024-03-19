@@ -38,6 +38,11 @@ func mig20240318212059Up(tx *gorm.DB) error {
 		ReloadFilePath string
 	}
 
+	// Strategies : 发布策略
+	type Strategies struct {
+		Mode string
+	}
+
 	/*** 字段变更 ***/
 	// delete column
 	if tx.Migrator().HasColumn(&Applications{}, "Mode") {
@@ -52,6 +57,12 @@ func mig20240318212059Up(tx *gorm.DB) error {
 	}
 	if tx.Migrator().HasColumn(&Applications{}, "ReloadFilePath") {
 		if err := tx.Migrator().DropColumn(&Applications{}, "ReloadFilePath"); err != nil {
+			return err
+		}
+	}
+
+	if tx.Migrator().HasColumn(&Strategies{}, "Mode") {
+		if err := tx.Migrator().DropColumn(&Strategies{}, "Mode"); err != nil {
 			return err
 		}
 	}
