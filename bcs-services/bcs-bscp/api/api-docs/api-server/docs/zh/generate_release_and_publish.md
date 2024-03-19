@@ -30,10 +30,10 @@
 label包含了3个元素key,op,value。其中key,value分别为一个label的key与value的值；op为该label的key与value的运算方式，目前
 支持的运算符(op)为: eq(等于),ne(不等于),gt(大于),ge(大于等于),lt(小于),le(小于等于),in(包含),nin(不包含）。其中lable的value的
 值的类型与运算符(op)有关系，不同的op对应不同的value的类型。具体如下：
-  2.1. op为eq,ne时，value的值为string;
-  2.2. op为gt,ge,lt,le时，value的值为数值类型;
-  2.3. op为in,nin时，value的值为字符串数组类型;
-  2.4 value为字符串类型时，最大长度为128;
+  1. op为eq,ne时，value的值为string;
+  2. op为gt,ge,lt,le时，value的值为数值类型;
+  3. op为in,nin时，value的值为字符串数组类型;
+  4 value为字符串类型时，最大长度为128;
 {
 	"labels": [{
 			"key": "name",
