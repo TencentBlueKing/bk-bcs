@@ -14,68 +14,54 @@
 package app
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-)
-
-const (
-	// NOCC:gas/crypto(工具误报:不包含凭证,只是获取凭证的路径)
-	tokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token" // nolint
 )
 
 // Run run agent
 func Run() error {
 	kubeconfig := viper.GetString("agent.kubeconfig")
-	cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if err != nil {
-		return fmt.Errorf("error getting k8s cluster config: %s", err.Error())
-	}
 
-	if kubeconfig == "" {
-		// since go-client 9.0.0, the restclient.Config returned by BuildConfigFromFlags doesn't have BearerToken,
-		// so manually get the BearerToken
-		token, err := ioutil.ReadFile(tokenFile) // nolint
-		if err != nil {
-			return fmt.Errorf("error getting the BearerToken: %s", err.Error())
-		}
-		cfg.BearerToken = string(token)
-		if err := populateCAData(cfg); err != nil {
-			return fmt.Errorf("error populating ca data: %s", err.Error())
-		}
-	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	kubeClient, err := kubernetes.NewForConfig(cfg)
+	kubeCtx, err := NewKubeClientContext(kubeconfig)
 	if err != nil {
-		return fmt.Errorf("error building kubernetes clientset: %s", err.Error())
+		return fmt.Errorf("kubeAgent init kubeClient context failed: %s", err.Error())
 	}
+	go kubeCtx.Run(ctx)
 
 	useWebsocket := viper.GetBool("agent.use-websocket")
 	if useWebsocket {
-		err := buildWebsocketToBke(cfg)
+		err := buildWebsocketToBke(kubeCtx.GetRestConfig())
 		if err != nil {
 			return err
 		}
 	} else {
-		go reportToBke(kubeClient, cfg)
+		go reportToBke(kubeCtx)
 	}
+
+	// to run in the container, should not trap SIGTERM
+	interrupt := make(chan os.Signal, 10)
+	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		select {
+		case e := <-interrupt:
+			blog.Infof("receive interrupt %s, do close", e.String())
+			cancel()
+		default:
+		}
+	}()
 
 	http.Handle("/metrics", promhttp.Handler())
 	listenAddr := viper.GetString("agent.listenAddr")
 	return http.ListenAndServe(listenAddr, nil)
-}
-
-func populateCAData(cfg *rest.Config) error {
-	bytes, err := ioutil.ReadFile(cfg.CAFile)
-	if err != nil {
-		return err
-	}
-	cfg.CAData = bytes
-	return nil
 }
