@@ -348,11 +348,6 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 		})
 	}
 
-	if err != nil {
-		logs.Errorf("list group current releases failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
 	resp := &pbds.ListHookRevisionReferencesResp{
 		Count:   uint32(count),
 		Details: details,

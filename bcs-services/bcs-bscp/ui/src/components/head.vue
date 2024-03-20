@@ -60,13 +60,13 @@
       </bk-select>
       <bk-popover ext-cls="login-out-popover" trigger="hover" placement="bottom-center" theme="light" :arrow="false">
         <div class="international">
-          <span :class="['bk-bscp-icon', locale === 'zh-CN' ? 'icon-lang-cn' : 'icon-lang-en']"></span>
+          <span :class="['bk-bscp-icon', locale === 'zh-cn' ? 'icon-lang-cn' : 'icon-lang-en']"></span>
         </div>
         <template #content>
-          <div class="international-item" @click="switchLanguage('en-US')">
+          <div class="international-item" @click="switchLanguage('en')">
             <span class="bk-bscp-icon icon-lang-en"></span> English
           </div>
-          <div class="international-item" @click="switchLanguage('zh-CN')">
+          <div class="international-item" @click="switchLanguage('zh-cn')">
             <span class="bk-bscp-icon icon-lang-cn"></span> 中文
           </div>
         </template>
@@ -117,6 +117,7 @@
   import VersionLog from './version-log.vue';
   import features from './features-dialog.vue';
   import MarkdownIt from 'markdown-it';
+  import { setCookie } from '../utils';
 
   const route = useRoute();
   const router = useRouter();
@@ -300,8 +301,9 @@
 
   // 切换语言
   const switchLanguage = (language: string) => {
+    const domain = window.location.hostname.replace(/^[^.]+(.*)$/, '$1');
+    setCookie('blueking_language', language, domain);
     locale.value = language;
-    localStorage.setItem('language', language);
     location.reload();
   };
 </script>

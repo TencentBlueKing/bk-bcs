@@ -679,10 +679,8 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 				}
 			}
 		}
-		release.Status = &pbrelease.ReleaseStatus{
-			PublishStatus:  status,
-			ReleasedGroups: releasedGroups,
-		}
+		release.Status.PublishStatus = status
+		release.Status.ReleasedGroups = releasedGroups
 	}
 
 	resp := &pbds.ListReleasesResp{

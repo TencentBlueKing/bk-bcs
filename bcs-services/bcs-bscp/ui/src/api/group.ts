@@ -1,5 +1,5 @@
 import http from '../request';
-import { IGroupCategoriesQuery, IGroupEditArg } from '../../types/group';
+import { IGroupCategoriesQuery, IGroupEditArg, IGroupItemInService } from '../../types/group';
 import { ICommonQuery } from '../../types/index';
 
 /**
@@ -36,7 +36,13 @@ export const delCategory = (app_id: number, group_category_id: number) =>
  * @returns
  */
 export const getServiceGroupList = (biz_id: string, app_id: number) =>
-  http.get(`/config/biz/${biz_id}/apps/${app_id}/groups`).then((res) => res.data);
+  http.get(`/config/biz/${biz_id}/apps/${app_id}/groups`).then((res) => {
+    const defaultGroup = res.data.details.find((item: IGroupItemInService) => item.group_id === 0);
+    if (defaultGroup) {
+      defaultGroup.group_name = '全部实例';
+    }
+    return res.data;
+  });
 
 /**
  * 获取空间下分组

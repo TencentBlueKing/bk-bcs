@@ -20,6 +20,7 @@ export interface IConfigVersion {
   status: {
     publish_status: string;
     released_groups: IReleasedGroup[];
+    fully_released: boolean;
   };
 }
 
@@ -123,10 +124,12 @@ export interface IReleasedGroup {
   mode: string;
   name: string;
   new_selector: {
-    labels_and: IGroupRuleItem[];
+    labels_and?: IGroupRuleItem[];
+    labels_or?: IGroupRuleItem[];
   };
   old_selector: {
-    labels_and: IGroupRuleItem[];
+    labels_and?: IGroupRuleItem[];
+    labels_or?: IGroupRuleItem[];
   };
   uid: string;
 }

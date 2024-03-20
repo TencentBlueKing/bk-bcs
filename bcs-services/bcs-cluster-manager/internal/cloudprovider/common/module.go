@@ -20,6 +20,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+	"github.com/kirito41dd/xslice"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
@@ -27,9 +30,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/avast/retry-go"
-	"github.com/kirito41dd/xslice"
 )
 
 const (
@@ -383,6 +383,7 @@ func CheckIPsInCmdb(ctx context.Context, nodeIPs []string) error {
 	return nil
 }
 
+// HostInfo host info
 type HostInfo struct {
 	HostId    int64
 	HostIp    string

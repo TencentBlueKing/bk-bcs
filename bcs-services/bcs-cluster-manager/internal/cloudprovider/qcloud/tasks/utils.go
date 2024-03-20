@@ -250,7 +250,7 @@ func GetExternalNgScriptType(ng *cmproto.NodeGroup) bool {
 
 	_, ok := ng.GetExtraInfo()[common.ScriptInterType.String()]
 	if ok {
-		return true
+		return ok
 	}
 
 	return false

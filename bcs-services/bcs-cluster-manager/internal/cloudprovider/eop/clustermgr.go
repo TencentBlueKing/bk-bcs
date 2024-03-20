@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -27,7 +27,7 @@ var clsMgr sync.Once
 
 func init() {
 	clsMgr.Do(func() {
-		//init Node
+		// init Node
 		cloudprovider.InitClusterManager(cloudName, &Cluster{})
 	})
 }
@@ -72,7 +72,8 @@ func (c *Cluster) CreateCluster(cls *cmproto.Cluster, opt *cloudprovider.CreateC
 }
 
 // CreateVirtualCluster create virtual cluster by cloud provider
-func (c *Cluster) CreateVirtualCluster(cls *cmproto.Cluster, opt *cloudprovider.CreateVirtualClusterOption) (*cmproto.Task, error) {
+func (c *Cluster) CreateVirtualCluster(cls *cmproto.Cluster,
+	opt *cloudprovider.CreateVirtualClusterOption) (*cmproto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -113,7 +114,8 @@ func (c *Cluster) DeleteCluster(cls *cmproto.Cluster, opt *cloudprovider.DeleteC
 }
 
 // DeleteVirtualCluster delete virtual cluster
-func (c *Cluster) DeleteVirtualCluster(cls *cmproto.Cluster, opt *cloudprovider.DeleteVirtualClusterOption) (*cmproto.Task, error) {
+func (c *Cluster) DeleteVirtualCluster(cls *cmproto.Cluster,
+	opt *cloudprovider.DeleteVirtualClusterOption) (*cmproto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -128,7 +130,8 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*cmproto.
 }
 
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
-func (c *Cluster) CheckClusterCidrAvailable(cls *cmproto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
+func (c *Cluster) CheckClusterCidrAvailable(cls *cmproto.Cluster,
+	opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
 	return false, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -138,12 +141,14 @@ func (c *Cluster) GetNodesInCluster(cls *cmproto.Cluster, opt *cloudprovider.Get
 }
 
 // AddNodesToCluster add new node to cluster according cloudprovider
-func (c *Cluster) AddNodesToCluster(cls *cmproto.Cluster, nodes []*cmproto.Node, opt *cloudprovider.AddNodesOption) (*cmproto.Task, error) {
+func (c *Cluster) AddNodesToCluster(cls *cmproto.Cluster, nodes []*cmproto.Node,
+	opt *cloudprovider.AddNodesOption) (*cmproto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
-func (c *Cluster) DeleteNodesFromCluster(cls *cmproto.Cluster, nodes []*cmproto.Node, opt *cloudprovider.DeleteNodesOption) (*cmproto.Task, error) {
+func (c *Cluster) DeleteNodesFromCluster(cls *cmproto.Cluster, nodes []*cmproto.Node,
+	opt *cloudprovider.DeleteNodesOption) (*cmproto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -158,7 +163,8 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 }
 
 // CheckClusterEndpointStatus check cluster endpoint status
-func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool, opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
+func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
+	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
 	return false, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -168,7 +174,8 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*cmproto.Clou
 }
 
 // GetMasterSuggestedMachines get master suggested machines
-func (c *Cluster) GetMasterSuggestedMachines(level, vpcId string, opt *cloudprovider.GetMasterSuggestedMachinesOption) ([]*cmproto.InstanceTemplateConfig, error) {
+func (c *Cluster) GetMasterSuggestedMachines(level, vpcId string,
+	opt *cloudprovider.GetMasterSuggestedMachinesOption) ([]*cmproto.InstanceTemplateConfig, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
