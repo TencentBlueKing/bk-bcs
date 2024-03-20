@@ -20,6 +20,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/bknotice"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // bkNoticeService is http handler for bknotice service.
@@ -29,7 +30,8 @@ type bkNoticeService struct {
 // GetCurrentAnnouncements get current announcements
 func (s *bkNoticeService) GetCurrentAnnouncements(w http.ResponseWriter, r *http.Request) {
 	// Prepare the new request
-	annotations, err := bknotice.GetCurrentAnnouncements(r.Context())
+	lang := tools.GetLangFromReq(r)
+	annotations, err := bknotice.GetCurrentAnnouncements(r.Context(), lang)
 	if err != nil {
 		logs.Errorf("get current announcements failed, err %s", err.Error())
 	}

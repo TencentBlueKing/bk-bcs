@@ -81,10 +81,10 @@ func RegisterSystem(ctx context.Context) error {
 }
 
 // GetCurrentAnnouncements 获取系统当前通知
-func GetCurrentAnnouncements(ctx context.Context) ([]Announcement, error) {
+func GetCurrentAnnouncements(ctx context.Context, lang string) ([]Announcement, error) {
 
-	url := fmt.Sprintf("%s/v1/announcement/get_current_announcements/?platform=%s",
-		cc.ApiServer().BKNotice.Host, cc.ApiServer().Esb.AppCode)
+	url := fmt.Sprintf("%s/v1/announcement/get_current_announcements/?platform=%s&language=%s",
+		cc.ApiServer().BKNotice.Host, cc.ApiServer().Esb.AppCode, lang)
 
 	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
 		cc.ApiServer().Esb.AppCode, cc.ApiServer().Esb.AppSecret)
