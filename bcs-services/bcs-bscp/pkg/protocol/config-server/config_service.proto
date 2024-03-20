@@ -1463,7 +1463,7 @@ message CreateTemplateReq {
   string name = 3;
   string path = 4;
   string memo = 5;
-  // string          revision_name     = 6;
+  string revision_name = 6;
   string revision_memo = 7;
   string file_type = 8;  // file_type is enum type
   string file_mode = 9;  // file_mode is enum type
