@@ -84,6 +84,9 @@
         <bk-input v-model="localVal.user_group" :disabled="!editable" @input="change"></bk-input>
       </bk-form-item>
     </div>
+    <bk-form-item v-if="isTpl" class="fixed-width-form" property="revision_name" :label="t('form_版本号')" required>
+      <bk-input v-model="localVal.revision_name" :placeholder="t('请输入')"></bk-input>
+    </bk-form-item>
     <bk-form-item v-if="localVal.file_type === 'binary'" :label="t('配置内容')" :required="true">
       <bk-upload
         class="config-uploader"
@@ -220,6 +223,21 @@
       {
         validator: (value: string) => value.length <= 200,
         message: t('最大长度200个字符'),
+      },
+    ],
+    revision_name: [
+      {
+        validator: (value: string) => value.length <= 128,
+        message: t('最大长度128个字符'),
+      },
+      {
+        validator: (value: string) => {
+          if (value.length > 0) {
+            return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_-]*[\u4e00-\u9fa5a-zA-Z0-9]?$/.test(value);
+          }
+          return true;
+        },
+        message: t('仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾'),
       },
     ],
   };
