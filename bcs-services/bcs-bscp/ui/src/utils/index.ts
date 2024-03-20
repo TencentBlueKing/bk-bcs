@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import Cookies from 'js-cookie';
 
 // 字节数转换为对应的显示单位
 export const byteUnitConverse = (size: number): string => {
@@ -53,3 +54,11 @@ export const getDiffType = (base: string, current: string) => {
   }
   return '';
 };
+
+export function getCookie(key: string) {
+  return Cookies.get(key);
+}
+
+export function setCookie(key: string, val: string) {
+  Cookies.set(key, val);
+}
