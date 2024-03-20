@@ -553,7 +553,7 @@ func getDefaultNodePath(cluster *proto.Cluster) (string, string) {
 
 // getNodeCommonLabels common labels
 // nolint
-func getNodeCommonLabels(cls *proto.Cluster, group *proto.NodeGroup) []*api.KeyValue {
+func getNodeCommonLabels(cls *proto.Cluster, group *proto.NodeGroup) []*api.KeyValue { // nolint
 	labels := make([]*api.KeyValue, 0)
 
 	if group != nil {
@@ -1054,7 +1054,8 @@ func DeleteTkeClusterByClusterId(ctx context.Context, opt *cloudprovider.CommonO
 }
 
 // UpdateNodePoolScheduleStatus update nodePool schedule state 默认值为0，表示参与调度；非0表示不参与调度
-func UpdateNodePoolScheduleStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeSchedule int64) error {
+func UpdateNodePoolScheduleStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	nodeSchedule int64) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	tkeCli, err := api.NewTkeClient(info.CmOption)

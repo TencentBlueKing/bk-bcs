@@ -173,7 +173,8 @@ func scaleUpNodePool(rootCtx context.Context, client api.AksService, info *cloud
 	defer cancel()
 
 	err := loop.LoopDoFunc(ctx, func() error {
-		pool, err := client.UpdatePoolAndReturn(ctx, targetPool, getNodeResourceGroup(info.Cluster), cluster.SystemID, *targetPool.Name)
+		pool, err := client.UpdatePoolAndReturn(ctx, targetPool,
+			getNodeResourceGroup(info.Cluster), cluster.SystemID, *targetPool.Name)
 		if err == nil { // 扩容完成
 			targetPool.Properties = pool.Properties
 			return loop.EndLoop
