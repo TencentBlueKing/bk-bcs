@@ -35,7 +35,6 @@ import (
 	simulatorinternal "k8s.io/autoscaler/cluster-autoscaler/simulator"
 	"k8s.io/autoscaler/cluster-autoscaler/utils"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
-	"k8s.io/autoscaler/cluster-autoscaler/utils/drain"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
@@ -1548,26 +1547,6 @@ func filterOutMasters(nodes []*apiv1.Node, pods []*apiv1.Pod) []*apiv1.Node {
 	}
 
 	return others
-}
-
-func hasGameServer(pods []*apiv1.Pod) bool {
-	for _, pod := range pods {
-		if pod.GetAnnotations()[drain.PodSafeToEvictKey] == valueTrue {
-			continue
-		}
-		ctlRef := metav1.GetControllerOf(pod)
-		refKind := ""
-		if ctlRef != nil {
-			refKind = ctlRef.Kind
-		}
-		if refKind == "GameDeployment" {
-			return true
-		}
-		if refKind == "GameStatefulSet" {
-			return true
-		}
-	}
-	return false
 }
 
 func sortNodesByDeletionCost(nodes []simulator.NodeToBeRemoved) []simulator.NodeToBeRemoved {
