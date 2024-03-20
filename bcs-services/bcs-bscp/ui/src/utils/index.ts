@@ -59,6 +59,6 @@ export function getCookie(key: string) {
   return Cookies.get(key);
 }
 
-export function setCookie(key: string, val: string) {
-  Cookies.set(key, val);
+export function setCookie(key: string, val: string, domain: string) {
+  Cookies.set(key, val, { domain, expires: 1, path: '/' });
 }

@@ -301,7 +301,8 @@
 
   // 切换语言
   const switchLanguage = (language: string) => {
-    setCookie('blueking_language', language);
+    const domain = window.location.hostname.replace(/^[^.]+(.*)$/, '$1');
+    setCookie('blueking_language', language, domain);
     locale.value = language;
     location.reload();
   };
