@@ -20,8 +20,10 @@ descheduler 将集群内的 Node/Pod （容器和箱子）的信息获取到，�
 
 在驱逐 Pod 之前，根据 Pod 对应的 Owner Workload 将 Pod 进行分类（无 Owner 的 Pod 不可驱逐，驱逐后将不会再被调度起来，后续可以考虑驱逐 -> 重建）
 
-驱逐发生时，按照节点的维度进行驱逐。根据最大并行节点数（默认 1）逐台驱逐，驱逐 Pod 后，Scheduler Extender 将迁移计划的 Pod 目标节点返回给 Scheduler，以此来
+驱逐发生时，按照节点的维度进行驱逐。根据最大并行节点数（默认 1）逐台驱逐，驱逐 Pod 后，Scheduler Extender 将迁移计划的 Pod 目标节点返回给 Scheduler，以此
 达到重调度的作用。
+
+![image](./repack_descheduler_infra.png)
 
 
 ## 使用
