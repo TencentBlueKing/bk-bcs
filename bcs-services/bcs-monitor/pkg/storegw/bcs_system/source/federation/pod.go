@@ -43,7 +43,8 @@ func (m *Federation) handlePodMetric(ctx context.Context, projectID, clusterID, 
 	for _, cls := range clusters {
 		clusterID := cls
 		groupFunc := func() error {
-			client, err := ClientFactory(ctx, clusterID, m.dispatch[clusterID].SourceType)
+			client, err := ClientFactory(ctx, clusterID, m.dispatch[clusterID].SourceType,
+				m.dispatch[clusterID].MetricsPrefix)
 			if err != nil {
 				klog.Warningf("get client in cluster %s error, %s", clusterID, err)
 				return nil

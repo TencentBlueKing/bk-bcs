@@ -20,16 +20,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 	bkmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/bk_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/compute"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/computev2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/prometheus"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
 )
 
 // ClientFactory 自动切换Prometheus/蓝鲸监控
-func ClientFactory(ctx context.Context, clusterID string, source clientutil.MonitorSourceType) (
+func ClientFactory(ctx context.Context, clusterID string, source clientutil.MonitorSourceType, metricsPrefix string) (
 	base.MetricHandler, error) {
 	switch source {
 	case clientutil.MonitorSourceCompute:
 		return compute.NewCompute(), nil
+	case clientutil.MonitorSourceComputeV2:
+		return computev2.NewCompute(metricsPrefix), nil
 	default:
 		ok, err := bkmonitor_client.IsBKMonitorEnabled(ctx, clusterID)
 		if err != nil {
