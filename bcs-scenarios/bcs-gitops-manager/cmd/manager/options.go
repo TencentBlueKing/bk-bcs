@@ -60,6 +60,7 @@ type Options struct {
 	AuditConfig          *common.AuditConfig             `json:"auditConfig,omitempty"`
 	DBConfig             *common.DBConfig                `json:"dbConfig,omitempty"`
 	MetricConfig         *common.MetricConfig            `json:"metricConfig,omitempty"`
+	MonitorConfig        *common.MonitorConfig           `json:"monitorConfig,omitempty"`
 	AdminUsersStr        string                          `json:"adminUsers,omitempty"`
 	AdminUsers           []string                        `json:"-"`
 }
