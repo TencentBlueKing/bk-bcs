@@ -75,7 +75,7 @@
     "appMetricName": "${bcsMetricAppName}"
   },
   "monitorConfig": {
-    "address": ${bcsMonitorAddress},
-    "port": ${bcsMonitorPort}
+    "address": "${bcsMonitorAddress}",
+    "port": "${bcsMonitorPort}"
   }
 }
