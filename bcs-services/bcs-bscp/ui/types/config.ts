@@ -81,6 +81,7 @@ export interface IConfigEditParams {
   user_group?: string;
   privilege?: string;
   fileAP?: string;
+  revision_name?: string;
 }
 
 // kv配置文件编辑表单参数
