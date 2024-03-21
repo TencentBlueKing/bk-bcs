@@ -31,6 +31,7 @@ import (
 type SecretInterface interface {
 	InitProjectSecret(ctx context.Context, project string) error
 	GetProjectSecret(ctx context.Context, project string) (string, error)
+	ListProjectSecrets(ctx context.Context, project string) ([]string, error)
 }
 
 type secretStore struct {
@@ -87,7 +88,8 @@ func (s *secretStore) InitProjectSecret(ctx context.Context, project string) err
 }
 
 const (
-	getSecretPath = "/api/v1/secrets/annotation" // nolint
+	// nolint
+	getSecretPath = "/api/v1/secrets/annotation"
 )
 
 // GetProjectSecret get the secret by project name
@@ -99,24 +101,54 @@ func (s *secretStore) GetProjectSecret(ctx context.Context, project string) (str
 			"project": project,
 		},
 	}
-	var secretName string
 	bs, err := s.send(ctx, hr)
 	if err != nil {
-		return secretName, errors.Wrapf(err, "get project '%s' secret failed", project)
+		return "", errors.Wrapf(err, "get project '%s' secret failed", project)
 	}
 	response := new(secretResponse)
 	if err = json.Unmarshal(bs, response); err != nil {
-		return secretName, errors.Wrapf(err, "get project '%s' secret unmarshal '%s' failed", project, string(bs))
+		return "", errors.Wrapf(err, "get project '%s' secret unmarshal '%s' failed", project, string(bs))
 	}
 	if response.Code != 0 {
-		return secretName, errors.Errorf("get project '%s' secret resp code not 0 but %d: %s",
+		return "", errors.Errorf("get project '%s' secret resp code not 0 but %d: %s",
 			project, response.Code, response.Message)
 	}
-
 	if str, ok := response.Data.(string); ok {
 		return str, nil
 	}
-	return secretName, errors.Errorf("get project '%s' secret response convert to string failed", project)
+	return "", errors.Errorf("get project '%s' secret response convert to string failed", project)
+}
+
+const (
+	// nolint
+	listProjectSecretsPath = "/api/v1/secrets/%s/list"
+)
+
+func (s *secretStore) ListProjectSecrets(ctx context.Context, project string) ([]string, error) {
+	hr := &httpRequest{
+		path:   fmt.Sprintf(listProjectSecretsPath, project),
+		method: http.MethodGet,
+		queryParams: map[string]string{
+			"path": "/",
+		},
+	}
+	bs, err := s.send(ctx, hr)
+	if err != nil {
+		return nil, errors.Wrapf(err, "list project '%s' secret failed", project)
+	}
+	response := new(secretResponse)
+	if err = json.Unmarshal(bs, response); err != nil {
+		return nil, errors.Wrapf(err, "init secret for project '%s' unmarshal '%s' failed",
+			project, string(bs))
+	}
+	if response.Code != 0 {
+		return nil, errors.Errorf("list secrets for project '%s' response code not 0 but %d: %s",
+			project, response.Code, response.Message)
+	}
+	if secrets, ok := response.Data.([]string); ok {
+		return secrets, nil
+	}
+	return nil, errors.Errorf("list secrets for project '%s' convert failed", project)
 }
 
 type httpRequest struct {

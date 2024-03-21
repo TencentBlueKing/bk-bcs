@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 )
 
 // NewGitOpsProxy create proxy instance
@@ -143,8 +144,12 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware: middleware,
 	}
 	analysisPlugin := &AnalysisPlugin{
-		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/analysis").Subrouter(),
-		storage:        ops.option.Storage,
+		Router:  ops.PathPrefix(common.GitOpsProxyURL + "/api/analysis").Subrouter(),
+		storage: ops.option.Storage,
+		secretStore: secretstore.NewSecretStore(&secretstore.SecretStoreOptions{
+			Address: ops.option.SecretOption.Address,
+			Port:    ops.option.SecretOption.Port,
+		}),
 		middleware:     middleware,
 		analysisClient: analysis.GetAnalysisClient(),
 	}
