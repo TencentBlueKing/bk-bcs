@@ -159,7 +159,7 @@
     copyToClipBoard(`{{ .${name} }}`);
     BkMessage({
       theme: 'success',
-      message: t('变量名称已复制'),
+      message: `${t('引用方式')} {{ .${name} }} ${t('已成功复制到剪贴板')}`,
     });
   };
 
