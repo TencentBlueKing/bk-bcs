@@ -14,19 +14,28 @@ package bcs
 
 import (
 	"context"
+	"crypto/tls"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	rspb "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/releaseutil"
+	helmtime "helm.sh/helm/v3/pkg/time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 )
 
 func (c *cluster) list(ctx context.Context, option release.ListOption) (int, []*release.Release, error) {
-	clientSet := c.ensureSdkClient()
 
-	results, err := clientSet.List(ctx, option)
+	results, err := c.getReleases(ctx, option)
 	if err != nil {
 		blog.Errorf("list helm release from cluster failed, %s, cluster: %s, namespace: %s",
 			err.Error(), c.clusterID, option.Namespace)
@@ -90,4 +99,79 @@ func filterIndex(offset, limit int, release []*rspb.Release) []*rspb.Release {
 	}
 
 	return release[offset : offset+limit]
+}
+
+// 获取release列表
+func (c *cluster) getReleases(ctx context.Context, option release.ListOption) ([]*rspb.Release, error) {
+	secretList, err := c.getSecretList(ctx, option)
+	if err != nil {
+		return nil, err
+	}
+	var releases []*rspb.Release
+	// 主要针对Labels的内容进行解析
+	for _, data := range secretList.Items {
+		releases = append(releases, &rspb.Release{
+			Name: data.Labels["name"],
+			Info: &rspb.Info{
+				LastDeployed: helmtime.Time{Time: getTime(data.Labels["modifiedAt"])},
+				Status:       rspb.Status(data.Labels["status"])},
+			Namespace: data.ObjectMeta.Namespace,
+			Version:   getVersion(data.Labels["version"]),
+		})
+	}
+	return releases, nil
+}
+
+// 获取版本号，string->int
+func getVersion(s string) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return i
+}
+
+// Unix字符串转换
+func getTime(s string) time.Time {
+	unixTimestamp, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return time.Now()
+	}
+
+	// 将 UNIX 时间戳转换为 time.Time 类型
+	return time.Unix(unixTimestamp, 0)
+}
+
+// 获取自定义字段的secrete list
+func (c *cluster) getSecretList(ctx context.Context, option release.ListOption) (*entity.SecretList, error) {
+	apiServer := options.GlobalOptions.Release.APIServer
+	bearerToken := options.GlobalOptions.Release.Token
+	url := fmt.Sprintf("%s/clusters/%s/api/v1/namespaces/%s/secrets?%s", apiServer, c.clusterID, option.Namespace,
+		"labelSelector=owner=helm,status!=superseded")
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+bearerToken)
+	client := &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
+	}}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	result := entity.SecretList{}
+
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
