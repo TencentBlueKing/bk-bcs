@@ -63,9 +63,6 @@
     alias: '',
     config_type: 'file',
     data_type: 'any',
-    reload_type: 'file',
-    reload_file_path: '/data/reload.json',
-    mode: 'normal',
     memo: '', // @todo 包含换行符后接口会报错
   });
   const formCompRef = ref();
@@ -84,9 +81,6 @@
           alias: '',
           config_type: 'file',
           data_type: 'any',
-          reload_type: 'file',
-          reload_file_path: '/data/reload.json',
-          mode: 'normal',
           memo: '',
         };
       }
@@ -102,12 +96,7 @@
     await formCompRef.value.validate();
     pending.value = false;
     try {
-      let resp: { id: number };
-      if (serviceData.value.config_type === 'file') {
-        resp = await createApp(spaceId.value, serviceData.value);
-      } else {
-        resp = await createApp(spaceId.value, { ...serviceData.value, reload_type: '', reload_file_path: '' });
-      }
+      const resp = await createApp(spaceId.value, serviceData.value);
       appId.value = resp.id;
       emits('reload');
       isShowConfirmDialog.value = true;

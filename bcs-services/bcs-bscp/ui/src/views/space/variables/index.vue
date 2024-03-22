@@ -29,7 +29,7 @@
         <bk-table-column :label="t('变量名称')" width="300">
           <template #default="{ row }">
             <div v-if="row.spec" class="var-name-wrapper">
-              <bk-overflow-title class="name-text" type="tips" @click="handleEditVar(row)">
+              <bk-overflow-title class="name-text" type="tips" :key="row.id" @click="handleEditVar(row)">
                 {{ row.spec.name }}
               </bk-overflow-title>
               <Copy class="copy-icon" @click="handleCopyText(row.spec.name)" />

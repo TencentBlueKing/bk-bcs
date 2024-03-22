@@ -5,9 +5,6 @@ export interface IServiceEditForm {
   name: string;
   alias: string;
   config_type: string;
-  reload_type: string;
-  reload_file_path: string;
-  mode: string;
   memo: string;
   data_type?: string;
 }

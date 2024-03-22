@@ -145,16 +145,8 @@
     space_id: '',
     spec: {
       name: '',
-      deploy_type: '',
       config_type: '',
-      mode: '',
       memo: '',
-      reload: {
-        file_reload_spec: {
-          reload_file_path: '',
-        },
-        reload_type: '',
-      },
       alias: '',
       data_type: '',
     },
