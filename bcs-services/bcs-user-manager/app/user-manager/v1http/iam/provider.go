@@ -60,6 +60,7 @@ type Instance struct {
 
 // Filter is the iam provider request filter
 type Filter struct {
+	Attr      string         `json:"attr"`
 	Keyword   string         `json:"keyword"`
 	IDs       []string       `json:"ids"`
 	Parent    ResourceParent `json:"parent"`
