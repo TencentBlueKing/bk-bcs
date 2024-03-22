@@ -49,7 +49,7 @@
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-  import { ref, computed, onMounted, watch } from 'vue';
+  import { ref, computed, onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRouter } from 'vue-router';
   import { storeToRefs } from 'pinia';
@@ -97,13 +97,6 @@
     }
     return { name: '', memo: '' };
   });
-
-  watch(
-    () => spaceId.value,
-    () => {
-      initData();
-    },
-  );
 
   onMounted(() => {
     initData();
