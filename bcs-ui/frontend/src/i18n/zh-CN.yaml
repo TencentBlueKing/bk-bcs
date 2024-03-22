@@ -752,7 +752,7 @@ cluster:
       putAwayConfig: 收起更多设置
       createCloudToken: 新增凭证
       fileImport: 文件导入
-      textKubeConfig: kubeconfig可用性测试
+      textKubeConfig: 可用性测试
   detail:
     title:
       overview: 集群总览
@@ -2012,14 +2012,7 @@ plugin:
     DBInfo: DB信息
     confirmDelete: 确定要删除
     input:
-      biz: 请输入业务名称
-      dbAddress: 请输入DB访问地址
-      user: 请输入账号
-      dbName: 请输入DB名称
-      label: 请输入标签
       values: 请填写Values 内容
-    labelIndexRegex: '第{index}组标签的值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$'
-    labelRegex: '标签值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$'
     content: 内容
     confirmUpgradeTips: Values 内容发生如下变化，请确认后再点击“确定”更新
     confirmUpgrade: 确认更新
@@ -2083,8 +2076,6 @@ plugin:
     filePath: 请输入文件路径
     success: 规则创建成功
     upgraded: 规则更新成功
-    polarisNS: Polaris命名空间
-    polarisSvcName: Polaris服务名
     cluster_ns: 集群/命名空间
     polarisInfo: Polaris信息
     syncStatus: 同步状态
@@ -2097,17 +2088,9 @@ plugin:
     pod: 是否直连Pod
     nodePort: NodePort模式不勾选
     weight: 权重
-    rule: 请输入规则名
-    ruleRegex: 规则名必须小于等于63字符
     ruleCharacterCriteria: '规则名以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字'
-    enterPolarisInfoName: 请输入Polaris信息名
     polarisInfoNameCriteria: 'Polaris信息名只允许数字、英文字母、.、-、_, 限制128个字符'
-    selectPolarisNamespace: 请选择Polaris命名空间
-    inputSvcName: 请输入关联Sercice服务名
-    portInt: 请输入关联Sercice的端口(整数类型)
-    portNoNegative: 关联Sercice的端口不能为负数
-    weightInt: 请输入关联Sercice的权重(整数类型)
-    weightNoNegative: 关联Sercice的权重不能为负数
+    ipPortAndWeight: 'IP:端口 权重'
 projects:
   cloudToken:
     add: 新建凭证

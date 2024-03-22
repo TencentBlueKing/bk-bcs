@@ -879,7 +879,7 @@ cluster:
       putAwayConfig: Put more settings
       createCloudToken: New voucher
       fileImport: File Import
-      textKubeConfig: kubeconfig usability testing
+      textKubeConfig: Usability testing
   detail:
     title:
       overview: Overview
@@ -2509,18 +2509,7 @@ plugin:
     DBInfo: DB Configuration
     confirmDelete: 'Are you sure you want to delete the '
     input:
-      biz: Please enter the business name
-      dbAddress: Please enter the DB access address
-      user: please enter your DB account
-      dbName: Please enter the DB name
-      label: Please enter the tag
       values: Please fill in Values content
-    labelIndexRegex: >-
-      The value of the label of the group {index} group does not meet the
-      regular expression^([[a-za-z0-9] [-a-za-z0-9 _.]? [A-Za-Z0-9])? $
-    labelRegex: >-
-      The label value does not meet the regular expression^([[a-za-z0-9]
-      [-a-za-z0-9 _.]*)? [A-Za-Z0-9]? $
     content: content
     confirmUpgradeTips: >-
       The content of value changes the following, please confirm after you click
@@ -2592,8 +2581,6 @@ plugin:
     filePath: Please enter the file path
     success: Rule created successfully
     upgraded: Rule updated successfully
-    polarisNS: Polaris naming space
-    polarisSvcName: Polaris service name
     cluster_ns: Clusters/Namespaces
     polarisInfo: Polaris info
     syncStatus: Synchronous state
@@ -2608,21 +2595,13 @@ plugin:
     pod: Whether to directly connect to pod
     nodePort: Nodeport mode is not checked
     weight: Weight
-    rule: Please enter the rules name
-    ruleRegex: The rules must be less than or equal to 63 characters
     ruleCharacterCriteria: >-
       The rules start and end and end with letters ([A-Z0-9A-Z]), with a broken
       number (-), the lower line (_), the point (.) And between the letters
-    enterPolarisInfoName: Please enter the Polaris information name
     polarisInfoNameCriteria: >-
       Polaris information name only allows numbers, English letters,.,-, _,
       limited 128 characters
-    selectPolarisNamespace: Please select Polaris naming space
-    inputSvcName: Please enter the associated service service name
-    portInt: Please enter the port of the association service (integer type)
-    portNoNegative: The port of the associated service cannot be negative
-    weightInt: Please enter the weight of the associated service (integer type)
-    weightNoNegative: The weight of the associated service cannot be negative
+    ipPortAndWeight: 'IP: Port Weight'
 projects:
   cloudToken:
     add: New voucher

@@ -30,6 +30,7 @@ export default [
   // DB授权配置
   {
     path: 'clusters/:clusterId/tools/db',
+    props: true,
     name: 'crdcontrollerDBInstances',
     component: DBList,
     meta: {
@@ -39,6 +40,7 @@ export default [
   // polaris配置
   {
     path: 'clusters/:clusterId/tools/polaris',
+    props: true,
     name: 'crdcontrollerPolarisInstances',
     component: BcsPolaris,
     meta: {
