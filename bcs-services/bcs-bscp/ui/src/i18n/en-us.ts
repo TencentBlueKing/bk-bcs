@@ -349,6 +349,8 @@ export default {
   撤销修改配置文件成功: 'Succeeded in unmodifying the configuration file',
   恢复配置文件成功: 'Succeeded in Restore the configuration file',
   打包下载: 'Package download',
+  当前线上全量版本: 'Current online full version',
+  历史全量上线过的版本: 'Historical online full version',
 
   // 分组管理
   新增分组: 'New group',

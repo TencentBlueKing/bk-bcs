@@ -21,6 +21,7 @@ export interface IConfigVersion {
     publish_status: string;
     released_groups: IReleasedGroup[];
     fully_released: boolean;
+    fully_release?: boolean;
   };
 }
 
