@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package constant declares package level variables that are constant throughout the program.
 package constant
 
 // MetadataKeyIPv6 ...

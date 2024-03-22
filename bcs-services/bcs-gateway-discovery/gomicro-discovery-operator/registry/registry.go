@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package registry defines structures and operations related to service registration and discovery.
 package registry
 
 import (
