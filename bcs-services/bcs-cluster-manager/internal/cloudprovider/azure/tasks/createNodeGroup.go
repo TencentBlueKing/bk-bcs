@@ -215,7 +215,7 @@ func createAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBas
 	if err = client.NodeGroupToAgentPool(group, pool); err != nil {
 		return errors.Wrapf(err, "createAgentPool[%s]: call NodeGroupToAgentPool failed", taskID)
 	}
-	_, err = client.CreatePoolAndReturn(ctx, pool, getClusterResourceGroup(info.Cluster),
+	_, err = client.CreatePoolAndReturn(ctx, pool, cloudprovider.GetClusterResourceGroup(info.Cluster),
 		cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {
 		return errors.Wrapf(err, "createAgentPool[%s]: call CreatePoolAndReturn[%s][%s] falied", taskID,
@@ -260,7 +260,7 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 
 		var cloudCluster *armcontainerservice.ManagedCluster
 
-		clsResourceGroup := getClusterResourceGroup(info.Cluster)
+		clsResourceGroup := cloudprovider.GetClusterResourceGroup(info.Cluster)
 		cloudCluster, err = client.GetCluster(ctx, info, clsResourceGroup)
 		if err != nil {
 			return errors.Wrapf(err, "createAgentPool[%s]: call GetCluster falied", taskID)
@@ -363,7 +363,7 @@ func checkNodeGroup(rootCtx context.Context, info *cloudprovider.CloudDependBasi
 	ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
 	defer cancel()
 	err = loop.LoopDoFunc(ctx, func() error {
-		pool, err = client.GetPoolAndReturn(ctx, getNodeResourceGroup(info.Cluster),
+		pool, err = client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
 			cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
 			blog.Errorf("checkNodeGroup[%s] poll GetAgentPool[%s][%s] failed: %v", taskID, cluster.SystemID,

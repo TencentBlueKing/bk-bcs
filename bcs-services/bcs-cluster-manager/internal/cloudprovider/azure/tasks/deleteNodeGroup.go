@@ -41,6 +41,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	// check validate
@@ -61,6 +62,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
 	if dependInfo.NodeGroup.AutoScaling == nil || len(dependInfo.NodeGroup.CloudNodeGroupID) == 0 {
 		blog.Errorf("DeleteCloudNodeGroupTask[%s]: nodegroup %s in task %s step %s has no autoscaling group",
 			taskID, nodeGroupID, taskID, stepName)
@@ -68,12 +70,6 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-
-	//// 默认不保留实例
-	// keepInstance := false
-	// if step.Params["KeepInstance"] == "true" {
-	//	keepInstance = true
-	// }
 
 	// delete agentPool
 	if err = deleteAgentPool(ctx, dependInfo); err != nil {
@@ -112,7 +108,7 @@ func deleteAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBas
 		return errors.Wrapf(err, "call NewAgentPoolClientWithOpt[%s] falied", taskID)
 	}
 
-	if _, err = client.GetPoolAndReturn(ctx, getNodeResourceGroup(info.Cluster),
+	if _, err = client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
 		cluster.SystemID, group.CloudNodeGroupID); err != nil {
 		if !(strings.Contains(err.Error(), "NotFound") || strings.Contains(err.Error(), "not found")) {
 			return errors.Wrapf(err, "deleteAgentPool[%s]: call GetPoolAndReturn[%s][%s] failed", taskID,
@@ -124,7 +120,7 @@ func deleteAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBas
 
 	ctx, cancel = context.WithTimeout(rootCtx, 20*time.Minute)
 	defer cancel()
-	if err = client.DeletePool(ctx, info, ""); err != nil {
+	if err = client.DeletePool(ctx, info, cloudprovider.GetClusterResourceGroup(info.Cluster)); err != nil {
 		return errors.Wrapf(err, "deleteAgentPool[%s]: call DeletePool[%s][%s] failed", taskID,
 			cluster.SystemID, group.CloudNodeGroupID)
 	}

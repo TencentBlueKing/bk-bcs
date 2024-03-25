@@ -370,7 +370,10 @@ func (ia *ImportAction) commonValidate(req *cmproto.ImportClusterReq) error {
 		req.IsExclusive = &wrappers.BoolValue{Value: true}
 	}
 	if req.ClusterType == "" {
-		req.ClusterType = common.ClusterManageTypeIndependent
+		req.ClusterType = common.ClusterTypeSingle
+	}
+	if req.ManageType == "" {
+		req.ManageType = common.ClusterManageTypeIndependent
 	}
 	if req.NetworkType == "" {
 		req.NetworkType = common.ClusterOverlayNetwork
