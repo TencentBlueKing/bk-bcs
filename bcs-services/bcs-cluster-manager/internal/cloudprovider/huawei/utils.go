@@ -19,7 +19,6 @@ import (
 	"strings"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
@@ -31,28 +30,6 @@ var (
 const (
 	// importClusterTaskTemplate bk-sops add task template
 	importClusterTaskTemplate = "cce-import cluster: %s"
-	// deleteClusterTaskTemplate bk-sops add task template
-	deleteClusterTaskTemplate = "cce-delete cluster: %s"
-	// addNodeTaskTemplate bk-sops add task template
-	addNodeTaskTemplate = "cce-add node: %s"
-	// cleanNodeTaskTemplate bk-sops add task template
-	cleanNodeTaskTemplate = "cce-remove node: %s"
-	// createNodeGroupTaskTemplate bk-sops add task template
-	createNodeGroupTaskTemplate = "cce-create node group: %s/%s"
-	// deleteNodeGroupTaskTemplate bk-sops add task template
-	deleteNodeGroupTaskTemplate = "cce-delete node group: %s/%s"
-	// updateNodeGroupDesiredNode bk-sops add task template
-	updateNodeGroupDesiredNodeTemplate = "cce-update node group desired node: %s/%s"
-	// cleanNodeGroupNodesTaskTemplate bk-sops add task template
-	cleanNodeGroupNodesTaskTemplate = "cce-remove node group nodes: %s/%s"
-	// moveNodesToNodeGroupTaskTemplate bk-sops add task template
-	moveNodesToNodeGroupTaskTemplate = "cce-move nodes to node group: %s/%s"
-	// switchNodeGroupAutoScalingTaskTemplate bk-sops add task template
-	switchNodeGroupAutoScalingTaskTemplate = "cce-switch node group auto scaling: %s/%s"
-	// updateAutoScalingOptionTemplate bk-sops add task template
-	updateAutoScalingOptionTemplate = "cce-update auto scaling option: %s"
-	// switchAutoScalingOptionStatusTemplate bk-sops add task template
-	switchAutoScalingOptionStatusTemplate = "cce-switch auto scaling option status: %s"
 )
 
 // tasks
@@ -92,7 +69,7 @@ var (
 		StepMethod: fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName),
 		StepName:   "检测节点状态",
 	}
-	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{
+	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName),
 		StepName:   "更新节点数据",
 	}
@@ -102,11 +79,11 @@ var (
 		StepMethod: fmt.Sprintf("%s-CleanNodeGroupNodesTask", cloudName),
 		StepName:   "下架节点组节点",
 	}
-	checkCleanNodeGroupNodesStatusStep = cloudprovider.StepInfo{
+	checkCleanNodeGroupNodesStatusStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-CheckCleanNodeGroupNodesStatusTask", cloudName),
 		StepName:   "检查节点组状态",
 	}
-	updateCleanNodeGroupNodesDBInfoStep = cloudprovider.StepInfo{
+	updateCleanNodeGroupNodesDBInfoStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UpdateCleanNodeGroupNodesDBInfoTask", cloudName),
 		StepName:   "更新节点组数据",
 	}

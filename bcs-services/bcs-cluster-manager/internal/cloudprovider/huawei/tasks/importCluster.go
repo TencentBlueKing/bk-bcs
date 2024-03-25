@@ -181,7 +181,7 @@ func importClusterInstances(info *cloudprovider.CloudDependBasicInfo) error {
 
 func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node,
 	info *cloudprovider.CloudDependBasicInfo) error {
-	//获取zones
+	// 获取zones
 	zones, err := api.GetAvailabilityZones(info.CmOption)
 	if err != nil {
 		return err

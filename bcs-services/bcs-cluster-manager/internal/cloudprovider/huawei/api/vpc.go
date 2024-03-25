@@ -82,6 +82,7 @@ func GetVpc3Client(opt *cloudprovider.CommonOption) (*Vpc3Client, error) {
 	return &Vpc3Client{vpc3.NewVpcClient(hcClient)}, nil
 }
 
+// ListVpcsByID 获取vpc
 func (v *Vpc2Client) ListVpcsByID(vpcID string) ([]model2.Vpc, error) {
 	rsp, err := v.ListVpcs(&model2.ListVpcsRequest{Id: &vpcID})
 	if err != nil {

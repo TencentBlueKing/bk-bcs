@@ -79,7 +79,7 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 	subnetZoneName := ""
 	subnets := make([]*proto.Subnet, 0)
 
-	//获取可用区
+	// 获取可用区
 	zones, err := api.GetAvailabilityZones(&opt.CommonOption)
 	if err != nil {
 		return nil, err
