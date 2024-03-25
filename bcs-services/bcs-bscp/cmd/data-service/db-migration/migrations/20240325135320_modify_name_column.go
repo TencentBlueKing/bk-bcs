@@ -21,19 +21,19 @@ import (
 func init() {
 	// add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
-		Version: "20240308173324",
-		Name:    "20240308173324_modify_name_column",
+		Version: "20240325135320",
+		Name:    "20240325135320_modify_name_column",
 		Mode:    migrator.GormMode,
-		Up:      mig20240308173324Up,
-		Down:    mig20240308173324Down,
+		Up:      mig20240325135320Up,
+		Down:    mig20240325135320Down,
 	})
 }
 
-// mig20240308173324Up for up migration
+// mig20240325135320Up for up migration
 // 字段变更，设置为collate为utf8mb4_bin，查询时区分大小写，场景如：字段唯一性校验时，字符串"App"和"app"能区分为不同
 //
 //nolint:funlen,gocyclo
-func mig20240308173324Up(tx *gorm.DB) error {
+func mig20240325135320Up(tx *gorm.DB) error {
 	// Applications : 服务
 	type Applications struct {
 		Name  string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -196,7 +196,7 @@ func mig20240308173324Up(tx *gorm.DB) error {
 
 }
 
-// mig20240308173324Down for down migration
-func mig20240308173324Down(tx *gorm.DB) error {
+// mig20240325135320Down for down migration
+func mig20240325135320Down(tx *gorm.DB) error {
 	return nil
 }
