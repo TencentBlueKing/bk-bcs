@@ -84,6 +84,9 @@
         <bk-input v-model="localVal.user_group" :disabled="!editable" @input="change"></bk-input>
       </bk-form-item>
     </div>
+    <bk-form-item v-if="isTpl" class="fixed-width-form" property="revision_name" :label="t('form_版本号')" required>
+      <bk-input v-model="localVal.revision_name" :placeholder="t('请输入')"></bk-input>
+    </bk-form-item>
     <bk-form-item v-if="localVal.file_type === 'binary'" :label="t('配置内容')" :required="true">
       <bk-upload
         class="config-uploader"
@@ -96,7 +99,7 @@
         :files="fileList"
         :custom-request="handleFileUpload">
         <template #file="{ file }">
-          <div>
+          <div style="width: 100%">
             <div class="file-wrapper">
               <div class="status-icon-area">
                 <Done v-if="file.status === 'success'" class="success-icon" />
@@ -106,6 +109,7 @@
               <div class="name" :title="file.name" @click="handleDownloadFile">{{ file.name }}</div>
               ({{ file.status === 'fail' ? byteUnitConverse(file.size) : file.size }})
             </div>
+            <div :class="{ 'progress-bar': uploadPending }"></div>
             <div v-if="file.status === 'fail'" class="error-msg">{{ file.statusText }}</div>
           </div>
         </template>
@@ -219,6 +223,21 @@
       {
         validator: (value: string) => value.length <= 200,
         message: t('最大长度200个字符'),
+      },
+    ],
+    revision_name: [
+      {
+        validator: (value: string) => value.length <= 128,
+        message: t('最大长度128个字符'),
+      },
+      {
+        validator: (value: string) => {
+          if (value.length > 0) {
+            return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_-]*[\u4e00-\u9fa5a-zA-Z0-9]?$/.test(value);
+          }
+          return true;
+        },
+        message: t('仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾'),
       },
     ],
   };
@@ -346,6 +365,7 @@
       }
       return (fileContent.value as IFileConfigContentSummary).signature;
     }
+    if (!stringContent.value.endsWith('\n')) stringContent.value += '\n';
     return SHA256(stringContent.value).toString();
   };
 
@@ -521,6 +541,20 @@
     align-items: center;
     span {
       margin-right: 5px;
+    }
+  }
+  .progress-bar {
+    width: 0;
+    height: 2px;
+    background-color: #3a84ff;
+    animation: progressAnimation 1s ease-in-out forwards;
+  }
+  @keyframes progressAnimation {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
     }
   }
 </style>

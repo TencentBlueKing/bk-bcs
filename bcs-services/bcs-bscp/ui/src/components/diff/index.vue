@@ -46,7 +46,12 @@
             :base="props.diff.base.content as string"
             :base-variables="props.diff.base.variables"
             :base-permission="basePermission" />
-          <Kv v-else :current="props.diff.current.content as string" :base="props.diff.base.content as string" />
+          <template v-else-if="props.diff.contentType === 'singleLineKV'">
+            <SingleLineKV
+              v-if="props.diff.singleLineKVDiff"
+              :diff-configs="props.diff.singleLineKVDiff"
+              :selected-id="props.selectedKvConfigId" />
+          </template>
         </div>
       </bk-loading>
     </section>
@@ -61,7 +66,7 @@
   import { IFileConfigContentSummary } from '../../../types/config';
   import File from './file.vue';
   import Text from './text.vue';
-  import Kv from './kv.vue';
+  import SingleLineKV from './single-line-kv.vue';
 
   const { t } = useI18n();
   const props = defineProps<{
@@ -69,6 +74,7 @@
     diff: IDiffDetail;
     id: number; // 服务ID或模板空间ID
     loading: boolean;
+    selectedKvConfigId?: number; // 选中的kv类型配置id
   }>();
 
   const isFullScreen = ref(false);
@@ -139,10 +145,20 @@
     .right-panel {
       height: 100%;
       width: 50%;
+      background-color: #313238;
+      :deep(.bk-select) {
+        .bk-input {
+          border-color: #63656e;
+        }
+        .bk-input--text {
+          color: #b6b6b6;
+          background: #313238;
+        }
+      }
     }
     .right-panel {
       position: relative;
-      border-left: 1px solid #dcdee5;
+      border-left: 1px solid #1d1d1d;
       .fullscreen-btn {
         position: absolute;
         top: 16px;

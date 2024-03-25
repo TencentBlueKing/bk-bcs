@@ -10423,6 +10423,8 @@ func (m *ImportCloudMode) Validate() error {
 
 	// no validation rules for Inter
 
+	// no validation rules for ResourceGroup
+
 	return nil
 }
 
@@ -10627,6 +10629,16 @@ func (m *ImportClusterReq) Validate() error {
 		return ImportClusterReqValidationError{
 			field:  "AccountID",
 			reason: "value length must be at most 1024 runes",
+		}
+	}
+
+	if v, ok := interface{}(m.GetArea()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ImportClusterReqValidationError{
+				field:  "Area",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
 		}
 	}
 

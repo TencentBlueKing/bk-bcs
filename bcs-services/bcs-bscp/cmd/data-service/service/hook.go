@@ -136,11 +136,6 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 		return nil, err
 	}
 
-	if err != nil {
-		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
 	result := []*pbds.ListHooksResp_Detail{}
 	for _, detail := range details {
 		result = append(result, &pbds.ListHooksResp_Detail{
@@ -324,11 +319,6 @@ func (s *Service) ListHookReferences(ctx context.Context,
 			Type:             result.HookType,
 			Deprecated:       result.Deprecated,
 		})
-	}
-
-	if err != nil {
-		logs.Errorf("list group current releases failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
 	}
 
 	resp := &pbds.ListHookReferencesResp{

@@ -52,6 +52,7 @@ export interface IRuleEditing {
   originalApp: string;
   isRight: boolean;
   isSelectService: boolean;
+  needPreview: boolean;
 }
 
 // 调用关联规则更新接口参数
@@ -64,4 +65,19 @@ export interface IRuleUpdateParams {
   add_scope: IRuleUpdateItem[];
   del_id: number[];
   alter_scope: IRuleUpdateItem[];
+}
+
+// 关联规则预览项参数
+export interface IPreviewRule {
+  id: number; // 规则id
+  scopeContent: string; // 规则内容
+  appName: string; // 服务名称
+}
+
+export interface IPreviewRuleParams {
+  start: number;
+  limit: number;
+  app_name: string;
+  scope: string;
+  search_value: string;
 }

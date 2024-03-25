@@ -143,6 +143,12 @@ type MetricConfig struct {
 	AppMetricName      string `json:"appMetricName"`
 }
 
+// MonitorConfig monitor server info
+type MonitorConfig struct {
+	Address string `json:"address"`
+	Port    string `json:"port"`
+}
+
 // Complete unset item
 func (config *AuthConfig) Complete() error {
 	return nil

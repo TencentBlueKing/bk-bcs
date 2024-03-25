@@ -420,14 +420,40 @@ func (plugin *AppPlugin) customRevisionsMetadata(r *http.Request) (*http.Request
 				fmt.Errorf("query parameter 'revisions' has empty value"))
 		}
 	}
+
 	repos := make([]string, 0)
-	if argoApp.Spec.HasMultipleSources() {
-		if len(argoApp.Spec.Sources) != len(revisions) {
-			return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("application has multiple(%d) "+
-				"sources, not same as query param 'revisions'", len(argoApp.Spec.Sources)))
-		}
+	if argoApp.Spec.HasMultipleSources() && len(argoApp.Spec.Sources) == len(revisions) {
 		for _, source := range argoApp.Spec.Sources {
 			repos = append(repos, source.RepoURL)
+		}
+	} else if argoApp.Spec.HasMultipleSources() && len(argoApp.Spec.Sources) != len(revisions) {
+		// 兼容应用从 SingleSource 与 MultipleSource 互相转换的情况
+		found := false
+		for i := range argoApp.Status.History {
+			history := argoApp.Status.History[i]
+			if len(revisions) == 1 && history.Revision == revisions[0] {
+				repos = append(repos, history.Source.RepoURL)
+				found = true
+				break
+			}
+			if len(revisions) > 1 && len(revisions) == len(history.Revisions) {
+				for j := range revisions {
+					if revisions[j] != history.Revisions[j] {
+						break
+					}
+					if j == len(revisions)-1 {
+						repos = append(repos, history.Source.RepoURL)
+						found = true
+					}
+				}
+				if found {
+					break
+				}
+			}
+		}
+		if !found {
+			return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("application has multiple(%d) "+
+				"sources, not same as query param 'revisions'", len(argoApp.Spec.Sources)))
 		}
 	} else {
 		if len(revisions) != 1 {

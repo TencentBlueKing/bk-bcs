@@ -10,18 +10,15 @@
  * limitations under the License.
  */
 
-// Package cmd provides operations for init and upgrading the bk-apigateway resources and
-// register the system 'bk-bscp' into bk-notice
+// Package cmd provides operations for init and upgrading the bk-apigateway resources
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/bknotice"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
@@ -30,30 +27,6 @@ var migrateCmd = &cobra.Command{
 	Short: "api-server migrations tool",
 	Run: func(cmd *cobra.Command, args []string) {
 
-	},
-}
-
-var migrateInitNoticeCmd = &cobra.Command{
-	Use:   "init-notice",
-	Short: "Register system 'bk-bscp' into bk-notice",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		if err := cc.LoadSettings(SysOpt.Sys); err != nil {
-			fmt.Println("load settings from config files failed, err:", err)
-			return
-		}
-
-		logs.InitLogger(cc.ApiServer().Log.Logs())
-
-		if !cc.ApiServer().BKNotice.Enable {
-			fmt.Println("bknotice is disabled, skip init")
-			return
-		}
-
-		if err := bknotice.RegisterSystem(context.Background()); err != nil {
-			fmt.Println("register system to bknotice failed, err:", err)
-			return
-		}
 	},
 }
 
@@ -79,7 +52,6 @@ func init() {
 	migrateCmd.PersistentFlags().BoolP("debug", "d", false,
 		"whether to debug output the execution process,, default is false")
 
-	migrateCmd.AddCommand(migrateInitNoticeCmd)
 	migrateCmd.AddCommand(migrateInitApigatewayCmd)
 
 	// Add "migrate" command to the root command

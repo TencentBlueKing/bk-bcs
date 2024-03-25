@@ -231,7 +231,7 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 		if !ok {
 			appPro.Annotations[common.SecretKey] = secretVal
 			if err := control.option.Storage.UpdateProject(ctx, appPro); err != nil {
-				blog.Errorf("[existErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
+				blog.Errorf("[existErr] sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
 			}
 		} else if secretVal != actualVal {
 			appPro.Annotations[common.SecretKey] = secretVal

@@ -14,6 +14,7 @@ package multicluster
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -175,15 +176,17 @@ func listNamespaceResources(ctx context.Context, clusterID string, namespaces []
 		}
 		return nil, err
 	}
-	if len(namespaces) == 0 {
-		namespaces = append(namespaces, "")
+	// 如果命名空间为空，则查询所有命名空间，如果命名空间数量大于 5，则查全部命名空间并最后筛选命名空间，这样能减少并发请求
+	filterNamespace := namespaces
+	if len(namespaces) == 0 || len(namespaces) >= 5 {
+		filterNamespace = []string{""}
 	}
 	errGroups := errgroup.Group{}
 	errGroups.SetLimit(20)
 	result := []*storage.Resource{}
 	mux := sync.Mutex{}
 	// 根据命名空间列表，并发查询资源
-	for _, v := range namespaces {
+	for _, v := range filterNamespace {
 		ns := v
 		errGroups.Go(func() error {
 			ret, innerErr := cli.NewResClient(clusterConf, k8sRes).ListAllWithoutPerm(ctx, ns, opts)
@@ -196,8 +199,11 @@ func listNamespaceResources(ctx context.Context, clusterID string, namespaces []
 			mux.Lock()
 			defer mux.Unlock()
 			for _, item := range ret {
-				result = append(result, &storage.Resource{ClusterID: clusterID, ResourceType: kind,
-					Data: item.UnstructuredContent()})
+				// 过滤命名空间，如果命名空间为空，则表示查询全部命名空间或者集群域资源，这种直接通过。其他情况则筛选命名空间
+				if len(namespaces) == 0 || slice.StringInSlice(item.GetNamespace(), namespaces) {
+					result = append(result, &storage.Resource{ClusterID: clusterID, ResourceType: kind,
+						Data: item.UnstructuredContent()})
+				}
 			}
 			return nil
 		})
@@ -366,4 +372,29 @@ func viewQueryToQueryFilter(filter *entity.ViewFilter) QueryFilter {
 		Name:          filter.Name,
 		LabelSelector: ls,
 	}
+}
+
+// 检查集群是否在黑名单中，如果在黑名单中，则禁止从 api server 查询
+// 先匹配项目，再匹配集群
+func inBlackList(projectCode string, clusterIDs []*clusterRes.ClusterNamespaces) bool {
+	var reg string
+	for _, v := range config.G.MultiCluster.BlacklistForAPIServerQuery {
+		// 项目配置只允许一个，多个以最后一个为准
+		if v.ProjectCode == projectCode {
+			reg = v.ClusterIDReg
+		}
+	}
+	if reg == "" {
+		return false
+	}
+	regexp, err := regexp.Compile(reg)
+	if err != nil {
+		return false
+	}
+	for _, v := range clusterIDs {
+		if regexp.MatchString(v.ClusterID) {
+			return true
+		}
+	}
+	return false
 }

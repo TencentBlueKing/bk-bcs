@@ -133,7 +133,11 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	}
 
 	// update cluster masterNodes info
-	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster) // nolint
+	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
+	if err != nil {
+		blog.Errorf("ImportClusterNodesTask[%s] task %s %s update cluster fatal", taskID, taskID, stepName)
+		return err
+	}
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {

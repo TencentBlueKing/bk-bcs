@@ -737,6 +737,8 @@ type UpdateDesiredNodeAction struct {
 	// 兼容clusterManager和nodeManager
 	clusterCloud *cmproto.Cloud
 	task         *cmproto.Task
+
+	nodeScheduler bool
 }
 
 // NewUpdateDesiredNodeAction create update action for online cluster credential
@@ -802,6 +804,7 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 		AsOption:     ua.asOption,
 		Operator:     ua.req.Operator,
 		Manual:       ua.req.Manual,
+		NodeSchedule: ua.nodeScheduler,
 	})
 	if err != nil {
 		blog.Errorf("build scaling task for NodeGroup %s with cloudprovider %s failed, %s",
@@ -853,6 +856,12 @@ func (ua *UpdateDesiredNodeAction) getRelativeData() error {
 	ua.clusterCloud = clusterCloud
 
 	ua.asOption, _ = actions.GetAsOptionByClusterID(ua.model, ua.group.ClusterID)
+
+	nodeScheduler, err := utils.CheckClusterNodeNum(ua.model, ua.cluster)
+	if err != nil {
+		blog.Errorf("CheckClusterNodeNum[%s:%s] failed: %v", ua.cluster.ClusterID, ua.group.NodeGroupID, err)
+	}
+	ua.nodeScheduler = nodeScheduler
 
 	return nil
 }

@@ -136,7 +136,9 @@ func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 		return err
 	}
 	err = retry.Do(func() error {
-		_, terErr := ec2Cli.TerminateInstances(&ec2.TerminateInstancesInput{InstanceIds: aws.StringSlice(validateInstances)})
+		_, terErr := ec2Cli.TerminateInstances(&ec2.TerminateInstancesInput{
+			InstanceIds: aws.StringSlice(validateInstances),
+		})
 		if terErr != nil {
 			blog.Errorf("removeAsgInstances[%s] RemoveInstances failed: %v", taskID, terErr)
 			return terErr

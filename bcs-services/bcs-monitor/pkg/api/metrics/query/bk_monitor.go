@@ -45,9 +45,9 @@ func (h BKMonitorHandler) handleBKMonitorClusterMetric(c *rest.Context, promql s
 		return promclient.ResultData{}, err
 	}
 
-	_, nodeNameMatch, err := GetMasterNodeMatch(c.Request.Context(), c.ClusterId)
-	if err != nil {
-		return promclient.ResultData{}, err
+	_, nodeNameMatch, ok := GetMasterNodeMatchIgnoreErr(c.Request.Context(), c.ClusterId)
+	if !ok {
+		return promclient.ResultData{}, nil
 	}
 
 	nodeFormat := ""
@@ -77,9 +77,9 @@ func (h BKMonitorHandler) handleBKMonitorClusterMetric(c *rest.Context, promql s
 // GetClusterOverview 获取集群概览
 // nolint
 func (h BKMonitorHandler) GetClusterOverview(c *rest.Context) (ClusterOverviewMetric, error) {
-	_, nodeNameMatch, err := GetMasterNodeMatch(c.Request.Context(), c.ClusterId)
-	if err != nil {
-		return ClusterOverviewMetric{}, err
+	_, nodeNameMatch, ok := GetMasterNodeMatchIgnoreErr(c.Request.Context(), c.ClusterId)
+	if !ok {
+		return ClusterOverviewMetric{}, nil
 	}
 
 	nodeFormat := ""
@@ -94,19 +94,19 @@ func (h BKMonitorHandler) GetClusterOverview(c *rest.Context) (ClusterOverviewMe
 	}
 
 	promqlMap := map[string]string{
-		"cpu_used":       `sum(rate(bkmonitor:container_cpu_usage_seconds_total{bcs_cluster_id="%<clusterID>s"%<node>s}[2m]))`,
-		"cpu_request":    `sum(avg_over_time(bkmonitor:kube_pod_container_resource_requests_cpu_cores{bcs_cluster_id="%<clusterID>s"%<node>s}[2m]))`,
-		"cpu_total":      `sum(avg_over_time(bkmonitor:kube_node_status_allocatable_cpu_cores{bcs_cluster_id="%<clusterID>s"%<node>s}[2m]))`,
-		"memory_used":    `sum(avg_over_time(bkmonitor:container_memory_usage_bytes{bcs_cluster_id="%<clusterID>s"%<node>s}[2m]))`,
-		"memory_request": `sum(avg_over_time(bkmonitor:kube_pod_container_resource_requests_memory_bytes{bcs_cluster_id="%<clusterID>s"%<node>s}[2m]))`,
-		"memory_total":   `sum(avg_over_time(bkmonitor:kube_node_status_allocatable_memory_bytes{bcs_cluster_id="%<clusterID>s"%<node>s}[2m]))`,
+		"cpu_used":       `sum(rate(bkmonitor:container_cpu_usage_seconds_total{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m]))`,
+		"cpu_request":    `sum(avg_over_time(bkmonitor:kube_pod_container_resource_requests_cpu_cores{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m]))`,
+		"cpu_total":      `sum(avg_over_time(bkmonitor:kube_node_status_allocatable_cpu_cores{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m]))`,
+		"memory_used":    `sum(avg_over_time(bkmonitor:container_memory_usage_bytes{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m]))`,
+		"memory_request": `sum(avg_over_time(bkmonitor:kube_pod_container_resource_requests_memory_bytes{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m]))`,
+		"memory_total":   `sum(avg_over_time(bkmonitor:kube_node_status_allocatable_memory_bytes{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m]))`,
 		"disk_used": `(sum(avg_over_time(bkmonitor:node_filesystem_size_bytes{bcs_cluster_id="%<clusterID>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}[2m])) ` +
 			`- sum(avg_over_time(bkmonitor:node_filesystem_free_bytes{bcs_cluster_id="%<clusterID>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}[2m])))`,
 		"disk_total":   `sum(avg_over_time(bkmonitor:node_filesystem_size_bytes{bcs_cluster_id="%<clusterID>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}[2m]))`,
 		"diskio_used":  `sum(max by(bk_instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m])))`,
 		"diskio_total": `count(max by(bk_instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m])))`,
-		"pod_used":     `sum(avg_over_time(bkmonitor:kubelet_running_pods{bcs_cluster_id="%<clusterID>s"%<node>s}[2m]))`,
-		"pod_total":    `sum(avg_over_time(bkmonitor:kube_node_status_capacity_pods{bcs_cluster_id="%<clusterID>s"%<node>s}[2m]))`,
+		"pod_used":     `sum(avg_over_time(bkmonitor:kubelet_running_pods{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m]))`,
+		"pod_total":    `sum(avg_over_time(bkmonitor:kube_node_status_capacity_pods{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m]))`,
 	}
 
 	result, err := bkmonitor.QueryMultiValues(c.Request.Context(), h.url, h.bkBizID, utils.GetNowQueryTime().Unix(),
@@ -146,8 +146,8 @@ func (h BKMonitorHandler) GetClusterOverview(c *rest.Context) (ClusterOverviewMe
 // ClusterPodUsage implements Handler.
 // nolint
 func (h BKMonitorHandler) ClusterPodUsage(c *rest.Context) (promclient.ResultData, error) {
-	promql := `sum(avg_over_time(bkmonitor:kubelet_running_pods{bcs_cluster_id="%<clusterID>s"%<node>s}[2m])) / ` +
-		`sum(avg_over_time(bkmonitor:kube_node_status_capacity_pods{bcs_cluster_id="%<clusterID>s"%<node>s}[2m])) * 100`
+	promql := `sum(avg_over_time(bkmonitor:kubelet_running_pods{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) / ` +
+		`sum(avg_over_time(bkmonitor:kube_node_status_capacity_pods{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) * 100`
 
 	return h.handleBKMonitorClusterMetric(c, promql)
 }
@@ -155,8 +155,8 @@ func (h BKMonitorHandler) ClusterPodUsage(c *rest.Context) (promclient.ResultDat
 // ClusterCPUUsage implements Handler.
 // nolint
 func (h BKMonitorHandler) ClusterCPUUsage(c *rest.Context) (promclient.ResultData, error) {
-	promql := `sum(rate(bkmonitor:container_cpu_usage_seconds_total{bcs_cluster_id="%<clusterID>s"%<node>s}[2m])) / ` +
-		`sum(avg_over_time(bkmonitor:kube_node_status_allocatable_cpu_cores{bcs_cluster_id="%<clusterID>s"%<node>s}[2m])) * 100`
+	promql := `sum(rate(bkmonitor:container_cpu_usage_seconds_total{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) / ` +
+		`sum(avg_over_time(bkmonitor:kube_node_status_allocatable_cpu_cores{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) * 100`
 
 	return h.handleBKMonitorClusterMetric(c, promql)
 }
@@ -164,8 +164,8 @@ func (h BKMonitorHandler) ClusterCPUUsage(c *rest.Context) (promclient.ResultDat
 // ClusterCPURequestUsage implements Handler.
 // nolint
 func (h BKMonitorHandler) ClusterCPURequestUsage(c *rest.Context) (promclient.ResultData, error) {
-	promql := `sum(avg_over_time(bkmonitor:kube_pod_container_resource_requests_cpu_cores{bcs_cluster_id="%<clusterID>s"%<node>s}[2m])) / ` +
-		`sum(avg_over_time(bkmonitor:kube_node_status_allocatable_cpu_cores{bcs_cluster_id="%<clusterID>s"%<node>s}[2m])) * 100`
+	promql := `sum(avg_over_time(bkmonitor:kube_pod_container_resource_requests_cpu_cores{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) / ` +
+		`sum(avg_over_time(bkmonitor:kube_node_status_allocatable_cpu_cores{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) * 100`
 
 	return h.handleBKMonitorClusterMetric(c, promql)
 }
@@ -173,8 +173,8 @@ func (h BKMonitorHandler) ClusterCPURequestUsage(c *rest.Context) (promclient.Re
 // ClusterMemoryUsage implements Handler.
 // nolint
 func (h BKMonitorHandler) ClusterMemoryUsage(c *rest.Context) (promclient.ResultData, error) {
-	promql := `sum(avg_over_time(bkmonitor:container_memory_usage_bytes{bcs_cluster_id="%<clusterID>s"%<node>s}[2m])) / ` +
-		`sum(avg_over_time(bkmonitor:kube_node_status_allocatable_memory_bytes{bcs_cluster_id="%<clusterID>s"%<node>s}[2m])) * 100`
+	promql := `sum(avg_over_time(bkmonitor:container_memory_usage_bytes{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) / ` +
+		`sum(avg_over_time(bkmonitor:kube_node_status_allocatable_memory_bytes{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) * 100`
 
 	return h.handleBKMonitorClusterMetric(c, promql)
 }
@@ -182,8 +182,8 @@ func (h BKMonitorHandler) ClusterMemoryUsage(c *rest.Context) (promclient.Result
 // ClusterMemoryRequestUsage implements Handler.
 // nolint
 func (h BKMonitorHandler) ClusterMemoryRequestUsage(c *rest.Context) (promclient.ResultData, error) {
-	promql := `sum(avg_over_time(bkmonitor:kube_pod_container_resource_requests_memory_bytes{bcs_cluster_id="%<clusterID>s"%<node>s}[2m])) / ` +
-		`sum(avg_over_time(bkmonitor:kube_node_status_allocatable_memory_bytes{bcs_cluster_id="%<clusterID>s"%<node>s}[2m])) * 100`
+	promql := `sum(avg_over_time(bkmonitor:kube_pod_container_resource_requests_memory_bytes{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) / ` +
+		`sum(avg_over_time(bkmonitor:kube_node_status_allocatable_memory_bytes{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) * 100`
 
 	return h.handleBKMonitorClusterMetric(c, promql)
 }

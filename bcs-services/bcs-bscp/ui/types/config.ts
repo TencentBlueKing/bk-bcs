@@ -20,6 +20,8 @@ export interface IConfigVersion {
   status: {
     publish_status: string;
     released_groups: IReleasedGroup[];
+    fully_released: boolean;
+    fully_release?: boolean;
   };
 }
 
@@ -80,6 +82,7 @@ export interface IConfigEditParams {
   user_group?: string;
   privilege?: string;
   fileAP?: string;
+  revision_name?: string;
 }
 
 // kv配置文件编辑表单参数
@@ -123,10 +126,12 @@ export interface IReleasedGroup {
   mode: string;
   name: string;
   new_selector: {
-    labels_and: IGroupRuleItem[];
+    labels_and?: IGroupRuleItem[];
+    labels_or?: IGroupRuleItem[];
   };
   old_selector: {
-    labels_and: IGroupRuleItem[];
+    labels_and?: IGroupRuleItem[];
+    labels_or?: IGroupRuleItem[];
   };
   uid: string;
 }

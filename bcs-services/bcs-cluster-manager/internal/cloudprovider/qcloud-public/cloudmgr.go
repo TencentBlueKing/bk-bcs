@@ -121,7 +121,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	cls.ManageType = *tkeCluster.ClusterType
 
 	// cluster cloud basic setting
-	clusterBasicSettingByQCloud(cls, tkeCluster)
+	clusterBasicSettingByQCloud(cls, tkeCluster, opt)
 	// cluster cloud node setting
 	_ = clusterCloudDefaultNodeSetting(cls, false)
 	// cluster cloud advanced setting
@@ -272,13 +272,15 @@ func clusterAdvancedSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) 
 	}
 }
 
-func clusterBasicSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) {
+func clusterBasicSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster,
+	opt *cloudprovider.SyncClusterCloudInfoOption) {
 	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
 		OS:                        *cluster.ClusterOs,
 		Version:                   *cluster.ClusterVersion,
 		VersionName:               *cluster.ClusterVersion,
 		ClusterLevel:              *cluster.ClusterLevel,
 		IsAutoUpgradeClusterLevel: *cluster.AutoUpgradeClusterLevel,
+		Area:                      opt.Area,
 	}
 }
 

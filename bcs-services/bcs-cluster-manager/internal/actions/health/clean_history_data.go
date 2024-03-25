@@ -124,5 +124,6 @@ func (ha *CleanDBDataAction) Handle(
 		ha.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+
 	ha.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }

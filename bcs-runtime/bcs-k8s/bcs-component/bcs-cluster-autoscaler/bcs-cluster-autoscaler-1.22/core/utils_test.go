@@ -284,7 +284,7 @@ func TestGetNodeInfosForGroupsCache(t *testing.T) {
 	predicateChecker, err := simulator.NewTestPredicateChecker()
 	assert.NoError(t, err)
 
-	nodeInfoCache := make(map[string]*schedulerframework.NodeInfo)
+	nodeInfoCache := make(map[string]cacheItem)
 
 	// Fill cache
 	res, err := getNodeInfosForGroups([]*apiv1.Node{unready4, unready3, ready2, ready1}, nodeInfoCache,
@@ -347,7 +347,7 @@ func TestGetNodeInfosForGroupsCache(t *testing.T) {
 	// Fill cache manually
 	infoNg4Node6 := schedulerframework.NewNodeInfo()
 	infoNg4Node6.SetNode(ready6.DeepCopy())
-	nodeInfoCache = map[string]*schedulerframework.NodeInfo{"ng4": infoNg4Node6}
+	nodeInfoCache = map[string]cacheItem{"ng4": {NodeInfo: infoNg4Node6, added: time.Now()}}
 	// Check if cache was used
 	res, err = getNodeInfosForGroups([]*apiv1.Node{ready1, ready2}, nodeInfoCache,
 		provider1, registry, []*appsv1.DaemonSet{}, predicateChecker, nil)

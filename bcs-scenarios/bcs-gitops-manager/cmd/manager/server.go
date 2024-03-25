@@ -407,6 +407,7 @@ func (s *Server) initGitOpsProxy(router *mux.Router) error {
 		RepoServerUrl:  s.option.GitOps.RepoServer,
 		AppSetWebhook:  s.option.GitOps.AppsetControllerWebhook,
 		PublicProjects: s.option.PublicProjects,
+		AdminUsers:     s.option.AdminUsers,
 		PathPrefix:     common.GitOpsProxyURL,
 		JWTDecoder:     s.jwtClient,
 		IAMClient:      s.iamClient,
@@ -419,6 +420,10 @@ func (s *Server) initGitOpsProxy(router *mux.Router) error {
 		TraceOption: &proxy.TraceOption{
 			Endpoint: s.option.TraceConfig.Endpoint,
 			Token:    s.option.TraceConfig.Token,
+		},
+		MonitorOption: &proxy.MonitorOption{
+			Address: s.option.MonitorConfig.Address,
+			Port:    s.option.MonitorConfig.Port,
 		},
 		BCSStorageAPIUrl:   s.option.APIGatewayForCluster,
 		BCSStorageAPIToken: s.option.APIGatewayToken,

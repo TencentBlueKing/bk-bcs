@@ -728,6 +728,11 @@ service Config {
       body: "*"
     };
   }
+  rpc CredentialScopePreview(CredentialScopePreviewReq) returns (CredentialScopePreviewResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/credential/scope/preview"
+    };
+  }
 
   rpc CreateKv(CreateKvReq) returns (CreateKvResp) {
     option (google.api.http) = {
@@ -773,6 +778,24 @@ message UpdateCredentialScopeReq {
 }
 
 message UpdateCredentialScopeResp {}
+
+message CredentialScopePreviewReq {
+  uint32 biz_id = 1;
+  string app_name = 2;
+  string scope = 3;
+  string search_value = 4;
+  uint32 start = 5;
+  uint32 limit = 6;
+}
+
+message CredentialScopePreviewResp {
+  message Detail {
+    string name = 1;
+    string path = 2;
+  }
+  uint32 count = 1;
+  repeated Detail details = 2;
+}
 
 message ListCredentialScopesReq {
   uint32 biz_id = 1;
@@ -845,12 +868,9 @@ message CreateAppReq {
   uint32 biz_id = 1;
   string name = 2;
   string config_type = 3;  // config_type is enum type, source resource reference: pkg/dal/table/app.go
-  string mode = 4;         // deploy_type is enum type, source resource reference: pkg/dal/table/app.go
-  string memo = 5;
-  string reload_type = 6;
-  string reload_file_path = 7;
-  string alias = 8;
-  string data_type = 9;  // data_type is enum type, source resource reference: pkg/dal/table/app.go
+  string memo = 4;
+  string alias = 5;
+  string data_type = 6;  // data_type is enum type, source resource reference: pkg/dal/table/app.go
 }
 
 message CreateAppResp {
@@ -862,10 +882,8 @@ message UpdateAppReq {
   uint32 biz_id = 2;
   string name = 3;
   string memo = 4;
-  string reload_type = 5;
-  string reload_file_path = 6;
-  string alias = 7;
-  string data_type = 8;
+  string alias = 5;
+  string data_type = 6;
 }
 
 message DeleteAppReq {
@@ -1446,7 +1464,7 @@ message CreateTemplateReq {
   string name = 3;
   string path = 4;
   string memo = 5;
-  // string          revision_name     = 6;
+  string revision_name = 6;
   string revision_memo = 7;
   string file_type = 8;  // file_type is enum type
   string file_mode = 9;  // file_mode is enum type

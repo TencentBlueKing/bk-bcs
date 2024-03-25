@@ -195,9 +195,9 @@ func createLaunchTemplate(clusterName string, cli *api.EC2Client) (*api.LaunchTe
 					},
 				},
 			}
-			output, tmpErr := cli.CreateLaunchTemplate(launchTemplateCreateInput)
-			if tmpErr != nil {
-				return nil, tmpErr
+			output, creErr := cli.CreateLaunchTemplate(launchTemplateCreateInput)
+			if creErr != nil {
+				return nil, creErr
 			}
 			return &api.LaunchTemplate{
 				LaunchTemplateName:  output.LaunchTemplateName,

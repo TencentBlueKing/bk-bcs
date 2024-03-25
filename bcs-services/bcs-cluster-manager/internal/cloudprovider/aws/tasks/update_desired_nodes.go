@@ -299,7 +299,9 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 	// wait all nodes to be ready
 	err = loop.LoopDoFunc(timeCtx, func() error {
-		instances, desErr := ec2Cli.DescribeInstances(&ec2.DescribeInstancesInput{InstanceIds: aws.StringSlice(instanceIDs)})
+		instances, desErr := ec2Cli.DescribeInstances(&ec2.DescribeInstancesInput{
+			InstanceIds: aws.StringSlice(instanceIDs),
+		})
 		if desErr != nil {
 			blog.Errorf("checkClusterInstanceStatus[%s] DescribeInstances failed: %v", taskID, desErr)
 			return nil
@@ -335,10 +337,19 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	// timeout error
 	if errors.Is(err, context.DeadlineExceeded) {
 		running, failure := make([]string, 0), make([]string, 0)
+<<<<<<< HEAD
 		instances, desErr := ec2Cli.DescribeInstances(&ec2.DescribeInstancesInput{InstanceIds: aws.StringSlice(instanceIDs)})
 		if desErr != nil {
 			blog.Errorf("checkClusterInstanceStatus[%s] DescribeInstances failed: %v", taskID, desErr)
 			return nil, nil, desErr
+=======
+		instances, desErr := ec2Cli.DescribeInstances(&ec2.DescribeInstancesInput{
+			InstanceIds: aws.StringSlice(instanceIDs),
+		})
+		if desErr != nil {
+			blog.Errorf("checkClusterInstanceStatus[%s] DescribeInstances failed: %v", taskID, desErr)
+			return nil, nil, err
+>>>>>>> master
 		}
 
 		for _, inst := range instances {

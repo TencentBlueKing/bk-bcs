@@ -143,6 +143,20 @@ func SplitStringsChunks(strList []string, limit int) [][]string {
 	return ss
 }
 
+// SplitInt64sChunks split int64 chunk
+func SplitInt64sChunks(strList []int64, limit int) [][]int64 {
+	if limit <= 0 || len(strList) == 0 {
+		return nil
+	}
+	i := xslice.SplitToChunks(strList, limit)
+	ss, ok := i.([][]int64)
+	if !ok {
+		return nil
+	}
+
+	return ss
+}
+
 // ToJSONString convert data struct to json string
 func ToJSONString(data interface{}) string {
 	b, _ := json.Marshal(data)

@@ -69,18 +69,18 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	if group.CloudNodeGroupID != "" {
 		_, desErr := eksCli.DescribeNodegroup(&group.CloudNodeGroupID, &cluster.SystemID)
 		if desErr != nil {
-			if strings.Contains(desErr.Error(), "ResourceNotFoundException") { // nolint
-				blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
-					taskID, nodeGroupID, group.CloudNodeGroupID, stepName, stepName)
-				found = false
-			} else {
+			if !strings.Contains(desErr.Error(), "ResourceNotFoundException") {
 				blog.Errorf(
 					"DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] api in task %s step %s failed, %s",
-					taskID, nodeGroupID, taskID, stepName, desErr.Error())
-				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID, desErr.Error())
+					taskID, nodeGroupID, taskID, stepName, err)
+				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID, err)
 				_ = state.UpdateStepFailure(start, stepName, retErr)
 				return retErr
 			}
+
+			blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
+				taskID, nodeGroupID, group.CloudNodeGroupID, stepName, stepName)
+			found = false
 		}
 	}
 	if found && group.CloudNodeGroupID != "" {

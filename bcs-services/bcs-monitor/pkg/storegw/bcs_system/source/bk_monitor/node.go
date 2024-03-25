@@ -19,7 +19,6 @@ import (
 	"github.com/prometheus/prometheus/prompb"
 
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 )
 
@@ -29,9 +28,9 @@ const provider = "BK-Monitor"
 // handleNodeMetric xxx
 func (m *BKMonitor) handleNodeMetric(ctx context.Context, projectID, clusterID, nodeName string, promql string, start,
 	end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	nodeMatch, _, err := base.GetNodeMatchByName(ctx, clusterID, nodeName)
-	if err != nil {
-		return nil, err
+	nodeMatch, _, ok := base.GetNodeMatchByNameIngErr(ctx, clusterID, nodeName)
+	if !ok {
+		return nil, nil
 	}
 	params := map[string]interface{}{
 		"clusterID":  clusterID,
@@ -53,9 +52,9 @@ func (m *BKMonitor) handleNodeMetric(ctx context.Context, projectID, clusterID, 
 // GetNodeInfo 节点信息
 func (m *BKMonitor) GetNodeInfo(ctx context.Context, projectID, clusterID, nodeName string, t time.Time) (
 	*base.NodeInfo, error) {
-	nodeMatch, ips, err := base.GetNodeMatchByName(ctx, clusterID, nodeName)
-	if err != nil {
-		return nil, err
+	nodeMatch, ips, ok := base.GetNodeMatchByNameIngErr(ctx, clusterID, nodeName)
+	if !ok {
+		return nil, nil
 	}
 	params := map[string]interface{}{
 		"clusterID":  clusterID,
@@ -67,9 +66,9 @@ func (m *BKMonitor) GetNodeInfo(ctx context.Context, projectID, clusterID, nodeN
 	}
 
 	// 获取容器运行时的版本
-	version, err := base.GetNodeCRVersionByName(ctx, clusterID, nodeName)
-	if err != nil {
-		return nil, err
+	version, ok := base.GetNodeCRVersionByNameIngErr(ctx, clusterID, nodeName)
+	if !ok {
+		return nil, nil
 	}
 
 	info := &base.NodeInfo{}
@@ -283,9 +282,9 @@ func (m *BKMonitor) GetNodePodCount(ctx context.Context, projectID, clusterID, n
 func (m *BKMonitor) GetNodePodTotal(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	// 获取集群中最大可用pod数
-	nodes, err := k8sclient.GetNodeInfo(ctx, clusterID, node)
-	if err != nil {
-		return nil, err
+	nodes, ok := base.GetNodeInfoIngoreErr(ctx, clusterID, node)
+	if !ok {
+		return nil, nil
 	}
 	return base.GetSameSeries(start, end, step, float64(nodes.Status.Allocatable.Pods().Value()), nil), nil
 }

@@ -437,7 +437,8 @@ func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
 }
 
 // Handle create cluster request
-func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterReq, resp *cmproto.CreateClusterResp) { // nolint
+func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterReq, // nolint
+	resp *cmproto.CreateClusterResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("create cluster failed, req or resp is empty")
 		return

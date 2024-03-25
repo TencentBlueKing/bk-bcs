@@ -25,7 +25,7 @@ safe_source() {
     #shellcheck source=/dev/null
     source "${source_file}"
   else
-    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    echo "[ERROR]: FAIL to source, missing ${source_file}" >&2
     exit 1
   fi
 }
@@ -56,13 +56,15 @@ if ! helm version --short 2>/dev/null | grep -qoE "^v${HELM_VER}"; then
       if ! command -v ctr &>/dev/null; then
         utils::log "ERROR" "containerd client: ctr is not found"
       fi
-      if ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "${helm_image}"; then
-        if ! ctr -n k8s.io run --rm --mount type=bind,src=/usr/bin,dst=/tmp,options=rbind:rw \
-          "${helm_image}" helm-copy."$(date +%s)" /bin/cp -f /usr/bin/helm /tmp/; then
-          utils::log "ERROR" "containerd fail to run ${helm_image}"
+
+      if ! ctr -n k8s.io images list |grep ${helm_image};then
+        if ! ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "${helm_image}"; then
+          utils::log "ERROR" "pull helm image failed"
         fi
-      else
-        utils::log "ERROR" "pull helm image failed"
+      fi
+      if ! ctr -n k8s.io run --rm --mount type=bind,src=/usr/bin,dst=/tmp,options=rbind:rw \
+        "${helm_image}" helm-copy."$(date +%s)" /bin/cp -f /usr/bin/helm /tmp/; then
+          utils::log "ERROR" "containerd fail to run ${helm_image}"
       fi
       ;;
     *)

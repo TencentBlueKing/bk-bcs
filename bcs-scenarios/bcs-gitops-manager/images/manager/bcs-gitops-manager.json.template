@@ -35,6 +35,7 @@
   "apiconnecturl": "${bcsGitOpsManagerAPIConnectURL}",
   "clustersyncinterval": ${bcsGitOpsManagerClusterSyncInterval},
   "publicProjects": "${bcsGitOpsPublicProjects}",
+  "adminUsers": "${bcsGitOpsAdminUsers}",
   "gitops": {
     "service": "${bcsGitOpsManagerService}",
     "user": "${bcsGitOpsManagerServiceUser}",
@@ -72,5 +73,9 @@
   "metricConfig": {
     "appMetricNamespace": "${bcsMetricAppNamespace}",
     "appMetricName": "${bcsMetricAppName}"
+  },
+  "monitorConfig": {
+    "address": "${bcsMonitorAddress}",
+    "port": "${bcsMonitorPort}"
   }
 }

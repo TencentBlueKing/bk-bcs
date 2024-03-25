@@ -60,12 +60,12 @@ func (s *appHistoryStore) handleApplication(item *v1alpha1.Application) error {
 		return nil
 	}
 	history := item.Status.History.LastRevisionHistory()
-	hm, err := s.db.GetApplicationHistoryManifest(item.Name, string(item.UID), history.ID)
+	exist, err := s.db.CheckApplicationHistoryManifestExist(item.Name, string(item.UID), history.ID)
 	if err != nil {
 		return errors.Wrapf(err, "get application history '%s/%s/%d' manifest failed",
 			item.Name, item.UID, history.ID)
 	}
-	if hm != nil {
+	if exist {
 		return nil
 	}
 	applicationYaml, err := json.Marshal(item)
@@ -92,7 +92,7 @@ func (s *appHistoryStore) handleApplication(item *v1alpha1.Application) error {
 	if err != nil {
 		return errors.Wrapf(err, "marshal managed resources from application '%s' failed", item.Name)
 	}
-	hm = &dao.ApplicationHistoryManifest{
+	hm := &dao.ApplicationHistoryManifest{
 		Project:                item.Spec.Project,
 		Name:                   item.Name,
 		ApplicationUID:         string(item.UID),
@@ -106,7 +106,10 @@ func (s *appHistoryStore) handleApplication(item *v1alpha1.Application) error {
 		HistorySource:          string(source),
 		HistorySources:         string(sources),
 	}
-	if err = s.db.CreateApplicationHistoryManifest(hm); err != nil {
+	if err = hm.Encode(); err != nil {
+		blog.Warnf("application history manifest encode failed: %s", err.Error())
+	}
+	if err = s.db.SaveApplicationHistoryManifest(hm); err != nil {
 		return errors.Wrapf(err, "save application '%s/%s' history '%d' to db failed",
 			item.Name, item.UID, history.ID)
 	}

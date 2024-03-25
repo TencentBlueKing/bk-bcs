@@ -1,5 +1,12 @@
 <template>
-  <bk-sideslider width="640" quick-close :title="t('查看配置项')" :is-show="props.show" @closed="close">
+  <bk-sideslider
+    ref="sideSliderRef"
+    width="640"
+    quick-close
+    :title="t('查看配置项')"
+    :is-show="props.show"
+    @closed="close"
+    @shown="setEditorHeight">
     <div class="view-wrap">
       <bk-tab v-model:active="activeTab" type="card-grid" ext-cls="view-config-tab">
         <bk-tab-panel name="content" label="配置项信息">
@@ -14,6 +21,7 @@
                 <kvConfigContentEditor
                   :content="props.config.spec.value"
                   :editable="false"
+                  :height="editorHeight"
                   :languages="props.config.spec.kv_type" />
               </div>
             </bk-form-item>
@@ -34,7 +42,7 @@
   </bk-sideslider>
 </template>
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue';
+  import { ref, computed, watch, nextTick } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { IConfigKvType } from '../../../../../../../../types/config';
   import kvConfigContentEditor from '../../components/kv-config-content-editor.vue';
@@ -50,6 +58,8 @@
 
   const activeTab = ref('content');
   const isFormChange = ref(false);
+  const sideSliderRef = ref();
+  const editorHeight = ref(0);
 
   const metaData = computed(() => {
     const { content_spec, revision, spec } = props.config;
@@ -68,6 +78,13 @@
       }
     },
   );
+
+  const setEditorHeight = () => {
+    nextTick(() => {
+      const el = sideSliderRef.value.$el.querySelector('.view-wrap');
+      editorHeight.value = el.offsetHeight > 310 ? el.offsetHeight - 310 : 300;
+    });
+  };
 
   const close = () => {
     emits('update:show', false);

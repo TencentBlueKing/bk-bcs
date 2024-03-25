@@ -1,5 +1,12 @@
 <template>
-  <bk-sideslider width="640" :title="t('查看配置文件')" :quick-close="true" :is-show="props.show" @closed="close">
+  <bk-sideslider
+    ref="sideSliderRef"
+    width="640"
+    :title="t('查看配置文件')"
+    :quick-close="true"
+    :is-show="props.show"
+    @closed="close"
+    @shown="setEditorHeight">
     <bk-loading :loading="detailLoading" class="config-loading-container">
       <bk-tab v-model:active="activeTab" type="card-grid" ext-cls="view-config-tab">
         <bk-tab-panel name="content" label="配置项信息">
@@ -22,6 +29,7 @@
                 :content="content as string"
                 :editable="false"
                 :show-tips="false"
+                :height="editorHeight"
                 :variables="variables" />
             </bk-form-item>
           </bk-form>
@@ -41,7 +49,7 @@
   </bk-sideslider>
 </template>
 <script setup lang="ts">
-  import { ref, watch } from 'vue';
+  import { nextTick, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import { TextFill } from 'bkui-vue/lib/icon';
@@ -119,6 +127,8 @@
   const variables = ref<IVariableEditParams[]>([]);
   const variablesLoading = ref(false);
   const tplSpaceId = ref(0);
+  const sideSliderRef = ref();
+  const editorHeight = ref(0);
 
   watch(
     () => props.show,
@@ -282,6 +292,13 @@
     const getContent = props.type === 'template' ? downloadTemplateContent : downloadConfigContent;
     const res = await getContent(props.bkBizId, props.id, signature);
     fileDownload(res, name);
+  };
+
+  const setEditorHeight = () => {
+    nextTick(() => {
+      const el = sideSliderRef.value.$el.querySelector('.config-loading-container');
+      editorHeight.value = el.offsetHeight > 510 ? el.offsetHeight - 310 : 300;
+    });
   };
 
   const close = () => {

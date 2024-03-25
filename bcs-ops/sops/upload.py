@@ -34,16 +34,16 @@ REPO_FILE = os.environ.get("REPO_FILE", "bcs-ops.tar.gz")
 SOPS_FILE = os.environ.get("SOPS_FILE", "bcs_bk_sops_common.dat")
 SOPS_PAT = os.environ.get("SOPS_PAT", r"SCRIPT_URL_PLACEHOLDER")
 
-BKAPI_HOST = os.environ["BKAPI_HOST"]
-APP_CODE = os.environ["APP_CODE"]
-APP_SECRET = os.environ["APP_SECRET"]
+BKAPI_HOST = os.environ.get("BKAPI_HOST", "")
+APP_CODE = os.environ.get("APP_CODE","")
+APP_SECRET = os.environ.get("APP_SECRET","")
 
-REPO_HOST = os.environ["REPO_HOST"]
-REPO_PROJECT = os.environ["REPO_PROJECT"]
-REPO_BUCKET = os.environ["REPO_BUCKET"]
-REPO_PATH = os.environ["REPO_PATH"]
-REPO_USER = os.environ["REPO_USER"]
-REPO_PASSWD = os.environ["REPO_PASSWD"]
+REPO_HOST = os.environ.get("REPO_HOST", "")
+REPO_PROJECT = os.environ.get("REPO_PROJECT", "")
+REPO_BUCKET = os.environ.get("REPO_BUCKET", "")
+REPO_PATH = os.environ.get("REPO_PATH", "")
+REPO_USER = os.environ.get("REPO_USER", "")
+REPO_PASSWD = os.environ.get("REPO_PASSWD", "")
 
 
 def bkrepo_upload(file: str, bkrepo_url: str, override: bool = True) -> bool:
@@ -89,6 +89,7 @@ class SOPS_UPLOAD_API:
         logging.debug(f"sub_pat: {sub_pat}, sub_str: {sub_str}")
         if isinstance(self.data, dict):
             self.data = ujson.dumps(self.data, sort_keys=True)
+        logging.debug(f"data: {self.data}")
         if re.search(sub_pat, self.data):
             self.data = re.sub(sub_pat, sub_str, self.data)
         else:
@@ -131,6 +132,10 @@ class SOPS_UPLOAD_API:
         logging.error(f"Upload failed: {response.text}")
         return False
 
+    def export(self, filename) -> None:
+        with open(filename, 'wb')  as f:
+            f.write(self.data.encode("utf-8"))
+
 
 def main():
     # set log-level
@@ -142,25 +147,38 @@ def main():
     # bcs sops file
 
     parser = argparse.ArgumentParser(description="Upload bcs scripts package to bkrepo")
-    parser.add_argument(
-        "upload",
+    subparsers = parser.add_subparsers(dest="command")
+
+    upload_parser = subparsers.add_parser("upload", help="upload file to bkrepo or sops")
+    upload_parser.add_argument(
+        "upload_options",
         choices=["bkrepo", "sops"],
         type=str,
-        default="bkrepo",
         help="upload to [sops] or [bkrepo]",
     )
+
+    convert_parser = subparsers.add_parser("modify", help="modify sops_common template")
+    convert_parser.add_argument("bkrepo_url", type=str, help="replace [bkrepo_url] to pattern: SCRIPT_URL_PLACEHOLDER")
+    convert_parser.add_argument("save_path", type=str, help="sops_common template save path", nargs='?',default="bcs_bk_sops_common.dat")
+
+
     args = parser.parse_args()
-    if args.upload:
-        if args.upload == "bkrepo":
+
+    if args.command == "upload":
+        print('start upload...')
+        if args.upload_options == "bkrepo":
             bkrepo_upload(REPO_FILE, bkrepo_url, override=True)
-        elif args.upload == "sops":
+        elif args.upload_options == "sops":
             s = SOPS_UPLOAD_API(SOPS_FILE, BKAPI_HOST, APP_CODE, APP_SECRET)
             s.replace_data(SOPS_PAT, bkrepo_url)
             s.upload()
-        else:
-            raise ValueError(
-                "Invalid choice for upload, please choose either 'sops' or 'bkrepo'"
-            )
+    elif args.command == "modify":
+        url =  args.bkrepo_url.replace("/", r"\\/")
+        logging.info(f"url: {url}")
+        filename = args.save_path
+        s = SOPS_UPLOAD_API(SOPS_FILE, "", "", "")
+        s.replace_data(url, SOPS_PAT)
+        s.export(filename)
 
 
 if __name__ == "__main__":

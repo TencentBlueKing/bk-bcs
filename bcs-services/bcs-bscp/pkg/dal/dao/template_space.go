@@ -247,6 +247,8 @@ func (dao *templateSpaceDao) CreateDefault(kit *kit.Kit, bizID uint32) (uint32, 
 		return tmplSpace.ID, nil
 	}
 
+	// use system user to create default template space
+	kit.User = constant.BKSystemUser
 	g := &table.TemplateSpace{
 		ID: 0,
 		Spec: &table.TemplateSpaceSpec{

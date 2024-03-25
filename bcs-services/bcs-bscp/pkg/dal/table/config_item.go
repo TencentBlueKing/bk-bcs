@@ -394,12 +394,6 @@ type FilePermission struct {
 }
 
 const (
-	// Json file format
-	Json FileFormat = "json"
-	// Yaml file format
-	Yaml FileFormat = "yaml"
-	// Xml file format
-	Xml FileFormat = "xml"
 	// Text file format
 	Text FileFormat = "text"
 	// Binary file format
@@ -412,9 +406,6 @@ type FileFormat string
 // Validate the file format is supported or not.
 func (f FileFormat) Validate() error {
 	switch f {
-	case Json:
-	case Yaml:
-	case Xml:
 	case Text:
 	case Binary:
 	default:

@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 )
 
 // NewGitOpsProxy create proxy instance
@@ -78,7 +79,7 @@ func (ops *ArgocdProxy) Stop() {
 func (ops *ArgocdProxy) initArgoPathHandler() error {
 	argoSession := session.NewArgoSession(ops.option)
 	secretSession := session.NewSecretSession(ops.option.SecretOption)
-	monitorSession := session.NewMonitorSession(nil)
+	monitorSession := session.NewMonitorSession(ops.option.MonitorOption)
 	middleware := mw.NewMiddlewareHandler(ops.option, argoSession, secretSession, monitorSession)
 	if err := middleware.Init(); err != nil {
 		return errors.Wrapf(err, "middleware init failed")
@@ -143,8 +144,12 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware: middleware,
 	}
 	analysisPlugin := &AnalysisPlugin{
-		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/analysis").Subrouter(),
-		storage:        ops.option.Storage,
+		Router:  ops.PathPrefix(common.GitOpsProxyURL + "/api/analysis").Subrouter(),
+		storage: ops.option.Storage,
+		secretStore: secretstore.NewSecretStore(&secretstore.SecretStoreOptions{
+			Address: ops.option.SecretOption.Address,
+			Port:    ops.option.SecretOption.Port,
+		}),
 		middleware:     middleware,
 		analysisClient: analysis.GetAnalysisClient(),
 	}

@@ -46,20 +46,6 @@ func (rs *ReleasedService) GetMatchedRelease(kt *kit.Kit, meta *types.AppInstanc
 		return 0, errf.New(errf.InvalidParameter, "only supports File and KV configuration types.")
 	}
 
-	switch am.Mode {
-	case table.Namespace:
-		if len(meta.Namespace) == 0 {
-			return 0, errf.New(errf.InvalidParameter, "app works at namespace mode, "+
-				"but request namespace is empty")
-		}
-	case table.Normal:
-		if len(meta.Namespace) != 0 {
-			return 0, errf.New(errf.InvalidParameter, "app works at normal mode, but namespace is set")
-		}
-	default:
-		return 0, errf.Newf(errf.InvalidParameter, "unsupported app mode: %s", am.Mode)
-	}
-
 	groups, err := rs.listReleasedGroups(kt, meta)
 	if err != nil {
 		return 0, err

@@ -139,7 +139,6 @@
       if (configForm.value.file_type === 'binary') {
         size = Number((content.value as IFileConfigContentSummary).size);
       } else {
-        if (typeof content.value === 'string' && !content.value.endsWith('\n')) content.value += '\n';
         const stringContent = content.value as string;
         size = new Blob([stringContent]).size;
         await updateConfigContent(props.bkBizId, props.appId, stringContent, sign);

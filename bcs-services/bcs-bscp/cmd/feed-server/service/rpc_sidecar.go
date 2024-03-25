@@ -96,28 +96,6 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 	return &pbfs.HandshakeResp{ApiVersion: sfs.CurrentAPIVersion, Payload: payloadBytes}, nil
 }
 
-// getAppReload get app reload option.
-// nolint: unused
-func (s *Service) getAppReload(kt *kit.Kit, bizID uint32, appIDs []uint32) (map[uint32]*sfs.Reload, error) {
-	appReloadList := make(map[uint32]*sfs.Reload)
-
-	for _, appID := range appIDs {
-		appMeta, err := s.bll.AppCache().GetMeta(kt, bizID, appID)
-		if err != nil {
-			return nil, err
-		}
-
-		appReloadList[appID] = &sfs.Reload{
-			ReloadType: appMeta.Reload.ReloadType,
-			FileReloadSpec: &sfs.FileReloadSpec{
-				ReloadFilePath: appMeta.Reload.FileReloadSpec.ReloadFilePath,
-			},
-		}
-	}
-
-	return appReloadList, nil
-}
-
 // Watch the change message from feed server for sidecar.
 func (s *Service) Watch(swm *pbfs.SideWatchMeta, fws pbfs.Upstream_WatchServer) error {
 
@@ -330,7 +308,8 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 
 	fileMetas := make([]*pbfs.FileMeta, 0, len(metas.ConfigItems))
 	for _, ci := range metas.ConfigItems {
-		if req.Key != "" && !tools.MatchConfigItem(req.Key, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name) {
+		ok, _ := tools.MatchConfigItem(req.Key, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
+		if req.Key != "" && !ok {
 			continue
 		}
 		app, err := s.bll.AppCache().GetMeta(im.Kit, req.BizId, ci.ConfigItemAttachment.AppId)

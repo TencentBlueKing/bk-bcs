@@ -62,7 +62,7 @@ func CreateECKClusterTask(taskID string, stepName string) error {
 		CloudID:   cloudID,
 	})
 	if err != nil {
-		blog.Errorf("CreateECKClusterTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s step %s failed, %s",
+		blog.Errorf("CreateECKClusterTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s step %s failed %s",
 			taskID, clusterID, taskID, stepName, err)
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -73,7 +73,7 @@ func CreateECKClusterTask(taskID string, stepName string) error {
 	for _, ngID := range strings.Split(nodeGroupIDs, ",") {
 		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if errGet != nil {
-			blog.Errorf("CreateECKClusterTask[%s]: GetNodeGroupByGroupID for cluster %s in task %s step %s failed, %s",
+			blog.Errorf("CreateECKClusterTask[%s]: GetNodeGroupByGroupID for cluster %s in task %s step %s failed %s",
 				taskID, clusterID, taskID, stepName, err)
 			retErr := fmt.Errorf("get nodegroup information failed, %s", err)
 			_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -523,8 +523,8 @@ func CheckECKNodesGroupStatusTask(taskID string, stepName string) error {
 		CloudID:   cloudID,
 	})
 	if err != nil {
-		blog.Errorf("CheckECKNodesGroupStatusTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s step %s "+
-			"failed, %s", taskID, clusterID, taskID, stepName, err)
+		blog.Errorf("CheckECKNodesGroupStatusTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
+			"step %s failed %s", taskID, clusterID, taskID, stepName, err)
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -676,9 +676,9 @@ func UpdateECKNodesGroupToDBTask(taskID string, stepName string) error {
 		CloudID:   cloudID,
 	})
 	if err != nil {
-		blog.Errorf("UpdateECKNodesGroupToDBTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s step %s "+
-			"failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+		blog.Errorf("UpdateECKNodesGroupToDBTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
+			"step %s failed %s", taskID, clusterID, taskID, stepName, err)
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}

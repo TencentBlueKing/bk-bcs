@@ -52,14 +52,17 @@ type Options struct {
 	APIConnectURL        string                          `json:"apiconnecturl,omitempty"`
 	ClusterSyncInterval  uint                            `json:"clustersyncinterval,omitempty"`
 	GitOps               *GitOps                         `json:"gitops,omitempty"`
-	PublicProjectsStr    string                          `json:"publicProjects"`
+	PublicProjectsStr    string                          `json:"publicProjects,omitempty"`
 	PublicProjects       []string                        `json:"-"`
 	SecretServer         *secretstore.SecretStoreOptions `json:"secretserver,omitempty"`
 	Auth                 *common.AuthConfig              `json:"auth,omitempty"`
 	TraceConfig          *common.TraceConfig             `json:"traceConfig,omitempty"`
-	AuditConfig          *common.AuditConfig             `json:"auditConfig"`
-	DBConfig             *common.DBConfig                `json:"dbConfig"`
-	MetricConfig         *common.MetricConfig            `json:"metricConfig"`
+	AuditConfig          *common.AuditConfig             `json:"auditConfig,omitempty"`
+	DBConfig             *common.DBConfig                `json:"dbConfig,omitempty"`
+	MetricConfig         *common.MetricConfig            `json:"metricConfig,omitempty"`
+	MonitorConfig        *common.MonitorConfig           `json:"monitorConfig,omitempty"`
+	AdminUsersStr        string                          `json:"adminUsers,omitempty"`
+	AdminUsers           []string                        `json:"-"`
 }
 
 // DefaultOptions for gitops-manager
@@ -153,6 +156,9 @@ func (opt *Options) Validate() error {
 	}
 	if opt.PublicProjectsStr != "" {
 		opt.PublicProjects = strings.Split(opt.PublicProjectsStr, ",")
+	}
+	if opt.AdminUsersStr != "" {
+		opt.AdminUsers = strings.Split(opt.AdminUsersStr, ",")
 	}
 	if opt.SecretServer == nil || opt.SecretServer.Address == "" || opt.SecretServer.Port == "" {
 		return fmt.Errorf("lost secret service address or port")

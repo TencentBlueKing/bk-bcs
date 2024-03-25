@@ -146,7 +146,9 @@ IPv6EOF
 ---
 EOF
 
-  k8s::config_master_vip add false ${EXTERNAL_VIP},${EXTERNAL_HOST} ${config_file}
+  if [[ -n "${EXTERNAL_VIP}" ]] || [[ -n "${EXTERNAL_HOST}" ]];then
+    k8s::config_master_vip add false ${EXTERNAL_VIP},${EXTERNAL_HOST} ${config_file}
+  fi
 }
 
 render_kubelet() {
@@ -223,7 +225,7 @@ IPv6EOF
 $(
     if [[ -n ${K8S_EXTRA_ARGS} ]]; then
       cat <<KUBELET_EOF
-    ${K8S_EXTRA_ARGS}
+$(echo "${K8S_EXTRA_ARGS}" | sed "s/:\s*/: /g; s/;\s*/\n    /g;s/^\s*/    /g")
 KUBELET_EOF
     fi
   )
@@ -313,7 +315,7 @@ safe_source() {
     #shellcheck source=/dev/null
     source "${source_file}"
   else
-    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    echo "[ERROR]: FAIL to source, missing ${source_file}" >&2
     exit 1
   fi
 }

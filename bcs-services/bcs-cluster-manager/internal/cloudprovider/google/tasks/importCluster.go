@@ -205,13 +205,6 @@ func importClusterNodesToCM(
 			node = &proto.Node{}
 		)
 
-		ipv4, ipv6 := utils.GetNodeIPAddress(&v)
-		node.ZoneName = nodeZone
-		node.InnerIP = utils.SliceToString(ipv4)
-		node.InnerIPv6 = utils.SliceToString(ipv6)
-		node.ClusterID = clusterID
-		node.Status = common.StatusRunning
-
 		instance, err := gceCli.GetInstance(ctx, nodeZone, v.Name)
 		if err == nil {
 			node = api.InstanceToNode(gceCli, instance)
@@ -221,6 +214,13 @@ func importClusterNodesToCM(
 			node.InstanceType = v.Labels[utils.NodeInstanceTypeFlag]
 			node.NodeName = v.Labels[utils.NodeNameFlag]
 		}
+
+		ipv4, ipv6 := utils.GetNodeIPAddress(&v)
+		node.ZoneName = nodeZone
+		node.InnerIP = utils.SliceToString(ipv4)
+		node.InnerIPv6 = utils.SliceToString(ipv6)
+		node.ClusterID = clusterID
+		node.Status = common.StatusRunning
 
 		err = cloudprovider.GetStorageModel().CreateNode(ctx, node)
 		if err != nil {
