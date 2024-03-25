@@ -403,9 +403,6 @@
 </script>
 
 <style scoped lang="scss">
-  .section {
-    margin-top: 32px;
-  }
   .search-wrap {
     position: relative;
     display: flex;

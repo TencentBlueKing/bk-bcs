@@ -31,10 +31,8 @@
       display: flex;
       align-items: center;
       height: 24px;
-      .title {
-        color: #313238;
-        margin-right: 16px;
-      }
+      margin-bottom: 16px;
+      color: #313238;
     }
     .container {
       height: calc(100% - 24px);

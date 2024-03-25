@@ -172,7 +172,7 @@
       module: 'client',
       name: t('客户端管理'),
       children: [
-        // { id: 'client-statistics', module: 'client-statistics', name: t('客户端统计') },
+        { id: 'client-statistics', module: 'client-statistics', name: t('客户端统计') },
         { id: 'client-search', module: 'client-search', name: t('客户端查询') },
         { id: 'credentials-management', module: 'credentials', name: t('客户端密钥') },
       ],

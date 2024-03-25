@@ -4,7 +4,7 @@
       v-for="btn in btnList"
       :key="btn.type"
       :class="['icon-wrap', { current: currentType === btn.type }]"
-      @click="currentType = btn.type">
+      @click="handleTypeChange(btn.type)">
       <span :class="['bk-bscp-icon', btn.icon]"></span>
     </div>
   </div>
@@ -12,7 +12,11 @@
 
 <script lang="ts" setup>
   import { ref } from 'vue';
-  const currentType = ref('pie');
+  const props = defineProps<{
+    currentType: string;
+  }>();
+  const currentType = ref(props.currentType);
+  const emits = defineEmits(['update:currentType']);
   const btnList = ref([
     {
       type: 'pie',
@@ -27,6 +31,11 @@
       icon: 'icon-reduce',
     },
   ]);
+
+  const handleTypeChange = (type: string) => {
+    currentType.value = type;
+    emits('update:currentType', type);
+  };
 </script>
 
 <style scoped lang="scss">
