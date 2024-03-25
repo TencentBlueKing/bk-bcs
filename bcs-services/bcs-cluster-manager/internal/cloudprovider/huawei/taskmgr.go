@@ -39,8 +39,8 @@ func newtask() *Task {
 	}
 
 	// import task
-	task.works[importClusterNodesTask] = tasks.ImportClusterNodesTask
-	task.works[registerClusterKubeConfigTask] = tasks.RegisterClusterKubeConfigTask
+	task.works[importClusterNodesStep.StepMethod] = tasks.ImportClusterNodesTask
+	task.works[registerClusterKubeConfigStep.StepMethod] = tasks.RegisterClusterKubeConfigTask
 
 	return task
 }
@@ -97,40 +97,16 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 		ForceTerminate: false,
 	}
 
+	// generate taskName
+	taskName := fmt.Sprintf(importClusterTaskTemplate, cls.ClusterID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
 	// setting all steps details
+	importCluster := &ImportClusterTaskOption{Cluster: cls}
 	// step1: import cluster registerKubeConfigStep
-	registerKubeConfigStep := &proto.Step{
-		Name:       registerClusterKubeConfigTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      3,
-		Start:      nowStr,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: registerClusterKubeConfigTask,
-		TaskName:   "注册集群kubeConfig认证",
-	}
-	registerKubeConfigStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
-	registerKubeConfigStep.Params[cloudprovider.CloudIDKey.String()] = cls.Provider
-
-	task.Steps[registerClusterKubeConfigTask] = registerKubeConfigStep
-	task.StepSequence = append(task.StepSequence, registerClusterKubeConfigTask)
-
+	importCluster.BuildRegisterKubeConfigStep(task)
 	// step2: import cluster nodes step
-	importNodesStep := &proto.Step{
-		Name:       importClusterNodesTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      3,
-		Start:      nowStr,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: importClusterNodesTask,
-		TaskName:   "导入集群节点",
-	}
-	importNodesStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
-	importNodesStep.Params[cloudprovider.CloudIDKey.String()] = cls.Provider
-
-	task.Steps[importClusterNodesTask] = importNodesStep
-	task.StepSequence = append(task.StepSequence, importClusterNodesTask)
+	importCluster.BuildImportClusterNodesStep(task)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

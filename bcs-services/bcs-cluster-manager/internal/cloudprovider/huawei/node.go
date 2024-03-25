@@ -10,20 +10,16 @@
  * limitations under the License.
  */
 
-// Package api xxx
-package api
+// Package huawei xxx
+package huawei
 
 import (
 	"fmt"
 	"sync"
 
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/global"
-	iam "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3"
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/region"
-
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
 )
 
 var nodeMgr sync.Once
@@ -31,32 +27,8 @@ var nodeMgr sync.Once
 func init() {
 	nodeMgr.Do(func() {
 		// init Node
-		cloudprovider.InitNodeManager("huawei", &NodeManager{})
+		cloudprovider.InitNodeManager(cloudName, &NodeManager{})
 	})
-}
-
-// GetIamClient get iam client from common option
-func GetIamClient(opt *cloudprovider.CommonOption) (*iam.IamClient, error) {
-	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
-		return nil, cloudprovider.ErrCloudCredentialLost
-	}
-
-	auth, err := global.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).SafeBuild()
-	if err != nil {
-		return nil, err
-	}
-
-	rn, err := region.SafeValueOf("cn-north-1")
-	if err != nil {
-		return nil, err
-	}
-
-	hcClient, err := iam.IamClientBuilder().WithCredential(auth).WithRegion(rn).SafeBuild()
-
-	// 创建IAM client
-	return iam.NewIamClient(
-		hcClient,
-	), nil
 }
 
 // NodeManager CVM relative API management
@@ -80,19 +52,18 @@ func (nm *NodeManager) GetCVMImageIDByImageName(imageName string, opt *cloudprov
 
 // GetCloudRegions get cloud regions
 func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
-	client, err := GetIamClient(opt)
+	client, err := api.GetIamClient(opt)
 	if err != nil {
 		return nil, err
 	}
 
-	req := model.KeystoneListRegionsRequest{}
-	rsp, err := client.KeystoneListRegions(&req)
+	cloudRegions, err := client.GetCloudRegions()
 	if err != nil {
 		return nil, err
 	}
 
 	regions := make([]*proto.RegionInfo, 0)
-	for _, v := range *rsp.Regions {
+	for _, v := range cloudRegions {
 		regions = append(regions, &proto.RegionInfo{
 			Region:      v.Id,
 			RegionName:  v.Locales.ZhCn,
@@ -108,7 +79,7 @@ func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Li
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// ListKeyPairs describe all ssh keyPairs https://cloud.tencent.com/document/product/213/15699
+// ListKeyPairs describe all ssh keyPairs
 func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.ListNetworksOption) ([]*proto.KeyPair, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
@@ -125,17 +96,19 @@ func (nm *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*pr
 
 // GetZoneList get zoneList
 func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*proto.ZoneInfo, error) {
+	zones, err := api.GetAvailabilityZones(&opt.CommonOption)
+	if err != nil {
+		return nil, err
+	}
+
 	zoneInfos := make([]*proto.ZoneInfo, 0)
-	for _, v := range Zones {
-		for x, y := range v {
-			zone := proto.ZoneInfo{
-				ZoneID:    y,
-				Zone:      fmt.Sprintf("%d", x+1),
-				ZoneName:  fmt.Sprintf("可用区%d", x+1),
-				ZoneState: "AVAILABLE",
-			}
-			zoneInfos = append(zoneInfos, &zone)
-		}
+	for k, v := range zones {
+		zoneInfos = append(zoneInfos, &proto.ZoneInfo{
+			ZoneID:    v.ZoneName,
+			Zone:      fmt.Sprintf("%d", k+1),
+			ZoneName:  fmt.Sprintf("可用区%d", k+1),
+			ZoneState: "AVAILABLE",
+		})
 	}
 
 	return zoneInfos, nil
