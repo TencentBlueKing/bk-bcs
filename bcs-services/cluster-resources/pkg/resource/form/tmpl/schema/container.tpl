@@ -552,6 +552,8 @@ resource:
                         value: tke.cloud.tencent.com/eni-ip
                       - label: {{ i18n "算力-GPU" .lang }}
                         value: tencent.com/fgpu
+                      - label: {{ i18n "临时存储" .lang }}
+                        value: ephemeral-storage
                 ui:rules:
                   - required
                   - validator: "{{`{{`}} $self.widgetNode.parent.parent.children.every(node => node.children[0].instance === $self || node.children[0].instance.value !== $self.value) {{`}}`}}"
@@ -607,6 +609,8 @@ resource:
                         value: tke.cloud.tencent.com/eni-ip
                       - label: {{ i18n "算力-GPU" .lang }}
                         value: tencent.com/fgpu
+                      - label: {{ i18n "临时存储" .lang }}
+                        value: ephemeral-storage                      
                 ui:rules:
                   - required
                   - validator: "{{`{{`}} $self.widgetNode.parent.parent.children.every(node => node.children[0].instance === $self || node.children[0].instance.value !== $self.value) {{`}}`}}"
