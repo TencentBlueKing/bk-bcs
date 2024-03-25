@@ -148,8 +148,8 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	return nil
 }
 
-func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
-	kubeConfigByte, err := base64.StdEncoding.DecodeString(data.Cluster.KubeConfig)
+func importClusterInstances(info *cloudprovider.CloudDependBasicInfo) error {
+	kubeConfigByte, err := base64.StdEncoding.DecodeString(info.Cluster.KubeConfig)
 	if err != nil {
 		return fmt.Errorf("decode kube config failed: %v", err)
 	}
@@ -171,7 +171,7 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		return fmt.Errorf("list nodes failed, %s", err.Error())
 	}
 
-	err = importClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID)
+	err = importClusterNodesToCM(context.Background(), nodes.Items, info)
 	if err != nil {
 		return err
 	}
@@ -179,21 +179,19 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	return nil
 }
 
-func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error {
+func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node,
+	info *cloudprovider.CloudDependBasicInfo) error {
+	//获取zones
+	zones, err := api.GetAvailabilityZones(info.CmOption)
+	if err != nil {
+		return err
+	}
+
 	for _, n := range nodes {
 		var (
-			nodeRegion, nodeZone string
-			node                 = &proto.Node{}
+			nodeZone string
+			node     = &proto.Node{}
 		)
-
-		region, ok := n.Labels[utils.RegionKubernetesFlag]
-		if ok {
-			nodeRegion = region
-		}
-		region, ok = n.Labels[utils.RegionTopologyFlag]
-		if ok && nodeZone == "" {
-			nodeRegion = region
-		}
 
 		zone, ok := n.Labels[utils.ZoneKubernetesFlag]
 		if ok {
@@ -208,20 +206,17 @@ func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, cluster
 		node.ZoneID = nodeZone
 		node.InnerIP = utils.SliceToString(ipv4)
 		node.InnerIPv6 = utils.SliceToString(ipv6)
-		node.ClusterID = clusterID
+		node.ClusterID = info.Cluster.ClusterID
 		node.Status = common.StatusRunning
 		node.NodeID = n.Spec.ProviderID
 		node.NodeName = n.Name
 		node.InstanceType = n.Labels[utils.NodeInstanceTypeFlag]
 
-		if nodeRegion != "" && nodeZone != "" {
-			zones, ok := api.Zones[region]
-			if ok {
-				for k, v := range zones {
-					if v == nodeZone {
-						node.Zone = uint32(k + 1)
-						node.ZoneName = fmt.Sprintf("可用区%d", k+1)
-					}
+		if nodeZone != "" {
+			for k, v := range zones {
+				if v.ZoneName == nodeZone {
+					node.Zone = uint32(k + 1)
+					node.ZoneName = fmt.Sprintf("可用区%d", k+1)
 				}
 			}
 		}

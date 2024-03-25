@@ -63,6 +63,7 @@ func NewEcsClient(opt *cloudprovider.CommonOption) (*EcsClient, error) {
 	return &EcsClient{&ecs.EcsClient{HcClient: hcClient}}, nil
 }
 
+// GetAvailabilityZones 获取region可用区
 func GetAvailabilityZones(opt *cloudprovider.CommonOption) ([]model.NovaAvailabilityZone, error) {
 	client, err := NewEcsClient(opt)
 	if err != nil {
