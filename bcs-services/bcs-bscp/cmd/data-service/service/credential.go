@@ -268,6 +268,7 @@ func (s *Service) getFileConfileItems(kt *kit.Kit, appID, bizID uint32, scope, s
 		if ok {
 			preview = append(preview, &pbds.CredentialScopePreviewResp_Detail{
 				Name: v.Spec.Name,
+				Path: v.Spec.Path,
 			})
 		}
 	}

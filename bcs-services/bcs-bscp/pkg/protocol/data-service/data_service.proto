@@ -258,6 +258,7 @@ message CredentialScopePreviewReq {
 message CredentialScopePreviewResp {
   message Detail {
     string name = 1;
+    string path = 2;
   }
   uint32 count = 1;
   repeated Detail details = 2;
