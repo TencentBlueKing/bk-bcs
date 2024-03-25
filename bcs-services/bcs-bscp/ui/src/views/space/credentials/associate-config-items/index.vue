@@ -31,11 +31,17 @@
         <RuleView v-else v-model:preview-rule="previewRule" :rules="rules" @edit="isRuleEdit = true" />
       </div>
       <div v-if="rules.length || isRuleEdit" class="results-wrapper">
-        <MatchingResult :rule="previewRule" :bk-biz-id="spaceId"/>
+        <MatchingResult :rule="previewRule" :bk-biz-id="spaceId" />
       </div>
     </section>
     <div class="action-btns">
-      <bk-button v-if="isRuleEdit" theme="primary" :loading="pending" :disabled="saveBtnDisabled" @click="handleSave">
+      <bk-button
+        v-if="isRuleEdit"
+        theme="primary"
+        :loading="pending"
+        :disabled="saveBtnDisabled"
+        v-bk-tooltips="{ content: '请先预览所有关联规则修改结果后，才能保存', disabled: !saveBtnDisabled }"
+        @click="handleSave">
         {{ t('保存') }}
       </bk-button>
       <bk-button

@@ -35,13 +35,17 @@
 
   watch(
     () => props.rule,
-    () => {
-      loadCredentialRulePreviewList();
+    (val) => {
+      if (val) {
+        loadCredentialRulePreviewList();
+      }
     },
     { deep: true },
   );
 
-  const tableEmptyText = computed(() => (props.rule?.id ? '暂无数据' : '请先在左侧表单设置关联规则并预览'));
+  const tableEmptyText = computed(() => {
+    return props.rule?.appName ? '没有匹配到配置项' : '请先在左侧表单设置关联规则并预览';
+  });
 
   const searchStr = ref('');
   const tableData = ref();
