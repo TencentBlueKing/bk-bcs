@@ -63,11 +63,16 @@ func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
 
 // ListAppMonitors list app monitor
 func (h *HttpServerClient) ListAppMonitors(request *restful.Request, response *restful.Response) {
+	type PanelInfo struct {
+		Name string `json:"name,omitempty"`
+		URL  string `json:"url,omitempty"`
+	}
 	// InstalledScenarioInfo install
 	type InstalledScenarioInfo struct {
-		Name    string `json:"name"`
-		Status  string `json:"status"`
-		Message string `json:"message"`
+		Name      string      `json:"name"`
+		Status    string      `json:"status"`
+		Message   string      `json:"message"`
+		PanelInfo []PanelInfo `json:"panel_url_map"`
 	}
 	// Resp response
 	type Resp struct {
@@ -86,7 +91,7 @@ func (h *HttpServerClient) ListAppMonitors(request *restful.Request, response *r
 		_, _ = response.Write(CreateResponseData(fmt.Errorf("build selector failed, err: %w", err), "", nil))
 		return
 	}
-	err = h.Mgr.GetClient().List(context.Background(), appMonitorList, &client.ListOptions{LabelSelector: selector})
+	err = h.Mgr.GetClient().List(request.Request.Context(), appMonitorList, &client.ListOptions{LabelSelector: selector})
 	if err != nil {
 		blog.Errorf("read api-server failed, err: %s", err.Error())
 		_, _ = response.Write(CreateResponseData(fmt.Errorf("read api-server failed, err: %w", err), "", nil))
@@ -95,9 +100,37 @@ func (h *HttpServerClient) ListAppMonitors(request *restful.Request, response *r
 
 	infoList := make([]InstalledScenarioInfo, 0)
 	for _, appMonitor := range appMonitorList.Items {
-		infoList = append(infoList, InstalledScenarioInfo{Name: appMonitor.Spec.Scenario,
+		info := InstalledScenarioInfo{Name: appMonitor.Spec.Scenario,
 			Status:  string(appMonitor.Status.SyncStatus.State),
-			Message: appMonitor.Status.SyncStatus.Message})
+			Message: appMonitor.Status.SyncStatus.Message}
+
+		panelSelector, err1 := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(map[string]string{
+			monitorextensionv1.LabelKeyForAppMonitorName: appMonitor.GetName(),
+			monitorextensionv1.LabelKeyForScenarioName:   appMonitor.Spec.Scenario,
+		}))
+		if err1 != nil {
+			blog.Errorf("build selector failed, err: %s", err1.Error())
+			_, _ = response.Write(CreateResponseData(fmt.Errorf("build selector failed, err1: %w", err), "", nil))
+			return
+		}
+		panelList := &monitorextensionv1.PanelList{}
+		if err = h.Mgr.GetClient().List(request.Request.Context(), panelList,
+			&client.ListOptions{LabelSelector: panelSelector}); err != nil {
+			blog.Errorf("read api-server failed, err: %s", err.Error())
+			_, _ = response.Write(CreateResponseData(fmt.Errorf("read api-server failed, err: %w", err), "", nil))
+			return
+		}
+
+		for _, panel := range panelList.Items {
+			for _, dashBoard := range panel.Status.DashBoards {
+				info.PanelInfo = append(info.PanelInfo, PanelInfo{
+					Name: dashBoard.Board,
+					URL:  fmt.Sprintf("https://bkmonitor.woa.com/?bizId=%s#/grafana/d/%s", bizID, dashBoard.ID),
+				})
+			}
+		}
+
+		infoList = append(infoList, info)
 	}
 
 	_, _ = response.Write(CreateResponseData(nil, "", Resp{InstallScenario: infoList}))
@@ -126,7 +159,7 @@ func (h *HttpServerClient) CreateOrUpdateAppMonitor(request *restful.Request, re
 		return
 	}
 
-	namespacedName, err := h.doCreateOrUpdateAppMonitor(req.BizID, req.Scenario, req.Values)
+	namespacedName, err := h.doCreateOrUpdateAppMonitor(request.Request.Context(), req.BizID, req.Scenario, req.Values)
 	if err != nil {
 		blog.Errorf("doCreateOrUpdateAppMonitor failed, bizID[%s], scenario[%s], values[%s], err: %s", req.BizID,
 			req.Scenario, req.Values, err.Error())
@@ -135,7 +168,6 @@ func (h *HttpServerClient) CreateOrUpdateAppMonitor(request *restful.Request, re
 		return
 	}
 
-	// for loop? chan?
 	var appMonitor monitorextensionv1.AppMonitor
 	for {
 		if inErr := h.Mgr.GetAPIReader().Get(request.Request.Context(), *namespacedName, &appMonitor); inErr != nil {
@@ -176,7 +208,7 @@ func (h *HttpServerClient) DeleteAppMonitor(request *restful.Request, response *
 		return
 	}
 
-	if err := h.doDeleteAppMonitor(req.BizID, req.Scenario); err != nil {
+	if err := h.doDeleteAppMonitor(request.Request.Context(), req.BizID, req.Scenario); err != nil {
 		blog.Errorf("%s", err.Error())
 		_, _ = response.Write(CreateResponseData(err, "", nil))
 		return
@@ -186,7 +218,7 @@ func (h *HttpServerClient) DeleteAppMonitor(request *restful.Request, response *
 
 // do Create Or Update App Monitor
 func (h *HttpServerClient) doCreateOrUpdateAppMonitor(
-	bizID, scenario, values string) (*k8stypes.NamespacedName, error) {
+	ctx context.Context, bizID, scenario, values string) (*k8stypes.NamespacedName, error) {
 	var (
 		appMonitor    *monitorextensionv1.AppMonitor
 		foundPrevious bool
@@ -199,7 +231,7 @@ func (h *HttpServerClient) doCreateOrUpdateAppMonitor(
 	if err != nil {
 		return nil, fmt.Errorf("build selector failed, err: %w", err)
 	}
-	err = h.Mgr.GetClient().List(context.Background(), appMonitorList, &client.ListOptions{LabelSelector: selector})
+	err = h.Mgr.GetClient().List(ctx, appMonitorList, &client.ListOptions{LabelSelector: selector})
 	if err != nil {
 		return nil, fmt.Errorf("read api-server failed, err: %s", err)
 	}
@@ -232,13 +264,15 @@ func (h *HttpServerClient) doCreateOrUpdateAppMonitor(
 
 	if foundPrevious {
 		blog.Infof("update previous AppMonitor'%s/%s'", appMonitor.GetNamespace(), appMonitor.GetName())
-		if err = h.Mgr.GetClient().Update(context.Background(), appMonitor); err != nil {
-			return nil, fmt.Errorf("update appmonitor '%s/%s' failed", appMonitor.GetNamespace(), appMonitor.GetName())
+		if err = h.Mgr.GetClient().Update(ctx, appMonitor); err != nil {
+			return nil, fmt.Errorf("update appmonitor '%s/%s' failed, err: %w", appMonitor.GetNamespace(),
+				appMonitor.GetName(), err)
 		}
 	} else {
 		blog.Infof("create AppMonitor'%s/%s'", appMonitor.GetNamespace(), appMonitor.GetName())
-		if err = h.Mgr.GetClient().Create(context.Background(), appMonitor); err != nil {
-			return nil, fmt.Errorf("update appmonitor '%s/%s' failed", appMonitor.GetNamespace(), appMonitor.GetName())
+		if err = h.Mgr.GetClient().Create(ctx, appMonitor); err != nil {
+			return nil, fmt.Errorf("update appmonitor '%s/%s' failed, err: %w", appMonitor.GetNamespace(),
+				appMonitor.GetName(), err)
 		}
 	}
 
@@ -249,7 +283,7 @@ func (h *HttpServerClient) doCreateOrUpdateAppMonitor(
 }
 
 // do Delete App Monitor
-func (h *HttpServerClient) doDeleteAppMonitor(bizID, scenario string) error {
+func (h *HttpServerClient) doDeleteAppMonitor(ctx context.Context, bizID, scenario string) error {
 	appMonitorList := &monitorextensionv1.AppMonitorList{}
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(map[string]string{
 		monitorextensionv1.LabelKeyForBizID:        bizID,
@@ -258,7 +292,7 @@ func (h *HttpServerClient) doDeleteAppMonitor(bizID, scenario string) error {
 	if err != nil {
 		return fmt.Errorf("build selector failed, err: %w", err)
 	}
-	err = h.Mgr.GetClient().List(context.Background(), appMonitorList, &client.ListOptions{LabelSelector: selector})
+	err = h.Mgr.GetClient().List(ctx, appMonitorList, &client.ListOptions{LabelSelector: selector})
 	if err != nil {
 		return fmt.Errorf("read api-server failed, err: %s", err)
 	}
@@ -272,7 +306,7 @@ func (h *HttpServerClient) doDeleteAppMonitor(bizID, scenario string) error {
 
 	appMonitor := appMonitorList.Items[0]
 
-	if err = h.Mgr.GetClient().Delete(context.Background(), &appMonitor); err != nil {
+	if err = h.Mgr.GetClient().Delete(ctx, &appMonitor); err != nil {
 		return fmt.Errorf("delete appmonitor'%s/%s' failed, err: %w", appMonitor.GetNamespace(),
 			appMonitor.GetName(), err)
 	}

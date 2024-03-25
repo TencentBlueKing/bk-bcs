@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"time"
 
@@ -37,6 +38,8 @@ import (
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/apiclient"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/fileoperator"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/render"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/utils"
 )
 
@@ -48,6 +51,10 @@ type PanelReconciler struct {
 	Ctx           context.Context
 	FileOp        *fileoperator.FileOperator
 	MonitorApiCli apiclient.IMonitorApiClient
+	MonitorRender *render.MonitorRender
+
+	SubPath string
+	Opts    *option.ControllerOption
 }
 
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,
@@ -87,7 +94,7 @@ func (r *PanelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	outputPath, err := r.FileOp.Compress(panel)
 	if err != nil {
 		blog.Errorf("compress panel '%s/%s' failed, err: %s", panel.Namespace, panel.Name, err.Error())
-		if inErr := r.updateSyncStatus(panel, monitorextensionv1.SyncStateFailed, err); inErr != nil {
+		if inErr := r.updateSyncStatus(panel, monitorextensionv1.SyncStateFailed, nil, err); inErr != nil {
 			blog.Warnf("update panel '%s/%s' sync status failed, err: %s", panel.GetNamespace(),
 				panel.GetName(), inErr.Error())
 		}
@@ -98,15 +105,37 @@ func (r *PanelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if err = r.MonitorApiCli.UploadConfig(panel.Spec.BizID, panel.Spec.BizToken, outputPath,
 		r.getAppName(panel), panel.Spec.Override); err != nil {
 		blog.Errorf("upload config to monitor failed, err: %s", err.Error())
-		if inErr := r.updateSyncStatus(panel, monitorextensionv1.SyncStateFailed, err); inErr != nil {
+		if inErr := r.updateSyncStatus(panel, monitorextensionv1.SyncStateFailed, nil, err); inErr != nil {
 			blog.Warnf("update panel '%s/%s' sync status failed, err: %s", panel.GetNamespace(),
 				panel.GetName(), inErr.Error())
 		}
 		return ctrl.Result{}, err
 	}
 
+	// 重新下载panel获取对应面板ID
+	if err = r.MonitorApiCli.DownloadConfig(panel.Spec.BizID, panel.Spec.BizToken); err != nil {
+		blog.Errorf("DownloadConfig for bizID[%s] failed, err: %s", panel.Spec.BizID, err.Error())
+		return ctrl.Result{}, err
+	}
+
+	if err = r.FileOp.Decompress(utils.GenBkmConfigTarPath(r.Opts.BKMDownloadConfigPath,
+		r.SubPath, panel.Spec.BizID),
+		utils.GenBkmConfigPath(r.Opts.BKMDownloadConfigPath, r.SubPath, panel.Spec.BizID)); err != nil {
+		blog.Errorf("decompress bkm config for bizID[%s] failed, err: %s", panel.Spec.BizID, err.Error())
+		return ctrl.Result{}, err
+	}
+	defer os.RemoveAll(utils.GenBkmConfigPath(r.Opts.BKMDownloadConfigPath, r.SubPath, panel.Spec.BizID))
+	defer os.RemoveAll(utils.GenBkmConfigTarPath(r.Opts.BKMDownloadConfigPath, r.SubPath, panel.Spec.BizID))
+
+	dashBoardInfos, err := r.MonitorRender.LoadDashBoard(filepath.Join(r.Opts.BKMDownloadConfigPath, r.SubPath,
+		panel.Spec.BizID, fmt.Sprintf("configs/grafana/%s", panel.Spec.Scenario))) // 面板所在目录名和场景名保持一致
+	if err != nil {
+		blog.Errorf("load panel from path[%s] failed, err: %s", filepath.Join(r.Opts.BKMDownloadConfigPath,
+			panel.Spec.BizID, "configs/grafana"), err.Error())
+		return ctrl.Result{}, err
+	}
 	blog.Infof("sync panel '%s' success", req.NamespacedName)
-	if inErr := r.updateSyncStatus(panel, monitorextensionv1.SyncStateCompleted, nil); inErr != nil {
+	if inErr := r.updateSyncStatus(panel, monitorextensionv1.SyncStateCompleted, dashBoardInfos, nil); inErr != nil {
 		blog.Warnf("update panel '%s/%s' sync status failed, err: %s", panel.GetNamespace(),
 			panel.GetName(), inErr.Error())
 	}
@@ -162,7 +191,7 @@ func (r *PanelReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *PanelReconciler) updateSyncStatus(panel *monitorextensionv1.Panel, state monitorextensionv1.SyncState,
-	err error) error {
+	dashBoards []*render.DashBoard, err error) error {
 	blog.Infof("Update sync state of panel (%s/%s) to %s", panel.GetNamespace(), panel.GetName(), state)
 	panel.Status.SyncStatus.State = state
 	// err message
@@ -173,13 +202,20 @@ func (r *PanelReconciler) updateSyncStatus(panel *monitorextensionv1.Panel, stat
 	}
 	panel.Status.SyncStatus.LastSyncTime = metav1.NewTime(time.Now())
 	panel.Status.SyncStatus.App = r.getAppName(panel)
+	dashBoardStatus := make([]monitorextensionv1.DashBoardStatus, 0)
+	for _, dashBoard := range dashBoards {
+		dashBoardStatus = append(dashBoardStatus, monitorextensionv1.DashBoardStatus{
+			Board: dashBoard.Title,
+			ID:    dashBoard.UID,
+		})
+	}
+	panel.Status.DashBoards = dashBoardStatus
 	if inErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		return r.Client.Status().Update(r.Ctx, panel)
 	}); inErr != nil {
 		blog.Warnf("update panel'%s/%s' failed, err: %s", panel.GetNamespace(), panel.GetName(), inErr.Error())
 		return inErr
 	}
-
 	return nil
 }
 
@@ -219,7 +255,7 @@ func (r *PanelReconciler) processDelete(panel *monitorextensionv1.Panel) error {
 	if err := r.MonitorApiCli.UploadConfig(panel.Spec.BizID, panel.Spec.BizToken, EmptyTARLocation,
 		r.getAppName(panel), panel.Spec.Override); err != nil {
 		blog.Errorf("upload config to monitor failed, err: %s", err.Error())
-		if inErr := r.updateSyncStatus(panel, monitorextensionv1.SyncStateFailed, err); inErr != nil {
+		if inErr := r.updateSyncStatus(panel, monitorextensionv1.SyncStateFailed, nil, err); inErr != nil {
 			blog.Warnf("update panel '%s/%s' sync status failed, err: %s", panel.GetNamespace(),
 				panel.GetName(), inErr.Error())
 		}
