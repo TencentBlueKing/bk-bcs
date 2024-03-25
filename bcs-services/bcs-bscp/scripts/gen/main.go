@@ -62,6 +62,7 @@ func main() {
 		table.ReleasedKv{},
 		table.Client{},
 		table.ClientEvent{},
+		table.ClientQuery{},
 	)
 
 	g.Execute()

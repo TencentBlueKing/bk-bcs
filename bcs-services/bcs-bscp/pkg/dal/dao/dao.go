@@ -69,6 +69,7 @@ type Set interface {
 	ReleasedKv() ReleasedKv
 	Client() Client
 	ClientEvent() ClientEvent
+	ClientQuery() ClientQuery
 }
 
 // NewDaoSet create the DAO set instance.
@@ -474,6 +475,15 @@ func (s *set) Client() Client {
 // ClientEvent returns the ClientEvent scope's DAO
 func (s *set) ClientEvent() ClientEvent {
 	return &clientEventDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// ClientQuery returns the ClientQuery scope's DAO
+func (s *set) ClientQuery() ClientQuery {
+	return &clientQueryDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
