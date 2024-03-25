@@ -4,7 +4,7 @@
       <div class="title">{{ t('配置项') }}</div>
       <div class="title-extend">
         <bk-checkbox
-          v-if="isBaseVersionExist"
+          v-if="isBaseVersionExist && diffConfigList.length > 0"
           v-model="isOnlyShowDiff"
           class="view-diff-checkbox"
           @change="handleToggleShowDiff">
@@ -107,6 +107,10 @@
 
   // 是否实际选择了对比的基准版本，为了区分的未命名版本id为0的情况
   const isBaseVersionExist = computed(() => typeof props.baseVersionId === 'number');
+  // 差异项配置文件列表
+  const diffConfigList = computed(() => {
+    return aggregatedList.value.filter((item) => item.diffType !== '');
+  });
 
   // 基准版本变化，更新选中对比项
   watch(
@@ -114,6 +118,7 @@
     async () => {
       baseList.value = await getConfigsOfVersion(props.baseVersionId);
       aggregatedList.value = calcDiff();
+      isOnlyShowDiff.value = diffConfigList.value.length > 0;
       groupedConfigListOnShow.value = getGroupedList();
       setDefaultSelected();
     },
@@ -136,6 +141,7 @@
     currentList.value = await getConfigsOfVersion(props.currentVersionId);
     baseList.value = await getConfigsOfVersion(props.baseVersionId);
     aggregatedList.value = calcDiff();
+    isOnlyShowDiff.value = diffConfigList.value.length > 0;
     groupedConfigListOnShow.value = getGroupedList();
     setDefaultSelected();
   });

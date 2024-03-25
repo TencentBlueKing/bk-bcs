@@ -74,6 +74,20 @@
   import AsideMenu from './aside-menu/index.vue';
   import Diff from '../../../../../../../components/diff/index.vue';
 
+  const getDefaultDiffData = (): IDiffDetail => ({
+    // 差异详情数据
+    id: 0,
+    contentType: 'text',
+    current: {
+      language: '',
+      content: '',
+    },
+    base: {
+      language: '',
+      content: '',
+    },
+  });
+
   const { t } = useI18n();
   const props = defineProps<{
     show: boolean;
@@ -95,19 +109,7 @@
   const versionListLoading = ref(false);
   const selectedBaseVersion = ref(); // 基准版本ID
   const selectedKV = ref(props.selectedKvConfigId);
-  const diffDetailData = ref<IDiffDetail>({
-    // 差异详情数据
-    id: 0,
-    contentType: 'text',
-    current: {
-      language: '',
-      content: '',
-    },
-    base: {
-      language: '',
-      content: '',
-    },
-  });
+  const diffDetailData = ref<IDiffDetail>(getDefaultDiffData());
 
   const loading = computed(() => versionListLoading.value);
 
@@ -174,6 +176,7 @@
   const handleClose = () => {
     selectedBaseVersion.value = undefined;
     versionList.value = [];
+    diffDetailData.value = getDefaultDiffData();
     emits('update:show', false);
   };
 

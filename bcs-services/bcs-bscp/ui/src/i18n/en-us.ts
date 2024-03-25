@@ -135,8 +135,8 @@ export default {
   最大长度200个字符: 'Maximum length of 200 characters',
   请上传文件: 'Please upload the file',
   '配置内容不能超过{size}M': 'Configuration content cannot exceed {size}M',
-  配置项名称: 'Configuration item name',
-  配置项值: 'Configuration item value',
+  配置项名称: 'Configuration Name',
+  配置项值: 'Configuration Value',
   '请输入(仅支持大小不超过2M)': 'Please enter (only supports size no more than 2M)',
   最大长度128个字符: 'Maximum length 128 characters',
   '只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾': 'Only Chinese, English, numbers, underscores (_), hyphens (-) are allowed, and must start and end with Chinese, English, numbers',
@@ -642,4 +642,5 @@ export default {
   '确认上线后，以下分组': 'After confirmation of deployment, ',
   以外: 'client instances outside of the following groups',
   的客户端实例将上线当前版本配置: ' will be deployed with the current version configuration.',
+  配置项类型: 'Configuration Name',
 };
