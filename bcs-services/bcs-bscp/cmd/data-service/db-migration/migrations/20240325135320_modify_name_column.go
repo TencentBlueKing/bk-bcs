@@ -29,11 +29,7 @@ func init() {
 	})
 }
 
-// mig20240325135320Up for up migration
-// 字段变更，设置为collate为utf8mb4_bin，查询时区分大小写，场景如：字段唯一性校验时，字符串"App"和"app"能区分为不同
-//
-//nolint:funlen,gocyclo
-func mig20240325135320Up(tx *gorm.DB) error {
+func modifyApp(tx *gorm.DB) error {
 	// Applications : 服务
 	type Applications struct {
 		Name  string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -49,7 +45,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyConfigItems(tx *gorm.DB) error {
 	// ConfigItems : 配置项
 	type ConfigItems struct {
 		Name string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -65,7 +64,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyCredentials(tx *gorm.DB) error {
 	// Credentials : 密钥
 	type Credentials struct {
 		Name string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -75,7 +77,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyGroups(tx *gorm.DB) error {
 	// Groups : 分组
 	type Groups struct {
 		Name string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -85,7 +90,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyHookRevisions(tx *gorm.DB) error {
 	// HookRevisions : 脚本版本
 	type HookRevisions struct {
 		Name string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -95,7 +103,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyHooks(tx *gorm.DB) error {
 	// Hooks : 脚本
 	type Hooks struct {
 		Name string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -105,7 +116,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyKvs(tx *gorm.DB) error {
 	// Kvs : 键值对配置
 	type Kvs struct {
 		Key string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -115,7 +129,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyReleases(tx *gorm.DB) error {
 	// Releases : 版本
 	type Releases struct {
 		Name string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -125,7 +142,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyReleasedKvs(tx *gorm.DB) error {
 	// ReleasedKvs : 已发布Kvs
 	type ReleasedKvs struct {
 		Key string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -135,7 +155,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyTemplateRevisions(tx *gorm.DB) error {
 	// TemplateRevisions : 模版版本
 	type TemplateRevisions struct {
 		RevisionName string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -145,7 +168,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyTemplateSets(tx *gorm.DB) error {
 	// TemplateSets : 模版套餐
 	type TemplateSets struct {
 		Name string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -155,7 +181,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyTemplateSpaces(tx *gorm.DB) error {
 	// TemplateSpaces : 模版空间
 	type TemplateSpaces struct {
 		Name string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -165,7 +194,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyTemplateVariables(tx *gorm.DB) error {
 	// TemplateVariables : 模版变量
 	type TemplateVariables struct {
 		Name string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -175,7 +207,10 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func modifyTemplates(tx *gorm.DB) error {
 	// Templates : 模版
 	type Templates struct {
 		Name string `gorm:"type:varchar(255) collate utf8mb4_bin not null"`
@@ -191,9 +226,36 @@ func mig20240325135320Up(tx *gorm.DB) error {
 			return err
 		}
 	}
-
 	return nil
+}
 
+func doModify(tx *gorm.DB, fs ...func(tx *gorm.DB) error) error {
+	for _, f := range fs {
+		if err := f(tx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// mig20240325135320Up for up migration
+// 字段变更，设置为collate为utf8mb4_bin，查询时区分大小写，场景如：字段唯一性校验时，字符串"App"和"app"能区分为不同
+func mig20240325135320Up(tx *gorm.DB) error {
+	return doModify(tx,
+		modifyApp,
+		modifyConfigItems,
+		modifyCredentials,
+		modifyGroups,
+		modifyHookRevisions,
+		modifyHooks,
+		modifyKvs,
+		modifyReleases,
+		modifyReleasedKvs,
+		modifyTemplateRevisions,
+		modifyTemplateSets,
+		modifyTemplateSpaces,
+		modifyTemplateVariables,
+		modifyTemplates)
 }
 
 // mig20240325135320Down for down migration
