@@ -112,7 +112,7 @@
   import useUserStore from '../store/user';
   import useTemplateStore from '../store/template';
   import { ISpaceDetail } from '../../types/index';
-  import { loginOut, getSpaceFeatureFlag } from '../api/index';
+  import { loginOut } from '../api/index';
   import type { IVersionLogItem } from '../../types/version-log';
   import VersionLog from './version-log.vue';
   import features from './features-dialog.vue';
@@ -197,25 +197,22 @@
   const handleSelectSpace = async (id: string) => {
     const space = spaceList.value.find((item: ISpaceDetail) => item.space_id === id);
     if (space) {
-      const res = await getSpaceFeatureFlag(id);
-      if (res.BIZ_VIEW) {
-        if (!space.permission) {
-          permissionQuery.value = {
-            resources: [
-              {
-                biz_id: id,
-                basic: {
-                  type: 'biz',
-                  action: 'find_business_resource',
-                  resource_id: id,
-                },
+      if (!space.permission) {
+        permissionQuery.value = {
+          resources: [
+            {
+              biz_id: id,
+              basic: {
+                type: 'biz',
+                action: 'find_business_resource',
+                resource_id: id,
               },
-            ],
-          };
+            },
+          ],
+        };
 
-          showApplyPermDialog.value = true;
-          return;
-        }
+        showApplyPermDialog.value = true;
+        return;
       }
       templateStore.$patch((state) => {
         state.templateSpaceList = [];
