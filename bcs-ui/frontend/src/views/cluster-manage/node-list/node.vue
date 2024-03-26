@@ -83,7 +83,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isKubeConfigImportCluster"
+              :disabled="isKubeConfigImportCluster || curSelectedCluster.provider === 'azureCloud'"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
@@ -491,7 +491,7 @@
                 text
                 class="mr10"
                 v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
-                :disabled="!row.inner_ip || isGcpCloudSelfNode(row)"
+                :disabled="!row.inner_ip || isCloudSelfNode(row)"
                 @click="handleRetry(row)"
               >{{ $t('cluster.ca.nodePool.records.action.retry') }}</bk-button>
               <bk-popover
@@ -514,9 +514,9 @@
                       </li>
                     </template>
                     <li
-                      :class="['bcs-dropdown-item', { disabled: isKubeConfigImportCluster || isGcpCloudSelfNode(row) }]"
+                      :class="['bcs-dropdown-item', { disabled: isKubeConfigImportCluster || isCloudSelfNode(row) }]"
                       v-bk-tooltips="{
-                        disabled: !isKubeConfigImportCluster && !isGcpCloudSelfNode(row),
+                        disabled: !isKubeConfigImportCluster && !isCloudSelfNode(row),
                         content: $t('cluster.nodeList.tips.disableImportClusterAction'),
                         placement: 'right'
                       }"
@@ -1092,8 +1092,8 @@ export default defineComponent({
     // kubeConfig导入集群
     const isKubeConfigImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer'
       && curSelectedCluster.value.importCategory === 'kubeConfig');
-    // gcpCloud私有节点
-    const isGcpCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
+    // cloud私有节点
+    const isCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
       && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud')
       && !row.nodeGroupID;
     // 全量表格数据
@@ -1518,7 +1518,7 @@ export default defineComponent({
       curCheckedNodes.value = [];
     };
     const handleDeleteNode = async (row) => {
-      if (isKubeConfigImportCluster.value || isGcpCloudSelfNode(row)) return;
+      if (isKubeConfigImportCluster.value || isCloudSelfNode(row)) return;
 
       curCheckedNodes.value = [row];
       showDeleteDialog.value = true;
@@ -2037,7 +2037,7 @@ export default defineComponent({
       delNode,
       deleteMode,
       deleting,
-      isGcpCloudSelfNode,
+      isCloudSelfNode,
     };
   },
 });

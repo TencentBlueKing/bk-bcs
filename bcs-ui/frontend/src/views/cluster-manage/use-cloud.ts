@@ -167,7 +167,7 @@ export default function () {
   // vpc列表
   const vpcLoading = ref(false);
   const vpcList = ref<Array<IVpcItem>>($store.state.cloudMetadata.vpcList);
-  const handleGetVPCList = async ({ region, cloudAccountID,  cloudID }) => {
+  const handleGetVPCList = async ({ region, cloudAccountID,  cloudID, resourceGroupName }) => {
     // gcpCloud 不支持vpc获取
     if (!region || !cloudAccountID || !cloudID || cloudID === 'gcpCloud') return;
     vpcLoading.value = true;
@@ -175,6 +175,7 @@ export default function () {
       $cloudId: cloudID,
       accountID: cloudAccountID,
       region,
+      resourceGroupName,
     }).catch(() => []);
     vpcLoading.value = false;
     return vpcList.value;

@@ -426,7 +426,9 @@ const handleImport = async () => {
     },
     clusterCategory: 'importer',
     networkType: 'overlay',
-    bkCloudID: formData.value.bkCloudID,
+    area: {
+      bkCloudID: formData.value.bkCloudID,
+    },
     accountID: formData.value.accountID,
   };
   const result = await $store.dispatch('clustermanager/importCluster', params);

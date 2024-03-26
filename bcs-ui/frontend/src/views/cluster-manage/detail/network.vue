@@ -250,6 +250,7 @@ export default defineComponent({
         accountID: cloudAccountID,
         vpcID,
         subnetID: clusterData.value.networkSettings?.eniSubnetIDs?.join(','),
+        resourceGroupName: clusterData.value.extraInfo?.nodeResourceGroup,
       }).catch(() => []);
       firstRowspan.value = {};
       // 排序子网，将相同子网放在一起
@@ -376,6 +377,7 @@ export default defineComponent({
           region: clusterData.value.region,
           cloudAccountID: clusterData.value.cloudAccountID,
           cloudID: clusterData.value.provider,
+          resourceGroupName: clusterData.value.extraInfo?.nodeResourceGroup,
         }),
       ]);
     });
