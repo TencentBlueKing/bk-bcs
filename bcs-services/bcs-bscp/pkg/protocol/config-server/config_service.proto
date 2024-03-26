@@ -7,6 +7,9 @@ import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/content/content.proto";
 import "pkg/protocol/core/group/group.proto";
 import "pkg/protocol/core/credential/credential.proto";
+import "pkg/protocol/core/client/client.proto";
+import "pkg/protocol/core/client-event/client_event.proto";
+import "pkg/protocol/core/client-query/client_query.proto";
 import "pkg/protocol/core/credential-scope/credential-scope.proto";
 import "pkg/protocol/core/hook/hook.proto";
 import "pkg/protocol/core/hook-revision/hook_revision.proto";
@@ -767,6 +770,44 @@ service Config {
       post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}/undelete"
     };
   };
+
+  rpc ListClients(ListClientsReq) returns (ListClientsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients"
+      body: "*"
+    };
+  };
+
+  rpc ListClientEvents(ListClientEventsReq) returns (ListClientEventsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_events/{client_id}"
+      body: "*"
+    };
+  };
+
+  // client query related interface
+  rpc ListClientQuerys(ListClientQuerysReq) returns (ListClientQuerysResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys"
+    };
+  };
+  rpc CreateClientQuery(CreateClientQueryReq) returns (CreateClientQueryResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys"
+      body: "*"
+    };
+  };
+  rpc UpdateClientQuery(UpdateClientQueryReq) returns (UpdateClientQueryResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/{id}"
+      body: "*"
+    };
+  };
+  rpc DeleteClientQuery(DeleteClientQueryReq) returns (DeleteClientQueryResp) {
+    option (google.api.http) = {
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/{id}"
+    };
+  };
 }
 
 message UpdateCredentialScopeReq {
@@ -791,6 +832,7 @@ message CredentialScopePreviewReq {
 message CredentialScopePreviewResp {
   message Detail {
     string name = 1;
+    string path = 2;
   }
   uint32 count = 1;
   repeated Detail details = 2;
@@ -2364,3 +2406,89 @@ message UnDeleteKvReq {
 }
 
 message UnDeleteKvResp {}
+
+message ListClientsReq {
+  message Order {
+    string desc = 1;
+    string asc = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  bool all = 3;
+  uint32 start = 4;
+  uint32 limit = 5;
+  Order order = 6;
+  int64 last_heartbeat_time = 7;
+  pbclient.ClientQueryCondition search = 8;
+}
+
+message ListClientsResp {
+  uint32 count = 1;
+  repeated pbclient.Client details = 2;
+}
+
+message ListClientEventsReq {
+  message Order {
+    string desc = 1;
+    string asc = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 client_id = 3;
+  bool all = 4;
+  uint32 start = 5;
+  uint32 limit = 6;
+  Order order = 7;
+  string search_value = 8;
+  string start_time = 9;
+  string end_time = 10;
+}
+
+message ListClientEventsResp {
+  uint32 count = 1;
+  repeated pbce.ClientEvent details = 2;
+}
+
+message ListClientQuerysReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string search_type = 3;  // 搜索类型：recent、common
+  uint32 start = 4;
+  uint32 limit = 5;
+  bool all = 6;
+}
+
+message ListClientQuerysResp {
+  uint32 count = 1;
+  repeated pbcq.ClientQuery details = 2;
+}
+
+message CreateClientQueryReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string search_type = 3;
+  string search_name = 4;
+  google.protobuf.Struct search_condition = 5;
+}
+
+message CreateClientQueryResp {
+  uint32 id = 1;
+}
+
+message UpdateClientQueryReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+  string search_name = 4;
+  google.protobuf.Struct search_condition = 5;
+}
+
+message UpdateClientQueryResp {}
+
+message DeleteClientQueryReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message DeleteClientQueryResp {}

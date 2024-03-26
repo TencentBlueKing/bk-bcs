@@ -15,7 +15,8 @@ export const transFileToObject = (file: File) => {
 
 // 文件下载
 export const fileDownload = (content: string, name: string) => {
-  const blob = new Blob([content], { type: 'text/plain;charset=UTF-8' });
+  // 定义MIME类型为二进制流，避免浏览器为文件名称默认添加.txt后缀
+  const blob = new Blob([content], { type: 'application/octet-stream' });
   const eleLink = document.createElement('a');
   const blobURL = window.URL.createObjectURL(blob);
   eleLink.style.display = 'none';

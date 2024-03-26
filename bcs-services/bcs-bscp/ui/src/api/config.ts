@@ -203,7 +203,6 @@ export const deleteVersion = (bizId: string, appId: number, releaseId: number) =
  */
 export const getConfigVersionList = (bizId: string, appId: number, params: IConfigVersionQueryParams) =>
   http.get(`config/biz/${bizId}/apps/${appId}/releases`, { params }).then((res) => {
-    console.log(res);
     res.data.details.forEach((item: IConfigVersion) => {
       const defaultGroup = item.status.released_groups.find((group) => group.id === 0);
       if (defaultGroup) {

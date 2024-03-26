@@ -248,7 +248,8 @@ func (s *Service) CredentialScopePreview(ctx context.Context, req *pbcs.Credenti
 	items := make([]*pbcs.CredentialScopePreviewResp_Detail, 0)
 	for _, v := range data.Details {
 		items = append(items, &pbcs.CredentialScopePreviewResp_Detail{
-			Name: v.Name,
+			Name: v.GetName(),
+			Path: v.GetPath(),
 		})
 	}
 	resp.Details = items

@@ -184,6 +184,7 @@
       baseGroupList.value = await getConfigsOfVersion(props.baseVersionId);
       baseVariables.value = await getVariableList(props.baseVersionId);
       aggregatedList.value = calcDiff();
+      isOnlyShowDiff.value = aggregatedListOfDiff.value.length > 0;
       groupedConfigListOnShow.value = getMenuList();
       setDefaultSelected();
     },

@@ -14,6 +14,8 @@
 package pbce
 
 import (
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
@@ -39,6 +41,28 @@ func (c *ClientEventSpec) ClientEventSpec() *table.ClientEventSpec {
 	}
 }
 
+// PbClientEventSpec convert table ClientEventSpec to pb ClientEventSpec
+func PbClientEventSpec(spec *table.ClientEventSpec) *ClientEventSpec { //nolint:revive
+	if spec == nil {
+		return nil
+	}
+
+	return &ClientEventSpec{
+		OriginalReleaseId:         spec.OriginalReleaseID,
+		TargetReleaseId:           spec.TargetReleaseID,
+		StartTime:                 timestamppb.New(spec.StartTime),
+		EndTime:                   timestamppb.New(spec.EndTime),
+		TotalSeconds:              spec.TotalSeconds,
+		TotalFileSize:             spec.TotalFileSize,
+		DownloadFileSize:          spec.DownloadFileSize,
+		TotalFileNum:              spec.TotalFileNum,
+		DownloadFileNum:           spec.DownloadFileNum,
+		ReleaseChangeStatus:       string(spec.ReleaseChangeStatus),
+		ReleaseChangeFailedReason: string(spec.ReleaseChangeFailedReason),
+		FailedDetailReason:        spec.FailedDetailReason,
+	}
+}
+
 // ClientEventAttachment convert pb ClientEventAttachment to table ClientEventAttachment
 func (c *ClientEventAttachment) ClientEventAttachment() *table.ClientEventAttachment {
 	if c == nil {
@@ -53,4 +77,44 @@ func (c *ClientEventAttachment) ClientEventAttachment() *table.ClientEventAttach
 		AppID:      c.AppId,
 		ClientMode: table.ClientMode(c.ClientMode),
 	}
+}
+
+// PbClientEventAttachment convert table PbClientEventAttachment to pb PbClientEventAttachment
+func PbClientEventAttachment(attachment *table.ClientEventAttachment) *ClientEventAttachment { // nolint
+	if attachment == nil {
+		return nil
+	}
+	return &ClientEventAttachment{
+		ClientId:   attachment.ClientID,
+		CursorId:   attachment.CursorID,
+		Uid:        attachment.UID,
+		BizId:      attachment.BizID,
+		AppId:      attachment.AppID,
+		ClientMode: string(attachment.ClientMode),
+	}
+}
+
+// PbClientEvent convert table ClientEvent to pb ClientEvent
+func PbClientEvent(c *table.ClientEvent) *ClientEvent {
+	if c == nil {
+		return nil
+	}
+
+	return &ClientEvent{
+		Id:         c.ID,
+		Spec:       PbClientEventSpec(c.Spec),
+		Attachment: PbClientEventAttachment(c.Attachment),
+	}
+}
+
+// PbClientEvents convert table ClientEvent to pb ClientEvent
+func PbClientEvents(c []*table.ClientEvent) []*ClientEvent {
+	if c == nil {
+		return make([]*ClientEvent, 0)
+	}
+	result := make([]*ClientEvent, 0)
+	for _, v := range c {
+		result = append(result, PbClientEvent(v))
+	}
+	return result
 }

@@ -16,9 +16,15 @@
       :border="['outer']"
       :remote-pagination="true"
       :pagination="pagination"
-      @page-limit-change="handlePageLimitChange"
+      :key="isFileType"
       @page-value-change="loadCredentialRulePreviewList">
-      <bk-table-column label="配置项" prop="name"></bk-table-column>
+      <bk-table-column :label="isFileType ? '配置文件绝对路径' : '配置项'">
+        <template #default="{ row }">
+          <div v-if="row.name">
+            {{ isFileType ? fileAP(row) : row.name }}
+          </div>
+        </template>
+      </bk-table-column>
     </bk-table>
   </div>
 </template>
@@ -33,15 +39,29 @@
     bkBizId: string;
   }>();
 
+  const isFileType = ref(false);
+
   watch(
     () => props.rule,
-    () => {
-      loadCredentialRulePreviewList();
+    (val) => {
+      if (val) {
+        loadCredentialRulePreviewList();
+      }
     },
     { deep: true },
   );
 
-  const tableEmptyText = computed(() => (props.rule?.id ? '暂无数据' : '请先在左侧表单设置关联规则并预览'));
+  // 配置文件绝对路径
+  const fileAP = computed(() => ({ name, path }: { name: string; path: string }) => {
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  });
+
+  const tableEmptyText = computed(() => {
+    return props.rule?.appName ? '没有匹配到配置项' : '请先在左侧表单设置关联规则并预览';
+  });
 
   const searchStr = ref('');
   const tableData = ref();
@@ -66,12 +86,7 @@
     const res = await getCredentialPreview(props.bkBizId, params);
     pagination.value.count = res.data.count;
     tableData.value = res.data.details;
-  };
-
-  // 更改每页条数
-  const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
-    loadCredentialRulePreviewList();
+    isFileType.value = !!tableData.value[0]?.path;
   };
 </script>
 <style lang="scss" scoped>

@@ -24,6 +24,7 @@ var (
 	Audit                       *audit
 	Client                      *client
 	ClientEvent                 *clientEvent
+	ClientQuery                 *clientQuery
 	Commit                      *commit
 	ConfigItem                  *configItem
 	Content                     *content
@@ -61,6 +62,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Audit = &Q.Audit
 	Client = &Q.Client
 	ClientEvent = &Q.ClientEvent
+	ClientQuery = &Q.ClientQuery
 	Commit = &Q.Commit
 	ConfigItem = &Q.ConfigItem
 	Content = &Q.Content
@@ -99,6 +101,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Audit:                       newAudit(db, opts...),
 		Client:                      newClient(db, opts...),
 		ClientEvent:                 newClientEvent(db, opts...),
+		ClientQuery:                 newClientQuery(db, opts...),
 		Commit:                      newCommit(db, opts...),
 		ConfigItem:                  newConfigItem(db, opts...),
 		Content:                     newContent(db, opts...),
@@ -138,6 +141,7 @@ type Query struct {
 	Audit                       audit
 	Client                      client
 	ClientEvent                 clientEvent
+	ClientQuery                 clientQuery
 	Commit                      commit
 	ConfigItem                  configItem
 	Content                     content
@@ -178,6 +182,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Audit:                       q.Audit.clone(db),
 		Client:                      q.Client.clone(db),
 		ClientEvent:                 q.ClientEvent.clone(db),
+		ClientQuery:                 q.ClientQuery.clone(db),
 		Commit:                      q.Commit.clone(db),
 		ConfigItem:                  q.ConfigItem.clone(db),
 		Content:                     q.Content.clone(db),
@@ -225,6 +230,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Audit:                       q.Audit.replaceDB(db),
 		Client:                      q.Client.replaceDB(db),
 		ClientEvent:                 q.ClientEvent.replaceDB(db),
+		ClientQuery:                 q.ClientQuery.replaceDB(db),
 		Commit:                      q.Commit.replaceDB(db),
 		ConfigItem:                  q.ConfigItem.replaceDB(db),
 		Content:                     q.Content.replaceDB(db),
@@ -262,6 +268,7 @@ type queryCtx struct {
 	Audit                       IAuditDo
 	Client                      IClientDo
 	ClientEvent                 IClientEventDo
+	ClientQuery                 IClientQueryDo
 	Commit                      ICommitDo
 	ConfigItem                  IConfigItemDo
 	Content                     IContentDo
@@ -299,6 +306,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Audit:                       q.Audit.WithContext(ctx),
 		Client:                      q.Client.WithContext(ctx),
 		ClientEvent:                 q.ClientEvent.WithContext(ctx),
+		ClientQuery:                 q.ClientQuery.WithContext(ctx),
 		Commit:                      q.Commit.WithContext(ctx),
 		ConfigItem:                  q.ConfigItem.WithContext(ctx),
 		Content:                     q.Content.WithContext(ctx),

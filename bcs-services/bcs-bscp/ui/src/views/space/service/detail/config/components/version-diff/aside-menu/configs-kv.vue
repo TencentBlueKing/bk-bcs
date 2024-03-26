@@ -4,7 +4,7 @@
       <div class="title">{{ t('配置项') }}</div>
       <div class="title-extend">
         <bk-checkbox
-          v-if="isBaseVersionExist"
+          v-if="isBaseVersionExist && diffConfigList.length > 0"
           v-model="isOnlyShowDiff"
           class="view-diff-checkbox"
           @change="handleToggleShowDiff">
@@ -107,6 +107,10 @@
 
   // 是否实际选择了对比的基准版本，为了区分的未命名版本id为0的情况
   const isBaseVersionExist = computed(() => typeof props.baseVersionId === 'number');
+  // 差异项配置文件列表
+  const diffConfigList = computed(() => {
+    return aggregatedList.value.filter((item) => item.diffType !== '');
+  });
 
   // 基准版本变化，更新选中对比项
   watch(
@@ -114,6 +118,7 @@
     async () => {
       baseList.value = await getConfigsOfVersion(props.baseVersionId);
       aggregatedList.value = calcDiff();
+      isOnlyShowDiff.value = diffConfigList.value.length > 0;
       groupedConfigListOnShow.value = getGroupedList();
       setDefaultSelected();
     },
@@ -136,6 +141,7 @@
     currentList.value = await getConfigsOfVersion(props.currentVersionId);
     baseList.value = await getConfigsOfVersion(props.baseVersionId);
     aggregatedList.value = calcDiff();
+    isOnlyShowDiff.value = diffConfigList.value.length > 0;
     groupedConfigListOnShow.value = getGroupedList();
     setDefaultSelected();
   });
@@ -254,28 +260,36 @@
 
   const handleToggleShowDiff = () => {
     groupedConfigListOnShow.value = getGroupedList();
+    updateSelectedDetail(selected.value);
   };
 
   const handleSearch = () => {
     groupedConfigListOnShow.value = getGroupedList();
     isSearchEmpty.value = searchStr.value !== '' && groupedConfigListOnShow.value.length === 0;
+    updateSelectedDetail(selected.value);
   };
 
   // 选择对比配置文件后，加载配置文件详情，组装对比数据
   const handleSelectItem = async (selectedId: number) => {
-    const config = aggregatedList.value.find((item) => item.id === selectedId);
+    updateSelectedDetail(selectedId);
+  };
+
+  // 更新对比项详情数据
+  const updateSelectedDetail = (id: number) => {
+    const config = aggregatedList.value.find((item) => item.id === id);
     if (config) {
-      selected.value = selectedId;
-      const data = getConfigDiffDetail(config);
+      selected.value = id;
+      const singleLineGroup = groupedConfigListOnShow.value.find((item) => item.name === 'singleLine');
+      const data = getConfigDiffDetail(config, singleLineGroup?.configs || []);
       emits('selected', data);
     }
   };
 
   // 差异对比详情数据
-  const getConfigDiffDetail = (config: IConfigDiffItem) => {
+  const getConfigDiffDetail = (config: IConfigDiffItem, list: IConfigDiffItem[]) => {
     // 单行配置
     if (SINGLE_LINE_TYPE.includes(config.kvType)) {
-      const configs: ISingleLineKVDIffItem[] = groupedConfigListOnShow.value[0].configs.map((item) => {
+      const configs: ISingleLineKVDIffItem[] = list.map((item) => {
         const { diffType, id, key, baseContent, currentContent } = item;
         return {
           id,
