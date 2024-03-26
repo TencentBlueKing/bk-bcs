@@ -22,8 +22,7 @@
             class="rule-input"
             :placeholder="inputPlaceholder(rule)"
             :disabled="rule.type === 'del'"
-            @input="handleInput(index)"
-            @change="handleRuleContentChange(index)">
+            @input="handleRuleContentChange(index)">
             <template #suffix>
               <div
                 v-if="rule.type"
@@ -49,8 +48,8 @@
             </template>
           </div>
           <div
-            :class="['preview', { 'preview-mode': previewRule?.id === rule.id }, { 'need-preview': rule.needPreview }]"
-            @click="handlePreviewRule(rule)">
+            :class="['preview', { 'preview-mode': previewRule?.index === index }, { 'need-preview': rule.needPreview }]"
+            @click="handlePreviewRule(rule, index)">
             <span>预览</span><Arrows-Right class="arrow-icon" />
           </div>
         </div>
@@ -107,7 +106,7 @@
         id,
         type: '',
         content: scope.slice(1),
-        original: scope,
+        original: scope.slice(1),
         isRight: true,
         app: selectApp || null,
         originalApp: app,
@@ -194,15 +193,6 @@
     return !!rule.content.length;
   };
 
-  // 产品逻辑：没有检测到输入错误时：鼠标失焦后检测；如果检测到错误时：输入框只要有内容变化就要检测
-  const handleInput = (index: number) => {
-    const rule = localRules.value[index];
-    if (!rule.isRight) {
-      rule.isRight = validateRule(rule);
-    }
-    emits('formChange');
-  };
-
   const handleSelectApp = (index: number) => {
     const rule = localRules.value[index];
     localRules.value[index].isSelectService = !!localRules.value[index].app;
@@ -223,6 +213,7 @@
       rule.needPreview = isRuleChange;
     }
     updateRuleParams();
+    emits('formChange');
   };
 
   const updateRuleParams = () => {
@@ -259,21 +250,23 @@
     return localRules.value.some((item) => !item.isRight || !item.isSelectService);
   };
 
-  const handlePreviewRule = (rule: IRuleEditing) => {
+  const handlePreviewRule = (rule: IRuleEditing, index: number) => {
     // 规则为新增或修改 先进行校验
     if (rule.type) {
       rule.isSelectService = !!rule.app;
       rule.isRight = validateRule(rule);
     }
-    let previewRule: IPreviewRule | null = {
-      id: rule.id,
-      appName: rule.app!.spec.name,
-      scopeContent: `/${rule.content}`,
-    };
+    let previewRule: IPreviewRule | null;
     // 规则错误取消预览
     if (!rule.isRight || !rule.isSelectService) {
       previewRule = null;
     } else {
+      previewRule = {
+        id: rule.id,
+        appName: rule.app!.spec.name,
+        scopeContent: `/${rule.content}`,
+        index,
+      };
       rule.needPreview = false;
     }
     emits('update:previewRule', previewRule);

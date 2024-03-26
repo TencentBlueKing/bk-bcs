@@ -7,10 +7,10 @@
     </p>
     <div v-if="props.rules.length > 0" class="rule-list">
       <div
-        v-for="rule in rules"
+        v-for="(rule, index) in rules"
         :key="rule.id"
         :class="['rule-item', { 'current-rule-item': previewRule?.id === rule.id }]"
-        @click="handlePreviewRule(rule)">
+        @click="handlePreviewRule(rule, index)">
         {{ rule.spec.app + rule.spec.scope }}
         <div v-if="previewRule?.id === rule.id" class="arrow-icon"></div>
       </div>
@@ -36,11 +36,12 @@
 
   const emits = defineEmits(['edit', 'update:previewRule']);
 
-  const handlePreviewRule = (rule: ICredentialRule) => {
+  const handlePreviewRule = (rule: ICredentialRule, index: number) => {
     const previewRule = {
       id: rule.id,
       appName: rule.spec.app,
       scopeContent: rule.spec.scope,
+      index,
     };
     emits('update:previewRule', previewRule);
   };
@@ -88,7 +89,7 @@
         height: 0;
         border-top: 8px solid transparent;
         border-bottom: 8px solid transparent;
-        border-left: 8px solid #699DF4;
+        border-left: 8px solid #699df4;
       }
     }
   }
