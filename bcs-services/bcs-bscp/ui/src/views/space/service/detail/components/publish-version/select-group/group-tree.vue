@@ -118,6 +118,7 @@
     treeData.value = list;
   };
 
+  // 节点是否为选中状态
   const getNodeCheckValue = (node: IGroupNode | ITreeDataItem) => {
     if ('children' in node) {
       return node.children.every((childNode) => props.value.findIndex((group) => group.id === childNode.id) > -1);
@@ -125,20 +126,19 @@
     return props.value.findIndex((group) => group.id === node.id) > -1;
   };
 
+  // 节点是否为半选状态
   const getNodeIndeterminateValue = (node: IGroupNode | ITreeDataItem) => {
     if ('children' in node) {
       let foundChecked = false;
       let foundUnChecked = false;
-      for (const childNode of node.children) {
+      node.children.some((childNode) => {
         if (props.value.findIndex((group) => group.id === childNode.id) > -1) {
           foundChecked = true;
         } else {
           foundUnChecked = true;
         }
-        if (foundChecked && foundUnChecked) {
-          break;
-        }
-      }
+        return foundChecked && foundUnChecked;
+      });
       return foundChecked && foundUnChecked;
     }
     return false;
