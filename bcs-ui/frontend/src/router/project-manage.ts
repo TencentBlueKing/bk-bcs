@@ -7,6 +7,7 @@ const ProjectInfo = () => import(/* webpackChunkName: 'project' */'@/views/proje
 const tencentCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/tencentCloud.vue');
 const tencentPublicCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/tencentPublicCloud.vue');
 const googleCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/googleCloud.vue');
+const azureCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/azureCloud.vue');
 
 export default [
   {
@@ -48,6 +49,15 @@ export default [
     component: googleCloud,
     meta: {
       title: 'Google Cloud',
+      hideBack: true,
+    },
+  },
+  {
+    path: 'azure-cloud',
+    name: 'azureCloud',
+    component: azureCloud,
+    meta: {
+      title: 'Azure Cloud',
       hideBack: true,
     },
   },

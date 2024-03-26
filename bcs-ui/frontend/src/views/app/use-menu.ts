@@ -341,6 +341,11 @@ export default function useMenu() {
               id: 'GOOGLECLOUD',
               route: 'googleCloud',
             },
+            {
+              title: 'Azure Cloud',
+              id: 'AZURECLOUD',
+              route: 'azureCloud',
+            },
           ],
         },
         {

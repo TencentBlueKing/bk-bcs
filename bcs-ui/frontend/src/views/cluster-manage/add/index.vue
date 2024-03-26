@@ -194,7 +194,7 @@ export default defineComponent({
             title: $i18n.t('publicCloud.azure.title'),
             desc: $i18n.t('publicCloud.azure.desc'),
             type: 'azureCloud',
-            disabled: true,
+            disabled: _INTERNAL_.value,
           },
         ],
       },
@@ -270,6 +270,11 @@ export default defineComponent({
         case 'googleCloud':
           $router.push({
             name: 'importGoogleCluster',
+          });
+          break;
+        case 'azureCloud':
+          $router.push({
+            name: 'importAzureCluster',
           });
           break;
       }

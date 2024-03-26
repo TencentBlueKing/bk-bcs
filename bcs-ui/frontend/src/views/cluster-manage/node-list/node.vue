@@ -20,7 +20,7 @@
       </div>
     </bcs-alert>
     <!-- 修改节点转移模块 -->
-    <template v-if="['tencentCloud', 'tencentPublicCloud', 'gcpCloud'].includes(curSelectedCluster.provider || '')">
+    <template v-if="['tencentCloud', 'tencentPublicCloud', 'gcpCloud', 'azureCloud'].includes(curSelectedCluster.provider || '')">
       <div class="flex items-center text-[12px]">
         <div class="text-[#979BA5] bcs-border-tips" v-bk-tooltips="$t('tke.tips.transferNodeCMDBModule')">
           {{ $t('tke.label.nodeModule.text') }}
@@ -1094,7 +1094,7 @@ export default defineComponent({
       && curSelectedCluster.value.importCategory === 'kubeConfig');
     // gcpCloud私有节点
     const isGcpCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
-      && curSelectedCluster.value.provider === 'gcpCloud'
+      && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud')
       && !row.nodeGroupID;
     // 全量表格数据
     const tableData = ref<any[]>([]);

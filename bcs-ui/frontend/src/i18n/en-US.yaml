@@ -212,18 +212,8 @@ metrics:
   podUsage: Pod usage
   cpuRequestUsage:
     text: CPU packing rate
-    clusterDesc: >-
-      Cluster CPU box installation rate = sum of all POD CPU REQUEST in the
-      cluster / cluster node CPU total number (excluding MASTER node), the
-      closer the cluster CPU packing rate is closer to the cluster CPU usage
-      rate, the higher the cluster CPU resource utilization rate {0}
   memRequestUsage:
     text: Memory box rate
-    clusterDesc: >-
-      Cluster memory installation box rate = The sum of all POD memory Request /
-      cluster all node memory (excluding Master nodes), the closer the cluster
-      memory box rate is closer to the cluster memory usage rate, the higher the
-      utilization rate of the cluster memory resources {0}
   diskIOUsage: Disk IO
   diskIOUsage1: DiskIO Total
   diskIOUsage2: Disk IO usage rate
@@ -273,7 +263,6 @@ generic:
       noMatchData: No matching data
       searchEmpty:
         text: The search result is empty
-        subTitle: 'You can try adjusting keywords or {action}'
     info:
       tips: Tip
       refreshAuth: 'The current operation is permanent, please refresh the interface'
@@ -752,14 +741,6 @@ cluster:
           desc: >-
             Node pod CIDR cannot be adjusted after allocation Please fill in
             after careful evaluation
-        article1: >-
-          The container network resources are limited, please allocate it
-          reasonably. Under the current container network configuration, the
-          cluster can be added at most {count} individual nodes.
-        article2: >-
-          When the container network resources are excessive, the container
-          network will be automatically scale-up. After the capacity is
-          expanded, the cluster can be added at most {count}.
         article3: >-
           The number of nodes can be added with clusters (including Master nodes
           and node nodes) = (Number of IP -quantity of service) / single node
@@ -943,15 +924,13 @@ cluster:
         placeholder: Please select business Topo module from CMDB
     unreadyConfig:
       title: Scaling Pause Configuration
-      path: >-
-        Pause automatic scaling when the number of NotReady nodes is greater
-        than {0} and exceeds {1} of the total number of nodes in the cluster
       desc: >-
         Autoscaler protection mechanism. If the number or proportion of
         NotReady  nodes is too large, the newly added nodes may also be
         NotReady, resulting  in increased business costs. When the number of
         NotReady nodes does not meet  the suspension triggering conditions,
         Autoscaler will be automatically restored
+      path: Scaling Pause Configuration Path
     autoScalerConfig:
       title: Autoscaler configuration
       expander:
@@ -1457,6 +1436,9 @@ cluster:
       retry: Failure to retry
       setLabel: Set label
       setTaint: Set taint
+      addTag: Add tag
+      saveSettings: save setting
+      cancel: cancel
       copy:
         text: Copy
         checkedIP: Copy check ip
@@ -1487,6 +1469,7 @@ cluster:
       batchSetLabel:
         text: Set label batch
         desc: Batch settings only show the same key label
+      batchSetTaint: Batch set taint
     label:
       podCounts: Pods
       index: No.
@@ -3106,6 +3089,42 @@ importGoogleCloud:
     regions: Regions
   tips:
     disabledTips: Credentials associated with the cluster and cannot be deleted
+azureCloud:
+  button:
+    create: Create
+    delete: Delete
+  placeholder:
+    search: Search ID/name/SubscriptionID/tenantID/ClientID/cluster
+  tips:
+    nameRegex: 'Only support English, numbers and characters (-)'
+    secretRegex: 'Only support English, numbers and characters (- or ~)'
+  label:
+    create: Create
+    cluster: Associated cluster
+    clusterType: Cluster type
+    managed: managed cluster
+    aksDesc: >-
+      The Master and Etcd of the Kubernetes cluster will be centrally managed
+      and maintained by the AKS team, and cluster administrators do not need to
+      concern themselves with the management and maintenance of the cluster
+      Master.
+importAzureCloud:
+  title: Import a public cloud cluster - Azure Cloud
+  label:
+    clusterName: Cluster name
+    token: Cloud Credentials
+    resourceGroups: Resource Groups
+    region: Region
+    clusterID: Cluster ID
+    nodemanArea: Nodeman Area
+    desc: Description
+  button:
+    test: Test
+    import: Import
+  clusterRegion:
+    zones: Zones
+    regions: Regions
+    other: Other
 publicCloud:
   tencent:
     title: Tencent Cloud
@@ -3267,7 +3286,13 @@ tke:
         Security group inbound rules must allow traffic from the BlueKing
         platform's network egress IP address on TCP port 443; otherwise, adding
         the cluster will fail.
-      defaultSecurityGroupTips: ''
+      defaultSecurityGroupTips: >-
+        The default security group of Cloud Ladder has been configured with
+        security rules for self-developed cloud segments, and users do not need
+        to configure additional rules; if there are special security rule
+        configurations required for the business, custom security groups can be
+        created and used in conjunction with the Cloud Ladder default security
+        group.
     availableIpNum: Available number of IPs
     serviceCidr: Service CIDR
     subnetID: Subnet ID
