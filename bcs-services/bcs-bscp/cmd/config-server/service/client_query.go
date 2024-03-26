@@ -28,7 +28,7 @@ func (s *Service) CreateClientQuery(ctx context.Context, req *pbcs.CreateClientQ
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: meta.Basic{Type: meta.App, Action: meta.Create}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View}, BizID: req.BizId},
 	}
 
 	err := s.authorizer.Authorize(kt, res...)
@@ -94,7 +94,7 @@ func (s *Service) UpdateClientQuery(ctx context.Context, req *pbcs.UpdateClientQ
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.Id}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.Id}, BizID: req.BizId},
 	}
 	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
@@ -123,7 +123,7 @@ func (s *Service) DeleteClientQuery(ctx context.Context, req *pbcs.DeleteClientQ
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: meta.Basic{Type: meta.App, Action: meta.Delete, ResourceID: req.Id}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.Id}, BizID: req.BizId},
 	}
 	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
