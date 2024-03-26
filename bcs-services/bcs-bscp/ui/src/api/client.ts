@@ -17,7 +17,7 @@ export const getClientQueryList = (bizId: string, appId: number, query: IClinetC
  * @returns
  */
 export const getClientPullRecord = (bizId: string, appId: number, clientId: number, query: IClinetCommonQuery) =>
-  http.post(`/config/biz/${bizId}/apps/${appId}/client_events${clientId}`, query);
+  http.post(`/config/biz/${bizId}/apps/${appId}/client_events/${clientId}`, query);
 
 /**
  * 获取客户端搜索记录

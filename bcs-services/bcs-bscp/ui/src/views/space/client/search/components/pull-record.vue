@@ -67,8 +67,16 @@
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column label="配置拉取文件数" prop="spec.download_file_num" width="116"></bk-table-column>
-          <bk-table-column label="配置拉取文件大小" prop="spec.total_file_size" width="128"></bk-table-column>
+          <bk-table-column label="配置拉取文件数" width="116">
+            <template #default="{ row }">
+              <div v-if="row.spec">{{ `${row.spec.download_file_num}/${row.spec.total_file_num}` }}</div>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="配置拉取文件大小" width="128">
+            <template #default="{ row }">
+              <div v-if="row.spec">{{ byteUnitConverse(row.spec.download_file_size) }}</div>
+            </template>
+          </bk-table-column>
           <bk-table-column label="配置拉取状态" width="104">
             <template #default="{ row }">
               <div v-if="row.spec" class="release_change_status">
@@ -98,7 +106,7 @@
   import { Share, Spinner, InfoLine } from 'bkui-vue/lib/icon';
   import SearchInput from '../../../../../components/search-input.vue';
   import { getClientPullRecord } from '../../../../../api/client';
-  import { datetimeFormat } from '../../../../../utils';
+  import { datetimeFormat, byteUnitConverse } from '../../../../../utils';
   import { CLIENT_STATUS_MAP } from '../../../../../constants/client';
   import dayjs from 'dayjs';
   import TableEmpty from '../../../../../components/table/table-empty.vue';
