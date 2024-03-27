@@ -1,5 +1,5 @@
 <template>
-  <div class="navigator-wrap">
+  <div class="text-diff-legend">
     <div class="color-wrapper">
       <div class="color-info">
         <div class="color-box red"></div>
@@ -38,7 +38,7 @@
 
   let contentNavigator: monaco.editor.IDiffNavigator;
   let permissionNavigator: monaco.editor.IDiffNavigator;
-  const contentLineChange = ref();
+  const contentLineChange = ref<monaco.editor.ILineChange[]>([]);
   const contentDiffNumber = ref(0);
   const currentDiffNumber = ref(0);
   const diffNumber = computed(() => contentDiffNumber.value + props.permissionDiffNumber);
@@ -81,7 +81,7 @@
   // 获取内容差异个数
   const getContentDiffNumber = () => {
     props.diffEditor.onDidUpdateDiff(() => {
-      contentLineChange.value = props.diffEditor.getLineChanges();
+      contentLineChange.value = props.diffEditor.getLineChanges() || [];
       contentDiffNumber.value = contentLineChange.value.length;
     });
   };
@@ -89,7 +89,7 @@
   // 获取当前差异行
   const getCurrentDiffIndex = () => {
     const position = props.diffEditor.getPosition() as monaco.Position;
-    if (contentLineChange.value.length === 0) {
+    if (contentLineChange.value?.length === 0) {
       currentDiffNumber.value = 0;
       return;
     }
@@ -112,7 +112,7 @@
 </script>
 
 <style scoped lang="scss">
-  .navigator-wrap {
+  .text-diff-legend {
     display: flex;
     align-items: center;
     width: 1197.72px;

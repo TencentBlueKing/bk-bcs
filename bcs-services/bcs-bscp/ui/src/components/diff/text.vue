@@ -9,10 +9,10 @@
       <section ref="textDiffRef" class="text-diff-wrapper"></section>
     </div>
     <div class="footer">
-      <navigator
+      <TextDiffLegend
         :permission-diff-number="permissionDiffNumber"
         :diff-editor="diffEditor"
-        :permission-editor="permissionEditor"></navigator>
+        :permission-editor="permissionEditor" />
     </div>
   </div>
 </template>
@@ -27,7 +27,7 @@
   import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker.js?worker';
   import { IVariableEditParams } from '../../../types/variable';
   import useDiffEditorVariableReplace from '../../utils/hooks/use-diff-editor-variable-replace';
-  import navigator from './navigator.vue';
+  import TextDiffLegend from './text-diff-legend.vue';
 
   const { t } = useI18n();
   self.MonacoEnvironment = {

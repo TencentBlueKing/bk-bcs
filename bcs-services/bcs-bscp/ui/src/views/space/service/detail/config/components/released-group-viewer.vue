@@ -49,7 +49,7 @@
       disabled?: boolean;
       placement?: string;
       groups: IReleasedGroup[]; // 当前版本上线的分组实例
-      isPending: boolean; // 是否为待上线
+      isPending?: boolean; // 是否为待上线
     }>(),
     {
       placement: 'bottom-end',
