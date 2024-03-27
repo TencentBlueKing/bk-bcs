@@ -193,3 +193,17 @@ var AKSImageOsList = []*proto.OsImage{
 		Provider:        common.PublicImageProvider,
 	},
 }
+
+// CCEImageOsList cce default images
+var CCEImageOsList = []*proto.OsImage{
+	{
+		Alias:           "",
+		Arch:            "x86_64",
+		ImageID:         "798dd69f-aba4-491b-a0db-53134b66f0c8",
+		OsCustomizeType: "GENERAL",
+		OsName:          "Huawei Cloud EulerOS 2.0 Standard 64 bit",
+		SeriesName:      "Huawei Cloud EulerOS 2.0 标准版 64位",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+}
