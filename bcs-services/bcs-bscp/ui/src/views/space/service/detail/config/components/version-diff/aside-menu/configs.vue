@@ -321,6 +321,9 @@
           signature,
           template_revision_id,
           create_at,
+          privilege,
+          user,
+          user_group,
         } = tpl;
         if (file_state !== 'DELETE') {
           group.configs.push({
@@ -332,6 +335,7 @@
             update_at: datetimeFormat(create_at),
             byte_size: unNamedVersion ? byte_size : origin_byte_size,
             signature: unNamedVersion ? signature : origin_signature,
+            permission: { privilege, user, user_group },
             template_revision_id,
           });
         }

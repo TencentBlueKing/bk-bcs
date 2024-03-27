@@ -29,7 +29,7 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: meta.Basic{Type: meta.App, Action: meta.View}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
 
 	err := s.authorizer.Authorize(kt, res...)

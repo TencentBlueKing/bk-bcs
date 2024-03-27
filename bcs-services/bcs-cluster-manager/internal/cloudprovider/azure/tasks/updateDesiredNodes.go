@@ -491,7 +491,7 @@ func vmToNode(client api.AksService, info *cloudprovider.CloudDependBasicInfo,
 
 // CheckClusterNodesStatusTask check update desired nodes status task. nodes already add to cluster,
 // thus not rollback desiredNum and only record status
-func CheckClusterNodesStatusTask(taskID string, stepName string) error {
+func CheckClusterNodesStatusTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)

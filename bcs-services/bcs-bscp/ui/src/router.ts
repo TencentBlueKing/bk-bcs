@@ -135,7 +135,23 @@ const routes = [
         ],
       },
       {
-        path: 'credentials',
+        path: 'client_statistics/:appId?',
+        name: 'client-statistics',
+        meta: {
+          navModule: 'client-statistics',
+        },
+        component: () => import('./views/space/client/manage/index.vue'),
+      },
+      {
+        path: 'client_search/:appId?',
+        name: 'client-search',
+        meta: {
+          navModule: 'client-search',
+        },
+        component: () => import('./views/space/client/search/index.vue'),
+      },
+      {
+        path: 'client_credentials',
         name: 'credentials-management',
         meta: {
           navModule: 'credentials',
