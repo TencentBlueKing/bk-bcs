@@ -619,8 +619,8 @@
     .secondNav-item {
       width: 102px;
       height: 40px;
-      text-align: center;
       line-height: 40px;
+      padding-left: 16px;
       font-size: 14px;
       a {
         color: #96a2b9;
