@@ -6,7 +6,7 @@
         v-model="localApp.id"
         ref="selectorRef"
         class="service-selector"
-        :popover-options="{ theme: 'light bk-select-popover service-selector-popover' }"
+        :popover-options="{ theme: 'light bk-select-popover' }"
         :popover-min-width="360"
         :filterable="true"
         :input-search="false"
@@ -203,6 +203,9 @@
       .heartbeat-selector {
         width: 112px;
         margin-right: 8px;
+        :deep(.bk-input--default) {
+          border-radius: 0 2px 2px 0;
+        }
       }
       .search-icon {
         margin-right: 8px;
