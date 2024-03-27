@@ -378,7 +378,7 @@
   };
 
   const refreshList = () => {
-    searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+    isSearchEmpty.value = searchStr.value === '';
     pagination.value.current = 1;
     getVersionList();
   };

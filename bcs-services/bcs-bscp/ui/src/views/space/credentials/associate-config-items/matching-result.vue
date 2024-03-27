@@ -85,7 +85,7 @@
 
   const loadCredentialRulePreviewList = async () => {
     listLoading.value = true;
-    searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+    isSearchEmpty.value = searchStr.value === '';
     const params = {
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit,

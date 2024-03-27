@@ -148,7 +148,7 @@
   const loadTableData = async () => {
     try {
       loading.value = true;
-      searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+      isSearchEmpty.value = searchStr.value === '';
       const params = {
         start: pagination.value.limit * (pagination.value.current - 1),
         limit: pagination.value.limit,

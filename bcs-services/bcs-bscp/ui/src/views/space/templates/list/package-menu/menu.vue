@@ -210,7 +210,7 @@
 
   const handleSearch = () => {
     let result: ITemplatePackageItem[] = [];
-    searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+    isSearchEmpty.value = searchStr.value === '';
     if (searchStr.value) {
       result = packages.value.filter((item) => item.spec.name.toLowerCase().includes(searchStr.value.toLowerCase()));
     } else {
