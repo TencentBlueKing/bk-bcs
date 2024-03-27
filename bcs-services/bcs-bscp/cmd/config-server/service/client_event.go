@@ -28,7 +28,7 @@ func (s *Service) ListClientEvents(ctx context.Context, req *pbcs.ListClientEven
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: meta.Basic{Type: meta.App, Action: meta.View}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
 
 	err := s.authorizer.Authorize(kt, res...)
