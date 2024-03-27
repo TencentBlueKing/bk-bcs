@@ -117,16 +117,8 @@ docs/.me_configs.data
 celerybeat*
 staticfiles
 
-backend/edition-metadata.json
-
-# This gitignore file is always written by editionctl script automatically
-bcs-ui/.gitignore
-bcs-ui/edition-metadata.json
-
 /data/
 
-bcs-ui/backend/settings/ce/dev_*.py
-bcs-ui/support-files/iam/
 .mypy_cache
 .kube/
 .husky

@@ -1,9 +1,0 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: configmap-test
-  namespace: default
-data:
-  special.how: very
-  special.type: charm
