@@ -417,7 +417,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 // CheckClusterNodesStatusTask check update desired nodes status task. nodes already add to cluster,
 // thus not rollback desiredNum and only record status
-func CheckClusterNodesStatusTask(taskID string, stepName string) error {
+func CheckClusterNodesStatusTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step

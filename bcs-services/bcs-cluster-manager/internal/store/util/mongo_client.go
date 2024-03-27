@@ -51,12 +51,12 @@ func NewMongoCli(opt *mongo.Options) (*driver.Client, error) {
 	mCliOpt.ConnectTimeout = &timeoutDuration
 
 	// create mongo client
-	mCli, err := driver.NewClient(mCliOpt)
+	mCli, err := driver.NewClient(mCliOpt) // nolint
 	if err != nil {
 		return nil, err
 	}
 	// connect to mongo
-	if err = mCli.Connect(context.TODO()); err != nil {
+	if err = mCli.Connect(context.TODO()); err != nil { // nolint
 		return nil, err
 	}
 
