@@ -64,6 +64,10 @@ type EndpointPort struct {
 	// mycompany.com/my-custom-protocol.
 	// +optional
 	AppProtocol *string `json:"appProtocol,omitempty" protobuf:"bytes,4,name=appProtocol"`
+
+	// hostPort represents the hostport of the pod using bcs randhosport plugin
+	// +optional
+	HostPort *int32 `json:"hostPort,omitempty" protobuf:"bytes,5,opt,name=hostPort"`
 }
 
 // EndpointConditions represents the current condition of an endpoint.
@@ -98,8 +102,6 @@ type MultiClusterEndpointSliceSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	AddressType AddressType `json:"addressType"`
-
-	Ports []EndpointPort `json:"ports"`
 
 	Endpoints []MultiClusterEndpointSliceEd `json:"endpoints"`
 }
@@ -149,9 +151,7 @@ type MultiClusterEndpointSliceEd struct {
 	// +optional
 	NodeAddresses []string `json:"nodeAddresses,omitempty" protobuf:"bytes,7,opt,name=nodeAddresses"`
 
-	// hostPort represents the hostport of the pod using bcs randhosport plugin
-	// +optional
-	HostPort *int32 `json:"hostPort,omitempty" protobuf:"bytes,8,opt,name=hostPort"`
+	Ports []EndpointPort `json:"ports,omitempty" protobuf:"bytes,8,opt,name=ports"`
 }
 
 // MultiClusterEndpointSliceStatus defines the observed state of MultiClusterEndpointSlice
