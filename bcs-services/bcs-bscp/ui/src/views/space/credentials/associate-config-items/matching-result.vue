@@ -10,22 +10,27 @@
       <div class="totle">共 {{ pagination.count }} 项</div>
     </div>
     <SearchInput v-model="searchStr" :placeholder="'请输入配置项名称'" @search="loadCredentialRulePreviewList" />
-    <bk-table
-      :empty-text="tableEmptyText"
-      :data="tableData"
-      :border="['outer']"
-      :remote-pagination="true"
-      :pagination="pagination"
-      :key="isFileType"
-      @page-value-change="loadCredentialRulePreviewList">
-      <bk-table-column :label="isFileType ? '配置文件绝对路径' : '配置项'">
-        <template #default="{ row }">
-          <div v-if="row.name">
-            {{ isFileType ? fileAP(row) : row.name }}
-          </div>
+    <bk-loading :loading="listLoading">
+      <bk-table
+        :empty-text="tableEmptyText"
+        :data="tableData"
+        :border="['outer']"
+        :remote-pagination="true"
+        :pagination="pagination"
+        :key="isFileType"
+        @page-value-change="loadCredentialRulePreviewList">
+        <bk-table-column :label="isFileType ? '配置文件绝对路径' : '配置项'">
+          <template #default="{ row }">
+            <div v-if="row.name">
+              {{ isFileType ? fileAP(row) : row.name }}
+            </div>
+          </template>
+        </bk-table-column>
+        <template #empty>
+          <TableEmpty :empty-title="tableEmptyText" :is-search-empty="isSearchEmpty" @clear="handleClearSearchStr" />
         </template>
-      </bk-table-column>
-    </bk-table>
+      </bk-table>
+    </bk-loading>
   </div>
 </template>
 <script setup lang="ts">
@@ -33,6 +38,7 @@
   import { IPreviewRule } from '../../../../../types/credential';
   import { getCredentialPreview } from '../../../../api/credentials';
   import SearchInput from '../../../../components/search-input.vue';
+  import TableEmpty from '../../../../components/table/table-empty.vue';
 
   const props = defineProps<{
     rule: IPreviewRule | null;
@@ -40,6 +46,8 @@
   }>();
 
   const isFileType = ref(false);
+  const isSearchEmpty = ref(false);
+  const listLoading = ref(false);
 
   watch(
     () => props.rule,
@@ -76,6 +84,8 @@
   });
 
   const loadCredentialRulePreviewList = async () => {
+    listLoading.value = true;
+    searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
     const params = {
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit,
@@ -83,10 +93,21 @@
       scope: props.rule!.scopeContent,
       search_value: searchStr.value,
     };
-    const res = await getCredentialPreview(props.bkBizId, params);
-    pagination.value.count = res.data.count;
-    tableData.value = res.data.details;
-    isFileType.value = !!tableData.value[0]?.path;
+    try {
+      const res = await getCredentialPreview(props.bkBizId, params);
+      pagination.value.count = res.data.count;
+      tableData.value = res.data.details;
+      isFileType.value = !!tableData.value[0]?.path;
+    } catch (error) {
+      console.error(error);
+    } finally {
+      listLoading.value = false;
+    }
+  };
+
+  const handleClearSearchStr = () => {
+    searchStr.value = '';
+    loadCredentialRulePreviewList();
   };
 </script>
 <style lang="scss" scoped>
