@@ -54,7 +54,11 @@ type ClientAttachment struct {
 type Resource struct {
 	CpuUsage       float64 `gorm:"column:cpu_usage" json:"cpu_usage"`
 	CpuMaxUsage    float64 `gorm:"column:cpu_max_usage" json:"cpu_max_usage"`
+	CpuMinUsage    float64 `gorm:"column:cpu_min_usage" json:"cpu_min_usage"`
+	CpuAvgUsage    float64 `gorm:"column:cpu_avg_usage" json:"cpu_avg_usage"`
 	MemoryUsage    uint64  `gorm:"column:memory_usage" json:"memory_usage"`
+	MemoryMinUsage uint64  `gorm:"column:memory_min_usage" json:"memory_min_usage"`
+	MemoryAvgUsage uint64  `gorm:"column:memory_avg_usage" json:"memory_avg_usage"`
 	MemoryMaxUsage uint64  `gorm:"column:memory_max_usage" json:"memory_max_usage"`
 }
 

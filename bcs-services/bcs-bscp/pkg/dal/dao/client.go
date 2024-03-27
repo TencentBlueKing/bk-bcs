@@ -50,6 +50,20 @@ type Client interface {
 	// List Obtain client data according to conditions
 	List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int64, search *pbclient.ClientQueryCondition,
 		order *pbds.ListClientsReq_Order, opt *types.BasePage) ([]*table.Client, int64, error)
+	// ListClientGroupByCurrentReleaseID 按当前版本 ID 列出客户端组
+	ListClientGroupByCurrentReleaseID(kit *kit.Kit, bizID, appID uint32, heartbeatTime int64,
+		search *pbclient.ClientQueryCondition) ([]types.ClientConfigVersionChart, error)
+	// ListClientGroupByChangeStatus 按更改状态列出客户端组
+	ListClientGroupByChangeStatus(kit *kit.Kit, bizID, appID uint32, heartbeatTime int64,
+		search *pbclient.ClientQueryCondition) ([]types.ChangeStatusChart, error)
+	// ListClientGroupByFailedReason 按失败原因列出客户端组
+	ListClientGroupByFailedReason(kit *kit.Kit, bizID, appID uint32, heartbeatTime int64,
+		search *pbclient.ClientQueryCondition) ([]types.FailedReasonChart, error)
+	// GetResourceUsage 获取资源使用率
+	GetResourceUsage(kit *kit.Kit, bizID, appID uint32, heartbeatTime int64,
+		search *pbclient.ClientQueryCondition) (types.ResourceUsage, error)
+	// ListClientByIDs 按多个 ID 列出客户端
+	ListClientByIDs(kit *kit.Kit, bizID, appID uint32, ids []uint32) ([]*table.Client, error)
 }
 
 var _ Client = new(clientDao)
@@ -58,6 +72,150 @@ type clientDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// GetResourceUsage 获取资源使用率
+func (dao *clientDao) GetResourceUsage(kit *kit.Kit, bizID uint32, appID uint32, heartbeatTime int64,
+	search *pbclient.ClientQueryCondition) (types.ResourceUsage, error) {
+
+	m := dao.genQ.Client
+	q := dao.genQ.Client.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID),
+		m.AppID.Eq(appID))
+
+	var err error
+	var items types.ResourceUsage
+	var conds []rawgen.Condition
+	if search != nil {
+		conds, err = dao.handleSearch(kit, bizID, appID, search)
+		if err != nil {
+			return items, err
+		}
+		if len(search.GetReleaseChangeStatus()) > 0 {
+			status := field.NewString(m.TableName(), "release_change_status")
+			conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
+		} else {
+			conds = append(conds, m.ReleaseChangeStatus.Eq("Success"))
+		}
+		q = q.Where(conds...)
+	}
+
+	err = q.Select(m.CpuMaxUsage.Max().As("cpu_max_usage"), m.MemoryMaxUsage.Max().As("memory_max_usage"),
+		m.CpuMinUsage.Min().As("cpu_min_usage"), m.CpuAvgUsage.Avg().As("cpu_avg_usage"),
+		m.MemoryMinUsage.Min().As("memory_min_usage"), m.MemoryAvgUsage.Avg().As("memory_avg_usage")).
+		Scan(&items)
+	if err != nil {
+		return items, err
+	}
+	return items, nil
+}
+
+// ListClientByIDs 按多个 ID 列出客户端
+func (dao *clientDao) ListClientByIDs(kit *kit.Kit, bizID uint32, appID uint32, ids []uint32) ([]*table.Client, error) {
+	m := dao.genQ.Client
+
+	result, err := dao.genQ.Client.WithContext(kit.Ctx).
+		Select(m.ID, m.BizID, m.AppID, m.ClientType).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ID.In(ids...)).
+		Find()
+
+	return result, err
+}
+
+// ListClientGroupByFailedReason 按照失败原因列出客户端组
+func (dao *clientDao) ListClientGroupByFailedReason(kit *kit.Kit, bizID uint32, appID uint32, heartbeatTime int64,
+	search *pbclient.ClientQueryCondition) ([]types.FailedReasonChart, error) {
+
+	m := dao.genQ.Client
+	q := dao.genQ.Client.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID),
+		m.AppID.Eq(appID), m.ReleaseChangeFailedReason.Neq(""))
+
+	var err error
+	var conds []rawgen.Condition
+	if search != nil {
+		conds, err = dao.handleSearch(kit, bizID, appID, search)
+		if err != nil {
+			return nil, err
+		}
+		if len(search.GetReleaseChangeStatus()) > 0 {
+			status := field.NewString(m.TableName(), "release_change_status")
+			conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
+		} else {
+			conds = append(conds, m.ReleaseChangeStatus.Eq("Failed"))
+		}
+		q = q.Where(conds...)
+	}
+	var items []types.FailedReasonChart
+	err = q.Select(m.ReleaseChangeFailedReason, m.ID.Count().As("count")).Group(m.ReleaseChangeFailedReason).Scan(&items)
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+// ListClientGroupByChangeStatus 按更改状态列出客户端组
+func (dao *clientDao) ListClientGroupByChangeStatus(kit *kit.Kit, bizID uint32, appID uint32, heartbeatTime int64,
+	search *pbclient.ClientQueryCondition) ([]types.ChangeStatusChart, error) {
+
+	m := dao.genQ.Client
+	q := dao.genQ.Client.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID),
+		m.AppID.Eq(appID))
+
+	var err error
+	var conds []rawgen.Condition
+	if search != nil {
+		conds, err = dao.handleSearch(kit, bizID, appID, search)
+		if err != nil {
+			return nil, err
+		}
+		if len(search.GetReleaseChangeStatus()) > 0 {
+			status := field.NewString(m.TableName(), "release_change_status")
+			conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
+		} else {
+			conds = append(conds, m.ReleaseChangeStatus.In("Failed", "Success"))
+		}
+		q = q.Where(conds...)
+	}
+
+	var items []types.ChangeStatusChart
+	err = q.Select(m.ReleaseChangeStatus, m.ID.Count().As("count")).
+		Group(m.ReleaseChangeStatus).
+		Scan(&items)
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+// ListClientGroupByCurrentReleaseID 通过当前版本ID统计数量
+func (dao *clientDao) ListClientGroupByCurrentReleaseID(kit *kit.Kit, bizID uint32, appID uint32, heartbeatTime int64,
+	search *pbclient.ClientQueryCondition) ([]types.ClientConfigVersionChart, error) {
+	m := dao.genQ.Client
+	q := dao.genQ.Client.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.CurrentReleaseID.Neq(0))
+	var err error
+	var conds []rawgen.Condition
+	if heartbeatTime > 0 {
+		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
+	}
+	if search != nil {
+		conds, err = dao.handleSearch(kit, bizID, appID, search)
+		if err != nil {
+			return nil, err
+		}
+		if len(search.GetReleaseChangeStatus()) > 0 {
+			status := field.NewString(m.TableName(), "release_change_status")
+			conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
+		}
+	}
+
+	var items []types.ClientConfigVersionChart
+	err = q.Select(m.CurrentReleaseID, m.ID.Count().As("count")).Where(conds...).
+		Group(m.CurrentReleaseID).
+		Scan(&items)
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 // List Obtain client data according to conditions
@@ -74,6 +232,11 @@ func (dao *clientDao) List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int6
 		conds, err = dao.handleSearch(kit, bizID, appID, search)
 		if err != nil {
 			return nil, 0, err
+		}
+
+		if len(search.GetReleaseChangeStatus()) > 0 {
+			status := field.NewString(m.TableName(), "release_change_status")
+			conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
 		}
 	}
 
@@ -160,11 +323,6 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 		conds = append(conds, q.Where(m.ID.In(cid...)))
 	}
 
-	if len(search.GetReleaseChangeStatus()) > 0 {
-		status := field.NewString(m.TableName(), "release_change_status")
-		conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
-	}
-
 	if search.GetLabel() != nil && len(search.GetLabel().GetFields()) != 0 {
 		for k, v := range search.GetLabel().GetFields() {
 			conds = append(conds, rawgen.Cond(datatypes.JSONQuery("labels").Equals(v.AsInterface(), k))...)
@@ -180,6 +338,16 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 	if len(search.GetOnlineStatus()) > 0 {
 		OnStatus := field.NewString(m.TableName(), "online_status")
 		conds = append(conds, q.Where(OnStatus.In(search.GetOnlineStatus()...)))
+	}
+
+	if len(search.GetClientType()) > 0 {
+		clientType := field.NewString(m.TableName(), "client_type")
+		conds = append(conds, q.Where(clientType.Eq(search.GetClientType())))
+	}
+
+	if len(search.GetClientVersion()) > 0 {
+		clientVersion := field.NewString(m.TableName(), "client_version")
+		conds = append(conds, q.Where(clientVersion.Like("%"+search.GetClientVersion()+"%")))
 	}
 
 	return conds, nil

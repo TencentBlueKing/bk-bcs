@@ -808,6 +808,26 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/{id}"
     };
   };
+
+  // client chart related interface
+  rpc ClientStatisticsAnalyze(ClientStatisticsAnalyzeReq) returns (ClientStatisticsAnalyzeResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/statistics"
+      body: "*"
+    };
+  };
+  rpc ClientPullTrendAnalyze(ClientPullTrendAnalyzeReq) returns (ClientPullTrendAnalyzeResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/pull_trend"
+      body: "*"
+    };
+  };
+  rpc ClientTagsAndExtraInfoAnalyze(ClientTagsAndExtraInfoAnalyzeReq) returns (ClientTagsAndExtraInfoAnalyzeResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/tags_and_extra_info"
+      body: "*"
+    };
+  };
 }
 
 message UpdateCredentialScopeReq {
@@ -2492,3 +2512,38 @@ message DeleteClientQueryReq {
 }
 
 message DeleteClientQueryResp {}
+
+message ClientStatisticsAnalyzeReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  pbclient.ClientQueryCondition search = 3;
+  int64 last_heartbeat_time = 4;
+  string chart_type = 5;  // 图表类型：sunburst、bar
+}
+
+message ClientStatisticsAnalyzeResp {
+  google.protobuf.Struct details = 1;
+}
+
+message ClientPullTrendAnalyzeReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  pbclient.ClientQueryCondition search = 3;
+  int64 last_heartbeat_time = 4;
+  int64 pull_time = 5;
+}
+
+message ClientPullTrendAnalyzeResp {
+  google.protobuf.Struct details = 1;
+}
+
+message ClientTagsAndExtraInfoAnalyzeReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  pbclient.ClientQueryCondition search = 3;
+  int64 last_heartbeat_time = 4;
+}
+
+message ClientTagsAndExtraInfoAnalyzeResp {
+  google.protobuf.Struct details = 1;
+}

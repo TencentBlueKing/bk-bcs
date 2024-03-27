@@ -172,6 +172,9 @@ const (
 	Data_CreateClientQuery_FullMethodName                 = "/pbds.Data/CreateClientQuery"
 	Data_UpdateClientQuery_FullMethodName                 = "/pbds.Data/UpdateClientQuery"
 	Data_DeleteClientQuery_FullMethodName                 = "/pbds.Data/DeleteClientQuery"
+	Data_ClientStatisticsAnalyze_FullMethodName           = "/pbds.Data/ClientStatisticsAnalyze"
+	Data_ClientPullTrendAnalyze_FullMethodName            = "/pbds.Data/ClientPullTrendAnalyze"
+	Data_ClientTagsAndExtraInfoAnalyze_FullMethodName     = "/pbds.Data/ClientTagsAndExtraInfoAnalyze"
 	Data_ListInstances_FullMethodName                     = "/pbds.Data/ListInstances"
 	Data_FetchInstanceInfo_FullMethodName                 = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
@@ -352,6 +355,10 @@ type DataClient interface {
 	CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error)
 	UpdateClientQuery(ctx context.Context, in *UpdateClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	// client metrics chart related interface
+	ClientStatisticsAnalyze(ctx context.Context, in *ClientStatisticsAnalyzeReq, opts ...grpc.CallOption) (*ClientStatisticsAnalyzeResp, error)
+	ClientPullTrendAnalyze(ctx context.Context, in *ClientPullTrendAnalyzeReq, opts ...grpc.CallOption) (*ClientPullTrendAnalyzeResp, error)
+	ClientTagsAndExtraInfoAnalyze(ctx context.Context, in *ClientTagsAndExtraInfoAnalyzeReq, opts ...grpc.CallOption) (*ClientTagsAndExtraInfoAnalyzeResp, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
 	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
@@ -1656,6 +1663,33 @@ func (c *dataClient) DeleteClientQuery(ctx context.Context, in *DeleteClientQuer
 	return out, nil
 }
 
+func (c *dataClient) ClientStatisticsAnalyze(ctx context.Context, in *ClientStatisticsAnalyzeReq, opts ...grpc.CallOption) (*ClientStatisticsAnalyzeResp, error) {
+	out := new(ClientStatisticsAnalyzeResp)
+	err := c.cc.Invoke(ctx, Data_ClientStatisticsAnalyze_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ClientPullTrendAnalyze(ctx context.Context, in *ClientPullTrendAnalyzeReq, opts ...grpc.CallOption) (*ClientPullTrendAnalyzeResp, error) {
+	out := new(ClientPullTrendAnalyzeResp)
+	err := c.cc.Invoke(ctx, Data_ClientPullTrendAnalyze_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ClientTagsAndExtraInfoAnalyze(ctx context.Context, in *ClientTagsAndExtraInfoAnalyzeReq, opts ...grpc.CallOption) (*ClientTagsAndExtraInfoAnalyzeResp, error) {
+	out := new(ClientTagsAndExtraInfoAnalyzeResp)
+	err := c.cc.Invoke(ctx, Data_ClientTagsAndExtraInfoAnalyze_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error) {
 	out := new(ListInstancesResp)
 	err := c.cc.Invoke(ctx, Data_ListInstances_FullMethodName, in, out, opts...)
@@ -1866,6 +1900,10 @@ type DataServer interface {
 	CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error)
 	UpdateClientQuery(context.Context, *UpdateClientQueryReq) (*base.EmptyResp, error)
 	DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*base.EmptyResp, error)
+	// client metrics chart related interface
+	ClientStatisticsAnalyze(context.Context, *ClientStatisticsAnalyzeReq) (*ClientStatisticsAnalyzeResp, error)
+	ClientPullTrendAnalyze(context.Context, *ClientPullTrendAnalyzeReq) (*ClientPullTrendAnalyzeResp, error)
+	ClientTagsAndExtraInfoAnalyze(context.Context, *ClientTagsAndExtraInfoAnalyzeReq) (*ClientTagsAndExtraInfoAnalyzeResp, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
 	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
@@ -2307,6 +2345,15 @@ func (UnimplementedDataServer) UpdateClientQuery(context.Context, *UpdateClientQ
 }
 func (UnimplementedDataServer) DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteClientQuery not implemented")
+}
+func (UnimplementedDataServer) ClientStatisticsAnalyze(context.Context, *ClientStatisticsAnalyzeReq) (*ClientStatisticsAnalyzeResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientStatisticsAnalyze not implemented")
+}
+func (UnimplementedDataServer) ClientPullTrendAnalyze(context.Context, *ClientPullTrendAnalyzeReq) (*ClientPullTrendAnalyzeResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientPullTrendAnalyze not implemented")
+}
+func (UnimplementedDataServer) ClientTagsAndExtraInfoAnalyze(context.Context, *ClientTagsAndExtraInfoAnalyzeReq) (*ClientTagsAndExtraInfoAnalyzeResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientTagsAndExtraInfoAnalyze not implemented")
 }
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
@@ -4906,6 +4953,60 @@ func _Data_DeleteClientQuery_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ClientStatisticsAnalyze_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClientStatisticsAnalyzeReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ClientStatisticsAnalyze(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ClientStatisticsAnalyze_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ClientStatisticsAnalyze(ctx, req.(*ClientStatisticsAnalyzeReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ClientPullTrendAnalyze_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClientPullTrendAnalyzeReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ClientPullTrendAnalyze(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ClientPullTrendAnalyze_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ClientPullTrendAnalyze(ctx, req.(*ClientPullTrendAnalyzeReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ClientTagsAndExtraInfoAnalyze_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClientTagsAndExtraInfoAnalyzeReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ClientTagsAndExtraInfoAnalyze(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ClientTagsAndExtraInfoAnalyze_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ClientTagsAndExtraInfoAnalyze(ctx, req.(*ClientTagsAndExtraInfoAnalyzeReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListInstancesReq)
 	if err := dec(in); err != nil {
@@ -5556,6 +5657,18 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteClientQuery",
 			Handler:    _Data_DeleteClientQuery_Handler,
+		},
+		{
+			MethodName: "ClientStatisticsAnalyze",
+			Handler:    _Data_ClientStatisticsAnalyze_Handler,
+		},
+		{
+			MethodName: "ClientPullTrendAnalyze",
+			Handler:    _Data_ClientPullTrendAnalyze_Handler,
+		},
+		{
+			MethodName: "ClientTagsAndExtraInfoAnalyze",
+			Handler:    _Data_ClientTagsAndExtraInfoAnalyze_Handler,
 		},
 		{
 			MethodName: "ListInstances",
