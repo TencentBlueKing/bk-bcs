@@ -368,6 +368,8 @@
   en: eni-ip
 - msgID: 算力-GPU
   en: Fgpu
+- msgID: 临时存储
+  en: ephemeral-storage
 - msgID: 同类资源不可重复设置配额
   en: "quotas cannot be set repeatedly for the same resources"
 - msgID: "CPU 限制"
