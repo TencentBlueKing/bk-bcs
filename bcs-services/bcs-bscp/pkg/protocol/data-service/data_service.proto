@@ -222,6 +222,7 @@ service Data {
   rpc DeleteKv(DeleteKvReq) returns (pbbase.EmptyResp) {};
   rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {};
   rpc UnDeleteKv(UnDeleteKvReq) returns (pbbase.EmptyResp) {};
+  rpc UndoKv(UndoKvReq) returns (pbbase.EmptyResp) {};
 
   // client related interface
   rpc ListClients(ListClientsReq) returns (ListClientsResp) {};
@@ -1653,6 +1654,12 @@ message BatchUpsertKvsResp {
 }
 
 message UnDeleteKvReq {
+  uint32 id = 1;
+  pbkv.KvSpec spec = 2;
+  pbkv.KvAttachment attachment = 3;
+}
+
+message UndoKvReq {
   uint32 id = 1;
   pbkv.KvSpec spec = 2;
   pbkv.KvAttachment attachment = 3;
