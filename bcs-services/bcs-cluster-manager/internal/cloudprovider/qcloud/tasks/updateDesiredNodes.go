@@ -392,7 +392,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error { // noli
 			// rollback failed nodes
 			_ = returnInstancesAndCleanNodes(ctx, dependInfo, successInstanceID)
 		}
-		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err.Error())
+		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %v", taskID, err)
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask checkClusterInstanceStatus failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
