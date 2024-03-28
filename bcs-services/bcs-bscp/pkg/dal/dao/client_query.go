@@ -121,13 +121,16 @@ func (dao *clientQueryDao) List(kit *kit.Kit, bizID uint32, appID uint32, creato
 	opt *types.BasePage) ([]*table.ClientQuery, int64, error) {
 
 	m := dao.genQ.ClientQuery
-	q := dao.genQ.ClientQuery.WithContext(kit.Ctx)
+	q := dao.genQ.ClientQuery.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Creator.Eq(creator))
 
 	if len(search_type) != 0 {
 		q = q.Where(m.SearchType.Eq(search_type))
+		if search_type == string(table.Common) {
+			q = q.Or(m.BizID.Eq(0), m.AppID.Eq(0), m.Creator.Eq("system"))
+		}
 	}
 
-	d := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Creator.Eq(creator)).Order(m.UpdatedAt.Desc())
+	d := q.Order(m.UpdatedAt.Desc())
 	if opt.All {
 		result, err := d.Find()
 		if err != nil {
