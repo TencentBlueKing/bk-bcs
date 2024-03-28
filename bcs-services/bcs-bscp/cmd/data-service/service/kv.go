@@ -464,20 +464,27 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbb
 
 	kt := kit.FromGrpcContext(ctx)
 
-	kvState := []string{
-		string(table.KvStateAdd),
-		string(table.KvStateUnchange),
-		string(table.KvStateRevise),
+	// 只有删除的才能恢复
+	kv, err := s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key, []string{
+		string(table.KvStateDelete),
+	})
+	if err != nil {
+		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
 	}
-	kv, err := s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key, kvState)
-	if err != nil && !errors.Is(gorm.ErrRecordNotFound, err) {
+
+	// 看该key是否有存在新增
+	addKv, err := s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key, []string{
+		string(table.KvStateAdd),
+	})
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
 		return nil, err
 	}
 
 	tx := s.dao.GenQuery().Begin()
-	if !errors.Is(gorm.ErrRecordNotFound, err) {
-		if e := s.dao.Kv().DeleteWithTx(kt, tx, kv); e != nil {
+	if addKv != nil && addKv.ID > 0 {
+		if e := s.dao.Kv().DeleteWithTx(kt, tx, addKv); e != nil {
 			if rErr := tx.Rollback(); rErr != nil {
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
@@ -485,8 +492,12 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbb
 		}
 	}
 
-	if err = s.dao.Kv().UpdateStateWithTx(kt, tx, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key,
-		table.KvStateUnchange); err != nil {
+	toUpdate, err := s.getKvUpdateData(kt, req.Attachment.BizId, req.Attachment.AppId, kv)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = s.dao.Kv().UpdateWithTx(kt, tx, toUpdate); err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
@@ -501,4 +512,80 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbb
 
 	return new(pbbase.EmptyResp), nil
 
+}
+
+// UndoKv Undo edited data and return to the latest published version
+func (s *Service) UndoKv(ctx context.Context, req *pbds.UndoKvReq) (*pbbase.EmptyResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	// 只有编辑的才能撤回
+	kvState := []string{
+		string(table.KvStateRevise),
+	}
+	kv, err := s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key, kvState)
+	if err != nil {
+		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
+	}
+
+	toUpdate, err := s.getKvUpdateData(kt, req.Attachment.BizId, req.Attachment.AppId, kv)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = s.dao.Kv().Update(kt, toUpdate); err != nil {
+		logs.Errorf("undo kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+func (s *Service) getKvUpdateData(kt *kit.Kit, bizID, appID uint32, kv *table.Kv) (*table.Kv, error) {
+
+	// 获取该服务最新发布的 release_id
+	release, err := s.dao.Release().GetReleaseLately(kt, bizID, appID)
+	if err != nil {
+		return nil, err
+	}
+
+	rkv, err := s.dao.ReleasedKv().Get(kt, bizID, appID, release.ID, kv.Spec.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取最新发布的kv
+	_, kvValue, err := s.getReleasedKv(kt, bizID, appID, rkv.Spec.Version, release.ID, kv.Spec.Key)
+	if err != nil {
+		return nil, err
+	}
+	opt := &types.UpsertKvOption{
+		BizID:  bizID,
+		AppID:  appID,
+		Key:    kv.Spec.Key,
+		Value:  kvValue,
+		KvType: kv.Spec.KvType,
+	}
+	// UpsertKv 创建｜更新kv
+	version, err := s.vault.UpsertKv(kt, opt)
+	if err != nil {
+		logs.Errorf("update kv failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	kv.KvState = table.KvStateUnchange
+
+	kv.Revision = &table.Revision{
+		Reviser:   kt.User,
+		UpdatedAt: time.Now().UTC(),
+	}
+
+	kv.Spec.Version = uint32(version)
+	kv.ContentSpec = &table.ContentSpec{
+		Signature: tools.SHA256(kvValue),
+		Md5:       tools.MD5(kvValue),
+		ByteSize:  uint64(len(kvValue)),
+	}
+
+	return kv, nil
 }

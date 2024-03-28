@@ -237,3 +237,31 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbcs.UnDeleteKvReq) (*pbc
 
 	return &pbcs.UnDeleteKvResp{}, nil
 }
+
+// UndoKv Undo edited data and return to the latest published version
+func (s *Service) UndoKv(ctx context.Context, req *pbcs.UndoKvReq) (*pbcs.UndoKvResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.UndoKvReq{
+		Spec: &pbkv.KvSpec{
+			Key: req.Key,
+		},
+		Attachment: &pbkv.KvAttachment{
+			BizId: req.BizId,
+			AppId: req.AppId,
+		},
+	}
+	if _, err := s.client.DS.UndoKv(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("undo kv failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return &pbcs.UndoKvResp{}, nil
+}
