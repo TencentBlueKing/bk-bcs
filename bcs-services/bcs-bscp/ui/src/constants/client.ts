@@ -68,10 +68,14 @@ export const CLIENT_SEARCH_DATA = [
 export const CLIENT_STATUS_MAP = {
   Success: '成功',
   Failed: '失败',
-  Processing: '拉取中',
+  Processing: '处理中',
   Skip: '跳过',
   online: '在线',
   offline: '离线',
+  success: '成功',
+  failed: '失败',
+  processing: '处理中',
+  skip: '跳过',
 };
 
 export const CLIENT_HEARTBEAT_LIST = [

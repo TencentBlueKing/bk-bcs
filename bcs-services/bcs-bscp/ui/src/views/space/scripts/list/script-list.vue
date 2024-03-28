@@ -310,7 +310,7 @@
   };
 
   const refreshList = () => {
-    isSearchEmpty.value = searchStr.value === '';
+    isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = 1;
     getScripts();
   };
