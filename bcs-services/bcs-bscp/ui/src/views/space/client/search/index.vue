@@ -231,7 +231,7 @@
   watch(
     () => searchQuery.value.search,
     (val) => {
-      Object.keys(val!).length === 0 ? (isSearchEmpty.value = false) : (isSearchEmpty.value = true);
+      isSearchEmpty.value = Object.keys(val!).length !== 0;
       loadList();
     },
     { deep: true },
