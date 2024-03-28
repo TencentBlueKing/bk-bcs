@@ -50,6 +50,7 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
 			Annotations:         req.GetSearch().GetAnnotations(),
 			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
 		},
 		Order: &pbds.ListClientsReq_Order{
 			Desc: req.GetOrder().GetDesc(),
