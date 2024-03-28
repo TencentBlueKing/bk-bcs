@@ -199,9 +199,13 @@ func (s *Service) ListClientEvents(ctx context.Context, req *pbds.ListClientEven
 		if err != nil {
 			return nil, err
 		}
+		// 设置时分秒为 00:00:00
+		starTime = time.Date(starTime.Year(), starTime.Month(), starTime.Day(), 0, 0, 0, 0, starTime.Location())
 	}
 	if len(req.GetEndTime()) > 0 {
 		endTime, err = time.Parse("2006-01-02", req.GetEndTime())
+		// 设置时分秒为 23:59:59
+		endTime = time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 23, 59, 59, 0, endTime.Location())
 		if err != nil {
 			return nil, err
 		}

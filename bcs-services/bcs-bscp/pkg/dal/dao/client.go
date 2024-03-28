@@ -161,8 +161,7 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 	}
 
 	if len(search.GetReleaseChangeStatus()) > 0 {
-		status := field.NewString(m.TableName(), "release_change_status")
-		conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
 	}
 
 	if search.GetLabel() != nil && len(search.GetLabel().GetFields()) != 0 {
@@ -178,8 +177,11 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 	}
 
 	if len(search.GetOnlineStatus()) > 0 {
-		OnStatus := field.NewString(m.TableName(), "online_status")
-		conds = append(conds, q.Where(OnStatus.In(search.GetOnlineStatus()...)))
+		conds = append(conds, q.Where(m.OnlineStatus.In(search.GetOnlineStatus()...)))
+	}
+
+	if len(search.GetClientVersion()) > 0 {
+		conds = append(conds, q.Where(m.ClientVersion.Like("%"+search.GetClientVersion()+"%")))
 	}
 
 	return conds, nil

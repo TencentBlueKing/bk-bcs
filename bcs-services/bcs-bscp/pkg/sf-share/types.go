@@ -556,9 +556,13 @@ func (bd BasicData) Validate() error {
 // ResourceUsage Resource utilization rate
 type ResourceUsage struct {
 	CpuMaxUsage    float64 `json:"cpuMaxUsage"`
+	CpuMinUsage    float64 `json:"cpuMinUsage"`
+	CpuAvgUsage    float64 `json:"cpuAvgUsage"`
 	CpuUsage       float64 `json:"cpuUsage"`
 	MemoryUsage    uint64  `json:"memoryUsage"`
 	MemoryMaxUsage uint64  `json:"memoryMaxUsage"`
+	MemoryMinUsage uint64  `json:"memoryMinUsage"`
+	MemoryAvgUsage uint64  `json:"memoryAvgUsage"`
 }
 
 // VersionChangePayload defines sdk version change to send payload to feed server.
