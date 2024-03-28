@@ -83,6 +83,9 @@
       .diff-content {
         background: #f0f1f5;
       }
+      .content-box {
+        border-color: #3a84ff;
+      }
     }
   }
   .diff-header {

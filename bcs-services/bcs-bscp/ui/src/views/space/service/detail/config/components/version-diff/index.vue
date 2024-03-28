@@ -176,6 +176,7 @@
   const handleClose = () => {
     selectedBaseVersion.value = undefined;
     versionList.value = [];
+    selectedKV.value = 0;
     diffDetailData.value = getDefaultDiffData();
     emits('update:show', false);
   };
