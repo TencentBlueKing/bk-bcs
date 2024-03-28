@@ -300,7 +300,7 @@
   const setEditorHeight = () => {
     nextTick(() => {
       const el = sideSliderRef.value.$el.querySelector('.config-loading-container');
-      editorHeight.value = el.offsetHeight > 510 ? el.offsetHeight - 310 : 300;
+      editorHeight.value = el.offsetHeight > 510 ? el.offsetHeight - 400 : 300;
     });
   };
 
@@ -311,20 +311,22 @@
 <style lang="scss" scoped>
   .config-loading-container {
     height: calc(100vh - 101px);
-    overflow: auto;
     .config-form-wrapper {
       padding: 20px 40px;
       height: 100%;
     }
   }
   .view-config-tab {
+    height: 100%;
     :deep(.bk-tab-header) {
       padding: 8px 24px 0;
       background: #eaebf0;
     }
     :deep(.bk-tab-content) {
       padding: 24px 40px;
+      height: calc(100% - 48px);
       box-shadow: none;
+      overflow: auto;
     }
     :deep(.bk-form-label) {
       color: #979ba5;

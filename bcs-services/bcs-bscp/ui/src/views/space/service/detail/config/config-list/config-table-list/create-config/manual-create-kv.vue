@@ -44,6 +44,7 @@
     key: '',
     kv_type: '',
     value: '',
+    memo: '',
   });
   watch(
     () => props.show,
@@ -53,6 +54,7 @@
           key: '',
           kv_type: '',
           value: '',
+          memo: '',
         };
         content.value = '';
         isFormChange.value = false;
@@ -81,6 +83,8 @@
       configForm.value.value = configForm.value.value.replace(/^0+(?=\d|$)/, '');
     }
     try {
+      console.log('configForm', configForm.value);
+      debugger; // eslint-disable-line
       await createKv(props.bkBizId, props.appId, { ...configForm.value });
       emits('confirm');
       close();

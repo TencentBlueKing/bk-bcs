@@ -3,6 +3,9 @@
     <bk-form-item :label="t('配置项名称')" property="key" :required="true">
       <bk-input v-model="localVal.key" :disabled="editable" @input="change" :placeholder="t('请输入')" />
     </bk-form-item>
+    <bk-form-item :label="t('配置项描述')" property="memo">
+      <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" @input="change" />
+    </bk-form-item>
     <bk-form-item :label="t('数据类型')" property="kv_type" :required="true" :description="typeDescription">
       <bk-radio-group v-model="localVal.kv_type">
         <bk-radio
