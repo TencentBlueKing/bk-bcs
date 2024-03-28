@@ -358,6 +358,9 @@ export default {
   打包下载: 'Package download',
   当前线上全量版本: 'Current online full version',
   历史全量上线过的版本: 'Historical online full version',
+  配置项信息: 'Configuration Info',
+  收起: 'Fold',
+  查看全部: 'View All',
 
   // 分组管理
   新增分组: 'New group',

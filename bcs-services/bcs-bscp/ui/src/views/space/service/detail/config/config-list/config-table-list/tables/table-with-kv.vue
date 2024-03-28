@@ -26,19 +26,18 @@
       </bk-table-column>
       <bk-table-column :label="t('配置项值预览')" prop="spec.value">
         <template #default="{ row }">
-          <div v-if="row.spec" class="preview">
-            <div class="preview-value">{{ row.spec.value }}</div>
-            <Copy @click="handleCopyText(row.spec.value)" />
-          </div>
+          <kvValuePreview v-if="row.spec" :value="row.spec.value" @viewAll="handleView(row)" />
         </template>
       </bk-table-column>
       <bk-table-column
-        :label="t('数据类型')"
         prop="spec.kv_type"
-        :filter="{ filterFn: () => true, list: typeFilterList, checked: typeFilterChecked }"></bk-table-column>
-      <bk-table-column :label="t('创建人')" prop="revision.creator"></bk-table-column>
-      <bk-table-column :label="t('修改人')" prop="revision.reviser"></bk-table-column>
-      <bk-table-column :label="t('修改时间')" :sort="true" :width="220">
+        :label="t('数据类型')"
+        :filter="{ filterFn: () => true, list: typeFilterList, checked: typeFilterChecked }"
+        :width="120">
+      </bk-table-column>
+      <bk-table-column :label="t('创建人')" prop="revision.creator" :width="150"></bk-table-column>
+      <bk-table-column :label="t('修改人')" prop="revision.reviser" :width="150"></bk-table-column>
+      <bk-table-column :label="t('修改时间')" :sort="true" :width="180">
         <template #default="{ row }">
           <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
         </template>
@@ -46,21 +45,22 @@
       <bk-table-column
         v-if="versionData.id === 0"
         :label="t('变更状态')"
-        :filter="{ filterFn: () => true, list: statusFilterList, checked: statusFilterChecked }">
+        :filter="{ filterFn: () => true, list: statusFilterList, checked: statusFilterChecked }"
+        :width="140">
         <template #default="{ row }">
           <StatusTag :status="row.kv_state" />
         </template>
       </bk-table-column>
-      <bk-table-column :label="t('操作')" fixed="right">
+      <bk-table-column :label="t('操作')" fixed="right" :width="220">
         <template #default="{ row }">
           <div class="operate-action-btns">
             <bk-button v-if="row.kv_state === 'DELETE'" text theme="primary" @click="handleUndelete(row)">
               {{ t('恢复') }}
             </bk-button>
             <template v-else>
-              <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEditOrView(row)">{{
-                versionData.id === 0 ? t('编辑') : t('查看')
-              }}</bk-button>
+              <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEditOrView(row)">
+                {{ versionData.id === 0 ? t('编辑') : t('查看') }}
+              </bk-button>
               <bk-button
                 v-if="versionData.status.publish_status !== 'editing'"
                 text
@@ -103,22 +103,22 @@
   import { ref, watch, onMounted, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
+  import Message from 'bkui-vue/lib/message';
   import useConfigStore from '../../../../../../../../store/config';
   import useServiceStore from '../../../../../../../../store/service';
   import { ICommonQuery } from '../../../../../../../../../types/index';
   import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
   import { getKvList, deleteKv, getReleaseKvList, undeleteKv } from '../../../../../../../../api/config';
-  import { datetimeFormat, copyToClipBoard } from '../../../../../../../../utils/index';
+  import { datetimeFormat } from '../../../../../../../../utils/index';
   import { getDefaultKvItem } from '../../../../../../../../utils/config';
   import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
-  import { Copy } from 'bkui-vue/lib/icon';
   import StatusTag from './status-tag';
   import EditConfig from '../edit-config-kv.vue';
   import ViewConfigKv from '../view-config-kv.vue';
+  import kvValuePreview from './kv-value-preview.vue';
   import VersionDiff from '../../../components/version-diff/index.vue';
   import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
   import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
-  import Message from 'bkui-vue/lib/message';
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
@@ -286,14 +286,6 @@
     deleteConfig.value = config;
   };
 
-  const handleCopyText = (text: string) => {
-    copyToClipBoard(text);
-    Message({
-      theme: 'success',
-      message: t('配置项值已复制'),
-    });
-  };
-
   const handleDeleteConfigConfirm = async () => {
     if (!deleteConfig.value) {
       return;
@@ -366,23 +358,6 @@
         .cell {
           color: #c4c6cc !important;
         }
-      }
-    }
-  }
-  .preview {
-    display: flex;
-    justify-content: space-between;
-    .preview-value {
-      width: 80%;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    span {
-      font-size: 12px;
-      cursor: pointer;
-      &:hover {
-        color: #3a84ff;
       }
     }
   }
