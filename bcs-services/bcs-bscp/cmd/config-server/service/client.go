@@ -70,3 +70,114 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 
 	return resp, nil
 }
+
+// ClientPullTrendAnalyze 客户端拉取数量趋势统计
+func (s *Service) ClientPullTrendAnalyze(ctx context.Context, req *pbcs.ClientPullTrendAnalyzeReq) (
+	*pbcs.ClientPullTrendAnalyzeResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	item, err := s.client.DS.ClientPullTrendAnalyze(kt.RpcCtx(), &pbds.ClientPullTrendAnalyzeReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Search: &pbclient.ClientQueryCondition{
+			Label:               req.GetSearch().GetLabel(),
+			CurrentReleaseName:  req.GetSearch().GetCurrentReleaseName(),
+			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
+			Annotations:         req.GetSearch().GetAnnotations(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
+			ClientType:          req.GetSearch().GetClientType(),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.ClientPullTrendAnalyzeResp{Details: item.Details}, nil
+}
+
+// ClientStatisticsAnalyze 客户端配置版本统计、拉取成功率统计、失败原因统计、客户端组件信息统计
+func (s *Service) ClientStatisticsAnalyze(ctx context.Context, req *pbcs.ClientStatisticsAnalyzeReq) (
+	*pbcs.ClientStatisticsAnalyzeResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	item, err := s.client.DS.ClientStatisticsAnalyze(kt.RpcCtx(), &pbds.ClientStatisticsAnalyzeReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Search: &pbclient.ClientQueryCondition{
+			Label:               req.GetSearch().GetLabel(),
+			CurrentReleaseName:  req.GetSearch().GetCurrentReleaseName(),
+			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
+			Annotations:         req.GetSearch().GetAnnotations(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
+			ClientType:          req.GetSearch().GetClientType(),
+		},
+		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+		ChartType:         req.GetChartType(),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.ClientStatisticsAnalyzeResp{
+		Details: item.Details,
+	}, nil
+}
+
+// ClientTagsAndExtraInfoAnalyze 客户端标签、客户端附加信息分布
+func (s *Service) ClientTagsAndExtraInfoAnalyze(ctx context.Context, req *pbcs.ClientTagsAndExtraInfoAnalyzeReq) (
+	*pbcs.ClientTagsAndExtraInfoAnalyzeResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	items, err := s.client.DS.ClientTagsAndExtraInfoAnalyze(kt.RpcCtx(), &pbds.ClientTagsAndExtraInfoAnalyzeReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Search: &pbclient.ClientQueryCondition{
+			Label:               req.GetSearch().GetLabel(),
+			CurrentReleaseName:  req.GetSearch().GetCurrentReleaseName(),
+			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
+			Annotations:         req.GetSearch().GetAnnotations(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
+			ClientType:          req.GetSearch().GetClientType(),
+		},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.ClientTagsAndExtraInfoAnalyzeResp{Details: items.Details}, nil
+}

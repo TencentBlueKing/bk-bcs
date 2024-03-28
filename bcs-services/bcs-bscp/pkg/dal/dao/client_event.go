@@ -38,6 +38,11 @@ type ClientEvent interface {
 	// List list client event details
 	List(kit *kit.Kit, bizID, appID, clientID uint32, startTime, endTime time.Time, searchValue string,
 		order *pbds.ListClientEventsReq_Order, opt *types.BasePage) ([]*table.ClientEvent, int64, error)
+	// GetMinMaxAvgTime 获取最小最大平均时间
+	GetMinMaxAvgTime(kit *kit.Kit, bizID, appID uint32, clientID []uint32, releaseChangeStatus []string) (
+		types.MinMaxAvgTimeChart, error)
+	// GetPullTrend 获取拉取趋势
+	GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64) ([]types.PullTrend, error)
 }
 
 var _ ClientEvent = new(clientEventDao)
@@ -46,6 +51,60 @@ type clientEventDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// GetPullTrend 获取拉取趋势
+func (dao *clientEventDao) GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64) (
+	[]types.PullTrend, error) {
+
+	m := dao.genQ.ClientEvent
+	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID),
+		m.AppID.Eq(appID))
+
+	var conds []rawgen.Condition
+	if pullTime > 0 {
+		startTime := time.Now().AddDate(0, 0, -int(pullTime))
+		conds = append(conds, m.StartTime.Gte(startTime))
+	}
+	if len(clientID) > 0 {
+		conds = append(conds, m.ClientID.In(clientID...))
+	}
+
+	var items []types.PullTrend
+
+	err := q.Select(m.ClientID, m.StartTime.Date().As("pull_time")).
+		Where(conds...).
+		Group(m.ClientID, field.NewField("", "pull_time")).
+		Scan(&items)
+	return items, err
+}
+
+// GetMinMaxAvgTime implements ClientEvent.
+func (dao *clientEventDao) GetMinMaxAvgTime(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32,
+	releaseChangeStatus []string) (types.MinMaxAvgTimeChart, error) {
+
+	m := dao.genQ.ClientEvent
+	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID),
+		m.AppID.Eq(appID))
+
+	var err error
+	var items types.MinMaxAvgTimeChart
+	var conds []rawgen.Condition
+	if len(releaseChangeStatus) > 0 {
+		status := field.NewString(m.TableName(), "release_change_status")
+		conds = append(conds, q.Where(status.In(releaseChangeStatus...)))
+	} else {
+		conds = append(conds, m.ReleaseChangeStatus.Eq("Success"))
+	}
+	if len(clientID) > 0 {
+		conds = append(conds, m.ClientID.In(clientID...))
+	}
+	q = q.Where(conds...)
+	err = q.Select(m.TotalSeconds.Max().As("max"), m.TotalSeconds.Min().As("min"), m.TotalSeconds.Avg().As("avg")).
+		Group(m.ReleaseChangeFailedReason).
+		Scan(&items)
+
+	return items, err
 }
 
 // List list client event details
@@ -88,7 +147,7 @@ func (dao *clientEventDao) List(kit *kit.Kit, bizID, appID, clientID uint32, sta
 }
 
 // 处理搜索
-func (dao *clientEventDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search string) ([]rawgen.Condition, error) {
+func (dao *clientEventDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search string) ([]rawgen.Condition, error) { // nolint
 	var conds []rawgen.Condition
 
 	m := dao.genQ.ClientEvent

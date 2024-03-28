@@ -160,6 +160,9 @@ const (
 	Config_CreateClientQuery_FullMethodName                 = "/pbcs.Config/CreateClientQuery"
 	Config_UpdateClientQuery_FullMethodName                 = "/pbcs.Config/UpdateClientQuery"
 	Config_DeleteClientQuery_FullMethodName                 = "/pbcs.Config/DeleteClientQuery"
+	Config_ClientStatisticsAnalyze_FullMethodName           = "/pbcs.Config/ClientStatisticsAnalyze"
+	Config_ClientPullTrendAnalyze_FullMethodName            = "/pbcs.Config/ClientPullTrendAnalyze"
+	Config_ClientTagsAndExtraInfoAnalyze_FullMethodName     = "/pbcs.Config/ClientTagsAndExtraInfoAnalyze"
 )
 
 // ConfigClient is the client API for Config service.
@@ -315,6 +318,10 @@ type ConfigClient interface {
 	CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error)
 	UpdateClientQuery(ctx context.Context, in *UpdateClientQueryReq, opts ...grpc.CallOption) (*UpdateClientQueryResp, error)
 	DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*DeleteClientQueryResp, error)
+	// client chart related interface
+	ClientStatisticsAnalyze(ctx context.Context, in *ClientStatisticsAnalyzeReq, opts ...grpc.CallOption) (*ClientStatisticsAnalyzeResp, error)
+	ClientPullTrendAnalyze(ctx context.Context, in *ClientPullTrendAnalyzeReq, opts ...grpc.CallOption) (*ClientPullTrendAnalyzeResp, error)
+	ClientTagsAndExtraInfoAnalyze(ctx context.Context, in *ClientTagsAndExtraInfoAnalyzeReq, opts ...grpc.CallOption) (*ClientTagsAndExtraInfoAnalyzeResp, error)
 }
 
 type configClient struct {
@@ -1549,6 +1556,33 @@ func (c *configClient) DeleteClientQuery(ctx context.Context, in *DeleteClientQu
 	return out, nil
 }
 
+func (c *configClient) ClientStatisticsAnalyze(ctx context.Context, in *ClientStatisticsAnalyzeReq, opts ...grpc.CallOption) (*ClientStatisticsAnalyzeResp, error) {
+	out := new(ClientStatisticsAnalyzeResp)
+	err := c.cc.Invoke(ctx, Config_ClientStatisticsAnalyze_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ClientPullTrendAnalyze(ctx context.Context, in *ClientPullTrendAnalyzeReq, opts ...grpc.CallOption) (*ClientPullTrendAnalyzeResp, error) {
+	out := new(ClientPullTrendAnalyzeResp)
+	err := c.cc.Invoke(ctx, Config_ClientPullTrendAnalyze_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ClientTagsAndExtraInfoAnalyze(ctx context.Context, in *ClientTagsAndExtraInfoAnalyzeReq, opts ...grpc.CallOption) (*ClientTagsAndExtraInfoAnalyzeResp, error) {
+	out := new(ClientTagsAndExtraInfoAnalyzeResp)
+	err := c.cc.Invoke(ctx, Config_ClientTagsAndExtraInfoAnalyze_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConfigServer is the server API for Config service.
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
@@ -1702,6 +1736,10 @@ type ConfigServer interface {
 	CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error)
 	UpdateClientQuery(context.Context, *UpdateClientQueryReq) (*UpdateClientQueryResp, error)
 	DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*DeleteClientQueryResp, error)
+	// client chart related interface
+	ClientStatisticsAnalyze(context.Context, *ClientStatisticsAnalyzeReq) (*ClientStatisticsAnalyzeResp, error)
+	ClientPullTrendAnalyze(context.Context, *ClientPullTrendAnalyzeReq) (*ClientPullTrendAnalyzeResp, error)
+	ClientTagsAndExtraInfoAnalyze(context.Context, *ClientTagsAndExtraInfoAnalyzeReq) (*ClientTagsAndExtraInfoAnalyzeResp, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -2115,6 +2153,15 @@ func (UnimplementedConfigServer) UpdateClientQuery(context.Context, *UpdateClien
 }
 func (UnimplementedConfigServer) DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*DeleteClientQueryResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteClientQuery not implemented")
+}
+func (UnimplementedConfigServer) ClientStatisticsAnalyze(context.Context, *ClientStatisticsAnalyzeReq) (*ClientStatisticsAnalyzeResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientStatisticsAnalyze not implemented")
+}
+func (UnimplementedConfigServer) ClientPullTrendAnalyze(context.Context, *ClientPullTrendAnalyzeReq) (*ClientPullTrendAnalyzeResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientPullTrendAnalyze not implemented")
+}
+func (UnimplementedConfigServer) ClientTagsAndExtraInfoAnalyze(context.Context, *ClientTagsAndExtraInfoAnalyzeReq) (*ClientTagsAndExtraInfoAnalyzeResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientTagsAndExtraInfoAnalyze not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -4576,6 +4623,60 @@ func _Config_DeleteClientQuery_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ClientStatisticsAnalyze_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClientStatisticsAnalyzeReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ClientStatisticsAnalyze(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ClientStatisticsAnalyze_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ClientStatisticsAnalyze(ctx, req.(*ClientStatisticsAnalyzeReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ClientPullTrendAnalyze_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClientPullTrendAnalyzeReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ClientPullTrendAnalyze(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ClientPullTrendAnalyze_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ClientPullTrendAnalyze(ctx, req.(*ClientPullTrendAnalyzeReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ClientTagsAndExtraInfoAnalyze_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClientTagsAndExtraInfoAnalyzeReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ClientTagsAndExtraInfoAnalyze(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ClientTagsAndExtraInfoAnalyze_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ClientTagsAndExtraInfoAnalyze(ctx, req.(*ClientTagsAndExtraInfoAnalyzeReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -5126,6 +5227,18 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteClientQuery",
 			Handler:    _Config_DeleteClientQuery_Handler,
+		},
+		{
+			MethodName: "ClientStatisticsAnalyze",
+			Handler:    _Config_ClientStatisticsAnalyze_Handler,
+		},
+		{
+			MethodName: "ClientPullTrendAnalyze",
+			Handler:    _Config_ClientPullTrendAnalyze_Handler,
+		},
+		{
+			MethodName: "ClientTagsAndExtraInfoAnalyze",
+			Handler:    _Config_ClientTagsAndExtraInfoAnalyze_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
