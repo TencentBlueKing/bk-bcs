@@ -242,14 +242,10 @@
     return groupedList;
   };
 
-  // 设置默认选中的配置文件
-  // 如果props有设置选中项，取props值
-  // 如果选中项有值，保持上一次选中项
+  // 如果有选中项，则保持上一次选中项
   // 否则取第一个非空分组的第一个配置文件
   const setDefaultSelected = () => {
-    if (props.selectedId) {
-      handleSelectItem(props.selectedId);
-    } else if (aggregatedList.value.find((item) => item.id === selected.value)) {
+    if (selected.value && aggregatedList.value.findIndex((item) => item.id === selected.value) > -1) {
       handleSelectItem(selected.value);
     } else {
       if (groupedConfigListOnShow.value[0]) {
