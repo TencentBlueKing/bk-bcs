@@ -35,7 +35,7 @@
       color: #313238;
     }
     .container {
-      height: calc(100% - 24px);
+      height: calc(100% - 40px);
     }
   }
 </style>

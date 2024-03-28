@@ -14,7 +14,7 @@
 
 <script lang="ts" setup>
   import ClientHeader from '../components/client-header.vue';
-  import VersionRelease from './section/version-release.vue';
+  import VersionRelease from './section/version-release/index.vue';
   import PullMass from './section/pull-mass/index.vue';
   import ClientLabel from './section/client-label/index.vue';
   import ComponentInfo from './section/component-info/index.vue';

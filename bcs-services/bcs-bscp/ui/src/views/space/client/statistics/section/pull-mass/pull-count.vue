@@ -1,5 +1,10 @@
 <template>
-  <Card title="拉取数量趋势（近一周）" :height="360">
+  <Card title="拉取数量趋势" :height="360">
+    <template #head-suffix>
+      <bk-select v-model="selectTime" class="time-selector" :clearable="false">
+        <bk-option v-for="item in selectorTimeList" :id="item.value" :key="item.value" :name="item.label" />
+      </bk-select>
+    </template>
     <div ref="canvasRef" class="canvas-wrap"></div>
   </Card>
 </template>
@@ -11,67 +16,67 @@
 
   const canvasRef = ref<HTMLElement>();
 
-  const uvBillData = [
-    { time: '2019-03', value: 350, type: 'uv' },
-    { time: '2019-04', value: 900, type: 'uv' },
-    { time: '2019-05', value: 300, type: 'uv' },
-    { time: '2019-06', value: 450, type: 'uv' },
-    { time: '2019-07', value: 470, type: 'uv' },
-    { time: '2019-08', value: 350, type: 'uv' },
-    { time: '2019-09', value: 900, type: 'uv' },
-    { time: '2019-10', value: 300, type: 'uv' },
-    { time: '2019-11', value: 450, type: 'uv' },
-    { time: '2019-12', value: 470, type: 'uv' },
-    { time: '2019-13', value: 350, type: 'uv' },
-    { time: '2019-14', value: 900, type: 'uv' },
-    { time: '2019-15', value: 300, type: 'uv' },
-    { time: '2019-17', value: 450, type: 'uv' },
-    { time: '2019-17', value: 470, type: 'uv' },
-    { time: '2019-03', value: 220, type: 'bill' },
-    { time: '2019-04', value: 300, type: 'bill' },
-    { time: '2019-05', value: 250, type: 'bill' },
-    { time: '2019-06', value: 220, type: 'bill' },
-    { time: '2019-07', value: 362, type: 'bill' },
-    { time: '2019-08', value: 220, type: 'bill' },
-    { time: '2019-09', value: 300, type: 'bill' },
-    { time: '2019-10', value: 250, type: 'bill' },
-    { time: '2019-11', value: 220, type: 'bill' },
-    { time: '2019-12', value: 362, type: 'bill' },
-    { time: '2019-13', value: 220, type: 'bill' },
-    { time: '2019-14', value: 300, type: 'bill' },
-    { time: '2019-15', value: 250, type: 'bill' },
-    { time: '2019-16', value: 220, type: 'bill' },
-    { time: '2019-17', value: 362, type: 'bill' },
-    { time: '2019-03', value: 220, type: 'bil' },
-    { time: '2019-04', value: 300, type: 'bil' },
-    { time: '2019-05', value: 250, type: 'bil' },
-    { time: '2019-06', value: 220, type: 'bil' },
-    { time: '2019-07', value: 362, type: 'bil' },
-    { time: '2019-08', value: 220, type: 'bil' },
-    { time: '2019-09', value: 300, type: 'bil' },
-    { time: '2019-10', value: 250, type: 'bil' },
-    { time: '2019-11', value: 220, type: 'bil' },
-    { time: '2019-12', value: 362, type: 'bil' },
-    { time: '2019-13', value: 220, type: 'bil' },
-    { time: '2019-14', value: 300, type: 'bil' },
-    { time: '2019-15', value: 250, type: 'bil' },
-    { time: '2019-16', value: 220, type: 'bil' },
-    { time: '2019-17', value: 362, type: 'bil' },
+  const selectTime = ref(7);
+
+  const selectorTimeList = [
+    {
+      value: 7,
+      label: '近7天',
+    },
+    {
+      value: 15,
+      label: '近15天',
+    },
+    {
+      value: 30,
+      label: '近30天',
+    },
   ];
 
+  const data = [
+    // 客户端拉取趋势
+    {
+      date: '2024/03/14',
+      type: 'sidecar',
+      count: 4,
+    },
+    {
+      date: '2024/03/14',
+      type: 'sdk',
+      count: 3,
+    },
+    {
+      date: '2024/03/15',
+      type: 'sidecar',
+      count: 8,
+    },
+    {
+      date: '2024/03/15',
+      type: 'sdk',
+      count: 3,
+    },
+    {
+      date: '2024/03/16',
+      type: 'sidecar',
+      count: 1,
+    },
+    {
+      date: '2024/03/16',
+      type: 'sdk',
+      count: 2,
+    },
+  ];
   const transformData = [
-    { time: '2019-03', count: 800 },
-    { time: '2019-04', count: 600 },
-    { time: '2019-05', count: 400 },
-    { time: '2019-06', count: 380 },
-    { time: '2019-07', count: 220 },
+    { date: '2024/03/14', total: 10 },
+    { date: '2024/03/15', total: 7 },
+    { date: '2024/03/16', total: 14 },
   ];
 
   onMounted(() => {
     const dualAxes = new DualAxes(canvasRef.value!, {
-      data: [uvBillData, transformData],
-      xField: 'time',
-      yField: ['value', 'count'],
+      data: [data, transformData],
+      xField: 'date',
+      yField: ['count', 'total'],
       geometryOptions: [
         {
           geometry: 'column',
@@ -94,5 +99,12 @@
 <style scoped lang="scss">
   .canvas-wrap {
     height: 100%;
+  }
+  .time-selector {
+    margin-left: 16px;
+    width: 88px;
+    :deep(.bk-input) {
+      height: 26px;
+    }
   }
 </style>

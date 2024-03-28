@@ -11,20 +11,26 @@
 
   const canvasRef = ref<HTMLElement>();
   const data = [
-    { type: '分类一', value: 27 },
-    { type: '分类二', value: 25 },
-    { type: '分类三', value: 18 },
-    { type: '分类四', value: 15 },
-    { type: '分类五', value: 10 },
-    { type: '其他', value: 5 },
+    // 拉取成功率
+    {
+      count: 2,
+      percent: 0.2857142857142857,
+      release_change_status: '拉取失败',
+    },
+    {
+      count: 5,
+      percent: 0.7142857142857143,
+      release_change_status: '拉取成功',
+    },
   ];
 
   onMounted(() => {
     const piePlot = new Pie(canvasRef.value!, {
       appendPadding: 10,
       data,
-      angleField: 'value',
-      colorField: 'type',
+      angleField: 'count',
+      colorField: 'release_change_status',
+      color: ['#F5876C', '#DAEFE4'],
       radius: 0.9,
       label: {
         type: 'inner',
@@ -36,6 +42,9 @@
         },
       },
       interactions: [{ type: 'element-active' }],
+      legend: {
+        position: 'bottom',
+      },
     });
 
     piePlot.render();
