@@ -61,9 +61,34 @@ func mig20240325180808Up(tx *gorm.DB) error {
 		return err
 	}
 
+	tx.Create([]ClientQuerys{
+		{
+			ID:              1,
+			BizID:           0,
+			AppID:           0,
+			SearchName:      "配置拉取失败",
+			SearchType:      "common",
+			SearchCondition: "{\"release_change_status\": [\"failed\"]}",
+			Creator:         "system",
+			CreatedAt:       time.Now(),
+			UpdatedAt:       time.Now(),
+		},
+		{
+			ID:              2,
+			BizID:           0,
+			AppID:           0,
+			SearchName:      "离线客户端",
+			SearchType:      "common",
+			SearchCondition: "{\"online_status\": [\"offline\"]}",
+			Creator:         "system",
+			CreatedAt:       time.Now(),
+			UpdatedAt:       time.Now(),
+		},
+	})
+
 	now := time.Now()
 	if result := tx.Create([]IDGenerators{
-		{Resource: "client_querys", MaxID: 0, UpdatedAt: now},
+		{Resource: "client_querys", MaxID: 2, UpdatedAt: now},
 	}); result.Error != nil {
 		return result.Error
 	}
