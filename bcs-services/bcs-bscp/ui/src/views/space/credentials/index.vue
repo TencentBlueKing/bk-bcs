@@ -380,7 +380,7 @@
     if (createPending.value) {
       return;
     }
-    isSearchEmpty.value = searchStr.value === '';
+    isSearchEmpty.value = searchStr.value !== '';
     listLoading.value = true;
     pagination.value.current = current;
     await loadCredentialList();

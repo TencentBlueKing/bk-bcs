@@ -137,7 +137,7 @@
   });
 
   const handleSearch = () => {
-    isSearchEmpty.value = searchStr.value === '';
+    isSearchEmpty.value = searchStr.value !== '';
   };
 
   const handleNodeCheckChange = (node: ISpaceTreeItem, val: boolean) => {

@@ -114,7 +114,7 @@
   );
 
   const handleSearch = () => {
-    isSearchEmpty.value = searchStr.value === '';
+    isSearchEmpty.value = searchStr.value !== '';
     if (searchStr.value) {
       const list: IPackageTableGroup[] = [];
       packageGroups.value.forEach((pkg) => {
