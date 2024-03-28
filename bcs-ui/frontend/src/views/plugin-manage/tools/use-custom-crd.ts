@@ -8,17 +8,20 @@ import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
 import $i18n from '@/i18n/i18n-setup';
 
-interface IConfig {
+interface IConfig<T> {
   $crd: string
   $apiVersion: string
   $kind: string
   clusterId: string
-  formData: Ref<Record<string, any>>
-  initFormData: Record<string, any>
+  formData: Ref<T>
+  initFormData: T
+  getParams?: Function
 }
 
-export default function useCustomCrdList(config: IConfig) {
-  const { $crd, $kind, $apiVersion, clusterId, formData, initFormData } = config;
+export default function useCustomCrdList<
+T extends { metadata: { name: string, namespace: string } }
+>(config: IConfig<T>) {
+  const { $crd, $kind, $apiVersion, clusterId, formData, initFormData, getParams } = config;
 
   const { clusterList } = useCluster();
   const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId));
@@ -84,8 +87,9 @@ export default function useCustomCrdList(config: IConfig) {
 
     saving.value = true;
     let result = false;
+    const params = getParams ? getParams() : formData.value;
     if (!currentRow.value) {
-    // 创建DB配置
+      // 创建配置
       result = await customResourceCreate({
         $crd,
         $clusterId: clusterId,
@@ -94,12 +98,12 @@ export default function useCustomCrdList(config: IConfig) {
         rawData: {
           apiVersion: $apiVersion,
           kind: $kind,
-          ...formData.value,
+          ...params,
         },
       }).then(() => true)
         .catch(() => false);
     } else {
-    // 更新配置
+      // 更新配置
       result = await customResourceUpdate({
         $crd,
         $clusterId: clusterId,
@@ -109,7 +113,7 @@ export default function useCustomCrdList(config: IConfig) {
         rawData: {
           apiVersion: $apiVersion,
           kind: $kind,
-          ...formData.value,
+          ...params,
         },
         namespace: formData.value.metadata.namespace,
       }).then(() => true)
