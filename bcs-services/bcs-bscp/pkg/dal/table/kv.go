@@ -39,6 +39,7 @@ type Kv struct {
 // KvSpec is kv specific which is defined by user.
 type KvSpec struct {
 	Key     string   `json:"key" gorm:"column:key"`
+	Memo    string   `json:"memo" gorm:"column:memo"`
 	KvType  DataType `json:"kv_type" gorm:"column:kv_type"`
 	Version uint32   `json:"version" gorm:"column:version"`
 }

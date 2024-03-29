@@ -30,6 +30,7 @@ func newReleasedKv(db *gorm.DB, opts ...gen.DOOption) releasedKv {
 	_releasedKv.ID = field.NewUint32(tableName, "id")
 	_releasedKv.ReleaseID = field.NewUint32(tableName, "release_id")
 	_releasedKv.Key = field.NewString(tableName, "key")
+	_releasedKv.Memo = field.NewString(tableName, "memo")
 	_releasedKv.KvType = field.NewString(tableName, "kv_type")
 	_releasedKv.Version = field.NewUint32(tableName, "version")
 	_releasedKv.BizID = field.NewUint32(tableName, "biz_id")
@@ -54,6 +55,7 @@ type releasedKv struct {
 	ID        field.Uint32
 	ReleaseID field.Uint32
 	Key       field.String
+	Memo      field.String
 	KvType    field.String
 	Version   field.Uint32
 	BizID     field.Uint32
@@ -84,6 +86,7 @@ func (r *releasedKv) updateTableName(table string) *releasedKv {
 	r.ID = field.NewUint32(table, "id")
 	r.ReleaseID = field.NewUint32(table, "release_id")
 	r.Key = field.NewString(table, "key")
+	r.Memo = field.NewString(table, "memo")
 	r.KvType = field.NewString(table, "kv_type")
 	r.Version = field.NewUint32(table, "version")
 	r.BizID = field.NewUint32(table, "biz_id")
@@ -121,10 +124,11 @@ func (r *releasedKv) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *releasedKv) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 14)
+	r.fieldMap = make(map[string]field.Expr, 15)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["release_id"] = r.ReleaseID
 	r.fieldMap["key"] = r.Key
+	r.fieldMap["memo"] = r.Memo
 	r.fieldMap["kv_type"] = r.KvType
 	r.fieldMap["version"] = r.Version
 	r.fieldMap["biz_id"] = r.BizID

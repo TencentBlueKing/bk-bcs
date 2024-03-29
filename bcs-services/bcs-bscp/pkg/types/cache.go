@@ -71,6 +71,7 @@ type ReleaseKvCache struct {
 	ID          uint32              `json:"id"`
 	ReleaseID   uint32              `json:"reid"`
 	Key         string              `json:"key"`
+	Memo        string              `json:"memo"`
 	KvType      string              `json:"kv_type"`
 	Revision    *table.Revision     `json:"revision"`
 	Attachment  *table.KvAttachment `json:"am"`
@@ -229,6 +230,7 @@ func ReleaseKvCaches(rs []*table.ReleasedKv) []*ReleaseKvCache {
 			ID:          one.ID,
 			ReleaseID:   one.ReleaseID,
 			Key:         one.Spec.Key,
+			Memo:        one.Spec.Memo,
 			KvType:      string(one.Spec.KvType),
 			Revision:    one.Revision,
 			Attachment:  one.Attachment,
