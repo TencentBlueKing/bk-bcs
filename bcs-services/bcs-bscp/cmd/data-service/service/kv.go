@@ -141,6 +141,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 	}
 
 	kv.Spec.Version = uint32(version)
+	kv.Spec.Memo = req.Spec.Memo
 	kv.ContentSpec = &table.ContentSpec{
 		Signature: tools.SHA256(req.Spec.Value),
 		Md5:       tools.MD5(req.Spec.Value),
