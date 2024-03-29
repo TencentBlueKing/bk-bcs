@@ -11,7 +11,6 @@
  */
 
 // Package handler define methods for handling mq event
-// NOCC:tosa/comment_ratio(ignore),gofmt/notformat(ignore)
 package handler
 
 import (
@@ -29,7 +28,7 @@ import (
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1"
-	gsv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamestatefulset/v1alpha1"
+	gsv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamestatefulset/v1alpha1" // nolint
 	"github.com/avast/retry-go"
 	"github.com/mitchellh/mapstructure"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -38,11 +37,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	cm "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/clustermanager"
+	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/projectmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/syncer"
 )
 
-var workloadKindList = []string{"GameDeployment", "GameStatefulSet", "StatefulSet", "DaemonSet"}
+var workloadKindList = []string{"GameDeployment", "GameStatefulSet", "StatefulSet", "DaemonSet", "Deployment"}
 
 // ClusterList the cluster list
 type ClusterList []string
@@ -50,14 +50,16 @@ type ClusterList []string
 // BcsBkcmdbSynchronizerHandler is the handler of bcs-bkcmdb-synchronizer
 type BcsBkcmdbSynchronizerHandler struct {
 	// BkcmdbSynchronizerOption *option.BkcmdbSynchronizerOption
-	Syncer    *syncer.Syncer
-	BkCluster *bkcmdbkube.Cluster
-	Chn       *amqp.Channel
+	Syncer *syncer.Syncer
+	// BkCluster *bkcmdbkube.Cluster
+	Chn   *amqp.Channel
+	CmCli *client.ClusterManagerClientWithHeader
+	PmCli *client.ProjectManagerClientWithHeader
 }
 
 // Handler is the handler of bcs-bkcmdb-synchronizer
 type Handler interface {
-	HandleMsg(chn *amqp.Channel, messages <-chan amqp.Delivery)
+	HandleMsg(chn *amqp.Channel, clusterId string, messages <-chan amqp.Delivery, done <-chan bool)
 }
 
 // MsgHeader is the message header
@@ -71,47 +73,85 @@ type MsgHeader struct {
 
 // NewBcsBkcmdbSynchronizerHandler create a new handler
 func NewBcsBkcmdbSynchronizerHandler(sync *syncer.Syncer) *BcsBkcmdbSynchronizerHandler {
+	optsCm := &cm.Options{
+		Module:          cm.ModuleClusterManager,
+		Address:         sync.BkcmdbSynchronizerOption.Bcsapi.GrpcAddr,
+		EtcdRegistry:    nil,
+		ClientTLSConfig: sync.ClientTls,
+		AuthToken:       sync.BkcmdbSynchronizerOption.Bcsapi.BearerToken,
+	}
+	cmCli, _ := cm.NewClusterManagerGrpcGwClient(optsCm)
+
+	optsPm := &pm.Options{
+		Module:          pm.ModuleProjectManager,
+		Address:         sync.BkcmdbSynchronizerOption.Bcsapi.GrpcAddr,
+		EtcdRegistry:    nil,
+		ClientTLSConfig: sync.ClientTls,
+		AuthToken:       sync.BkcmdbSynchronizerOption.Bcsapi.BearerToken,
+	}
+
+	// Create a new project manager gRPC gateway client with the configuration.
+	pmCli, _ := pm.NewProjectManagerGrpcGwClient(optsPm)
 	return &BcsBkcmdbSynchronizerHandler{
 		//BkcmdbSynchronizerOption: option,
 		Syncer: sync,
+		CmCli:  cmCli,
+		PmCli:  pmCli,
 	}
 }
 
 // HandleMsg handle the message from rabbitmq
-func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(chn *amqp.Channel, messages <-chan amqp.Delivery) {
+func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(
+	chn *amqp.Channel, clusterId string, messages <-chan amqp.Delivery, done <-chan bool) {
 	b.Chn = chn
+
+	bkCluster, err := b.handleCluster(clusterId)
+	if err != nil {
+		blog.Errorf("handleCluster err: %v", err)
+		return
+	}
+
 	for msg := range messages {
+		select {
+		case <-done:
+			blog.Infof("goroutine stop, stop handleMsg.")
+			return
+		default:
+
+		}
 		// blog.Infof("Received a message")
 		// blog.Infof("Message: %v", msg.Headers)
 
-		err := b.handleCluster(msg)
-		if err != nil {
-			blog.Errorf("handleCluster err: %v", err)
-			return
-		}
-
 		header := msg.Headers
 
-		// handle header
 		if v, ok := header["resourceType"]; ok {
-			blog.Infof("resourceType: %v", v)
+			var errH error
+			blog.Infof("resourceType: %v %v", v, msg)
 			switch v.(string) {
 			case "Pod":
-				b.handlePod(msg)
+				errH = b.handlePod(msg, bkCluster)
 			case "Deployment":
-				b.handleDeployment(msg)
+				errH = b.handleDeployment(msg, bkCluster)
 			case "StatefulSet":
-				b.handleStatefulSet(msg)
+				errH = b.handleStatefulSet(msg, bkCluster)
 			case "DaemonSet":
-				b.handleDaemonSet(msg)
+				errH = b.handleDaemonSet(msg, bkCluster)
 			case "GameDeployment":
-				b.handleGameDeployment(msg)
+				errH = b.handleGameDeployment(msg, bkCluster)
 			case "GameStatefulSet":
-				b.handleGameStatefulSet(msg)
+				errH = b.handleGameStatefulSet(msg, bkCluster)
 			case "Namespace":
-				b.handleNamespace(msg)
+				errH = b.handleNamespace(msg, bkCluster)
 			case "Node":
-				b.handleNode(msg)
+				errH = b.handleNode(msg, bkCluster)
+			case "Event":
+				errH = b.handleEvent(msg, bkCluster)
+			}
+
+			if errH != nil {
+				if err := b.PublishMsg(msg); err != nil {
+					blog.Errorf("republish err: %s", err.Error())
+				}
 			}
 		}
 
@@ -124,34 +164,17 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(chn *amqp.Channel, messages <-c
 
 // handle cluster
 // nolint funlen
-func (b *BcsBkcmdbSynchronizerHandler) handleCluster(msg amqp.Delivery) error {
-	if b.BkCluster != nil {
-		return nil
-	}
-
-	blog.Infof("handleCluster Message: %v", msg.Headers)
-	msgHeader, err := getMsgHeader(&msg.Headers)
-	if err != nil {
-		blog.Errorf("handleCluster unable to get headers, err: %s", err.Error())
-		return err
-	}
-
-	// get cluster manager grpc gw client
-	cmCli, err := b.getClusterManagerGrpcGwClient()
-	if err != nil {
-		blog.Errorf("get cluster manager grpc gw client failed, err: %s", err.Error())
-		return err
-	}
+func (b *BcsBkcmdbSynchronizerHandler) handleCluster(clusterId string) (bkCluster *bkcmdbkube.Cluster, err error) {
 
 	lcReq := cmp.ListClusterReq{
-		ClusterID: msgHeader.ClusterId,
+		ClusterID: clusterId,
 	}
 
 	// list cluster
-	resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
+	resp, err := b.CmCli.Cli.ListCluster(b.CmCli.Ctx, &lcReq)
 	if err != nil {
 		blog.Errorf("list cluster failed, err: %s", err.Error())
-		return err
+		return nil, err
 	}
 
 	clusters := resp.Data
@@ -209,24 +232,22 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(msg amqp.Delivery) error {
 	}
 
 	// get bk cluster
-	bkCluster, err := b.Syncer.GetBkCluster(clusterMap[msgHeader.ClusterId])
+	bkCluster, err = b.Syncer.GetBkCluster(clusterMap[clusterId])
 	if err != nil {
 		blog.Errorf("handleCluster: Unable to get bkcluster, err: %s", err.Error())
-		return err
+		return nil, err
 	}
 
-	b.BkCluster = bkCluster
-
-	return nil
+	return bkCluster, err
 }
 
 // handle pod
-func (b *BcsBkcmdbSynchronizerHandler) handlePod(msg amqp.Delivery) {
+func (b *BcsBkcmdbSynchronizerHandler) handlePod(msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster) error {
 	blog.Infof("handlePod Message: %v", msg.Headers)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handlePod unable to get headers, err: %s", err.Error())
-		return
+		return fmt.Errorf("handlePod unable to get headers, err: %s", err.Error())
 	}
 
 	blog.Infof("Headers: %s", msgHeader.ClusterId)
@@ -234,29 +255,31 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePod(msg amqp.Delivery) {
 	err = json.Unmarshal(msg.Body, pod)
 	if err != nil {
 		blog.Errorf("handlePod: Unable to unmarshal")
-		return
+		return fmt.Errorf("handlePod: Unable to unmarshal")
 	}
 
-	// handle event
 	switch msgHeader.Event {
 	case "update": // nolint
-		err = b.handlePodUpdate(pod)
+		err = b.handlePodUpdate(pod, bkCluster)
 		if err != nil {
 			blog.Errorf("handlePodUpdate err: %s", err.Error())
+			return fmt.Errorf("handlePodUpdate err: %s", err.Error())
 		}
 	case "delete": // nolint
-		err = b.handlePodDelete(pod)
+		err = b.handlePodDelete(pod, bkCluster)
 		if err != nil {
 			blog.Errorf("handlePodDelete err: %s", err.Error())
+			return fmt.Errorf("handlePodDelete err: %s", err.Error())
 		}
 	default:
 		blog.Errorf("handlePod: Unknown event: %s", msgHeader.Event)
 	}
+	return nil
 }
 
 // handle pod update
-func (b *BcsBkcmdbSynchronizerHandler) handlePodUpdate(pod *corev1.Pod) error {
-	bkPods, err := b.Syncer.GetBkPods(b.BkCluster.BizID, &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handlePodUpdate(pod *corev1.Pod, bkCluster *bkcmdbkube.Cluster) error {
+	bkPods, err := b.Syncer.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -267,7 +290,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodUpdate(pod *corev1.Pod) error {
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 			{
 				Field:    "namespace",
@@ -286,10 +309,52 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodUpdate(pod *corev1.Pod) error {
 
 	// handle pod create
 	if len(*bkPods) == 0 {
-		err := b.handlePodCreate(pod)
+		err = b.handlePodCreate(pod, bkCluster)
 		if err != nil {
 			blog.Errorf("handlePodCreate failed for pod %s: %v", pod.Name, err)
 			return err
+		}
+	}
+
+	if len(*bkPods) == 1 {
+		if pod.Status.Phase != corev1.PodRunning {
+			err = b.handlePodDelete(pod, bkCluster)
+			if err != nil {
+				blog.Errorf("handlePodDelete err: %s", err.Error())
+				return fmt.Errorf("handlePodDelete err: %s", err.Error())
+			}
+		}
+
+		bkContainers, err := b.Syncer.CMDBClient.GetBcsContainer(&client.GetBcsContainerRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: (*bkPods)[0].BizID,
+				Page: client.Page{
+					Limit: 200,
+					Start: 0,
+				},
+			},
+			BkPodID: (*bkPods)[0].ID,
+		})
+
+		if err != nil {
+			blog.Errorf("handlePodUpdate GetBcsContainer err: %v", err)
+			return fmt.Errorf("handlePodUpdate GetBcsContainer err: %v", err)
+		}
+		for i, c := range *bkContainers {
+			if *c.ContainerID != pod.Status.ContainerStatuses[i].ContainerID {
+				err = b.handlePodDelete(pod, bkCluster)
+				if err != nil {
+					blog.Errorf("handlePodDelete err: %s", err.Error())
+					return fmt.Errorf("handlePodDelete err: %s", err.Error())
+				}
+
+				err := b.handlePodCreate(pod, bkCluster)
+				if err != nil {
+					blog.Errorf("handlePodCreate failed for pod %s: %v", pod.Name, err)
+					return err
+				}
+				break
+			}
 		}
 	}
 
@@ -297,8 +362,8 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodUpdate(pod *corev1.Pod) error {
 }
 
 // handle pod delete
-func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod) error {
-	bkPods, err := b.Syncer.GetBkPods(b.BkCluster.BizID, &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod, bkCluster *bkcmdbkube.Cluster) error {
+	bkPods, err := b.Syncer.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -309,7 +374,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod) error {
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 			{
 				Field:    "namespace",
@@ -335,7 +400,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod) error {
 	// b.Syncer.DeleteBkPods(b.BkCluster.BizID, &[]int64{bkPod.ID})
 	err = retry.Do(
 		func() error {
-			return b.Syncer.DeleteBkPods(b.BkCluster, &[]int64{bkPod.ID})
+			return b.Syncer.DeleteBkPods(bkCluster, &[]int64{bkPod.ID})
 		},
 		retry.Delay(time.Second*2),
 		retry.Attempts(3),
@@ -347,19 +412,13 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod) error {
 
 // handle pod create
 // nolint funlen
-func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
+func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod, bkCluster *bkcmdbkube.Cluster) error {
 	var operator []string
-	cmCli, err := b.getClusterManagerGrpcGwClient()
-	if err != nil {
-		blog.Errorf("get cluster manager grpc gw client failed, err: %s", err.Error())
-		return err
-	}
-
 	lcReq := cmp.ListClusterReq{
-		ClusterID: b.BkCluster.Uid,
+		ClusterID: bkCluster.Uid,
 	}
 
-	resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
+	resp, err := b.CmCli.Cli.ListCluster(b.CmCli.Ctx, &lcReq)
 	if err != nil {
 		blog.Errorf("list cluster failed, err: %s", err.Error())
 		return err
@@ -367,7 +426,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 
 	clusters := resp.Data
 
-	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
+	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -378,7 +437,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -387,12 +446,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 	}
 
 	if len(*bkNamespaces) != 1 {
-		return fmt.Errorf("len(bkNamespaces) = %d", len(*bkNamespaces))
+		return errors.New(fmt.Sprintf("len(bkNamespaces) = %d", len(*bkNamespaces)))
 	}
 
 	bkNamespace := (*bkNamespaces)[0]
 
-	bkWorkloadPods, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "pods", &client.PropertyFilter{
+	bkWorkloadPods, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "pods", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -403,7 +462,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -414,7 +473,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 
 	if len(*bkWorkloadPods) != 1 {
 		blog.Errorf("get bk workload pods len is %d", len(*bkWorkloadPods))
-		return fmt.Errorf("len(*bkWorkloadPods) = %d", len(*bkWorkloadPods))
+		return errors.New(fmt.Sprintf("len(*bkWorkloadPods) = %d", len(*bkWorkloadPods)))
 	}
 
 	p := bkcmdbkube.PodsWorkload{}
@@ -435,12 +494,15 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 			if err != nil {
 				return err
 			}
-			rsList, err := storageCli.QueryK8sReplicaSet(b.BkCluster.Uid, pod.Namespace, ownerRef.Name)
+			rsList, err := storageCli.QueryK8sReplicaSet(bkCluster.Uid, pod.Namespace, ownerRef.Name)
 			if err != nil {
-				return fmt.Errorf("query replicaSet %s failed, err: %s", ownerRef.Name, err.Error())
+				return errors.New(fmt.Sprintf("query replicaSet %s failed, err: %s", ownerRef.Name, err.Error()))
 			}
 			if len(rsList) != 1 {
-				return fmt.Errorf("replicaSet %s not found", ownerRef.Name)
+				for _, rs := range rsList {
+					blog.Infof("rs: %v", rs.Data)
+				}
+				return errors.New(fmt.Sprintf("replicaSet %s not found", ownerRef.Name))
 			}
 			rs := rsList[0]
 
@@ -452,13 +514,13 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 			case "Deployment":
 				workloadKind = "deployment"
 				workloadName = rsOwnerRef.Name
-				bkWorkloads, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, workloadKind, &client.PropertyFilter{
+				bkWorkloads, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, workloadKind, &client.PropertyFilter{
 					Condition: "AND",
 					Rules: []client.Rule{
 						{
 							Field:    "cluster_uid",
 							Operator: "in",
-							Value:    []string{b.BkCluster.Uid},
+							Value:    []string{bkCluster.Uid},
 						},
 						{
 							Field:    "namespace",
@@ -478,11 +540,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 				}
 
 				if len(*bkWorkloads) == 0 {
-					return fmt.Errorf("no workload %s in %s", workloadName, bkNamespace.Name)
+					return errors.New(fmt.Sprintf("no workload %s in %s", workloadName, bkNamespace.Name))
 				}
 
 				if len(*bkWorkloads) > 1 {
-					return fmt.Errorf("len(bkWorkloads) = %d", len(*bkWorkloads))
+					return errors.New(fmt.Sprintf("len(bkWorkloads) = %d", len(*bkWorkloads)))
 				}
 
 				workloadID = (int64)((*bkWorkloads)[0].(map[string]interface{})["id"].(float64))
@@ -498,19 +560,19 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 					}
 				}
 			default:
-				return fmt.Errorf("kind %s is not supported", rsOwnerRef.Kind)
+				return errors.New(fmt.Sprintf("kind %s is not supported", rsOwnerRef.Kind))
 			}
 
 		} else if exist, _ := common.InArray(ownerRef.Kind, workloadKindList); exist {
 			workloadKind = common.FirstLower(ownerRef.Kind)
 			workloadName = ownerRef.Name
-			bkWorkloads, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, workloadKind, &client.PropertyFilter{
+			bkWorkloads, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, workloadKind, &client.PropertyFilter{
 				Condition: "AND",
 				Rules: []client.Rule{
 					{
 						Field:    "cluster_uid",
 						Operator: "in",
-						Value:    []string{b.BkCluster.Uid},
+						Value:    []string{bkCluster.Uid},
 					},
 					{
 						Field:    "namespace",
@@ -530,11 +592,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 			}
 
 			if len(*bkWorkloads) == 0 {
-				return fmt.Errorf("no workload %s in %s", workloadName, bkNamespace.Name)
+				return errors.New(fmt.Sprintf("no workload %s in %s", workloadName, bkNamespace.Name))
 			}
 
 			if len(*bkWorkloads) > 1 {
-				return fmt.Errorf("len(bkWorkloads) = %d", len(*bkWorkloads))
+				return errors.New(fmt.Sprintf("len(bkWorkloads) = %d", len(*bkWorkloads)))
 			}
 
 			workloadID = (int64)((*bkWorkloads)[0].(map[string]interface{})["id"].(float64))
@@ -550,20 +612,20 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 				}
 			}
 		} else {
-			return fmt.Errorf("kind %s is not supported", ownerRef.Kind)
+			return errors.New(fmt.Sprintf("kind %s is not supported", ownerRef.Kind))
 
 		}
 	}
 
 	var nodeID, hostID int64
 
-	bkNodes, err := b.Syncer.GetBkNodes(b.BkCluster.BizID, &client.PropertyFilter{
+	bkNodes, err := b.Syncer.GetBkNodes(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 			{
 				Field:    "name",
@@ -578,7 +640,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 	}
 
 	if len(*bkNodes) != 1 {
-		return fmt.Errorf("len(bkNodes) = %d", len(*bkNodes))
+		return errors.New(fmt.Sprintf("len(bkNodes) = %d", len(*bkNodes)))
 	}
 
 	bkNode := (*bkNodes)[0]
@@ -676,11 +738,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 		operator = append(operator, "")
 	}
 
-	b.Syncer.CreateBkPods(b.BkCluster, map[int64][]client.CreateBcsPodRequestDataPod{
+	b.Syncer.CreateBkPods(bkCluster, map[int64][]client.CreateBcsPodRequestDataPod{
 		bkNamespace.BizID: []client.CreateBcsPodRequestDataPod{
 			{
 				Spec: &client.CreateBcsPodRequestPodSpec{
-					ClusterID:    &b.BkCluster.ID,
+					ClusterID:    &bkCluster.ID,
 					NameSpaceID:  &bkNamespace.ID,
 					WorkloadKind: &workloadKind,
 					WorkloadID:   &workloadID,
@@ -707,12 +769,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod) error {
 	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleDeployment(msg amqp.Delivery) {
+func (b *BcsBkcmdbSynchronizerHandler) handleDeployment(msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster) error {
 	blog.Infof("handleDeployment Message: %v", msg.Headers)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleDeployment unable to get headers, err: %s", err.Error())
-		return
+		return fmt.Errorf("handleDeployment unable to get headers, err: %s", err.Error())
 	}
 
 	blog.Infof("Headers: %s", msgHeader.ClusterId)
@@ -720,31 +782,31 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeployment(msg amqp.Delivery) {
 	err = json.Unmarshal(msg.Body, deployment)
 	if err != nil {
 		blog.Errorf("handleDeployment: Unable to unmarshal")
-		return
+		return fmt.Errorf("handleDeployment: Unable to unmarshal")
 	}
 
 	switch msgHeader.Event {
 	case "update": // nolint
-		err = b.handleDeploymentUpdate(deployment)
+		err = b.handleDeploymentUpdate(deployment, bkCluster)
 		if err != nil {
 			blog.Errorf("handleDeploymentUpdate err: %s", err.Error())
+			return fmt.Errorf("handleDeploymentUpdate err: %s", err.Error())
 		}
 	case "delete": // nolint
-		err = b.handleDeploymentDelete(deployment)
+		err = b.handleDeploymentDelete(deployment, bkCluster)
 		if err != nil {
 			blog.Errorf("handleDeploymentDelete err: %s", err.Error())
-			err = b.PublishMsg(msg)
-			if err != nil {
-				blog.Errorf("republish err: %s", err.Error())
-			}
+			return fmt.Errorf("handleDeploymentDelete err: %s", err.Error())
 		}
 	default:
 		blog.Errorf("handleDeployment: Unknown event: %s", msgHeader.Event)
 	}
+	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentUpdate(deployment *appv1.Deployment) error {
-	bkDeployments, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "deployment", &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentUpdate(
+	deployment *appv1.Deployment, bkCluster *bkcmdbkube.Cluster) error {
+	bkDeployments, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "deployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -755,7 +817,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentUpdate(deployment *appv1.
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -765,7 +827,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentUpdate(deployment *appv1.
 	}
 
 	if len(*bkDeployments) == 0 {
-		err := b.handleDeploymentCreate(deployment)
+		err := b.handleDeploymentCreate(deployment, bkCluster)
 		if err != nil {
 			blog.Errorf(fmt.Sprintf("handleDeploymentCreate err: %s", err.Error()))
 			return err
@@ -785,7 +847,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentUpdate(deployment *appv1.
 		needToUpdate, updateData := b.Syncer.CompareDeployment(&bkDeployment, &storage.Deployment{Data: deployment})
 		if needToUpdate {
 			deploymentToUpdate[bkDeployment.ID] = updateData
-			b.Syncer.UpdateBkWorkloads(b.BkCluster, "deployment", &deploymentToUpdate)
+			b.Syncer.UpdateBkWorkloads(bkCluster, "deployment", &deploymentToUpdate)
 		}
 	}
 
@@ -797,8 +859,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentUpdate(deployment *appv1.
 	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(deployment *appv1.Deployment) error {
-	bkDeployments, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "deployment", &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(
+	deployment *appv1.Deployment, bkCluster *bkcmdbkube.Cluster) error {
+	bkDeployments, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "deployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -809,7 +872,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(deployment *appv1.
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -837,7 +900,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(deployment *appv1.
 	// err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "deployment", &[]int64{bkDeployment.ID})
 	err = retry.Do(
 		func() error {
-			return b.Syncer.DeleteBkWorkloads(b.BkCluster, "deployment", &[]int64{bkDeployment.ID})
+			return b.Syncer.DeleteBkWorkloads(bkCluster, "deployment", &[]int64{bkDeployment.ID})
 		},
 		retry.Delay(time.Second*1),
 		retry.Attempts(2),
@@ -847,8 +910,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(deployment *appv1.
 	return err
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentCreate(deployment *appv1.Deployment) error {
-	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentCreate(
+	deployment *appv1.Deployment, bkCluster *bkcmdbkube.Cluster) error {
+	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -859,7 +923,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentCreate(deployment *appv1.
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -877,16 +941,16 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentCreate(deployment *appv1.
 	toAddData := b.Syncer.GenerateBkDeployment(&bkNamespace, &storage.Deployment{Data: deployment})
 	deploymentToAdd[bkNamespace.BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
 
-	b.Syncer.CreateBkWorkloads(b.BkCluster, "deployment", deploymentToAdd)
+	b.Syncer.CreateBkWorkloads(bkCluster, "deployment", deploymentToAdd)
 	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSet(msg amqp.Delivery) {
+func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSet(msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster) error {
 	blog.Infof("handleStatefulSet Message: %v", msg.Headers)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleStatefulSet unable to get headers, err: %s", err.Error())
-		return
+		return fmt.Errorf("handleStatefulSet unable to get headers, err: %s", err.Error())
 	}
 
 	blog.Infof("Headers: %s", msgHeader.ClusterId)
@@ -894,31 +958,31 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSet(msg amqp.Delivery) {
 	err = json.Unmarshal(msg.Body, statefulSet)
 	if err != nil {
 		blog.Errorf("handleStatefulSet: Unable to unmarshal")
-		return
+		return fmt.Errorf("handleStatefulSet: Unable to unmarshal")
 	}
 
 	switch msgHeader.Event {
 	case "update": // nolint
-		err = b.handleStatefulSetUpdate(statefulSet)
+		err = b.handleStatefulSetUpdate(statefulSet, bkCluster)
 		if err != nil {
 			blog.Errorf("handleStatefulSetUpdate err: %s", err.Error())
+			return fmt.Errorf("handleStatefulSetUpdate err: %s", err.Error())
 		}
 	case "delete": // nolint
-		err = b.handleStatefulSetDelete(statefulSet)
+		err = b.handleStatefulSetDelete(statefulSet, bkCluster)
 		if err != nil {
 			blog.Errorf("handleStatefulSetDelete err: %s", err.Error())
-			err = b.PublishMsg(msg)
-			if err != nil {
-				blog.Errorf("republish err: %s", err.Error())
-			}
+			return fmt.Errorf("handleStatefulSetDelete err: %s", err.Error())
 		}
 	default:
 		blog.Errorf("handleStatefulSet: Unknown event: %s", msgHeader.Event)
 	}
+	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetUpdate(statefulSet *appv1.StatefulSet) error {
-	bkStatefulSets, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "statefulSet", &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetUpdate(
+	statefulSet *appv1.StatefulSet, bkCluster *bkcmdbkube.Cluster) error {
+	bkStatefulSets, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "statefulSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -929,7 +993,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetUpdate(statefulSet *appv
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -939,7 +1003,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetUpdate(statefulSet *appv
 	}
 
 	if len(*bkStatefulSets) == 0 {
-		err := b.handleStatefulSetCreate(statefulSet)
+		err := b.handleStatefulSetCreate(statefulSet, bkCluster)
 		if err != nil {
 			blog.Errorf(fmt.Sprintf("handleStatefulSetCreate err: %s", err.Error()))
 			return err
@@ -959,7 +1023,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetUpdate(statefulSet *appv
 		needToUpdate, updateData := b.Syncer.CompareStatefulSet(&bkStatefulSet, &storage.StatefulSet{Data: statefulSet})
 		if needToUpdate {
 			statefulSetToUpdate[bkStatefulSet.ID] = updateData
-			b.Syncer.UpdateBkWorkloads(b.BkCluster, "statefulSet", &statefulSetToUpdate)
+			b.Syncer.UpdateBkWorkloads(bkCluster, "statefulSet", &statefulSetToUpdate)
 		}
 	}
 
@@ -971,8 +1035,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetUpdate(statefulSet *appv
 	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetDelete(statefulSet *appv1.StatefulSet) error {
-	bkStatefulSets, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "statefulSet", &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetDelete(
+	statefulSet *appv1.StatefulSet, bkCluster *bkcmdbkube.Cluster) error {
+	bkStatefulSets, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "statefulSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -983,7 +1048,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetDelete(statefulSet *appv
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1011,7 +1076,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetDelete(statefulSet *appv
 	// err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "statefulSet", &[]int64{bkStatefulSet.ID})
 	err = retry.Do(
 		func() error {
-			return b.Syncer.DeleteBkWorkloads(b.BkCluster, "statefulSet", &[]int64{bkStatefulSet.ID})
+			return b.Syncer.DeleteBkWorkloads(bkCluster, "statefulSet", &[]int64{bkStatefulSet.ID})
 		},
 		retry.Delay(time.Second*1),
 		retry.Attempts(2),
@@ -1021,8 +1086,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetDelete(statefulSet *appv
 	return err
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetCreate(statefulSet *appv1.StatefulSet) error {
-	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetCreate(
+	statefulSet *appv1.StatefulSet, bkCluster *bkcmdbkube.Cluster) error {
+	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1033,7 +1099,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetCreate(statefulSet *appv
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1051,16 +1117,16 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetCreate(statefulSet *appv
 	toAddData := b.Syncer.GenerateBkStatefulSet(&bkNamespace, &storage.StatefulSet{Data: statefulSet})
 	statefulSetToAdd[bkNamespace.BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
 
-	b.Syncer.CreateBkWorkloads(b.BkCluster, "statefulSet", statefulSetToAdd)
+	b.Syncer.CreateBkWorkloads(bkCluster, "statefulSet", statefulSetToAdd)
 	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSet(msg amqp.Delivery) {
+func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSet(msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster) error {
 	blog.Infof("handleDaemonSet Message: %v", msg.Headers)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleDaemonSet unable to get headers, err: %s", err.Error())
-		return
+		return fmt.Errorf("handleDaemonSet unable to get headers, err: %s", err.Error())
 	}
 
 	blog.Infof("Headers: %s", msgHeader.ClusterId)
@@ -1068,31 +1134,31 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSet(msg amqp.Delivery) {
 	err = json.Unmarshal(msg.Body, daemonSet)
 	if err != nil {
 		blog.Errorf("handleDaemonSet: Unable to unmarshal")
-		return
+		return fmt.Errorf("handleDaemonSet: Unable to unmarshal")
 	}
 
 	switch msgHeader.Event {
 	case "update": // nolint
-		err = b.handleDaemonSetUpdate(daemonSet)
+		err = b.handleDaemonSetUpdate(daemonSet, bkCluster)
 		if err != nil {
 			blog.Errorf("handleDaemonSetUpdate err: %s", err.Error())
+			return fmt.Errorf("handleDaemonSetUpdate err: %s", err.Error())
 		}
 	case "delete": // nolint
-		err = b.handleDaemonSetDelete(daemonSet)
+		err = b.handleDaemonSetDelete(daemonSet, bkCluster)
 		if err != nil {
 			blog.Errorf("handleDaemonSetDelete err: %s", err.Error())
-			err = b.PublishMsg(msg)
-			if err != nil {
-				blog.Errorf("republish err: %s", err.Error())
-			}
+			return fmt.Errorf("handleDaemonSetDelete err: %s", err.Error())
 		}
 	default:
 		blog.Errorf("handleDaemonSet: Unknown event: %s", msgHeader.Event)
 	}
+	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetUpdate(daemonSet *appv1.DaemonSet) error {
-	bkDaemonSets, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "daemonSet", &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetUpdate(
+	daemonSet *appv1.DaemonSet, bkCluster *bkcmdbkube.Cluster) error {
+	bkDaemonSets, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "daemonSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1103,7 +1169,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetUpdate(daemonSet *appv1.Da
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1113,7 +1179,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetUpdate(daemonSet *appv1.Da
 	}
 
 	if len(*bkDaemonSets) == 0 {
-		err := b.handleDaemonSetCreate(daemonSet)
+		err := b.handleDaemonSetCreate(daemonSet, bkCluster)
 		if err != nil {
 			blog.Errorf(fmt.Sprintf("handleDaemonSetCreate err: %s", err.Error()))
 			return err
@@ -1133,7 +1199,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetUpdate(daemonSet *appv1.Da
 		needToUpdate, updateData := b.Syncer.CompareDaemonSet(&bkDaemonSet, &storage.DaemonSet{Data: daemonSet})
 		if needToUpdate {
 			daemonSetToUpdate[bkDaemonSet.ID] = updateData
-			b.Syncer.UpdateBkWorkloads(b.BkCluster, "daemonSet", &daemonSetToUpdate)
+			b.Syncer.UpdateBkWorkloads(bkCluster, "daemonSet", &daemonSetToUpdate)
 		}
 	}
 
@@ -1145,8 +1211,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetUpdate(daemonSet *appv1.Da
 	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetDelete(daemonSet *appv1.DaemonSet) error {
-	bkDaemonSets, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "daemonSet", &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetDelete(
+	daemonSet *appv1.DaemonSet, bkCluster *bkcmdbkube.Cluster) error {
+	bkDaemonSets, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "daemonSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1157,7 +1224,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetDelete(daemonSet *appv1.Da
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1185,7 +1252,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetDelete(daemonSet *appv1.Da
 	// err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "daemonSet", &[]int64{bkDaemonSet.ID})
 	err = retry.Do(
 		func() error {
-			return b.Syncer.DeleteBkWorkloads(b.BkCluster, "daemonSet", &[]int64{bkDaemonSet.ID})
+			return b.Syncer.DeleteBkWorkloads(bkCluster, "daemonSet", &[]int64{bkDaemonSet.ID})
 		},
 		retry.Delay(time.Second*1),
 		retry.Attempts(2),
@@ -1195,8 +1262,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetDelete(daemonSet *appv1.Da
 	return err
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetCreate(daemonSet *appv1.DaemonSet) error {
-	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetCreate(
+	daemonSet *appv1.DaemonSet, bkCluster *bkcmdbkube.Cluster) error {
+	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1207,7 +1275,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetCreate(daemonSet *appv1.Da
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1225,16 +1293,16 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetCreate(daemonSet *appv1.Da
 	toAddData := b.Syncer.GenerateBkDaemonSet(&bkNamespace, &storage.DaemonSet{Data: daemonSet})
 	daemonSetToAdd[bkNamespace.BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
 
-	b.Syncer.CreateBkWorkloads(b.BkCluster, "daemonSet", daemonSetToAdd)
+	b.Syncer.CreateBkWorkloads(bkCluster, "daemonSet", daemonSetToAdd)
 	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleGameDeployment(msg amqp.Delivery) {
+func (b *BcsBkcmdbSynchronizerHandler) handleGameDeployment(msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster) error {
 	blog.Infof("handleGameDeployment Message: %v", msg.Headers)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleGameDeployment unable to get headers, err: %s", err.Error())
-		return
+		return fmt.Errorf("handleGameDeployment unable to get headers, err: %s", err.Error())
 	}
 
 	blog.Infof("Headers: %s", msgHeader.ClusterId)
@@ -1242,32 +1310,31 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeployment(msg amqp.Delivery) {
 	err = json.Unmarshal(msg.Body, gameDeployment)
 	if err != nil {
 		blog.Errorf("handleGameDeployment: Unable to unmarshal")
-		return
+		return fmt.Errorf("handleGameDeployment: Unable to unmarshal")
 	}
 
 	switch msgHeader.Event {
 	case "update": // nolint
-		err = b.handleGameDeploymentUpdate(gameDeployment)
+		err = b.handleGameDeploymentUpdate(gameDeployment, bkCluster)
 		if err != nil {
 			blog.Errorf("handleGameDeploymentUpdate err: %s", err.Error())
+			return fmt.Errorf("handleGameDeploymentUpdate err: %s", err.Error())
 		}
 	case "delete": // nolint
-		err = b.handleGameDeploymentDelete(gameDeployment)
+		err = b.handleGameDeploymentDelete(gameDeployment, bkCluster)
 		if err != nil {
 			blog.Errorf("handleGameDeploymentDelete err: %s", err.Error())
-			err = b.PublishMsg(msg)
-			if err != nil {
-				blog.Errorf("republish err: %s", err.Error())
-			}
+			return fmt.Errorf("handleGameDeploymentDelete err: %s", err.Error())
 		}
 	default:
 		blog.Errorf("handleGameDeployment: Unknown event: %s", msgHeader.Event)
 	}
+	return nil
 }
 
-// handle GameDeployment Update
-func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentUpdate(gameDeployment *gdv1alpha1.GameDeployment) error {
-	bkGameDeployments, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "gameDeployment", &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentUpdate(
+	gameDeployment *gdv1alpha1.GameDeployment, bkCluster *bkcmdbkube.Cluster) error {
+	bkGameDeployments, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "gameDeployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1278,7 +1345,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentUpdate(gameDeployment
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1288,7 +1355,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentUpdate(gameDeployment
 	}
 
 	if len(*bkGameDeployments) == 0 {
-		err := b.handleGameDeploymentCreate(gameDeployment)
+		err := b.handleGameDeploymentCreate(gameDeployment, bkCluster)
 		if err != nil {
 			blog.Errorf(fmt.Sprintf("handleGameDeploymentCreate err: %s", err.Error()))
 			return err
@@ -1305,11 +1372,11 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentUpdate(gameDeployment
 		}
 
 		gameDeploymentToUpdate := make(map[int64]*client.UpdateBcsWorkloadRequestData, 0)
-		needToUpdate, updateData := b.Syncer.CompareGameDeployment(&bkGameDeployment,
-			&storage.GameDeployment{Data: gameDeployment})
+		needToUpdate, updateData := b.Syncer.CompareGameDeployment(
+			&bkGameDeployment, &storage.GameDeployment{Data: gameDeployment})
 		if needToUpdate {
 			gameDeploymentToUpdate[bkGameDeployment.ID] = updateData
-			b.Syncer.UpdateBkWorkloads(b.BkCluster, "gameDeployment", &gameDeploymentToUpdate)
+			b.Syncer.UpdateBkWorkloads(bkCluster, "gameDeployment", &gameDeploymentToUpdate)
 		}
 	}
 
@@ -1322,8 +1389,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentUpdate(gameDeployment
 }
 
 // handle GameDeployment Delete
-func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentDelete(gameDeployment *gdv1alpha1.GameDeployment) error {
-	bkGameDeployments, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "gameDeployment", &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentDelete(
+	gameDeployment *gdv1alpha1.GameDeployment, bkCluster *bkcmdbkube.Cluster) error {
+	bkGameDeployments, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "gameDeployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1334,7 +1402,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentDelete(gameDeployment
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1362,7 +1430,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentDelete(gameDeployment
 	// err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "gameDeployment", &[]int64{bkGameDeployment.ID})
 	err = retry.Do(
 		func() error {
-			return b.Syncer.DeleteBkWorkloads(b.BkCluster, "gameDeployment", &[]int64{bkGameDeployment.ID})
+			return b.Syncer.DeleteBkWorkloads(bkCluster, "gameDeployment", &[]int64{bkGameDeployment.ID})
 		},
 		retry.Delay(time.Second*1),
 		retry.Attempts(2),
@@ -1373,8 +1441,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentDelete(gameDeployment
 }
 
 // handle GameDeployment Create
-func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentCreate(gameDeployment *gdv1alpha1.GameDeployment) error {
-	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentCreate(
+	gameDeployment *gdv1alpha1.GameDeployment, bkCluster *bkcmdbkube.Cluster) error {
+	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1385,7 +1454,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentCreate(gameDeployment
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1403,17 +1472,17 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentCreate(gameDeployment
 	toAddData := b.Syncer.GenerateBkGameDeployment(&bkNamespace, &storage.GameDeployment{Data: gameDeployment})
 	gameDeploymentToAdd[bkNamespace.BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
 
-	b.Syncer.CreateBkWorkloads(b.BkCluster, "gameDeployment", gameDeploymentToAdd)
+	b.Syncer.CreateBkWorkloads(bkCluster, "gameDeployment", gameDeploymentToAdd)
 	return nil
 }
 
 // handle GameStateful Set
-func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSet(msg amqp.Delivery) {
+func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSet(msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster) error {
 	blog.Infof("handleGameStatefulSet Message: %v", msg.Headers)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleGameStatefulSet unable to get headers, err: %s", err.Error())
-		return
+		return fmt.Errorf("handleGameStatefulSet unable to get headers, err: %s", err.Error())
 	}
 
 	blog.Infof("Headers: %s", msgHeader.ClusterId)
@@ -1421,33 +1490,33 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSet(msg amqp.Delivery) 
 	err = json.Unmarshal(msg.Body, gameStatefulSet)
 	if err != nil {
 		blog.Errorf("handleGameStatefulSet: Unable to unmarshal")
-		return
+		return fmt.Errorf("handleGameStatefulSet: Unable to unmarshal")
 	}
 
 	switch msgHeader.Event {
 	case "update": // nolint
-		err = b.handleGameStatefulSetUpdate(gameStatefulSet)
+		err = b.handleGameStatefulSetUpdate(gameStatefulSet, bkCluster)
 		if err != nil {
 			blog.Errorf("handleGameStatefulSetUpdate err: %s", err.Error())
+			return fmt.Errorf("handleGameStatefulSetUpdate err: %s", err.Error())
 		}
 	case "delete": // nolint
-		err = b.handleGameStatefulSetDelete(gameStatefulSet)
+		err = b.handleGameStatefulSetDelete(gameStatefulSet, bkCluster)
 		if err != nil {
 			blog.Errorf("handleGameStatefulSetDelete err: %s", err.Error())
-			err = b.PublishMsg(msg)
-			if err != nil {
-				blog.Errorf("republish err: %s", err.Error())
-			}
+			return fmt.Errorf("handleGameStatefulSetDelete err: %s", err.Error())
 		}
 	default:
 		blog.Errorf("handleGameStatefulSet: Unknown event: %s", msgHeader.Event)
 	}
+	return nil
 }
 
 // handle GameStateful Set Update
-func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetUpdate(gameStatefulSet *gsv1alpha1.GameStatefulSet) error {
+func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetUpdate(
+	gameStatefulSet *gsv1alpha1.GameStatefulSet, bkCluster *bkcmdbkube.Cluster) error {
 	// GetBkWorkloads get bkworkloads
-	bkGameStatefulSets, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
+	bkGameStatefulSets, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1458,7 +1527,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetUpdate(gameStatefulS
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1468,7 +1537,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetUpdate(gameStatefulS
 	}
 
 	if len(*bkGameStatefulSets) == 0 {
-		err := b.handleGameStatefulSetCreate(gameStatefulSet)
+		err := b.handleGameStatefulSetCreate(gameStatefulSet, bkCluster)
 		if err != nil {
 			blog.Errorf(fmt.Sprintf("handleGameStatefulSetCreate err: %s", err.Error()))
 			return err
@@ -1489,7 +1558,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetUpdate(gameStatefulS
 			&storage.GameStatefulSet{Data: gameStatefulSet})
 		if needToUpdate {
 			gameStatefulSetToUpdate[bkGameStatefulSet.ID] = updateData
-			b.Syncer.UpdateBkWorkloads(b.BkCluster, "gameStatefulSet", &gameStatefulSetToUpdate)
+			b.Syncer.UpdateBkWorkloads(bkCluster, "gameStatefulSet", &gameStatefulSetToUpdate)
 		}
 	}
 
@@ -1501,9 +1570,10 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetUpdate(gameStatefulS
 	return nil
 }
 
-// handle GameStateful Set Delete
-func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetDelete(gameStatefulSet *gsv1alpha1.GameStatefulSet) error {
-	bkGameStatefulSets, err := b.Syncer.GetBkWorkloads(b.BkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
+// handle GameStatefulSet Delete
+func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetDelete(
+	gameStatefulSet *gsv1alpha1.GameStatefulSet, bkCluster *bkcmdbkube.Cluster) error {
+	bkGameStatefulSets, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1514,7 +1584,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetDelete(gameStatefulS
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1542,7 +1612,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetDelete(gameStatefulS
 	// err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "gameStatefulSet", &[]int64{bkGameStatefulSet.ID})
 	err = retry.Do(
 		func() error {
-			return b.Syncer.DeleteBkWorkloads(b.BkCluster, "gameStatefulSet", &[]int64{bkGameStatefulSet.ID})
+			return b.Syncer.DeleteBkWorkloads(bkCluster, "gameStatefulSet", &[]int64{bkGameStatefulSet.ID})
 		},
 		retry.Delay(time.Second*1),
 		retry.Attempts(2),
@@ -1552,10 +1622,10 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetDelete(gameStatefulS
 	return err
 }
 
-// handle GameStateful Set Create
-func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetCreate(gameStatefulSet *gsv1alpha1.GameStatefulSet) error {
-	// GetBkNamespaces get bknamespaces
-	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
+// handle GameStatefulSet Create
+func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetCreate(
+	gameStatefulSet *gsv1alpha1.GameStatefulSet, bkCluster *bkcmdbkube.Cluster) error {
+	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1566,7 +1636,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetCreate(gameStatefulS
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1581,21 +1651,19 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetCreate(gameStatefulS
 	bkNamespace := (*bkNamespaces)[0]
 
 	gameStatefulSetToAdd := make(map[int64][]client.CreateBcsWorkloadRequestData, 0)
-	// GenerateBkGameStatefulSet generate bkgamestatefulset from k8sgamestatefulset
 	toAddData := b.Syncer.GenerateBkGameStatefulSet(&bkNamespace, &storage.GameStatefulSet{Data: gameStatefulSet})
 	gameStatefulSetToAdd[bkNamespace.BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
 
-	// CreateBkWorkloads create bkworkloads
-	b.Syncer.CreateBkWorkloads(b.BkCluster, "gameStatefulSet", gameStatefulSetToAdd)
+	b.Syncer.CreateBkWorkloads(bkCluster, "gameStatefulSet", gameStatefulSetToAdd)
 	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleNamespace(msg amqp.Delivery) {
+func (b *BcsBkcmdbSynchronizerHandler) handleNamespace(msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster) error {
 	blog.Infof("handleNamespace Message: %v", msg.Headers)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleNamespace unable to get headers, err: %s", err.Error())
-		return
+		return fmt.Errorf("handleNamespace unable to get headers, err: %s", err.Error())
 	}
 
 	blog.Infof("Headers: %s", msgHeader.ClusterId)
@@ -1603,32 +1671,31 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespace(msg amqp.Delivery) {
 	err = json.Unmarshal(msg.Body, namespace)
 	if err != nil {
 		blog.Errorf("handleNamespace: Unable to unmarshal")
-		return
+		return fmt.Errorf("handleNamespace: Unable to unmarshal")
 	}
 
 	switch msgHeader.Event {
-	case "update": // nolint
-		err = b.handleNamespaceUpdate(namespace)
+	case "update":
+		err = b.handleNamespaceUpdate(namespace, bkCluster)
 		if err != nil {
 			blog.Errorf("handleNamespaceUpdate err: %s", err.Error())
+			return fmt.Errorf("handleNamespaceUpdate err: %s", err.Error())
 		}
-	case "delete": // nolint
-		err = b.handleNamespaceDelete(namespace)
+	case "delete":
+		err = b.handleNamespaceDelete(namespace, bkCluster)
 		if err != nil {
 			blog.Errorf("handleNamespaceDelete err: %s", err.Error())
-			err = b.PublishMsg(msg)
-			if err != nil {
-				blog.Errorf("republish err: %s", err.Error())
-			}
+			return fmt.Errorf("handleNamespaceDelete err: %s", err.Error())
 		}
 	default:
 		blog.Errorf("handleNamespace: Unknown event: %s", msgHeader.Event)
 	}
+	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceUpdate(namespace *corev1.Namespace) error {
-	// GetBkNamespaces get bknamespaces
-	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceUpdate(
+	namespace *corev1.Namespace, bkCluster *bkcmdbkube.Cluster) error {
+	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1639,7 +1706,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceUpdate(namespace *corev1.N
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1649,7 +1716,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceUpdate(namespace *corev1.N
 	}
 
 	if len(*bkNamespaces) == 0 {
-		err := b.handleNamespaceCreate(namespace)
+		err := b.handleNamespaceCreate(namespace, bkCluster)
 		if err != nil {
 			blog.Errorf(fmt.Sprintf("handleNamespaceCreate err: %s", err.Error()))
 			return err
@@ -1659,11 +1726,10 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceUpdate(namespace *corev1.N
 	if len(*bkNamespaces) == 1 {
 		bkNamespace := (*bkNamespaces)[0]
 		nsToUpdate := make(map[int64]*client.UpdateBcsNamespaceRequestData, 0)
-		// CompareNamespace compare bkns and k8sns
 		needToUpdate, updateData := b.Syncer.CompareNamespace(&bkNamespace, &storage.Namespace{Data: namespace})
 		if needToUpdate {
 			nsToUpdate[bkNamespace.ID] = updateData
-			b.Syncer.UpdateBkNamespaces(b.BkCluster, &nsToUpdate)
+			b.Syncer.UpdateBkNamespaces(bkCluster, &nsToUpdate)
 		}
 	}
 
@@ -1675,9 +1741,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceUpdate(namespace *corev1.N
 	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceDelete(namespace *corev1.Namespace) error {
-	// GetBkNamespaces get bknamespaces
-	bkNamespaces, err := b.Syncer.GetBkNamespaces(b.BkCluster.BizID, &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceDelete(
+	namespace *corev1.Namespace, bkCluster *bkcmdbkube.Cluster) error {
+	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1688,7 +1754,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceDelete(namespace *corev1.N
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1710,8 +1776,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceDelete(namespace *corev1.N
 	// err = b.Syncer.DeleteBkNamespaces(b.BkCluster.BizID, &[]int64{bkNamespace.ID})
 	err = retry.Do(
 		func() error {
-			// DeleteBkNamespaces delete bknamespaces
-			return b.Syncer.DeleteBkNamespaces(b.BkCluster, &[]int64{bkNamespace.ID})
+			return b.Syncer.DeleteBkNamespaces(bkCluster, &[]int64{bkNamespace.ID})
 		},
 		retry.Delay(time.Second*1),
 		retry.Attempts(2),
@@ -1722,15 +1787,15 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceDelete(namespace *corev1.N
 }
 
 // handle Namespace Create
-func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceCreate(namespace *corev1.Namespace) error {
-	// GetProjectManagerGrpcGwClient is a function that returns a project manager gRPC gateway client.
+func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceCreate(
+	namespace *corev1.Namespace, bkCluster *bkcmdbkube.Cluster) error {
 	pmCli, err := b.Syncer.GetProjectManagerGrpcGwClient()
 	if err != nil {
 		blog.Errorf("get project manager grpc gw client failed, err: %s", err.Error())
 		return nil
 	}
 
-	bizid := b.BkCluster.BizID
+	bizid := bkCluster.BizID
 	if projectCode, ok := namespace.Annotations["io.tencent.bcs.projectcode"]; ok {
 		gpr := pmp.GetProjectRequest{
 			ProjectIDOrCode: projectCode,
@@ -1748,24 +1813,52 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceCreate(namespace *corev1.N
 		}
 	}
 
-	if bizid != b.BkCluster.BizID {
+	if bizid != bkCluster.BizID {
 		bizid = int64(71)
 	}
 
 	nsToAdd := make(map[int64][]bkcmdbkube.Namespace, 0)
-	nsToAdd[bizid] = []bkcmdbkube.Namespace{b.Syncer.GenerateBkNsData(b.BkCluster, &storage.Namespace{Data: namespace})}
-	// CreateBkNamespaces create bknamespaces
-	b.Syncer.CreateBkNamespaces(b.BkCluster, nsToAdd)
+	nsToAdd[bizid] = []bkcmdbkube.Namespace{b.Syncer.GenerateBkNsData(bkCluster, &storage.Namespace{Data: namespace})}
+	b.Syncer.CreateBkNamespaces(bkCluster, nsToAdd)
+	return nil
+}
+
+// Event handle
+func (b *BcsBkcmdbSynchronizerHandler) handleEvent(msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster) error {
+	blog.Infof("handleEvent Message: %v", msg.Headers)
+	msgHeader, err := getMsgHeader(&msg.Headers)
+	if err != nil {
+		blog.Errorf("handleEvent unable to get headers, err: %s", err.Error())
+		return fmt.Errorf("handleEvent unable to get headers, err: %s", err.Error())
+	}
+	blog.Infof("Headers: %s", msgHeader.ClusterId)
+	if resourceKind, resourceKindOk := msg.Headers["resourceKind"]; resourceKindOk {
+		if resourceKind == "Pod" {
+			if eventType, eventTypeOk := msg.Headers["type"]; eventTypeOk {
+				switch eventType.(string) { // nolint
+				case "BackOff":
+					pod := corev1.Pod{}
+					pod.Name = msgHeader.ResourceName
+					pod.Namespace = msgHeader.Namespace
+					err = b.handlePodDelete(&pod, bkCluster)
+					if err != nil {
+						blog.Errorf("handlePodDelete err: %s", err.Error())
+						return fmt.Errorf("handlePodDelete err: %s", err.Error())
+					}
+				}
+			}
+		}
+	}
 	return nil
 }
 
 // Node handle
-func (b *BcsBkcmdbSynchronizerHandler) handleNode(msg amqp.Delivery) {
+func (b *BcsBkcmdbSynchronizerHandler) handleNode(msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster) error {
 	blog.Infof("handleNode Message: %v", msg.Headers)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleNode unable to get headers, err: %s", err.Error())
-		return
+		return fmt.Errorf("handleNode unable to get headers, err: %s", err.Error())
 	}
 
 	blog.Infof("Headers: %s", msgHeader.ClusterId)
@@ -1773,32 +1866,30 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNode(msg amqp.Delivery) {
 	err = json.Unmarshal(msg.Body, node)
 	if err != nil {
 		blog.Errorf("handleNode: Unable to unmarshal")
-		return
+		return fmt.Errorf("handleNode: Unable to unmarshal")
 	}
 
 	switch msgHeader.Event {
 	case "update": // nolint
-		err = b.handleNodeUpdate(node)
+		err = b.handleNodeUpdate(node, bkCluster)
 		if err != nil {
 			blog.Errorf("handleNodeUpdate err: %s", err.Error())
+			return fmt.Errorf("handleNodeUpdate err: %s", err.Error())
 		}
 	case "delete": // nolint
-		err = b.handleNodeDelete(node)
+		err = b.handleNodeDelete(node, bkCluster)
 		if err != nil {
 			blog.Errorf("handleNodeDelete err: %s", err.Error())
-			err = b.PublishMsg(msg)
-			if err != nil {
-				blog.Errorf("republish err: %s", err.Error())
-			}
+			return fmt.Errorf("handleNodeDelete err: %s", err.Error())
 		}
 	default:
 		blog.Errorf("handleNode: Unknown event: %s", msgHeader.Event)
 	}
+	return nil
 }
 
-func (b *BcsBkcmdbSynchronizerHandler) handleNodeUpdate(node *corev1.Node) error {
-	// GetBkNodes get bknodes
-	bkNodes, err := b.Syncer.GetBkNodes(b.BkCluster.BizID, &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleNodeUpdate(node *corev1.Node, bkCluster *bkcmdbkube.Cluster) error {
+	bkNodes, err := b.Syncer.GetBkNodes(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1809,7 +1900,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeUpdate(node *corev1.Node) error
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1819,7 +1910,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeUpdate(node *corev1.Node) error
 	}
 
 	if len(*bkNodes) == 0 {
-		err := b.handleNodeCreate(node)
+		err := b.handleNodeCreate(node, bkCluster)
 		if err != nil {
 			blog.Errorf(fmt.Sprintf("handleNodeCreate err: %s", err.Error()))
 			return err
@@ -1832,7 +1923,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeUpdate(node *corev1.Node) error
 		needToUpdate, updateData := b.Syncer.CompareNode(&bkNode, &storage.K8sNode{Data: node})
 		if needToUpdate {
 			nodeToUpdate[bkNode.ID] = updateData
-			b.Syncer.UpdateBkNodes(b.BkCluster, &nodeToUpdate)
+			b.Syncer.UpdateBkNodes(bkCluster, &nodeToUpdate)
 		}
 	}
 
@@ -1844,10 +1935,8 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeUpdate(node *corev1.Node) error
 	return nil
 }
 
-// handle Node Delete
-func (b *BcsBkcmdbSynchronizerHandler) handleNodeDelete(node *corev1.Node) error {
-	// GetBkNodes get bknodes
-	bkNodes, err := b.Syncer.GetBkNodes(b.BkCluster.BizID, &client.PropertyFilter{
+func (b *BcsBkcmdbSynchronizerHandler) handleNodeDelete(node *corev1.Node, bkCluster *bkcmdbkube.Cluster) error {
+	bkNodes, err := b.Syncer.GetBkNodes(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1858,7 +1947,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeDelete(node *corev1.Node) error
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
-				Value:    []string{b.BkCluster.Uid},
+				Value:    []string{bkCluster.Uid},
 			},
 		},
 	})
@@ -1880,7 +1969,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeDelete(node *corev1.Node) error
 	// b.Syncer.DeleteBkNodes(b.BkCluster.BizID, &[]int64{bkNode.ID})
 	err = retry.Do(
 		func() error {
-			return b.Syncer.DeleteBkNodes(b.BkCluster, &[]int64{bkNode.ID})
+			return b.Syncer.DeleteBkNodes(bkCluster, &[]int64{bkNode.ID})
 		},
 		retry.Delay(time.Second*1),
 		retry.Attempts(2),
@@ -1890,15 +1979,13 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodeDelete(node *corev1.Node) error
 	return err
 }
 
-// handle Node Create
-func (b *BcsBkcmdbSynchronizerHandler) handleNodeCreate(node *corev1.Node) error {
+func (b *BcsBkcmdbSynchronizerHandler) handleNodeCreate(node *corev1.Node, bkCluster *bkcmdbkube.Cluster) error {
 	nodeToAdd := make([]client.CreateBcsNodeRequestData, 0)
-	nodeToAdd = append(nodeToAdd, b.Syncer.GenerateBkNodeData(b.BkCluster, &storage.K8sNode{Data: node}))
-	b.Syncer.CreateBkNodes(b.BkCluster, &nodeToAdd)
+	nodeToAdd = append(nodeToAdd, b.Syncer.GenerateBkNodeData(bkCluster, &storage.K8sNode{Data: node}))
+	b.Syncer.CreateBkNodes(bkCluster, &nodeToAdd)
 	return nil
 }
 
-// get MsgHeader
 func getMsgHeader(header *amqp.Table) (*MsgHeader, error) {
 	var msgHeader MsgHeader
 	if err := mapstructure.Decode(header, &msgHeader); err != nil {
@@ -1919,9 +2006,9 @@ func (b *BcsBkcmdbSynchronizerHandler) PublishMsg(msg amqp.Delivery) error {
 		// If not, set the republish header to 1.
 		msg.Headers["republish"] = 1
 	} else {
-		// If it has been republished before, check if the republish count is less than 100.
-		if !(republish.(int32) < 100) {
-			// If it has been republished more than 100 times, return an error.
+		// If it has been republished before, check if the republish count is less than 10.
+		if republish.(int32) > 10 {
+			// If it has been republished more than 10 times, return an error.
 			return errors.New("no need to publish")
 		}
 		// If it is, increment the republish count.
@@ -1949,17 +2036,4 @@ func (b *BcsBkcmdbSynchronizerHandler) PublishMsg(msg amqp.Delivery) error {
 
 	// Return the error if there is one, or nil if the message was published successfully.
 	return err
-}
-
-func (b *BcsBkcmdbSynchronizerHandler) getClusterManagerGrpcGwClient() (
-	cmCli *client.ClusterManagerClientWithHeader, err error) {
-	opts := &cm.Options{
-		Module:          cm.ModuleClusterManager,
-		Address:         b.Syncer.BkcmdbSynchronizerOption.Bcsapi.GrpcAddr,
-		EtcdRegistry:    nil,
-		ClientTLSConfig: b.Syncer.ClientTls,
-		AuthToken:       b.Syncer.BkcmdbSynchronizerOption.Bcsapi.BearerToken,
-	}
-	cmCli, err = cm.NewClusterManagerGrpcGwClient(opts)
-	return cmCli, err
 }

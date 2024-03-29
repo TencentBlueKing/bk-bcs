@@ -41,6 +41,7 @@ func (k *KvSpec) KvSpec() *table.KvSpec {
 	return &table.KvSpec{
 		Key:    k.Key,
 		KvType: table.DataType(k.KvType),
+		Memo:   k.Memo,
 	}
 }
 
@@ -84,6 +85,7 @@ func PbKvSpec(spec *table.KvSpec, value string) *KvSpec {
 		Key:    spec.Key,
 		KvType: string(spec.KvType),
 		Value:  value,
+		Memo:   spec.Memo,
 	}
 }
 

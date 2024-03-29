@@ -570,6 +570,24 @@ type GetBcsPodResponseData struct {
 	Info  *[]bkcmdbkube.Pod `json:"info"`
 }
 
+// GetBcsContainerRequest 表示获取BCS容器请求的结构体
+type GetBcsContainerRequest struct {
+	CommonRequest       // 嵌入通用请求结构体
+	BkPodID       int64 `json:"bk_pod_id"` // BkPodID定了要查询的Pod的ID
+}
+
+// GetBcsContainerResponse 表示获取BCS容器响应的结构体
+type GetBcsContainerResponse struct {
+	CommonResponse                              // 嵌入通用响应结
+	Data           *GetBcsContainerResponseData `json:"data"` // 包含响应数据的指针
+}
+
+// GetBcsContainerResponseData 包含实际的响应数据
+type GetBcsContainerResponseData struct {
+	Count int                     `json:"count"` // 返回的容器数量
+	Info  *[]bkcmdbkube.Container `json:"info"`  // 容器的详细信息
+}
+
 // CreateBcsPodRequest defines the structure of the request for creating BCS pods.
 type CreateBcsPodRequest struct {
 	Data *[]CreateBcsPodRequestData `json:"data"`
@@ -669,4 +687,10 @@ type Rule struct {
 	Field    string      `json:"field"`
 	Operator string      `json:"operator"`
 	Value    interface{} `json:"value"`
+}
+
+// DeleteBcsClusterAllRequest represents the request for deleting a BCS cluster
+type DeleteBcsClusterAllRequest struct {
+	BKBizID *int64   `json:"bk_biz_id"`
+	IDs     *[]int64 `json:"ids"`
 }

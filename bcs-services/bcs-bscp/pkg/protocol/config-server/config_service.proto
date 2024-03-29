@@ -2336,6 +2336,7 @@ message CreateKvReq {
   string key = 3;
   string kv_type = 4;
   string value = 5;
+  string memo = 6;
 }
 
 message CreateKvResp {
@@ -2346,6 +2347,7 @@ message UpdateKvReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   string key = 4;
+  string memo = 5;
   string value = 6;
 }
 

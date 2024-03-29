@@ -329,7 +329,7 @@ func NewProjectManager(config *client.Config) pmp.BCSProjectClient {
 }
 
 // NewProjectManagerGrpcGwClient return cluster manager grpc gateway client
-func NewProjectManagerGrpcGwClient(opts *Options) (cmCli *client.ProjectManagerClientWithHeader, err error) {
+func NewProjectManagerGrpcGwClient(opts *Options) (pmCli *client.ProjectManagerClientWithHeader, err error) {
 	cli := NewProjectManagerClient(opts)
 	if cli == nil {
 		return nil, fmt.Errorf("init project manager client failed")
@@ -339,7 +339,7 @@ func NewProjectManagerGrpcGwClient(opts *Options) (cmCli *client.ProjectManagerC
 		return nil, fmt.Errorf("get project manager conn failed, err %s", err.Error())
 	}
 
-	pmCli := cli.NewPMGrpcClientWithHeader(context.Background(), pmConn)
+	pmCli = cli.NewPMGrpcClientWithHeader(context.Background(), pmConn)
 	_, err = pmCli.Cli.ListProjects(pmCli.Ctx, &pmp.ListProjectsRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("pmcli ping error %s", err.Error())

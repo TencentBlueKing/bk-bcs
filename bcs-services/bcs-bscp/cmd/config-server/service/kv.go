@@ -43,6 +43,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbcs.CreateKvReq) (*pbcs.Cr
 		},
 		Spec: &pbkv.KvSpec{
 			Key:    req.Key,
+			Memo:   req.Memo,
 			KvType: req.KvType,
 			Value:  req.Value,
 		},
@@ -79,6 +80,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbcs.UpdateKvReq) (*pbcs.Up
 		Spec: &pbkv.KvSpec{
 			Key:   req.Key,
 			Value: req.Value,
+			Memo:  req.Memo,
 		},
 	}
 	if _, err := s.client.DS.UpdateKv(grpcKit.RpcCtx(), r); err != nil {
