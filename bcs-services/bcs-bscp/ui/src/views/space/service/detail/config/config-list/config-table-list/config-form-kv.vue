@@ -1,10 +1,16 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item :label="t('配置项名称')" property="key" :required="true">
-      <bk-input v-model="localVal.key" :disabled="editable" @input="change" :placeholder="t('请输入')" />
+      <bk-input v-model="localVal.key" :disabled="!editable" @input="change" :placeholder="t('请输入')" />
     </bk-form-item>
     <bk-form-item :label="t('配置项描述')" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" @input="change" />
+      <bk-input
+        v-model="localVal.memo"
+        type="textarea"
+        :maxlength="200"
+        :disabled="!editable"
+        :placeholder="t('请输入')"
+        @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('数据类型')" property="kv_type" :required="true" :description="typeDescription">
       <bk-radio-group v-model="localVal.kv_type">
@@ -96,6 +102,12 @@
         validator: (value: string) =>
           /^([\\u4E00-\\u9FA5A-Za-z0-9]([\\u4E00-\\u9FA5A-Za-z0-9-_]*)?)?[\\u4E00-\\u9FA5A-Za-z0-9]$/.test(value),
         message: t('只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾'),
+      },
+    ],
+    memo: [
+      {
+        validator: (value: string) => value.length <= 200,
+        message: t('最大长度200个字符'),
       },
     ],
     value: [
