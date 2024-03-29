@@ -2336,6 +2336,7 @@ message CreateKvReq {
   string key = 3;
   string kv_type = 4;
   string value = 5;
+  string memo = 6;
 }
 
 message CreateKvResp {

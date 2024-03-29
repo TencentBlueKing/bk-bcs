@@ -43,6 +43,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbcs.CreateKvReq) (*pbcs.Cr
 		},
 		Spec: &pbkv.KvSpec{
 			Key:    req.Key,
+			Memo:   req.Memo,
 			KvType: req.KvType,
 			Value:  req.Value,
 		},
