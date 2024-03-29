@@ -2347,6 +2347,7 @@ message UpdateKvReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   string key = 4;
+  string memo = 5;
   string value = 6;
 }
 
