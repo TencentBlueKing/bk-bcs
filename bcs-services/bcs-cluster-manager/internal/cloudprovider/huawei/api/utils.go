@@ -17,10 +17,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 
+	"github.com/GehirnInc/crypt"
+	_ "github.com/GehirnInc/crypt/sha512_crypt"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
 	iamModel "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
 
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
@@ -154,4 +159,187 @@ func GetProjectIDByRegion(opt *cloudprovider.CommonOption) (string, error) {
 	}
 
 	return (*rsp.Projects)[0].Id, nil
+}
+
+// Crypt encryption node password
+func Crypt(password string) (string, error) {
+	str, err := crypt.SHA512.New().Generate([]byte(password), []byte("$6$tM3|cY3+tI4)"))
+	if err != nil {
+		return "", err
+	}
+
+	return base64.RawStdEncoding.EncodeToString([]byte(str)), nil
+}
+
+// GenerateModifyClusterNodePoolInput get cce update node pool input
+func GenerateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string,
+	oldNodePool *model.ShowNodePoolResponse) *model.UpdateNodePoolRequest {
+	// cce nodePool名称以小写字母开头，由小写字母、数字、中划线(-)组成，长度范围1-50位，且不能以中划线(-)结尾
+	name := strings.ToLower(group.Name)
+
+	req := &model.UpdateNodePoolRequest{
+		NodepoolId: group.CloudNodeGroupID,
+		ClusterId:  clusterID,
+		Body: &model.NodePoolUpdate{
+			Metadata: &model.NodePoolMetadataUpdate{
+				Name: name,
+			},
+			Spec: &model.NodePoolSpecUpdate{
+				NodeTemplate: &model.NodeSpecUpdate{
+					Taints:   make([]model.Taint, 0),
+					K8sTags:  map[string]string{},
+					UserTags: make([]model.UserTag, 0),
+				},
+				//更新节点池不能更新节点数量,只能通过UpdateDesiredNodes方法更新,会影响互斥性
+				InitialNodeCount: *oldNodePool.Spec.InitialNodeCount,
+				Autoscaling:      &model.NodePoolNodeAutoscaling{},
+			},
+		},
+	}
+
+	if group.NodeTemplate != nil {
+		for _, v := range group.NodeTemplate.Taints {
+			effect := model.GetTaintEffectEnum().NO_SCHEDULE
+			if v.Effect == "PreferNoSchedule" {
+				effect = model.GetTaintEffectEnum().PREFER_NO_SCHEDULE
+			} else if v.Effect == "NoExecute" {
+				effect = model.GetTaintEffectEnum().NO_EXECUTE
+			}
+			value := v.Value
+			req.Body.Spec.NodeTemplate.Taints = append(req.Body.Spec.NodeTemplate.Taints, model.Taint{
+				Key:    v.Key,
+				Value:  &value,
+				Effect: effect,
+			})
+		}
+	}
+
+	if group.Tags != nil {
+		req.Body.Spec.NodeTemplate.K8sTags = group.Tags
+
+		for k, v := range group.Tags {
+			key := k
+			value := v
+			req.Body.Spec.NodeTemplate.UserTags = append(req.Body.Spec.NodeTemplate.UserTags, model.UserTag{
+				Key:   &key,
+				Value: &value,
+			})
+		}
+	}
+
+	if len(req.Body.Spec.NodeTemplate.Taints) == 0 && oldNodePool.Spec.NodeTemplate.Taints != nil {
+		req.Body.Spec.NodeTemplate.Taints = *oldNodePool.Spec.NodeTemplate.Taints
+	}
+
+	if len(req.Body.Spec.NodeTemplate.K8sTags) == 0 && oldNodePool.Spec.NodeTemplate.K8sTags != nil {
+		req.Body.Spec.NodeTemplate.K8sTags = oldNodePool.Spec.NodeTemplate.K8sTags
+	}
+
+	if len(req.Body.Spec.NodeTemplate.UserTags) == 0 && oldNodePool.Spec.NodeTemplate.UserTags != nil {
+		req.Body.Spec.NodeTemplate.UserTags = *oldNodePool.Spec.NodeTemplate.UserTags
+	}
+
+	return req
+}
+
+// GenerateCreateNodePoolRequest get cce nodepool request
+func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
+	cluster *proto.Cluster) (*model.CreateNodePoolRequest, error) {
+	var (
+		initialNodeCount int32 = 0
+		clusterId              = cluster.SystemID
+	)
+
+	nodeTemplate, err := GenerateNodeSpec(group)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.CreateNodePoolRequest{
+		ClusterId: clusterId,
+		Body: &model.NodePool{
+			Kind:       "NodePool",
+			ApiVersion: "v3",
+			Metadata: &model.NodePoolMetadata{
+				Name: group.NodeGroupID,
+			},
+			Spec: &model.NodePoolSpec{
+				InitialNodeCount: &initialNodeCount,
+				NodeTemplate:     nodeTemplate,
+			},
+		},
+	}, nil
+}
+
+// GenerateNodeSpec get node spec
+func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
+	if nodeGroup.LaunchTemplate == nil {
+		return nil, fmt.Errorf("node group launch template is nil")
+	}
+
+	var (
+		nodeBillingMode int32 = 0
+		maxPod          int32 = 110
+	)
+
+	if nodeGroup.LaunchTemplate.InstanceType == "" {
+		return nil, fmt.Errorf("the node specifications cannot be empty")
+	}
+
+	if nodeGroup.LaunchTemplate.SystemDisk == nil {
+		return nil, fmt.Errorf("the system disk information of a node cannot be empty")
+	}
+
+	if len(nodeGroup.LaunchTemplate.DataDisks) == 0 {
+		return nil, fmt.Errorf("the data disk information of a node cannot be empty")
+	}
+
+	if nodeGroup.NodeTemplate != nil && nodeGroup.NodeTemplate.MaxPodsPerNode != 0 {
+		maxPod = int32(nodeGroup.AutoScaling.MaxSize)
+	}
+
+	diskSize, err := strconv.Atoi(nodeGroup.LaunchTemplate.SystemDisk.DiskSize)
+	if err != nil {
+		return nil, err
+	}
+
+	dataVolumes := make([]model.Volume, 0)
+	for _, v := range nodeGroup.LaunchTemplate.DataDisks {
+		var size int
+		size, err = strconv.Atoi(v.DiskSize)
+		if err != nil {
+			return nil, err
+		}
+
+		dataVolumes = append(dataVolumes, model.Volume{
+			Volumetype: v.DiskType,
+			Size:       int32(size),
+		})
+	}
+
+	password, err := Crypt(nodeGroup.LaunchTemplate.InitLoginPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.NodeSpec{
+		Flavor: nodeGroup.LaunchTemplate.InstanceType,
+		Az:     "random", // 随机选择可用区
+		Os:     &nodeGroup.NodeOS,
+		Login: &model.Login{
+			UserPassword: &model.UserPassword{
+				//username不填默认为root，password必须加盐并base64加密
+				Password: password,
+			},
+		},
+		RootVolume: &model.Volume{
+			Volumetype: nodeGroup.LaunchTemplate.SystemDisk.DiskType,
+			Size:       int32(diskSize),
+		},
+		DataVolumes: dataVolumes,
+		BillingMode: &nodeBillingMode,
+		ExtendParam: &model.NodeExtendParam{
+			MaxPods: &maxPod,
+		},
+	}, nil
 }

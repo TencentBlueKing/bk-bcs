@@ -66,6 +66,7 @@ require (
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.1.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.3.0
+	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
 	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20240131080851-5006e27e0a5d
 	github.com/Tencent/bk-bcs/bcs-common/pkg/i18n v0.0.0-20230908142111-fef103db0120
 	github.com/apparentlymart/go-cidr v1.1.0

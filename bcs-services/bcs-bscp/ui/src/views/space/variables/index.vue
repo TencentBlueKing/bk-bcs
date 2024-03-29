@@ -188,7 +188,7 @@
   };
 
   const refreshList = (current = 1) => {
-    isSearchEmpty.value = searchStr.value === '';
+    isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = current;
     getVariables();
   };

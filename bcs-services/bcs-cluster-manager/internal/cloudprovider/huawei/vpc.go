@@ -137,7 +137,28 @@ func (vm *VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption
 
 // ListBandwidthPacks list bandWidthPacks
 func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*proto.BandwidthPackageInfo, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	client, err := api.NewEipClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	rsp, err := client.GetAllBandwidths()
+	if err != nil {
+		return nil, err
+	}
+
+	bandwidths := make([]*proto.BandwidthPackageInfo, 0)
+	for _, v := range rsp {
+		bandwidths = append(bandwidths, &proto.BandwidthPackageInfo{
+			Id:          *v.Id,
+			Name:        *v.Name,
+			NetworkType: *v.BandwidthType,
+			Status:      *v.AdminState,
+			Bandwidth:   *v.Size,
+		})
+	}
+
+	return bandwidths, nil
 }
 
 // CheckConflictInVpcCidr check cidr if conflict with vpc cidrs

@@ -160,27 +160,71 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest,
 	account *proto.Account) error {
 	// call cloud interface to check account
-	return cloudprovider.ErrCloudNotImplemented
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListSecurityGroupsValidate request is empty", cloudName)
+	}
+
+	if account.SecretID == "" || account.SecretKey == "" {
+		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid crendential info", cloudName)
+	}
+
+	return nil
 }
 
 // ListInstanceTypeValidate xxx
 func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest,
 	account *proto.Account) error {
 	// call cloud interface to check account
-	return cloudprovider.ErrCloudNotImplemented
+	if c == nil || req == nil {
+		return fmt.Errorf("%s ListInstanceTypeValidate request is empty", cloudName)
+	}
+
+	if account == nil {
+		return fmt.Errorf("%s ListInstanceTypeValidate options is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 || len(req.Region) == 0 {
+		return fmt.Errorf("%s ListInstanceTypeValidate opt lost valid crendential info", cloudName)
+	}
+
+	return nil
 }
 
 // ListCloudOsImageValidate xxx
 func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error {
 	// call cloud interface to check account
-	return cloudprovider.ErrCloudNotImplemented
+	if c == nil || req == nil {
+		return fmt.Errorf("%s ListCloudOsImageValidate request is empty", cloudName)
+	}
+
+	if account == nil {
+		return fmt.Errorf("%s ListCloudOsImageValidate options is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 || len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudOsImageValidate opt lost valid crendential info", cloudName)
+	}
+
+	return nil
 }
 
 // CreateNodeGroupValidate xxx
 func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest,
 	opt *cloudprovider.CommonOption) error {
 	// call cloud interface to check account
-	return cloudprovider.ErrCloudNotImplemented
+	if c == nil || req == nil {
+		return fmt.Errorf("%s CreateNodeGroupValidate request is empty", cloudName)
+	}
+
+	if opt == nil || opt.Account == nil {
+		return fmt.Errorf("%s CreateNodeGroupValidate options is empty", cloudName)
+	}
+
+	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return fmt.Errorf("%s CreateNodeGroupValidate opt lost valid crendential info", cloudName)
+	}
+
+	return nil
 }
 
 // AddNodesToClusterValidate xxx
@@ -244,10 +288,18 @@ func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
 
 // ListInstancesValidate xxx
 func (c *CloudValidate) ListInstancesValidate(req *proto.ListCloudInstancesRequest, account *proto.Account) error {
-	return cloudprovider.ErrCloudNotImplemented
+	return nil
 }
 
 // ListKeyPairsValidate list key pairs validate
 func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, account *proto.Account) error {
-	return cloudprovider.ErrCloudNotImplemented
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListCloudVpcsValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListCloudVpcsValidate request lost valid crendential info", cloudName)
+	}
+
+	return nil
 }

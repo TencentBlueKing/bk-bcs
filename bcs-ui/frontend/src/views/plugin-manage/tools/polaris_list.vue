@@ -300,6 +300,7 @@ import { formatDate } from '@/common/util';
 import BcsContent from '@/components/layout/Content.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import $i18n from '@/i18n/i18n-setup';
+import $store from '@/store';
 
 interface IPolarisFormData {
   metadata: {
@@ -369,6 +370,16 @@ const initFormData = {
 const formData = ref<IPolarisFormData>({
   ...initFormData,
 });
+
+const getParams = () => {
+  const data: IPolarisFormData = JSON.parse(JSON.stringify(formData.value));
+  data.spec.polaris.operator = $store.state.user?.username;
+  data.spec.services = data.spec.services.map(item => ({
+    ...item,
+    namespace: data.metadata.namespace,
+  }));
+  return data;
+};
 
 // 表单校验
 const rules = ref({
@@ -445,6 +456,7 @@ const {
   clusterId: props.clusterId,
   formData,
   initFormData,
+  getParams,
 });
 
 const showToken = ref(false);

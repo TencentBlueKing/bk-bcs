@@ -30,6 +30,28 @@ var (
 const (
 	// importClusterTaskTemplate bk-sops add task template
 	importClusterTaskTemplate = "cce-import cluster: %s"
+	// deleteClusterTaskTemplate bk-sops add task template
+	deleteClusterTaskTemplate = "cce-delete cluster: %s" // nolint
+	// addNodeTaskTemplate bk-sops add task template
+	addNodeTaskTemplate = "cce-add node: %s" // nolint
+	// cleanNodeTaskTemplate bk-sops add task template
+	cleanNodeTaskTemplate = "cce-remove node: %s" // nolint
+	// createNodeGroupTaskTemplate bk-sops add task template
+	createNodeGroupTaskTemplate = "cce-create node group: %s/%s"
+	// deleteNodeGroupTaskTemplate bk-sops add task template
+	deleteNodeGroupTaskTemplate = "cce-delete node group: %s/%s"
+	// updateNodeGroupDesiredNode bk-sops add task template
+	updateNodeGroupDesiredNodeTemplate = "cce-update node group desired node: %s/%s"
+	// cleanNodeGroupNodesTaskTemplate bk-sops add task template
+	cleanNodeGroupNodesTaskTemplate = "cce-remove node group nodes: %s/%s"
+	// moveNodesToNodeGroupTaskTemplate bk-sops add task template
+	moveNodesToNodeGroupTaskTemplate = "cce-move nodes to node group: %s/%s" // nolint
+	// switchNodeGroupAutoScalingTaskTemplate bk-sops add task template
+	switchNodeGroupAutoScalingTaskTemplate = "cce-switch node group auto scaling: %s/%s"
+	// updateAutoScalingOptionTemplate bk-sops add task template
+	updateAutoScalingOptionTemplate = "cce-update auto scaling option: %s"
+	// switchAutoScalingOptionStatusTemplate bk-sops add task template
+	switchAutoScalingOptionStatusTemplate = "cce-switch auto scaling option status: %s"
 )
 
 // tasks
