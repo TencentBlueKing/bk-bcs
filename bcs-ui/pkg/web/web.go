@@ -144,7 +144,7 @@ func (w *WebServer) subRouter() http.Handler {
 	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
 	r.With(metrics.RequestCollect("SwitchLanguageHandler")).Put("/switch_language", w.CookieSwitchLanguage)
 	r.With(metrics.RequestCollect("ReleaseNoteHandler")).Get("/release_note", w.ReleaseNoteHandler)
-	r.With(metrics.RequestCollect("DataPrintHandler")).Post("/data_print", DataPrintHandler)
+	r.With(metrics.RequestCollect("ReportHandler")).Post("/report", ReportHandler)
 
 	r.With(metrics.RequestCollect("no_permission")).Get("/403.html", w.embedWebServer.Render403Handler().ServeHTTP)
 
@@ -205,8 +205,8 @@ func HealthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-// DataPrintHandler 数据打印，前端埋点接口
-func DataPrintHandler(w http.ResponseWriter, r *http.Request) {
+// ReportHandler 数据打印，前端埋点接口
+func ReportHandler(w http.ResponseWriter, r *http.Request) {
 	okResponse := &OKResponse{Message: "OK", RequestID: r.Header.Get(constants.RequestIDHeaderKey)}
 	// response message
 	defer render.JSON(w, r, okResponse)
