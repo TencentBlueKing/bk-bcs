@@ -11,6 +11,9 @@
       <span v-if="previewGroup.type === 'modify'" class="release-name">
         {{ previewGroup.name }} <ArrowsRight class="arrow-icon" /> {{ versionData.spec.name }}
       </span>
+      <span v-else-if="previewGroup.type === 'retain'" class="release-name">
+        {{ previewGroup.name }}
+      </span>
       <span v-if="!hasDefaultGroup" class="group-count-wrapper">
         {{ t('共') }}
         <span class="count">{{ previewGroup.children.length }}</span>
