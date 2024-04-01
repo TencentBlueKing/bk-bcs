@@ -759,6 +759,11 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{id}"
     };
   };
+  rpc BatchDeleteKv(BatchDeleteKvReq) returns (BatchDeleteKvResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/batchDelete"
+    };
+  };
   rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs"
@@ -2384,6 +2389,17 @@ message DeleteKvReq {
 }
 
 message DeleteKvResp {}
+
+message BatchDeleteKvReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  repeated uint32 ids = 3;
+}
+
+message BatchDeleteKvResp {
+  repeated uint32 successful_ids = 1;
+  repeated uint32 failed_ids = 2;
+}
 
 message BatchUpsertKvsReq {
   message Kv {
