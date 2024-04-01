@@ -11,9 +11,9 @@
         class="config-form-wrapper"
         :config="configForm as IConfigKvItem"
         :content="content"
-        :editable="true"
         :bk-biz-id="props.bkBizId"
         :id="props.appId"
+        :edit-mode="true"
         @change="handleChange" />
     </div>
     <section class="action-btns">
