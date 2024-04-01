@@ -26,7 +26,7 @@
       </bk-table-column>
       <bk-table-column :label="t('配置项值预览')" prop="spec.value">
         <template #default="{ row }">
-          <kvValuePreview v-if="row.spec" :key="row.id" :value="row.spec.value" @viewAll="handleView(row)" />
+          <kvValuePreview v-if="row.spec" :key="row.id" :value="row.spec.value" @view-all="handleView(row)" />
         </template>
       </bk-table-column>
       <bk-table-column
