@@ -60,6 +60,7 @@
             <div v-show="!previewGroup.fold" class="group-list">
               <div v-for="group in previewGroup.children" class="group-item" :key="group.id">
                 <div class="name">{{ group.name }}</div>
+                <div v-if="group.desc" class="desc">{{ group.desc }}</div>
                 <div v-if="group.rules.length > 0" class="rules">
                   <bk-overflow-title type="tips">
                     <span v-for="(rule, index) in group.rules" :key="index" class="rule">
@@ -94,7 +95,7 @@
   import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../types/group';
   import { IConfigVersion } from '../../../../../../../types/config';
   import useConfigStore from '../../../../../../store/config';
-  import { aggregatePreviewData, aggregateExcludedData } from '../hooks/aggegate-groups';
+  import { aggregatePreviewData, aggregateExcludedData } from '../hooks/aggregate-groups';
   import RuleTag from '../../../../groups/components/rule-tag.vue';
 
   const versionStore = useConfigStore();
@@ -307,6 +308,10 @@
       color: #63656e;
       background: #f0f1f5;
       border-radius: 2px;
+    }
+    .desc {
+      font-size: 12px;
+      color: #979ba5;
     }
     .rules {
       margin-left: 8px;

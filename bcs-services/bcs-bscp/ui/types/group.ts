@@ -124,6 +124,7 @@ export interface IGroupToPublish {
   release_id: number;
   release_name: string;
   published?: boolean;
+  desc?: string;
   rules: IGroupRuleItem[];
 }
 

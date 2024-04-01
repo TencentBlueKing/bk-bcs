@@ -129,6 +129,9 @@
       automaticLayout: true,
       scrollBeyondLastLine: false,
       readOnly: true,
+      unicodeHighlight: {
+        ambiguousCharacters: false,
+      },
     });
     diffEditor.setModel({
       original: originalModel,

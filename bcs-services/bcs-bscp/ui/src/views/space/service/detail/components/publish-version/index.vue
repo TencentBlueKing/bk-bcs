@@ -146,8 +146,20 @@
   const diffableVersionList = computed(() => {
     const list = [] as IConfigVersion[];
     versionList.value.forEach((version) => {
-      version.status.released_groups.some((group) => {
-        if (group.id === 0 || groups.value.findIndex((item) => item.id === group.id)) {
+      if (version.id === versionData.value.id) return; // 忽略当前上线版本
+      version.status.released_groups.some((item) => {
+        // 其他版本包含默认分组，且当前选中分组未上线
+        if (item.id === 0) {
+          return groups.value.some((g) => {
+            if (g.release_id === 0) {
+              list.push(version);
+              return true;
+            }
+            return false;
+          });
+        }
+        // 其他版本包含的分组在当前已选中的分组中
+        if (groups.value.some((g) => g.id === item.id)) {
           list.push(version);
           return true;
         }

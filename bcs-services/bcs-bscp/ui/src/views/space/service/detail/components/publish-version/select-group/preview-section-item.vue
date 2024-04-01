@@ -45,6 +45,7 @@
       <div v-for="group in previewGroup.children" class="group-item" :key="group.id">
         <span class="node-name">
           {{ group.name }}
+          <span v-if="group.desc" class="desc">{{ group.desc }}</span>
         </span>
         <span v-if="group.rules && group.rules.length > 0" class="split-line">|</span>
         <div class="rules">
@@ -210,6 +211,10 @@
         font-size: 12px;
         line-height: 20px;
         color: #63656e;
+        .desc {
+          margin-left: 8px;
+          color: #979ba5;
+        }
       }
       .split-line {
         margin: 0 4px 0 16px;

@@ -4,7 +4,7 @@
       <div class="title">{{ t('配置项') }}</div>
       <div class="title-extend">
         <bk-checkbox
-          v-if="isBaseVersionExist && diffConfigList.length > 0"
+          v-if="isBaseVersionExist"
           v-model="isOnlyShowDiff"
           class="view-diff-checkbox"
           @change="handleToggleShowDiff">

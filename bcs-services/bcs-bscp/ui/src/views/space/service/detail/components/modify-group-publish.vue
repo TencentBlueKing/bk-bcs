@@ -124,12 +124,22 @@
   const diffableVersionList = computed(() => {
     const list = [] as IConfigVersion[];
     versionList.value.forEach((version) => {
-      if (version.id === versionData.value.id) return; // 当前版本排除掉
-      version.status.released_groups.some((group) => {
-        if (
-          group.id === 0 ||
-          groups.value.find((item) => item.id === group.id && !releasedGroups.value.includes(group.id))
-        ) {
+      if (version.id === versionData.value.id) return; // 忽略当前上线版本
+      version.status.released_groups.some((item) => {
+        if (releasedGroups.value.includes(item.id)) return false; // 忽略已在当前版本上线的分组
+        if (item.id === 0) {
+          // 其他版本包含默认分组，且当前选中分组未上线
+          return groups.value.some((g) => {
+            if (g.release_id === 0) {
+              list.push(version);
+              return true;
+            }
+            return false;
+          });
+        }
+
+        // 其他版本包含的分组在当前已选中的分组中
+        if (groups.value.findIndex((g) => g.id === item.id) > -1) {
           list.push(version);
           return true;
         }

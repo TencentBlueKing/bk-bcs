@@ -361,6 +361,8 @@ export default {
   配置项信息: 'Configuration Info',
   收起: 'Fold',
   查看全部: 'View All',
+  '已上线分组：': 'Released Groups: ',
+  '（已上线分组之外的所有实例）': 'All instances outside of the launched group',
 
   // 分组管理
   新增分组: 'New group',
