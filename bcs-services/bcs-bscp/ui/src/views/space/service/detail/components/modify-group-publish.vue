@@ -36,7 +36,12 @@
         </select-group>
         <template #footer>
           <section class="actions-wrapper">
-            <bk-button class="publish-btn" theme="primary" @click="handlePublishOrOpenDiff">
+            <bk-button
+              v-bk-tooltips="{ content: t('请选择需要调整的分组'), disabled: isSelectedGroupsChanged }"
+              class="publish-btn"
+              theme="primary"
+              :disabled="!isSelectedGroupsChanged"
+              @click="handlePublishOrOpenDiff">
               {{ diffableVersionList.length ? t('对比并上线') : t('上线版本') }}
             </bk-button>
             <bk-button @click="handlePanelClose">取消</bk-button>
@@ -149,6 +154,11 @@
     return list;
   });
 
+  // 是否有调整分组
+  const isSelectedGroupsChanged = computed(() => {
+    return groups.value.length > 0 && groups.value.some((item) => !releasedGroups.value.includes(item.id));
+  });
+
   const permissionQueryResource = computed(() => [
     {
       biz_id: props.bkBizId,
@@ -191,6 +201,7 @@
 
   // 判断是否需要对比上线版本
   const handlePublishOrOpenDiff = () => {
+    console.log(groups.value, releasedGroups.value);
     if (diffableVersionList.value.length) {
       baseVersionId.value = diffableVersionList.value[0].id;
       isDiffSliderShow.value = true;

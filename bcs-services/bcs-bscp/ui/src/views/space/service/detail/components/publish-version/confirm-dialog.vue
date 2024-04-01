@@ -206,8 +206,12 @@
       const params = { ...localVal.value };
       // 全部实例上线，只需要将all置为true
       if (props.releaseType === 'all') {
-        params.groups = [];
-        params.all = true;
+        if (excludeGroups.value.length > 0) {
+          params.all = false;
+        } else {
+          params.all = true;
+          params.groups = [];
+        }
       }
       const resp = await publishVersion(props.bkBizId, props.appId, versionData.value.id, params);
       handleClose();

@@ -9,12 +9,12 @@
     <template #content>
       <bk-loading :loading="loading" :opacity="1" class="groups-content-wrapper">
         <div class="header-area">
-          <h3 class="title">{{ props.isPending ? t('待上线实例') : t('已上线实例') }}</h3>
-          <template v-if="hasDefaultGroup">
+          <h3 class="title">{{ title }}</h3>
+          <template v-if="hasDefaultGroup && groupList.length > 0">
             <div class="tips">{{ t('除以下分组之外的所有实例') }}</div>
           </template>
         </div>
-        <div class="group-list">
+        <div v-if="groupList.length > 0" class="group-list">
           <div v-for="group in groupList" class="group-item" :key="group.id">
             <div class="group-name">
               <i class="bk-bscp-icon icon-resources-fill" />
@@ -62,6 +62,12 @@
   const groupList = ref<IReleasedGroup[]>([]);
 
   const hasDefaultGroup = computed(() => props.groups.some((item) => item.id === 0));
+  const title = computed(() => {
+    if (hasDefaultGroup.value) {
+      return t('全部实例');
+    }
+    return props.isPending ? t('待上线分组') : t('已上线分组');
+  });
 
   const popoverOpen = () => {
     if (hasDefaultGroup.value) {
