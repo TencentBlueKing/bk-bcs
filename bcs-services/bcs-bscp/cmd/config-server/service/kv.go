@@ -195,6 +195,7 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq)
 	failedIDs := []uint32{}
 	var mux sync.Mutex
 
+	// 使用 data-service 原子接口
 	for _, v := range req.GetIds() {
 		v := v
 		errGroup.Go(func() error {
