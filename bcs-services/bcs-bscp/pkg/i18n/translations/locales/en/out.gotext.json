@@ -2,9 +2,9 @@
     "language": "en",
     "messages": [
         {
-            "id": "ids is empty",
-            "message": "ids is empty",
-            "translation": "ids is empty",
+            "id": "id is required",
+            "message": "id is required",
+            "translation": "id is required",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },

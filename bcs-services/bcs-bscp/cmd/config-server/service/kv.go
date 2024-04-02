@@ -186,11 +186,11 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq)
 	}
 
 	if len(req.GetIds()) == 0 {
-		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit, "ids is empty"))
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit, "id is required"))
 	}
 
-	errGroup, errCtx := errgroup.WithContext(ctx)
-	errGroup.SetLimit(10)
+	eg, egCtx := errgroup.WithContext(grpcKit.RpcCtx())
+	eg.SetLimit(10)
 
 	successfulIDs := []uint32{}
 	failedIDs := []uint32{}
@@ -199,7 +199,7 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq)
 	// 使用 data-service 原子接口
 	for _, v := range req.GetIds() {
 		v := v
-		errGroup.Go(func() error {
+		eg.Go(func() error {
 			r := &pbds.DeleteKvReq{
 				Id: v,
 				Attachment: &pbkv.KvAttachment{
@@ -207,7 +207,7 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq)
 					AppId: req.AppId,
 				},
 			}
-			if _, err := s.client.DS.DeleteKv(errCtx, r); err != nil {
+			if _, err := s.client.DS.DeleteKv(egCtx, r); err != nil {
 				logs.Errorf("delete kv failed, err: %v, rid: %s", err, grpcKit.Rid)
 
 				// 错误不返回异常，记录错误ID
@@ -223,6 +223,11 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq)
 
 			return nil
 		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		logs.Errorf("batch delete failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
 	}
 
 	// 全部失败, 当前API视为失败

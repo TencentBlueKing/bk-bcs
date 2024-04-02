@@ -44,8 +44,8 @@ var messageKeyToIndex = map[string]int{
 	"batch delete failed":                 1,
 	"db operation failed":                 5,
 	"default_val %s is not a number type": 14,
+	"id is required":                      0,
 	"id should not be set":                7,
-	"ids is empty":                        0,
 	"invalid argument":                    6,
 	"invalid name, length should <= 128":  12,
 	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                         11,
@@ -58,37 +58,37 @@ var messageKeyToIndex = map[string]int{
 }
 
 var enIndex = []uint32{ // 17 elements
-	0x00000000, 0x0000000d, 0x00000021, 0x0000004e,
-	0x00000062, 0x00000093, 0x000000a7, 0x000000b8,
-	0x000000cd, 0x000000da, 0x000000ed, 0x000000fe,
-	0x00000151, 0x00000174, 0x000001f6, 0x0000021d,
-	0x0000023e,
+	0x00000000, 0x0000000f, 0x00000023, 0x00000050,
+	0x00000064, 0x00000095, 0x000000a9, 0x000000ba,
+	0x000000cf, 0x000000dc, 0x000000ef, 0x00000100,
+	0x00000153, 0x00000176, 0x000001f8, 0x0000021f,
+	0x00000240,
 } // Size: 92 bytes
 
-const enData string = "" + // Size: 574 bytes
-	"\x02ids is empty\x02batch delete failed\x02template variable name must s" +
-	"tart with %[1]s\x02app %[1]d not found\x02same template variable name %[" +
-	"1]s already exists\x02db operation failed\x02invalid argument\x02id shou" +
-	"ld not be set\x02spec not set\x02attachment not set\x02revision not set" +
-	"\x02invalid name, length should >= 9 and must start with prefix bk_bscp_" +
-	" (ignore case)\x02invalid name, length should <= 128\x02invalid name: %[" +
-	"1]s, only allows to include english、numbers、underscore (_), and must sta" +
-	"rt with prefix bk_bscp_ (ignore case)\x02default_val %[1]s is not a numb" +
-	"er type\x02unsupported variable type: %[1]s"
+const enData string = "" + // Size: 576 bytes
+	"\x02id is required\x02batch delete failed\x02template variable name must" +
+	" start with %[1]s\x02app %[1]d not found\x02same template variable name " +
+	"%[1]s already exists\x02db operation failed\x02invalid argument\x02id sh" +
+	"ould not be set\x02spec not set\x02attachment not set\x02revision not se" +
+	"t\x02invalid name, length should >= 9 and must start with prefix bk_bscp" +
+	"_ (ignore case)\x02invalid name, length should <= 128\x02invalid name: %" +
+	"[1]s, only allows to include english、numbers、underscore (_), and must st" +
+	"art with prefix bk_bscp_ (ignore case)\x02default_val %[1]s is not a num" +
+	"ber type\x02unsupported variable type: %[1]s"
 
 var zhIndex = []uint32{ // 17 elements
-	0x00000000, 0x00000009, 0x0000001c, 0x00000046,
-	0x00000063, 0x0000008d, 0x0000009c, 0x000000a9,
-	0x000000be, 0x000000d2, 0x000000ec, 0x00000104,
-	0x00000158, 0x00000179, 0x000001f4, 0x00000219,
-	0x0000023a,
+	0x00000000, 0x0000000f, 0x00000022, 0x0000004c,
+	0x00000069, 0x00000093, 0x000000a2, 0x000000af,
+	0x000000c4, 0x000000d8, 0x000000f2, 0x0000010a,
+	0x0000015e, 0x0000017f, 0x000001fa, 0x0000021f,
+	0x00000240,
 } // Size: 92 bytes
 
-const zhData string = "" + // Size: 570 bytes
-	"\x02id为空\x02批量删除失败\x02模版变量名必须以%[1]s前缀开头\x02ID为%[1]d的服务不存在\x02同名的模版变量名称%[" +
-	"1]s已存在\x02db操作失败\x02无效参数\x02id不应该被设置\x02spec没有被设置\x02attachment没有被设置\x02" +
-	"revision没有被设置\x02无效名称，长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称，长度应该<=128" +
-	"\x02无效名称：%[1]s，只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）\x02default_val %[" +
-	"1]s 不是数字类型\x02不支持的变量类型：%[1]s"
+const zhData string = "" + // Size: 576 bytes
+	"\x02id不能为空\x02批量删除失败\x02模版变量名必须以%[1]s前缀开头\x02ID为%[1]d的服务不存在\x02同名的模版变量名称" +
+	"%[1]s已存在\x02db操作失败\x02无效参数\x02id不应该被设置\x02spec没有被设置\x02attachment没有被设置" +
+	"\x02revision没有被设置\x02无效名称，长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称，长度应该<=1" +
+	"28\x02无效名称：%[1]s，只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）\x02default_val " +
+	"%[1]s 不是数字类型\x02不支持的变量类型：%[1]s"
 
-	// Total table size 1328 bytes (1KiB); checksum: 4F928CCB
+	// Total table size 1336 bytes (1KiB); checksum: 10E540E4

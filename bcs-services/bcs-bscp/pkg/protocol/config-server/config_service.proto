@@ -762,6 +762,7 @@ service Config {
   rpc BatchDeleteKv(BatchDeleteKvReq) returns (BatchDeleteKvResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/batchDelete"
+      body: "*"
     };
   };
   rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {

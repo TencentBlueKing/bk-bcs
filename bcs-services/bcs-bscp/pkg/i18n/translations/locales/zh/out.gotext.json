@@ -2,9 +2,9 @@
     "language": "zh",
     "messages": [
         {
-            "id": "ids is empty",
-            "message": "ids is empty",
-            "translation": "id为空"
+            "id": "id is required",
+            "message": "id is required",
+            "translation": "id不能为空"
         },
         {
             "id": "batch delete failed",
