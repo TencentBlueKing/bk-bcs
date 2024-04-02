@@ -54,7 +54,8 @@ func (dao *clientEventDao) List(kit *kit.Kit, bizID, appID, clientID uint32, sta
 	[]*table.ClientEvent, int64, error) {
 
 	m := dao.genQ.ClientEvent
-	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ClientID.Eq(clientID))
+	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
+		m.ClientID.Eq(clientID), m.ReleaseChangeFailedReason.Neq("SkipFailed"))
 	var err error
 	var conds []rawgen.Condition
 	if len(searchValue) > 0 {

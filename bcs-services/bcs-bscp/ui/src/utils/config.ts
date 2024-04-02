@@ -41,6 +41,7 @@ export function getDefaultKvItem() {
     spec: {
       kv_type: '',
       key: '',
+      memo: '',
       value: '',
     },
     content_spec: {

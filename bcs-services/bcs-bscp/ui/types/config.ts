@@ -90,6 +90,7 @@ export interface IConfigKvEditParams {
   key: string;
   kv_type: string;
   value: string;
+  memo: string;
 }
 
 // 文件配置概览内容
@@ -210,6 +211,7 @@ export interface IConfigKvItem {
   key: string;
   kv_type: string;
   value: string;
+  memo: string;
 }
 
 // 单个kv配置详情

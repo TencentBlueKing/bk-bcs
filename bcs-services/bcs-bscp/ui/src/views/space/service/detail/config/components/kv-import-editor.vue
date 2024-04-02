@@ -141,6 +141,7 @@
         key,
         kv_type,
         value,
+        memo: '',
       });
       if (kvContent.length !== 3) {
         errorLine.value.push({
