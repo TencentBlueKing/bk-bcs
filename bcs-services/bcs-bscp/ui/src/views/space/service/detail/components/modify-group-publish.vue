@@ -135,7 +135,7 @@
         if (item.id === 0) {
           // 其他版本包含默认分组，且当前选中分组未上线
           return groups.value.some((g) => {
-            if (g.release_id === 0) {
+            if (g.release_id === 0 || g.id === 0) {
               list.push(version);
               return true;
             }
