@@ -6,7 +6,9 @@
         <bk-button v-if="isExpanded" text theme="primary" @click="isExpanded = false">{{ $t('收起') }}</bk-button>
         <bk-button v-else text theme="primary" @click="isExpanded = true">{{ $t('展开') }}</bk-button>
       </template>
-      <bk-button v-if="showViewAllBtn" text theme="primary" @click="emits('viewAll')">{{ $t('查看全部') }}</bk-button>
+      <bk-button v-if="showViewAllBtn" text theme="primary" @click="emits('viewAll')">
+        {{ $t('查看完整配置') }}
+      </bk-button>
     </div>
     <Copy class="copy-icon" @click="handleCopyText" />
   </div>
@@ -73,6 +75,7 @@
     top: 50%;
     right: 0;
     transform: translateY(-50%);
+    color: #979ba5;
     cursor: pointer;
     &:hover {
       color: #3a84ff;

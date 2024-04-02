@@ -1,7 +1,10 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item :label="t('配置项名称')" property="key" :required="true">
-      <bk-input v-model="localVal.key" :disabled="editable" @input="change" :placeholder="t('请输入')" />
+      <bk-input v-model="localVal.key" :disabled="!props.editMode" @input="change" :placeholder="t('请输入')" />
+    </bk-form-item>
+    <bk-form-item :label="t('配置项描述')" property="memo">
+      <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :placeholder="t('请输入')" @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('数据类型')" property="kv_type" :required="true" :description="typeDescription">
       <bk-radio-group v-model="localVal.kv_type">
@@ -46,13 +49,13 @@
   const props = withDefaults(
     defineProps<{
       config: IConfigKvEditParams;
-      editable?: boolean;
+      editMode?: boolean;
       bkBizId: string;
       id: number; // 服务ID或者模板空间ID
       isTpl?: boolean; // 是否未模板配置文件，非模板配置文件和模板配置文件的上传、下载接口参数有差异
     }>(),
     {
-      editable: false,
+      editMode: false,
     },
   );
 
@@ -63,14 +66,14 @@
   });
 
   const typeDescription = computed(() => {
-    if (appData.value.spec.data_type !== 'any' && !props.editable) {
+    if (appData.value.spec.data_type !== 'any' && !props.editMode) {
       return `已限制该服务下所有配置项数据类型为${appData.value.spec.data_type}，如需其他数据类型，请调整服务属性下的数据类型`;
     }
     return '';
   });
 
   const radioDisabled = computed(() => (kvTypeId: string) => {
-    if (appData.value.spec.data_type !== 'any' || props.editable) {
+    if (appData.value.spec.data_type !== 'any' || props.editMode) {
       return kvTypeId !== localVal.value.kv_type;
     }
     return false;
@@ -95,6 +98,12 @@
         message: t('只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾'),
       },
     ],
+    memo: [
+      {
+        validator: (value: string) => value.length <= 200,
+        message: t('最大长度200个字符'),
+      },
+    ],
     value: [
       {
         validator: (value: string) => {
@@ -110,7 +119,7 @@
 
   // 新建文件任意类型默认选中string
   onMounted(() => {
-    if (!props.editable) {
+    if (!props.editMode) {
       localVal.value.kv_type = appData.value.spec.data_type! === 'any' ? 'string' : appData.value.spec.data_type!;
     }
   });

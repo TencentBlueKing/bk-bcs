@@ -104,14 +104,14 @@
         });
       }
       if (groups.length > 0) {
-        list.push({ id, name: spec.name, children: groups });
+        list.push({ id, name: `${t('已上线分组：')}${spec.name}`, children: groups });
       }
     });
 
     if (defaultGroup && defaultGroup.release_id === 0) {
       const groups = props.groupList.filter((group) => group.id !== 0 && group.release_id === 0);
       if (groups.length > 0) {
-        list.push({ id: 0, name: '未上线版本的分组', children: groups });
+        list.push({ id: 0, name: t('未上线版本的分组'), children: groups });
       }
     }
 

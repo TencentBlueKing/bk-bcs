@@ -10,7 +10,7 @@
     @update:show="emits('close')">
     <template #baseHead>
       <div class="panel-header">
-        <div class="version-tag base">{{ $t('对比版本') }}</div>
+        <div class="version-tag base">{{ $t('线上版本') }}</div>
         <div class="base-version-tab">
           <bk-tab :active="activeTab" type="unborder-card" @change="handleVersionChange">
             <bk-tab-panel v-for="version in props.versionList" :key="version.id" :name="version.id">
