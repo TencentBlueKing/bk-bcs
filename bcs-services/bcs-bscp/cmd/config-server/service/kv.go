@@ -20,6 +20,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -185,7 +186,7 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq)
 	}
 
 	if len(req.GetIds()) == 0 {
-		return nil, errf.Errorf(grpcKit, errf.InvalidArgument, "ids is empty")
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit, "ids is empty"))
 	}
 
 	errGroup, errCtx := errgroup.WithContext(ctx)
@@ -226,7 +227,7 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq)
 
 	// 全部失败, 当前API视为失败
 	if len(failedIDs) == len(req.Ids) {
-		return nil, errf.Errorf(grpcKit, errf.Aborted, "batch delete failed")
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
 	}
 
 	return &pbcs.BatchDeleteKvResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
