@@ -11,6 +11,9 @@
       <span v-if="previewGroup.type === 'modify'" class="release-name">
         {{ previewGroup.name }} <ArrowsRight class="arrow-icon" /> {{ versionData.spec.name }}
       </span>
+      <span v-else-if="previewGroup.type === 'retain'" class="release-name">
+        {{ previewGroup.name }}
+      </span>
       <span v-if="!hasDefaultGroup" class="group-count-wrapper">
         {{ t('共') }}
         <span class="count">{{ previewGroup.children.length }}</span>
@@ -42,6 +45,7 @@
       <div v-for="group in previewGroup.children" class="group-item" :key="group.id">
         <span class="node-name">
           {{ group.name }}
+          <span v-if="group.desc" class="desc">{{ group.desc }}</span>
         </span>
         <span v-if="group.rules && group.rules.length > 0" class="split-line">|</span>
         <div class="rules">
@@ -207,6 +211,10 @@
         font-size: 12px;
         line-height: 20px;
         color: #63656e;
+        .desc {
+          margin-left: 8px;
+          color: #979ba5;
+        }
       }
       .split-line {
         margin: 0 4px 0 16px;

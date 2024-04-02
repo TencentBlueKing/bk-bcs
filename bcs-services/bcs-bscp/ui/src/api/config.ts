@@ -440,8 +440,8 @@ export const batchUpsertKv = (bizId: string, appId: number, kvs: any) =>
  * @param value 配置值
  * @returns
  */
-export const updateKv = (bizId: string, appId: number, key: string, value: string) =>
-  http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value });
+export const updateKv = (bizId: string, appId: number, key: string, value: string, memo: string) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value, memo });
 
 /**
  * 删除kv

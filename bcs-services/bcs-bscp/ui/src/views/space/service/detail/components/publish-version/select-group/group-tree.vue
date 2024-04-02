@@ -50,6 +50,7 @@
                 </template>
               </div>
             </bk-checkbox>
+            <div v-if="node.fullReleased" class="full-released-tag">All</div>
           </div>
         </template>
         <template #empty>
@@ -82,6 +83,7 @@
   interface ITreeDataItem {
     id: number;
     name: string;
+    fullReleased: boolean;
     children: IGroupNode[];
   }
 
@@ -95,6 +97,7 @@
     props.versionList.forEach((version) => {
       const { id, spec, status } = version;
       let groups: IGroupNode[] = [];
+      const fullReleased = status.released_groups.findIndex((group) => group.id === 0) > -1;
       if (defaultGroup && defaultGroup.release_id === id) {
         // 全部实例分组发布到当前版本上
         groups = props.groupList.filter((group) => group.id !== 0 && group.release_id === 0);
@@ -104,14 +107,14 @@
         });
       }
       if (groups.length > 0) {
-        list.push({ id, name: spec.name, children: groups });
+        list.push({ id, name: `${t('已上线分组：')}${spec.name}`, fullReleased, children: groups });
       }
     });
 
     if (defaultGroup && defaultGroup.release_id === 0) {
       const groups = props.groupList.filter((group) => group.id !== 0 && group.release_id === 0);
       if (groups.length > 0) {
-        list.push({ id: 0, name: '未上线版本的分组', children: groups });
+        list.push({ id: 0, name: t('未上线版本的分组'), fullReleased: false, children: groups });
       }
     }
 
@@ -308,6 +311,8 @@
       }
     }
     .node-item-wrapper {
+      display: flex;
+      align-items: center;
       :deep(.bk-checkbox) {
         display: flex;
         .bk-checkbox-input {
@@ -316,6 +321,17 @@
         .bk-checkbox-label {
           overflow: hidden;
         }
+      }
+      .full-released-tag {
+        margin-left: 8px;
+        padding: 0 8px;
+        height: 22px;
+        line-height: 22px;
+        color: #14a568;
+        font-size: 12px;
+        background: #e4faf0;
+        border: 1px solid #14a568;
+        border-radius: 2px;
       }
     }
     .node-label {

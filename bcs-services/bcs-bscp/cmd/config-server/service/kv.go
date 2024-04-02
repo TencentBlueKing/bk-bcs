@@ -15,7 +15,11 @@ package service
 import (
 	"context"
 	"errors"
+	"sync"
 
+	"golang.org/x/sync/errgroup"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -43,6 +47,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbcs.CreateKvReq) (*pbcs.Cr
 		},
 		Spec: &pbkv.KvSpec{
 			Key:    req.Key,
+			Memo:   req.Memo,
 			KvType: req.KvType,
 			Value:  req.Value,
 		},
@@ -79,6 +84,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbcs.UpdateKvReq) (*pbcs.Up
 		Spec: &pbkv.KvSpec{
 			Key:   req.Key,
 			Value: req.Value,
+			Memo:  req.Memo,
 		},
 	}
 	if _, err := s.client.DS.UpdateKv(grpcKit.RpcCtx(), r); err != nil {
@@ -165,6 +171,65 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbcs.DeleteKvReq) (*pbcs.De
 
 	return &pbcs.DeleteKvResp{}, nil
 
+}
+
+// BatchDeleteKv is used to batch delete key-value data.
+func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq) (*pbcs.BatchDeleteKvResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	if len(req.GetIds()) == 0 {
+		return nil, errf.Errorf(grpcKit, errf.InvalidArgument, "ids is empty")
+	}
+
+	errGroup, errCtx := errgroup.WithContext(ctx)
+	errGroup.SetLimit(10)
+
+	successfulIDs := []uint32{}
+	failedIDs := []uint32{}
+	var mux sync.Mutex
+
+	// 使用 data-service 原子接口
+	for _, v := range req.GetIds() {
+		v := v
+		errGroup.Go(func() error {
+			r := &pbds.DeleteKvReq{
+				Id: v,
+				Attachment: &pbkv.KvAttachment{
+					BizId: req.BizId,
+					AppId: req.AppId,
+				},
+			}
+			if _, err := s.client.DS.DeleteKv(errCtx, r); err != nil {
+				logs.Errorf("delete kv failed, err: %v, rid: %s", err, grpcKit.Rid)
+
+				// 错误不返回异常，记录错误ID
+				mux.Lock()
+				failedIDs = append(failedIDs, v)
+				mux.Unlock()
+				return nil
+			}
+
+			mux.Lock()
+			successfulIDs = append(successfulIDs, v)
+			mux.Unlock()
+
+			return nil
+		})
+	}
+
+	// 全部失败, 当前API视为失败
+	if len(failedIDs) == len(req.Ids) {
+		return nil, errf.Errorf(grpcKit, errf.Aborted, "batch delete failed")
+	}
+
+	return &pbcs.BatchDeleteKvResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
 }
 
 // BatchUpsertKvs is used to insert or update key-value data in bulk.

@@ -41,6 +41,7 @@ export function getDefaultKvItem() {
     spec: {
       kv_type: '',
       key: '',
+      memo: '',
       value: '',
     },
     content_spec: {
@@ -74,4 +75,9 @@ export function getConfigEditParams() {
     privilege: '644',
     revision_name: `v${dayjs().format('YYYYMMDDHHmmss')}`,
   };
+}
+
+// 拼接文件型配置项路径和文件名称
+export function joinPathName(path: string, name: string) {
+  return path.endsWith('/') ? `${path}${name}` : `${path}/${name}`;
 }

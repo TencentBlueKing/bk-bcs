@@ -61,7 +61,7 @@
   import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../../types/group';
   import { storeToRefs } from 'pinia';
   import useConfigStore from '../../../../../../../store/config';
-  import { aggregatePreviewData, aggregateExcludedData } from '../../hooks/aggegate-groups';
+  import { aggregatePreviewData, aggregateExcludedData } from '../../hooks/aggregate-groups';
   import PreviewSectionItem from './preview-section-item.vue';
 
   const versionStore = useConfigStore();

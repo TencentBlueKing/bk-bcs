@@ -258,8 +258,8 @@ func (s *Service) ListClients(ctx context.Context, req *pbds.ListClientsReq) (
 	data := pbclient.PbClients(items)
 	for _, v := range data {
 		v.Spec.CurrentReleaseName = releaseNames[v.Spec.CurrentReleaseId]
-		v.Spec.Resource.CpuUsage = math.Round(v.Spec.Resource.CpuUsage*10) / 10
-		v.Spec.Resource.CpuMaxUsage = math.Round(v.Spec.Resource.CpuMaxUsage*10) / 10
+		v.Spec.Resource.CpuUsage = math.Round(v.Spec.Resource.CpuUsage*1000) / 1000
+		v.Spec.Resource.CpuMaxUsage = math.Round(v.Spec.Resource.CpuMaxUsage*1000) / 1000
 		v.Spec.Resource.MemoryUsage /= (1024 * 1024)
 		v.Spec.Resource.MemoryMaxUsage /= (1024 * 1024)
 	}

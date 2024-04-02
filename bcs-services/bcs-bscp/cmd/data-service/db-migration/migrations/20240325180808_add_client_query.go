@@ -98,6 +98,22 @@ func mig20240325180808Up(tx *gorm.DB) error {
 
 // mig20240325180808Down for down migration
 func mig20240325180808Down(tx *gorm.DB) error {
+
+	// IDGenerators : ID生成器
+	type IDGenerators struct {
+		ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`
+		Resource  string    `gorm:"type:varchar(50) not null;uniqueIndex:idx_resource"`
+		MaxID     uint      `gorm:"type:bigint(1) unsigned not null"`
+		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
+	}
+
+	var resources = []string{
+		"client_querys",
+	}
+	if result := tx.Where("resource IN ?", resources).Delete(&IDGenerators{}); result.Error != nil {
+		return result.Error
+	}
+
 	if err := tx.Migrator().DropTable("client_querys"); err != nil {
 		return err
 	}

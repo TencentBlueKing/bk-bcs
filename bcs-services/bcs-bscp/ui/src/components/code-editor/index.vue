@@ -141,6 +141,9 @@
         readOnly: !props.editable,
         scrollBeyondLastLine: false,
         tabSize: tabSize.value,
+        unicodeHighlight: {
+          ambiguousCharacters: false,
+        },
       });
     }
     if (props.lfEol) {
