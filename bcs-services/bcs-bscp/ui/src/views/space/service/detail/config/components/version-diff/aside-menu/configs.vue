@@ -27,7 +27,6 @@
         <div v-if="group.expand" class="config-list">
           <div
             v-for="config in group.configs"
-            v-overflow-title
             :key="config.id"
             :class="['config-item', { actived: getItemSelectedStatus(group.id, config) }]"
             @click="
@@ -39,7 +38,9 @@
               })
             ">
             <i v-if="config.diffType" :class="['status-icon', config.diffType]"></i>
-            {{ config.name }}
+            <bk-overflow-title type="tips">
+              {{ config.name }}
+            </bk-overflow-title>
           </div>
         </div>
       </div>
@@ -61,6 +62,7 @@
   import { Search, RightShape } from 'bkui-vue/lib/icon';
   import useServiceStore from '../../../../../../../../store/service';
   import { datetimeFormat, byteUnitConverse } from '../../../../../../../../utils';
+  import { joinPathName } from '../../../../../../../../utils/config';
   import { ICommonQuery } from '../../../../../../../../../types/index';
   import {
     IConfigItem,
@@ -68,7 +70,6 @@
     IConfigDiffSelected,
     IFileConfigContentSummary,
   } from '../../../../../../../../../types/config';
-
   import { IVariableEditParams } from '../../../../../../../../../types/variable';
   import {
     getConfigList,
@@ -78,7 +79,6 @@
     getBoundTemplatesByAppVersion,
   } from '../../../../../../../../api/config';
   import { getReleasedAppVariables } from '../../../../../../../../api/variable';
-
   import SearchInput from '../../../../../../../../components/search-input.vue';
   import tableEmpty from '../../../../../../../../components/table/table-empty.vue';
 
@@ -267,12 +267,13 @@
         expand: true,
         configs: configs.map((config) => {
           const { id, spec, commit_spec, revision, file_state } = config;
-          const { name, file_type, permission } = spec;
+          const { name, path, file_type, permission } = spec;
           const { origin_byte_size, byte_size, signature, origin_signature } = commit_spec.content;
+
           return {
             type: 'config',
             id,
-            name,
+            name: joinPathName(path, name),
             file_type,
             file_state,
             update_at: datetimeFormat(revision.update_at || revision.create_at),
@@ -313,6 +314,7 @@
         const {
           template_id,
           name,
+          path,
           file_type,
           file_state,
           origin_byte_size,
@@ -329,7 +331,7 @@
           group.configs.push({
             type: 'template',
             id: template_id,
-            name,
+            name: joinPathName(path, name),
             file_type,
             file_state,
             update_at: datetimeFormat(create_at),
@@ -457,10 +459,10 @@
   };
 
   const getMenuList = () => {
-    const fullList = isOnlyShowDiff.value ? aggregatedListOfDiff.value : aggregatedList.value;
+    const groupList = isOnlyShowDiff.value ? aggregatedListOfDiff.value : aggregatedList.value;
+    let menuList: IDiffGroupData[] = [];
     if (searchStr.value !== '') {
-      const searchedList: IDiffGroupData[] = [];
-      fullList.forEach((group) => {
+      groupList.forEach((group) => {
         const configs = group.configs.filter((item) => {
           const isSearchHit = item.name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase());
           if (isOnlyShowDiff.value) {
@@ -469,15 +471,19 @@
           return isSearchHit;
         });
         if (configs.length > 0) {
-          searchedList.push({
+          menuList.push({
             ...group,
             configs,
           });
         }
       });
-      return searchedList;
+    } else {
+      menuList = groupList.slice();
     }
-    return fullList.slice();
+    if (menuList.length > 0) {
+      menuList[0].expand = true;
+    }
+    return menuList;
   };
 
   // 设置默认选中的配置文件

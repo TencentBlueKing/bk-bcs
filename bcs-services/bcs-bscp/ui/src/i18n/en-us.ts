@@ -363,6 +363,10 @@ export default {
   展开: 'Expand',
   收起: 'Fold',
   查看完整配置: 'View All',
+  '已上线分组：': 'Released Groups: ',
+  '（已上线分组之外的所有实例）': 'All instances outside of the launched group',
+  除以下分组之外的所有实例: 'All instances except for the following groups',
+  请选择需要调整的分组: 'Please select the group that needs to be adjusted',
 
   // 分组管理
   新增分组: 'New group',
