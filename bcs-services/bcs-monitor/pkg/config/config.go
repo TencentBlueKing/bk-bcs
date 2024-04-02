@@ -62,10 +62,6 @@ func (c *Configuration) init() error {
 		return err
 	}
 
-	if err := c.BKMonitor.init(); err != nil {
-		return err
-	}
-
 	return nil
 }
 

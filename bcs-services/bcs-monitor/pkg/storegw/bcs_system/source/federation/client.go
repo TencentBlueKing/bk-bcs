@@ -34,11 +34,7 @@ func ClientFactory(ctx context.Context, clusterID string, source clientutil.Moni
 	case clientutil.MonitorSourceComputeV2:
 		return computev2.NewCompute(metricsPrefix), nil
 	default:
-		ok, err := bkmonitor_client.IsBKMonitorEnabled(ctx, clusterID)
-		if err != nil {
-			return nil, err
-		}
-		if ok {
+		if bkmonitor_client.IsBKMonitorEnabled(clusterID) {
 			return bkmonitor.NewBKMonitor(), nil
 		}
 		return prometheus.NewPrometheus(), nil
