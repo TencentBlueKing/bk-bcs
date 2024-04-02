@@ -1,7 +1,7 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item :label="t('配置项名称')" property="key" :required="true">
-      <bk-input v-model="localVal.key" :disabled="!props.editMode" @input="change" :placeholder="t('请输入')" />
+      <bk-input v-model="localVal.key" :disabled="props.editMode" @input="change" :placeholder="t('请输入')" />
     </bk-form-item>
     <bk-form-item :label="t('配置项描述')" property="memo">
       <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :placeholder="t('请输入')" @input="change" />
