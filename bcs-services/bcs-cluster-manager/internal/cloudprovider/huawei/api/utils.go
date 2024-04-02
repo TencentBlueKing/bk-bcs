@@ -27,6 +27,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 // GetInternalClusterKubeConfig get cce cluster kebeconfig
@@ -246,13 +247,21 @@ func GenerateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string
 func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 	cluster *proto.Cluster) (*model.CreateNodePoolRequest, error) {
 	var (
-		initialNodeCount int32 = 0
-		clusterId              = cluster.SystemID
+		initialNodeCount  int32 = 0
+		clusterId               = cluster.SystemID
+		podSecurityGroups []model.SecurityId
 	)
 
 	nodeTemplate, err := GenerateNodeSpec(group)
 	if err != nil {
 		return nil, err
+	}
+
+	if group.LaunchTemplate != nil {
+		for _, v := range group.LaunchTemplate.SecurityGroupIDs {
+			id := v
+			podSecurityGroups = append(podSecurityGroups, model.SecurityId{Id: &id})
+		}
 	}
 
 	return &model.CreateNodePoolRequest{
@@ -264,8 +273,9 @@ func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 				Name: group.NodeGroupID,
 			},
 			Spec: &model.NodePoolSpec{
-				InitialNodeCount: &initialNodeCount,
-				NodeTemplate:     nodeTemplate,
+				InitialNodeCount:  &initialNodeCount,
+				NodeTemplate:      nodeTemplate,
+				PodSecurityGroups: &podSecurityGroups,
 			},
 		},
 	}, nil
@@ -278,9 +288,29 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 	}
 
 	var (
-		nodeBillingMode int32 = 0
-		maxPod          int32 = 110
+		nodeBillingMode int32  = 0
+		maxPod          int32  = 256
+		periodType      string = "month"
+		periodNum       int32  = 1
+		az              string = "random" // 随机选择可用区
+		subnetId        string = ""
 	)
+
+	if nodeGroup.LaunchTemplate != nil {
+		if nodeGroup.LaunchTemplate.InstanceChargeType == common.PREPAID && nodeGroup.LaunchTemplate.Charge != nil {
+			nodeBillingMode = 1
+			periodNum = int32(nodeGroup.LaunchTemplate.Charge.Period)
+		}
+	}
+
+	if nodeGroup.AutoScaling != nil {
+		if len(nodeGroup.AutoScaling.Zones) > 0 {
+			az = nodeGroup.AutoScaling.Zones[0]
+		}
+		if len(nodeGroup.AutoScaling.SubnetIDs) > 0 {
+			subnetId = nodeGroup.AutoScaling.SubnetIDs[0]
+		}
+	}
 
 	if nodeGroup.LaunchTemplate.InstanceType == "" {
 		return nil, fmt.Errorf("the node specifications cannot be empty")
@@ -324,7 +354,7 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 
 	return &model.NodeSpec{
 		Flavor: nodeGroup.LaunchTemplate.InstanceType,
-		Az:     "random", // 随机选择可用区
+		Az:     az,
 		Os:     &nodeGroup.NodeOS,
 		Login: &model.Login{
 			UserPassword: &model.UserPassword{
@@ -339,7 +369,12 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 		DataVolumes: dataVolumes,
 		BillingMode: &nodeBillingMode,
 		ExtendParam: &model.NodeExtendParam{
-			MaxPods: &maxPod,
+			MaxPods:    &maxPod,
+			PeriodType: &periodType,
+			PeriodNum:  &periodNum,
+		},
+		NodeNicSpec: &model.NodeNicSpec{
+			PrimaryNic: &model.NicSpec{SubnetId: &subnetId},
 		},
 	}, nil
 }
