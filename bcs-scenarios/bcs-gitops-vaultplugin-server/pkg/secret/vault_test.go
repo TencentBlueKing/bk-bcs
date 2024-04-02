@@ -10,63 +10,68 @@
  * limitations under the License.
  */
 
-/*
-在M1芯片的mac中使用gomonkey需要注意！！！
-https://github.com/agiledragon/gomonkey/issues/70
-
-需要把 $GOMODCACHE/github.com/agiledragon/gomonkey/v2@v2.9.0/modify_binary_darwin.go 文件的
-modifyBinary(target uintptr, bytes []byte) 函数
-
-err := syscall.Mprotect(page, syscall.PROT_READ|syscall.PROT_WRITE|syscall.PROT_EXEC)
-修改为
-err := syscall.Mprotect(page, syscall.PROT_READ|syscall.PROT_WRITE)
-
-否则会出现报错:
-panic: permission denied [recovered]
-        panic: permission denied
-
-*/
-
 package secret
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 	"testing"
 	"time"
 
-	"github.com/agiledragon/gomonkey/v2"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/options"
 	"github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/assert"
+	"github.com/xhd2015/xgo/runtime/core"
+	"github.com/xhd2015/xgo/runtime/mock"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
+
+type MockSecret struct {
+	corev1.SecretInterface
+}
+type MockCoreV1 struct {
+	corev1.CoreV1Interface
+	secret MockSecret
+}
+
+func (c MockCoreV1) Secrets(namespace string) corev1.SecretInterface {
+	return c.secret
+}
+func (c MockSecret) Create(ctx context.Context, secret *v1.Secret, opts metav1.CreateOptions) (*v1.Secret, error) {
+	return nil, nil
+}
 
 // TestInitProject init project
 func TestInitProject(t *testing.T) {
 	manager := &VaultSecretManager{
-		client: &api.Client{},
+		option:  &options.Options{},
+		client:  &api.Client{},
+		kclient: &kubernetes.Clientset{},
 	}
-	patches := gomonkey.NewPatches()
 
-	patches.ApplyMethod(manager.client.Sys(), "PutPolicyWithContext",
-		func(_ *api.Sys, _ context.Context, _ string, _ string) error {
-			return nil
-		})
-
-	patches.ApplyMethodSeq(reflect.TypeOf(manager.client.Auth().Token()), "CreateWithContext", []gomonkey.OutputCell{
-		{
-			Values: []interface{}{
-				&api.Secret{
-					Auth: &api.SecretAuth{
-						ClientToken: "test-token",
-					},
-				},
-				nil,
-			},
-		},
+	mock.Patch(manager.hasInitProject, func(project string) bool {
+		return false
 	})
-
-	defer patches.Reset()
+	mock.Patch((*api.Sys).Mount, func(_ *api.Sys, path string, mountInfo *api.MountInput) error {
+		return nil
+	})
+	mock.Patch((*api.Sys).PutPolicyWithContext, func(_ *api.Sys, _ context.Context, _ string, _ string) error {
+		return nil
+	})
+	mock.Patch((*api.TokenAuth).CreateWithContext, func(_ *api.TokenAuth, ctx context.Context, opts *api.TokenCreateRequest) (*api.Secret, error) {
+		return &api.Secret{
+			Auth: &api.SecretAuth{
+				ClientToken: "test-token",
+			},
+		}, nil
+	})
+	secretIntf := MockSecret{}
+	corev1Intf := MockCoreV1{secret: secretIntf}
+	mock.Patch(manager.kclient.CoreV1, func() corev1.CoreV1Interface {
+		return corev1Intf
+	})
 
 	err := manager.InitProject("")
 
@@ -86,11 +91,9 @@ func TestGetSecret(t *testing.T) {
 		CustomMetadata:  nil,
 		Raw:             nil,
 	}
-	am := gomonkey.ApplyMethod(manager.client.KVv2(""), "Get",
-		func(_ *api.KVv2, _ context.Context, _ string) (*api.KVSecret, error) {
-			return mockSecret, fmt.Errorf("errors")
-		})
-	defer am.Reset()
+	mock.Patch((*api.KVv2).Get, func(_ *api.KVv2, _ context.Context, _ string) (*api.KVSecret, error) {
+		return mockSecret, nil
+	})
 
 	req := SecretRequest{}
 	secretData, err := manager.GetSecret(context.Background(), &req)
@@ -103,17 +106,16 @@ func TestGetSecret(t *testing.T) {
 func TestGetMetadata(t *testing.T) {
 	manager := &VaultSecretManager{client: &api.Client{}}
 
-	mockMetadata := &SecretMetadata{
-		CreateTime:     time.Time{},
+	mockMetadata := &api.KVMetadata{
+		// CreateTime:     time.Time{},
 		UpdatedTime:    time.Time{},
-		CurrentVersion: 0,
-		Version:        nil,
+		CurrentVersion: 123,
+		// Version:        nil,
 	}
-	patches := gomonkey.ApplyMethod(manager.client.KVv2(""), "GetMetadata",
-		func(_ *api.KVv2, _ context.Context, _ string) (*SecretMetadata, error) {
-			return mockMetadata, nil
-		})
-	defer patches.Reset()
+
+	mock.Patch((*api.KVv2).GetMetadata, func(_ *api.KVv2, _ context.Context, _ string) (*api.KVMetadata, error) {
+		return mockMetadata, nil
+	})
 
 	req := SecretRequest{}
 	metadata, err := manager.GetMetadata(context.Background(), &req)
@@ -129,11 +131,10 @@ func TestListSecret(t *testing.T) {
 	mockPath := &api.Secret{
 		Data: map[string]interface{}{"keys": []interface{}{"hello", "qa70"}},
 	}
-	patches := gomonkey.ApplyMethod(manager.client.Logical(), "ListWithContext",
-		func(_ *api.Logical, _ context.Context, _ string) (*api.Secret, error) {
-			return mockPath, nil
-		})
-	defer patches.Reset()
+
+	mock.Patch((*api.Logical).ListWithContext, func(_ *api.Logical, _ context.Context, _ string) (*api.Secret, error) {
+		return mockPath, nil
+	})
 
 	req := SecretRequest{}
 	path, err := manager.ListSecret(context.Background(), &req)
@@ -155,11 +156,10 @@ func TestCreatePutSecret(t *testing.T) {
 		CustomMetadata:  nil,
 		Raw:             nil,
 	}
-	am := gomonkey.ApplyMethod(manager.client.KVv2(""), "Put",
-		func(_ *api.KVv2, _ context.Context, _ string, _ map[string]interface{}) (*api.KVSecret, error) {
-			return mockSecret, fmt.Errorf("errors")
-		})
-	defer am.Reset()
+	mock.Mock((*api.KVv2).Put, func(ctx context.Context, fn *core.FuncInfo, args, results core.Object) error {
+		results.GetFieldIndex(0).Set(mockSecret)
+		return nil
+	})
 
 	req := SecretRequest{
 		Data: map[string]interface{}{
@@ -176,11 +176,9 @@ func TestCreatePutSecret(t *testing.T) {
 func TestDeleteSecret(t *testing.T) {
 	manager := &VaultSecretManager{client: &api.Client{}}
 
-	am := gomonkey.ApplyMethod(manager.client.KVv2(""), "DeleteMetadata",
-		func(_ *api.KVv2, _ context.Context, _ string) error {
-			return nil
-		})
-	defer am.Reset()
+	mock.Patch((*api.KVv2).DeleteMetadata, func(_ *api.KVv2, _ context.Context, _ string) error {
+		return nil
+	})
 
 	req := SecretRequest{}
 	err := manager.DeleteSecret(context.Background(), &req)
