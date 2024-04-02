@@ -14,6 +14,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
 	cce "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
@@ -58,9 +60,7 @@ func NewCceClient(opt *cloudprovider.CommonOption) (*CceClient, error) {
 		return nil, err
 	}
 
-	return &CceClient{
-		CceClient: cce.NewCceClient(hcClient),
-	}, nil
+	return &CceClient{cce.NewCceClient(hcClient)}, nil
 }
 
 // ListCceCluster get cce cluster list, region parameter init tke client
@@ -93,4 +93,179 @@ func (cli *CceClient) GetCceCluster(clusterID string) (*model.ShowClusterRespons
 	}
 
 	return rsp, nil
+}
+
+// ListClusterNodes get cluster all nodes
+func (cli *CceClient) ListClusterNodes(clusterId string) ([]model.Node, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	rsp, err := cli.ListNodes(&model.ListNodesRequest{
+		ClusterId: clusterId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return *rsp.Items, nil
+}
+
+// ListClusterNodePoolNodes get cluster node pool all nodes
+func (cli *CceClient) ListClusterNodePoolNodes(clusterId, nodePoolId string) ([]model.Node, error) {
+	nodes, err := cli.ListClusterNodes(clusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	nodePoolNodes := make([]model.Node, 0)
+	for _, v := range nodes {
+		if id, ok := v.Metadata.Annotations["kubernetes.io/node-pool.id"]; ok {
+			if id == nodePoolId {
+				nodePoolNodes = append(nodePoolNodes, v)
+			}
+		}
+	}
+
+	return nodePoolNodes, nil
+}
+
+// CreateClusterNodePool create cluster node pool
+func (cli *CceClient) CreateClusterNodePool(req *model.CreateNodePoolRequest) (*model.CreateNodePoolResponse, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	rsp, err := cli.CreateNodePool(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return rsp, nil
+}
+
+// GetClusterNodePool get cluster node pool
+func (cli *CceClient) GetClusterNodePool(clusterId, nodePoolId string) (*model.ShowNodePoolResponse, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	rsp, err := cli.ShowNodePool(&model.ShowNodePoolRequest{
+		ClusterId:  clusterId,
+		NodepoolId: nodePoolId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return rsp, nil
+}
+
+// UpdateDesiredNodes update node pool InitialNodeCount
+func (cli *CceClient) UpdateDesiredNodes(clusterId, nodePoolId string, nodeCount int32) (
+	*model.UpdateNodePoolResponse, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	taints := make([]model.Taint, 0)
+	k8sTags := map[string]string{}
+	userTags := make([]model.UserTag, 0)
+
+	nodePool, err := cli.GetClusterNodePool(clusterId, nodePoolId)
+	if err != nil {
+		return nil, fmt.Errorf("updateDesiredNodes get cluster nodePool err: %s", err)
+	}
+
+	if nodePool.Spec.NodeTemplate.Taints != nil {
+		taints = *nodePool.Spec.NodeTemplate.Taints
+	}
+
+	if nodePool.Spec.NodeTemplate.K8sTags != nil {
+		k8sTags = nodePool.Spec.NodeTemplate.K8sTags
+	}
+
+	if nodePool.Spec.NodeTemplate.UserTags != nil {
+		userTags = *nodePool.Spec.NodeTemplate.UserTags
+	}
+
+	req := &model.UpdateNodePoolRequest{
+		ClusterId:  clusterId,
+		NodepoolId: nodePoolId,
+		Body: &model.NodePoolUpdate{
+			Metadata: &model.NodePoolMetadataUpdate{
+				Name: nodePool.Metadata.Name,
+			},
+			Spec: &model.NodePoolSpecUpdate{
+				NodeTemplate: &model.NodeSpecUpdate{
+					Taints:   taints,
+					K8sTags:  k8sTags,
+					UserTags: userTags,
+				},
+				InitialNodeCount: nodeCount,
+				Autoscaling:      &model.NodePoolNodeAutoscaling{},
+			},
+		},
+	}
+
+	rsp, err := cli.UpdateNodePool(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return rsp, nil
+}
+
+// RemoveNodePoolNodes remove node pool nodes
+func (cli *CceClient) RemoveNodePoolNodes(clusterId string, nodeIds []string, password string) error {
+	if len(nodeIds) == 0 {
+		return nil
+	}
+
+	pw, err := Crypt(password)
+	if err != nil {
+		return err
+	}
+
+	nodes := make([]model.NodeItem, 0)
+	for _, v := range nodeIds {
+		nodes = append(nodes, model.NodeItem{
+			Uid: v,
+		})
+	}
+
+	_, err = cli.RemoveNode(&model.RemoveNodeRequest{
+		ClusterId: clusterId,
+		Body: &model.RemoveNodesTask{
+			Spec: &model.RemoveNodesSpec{
+				Login: &model.Login{
+					UserPassword: &model.UserPassword{
+						Password: pw,
+					},
+				},
+				Nodes: nodes,
+			},
+		},
+	})
+
+	return err
+}
+
+// CleanNodePoolNodes delete node pool nodes
+func (cli *CceClient) CleanNodePoolNodes(clusterId string, nodeIds []string) error {
+	if len(nodeIds) == 0 {
+		return nil
+	}
+
+	for _, nodeId := range nodeIds {
+		_, err := cli.DeleteNode(&model.DeleteNodeRequest{
+			ClusterId: clusterId,
+			NodeId:    nodeId,
+		})
+		if err != nil {
+			return fmt.Errorf("删除节点[%s]失败, error: %s", nodeId, err)
+		}
+	}
+
+	return nil
 }

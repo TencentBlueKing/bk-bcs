@@ -15,6 +15,7 @@ package huawei
 
 import (
 	"fmt"
+	"net"
 	"sync"
 
 	model2 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2/model"
@@ -92,14 +93,23 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 				subnetZoneName = fmt.Sprintf("可用区%d", k+1)
 			}
 		}
+
+		rps2, err2 := client.ListPrivateips(&model2.ListPrivateipsRequest{SubnetId: s.Id})
+		if err2 != nil {
+			return nil, err
+		}
+
+		total, _ := calculateAvailableIPs(s.Cidr)
+
 		subnets = append(subnets, &proto.Subnet{
-			VpcID:         s.VpcId,
-			SubnetID:      s.Id,
-			SubnetName:    s.Name,
-			CidrRange:     s.Cidr,
-			Ipv6CidrRange: s.CidrV6,
-			Zone:          subnetZone,
-			ZoneName:      subnetZoneName,
+			VpcID:                   s.VpcId,
+			SubnetID:                s.Id,
+			SubnetName:              s.Name,
+			CidrRange:               s.Cidr,
+			Ipv6CidrRange:           s.CidrV6,
+			Zone:                    subnetZone,
+			ZoneName:                subnetZoneName,
+			AvailableIPAddressCount: uint64(total - len(*rps2.Privateips)),
 		})
 	}
 
@@ -137,11 +147,47 @@ func (vm *VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption
 
 // ListBandwidthPacks list bandWidthPacks
 func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*proto.BandwidthPackageInfo, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	client, err := api.NewEipClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	rsp, err := client.GetAllBandwidths()
+	if err != nil {
+		return nil, err
+	}
+
+	bandwidths := make([]*proto.BandwidthPackageInfo, 0)
+	for _, v := range rsp {
+		bandwidths = append(bandwidths, &proto.BandwidthPackageInfo{
+			Id:          *v.Id,
+			Name:        *v.Name,
+			NetworkType: *v.BandwidthType,
+			Status:      *v.AdminState,
+			Bandwidth:   *v.Size,
+		})
+	}
+
+	return bandwidths, nil
 }
 
 // CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
 func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
 	opt *cloudprovider.CommonOption) ([]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// calculateAvailableIPs takes a CIDR range and returns the number of available IP addresses.
+func calculateAvailableIPs(cidr string) (int, error) {
+	// Parse the CIDR
+	_, ipNet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse CIDR: %w", err)
+	}
+
+	// Calculate the number of available IPs
+	ones, _ := ipNet.Mask.Size()
+	availableIPs := (1 << uint(32-ones)) - 2
+
+	return availableIPs, nil
 }
