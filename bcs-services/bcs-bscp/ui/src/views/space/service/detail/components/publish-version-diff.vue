@@ -22,7 +22,7 @@
                     :bk-biz-id="props.bkBizId"
                     :app-id="props.appId"
                     :groups="version.status.released_groups">
-                    <i class="bk-bscp-icon icon-resources-fill view-detail-icon" @click.stop></i>
+                    <i class="bk-bscp-icon icon-resources-fill view-detail-icon" />
                   </ReleasedGroupViewer>
                 </div>
               </template>
