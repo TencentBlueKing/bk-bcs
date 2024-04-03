@@ -113,3 +113,18 @@
 .icon-star-fill:before {
   content: '\e11d';
 }
+.icon-download:before {
+  content: '\e120';
+}
+.icon-ellipsis:before {
+  content: '\e121';
+}
+.icon-table-chart:before {
+  content: '\e122';
+}
+.icon-pie-chart:before {
+  content: '\e11e';
+}
+.icon-bar-chart:before {
+  content: '\e11f';
+}
