@@ -2,6 +2,20 @@
     "language": "en",
     "messages": [
         {
+            "id": "id is required",
+            "message": "id is required",
+            "translation": "id is required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "batch delete failed",
+            "message": "batch delete failed",
+            "translation": "batch delete failed",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "template variable name must start with {TemplateVariablePrefix}",
             "message": "template variable name must start with {TemplateVariablePrefix}",
             "translation": "template variable name must start with {TemplateVariablePrefix}",
