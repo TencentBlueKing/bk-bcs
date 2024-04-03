@@ -45,6 +45,8 @@ _yum_docker() {
         sed -i "s/\$releasever/8/g" "$ROOT_DIR/docker-ce.repo"
       elif grep "TencentOS Server 2.[0-9]*" /etc/tlinux-release;then
         sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
+      elif grep "Tencent tlinux release 2.[0-9]*" /etc/tlinux-release;then
+        sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
       fi
     fi
   else
