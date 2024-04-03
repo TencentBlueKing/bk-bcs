@@ -199,13 +199,13 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 
 	var conds []rawgen.Condition
 	if searchKey != "" {
-		searchVal := "%" + searchKey + "%"
+		searchVal := "(?i)" + searchKey
 
 		var item []struct {
 			CredentialID uint32
 		}
 		err := cs.WithContext(kit.Ctx).Select(cs.CredentialId).
-			Where(cs.BizID.Eq(bizID), cs.CredentialScope.Like(searchVal)).Group(cs.CredentialId).Scan(&item)
+			Where(cs.BizID.Eq(bizID), cs.CredentialScope.Regexp(searchVal)).Group(cs.CredentialId).Scan(&item)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -214,11 +214,11 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 			for _, v := range item {
 				credentialID = append(credentialID, v.CredentialID)
 			}
-			conds = append(conds, q.Where(m.Memo.Like(searchVal)).Or(m.Reviser.Like(searchVal)).
-				Or(m.Name.Like(searchVal)).Or(m.ID.In(credentialID...)))
+			conds = append(conds, q.Where(m.Memo.Regexp(searchVal)).Or(m.Reviser.Regexp(searchVal)).
+				Or(m.Name.Regexp(searchVal)).Or(m.ID.In(credentialID...)))
 		} else {
-			conds = append(conds, q.Where(m.Memo.Like(searchVal)).Or(m.Reviser.Like(searchVal)).
-				Or(m.Name.Like(searchVal)))
+			conds = append(conds, q.Where(m.Memo.Regexp(searchVal)).Or(m.Reviser.Regexp(searchVal)).
+				Or(m.Name.Regexp(searchVal)))
 		}
 	}
 

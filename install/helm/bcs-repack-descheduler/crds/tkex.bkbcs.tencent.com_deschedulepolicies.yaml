@@ -1,0 +1,121 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  name: deschedulepolicies.tkex.bkbcs.tencent.com
+spec:
+  group: tkex.bkbcs.tencent.com
+  names:
+    kind: DeschedulePolicy
+    listKind: DeschedulePolicyList
+    plural: deschedulepolicies
+    shortNames:
+    - dp
+    singular: deschedulepolicy
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DeschedulePolicy defines the policy that deschedule
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: DescheduleSpec the spec of DeschedulePolicy
+            properties:
+              balance:
+                description: |-
+                  Balance defines balance strategy, it will decentralize the pods in cluster.
+                  This strategy is to keep the utilization of each node in the cluster as balanced
+                  as possible
+                  DOTO: 当前版本未实现
+                type: object
+              converge:
+                description: |-
+                  Converge defines converge strategy, it will converge the resource of
+                  all cluster. It drains the nodes which in lowWaterLevel, centralize
+                  pods in cluster.
+                properties:
+                  disabled:
+                    default: true
+                    description: Disabled defines whether this strategy is disabled,
+                      default true.
+                    type: boolean
+                  highWaterLevel:
+                    description: HighWaterLevel represents the maximum water level
+                      limit the nodes needs to reach
+                    type: number
+                  lowWaterLevel:
+                    description: LowWaterLevel represents the minimum water level
+                      limit the nodes needs to reach
+                    type: number
+                  maxPods:
+                    description: MaxPods defines the maximum number of pods that migrate
+                      at once
+                    format: int32
+                    type: integer
+                  minPods:
+                    description: MinPods defines the minimum number of pods that migrate
+                      at once
+                    format: int32
+                    type: integer
+                  profitTarget:
+                    description: |-
+                      ProfitTarget represents that the profit target, such as cpu/meme/nodes. Uses
+                      can fill it to define maximum resource of savings.
+                    properties:
+                      cpu:
+                        description: |-
+                          Cpu defines the cpu num that maximum expects.
+                          unit m
+                        format: int32
+                        type: integer
+                      mem:
+                        description: |-
+                          Mem defines the memory num that maximum expects
+                          unit M
+                        format: int32
+                        type: integer
+                      node:
+                        description: Node defines the node num that maximum expect
+                        format: int32
+                        type: integer
+                    type: object
+                  timeRange:
+                    description: |-
+                      TimeRange is the crontab format string, it will do strategy
+                      with its define.
+                    type: string
+                type: object
+              type:
+                default: Converge
+                description: DescheduleType the type of policy
+                enum:
+                - Converge
+                - Balance
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+

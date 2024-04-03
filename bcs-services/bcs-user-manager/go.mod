@@ -13,7 +13,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230921034852-f07df6e705c2
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230921064043-a8ed550f5a77
 	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230926121755-f75e5692e9c4
-	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230918042150-6020611e4f01
+	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20240321025827-3dae3a862210
 	github.com/Tencent/bk-bcs/bcs-common/pkg/i18n v0.0.0-20231023061744-043bdae0b61e
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230921034852-f07df6e705c2
 	github.com/TencentBlueKing/iam-go-sdk v0.1.4

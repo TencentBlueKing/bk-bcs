@@ -56,20 +56,25 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
 	// extract parameter && check validate
-	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	user := step.Params[cloudprovider.OperatorKey.String()]
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
 	nodeNum, _ := strconv.Atoi(desiredNodes)
-	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(desiredNodes) == 0 || len(user) == 0 {
+
+	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
+
+	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(desiredNodes) == 0 {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask check parameters failed")
+		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
 		CloudID:     cloudID,
@@ -78,42 +83,119 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: call GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask call GetClusterDependBasicInfo failed")
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
-	client, err := api.NewAksServiceImplWithCommonOption(dependInfo.CmOption) // new client
+	err = applyInstanceMachines(ctx, dependInfo, int64(nodeNum))
 	if err != nil {
-		return errors.Wrapf(err, "new azure client failed")
-	}
-	agentPool, err := preCheckAgentPool(ctx, client, dependInfo) // 前置检查
-	if err != nil {
-		blog.Errorf("ApplyInstanceMachinesTask[%s]: preCheckAgentPool failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("ApplyInstanceMachinesTask preCheckAgentPool failed: %s", err.Error())
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		blog.Errorf("ApplyInstanceMachinesTask[%s]: applyInstanceMachines failed: %s", taskID, err.Error())
+		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed")
+
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	// 扩容
-	agentPool.Properties.Count = to.Ptr(*agentPool.Properties.Count + int32(nodeNum))
-	if err = scaleUpNodePool(ctx, client, dependInfo, agentPool); err != nil {
-		blog.Errorf("ApplyInstanceMachinesTask[%s]: scaleUpNodePool failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("ApplyInstanceMachinesTask scaleUpNodePool failed: %s", err.Error())
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	// 检查扩容状态
-	_ = checkScaleUp(ctx, client, dependInfo)
+
 	// trans success nodes to cm DB and record common paras, not handle error
-	_ = recordClusterInstanceToDB(ctx, client, state, dependInfo, uint64(nodeNum))
+	err = recordClusterInstanceToDB(ctx, state, dependInfo, uint64(nodeNum))
+	if err != nil {
+		blog.Errorf("ApplyInstanceMachinesTask[%s]: recordClusterInstanceToDB failed: %s",
+			taskID, err.Error())
+		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed %s", err.Error())
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		}
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	// destroy virtual nodes
+	if manual == common.True {
+		blog.Infof("ApplyInstanceMachinesTask[%s] begin DeleteVirtualNodes", taskID)
+		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
+	}
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		return errors.Wrapf(err, "ApplyInstanceMachinesTask[%s] task %s %s update to storage fatal", taskID,
 			taskID, stepName)
 	}
+	return nil
+}
+
+func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNum int64) error {
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
+	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption) // new client
+	if err != nil {
+		blog.Errorf("applyInstanceMachines[%s] init azure client failed", taskId)
+		return errors.Wrapf(err, "new azure client failed")
+	}
+
+	// pre check agentPool & vmScaleSet
+	agentPool, err := preCheckAgentPool(ctx, client, info) // 前置检查
+	if err != nil {
+		blog.Errorf("applyInstanceMachines[%s] preCheckAgentPool failed: %v", taskId, err)
+		return err
+	}
+
+	// scale nodes to desired size
+	agentPool.Properties.Count = to.Ptr(*agentPool.Properties.Count + int32(nodeNum))
+
+	// update agent pool desired size
+	if err = scaleUpNodePool(ctx, client, info, agentPool); err != nil {
+		blog.Errorf("applyInstanceMachines[%s] scaleUpNodePool[%s] failed: %v", taskId, *agentPool.Name, err)
+		return err
+	}
+	blog.Infof("applyInstanceMachines[%s] scaleUpNodePool[%s] success", taskId, *agentPool.Name)
+
+	// check agent
+	err = checkScaleUp(ctx, client, info)
+	if err != nil {
+		// rollout instances
+		_ = ScaleAgentPoolToDesiredSize(ctx, info, *agentPool.Properties.Count-int32(nodeNum))
+		blog.Errorf("applyInstanceMachines[%s] checkScaleUp failed: %v", taskId, err)
+		return err
+	}
+
+	return nil
+}
+
+// ScaleAgentPoolToDesiredSize scale agent pool to desired size nodes
+func ScaleAgentPoolToDesiredSize(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, desired int32) error {
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
+	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption) // new client
+	if err != nil {
+		return errors.Wrapf(err, "new azure client failed")
+	}
+
+	agentPool, err := client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
+		info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
+	if err != nil {
+		blog.Errorf("ScaleAgentPoolToDesiredSize[%s] GetPoolAndReturn failed: %v", err)
+		return err
+	}
+	agentPool.Properties.Count = &desired
+
+	// update agent pool desired size
+	if err = scaleUpNodePool(ctx, client, info, agentPool); err != nil {
+		blog.Errorf("ScaleAgentPoolToDesiredSize[%s] scaleUpNodePool[%s] failed: %v", taskId, *agentPool.Name, err)
+		return err
+	}
+
 	return nil
 }
 
@@ -129,7 +211,7 @@ func preCheckAgentPool(rootCtx context.Context, client api.AksService, info *clo
 	)
 	defer cancel()
 
-	// 检查 vmScaleSet 是否存在
+	// 检查 vmScaleSet 是否存在: vmScaleSet 的 AutoScalingName 资源组
 	err := retry.Do(
 		func() error {
 			if _, err := client.GetSetWithName(ctx, asg.AutoScalingName, asg.AutoScalingID); err != nil {
@@ -147,7 +229,7 @@ func preCheckAgentPool(rootCtx context.Context, client api.AksService, info *clo
 	defer cancel()
 	err = retry.Do(
 		func() error {
-			if agentPool, err = client.GetPoolAndReturn(ctx, getNodeResourceGroup(info.Cluster),
+			if agentPool, err = client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
 				info.Cluster.SystemID, group.CloudNodeGroupID); err != nil {
 				return err
 			}
@@ -173,14 +255,17 @@ func scaleUpNodePool(rootCtx context.Context, client api.AksService, info *cloud
 	defer cancel()
 
 	err := loop.LoopDoFunc(ctx, func() error {
-		pool, err := client.UpdatePoolAndReturn(ctx, targetPool, getNodeResourceGroup(info.Cluster), cluster.SystemID, *targetPool.Name)
-		if err == nil { // 扩容完成
+		pool, err := client.UpdatePoolAndReturn(ctx, targetPool, cloudprovider.GetClusterResourceGroup(info.Cluster),
+			cluster.SystemID, *targetPool.Name)
+		// 扩容完成
+		if err == nil {
 			targetPool.Properties = pool.Properties
 			return loop.EndLoop
 		}
 		if strings.Contains(err.Error(), "missing error information") { // 如果节点池正在扩容中，此时再次扩容，则会失败
 			return errors.Errorf("scaleUpNodePool[%s] continuous scale up fails", taskID)
 		}
+
 		// 扩容失败
 		return errors.Wrapf(err, "scaleUpNodePool[%s] UpdatePoolAndReturn failed(scale up)", taskID)
 	}, loop.LoopInterval(30*time.Second))
@@ -203,7 +288,7 @@ func checkScaleUp(rootCtx context.Context, client api.AksService, info *cloudpro
 	defer cancel()
 
 	err := loop.LoopDoFunc(ctx, func() error {
-		agentPool, err := client.GetPoolAndReturn(ctx, getNodeResourceGroup(info.Cluster),
+		agentPool, err := client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
 			info.Cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
 			return errors.Wrapf(err, "checkScaleUp[%s] call GetPoolAndReturn failed", taskID)
@@ -226,21 +311,28 @@ func checkScaleUp(rootCtx context.Context, client api.AksService, info *cloudpro
 }
 
 // recordClusterInstanceToDB already auto build instances to cluster, thus not handle error
-func recordClusterInstanceToDB(ctx context.Context, client api.AksService, state *cloudprovider.TaskState,
+func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskState,
 	info *cloudprovider.CloudDependBasicInfo, nodeNum uint64) error {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)            // 获取 taskID
+	taskID := cloudprovider.GetTaskIDFromContext(ctx) // 获取 taskID
+
+	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption) // new client
+	if err != nil {
+		blog.Errorf("recordClusterInstanceToDB[%s] init azure client failed", taskID)
+		return errors.Wrapf(err, "new azure client failed")
+	}
+
 	successInstance, err := differentInstance(ctx, client, info) // 与db中的node对比，筛选出被扩容出来的机器
 	if err != nil {
 		return errors.Wrapf(err, "recordClusterInstanceToDB[%s] call differentInstance failed", taskID)
 	}
+
 	// 回滚期望数量
 	if len(successInstance) != int(nodeNum) {
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(info.NodeGroup.NodeGroupID, int(nodeNum)-len(successInstance),
 			true)
 	}
 
-	//  无失败机器的情况
-	// instanceIDs 保存到 队列common中
+	//  无失败机器的情况 instanceIDs 保存到 队列common中
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
@@ -259,6 +351,8 @@ func recordClusterInstanceToDB(ctx context.Context, client api.AksService, state
 		blog.Errorf("recordClusterInstanceToDB[%s] transInstancesToNode failed: %v", taskID, err)
 	}
 	if len(nodeIPs) > 0 {
+		state.Task.NodeIPList = nodeIPs
+		state.Task.CommonParams[cloudprovider.OriginNodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 	}
 
@@ -268,15 +362,16 @@ func recordClusterInstanceToDB(ctx context.Context, client api.AksService, state
 // differentInstance 对比 - 查找出被扩容出来的 vm node
 func differentInstance(rootCtx context.Context, client api.AksService, info *cloudprovider.CloudDependBasicInfo) (
 	[]*armcompute.VirtualMachineScaleSetVM, error) {
-	var (
-		asg         = info.NodeGroup.AutoScaling
-		taskID      = cloudprovider.GetTaskIDFromContext(rootCtx)
-		res         = make([]*armcompute.VirtualMachineScaleSetVM, 0)
-		ctx, cancel = context.WithTimeout(rootCtx, 30*time.Second)
-	)
+	ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
 	defer cancel()
 
-	// 获取 node list
+	var (
+		asg    = info.NodeGroup.AutoScaling
+		taskID = cloudprovider.GetTaskIDFromContext(rootCtx)
+		res    = make([]*armcompute.VirtualMachineScaleSetVM, 0)
+	)
+
+	// 获取 vmScaleSet node list
 	vmList, err := client.ListInstanceAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "scaleUpNodePool[%s] ListInstanceAndReturn failed", taskID)
@@ -396,7 +491,7 @@ func vmToNode(client api.AksService, info *cloudprovider.CloudDependBasicInfo,
 
 // CheckClusterNodesStatusTask check update desired nodes status task. nodes already add to cluster,
 // thus not rollback desiredNum and only record status
-func CheckClusterNodesStatusTask(taskID string, stepName string) error {
+func CheckClusterNodesStatusTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -414,6 +509,8 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
+
 	successInstanceID := strings.Split(state.Task.CommonParams[cloudprovider.SuccessNodeIDsKey.String()], ",")
 	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(successInstanceID) == 0 {
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: check parameter validate failed", taskID)
@@ -435,24 +532,54 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 
 	// 无失败机器的情况
 	successInstances, failureInstances, err := checkClusterInstanceStatus(ctx, dependInfo, successInstanceID)
-	if err != nil {
+	if err != nil || len(successInstances) == 0 {
+		if manual != common.True {
+			// rollback failed nodes
+			_ = returnAzureInstancesAndCleanNodes(ctx, dependInfo, failureInstances)
+		}
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask checkClusterInstanceStatus failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
+	// rollback abnormal nodes
+	if len(failureInstances) > 0 {
+		blog.Errorf("CheckClusterNodesStatusTask[%s] handle failedNodes[%v]", taskID, failureInstances)
+		errMsg := returnAzureInstancesAndCleanNodes(ctx, dependInfo, failureInstances)
+		if errMsg != nil {
+			blog.Errorf("CheckClusterNodesStatusTask[%s] returnInstancesAndCleanNodes failed %v", taskID, errMsg)
+		}
+	}
+
 	// update response information to task common params
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
+	// inject instances nodeIds
 	if len(successInstances) > 0 {
 		state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(successInstances, ",")
-		// dynamic inject paras
-		state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(successInstances, ",")
 	}
 	if len(failureInstances) > 0 {
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(failureInstances, ",")
+	}
+
+	nodes := cloudprovider.GetNodesByInstanceIDs(successInstances)
+	var (
+		ipList    = make([]string, 0)
+		nodeNames = make([]string, 0)
+	)
+	for i := range nodes {
+		ipList = append(ipList, nodes[i].InnerIP)
+		nodeNames = append(nodeNames, nodes[i].NodeName)
+	}
+
+	if len(ipList) > 0 {
+		state.Task.CommonParams[cloudprovider.NodeNamesKey.String()] = strings.Join(nodeNames, ",")
+		// dynamic inject paras
+		state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(ipList, ",")
+		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(ipList, ",")
+		state.Task.NodeIPList = ipList
 	}
 
 	// update step
@@ -574,4 +701,47 @@ func getVmStatus(k8sOperator *clusterops.K8SOperator, info *cloudprovider.CloudD
 	}
 
 	return running, failure, nil
+}
+
+// returnAzureInstancesAndCleanNodes return nodes and clean nodes data
+func returnAzureInstancesAndCleanNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	nodeIds []string) error { // nolint
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	if len(nodeIds) == 0 {
+		blog.Infof("returnAzureInstancesAndCleanNodes[%s] nodeIds empty", taskID)
+		return nil
+	}
+
+	// delete db data record
+	for _, id := range nodeIds {
+		err := cloudprovider.GetStorageModel().DeleteClusterNode(context.Background(),
+			info.Cluster.ClusterID, id)
+		if err != nil {
+			blog.Errorf("returnAzureInstancesAndCleanNodes[%s] DeleteClusterNode[%s] failed: %v",
+				taskID, id, err)
+		} else {
+			blog.Infof("returnAzureInstancesAndCleanNodes[%s] DeleteClusterNode success[%+v]", taskID, id)
+		}
+	}
+
+	// delete instances
+	err := removeVMSSsInstances(ctx, info, nodeIds)
+	if err != nil {
+		blog.Errorf("returnAzureInstancesAndCleanNodes[%s] removeVMSSsInstances[%+v] "+
+			"failed: %v", taskID, nodeIds, err)
+	} else {
+		blog.Infof("returnAzureInstancesAndCleanNodes[%s] removeVMSSsInstances[%+v] success", taskID, nodeIds)
+	}
+
+	// rollback nodeGroup desired size
+	err = cloudprovider.UpdateNodeGroupDesiredSize(info.NodeGroup.NodeGroupID, len(nodeIds), true)
+	if err != nil {
+		blog.Errorf("returnAzureInstancesAndCleanNodes[%s] UpdateNodeGroupDesiredSize failed: %v", taskID, err)
+	} else {
+		blog.Infof("returnAzureInstancesAndCleanNodes[%s] UpdateNodeGroupDesiredSize success[%v]",
+			taskID, len(nodeIds))
+	}
+
+	return nil
 }

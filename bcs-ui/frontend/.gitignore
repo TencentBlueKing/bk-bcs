@@ -1,7 +1,7 @@
 node_modules/
 webpack_cache/
 dist/*
-!dist/gitkeep
+!dist/.gitkeep
 output/
 test/unit/coverage
 *.bak*
@@ -80,7 +80,7 @@ webpack-stats.json
 .cache
 
 static/lib*
-
+static/static_version.txt
 
 mock/ajax/app/cluster.js
 .hard-source-cache

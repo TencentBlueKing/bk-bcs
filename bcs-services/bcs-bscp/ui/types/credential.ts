@@ -72,6 +72,7 @@ export interface IPreviewRule {
   id: number; // 规则id
   scopeContent: string; // 规则内容
   appName: string; // 服务名称
+  index: number ; // 规则索引
 }
 
 export interface IPreviewRuleParams {

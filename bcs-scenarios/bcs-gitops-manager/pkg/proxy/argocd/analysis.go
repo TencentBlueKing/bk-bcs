@@ -14,9 +14,12 @@ package argocd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -31,19 +34,33 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 )
 
 // AnalysisPlugin for gitops analysis
 type AnalysisPlugin struct {
 	*mux.Router
 	storage        store.Store
+	secretStore    secretstore.SecretInterface
 	middleware     mw.MiddlewareInterface
 	analysisClient analysis.AnalysisInterface
+
+	cachedLock sync.Mutex
+	cachedAll  []*ProjectAnalysis
 }
 
 // Init init the http route for analysis
 func (plugin *AnalysisPlugin) Init() error {
 	plugin.Path("").Methods("GET").Handler(plugin.middleware.HttpWrapper(plugin.analysis))
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			if err := plugin.cacheAllProjectsAnalysis(); err != nil {
+				blog.Errorf("analysis cache all project failed: %s", err.Error())
+			}
+		}
+	}()
 	blog.Infof("argocd analysis init successfully")
 	return nil
 }
@@ -116,10 +133,18 @@ type AnalysisSync struct {
 }
 
 func (plugin *AnalysisPlugin) analysis(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	projects, err := plugin.checkQuery(r)
+	isAll, projects, err := plugin.checkQuery(r)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, err)
 	}
+	if isAll {
+		return r, mw.ReturnJSONResponse(&AnalysisResponse{
+			Code:      0,
+			RequestID: mw.RequestID(r.Context()),
+			Data:      plugin.getCacheAll(),
+		})
+	}
+
 	result := make([]*ProjectAnalysis, 0, len(projects))
 	for _, argoProj := range projects {
 		var projAna *ProjectAnalysis
@@ -182,7 +207,7 @@ func (plugin *AnalysisPlugin) handleProject(ctx context.Context,
 		})
 	}
 
-	clusters, err := plugin.storage.ListClustersByProject(ctx, argoProj.Name)
+	clusters, err := plugin.storage.ListClustersByProject(ctx, result.ProjectID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "list clusters by project '%s' failed", argoProj.Name)
 	}
@@ -195,6 +220,16 @@ func (plugin *AnalysisPlugin) handleProject(ctx context.Context,
 			ClusterName:   clusters.Items[i].Annotations[common.ClusterAliaName],
 			ClusterServer: clusters.Items[i].Server,
 			ClusterID:     clusters.Items[i].Name,
+		})
+	}
+
+	projectSecrets, err := plugin.secretStore.ListProjectSecrets(ctx, argoProj.Name)
+	if err != nil {
+		return nil, errors.Wrapf(err, "list secrets failed")
+	}
+	for i := range projectSecrets {
+		result.Secrets = append(result.Secrets, &AnalysisSecret{
+			Name: projectSecrets[i],
 		})
 	}
 
@@ -243,7 +278,7 @@ func (plugin *AnalysisPlugin) handleProject(ctx context.Context,
 }
 
 // checkQuery it will check the permission with projects
-func (plugin *AnalysisPlugin) checkQuery(r *http.Request) ([]v1alpha1.AppProject, error) {
+func (plugin *AnalysisPlugin) checkQuery(r *http.Request) (bool, []v1alpha1.AppProject, error) {
 	projects := r.URL.Query()["projects"]
 	if len(projects) != 0 {
 		result := make([]v1alpha1.AppProject, 0, len(projects))
@@ -252,20 +287,54 @@ func (plugin *AnalysisPlugin) checkQuery(r *http.Request) ([]v1alpha1.AppProject
 			argoProj, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(),
 				projectName, iam.ProjectView)
 			if statusCode != http.StatusOK {
-				return nil, errors.Wrapf(err, "check project '%s' permission failed", projectName)
+				return false, nil, errors.Wrapf(err, "check project '%s' permission failed", projectName)
 			}
 			result = append(result, *argoProj)
 		}
-		return result, nil
+		return false, result, nil
 	}
 
 	user := mw.User(r.Context())
 	if user.ClientID != proxy.AdminClientUser && user.ClientID != proxy.AdminGitOpsUser {
-		return nil, fmt.Errorf("query param 'projects' cannot be empty")
+		return false, nil, fmt.Errorf("query param 'projects' cannot be empty")
 	}
 	projList, _, err := plugin.middleware.ListProjectsWithoutAuth(r.Context())
 	if err != nil {
-		return nil, err
+		return false, nil, err
 	}
-	return projList.Items, nil
+	return true, projList.Items, nil
+}
+
+// cacheAllProjectsAnalysis 提前缓存全量运营数据，优化查询效率
+func (plugin *AnalysisPlugin) cacheAllProjectsAnalysis() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	projList, _, err := plugin.middleware.ListProjectsWithoutAuth(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "list projects without auth failed")
+	}
+	result := make([]*ProjectAnalysis, 0, len(projList.Items))
+	for _, argoProj := range projList.Items {
+		var projAna *ProjectAnalysis
+		projAna, err = plugin.handleProject(ctx, &argoProj)
+		if err != nil {
+			return errors.Wrapf(err, "handle project '%s' analysis failed", argoProj.Name)
+		}
+		result = append(result, projAna)
+	}
+
+	plugin.cachedLock.Lock()
+	plugin.cachedAll = result
+	plugin.cachedLock.Unlock()
+	return nil
+}
+
+func (plugin *AnalysisPlugin) getCacheAll() []*ProjectAnalysis {
+	plugin.cachedLock.Lock()
+	defer plugin.cachedLock.Unlock()
+
+	bs, _ := json.Marshal(plugin.cachedAll)
+	c := make([]*ProjectAnalysis, 0, len(plugin.cachedAll))
+	_ = json.Unmarshal(bs, &c)
+	return c
 }

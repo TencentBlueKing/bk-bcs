@@ -7,7 +7,7 @@ info:
 schemes:
 - http
 paths:
-  /api/v1/api/create/content/upload/biz_id/{biz_id}/app_id/{app_id}:
+  /api/v1/biz/{biz_id}/content/upload:
     put:
       operationId: upload_content
       description: 上传文件内容
@@ -23,7 +23,7 @@ paths:
         backend:
           type: HTTP
           method: put
-          path: /api/v1/api/create/content/upload/biz_id/{biz_id}/app_id/{app_id}
+          path: /api/v1/biz/{biz_id}/content/upload
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -31,10 +31,10 @@ paths:
         authConfig:
           userVerifiedRequired: false
         disabledStages: []
-  /api/v1/api/get/content/download/biz_id/{biz_id}/app_id/{app_id}:
+  /api/v1/biz/{biz_id}/content/download:
     get:
       operationId: download_content
-      description: 下载内容
+      description: 下载文件内容
       tags:
       - 配置项元数据管理
       responses:
@@ -47,13 +47,37 @@ paths:
         backend:
           type: HTTP
           method: get
-          path: /api/v1/api/get/content/download/biz_id/{biz_id}/app_id/{app_id}
+          path: /api/v1/biz/{biz_id}/content/download
           matchSubpath: false
           timeout: 0
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/biz/{biz_id}/content/metadata:
+    get:
+      operationId: get_content_metadata
+      description: 获取文件内容元数据
+      tags:
+        - 配置项元数据管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/biz/{biz_id}/content/metadata
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/create/app/app/biz_id/{biz_id}:
     post:
@@ -77,14 +101,14 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
-  /api/v1/config/create/commit/commit/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}:
-    post:
-      operationId: create_commit
-      description: 创建提交
+  /api/v1/config/delete/app/app/app_id/{id}/biz_id/{biz_id}:
+    delete:
+      operationId: delete_app
+      description: 删除应用
       tags:
-      - 提交记录管理
+        - 应用管理
       responses:
         default:
           description: ''
@@ -94,14 +118,86 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: post
-          path: /api/v1/config/create/commit/commit/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}
+          method: delete
+          path: /api/v1/config/delete/app/app/app_id/{id}/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/update/app/app/app_id/{id}/biz_id/{biz_id}:
+    put:
+      operationId: update_app
+      description: 更新应用
+      tags:
+        - 应用管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/update/app/app/app_id/{id}/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}:
+    get:
+      operationId: get_app
+      description: 获取应用详情
+      tags:
+        - 应用管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/list/app/app/biz_id/{biz_id}:
+    get:
+      operationId: list_app
+      description: 获取应用列表
+      tags:
+        - 应用管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/list/app/app/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/create/config_item/config_item/app_id/{app_id}/biz_id/{biz_id}:
     post:
@@ -125,103 +221,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/biz/{biz_id}/apps/{app_id}/config_items:
-    put:
-      operationId: batch_upsert_config_items
-      description: 批量覆盖上传配置项
-      tags:
-      - 配置项管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: put
-          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_items
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
           userVerifiedRequired: false
-        disabledStages: []
-  /api/v1/config/create/content/content/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}:
-    post:
-      operationId: create_content
-      description: 创建提交内容
-      tags:
-      - 配置项元数据管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/create/content/content/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/create/release/release/app_id/{app_id}/biz_id/{biz_id}:
-    post:
-      operationId: create_release
-      description: 创建版本
-      tags:
-      - 版本管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/create/release/release/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/delete/app/app/app_id/{id}/biz_id/{biz_id}:
-    delete:
-      operationId: delete_app
-      description: 删除应用
-      tags:
-      - 应用管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: delete
-          path: /api/v1/config/delete/app/app/app_id/{id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
         disabledStages: []
   /api/v1/config/delete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}:
     delete:
@@ -245,14 +245,14 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
-  /api/v1/config/list/release/config_item/release_id/{release_id}/biz_id/{biz_id}:
-    post:
-      operationId: list_released_config_item_list
-      description: 查询版本中的配置项快照信息
+  /api/v1/config/update/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}:
+    put:
+      operationId: update_config_item
+      description: 更新配置
       tags:
-      - 版本管理
+        - 配置项管理
       responses:
         default:
           description: ''
@@ -262,56 +262,8 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: post
-          path: /api/v1/config/list/release/config_item/release_id/{release_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/biz/{biz_id}/apps/{app_id}:
-    get:
-      operationId: get_app
-      description: 获取应用详情
-      tags:
-      - 应用管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/apps/{app_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/biz/{biz_id}/apps/query/name/{app_name}:
-    get:
-      operationId: get_app_by_name
-      description: 通过名称获取服务详情
-      tags:
-      - 应用管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/apps/query/name/{app_name}
+          method: put
+          path: /api/v1/config/update/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -319,55 +271,7 @@ paths:
         authConfig:
           userVerifiedRequired: false
         disabledStages: []
-  /api/v1/config/list/app/app/biz_id/{biz_id}:
-    post:
-      operationId: list_app
-      description: 获取应用列表
-      tags:
-      - 应用管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/list/app/app/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/list/commit/commit/app_id/{app_id}/biz_id/{biz_id}:
-    post:
-      operationId: list_commit
-      description: 查询提交记录列表
-      tags:
-      - 提交记录管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/list/commit/commit/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/apps/{app_id}/config_items/{config_item_id}:
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/{config_item_id}:
     get:
       operationId: get_config_item
       description: 获取配置项详情
@@ -383,18 +287,18 @@ paths:
         backend:
           type: HTTP
           method: get
-          path: /api/v1/config/apps/{app_id}/config_items/{config_item_id}
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/{config_item_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
-  /api/v1/config/apps/{app_id}/config_items:
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/config_items:
     get:
-      operationId: list_config_items
-      description: 查询配置列表
+      operationId: list_config_item
+      description: 查询未命名版本服务的配置项
       tags:
       - 配置项管理
       responses:
@@ -407,18 +311,41 @@ paths:
         backend:
           type: HTTP
           method: get
-          path: /api/v1/config/apps/{app_id}/config_items
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_items
           matchSubpath: false
           timeout: 0
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
+        disabledStages: []
+    put:
+      operationId: batch_upsert_config_item
+      description: 批量覆盖上传配置项
+      tags:
+        - 配置项管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_items
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/config_item_count/biz_id/{biz_id}:
     post:
       operationId: list_config_item_count
-      description: 查询当前业务下的app数量
+      description: 查询当前业务下的配置项数量
       tags:
         - 配置项管理
       responses:
@@ -434,17 +361,17 @@ paths:
           path: /api/v1/config/config_item_count/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-  /api/v1/config/list/content/content/app_id/{app_id}/biz_id/{biz_id}:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/create/release/release/app_id/{app_id}/biz_id/{biz_id}:
     post:
-      operationId: list_content
-      description: 查询配置项元数据信息
+      operationId: create_release
+      description: 创建版本
       tags:
-      - 配置项元数据管理
+        - 版本管理
       responses:
         default:
           description: ''
@@ -455,17 +382,17 @@ paths:
         backend:
           type: HTTP
           method: post
-          path: /api/v1/config/list/content/content/app_id/{app_id}/biz_id/{biz_id}
+          path: /api/v1/config/create/release/release/app_id/{app_id}/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/apps/{app_id}/releases:
     get:
-      operationId: list_releases
+      operationId: list_release
       description: 查询配置版本列表
       tags:
       - 版本管理
@@ -485,55 +412,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/update/app/app/app_id/{id}/biz_id/{biz_id}:
-    put:
-      operationId: update_app
-      description: 更新应用
-      tags:
-      - 应用管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: put
-          path: /api/v1/config/update/app/app/app_id/{id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/update/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}:
-    put:
-      operationId: update_config_item
-      description: 更新配置
-      tags:
-      - 配置项管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: put
-          path: /api/v1/config/update/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/update/strategy/publish/publish/release_id/{release_id}/app_id/{app_id}/biz_id/{biz_id}:
     post:
@@ -583,6 +462,198 @@ paths:
         authConfig:
           userVerifiedRequired: false
         disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/hooks:
+    get:
+      operationId: get_released_hook
+      description: 获取服务版本前后置脚本
+      tags:
+        - 发布管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/hooks
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/config_items/{config_item_id}:
+    get:
+      operationId: get_released_config_item
+      description: 查询单个已命名版本服务的配置项
+      tags:
+        - 发布管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/config_items/{config_item_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/config_items:
+    get:
+      operationId: list_released_config_item
+      description: 查询已命名版本服务的配置项
+      tags:
+        - 发布管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/config_items
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions/{template_revision_id}:
+    get:
+      operationId: get_released_app_bound_template_revision
+      description: 查询单个已命名版本服务绑定的模版版本
+      tags:
+        - 发布管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions/{template_revision_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions:
+    get:
+      operationId: list_released_app_bound_template_revision
+      description: 查询已命名版本服务绑定的模版版本
+      tags:
+        - 发布管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs/{key}:
+    get:
+      operationId: get_released_kv
+      description: 查询单个已命名版本服务的kv配置项
+      tags:
+        - 发布管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs/{key}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs:
+    get:
+      operationId: list_released_kv
+      description: 查询已命名版本服务的kv配置项
+      tags:
+        - 发布管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/groups/{group_id}/released_apps:
+    get:
+      operationId: list_group_released_apps
+      description: 获取分组已上线的应用
+      tags:
+        - 发布管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path:  /api/v1/config/biz/{biz_id}/groups/{group_id}/released_apps
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/groups:
     post:
       operationId: create_group
@@ -605,7 +676,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     get:
       operationId: list_all_groups
@@ -628,7 +699,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/biz/{biz_id}/apps/{app_id}/groups:
     get:
@@ -652,7 +723,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/biz/{biz_id}/groups/{group_id}:
     put:
@@ -676,7 +747,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     delete:
       operationId: delete_group
@@ -699,31 +770,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/biz/{biz_id}/groups/{group_id}/released_apps:
-    get:
-      operationId: list_group_released_apps
-      description: 获取分组已上线的应用
-      tags:
-      - 分组管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path:  /api/v1/config/biz/{biz_id}/groups/{group_id}/released_apps
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/biz/{biz_id}/hooks:
     post:
@@ -747,9 +794,8 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
-
     get:
       operationId: list_hook
       description: hook脚本列表
@@ -768,37 +814,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/hooks
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
-  /api/v1/config/biz/{biz_id}/hooks/{hook_id}/references:
-    get:
-      operationId: list_hook_references
-      description: hook引用列表
-      tags:
-        - hook脚本管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/references
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/hooks/{hook_id}:
     get:
       operationId: get_hook
@@ -818,12 +838,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
+          userVerifiedRequired: false
+        disabledStages: []
     delete:
       operationId: delete_hook
       description: 删除hook脚本
@@ -842,16 +861,15 @@ paths:
           path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/hook_tags:
     get:
       operationId: list_hook_tag
-      description: hook脚本标签列表
+      description: 获取hook脚本标签列表
       tags:
         - hook脚本管理
       responses:
@@ -867,12 +885,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/hooks/hook_tags
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}:
     get:
       operationId: get_hook_revision
@@ -888,16 +905,15 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: put
+          method: get
           path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
+          userVerifiedRequired: false
+        disabledStages: []
     put:
       operationId: update_hook_revision
       description: 更新hook版本
@@ -916,12 +932,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
+          userVerifiedRequired: false
+        disabledStages: []
     delete:
       operationId: delete_hook_revision
       description: 删除hook版本
@@ -940,12 +955,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions:
     post:
       operationId: create_hook_revision
@@ -965,12 +979,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
+          userVerifiedRequired: false
+        disabledStages: []
     get:
       operationId: list_hook_revision
       description: hook版本列表
@@ -985,16 +998,15 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: post
+          method: get
           path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}/publish:
     put:
       operationId: publish_hook_revision
@@ -1014,16 +1026,15 @@ paths:
           path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}/publish
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
-  /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}references:
-    get:
-      operationId: list_hook_revision_references
-      description: hook版本引用列表
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks:
+    put:
+      operationId: update_config_hook
+      description: 更新配置脚本
       tags:
         - hook脚本管理
       responses:
@@ -1035,16 +1046,15 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}references
+          method: put
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces:
     post:
       operationId: create_template_space
@@ -1067,7 +1077,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     get:
       operationId: list_template_space
@@ -1087,11 +1097,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/template_spaces
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}:
     put:
       operationId: update_template_space
@@ -1114,7 +1124,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     delete:
       operationId: delete_template_space
@@ -1137,7 +1147,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/list_by_ids:
     post:
@@ -1161,7 +1171,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates:
     post:
@@ -1185,7 +1195,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     get:
       operationId: list_template
@@ -1205,11 +1215,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}:
     put:
       operationId: update_template
@@ -1232,7 +1242,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     delete:
       operationId: delete_template
@@ -1255,31 +1265,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/add_to_template_sets:
-    post:
-      operationId: add_template_to_template_set
-      description: 添加模版到模版套餐
-      tags:
-        - 模版
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/add_to_template_sets
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/biz/{biz_id}/templates/list_by_ids:
     post:
@@ -1303,7 +1289,79 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/templates:
+    get:
+      operationId: list_template_of_template_set
+      description: 查询单个套餐下的模版
+      tags:
+        - 模版
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/templates
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/add_to_template_sets:
+    post:
+      operationId: add_template_to_template_set
+      description: 添加模版到模版套餐
+      tags:
+        - 模版
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/add_to_template_sets
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates//delete_from_template_sets:
+    post:
+      operationId: delete_template_from_template_set
+      description: 从模版套餐移出模版
+      tags:
+        - 模版
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates//delete_from_template_sets
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions:
     post:
@@ -1327,7 +1385,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     get:
       operationId: list_template_revision
@@ -1347,11 +1405,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}:
     delete:
       operationId: delete_template_revision
@@ -1374,7 +1432,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/biz/{biz_id}/template_revisions/list_by_ids:
     post:
@@ -1395,35 +1453,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/template_revisions/list_by_ids
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-  /api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids:
-    post:
-      operationId: list_template_revision_name_by_template_id
-      description: 批量查询模版的版本名称
-      tags:
-        - 模版版本
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets:
     post:
       operationId: create_template_set
@@ -1446,7 +1480,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     get:
       operationId: list_template_set
@@ -1466,11 +1500,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}:
     put:
       operationId: update_template_set
@@ -1493,7 +1527,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     delete:
       operationId: delete_template_set
@@ -1516,7 +1550,55 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_sets/list_by_ids:
+    post:
+      operationId: list_template_set_by_id
+      description: 根据ID查询模版套餐
+      tags:
+        - 模版套餐
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_sets/list_by_ids
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_sets/list_all_of_biz:
+    get:
+      operationId: list_all_template_set_of_biz
+      description: 查询业务下的所有模版套餐
+      tags:
+        - 模版套餐
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/template_sets/list_all_of_biz
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/biz/{biz_id}/apps/{app_id}/template_sets:
     get:
@@ -1537,35 +1619,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/apps/{app_id}/template_sets
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-  /api/v1/config/biz/{biz_id}/template_sets/list_by_ids:
-    post:
-      operationId: list_template_set_by_id
-      description: 根据ID查询模版套餐
-      tags:
-        - 模版套餐
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/biz/{biz_id}/template_sets/list_by_ids
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings:
     post:
       operationId: create_app_template_binding
@@ -1588,7 +1646,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     get:
       operationId: list_app_template_binding
@@ -1608,11 +1666,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}:
     put:
       operationId: update_app_template_binding
@@ -1635,7 +1693,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     delete:
       operationId: delete_app_template_binding
@@ -1658,14 +1716,14 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_counts:
-    post:
-      operationId: list_template_bound_count
-      description: 查询模版被引用计数
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/template_revisions:
+    get:
+      operationId: list_app_bound_template_revision
+      description: 查询未命名版本服务绑定的模版版本
       tags:
-        - 模版引用关系
+        - 服务模版绑定
       responses:
         default:
           description: ''
@@ -1675,231 +1733,15 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: post
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_counts
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/template_revisions
           matchSubpath: false
           timeout: 0
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/bound_counts:
-    post:
-      operationId: list_template_revision_bound_count
-      description: 查询模版版本被引用计数
-      tags:
-        - 模版引用关系
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/bound_counts
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_counts:
-    post:
-      operationId: list_template_set_bound_count
-      description: 查询套餐被引用计数
-      tags:
-        - 模版引用关系
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_counts
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details:
-    get:
-      operationId: list_template_bound_unnamed_app_detail
-      description: 查询模版被未命名版本服务引用详情
-      tags:
-        - 模版引用关系
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details:
-    get:
-      operationId: list_template_bound_named_app_detail
-      description: 查询模版被已命名版本服务引用详情
-      tags:
-        - 模版引用关系
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details:
-    get:
-      operationId: list_template_bound_template_set_detail
-      description: 查询模版被模版套餐引用详情
-      tags:
-        - 模版引用关系
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details:
-    get:
-      operationId: list_template_revision_bound_unnamed_app_detail
-      description: 查询模版版本被未命名版本服务引用详情
-      tags:
-        - 模版引用关系
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details:
-    get:
-      operationId: list_template_revision_bound_named_app_detail
-      description: 查询模版版本被已命名版本服务引用详情
-      tags:
-        - 模版引用关系
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details:
-    get:
-      operationId: list_template_set_bound_unnamed_app_detail
-      description: 查询模版套餐被未命名版本服务引用详情
-      tags:
-        - 模版引用关系
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details:
-    get:
-      operationId: list_template_set_bound_named_app_detail
-      description: 查询模版套餐被已命名版本服务引用详情
-      tags:
-        - 模版引用关系
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
   /api/v1/config/biz/{biz_id}/template_variables:
     post:
       operationId: create_template_variable
@@ -1922,7 +1764,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     get:
       operationId: list_template_variable
@@ -1942,11 +1784,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/template_variables
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}:
     put:
       operationId: update_template_variable
@@ -1969,7 +1811,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
     delete:
       operationId: delete_template_variable
@@ -1992,14 +1834,14 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
-  /api/v1/api/get/content/metadata/biz_id/{biz_id}/app_id/{app_id}:
-    get:
-      operationId: download_content_metadata
-      description: 下载文件元数据
+  /api/v1/config/biz/{biz_id}/template_variables/import:
+    post:
+      operationId: import_template_variable
+      description: 导入模版变量
       tags:
-        - 配置项元数据管理
+        - 模版变量
       responses:
         default:
           description: ''
@@ -2009,15 +1851,15 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: get
-          path: /api/v1/api/get/content/metadata/biz_id/{biz_id}/app_id/{app_id}
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_variables/import
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz_id/{biz_id}/credentials:
     get:
       operationId: list_credential
@@ -2037,11 +1879,11 @@ paths:
           path: /api/v1/config/biz_id/{biz_id}/credentials
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
     post:
       operationId: create_credential
       description: 创建凭据
@@ -2060,11 +1902,11 @@ paths:
           path: /api/v1/config/biz_id/{biz_id}/credentials
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz_id/{biz_id}/credential:
     put:
       operationId: update_credential
@@ -2084,11 +1926,11 @@ paths:
           path: /api/v1/config/biz_id/{biz_id}/credential
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
     delete:
       operationId: delete_credential
       description: 删除凭据
@@ -2107,11 +1949,11 @@ paths:
           path: /api/v1/config/biz_id/{biz_id}/credential
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scopes:
     get:
       operationId: list_credential_scope
@@ -2131,14 +1973,14 @@ paths:
           path: /api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scopes
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scope:
     put:
-      operationId: put_credential_scope
+      operationId: update_credential_scope
       description: 更新凭据规则
       tags:
         - credential管理
@@ -2155,62 +1997,11 @@ paths:
           path: /api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scope
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
-  /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks:
-    put:
-      operationId: update_config_hook
-      description: 更新配置脚本
-      tags:
-        - hook脚本管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: put
-          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
-  /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/hooks:
-    get:
-      operationId: get_release_hook
-      description: 获取版本前后置脚本
-      tags:
-        - hook脚本管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/hooks
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/apps/{app_id}/kvs:
     post:
       operationId: create_kv
@@ -2230,14 +2021,14 @@ paths:
           path: /api/v1/config/biz/{biz_id}/apps/{app_id}/kvs
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
     get:
-      operationId: get_kv
-      description: 获取kv
+      operationId: list_kv
+      description: 获取kv列表
       tags:
         - kv管理
       responses:
@@ -2253,11 +2044,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/apps/{app_id}/kvs
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
     put:
       operationId: batch_upsert_kv
       description: 批量上传｜更新kv
@@ -2272,15 +2063,15 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: get
+          method: put
           path: /api/v1/config/biz/{biz_id}/apps/{app_id}/kvs
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
 
   /api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}:
     put:
@@ -2301,11 +2092,11 @@ paths:
           path: /api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
     delete:
       operationId: delete_kv
       description: 删除kv
@@ -2320,35 +2111,13 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: put
+          method: delete
           path: /api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}
           matchSubpath: false
           timeout: 0
-          upstreams: { }
-          transformHeaders: { }
+          upstreams: {}
+          transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-    post:
-      operationId: undelete_kv
-      description: 撤销删除kv
-      tags:
-        - kv管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: put
-          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
+          userVerifiedRequired: false
+        disabledStages: []
+        

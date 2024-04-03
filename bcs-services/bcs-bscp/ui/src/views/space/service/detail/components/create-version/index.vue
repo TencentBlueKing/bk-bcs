@@ -15,18 +15,6 @@
     :app-id="props.appId"
     :is-diff-slider-show="isDiffSliderShow"
     @created="handleCreated" />
-  <!-- <VersionDiff
-    v-model:show="isDiffSliderShow"
-    :current-version="versionData"
-    :un-named-version-variables="variableList"
-  >
-    <template #footerActions>
-      <bk-button class="create-version-btn" theme="primary" :loading="createPending" @click="triggerCreate">
-        生成版本
-      </bk-button>
-      <bk-button @click="isDiffSliderShow = false">关闭</bk-button>
-    </template>
-  </VersionDiff> -->
 </template>
 <script setup lang="ts">
   import { ref, computed } from 'vue';
@@ -36,9 +24,7 @@
   import useGlobalStore from '../../../../../../store/global';
   import useConfigStore from '../../../../../../store/config';
   import { IConfigVersion } from '../../../../../../../types/config';
-  // import { IVariableEditParams } from '../../../../../../../types/variable';
   import CreateVersionSlider from './create-version-slider.vue';
-  // import VersionDiff from '../../config/components/version-diff/index.vue';
 
   const props = defineProps<{
     bkBizId: string;
@@ -54,8 +40,6 @@
   const { allConfigCount, versionData } = storeToRefs(useConfigStore());
   const isVersionSliderShow = ref(false);
   const isDiffSliderShow = ref(false);
-  // const variableList = ref<IVariableEditParams[]>([]);
-  // const createPending = ref(false);
   const createSliderRef = ref();
 
   const permissionQueryResource = computed(() => [
@@ -77,23 +61,6 @@
       showApplyPermDialog.value = true;
     }
   };
-
-  // const handleDiffSliderOpen = (variables: IVariableEditParams[]) => {
-  //   isDiffSliderShow.value = true;
-  //   variableList.value = variables;
-  // };
-
-  // // 触发生成版本确认操作
-  // const triggerCreate = async () => {
-  //   try {
-  //     createPending.value = true;
-  //     await createSliderRef.value.confirm();
-  //   } catch (e) {
-  //     console.log(e);
-  //   } finally {
-  //     createPending.value = false;
-  //   }
-  // };
 
   const handleCreated = (versionData: IConfigVersion, isPublish: boolean) => {
     isDiffSliderShow.value = false;

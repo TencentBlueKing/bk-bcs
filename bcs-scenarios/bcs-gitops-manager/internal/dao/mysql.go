@@ -256,8 +256,8 @@ func (d *driver) ListResourcePreferences(project, resourceType string) ([]Resour
 	return result, nil
 }
 
-// CreateApplicationHistoryManifest create application history manifest object
-func (d *driver) CreateApplicationHistoryManifest(hm *ApplicationHistoryManifest) error {
+// SaveApplicationHistoryManifest create application history manifest object
+func (d *driver) SaveApplicationHistoryManifest(hm *ApplicationHistoryManifest) error {
 	return d.db.Table(tableHistoryManifest).Save(hm).Error
 }
 
@@ -284,4 +284,21 @@ func (d *driver) GetApplicationHistoryManifest(appName, appUID string,
 		return nil, nil
 	}
 	return &result[0], nil
+}
+
+// CheckApplicationHistoryManifestExist check manifest whether exist
+func (d *driver) CheckApplicationHistoryManifestExist(appName, appUID string, historyID int64) (bool, error) {
+	rows, err := d.rateClient.Table(tableHistoryManifest).Select("id").
+		Where("name = ?", appName).
+		Where("applicationUID = ?", appUID).
+		Where("historyID = ?", historyID).Rows()
+	if err != nil {
+		return false, errors.Wrapf(err, "get application history manifest failed")
+	}
+	defer rows.Close() // nolint
+
+	for rows.Next() {
+		return true, nil
+	}
+	return false, nil
 }

@@ -79,6 +79,17 @@ var (
 	}
 )
 
+var nodeInfoCacheExpiredTime = 10 * time.Minute
+
+type cacheItem struct {
+	*schedulerframework.NodeInfo
+	added time.Time
+}
+
+func isCacheItemExpired(added time.Time) bool {
+	return time.Since(added) > nodeInfoCacheExpiredTime
+}
+
 // Following data structure is used to avoid running predicates #pending_pods * #nodes
 // times (which turned out to be very expensive if there are thousands of pending pods).
 // This optimization is based on the assumption that if there are that many pods they're
@@ -175,7 +186,7 @@ func filterOutExpendablePods(pods []*apiv1.Pod, expendablePodsPriorityCutoff int
 // DOTO(mwielgus): Review error policy - sometimes we may continue with partial errors.
 // NOCC:golint/fnsize(设计如此)
 // nolint funlen
-func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedulerframework.NodeInfo,
+func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]cacheItem,
 	cloudProvider cloudprovider.CloudProvider, listers kube_util.ListerRegistry,
 	daemonsets []*appsv1.DaemonSet, predicateChecker simulator.PredicateChecker,
 	ignoredTaints taints.TaintKeySet) (map[string]*schedulerframework.NodeInfo, errors.AutoscalerError) {
@@ -238,7 +249,7 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 		// DOTO: support node pool label update
 		if added && nodeInfoCache != nil {
 			if nodeInfoCopy, err := deepCopyNodeInfo(result[id]); err == nil {
-				nodeInfoCache[id] = nodeInfoCopy
+				nodeInfoCache[id] = cacheItem{NodeInfo: nodeInfoCopy, added: time.Now()}
 			}
 		}
 	}
@@ -273,7 +284,7 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 }
 
 func getNodeInfos(cloudProvider cloudprovider.CloudProvider,
-	nodeInfoCache map[string]*schedulerframework.NodeInfo,
+	nodeInfoCache map[string]cacheItem,
 	daemonsets []*appsv1.DaemonSet, predicateChecker simulator.PredicateChecker,
 	ignoredTaints taints.TaintKeySet, seenGroups map[string]bool,
 	result map[string]*schedulerframework.NodeInfo) (map[string]bool,
@@ -287,8 +298,10 @@ func getNodeInfos(cloudProvider cloudprovider.CloudProvider,
 
 		// No good template, check cache of previously running nodes.
 		if nodeInfoCache != nil {
-			if nodeInfo, found := nodeInfoCache[id]; found {
-				if nodeInfoCopy, err := deepCopyNodeInfo(nodeInfo); err == nil {
+			if item, found := nodeInfoCache[id]; found {
+				if isCacheItemExpired(item.added) {
+					delete(nodeInfoCache, id)
+				} else if nodeInfoCopy, err := deepCopyNodeInfo(item.NodeInfo); err == nil {
 					result[id] = nodeInfoCopy
 					continue
 				}

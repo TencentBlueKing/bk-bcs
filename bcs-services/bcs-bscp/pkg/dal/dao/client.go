@@ -13,14 +13,20 @@
 package dao
 
 import (
+	"strings"
 	"time"
 
+	"gorm.io/datatypes"
+	rawgen "gorm.io/gen"
 	"gorm.io/gen/field"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	pbclient "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Client supplies all the client related operations.
@@ -32,7 +38,8 @@ type Client interface {
 	// ListClientByTuple Query the client list according to multiple fields in
 	ListClientByTuple(kit *kit.Kit, data [][]interface{}) ([]*table.Client, error)
 	// BatchUpdateSelectFieldTx Update selected field
-	BatchUpdateSelectFieldTx(kit *kit.Kit, tx *gen.QueryTx, messageType sfs.MessagingType, data []*table.Client) error
+	BatchUpdateSelectFieldTx(kit *kit.Kit, tx *gen.QueryTx, messageType sfs.MessagingType,
+		data []*table.Client) error
 	// ListByHeartbeatTimeOnlineState obtain data based on the last heartbeat time and online status
 	ListByHeartbeatTimeOnlineState(kit *kit.Kit, heartbeatTime time.Time, onlineState string,
 		limit int, id uint32) ([]*table.Client, error)
@@ -40,6 +47,9 @@ type Client interface {
 	UpdateClientOnlineState(kit *kit.Kit, heartbeatTime time.Time, onlineState string, ids []uint32) error
 	// GetClientCountByCondition Get the total according to the condition
 	GetClientCountByCondition(kit *kit.Kit, heartbeatTime time.Time, onlineState string) (int64, error)
+	// List Obtain client data according to conditions
+	List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int64, search *pbclient.ClientQueryCondition,
+		order *pbds.ListClientsReq_Order, opt *types.BasePage) ([]*table.Client, int64, error)
 }
 
 var _ Client = new(clientDao)
@@ -48,6 +58,160 @@ type clientDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// List Obtain client data according to conditions
+func (dao *clientDao) List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int64,
+	search *pbclient.ClientQueryCondition, order *pbds.ListClientsReq_Order,
+	opt *types.BasePage) ([]*table.Client, int64, error) {
+
+	m := dao.genQ.Client
+	q := dao.genQ.Client.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID))
+
+	var err error
+	var conds []rawgen.Condition
+	if search != nil {
+		conds, err = dao.handleSearch(kit, bizID, appID, search)
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
+	if heartbeatTime > 0 {
+		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
+	}
+
+	var exprs []field.Expr
+	if order != nil {
+		exprs = dao.handleOrder(order)
+	}
+
+	d := q.Where(conds...).Order(exprs...)
+	if opt.All {
+		result, err := d.Find()
+		if err != nil {
+			return nil, 0, err
+		}
+		return result, int64(len(result)), err
+	}
+	return d.FindByPage(opt.Offset(), opt.LimitInt())
+}
+
+// 处理搜索
+func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pbclient.ClientQueryCondition) (
+	[]rawgen.Condition, error) {
+
+	var conds []rawgen.Condition
+	m := dao.genQ.Client
+	q := dao.genQ.Client.WithContext(kit.Ctx)
+	rs := dao.genQ.Release
+	ce := dao.genQ.ClientEvent
+	if len(search.GetIp()) > 0 {
+		conds = append(conds, q.Where(m.Ip.Like("%"+search.GetIp()+"%")))
+	}
+	if len(search.GetUid()) > 0 {
+		conds = append(conds, q.Where(m.UID.Like("%"+search.GetUid()+"%")))
+	}
+
+	if len(search.GetCurrentReleaseName()) > 0 {
+		var item []struct {
+			ID uint32
+		}
+		err := rs.WithContext(kit.Ctx).Select(rs.ID).Where(rs.BizID.Eq(bizID), rs.AppID.Eq(appID),
+			rs.Name.Like("%"+search.GetCurrentReleaseName()+"%")).Scan(&item)
+		if err != nil {
+			return conds, err
+		}
+		releaseID := []uint32{}
+		for _, v := range item {
+			releaseID = append(releaseID, v.ID)
+		}
+		conds = append(conds, q.Where(m.CurrentReleaseID.In(releaseID...)))
+	}
+
+	// 目标版本查询
+	// 先获取releaseID, 根据 target_release_id = releaseID 获取 client_events 中的 client_id
+	if len(search.GetTargetReleaseName()) > 0 {
+		var item []struct {
+			ID uint32
+		}
+		err := rs.WithContext(kit.Ctx).Select(rs.ID).Where(rs.BizID.Eq(bizID), rs.AppID.Eq(appID),
+			rs.Name.Like("%"+search.GetTargetReleaseName()+"%")).Scan(&item)
+		if err != nil {
+			return conds, err
+		}
+		releaseID := []uint32{}
+		for _, v := range item {
+			releaseID = append(releaseID, v.ID)
+		}
+		var clientEvent []struct {
+			ClientID uint32
+		}
+		err = ce.WithContext(kit.Ctx).Select(ce.ClientID).Where(ce.TargetReleaseID.In(releaseID...)).
+			Group(ce.ClientID).Scan(&clientEvent)
+		if err != nil {
+			return conds, err
+		}
+		cid := []uint32{}
+		for _, v := range clientEvent {
+			cid = append(cid, v.ClientID)
+		}
+		conds = append(conds, q.Where(m.ID.In(cid...)))
+	}
+
+	if len(search.GetReleaseChangeStatus()) > 0 {
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
+	}
+
+	if search.GetLabel() != nil && len(search.GetLabel().GetFields()) != 0 {
+		for k, v := range search.GetLabel().GetFields() {
+			conds = append(conds, rawgen.Cond(datatypes.JSONQuery("labels").Equals(v.AsInterface(), k))...)
+		}
+	}
+
+	if search.GetAnnotations() != nil && len(search.GetAnnotations().GetFields()) != 0 {
+		for k, v := range search.GetLabel().GetFields() {
+			conds = append(conds, rawgen.Cond(datatypes.JSONQuery("annotations").Equals(v.AsInterface(), k))...)
+		}
+	}
+
+	if len(search.GetOnlineStatus()) > 0 {
+		conds = append(conds, q.Where(m.OnlineStatus.In(search.GetOnlineStatus()...)))
+	}
+
+	if len(search.GetClientVersion()) > 0 {
+		conds = append(conds, q.Where(m.ClientVersion.Like("%"+search.GetClientVersion()+"%")))
+	}
+
+	return conds, nil
+}
+
+// 处理排序
+func (dao *clientDao) handleOrder(order *pbds.ListClientsReq_Order) []field.Expr {
+	var exprs []field.Expr
+	m := dao.genQ.Client
+
+	if len(order.GetDesc()) > 0 {
+		desc := strings.Split(order.GetDesc(), ",")
+		for _, v := range desc {
+			orderCol, ok := m.GetFieldByName(v)
+			if ok {
+				exprs = append(exprs, orderCol.Desc())
+			}
+		}
+	}
+	if len(order.GetAsc()) > 0 {
+		asc := strings.Split(order.GetAsc(), ",")
+		for _, v := range asc {
+			orderCol, ok := m.GetFieldByName(v)
+			if ok {
+				exprs = append(exprs, orderCol)
+			}
+		}
+	}
+
+	return exprs
 }
 
 // GetClientCountByCondition Get the total according to the condition

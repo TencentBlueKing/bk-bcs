@@ -46,7 +46,8 @@ func (s *MonitorSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// backend real path with encoded format
 	realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
 	// !force https link
-	fullPath := fmt.Sprintf("http://bcsmonitorcontroller.bcs-system.svc.cluster.local:18088%s", realPath)
+	// fullPath := fmt.Sprintf("http://bcsmonitorcontroller.bcs-system.svc.cluster.local:18088%s", realPath)
+	fullPath := fmt.Sprintf("http://%s:%s%s", s.op.Address, s.op.Port, realPath)
 	newURL, err := url.Parse(fullPath)
 	if err != nil {
 		err = fmt.Errorf("monitor session build new fullpath '%s' failed: %w", fullPath, err)

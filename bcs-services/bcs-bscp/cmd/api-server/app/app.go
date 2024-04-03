@@ -14,6 +14,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -22,6 +23,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/api-server/options"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/api-server/service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/bknotice"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
@@ -79,6 +81,13 @@ func (as *apiServer) prepare(opt *options.Option) error {
 
 	as.discover = dis
 	logs.Infof("create discovery success.")
+
+	// register system to bknotice service
+	if cc.ApiServer().BKNotice.Enable {
+		if err := bknotice.RegisterSystem(context.TODO()); err != nil {
+			logs.Errorf("register system to bknotice failed, err: %v", err)
+		}
+	}
 
 	return nil
 }

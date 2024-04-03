@@ -1,11 +1,14 @@
 <template>
   <section class="single-line-kv-diff">
-    <div class="config-diff-list">
-      <div v-for="diffItem in diffConfigs" class="config-diff-item" :key="diffItem.id">
+    <div ref="containerRef" class="config-diff-list">
+      <div
+        v-for="diffItem in diffConfigs"
+        :class="['config-diff-item', { selected: props.selectedId === diffItem.id }]"
+        :key="diffItem.id">
         <div :class="['diff-header', diffItem.diffType]">
           <span class="config-name">{{ diffItem.name }}</span>
         </div>
-        <div :class="['diff-content', { selected: props.selectedId === diffItem.id }]">
+        <div class="diff-content">
           <div class="left-version-content">
             <div class="content-box">
               {{ diffItem.base.content }}
@@ -24,12 +27,36 @@
 </template>
 
 <script lang="ts" setup>
+  import { ref, watch, onMounted } from 'vue';
   import { ISingleLineKVDIffItem } from '../../../types/service';
 
   const props = defineProps<{
     diffConfigs: ISingleLineKVDIffItem[];
     selectedId?: number;
   }>();
+
+  const containerRef = ref();
+
+  watch(
+    [() => props.diffConfigs, () => props.selectedId],
+    () => {
+      setScrollTop();
+    },
+    {
+      flush: 'post',
+    },
+  );
+
+  onMounted(() => {
+    setScrollTop();
+  });
+
+  const setScrollTop = () => {
+    const selectedEl = containerRef.value.querySelector('.config-diff-item.selected');
+    if (selectedEl) {
+      containerRef.value.scrollTo(0, selectedEl.offsetTop);
+    }
+  };
 </script>
 
 <style scoped lang="scss">
@@ -52,6 +79,14 @@
   }
   .config-diff-item {
     margin-bottom: 12px;
+    &.selected {
+      .diff-content {
+        background: #f0f1f5;
+      }
+      .content-box {
+        border-color: #3a84ff;
+      }
+    }
   }
   .diff-header {
     padding: 2px 16px;
@@ -83,9 +118,6 @@
   .diff-content {
     display: flex;
     align-items: flex-start;
-    &.selected {
-      background: #f0f1f5;
-    }
   }
   .left-version-content,
   .right-version-content {

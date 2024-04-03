@@ -10,6 +10,7 @@ export default function useClusterSelector(
   defaultClusterID: string,
   clusterType: ClusterType | Omit<ClusterType, 'all'>[] = ['independent', 'managed'],
   updateStore = true,
+  validateClusterID = true,
 ) {
   const { clusterList } = useCluster();
   const keyword = ref('');
@@ -108,7 +109,7 @@ export default function useClusterSelector(
   };
 
   onBeforeMount(() => {
-    handleValidateClusterID();
+    validateClusterID && handleValidateClusterID();
   });
 
   return {

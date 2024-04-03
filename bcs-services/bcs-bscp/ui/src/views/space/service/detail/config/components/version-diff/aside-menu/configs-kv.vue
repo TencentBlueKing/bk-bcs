@@ -1,5 +1,5 @@
 <template>
-  <div :class="['configs-menu', { 'search-opened': isOpenSearch }]">
+  <div v-bkloading="{ loading }" :class="['configs-menu', { 'search-opened': isOpenSearch }]">
     <div class="title-area">
       <div class="title">{{ t('配置项') }}</div>
       <div class="title-extend">
@@ -104,6 +104,7 @@
   const isOpenSearch = ref(false);
   const searchStr = ref('');
   const isSearchEmpty = ref(false);
+  const loading = ref(true);
 
   // 是否实际选择了对比的基准版本，为了区分的未命名版本id为0的情况
   const isBaseVersionExist = computed(() => typeof props.baseVersionId === 'number');
@@ -111,11 +112,8 @@
   // 基准版本变化，更新选中对比项
   watch(
     () => props.baseVersionId,
-    async () => {
-      baseList.value = await getConfigsOfVersion(props.baseVersionId);
-      aggregatedList.value = calcDiff();
-      groupedConfigListOnShow.value = getGroupedList();
-      setDefaultSelected();
+    () => {
+      initData();
     },
   );
 
@@ -132,13 +130,24 @@
     },
   );
 
-  onMounted(async () => {
-    currentList.value = await getConfigsOfVersion(props.currentVersionId);
-    baseList.value = await getConfigsOfVersion(props.baseVersionId);
+  onMounted(() => {
+    initData(true);
+  });
+
+  // 初始化对比配置项以及设置默认选中的配置项
+  const initData = async (needGetCrt = false) => {
+    loading.value = true;
+    if (needGetCrt) {
+      currentList.value = await getConfigsOfVersion(props.currentVersionId);
+    }
+    if (props.baseVersionId) {
+      baseList.value = await getConfigsOfVersion(props.baseVersionId);
+    }
     aggregatedList.value = calcDiff();
     groupedConfigListOnShow.value = getGroupedList();
     setDefaultSelected();
-  });
+    loading.value = false;
+  };
 
   // 获取某一版本下配置文件
   const getConfigsOfVersion = async (releaseId: number | undefined) => {
@@ -236,14 +245,10 @@
     return groupedList;
   };
 
-  // 设置默认选中的配置文件
-  // 如果props有设置选中项，取props值
-  // 如果选中项有值，保持上一次选中项
+  // 如果有选中项，则保持上一次选中项
   // 否则取第一个非空分组的第一个配置文件
   const setDefaultSelected = () => {
-    if (props.selectedId) {
-      handleSelectItem(props.selectedId);
-    } else if (aggregatedList.value.find((item) => item.id === selected.value)) {
+    if (selected.value && aggregatedList.value.findIndex((item) => item.id === selected.value) > -1) {
       handleSelectItem(selected.value);
     } else {
       if (groupedConfigListOnShow.value[0]) {
@@ -254,28 +259,36 @@
 
   const handleToggleShowDiff = () => {
     groupedConfigListOnShow.value = getGroupedList();
+    updateSelectedDetail(selected.value);
   };
 
   const handleSearch = () => {
     groupedConfigListOnShow.value = getGroupedList();
     isSearchEmpty.value = searchStr.value !== '' && groupedConfigListOnShow.value.length === 0;
+    updateSelectedDetail(selected.value);
   };
 
   // 选择对比配置文件后，加载配置文件详情，组装对比数据
   const handleSelectItem = async (selectedId: number) => {
-    const config = aggregatedList.value.find((item) => item.id === selectedId);
+    updateSelectedDetail(selectedId);
+  };
+
+  // 更新对比项详情数据
+  const updateSelectedDetail = (id: number) => {
+    const config = aggregatedList.value.find((item) => item.id === id);
     if (config) {
-      selected.value = selectedId;
-      const data = getConfigDiffDetail(config);
+      selected.value = id;
+      const singleLineGroup = groupedConfigListOnShow.value.find((item) => item.name === 'singleLine');
+      const data = getConfigDiffDetail(config, singleLineGroup?.configs || []);
       emits('selected', data);
     }
   };
 
   // 差异对比详情数据
-  const getConfigDiffDetail = (config: IConfigDiffItem) => {
+  const getConfigDiffDetail = (config: IConfigDiffItem, list: IConfigDiffItem[]) => {
     // 单行配置
     if (SINGLE_LINE_TYPE.includes(config.kvType)) {
-      const configs: ISingleLineKVDIffItem[] = groupedConfigListOnShow.value[0].configs.map((item) => {
+      const configs: ISingleLineKVDIffItem[] = list.map((item) => {
         const { diffType, id, key, baseContent, currentContent } = item;
         return {
           id,

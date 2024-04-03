@@ -41,7 +41,7 @@
     height: 100%;
     background: #f5f7fa;
     .header {
-      padding-top: 24px;
+      padding: 24px 0;
     }
   }
 </style>

@@ -197,14 +197,8 @@ metrics:
   podUsage: Pod使用率
   cpuRequestUsage:
     text: CPU装箱率
-    clusterDesc: >-
-      集群CPU装箱率 = 集群所有Pod CPU Request之和 /
-      集群所有节点CPU总核数（不包含Master节点），集群CPU装箱率越接近集群CPU使用率，集群CPU资源利用率越高 {0}
   memRequestUsage:
     text: 内存装箱率
-    clusterDesc: >-
-      集群内存装箱率 = 集群所有Pod 内存 Request之和 /
-      集群所有节点内存总大小（不包含Master节点），集群内存装箱率越接近集群内存使用率，集群内存资源利用率越高 {0}
   diskIOUsage: 磁盘IO
   diskIOUsage1: 磁盘IO总量
   diskIOUsage2: 磁盘IO使用率
@@ -253,7 +247,6 @@ generic:
       noMatchData: 无匹配数据
       searchEmpty:
         text: 搜索结果为空
-        subTitle: '可以尝试 调整关键词 或{action}'
     info:
       tips: 提示
       refreshAuth: 当前操作有权限，请刷新界面
@@ -680,8 +673,6 @@ cluster:
         maxNodePodNum:
           text: 单节点Pod数量上限
           desc: 单节点Pod数量上限一旦分配后将无法调整，请谨慎评估后再填写
-        article1: '容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点'
-        article2: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点'
         article3: 集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限
       networkMode:
         text: 网络模式
@@ -752,7 +743,7 @@ cluster:
       putAwayConfig: 收起更多设置
       createCloudToken: 新增凭证
       fileImport: 文件导入
-      textKubeConfig: kubeconfig可用性测试
+      textKubeConfig: 可用性测试
   detail:
     title:
       overview: 集群总览
@@ -804,9 +795,9 @@ cluster:
         placeholder: 请选择业务 CMDB topo 模块
     unreadyConfig:
       title: 扩缩容暂停配置
-      path: 'NotReady节点数大于 {0} 个且超过集群总节点数 {1} 时暂停自动扩缩容'
       desc: >-
         自动扩缩容保护机制，如果NotReady节点数量或比例过大，自动扩容上来的节点也有可能会是NotReady状态，导致业务成本增加，当NotReady节点数不符合暂停触发条件时自动恢复自动扩缩容
+      path: 扩缩容暂停配置路径
     autoScalerConfig:
       title: 自动扩容配置
       expander:
@@ -1173,6 +1164,9 @@ cluster:
       retry: 失败重试
       setLabel: 设置标签
       setTaint: 设置污点
+      addTag: 添加标签
+      saveSettings: 保存设置
+      cancel: 取消
       copy:
         text: 复制
         checkedIP: 复制勾选IP
@@ -1203,6 +1197,7 @@ cluster:
       batchSetLabel:
         text: 批量设置标签
         desc: 批量设置只展示相同Key的标签
+      batchSetTaint: 批量设置污点
     label:
       podCounts: Pod数量
       index: 序号
@@ -2012,14 +2007,7 @@ plugin:
     DBInfo: DB信息
     confirmDelete: 确定要删除
     input:
-      biz: 请输入业务名称
-      dbAddress: 请输入DB访问地址
-      user: 请输入账号
-      dbName: 请输入DB名称
-      label: 请输入标签
       values: 请填写Values 内容
-    labelIndexRegex: '第{index}组标签的值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$'
-    labelRegex: '标签值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$'
     content: 内容
     confirmUpgradeTips: Values 内容发生如下变化，请确认后再点击“确定”更新
     confirmUpgrade: 确认更新
@@ -2083,8 +2071,6 @@ plugin:
     filePath: 请输入文件路径
     success: 规则创建成功
     upgraded: 规则更新成功
-    polarisNS: Polaris命名空间
-    polarisSvcName: Polaris服务名
     cluster_ns: 集群/命名空间
     polarisInfo: Polaris信息
     syncStatus: 同步状态
@@ -2097,17 +2083,9 @@ plugin:
     pod: 是否直连Pod
     nodePort: NodePort模式不勾选
     weight: 权重
-    rule: 请输入规则名
-    ruleRegex: 规则名必须小于等于63字符
     ruleCharacterCriteria: '规则名以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字'
-    enterPolarisInfoName: 请输入Polaris信息名
     polarisInfoNameCriteria: 'Polaris信息名只允许数字、英文字母、.、-、_, 限制128个字符'
-    selectPolarisNamespace: 请选择Polaris命名空间
-    inputSvcName: 请输入关联Sercice服务名
-    portInt: 请输入关联Sercice的端口(整数类型)
-    portNoNegative: 关联Sercice的端口不能为负数
-    weightInt: 请输入关联Sercice的权重(整数类型)
-    weightNoNegative: 关联Sercice的权重不能为负数
+    ipPortAndWeight: 'IP:端口 权重'
 projects:
   cloudToken:
     add: 新建凭证
@@ -2526,6 +2504,38 @@ importGoogleCloud:
   clusterRegion:
     zones: 可用区级集群
     regions: 区域级集群
+azureCloud:
+  button:
+    create: 新建凭证
+    delete: 删除凭证
+  placeholder:
+    search: 搜索ID/名称/SubscriptionID/tenantID/ClientID/集群
+  tips:
+    nameRegex: 仅支持英文、数字和字符(-)
+    secretRegex: 仅支持英文、数字和字符(-或~)
+  label:
+    create: 新建凭证
+    cluster: 关联集群
+    clusterType: 集群类型
+    managed: 托管集群
+    aksDesc: Kubernetes 集群的 Master 和 Etcd 会由 AKS 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
+importAzureCloud:
+  title: 导入公有云集群 - 微软云
+  label:
+    clusterName: 集群名称
+    token: 云凭证
+    resourceGroups: 资源组
+    region: 所属区域
+    clusterID: 云集群 ID
+    nodemanArea: 管控区域
+    desc: 集群描述
+  button:
+    test: 连通性测试
+    import: 导入
+  clusterRegion:
+    zones: 可用区级集群
+    regions: 区域级集群
+    other: 其他
 googleCA:
   tips:
     zone: 目前只支持单可用区

@@ -5,7 +5,8 @@
     :current-template-space="currentTemplateSpace"
     current-pkg="no_specified"
     :space-id="spaceId"
-    :get-config-list="getConfigList">
+    :get-config-list="getConfigList"
+    :show-delete-action="true">
     <template #tableOperations>
       <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
       <DeleteConfigs
@@ -13,17 +14,6 @@
         :current-template-space="currentTemplateSpace"
         :configs="selectedConfigs"
         @deleted="handleConfigsDeleted" />
-    </template>
-    <template #columnOperations="{ config }">
-      <bk-button class="opt-btn" theme="primary" text @click="handleAddToPkgsClick(config)">
-        {{ t('添加至') }}
-      </bk-button>
-      <bk-button class="opt-btn" theme="primary" text @click="handleDeleteClick(config)">{{ t('删除') }}</bk-button>
-      <DownloadConfig
-        class="opt-btn"
-        :space-id="spaceId"
-        :template-space-id="currentTemplateSpace"
-        :template-id="config.id" />
     </template>
   </CommonConfigTable>
   <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="selectedConfigs" @added="refreshConfigList" />
@@ -34,7 +24,6 @@
 </template>
 <script lang="ts" setup>
   import { ref } from 'vue';
-  import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../../../../store/global';
   import useTemplateStore from '../../../../../../store/template';
@@ -46,12 +35,10 @@
   import AddToDialog from '../operations/add-to-pkgs/add-to-dialog.vue';
   import DeleteConfigs from '../operations/delete-configs/delete-button.vue';
   import DeleteConfigDialog from '../operations/delete-configs/delete-config-dialog.vue';
-  import DownloadConfig from '../operations/download-config/download-config.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
   const { currentTemplateSpace } = storeToRefs(templateStore);
-  const { t } = useI18n();
 
   const configTable = ref();
   const selectedConfigs = ref<ITemplateConfigItem[]>([]);
@@ -66,16 +53,6 @@
   const refreshConfigList = () => {
     configTable.value.refreshList();
     updateRefreshFlag();
-  };
-
-  const handleAddToPkgsClick = (config: ITemplateConfigItem) => {
-    isAddToPkgsDialogShow.value = true;
-    selectedConfigs.value = [config];
-  };
-
-  const handleDeleteClick = async (config: ITemplateConfigItem) => {
-    isDeleteConfigDialogShow.value = true;
-    selectedConfigs.value = [config];
   };
 
   const handleConfigsDeleted = () => {

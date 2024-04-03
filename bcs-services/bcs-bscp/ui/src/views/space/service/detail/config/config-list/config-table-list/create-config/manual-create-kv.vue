@@ -44,6 +44,7 @@
     key: '',
     kv_type: '',
     value: '',
+    memo: '',
   });
   watch(
     () => props.show,
@@ -53,6 +54,7 @@
           key: '',
           kv_type: '',
           value: '',
+          memo: '',
         };
         content.value = '';
         isFormChange.value = false;

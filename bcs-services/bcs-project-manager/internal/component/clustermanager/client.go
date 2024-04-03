@@ -181,7 +181,7 @@ func GetCluster(clusterID string) (*Cluster, error) {
 		logging.Error("get cluster from cluster manager failed, msg: %s", resp.GetMessage())
 		return nil, errors.New(resp.GetMessage())
 	}
-	_ = c.Add(fmt.Sprintf(CacheKeyClusterPrefix, clusterID), resp.GetData(), time.Hour)
+	_ = c.Add(fmt.Sprintf(CacheKeyClusterPrefix, clusterID), resp.GetData(), 5*time.Minute)
 	return resp.GetData(), nil
 }
 

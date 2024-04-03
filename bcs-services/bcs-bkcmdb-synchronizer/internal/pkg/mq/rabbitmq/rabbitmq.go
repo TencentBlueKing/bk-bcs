@@ -140,7 +140,7 @@ func (r *RabbitMQ) BindQueue(chn *amqp.Channel, queueName, exchangeName string, 
 }
 
 // StartConsumer start a consumer
-func (r *RabbitMQ) StartConsumer(chn *amqp.Channel, queueName string, handler handler.Handler) error {
+func (r *RabbitMQ) StartConsumer(chn *amqp.Channel, queueName string, handler handler.Handler, done <-chan bool) error {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "unknown"
@@ -151,7 +151,7 @@ func (r *RabbitMQ) StartConsumer(chn *amqp.Channel, queueName string, handler ha
 		queueName,
 		consumer,
 		false,
-		true,
+		false,
 		false,
 		false,
 		nil,
@@ -161,7 +161,7 @@ func (r *RabbitMQ) StartConsumer(chn *amqp.Channel, queueName string, handler ha
 		return err
 	}
 
-	handler.HandleMsg(chn, messages)
+	handler.HandleMsg(chn, queueName, messages, done)
 
 	return nil
 }

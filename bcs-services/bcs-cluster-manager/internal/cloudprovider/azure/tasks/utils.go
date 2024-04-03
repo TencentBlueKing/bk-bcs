@@ -70,29 +70,3 @@ func setModuleInfo(group *proto.NodeGroup, bkBizIDString string) {
 		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
 	}
 }
-
-func getClusterResourceGroup(cls *proto.Cluster) string {
-	if cls.GetExtraInfo() == nil {
-		return ""
-	}
-
-	rg, ok := cls.GetExtraInfo()[common.ClusterResourceGroup]
-	if ok {
-		return rg
-	}
-
-	return ""
-}
-
-func getNodeResourceGroup(cls *proto.Cluster) string {
-	if cls.GetExtraInfo() == nil {
-		return ""
-	}
-
-	rg, ok := cls.GetExtraInfo()[common.NodeResourceGroup]
-	if ok {
-		return rg
-	}
-
-	return ""
-}

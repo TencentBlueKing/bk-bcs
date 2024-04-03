@@ -152,8 +152,15 @@ const (
 	Config_UpdateKv_FullMethodName                          = "/pbcs.Config/UpdateKv"
 	Config_ListKvs_FullMethodName                           = "/pbcs.Config/ListKvs"
 	Config_DeleteKv_FullMethodName                          = "/pbcs.Config/DeleteKv"
+	Config_BatchDeleteKv_FullMethodName                     = "/pbcs.Config/BatchDeleteKv"
 	Config_BatchUpsertKvs_FullMethodName                    = "/pbcs.Config/BatchUpsertKvs"
 	Config_UnDeleteKv_FullMethodName                        = "/pbcs.Config/UnDeleteKv"
+	Config_ListClients_FullMethodName                       = "/pbcs.Config/ListClients"
+	Config_ListClientEvents_FullMethodName                  = "/pbcs.Config/ListClientEvents"
+	Config_ListClientQuerys_FullMethodName                  = "/pbcs.Config/ListClientQuerys"
+	Config_CreateClientQuery_FullMethodName                 = "/pbcs.Config/CreateClientQuery"
+	Config_UpdateClientQuery_FullMethodName                 = "/pbcs.Config/UpdateClientQuery"
+	Config_DeleteClientQuery_FullMethodName                 = "/pbcs.Config/DeleteClientQuery"
 )
 
 // ConfigClient is the client API for Config service.
@@ -230,12 +237,12 @@ type ConfigClient interface {
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -300,8 +307,16 @@ type ConfigClient interface {
 	UpdateKv(ctx context.Context, in *UpdateKvReq, opts ...grpc.CallOption) (*UpdateKvResp, error)
 	ListKvs(ctx context.Context, in *ListKvsReq, opts ...grpc.CallOption) (*ListKvsResp, error)
 	DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc.CallOption) (*DeleteKvResp, error)
+	BatchDeleteKv(ctx context.Context, in *BatchDeleteKvReq, opts ...grpc.CallOption) (*BatchDeleteKvResp, error)
 	BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*UnDeleteKvResp, error)
+	ListClients(ctx context.Context, in *ListClientsReq, opts ...grpc.CallOption) (*ListClientsResp, error)
+	ListClientEvents(ctx context.Context, in *ListClientEventsReq, opts ...grpc.CallOption) (*ListClientEventsResp, error)
+	// client query related interface
+	ListClientQuerys(ctx context.Context, in *ListClientQuerysReq, opts ...grpc.CallOption) (*ListClientQuerysResp, error)
+	CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error)
+	UpdateClientQuery(ctx context.Context, in *UpdateClientQueryReq, opts ...grpc.CallOption) (*UpdateClientQueryResp, error)
+	DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*DeleteClientQueryResp, error)
 }
 
 type configClient struct {
@@ -1464,6 +1479,15 @@ func (c *configClient) DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...gr
 	return out, nil
 }
 
+func (c *configClient) BatchDeleteKv(ctx context.Context, in *BatchDeleteKvReq, opts ...grpc.CallOption) (*BatchDeleteKvResp, error) {
+	out := new(BatchDeleteKvResp)
+	err := c.cc.Invoke(ctx, Config_BatchDeleteKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*BatchUpsertKvsResp, error) {
 	out := new(BatchUpsertKvsResp)
 	err := c.cc.Invoke(ctx, Config_BatchUpsertKvs_FullMethodName, in, out, opts...)
@@ -1476,6 +1500,60 @@ func (c *configClient) BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq
 func (c *configClient) UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*UnDeleteKvResp, error) {
 	out := new(UnDeleteKvResp)
 	err := c.cc.Invoke(ctx, Config_UnDeleteKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListClients(ctx context.Context, in *ListClientsReq, opts ...grpc.CallOption) (*ListClientsResp, error) {
+	out := new(ListClientsResp)
+	err := c.cc.Invoke(ctx, Config_ListClients_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListClientEvents(ctx context.Context, in *ListClientEventsReq, opts ...grpc.CallOption) (*ListClientEventsResp, error) {
+	out := new(ListClientEventsResp)
+	err := c.cc.Invoke(ctx, Config_ListClientEvents_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListClientQuerys(ctx context.Context, in *ListClientQuerysReq, opts ...grpc.CallOption) (*ListClientQuerysResp, error) {
+	out := new(ListClientQuerysResp)
+	err := c.cc.Invoke(ctx, Config_ListClientQuerys_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error) {
+	out := new(CreateClientQueryResp)
+	err := c.cc.Invoke(ctx, Config_CreateClientQuery_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateClientQuery(ctx context.Context, in *UpdateClientQueryReq, opts ...grpc.CallOption) (*UpdateClientQueryResp, error) {
+	out := new(UpdateClientQueryResp)
+	err := c.cc.Invoke(ctx, Config_UpdateClientQuery_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*DeleteClientQueryResp, error) {
+	out := new(DeleteClientQueryResp)
+	err := c.cc.Invoke(ctx, Config_DeleteClientQuery_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1556,12 +1634,12 @@ type ConfigServer interface {
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1626,8 +1704,16 @@ type ConfigServer interface {
 	UpdateKv(context.Context, *UpdateKvReq) (*UpdateKvResp, error)
 	ListKvs(context.Context, *ListKvsReq) (*ListKvsResp, error)
 	DeleteKv(context.Context, *DeleteKvReq) (*DeleteKvResp, error)
+	BatchDeleteKv(context.Context, *BatchDeleteKvReq) (*BatchDeleteKvResp, error)
 	BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(context.Context, *UnDeleteKvReq) (*UnDeleteKvResp, error)
+	ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error)
+	ListClientEvents(context.Context, *ListClientEventsReq) (*ListClientEventsResp, error)
+	// client query related interface
+	ListClientQuerys(context.Context, *ListClientQuerysReq) (*ListClientQuerysResp, error)
+	CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error)
+	UpdateClientQuery(context.Context, *UpdateClientQueryReq) (*UpdateClientQueryResp, error)
+	DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*DeleteClientQueryResp, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -2018,11 +2104,32 @@ func (UnimplementedConfigServer) ListKvs(context.Context, *ListKvsReq) (*ListKvs
 func (UnimplementedConfigServer) DeleteKv(context.Context, *DeleteKvReq) (*DeleteKvResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteKv not implemented")
 }
+func (UnimplementedConfigServer) BatchDeleteKv(context.Context, *BatchDeleteKvReq) (*BatchDeleteKvResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteKv not implemented")
+}
 func (UnimplementedConfigServer) BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertKvs not implemented")
 }
 func (UnimplementedConfigServer) UnDeleteKv(context.Context, *UnDeleteKvReq) (*UnDeleteKvResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteKv not implemented")
+}
+func (UnimplementedConfigServer) ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClients not implemented")
+}
+func (UnimplementedConfigServer) ListClientEvents(context.Context, *ListClientEventsReq) (*ListClientEventsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClientEvents not implemented")
+}
+func (UnimplementedConfigServer) ListClientQuerys(context.Context, *ListClientQuerysReq) (*ListClientQuerysResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClientQuerys not implemented")
+}
+func (UnimplementedConfigServer) CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateClientQuery not implemented")
+}
+func (UnimplementedConfigServer) UpdateClientQuery(context.Context, *UpdateClientQueryReq) (*UpdateClientQueryResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateClientQuery not implemented")
+}
+func (UnimplementedConfigServer) DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*DeleteClientQueryResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteClientQuery not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -4340,6 +4447,24 @@ func _Config_DeleteKv_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_BatchDeleteKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchDeleteKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchDeleteKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchDeleteKv(ctx, req.(*BatchDeleteKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_BatchUpsertKvs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BatchUpsertKvsReq)
 	if err := dec(in); err != nil {
@@ -4372,6 +4497,114 @@ func _Config_UnDeleteKv_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).UnDeleteKv(ctx, req.(*UnDeleteKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListClients_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClientsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListClients(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListClients_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListClients(ctx, req.(*ListClientsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListClientEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClientEventsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListClientEvents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListClientEvents_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListClientEvents(ctx, req.(*ListClientEventsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListClientQuerys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClientQuerysReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListClientQuerys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListClientQuerys_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListClientQuerys(ctx, req.(*ListClientQuerysReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_CreateClientQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateClientQueryReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateClientQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CreateClientQuery_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateClientQuery(ctx, req.(*CreateClientQueryReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateClientQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateClientQueryReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateClientQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateClientQuery_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateClientQuery(ctx, req.(*UpdateClientQueryReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteClientQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteClientQueryReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteClientQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_DeleteClientQuery_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteClientQuery(ctx, req.(*DeleteClientQueryReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4896,12 +5129,40 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_DeleteKv_Handler,
 		},
 		{
+			MethodName: "BatchDeleteKv",
+			Handler:    _Config_BatchDeleteKv_Handler,
+		},
+		{
 			MethodName: "BatchUpsertKvs",
 			Handler:    _Config_BatchUpsertKvs_Handler,
 		},
 		{
 			MethodName: "UnDeleteKv",
 			Handler:    _Config_UnDeleteKv_Handler,
+		},
+		{
+			MethodName: "ListClients",
+			Handler:    _Config_ListClients_Handler,
+		},
+		{
+			MethodName: "ListClientEvents",
+			Handler:    _Config_ListClientEvents_Handler,
+		},
+		{
+			MethodName: "ListClientQuerys",
+			Handler:    _Config_ListClientQuerys_Handler,
+		},
+		{
+			MethodName: "CreateClientQuery",
+			Handler:    _Config_CreateClientQuery_Handler,
+		},
+		{
+			MethodName: "UpdateClientQuery",
+			Handler:    _Config_UpdateClientQuery_Handler,
+		},
+		{
+			MethodName: "DeleteClientQuery",
+			Handler:    _Config_DeleteClientQuery_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

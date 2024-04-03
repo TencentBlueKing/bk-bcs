@@ -50,10 +50,11 @@ type GitOpsOptions struct {
 	// JWTClient for authentication
 	JWTDecoder *jwt.JWTClient
 	// IAMClient is basic client
-	IAMClient    iam.PermClient
-	SecretOption *SecretOption
-	TraceOption  *TraceOption
-	DB           dao.Interface
+	IAMClient     iam.PermClient
+	SecretOption  *SecretOption
+	TraceOption   *TraceOption
+	MonitorOption *MonitorOption
+	DB            dao.Interface
 
 	BCSStorageAPIUrl   string
 	BCSStorageAPIToken string

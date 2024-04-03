@@ -1,5 +1,10 @@
 import http from '../request';
-import { IConfigEditParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config';
+import {
+  IConfigEditParams,
+  IConfigVersionQueryParams,
+  ITemplateBoundByAppData,
+  IConfigVersion,
+} from '../../types/config';
 import { IVariableEditParams } from '../../types/variable';
 import { ICommonQuery } from '../../types/index';
 
@@ -197,7 +202,15 @@ export const deleteVersion = (bizId: string, appId: number, releaseId: number) =
  * @returns
  */
 export const getConfigVersionList = (bizId: string, appId: number, params: IConfigVersionQueryParams) =>
-  http.get(`config/biz/${bizId}/apps/${appId}/releases`, { params });
+  http.get(`config/biz/${bizId}/apps/${appId}/releases`, { params }).then((res) => {
+    res.data.details.forEach((item: IConfigVersion) => {
+      const defaultGroup = item.status.released_groups.find((group) => group.id === 0);
+      if (defaultGroup) {
+        defaultGroup.name = '全部实例';
+      }
+    });
+    return res;
+  });
 
 /**
  * 发布版本
@@ -427,8 +440,8 @@ export const batchUpsertKv = (bizId: string, appId: number, kvs: any) =>
  * @param value 配置值
  * @returns
  */
-export const updateKv = (bizId: string, appId: number, key: string, value: string) =>
-  http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value });
+export const updateKv = (bizId: string, appId: number, key: string, value: string, memo: string) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value, memo });
 
 /**
  * 删除kv

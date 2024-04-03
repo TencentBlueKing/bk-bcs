@@ -84,7 +84,7 @@ func (plugin *AppPlugin) applicationHistoryState(r *http.Request) (*http.Request
 			fmt.Errorf("application '%s/%s' with history '%s' not found", appName, applicationUID, historyIDStr))
 	}
 	resources := make([]*argoappv1.ResourceDiff, 0)
-	if err = json.Unmarshal([]byte(hm.ManagedResources), &resources); err != nil {
+	if err = json.Unmarshal(hm.GetManagedResources(), &resources); err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError,
 			errors.Wrapf(err, "unmarshal application history managedResources failed"))
 	}

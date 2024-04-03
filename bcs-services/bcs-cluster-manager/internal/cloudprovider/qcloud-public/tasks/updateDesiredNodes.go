@@ -33,7 +33,7 @@ import (
 )
 
 // ApplyInstanceMachinesTask update desired nodes task
-func ApplyInstanceMachinesTask(taskID string, stepName string) error {
+func ApplyInstanceMachinesTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step

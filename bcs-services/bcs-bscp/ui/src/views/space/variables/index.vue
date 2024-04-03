@@ -29,7 +29,7 @@
         <bk-table-column :label="t('变量名称')" width="300">
           <template #default="{ row }">
             <div v-if="row.spec" class="var-name-wrapper">
-              <bk-overflow-title class="name-text" type="tips" @click="handleEditVar(row)">
+              <bk-overflow-title class="name-text" type="tips" :key="row.id" @click="handleEditVar(row)">
                 {{ row.spec.name }}
               </bk-overflow-title>
               <Copy class="copy-icon" @click="handleCopyText(row.spec.name)" />
@@ -159,7 +159,7 @@
     copyToClipBoard(`{{ .${name} }}`);
     BkMessage({
       theme: 'success',
-      message: t('变量名称已复制'),
+      message: `${t('引用方式')} {{ .${name} }} ${t('已成功复制到剪贴板')}`,
     });
   };
 
@@ -188,7 +188,7 @@
   };
 
   const refreshList = (current = 1) => {
-    searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+    isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = current;
     getVariables();
   };

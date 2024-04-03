@@ -124,6 +124,7 @@ export interface IGroupToPublish {
   release_id: number;
   release_name: string;
   published?: boolean;
+  desc?: string;
   rules: IGroupRuleItem[];
 }
 
@@ -157,6 +158,6 @@ export interface IGroupItemInService {
 export interface IGroupPreviewItem {
   id: number;
   name: string;
-  type: String;
+  type: string;
   children: IGroupToPublish[];
 }

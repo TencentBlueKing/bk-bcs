@@ -13,7 +13,6 @@
 package source
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,7 +22,6 @@ import (
 )
 
 func TestIsBKMonitorEnabled(t *testing.T) {
-	ok, err := bkmonitor_client.IsBKMonitorEnabled(context.Background(), bcstesting.GetTestClusterId())
-	assert.NoError(t, err)
+	ok := bkmonitor_client.IsBKMonitorEnabled(bcstesting.GetTestClusterId())
 	assert.Equal(t, ok, false)
 }

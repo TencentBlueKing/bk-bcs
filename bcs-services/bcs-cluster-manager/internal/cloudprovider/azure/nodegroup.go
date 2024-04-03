@@ -429,7 +429,8 @@ func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *p
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	pool, err := client.GetPoolAndReturn(ctx, "", cluster.SystemID, group.CloudNodeGroupID)
+	pool, err := client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(cluster),
+		cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {
 		return errors.Wrapf(err, "UpdateNodeGroup: call GetAgentPool api failed")
 	}

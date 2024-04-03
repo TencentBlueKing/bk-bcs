@@ -82,14 +82,14 @@
   const currentPermission = computed(() => {
     if (!props.diff.base.permission) return;
     return `${t('权限')}:${props.diff.current.permission?.privilege}
-  ${t('用户')}:${props.diff.current.permission?.user}
-  ${t('用户组')}:${props.diff.current.permission?.user_group}`;
+${t('用户')}:${props.diff.current.permission?.user}
+${t('用户组')}:${props.diff.current.permission?.user_group}`;
   });
   const basePermission = computed(() => {
     if (!props.diff.base.permission) return;
     return `${t('权限')}:${props.diff.base.permission?.privilege}
-  ${t('用户')}:${props.diff.base.permission?.user}
-  ${t('用户组')}:${props.diff.base.permission?.user_group}`;
+${t('用户')}:${props.diff.base.permission?.user}
+${t('用户组')}:${props.diff.base.permission?.user_group}`;
   });
 
   // 打开全屏
@@ -145,10 +145,20 @@
     .right-panel {
       height: 100%;
       width: 50%;
+      background-color: #313238;
+      :deep(.bk-select) {
+        .bk-input {
+          border-color: #63656e;
+        }
+        .bk-input--text {
+          color: #b6b6b6;
+          background: #313238;
+        }
+      }
     }
     .right-panel {
       position: relative;
-      border-left: 1px solid #dcdee5;
+      border-left: 1px solid #1d1d1d;
       .fullscreen-btn {
         position: absolute;
         top: 16px;

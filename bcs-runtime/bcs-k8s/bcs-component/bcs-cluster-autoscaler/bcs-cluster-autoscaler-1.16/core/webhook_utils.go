@@ -420,13 +420,13 @@ func checkCandidates(node *corev1.Node, candidates ScaleDownCandidates) (string,
 func simpleGetPodsToMove(nodeInfo *schedulernodeinfo.NodeInfo) []*corev1.Pod {
 	pods := []*corev1.Pod{}
 	for _, pod := range nodeInfo.Pods() {
-		if _, found := pod.ObjectMeta.Annotations[types.ConfigMirrorAnnotationKey]; found {
+		if pod.Annotations != nil && pod.Annotations[types.ConfigMirrorAnnotationKey] != "" {
 			continue
 		}
 		if pod.DeletionTimestamp != nil {
 			continue
 		}
-		if controllerRef := metav1.GetControllerOf(pod); controllerRef.Kind == "DaemonSet" {
+		if controllerRef := metav1.GetControllerOf(pod); controllerRef != nil && controllerRef.Kind == "DaemonSet" {
 			continue
 		}
 		pods = append(pods, pod)

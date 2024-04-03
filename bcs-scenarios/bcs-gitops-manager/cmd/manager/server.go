@@ -421,6 +421,10 @@ func (s *Server) initGitOpsProxy(router *mux.Router) error {
 			Endpoint: s.option.TraceConfig.Endpoint,
 			Token:    s.option.TraceConfig.Token,
 		},
+		MonitorOption: &proxy.MonitorOption{
+			Address: s.option.MonitorConfig.Address,
+			Port:    s.option.MonitorConfig.Port,
+		},
 		BCSStorageAPIUrl:   s.option.APIGatewayForCluster,
 		BCSStorageAPIToken: s.option.APIGatewayToken,
 	}

@@ -11,9 +11,9 @@
         class="config-form-wrapper"
         :config="configForm as IConfigKvItem"
         :content="content"
-        :editable="true"
         :bk-biz-id="props.bkBizId"
         :id="props.appId"
+        :edit-mode="true"
         @change="handleChange" />
     </div>
     <section class="action-btns">
@@ -78,7 +78,13 @@
     }
     try {
       pending.value = true;
-      await updateKv(props.bkBizId, props.appId, configForm.value!.key, configForm.value!.value);
+      await updateKv(
+        props.bkBizId,
+        props.appId,
+        configForm.value!.key,
+        configForm.value!.value,
+        configForm.value!.memo,
+      );
       emits('confirm');
       close();
       Message({

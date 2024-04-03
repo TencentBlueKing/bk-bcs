@@ -60,7 +60,6 @@ func newtask() *Task {
 	// update desired nodes task
 	task.works[applyInstanceMachinesStep.StepMethod] = tasks.ApplyInstanceMachinesTask
 	task.works[checkClusterNodesStatusStep.StepMethod] = tasks.CheckClusterNodesStatusTask
-	task.works[removeClusterNodesTaintStep.StepMethod] = tasks.RemoveClusterNodesTaintTask
 
 	// clean node in nodeGroup task
 	task.works[cleanNodeGroupNodesStep.StepMethod] = tasks.CleanNodeGroupNodesTask
@@ -597,8 +596,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil,
 		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
 
-	// common.BuildUnCordonNodesTaskStep(task, group.ClusterID, nil)
-	updateDesired.BuildRemoveClusterNodesTaintStep(task)
+	// step5: remove inner nodes taints
+	common.BuildRemoveClusterNodesInnerTaintTaskStep(task, group)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

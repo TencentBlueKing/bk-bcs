@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"math"
 	"sort"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -25,6 +26,7 @@ import (
 	pbclient "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // BatchUpsertClientMetrics 批量操作client metrics
@@ -218,4 +220,55 @@ func (s *Service) updatePrimaryKey(clientData []*pbclient.Client, createID map[s
 			item.Id = v
 		}
 	}
+}
+
+// ListClients list clients
+func (s *Service) ListClients(ctx context.Context, req *pbds.ListClientsReq) (
+	*pbds.ListClientsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	items, count, err := s.dao.Client().List(grpcKit, req.BizId, req.AppId,
+		req.GetLastHeartbeatTime(),
+		req.GetSearch(),
+		req.GetOrder(),
+		&types.BasePage{
+			Start: req.Start,
+			Limit: uint(req.Limit),
+			All:   req.All,
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取发布版本信息
+	releaseIDs := []uint32{}
+	for _, v := range items {
+		releaseIDs = append(releaseIDs, v.Spec.CurrentReleaseID)
+	}
+
+	releases, err := s.dao.Release().ListAllByIDs(grpcKit, releaseIDs, req.BizId)
+	if err != nil {
+		return nil, err
+	}
+
+	releaseNames := map[uint32]string{}
+	for _, v := range releases {
+		releaseNames[v.ID] = v.Spec.Name
+	}
+	data := pbclient.PbClients(items)
+	for _, v := range data {
+		v.Spec.CurrentReleaseName = releaseNames[v.Spec.CurrentReleaseId]
+		v.Spec.Resource.CpuUsage = math.Round(v.Spec.Resource.CpuUsage*1000) / 1000
+		v.Spec.Resource.CpuMaxUsage = math.Round(v.Spec.Resource.CpuMaxUsage*1000) / 1000
+		v.Spec.Resource.MemoryUsage /= (1024 * 1024)
+		v.Spec.Resource.MemoryMaxUsage /= (1024 * 1024)
+	}
+
+	resp := &pbds.ListClientsResp{
+		Details: data,
+		Count:   uint32(count),
+	}
+
+	return resp, nil
+
 }

@@ -75,28 +75,13 @@ func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*sto
 		return nil, err
 	}
 
-	// NOCC:ineffassign/assign(误报)
-	var grayClusterMap map[string]struct{}
-	if config.G.BKMonitor.EnableGrey {
-		grayClusterMap, err = bkmonitor_client.QueryGrayClusterMap(ctx, config.G.BKMonitor.MetadataURL)
-		if err != nil {
-			klog.Errorf("query bk_monitor cluster list error, %s", err)
+	lsets = make([]labelpb.ZLabelSet, 0)
+	for clusterID := range clusterMap {
+		if !bkmonitor_client.IsBKMonitorEnabled(clusterID) {
+			continue
 		}
-		lsets = make([]labelpb.ZLabelSet, 0, len(grayClusterMap))
-		for clusterID := range grayClusterMap {
-			// 不存在的，或者已经删除的集群，需要过滤
-			if _, ok := clusterMap[clusterID]; !ok {
-				continue
-			}
-			labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR", "cluster_id": clusterID})
-			lsets = append(lsets, labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)})
-		}
-	} else {
-		lsets = make([]labelpb.ZLabelSet, 0, len(clusterMap))
-		for clusterID := range clusterMap {
-			labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR", "cluster_id": clusterID})
-			lsets = append(lsets, labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)})
-		}
+		labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR", "cluster_id": clusterID})
+		lsets = append(lsets, labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)})
 	}
 
 	for _, m := range AvailableNodeMetrics {

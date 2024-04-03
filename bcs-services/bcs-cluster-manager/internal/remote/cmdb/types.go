@@ -49,7 +49,8 @@ const (
 
 const (
 	// host field info
-	fieldCloudID     = "bk_cloud_id"
+	fieldCloudID = "bk_cloud_id"
+	// FieldHostIP field host ip
 	FieldHostIP      = "bk_host_innerip"
 	fieldHostIPv6    = "bk_host_innerip_v6"
 	fieldHostOutIP   = "bk_host_outerip"
@@ -58,7 +59,8 @@ const (
 	fieldHostName    = "bk_host_name" // 主机名称
 	fieldOsType      = "bk_os_type"   // 操作系统类型
 	fieldOsName      = "bk_os_name"   // 操作系统名称
-	FieldAssetId     = "bk_asset_id"  // 固资号ID
+	// FieldAssetId 固资号ID
+	FieldAssetId = "bk_asset_id"
 
 	fieldDeviceType  = "bk_svr_device_cls_name"
 	fieldIDCCityName = "idc_city_name"

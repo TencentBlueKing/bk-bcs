@@ -41,16 +41,11 @@ type Handler interface {
 
 // HandlerFactory 自动切换Prometheus/蓝鲸监控
 func HandlerFactory(ctx context.Context, clusterID string) (Handler, error) {
-	ok, err := bkmonitor_client.IsBKMonitorEnabled(ctx, clusterID)
-	if err != nil {
-		return nil, err
-	}
-
 	cls, err := bcs.GetCluster(clusterID)
 	if err != nil {
 		return nil, err
 	}
-	if ok && !cls.IsVirtual() {
+	if bkmonitor_client.IsBKMonitorEnabled(clusterID) && !cls.IsVirtual() {
 		return NewBKMonitorHandler(cls.BKBizID, clusterID), nil
 	}
 	return NewBCSMonitorHandler(), nil

@@ -89,6 +89,8 @@ const (
 	ResourcePoolLabelAction = "resourcePoolLabel"
 	// CheckClusterCleanNodesAction 检测集群销毁节点状态
 	CheckClusterCleanNodesAction = "checkClusterCleanNodes"
+	// RemoveClusterNodesInnerTaintAction remove nodes inner taints
+	RemoveClusterNodesInnerTaintAction = "removeClusterNodesInnerTaint"
 	// LadderResourcePoolLabelAction 标签设置
 	LadderResourcePoolLabelAction = "yunti-ResourcePoolLabelTask"
 )
@@ -1251,4 +1253,32 @@ func UpdateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *proto.NodeGro
 	}
 
 	return nil
+}
+
+// GetClusterResourceGroup cluster resource group
+func GetClusterResourceGroup(cls *proto.Cluster) string {
+	if cls.GetExtraInfo() == nil {
+		return ""
+	}
+
+	rg, ok := cls.GetExtraInfo()[common.ClusterResourceGroup]
+	if ok {
+		return rg
+	}
+
+	return ""
+}
+
+// GetNodeResourceGroup other resource group
+func GetNodeResourceGroup(cls *proto.Cluster) string {
+	if cls.GetExtraInfo() == nil {
+		return ""
+	}
+
+	rg, ok := cls.GetExtraInfo()[common.NodeResourceGroup]
+	if ok {
+		return rg
+	}
+
+	return ""
 }

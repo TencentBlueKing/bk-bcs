@@ -434,22 +434,9 @@ type SidecarHandshakePayload struct {
 type SidecarRuntimeOption struct {
 	// BounceIntervalHour sidecar connect bounce interval, if reach this bounce interval, sidecar will
 	// reconnect stream server instance.
-	BounceIntervalHour uint                          `json:"bounceInterval"`
-	RepositoryTLS      *TLSBytes                     `json:"repositoryTLS"`
-	Repository         *RepositoryV1                 `json:"repository"`
-	AppReloads         map[ /*appID*/ uint32]*Reload `json:"reload"`
-}
-
-// Reload defines the sidecar's notify app to reload config file options delivered from the
-// upstream server with handshake.
-type Reload struct {
-	ReloadType     table.AppReloadType `json:"reload_type"`
-	FileReloadSpec *FileReloadSpec     `json:"file_reload_spec"`
-}
-
-// FileReloadSpec defines sidecar file reload need info.
-type FileReloadSpec struct {
-	ReloadFilePath string `json:"reload_file_path"`
+	BounceIntervalHour uint          `json:"bounceInterval"`
+	RepositoryTLS      *TLSBytes     `json:"repositoryTLS"`
+	Repository         *RepositoryV1 `json:"repository"`
 }
 
 // ServiceInfo defines the sidecar's need info from the upstream server with handshake.
@@ -569,9 +556,13 @@ func (bd BasicData) Validate() error {
 // ResourceUsage Resource utilization rate
 type ResourceUsage struct {
 	CpuMaxUsage    float64 `json:"cpuMaxUsage"`
+	CpuMinUsage    float64 `json:"cpuMinUsage"`
+	CpuAvgUsage    float64 `json:"cpuAvgUsage"`
 	CpuUsage       float64 `json:"cpuUsage"`
 	MemoryUsage    uint64  `json:"memoryUsage"`
 	MemoryMaxUsage uint64  `json:"memoryMaxUsage"`
+	MemoryMinUsage uint64  `json:"memoryMinUsage"`
+	MemoryAvgUsage uint64  `json:"memoryAvgUsage"`
 }
 
 // VersionChangePayload defines sdk version change to send payload to feed server.

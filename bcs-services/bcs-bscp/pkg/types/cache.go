@@ -28,10 +28,6 @@ import (
 type AppCacheMeta struct {
 	Name       string           `json:"name"`
 	ConfigType table.ConfigType `json:"cft"`
-	// the current effected strategy set's type under this app.
-	// only one strategy set is effected at one time.
-	Mode   table.AppMode `json:"mod"`
-	Reload *table.Reload `json:"reload"`
 }
 
 // ReleasedGroupCache is the released group info which will be stored in cache.
@@ -75,6 +71,7 @@ type ReleaseKvCache struct {
 	ID          uint32              `json:"id"`
 	ReleaseID   uint32              `json:"reid"`
 	Key         string              `json:"key"`
+	Memo        string              `json:"memo"`
 	KvType      string              `json:"kv_type"`
 	Revision    *table.Revision     `json:"revision"`
 	Attachment  *table.KvAttachment `json:"am"`
@@ -233,6 +230,7 @@ func ReleaseKvCaches(rs []*table.ReleasedKv) []*ReleaseKvCache {
 			ID:          one.ID,
 			ReleaseID:   one.ReleaseID,
 			Key:         one.Spec.Key,
+			Memo:        one.Spec.Memo,
 			KvType:      string(one.Spec.KvType),
 			Revision:    one.Revision,
 			Attachment:  one.Attachment,

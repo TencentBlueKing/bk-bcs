@@ -6,7 +6,7 @@
         v-model="localApp.id"
         ref="selectorRef"
         class="service-selector"
-        :popover-options="{ theme: 'light bk-select-popover service-selector-popover' }"
+        :popover-options="{ theme: 'light bk-select-popover' }"
         :popover-min-width="360"
         :filterable="true"
         :input-search="false"
@@ -138,11 +138,14 @@
 <style scoped lang="scss">
   .head {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     font-size: 20px;
     line-height: 28px;
+    height: 32px;
     .head-left {
       display: flex;
+      align-items: center;
       .title {
         position: relative;
         color: #313238;
@@ -184,6 +187,7 @@
     }
     .head-right {
       display: flex;
+      align-items: center;
       font-size: 12px;
       .selector-tips {
         width: 88px;
@@ -199,6 +203,9 @@
       .heartbeat-selector {
         width: 112px;
         margin-right: 8px;
+        :deep(.bk-input--default) {
+          border-radius: 0 2px 2px 0;
+        }
       }
       .search-icon {
         margin-right: 8px;

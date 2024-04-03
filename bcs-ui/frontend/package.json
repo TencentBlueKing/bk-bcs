@@ -5,14 +5,14 @@
   "author": "bkfe",
   "scripts": {
     "dev": "npm run i18n && bk-cli-service-webpack dev",
-    "build": "node ./scripts/generate-version.js && bk-cli-service-webpack build",
+    "build": "node ./scripts/generate-version.js && bk-cli-service-webpack build && node ./scripts/post-build.js",
     "i18n": "node ./scripts/vue-i18n-extract.js",
     "lint": "eslint --fix --ext .js,.vue,.ts,.tsx src"
   },
   "dependencies": {
     "@blueking/bkui-form": "0.0.39",
     "@blueking/ip-selector": "0.2.0-beta",
-    "@blueking/notice-component-vue2": "^2.0.3",
+    "@blueking/notice-component-vue2": "^2.0.4",
     "axios": "^1.6.2",
     "base-64": "^0.1.0",
     "bk-magic-vue": "2.5.8-beta.11",

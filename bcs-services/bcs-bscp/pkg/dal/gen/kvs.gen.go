@@ -30,6 +30,7 @@ func newKv(db *gorm.DB, opts ...gen.DOOption) kv {
 	_kv.ID = field.NewUint32(tableName, "id")
 	_kv.KvState = field.NewString(tableName, "kv_state")
 	_kv.Key = field.NewString(tableName, "key")
+	_kv.Memo = field.NewString(tableName, "memo")
 	_kv.KvType = field.NewString(tableName, "kv_type")
 	_kv.Version = field.NewUint32(tableName, "version")
 	_kv.BizID = field.NewUint32(tableName, "biz_id")
@@ -54,6 +55,7 @@ type kv struct {
 	ID        field.Uint32
 	KvState   field.String
 	Key       field.String
+	Memo      field.String
 	KvType    field.String
 	Version   field.Uint32
 	BizID     field.Uint32
@@ -84,6 +86,7 @@ func (k *kv) updateTableName(table string) *kv {
 	k.ID = field.NewUint32(table, "id")
 	k.KvState = field.NewString(table, "kv_state")
 	k.Key = field.NewString(table, "key")
+	k.Memo = field.NewString(table, "memo")
 	k.KvType = field.NewString(table, "kv_type")
 	k.Version = field.NewUint32(table, "version")
 	k.BizID = field.NewUint32(table, "biz_id")
@@ -119,10 +122,11 @@ func (k *kv) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (k *kv) fillFieldMap() {
-	k.fieldMap = make(map[string]field.Expr, 14)
+	k.fieldMap = make(map[string]field.Expr, 15)
 	k.fieldMap["id"] = k.ID
 	k.fieldMap["kv_state"] = k.KvState
 	k.fieldMap["key"] = k.Key
+	k.fieldMap["memo"] = k.Memo
 	k.fieldMap["kv_type"] = k.KvType
 	k.fieldMap["version"] = k.Version
 	k.fieldMap["biz_id"] = k.BizID

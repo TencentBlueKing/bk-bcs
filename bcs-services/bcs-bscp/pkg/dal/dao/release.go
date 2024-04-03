@@ -128,9 +128,9 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (*type
 	if opts.SearchKey == "" {
 		q = q.Where(m.BizID.Eq(opts.BizID), m.AppID.Eq(opts.AppID), m.Deprecated.Is(opts.Deprecated))
 	} else {
-		searchKey := "%" + opts.SearchKey + "%"
+		searchKey := "(?i)" + opts.SearchKey
 		q = q.Where(m.BizID.Eq(opts.BizID), m.AppID.Eq(opts.AppID), m.Deprecated.Is(opts.Deprecated)).Where(
-			q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Creator.Like(searchKey)))
+			q.Where(m.Name.Regexp(searchKey)).Or(m.Memo.Regexp(searchKey)).Or(m.Creator.Regexp(searchKey)))
 	}
 	q = q.Order(m.ID.Desc())
 

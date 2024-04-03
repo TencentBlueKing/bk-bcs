@@ -7,7 +7,7 @@ import { IClinetCommonQuery, ICreateClientSearchRecordQuery } from '../../types/
  * @returns
  */
 export const getClientQueryList = (bizId: string, appId: number, query: IClinetCommonQuery) =>
-  http.post(`/config/biz/${bizId}/apps/${appId}/client_metrics`, query);
+  http.post(`/config/biz/${bizId}/apps/${appId}/clients`, query);
 
 /**
  * 获取客户端配置拉取记录
@@ -17,7 +17,7 @@ export const getClientQueryList = (bizId: string, appId: number, query: IClinetC
  * @returns
  */
 export const getClientPullRecord = (bizId: string, appId: number, clientId: number, query: IClinetCommonQuery) =>
-  http.post(`/config/biz/${bizId}/apps/${appId}/client_metrics/${clientId}/events`, query);
+  http.post(`/config/biz/${bizId}/apps/${appId}/client_events/${clientId}`, query);
 
 /**
  * 获取客户端搜索记录

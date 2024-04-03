@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package tasks xxx
 package tasks
 
 import (
@@ -61,9 +62,9 @@ func CreateECKClusterTask(taskID string, stepName string) error {
 		CloudID:   cloudID,
 	})
 	if err != nil {
-		blog.Errorf("CreateECKClusterTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+		blog.Errorf("CreateECKClusterTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s step %s failed %s",
+			taskID, clusterID, taskID, stepName, err)
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -72,9 +73,9 @@ func CreateECKClusterTask(taskID string, stepName string) error {
 	for _, ngID := range strings.Split(nodeGroupIDs, ",") {
 		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if errGet != nil {
-			blog.Errorf("CreateECKClusterTask[%s]: GetNodeGroupByGroupID for cluster %s in task %s "+
-				"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-			retErr := fmt.Errorf("get nodegroup information failed, %s", err.Error())
+			blog.Errorf("CreateECKClusterTask[%s]: GetNodeGroupByGroupID for cluster %s in task %s step %s failed %s",
+				taskID, clusterID, taskID, stepName, err)
+			retErr := fmt.Errorf("get nodegroup information failed, %s", err)
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
 		}
@@ -412,9 +413,9 @@ func CheckECKClusterStatusTask(taskID string, stepName string) error {
 		CloudID:   cloudID,
 	})
 	if err != nil {
-		blog.Errorf("CheckECKClusterStatusTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+		blog.Errorf("CheckECKClusterStatusTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s step %s "+
+			"failed %s", taskID, clusterID, taskID, stepName, err)
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -523,8 +524,8 @@ func CheckECKNodesGroupStatusTask(taskID string, stepName string) error {
 	})
 	if err != nil {
 		blog.Errorf("CheckECKNodesGroupStatusTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+			"step %s failed %s", taskID, clusterID, taskID, stepName, err)
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -676,8 +677,8 @@ func UpdateECKNodesGroupToDBTask(taskID string, stepName string) error {
 	})
 	if err != nil {
 		blog.Errorf("UpdateECKNodesGroupToDBTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+			"step %s failed %s", taskID, clusterID, taskID, stepName, err)
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -819,7 +820,7 @@ func CheckECKClusterNodesStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
 	systemID string, nodeGroupIDs []string) ([]string, []string, error) {
 	var (
 		totalNodesNum   uint32

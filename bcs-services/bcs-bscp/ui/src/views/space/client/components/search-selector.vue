@@ -164,7 +164,8 @@
     () => searchConditionList.value,
     () => {
       isCommonlyUsed.value = false;
-      if (searchConditionList.value.length === 0) return;
+      // 搜索框和查询条件都为空时不需要转换查询参数
+      if (searchConditionList.value.length === 0 && Object.keys(searchQuery.value.search!).length === 0) return;
       handleSearchConditionChangeQuery();
     },
     { deep: true },
@@ -403,6 +404,9 @@
 </script>
 
 <style scoped lang="scss">
+  .section {
+    margin-top: 32px;
+  }
   .search-wrap {
     position: relative;
     display: flex;

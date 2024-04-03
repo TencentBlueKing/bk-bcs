@@ -76,13 +76,13 @@
       </bk-select>
       <bk-popover ext-cls="login-out-popover" trigger="hover" placement="bottom-center" theme="light" :arrow="false">
         <div class="international">
-          <span :class="['bk-bscp-icon', locale === 'zh-CN' ? 'icon-lang-cn' : 'icon-lang-en']"></span>
+          <span :class="['bk-bscp-icon', locale === 'zh-cn' ? 'icon-lang-cn' : 'icon-lang-en']"></span>
         </div>
         <template #content>
-          <div class="international-item" @click="switchLanguage('en-US')">
+          <div class="international-item" @click="switchLanguage('en')">
             <span class="bk-bscp-icon icon-lang-en"></span> English
           </div>
-          <div class="international-item" @click="switchLanguage('zh-CN')">
+          <div class="international-item" @click="switchLanguage('zh-cn')">
             <span class="bk-bscp-icon icon-lang-cn"></span> 中文
           </div>
         </template>
@@ -128,11 +128,12 @@
   import useUserStore from '../store/user';
   import useTemplateStore from '../store/template';
   import { ISpaceDetail } from '../../types/index';
-  import { loginOut, getSpaceFeatureFlag } from '../api/index';
+  import { loginOut } from '../api/index';
   import type { IVersionLogItem } from '../../types/version-log';
   import VersionLog from './version-log.vue';
   import features from './features-dialog.vue';
   import MarkdownIt from 'markdown-it';
+  import { setCookie } from '../utils';
 
   const route = useRoute();
   const router = useRouter();
@@ -255,25 +256,22 @@
   const handleSelectSpace = async (id: string) => {
     const space = spaceList.value.find((item: ISpaceDetail) => item.space_id === id);
     if (space) {
-      const res = await getSpaceFeatureFlag(id);
-      if (res.BIZ_VIEW) {
-        if (!space.permission) {
-          permissionQuery.value = {
-            resources: [
-              {
-                biz_id: id,
-                basic: {
-                  type: 'biz',
-                  action: 'find_business_resource',
-                  resource_id: id,
-                },
+      if (!space.permission) {
+        permissionQuery.value = {
+          resources: [
+            {
+              biz_id: id,
+              basic: {
+                type: 'biz',
+                action: 'find_business_resource',
+                resource_id: id,
               },
-            ],
-          };
+            },
+          ],
+        };
 
-          showApplyPermDialog.value = true;
-          return;
-        }
+        showApplyPermDialog.value = true;
+        return;
       }
       templateStore.$patch((state) => {
         state.templateSpaceList = [];
@@ -359,8 +357,9 @@
 
   // 切换语言
   const switchLanguage = (language: string) => {
+    const domain = window.location.hostname.replace(/^[^.]+(.*)$/, '$1');
+    setCookie('blueking_language', language, domain);
     locale.value = language;
-    localStorage.setItem('language', language);
     location.reload();
   };
 </script>
@@ -620,8 +619,8 @@
     .secondNav-item {
       width: 102px;
       height: 40px;
-      text-align: center;
       line-height: 40px;
+      padding-left: 16px;
       font-size: 14px;
       a {
         color: #96a2b9;

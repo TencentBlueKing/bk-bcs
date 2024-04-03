@@ -14,7 +14,6 @@ package dao
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
@@ -92,7 +91,7 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(h.BizID.Eq(opt.BizID)).Order(h.Name)
 
 	if opt.Name != "" {
-		q = q.Where(h.Name.Like(fmt.Sprintf("%%%s%%", opt.Name)))
+		q = q.Where(h.Name.Regexp("(?i)" + opt.Name))
 	}
 	if opt.Tag != "" {
 		q = q.Where(h.Tag.Eq(opt.Tag))
@@ -101,11 +100,11 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 	}
 
 	if opt.SearchKey != "" {
-		searchKey := "%" + opt.SearchKey + "%"
+		searchKey := "(?i)" + opt.SearchKey
 		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
 		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
-		q = q.Where(q.Where(h.Name.Like(searchKey)).Or(h.Memo.Like(searchKey)).Or(h.Creator.Like(searchKey)).
-			Or(h.Reviser.Like(searchKey)))
+		q = q.Where(q.Where(h.Name.Regexp(searchKey)).Or(h.Memo.Regexp(searchKey)).Or(
+			h.Creator.Regexp(searchKey)).Or(h.Reviser.Regexp(searchKey)))
 	}
 
 	details := make([]*types.ListHooksWithReferDetail, 0)
@@ -150,11 +149,11 @@ func (dao *hookDao) ListHookReferences(kit *kit.Kit, opt *types.ListHookReferenc
 		LeftJoin(r, rh.ReleaseID.EqCol(r.ID)).
 		Where(rh.HookID.Eq(opt.HookID), rh.BizID.Eq(opt.BizID))
 	if opt.SearchKey != "" {
-		searchKey := "%" + opt.SearchKey + "%"
+		searchKey := "(?i)" + opt.SearchKey
 		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
 		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
 		query = query.Where(query.Where(
-			a.Name.Like(searchKey)).Or(r.Name.Like(searchKey)).Or(rh.HookRevisionName.Like(searchKey)))
+			a.Name.Regexp(searchKey)).Or(r.Name.Regexp(searchKey)).Or(rh.HookRevisionName.Regexp(searchKey)))
 	}
 
 	count, err = query.Order(rh.ID.Desc()).ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
