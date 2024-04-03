@@ -34,7 +34,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted, computed } from 'vue';
+  import { ref, onMounted, computed, watch } from 'vue';
 
   import Card from '../../components/card.vue';
   import TriggerBtn from '../../components/trigger-btn.vue';
@@ -101,6 +101,11 @@
   const loading = ref(false);
   const currentComponent = computed(() => componentMap[currentType.value as keyof typeof componentMap]);
   const needData = computed(() => (currentType.value === 'pie' ? sunburstData.value : data.value));
+
+  watch(
+    () => props.appId,
+    () => loadChartData(),
+  );
 
   onMounted(() => {
     loadChartData();

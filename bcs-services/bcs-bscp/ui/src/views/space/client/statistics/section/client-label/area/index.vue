@@ -32,7 +32,7 @@
     selectedLabel: string;
   }>();
 
-  const currentType = ref('pie');
+  const currentType = ref('column');
   const componentMap = {
     pie: Pie,
     column: Column,

@@ -20,15 +20,15 @@
   const btnList = ref([
     {
       type: 'pie',
-      icon: 'icon-help-fill',
+      icon: 'icon-pie-chart',
     },
     {
       type: 'column',
-      icon: 'icon-app-store',
+      icon: 'icon-bar-chart',
     },
     {
       type: 'table',
-      icon: 'icon-reduce',
+      icon: 'icon-table-chart',
     },
   ]);
 
@@ -55,6 +55,9 @@
       height: 20px;
       cursor: pointer;
       color: #979ba5;
+      .bk-bscp-icon {
+        font-size: 12px;
+      }
       &.current {
         background-color: #fff;
         color: #3a84ff;

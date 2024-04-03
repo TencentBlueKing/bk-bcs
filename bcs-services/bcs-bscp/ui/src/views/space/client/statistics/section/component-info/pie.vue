@@ -25,13 +25,11 @@
   let piePlot: Sunburst;
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
-  const data = ref(props.data || []);
 
   watch(
-    () => props.data,
+    () => props.data.children,
     () => {
-      data.value = props.data;
-      piePlot.changeData(data.value);
+      piePlot.changeData(props.data);
     },
   );
 
@@ -41,7 +39,7 @@
 
   const initChart = () => {
     piePlot = new Sunburst(canvasRef.value!, {
-      data: data.value,
+      data: props.data,
       height: 300,
       width: 800,
       colorField: 'name',
@@ -58,6 +56,17 @@
         offsetX: -200,
         marker: {
           symbol: 'circle',
+        },
+      },
+      tooltip: {
+        fields: ['count', 'percent'],
+        showTitle: true,
+        title: 'current_release_name',
+        container: tooltipRef.value?.getDom(),
+        enterable: true,
+        customItems: (originalItems: any[]) => {
+          originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
+          return originalItems;
         },
       },
     });
