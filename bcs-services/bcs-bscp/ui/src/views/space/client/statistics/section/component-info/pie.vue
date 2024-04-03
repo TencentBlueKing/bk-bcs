@@ -6,9 +6,10 @@
 
 <script lang="ts" setup>
   import { ref, onMounted, watch } from 'vue';
-  import { Pie } from '@antv/g2plot';
+  import { Sunburst } from '@antv/g2plot';
+
   import Tooltip from '../../components/tooltip.vue';
-  import { IClientConfigVersionItem } from '../../../../../../../types/client';
+  import { IVersionDistributionPie } from '../../../../../../../types/client';
   import { useRouter, useRoute } from 'vue-router';
 
   const router = useRouter();
@@ -18,18 +19,19 @@
   const appId = ref(Number(route.params.appId));
 
   const props = defineProps<{
-    data: IClientConfigVersionItem[];
+    data: IVersionDistributionPie;
   }>();
 
-  let piePlot: Pie;
+  let piePlot: Sunburst;
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
-  const jumpId = ref('');
+  const data = ref(props.data || []);
 
   watch(
     () => props.data,
     () => {
-      piePlot.changeData(props.data);
+      data.value = props.data;
+      piePlot.changeData(data.value);
     },
   );
 
@@ -38,42 +40,25 @@
   });
 
   const initChart = () => {
-    piePlot = new Pie(canvasRef.value!, {
-      data: props.data,
-      angleField: 'count',
-      colorField: 'current_release_name',
-      radius: 1,
-      autoFit: false,
-      height: 184,
+    piePlot = new Sunburst(canvasRef.value!, {
+      data: data.value,
+      height: 300,
       width: 800,
+      colorField: 'name',
       label: {
-        type: 'inner',
-        offset: '-30%',
-        content: ({ percent }) => `${(percent * 100).toFixed(0)}%`,
+        content: ({ data }) => `${data.percent.toFixed(0)}%`,
         style: {
           fontSize: 14,
           textAlign: 'center',
         },
+        autoRotate: false,
       },
-      tooltip: {
-        fields: ['count', 'percent'],
-        showTitle: true,
-        title: 'current_release_name',
-        container: tooltipRef.value?.getDom(),
-        enterable: true,
-        customItems: (originalItems: any[]) => {
-          jumpId.value = originalItems[0].title;
-          originalItems[0].name = '客户端数量';
-          originalItems[1].name = '占比';
-          originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
-          return originalItems;
-        },
-      },
-      interactions: [{ type: 'element-active' }],
       legend: {
-        layout: 'horizontal',
         position: 'right',
-        flipPage: false,
+        offsetX: -200,
+        marker: {
+          symbol: 'circle',
+        },
       },
     });
     piePlot.render();

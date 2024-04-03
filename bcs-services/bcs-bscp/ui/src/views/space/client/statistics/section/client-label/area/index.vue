@@ -1,0 +1,76 @@
+<template>
+  <Card :title="`按 ${label} 统计`" :height="368">
+    <template #head-suffix>
+      <bk-tag theme="info" type="stroke" style="margin-left: 8px"> 标签 </bk-tag>
+      <TriggerBtn v-model:currentType="currentType" style="margin-left: 8px" />
+    </template>
+    <bk-loading class="loading-wrap" :loading="loading">
+      <component v-if="selectedLabelData?.length" :is="currentComponent" :data="selectedLabelData" :label="label" />
+      <bk-exception
+        v-else
+        class="exception-wrap-item exception-part"
+        type="empty"
+        scene="part"
+        description="没有数据" />
+    </bk-loading>
+  </Card>
+</template>
+
+<script lang="ts" setup>
+  import { ref, onMounted, computed, watch } from 'vue';
+  import Card from '../../../components/card.vue';
+  import TriggerBtn from '../../../components/trigger-btn.vue';
+  import Pie from './pie.vue';
+  import Column from './column.vue';
+  import Table from './table.vue';
+  import { IClientLabelItem } from '../../../../../../../../types/client';
+  import { getClientLabelData } from '../../../../../../../api/client';
+
+  const props = defineProps<{
+    bkBizId: string;
+    appId: number;
+    selectedLabel: string;
+  }>();
+
+  const currentType = ref('pie');
+  const componentMap = {
+    pie: Pie,
+    column: Column,
+    table: Table,
+  };
+  const allLabeldata = ref<{ [key: string]: IClientLabelItem[] }>();
+  const loading = ref(false);
+
+  const currentComponent = computed(() => componentMap[currentType.value as keyof typeof componentMap]);
+  const selectedLabelData = computed(() => allLabeldata.value?.[props.selectedLabel]);
+  const label = computed(() => props.selectedLabel.charAt(0).toUpperCase() + props.selectedLabel.slice(1));
+
+  onMounted(() => {
+    loadChartData();
+  });
+
+  watch(
+    () => props.appId,
+    () => {
+      loadChartData();
+    },
+  );
+
+  const loadChartData = async () => {
+    try {
+      loading.value = true;
+      const res = await getClientLabelData(props.bkBizId, props.appId, {});
+      allLabeldata.value = res;
+    } catch (error) {
+      console.error(error);
+    } finally {
+      loading.value = false;
+    }
+  };
+</script>
+
+<style scoped lang="scss">
+  .loading-wrap {
+    height: 100%;
+  }
+</style>

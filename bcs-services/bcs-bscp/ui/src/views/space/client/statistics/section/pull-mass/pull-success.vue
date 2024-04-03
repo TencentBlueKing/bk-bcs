@@ -1,33 +1,85 @@
 <template>
   <Card title="拉取成功率" :height="416" :width="318">
-    <div ref="canvasRef" class="canvas-wrap"></div>
+    <bk-loading class="loading-wrap" :loading="loading">
+      <div v-if="data.length" ref="canvasRef" class="canvas-wrap"></div>
+      <bk-exception
+        v-else
+        class="exception-wrap-item exception-part"
+        type="empty"
+        scene="part"
+        description="暂无数据" />
+    </bk-loading>
   </Card>
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, watch, onMounted } from 'vue';
   import { Pie } from '@antv/g2plot';
   import Card from '../../components/card.vue';
+  import { IPullSuccessRate } from '../../../../../../../types/client';
+  import { getClientPullStatusData } from '../../../../../../api/client';
 
+  const props = defineProps<{
+    bkBizId: string;
+    appId: number;
+  }>();
+
+  let piePlot: Pie | null;
   const canvasRef = ref<HTMLElement>();
-  const data = [
-    // 拉取成功率
-    {
-      count: 2,
-      percent: 0.2857142857142857,
-      release_change_status: '拉取失败',
-    },
-    {
-      count: 5,
-      percent: 0.7142857142857143,
-      release_change_status: '拉取成功',
-    },
-  ];
+  const data = ref<IPullSuccessRate[]>([]);
+  const loading = ref(false);
 
-  onMounted(() => {
-    const piePlot = new Pie(canvasRef.value!, {
+  watch(
+    () => props.appId,
+    async () => {
+      await loadChartData();
+      if (data.value.length) {
+        if (piePlot) {
+          piePlot!.changeData(data.value);
+        } else {
+          initChart();
+        }
+      }
+    },
+  );
+
+  watch(
+    () => data.value,
+    (val) => {
+      if (!val.length && piePlot) {
+        piePlot!.destroy();
+        piePlot = null;
+      }
+    },
+  );
+
+  onMounted(async () => {
+    await loadChartData();
+    if (data.value.length) {
+      initChart();
+    }
+  });
+
+  const loadChartData = async () => {
+    try {
+      loading.value = true;
+      const res = await getClientPullStatusData(props.bkBizId, props.appId, {});
+      data.value = res.change_status.map((item: any) => ({
+        count: item.count,
+        percent: item.percent,
+        release_change_status: item.release_change_status === 'Failed' ? '拉取失败' : '拉取成功',
+      }));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const initChart = () => {
+    piePlot = new Pie(canvasRef.value!, {
       appendPadding: 10,
-      data,
+      data: data.value,
       angleField: 'count',
       colorField: 'release_change_status',
       color: ['#F5876C', '#DAEFE4'],
@@ -46,13 +98,12 @@
         position: 'bottom',
       },
     });
-
-    piePlot.render();
-  });
+    piePlot!.render();
+  };
 </script>
 
 <style scoped lang="scss">
-  .canvas-wrap {
+  .loading-wrap {
     height: 100%;
   }
 </style>

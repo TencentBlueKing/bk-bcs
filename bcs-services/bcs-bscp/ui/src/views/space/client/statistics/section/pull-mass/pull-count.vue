@@ -5,19 +5,37 @@
         <bk-option v-for="item in selectorTimeList" :id="item.value" :key="item.value" :name="item.label" />
       </bk-select>
     </template>
-    <div ref="canvasRef" class="canvas-wrap"></div>
+    <bk-loading class="loading-wrap" :loading="loading">
+      <div v-if="data.time.length" ref="canvasRef" class="canvas-wrap">
+        <Tooltip ref="tooltipRef" />
+      </div>
+      <bk-exception
+        v-else
+        class="exception-wrap-item exception-part"
+        type="empty"
+        scene="part"
+        description="暂无数据" />
+    </bk-loading>
   </Card>
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, watch } from 'vue';
   import Card from '../../components/card.vue';
   import { DualAxes } from '@antv/g2plot';
+  import { getClientPullCountData } from '../../../../../../api/client';
+  import { IPullCount } from '../../../../../../../types/client';
+  import Tooltip from '../../components/tooltip.vue';
 
+  const props = defineProps<{
+    bkBizId: string;
+    appId: number;
+  }>();
+
+  let dualAxes: DualAxes | null;
   const canvasRef = ref<HTMLElement>();
-
+  const tooltipRef = ref();
   const selectTime = ref(7);
-
   const selectorTimeList = [
     {
       value: 7,
@@ -32,72 +50,125 @@
       label: '近30天',
     },
   ];
+  const data = ref<IPullCount>({
+    time: [],
+    time_and_type: [],
+  });
+  const loading = ref(false);
 
-  const data = [
-    // 客户端拉取趋势
-    {
-      date: '2024/03/14',
-      type: 'sidecar',
-      count: 4,
-    },
-    {
-      date: '2024/03/14',
-      type: 'sdk',
-      count: 3,
-    },
-    {
-      date: '2024/03/15',
-      type: 'sidecar',
-      count: 8,
-    },
-    {
-      date: '2024/03/15',
-      type: 'sdk',
-      count: 3,
-    },
-    {
-      date: '2024/03/16',
-      type: 'sidecar',
-      count: 1,
-    },
-    {
-      date: '2024/03/16',
-      type: 'sdk',
-      count: 2,
-    },
-  ];
-  const transformData = [
-    { date: '2024/03/14', total: 10 },
-    { date: '2024/03/15', total: 7 },
-    { date: '2024/03/16', total: 14 },
-  ];
+  watch([() => selectTime.value, () => props.appId], async () => {
+    await loadChartData();
+    if (data.value.time.length) {
+      if (dualAxes) {
+        dualAxes.changeData([data.value.time_and_type, data.value.time]);
+      } else {
+        initChart();
+      }
+    }
+  });
 
-  onMounted(() => {
-    const dualAxes = new DualAxes(canvasRef.value!, {
-      data: [data, transformData],
-      xField: 'date',
-      yField: ['count', 'total'],
+  watch(
+    () => data.value.time,
+    (val) => {
+      if (!val.length && dualAxes) {
+        dualAxes!.destroy();
+        dualAxes = null;
+      }
+    },
+  );
+
+  onMounted(async () => {
+    await loadChartData();
+    if (data.value.time.length) {
+      initChart();
+    }
+  });
+
+  const loadChartData = async () => {
+    try {
+      loading.value = true;
+      const res = await getClientPullCountData(props.bkBizId, props.appId, { pull_time: selectTime.value });
+      data.value = res;
+    } catch (error) {
+      console.error(error);
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const initChart = () => {
+    dualAxes = new DualAxes(canvasRef.value!, {
+      data: [data.value.time_and_type, data.value.time],
+      xField: 'time',
+      yField: ['value', 'count'],
+      yAxis: {
+        grid: {
+          line: {
+            style: {
+              stroke: '#979BA5',
+              lineDash: [4, 5],
+            },
+          },
+        },
+      },
+      padding: [10, 10, 30, 20],
       geometryOptions: [
         {
           geometry: 'column',
           isGroup: true,
           seriesField: 'type',
+          columnWidthRatio: 0.2,
+          color: ['#3E96C2', '#61B2C2', '#61B2C2'],
         },
         {
           geometry: 'line',
           lineStyle: {
             lineWidth: 2,
           },
+          color: '#2C2599',
+          label: {
+            position: 'top',
+          },
         },
       ],
+      legend: {
+        position: 'bottom',
+      },
+      tooltip: {
+        fields: ['value', 'count'],
+        showTitle: true,
+        title: 'time',
+        container: tooltipRef.value?.getDom(),
+        enterable: true,
+        customItems: (originalItems: any[]) => {
+          originalItems.forEach((item) => {
+            switch (item.data.type) {
+              case 'sidecar':
+                item.name = 'SideCar 客户端';
+                break;
+              case 'sdk':
+                item.name = 'SDK 客户端';
+                break;
+              case 'agent':
+                item.name = '主机插件客户端';
+                break;
+              case 'command':
+                item.name = 'command';
+                break;
+              default:
+                item.name = '总量';
+            }
+          });
+          return originalItems;
+        },
+      },
     });
-
-    dualAxes.render();
-  });
+    dualAxes!.render();
+  };
 </script>
 
 <style scoped lang="scss">
-  .canvas-wrap {
+  .loading-wrap {
     height: 100%;
   }
   .time-selector {

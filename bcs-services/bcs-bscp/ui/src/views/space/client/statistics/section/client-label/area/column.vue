@@ -7,7 +7,7 @@
 <script lang="ts" setup>
   import { onMounted, ref, watch } from 'vue';
   import { Column } from '@antv/g2plot';
-  import Tooltip from '../../components/tooltip.vue';
+  import Tooltip from '../../../components/tooltip.vue';
 
   const props = defineProps<{
     data: any;
@@ -32,13 +32,13 @@
   const createChart = () => {
     columnPlot = new Column(canvasRef.value!, {
       data: data.value,
-      xField: 'current_release_name',
+      xField: 'value',
       yField: 'count',
       padding: [20, 10, 50, 20],
       limitInPlot: false,
       color: '#3E96C2',
       seriesField: 'count',
-      maxColumnWidth: 80,
+      maxColumnWidth: 40,
       legend: {
         custom: true,
         position: 'bottom',
@@ -64,7 +64,7 @@
       tooltip: {
         fields: ['count'],
         showTitle: true,
-        title: 'current_release_name',
+        title: 'value',
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {

@@ -5,7 +5,7 @@
     <!-- 列表容器，会自己填充 -->
     <ul class="g2-tooltip-list"></ul>
     <!-- 自定义尾部-->
-    <li class="g2-tooltip-bottom">
+    <li class="g2-tooltip-bottom" @click="emits('jump')">
       <span class="bk-bscp-icon icon-help-fill"></span>
       <span class="g2-tooltip-name">查看数据详情</span>
     </li>
@@ -14,7 +14,11 @@
 
 <script lang="ts" setup>
   import { ref } from 'vue';
+
+  const emits = defineEmits(['jump']);
+
   const tooltipRef = ref();
+
   const getDom = () => {
     return tooltipRef.value;
   };

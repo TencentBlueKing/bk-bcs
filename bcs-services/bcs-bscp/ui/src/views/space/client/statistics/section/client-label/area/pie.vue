@@ -7,8 +7,8 @@
 <script lang="ts" setup>
   import { ref, onMounted, watch } from 'vue';
   import { Pie } from '@antv/g2plot';
-  import Tooltip from '../../components/tooltip.vue';
-  import { IClientConfigVersionItem } from '../../../../../../../types/client';
+  import Tooltip from '../../../components/tooltip.vue';
+  import { IClientLabelItem } from '../../../../../../../../types/client';
   import { useRouter, useRoute } from 'vue-router';
 
   const router = useRouter();
@@ -18,18 +18,20 @@
   const appId = ref(Number(route.params.appId));
 
   const props = defineProps<{
-    data: IClientConfigVersionItem[];
+    data: IClientLabelItem[];
   }>();
 
   let piePlot: Pie;
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
+  const data = ref(props.data || []);
   const jumpId = ref('');
 
   watch(
     () => props.data,
     () => {
-      piePlot.changeData(props.data);
+      data.value = props.data;
+      piePlot.changeData(data.value);
     },
   );
 
@@ -39,9 +41,9 @@
 
   const initChart = () => {
     piePlot = new Pie(canvasRef.value!, {
-      data: props.data,
+      data: data.value,
       angleField: 'count',
-      colorField: 'current_release_name',
+      colorField: 'value',
       radius: 1,
       autoFit: false,
       height: 184,
@@ -58,7 +60,7 @@
       tooltip: {
         fields: ['count', 'percent'],
         showTitle: true,
-        title: 'current_release_name',
+        title: 'value',
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
@@ -71,9 +73,8 @@
       },
       interactions: [{ type: 'element-active' }],
       legend: {
-        layout: 'horizontal',
         position: 'right',
-        flipPage: false,
+        offsetX: -200,
       },
     });
     piePlot.render();

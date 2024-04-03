@@ -71,3 +71,73 @@ export interface ICommonlyUsedItem {
   };
   search_condition: ISearchCondition[];
 }
+
+// 客户端配置版本
+export interface IClientConfigVersionItem {
+  count: number;
+  current_release_id: number; // 版本ID
+  current_release_name: string; // 版本名称
+  percent: number;
+}
+
+// 拉取成功率
+export interface IPullSuccessRate {
+  count: number;
+  percent: number;
+  release_change_status: string;
+}
+
+// 信息展示卡片
+export interface IInfoCard {
+  value: number;
+  name: string;
+  key: string;
+}
+
+export interface IPullErrorReason {
+  count: number;
+  percent: number;
+  release_change_failed_reason: string;
+}
+
+// 拉取数量趋势
+export interface IPullCount {
+  time: {
+    count: number;
+    time: string;
+  }[];
+  time_and_type: {
+    time: string;
+    value: number;
+    type: string;
+  }[];
+}
+
+// 客户端标签
+export interface IClientLabelItem {
+  count: number;
+  percent: number;
+  value: string;
+  key: string;
+}
+
+// 组件版本发布(柱状图和表格)
+export interface IVersionDistributionItem {
+  client_type: string;
+  client_version: string;
+  percent: number;
+  value: number;
+}
+
+// 组件版本发布(旭日图)
+export interface IVersionDistributionPie {
+  name: string;
+  children: IVersionDistributionPieItem[];
+}
+
+export interface IVersionDistributionPieItem {
+  name: string;
+  value: number;
+  percent: number;
+  children?: IVersionDistributionPieItem[];
+}

@@ -30,8 +30,8 @@
     .head {
       display: flex;
       align-items: center;
-      height: 24px;
       margin-bottom: 16px;
+      height: 24px;
       color: #313238;
     }
     .container {
