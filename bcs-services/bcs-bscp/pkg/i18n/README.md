@@ -262,3 +262,5 @@ if len(req.GetIds()) == 0 {
 		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit, "id is required"))
 }
 ```
+
+注： 添加后 make i18n 提测和翻译后再编译
