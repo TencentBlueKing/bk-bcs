@@ -258,7 +258,7 @@ export default {
   移除套餐: 'Remove plan',
   替换版本: 'Replace version',
   下载: 'Download',
-  下载模板文件: 'Download template',
+  下载模板文件: 'Download',
   '确认删除该配置文件？': 'Confirm to delete this profile?',
   '确认移除该配置模板套餐？': 'Are you sure to remove this configuration template package?',
   配置模板套餐: 'Configure template package',
@@ -512,6 +512,7 @@ export default {
   '确认更新配置文件版本？': 'Confirm to update the configuration file version?',
   以下套餐及服务未命名版本中引用的此配置文件也将更新: 'This configuration file referenced in the unnamed versions of the following packages and services will also be updated',
   引用此模板的服务: 'Services that reference this template',
+  删除模板文件: 'Delete',
 
   // 脚本管理
   全部脚本: 'All scripts',
