@@ -1,5 +1,5 @@
 <template>
-  <div :class="['configs-menu', { 'search-opened': isOpenSearch }]">
+  <div v-bkloading="{ loading }" :class="['configs-menu', { 'search-opened': isOpenSearch }]">
     <div class="title-area">
       <div class="title">{{ t('配置项') }}</div>
       <div class="title-extend">
@@ -104,23 +104,16 @@
   const isOpenSearch = ref(false);
   const searchStr = ref('');
   const isSearchEmpty = ref(false);
+  const loading = ref(true);
 
   // 是否实际选择了对比的基准版本，为了区分的未命名版本id为0的情况
   const isBaseVersionExist = computed(() => typeof props.baseVersionId === 'number');
-  // 差异项配置文件列表
-  const diffConfigList = computed(() => {
-    return aggregatedList.value.filter((item) => item.diffType !== '');
-  });
 
   // 基准版本变化，更新选中对比项
   watch(
     () => props.baseVersionId,
-    async () => {
-      baseList.value = await getConfigsOfVersion(props.baseVersionId);
-      aggregatedList.value = calcDiff();
-      isOnlyShowDiff.value = diffConfigList.value.length > 0;
-      groupedConfigListOnShow.value = getGroupedList();
-      setDefaultSelected();
+    () => {
+      initData();
     },
   );
 
@@ -137,14 +130,24 @@
     },
   );
 
-  onMounted(async () => {
-    currentList.value = await getConfigsOfVersion(props.currentVersionId);
-    baseList.value = await getConfigsOfVersion(props.baseVersionId);
+  onMounted(() => {
+    initData(true);
+  });
+
+  // 初始化对比配置项以及设置默认选中的配置项
+  const initData = async (needGetCrt = false) => {
+    loading.value = true;
+    if (needGetCrt) {
+      currentList.value = await getConfigsOfVersion(props.currentVersionId);
+    }
+    if (props.baseVersionId) {
+      baseList.value = await getConfigsOfVersion(props.baseVersionId);
+    }
     aggregatedList.value = calcDiff();
-    isOnlyShowDiff.value = diffConfigList.value.length > 0;
     groupedConfigListOnShow.value = getGroupedList();
     setDefaultSelected();
-  });
+    loading.value = false;
+  };
 
   // 获取某一版本下配置文件
   const getConfigsOfVersion = async (releaseId: number | undefined) => {

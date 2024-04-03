@@ -627,9 +627,9 @@
   resolved "https://mirrors.tencent.com/npm/@vitejs%2fplugin-basic-ssl/-/plugin-basic-ssl-1.0.1.tgz#48c46eab21e0730921986ce742563ae83fe7fe34"
   integrity sha512-pcub+YbFtFhaGRTo1832FQHQSHvMrlb43974e2eS8EKleR3p1cDdkJFPci1UhwkEf1J9Bz+wKBSzqpKp7nNj2A==
 
-"@vitejs/plugin-vue@^3.0.3":
+"@vitejs/plugin-vue@^3.2.0":
   version "3.2.0"
-  resolved "https://mirrors.tencent.com/npm/@vitejs%2fplugin-vue/-/plugin-vue-3.2.0.tgz#a1484089dd85d6528f435743f84cdd0d215bbb54"
+  resolved "https://mirrors.tencent.com/npm/@vitejs/plugin-vue/-/plugin-vue-3.2.0.tgz#a1484089dd85d6528f435743f84cdd0d215bbb54"
   integrity sha512-E0tnaL4fr+qkdCNxJ+Xd0yM31UwMkQje76fsDVBBUCoGOUPexu2VDUYHL8P4CwV+zMvWw6nlRw19OnRKmYAJpw==
 
 "@volar/language-core@2.1.6", "@volar/language-core@~2.1.3":
