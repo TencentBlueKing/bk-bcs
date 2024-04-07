@@ -234,7 +234,6 @@
       isSearchEmpty.value = Object.keys(val!).length !== 0;
       loadList();
     },
-    { deep: true },
   );
 
   const showResourse = (resourse: IResourseType) => {

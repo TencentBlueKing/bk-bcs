@@ -7,14 +7,13 @@
     </template>
     <bk-loading class="loading-wrap" :loading="loading">
       <div v-if="data.time.length" ref="canvasRef" class="canvas-wrap">
-        <Tooltip ref="tooltipRef" />
+        <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
       </div>
-      <bk-exception
-        v-else
-        class="exception-wrap-item exception-part"
-        type="empty"
-        scene="part"
-        description="暂无数据" />
+      <bk-exception v-else class="exception-wrap-item exception-part" type="empty" scene="part" description="暂无数据">
+        <template #type>
+          <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+        </template>
+      </bk-exception>
     </bk-loading>
   </Card>
 </template>
@@ -28,9 +27,11 @@
   import Tooltip from '../../components/tooltip.vue';
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter();
 
   const clientStore = useClientStore();
-
   const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
@@ -120,16 +121,24 @@
       data: [data.value.time_and_type, data.value.time],
       xField: 'time',
       yField: ['value', 'count'],
-      yAxis: {
-        grid: {
-          line: {
-            style: {
-              stroke: '#979BA5',
-              lineDash: [4, 5],
+      yAxis: [
+        {
+          grid: {
+            line: {
+              style: {
+                stroke: '#979BA5',
+                lineDash: [4, 5],
+              },
             },
           },
+          tickInterval: 1,
         },
-      },
+        {
+          tickInterval: 1,
+          min: 0,
+        },
+      ],
+
       padding: [10, 10, 30, 20],
       geometryOptions: [
         {
@@ -183,6 +192,13 @@
       },
     });
     dualAxes!.render();
+  };
+
+  const jumpToSearch = () => {
+    router.push({
+      name: 'client-search',
+      params: { appId: props.appId, bizId: props.bkBizId },
+    });
   };
 </script>
 

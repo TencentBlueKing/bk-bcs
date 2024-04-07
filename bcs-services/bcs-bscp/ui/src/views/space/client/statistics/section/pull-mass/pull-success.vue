@@ -1,13 +1,14 @@
 <template>
   <Card title="拉取成功率" :height="416" :width="318">
     <bk-loading class="loading-wrap" :loading="loading">
-      <div v-if="data.length" ref="canvasRef" class="canvas-wrap"></div>
-      <bk-exception
-        v-else
-        class="exception-wrap-item exception-part"
-        type="empty"
-        scene="part"
-        description="暂无数据" />
+      <div v-if="data.length" ref="canvasRef" class="canvas-wrap">
+        <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+      </div>
+      <bk-exception v-else class="exception-wrap-item exception-part" type="empty" scene="part" description="暂无数据">
+        <template #type>
+          <span class="bk-bscp-icon icon-pie-chart exception-icon" />
+        </template>
+      </bk-exception>
     </bk-loading>
   </Card>
 </template>
@@ -16,13 +17,16 @@
   import { ref, watch, onMounted } from 'vue';
   import { Pie } from '@antv/g2plot';
   import Card from '../../components/card.vue';
+  import Tooltip from '../../components/tooltip.vue';
   import { IPullSuccessRate, IClinetCommonQuery } from '../../../../../../../types/client';
   import { getClientPullStatusData } from '../../../../../../api/client';
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter();
 
   const clientStore = useClientStore();
-
   const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
@@ -34,6 +38,8 @@
   const canvasRef = ref<HTMLElement>();
   const data = ref<IPullSuccessRate[]>([]);
   const loading = ref(false);
+  const tooltipRef = ref();
+  const jumpStatus = ref('');
 
   watch(
     () => props.appId,
@@ -117,8 +123,30 @@
       legend: {
         position: 'bottom',
       },
+      tooltip: {
+        fields: ['count', 'percent'],
+        showTitle: true,
+        title: 'release_change_status',
+        container: tooltipRef.value?.getDom(),
+        enterable: true,
+        customItems: (originalItems: any[]) => {
+          jumpStatus.value = originalItems[0].data.release_change_status === '拉取成功' ? 'Success' : 'Failed';
+          originalItems[0].name = '客户端数量';
+          originalItems[1].name = '占比';
+          originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
+          return originalItems;
+        },
+      },
     });
     piePlot!.render();
+  };
+
+  const jumpToSearch = () => {
+    router.push({
+      name: 'client-search',
+      params: { appId: props.appId, bizId: props.bkBizId },
+      query: { release_change_status: jumpStatus.value },
+    });
   };
 </script>
 

@@ -5,13 +5,19 @@
       <TriggerBtn v-model:currentType="currentType" style="margin-left: 8px" />
     </template>
     <bk-loading class="loading-wrap" :loading="loading">
-      <component v-if="selectedLabelData?.length" :is="currentComponent" :data="selectedLabelData" :label="label" />
-      <bk-exception
-        v-else
-        class="exception-wrap-item exception-part"
-        type="empty"
-        scene="part"
-        description="没有数据" />
+      <component
+        v-if="selectedLabelData?.length"
+        :bk-biz-id="bkBizId"
+        :app-id="appId"
+        :is="currentComponent"
+        :data="selectedLabelData"
+        :label="label"
+        @jump="jumpToSearch" />
+      <bk-exception v-else class="exception-wrap-item exception-part" type="empty" scene="part" description="暂无数据">
+        <template #type>
+          <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+        </template>
+      </bk-exception>
     </bk-loading>
   </Card>
 </template>
@@ -27,9 +33,11 @@
   import { getClientLabelData } from '../../../../../../../api/client';
   import useClientStore from '../../../../../../../store/client';
   import { storeToRefs } from 'pinia';
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter();
 
   const clientStore = useClientStore();
-
   const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
@@ -84,6 +92,13 @@
     } finally {
       loading.value = false;
     }
+  };
+
+  const jumpToSearch = () => {
+    router.push({
+      name: 'client-search',
+      params: { appId: props.appId, bizId: props.bkBizId },
+    });
   };
 </script>
 

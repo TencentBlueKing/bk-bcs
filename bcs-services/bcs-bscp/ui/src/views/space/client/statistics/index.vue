@@ -45,3 +45,10 @@
     }
   }
 </style>
+
+<style>
+  .exception-icon {
+    font-size: 49px;
+    color: #dee0e3;
+  }
+</style>

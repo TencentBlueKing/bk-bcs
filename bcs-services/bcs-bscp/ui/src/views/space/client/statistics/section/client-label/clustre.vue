@@ -1,6 +1,10 @@
 <template>
   <Card title="按 Cluster_id 统计" :height="368">
-    <bk-exception class="exception-wrap-item exception-part" type="empty" scene="part" description="暂无数据" />
+    <bk-exception class="exception-wrap-item exception-part" type="empty" scene="part" description="暂无数据">
+      <template #type>
+        <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+      </template>
+    </bk-exception>
   </Card>
 </template>
 

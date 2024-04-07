@@ -14,7 +14,11 @@
               class="exception-wrap-item exception-part"
               type="empty"
               scene="part"
-              description="没有数据" />
+              description="暂无数据">
+              <template #type>
+                <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+              </template>
+            </bk-exception>
           </bk-loading>
         </Card>
       </div>

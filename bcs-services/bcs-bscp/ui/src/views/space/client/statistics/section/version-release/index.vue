@@ -6,13 +6,19 @@
         <TriggerBtn v-model:currentType="currentType" style="margin-left: 16px" />
       </template>
       <bk-loading class="loading-wrap" :loading="loading">
-        <component v-if="data?.length" :is="currentComponent" :data="data" />
-        <bk-exception
-          v-else
-          class="exception-wrap-item exception-part"
-          type="empty"
-          scene="part"
-          description="没有数据" />
+        <component
+          v-if="data?.length"
+          :bk-biz-id="bkBizId"
+          :app-id="appId"
+          :is="currentComponent"
+          :data="data"
+          @update="jumpVersionName = $event as string"
+          @jump="jumpToSearch" />
+        <bk-exception v-else type="empty" scene="part" description="暂无数据">
+          <template #type>
+            <span class="bk-bscp-icon icon-pie-chart exception-icon" />
+          </template>
+        </bk-exception>
       </bk-loading>
     </Card>
   </div>
@@ -30,9 +36,11 @@
   import { getConfigVersionData } from '../../../../../../api/client';
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter();
 
   const clientStore = useClientStore();
-
   const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
@@ -49,6 +57,7 @@
   const data = ref<IClientConfigVersionItem[]>();
   const currentComponent = computed(() => componentMap[currentType.value as keyof typeof componentMap]);
   const loading = ref(false);
+  const jumpVersionName = ref('');
 
   onMounted(() => {
     loadChartData();
@@ -83,6 +92,14 @@
     } finally {
       loading.value = false;
     }
+  };
+
+  const jumpToSearch = () => {
+    router.push({
+      name: 'client-search',
+      params: { appId: props.appId, bizId: props.bkBizId },
+      query: { current_release_name: jumpVersionName.value },
+    });
   };
 </script>
 

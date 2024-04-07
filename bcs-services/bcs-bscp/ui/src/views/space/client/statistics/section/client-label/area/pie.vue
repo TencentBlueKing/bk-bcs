@@ -1,6 +1,6 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
-    <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+    <Tooltip ref="tooltipRef" @jump="emits('jump')" />
   </div>
 </template>
 
@@ -9,29 +9,23 @@
   import { Pie } from '@antv/g2plot';
   import Tooltip from '../../../components/tooltip.vue';
   import { IClientLabelItem } from '../../../../../../../../types/client';
-  import { useRouter, useRoute } from 'vue-router';
-
-  const router = useRouter();
-  const route = useRoute();
-
-  const bizId = ref(String(route.params.spaceId));
-  const appId = ref(Number(route.params.appId));
 
   const props = defineProps<{
     data: IClientLabelItem[];
+    bkBizId: string;
+    appId: number;
   }>();
+
+  const emits = defineEmits(['jump']);
 
   let piePlot: Pie;
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
-  const data = ref(props.data || []);
-  const jumpId = ref('');
 
   watch(
     () => props.data,
     () => {
-      data.value = props.data;
-      piePlot.changeData(data.value);
+      piePlot.changeData(props.data);
     },
   );
 
@@ -41,7 +35,7 @@
 
   const initChart = () => {
     piePlot = new Pie(canvasRef.value!, {
-      data: data.value,
+      data: props.data,
       angleField: 'count',
       colorField: 'value',
       radius: 1,
@@ -64,10 +58,9 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          jumpId.value = originalItems[0].title;
           originalItems[0].name = '客户端数量';
           originalItems[1].name = '占比';
-          originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
+          originalItems[1].value = `${parseFloat(originalItems[1].value).toFixed(1)}%`;
           return originalItems;
         },
       },
@@ -78,10 +71,6 @@
       },
     });
     piePlot.render();
-  };
-
-  const jumpToSearch = () => {
-    router.push({ name: 'client-search', params: { appId: appId.value, bizId: bizId.value } });
   };
 </script>
 

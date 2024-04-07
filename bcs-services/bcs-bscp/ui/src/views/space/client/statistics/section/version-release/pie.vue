@@ -1,6 +1,6 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
-    <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+    <Tooltip ref="tooltipRef" @jump="emits('jump')" />
   </div>
 </template>
 
@@ -9,22 +9,18 @@
   import { Pie } from '@antv/g2plot';
   import Tooltip from '../../components/tooltip.vue';
   import { IClientConfigVersionItem } from '../../../../../../../types/client';
-  import { useRouter, useRoute } from 'vue-router';
-
-  const router = useRouter();
-  const route = useRoute();
-
-  const bizId = ref(String(route.params.spaceId));
-  const appId = ref(Number(route.params.appId));
 
   const props = defineProps<{
     data: IClientConfigVersionItem[];
+    bkBizId: string;
+    appId: number;
   }>();
+
+  const emits = defineEmits(['update', 'jump']);
 
   let piePlot: Pie;
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
-  const jumpId = ref('');
 
   watch(
     () => props.data,
@@ -62,7 +58,7 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          jumpId.value = originalItems[0].title;
+          emits('update', originalItems[0].title);
           originalItems[0].name = '客户端数量';
           originalItems[1].name = '占比';
           originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
@@ -77,10 +73,6 @@
       },
     });
     piePlot.render();
-  };
-
-  const jumpToSearch = () => {
-    router.push({ name: 'client-search', params: { appId: appId.value, bizId: bizId.value } });
   };
 </script>
 

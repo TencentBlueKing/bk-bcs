@@ -44,6 +44,7 @@
             },
           },
         },
+        tickInterval: 1,
       },
       seriesField: 'client_version',
       maxColumnWidth: 80,

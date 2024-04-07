@@ -109,7 +109,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { nextTick, ref, computed, watch } from 'vue';
+  import { nextTick, ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
   import { storeToRefs } from 'pinia';
   import { EditLine, CloseLine } from 'bkui-vue/lib/icon';
   import { CLIENT_SEARCH_DATA, CLIENT_STATISTICS_SEARCH_DATA, CLIENT_STATUS_MAP } from '../../../../constants/client';
@@ -189,6 +189,23 @@
       }
     },
   );
+
+  onMounted(() => {
+    const entries = Object.entries(route.query);
+    if (entries.length === 0) return;
+    const { name, value } = CLIENT_SEARCH_DATA.find((item) => item.value === entries[0][0])!;
+    searchConditionList.value.push({
+      content: `${name} : ${entries[0][1]}`,
+      value: entries[0][1] as string,
+      key: value,
+    });
+  });
+
+  onBeforeUnmount(() => {
+    clientStore.$patch((state) => {
+      state.searchQuery.search = {};
+    });
+  });
 
   // 选择父选择器
   const handleSelectParent = (parentSelectorItem: ISelectorItem) => {

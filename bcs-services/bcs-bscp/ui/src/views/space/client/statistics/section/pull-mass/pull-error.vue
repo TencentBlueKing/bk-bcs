@@ -3,13 +3,19 @@
     <div class="pull-error-wrap">
       <Card title="拉取失败原因" :height="416">
         <bk-loading class="loading-wrap" :loading="loading">
-          <div v-if="data.length" ref="canvasRef" class="canvas-wrap"></div>
+          <div v-if="data.length" ref="canvasRef" class="canvas-wrap">
+            <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+          </div>
           <bk-exception
             v-else
             class="exception-wrap-item exception-part"
             type="empty"
             scene="part"
-            description="暂无数据" />
+            description="暂无数据">
+            <template #type>
+              <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+            </template>
+          </bk-exception>
         </bk-loading>
       </Card>
     </div>
@@ -31,13 +37,16 @@
   import { ref, watch, onMounted } from 'vue';
   import { Column } from '@antv/g2plot';
   import Card from '../../components/card.vue';
+  import Tooltip from '../../components/tooltip.vue';
   import { IPullErrorReason, IInfoCard, IClinetCommonQuery } from '../../../../../../../types/client';
   import { getClientPullStatusData } from '../../../../../../api/client';
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter();
 
   const clientStore = useClientStore();
-
   const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
@@ -47,6 +56,7 @@
 
   let columnPlot: Column | null;
   const canvasRef = ref<HTMLElement>();
+  const tooltipRef = ref();
   const pullTime = ref<IInfoCard[]>([
     {
       value: 0,
@@ -134,6 +144,22 @@
       yField: 'count',
       color: '#FFA66B',
       maxColumnWidth: 60,
+      padding: [10, 10, 40, 20],
+      legend: {
+        layout: 'horizontal',
+        custom: true,
+        position: 'bottom',
+        items: [
+          {
+            id: '1',
+            name: '拉取失败数量',
+            value: 'count',
+            marker: {
+              symbol: 'square',
+            },
+          },
+        ],
+      },
       yAxis: {
         grid: {
           line: {
@@ -143,38 +169,36 @@
             },
           },
         },
+        tickInterval: 1,
       },
       label: {
         // 可手动配置 label 数据标签位置
-        position: 'middle', // 'top', 'bottom', 'middle',
+        position: 'top', // 'top', 'bottom', 'middle',
         // 配置样式
         style: {
-          fill: '#FFFFFF',
-          opacity: 0.6,
+          fill: '#979BA5',
         },
       },
-      xAxis: {
-        label: {
-          autoHide: true,
-          autoRotate: false,
+      tooltip: {
+        fields: ['value', 'count'],
+        showTitle: true,
+        title: 'release_change_failed_reason',
+        container: tooltipRef.value?.getDom(),
+        enterable: true,
+        customItems: (originalItems: any[]) => {
+          originalItems[0].name = '客户端数量';
+          return originalItems;
         },
-      },
-      legend: {
-        custom: true,
-        position: 'bottom',
-        items: [
-          {
-            id: '1',
-            name: '客户端数量',
-            value: 'count',
-            marker: {
-              symbol: 'square',
-            },
-          },
-        ],
       },
     });
     columnPlot!.render();
+  };
+
+  const jumpToSearch = () => {
+    router.push({
+      name: 'client-search',
+      params: { appId: props.appId, bizId: props.bkBizId },
+    });
   };
 </script>
 

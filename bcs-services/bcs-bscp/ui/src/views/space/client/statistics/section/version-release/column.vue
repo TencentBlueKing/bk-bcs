@@ -1,17 +1,22 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
-    <Tooltip ref="tooltipRef" />
+    <Tooltip ref="tooltipRef" @jump="emits('jump')" />
   </div>
 </template>
 
 <script lang="ts" setup>
   import { onMounted, ref, watch } from 'vue';
   import { Column } from '@antv/g2plot';
+  import { IClientConfigVersionItem } from '../../../../../../../types/client';
   import Tooltip from '../../components/tooltip.vue';
 
   const props = defineProps<{
-    data: any;
+    data: IClientConfigVersionItem[];
+    bkBizId: string;
+    appId: number;
   }>();
+  const emits = defineEmits(['update', 'jump']);
+
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
   let columnPlot: Column;
@@ -34,7 +39,7 @@
       data: data.value,
       xField: 'current_release_name',
       yField: 'count',
-      padding: [20, 10, 50, 20],
+      padding: [30, 10, 50, 20],
       limitInPlot: false,
       color: '#3E96C2',
       seriesField: 'count',
@@ -68,7 +73,7 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          // process originalItems,
+          emits('update', originalItems[0].title);
           originalItems[0].name = '客户端数量';
           return originalItems;
         },
@@ -82,6 +87,7 @@
             },
           },
         },
+        tickInterval: 1,
       },
     });
     columnPlot.render();
