@@ -124,6 +124,8 @@ const (
 	MetricResCPU = "cpu"
 	// MetricResMem 指标资源：内存
 	MetricResMem = "memory"
+	// MetricResEphemeralStorage 指标资源：临时存储
+	MetricResEphemeralStorage = "ephemeral-storage"
 )
 
 const (
