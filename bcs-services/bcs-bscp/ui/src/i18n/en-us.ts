@@ -367,6 +367,7 @@ export default {
   '（已上线分组之外的所有实例）': 'All instances outside of the launched group',
   除以下分组之外的所有实例: 'All instances except for the following groups',
   请选择需要调整的分组: 'Please select the group that needs to be adjusted',
+  '确认删除所选的 {n} 项配置项？': 'Confirm the deletion of the selected {n} configuration items?',
 
   // 分组管理
   新增分组: 'New group',

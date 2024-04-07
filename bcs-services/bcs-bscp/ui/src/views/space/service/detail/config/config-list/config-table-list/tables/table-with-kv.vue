@@ -7,11 +7,18 @@
       :remote-pagination="true"
       :pagination="pagination"
       :key="versionData.id"
+      :checked="selectedConfigIds"
+      selection-key="id"
+      row-key="id"
       :row-class="getRowCls"
+      :is-row-select-enable="isRowSelectEnable"
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"
       @column-sort="handleSort"
-      @column-filter="handleFilter">
+      @column-filter="handleFilter"
+      @selection-change="handleSelectionChange"
+      @select-all="handleSelectAll">
+      <bk-table-column v-if="versionData.id === 0" type="selection" :width="40" :min-width="40"></bk-table-column>
       <bk-table-column :label="t('配置项名称')" prop="spec.key" :min-width="240">
         <template #default="{ row }">
           <bk-button
@@ -133,7 +140,7 @@
     searchStr: string;
   }>();
 
-  const emits = defineEmits(['clearStr']);
+  const emits = defineEmits(['clearStr', 'updateSelectedIds']);
 
   const loading = ref(false);
   const configList = ref<IConfigKvType[]>([]);
@@ -142,6 +149,7 @@
   const viewPanelShow = ref(false);
   const activeConfig = ref<IConfigKvType>(getDefaultKvItem());
   const deleteConfig = ref<IConfigKvType>();
+  const selectedConfigIds = ref<number[]>([]);
   const isDiffPanelShow = ref(false);
   const diffConfig = ref(0);
   const isSearchEmpty = ref(false);
@@ -206,6 +214,13 @@
   );
 
   watch(
+    () => selectedConfigIds.value,
+    () => {
+      emits('updateSelectedIds', selectedConfigIds.value);
+    },
+  );
+
+  watch(
     () => configsCount.value,
     () => {
       configStore.$patch((state) => {
@@ -259,6 +274,34 @@
     }
   };
 
+  // 表格行是否可以选中
+  const isRowSelectEnable = ({ row }: { row: IConfigKvType }) => {
+    return row.kv_state !== 'DELETE';
+  };
+
+  // 表格行选择事件
+  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IConfigKvType }) => {
+    const index = selectedConfigIds.value.findIndex((id) => id === row.id);
+    if (checked) {
+      if (index === -1) {
+        selectedConfigIds.value.push(row.id);
+      }
+    } else {
+      selectedConfigIds.value.splice(index, 1);
+    }
+    console.log('handleSelection: ', checked, selectedConfigIds.value);
+  };
+
+  // 全选
+  const handleSelectAll = ({ checked }: { checked: boolean }) => {
+    if (checked) {
+      selectedConfigIds.value = configList.value.filter((item) => item.kv_state !== 'DELETE').map((item) => item.id);
+    } else {
+      selectedConfigIds.value = [];
+    }
+    console.log('handleSelectAll: ', checked, selectedConfigIds.value);
+  };
+
   const handleEditOrView = (config: IConfigKvType) => {
     activeConfig.value = config;
     if (isUnNamedVersion.value) {
@@ -291,6 +334,10 @@
       return;
     }
     await deleteKv(props.bkBizId, props.appId, deleteConfig.value.id);
+    const index = selectedConfigIds.value.findIndex((id) => id === deleteConfig.value?.id);
+    if (index > -1) {
+      selectedConfigIds.value.splice(index, 1);
+    }
     if (configList.value.length === 1 && pagination.value.current > 1) {
       pagination.value.current -= 1;
     }
