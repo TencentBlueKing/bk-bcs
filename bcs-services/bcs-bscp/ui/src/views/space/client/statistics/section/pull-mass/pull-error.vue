@@ -31,8 +31,14 @@
   import { ref, watch, onMounted } from 'vue';
   import { Column } from '@antv/g2plot';
   import Card from '../../components/card.vue';
-  import { IPullErrorReason, IInfoCard } from '../../../../../../../types/client';
+  import { IPullErrorReason, IInfoCard, IClinetCommonQuery } from '../../../../../../../types/client';
   import { getClientPullStatusData } from '../../../../../../api/client';
+  import useClientStore from '../../../../../../store/client';
+  import { storeToRefs } from 'pinia';
+
+  const clientStore = useClientStore();
+
+  const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
     bkBizId: string;
@@ -81,8 +87,18 @@
       if (!val.length && columnPlot) {
         columnPlot!.destroy();
         columnPlot = null;
+      } else {
+        columnPlot?.changeData(data.value);
       }
     },
+  );
+
+  watch(
+    () => searchQuery.value,
+    () => {
+      loadChartData();
+    },
+    { deep: true },
   );
 
   onMounted(async () => {
@@ -93,9 +109,13 @@
   });
 
   const loadChartData = async () => {
+    const params: IClinetCommonQuery = {
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      search: searchQuery.value.search,
+    };
     try {
       loading.value = true;
-      const res = await getClientPullStatusData(props.bkBizId, props.appId, {});
+      const res = await getClientPullStatusData(props.bkBizId, props.appId, params);
       data.value = res.failed_reason;
       Object.entries(res.time_consuming).map(
         ([key, value]) => (pullTime.value.find((item) => item.key === key)!.value = value as number),

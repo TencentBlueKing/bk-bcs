@@ -23,8 +23,14 @@
   import Pie from './pie.vue';
   import Column from './column.vue';
   import Table from './table.vue';
-  import { IClientLabelItem } from '../../../../../../../../types/client';
+  import { IClientLabelItem, IClinetCommonQuery } from '../../../../../../../../types/client';
   import { getClientLabelData } from '../../../../../../../api/client';
+  import useClientStore from '../../../../../../../store/client';
+  import { storeToRefs } from 'pinia';
+
+  const clientStore = useClientStore();
+
+  const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
     bkBizId: string;
@@ -56,10 +62,22 @@
     },
   );
 
+  watch(
+    () => searchQuery.value,
+    () => {
+      loadChartData();
+    },
+    { deep: true },
+  );
+
   const loadChartData = async () => {
+    const params: IClinetCommonQuery = {
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      search: searchQuery.value.search,
+    };
     try {
       loading.value = true;
-      const res = await getClientLabelData(props.bkBizId, props.appId, {});
+      const res = await getClientLabelData(props.bkBizId, props.appId, params);
       allLabeldata.value = res;
     } catch (error) {
       console.error(error);

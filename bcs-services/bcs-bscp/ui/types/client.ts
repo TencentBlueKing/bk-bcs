@@ -14,8 +14,8 @@ export interface ISearchCondition {
 
 // 客户端查询条件公共接口
 export interface IClinetCommonQuery {
-  start: number;
-  limit: number;
+  start?: number;
+  limit?: number;
   last_heartbeat_time?: number;
   all?: boolean;
   order?: {
@@ -27,6 +27,7 @@ export interface IClinetCommonQuery {
   end_time?: string;
   search_value?: string;
   search_type?: string;
+  pull_time?: number;
 }
 
 // 客户端查询列表接口查询条件
@@ -40,6 +41,7 @@ export interface IClientSearchParams {
   annotations?: string;
   online_status?: string[];
   client_version?: string;
+  client_type?: string;
 }
 
 export interface IGetClientSearchListQuery {

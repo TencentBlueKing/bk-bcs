@@ -48,7 +48,13 @@
     IVersionDistributionPie,
     IVersionDistributionPieItem,
     IInfoCard,
+    IClinetCommonQuery,
   } from '../../../../../../../types/client';
+  import useClientStore from '../../../../../../store/client';
+  import { storeToRefs } from 'pinia';
+
+  const clientStore = useClientStore();
+  const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
     bkBizId: string;
@@ -107,14 +113,26 @@
     () => loadChartData(),
   );
 
+  watch(
+    () => searchQuery.value,
+    () => {
+      loadChartData();
+    },
+    { deep: true },
+  );
+
   onMounted(() => {
     loadChartData();
   });
 
   const loadChartData = async () => {
+    const params: IClinetCommonQuery = {
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      search: searchQuery.value.search,
+    };
     try {
       loading.value = true;
-      const res = await getClientComponentInfoData(props.bkBizId, props.appId, {});
+      const res = await getClientComponentInfoData(props.bkBizId, props.appId, params);
       data.value = res.version_distribution;
       sunburstData.value.children = convertToTree(res.version_distribution);
       Object.entries(res.resource_usage).map(

@@ -16,8 +16,14 @@
   import { ref, watch, onMounted } from 'vue';
   import { Pie } from '@antv/g2plot';
   import Card from '../../components/card.vue';
-  import { IPullSuccessRate } from '../../../../../../../types/client';
+  import { IPullSuccessRate, IClinetCommonQuery } from '../../../../../../../types/client';
   import { getClientPullStatusData } from '../../../../../../api/client';
+  import useClientStore from '../../../../../../store/client';
+  import { storeToRefs } from 'pinia';
+
+  const clientStore = useClientStore();
+
+  const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
     bkBizId: string;
@@ -49,8 +55,18 @@
       if (!val.length && piePlot) {
         piePlot!.destroy();
         piePlot = null;
+      } else {
+        piePlot?.changeData(data.value);
       }
     },
+  );
+
+  watch(
+    () => searchQuery.value,
+    () => {
+      loadChartData();
+    },
+    { deep: true },
   );
 
   onMounted(async () => {
@@ -61,9 +77,13 @@
   });
 
   const loadChartData = async () => {
+    const params: IClinetCommonQuery = {
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      search: searchQuery.value.search,
+    };
     try {
       loading.value = true;
-      const res = await getClientPullStatusData(props.bkBizId, props.appId, {});
+      const res = await getClientPullStatusData(props.bkBizId, props.appId, params);
       data.value = res.change_status.map((item: any) => ({
         count: item.count,
         percent: item.percent,

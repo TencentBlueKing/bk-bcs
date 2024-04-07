@@ -30,7 +30,7 @@
             @enter="handleConfirmConditionItem" />
         </div>
         <div
-          v-if="searchConditionList.length"
+          v-if="searchConditionList.length && isClientSearch"
           :class="['set-used', { light: isCommonlyUsed }]"
           v-bk-tooltips="{ content: '设为常用' }"
           @click.stop="handleOpenSetCommonlyDialg(true)">
@@ -42,11 +42,7 @@
           <div class="search-condition">
             <div class="title">查询条件</div>
             <div v-if="!showChildSelector">
-              <div
-                v-for="item in CLIENT_SEARCH_DATA"
-                :key="item.value"
-                class="search-item"
-                @click="handleSelectParent(item)">
+              <div v-for="item in selectorData" :key="item.value" class="search-item" @click="handleSelectParent(item)">
                 {{ item.name }}
               </div>
             </div>
@@ -75,7 +71,7 @@
         </div>
       </template>
     </bk-popover>
-    <div class="commonly-warp">
+    <div v-if="isClientSearch" class="commonly-wrap">
       <template v-for="(item, index) in commonlySearchList" :key="item.id">
         <CommonlyUsedTag
           v-if="index < 5"
@@ -116,7 +112,7 @@
   import { nextTick, ref, computed, watch } from 'vue';
   import { storeToRefs } from 'pinia';
   import { EditLine, CloseLine } from 'bkui-vue/lib/icon';
-  import { CLIENT_SEARCH_DATA, CLIENT_STATUS_MAP } from '../../../../constants/client';
+  import { CLIENT_SEARCH_DATA, CLIENT_STATISTICS_SEARCH_DATA, CLIENT_STATUS_MAP } from '../../../../constants/client';
   import { ISelectorItem, ISearchCondition, ICommonlyUsedItem } from '../../../../../types/client';
   import {
     getClientSearchRecord,
@@ -129,9 +125,12 @@
   import CommonlyUsedTag from './commonly-used-tag.vue';
   import { Message } from 'bkui-vue';
   import { cloneDeep } from 'lodash';
+  import { useRoute } from 'vue-router';
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
+
+  const route = useRoute();
 
   const isShowPopover = ref(false);
   const searchConditionList = ref<ISearchCondition[]>([]);
@@ -159,6 +158,10 @@
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
     return 'UID/IP/标签/当前配置版本/目标配置版本/最近一次拉取配置状态/附加信息/在线状态/客户端组件版本';
   });
+
+  const isClientSearch = computed(() => route.name === 'client-search');
+
+  const selectorData = computed(() => (isClientSearch.value ? CLIENT_SEARCH_DATA : CLIENT_STATISTICS_SEARCH_DATA));
 
   watch(
     () => searchConditionList.value,
@@ -378,7 +381,7 @@
         });
       } else if (key === 'online_status' || key === 'release_change_status') {
         query[key].forEach((value: string) => {
-          const content = `${CLIENT_SEARCH_DATA.find((item) => item.value === key)?.name}:${
+          const content = `${selectorData.value.find((item) => item.value === key)?.name}:${
             CLIENT_STATUS_MAP[value as keyof typeof CLIENT_STATUS_MAP]
           }`;
           searchList.push({
@@ -389,7 +392,7 @@
           searchName.push(content);
         });
       } else {
-        const content = `${CLIENT_SEARCH_DATA.find((item) => item.value === key)?.name}:${query[key]}`;
+        const content = `${selectorData.value.find((item) => item.value === key)?.name}:${query[key]}`;
         searchList.push({
           key,
           value: query[key],
@@ -404,9 +407,6 @@
 </script>
 
 <style scoped lang="scss">
-  .section {
-    margin-top: 32px;
-  }
   .search-wrap {
     position: relative;
     display: flex;
@@ -477,7 +477,8 @@
       }
     }
   }
-  .commonly-warp {
+  .commonly-wrap {
+    position: absolute;
     height: 26px;
     display: flex;
     margin-top: 6px;

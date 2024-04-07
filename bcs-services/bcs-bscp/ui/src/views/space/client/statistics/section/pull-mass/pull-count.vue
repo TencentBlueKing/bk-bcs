@@ -24,8 +24,14 @@
   import Card from '../../components/card.vue';
   import { DualAxes } from '@antv/g2plot';
   import { getClientPullCountData } from '../../../../../../api/client';
-  import { IPullCount } from '../../../../../../../types/client';
+  import { IPullCount, IClinetCommonQuery } from '../../../../../../../types/client';
   import Tooltip from '../../components/tooltip.vue';
+  import useClientStore from '../../../../../../store/client';
+  import { storeToRefs } from 'pinia';
+
+  const clientStore = useClientStore();
+
+  const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
     bkBizId: string;
@@ -68,6 +74,14 @@
   });
 
   watch(
+    () => searchQuery.value,
+    () => {
+      loadChartData();
+    },
+    { deep: true },
+  );
+
+  watch(
     () => data.value.time,
     (val) => {
       if (!val.length && dualAxes) {
@@ -85,10 +99,15 @@
   });
 
   const loadChartData = async () => {
+    const params: IClinetCommonQuery = {
+      search: searchQuery.value.search,
+      pull_time: selectTime.value,
+    };
     try {
       loading.value = true;
-      const res = await getClientPullCountData(props.bkBizId, props.appId, { pull_time: selectTime.value });
-      data.value = res;
+      const res = await getClientPullCountData(props.bkBizId, props.appId, params);
+      data.value.time = res.time || [];
+      data.value.time_and_type = res.time_and_type || [];
     } catch (error) {
       console.error(error);
     } finally {

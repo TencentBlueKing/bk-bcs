@@ -26,8 +26,14 @@
   import Pie from './pie.vue';
   import Column from './column.vue';
   import Table from './table.vue';
-  import { IClientConfigVersionItem } from '../../../../../../../types/client';
+  import { IClientConfigVersionItem, IClinetCommonQuery } from '../../../../../../../types/client';
   import { getConfigVersionData } from '../../../../../../api/client';
+  import useClientStore from '../../../../../../store/client';
+  import { storeToRefs } from 'pinia';
+
+  const clientStore = useClientStore();
+
+  const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
     bkBizId: string;
@@ -55,10 +61,22 @@
     },
   );
 
+  watch(
+    () => searchQuery.value,
+    () => {
+      loadChartData();
+    },
+    { deep: true },
+  );
+
   const loadChartData = async () => {
+    const params: IClinetCommonQuery = {
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      search: searchQuery.value.search,
+    };
     try {
       loading.value = true;
-      const res = await getConfigVersionData(props.bkBizId, props.appId, {});
+      const res = await getConfigVersionData(props.bkBizId, props.appId, params);
       data.value = res.client_config_version;
     } catch (error) {
       console.error(error);

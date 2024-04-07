@@ -41,10 +41,6 @@ export const CLIENT_SEARCH_DATA = [
       },
     ],
   },
-  // {
-  //   name: '附加信息',
-  //   value: 'annotations',
-  // },
   {
     name: '在线状态',
     value: 'online_status',
@@ -62,6 +58,51 @@ export const CLIENT_SEARCH_DATA = [
   {
     name: '客户端组件版本',
     value: 'client_version',
+  },
+];
+
+export const CLIENT_STATISTICS_SEARCH_DATA = [
+  {
+    name: '标签',
+    value: 'label',
+  },
+  {
+    name: '当前配置版本',
+    value: 'current_release_name',
+  },
+  // {
+  //   name: '附加信息',
+  //   value: 'annotations',
+  // },
+  {
+    name: '最近一次拉取配置状态',
+    value: 'release_change_status',
+    children: [
+      {
+        name: '成功',
+        value: 'Success',
+      },
+      {
+        name: '失败',
+        value: 'Failed',
+      },
+      {
+        name: '处理中',
+        value: 'Processing',
+      },
+      {
+        name: '跳过',
+        value: 'Skip',
+      },
+    ],
+  },
+  {
+    name: '客户端组件版本',
+    value: 'client_version',
+  },
+  {
+    name: '客户端组件类型',
+    value: 'client_type',
   },
 ];
 
