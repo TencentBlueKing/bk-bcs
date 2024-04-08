@@ -1,16 +1,31 @@
 <template>
-  <Card title="拉取成功率" :height="416" :width="318">
-    <bk-loading class="loading-wrap" :loading="loading">
-      <div v-if="data.length" ref="canvasRef" class="canvas-wrap">
-        <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
-      </div>
-      <bk-exception v-else class="exception-wrap-item exception-part" type="empty" scene="part" description="暂无数据">
-        <template #type>
-          <span class="bk-bscp-icon icon-pie-chart exception-icon" />
+  <Teleport :disabled="!isOpenFullScreen" to="body">
+    <div :class="{ fullscreen: isOpenFullScreen }">
+      <Card title="拉取成功率" :height="416" :width="318">
+        <template #operation>
+          <OperationBtn
+            :is-open-full-screen="isOpenFullScreen"
+            @refresh="loadChartData"
+            @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
         </template>
-      </bk-exception>
-    </bk-loading>
-  </Card>
+        <bk-loading class="loading-wrap" :loading="loading">
+          <div v-if="data.length" ref="canvasRef" class="canvas-wrap">
+            <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+          </div>
+          <bk-exception
+            v-else
+            class="exception-wrap-item exception-part"
+            type="empty"
+            scene="part"
+            description="暂无数据">
+            <template #type>
+              <span class="bk-bscp-icon icon-pie-chart exception-icon" />
+            </template>
+          </bk-exception>
+        </bk-loading>
+      </Card>
+    </div>
+  </Teleport>
 </template>
 
 <script lang="ts" setup>
@@ -18,6 +33,7 @@
   import { Pie } from '@antv/g2plot';
   import Card from '../../components/card.vue';
   import Tooltip from '../../components/tooltip.vue';
+  import OperationBtn from '../../components/operation-btn.vue';
   import { IPullSuccessRate, IClinetCommonQuery } from '../../../../../../../types/client';
   import { getClientPullStatusData } from '../../../../../../api/client';
   import useClientStore from '../../../../../../store/client';
@@ -40,6 +56,7 @@
   const loading = ref(false);
   const tooltipRef = ref();
   const jumpStatus = ref('');
+  const isOpenFullScreen = ref(false);
 
   watch(
     () => props.appId,
@@ -118,6 +135,7 @@
           fontSize: 14,
           textAlign: 'center',
         },
+        autoRotate: false,
       },
       interactions: [{ type: 'element-active' }],
       legend: {
@@ -153,5 +171,21 @@
 <style scoped lang="scss">
   .loading-wrap {
     height: 100%;
+  }
+  .fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 5000;
+    background-color: rgba(0, 0, 0, 0.6);
+    .card {
+      position: absolute;
+      width: 100% !important;
+      height: 80vh !important;
+      top: 50%;
+      transform: translateY(-50%);
+    }
   }
 </style>

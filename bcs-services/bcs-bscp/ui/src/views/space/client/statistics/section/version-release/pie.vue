@@ -39,9 +39,7 @@
       angleField: 'count',
       colorField: 'current_release_name',
       radius: 1,
-      autoFit: false,
-      height: 184,
-      width: 800,
+      padding: [20, 800, 20, 50],
       label: {
         type: 'inner',
         offset: '-30%',
@@ -50,6 +48,7 @@
           fontSize: 14,
           textAlign: 'center',
         },
+        autoRotate: false,
       },
       tooltip: {
         fields: ['count', 'percent'],
@@ -70,6 +69,7 @@
         layout: 'horizontal',
         position: 'right',
         flipPage: false,
+        offsetX: -600,
       },
     });
     piePlot.render();
@@ -79,8 +79,6 @@
 <style lang="scss">
   .canvas-wrap {
     position: relative;
-    display: flex;
-    align-items: center;
     height: 100%;
   }
   .g2-tooltip {

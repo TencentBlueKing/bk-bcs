@@ -50,6 +50,7 @@
           fontSize: 14,
           textAlign: 'center',
         },
+        autoRotate: false,
       },
       tooltip: {
         fields: ['count', 'percent'],

@@ -4,6 +4,9 @@
       <span>{{ title }}</span>
       <slot name="head-suffix" />
     </div>
+    <div class="operation-btn">
+      <slot name="operation" />
+    </div>
     <div class="container">
       <slot />
     </div>
@@ -20,6 +23,7 @@
 
 <style scoped lang="scss">
   .card {
+    position: relative;
     padding: 12px 16px;
     margin-bottom: 16px;
     background: #ffffff;
@@ -36,6 +40,11 @@
     }
     .container {
       height: calc(100% - 40px);
+    }
+    .operation-btn {
+      position: absolute;
+      right: 0;
+      top: -32px;
     }
   }
 </style>

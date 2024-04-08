@@ -1,5 +1,5 @@
 <template>
-  <section class="client-manege-page">
+  <section class="client-statistics-page">
     <div class="header">
       <ClientHeader title="客户端统计" />
     </div>
@@ -36,7 +36,7 @@
 </script>
 
 <style scoped lang="scss">
-  .client-manege-page {
+  .client-statistics-page {
     padding: 0 24px;
     height: 100%;
     background: #f5f7fa;

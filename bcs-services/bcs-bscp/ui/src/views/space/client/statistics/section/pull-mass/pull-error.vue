@@ -1,24 +1,32 @@
 <template>
   <div class="wrap">
-    <div class="pull-error-wrap">
-      <Card title="拉取失败原因" :height="416">
-        <bk-loading class="loading-wrap" :loading="loading">
-          <div v-if="data.length" ref="canvasRef" class="canvas-wrap">
-            <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
-          </div>
-          <bk-exception
-            v-else
-            class="exception-wrap-item exception-part"
-            type="empty"
-            scene="part"
-            description="暂无数据">
-            <template #type>
-              <span class="bk-bscp-icon icon-bar-chart exception-icon" />
-            </template>
-          </bk-exception>
-        </bk-loading>
-      </Card>
-    </div>
+    <Teleport :disabled="!isOpenFullScreen" to="body">
+      <div class="pull-error-wrap" :class="{ fullscreen: isOpenFullScreen }">
+        <Card title="拉取失败原因" :height="416">
+          <template #operation>
+            <OperationBtn
+              :is-open-full-screen="isOpenFullScreen"
+              @refresh="loadChartData"
+              @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
+          </template>
+          <bk-loading class="loading-wrap" :loading="loading">
+            <div v-if="data.length" ref="canvasRef" class="canvas-wrap">
+              <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+            </div>
+            <bk-exception
+              v-else
+              class="exception-wrap-item exception-part"
+              type="empty"
+              scene="part"
+              description="暂无数据">
+              <template #type>
+                <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+              </template>
+            </bk-exception>
+          </bk-loading>
+        </Card>
+      </div>
+    </Teleport>
     <div>
       <Card v-for="item in pullTime" :key="item.key" :title="item.name" :width="207" :height="128">
         <div class="time-info">
@@ -38,6 +46,7 @@
   import { Column } from '@antv/g2plot';
   import Card from '../../components/card.vue';
   import Tooltip from '../../components/tooltip.vue';
+  import OperationBtn from '../../components/operation-btn.vue';
   import { IPullErrorReason, IInfoCard, IClinetCommonQuery } from '../../../../../../../types/client';
   import { getClientPullStatusData } from '../../../../../../api/client';
   import useClientStore from '../../../../../../store/client';
@@ -76,6 +85,8 @@
   ]);
   const data = ref<IPullErrorReason[]>([]);
   const loading = ref(false);
+  const isOpenFullScreen = ref(false);
+  const initialWidth = ref(0);
 
   watch(
     () => props.appId,
@@ -111,10 +122,18 @@
     { deep: true },
   );
 
+  watch(
+    () => isOpenFullScreen.value,
+    (val) => {
+      canvasRef.value!.style.width = val ? '100%' : `${initialWidth.value}px`;
+    },
+  );
+
   onMounted(async () => {
     await loadChartData();
     if (data.value.length) {
       initChart();
+      initialWidth.value = canvasRef.value!.offsetWidth;
     }
   });
 
@@ -228,6 +247,25 @@
       .empty {
         font-size: 12px;
         color: #979ba5;
+      }
+    }
+  }
+  .fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 5000;
+    background-color: rgba(0, 0, 0, 0.6);
+    .card {
+      position: absolute;
+      width: 100%;
+      height: 80vh !important;
+      top: 50%;
+      transform: translateY(-50%);
+      .loading-wrap {
+        height: 100%;
       }
     }
   }

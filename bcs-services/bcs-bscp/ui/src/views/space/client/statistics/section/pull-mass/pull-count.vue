@@ -1,26 +1,42 @@
 <template>
-  <Card title="拉取数量趋势" :height="360">
-    <template #head-suffix>
-      <bk-select v-model="selectTime" class="time-selector" :clearable="false">
-        <bk-option v-for="item in selectorTimeList" :id="item.value" :key="item.value" :name="item.label" />
-      </bk-select>
-    </template>
-    <bk-loading class="loading-wrap" :loading="loading">
-      <div v-if="data.time.length" ref="canvasRef" class="canvas-wrap">
-        <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
-      </div>
-      <bk-exception v-else class="exception-wrap-item exception-part" type="empty" scene="part" description="暂无数据">
-        <template #type>
-          <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+  <Teleport :disabled="!isOpenFullScreen" to="body">
+    <div :class="{ fullscreen: isOpenFullScreen }">
+      <Card title="拉取数量趋势" :height="360">
+        <template #operation>
+          <OperationBtn
+            :is-open-full-screen="isOpenFullScreen"
+            @refresh="loadChartData"
+            @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
         </template>
-      </bk-exception>
-    </bk-loading>
-  </Card>
+        <template #head-suffix>
+          <bk-select v-model="selectTime" class="time-selector" :clearable="false">
+            <bk-option v-for="item in selectorTimeList" :id="item.value" :key="item.value" :name="item.label" />
+          </bk-select>
+        </template>
+        <bk-loading class="loading-wrap" :loading="loading">
+          <div v-if="data.time.length" ref="canvasRef" class="canvas-wrap">
+            <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+          </div>
+          <bk-exception
+            v-else
+            class="exception-wrap-item exception-part"
+            type="empty"
+            scene="part"
+            description="暂无数据">
+            <template #type>
+              <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+            </template>
+          </bk-exception>
+        </bk-loading>
+      </Card>
+    </div>
+  </Teleport>
 </template>
 
 <script lang="ts" setup>
   import { ref, onMounted, watch } from 'vue';
   import Card from '../../components/card.vue';
+  import OperationBtn from '../../components/operation-btn.vue';
   import { DualAxes } from '@antv/g2plot';
   import { getClientPullCountData } from '../../../../../../api/client';
   import { IPullCount, IClinetCommonQuery } from '../../../../../../../types/client';
@@ -62,6 +78,7 @@
     time_and_type: [],
   });
   const loading = ref(false);
+  const isOpenFullScreen = ref(false);
 
   watch([() => selectTime.value, () => props.appId], async () => {
     await loadChartData();
@@ -76,8 +93,9 @@
 
   watch(
     () => searchQuery.value,
-    () => {
-      loadChartData();
+    async () => {
+      await loadChartData();
+      dualAxes!.changeData([data.value.time_and_type, data.value.time]);
     },
     { deep: true },
   );
@@ -211,6 +229,25 @@
     width: 88px;
     :deep(.bk-input) {
       height: 26px;
+    }
+  }
+  .fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 5000;
+    background-color: rgba(0, 0, 0, 0.6);
+    .card {
+      position: absolute;
+      width: 100%;
+      height: 80vh !important;
+      top: 50%;
+      transform: translateY(-50%);
+      .loading-wrap {
+        height: 100%;
+      }
     }
   }
 </style>
