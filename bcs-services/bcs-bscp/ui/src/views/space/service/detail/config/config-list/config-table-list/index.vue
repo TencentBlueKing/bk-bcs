@@ -22,7 +22,7 @@
           :version-id="versionData.id"
           :version-name="versionData.spec.name" />
         <BatchDeleteKv
-          v-if="!isFileType"
+          v-if="!isFileType && versionData.status.publish_status === 'editing'"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :selected-ids="selectedIds"
@@ -112,8 +112,9 @@
     searchStr.value = '';
   };
 
+  // 批量删除配置项回调
   const handleBatchDeleted = () => {
-    tableRef.value.refresh();
+    tableRef.value.refreshAfterBatchDelete();
   };
 
   defineExpose({

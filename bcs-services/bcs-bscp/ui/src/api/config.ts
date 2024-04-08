@@ -460,7 +460,7 @@ export const deleteKv = (bizId: string, appId: number, configId: number) =>
  * @param ids 配置项ID列表
  */
 export const batchDeleteKv = (bizId: string, appId: number, ids: number[]) => {
-  http.delete(`config/biz/${bizId}/apps/${appId}/kvs/batchDelete`, { params: { ids } });
+  http.post(`config/biz/${bizId}/apps/${appId}/kvs/batchDelete`, { ids });
 };
 
 /**

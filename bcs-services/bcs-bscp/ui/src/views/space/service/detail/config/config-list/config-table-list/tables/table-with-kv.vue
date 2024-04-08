@@ -202,6 +202,8 @@
     () => versionData.value.id,
     () => {
       refresh();
+      selectedConfigIds.value = [];
+      emits('updateSelectedIds', selectedConfigIds.value);
     },
   );
 
@@ -210,13 +212,6 @@
     () => {
       props.searchStr ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
       refresh();
-    },
-  );
-
-  watch(
-    () => selectedConfigIds.value,
-    () => {
-      emits('updateSelectedIds', selectedConfigIds.value);
     },
   );
 
@@ -290,6 +285,7 @@
       selectedConfigIds.value.splice(index, 1);
     }
     console.log('handleSelection: ', checked, selectedConfigIds.value);
+    emits('updateSelectedIds', selectedConfigIds.value);
   };
 
   // 全选
@@ -300,6 +296,7 @@
       selectedConfigIds.value = [];
     }
     console.log('handleSelectAll: ', checked, selectedConfigIds.value);
+    emits('updateSelectedIds', selectedConfigIds.value);
   };
 
   const handleEditOrView = (config: IConfigKvType) => {
@@ -329,33 +326,53 @@
     deleteConfig.value = config;
   };
 
+  // 删除单个配置项
   const handleDeleteConfigConfirm = async () => {
     if (!deleteConfig.value) {
       return;
     }
     await deleteKv(props.bkBizId, props.appId, deleteConfig.value.id);
+
+    // 删除的配置项如果在多选列表里，需要去掉
     const index = selectedConfigIds.value.findIndex((id) => id === deleteConfig.value?.id);
     if (index > -1) {
       selectedConfigIds.value.splice(index, 1);
     }
-    if (configList.value.length === 1 && pagination.value.current > 1) {
-      pagination.value.current -= 1;
+
+    // 新增的配置项被删除后，检查是否需要往前翻一页
+    if (deleteConfig.value.kv_state === 'ADD') {
+      if (configList.value.length === 1 && pagination.value.current > 1) {
+        pagination.value.current -= 1;
+      }
     }
+
     Message({
       theme: 'success',
       message: t('删除配置项成功'),
     });
-    refresh();
+    refresh(pagination.value.current);
     isDeleteConfigDialogShow.value = false;
   };
 
-  // 撤销删除
+  // 撤销删除单个配置项
   const handleUndelete = async (config: IConfigKvType) => {
     await undeleteKv(props.bkBizId, props.appId, config.spec.key);
     Message({ theme: 'success', message: t('恢复配置项成功') });
     refresh();
   };
 
+  // 批量删除配置项后刷新配置项列表
+  const refreshAfterBatchDelete = () => {
+    if (selectedConfigIds.value.length === configList.value.length && pagination.value.current > 1) {
+      pagination.value.current -= 1;
+    }
+
+    selectedConfigIds.value = [];
+    emits('updateSelectedIds', []);
+    refresh(pagination.value.current);
+  };
+
+  // page-limit
   const handlePageLimitChange = (limit: number) => {
     pagination.value.limit = limit;
     refresh();
@@ -367,7 +384,6 @@
   };
 
   const handleFilter = ({ checked, index }: any) => {
-    console.log(checked, index);
     if (index === 2) {
       // 调整数据类型筛选条件
       typeFilterChecked.value = checked;
@@ -390,6 +406,7 @@
 
   defineExpose({
     refresh,
+    refreshAfterBatchDelete,
   });
 </script>
 <style lang="scss" scoped>

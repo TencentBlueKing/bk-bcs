@@ -8,8 +8,13 @@
   <DeleteConfirmDialog
     v-model:isShow="isBatchDeleteDialogShow"
     :title="t('确认删除所选的 {n} 项配置项？', { n: props.selectedIds.length })"
+    :pending="batchDeletePending"
     @confirm="handleBatchDeleteConfirm">
-    <div>{{ t('如果已生成版本中删除，该操作将无法撤销，请谨慎操作') }}</div>
+    <div>
+      {{
+        t('已生成版本中存在的配置项，可以通过恢复按钮撤销删除，新增且未生成版本的配置项，将无法撤销删除，请谨慎操作。')
+      }}
+    </div>
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
@@ -27,6 +32,8 @@
     selectedIds: number[];
   }>();
 
+  const emits = defineEmits(['deleted']);
+
   const batchDeletePending = ref(false);
   const isBatchDeleteDialogShow = ref(false);
 
@@ -37,6 +44,8 @@
       theme: 'success',
       message: t('批量删除配置项成功'),
     });
+    batchDeletePending.value = false;
     isBatchDeleteDialogShow.value = false;
+    emits('deleted');
   };
 </script>

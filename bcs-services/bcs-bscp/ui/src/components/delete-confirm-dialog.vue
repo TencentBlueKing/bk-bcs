@@ -3,6 +3,7 @@
     :is-show="isShow"
     :title="title"
     :theme="'primary'"
+    :loading="pending"
     quick-close
     ext-cls="delete-confirm-dialog"
     @closed="handleClose">
@@ -19,11 +20,17 @@
 <script lang="ts" setup>
   import { useI18n } from 'vue-i18n';
   const { t } = useI18n();
-  defineProps<{
-    isShow: boolean;
-    title: string;
-    confirmText?: string;
-  }>();
+  withDefaults(
+    defineProps<{
+      isShow: boolean;
+      title: string;
+      pending?: boolean;
+      confirmText?: string;
+    }>(),
+    {
+      pending: false,
+    },
+  );
 
   const handleClose = () => {
     emits('close');
