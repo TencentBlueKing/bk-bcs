@@ -31,7 +31,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/analyze"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/resources"
@@ -42,11 +42,11 @@ import (
 // AppPlugin for internal project authorization
 type AppPlugin struct {
 	*mux.Router
-	db             dao.Interface
-	storage        store.Store
-	middleware     mw.MiddlewareInterface
-	analysisClient analysis.AnalysisInterface
-	bcsStorage     bcsapi.Storage
+	db         dao.Interface
+	storage    store.Store
+	middleware mw.MiddlewareInterface
+	bcsStorage bcsapi.Storage
+	appCollect analyze.CollectApplication
 }
 
 // all argocd application URL:
@@ -335,7 +335,7 @@ func (plugin *AppPlugin) applicationCollect(r *http.Request) (*http.Request, *mw
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
-	if err = plugin.analysisClient.ApplicationCollect(argoApp.Spec.Project, appName); err != nil {
+	if err = plugin.appCollect.ApplicationCollect(argoApp.Spec.Project, appName); err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
 	return r, mw.ReturnJSONResponse("success")
@@ -352,7 +352,7 @@ func (plugin *AppPlugin) applicationCancelCollect(r *http.Request) (*http.Reques
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
-	if err = plugin.analysisClient.ApplicationCancelCollect(argoApp.Spec.Project, appName); err != nil {
+	if err = plugin.appCollect.ApplicationCancelCollect(argoApp.Spec.Project, appName); err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
 	return r, mw.ReturnJSONResponse("success")

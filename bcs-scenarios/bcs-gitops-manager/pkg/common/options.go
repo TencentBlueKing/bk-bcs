@@ -149,6 +149,29 @@ type MonitorConfig struct {
 	Port    string `json:"port"`
 }
 
+// AnalysisConfig defines the config of analysis
+type AnalysisConfig struct {
+	BKMonitorPushUrl    string `json:"bkMonitorPushUrl"`
+	BKMonitorPushToken  string `json:"bkMonitorPushToken"`
+	BKMonitorPushDataID int64  `json:"bkMonitorPushDataID"`
+
+	BKMonitorGetUrl   string `json:"bkMonitorGetUrl"`
+	BKMonitorGetBizID int64  `json:"bkMonitorGetBizID"`
+	BKMonitorGetUser  string `json:"bkMonitorGetUser"`
+
+	BKCCUrl string `json:"bkccUrl"`
+
+	GitOpsAnalysisUrlSG   string `json:"gitOpsAnalysisUrlSG"`
+	GitOpsAnalysisTokenSG string `json:"gitOpsAnalysisTokenSG"`
+}
+
+// SecretStoreOptions defines the options of secret store
+// nolint
+type SecretStoreOptions struct {
+	Address string `json:"address"`
+	Port    string `json:"port"`
+}
+
 // Complete unset item
 func (config *AuthConfig) Complete() error {
 	return nil

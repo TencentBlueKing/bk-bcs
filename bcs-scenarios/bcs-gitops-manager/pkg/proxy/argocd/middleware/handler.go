@@ -38,11 +38,13 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/exp/slices"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/analyze"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
 // MiddlewareInterface defines the middleware interface
@@ -69,7 +71,6 @@ type MiddlewareInterface interface {
 	CheckApplicationPermission(ctx context.Context, appName string,
 		action iam.ActionID) (*v1alpha1.Application, int, error)
 
-	ListProjectsWithoutAuth(ctx context.Context) (*v1alpha1.AppProjectList, int, error)
 	ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, int, error)
 	ListClusters(ctx context.Context, projectNames []string) (*v1alpha1.ClusterList, int, error)
 	ListRepositories(ctx context.Context, projectNames []string,
@@ -89,38 +90,45 @@ type handler struct {
 	projectPermission   *project.BCSProjectPerm
 	clusterPermission   *cluster.BCSClusterPerm
 	namespacePermission *namespace.BCSNamespacePerm
-	option              *proxy.GitOpsOptions
-	argoSession         *session.ArgoSession
-	secretSession       *session.SecretSession
-	analysisClient      analysis.AnalysisInterface
-	monitorSession      *session.MonitorSession
+
+	option             *options.Options
+	store              store.Store
+	analysisCollection analyze.AnalysisCollection
+	appCollect         analyze.CollectApplication
+
+	secretSession     *session.SecretSession
+	monitorSession    *session.MonitorSession
+	argoSession       *session.ArgoSession
+	argoStreamSession *session.ArgoStreamSession
 
 	tracer func(context.Context) error
 }
 
 // NewMiddlewareHandler create handler instance
-func NewMiddlewareHandler(option *proxy.GitOpsOptions, session *session.ArgoSession,
-	secretSession *session.SecretSession,
-	monitorSession *session.MonitorSession) MiddlewareInterface {
+func NewMiddlewareHandler() MiddlewareInterface {
+	op := options.GlobalOptions()
 	return &handler{
-		option:              option,
-		argoSession:         session,
-		secretSession:       secretSession,
-		monitorSession:      monitorSession,
-		projectPermission:   project.NewBCSProjectPermClient(option.IAMClient),
-		clusterPermission:   cluster.NewBCSClusterPermClient(option.IAMClient),
-		namespacePermission: namespace.NewBCSNamespacePermClient(option.IAMClient),
-		analysisClient:      analysis.GetAnalysisClient(),
+		option:              op,
+		store:               store.GlobalStore(),
+		argoSession:         session.NewArgoSession(),
+		argoStreamSession:   session.NewArgoStreamSession(),
+		secretSession:       session.NewSecretSession(),
+		monitorSession:      session.NewMonitorSession(),
+		projectPermission:   project.NewBCSProjectPermClient(op.IAMClient),
+		clusterPermission:   cluster.NewBCSClusterPermClient(op.IAMClient),
+		namespacePermission: namespace.NewBCSNamespacePermClient(op.IAMClient),
+		analysisCollection:  analyze.GetAnalysisClient(),
+		appCollect:          analyze.NewCollectApplication(),
 	}
 }
 
 // Init will init the tracer
 func (h *handler) Init() error {
 	opts := []trace.Option{
-		trace.OTLPEndpoint(h.option.TraceOption.Endpoint),
+		trace.OTLPEndpoint(h.option.TraceConfig.Endpoint),
 	}
 	attrs := make([]attribute.KeyValue, 0)
-	attrs = append(attrs, attribute.String("bk.data.token", h.option.TraceOption.Token))
+	attrs = append(attrs, attribute.String("bk.data.token", h.option.TraceConfig.Token))
 	opts = append(opts, trace.ResourceAttrs(attrs))
 	// InitTracingProvider Initializes an OTLP exporter, and configures the corresponding trace and
 	// metric providers.
@@ -136,12 +144,13 @@ func (h *handler) Init() error {
 func (h *handler) HttpWrapper(handler HttpHandler) http.Handler {
 	handlerName := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
 	hw := &httpWrapper{
-		handler:        handler,
-		handlerName:    handlerName,
-		option:         h.option,
-		argoSession:    h.argoSession,
-		secretSession:  h.secretSession,
-		monitorSession: h.monitorSession,
+		handler:           handler,
+		handlerName:       handlerName,
+		option:            h.option,
+		argoSession:       h.argoSession,
+		argoStreamSession: h.argoStreamSession,
+		secretSession:     h.secretSession,
+		monitorSession:    h.monitorSession,
 	}
 	blog.Infof("[Trace] request handler '%s' add to otel", handlerName)
 	return otelhttp.NewHandler(hw, handlerName)
@@ -180,7 +189,7 @@ func (h *handler) CheckProjectPermission(ctx context.Context, projectName string
 		return nil, http.StatusBadRequest, errors.Errorf("project name cannot be empty")
 	}
 	// get project info and validate projectPermission
-	argoProject, err := h.option.Storage.GetProject(ctx, projectName)
+	argoProject, err := h.store.GetProject(ctx, projectName)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "get project from storage failure")
 	}
@@ -265,7 +274,7 @@ func (h *handler) CheckNamespaceScopedResourcePermission(ctx context.Context, pr
 func (h *handler) CheckProjectPermissionByID(ctx context.Context, projectName, projectID string,
 	action iam.ActionID) (int, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
-	h.analysisClient.UpdateActivityUser(projectName, user.GetUser())
+	h.analysisCollection.UpdateActivityUser(projectName, user.GetUser())
 	if h.isAdminUser(user.GetUser()) {
 		return http.StatusOK, nil
 	}
@@ -299,7 +308,7 @@ func (h *handler) CheckClusterPermission(ctx context.Context, query *clusterclie
 	if h.isAdminUser(user.GetUser()) {
 		return http.StatusOK, nil
 	}
-	argoCluster, err := h.option.Storage.GetCluster(ctx, query)
+	argoCluster, err := h.store.GetCluster(ctx, query)
 	if err != nil {
 		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster from storage failure")
 	}
@@ -334,7 +343,7 @@ func (h *handler) CheckClusterPermission(ctx context.Context, query *clusterclie
 // CheckRepositoryPermission 检查登录态用户对于 Repo 仓库权限，Repo 权限与 Project 权限挂钩
 func (h *handler) CheckRepositoryPermission(ctx context.Context, repoName string,
 	action iam.ActionID) (*v1alpha1.Repository, int, error) {
-	repo, err := h.option.Storage.GetRepository(ctx, repoName)
+	repo, err := h.store.GetRepository(ctx, repoName)
 	if err != nil {
 		return nil, http.StatusInternalServerError,
 			errors.Wrapf(err, "get repository '%s' from storage failed", repoName)
@@ -351,7 +360,7 @@ func (h *handler) CheckRepositoryPermission(ctx context.Context, repoName string
 }
 
 func (h *handler) checkRepositoryBelongProject(ctx context.Context, repoUrl, project string) (bool, error) {
-	repo, err := h.option.Storage.GetRepository(ctx, repoUrl)
+	repo, err := h.store.GetRepository(ctx, repoUrl)
 	if err != nil {
 		return false, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
 	}
@@ -372,7 +381,7 @@ func (h *handler) checkRepositoryBelongProject(ctx context.Context, repoUrl, pro
 // CheckApplicationPermission 检查应用的权限
 func (h *handler) CheckApplicationPermission(ctx context.Context, appName string,
 	action iam.ActionID) (*v1alpha1.Application, int, error) {
-	app, err := h.option.Storage.GetApplication(ctx, appName)
+	app, err := h.store.GetApplication(ctx, appName)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err,
 			"get application '%s' from storage failed", appName)
@@ -398,7 +407,7 @@ func (h *handler) CheckApplicationPermission(ctx context.Context, appName string
 	projectID = common.GetBCSProjectID(argoProject.Annotations)
 
 	// 获取集群信息
-	argoCluster, err := h.option.Storage.GetCluster(ctx, &argocluster.ClusterQuery{
+	argoCluster, err := h.store.GetCluster(ctx, &argocluster.ClusterQuery{
 		Server: app.Spec.Destination.Server,
 	})
 	if err != nil {
@@ -467,7 +476,7 @@ func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Appl
 		Server: app.Spec.Destination.Server,
 		Name:   app.Spec.Destination.Name,
 	}
-	argoCluster, err := h.option.Storage.GetCluster(ctx, &clusterQuery)
+	argoCluster, err := h.store.GetCluster(ctx, &clusterQuery)
 	if err != nil {
 		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster '%v' failed", clusterQuery)
 	}
@@ -500,28 +509,9 @@ func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Appl
 	return 0, nil
 }
 
-// ListProjectsWithoutAuth list all projects that argo controlled
-func (h *handler) ListProjectsWithoutAuth(ctx context.Context) (*v1alpha1.AppProjectList, int, error) {
-	projectList, err := h.option.Storage.ListProjects(ctx)
-	if err != nil {
-		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list projects failed")
-	}
-	result := make([]v1alpha1.AppProject, 0, len(projectList.Items))
-	for i := range projectList.Items {
-		appProj := projectList.Items[i]
-		projectID := common.GetBCSProjectID(appProj.Annotations)
-		if projectID == "" {
-			continue
-		}
-		result = append(result, appProj)
-	}
-	projectList.Items = result
-	return projectList, http.StatusOK, nil
-}
-
 // ListProjects 根据用户权限列出具备权限的 Projects
 func (h *handler) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, int, error) {
-	projectList, err := h.option.Storage.ListProjects(ctx)
+	projectList, err := h.store.ListProjects(ctx)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list projects failed")
 	}
@@ -558,7 +548,7 @@ func (h *handler) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, i
 // ListClusters 根据项目名获取用户态下可以 view 的集群列表
 func (h *handler) ListClusters(ctx context.Context, projectNames []string) (
 	*v1alpha1.ClusterList, int, error) {
-	clusterList, err := h.option.Storage.ListCluster(ctx)
+	clusterList, err := h.store.ListCluster(ctx)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list clusters from storage failure")
 	}
@@ -606,7 +596,7 @@ func (h *handler) ListRepositories(ctx context.Context, projectNames []string,
 	}
 
 	// projectPermission pass, list all repositories in gitops storage
-	repositories, err := h.option.Storage.ListRepository(ctx, projectNames)
+	repositories, err := h.store.ListRepository(ctx, projectNames)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list repository from storage failed")
 	}
@@ -616,7 +606,7 @@ func (h *handler) ListRepositories(ctx context.Context, projectNames []string,
 // ListApplications 根据项目名称获取所有应用
 func (h *handler) ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (
 	*v1alpha1.ApplicationList, error) {
-	apps, err := h.option.Storage.ListApplications(ctx, query)
+	apps, err := h.store.ListApplications(ctx, query)
 	if err != nil {
 		return nil, errors.Wrapf(err, "list application swith project '%v' failed", query.Projects)
 	}
@@ -633,7 +623,7 @@ func (h *handler) ListApplications(ctx context.Context, query *appclient.Applica
 	result := make([]v1alpha1.Application, 0, len(apps.Items))
 	for proj, projApps := range projectAppsMap {
 		var prefers []*dao.ResourcePreference
-		prefers, err = h.analysisClient.ListApplicationCollects(proj)
+		prefers, err = h.appCollect.ListApplicationCollects(proj)
 		if err != nil {
 			return nil, errors.Wrapf(err, "list application collects for project '%s' failed", proj)
 		}

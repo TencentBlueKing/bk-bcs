@@ -23,71 +23,14 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
 	grpcproto "google.golang.org/grpc/encoding/proto"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
-
-// GitOpsOptions for revese proxy
-type GitOpsOptions struct {
-	// backend gitops kubernetes service and port
-	Service        string
-	RepoServerUrl  string
-	AppSetWebhook  string
-	PublicProjects []string
-	AdminUsers     []string
-	// URL prefix like /gitopsmanager/proxy/
-	PathPrefix string
-	// storage interface for access gitops data
-	Storage store.Store
-	// JWTClient for authentication
-	JWTDecoder *jwt.JWTClient
-	// IAMClient is basic client
-	IAMClient     iam.PermClient
-	SecretOption  *SecretOption
-	TraceOption   *TraceOption
-	MonitorOption *MonitorOption
-	DB            dao.Interface
-
-	BCSStorageAPIUrl   string
-	BCSStorageAPIToken string
-}
-
-// TraceOption defines the config of bkmonitor APM
-type TraceOption struct {
-	Endpoint string
-	Token    string
-}
-
-// SecretOption defines the config of secret
-type SecretOption struct {
-	Address string
-	Port    string
-}
-
-// MonitorOption defines the config of secret
-type MonitorOption struct {
-	Address string
-	Port    string
-}
-
-// Validate options
-func (opt *GitOpsOptions) Validate() error {
-	if len(opt.Service) == 0 {
-		return fmt.Errorf("lost gitops system information")
-	}
-	if opt.Storage == nil {
-		return fmt.Errorf("lost gitops storage access")
-	}
-	return nil
-}
 
 // GitOpsProxy definition for all kinds of
 // gitops solution
@@ -113,14 +56,6 @@ func (user *UserInfo) GetUser() string {
 	return ""
 }
 
-const (
-	headerBKUserName = "bkUserName"
-	// AdminClientUser xxx
-	AdminClientUser = "admin"
-	// AdminGitOpsUser xxx
-	AdminGitOpsUser = "bcs-gitops-manager"
-)
-
 // GetJWTInfo from request
 func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 	raw := req.Header.Get("Authorization")
@@ -128,8 +63,8 @@ func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "get authorization user failed")
 	}
-	if user.ClientID == AdminGitOpsUser || user.ClientID == AdminClientUser {
-		userName := req.Header.Get(headerBKUserName)
+	if common.IsAdminUser(user.ClientID) {
+		userName := req.Header.Get(common.HeaderBKUserName)
 		user.UserName = userName
 	}
 	return user, nil

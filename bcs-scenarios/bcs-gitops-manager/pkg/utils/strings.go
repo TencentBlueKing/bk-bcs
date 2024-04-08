@@ -16,6 +16,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"io"
+	"strings"
 	"unsafe"
 )
 
@@ -67,4 +68,14 @@ func StringToSliceByte(s string) []byte {
 	x := (*[2]uintptr)(unsafe.Pointer(&s))
 	h := [3]uintptr{x[0], x[1], x[1]}
 	return *(*[]byte)(unsafe.Pointer(&h))
+}
+
+// StringsContainsOr string contains slice
+func StringsContainsOr(s string, fields ...string) bool {
+	for i := 0; i < len(fields); i++ {
+		if strings.Contains(s, fields[i]) {
+			return true
+		}
+	}
+	return false
 }
