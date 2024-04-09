@@ -205,7 +205,7 @@ func HealthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-// ReportHandler 数据打印，前端埋点接口
+// ReportHandler 通过标准输出落地到日志采集，前端埋点接口
 func ReportHandler(w http.ResponseWriter, r *http.Request) {
 	okResponse := &OKResponse{Message: "OK", RequestID: r.Header.Get(constants.RequestIDHeaderKey)}
 	// response message
@@ -226,5 +226,6 @@ func ReportHandler(w http.ResponseWriter, r *http.Request) {
 		okResponse.Message = err.Error()
 		return
 	}
+	// 通过标准输出落地到日志采集
 	fmt.Println(stringBuffer.String())
 }
