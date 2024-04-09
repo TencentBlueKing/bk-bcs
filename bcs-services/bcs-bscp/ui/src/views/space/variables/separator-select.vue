@@ -13,7 +13,7 @@
     </div>
     <bk-form ref="formRef" v-if="selectSeparatorId === 4" :rules="rules" :model="formData">
       <bk-form-item required property="separator">
-        <bk-input class="custom-input" v-model="formData.separator" :placeholder="t('未输入')" />
+        <bk-input class="custom-input" v-model="formData.separator" :placeholder="t('请输入分隔符，限制为10个字符')" />
       </bk-form-item>
     </bk-form>
     <div class="footer">
@@ -49,7 +49,7 @@
         message: t('您输入的分隔符错误,请重新输入'),
       },
       {
-        validator: (val: string) => val.length === 1,
+        validator: (val: string) => val.length < 11,
         message: t('您输入的分隔符过长,请重新输入'),
       },
     ],
