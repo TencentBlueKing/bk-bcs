@@ -1,5 +1,5 @@
 <template>
-  <div :class="['configs-menu', { 'search-opened': isOpenSearch }]">
+  <div v-bkloading="{ loading }" :class="['configs-menu', { 'search-opened': isOpenSearch }]">
     <div class="title-area">
       <div class="title">{{ t('配置文件') }}</div>
       <div class="title-extend">
@@ -8,7 +8,7 @@
           v-model="isOnlyShowDiff"
           class="view-diff-checkbox"
           @change="handleToggleShowDiff">
-          {{ t('只查看差异文件') }}({{ diffCount }})
+          {{ t('只看差异文件') }}({{ diffCount }})
         </bk-checkbox>
         <div :class="['search-trigger', { actived: isOpenSearch }]" @click="isOpenSearch = !isOpenSearch">
           <Search />
@@ -158,6 +158,7 @@
   const isOpenSearch = ref(false);
   const searchStr = ref('');
   const isSearchEmpty = ref(false);
+  const loading = ref(true);
 
   // 是否实际选择了对比的基准版本，为了区分的未命名版本id为0的情况
   const isBaseVersionExist = computed(() => typeof props.baseVersionId === 'number');
@@ -180,13 +181,8 @@
   // 基准版本变化，更新选中对比项
   watch(
     () => props.baseVersionId,
-    async () => {
-      baseGroupList.value = await getConfigsOfVersion(props.baseVersionId);
-      baseVariables.value = await getVariableList(props.baseVersionId);
-      aggregatedList.value = calcDiff();
-      isOnlyShowDiff.value = aggregatedListOfDiff.value.length > 0;
-      groupedConfigListOnShow.value = getMenuList();
-      setDefaultSelected();
+    () => {
+      initData();
     },
   );
 
@@ -203,28 +199,33 @@
     },
   );
 
-  onMounted(async () => {
-    await getAllConfigList();
-    // 未命名版本变量取正在编辑中的变量列表
-    if (isUnNamedVersion(props.currentVersionId)) {
-      currentVariables.value = props.unNamedVersionVariables;
-    } else {
-      currentVariables.value = await getVariableList(props.currentVersionId);
-    }
-    baseVariables.value = await getVariableList(props.baseVersionId);
-    aggregatedList.value = calcDiff();
-    isOnlyShowDiff.value = aggregatedListOfDiff.value.length > 0;
-    groupedConfigListOnShow.value = getMenuList();
-    setDefaultSelected();
+  onMounted(() => {
+    initData(true);
   });
 
   // 判断版本是否为未命名版本
   const isUnNamedVersion = (id: number) => id === 0;
 
-  // 获取当前版本和基准版本的所有配置文件列表(非模板配置和套餐下模板)
-  const getAllConfigList = async () => {
-    currentGroupList.value = await getConfigsOfVersion(props.currentVersionId);
-    baseGroupList.value = await getConfigsOfVersion(props.baseVersionId);
+  // 初始化对比配置文件以及设置默认选中的配置文件
+  const initData = async (needGetCrt = false) => {
+    loading.value = true;
+    if (needGetCrt) {
+      currentGroupList.value = await getConfigsOfVersion(props.currentVersionId);
+      // 未命名版本变量取正在编辑中的变量列表
+      if (isUnNamedVersion(props.currentVersionId)) {
+        currentVariables.value = props.unNamedVersionVariables;
+      } else {
+        currentVariables.value = await getVariableList(props.currentVersionId);
+      }
+    }
+    if (props.baseVersionId) {
+      baseGroupList.value = await getConfigsOfVersion(props.baseVersionId);
+      baseVariables.value = await getVariableList(props.baseVersionId);
+    }
+    aggregatedList.value = calcDiff();
+    groupedConfigListOnShow.value = getMenuList();
+    setDefaultSelected();
+    loading.value = false;
   };
 
   // 获取某一版本下配置文件和模板列表
@@ -491,11 +492,9 @@
   // 如果选中项有值，保持上一次选中项
   // 否则取第一个非空分组的第一个配置文件
   const setDefaultSelected = () => {
-    if (props.selectedConfig.id) {
-      const pkg = aggregatedList.value.find((group) => group.id === props.selectedConfig.pkgId);
-      if (pkg) {
-        pkg.expand = true;
-      }
+    const pkg = aggregatedList.value.find((group) => group.id === props.selectedConfig.pkgId);
+    if (props.selectedConfig.id && pkg) {
+      pkg.expand = true;
       handleSelectItem(props.selectedConfig);
     } else {
       const selectedGroup = aggregatedList.value.find((group) => group.id === selected.value.pkgId);

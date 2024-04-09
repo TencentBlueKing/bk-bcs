@@ -335,7 +335,6 @@
     height: calc(100% - 10px);
     :deep(.monaco-editor) {
       width: 100%;
-      padding-top: 10px;
       .template-variable-item {
         color: #1768ef;
         border: 1px solid #1768ef;

@@ -20,6 +20,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -41,8 +42,8 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbcs.CreateTe
 	}
 
 	if !strings.HasPrefix(strings.ToLower(req.Name), constant.TemplateVariablePrefix) {
-		return nil, errf.Errorf(grpcKit, errf.InvalidArgument, "template variable name must start with %s",
-			constant.TemplateVariablePrefix)
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit,
+			"template variable name must start with %s", constant.TemplateVariablePrefix))
 	}
 
 	r := &pbds.CreateTemplateVariableReq{

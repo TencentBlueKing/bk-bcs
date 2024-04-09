@@ -2,6 +2,16 @@
     "language": "zh",
     "messages": [
         {
+            "id": "id is required",
+            "message": "id is required",
+            "translation": "id不能为空"
+        },
+        {
+            "id": "batch delete failed",
+            "message": "batch delete failed",
+            "translation": "批量删除失败"
+        },
+        {
             "id": "template variable name must start with {TemplateVariablePrefix}",
             "message": "template variable name must start with {TemplateVariablePrefix}",
             "translation": "模版变量名必须以{TemplateVariablePrefix}前缀开头",

@@ -531,6 +531,14 @@ resource:
             props:
               max: 256000
               unit: MiB
+        ephemeral-storage:
+          title: {{ i18n "临时存储预留" .lang }}
+          type: integer
+          ui:component:
+            name: bfInput
+            props:
+              max: 256000
+              unit: GiB
         extra:
           title: {{ i18n "自定义资源预留" .lang }}
           type: array
@@ -586,6 +594,14 @@ resource:
             props:
               max: 256000
               unit: MiB
+        ephemeral-storage:
+          title: {{ i18n "临时存储限制" .lang }}
+          type: integer
+          ui:component:
+            name: bfInput
+            props:
+              max: 256000
+              unit: GiB
         extra:
           title: {{ i18n "自定义资源限制" .lang }}
           type: array

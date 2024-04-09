@@ -77,7 +77,7 @@ func (a authorizer) initKitWithCookie(r *http.Request, k *kit.Kit, multiErr *mul
 		}
 	}
 
-	resp, err := a.authClient.GetUserInfo(r.Context(), req)
+	resp, err := a.authClient.GetUserInfo(k.RpcCtx(), req)
 	if err != nil {
 		s := status.Convert(err)
 		// 无权限的需要特殊跳转
@@ -207,7 +207,7 @@ func (a authorizer) ContentVerified(next http.Handler) http.Handler {
 		if appID > 0 {
 			// NOTE: authenticate app on iam
 
-			space, err := a.authClient.QuerySpaceByAppID(r.Context(), &pbas.QuerySpaceByAppIDReq{AppId: appID})
+			space, err := a.authClient.QuerySpaceByAppID(kt.RpcCtx(), &pbas.QuerySpaceByAppIDReq{AppId: appID})
 			if err != nil {
 				render.Render(w, r, rest.BadRequest(err))
 				return
@@ -245,8 +245,7 @@ func (a authorizer) AppVerified(next http.Handler) http.Handler {
 			render.Render(w, r, rest.BadRequest(err))
 			return
 		}
-
-		space, err := a.authClient.QuerySpaceByAppID(r.Context(), &pbas.QuerySpaceByAppIDReq{AppId: uint32(appID)})
+		space, err := a.authClient.QuerySpaceByAppID(kt.RpcCtx(), &pbas.QuerySpaceByAppIDReq{AppId: uint32(appID)})
 		if err != nil {
 			render.Render(w, r, rest.GRPCErr(err))
 			return
