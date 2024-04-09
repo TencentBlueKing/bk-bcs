@@ -12,14 +12,12 @@ require (
 	github.com/go-micro/plugins/v4/broker/stan v1.1.0
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/golang/glog v1.2.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-querystring v1.1.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
-	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/juju/ratelimit v1.0.1
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
