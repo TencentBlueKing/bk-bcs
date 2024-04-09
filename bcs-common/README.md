@@ -18,7 +18,7 @@ bcs 公共模块库，提供日志，metrics, i18n, 双栈监听, 服务注册,
 ## 使用方式
 根据依赖的库, 使用go get进行依赖
 ```
-go get github.com/Tencent/bk-bcs/bcs-common
+go get github.com/Tencent/bk-bcs/bcs-common@{commitID}
 ```
 
 ## 独立 go.mod 模块
