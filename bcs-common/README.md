@@ -2,7 +2,7 @@
 
 bcs 公共模块库，提供日志，metrics, i18n, 双栈监听, 服务注册,
 
-<a href="https://pkg.go.dev/github.com/Tencent/bk-bcs/bcs-common/common><img src="https://pkg.go.dev/badge/github.com/Tencent/bk-bcs/bcs-common" alt="GoDoc"></a>
+<a href="https://pkg.go.dev/github.com/Tencent/bk-bcs/bcs-common/common"><img src="https://pkg.go.dev/badge/github.com/Tencent/bk-bcs/bcs-common" alt="GoDoc"></a>
 
 ## common 目录
 - [blog](./common/blog/) 日志相关
