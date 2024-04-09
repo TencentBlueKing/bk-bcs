@@ -19,8 +19,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	"github.com/micro/go-micro/v2/metadata"
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/metadata"
+	"go-micro.dev/v4/server"
 )
 
 // GoMicroAuth is the authentication middleware for go-micro
@@ -45,8 +45,8 @@ func (g *GoMicroAuth) EnableSkipHandler(skipHandler func(ctx context.Context, re
 }
 
 // EnableSkipClient enable skip client, if skip client return true, skip authorization
-func (g *GoMicroAuth) EnableSkipClient(exemptClient func(ctx context.Context, req server.Request,
-	client string) bool) *GoMicroAuth {
+// nolint
+func (g *GoMicroAuth) EnableSkipClient(exemptClient func(ctx context.Context, req server.Request, client string) bool) *GoMicroAuth {
 	g.exemptClient = exemptClient
 	return g
 }
@@ -59,84 +59,92 @@ func (g *GoMicroAuth) SetCheckUserPerm(checkUserPerm func(ctx context.Context,
 }
 
 // AuthenticationFunc is the authentication function for go-micro
-func (g *GoMicroAuth) AuthenticationFunc(fn server.HandlerFunc) server.HandlerFunc {
-	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-		md, ok := metadata.FromContext(ctx)
-		if !ok {
-			return errors.New("failed to get micro's metadata")
-		}
-		authUser := AuthUser{}
+func (g *GoMicroAuth) AuthenticationFunc() server.HandlerWrapper {
+	return func(fn server.HandlerFunc) server.HandlerFunc {
+		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
+			md, ok := metadata.FromContext(ctx)
+			if !ok {
+				return errors.New("failed to get micro's metadata")
+			}
+			authUser := AuthUser{}
 
-		// parse client token from header
-		clientName, ok := md.Get(InnerClientHeaderKey)
-		if ok {
-			authUser.InnerClient = clientName
-		}
+			// parse client token from header
+			clientName, ok := md.Get(InnerClientHeaderKey)
+			if ok {
+				authUser.InnerClient = clientName
+			}
 
-		// parse jwt token from header
-		jwtToken, ok := md.Get(AuthorizationHeaderKey)
-		if ok {
-			u, err := g.parseJwtToken(jwtToken)
-			if err != nil {
-				return err
+			// parse jwt token from header
+			jwtToken, ok := md.Get(AuthorizationHeaderKey)
+			if ok {
+				u, err := g.parseJwtToken(jwtToken)
+				if err != nil {
+					return err
+				}
+				// !NOTO: bk-apigw would set SubType to "user" even if use client's app code and secret
+				if u.SubType == jwt.User.String() {
+					authUser.Username = u.UserName
+				}
+				if u.SubType == jwt.Client.String() {
+					authUser.ClientName = u.ClientID
+				}
+				if len(u.BKAppCode) != 0 {
+					authUser.ClientName = u.BKAppCode
+				}
 			}
-			// !NOTO: bk-apigw would set SubType to "user" even if use client's app code and secret
-			if u.SubType == jwt.User.String() {
-				authUser.Username = u.UserName
-			}
-			if u.SubType == jwt.Client.String() {
-				authUser.ClientName = u.ClientID
-			}
-			if len(u.BKAppCode) != 0 {
-				authUser.ClientName = u.BKAppCode
-			}
-		}
 
-		// If and only if client name from jwt token is not empty, we will check username in header
-		if authUser.ClientName != "" {
-			username, ok := md.Get(CustomUsernameHeaderKey)
-			if ok && username != "" {
-				authUser.Username = username
+			// If and only if client name from jwt token is not empty, we will check username in header
+			if authUser.ClientName != "" {
+				username, ok := md.Get(CustomUsernameHeaderKey)
+				if ok && username != "" {
+					authUser.Username = username
+				}
 			}
-		}
 
-		// set auth user to context
-		ctx = context.WithValue(ctx, AuthUserKey, authUser)
-		return fn(ctx, req, rsp)
+			// set auth user to context
+			ctx = context.WithValue(ctx, AuthUserKey, authUser)
+			return fn(ctx, req, rsp)
+		}
 	}
 }
 
 // AuthorizationFunc is the authorization function for go-micro
-func (g *GoMicroAuth) AuthorizationFunc(fn server.HandlerFunc) server.HandlerFunc {
-	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-		if g.skipHandler != nil && g.skipHandler(ctx, req) {
+func (g *GoMicroAuth) AuthorizationFunc() server.HandlerWrapper {
+	return func(fn server.HandlerFunc) server.HandlerFunc {
+		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
+			if g.skipHandler != nil && g.skipHandler(ctx, req) {
+				return fn(ctx, req, rsp)
+			}
+
+			authUser, err := GetUserFromContext(ctx)
+			if err != nil {
+				return err
+			}
+
+			if authUser.IsInner() {
+				return fn(ctx, req, rsp)
+			}
+
+			if g.exemptClient != nil && g.exemptClient(ctx, req, authUser.ClientName) {
+				return fn(ctx, req, rsp)
+			}
+
+			if len(authUser.Username) == 0 {
+				return errors.New("username is empty")
+			}
+
+			if g.checkUserPerm == nil {
+				return errors.New("check user permission function is not set")
+			}
+
+			if allow, err := g.checkUserPerm(ctx, req, authUser.Username); err != nil {
+				return err
+			} else if !allow {
+				return errors.New("user not authorized")
+			}
+
 			return fn(ctx, req, rsp)
 		}
-
-		authUser, err := GetUserFromContext(ctx)
-		if err != nil {
-			return err
-		}
-
-		if authUser.IsInner() {
-			return fn(ctx, req, rsp)
-		}
-
-		if g.exemptClient != nil && g.exemptClient(ctx, req, authUser.ClientName) {
-			return fn(ctx, req, rsp)
-		}
-
-		if g.checkUserPerm == nil {
-			return errors.New("check user permission function is not set")
-		}
-
-		if allow, err := g.checkUserPerm(ctx, req, authUser.GetUsername()); err != nil {
-			return err
-		} else if !allow {
-			return errors.New("user not authorized")
-		}
-
-		return fn(ctx, req, rsp)
 	}
 }
 
