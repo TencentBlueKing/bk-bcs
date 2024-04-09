@@ -9,7 +9,7 @@
       </div>
       <div class="totle">共 {{ pagination.count }} 项</div>
     </div>
-    <SearchInput v-model="searchStr" :placeholder="'请输入配置项名称'" @search="loadCredentialRulePreviewList" />
+    <SearchInput v-model="searchStr" :placeholder="inputPlaceholder" @search="loadCredentialRulePreviewList" />
     <bk-loading :loading="listLoading">
       <bk-table
         :empty-text="tableEmptyText"
@@ -66,6 +66,8 @@
     }
     return `${path}/${name}`;
   });
+
+  const inputPlaceholder = computed(() => (isFileType.value ? '请输入配置文件绝对路径' : '请输入配置项名称'));
 
   const tableEmptyText = computed(() => {
     return props.rule?.appName ? '没有匹配到配置项' : '请先在左侧表单设置关联规则并预览';
