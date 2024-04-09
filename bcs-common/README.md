@@ -15,6 +15,7 @@ bcs 公共模块库，提供日志，metrics, i18n, 双栈监听, 服务注册, 
 - [i18n](./pkg/i18n/) 国际化相关
 - [audit](./pkg//audit/) 操作审计相关
 - [auth](./pkg/auth/) iam 鉴权相关
+- [bcsmonitor](./pkg/bcsmonitor/) bcs-monitor promql 相关封装
 
 ## 使用方式
 根据依赖的库, 使用go get进行依赖

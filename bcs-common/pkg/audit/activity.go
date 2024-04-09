@@ -21,6 +21,8 @@ import (
 	"time"
 
 	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/restyclient"
 )
 
 // ActivityStatus is the activity status
@@ -205,7 +207,7 @@ func createActivity(activity []Activity) error {
 		Activities: activity,
 	}
 	url := fmt.Sprintf("%s/bcsapi/v4/usermanager/v3/activity_logs", bcsHost)
-	resp, err := GetClient().R().SetAuthToken(token).SetBody(body).Post(url)
+	resp, err := restyclient.R().SetAuthToken(token).SetBody(body).Post(url)
 	if err != nil {
 		return err
 	}
