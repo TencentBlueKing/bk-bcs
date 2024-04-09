@@ -1,3 +1,4 @@
+import { localT } from '../i18n';
 export const CLIENT_SEARCH_DATA = [
   {
     name: 'UID',
@@ -8,35 +9,35 @@ export const CLIENT_SEARCH_DATA = [
     value: 'ip',
   },
   {
-    name: '标签',
+    name: localT('标签'),
     value: 'label',
   },
   {
-    name: '当前配置版本',
+    name: localT('当前配置版本'),
     value: 'current_release_name',
   },
   {
-    name: '目标配置版本',
+    name: localT('目标配置版本'),
     value: 'target_release_name',
   },
   {
-    name: '最近一次拉取配置状态',
+    name: localT('最近一次拉取配置状态'),
     value: 'release_change_status',
     children: [
       {
-        name: '成功',
+        name: localT('成功'),
         value: 'Success',
       },
       {
-        name: '失败',
+        name: localT('失败'),
         value: 'Failed',
       },
       {
-        name: '处理中',
+        name: localT('处理中'),
         value: 'Processing',
       },
       {
-        name: '跳过',
+        name: localT('跳过'),
         value: 'Skip',
       },
     ],
@@ -46,77 +47,77 @@ export const CLIENT_SEARCH_DATA = [
   //   value: 'annotations',
   // },
   {
-    name: '在线状态',
+    name: localT('在线状态'),
     value: 'online_status',
     children: [
       {
-        name: '在线',
+        name: localT('在线'),
         value: 'online',
       },
       {
-        name: '未在线',
+        name: localT('未在线'),
         value: 'offline',
       },
     ],
   },
   {
-    name: '客户端组件版本',
+    name: localT('客户端组件版本'),
     value: 'client_version',
   },
 ];
 
 export const CLIENT_STATUS_MAP = {
-  Success: '成功',
-  Failed: '失败',
-  Processing: '处理中',
-  Skip: '跳过',
-  online: '在线',
-  offline: '离线',
-  success: '成功',
-  failed: '失败',
-  processing: '处理中',
-  skip: '跳过',
+  Success: localT('成功'),
+  Failed: localT('失败'),
+  Processing: localT('处理中'),
+  Skip: localT('跳过'),
+  online: localT('在线'),
+  offline: localT('未在线'),
+  success: localT('成功'),
+  failed: localT('失败'),
+  processing: localT('处理中'),
+  skip: localT('跳过'),
 };
 
 export const CLIENT_HEARTBEAT_LIST = [
   {
     value: 1,
-    label: '近1分钟',
+    label: `${localT('近')}1${localT('分钟')}`,
   },
   {
     value: 5,
-    label: '近5分钟',
+    label: `${localT('近')}5${localT('分钟')}`,
   },
   {
     value: 60,
-    label: '近1小时',
+    label: `${localT('近')}1${localT('小时')}`,
   },
   {
     value: 360,
-    label: '近6小时',
+    label: `${localT('近')}6${localT('小时')}`,
   },
   {
     value: 720,
-    label: '近12小时',
+    label: `${localT('近')}12${localT('小时')}`,
   },
   {
     value: 1440,
-    label: '近1天',
+    label: `${localT('近')}1${localT('天')}`,
   },
   {
     value: 4320,
-    label: '近3天',
+    label: `${localT('近')}3${localT('天')}`,
   },
   {
     value: 10080,
-    label: '近7天',
+    label: `${localT('近')}7${localT('天')}`,
   },
   {
     value: 20160,
-    label: '近15天',
+    label: `${localT('近')}15${localT('天')}`,
   },
   {
     value: 43200,
-    label: '近30天',
+    label: `${localT('近')}30${localT('天')}`,
   },
 ];

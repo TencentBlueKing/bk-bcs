@@ -29,6 +29,11 @@
           <kvValuePreview v-if="row.spec" :key="row.id" :value="row.spec.value" @view-all="handleView(row)" />
         </template>
       </bk-table-column>
+      <bk-table-column :label="t('配置项描述')">
+        <template #default="{ row }">
+          <span v-if="row.spec">{{ row.spec.memo || '--' }}</span>
+        </template>
+      </bk-table-column>
       <bk-table-column
         prop="spec.kv_type"
         :label="t('数据类型')"

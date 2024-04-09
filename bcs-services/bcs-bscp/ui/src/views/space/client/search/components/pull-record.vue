@@ -2,7 +2,7 @@
   <bk-sideslider :is-show="show" width="1200" quick-close @closed="emits('close')">
     <template #header>
       <div class="header">
-        <span class="title">配置拉取记录</span>
+        <span class="title">{{ $t('配置拉取记录') }}</span>
         <span class="uid">UID : {{ uid }}</span>
       </div>
     </template>
@@ -18,26 +18,26 @@
         <SearchInput
           v-model="searchStr"
           :width="600"
-          :placeholder="'当前配置版本/目标配置版本/最近一次拉取配置状态'"
+          :placeholder="$t('当前配置版本/目标配置版本/最近一次拉取配置状态')"
           @search="loadTableData" />
       </div>
       <bk-loading :loading="loading">
         <bk-table :data="tableData" :border="['outer', 'row']" :pagination="pagination">
-          <bk-table-column label="开始时间" width="154">
+          <bk-table-column :label="$t('开始时间')" width="154">
             <template #default="{ row }">
               <span v-if="row.spec">
                 {{ datetimeFormat(row.spec.start_time) }}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column label="结束时间" width="154">
+          <bk-table-column :label="$t('结束时间')" width="154">
             <template #default="{ row }">
               <span v-if="row.spec">
                 {{ datetimeFormat(row.spec.end_time) }}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column label="当前配置版本" width="133">
+          <bk-table-column :label="$t('当前配置版本')" width="133">
             <template #default="{ row }">
               <div
                 v-if="row.spec && row.spec.original_release_id"
@@ -48,7 +48,7 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column label="目标配置版本" width="134">
+          <bk-table-column :label="$t('目标配置版本')" width="134">
             <template #default="{ row }">
               <div
                 v-if="row.spec && row.spec.target_release_id"
@@ -59,25 +59,25 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column label="配置拉取方式" prop="attachment.client_mode" width="104"></bk-table-column>
-          <bk-table-column label="配置拉取耗时(秒)" width="128">
+          <bk-table-column :label="$t('配置拉取方式')" prop="attachment.client_mode" width="104"></bk-table-column>
+          <bk-table-column :label="$t('配置拉取耗时(秒)')" width="128">
             <template #default="{ row }">
               <span v-if="row.spec">
                 {{ parseInt(row.spec.total_seconds) }}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column label="配置拉取文件数" width="116">
+          <bk-table-column :label="$t('配置拉取文件数')" width="116">
             <template #default="{ row }">
               <div v-if="row.spec">{{ `${row.spec.download_file_num}/${row.spec.total_file_num}` }}</div>
             </template>
           </bk-table-column>
-          <bk-table-column label="配置拉取文件大小" width="128">
+          <bk-table-column :label="$t('配置拉取文件大小')" width="128">
             <template #default="{ row }">
               <div v-if="row.spec">{{ byteUnitConverse(row.spec.download_file_size) }}</div>
             </template>
           </bk-table-column>
-          <bk-table-column label="配置拉取状态" width="104">
+          <bk-table-column :label="$t('配置拉取状态')" width="104">
             <template #default="{ row }">
               <div v-if="row.spec" class="release_change_status">
                 <Spinner v-if="row.spec.release_change_status === 'Skip'" class="spinner-icon" fill="#3A84FF" />

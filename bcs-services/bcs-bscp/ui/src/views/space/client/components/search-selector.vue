@@ -32,7 +32,7 @@
         <div
           v-if="searchConditionList.length"
           :class="['set-used', { light: isCommonlyUsed }]"
-          v-bk-tooltips="{ content: '设为常用' }"
+          v-bk-tooltips="{ content: t('设为常用') }"
           @click.stop="handleOpenSetCommonlyDialg(true)">
           <span class="bk-bscp-icon icon-star-fill"></span>
         </div>
@@ -40,7 +40,7 @@
       <template #content>
         <div class="menu-wrap">
           <div class="search-condition">
-            <div class="title">查询条件</div>
+            <div class="title">{{ t('查询条件') }}</div>
             <div v-if="!showChildSelector">
               <div
                 v-for="item in CLIENT_SEARCH_DATA"
@@ -61,7 +61,7 @@
             </div>
           </div>
           <div class="resent-search">
-            <div class="title">最近查询</div>
+            <div class="title">{{ t('最近查询') }}</div>
             <bk-loading :loading="resentSearchListLoading">
               <div
                 v-for="item in recentSearchList"
@@ -85,7 +85,7 @@
           @delete="handleConfirmDeleteCommonlyUsed(item.id)" />
       </template>
       <bk-popover ext-cls="all-commonly-search-popover" placement="bottom" theme="light" :arrow="false">
-        <bk-button theme="primary" text>全部常用查询</bk-button>
+        <bk-button theme="primary" text>{{ t('全部常用查询') }}</bk-button>
         <template #content>
           <div
             v-for="item in commonlySearchList"
@@ -129,6 +129,9 @@
   import CommonlyUsedTag from './commonly-used-tag.vue';
   import { Message } from 'bkui-vue';
   import { cloneDeep } from 'lodash';
+  import { useI18n } from 'vue-i18n';
+
+  const { t } = useI18n();
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -157,7 +160,7 @@
 
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
-    return 'UID/IP/标签/当前配置版本/目标配置版本/最近一次拉取配置状态/附加信息/在线状态/客户端组件版本';
+    return t('UID/IP/标签/当前配置版本/目标配置版本/最近一次拉取配置状态/在线状态/客户端组件版本');
   });
 
   watch(
@@ -284,7 +287,7 @@
       isCommonlyUsed.value = true;
       Message({
         theme: 'success',
-        message: '常用查询添加成功',
+        message: t('常用查询添加成功'),
       });
     } catch (error) {
       console.error(error);
@@ -303,7 +306,7 @@
       handleGetSearchList('common');
       Message({
         theme: 'success',
-        message: '常用查询修改成功',
+        message: t('常用查询修改成功'),
       });
     } catch (error) {
       console.error(error);
@@ -317,7 +320,7 @@
       handleGetSearchList('common');
       Message({
         theme: 'success',
-        message: '常用查询删除成功',
+        message: t('常用查询删除成功'),
       });
     } catch (error) {
       console.error(error);
@@ -368,7 +371,7 @@
       if (key === 'label') {
         const labelValue = query[key];
         Object.keys(labelValue).forEach((label) => {
-          const content = `客户端标签:${label}=${labelValue[label]}`;
+          const content = `${t('标签')}:${label}=${labelValue[label]}`;
           searchList.push({
             key,
             value: `${label}=${labelValue[label]}`,
