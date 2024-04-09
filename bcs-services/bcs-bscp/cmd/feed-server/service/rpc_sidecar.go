@@ -15,6 +15,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -25,6 +27,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/bcs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/gse"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
@@ -36,6 +41,11 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+)
+
+var (
+	// LabelKeyAgentID is the key of agent id in bcs node labels.
+	LabelKeyAgentID = "bkcmdb.tencent.com/bk-agent-id"
 )
 
 // Handshake received handshake from sidecar to validate the app instance's authorization and legality.
@@ -192,7 +202,7 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		vc.BasicData.OnlineStatus = sfs.Online
 		payload, errE := vc.Encode()
 		if errE != nil {
-			logs.Errorf("version change message encoding failed, %s", err.Error())
+			logs.Errorf("version change message encoding failed, %s", errE.Error())
 			return nil, err
 		}
 		s.handleResourceUsageMetrics(vc.BasicData.BizID, vc.Application.App, vc.ResourceUsage)
@@ -573,6 +583,189 @@ func (s *Service) ListApps(ctx context.Context, req *pbfs.ListAppsReq) (*pbfs.Li
 
 	r := &pbfs.ListAppsResp{Apps: apps}
 	return r, nil
+}
+
+// AsyncDownload 异步 p2p 下载
+func (s *Service) AsyncDownload(ctx context.Context, req *pbfs.AsyncDownloadReq) (*pbfs.AsyncDownloadResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	// 1. 鉴权
+	credential := getCredential(ctx)
+	app, err := s.bll.AppCache().GetMeta(kit, req.BizId, req.FileMeta.ConfigItemAttachment.AppId)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app %d metadata failed, %s",
+			req.FileMeta.ConfigItemAttachment.AppId, err.Error())
+	}
+	if !credential.MatchApp(app.Name) {
+		return nil, status.Errorf(codes.PermissionDenied, "not have app %s permission", app.Name)
+	}
+
+	if !credential.MatchConfigItem(app.Name, req.FileMeta.ConfigItemSpec.Path, req.FileMeta.ConfigItemSpec.Name) {
+		return nil, status.Error(codes.PermissionDenied, "no permission download file")
+	}
+
+	gseConf := cc.FeedServer().GSE
+	if gseConf.NodeAgentID == "" && (gseConf.ClusterID == "" || gseConf.PodID == "" || gseConf.ContainerName == "") {
+		logs.Warnf("")
+		return nil, status.Error(codes.Internal, "server cluster_id, pod_id and container_name is required")
+	}
+
+	// 2. 获取客户端信息，check 是否支持 p2p 下载
+	var clientAgentID, clientContainerID, serverAgentID, serverContainerID string
+	if req.BkAgentId != "" {
+		// target is node
+		clientAgentID = req.BkAgentId
+	} else {
+		// target is container
+		if req.ClusterId == "" || req.PodId == "" {
+			return nil, status.Error(codes.InvalidArgument, "client cluster_id and pod_id is required")
+		}
+		pod, qErr := bcs.QueryPod(ctx, req.ClusterId, req.PodId)
+		if qErr != nil {
+			return nil, qErr
+		}
+		for _, initContainer := range pod.Status.InitContainerStatuses {
+			if initContainer.Name == req.ContainerName {
+				clientContainerID = tools.SplitContainerID(initContainer.ContainerID)
+			}
+		}
+		for _, container := range pod.Status.ContainerStatuses {
+			if container.Name == req.ContainerName {
+				clientContainerID = tools.SplitContainerID(container.ContainerID)
+			}
+		}
+		if clientContainerID == "" {
+			return nil, status.Errorf(codes.InvalidArgument, "client container %s not found in pod %s/%s",
+				req.ContainerName, req.ClusterId, req.PodId)
+		}
+		node, qErr := bcs.QueryNode(ctx, req.ClusterId, pod.Spec.NodeName)
+		if qErr != nil {
+			return nil, qErr
+		}
+		clientAgentID = node.Labels[LabelKeyAgentID]
+		if clientAgentID == "" {
+			return nil, status.Errorf(codes.InvalidArgument, "bk-agent-id not found in client node %s/%s",
+				req.ClusterId, pod.Spec.NodeName)
+		}
+	}
+	// 3. 下载文件到本地目录
+	/*
+		TODO: 异步下载优化点：
+		1. 文件清理机制，避免 POD 磁盘占用过多
+		2. 文件 sha256 一致性哈希，避免多个 feed-server 缓存相同文件
+	*/
+	sourceDir := cc.FeedServer().GSE.SourceDir
+	serverFileDir := path.Join(sourceDir, strconv.Itoa(int(req.FileMeta.ConfigItemAttachment.AppId)),
+		req.FileMeta.ConfigItemSpec.Path)
+	if err = os.MkdirAll(serverFileDir, os.ModePerm); err != nil {
+		return nil, err
+	}
+	// filepath = sourceDir/{app_id}/{path}/{name}
+	serverFilePath := path.Join(serverFileDir, req.FileMeta.ConfigItemSpec.Name)
+	file, err := os.OpenFile(serverFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+	reader, _, err := s.provider.Download(kit, req.FileMeta.CommitSpec.Content.Signature)
+	if err != nil {
+		return nil, err
+	}
+	if _, e := io.Copy(file, reader); e != nil {
+		return nil, e
+	}
+
+	// 4. 获取服务端 agent_id 和 container_id
+	if gseConf.NodeAgentID != "" {
+		// if serverAgentID configured, it measn feed server was deployed in binary mode, source is node
+		serverAgentID = gseConf.NodeAgentID
+	} else {
+		// if serverAgentID not configured, it means feed server was deployed in container mode, source is container
+		if gseConf.ClusterID == "" || gseConf.PodID == "" {
+			return nil, status.Error(codes.Internal, "server cluster_id and pod_id is required")
+		}
+		pod, qErr := bcs.QueryPod(ctx, gseConf.ClusterID, gseConf.PodID)
+		if qErr != nil {
+			return nil, qErr
+		}
+		for _, container := range pod.Status.ContainerStatuses {
+			if container.Name == gseConf.ContainerName {
+				serverContainerID = tools.SplitContainerID(container.ContainerID)
+			}
+		}
+		if serverContainerID == "" {
+			return nil, status.Errorf(codes.Internal, "server container %s not found in pod %s/%s",
+				gseConf.ContainerName, gseConf.ClusterID, gseConf.PodID)
+		}
+		node, qErr := bcs.QueryNode(ctx, gseConf.ClusterID, pod.Spec.NodeName)
+		if qErr != nil {
+			return nil, qErr
+		}
+		serverAgentID = node.Labels[LabelKeyAgentID]
+		if serverAgentID == "" {
+			return nil, status.Errorf(codes.Internal, "bk-agent-id not found in server node %s/%s",
+				gseConf.ClusterID, pod.Spec.NodeName)
+		}
+	}
+	// 5. 创建文件传输任务
+	taskID, err := gse.CreateTransferFileTask(ctx, serverAgentID, serverContainerID, serverFileDir, gseConf.AgentUser,
+		req.FileMeta.ConfigItemSpec.Name, clientAgentID, clientContainerID, req.FileDir,
+		req.FileMeta.ConfigItemSpec.Permission.User)
+	if err != nil {
+		return nil, fmt.Errorf("create transfer file task failed, %s", err.Error())
+	}
+
+	// 6. 任务 ID 及其相关信息存入 Redis
+	task := &types.AsyncDownloadTask{
+		BizID:    req.BizId,
+		AppID:    req.FileMeta.ConfigItemAttachment.AppId,
+		TaskID:   taskID,
+		FileName: req.FileMeta.ConfigItemSpec.Name,
+		FilePath: req.FileDir,
+	}
+	if err := s.bll.AsyncDownload().CreateAsyncDownloadTask(kit, task); err != nil {
+		return nil, err
+	}
+
+	// 5. 将任务ID存入数据库并且返回给客户端
+	r := &pbfs.AsyncDownloadResp{
+		TaskId: taskID,
+	}
+	return r, nil
+}
+
+// AsyncDownloadStatus 查询异步 p2p 下载任务状态
+func (s *Service) AsyncDownloadStatus(ctx context.Context, req *pbfs.AsyncDownloadStatusReq) (
+	*pbfs.AsyncDownloadStatusResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+	// 1.1 从 Redis 获取到任务对应的服务、文件信息，用token鉴权
+	task, err := s.bll.AsyncDownload().GetAsyncDownloadTask(kit, req.BizId, req.TaskId)
+	if err != nil {
+		return nil, err
+	}
+	// 1. 鉴权
+	credential := getCredential(ctx)
+	app, err := s.bll.AppCache().GetMeta(kit, task.BizID, task.AppID)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app %d metadata failed, %s",
+			task.AppID, err.Error())
+	}
+	if !credential.MatchApp(app.Name) {
+		return nil, status.Errorf(codes.PermissionDenied, "have not app %s permission", app.Name)
+	}
+
+	if !credential.MatchConfigItem(app.Name, task.FilePath, task.FileName) {
+		return nil, status.Error(codes.PermissionDenied, "no permission download file")
+	}
+
+	// 2. 获取GSE任务状态
+	status, err := gse.TransferFileResult(ctx, task.TaskID)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: 是否要保存任务开始时间，用以判断超时
+	return &pbfs.AsyncDownloadStatusResp{
+		Status: status,
+	}, nil
 }
 
 // 匹配
