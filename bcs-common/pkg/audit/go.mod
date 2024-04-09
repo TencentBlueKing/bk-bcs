@@ -8,12 +8,12 @@ require (
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/google/uuid v1.3.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.43.0
-	k8s.io/klog v1.0.0
+	k8s.io/klog/v2 v2.120.1
 )
 
 require (
 	github.com/felixge/httpsnoop v1.0.3 // indirect
-	github.com/go-logr/logr v1.2.4 // indirect
+	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
