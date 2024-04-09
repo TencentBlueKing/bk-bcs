@@ -459,9 +459,8 @@ export const deleteKv = (bizId: string, appId: number, configId: number) =>
  * @param appId 应用ID
  * @param ids 配置项ID列表
  */
-export const batchDeleteKv = (bizId: string, appId: number, ids: number[]) => {
+export const batchDeleteKv = (bizId: string, appId: number, ids: number[]) =>
   http.post(`config/biz/${bizId}/apps/${appId}/kvs/batchDelete`, { ids });
-};
 
 /**
  * 获取已发布kv
