@@ -360,6 +360,8 @@
   en: "CPU Requests"
 - msgID: 内存预留
   en: "Memory Requests"
+- msgID: 临时存储预留
+  en: "Ephemeral-storage Requests"
 - msgID: 自定义资源预留
   en: "Custom Resource Requests"
 - msgID: 共享网卡（eip）
@@ -374,6 +376,8 @@
   en: "CPU Limits"
 - msgID: 内存限制
   en: "Memory Limits"
+- msgID: 临时存储限制
+  en: "Ephemeral-storage Limits"
 - msgID: 自定义资源限制
   en: "Custom Resource Limits"
 - msgID: 安全
