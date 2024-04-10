@@ -229,6 +229,25 @@ func (cd *argo) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, err
 	return pro, nil
 }
 
+// ListProjectsWithoutAuth return projects all
+func (cd *argo) ListProjectsWithoutAuth(ctx context.Context) (*v1alpha1.AppProjectList, error) {
+	projectList, err := cd.ListProjects(ctx)
+	if err != nil {
+		return nil, errors.Wrapf(err, "list projects failed")
+	}
+	result := make([]v1alpha1.AppProject, 0, len(projectList.Items))
+	for i := range projectList.Items {
+		appProj := projectList.Items[i]
+		projectID := common.GetBCSProjectID(appProj.Annotations)
+		if projectID == "" {
+			continue
+		}
+		result = append(result, appProj)
+	}
+	projectList.Items = result
+	return projectList, nil
+}
+
 // CreateCluster interface
 func (cd *argo) CreateCluster(ctx context.Context, cls *v1alpha1.Cluster) error {
 	_, err := cd.clusterClient.Create(ctx, &cluster.ClusterCreateRequest{Cluster: cls})
@@ -402,6 +421,19 @@ func (cd *argo) ListRepository(ctx context.Context, projNames []string) (*v1alph
 	return repos, nil
 }
 
+// AllApplications return all applications cached
+func (cd *argo) AllApplications() []*v1alpha1.Application {
+	result := make([]*v1alpha1.Application, 0)
+	cd.cacheApplication.Range(func(key, value any) bool {
+		projectApps := value.(map[string]*v1alpha1.Application)
+		for _, app := range projectApps {
+			result = append(result, app.DeepCopy())
+		}
+		return true
+	})
+	return result
+}
+
 // GetApplication will return application by name
 func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error) {
 	if !cd.cacheSynced.Load() {
@@ -423,7 +455,7 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 		apps := cd.getProjectApplications(key.(string))
 		app, ok := apps[name]
 		if ok {
-			result = app
+			result = app.DeepCopy()
 			return false
 		}
 		return true
@@ -973,8 +1005,8 @@ func (cd *argo) getProjectApplications(projName string) map[string]*v1alpha1.App
 	}
 	result := v.(map[string]*v1alpha1.Application)
 	newResult := make(map[string]*v1alpha1.Application)
-	for proj, apps := range result {
-		newResult[proj] = apps
+	for appName, app := range result {
+		newResult[appName] = app.DeepCopy()
 	}
 	return newResult
 }
@@ -986,10 +1018,10 @@ func (cd *argo) storeApplication(application *v1alpha1.Application) {
 	projectApps, ok := cd.cacheApplication.Load(projName)
 	if !ok {
 		cd.cacheApplication.Store(projName, map[string]*v1alpha1.Application{
-			application.Name: application,
+			application.Name: application.DeepCopy(),
 		})
 	} else {
-		projectApps.(map[string]*v1alpha1.Application)[application.Name] = application
+		projectApps.(map[string]*v1alpha1.Application)[application.Name] = application.DeepCopy()
 	}
 }
 

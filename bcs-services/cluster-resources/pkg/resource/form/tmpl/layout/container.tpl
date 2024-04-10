@@ -85,6 +85,7 @@
       - - group:
             - [ "cpu" ]
             - [ "memory" ]
+            - [ "ephemeral-storage" ]
             - - group:
                   - [ "key", "value", "." ]
                 prop: extra
@@ -95,6 +96,7 @@
         - group:
             - [ "cpu" ]
             - [ "memory" ]
+            - [ "ephemeral-storage" ]
             - - group:
                   - [ "key", "value", "." ]
                 prop: extra

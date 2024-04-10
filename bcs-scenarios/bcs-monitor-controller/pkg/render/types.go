@@ -10,20 +10,11 @@
  * limitations under the License.
  */
 
-package utils
+package render
 
-import (
-	"fmt"
-	"path/filepath"
-)
-
-// GenBkmConfigTarPath gen bkm tar path
-func GenBkmConfigTarPath(downloadPath, subPath, bizID string) string {
-	return filepath.Join(downloadPath, subPath, fmt.Sprintf("%s_config.tar.gz",
-		bizID))
-}
-
-// GenBkmConfigPath gen bkm config path
-func GenBkmConfigPath(downloadPath, subPath, bizID string) string {
-	return filepath.Join(downloadPath, subPath, bizID)
+// DashBoard 面板配置
+type DashBoard struct {
+	Title   string `json:"title,omitempty"`
+	UID     string `json:"uid,omitempty"`
+	Version int64  `json:"version,omitempty"`
 }

@@ -10,20 +10,27 @@
  * limitations under the License.
  */
 
-package utils
+// Package ccv3 xxx
+package ccv3
 
-import (
-	"fmt"
-	"path/filepath"
+const (
+	searchBusinessApi = "/api/c/compapi/v2/cc/search_business/"
 )
 
-// GenBkmConfigTarPath gen bkm tar path
-func GenBkmConfigTarPath(downloadPath, subPath, bizID string) string {
-	return filepath.Join(downloadPath, subPath, fmt.Sprintf("%s_config.tar.gz",
-		bizID))
+// Interface defines the interface to bkcc
+type Interface interface {
+	SearchBusiness(bkBizIds []int64) ([]CCBusiness, error)
 }
 
-// GenBkmConfigPath gen bkm config path
-func GenBkmConfigPath(downloadPath, subPath, bizID string) string {
-	return filepath.Join(downloadPath, subPath, bizID)
+type appInfo struct {
+	AppCode   string `json:"bk_app_code"`   // app code for api from bk center
+	AppSecret string `json:"bk_app_secret"` // app secret for api from bk center
+	Operator  string `json:"bk_username"`   // user name
+}
+
+// CCBusiness business for cc
+type CCBusiness struct {
+	BkBizId      int64  `json:"bk_biz_id"`
+	BkBizName    string `json:"bk_biz_name"`
+	BkMaintainer string `json:"bk_biz_maintainer"`
 }
