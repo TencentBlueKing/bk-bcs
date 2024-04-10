@@ -52,6 +52,16 @@ type AksService interface {
 
 // ClusterService 集群(cluster Pool)
 type ClusterService interface {
+	// CreateCluster 创建集群
+	//
+	// resourceGroupName - 资源组名称(Account.resourceGroupName)
+	//
+	// resourceName -集群名称
+	//
+	// cluster - 集群参数
+	CreateCluster(ctx context.Context, resourceGroupName, resourceName string,
+		cluster armcontainerservice.ManagedCluster) (*armcontainerservice.ManagedCluster, error)
+
 	// GetCluster 查询集群
 	//
 	// resourceGroupName - 资源组名称

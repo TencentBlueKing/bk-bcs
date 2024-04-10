@@ -237,6 +237,23 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	}
 
 	cluster.ExtraInfo[common.NodeResourceGroup] = *managedCluster.Properties.NodeResourceGroup
+
+	var sysPoolName string
+	for _, pool := range managedCluster.Properties.AgentPoolProfiles {
+		if *pool.Mode == common.CloudClusterNodeGroupTypeSystem {
+			sysPoolName = *pool.Name
+		}
+	}
+	set, err := client.MatchNodeGroup(ctx, cluster.ExtraInfo[common.NodeResourceGroup], sysPoolName)
+	if err != nil {
+		return errors.Wrapf(err, "call MatchNodeGroup falied")
+	}
+
+	subnetResourceGroup := api.RegexpSetSubnetResourceGroup(set)
+	if len(subnetResourceGroup) != 0 {
+		cluster.ExtraInfo[common.NetworkResourceGroup] = subnetResourceGroup
+	}
+
 	return nil
 }
 

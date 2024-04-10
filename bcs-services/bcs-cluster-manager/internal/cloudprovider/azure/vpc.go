@@ -121,7 +121,13 @@ func (vm *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) 
 
 	groups := make([]*proto.SecurityGroup, 0)
 	for _, v := range result {
-		groups = append(groups, &proto.SecurityGroup{SecurityGroupName: *v.Name})
+		if opt.Region != "" && opt.Region != *v.Location {
+			continue
+		}
+		groups = append(groups, &proto.SecurityGroup{
+			SecurityGroupName: *v.Name,
+			SecurityGroupID:   *v.Name,
+		})
 	}
 
 	return groups, nil

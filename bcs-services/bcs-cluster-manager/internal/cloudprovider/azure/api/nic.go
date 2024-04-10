@@ -130,8 +130,6 @@ func (aks *AksServiceImpl) UpdateSubnet(ctx context.Context, nodeResourceGroup, 
 
 // GetNetworkSecurityGroups 查询安全组
 //
-// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
-//
 // networkSecurityGroupName - 安全组名称(LaunchConfiguration.securityGroupIDs).
 func (aks *AksServiceImpl) GetNetworkSecurityGroups(ctx context.Context, nodeResourceGroup,
 	networkSecurityGroupName string) (*armnetwork.SecurityGroup, error) {
