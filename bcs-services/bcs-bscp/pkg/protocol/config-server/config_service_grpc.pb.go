@@ -155,6 +155,7 @@ const (
 	Config_BatchDeleteKv_FullMethodName                     = "/pbcs.Config/BatchDeleteKv"
 	Config_BatchUpsertKvs_FullMethodName                    = "/pbcs.Config/BatchUpsertKvs"
 	Config_UnDeleteKv_FullMethodName                        = "/pbcs.Config/UnDeleteKv"
+	Config_UndoKv_FullMethodName                            = "/pbcs.Config/UndoKv"
 	Config_ListClients_FullMethodName                       = "/pbcs.Config/ListClients"
 	Config_ListClientEvents_FullMethodName                  = "/pbcs.Config/ListClientEvents"
 	Config_ListClientQuerys_FullMethodName                  = "/pbcs.Config/ListClientQuerys"
@@ -237,12 +238,12 @@ type ConfigClient interface {
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete :
-	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete :
+	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -310,6 +311,7 @@ type ConfigClient interface {
 	BatchDeleteKv(ctx context.Context, in *BatchDeleteKvReq, opts ...grpc.CallOption) (*BatchDeleteKvResp, error)
 	BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*UnDeleteKvResp, error)
+	UndoKv(ctx context.Context, in *UndoKvReq, opts ...grpc.CallOption) (*UndoKvResp, error)
 	ListClients(ctx context.Context, in *ListClientsReq, opts ...grpc.CallOption) (*ListClientsResp, error)
 	ListClientEvents(ctx context.Context, in *ListClientEventsReq, opts ...grpc.CallOption) (*ListClientEventsResp, error)
 	// client query related interface
@@ -1506,6 +1508,15 @@ func (c *configClient) UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts .
 	return out, nil
 }
 
+func (c *configClient) UndoKv(ctx context.Context, in *UndoKvReq, opts ...grpc.CallOption) (*UndoKvResp, error) {
+	out := new(UndoKvResp)
+	err := c.cc.Invoke(ctx, Config_UndoKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) ListClients(ctx context.Context, in *ListClientsReq, opts ...grpc.CallOption) (*ListClientsResp, error) {
 	out := new(ListClientsResp)
 	err := c.cc.Invoke(ctx, Config_ListClients_FullMethodName, in, out, opts...)
@@ -1634,12 +1645,12 @@ type ConfigServer interface {
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete :
-	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete :
+	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1707,6 +1718,7 @@ type ConfigServer interface {
 	BatchDeleteKv(context.Context, *BatchDeleteKvReq) (*BatchDeleteKvResp, error)
 	BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(context.Context, *UnDeleteKvReq) (*UnDeleteKvResp, error)
+	UndoKv(context.Context, *UndoKvReq) (*UndoKvResp, error)
 	ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error)
 	ListClientEvents(context.Context, *ListClientEventsReq) (*ListClientEventsResp, error)
 	// client query related interface
@@ -2112,6 +2124,9 @@ func (UnimplementedConfigServer) BatchUpsertKvs(context.Context, *BatchUpsertKvs
 }
 func (UnimplementedConfigServer) UnDeleteKv(context.Context, *UnDeleteKvReq) (*UnDeleteKvResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteKv not implemented")
+}
+func (UnimplementedConfigServer) UndoKv(context.Context, *UndoKvReq) (*UndoKvResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UndoKv not implemented")
 }
 func (UnimplementedConfigServer) ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClients not implemented")
@@ -4501,6 +4516,24 @@ func _Config_UnDeleteKv_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_UndoKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UndoKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UndoKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UndoKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UndoKv(ctx, req.(*UndoKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_ListClients_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListClientsReq)
 	if err := dec(in); err != nil {
@@ -5139,6 +5172,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnDeleteKv",
 			Handler:    _Config_UnDeleteKv_Handler,
+		},
+		{
+			MethodName: "UndoKv",
+			Handler:    _Config_UndoKv_Handler,
 		},
 		{
 			MethodName: "ListClients",

@@ -776,6 +776,11 @@ service Config {
       post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}/undelete"
     };
   };
+  rpc UndoKv(UndoKvReq) returns (UndoKvResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}/undo"
+    };
+  };
 
   rpc ListClients(ListClientsReq) returns (ListClientsResp) {
     option (google.api.http) = {
@@ -2425,6 +2430,14 @@ message UnDeleteKvReq {
 }
 
 message UnDeleteKvResp {}
+
+message UndoKvReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string key = 3;
+}
+
+message UndoKvResp {}
 
 message ListClientsReq {
   message Order {
