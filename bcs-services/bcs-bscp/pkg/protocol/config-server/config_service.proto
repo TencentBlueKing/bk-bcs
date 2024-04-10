@@ -2412,6 +2412,7 @@ message BatchUpsertKvsReq {
     string key = 1;
     string kv_type = 2;
     string value = 3;
+    string memo = 4;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
