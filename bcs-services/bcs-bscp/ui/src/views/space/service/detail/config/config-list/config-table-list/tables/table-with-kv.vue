@@ -7,7 +7,7 @@
       :remote-pagination="true"
       :pagination="pagination"
       :key="versionData.id"
-      :checked="selectedConfigIds"
+      :checked="checkedConfigs"
       selection-key="id"
       row-key="id"
       :row-class="getRowCls"
@@ -198,6 +198,10 @@
     return '';
   });
 
+  const checkedConfigs = computed(() => {
+    return configList.value.filter((config) => selectedConfigIds.value.includes(config.id));
+  });
+
   watch(
     () => versionData.value.id,
     () => {
@@ -284,7 +288,6 @@
     } else {
       selectedConfigIds.value.splice(index, 1);
     }
-    console.log('handleSelection: ', checked, selectedConfigIds.value);
     emits('updateSelectedIds', selectedConfigIds.value);
   };
 
@@ -295,7 +298,6 @@
     } else {
       selectedConfigIds.value = [];
     }
-    console.log('handleSelectAll: ', checked, selectedConfigIds.value);
     emits('updateSelectedIds', selectedConfigIds.value);
   };
 
