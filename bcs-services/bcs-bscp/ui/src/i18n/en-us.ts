@@ -378,6 +378,9 @@ export default {
   '（已上线分组之外的所有实例）': 'All instances outside of the launched group',
   除以下分组之外的所有实例: 'All instances except for the following groups',
   请选择需要调整的分组: 'Please select the group that needs to be adjusted',
+  '确认删除所选的 {n} 项配置项？': 'Confirm the deletion of the selected {n} configuration items?',
+  '已生成版本中存在的配置项，可以通过恢复按钮撤销删除，新增且未生成版本的配置项，将无法撤销删除，请谨慎操作。': 'Configuration items that exist in the generated version can be undone by clicking the restore button. Newly added configuration items that have not generated a version cannot be undone. Please proceed with caution.',
+  批量删除配置项成功: 'Batch deletion of configuration items was successful',
 
   // 分组管理
   新增分组: 'New group',

@@ -7,11 +7,18 @@
       :remote-pagination="true"
       :pagination="pagination"
       :key="versionData.id"
+      :checked="checkedConfigs"
+      selection-key="id"
+      row-key="id"
       :row-class="getRowCls"
+      :is-row-select-enable="isRowSelectEnable"
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"
       @column-sort="handleSort"
-      @column-filter="handleFilter">
+      @column-filter="handleFilter"
+      @selection-change="handleSelectionChange"
+      @select-all="handleSelectAll">
+      <bk-table-column v-if="versionData.id === 0" type="selection" :width="40" :min-width="40"></bk-table-column>
       <bk-table-column :label="t('配置项名称')" prop="spec.key" :min-width="240">
         <template #default="{ row }">
           <bk-button
@@ -138,7 +145,7 @@
     searchStr: string;
   }>();
 
-  const emits = defineEmits(['clearStr']);
+  const emits = defineEmits(['clearStr', 'updateSelectedIds']);
 
   const loading = ref(false);
   const configList = ref<IConfigKvType[]>([]);
@@ -147,6 +154,7 @@
   const viewPanelShow = ref(false);
   const activeConfig = ref<IConfigKvType>(getDefaultKvItem());
   const deleteConfig = ref<IConfigKvType>();
+  const selectedConfigIds = ref<number[]>([]);
   const isDiffPanelShow = ref(false);
   const diffConfig = ref(0);
   const isSearchEmpty = ref(false);
@@ -195,10 +203,16 @@
     return '';
   });
 
+  const checkedConfigs = computed(() => {
+    return configList.value.filter((config) => selectedConfigIds.value.includes(config.id));
+  });
+
   watch(
     () => versionData.value.id,
     () => {
       refresh();
+      selectedConfigIds.value = [];
+      emits('updateSelectedIds', selectedConfigIds.value);
     },
   );
 
@@ -264,6 +278,34 @@
     }
   };
 
+  // 表格行是否可以选中
+  const isRowSelectEnable = ({ row }: { row: IConfigKvType }) => {
+    return row.kv_state !== 'DELETE';
+  };
+
+  // 表格行选择事件
+  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IConfigKvType }) => {
+    const index = selectedConfigIds.value.findIndex((id) => id === row.id);
+    if (checked) {
+      if (index === -1) {
+        selectedConfigIds.value.push(row.id);
+      }
+    } else {
+      selectedConfigIds.value.splice(index, 1);
+    }
+    emits('updateSelectedIds', selectedConfigIds.value);
+  };
+
+  // 全选
+  const handleSelectAll = ({ checked }: { checked: boolean }) => {
+    if (checked) {
+      selectedConfigIds.value = configList.value.filter((item) => item.kv_state !== 'DELETE').map((item) => item.id);
+    } else {
+      selectedConfigIds.value = [];
+    }
+    emits('updateSelectedIds', selectedConfigIds.value);
+  };
+
   const handleEditOrView = (config: IConfigKvType) => {
     activeConfig.value = config;
     if (isUnNamedVersion.value) {
@@ -291,29 +333,53 @@
     deleteConfig.value = config;
   };
 
+  // 删除单个配置项
   const handleDeleteConfigConfirm = async () => {
     if (!deleteConfig.value) {
       return;
     }
     await deleteKv(props.bkBizId, props.appId, deleteConfig.value.id);
-    if (configList.value.length === 1 && pagination.value.current > 1) {
-      pagination.value.current -= 1;
+
+    // 删除的配置项如果在多选列表里，需要去掉
+    const index = selectedConfigIds.value.findIndex((id) => id === deleteConfig.value?.id);
+    if (index > -1) {
+      selectedConfigIds.value.splice(index, 1);
     }
+
+    // 新增的配置项被删除后，检查是否需要往前翻一页
+    if (deleteConfig.value.kv_state === 'ADD') {
+      if (configList.value.length === 1 && pagination.value.current > 1) {
+        pagination.value.current -= 1;
+      }
+    }
+
     Message({
       theme: 'success',
       message: t('删除配置项成功'),
     });
-    refresh();
+    refresh(pagination.value.current);
     isDeleteConfigDialogShow.value = false;
   };
 
-  // 撤销删除
+  // 撤销删除单个配置项
   const handleUndelete = async (config: IConfigKvType) => {
     await undeleteKv(props.bkBizId, props.appId, config.spec.key);
     Message({ theme: 'success', message: t('恢复配置项成功') });
     refresh();
   };
 
+  // 批量删除配置项后刷新配置项列表
+  const refreshAfterBatchDelete = () => {
+    if (selectedConfigIds.value.length === configList.value.length && pagination.value.current > 1) {
+      pagination.value.current -= 1;
+    }
+
+    selectedConfigIds.value = [];
+    emits('updateSelectedIds', []);
+    refresh(pagination.value.current);
+  };
+
+  // page-limit
   const handlePageLimitChange = (limit: number) => {
     pagination.value.limit = limit;
     refresh();
@@ -325,7 +391,6 @@
   };
 
   const handleFilter = ({ checked, index }: any) => {
-    console.log(checked, index);
     if (index === 2) {
       // 调整数据类型筛选条件
       typeFilterChecked.value = checked;
@@ -348,6 +413,7 @@
 
   defineExpose({
     refresh,
+    refreshAfterBatchDelete,
   });
 </script>
 <style lang="scss" scoped>
