@@ -24,7 +24,7 @@
 ### 响应示例
 
 ```json
-k_bscp_var1 string hello 这是字符串类型的变量
+bk_bscp_var1 string hello 这是字符串类型的变量
 bk_bscp_var2 number 100 这是整形
 ```
 

@@ -64,7 +64,7 @@ func (s *variableService) ExportGlobalVariables(w http.ResponseWriter, r *http.R
 	}
 	buf := getVarBuffer(vs, sep)
 
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=global_%d_variable.txt", kt.BizID))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%d_global_variable.txt", kt.BizID))
 	w.Header().Set("Content-Type", "text/plain")
 	_, err = buf.WriteTo(w)
 	if err != nil {
