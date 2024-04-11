@@ -10,12 +10,14 @@ import (
 	context "context"
 	app "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
 	base "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	client "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client"
 	group "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group"
 	hook_revision "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
 	release "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -162,6 +164,12 @@ const (
 	Config_CreateClientQuery_FullMethodName                 = "/pbcs.Config/CreateClientQuery"
 	Config_UpdateClientQuery_FullMethodName                 = "/pbcs.Config/UpdateClientQuery"
 	Config_DeleteClientQuery_FullMethodName                 = "/pbcs.Config/DeleteClientQuery"
+	Config_ClientConfigVersionStatistics_FullMethodName     = "/pbcs.Config/ClientConfigVersionStatistics"
+	Config_ClientPullTrendStatistics_FullMethodName         = "/pbcs.Config/ClientPullTrendStatistics"
+	Config_ClientPullStatistics_FullMethodName              = "/pbcs.Config/ClientPullStatistics"
+	Config_ClientLabelStatistics_FullMethodName             = "/pbcs.Config/ClientLabelStatistics"
+	Config_ClientAnnotationStatistics_FullMethodName        = "/pbcs.Config/ClientAnnotationStatistics"
+	Config_ClientVersionStatistics_FullMethodName           = "/pbcs.Config/ClientVersionStatistics"
 )
 
 // ConfigClient is the client API for Config service.
@@ -319,6 +327,13 @@ type ConfigClient interface {
 	CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error)
 	UpdateClientQuery(ctx context.Context, in *UpdateClientQueryReq, opts ...grpc.CallOption) (*UpdateClientQueryResp, error)
 	DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*DeleteClientQueryResp, error)
+	// client chart related interface
+	ClientConfigVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientPullTrendStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientPullStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientLabelStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientAnnotationStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 }
 
 type configClient struct {
@@ -1571,6 +1586,60 @@ func (c *configClient) DeleteClientQuery(ctx context.Context, in *DeleteClientQu
 	return out, nil
 }
 
+func (c *configClient) ClientConfigVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Config_ClientConfigVersionStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ClientPullTrendStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Config_ClientPullTrendStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ClientPullStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Config_ClientPullStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ClientLabelStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Config_ClientLabelStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ClientAnnotationStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Config_ClientAnnotationStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ClientVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Config_ClientVersionStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConfigServer is the server API for Config service.
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
@@ -1726,6 +1795,13 @@ type ConfigServer interface {
 	CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error)
 	UpdateClientQuery(context.Context, *UpdateClientQueryReq) (*UpdateClientQueryResp, error)
 	DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*DeleteClientQueryResp, error)
+	// client chart related interface
+	ClientConfigVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ClientPullTrendStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ClientPullStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ClientLabelStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ClientAnnotationStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -2145,6 +2221,24 @@ func (UnimplementedConfigServer) UpdateClientQuery(context.Context, *UpdateClien
 }
 func (UnimplementedConfigServer) DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*DeleteClientQueryResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteClientQuery not implemented")
+}
+func (UnimplementedConfigServer) ClientConfigVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientConfigVersionStatistics not implemented")
+}
+func (UnimplementedConfigServer) ClientPullTrendStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientPullTrendStatistics not implemented")
+}
+func (UnimplementedConfigServer) ClientPullStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientPullStatistics not implemented")
+}
+func (UnimplementedConfigServer) ClientLabelStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientLabelStatistics not implemented")
+}
+func (UnimplementedConfigServer) ClientAnnotationStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientAnnotationStatistics not implemented")
+}
+func (UnimplementedConfigServer) ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientVersionStatistics not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -4642,6 +4736,114 @@ func _Config_DeleteClientQuery_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ClientConfigVersionStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ClientConfigVersionStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ClientConfigVersionStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ClientConfigVersionStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ClientPullTrendStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ClientPullTrendStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ClientPullTrendStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ClientPullTrendStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ClientPullStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ClientPullStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ClientPullStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ClientPullStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ClientLabelStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ClientLabelStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ClientLabelStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ClientLabelStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ClientAnnotationStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ClientAnnotationStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ClientAnnotationStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ClientAnnotationStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ClientVersionStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ClientVersionStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ClientVersionStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ClientVersionStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -5200,6 +5402,30 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteClientQuery",
 			Handler:    _Config_DeleteClientQuery_Handler,
+		},
+		{
+			MethodName: "ClientConfigVersionStatistics",
+			Handler:    _Config_ClientConfigVersionStatistics_Handler,
+		},
+		{
+			MethodName: "ClientPullTrendStatistics",
+			Handler:    _Config_ClientPullTrendStatistics_Handler,
+		},
+		{
+			MethodName: "ClientPullStatistics",
+			Handler:    _Config_ClientPullStatistics_Handler,
+		},
+		{
+			MethodName: "ClientLabelStatistics",
+			Handler:    _Config_ClientLabelStatistics_Handler,
+		},
+		{
+			MethodName: "ClientAnnotationStatistics",
+			Handler:    _Config_ClientAnnotationStatistics_Handler,
+		},
+		{
+			MethodName: "ClientVersionStatistics",
+			Handler:    _Config_ClientVersionStatistics_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

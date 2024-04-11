@@ -192,7 +192,7 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		vc.BasicData.OnlineStatus = sfs.Online
 		payload, errE := vc.Encode()
 		if errE != nil {
-			logs.Errorf("version change message encoding failed, %s", err.Error())
+			logs.Errorf("version change message encoding failed, %s", errE.Error())
 			return nil, err
 		}
 		s.handleResourceUsageMetrics(vc.BasicData.BizID, vc.Application.App, vc.ResourceUsage)

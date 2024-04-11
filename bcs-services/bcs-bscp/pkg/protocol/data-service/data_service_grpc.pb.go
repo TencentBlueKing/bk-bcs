@@ -10,6 +10,7 @@ import (
 	context "context"
 	app "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
 	base "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	client "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client"
 	commit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
 	config_item "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	content "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
@@ -21,6 +22,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -173,6 +175,12 @@ const (
 	Data_CreateClientQuery_FullMethodName                 = "/pbds.Data/CreateClientQuery"
 	Data_UpdateClientQuery_FullMethodName                 = "/pbds.Data/UpdateClientQuery"
 	Data_DeleteClientQuery_FullMethodName                 = "/pbds.Data/DeleteClientQuery"
+	Data_ClientConfigVersionStatistics_FullMethodName     = "/pbds.Data/ClientConfigVersionStatistics"
+	Data_ClientPullTrendStatistics_FullMethodName         = "/pbds.Data/ClientPullTrendStatistics"
+	Data_ClientPullStatistics_FullMethodName              = "/pbds.Data/ClientPullStatistics"
+	Data_ClientLabelStatistics_FullMethodName             = "/pbds.Data/ClientLabelStatistics"
+	Data_ClientAnnotationStatistics_FullMethodName        = "/pbds.Data/ClientAnnotationStatistics"
+	Data_ClientVersionStatistics_FullMethodName           = "/pbds.Data/ClientVersionStatistics"
 	Data_ListInstances_FullMethodName                     = "/pbds.Data/ListInstances"
 	Data_FetchInstanceInfo_FullMethodName                 = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
@@ -354,6 +362,13 @@ type DataClient interface {
 	CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error)
 	UpdateClientQuery(ctx context.Context, in *UpdateClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	// client metrics chart related interface
+	ClientConfigVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientPullTrendStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientPullStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientLabelStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientAnnotationStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
 	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
@@ -1667,6 +1682,60 @@ func (c *dataClient) DeleteClientQuery(ctx context.Context, in *DeleteClientQuer
 	return out, nil
 }
 
+func (c *dataClient) ClientConfigVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Data_ClientConfigVersionStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ClientPullTrendStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Data_ClientPullTrendStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ClientPullStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Data_ClientPullStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ClientLabelStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Data_ClientLabelStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ClientAnnotationStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Data_ClientAnnotationStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ClientVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Data_ClientVersionStatistics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error) {
 	out := new(ListInstancesResp)
 	err := c.cc.Invoke(ctx, Data_ListInstances_FullMethodName, in, out, opts...)
@@ -1878,6 +1947,13 @@ type DataServer interface {
 	CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error)
 	UpdateClientQuery(context.Context, *UpdateClientQueryReq) (*base.EmptyResp, error)
 	DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*base.EmptyResp, error)
+	// client metrics chart related interface
+	ClientConfigVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ClientPullTrendStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ClientPullStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ClientLabelStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ClientAnnotationStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
 	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
@@ -2322,6 +2398,24 @@ func (UnimplementedDataServer) UpdateClientQuery(context.Context, *UpdateClientQ
 }
 func (UnimplementedDataServer) DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteClientQuery not implemented")
+}
+func (UnimplementedDataServer) ClientConfigVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientConfigVersionStatistics not implemented")
+}
+func (UnimplementedDataServer) ClientPullTrendStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientPullTrendStatistics not implemented")
+}
+func (UnimplementedDataServer) ClientPullStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientPullStatistics not implemented")
+}
+func (UnimplementedDataServer) ClientLabelStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientLabelStatistics not implemented")
+}
+func (UnimplementedDataServer) ClientAnnotationStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientAnnotationStatistics not implemented")
+}
+func (UnimplementedDataServer) ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientVersionStatistics not implemented")
 }
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
@@ -4939,6 +5033,114 @@ func _Data_DeleteClientQuery_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ClientConfigVersionStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ClientConfigVersionStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ClientConfigVersionStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ClientConfigVersionStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ClientPullTrendStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ClientPullTrendStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ClientPullTrendStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ClientPullTrendStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ClientPullStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ClientPullStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ClientPullStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ClientPullStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ClientLabelStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ClientLabelStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ClientLabelStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ClientLabelStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ClientAnnotationStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ClientAnnotationStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ClientAnnotationStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ClientAnnotationStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ClientVersionStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ClientVersionStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ClientVersionStatistics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ClientVersionStatistics(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListInstancesReq)
 	if err := dec(in); err != nil {
@@ -5593,6 +5795,30 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteClientQuery",
 			Handler:    _Data_DeleteClientQuery_Handler,
+		},
+		{
+			MethodName: "ClientConfigVersionStatistics",
+			Handler:    _Data_ClientConfigVersionStatistics_Handler,
+		},
+		{
+			MethodName: "ClientPullTrendStatistics",
+			Handler:    _Data_ClientPullTrendStatistics_Handler,
+		},
+		{
+			MethodName: "ClientPullStatistics",
+			Handler:    _Data_ClientPullStatistics_Handler,
+		},
+		{
+			MethodName: "ClientLabelStatistics",
+			Handler:    _Data_ClientLabelStatistics_Handler,
+		},
+		{
+			MethodName: "ClientAnnotationStatistics",
+			Handler:    _Data_ClientAnnotationStatistics_Handler,
+		},
+		{
+			MethodName: "ClientVersionStatistics",
+			Handler:    _Data_ClientVersionStatistics_Handler,
 		},
 		{
 			MethodName: "ListInstances",

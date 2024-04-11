@@ -39,7 +39,7 @@ type ClientSpec struct {
 	CurrentReleaseID          uint32       `gorm:"column:current_release_id" json:"current_release_id"`
 	TargetReleaseID           uint32       `gorm:"column:target_release_id" json:"target_release_id"`
 	ReleaseChangeStatus       Status       `gorm:"column:release_change_status" json:"release_change_status"`
-	ReleaseChangeFailedReason FailedReason `gorm:"column:release_change_failed_reason" json:"release_change_failed_reason"`
+	ReleaseChangeFailedReason FailedReason `gorm:"column:release_change_failed_reason" json:"release_change_failed_reason"` // nolint
 	FailedDetailReason        string       `gorm:"column:failed_detail_reason" json:"failed_detail_reason"`
 }
 
@@ -54,8 +54,12 @@ type ClientAttachment struct {
 type Resource struct {
 	CpuUsage       float64 `gorm:"column:cpu_usage" json:"cpu_usage"`
 	CpuMaxUsage    float64 `gorm:"column:cpu_max_usage" json:"cpu_max_usage"`
+	CpuMinUsage    float64 `gorm:"column:cpu_min_usage" json:"cpu_min_usage"`
+	CpuAvgUsage    float64 `gorm:"column:cpu_avg_usage" json:"cpu_avg_usage"`
 	MemoryUsage    uint64  `gorm:"column:memory_usage" json:"memory_usage"`
 	MemoryMaxUsage uint64  `gorm:"column:memory_max_usage" json:"memory_max_usage"`
+	MemoryMinUsage uint64  `gorm:"column:memory_min_usage" json:"memory_min_usage"`
+	MemoryAvgUsage uint64  `gorm:"column:memory_avg_usage" json:"memory_avg_usage"`
 }
 
 // TableName is the app's database table name.

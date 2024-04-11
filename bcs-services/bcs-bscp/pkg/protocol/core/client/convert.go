@@ -28,11 +28,16 @@ func (c *ClientSpec) ClientSpec() *table.ClientSpec {
 	if c.Resource != nil {
 		resource = table.Resource{
 			CpuMaxUsage:    c.Resource.CpuMaxUsage,
-			MemoryMaxUsage: c.Resource.MemoryMaxUsage,
 			CpuUsage:       c.Resource.CpuUsage,
+			MemoryMaxUsage: c.Resource.MemoryMaxUsage,
 			MemoryUsage:    c.Resource.MemoryUsage,
+			MemoryMinUsage: c.Resource.MemoryMinUsage,
+			MemoryAvgUsage: c.Resource.MemoryAvgUsage,
+			CpuMinUsage:    c.Resource.CpuMinUsage,
+			CpuAvgUsage:    c.Resource.CpuAvgUsage,
 		}
 	}
+
 	return &table.ClientSpec{
 		ClientVersion:             c.ClientVersion,
 		ClientType:                table.ClientType(c.ClientType),
@@ -70,6 +75,10 @@ func PbClientSpec(spec *table.ClientSpec) *ClientSpec { //nolint:revive
 			CpuMaxUsage:    spec.Resource.CpuMaxUsage,
 			MemoryUsage:    spec.Resource.MemoryUsage,
 			MemoryMaxUsage: spec.Resource.MemoryMaxUsage,
+			MemoryMinUsage: spec.Resource.MemoryMinUsage,
+			MemoryAvgUsage: spec.Resource.MemoryAvgUsage,
+			CpuMinUsage:    spec.Resource.CpuMinUsage,
+			CpuAvgUsage:    spec.Resource.CpuAvgUsage,
 		},
 		CurrentReleaseId:          spec.CurrentReleaseID,
 		TargetReleaseId:           spec.TargetReleaseID,
