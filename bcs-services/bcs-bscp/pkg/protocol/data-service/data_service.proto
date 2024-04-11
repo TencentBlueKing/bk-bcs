@@ -236,9 +236,17 @@ service Data {
   rpc UpdateClientQuery(UpdateClientQueryReq) returns (pbbase.EmptyResp) {};
   rpc DeleteClientQuery(DeleteClientQueryReq) returns (pbbase.EmptyResp) {};
 
+  // client metrics chart related interface
+  rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientPullTrendStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientPullStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientLabelStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+
   // used iam pull resource callback.
-  rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {}
-  rpc FetchInstanceInfo(FetchInstanceInfoReq) returns (FetchInstanceInfoResp) {}
+  rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {};
+  rpc FetchInstanceInfo(FetchInstanceInfoReq) returns (FetchInstanceInfoResp) {};
 
   // Ping verifies if the grpc connection is still alive.
   rpc Ping(PingMsg) returns (PingMsg) {
