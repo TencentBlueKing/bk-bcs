@@ -27,20 +27,21 @@ type Client struct {
 
 // ClientSpec is a client spec
 type ClientSpec struct {
-	ClientVersion             string       `gorm:"column:client_version" json:"client_version"`
-	ClientType                ClientType   `gorm:"column:client_type" json:"client_type"`
-	Ip                        string       `gorm:"column:ip" json:"ip"`
-	Labels                    string       `gorm:"column:labels" json:"labels"`
-	Annotations               string       `gorm:"column:annotations" json:"annotations"`
-	FirstConnectTime          time.Time    `gorm:"column:first_connect_time" json:"first_connect_time"`
-	LastHeartbeatTime         time.Time    `gorm:"column:last_heartbeat_time" json:"last_heartbeat_time"`
-	OnlineStatus              OnlineStatus `gorm:"column:online_status" json:"online_status"`
-	Resource                  Resource     `json:"resource" gorm:"embedded"`
-	CurrentReleaseID          uint32       `gorm:"column:current_release_id" json:"current_release_id"`
-	TargetReleaseID           uint32       `gorm:"column:target_release_id" json:"target_release_id"`
-	ReleaseChangeStatus       Status       `gorm:"column:release_change_status" json:"release_change_status"`
-	ReleaseChangeFailedReason FailedReason `gorm:"column:release_change_failed_reason" json:"release_change_failed_reason"` // nolint
-	FailedDetailReason        string       `gorm:"column:failed_detail_reason" json:"failed_detail_reason"`
+	ClientVersion             string     `gorm:"column:client_version" json:"client_version"`
+	ClientType                ClientType `gorm:"column:client_type" json:"client_type"`
+	Ip                        string     `gorm:"column:ip" json:"ip"`
+	Labels                    string     `gorm:"column:labels" json:"labels"`
+	Annotations               string     `gorm:"column:annotations" json:"annotations"`
+	FirstConnectTime          time.Time  `gorm:"column:first_connect_time" json:"first_connect_time"`
+	LastHeartbeatTime         time.Time  `gorm:"column:last_heartbeat_time" json:"last_heartbeat_time"`
+	OnlineStatus              string     `gorm:"column:online_status" json:"online_status"`
+	Resource                  Resource   `json:"resource" gorm:"embedded"`
+	CurrentReleaseID          uint32     `gorm:"column:current_release_id" json:"current_release_id"`
+	TargetReleaseID           uint32     `gorm:"column:target_release_id" json:"target_release_id"`
+	ReleaseChangeStatus       Status     `gorm:"column:release_change_status" json:"release_change_status"`
+	ReleaseChangeFailedReason string     `gorm:"column:release_change_failed_reason" json:"release_change_failed_reason"` // nolint
+	SpecificFailedReason      string     `gorm:"column:specific_failed_reason" json:"specific_failed_reason"`
+	FailedDetailReason        string     `gorm:"column:failed_detail_reason" json:"failed_detail_reason"`
 }
 
 // ClientAttachment is a client attachment
@@ -121,10 +122,6 @@ func (c *ClientSpec) ValidateCreate() error {
 		return errors.New("last heartbeat time not set")
 	}
 
-	if err := c.OnlineStatus.Validate(); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -155,8 +152,6 @@ const (
 	Failed Status = "Failed"
 	// Processing xxx
 	Processing Status = "Processing"
-	// Skip xxx
-	Skip Status = "Skip"
 )
 
 // Validate the version change status is valid or not.
@@ -165,55 +160,6 @@ func (rs Status) Validate() error {
 	case Success:
 	case Failed:
 	case Processing:
-	case Skip:
-	}
-
-	return nil
-}
-
-// OnlineStatus define the online status structure
-type OnlineStatus string
-
-const (
-	// Online xxx
-	Online OnlineStatus = "online"
-	// Offline xxx
-	Offline OnlineStatus = "offline"
-)
-
-// Validate the online status is valid or not.
-func (os OnlineStatus) Validate() error {
-	switch os {
-	case Online:
-	case Offline:
-	default:
-		return fmt.Errorf("unknown %s sidecar online status", os)
-	}
-
-	return nil
-}
-
-// FailedReason define the failure cause structure
-type FailedReason string
-
-const (
-	// PreHookFailed pre hook failed
-	PreHookFailed FailedReason = "PreHookFailed"
-	// PostHookFailed post hook failed
-	PostHookFailed FailedReason = "PostHookFailed"
-	// DownloadFailed download failed
-	DownloadFailed FailedReason = "DownloadFailed"
-	// SkipFailed Skip failed
-	SkipFailed FailedReason = "SkipFailed"
-)
-
-// Validate the failed reason is valid or not.
-func (fr FailedReason) Validate() error {
-	switch fr {
-	case PreHookFailed:
-	case PostHookFailed:
-	case DownloadFailed:
-	case SkipFailed:
 	}
 
 	return nil

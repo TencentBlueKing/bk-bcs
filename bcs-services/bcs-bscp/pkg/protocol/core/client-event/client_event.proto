@@ -31,6 +31,7 @@ message ClientEventSpec {
   string release_change_status = 10;
   string release_change_failed_reason = 11;
   string failed_detail_reason = 12;
+  string specific_failed_reason = 13;
 }
 
 // ClientEventAttachment source resource reference: pkg/dal/table/client-event.go

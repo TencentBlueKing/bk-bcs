@@ -151,12 +151,13 @@ type SideAppMeta struct {
 	// CursorID 事件ID
 	CursorID string `json:"cursorID"`
 	// ReleaseChangeStatus 变更状态
-	ReleaseChangeStatus Status       `json:"releaseChangeStatus"`
-	FailedReason        FailedReason `json:"failedReason"`
-	FailedDetailReason  string       `json:"failedDetailReason"`
-	StartTime           time.Time    `json:"startTime"`
-	EndTime             time.Time    `json:"endTime"`
-	TotalSeconds        float64      `json:"totalSeconds"`
+	ReleaseChangeStatus  Status    `json:"releaseChangeStatus"`
+	FailedReason         string    `json:"failedReason"`
+	SpecificFailedReason string    `json:"specificFailedReason"`
+	FailedDetailReason   string    `json:"failedDetailReason"`
+	StartTime            time.Time `json:"startTime"`
+	EndTime              time.Time `json:"endTime"`
+	TotalSeconds         float64   `json:"totalSeconds"`
 }
 
 // Validate the sidecar's app meta is valid or not.
@@ -611,9 +612,9 @@ func (cm OnlineStatus) Validate() error {
 func (cm OnlineStatus) String() string {
 	switch cm {
 	case Online:
-		return "online"
+		return "Online"
 	case Offline:
-		return "offline"
+		return "Offline"
 	default:
 		return ""
 	}
@@ -652,50 +653,6 @@ func (rs Status) String() string {
 		return "Failed"
 	case Processing:
 		return "Processing"
-	default:
-		return ""
-	}
-}
-
-// FailedReason define the failure cause structure
-type FailedReason uint32
-
-const (
-	// PreHookFailed pre hook failed
-	PreHookFailed FailedReason = 1
-	// PostHookFailed post hook failed
-	PostHookFailed FailedReason = 2
-	// DownloadFailed download failed
-	DownloadFailed FailedReason = 3
-	// SkipFailed skip failed
-	SkipFailed FailedReason = 4
-)
-
-// Validate the failed reason is valid or not.
-func (fr FailedReason) Validate() error {
-	switch fr {
-	case PreHookFailed:
-	case PostHookFailed:
-	case DownloadFailed:
-	case SkipFailed:
-	default:
-		return fmt.Errorf("unknown %d sidecar failed reason", fr)
-	}
-
-	return nil
-}
-
-// String return the corresponding string type
-func (fr FailedReason) String() string {
-	switch fr {
-	case PreHookFailed:
-		return "PreHookFailed"
-	case PostHookFailed:
-		return "PostHookFailed"
-	case DownloadFailed:
-		return "DownloadFailed"
-	case SkipFailed:
-		return "SkipFailed"
 	default:
 		return ""
 	}

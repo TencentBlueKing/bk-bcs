@@ -33,6 +33,7 @@ message ClientSpec {
   string failed_detail_reason = 13;
   string client_type = 14;
   string current_release_name = 15;
+  string specific_failed_reason = 16;
 }
 
 // ClientAttachment source resource reference: pkg/dal/table/client.go
