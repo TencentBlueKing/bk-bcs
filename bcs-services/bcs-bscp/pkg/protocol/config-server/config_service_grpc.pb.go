@@ -35,6 +35,7 @@ const (
 	Config_BatchUpsertConfigItems_FullMethodName            = "/pbcs.Config/BatchUpsertConfigItems"
 	Config_UpdateConfigItem_FullMethodName                  = "/pbcs.Config/UpdateConfigItem"
 	Config_DeleteConfigItem_FullMethodName                  = "/pbcs.Config/DeleteConfigItem"
+	Config_BatchDeleteConfigItems_FullMethodName            = "/pbcs.Config/BatchDeleteConfigItems"
 	Config_UnDeleteConfigItem_FullMethodName                = "/pbcs.Config/UnDeleteConfigItem"
 	Config_UndoConfigItem_FullMethodName                    = "/pbcs.Config/UndoConfigItem"
 	Config_GetConfigItem_FullMethodName                     = "/pbcs.Config/GetConfigItem"
@@ -133,6 +134,7 @@ const (
 	Config_ListReleasedAppTmplVariables_FullMethodName      = "/pbcs.Config/ListReleasedAppTmplVariables"
 	Config_CreateGroup_FullMethodName                       = "/pbcs.Config/CreateGroup"
 	Config_DeleteGroup_FullMethodName                       = "/pbcs.Config/DeleteGroup"
+	Config_BatchDeleteGroups_FullMethodName                 = "/pbcs.Config/BatchDeleteGroups"
 	Config_UpdateGroup_FullMethodName                       = "/pbcs.Config/UpdateGroup"
 	Config_ListAllGroups_FullMethodName                     = "/pbcs.Config/ListAllGroups"
 	Config_ListAppGroups_FullMethodName                     = "/pbcs.Config/ListAppGroups"
@@ -181,6 +183,7 @@ type ConfigClient interface {
 	BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(ctx context.Context, in *UpdateConfigItemReq, opts ...grpc.CallOption) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error)
+	BatchDeleteConfigItems(ctx context.Context, in *BatchDeleteAppResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	UnDeleteConfigItem(ctx context.Context, in *UnDeleteConfigItemReq, opts ...grpc.CallOption) (*UnDeleteConfigItemResp, error)
 	UndoConfigItem(ctx context.Context, in *UndoConfigItemReq, opts ...grpc.CallOption) (*UndoConfigItemResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*GetConfigItemResp, error)
@@ -238,12 +241,12 @@ type ConfigClient interface {
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -289,6 +292,7 @@ type ConfigClient interface {
 	ListReleasedAppTmplVariables(ctx context.Context, in *ListReleasedAppTmplVariablesReq, opts ...grpc.CallOption) (*ListReleasedAppTmplVariablesResp, error)
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
+	BatchDeleteGroups(ctx context.Context, in *BatchDeleteBizResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
 	ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error)
 	ListAppGroups(ctx context.Context, in *ListAppGroupsReq, opts ...grpc.CallOption) (*ListAppGroupsResp, error)
@@ -308,7 +312,7 @@ type ConfigClient interface {
 	UpdateKv(ctx context.Context, in *UpdateKvReq, opts ...grpc.CallOption) (*UpdateKvResp, error)
 	ListKvs(ctx context.Context, in *ListKvsReq, opts ...grpc.CallOption) (*ListKvsResp, error)
 	DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc.CallOption) (*DeleteKvResp, error)
-	BatchDeleteKv(ctx context.Context, in *BatchDeleteKvReq, opts ...grpc.CallOption) (*BatchDeleteKvResp, error)
+	BatchDeleteKv(ctx context.Context, in *BatchDeleteAppResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*UnDeleteKvResp, error)
 	UndoKv(ctx context.Context, in *UndoKvReq, opts ...grpc.CallOption) (*UndoKvResp, error)
@@ -422,6 +426,15 @@ func (c *configClient) UpdateConfigItem(ctx context.Context, in *UpdateConfigIte
 func (c *configClient) DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error) {
 	out := new(DeleteConfigItemResp)
 	err := c.cc.Invoke(ctx, Config_DeleteConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) BatchDeleteConfigItems(ctx context.Context, in *BatchDeleteAppResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error) {
+	out := new(BatchDeleteResp)
+	err := c.cc.Invoke(ctx, Config_BatchDeleteConfigItems_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1310,6 +1323,15 @@ func (c *configClient) DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts
 	return out, nil
 }
 
+func (c *configClient) BatchDeleteGroups(ctx context.Context, in *BatchDeleteBizResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error) {
+	out := new(BatchDeleteResp)
+	err := c.cc.Invoke(ctx, Config_BatchDeleteGroups_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error) {
 	out := new(UpdateGroupResp)
 	err := c.cc.Invoke(ctx, Config_UpdateGroup_FullMethodName, in, out, opts...)
@@ -1481,8 +1503,8 @@ func (c *configClient) DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...gr
 	return out, nil
 }
 
-func (c *configClient) BatchDeleteKv(ctx context.Context, in *BatchDeleteKvReq, opts ...grpc.CallOption) (*BatchDeleteKvResp, error) {
-	out := new(BatchDeleteKvResp)
+func (c *configClient) BatchDeleteKv(ctx context.Context, in *BatchDeleteAppResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error) {
+	out := new(BatchDeleteResp)
 	err := c.cc.Invoke(ctx, Config_BatchDeleteKv_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1588,6 +1610,7 @@ type ConfigServer interface {
 	BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error)
+	BatchDeleteConfigItems(context.Context, *BatchDeleteAppResourcesReq) (*BatchDeleteResp, error)
 	UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*UnDeleteConfigItemResp, error)
 	UndoConfigItem(context.Context, *UndoConfigItemReq) (*UndoConfigItemResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error)
@@ -1645,12 +1668,12 @@ type ConfigServer interface {
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1696,6 +1719,7 @@ type ConfigServer interface {
 	ListReleasedAppTmplVariables(context.Context, *ListReleasedAppTmplVariablesReq) (*ListReleasedAppTmplVariablesResp, error)
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
+	BatchDeleteGroups(context.Context, *BatchDeleteBizResourcesReq) (*BatchDeleteResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
 	ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error)
 	ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error)
@@ -1715,7 +1739,7 @@ type ConfigServer interface {
 	UpdateKv(context.Context, *UpdateKvReq) (*UpdateKvResp, error)
 	ListKvs(context.Context, *ListKvsReq) (*ListKvsResp, error)
 	DeleteKv(context.Context, *DeleteKvReq) (*DeleteKvResp, error)
-	BatchDeleteKv(context.Context, *BatchDeleteKvReq) (*BatchDeleteKvResp, error)
+	BatchDeleteKv(context.Context, *BatchDeleteAppResourcesReq) (*BatchDeleteResp, error)
 	BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(context.Context, *UnDeleteKvReq) (*UnDeleteKvResp, error)
 	UndoKv(context.Context, *UndoKvReq) (*UndoKvResp, error)
@@ -1764,6 +1788,9 @@ func (UnimplementedConfigServer) UpdateConfigItem(context.Context, *UpdateConfig
 }
 func (UnimplementedConfigServer) DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteConfigItem not implemented")
+}
+func (UnimplementedConfigServer) BatchDeleteConfigItems(context.Context, *BatchDeleteAppResourcesReq) (*BatchDeleteResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteConfigItems not implemented")
 }
 func (UnimplementedConfigServer) UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*UnDeleteConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteConfigItem not implemented")
@@ -2059,6 +2086,9 @@ func (UnimplementedConfigServer) CreateGroup(context.Context, *CreateGroupReq) (
 func (UnimplementedConfigServer) DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroup not implemented")
 }
+func (UnimplementedConfigServer) BatchDeleteGroups(context.Context, *BatchDeleteBizResourcesReq) (*BatchDeleteResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteGroups not implemented")
+}
 func (UnimplementedConfigServer) UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroup not implemented")
 }
@@ -2116,7 +2146,7 @@ func (UnimplementedConfigServer) ListKvs(context.Context, *ListKvsReq) (*ListKvs
 func (UnimplementedConfigServer) DeleteKv(context.Context, *DeleteKvReq) (*DeleteKvResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteKv not implemented")
 }
-func (UnimplementedConfigServer) BatchDeleteKv(context.Context, *BatchDeleteKvReq) (*BatchDeleteKvResp, error) {
+func (UnimplementedConfigServer) BatchDeleteKv(context.Context, *BatchDeleteAppResourcesReq) (*BatchDeleteResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteKv not implemented")
 }
 func (UnimplementedConfigServer) BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error) {
@@ -2352,6 +2382,24 @@ func _Config_DeleteConfigItem_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).DeleteConfigItem(ctx, req.(*DeleteConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_BatchDeleteConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteAppResourcesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchDeleteConfigItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchDeleteConfigItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchDeleteConfigItems(ctx, req.(*BatchDeleteAppResourcesReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4120,6 +4168,24 @@ func _Config_DeleteGroup_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_BatchDeleteGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteBizResourcesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchDeleteGroups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchDeleteGroups_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchDeleteGroups(ctx, req.(*BatchDeleteBizResourcesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_UpdateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateGroupReq)
 	if err := dec(in); err != nil {
@@ -4463,7 +4529,7 @@ func _Config_DeleteKv_Handler(srv interface{}, ctx context.Context, dec func(int
 }
 
 func _Config_BatchDeleteKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BatchDeleteKvReq)
+	in := new(BatchDeleteAppResourcesReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -4475,7 +4541,7 @@ func _Config_BatchDeleteKv_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: Config_BatchDeleteKv_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).BatchDeleteKv(ctx, req.(*BatchDeleteKvReq))
+		return srv.(ConfigServer).BatchDeleteKv(ctx, req.(*BatchDeleteAppResourcesReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4692,6 +4758,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteConfigItem",
 			Handler:    _Config_DeleteConfigItem_Handler,
+		},
+		{
+			MethodName: "BatchDeleteConfigItems",
+			Handler:    _Config_BatchDeleteConfigItems_Handler,
 		},
 		{
 			MethodName: "UnDeleteConfigItem",
@@ -5084,6 +5154,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteGroup",
 			Handler:    _Config_DeleteGroup_Handler,
+		},
+		{
+			MethodName: "BatchDeleteGroups",
+			Handler:    _Config_BatchDeleteGroups_Handler,
 		},
 		{
 			MethodName: "UpdateGroup",

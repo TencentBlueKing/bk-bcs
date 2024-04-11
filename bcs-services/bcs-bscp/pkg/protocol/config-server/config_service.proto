@@ -96,6 +96,12 @@ service Config {
       delete: "/api/v1/config/delete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
     };
   }
+  rpc BatchDeleteConfigItems(BatchDeleteAppResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/batchDelete"
+      body: "*"
+    };
+  }
   rpc UnDeleteConfigItem(UnDeleteConfigItemReq) returns (UnDeleteConfigItemResp) {
     option (google.api.http) = {
       post: "/api/v1/config/undelete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
@@ -651,6 +657,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/groups/{group_id}"
     };
   }
+  rpc BatchDeleteGroups(BatchDeleteBizResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/groups/batchDelete"
+      body: "*"
+    };
+  }
   rpc UpdateGroup(UpdateGroupReq) returns (UpdateGroupResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/groups/{group_id}"
@@ -759,7 +771,7 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{id}"
     };
   };
-  rpc BatchDeleteKv(BatchDeleteKvReq) returns (BatchDeleteKvResp) {
+  rpc BatchDeleteKv(BatchDeleteAppResourcesReq) returns (BatchDeleteResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/batchDelete"
       body: "*"
@@ -2396,13 +2408,18 @@ message DeleteKvReq {
 
 message DeleteKvResp {}
 
-message BatchDeleteKvReq {
+message BatchDeleteBizResourcesReq {
+  uint32 biz_id = 1;
+  repeated uint32 ids = 2;
+}
+
+message BatchDeleteAppResourcesReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   repeated uint32 ids = 3;
 }
 
-message BatchDeleteKvResp {
+message BatchDeleteResp {
   repeated uint32 successful_ids = 1;
   repeated uint32 failed_ids = 2;
 }
