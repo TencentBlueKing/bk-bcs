@@ -15,6 +15,8 @@
           {{ t('新增变量') }}
         </bk-button>
         <bk-button @click="isImportVariableShow = true">{{ t('导入变量') }}</bk-button>
+        <VaribaleExport :biz-id="spaceId" />
+        <bk-button @click="handleExport">{{ t('导出变量') }} </bk-button>
       </div>
       <SearchInput v-model="searchStr" :placeholder="t('请输入变量名称')" :width="320" @search="refreshList()" />
     </div>
@@ -85,6 +87,7 @@
   import { IVariableEditParams, IVariableItem } from '../../../../types/variable';
   import { getVariableList, deleteVariable } from '../../../api/variable';
   import { copyToClipBoard } from '../../../utils/index';
+  import { fileDownload } from '../../../utils/file';
   import VariableCreate from './variable-create.vue';
   import VariableEdit from './variable-edit.vue';
   import VariableImport from './variable-import.vue';
@@ -143,6 +146,11 @@
     list.value = res.details;
     pagination.value.count = res.count;
     loading.value = false;
+  };
+
+  // 导出变量
+  const handleExport = async () => {
+    fileDownload(`${(window as any).BK_BCS_BSCP_API}/api/v1/config/biz/${spaceId.value}/variables/export`, '', false);
   };
 
   const handleEditVar = (variable: IVariableItem) => {
