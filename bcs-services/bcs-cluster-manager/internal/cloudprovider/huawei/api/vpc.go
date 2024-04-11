@@ -14,6 +14,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
 	vpc2 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2"
 	model2 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2/model"
@@ -90,4 +92,18 @@ func (v *Vpc2Client) ListVpcsByID(vpcID string) ([]model2.Vpc, error) {
 	}
 
 	return *rsp.Vpcs, nil
+}
+
+// CalculateAvailableIp 计算子网可用ip数
+func (v *Vpc2Client) CalculateAvailableIp(networkId string) (int32, error) {
+	rsp, err := v.ShowNetworkIpAvailabilities(&model2.ShowNetworkIpAvailabilitiesRequest{NetworkId: networkId})
+	if err != nil {
+		return 0, err
+	}
+
+	if rsp.NetworkIpAvailability == nil {
+		return 0, fmt.Errorf("network ip availability is nil")
+	}
+
+	return rsp.NetworkIpAvailability.TotalIps - rsp.NetworkIpAvailability.UsedIps, nil
 }

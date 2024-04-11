@@ -15,7 +15,6 @@ package huawei
 
 import (
 	"fmt"
-	"net"
 	"sync"
 
 	model2 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2/model"
@@ -94,12 +93,10 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 			}
 		}
 
-		rps2, err2 := client.ListPrivateips(&model2.ListPrivateipsRequest{SubnetId: s.Id})
+		availableIPAddressCount, err2 := client.CalculateAvailableIp(s.Id)
 		if err2 != nil {
 			return nil, err
 		}
-
-		total, _ := calculateAvailableIPs(s.Cidr)
 
 		subnets = append(subnets, &proto.Subnet{
 			VpcID:                   s.VpcId,
@@ -109,7 +106,7 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 			Ipv6CidrRange:           s.CidrV6,
 			Zone:                    subnetZone,
 			ZoneName:                subnetZoneName,
-			AvailableIPAddressCount: uint64(total - len(*rps2.Privateips)),
+			AvailableIPAddressCount: uint64(availableIPAddressCount),
 		})
 	}
 
@@ -175,19 +172,4 @@ func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*pr
 func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
 	opt *cloudprovider.CommonOption) ([]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
-}
-
-// calculateAvailableIPs takes a CIDR range and returns the number of available IP addresses.
-func calculateAvailableIPs(cidr string) (int, error) {
-	// Parse the CIDR
-	_, ipNet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse CIDR: %w", err)
-	}
-
-	// Calculate the number of available IPs
-	ones, _ := ipNet.Mask.Size()
-	availableIPs := (1 << uint(32-ones)) - 2
-
-	return availableIPs, nil
 }
