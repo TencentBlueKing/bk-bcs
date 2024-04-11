@@ -831,6 +831,44 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/{id}"
     };
   };
+
+  // client chart related interface
+  rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/config_version_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientPullTrendStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/pull_trend_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientPullStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/pull_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientLabelStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/label_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/annotation_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/version_statistics"
+      body: "*"
+    };
+  };
 }
 
 message UpdateCredentialScopeReq {
@@ -2429,6 +2467,7 @@ message BatchUpsertKvsReq {
     string key = 1;
     string kv_type = 2;
     string value = 3;
+    string memo = 4;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;

@@ -263,6 +263,7 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbcs.BatchUpsertKvsRe
 				Key:    kv.Key,
 				KvType: kv.KvType,
 				Value:  kv.Value,
+				Memo:   kv.Memo,
 			},
 		})
 	}
