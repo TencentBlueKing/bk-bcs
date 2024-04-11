@@ -1,11 +1,16 @@
 <template>
-  <section class="card" :style="{ height: height + 'px', width: width + 'px' }">
+  <div class="card" :style="{ height: height + 'px', width: width + 'px' }">
     <div class="head">
       <span>{{ title }}</span>
       <slot name="head-suffix" />
     </div>
-    <slot />
-  </section>
+    <div class="operation-btn">
+      <slot name="operation" />
+    </div>
+    <div class="container">
+      <slot />
+    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -18,6 +23,7 @@
 
 <style scoped lang="scss">
   .card {
+    position: relative;
     padding: 12px 16px;
     margin-bottom: 16px;
     background: #ffffff;
@@ -28,11 +34,17 @@
     .head {
       display: flex;
       align-items: center;
+      margin-bottom: 16px;
       height: 24px;
-      .title {
-        color: #313238;
-        margin-right: 16px;
-      }
+      color: #313238;
+    }
+    .container {
+      height: calc(100% - 40px);
+    }
+    .operation-btn {
+      position: absolute;
+      right: 0;
+      top: -32px;
     }
   }
 </style>

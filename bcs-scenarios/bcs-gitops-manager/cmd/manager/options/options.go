@@ -10,21 +10,38 @@
  * limitations under the License.
  */
 
-package manager
+// Package options xxx
+package options
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 )
 
-const (
-	gracefulPeriod = 3
+var (
+	op *Options
 )
+
+// GlobalOptions returns the global option object
+func GlobalOptions() *Options {
+	return op
+}
+
+// Parse the option from config file
+func Parse(configFile string) error {
+	op = new(Options)
+	if err := common.LoadConfigFile(configFile, op); err != nil {
+		return errors.Wrapf(err, "load option json config file failed")
+	}
+	return nil
+}
 
 // GitOps configuraiotn
 type GitOps struct {
@@ -45,24 +62,28 @@ type Options struct {
 	// work mode, tunnel/service
 	Mode string `json:"mode,omitempty"`
 	// 用于存放 Cluster Server 地址，为空则使用 APIGateway 的值
-	APIGatewayForCluster string                          `json:"apigatewayforcluster,omitempty"`
-	APIGateway           string                          `json:"apigateway,omitempty"`
-	APIGatewayToken      string                          `json:"apigatewaytoken,omitempty"`
-	APIConnectToken      string                          `json:"apiconnecttoken,omitempty"`
-	APIConnectURL        string                          `json:"apiconnecturl,omitempty"`
-	ClusterSyncInterval  uint                            `json:"clustersyncinterval,omitempty"`
-	GitOps               *GitOps                         `json:"gitops,omitempty"`
-	PublicProjectsStr    string                          `json:"publicProjects,omitempty"`
-	PublicProjects       []string                        `json:"-"`
-	SecretServer         *secretstore.SecretStoreOptions `json:"secretserver,omitempty"`
-	Auth                 *common.AuthConfig              `json:"auth,omitempty"`
-	TraceConfig          *common.TraceConfig             `json:"traceConfig,omitempty"`
-	AuditConfig          *common.AuditConfig             `json:"auditConfig,omitempty"`
-	DBConfig             *common.DBConfig                `json:"dbConfig,omitempty"`
-	MetricConfig         *common.MetricConfig            `json:"metricConfig,omitempty"`
-	MonitorConfig        *common.MonitorConfig           `json:"monitorConfig,omitempty"`
-	AdminUsersStr        string                          `json:"adminUsers,omitempty"`
-	AdminUsers           []string                        `json:"-"`
+	APIGatewayForCluster string                     `json:"apigatewayforcluster,omitempty"`
+	APIGateway           string                     `json:"apigateway,omitempty"`
+	APIGatewayToken      string                     `json:"apigatewaytoken,omitempty"`
+	APIConnectToken      string                     `json:"apiconnecttoken,omitempty"`
+	APIConnectURL        string                     `json:"apiconnecturl,omitempty"`
+	ClusterSyncInterval  uint                       `json:"clustersyncinterval,omitempty"`
+	GitOps               *GitOps                    `json:"gitops,omitempty"`
+	PublicProjectsStr    string                     `json:"publicProjects,omitempty"`
+	PublicProjects       []string                   `json:"-"`
+	AnalysisConfig       *common.AnalysisConfig     `json:"analysisConfig,omitempty"`
+	SecretServer         *common.SecretStoreOptions `json:"secretserver,omitempty"`
+	Auth                 *common.AuthConfig         `json:"auth,omitempty"`
+	TraceConfig          *common.TraceConfig        `json:"traceConfig,omitempty"`
+	AuditConfig          *common.AuditConfig        `json:"auditConfig,omitempty"`
+	DBConfig             *common.DBConfig           `json:"dbConfig,omitempty"`
+	MetricConfig         *common.MetricConfig       `json:"metricConfig,omitempty"`
+	MonitorConfig        *common.MonitorConfig      `json:"monitorConfig,omitempty"`
+	AdminUsersStr        string                     `json:"adminUsers,omitempty"`
+	AdminUsers           []string                   `json:"-"`
+
+	JWTDecoder *jwt.JWTClient `json:"-"`
+	IAMClient  iam.PermClient `json:"-"`
 }
 
 // DefaultOptions for gitops-manager

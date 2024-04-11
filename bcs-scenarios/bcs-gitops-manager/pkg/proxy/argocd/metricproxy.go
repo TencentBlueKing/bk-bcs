@@ -24,8 +24,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
@@ -85,7 +85,7 @@ func (plugin *MetricPlugin) metric(r *http.Request) (*http.Request, *mw.HttpResp
 func (plugin *MetricPlugin) parseParam(ctx context.Context, r *http.Request) (string, string, *mw.HttpResponse) {
 	var namespace, smName string
 	user := mw.User(ctx)
-	if user.ClientID != proxy.AdminClientUser && user.ClientID != proxy.AdminGitOpsUser {
+	if !common.IsAdminUser(user.ClientID) {
 		return namespace, smName, mw.ReturnErrorResponse(http.StatusUnauthorized, errors.Errorf("not authorized"))
 	}
 	namespace = mux.Vars(r)["namespace"]

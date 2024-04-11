@@ -1,13 +1,13 @@
 <template>
   <bk-dialog
     :is-show="isShow"
-    :title="isCreate ? '设为常用' : '重命名'"
+    :title="isCreate ? $t('设为常用') : $t('重命名')"
     theme="primary"
     confirm-text="保存"
     @closed="handleClose"
     @confirm="handleConfirm">
     <bk-form ref="formRef" :model="formData">
-      <bk-form-item label="名称" property="name" label-width="80" required>
+      <bk-form-item :label="$t('名称')" property="name" label-width="80" required>
         <bk-input v-model="formData.name"></bk-input>
       </bk-form-item>
     </bk-form>

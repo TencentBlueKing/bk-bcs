@@ -69,10 +69,6 @@ const (
 	Heartbeat MessagingType = 2
 	// VersionChangeMessage the version change event was reported. Procedure
 	VersionChangeMessage MessagingType = 3
-	// PullStatus the current pull status is reported
-	PullStatus MessagingType = 4
-	// ClientInfo report basic information about the client when the client first connects to the client
-	ClientInfo MessagingType = 5
 )
 
 // Validate the messaging type is valid or not.
@@ -81,8 +77,6 @@ func (sm MessagingType) Validate() error {
 	case SidecarOffline:
 	case Heartbeat:
 	case VersionChangeMessage:
-	case PullStatus:
-	case ClientInfo:
 	default:
 		return fmt.Errorf("unknown %d sidecar message type", sm)
 	}
@@ -99,10 +93,6 @@ func (sm MessagingType) String() string {
 		return "Heartbeat"
 	case VersionChangeMessage:
 		return "VersionChange"
-	case PullStatus:
-		return "PullStatus"
-	case ClientInfo:
-		return "ClientInfo"
 	default:
 		return "Unknown"
 	}
@@ -555,14 +545,8 @@ func (bd BasicData) Validate() error {
 
 // ResourceUsage Resource utilization rate
 type ResourceUsage struct {
-	CpuMaxUsage    float64 `json:"cpuMaxUsage"`
-	CpuMinUsage    float64 `json:"cpuMinUsage"`
-	CpuAvgUsage    float64 `json:"cpuAvgUsage"`
-	CpuUsage       float64 `json:"cpuUsage"`
-	MemoryUsage    uint64  `json:"memoryUsage"`
-	MemoryMaxUsage uint64  `json:"memoryMaxUsage"`
-	MemoryMinUsage uint64  `json:"memoryMinUsage"`
-	MemoryAvgUsage uint64  `json:"memoryAvgUsage"`
+	MemoryUsage, MemoryMaxUsage, MemoryMinUsage, MemoryAvgUsage uint64
+	CpuUsage, CpuMaxUsage, CpuMinUsage, CpuAvgUsage             float64
 }
 
 // VersionChangePayload defines sdk version change to send payload to feed server.
@@ -685,10 +669,6 @@ const (
 	DownloadFailed FailedReason = 3
 	// SkipFailed skip failed
 	SkipFailed FailedReason = 4
-	// ClearOldFilesFailed Clear old files failed
-	ClearOldFilesFailed FailedReason = 5
-	// UpdateMetadataFailed Update Metadata failed
-	UpdateMetadataFailed FailedReason = 6
 )
 
 // Validate the failed reason is valid or not.
@@ -761,14 +741,6 @@ type ClientMetricData struct {
 	MessagingType uint32
 	Payload       []byte
 }
-
-// // ClientInfoItem 单个客户端连接信息
-// type ClientInfoItem struct {
-// 	// BasicData 基础信息：例如客户端唯一标识、bizID、客户端模式
-// 	BasicData BasicData `json:"basic_data"`
-// 	// Applications app相关信息：例如 appName、appID、currentReleaseID等
-// 	Application SideAppMeta `json:"application"`
-// }
 
 // HeartbeatItem 单个服务心跳数据
 type HeartbeatItem struct {

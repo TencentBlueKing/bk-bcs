@@ -254,6 +254,46 @@ func (r *MonitorRender) loadPanel(path string) ([]*v1.ConfigMap, *monitorextensi
 	return configmaps, panel, nil
 }
 
+// LoadDashBoard return DashBoard info, use filterFunc to filter file name
+func (r *MonitorRender) LoadDashBoard(path string, filterFunc ...func(string) bool) ([]*DashBoard, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		blog.Infof("empty raw grafana panel, continue...")
+		return nil, nil
+	}
+	panels := make([]*DashBoard, 0)
+
+	err := filepath.Walk(path, func(path string, info os.FileInfo,
+		err error) error {
+		if err != nil {
+			blog.Errorf("walk through directory'%s' failed, err: %s", path, err.Error())
+			return err
+		}
+
+		// load grafana panel json config
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".json") {
+			for _, filter := range filterFunc {
+				if !filter(info.Name()) {
+					return nil
+				}
+			}
+			data, inErr := ioutil.ReadFile(path)
+			if inErr != nil {
+				return fmt.Errorf("read file'%s' failed, err: %w", path, inErr)
+			}
+			var panel DashBoard
+			if inErr = yaml.Unmarshal(data, &panel); inErr != nil {
+				return fmt.Errorf("unmarshal panel in'%s' failed, err: %w", info.Name(), inErr)
+			}
+			panels = append(panels, &panel)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return panels, nil
+}
+
 func (r *MonitorRender) loadNoticeGroup(path string) (*monitorextensionv1.NoticeGroup, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		blog.Infof("empty raw notice , continue...")

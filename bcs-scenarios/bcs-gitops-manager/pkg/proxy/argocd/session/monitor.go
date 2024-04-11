@@ -23,20 +23,20 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // MonitorSession defines the instance that to proxy to monitor server
 type MonitorSession struct {
-	op *proxy.MonitorOption
+	op *options.Options
 }
 
 // NewMonitorSession create the session of monitor
-func NewMonitorSession(op *proxy.MonitorOption) *MonitorSession {
+func NewMonitorSession() *MonitorSession {
 	return &MonitorSession{
-		op: op,
+		op: options.GlobalOptions(),
 	}
 }
 
@@ -47,7 +47,7 @@ func (s *MonitorSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
 	// !force https link
 	// fullPath := fmt.Sprintf("http://bcsmonitorcontroller.bcs-system.svc.cluster.local:18088%s", realPath)
-	fullPath := fmt.Sprintf("http://%s:%s%s", s.op.Address, s.op.Port, realPath)
+	fullPath := fmt.Sprintf("http://%s:%s%s", s.op.MonitorConfig.Address, s.op.MonitorConfig.Port, realPath)
 	newURL, err := url.Parse(fullPath)
 	if err != nil {
 		err = fmt.Errorf("monitor session build new fullpath '%s' failed: %w", fullPath, err)

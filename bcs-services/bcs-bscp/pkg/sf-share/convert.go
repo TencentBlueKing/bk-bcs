@@ -51,6 +51,10 @@ func (v *VersionChangePayload) PbClientMetric() (*pbclient.Client, error) {
 				CpuMaxUsage:    v.ResourceUsage.CpuMaxUsage,
 				MemoryUsage:    v.ResourceUsage.MemoryUsage,
 				MemoryMaxUsage: v.ResourceUsage.MemoryMaxUsage,
+				CpuMinUsage:    v.ResourceUsage.CpuMinUsage,
+				CpuAvgUsage:    v.ResourceUsage.CpuAvgUsage,
+				MemoryMinUsage: v.ResourceUsage.MemoryMinUsage,
+				MemoryAvgUsage: v.ResourceUsage.MemoryAvgUsage,
 			},
 			CurrentReleaseId:          currentReleaseId,
 			TargetReleaseId:           v.Application.TargetReleaseID,
@@ -95,7 +99,8 @@ func (v *VersionChangePayload) PbClientEventMetric() (*pbce.ClientEvent, error) 
 			AppId:      v.Application.AppID,
 			CursorId:   v.Application.CursorID,
 		},
-		MessageType: VersionChangeMessage.String(),
+		MessageType:   VersionChangeMessage.String(),
+		HeartbeatTime: timestamppb.New(v.BasicData.HeartbeatTime),
 	}
 	return data, nil
 }
@@ -109,6 +114,7 @@ func (h *HeartbeatItem) PbClientMetric() (*pbclient.Client, error) {
 	if h.Application.CursorID == "" {
 		return nil, nil
 	}
+
 	data := &pbclient.Client{
 		Spec: &pbclient.ClientSpec{
 			ClientVersion:     h.BasicData.ClientVersion,
@@ -122,8 +128,12 @@ func (h *HeartbeatItem) PbClientMetric() (*pbclient.Client, error) {
 			Resource: &pbclient.ClientResource{
 				CpuUsage:       h.ResourceUsage.CpuUsage,
 				CpuMaxUsage:    h.ResourceUsage.CpuMaxUsage,
+				CpuMinUsage:    h.ResourceUsage.CpuMinUsage,
+				CpuAvgUsage:    h.ResourceUsage.CpuAvgUsage,
 				MemoryUsage:    h.ResourceUsage.MemoryUsage,
 				MemoryMaxUsage: h.ResourceUsage.MemoryMaxUsage,
+				MemoryMinUsage: h.ResourceUsage.MemoryMinUsage,
+				MemoryAvgUsage: h.ResourceUsage.MemoryAvgUsage,
 			},
 			ReleaseChangeStatus: h.Application.ReleaseChangeStatus.String(),
 			CurrentReleaseId:    h.Application.CurrentReleaseID,
@@ -178,8 +188,10 @@ func toString(label interface{}) string {
 	if err != nil {
 		return "{}"
 	}
-	if len(marshal) == 0 {
+
+	if string(marshal) == "null" {
 		return "{}"
 	}
+
 	return string(marshal)
 }

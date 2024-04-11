@@ -11,6 +11,7 @@
     "lint": "npx eslint \"./src/**/*.{js,vue,ts}\""
   },
   "dependencies": {
+    "@antv/g2plot": "^2.4.31",
     "@blueking/notice-component": "^2.0.1",
     "@types/js-cookie": "^3.0.2",
     "@types/lodash.clonedeep": "^4.5.7",

@@ -520,6 +520,7 @@
         subTitle: t('禁用密钥后，使用此密钥的应用将无法正常使用 SDK/API 拉取配置'),
         'ext-cls': 'info-box-style',
         confirmText: t('禁用'),
+        cancelText: t('取消'),
         onConfirm: async () => {
           const params = {
             id: credential.id,

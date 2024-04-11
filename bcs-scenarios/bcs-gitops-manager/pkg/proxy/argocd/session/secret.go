@@ -24,21 +24,21 @@ import (
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/pkg/errors"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // SecretSession defines the instance that to proxy to secret server
 type SecretSession struct {
-	op *proxy.SecretOption
+	op *options.Options
 }
 
 // NewSecretSession create the session of secret
-func NewSecretSession(op *proxy.SecretOption) *SecretSession {
+func NewSecretSession() *SecretSession {
 	return &SecretSession{
-		op: op,
+		op: options.GlobalOptions(),
 	}
 }
 
@@ -48,7 +48,7 @@ func (s *SecretSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// backend real path with encoded format
 	realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
 	// !force https link
-	fullPath := fmt.Sprintf("http://%s:%s%s", s.op.Address, s.op.Port, realPath)
+	fullPath := fmt.Sprintf("http://%s:%s%s", s.op.SecretServer.Address, s.op.SecretServer.Port, realPath)
 	newURL, err := url.Parse(fullPath)
 	if err != nil {
 		err = errors.Errorf("secret session build new fullpath '%s' failed: %s", fullPath, err.Error())

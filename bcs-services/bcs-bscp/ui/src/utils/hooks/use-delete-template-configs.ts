@@ -13,6 +13,7 @@ const useDeleteTemplateConfigs = (space_id: string, current_template_space: numb
       }？`,
       subTitle: localT('删除后不可找回，请谨慎操作。'),
       confirmText: localT('确认删除'),
+      cancelText: localT('取消'),
       infoType: 'warning',
       onConfirm: async () => {
         const ids = configs.map((config) => config.id);

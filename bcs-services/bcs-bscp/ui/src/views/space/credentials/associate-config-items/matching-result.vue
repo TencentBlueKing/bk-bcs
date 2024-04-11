@@ -5,11 +5,11 @@
         <bk-overflow-title v-if="rule" class="rule" type="tips">
           {{ rule.appName + rule.scopeContent }}
         </bk-overflow-title>
-        <span class="result">匹配结果</span>
+        <span class="result">{{ t('匹配结果') }}</span>
       </div>
-      <div class="totle">共 {{ pagination.count }} 项</div>
+      <div class="totle">{{ t('共') }} {{ pagination.count }} {{ t('项') }}</div>
     </div>
-    <SearchInput v-model="searchStr" :placeholder="'请输入配置项名称'" @search="loadCredentialRulePreviewList" />
+    <SearchInput v-model="searchStr" :placeholder="inputPlaceholder" @search="loadCredentialRulePreviewList" />
     <bk-loading :loading="listLoading">
       <bk-table
         :empty-text="tableEmptyText"
@@ -19,7 +19,7 @@
         :pagination="pagination"
         :key="isFileType"
         @page-value-change="loadCredentialRulePreviewList">
-        <bk-table-column :label="isFileType ? '配置文件绝对路径' : '配置项'">
+        <bk-table-column :label="isFileType ? t('配置文件绝对路径') : t('配置项')">
           <template #default="{ row }">
             <div v-if="row.name">
               {{ isFileType ? fileAP(row) : row.name }}
@@ -39,6 +39,9 @@
   import { getCredentialPreview } from '../../../../api/credentials';
   import SearchInput from '../../../../components/search-input.vue';
   import TableEmpty from '../../../../components/table/table-empty.vue';
+  import { useI18n } from 'vue-i18n';
+
+  const { t } = useI18n();
 
   const props = defineProps<{
     rule: IPreviewRule | null;
@@ -67,8 +70,10 @@
     return `${path}/${name}`;
   });
 
+  const inputPlaceholder = computed(() => (isFileType.value ? t('请输入配置文件绝对路径') : t('请输入配置项名称')));
+
   const tableEmptyText = computed(() => {
-    return props.rule?.appName ? '没有匹配到配置项' : '请先在左侧表单设置关联规则并预览';
+    return props.rule?.appName ? t('没有匹配到配置项') : t('请先在左侧表单设置关联规则并预览');
   });
 
   const searchStr = ref('');
@@ -132,7 +137,6 @@
         }
       }
       .totle {
-        width: 70px;
         height: 24px;
         background: #eaebf0;
         border-radius: 12px;

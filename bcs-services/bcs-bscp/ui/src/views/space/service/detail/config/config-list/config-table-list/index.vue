@@ -20,7 +20,13 @@
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :version-id="versionData.id"
-          :version-name="versionData.spec.name"/>
+          :version-name="versionData.spec.name" />
+        <BatchDeleteKv
+          v-if="!isFileType && versionData.status.publish_status === 'editing'"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :selected-ids="selectedIds"
+          @deleted="handleBatchDeleted" />
       </div>
       <SearchInput
         v-model="searchStr"
@@ -51,7 +57,8 @@
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
         :search-str="searchStr"
-        @clear-str="clearStr" />
+        @clear-str="clearStr"
+        @update-selected-ids="selectedIds = $event" />
     </section>
   </section>
 </template>
@@ -69,6 +76,7 @@
   import TableWithPagination from './tables/table-with-pagination.vue';
   import TableWithKv from './tables/table-with-kv.vue';
   import ConfigExport from './config-export.vue';
+  import BatchDeleteKv from './batch-delete-kv.vue';
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
@@ -85,6 +93,7 @@
   const searchStr = ref('');
   const useTemplate = ref(true);
   const editVariablesRef = ref();
+  const selectedIds = ref<number[]>([]);
 
   const refreshConfigList = (isBatchUpload = false) => {
     if (isFileType.value) {
@@ -101,6 +110,11 @@
 
   const clearStr = () => {
     searchStr.value = '';
+  };
+
+  // 批量删除配置项回调
+  const handleBatchDeleted = () => {
+    tableRef.value.refreshAfterBatchDelete();
   };
 
   defineExpose({
@@ -122,6 +136,9 @@
       align-items: center;
       :deep(.create-config-btn) {
         margin-right: 8px;
+      }
+      :deep(.batch-delete-btn) {
+        margin-left: 8px;
       }
     }
     .config-search-input {

@@ -23,6 +23,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
@@ -35,20 +37,14 @@ type SecretInterface interface {
 }
 
 type secretStore struct {
-	op *SecretStoreOptions
-}
-
-// SecretStoreOptions defines the options of secret store
-// nolint
-type SecretStoreOptions struct {
-	Address string `json:"address"`
-	Port    string `json:"port"`
+	op *common.SecretStoreOptions
 }
 
 // NewSecretStore will create the instance of SecretStore
-func NewSecretStore(op *SecretStoreOptions) SecretInterface {
+func NewSecretStore() SecretInterface {
+	op := options.GlobalOptions()
 	return &secretStore{
-		op: op,
+		op: op.SecretServer,
 	}
 }
 
@@ -145,8 +141,15 @@ func (s *secretStore) ListProjectSecrets(ctx context.Context, project string) ([
 		return nil, errors.Errorf("list secrets for project '%s' response code not 0 but %d: %s",
 			project, response.Code, response.Message)
 	}
-	if secrets, ok := response.Data.([]string); ok {
-		return secrets, nil
+	if response.Data == nil {
+		return nil, nil
+	}
+	if secrets, ok := response.Data.([]interface{}); ok {
+		result := make([]string, 0, len(secrets))
+		for i := range secrets {
+			result = append(result, secrets[i].(string))
+		}
+		return result, nil
 	}
 	return nil, errors.Errorf("list secrets for project '%s' convert failed", project)
 }
