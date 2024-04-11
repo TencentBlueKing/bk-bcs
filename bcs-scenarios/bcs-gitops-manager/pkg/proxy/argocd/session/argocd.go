@@ -24,23 +24,26 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // ArgoSession purpose: simple revese proxy for argocd according kubernetes service.
 // gitops proxy implements http.Handler interface.
 type ArgoSession struct {
-	option       *proxy.GitOpsOptions
+	option       *options.Options
+	store        store.Store
 	reverseProxy *httputil.ReverseProxy
 }
 
 // NewArgoSession create the session of argoCD
-func NewArgoSession(option *proxy.GitOpsOptions) *ArgoSession {
+func NewArgoSession() *ArgoSession {
 	s := &ArgoSession{
-		option: option,
+		option: options.GlobalOptions(),
+		store:  store.GlobalStore(),
 	}
 	s.initReverseProxy()
 	return s
@@ -50,7 +53,7 @@ func (s *ArgoSession) initReverseProxy() {
 	s.reverseProxy = &httputil.ReverseProxy{
 		Director: func(request *http.Request) {
 			// setting login session token for pass through, for http 1.x
-			token := s.option.Storage.GetToken(request.Context())
+			token := s.store.GetToken(request.Context())
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			// for http 2
 			request.Header.Set("Token", token)
@@ -59,7 +62,7 @@ func (s *ArgoSession) initReverseProxy() {
 			requestID := request.Context().Value(traceconst.RequestIDHeaderKey).(string)
 			// backend real path with encoded format
 			realPath := strings.TrimPrefix(request.URL.RequestURI(), common.GitOpsProxyURL)
-			fullPath := fmt.Sprintf("https://%s%s", s.option.Service, realPath)
+			fullPath := fmt.Sprintf("https://%s%s", s.option.GitOps.Service, realPath)
 			if !utils.IsContextCanceled(e) {
 				metric.ManagerArgoProxyFailed.WithLabelValues().Inc()
 				blog.Errorf("RequestID[%s] GitOps proxy %s failure, %s. header: %+v",
@@ -75,7 +78,7 @@ func (s *ArgoSession) initReverseProxy() {
 			requestID := r.Request.Context().Value(traceconst.RequestIDHeaderKey).(string)
 			// backend real path with encoded format
 			realPath := strings.TrimPrefix(r.Request.URL.RequestURI(), common.GitOpsProxyURL)
-			fullPath := fmt.Sprintf("https://%s%s", s.option.Service, realPath)
+			fullPath := fmt.Sprintf("https://%s%s", s.option.GitOps.Service, realPath)
 			blog.Infof("RequestID[%s] GitOps proxy %s response header details: %+v, status %s, code: %d",
 				requestID, fullPath, r.Header, r.Status, r.StatusCode)
 			return nil
@@ -89,7 +92,7 @@ func (s *ArgoSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// backend real path with encoded format
 	realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
 	// !force https link
-	fullPath := fmt.Sprintf("https://%s%s", s.option.Service, realPath)
+	fullPath := fmt.Sprintf("https://%s%s", s.option.GitOps.Service, realPath)
 	newURL, err := url.Parse(fullPath)
 	if err != nil {
 		blog.Errorf("RequestID[%s] GitOps session build new fullpath %s failed, %s",

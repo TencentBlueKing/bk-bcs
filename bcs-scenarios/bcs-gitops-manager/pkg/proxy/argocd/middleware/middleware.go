@@ -20,11 +20,13 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/tracing"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
@@ -35,12 +37,13 @@ import (
 type HttpHandler func(r *http.Request) (*http.Request, *HttpResponse)
 
 type httpWrapper struct {
-	handler        HttpHandler
-	handlerName    string
-	option         *proxy.GitOpsOptions
-	argoSession    *session.ArgoSession
-	secretSession  *session.SecretSession
-	monitorSession *session.MonitorSession
+	handler           HttpHandler
+	handlerName       string
+	option            *options.Options
+	argoSession       *session.ArgoSession
+	argoStreamSession *session.ArgoStreamSession
+	secretSession     *session.SecretSession
+	monitorSession    *session.MonitorSession
 }
 
 // HttpResponse 定义了返回信息，根据返回信息 httpWrapper 做对应处理
@@ -67,7 +70,8 @@ func User(ctx context.Context) *proxy.UserInfo {
 	return ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 }
 
-func (p *httpWrapper) setContext(rw http.ResponseWriter, r *http.Request) (context.Context, string) {
+// SetContext set the user-info and trace info
+func SetContext(rw http.ResponseWriter, r *http.Request, jwtDecoder *jwt.JWTClient) (context.Context, string) {
 	// 获取 RequestID 信息，并重新存入上下文
 	var requestID string
 	requestIDHeader := r.Context().Value(traceconst.RequestIDHeaderKey)
@@ -81,7 +85,7 @@ func (p *httpWrapper) setContext(rw http.ResponseWriter, r *http.Request) (conte
 	rw.Header().Set(traceconst.RequestIDHeaderKey, requestID)
 
 	// 统一获取 User 信息，并存入上下文
-	user, err := proxy.GetJWTInfo(r, p.option.JWTDecoder)
+	user, err := proxy.GetJWTInfo(r, jwtDecoder)
 	if err != nil || user == nil {
 		http.Error(rw, errors.Wrapf(err, "get user info failed").Error(), http.StatusUnauthorized)
 		return nil, requestID
@@ -100,7 +104,7 @@ func (p *httpWrapper) setContext(rw http.ResponseWriter, r *http.Request) (conte
 // ServeHTTP 接收请求的入口，根据返回的 type 类型做不同的操作
 func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	ctx, requestID := p.setContext(rw, r)
+	ctx, requestID := SetContext(rw, r, p.option.JWTDecoder)
 	if ctx == nil {
 		return
 	}
@@ -138,6 +142,8 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	switch resp.respType {
 	case reverseArgo:
 		p.argoSession.ServeHTTP(rw, req)
+	case reverseArgoStream:
+		p.argoStreamSession.ServeHTTP(rw, req)
 	case reverseSecret:
 		p.secretSession.ServeHTTP(rw, req)
 	case reverseMonitor:
@@ -178,7 +184,15 @@ const (
 	directResponse
 	// jsonResponse 返回 JSON 信息给客户端
 	jsonResponse
+	reverseArgoStream
 )
+
+// ReturnArgoStreamReverse will reverse stream to argocd
+func ReturnArgoStreamReverse() *HttpResponse {
+	return &HttpResponse{
+		respType: reverseArgoStream,
+	}
+}
 
 // ReturnArgoReverse will reverse to argocd
 func ReturnArgoReverse() *HttpResponse {

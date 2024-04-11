@@ -193,6 +193,7 @@ type RkvOutData struct {
 	Key    string `json:"key" yaml:"key" xml:"key"`
 	KvType string `json:"kv_type" yaml:"kv_type" xml:"kv_type"`
 	Value  string `json:"value" yaml:"value" xml:"value"`
+	Memo   string `json:"memo" yaml:"memo" xml:"memo"`
 }
 
 func rkvsToOutData(details []*pbrkv.ReleasedKv) map[string]interface{} {
@@ -207,6 +208,7 @@ func rkvsToOutData(details []*pbrkv.ReleasedKv) map[string]interface{} {
 		d[rkv.Spec.Key] = map[string]interface{}{
 			"kv_type": rkv.Spec.KvType,
 			"value":   value,
+			"memo":    rkv.Spec.Memo,
 		}
 	}
 
@@ -225,6 +227,7 @@ func kvsToOutData(details []*pbkv.Kv) map[string]interface{} {
 		d[rkv.Spec.Key] = map[string]interface{}{
 			"kv_type": rkv.Spec.KvType,
 			"value":   value,
+			"memo":    rkv.Spec.Memo,
 		}
 	}
 

@@ -32,7 +32,7 @@
       </bk-select>
     </div>
     <div class="head-right">
-      <div class="selector-tips">最后心跳时间</div>
+      <div class="selector-tips">{{ $t('最后心跳时间') }}</div>
       <bk-select
         v-model="heartbeatTime"
         class="heartbeat-selector"
@@ -42,7 +42,8 @@
       </bk-select>
       <SearchSelector :bk-biz-id="bizId" :app-id="localApp.id" />
       <bk-button theme="primary" style="margin-left: 8px" @click="emits('search')">
-        <Search class="search-icon" />查询
+        <Search class="search-icon" />
+        {{ $t('查询') }}
       </bk-button>
     </div>
   </div>

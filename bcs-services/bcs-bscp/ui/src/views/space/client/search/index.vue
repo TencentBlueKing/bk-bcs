@@ -1,7 +1,7 @@
 <template>
   <section class="client-search-page">
     <div class="header">
-      <ClientHeader title="客户端查询" @search="loadList" />
+      <ClientHeader :title="t('客户端查询')" @search="loadList" />
     </div>
     <div class="content">
       <!-- @todo 重试功能待接口支持 -->
@@ -21,7 +21,7 @@
           <!-- <bk-table-column type="selection" :min-width="40" :width="40"> </bk-table-column> -->
           <bk-table-column label="UID" :width="254" prop="attachment.uid"></bk-table-column>
           <bk-table-column label="IP" :width="120" prop="spec.ip"></bk-table-column>
-          <bk-table-column label="客户端标签" :min-width="296">
+          <bk-table-column :label="t('客户端标签')" :min-width="296">
             <template #default="{ row }">
               <div v-if="row.labels" class="labels">
                 <span v-for="(label, index) in row.labels" :key="index">
@@ -36,7 +36,7 @@
               <span v-else>--</span>
             </template>
           </bk-table-column>
-          <bk-table-column label="当前配置版本" :width="140">
+          <bk-table-column :label="t('当前配置版本')" :width="140">
             <template #default="{ row }">
               <div
                 v-if="row.spec && row.spec.current_release_id"
@@ -48,7 +48,7 @@
             </template>
           </bk-table-column>
           <bk-table-column
-            label="最近一次拉取配置状态"
+            :label="t('最近一次拉取配置状态')"
             :width="178"
             :filter="{
               filterFn: () => true,
@@ -70,7 +70,7 @@
           </bk-table-column>
           <!-- <bk-table-column label="附加信息" :width="244"></bk-table-column> -->
           <bk-table-column
-            label="在线状态"
+            :label="t('在线状态')"
             :width="94"
             :filter="{
               filterFn: () => true,
@@ -80,45 +80,45 @@
             <template #default="{ row }">
               <div v-if="row.spec" class="online-status">
                 <div :class="['dot', row.spec.online_status]"></div>
-                <span>{{ row.spec.online_status === 'online' ? '在线' : '离线' }}</span>
+                <span>{{ row.spec.online_status === 'online' ? t('在线') : t('离线')}}</span>
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column label="首次连接时间" :width="154">
+          <bk-table-column :label="t('首次连接时间')" :width="154">
             <template #default="{ row }">
               <span v-if="row.spec">
                 {{ datetimeFormat(row.spec.first_connect_time) }}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column label="最后心跳时间" :width="154">
+          <bk-table-column :label="t('最后心跳时间')" :width="154">
             <template #default="{ row }">
               <span v-if="row.spec">
                 {{ datetimeFormat(row.spec.last_heartbeat_time) }}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column label="CPU资源占用(当前/最大)" :width="174">
+          <bk-table-column :label="t('CPU资源占用(当前/最大)')" :width="174">
             <template #default="{ row }">
               <span v-if="row.spec">
                 {{ showResourse(row.spec.resource).cpuResourse }}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column label="内容资源占用(当前/最大)" :width="170">
+          <bk-table-column :label="t('内容资源占用(当前/最大)')" :width="170">
             <template #default="{ row }">
               <span v-if="row.spec">
                 {{ showResourse(row.spec.resource).memoryResource }}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column label="客户端组件类型" :width="128" prop="spec.client_type"></bk-table-column>
-          <bk-table-column label="客户端组件版本" :width="128" prop="spec.client_version"></bk-table-column>
-          <bk-table-column label="操作" :width="148" fixed="right">
+          <bk-table-column :label="t('客户端组件类型')" :width="128" prop="spec.client_type"></bk-table-column>
+          <bk-table-column :label="t('客户端组件版本')" :width="128" prop="spec.client_version"></bk-table-column>
+          <bk-table-column :label="t('操作')" :width="148" fixed="right">
             <template #default="{ row }">
               <div v-if="row.spec">
                 <bk-button theme="primary" text @click="handleShowPullRecord(row.attachment.uid, row.id)">
-                  配置拉取记录
+                  {{ t('配置拉取记录') }}
                 </bk-button>
                 <!-- <bk-button
                   v-if="row.spec.release_change_status === 'Failed'"
@@ -161,6 +161,9 @@
   import { IClinetCommonQuery } from '../../../../../types/client';
   import useClientStore from '../../../../store/client';
   import TableEmpty from '../../../../components/table/table-empty.vue';
+  import { useI18n } from 'vue-i18n';
+
+  const { t } = useI18n();
 
   interface IResourseType {
     cpu_usage: number;
@@ -190,30 +193,30 @@
   });
   const releaseChangeStatusFilterList = [
     {
-      text: '成功',
+      text: t('成功'),
       value: 'Success',
     },
     {
-      text: '失败',
+      text: t('失败'),
       value: 'Failed',
     },
     {
-      text: '处理中',
+      text: t('处理中'),
       value: 'Processing',
     },
     {
-      text: '跳过',
+      text: t('跳过'),
       value: 'Skip',
     },
   ];
   const releaseChangeStatusFilterChecked = ref<string[]>([]);
   const onlineStatusFilterList = [
     {
-      text: '在线',
+      text: t('在线'),
       value: 'online',
     },
     {
-      text: '未在线',
+      text: t('未在线'),
       value: 'offline',
     },
   ];
@@ -238,7 +241,7 @@
 
   const showResourse = (resourse: IResourseType) => {
     return {
-      cpuResourse: `${resourse.cpu_usage} 核/${resourse.cpu_max_usage} 核`,
+      cpuResourse: `${resourse.cpu_usage} ${'核'}/${resourse.cpu_max_usage} ${'核'}`,
       memoryResource: `${resourse.memory_usage}MB/${resourse.memory_max_usage}MB`,
     };
   };

@@ -13,6 +13,7 @@
 package dao
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -22,8 +23,8 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao/mysqlrate"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
 
 type driver struct {
@@ -41,7 +42,8 @@ func GlobalDB() Interface {
 }
 
 // NewDriver creates the MySQL instance
-func NewDriver(dbCfg *common.DBConfig) (Interface, error) {
+func NewDriver() (Interface, error) {
+	dbCfg := options.GlobalOptions().DBConfig
 	connArgs := fmt.Sprintf("%s:%s@(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		dbCfg.Username, dbCfg.Password, dbCfg.Addr, dbCfg.Database)
 	var err error
@@ -87,6 +89,9 @@ func (d *driver) autoCreateTable() error {
 	}
 	if err := d.createTable(tableHistoryManifest, &ApplicationHistoryManifest{}); err != nil {
 		return errors.Wrapf(err, "create table '%s' failed", tableHistoryManifest)
+	}
+	if err := d.createTable(tableResourceInfo, &ResourceInfo{}); err != nil {
+		return errors.Wrapf(err, "create table '%s' failed", tableResourceInfo)
 	}
 	return nil
 }
@@ -301,4 +306,70 @@ func (d *driver) CheckApplicationHistoryManifestExist(appName, appUID string, hi
 		return true, nil
 	}
 	return false, nil
+}
+
+// SaveOrUpdateResourceInfo save the resource info object
+func (d *driver) SaveOrUpdateResourceInfo(info *ResourceInfo) error {
+	info.UpdateTime = time.Now()
+	result := d.rateClient.Table(tableResourceInfo).
+		Where("project = ? AND application = ?", info.Project, info.Application).
+		UpdateColumns(map[string]interface{}{
+			"resources":  info.Resources,
+			"updateTime": time.Now(),
+		})
+	if err := result.Error; err != nil {
+		return errors.Wrapf(err, "update resource info '%s' failed", info.Application)
+	}
+	if result.RowsAffected == 0 {
+		return d.rateClient.Table(tableResourceInfo).Save(info).Error
+	}
+	return nil
+}
+
+// ListResourceInfosByProject list resource info by project
+func (d *driver) ListResourceInfosByProject(projects []string) ([]ResourceInfo, error) {
+	var rows *sql.Rows
+	var err error
+	if len(projects) == 0 {
+		rows, err = d.rateClient.Table(tableResourceInfo).Rows()
+	} else {
+		rows, err = d.rateClient.Table(tableResourceInfo).Where("project IN (?)", projects).Rows()
+	}
+	if err != nil {
+		return nil, errors.Wrapf(err, "query resource preferences failed")
+	}
+	defer rows.Close() // nolint
+
+	result := make([]ResourceInfo, 0)
+	for rows.Next() {
+		syncInfo := new(ResourceInfo)
+		if err = d.db.ScanRows(rows, syncInfo); err != nil {
+			return nil, errors.Wrapf(err, "scan syncinfo rows failed")
+		}
+		result = append(result, *syncInfo)
+	}
+	return result, nil
+}
+
+// GetResourceInfo get the resource info by project and application
+func (d *driver) GetResourceInfo(project, app string) (*ResourceInfo, error) {
+	rows, err := d.rateClient.Table(tableResourceInfo).Where("project = ?", project).
+		Where("application = ?", app).Rows()
+	if err != nil {
+		return nil, errors.Wrapf(err, "get syncinfo failed")
+	}
+	defer rows.Close() // nolint
+
+	result := make([]ResourceInfo, 0)
+	for rows.Next() {
+		syncInfo := new(ResourceInfo)
+		if err = d.db.ScanRows(rows, syncInfo); err != nil {
+			return nil, errors.Wrapf(err, "scan syncinfo rows failed")
+		}
+		result = append(result, *syncInfo)
+	}
+	if len(result) == 0 {
+		return nil, nil
+	}
+	return &result[0], nil
 }

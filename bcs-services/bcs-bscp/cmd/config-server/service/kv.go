@@ -261,6 +261,7 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbcs.BatchUpsertKvsRe
 				Key:    kv.Key,
 				KvType: kv.KvType,
 				Value:  kv.Value,
+				Memo:   kv.Memo,
 			},
 		})
 	}
@@ -293,13 +294,9 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbcs.UnDeleteKvReq) (*pbc
 	}
 
 	r := &pbds.UnDeleteKvReq{
-		Spec: &pbkv.KvSpec{
-			Key: req.Key,
-		},
-		Attachment: &pbkv.KvAttachment{
-			BizId: req.BizId,
-			AppId: req.AppId,
-		},
+		Key:   req.GetKey(),
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
 	}
 	if _, err := s.client.DS.UnDeleteKv(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("delete kv failed, err: %v, rid: %s", err, grpcKit.Rid)
@@ -307,4 +304,29 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbcs.UnDeleteKvReq) (*pbc
 	}
 
 	return &pbcs.UnDeleteKvResp{}, nil
+}
+
+// UndoKv Undo edited data and return to the latest published version
+func (s *Service) UndoKv(ctx context.Context, req *pbcs.UndoKvReq) (*pbcs.UndoKvResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.UndoKvReq{
+		Key:   req.GetKey(),
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+	}
+	if _, err := s.client.DS.UndoKv(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("undo kv failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return &pbcs.UndoKvResp{}, nil
 }

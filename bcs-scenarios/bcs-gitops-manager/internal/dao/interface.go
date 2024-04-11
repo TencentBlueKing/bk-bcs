@@ -43,6 +43,15 @@ type SyncInfo struct {
 	UpdateTime   time.Time `json:"updateTime" gorm:"column:updateTime;type:datetime NOT NULL"`
 }
 
+// ResourceInfo defines the resource info object
+type ResourceInfo struct {
+	ID          int64     `json:"id" gorm:"column:id;primaryKey;type:int(11) AUTO_INCREMENT NOT NULL"`
+	Project     string    `json:"project" gorm:"index:idx_proj;column:project;type:varchar(256) NOT NULL"`
+	Application string    `json:"application" gorm:"index:idx_app;column:application;type:varchar(256) NOT NULL"`
+	Resources   string    `json:"resources" gorm:"column:resources;type:text NOT NULL"`
+	UpdateTime  time.Time `json:"updateTime" gorm:"column:updateTime;type:datetime NOT NULL"`
+}
+
 const (
 	// PreferenceTypeApplication xxx
 	PreferenceTypeApplication = "application"
@@ -132,6 +141,8 @@ const (
 	tableSyncInfo           = "bcs_gitops_sync_info"
 	tableResourcePreference = "bcs_gitops_resource_preference"
 	tableHistoryManifest    = "bcs_gitops_app_history_manifest"
+	// nolint
+	tableResourceInfo = "bcs_gitops_resource_info"
 )
 
 // Interface xxx interface
@@ -147,6 +158,10 @@ type Interface interface {
 	ListSyncInfosForProject(project string) ([]SyncInfo, error)
 	SaveSyncInfo(info *SyncInfo) error
 	UpdateSyncInfo(info *SyncInfo) error
+
+	SaveOrUpdateResourceInfo(info *ResourceInfo) error
+	ListResourceInfosByProject(projects []string) ([]ResourceInfo, error)
+	GetResourceInfo(project, app string) (*ResourceInfo, error)
 
 	SaveResourcePreference(prefer *ResourcePreference) error
 	DeleteResourcePreference(project, resourceType, name string) error

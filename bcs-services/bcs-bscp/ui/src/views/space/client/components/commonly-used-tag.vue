@@ -8,8 +8,8 @@
         @mouseenter="isShow = true" />
       <template #content>
         <bk-dropdown-menu>
-          <bk-dropdown-item @click="handleMenuClick('update')">重命名</bk-dropdown-item>
-          <bk-dropdown-item @click="handleMenuClick('delete')">删除</bk-dropdown-item>
+          <bk-dropdown-item @click="handleMenuClick('update')">{{ $t('重命名') }}</bk-dropdown-item>
+          <bk-dropdown-item @click="handleMenuClick('delete')">{{ $t('删除') }}</bk-dropdown-item>
         </bk-dropdown-menu>
       </template>
     </bk-dropdown>

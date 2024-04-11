@@ -119,16 +119,19 @@ type BkmApiClient struct {
 	FullAuthToken string
 	httpCli       http.Client
 
-	Opts *option.ControllerOption
+	SubPath string
+	Opts    *option.ControllerOption
 }
 
 // NewBkmApiClient return new bkm apli client
-func NewBkmApiClient(opts *option.ControllerOption) *BkmApiClient {
+func NewBkmApiClient(subPath string, opts *option.ControllerOption) *BkmApiClient {
 	return &BkmApiClient{
 		httpCli:       http.Client{},
 		FullAuthToken: os.Getenv(envNameBKMFullAuthToken),
 		MonitorURL:    os.Getenv(envNameBKMAPIDomain),
 		Opts:          opts,
+
+		SubPath: subPath,
 	}
 }
 
@@ -205,7 +208,7 @@ func (b *BkmApiClient) DownloadConfig(bizID, bizToken string) error {
 	url := fmt.Sprintf("%s/rest/v2/as_code/export_config_file/", b.MonitorURL)
 	reqParams := map[string]interface{}{
 		"bk_biz_id":              bizID,
-		"dashboard_for_external": true,
+		"dashboard_for_external": false,
 	}
 	bts, _ := json.Marshal(reqParams)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(bts))
@@ -372,8 +375,11 @@ func (b *BkmApiClient) doPollDownloadTaskStatus(bizID string, resp *http.Respons
 	}
 	defer downloadResp.Body.Close()
 
+	if err = os.MkdirAll(filepath.Join(b.Opts.BKMDownloadConfigPath, b.SubPath), 0755); err != nil {
+		return false, fmt.Errorf("mkdir failed, err: %w", err)
+	}
 	// 创建一个文件用于保存
-	out, err := os.Create(utils.GenBkmConfigTarPath(b.Opts.BKMDownloadConfigPath, bizID))
+	out, err := os.Create(utils.GenBkmConfigTarPath(b.Opts.BKMDownloadConfigPath, b.SubPath, bizID))
 	if err != nil {
 		return false, fmt.Errorf("create download file failed, err: %w", err)
 	}

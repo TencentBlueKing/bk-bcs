@@ -77,5 +77,16 @@
   "monitorConfig": {
     "address": "${bcsMonitorAddress}",
     "port": "${bcsMonitorPort}"
+  },
+  "analysisConfig": {
+    "bkMonitorPushUrl": "${bcsAnalysisBKMonitorPushUrl}",
+    "bkMonitorPushToken": "${bcsAnalysisBKMonitorPushToken}",
+    "bkMonitorPushDataID": ${bcsAnalysisBKMonitorPushDataID},
+    "bkMonitorGetUrl": "${bcsAnalysisBKMonitorGetUrl}",
+    "bkMonitorGetBizID": ${bcsAnalysisBKMonitorGetBizID},
+    "bkMonitorGetUser": "${bcsAnalysisBKMonitorGetUser}",
+    "bkccUrl": "${bcsAnalysisBKCCUrl}",
+    "gitOpsAnalysisUrlSG": "${bcsAnalysisSGUrl}",
+    "gitOpsAnalysisTokenSG": "${bcsAnalysisSGToken}"
   }
 }
