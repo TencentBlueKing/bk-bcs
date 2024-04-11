@@ -6,13 +6,13 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
-  name: multiclusterendpointslice.federation.bkbcs.tencent.com
+  name: multiclusterendpointslices.federation.bkbcs.tencent.com
 spec:
   group: federation.bkbcs.tencent.com
   names:
     kind: MultiClusterEndpointSlice
     listKind: MultiClusterEndpointSliceList
-    plural: multiclusterendpointslice
+    plural: multiclusterendpointslices
     singular: multiclusterendpointslice
   scope: Namespaced
   versions:
