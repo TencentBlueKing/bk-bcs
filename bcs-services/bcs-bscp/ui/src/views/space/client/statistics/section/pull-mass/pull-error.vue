@@ -163,7 +163,7 @@
       yField: 'count',
       color: '#FFA66B',
       maxColumnWidth: 60,
-      padding: [10, 10, 40, 20],
+      padding: [10, 10, 40, 40],
       legend: {
         layout: 'horizontal',
         custom: true,
@@ -188,7 +188,7 @@
             },
           },
         },
-        tickInterval: 1,
+        top: true,
       },
       label: {
         // 可手动配置 label 数据标签位置

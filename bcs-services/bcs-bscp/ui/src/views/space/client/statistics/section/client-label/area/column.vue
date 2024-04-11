@@ -85,7 +85,6 @@
             },
           },
         },
-        tickInterval: 1,
       },
     });
     columnPlot.render();
