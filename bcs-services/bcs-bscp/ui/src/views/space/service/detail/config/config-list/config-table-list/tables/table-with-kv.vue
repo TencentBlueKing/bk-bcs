@@ -73,6 +73,9 @@
               <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEditOrView(row)">
                 {{ versionData.id === 0 ? t('编辑') : t('查看') }}
               </bk-button>
+              <bk-button v-if="row.kv_state === 'REVISE'" text theme="primary" @click="handleUnModify(row)">
+                {{ t('撤销') }}
+              </bk-button>
               <bk-button
                 v-if="versionData.status.publish_status !== 'editing'"
                 text
@@ -120,7 +123,7 @@
   import useServiceStore from '../../../../../../../../store/service';
   import { ICommonQuery } from '../../../../../../../../../types/index';
   import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
-  import { getKvList, deleteKv, getReleaseKvList, undeleteKv } from '../../../../../../../../api/config';
+  import { getKvList, deleteKv, getReleaseKvList, undeleteKv, unModifyKv } from '../../../../../../../../api/config';
   import { datetimeFormat } from '../../../../../../../../utils/index';
   import { getDefaultKvItem } from '../../../../../../../../utils/config';
   import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
@@ -331,6 +334,12 @@
     }
     isDeleteConfigDialogShow.value = true;
     deleteConfig.value = config;
+  };
+
+  const handleUnModify = async (config: IConfigKvType) => {
+    await unModifyKv(props.bkBizId, props.appId, config.spec.key);
+    Message({ theme: 'success', message: t('撤销修改配置项成功') });
+    refresh();
   };
 
   // 删除单个配置项

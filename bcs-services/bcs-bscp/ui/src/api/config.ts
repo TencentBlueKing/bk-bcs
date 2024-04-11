@@ -494,6 +494,16 @@ export const undeleteKv = (bizId: string, appId: number, key: string) =>
   http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undelete`);
 
 /**
+ * 恢复修改kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const unModifyKv = (bizId: string, appId: number, key: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undo`);
+
+/**
  * 批量导入kv配置文件
  * @param bizId 业务ID
  * @param appId 应用ID
