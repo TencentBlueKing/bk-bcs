@@ -16,7 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
+	"path"
 	"strings"
 	"time"
 
@@ -241,18 +241,17 @@ func (s *Service) getFileConfileItems(kt *kit.Kit, appID, bizID uint32, scope, s
 
 	status := []string{constant.FileStateAdd, constant.FileStateRevise, constant.FileStateUnchange}
 	ci, err := s.ListConfigItems(kt.RpcCtx(), &pbds.ListConfigItemsReq{
-		BizId:       bizID,
-		AppId:       appID,
-		All:         true,
-		WithStatus:  true,
-		Status:      status,
-		SearchValue: searchValue,
+		BizId:      bizID,
+		AppId:      appID,
+		All:        true,
+		WithStatus: true,
+		Status:     status,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	tci, err := s.getAllUnPublishedTmpConfig(kt, appID, bizID, status, searchValue)
+	tci, err := s.getAllUnPublishedTmpConfig(kt, appID, bizID, status)
 	if err != nil {
 		return nil, err
 	}
@@ -262,17 +261,19 @@ func (s *Service) getFileConfileItems(kt *kit.Kit, appID, bizID uint32, scope, s
 	allCi = append(allCi, tci...)
 
 	preview := []*pbds.CredentialScopePreviewResp_Detail{}
-
 	for _, v := range allCi {
-		ok, _ := tools.MatchConfigItem(scope, v.Spec.Path, v.Spec.Name)
-		if ok {
-			preview = append(preview, &pbds.CredentialScopePreviewResp_Detail{
-				Name: v.Spec.Name,
-				Path: v.Spec.Path,
-			})
+		if ok, _ := tools.MatchConfigItem(scope, v.Spec.Path, v.Spec.Name); !ok {
+			continue
 		}
-	}
 
+		if searchValue != "" && !strings.Contains(path.Join(v.Spec.Path, v.Spec.Name), searchValue) {
+			continue
+		}
+		preview = append(preview, &pbds.CredentialScopePreviewResp_Detail{
+			Name: v.Spec.Name,
+			Path: v.Spec.Path,
+		})
+	}
 	return preview, nil
 }
 
@@ -296,25 +297,17 @@ func (s *Service) getKVConfigItems(kt *kit.Kit, appID, bizID uint32, scope, sear
 	if err != nil {
 		return nil, err
 	}
-	// 使用正则表达式进行模糊搜索
-	regex, err := regexp.Compile(fmt.Sprintf(".*%s.*", searchValue))
-	if err != nil {
-		return preview, err
-	}
+
 	for _, v := range kv {
-		if g.Match(v.Spec.Key) {
-			if searchValue != "" {
-				if regex.MatchString(v.Spec.Key) {
-					preview = append(preview, &pbds.CredentialScopePreviewResp_Detail{
-						Name: v.Spec.Key,
-					})
-				}
-			} else {
-				preview = append(preview, &pbds.CredentialScopePreviewResp_Detail{
-					Name: v.Spec.Key,
-				})
-			}
+		if !g.Match(v.Spec.Key) {
+			continue
 		}
+		if searchValue != "" && !strings.Contains(v.Spec.Key, searchValue) {
+			continue
+		}
+		preview = append(preview, &pbds.CredentialScopePreviewResp_Detail{
+			Name: v.Spec.Key,
+		})
 	}
 
 	return preview, nil
@@ -322,7 +315,7 @@ func (s *Service) getKVConfigItems(kt *kit.Kit, appID, bizID uint32, scope, sear
 
 // 获取未发布下的所有模板配置
 func (s *Service) getAllUnPublishedTmpConfig(kt *kit.Kit, appID, bizID uint32,
-	status []string, searchValue string) ([]*pbci.ConfigItem, error) {
+	status []string) ([]*pbci.ConfigItem, error) {
 
 	tmplSetInfo, err := s.getAllAppTmplSets(kt, bizID, appID)
 	if err != nil {
@@ -368,30 +361,14 @@ func (s *Service) getAllUnPublishedTmpConfig(kt *kit.Kit, appID, bizID uint32,
 		details = append(details, group)
 	}
 	tci := []*pbci.ConfigItem{}
-	// 使用正则表达式进行模糊搜索
-	regex, err := regexp.Compile(fmt.Sprintf(".*%s.*", searchValue))
-	if err != nil {
-		return tci, err
-	}
 	for _, v := range details {
 		for _, vv := range v.TemplateRevisions {
-			if searchValue != "" {
-				if regex.MatchString(vv.Name) {
-					tci = append(tci, &pbci.ConfigItem{
-						Spec: &pbci.ConfigItemSpec{
-							Name: vv.Name,
-							Path: vv.Path,
-						},
-					})
-				}
-			} else {
-				tci = append(tci, &pbci.ConfigItem{
-					Spec: &pbci.ConfigItemSpec{
-						Name: vv.Name,
-						Path: vv.Path,
-					},
-				})
-			}
+			tci = append(tci, &pbci.ConfigItem{
+				Spec: &pbci.ConfigItemSpec{
+					Name: vv.Name,
+					Path: vv.Path,
+				},
+			})
 		}
 	}
 	return tci, nil
