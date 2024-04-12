@@ -116,7 +116,7 @@ func (dao *clientEventDao) List(kit *kit.Kit, bizID, appID, clientID uint32, sta
 
 	m := dao.genQ.ClientEvent
 	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
-		m.ClientID.Eq(clientID), m.ReleaseChangeFailedReason.Neq("SkipFailed"))
+		m.ClientID.Eq(clientID))
 	var err error
 	var conds []rawgen.Condition
 	if len(searchValue) > 0 {
@@ -269,7 +269,7 @@ func (dao *clientEventDao) UpsertVersionChange(kit *kit.Kit, tx *gen.QueryTx, da
 			"client_mode", "original_release_id", "target_release_id", "start_time", "end_time",
 			"release_change_status", "release_change_failed_reason", "failed_detail_reason",
 			"download_file_size", "download_file_num", "total_seconds", "total_file_size",
-			"total_file_num", "download_file_num",
+			"total_file_num", "download_file_num", "specific_failed_reason",
 		}),
 	}).CreateInBatches(data, 500)
 }

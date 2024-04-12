@@ -481,7 +481,7 @@ func (dao *clientDao) UpsertVersionChange(kit *kit.Kit, tx *gen.QueryTx, data []
 		Columns: []clause.Column{{Name: "biz_id"}, {Name: "app_id"}, {Name: "uid"}},
 		DoUpdates: clause.AssignmentColumns([]string{
 			"online_status", "last_heartbeat_time", "client_version", "client_type", "ip", "labels", "annotations",
-			"current_release_id", "target_release_id",
+			"current_release_id", "target_release_id", "specific_failed_reason",
 			"release_change_status", "release_change_failed_reason", "failed_detail_reason",
 			"cpu_usage", "cpu_max_usage", "cpu_min_usage", "cpu_avg_usage",
 			"memory_usage", "memory_max_usage", "memory_min_usage", "memory_avg_usage",

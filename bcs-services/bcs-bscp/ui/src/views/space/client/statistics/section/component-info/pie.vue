@@ -58,17 +58,17 @@
           symbol: 'circle',
         },
       },
-      tooltip: {
-        fields: ['count', 'percent'],
-        showTitle: true,
-        title: 'current_release_name',
-        container: tooltipRef.value?.getDom(),
-        enterable: true,
-        customItems: (originalItems: any[]) => {
-          originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
-          return originalItems;
-        },
-      },
+      // tooltip: {
+      //   fields: ['count', 'percent'],
+      //   showTitle: true,
+      //   title: 'current_release_name',
+      //   container: tooltipRef.value?.getDom(),
+      //   enterable: true,
+      //   customItems: (originalItems: any[]) => {
+      //     originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
+      //     return originalItems;
+      //   },
+      // },
     });
     piePlot.render();
   };
@@ -79,13 +79,4 @@
 </script>
 
 <style lang="scss">
-  .canvas-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-    height: 100%;
-  }
-  .g2-tooltip {
-    visibility: hidden;
-  }
 </style>

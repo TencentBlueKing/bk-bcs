@@ -149,10 +149,8 @@
               },
             },
           },
-          tickInterval: 1,
         },
         {
-          tickInterval: 1,
           min: 0,
         },
       ],
