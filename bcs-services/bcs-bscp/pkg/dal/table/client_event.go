@@ -27,18 +27,19 @@ type ClientEvent struct {
 
 // ClientEventSpec is a client event spec
 type ClientEventSpec struct {
-	OriginalReleaseID         uint32       `gorm:"column:original_release_id" json:"original_release_id"`
-	TargetReleaseID           uint32       `gorm:"column:target_release_id" json:"target_release_id"`
-	StartTime                 time.Time    `gorm:"column:start_time" json:"start_time"`
-	EndTime                   time.Time    `gorm:"column:end_time" json:"end_time"`
-	TotalSeconds              float64      `gorm:"column:total_seconds" json:"total_seconds"`
-	TotalFileSize             float64      `gorm:"column:total_file_size" json:"total_file_size"`
-	DownloadFileSize          float64      `gorm:"column:download_file_size" json:"download_file_size"`
-	TotalFileNum              uint32       `gorm:"column:total_file_num" json:"total_file_num"`
-	DownloadFileNum           uint32       `gorm:"column:download_file_num" json:"download_file_num"`
-	ReleaseChangeStatus       Status       `gorm:"column:release_change_status" json:"release_change_status"`
-	ReleaseChangeFailedReason FailedReason `gorm:"column:release_change_failed_reason" json:"release_change_failed_reason"`
-	FailedDetailReason        string       `gorm:"column:failed_detail_reason" json:"failed_detail_reason"`
+	OriginalReleaseID         uint32    `gorm:"column:original_release_id" json:"original_release_id"`
+	TargetReleaseID           uint32    `gorm:"column:target_release_id" json:"target_release_id"`
+	StartTime                 time.Time `gorm:"column:start_time" json:"start_time"`
+	EndTime                   time.Time `gorm:"column:end_time" json:"end_time"`
+	TotalSeconds              float64   `gorm:"column:total_seconds" json:"total_seconds"`
+	TotalFileSize             float64   `gorm:"column:total_file_size" json:"total_file_size"`
+	DownloadFileSize          float64   `gorm:"column:download_file_size" json:"download_file_size"`
+	TotalFileNum              uint32    `gorm:"column:total_file_num" json:"total_file_num"`
+	DownloadFileNum           uint32    `gorm:"column:download_file_num" json:"download_file_num"`
+	ReleaseChangeStatus       Status    `gorm:"column:release_change_status" json:"release_change_status"`
+	ReleaseChangeFailedReason string    `gorm:"column:release_change_failed_reason" json:"release_change_failed_reason"`
+	SpecificFailedReason      string    `gorm:"column:specific_failed_reason" json:"specific_failed_reason"`
+	FailedDetailReason        string    `gorm:"column:failed_detail_reason" json:"failed_detail_reason"`
 }
 
 // ClientEventAttachment is a client event attachment
