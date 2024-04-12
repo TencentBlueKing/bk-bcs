@@ -39,56 +39,61 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
-	"app %d not found":                    3,
-	"attachment not set":                  9,
+	"app %d not found":                    5,
+	"attachment not set":                  11,
 	"batch delete failed":                 1,
-	"db operation failed":                 5,
-	"default_val %s is not a number type": 14,
-	"id is required":                      0,
-	"id should not be set":                7,
-	"invalid argument":                    6,
-	"invalid name, length should <= 128":  12,
-	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                         11,
-	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)": 13,
-	"revision not set": 10,
-	"same template variable name %s already exists": 4,
-	"spec not set": 8,
-	"template variable name must start with %s": 2,
-	"unsupported variable type: %s":             15,
+	"db operation failed":                 7,
+	"default_val %s is not a number type": 16,
+	"id is required":                      2,
+	"id should not be set":                9,
+	"invalid argument":                    8,
+	"invalid name, length should <= 128":  14,
+	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                         13,
+	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)": 15,
+	"revision not set": 12,
+	"same template variable name %s already exists": 6,
+	"spec not set": 10,
+	"template variable name must start with %s":                                        3,
+	"the length of hook ids is %d, it must be within the range of [1,%d]":              0,
+	"the length of template variable ids is %d, it must be within the range of [1,%d]": 4,
+	"unsupported variable type: %s":                                                    17,
 }
 
-var enIndex = []uint32{ // 17 elements
-	0x00000000, 0x0000000f, 0x00000023, 0x00000050,
-	0x00000064, 0x00000095, 0x000000a9, 0x000000ba,
-	0x000000cf, 0x000000dc, 0x000000ef, 0x00000100,
-	0x00000153, 0x00000176, 0x000001f8, 0x0000021f,
-	0x00000240,
-} // Size: 92 bytes
+var enIndex = []uint32{ // 19 elements
+	0x00000000, 0x0000004a, 0x0000005e, 0x0000006d,
+	0x0000009a, 0x000000f1, 0x00000105, 0x00000136,
+	0x0000014a, 0x0000015b, 0x00000170, 0x0000017d,
+	0x00000190, 0x000001a1, 0x000001f4, 0x00000217,
+	0x00000299, 0x000002c0, 0x000002e1,
+} // Size: 100 bytes
 
-const enData string = "" + // Size: 576 bytes
-	"\x02id is required\x02batch delete failed\x02template variable name must" +
-	" start with %[1]s\x02app %[1]d not found\x02same template variable name " +
-	"%[1]s already exists\x02db operation failed\x02invalid argument\x02id sh" +
-	"ould not be set\x02spec not set\x02attachment not set\x02revision not se" +
-	"t\x02invalid name, length should >= 9 and must start with prefix bk_bscp" +
-	"_ (ignore case)\x02invalid name, length should <= 128\x02invalid name: %" +
-	"[1]s, only allows to include english、numbers、underscore (_), and must st" +
-	"art with prefix bk_bscp_ (ignore case)\x02default_val %[1]s is not a num" +
-	"ber type\x02unsupported variable type: %[1]s"
+const enData string = "" + // Size: 737 bytes
+	"\x02the length of hook ids is %[1]d, it must be within the range of [1,%" +
+	"[2]d]\x02batch delete failed\x02id is required\x02template variable name" +
+	" must start with %[1]s\x02the length of template variable ids is %[1]d, " +
+	"it must be within the range of [1,%[2]d]\x02app %[1]d not found\x02same " +
+	"template variable name %[1]s already exists\x02db operation failed\x02in" +
+	"valid argument\x02id should not be set\x02spec not set\x02attachment not" +
+	" set\x02revision not set\x02invalid name, length should >= 9 and must st" +
+	"art with prefix bk_bscp_ (ignore case)\x02invalid name, length should <=" +
+	" 128\x02invalid name: %[1]s, only allows to include english、numbers、unde" +
+	"rscore (_), and must start with prefix bk_bscp_ (ignore case)\x02default" +
+	"_val %[1]s is not a number type\x02unsupported variable type: %[1]s"
 
-var zhIndex = []uint32{ // 17 elements
-	0x00000000, 0x0000000f, 0x00000022, 0x0000004c,
-	0x00000069, 0x00000093, 0x000000a2, 0x000000af,
-	0x000000c4, 0x000000d8, 0x000000f2, 0x0000010a,
-	0x0000015e, 0x0000017f, 0x000001fa, 0x0000021f,
-	0x00000240,
-} // Size: 92 bytes
+var zhIndex = []uint32{ // 19 elements
+	0x00000000, 0x00000040, 0x00000053, 0x00000062,
+	0x0000008c, 0x000000d2, 0x000000ef, 0x00000119,
+	0x00000128, 0x00000135, 0x0000014a, 0x0000015e,
+	0x00000178, 0x00000190, 0x000001e4, 0x00000205,
+	0x00000280, 0x000002a5, 0x000002c6,
+} // Size: 100 bytes
 
-const zhData string = "" + // Size: 576 bytes
-	"\x02id不能为空\x02批量删除失败\x02模版变量名必须以%[1]s前缀开头\x02ID为%[1]d的服务不存在\x02同名的模版变量名称" +
-	"%[1]s已存在\x02db操作失败\x02无效参数\x02id不应该被设置\x02spec没有被设置\x02attachment没有被设置" +
-	"\x02revision没有被设置\x02无效名称，长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称，长度应该<=1" +
-	"28\x02无效名称：%[1]s，只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）\x02default_val " +
-	"%[1]s 不是数字类型\x02不支持的变量类型：%[1]s"
+const zhData string = "" + // Size: 710 bytes
+	"\x02脚本id列表的长度为%[1]d, 长度范围必须为[1,%[2]d]\x02批量删除失败\x02id不能为空\x02模版变量名必须以%[1" +
+	"]s前缀开头\x02全局变量id列表的长度为%[1]d, 长度范围必须为[1,%[2]d]\x02ID为%[1]d的服务不存在\x02同名的模版" +
+	"变量名称%[1]s已存在\x02db操作失败\x02无效参数\x02id不应该被设置\x02spec没有被设置\x02attachment没" +
+	"有被设置\x02revision没有被设置\x02无效名称，长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称，长" +
+	"度应该<=128\x02无效名称：%[1]s，只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）\x02defa" +
+	"ult_val %[1]s 不是数字类型\x02不支持的变量类型：%[1]s"
 
-	// Total table size 1336 bytes (1KiB); checksum: 10E540E4
+	// Total table size 1647 bytes (1KiB); checksum: 45ABBE0C

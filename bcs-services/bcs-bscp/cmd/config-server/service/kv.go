@@ -192,8 +192,7 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq)
 	eg, egCtx := errgroup.WithContext(grpcKit.RpcCtx())
 	eg.SetLimit(10)
 
-	successfulIDs := []uint32{}
-	failedIDs := []uint32{}
+	var successfulIDs, failedIDs []uint32
 	var mux sync.Mutex
 
 	// 使用 data-service 原子接口
