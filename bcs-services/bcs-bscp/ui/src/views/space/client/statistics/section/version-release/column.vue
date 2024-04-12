@@ -39,7 +39,7 @@
       data: data.value,
       xField: 'current_release_name',
       yField: 'count',
-      padding: [30, 10, 50, 20],
+      padding: [30, 10, 50, 30],
       limitInPlot: false,
       color: '#3E96C2',
       seriesField: 'count',
@@ -87,7 +87,6 @@
             },
           },
         },
-        tickInterval: 1,
       },
     });
     columnPlot.render();

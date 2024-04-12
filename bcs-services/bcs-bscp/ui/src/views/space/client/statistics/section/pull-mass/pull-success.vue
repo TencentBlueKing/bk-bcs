@@ -110,7 +110,7 @@
       data.value = res.change_status.map((item: any) => ({
         count: item.count,
         percent: item.percent,
-        release_change_status: item.release_change_status === 'Failed' ? '拉取失败' : '拉取成功',
+        release_change_status: item.release_change_status,
       }));
     } catch (error) {
       console.error(error);
@@ -125,7 +125,6 @@
       data: data.value,
       angleField: 'count',
       colorField: 'release_change_status',
-      color: ['#F5876C', '#DAEFE4'],
       radius: 0.9,
       label: {
         type: 'inner',
@@ -148,7 +147,7 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          jumpStatus.value = originalItems[0].data.release_change_status === '拉取成功' ? 'Success' : 'Failed';
+          jumpStatus.value = originalItems[0].data.release_change_status;
           originalItems[0].name = '客户端数量';
           originalItems[1].name = '占比';
           originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
