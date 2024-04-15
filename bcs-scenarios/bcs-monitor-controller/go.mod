@@ -3,6 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-c
 go 1.18
 
 replace (
+	github.com/go-git/go-git/v5 => github.com/go-git/go-git/v5 v5.0.0-20200310004119-2637279338ca
 	// https://github.com/kubernetes/kubernetes/issues/79384#issuecomment-505627280
 	k8s.io/api => k8s.io/api v0.24.2
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.24.2

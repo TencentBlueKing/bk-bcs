@@ -106,7 +106,6 @@ func (gr *gitRepo) Pull() error {
 	}
 
 	err = worktree.Pull(&git.PullOptions{
-		RemoteURL:     gr.URL,
 		ReferenceName: plumbing.NewBranchReferenceName(gr.TargetRevision),
 		SingleBranch:  true,
 		Auth:          gr.auth,
