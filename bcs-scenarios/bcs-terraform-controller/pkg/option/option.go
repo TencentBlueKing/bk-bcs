@@ -42,6 +42,8 @@ type ControllerOption struct {
 	Port       int    `json:"port" value:"8080" usage:"http port"`
 	MetricPort int    `json:"metricPort" value:"8081" usage:"metric port"`
 	GRPCPort   int    `json:"grpcPort" value:"8082" usage:"grpc port"`
+	HealthPort int    `json:"healthPort" value:"8083" usage:"health port"`
+	HTTPPort   int    `json:"httpPort" value:"8088" usage:"http port"`
 
 	EnableLeaderElection bool `json:"enableLeaderElection" value:"true" usage:"whether enable leader election"`
 	KubernetesQPS        int  `json:"kubernetesQPS" value:"50" usage:"kubernetes qps"`

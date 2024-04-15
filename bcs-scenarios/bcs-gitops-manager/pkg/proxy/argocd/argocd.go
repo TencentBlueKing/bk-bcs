@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/analyze"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/terraformstore"
 )
 
 // NewGitOpsProxy create proxy instance
@@ -159,11 +160,16 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/monitor").Subrouter(),
 		middleware: middleware,
 	}
+	terraformPlugin := &TerraformPlugin{
+		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/terraforms").Subrouter(),
+		middleware:     middleware,
+		terraformStore: terraformstore.NewTerraformStore(),
+	}
 	initializer := []func() error{
 		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
 		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, analysisPlugin.Init,
-		monitorPlugin.Init,
+		monitorPlugin.Init, terraformPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy

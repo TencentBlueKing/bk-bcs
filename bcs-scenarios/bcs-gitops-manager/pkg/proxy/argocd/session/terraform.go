@@ -22,37 +22,44 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
-// MonitorSession defines the instance that to proxy to monitor server
-type MonitorSession struct {
+// TerraformSession defines the instance that to proxy to terraform server
+type TerraformSession struct {
 	op           *options.Options
 	reverseProxy *httputil.ReverseProxy
 }
 
-// NewMonitorSession create the session of monitor
-func NewMonitorSession() *MonitorSession {
-	s := &MonitorSession{
+// NewTerraformSession create the session of terraform
+func NewTerraformSession() *TerraformSession {
+	s := &TerraformSession{
 		op: options.GlobalOptions(),
 	}
 	s.initReverseProxy()
 	return s
 }
 
-func (s *MonitorSession) initReverseProxy() {
+func (s *TerraformSession) initReverseProxy() {
 	s.reverseProxy = &httputil.ReverseProxy{
 		Director: func(request *http.Request) {},
 		ErrorHandler: func(res http.ResponseWriter, req *http.Request, e error) {
+			if !utils.IsContextCanceled(e) {
+				metric.ManagerTerraformProxyFailed.WithLabelValues().Inc()
+			}
 			requestID := req.Context().Value(traceconst.RequestIDHeaderKey).(string)
 			realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
-			fullPath := fmt.Sprintf("https://%s%s", s.op.MonitorConfig.Address, realPath)
-			blog.Errorf("RequestID[%s] monitor session proxy '%s' with header '%s' failure: %s",
+			fullPath := fmt.Sprintf("https://%s:%s%s", s.op.TerraformServer.Address,
+				s.op.TerraformServer.Port, realPath)
+			blog.Errorf("RequestID[%s] terraform session proxy '%s' with header '%s' failure: %s",
 				requestID, fullPath, req.Header, e.Error())
 			res.WriteHeader(http.StatusInternalServerError)
-			_, _ = res.Write([]byte("monitor session proxy failed")) // nolint
+			_, _ = res.Write([]byte("terraform session proxy failed")) // nolint
 		},
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
@@ -64,23 +71,23 @@ func (s *MonitorSession) initReverseProxy() {
 }
 
 // ServeHTTP http.Handler implementation
-func (s *MonitorSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+func (s *TerraformSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	requestID := req.Context().Value(traceconst.RequestIDHeaderKey).(string)
 	// backend real path with encoded format
 	realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
 	// !force https link
-	// fullPath := fmt.Sprintf("http://bcsmonitorcontroller.bcs-system.svc.cluster.local:18088%s", realPath)
-	fullPath := fmt.Sprintf("http://%s:%s%s", s.op.MonitorConfig.Address, s.op.MonitorConfig.Port, realPath)
+	fullPath := fmt.Sprintf("http://%s:%s%s", s.op.TerraformServer.Address, s.op.TerraformServer.Port, realPath)
 	newURL, err := url.Parse(fullPath)
 	if err != nil {
-		err = fmt.Errorf("monitor session build new fullpath '%s' failed: %w", fullPath, err)
+		err = errors.Errorf("terraform session build new fullpath '%s' failed: %s", fullPath, err.Error())
 		rw.WriteHeader(http.StatusInternalServerError)
 		blog.Errorf(err.Error())
 		_, _ = rw.Write([]byte(err.Error())) // nolint
 		return
 	}
+
 	req.URL = newURL
 	req.Header.Set(traceconst.RequestIDHeaderKey, requestID)
-	blog.Infof("RequestID[%s] monitor session serve: %s/%s", requestID, req.Method, fullPath)
+	blog.Infof("RequestID[%s] terraform session serve: %s/%s", requestID, req.Method, fullPath)
 	s.reverseProxy.ServeHTTP(rw, req)
 }
