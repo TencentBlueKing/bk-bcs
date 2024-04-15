@@ -44,15 +44,16 @@ func (c *ClientSpec) ClientSpec() *table.ClientSpec {
 		Ip:                        c.Ip,
 		Labels:                    c.Labels,
 		Annotations:               c.Annotations,
-		FirstConnectTime:          c.FirstConnectTime.AsTime(),
-		LastHeartbeatTime:         c.LastHeartbeatTime.AsTime(),
-		OnlineStatus:              table.OnlineStatus(c.OnlineStatus),
+		FirstConnectTime:          c.FirstConnectTime.AsTime().UTC(),
+		LastHeartbeatTime:         c.LastHeartbeatTime.AsTime().UTC(),
+		OnlineStatus:              c.OnlineStatus,
 		Resource:                  resource,
 		CurrentReleaseID:          c.CurrentReleaseId,
 		TargetReleaseID:           c.TargetReleaseId,
 		ReleaseChangeStatus:       table.Status(c.ReleaseChangeStatus),
-		ReleaseChangeFailedReason: table.FailedReason(c.ReleaseChangeFailedReason),
+		ReleaseChangeFailedReason: c.ReleaseChangeFailedReason,
 		FailedDetailReason:        c.FailedDetailReason,
+		SpecificFailedReason:      c.SpecificFailedReason,
 	}
 }
 
@@ -69,7 +70,7 @@ func PbClientSpec(spec *table.ClientSpec) *ClientSpec { //nolint:revive
 		Annotations:       spec.Annotations,
 		FirstConnectTime:  timestamppb.New(spec.FirstConnectTime),
 		LastHeartbeatTime: timestamppb.New(spec.LastHeartbeatTime),
-		OnlineStatus:      string(spec.OnlineStatus),
+		OnlineStatus:      spec.OnlineStatus,
 		Resource: &ClientResource{
 			CpuUsage:       spec.Resource.CpuUsage,
 			CpuMaxUsage:    spec.Resource.CpuMaxUsage,
@@ -83,9 +84,10 @@ func PbClientSpec(spec *table.ClientSpec) *ClientSpec { //nolint:revive
 		CurrentReleaseId:          spec.CurrentReleaseID,
 		TargetReleaseId:           spec.TargetReleaseID,
 		ReleaseChangeStatus:       string(spec.ReleaseChangeStatus),
-		ReleaseChangeFailedReason: string(spec.ReleaseChangeFailedReason),
+		ReleaseChangeFailedReason: spec.ReleaseChangeFailedReason,
 		FailedDetailReason:        spec.FailedDetailReason,
 		ClientType:                string(spec.ClientType),
+		SpecificFailedReason:      spec.SpecificFailedReason,
 	}
 }
 

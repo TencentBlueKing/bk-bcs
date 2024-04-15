@@ -674,6 +674,9 @@
 
   // 配置文件撤销修改
   const handleUnModify = async (id: number) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
     await unModifyConfigItem(props.bkBizId, props.appId, id);
     Message({ theme: 'success', message: t('撤销修改配置文件成功') });
     getAllConfigList();
@@ -681,6 +684,9 @@
 
   // 配置文件恢复删除
   const handleUnDelete = async (id: number) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
     await unDeleteConfigItem(props.bkBizId, props.appId, id);
     Message({ theme: 'success', message: t('恢复配置文件成功') });
     getAllConfigList();

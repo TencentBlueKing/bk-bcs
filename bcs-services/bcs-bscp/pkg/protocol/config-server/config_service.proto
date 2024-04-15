@@ -98,7 +98,7 @@ service Config {
   }
   rpc BatchDeleteConfigItems(BatchDeleteAppResourcesReq) returns (BatchDeleteResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/batchDelete"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/batch_delete"
       body: "*"
     };
   }
@@ -210,6 +210,12 @@ service Config {
   rpc DeleteHook(DeleteHookReq) returns (DeleteHookResp) {
     option (google.api.http) = {
       delete: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+    };
+  }
+  rpc BatchDeleteHook(BatchDeleteHookReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/hooks/batch_delete"
+      body: "*"
     };
   }
   rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
@@ -596,6 +602,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
     };
   }
+  rpc BatchDeleteTemplateVariable(BatchDeleteBizResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/template_variables/batch_delete"
+      body: "*"
+    };
+  }
   rpc UpdateTemplateVariable(UpdateTemplateVariableReq) returns (UpdateTemplateVariableResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
@@ -659,7 +671,7 @@ service Config {
   }
   rpc BatchDeleteGroups(BatchDeleteBizResourcesReq) returns (BatchDeleteResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/groups/batchDelete"
+      post: "/api/v1/config/biz/{biz_id}/groups/batch_delete"
       body: "*"
     };
   }
@@ -773,7 +785,7 @@ service Config {
   };
   rpc BatchDeleteKv(BatchDeleteAppResourcesReq) returns (BatchDeleteResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/batchDelete"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/batch_delete"
       body: "*"
     };
   };
@@ -1314,6 +1326,12 @@ message DeleteHookReq {
 }
 
 message DeleteHookResp {}
+
+message BatchDeleteHookReq {
+  uint32 biz_id = 1;
+  repeated uint32 ids = 2;
+  bool force = 3;
+}
 
 message ListHooksReq {
   uint32 biz_id = 1;

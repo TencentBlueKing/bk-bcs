@@ -66,12 +66,35 @@
       <bk-table-column :label="t('操作')" fixed="right" :width="220">
         <template #default="{ row }">
           <div class="operate-action-btns">
-            <bk-button v-if="row.kv_state === 'DELETE'" text theme="primary" @click="handleUndelete(row)">
+            <bk-button
+              v-if="row.kv_state === 'DELETE'"
+              v-cursor="{ active: !hasEditServicePerm }"
+              :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+              :disabled="!hasEditServicePerm"
+              text
+              theme="primary"
+              @click="handleUndelete(row)">
               {{ t('恢复') }}
             </bk-button>
             <template v-else>
-              <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEditOrView(row)">
+              <bk-button
+                v-cursor="{ active: !hasEditServicePerm }"
+                :class="{ 'bk-text-with-no-perm': versionData.id === 0 && !hasEditServicePerm }"
+                :disabled="versionData.id === 0 && !hasEditServicePerm"
+                text
+                theme="primary"
+                @click="handleEditOrView(row)">
                 {{ versionData.id === 0 ? t('编辑') : t('查看') }}
+              </bk-button>
+              <bk-button
+                v-cursor="{ active: !hasEditServicePerm }"
+                v-if="row.kv_state === 'REVISE'"
+                :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                :disabled="!hasEditServicePerm"
+                text
+                theme="primary"
+                @click="handleUnModify(row)">
+                {{ t('撤销') }}
               </bk-button>
               <bk-button
                 v-if="versionData.status.publish_status !== 'editing'"
@@ -80,7 +103,14 @@
                 @click="handleDiff(row)">
                 {{ t('对比') }}
               </bk-button>
-              <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">
+              <bk-button
+                v-cursor="{ active: !hasEditServicePerm }"
+                v-if="versionData.id === 0"
+                :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                :disabled="!hasEditServicePerm"
+                text
+                theme="primary"
+                @click="handleDel(row)">
                 {{ t('删除') }}
               </bk-button>
             </template>
@@ -120,7 +150,7 @@
   import useServiceStore from '../../../../../../../../store/service';
   import { ICommonQuery } from '../../../../../../../../../types/index';
   import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
-  import { getKvList, deleteKv, getReleaseKvList, undeleteKv } from '../../../../../../../../api/config';
+  import { getKvList, deleteKv, getReleaseKvList, undeleteKv, unModifyKv } from '../../../../../../../../api/config';
   import { datetimeFormat } from '../../../../../../../../utils/index';
   import { getDefaultKvItem } from '../../../../../../../../utils/config';
   import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
@@ -136,7 +166,7 @@
   const serviceStore = useServiceStore();
   const { versionData } = storeToRefs(configStore);
   const { checkPermBeforeOperate } = serviceStore;
-  const { permCheckLoading } = storeToRefs(serviceStore);
+  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
   const { t } = useI18n();
 
   const props = defineProps<{
@@ -309,6 +339,9 @@
   const handleEditOrView = (config: IConfigKvType) => {
     activeConfig.value = config;
     if (isUnNamedVersion.value) {
+      if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+        return;
+      }
       editPanelShow.value = true;
     } else {
       viewPanelShow.value = true;
@@ -331,6 +364,15 @@
     }
     isDeleteConfigDialogShow.value = true;
     deleteConfig.value = config;
+  };
+
+  const handleUnModify = async (config: IConfigKvType) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
+    await unModifyKv(props.bkBizId, props.appId, config.spec.key);
+    Message({ theme: 'success', message: t('撤销修改配置项成功') });
+    refresh();
   };
 
   // 删除单个配置项
@@ -363,6 +405,9 @@
 
   // 撤销删除单个配置项
   const handleUndelete = async (config: IConfigKvType) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
     await undeleteKv(props.bkBizId, props.appId, config.spec.key);
     Message({ theme: 'success', message: t('恢复配置项成功') });
     refresh();

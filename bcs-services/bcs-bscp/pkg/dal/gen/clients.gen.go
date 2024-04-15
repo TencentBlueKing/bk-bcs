@@ -51,6 +51,7 @@ func newClient(db *gorm.DB, opts ...gen.DOOption) client {
 	_client.TargetReleaseID = field.NewUint32(tableName, "target_release_id")
 	_client.ReleaseChangeStatus = field.NewString(tableName, "release_change_status")
 	_client.ReleaseChangeFailedReason = field.NewString(tableName, "release_change_failed_reason")
+	_client.SpecificFailedReason = field.NewString(tableName, "specific_failed_reason")
 	_client.FailedDetailReason = field.NewString(tableName, "failed_detail_reason")
 
 	_client.fillFieldMap()
@@ -86,6 +87,7 @@ type client struct {
 	TargetReleaseID           field.Uint32
 	ReleaseChangeStatus       field.String
 	ReleaseChangeFailedReason field.String
+	SpecificFailedReason      field.String
 	FailedDetailReason        field.String
 
 	fieldMap map[string]field.Expr
@@ -127,6 +129,7 @@ func (c *client) updateTableName(table string) *client {
 	c.TargetReleaseID = field.NewUint32(table, "target_release_id")
 	c.ReleaseChangeStatus = field.NewString(table, "release_change_status")
 	c.ReleaseChangeFailedReason = field.NewString(table, "release_change_failed_reason")
+	c.SpecificFailedReason = field.NewString(table, "specific_failed_reason")
 	c.FailedDetailReason = field.NewString(table, "failed_detail_reason")
 
 	c.fillFieldMap()
@@ -152,7 +155,7 @@ func (c *client) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *client) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 25)
+	c.fieldMap = make(map[string]field.Expr, 26)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["uid"] = c.UID
 	c.fieldMap["biz_id"] = c.BizID
@@ -177,6 +180,7 @@ func (c *client) fillFieldMap() {
 	c.fieldMap["target_release_id"] = c.TargetReleaseID
 	c.fieldMap["release_change_status"] = c.ReleaseChangeStatus
 	c.fieldMap["release_change_failed_reason"] = c.ReleaseChangeFailedReason
+	c.fieldMap["specific_failed_reason"] = c.SpecificFailedReason
 	c.fieldMap["failed_detail_reason"] = c.FailedDetailReason
 }
 

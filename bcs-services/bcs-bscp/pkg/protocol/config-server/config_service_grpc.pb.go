@@ -58,6 +58,7 @@ const (
 	Config_DeleteRelease_FullMethodName                     = "/pbcs.Config/DeleteRelease"
 	Config_CreateHook_FullMethodName                        = "/pbcs.Config/CreateHook"
 	Config_DeleteHook_FullMethodName                        = "/pbcs.Config/DeleteHook"
+	Config_BatchDeleteHook_FullMethodName                   = "/pbcs.Config/BatchDeleteHook"
 	Config_ListHooks_FullMethodName                         = "/pbcs.Config/ListHooks"
 	Config_ListHookTags_FullMethodName                      = "/pbcs.Config/ListHookTags"
 	Config_GetHook_FullMethodName                           = "/pbcs.Config/GetHook"
@@ -125,6 +126,7 @@ const (
 	Config_ListLatestTmplBoundUnnamedApps_FullMethodName    = "/pbcs.Config/ListLatestTmplBoundUnnamedApps"
 	Config_CreateTemplateVariable_FullMethodName            = "/pbcs.Config/CreateTemplateVariable"
 	Config_DeleteTemplateVariable_FullMethodName            = "/pbcs.Config/DeleteTemplateVariable"
+	Config_BatchDeleteTemplateVariable_FullMethodName       = "/pbcs.Config/BatchDeleteTemplateVariable"
 	Config_UpdateTemplateVariable_FullMethodName            = "/pbcs.Config/UpdateTemplateVariable"
 	Config_ListTemplateVariables_FullMethodName             = "/pbcs.Config/ListTemplateVariables"
 	Config_ImportTemplateVariables_FullMethodName           = "/pbcs.Config/ImportTemplateVariables"
@@ -213,6 +215,7 @@ type ConfigClient interface {
 	DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*DeleteReleaseResp, error)
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error)
+	BatchDeleteHook(ctx context.Context, in *BatchDeleteHookReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
 	ListHookTags(ctx context.Context, in *ListHookTagsReq, opts ...grpc.CallOption) (*ListHookTagsResp, error)
 	GetHook(ctx context.Context, in *GetHookReq, opts ...grpc.CallOption) (*GetHookResp, error)
@@ -289,6 +292,7 @@ type ConfigClient interface {
 	ListLatestTmplBoundUnnamedApps(ctx context.Context, in *ListLatestTmplBoundUnnamedAppsReq, opts ...grpc.CallOption) (*ListLatestTmplBoundUnnamedAppsResp, error)
 	CreateTemplateVariable(ctx context.Context, in *CreateTemplateVariableReq, opts ...grpc.CallOption) (*CreateTemplateVariableResp, error)
 	DeleteTemplateVariable(ctx context.Context, in *DeleteTemplateVariableReq, opts ...grpc.CallOption) (*DeleteTemplateVariableResp, error)
+	BatchDeleteTemplateVariable(ctx context.Context, in *BatchDeleteBizResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	UpdateTemplateVariable(ctx context.Context, in *UpdateTemplateVariableReq, opts ...grpc.CallOption) (*UpdateTemplateVariableResp, error)
 	ListTemplateVariables(ctx context.Context, in *ListTemplateVariablesReq, opts ...grpc.CallOption) (*ListTemplateVariablesResp, error)
 	ImportTemplateVariables(ctx context.Context, in *ImportTemplateVariablesReq, opts ...grpc.CallOption) (*ImportTemplateVariablesResp, error)
@@ -630,6 +634,15 @@ func (c *configClient) CreateHook(ctx context.Context, in *CreateHookReq, opts .
 func (c *configClient) DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error) {
 	out := new(DeleteHookResp)
 	err := c.cc.Invoke(ctx, Config_DeleteHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) BatchDeleteHook(ctx context.Context, in *BatchDeleteHookReq, opts ...grpc.CallOption) (*BatchDeleteResp, error) {
+	out := new(BatchDeleteResp)
+	err := c.cc.Invoke(ctx, Config_BatchDeleteHook_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1239,6 +1252,15 @@ func (c *configClient) DeleteTemplateVariable(ctx context.Context, in *DeleteTem
 	return out, nil
 }
 
+func (c *configClient) BatchDeleteTemplateVariable(ctx context.Context, in *BatchDeleteBizResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error) {
+	out := new(BatchDeleteResp)
+	err := c.cc.Invoke(ctx, Config_BatchDeleteTemplateVariable_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) UpdateTemplateVariable(ctx context.Context, in *UpdateTemplateVariableReq, opts ...grpc.CallOption) (*UpdateTemplateVariableResp, error) {
 	out := new(UpdateTemplateVariableResp)
 	err := c.cc.Invoke(ctx, Config_UpdateTemplateVariable_FullMethodName, in, out, opts...)
@@ -1701,6 +1723,7 @@ type ConfigServer interface {
 	DeleteRelease(context.Context, *DeleteReleaseReq) (*DeleteReleaseResp, error)
 	CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error)
+	BatchDeleteHook(context.Context, *BatchDeleteHookReq) (*BatchDeleteResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
 	ListHookTags(context.Context, *ListHookTagsReq) (*ListHookTagsResp, error)
 	GetHook(context.Context, *GetHookReq) (*GetHookResp, error)
@@ -1777,6 +1800,7 @@ type ConfigServer interface {
 	ListLatestTmplBoundUnnamedApps(context.Context, *ListLatestTmplBoundUnnamedAppsReq) (*ListLatestTmplBoundUnnamedAppsResp, error)
 	CreateTemplateVariable(context.Context, *CreateTemplateVariableReq) (*CreateTemplateVariableResp, error)
 	DeleteTemplateVariable(context.Context, *DeleteTemplateVariableReq) (*DeleteTemplateVariableResp, error)
+	BatchDeleteTemplateVariable(context.Context, *BatchDeleteBizResourcesReq) (*BatchDeleteResp, error)
 	UpdateTemplateVariable(context.Context, *UpdateTemplateVariableReq) (*UpdateTemplateVariableResp, error)
 	ListTemplateVariables(context.Context, *ListTemplateVariablesReq) (*ListTemplateVariablesResp, error)
 	ImportTemplateVariables(context.Context, *ImportTemplateVariablesReq) (*ImportTemplateVariablesResp, error)
@@ -1927,6 +1951,9 @@ func (UnimplementedConfigServer) CreateHook(context.Context, *CreateHookReq) (*C
 }
 func (UnimplementedConfigServer) DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteHook not implemented")
+}
+func (UnimplementedConfigServer) BatchDeleteHook(context.Context, *BatchDeleteHookReq) (*BatchDeleteResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteHook not implemented")
 }
 func (UnimplementedConfigServer) ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListHooks not implemented")
@@ -2128,6 +2155,9 @@ func (UnimplementedConfigServer) CreateTemplateVariable(context.Context, *Create
 }
 func (UnimplementedConfigServer) DeleteTemplateVariable(context.Context, *DeleteTemplateVariableReq) (*DeleteTemplateVariableResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplateVariable not implemented")
+}
+func (UnimplementedConfigServer) BatchDeleteTemplateVariable(context.Context, *BatchDeleteBizResourcesReq) (*BatchDeleteResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteTemplateVariable not implemented")
 }
 func (UnimplementedConfigServer) UpdateTemplateVariable(context.Context, *UpdateTemplateVariableReq) (*UpdateTemplateVariableResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTemplateVariable not implemented")
@@ -2854,6 +2884,24 @@ func _Config_DeleteHook_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).DeleteHook(ctx, req.(*DeleteHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_BatchDeleteHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchDeleteHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchDeleteHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchDeleteHook(ctx, req.(*BatchDeleteHookReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4064,6 +4112,24 @@ func _Config_DeleteTemplateVariable_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_BatchDeleteTemplateVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteBizResourcesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchDeleteTemplateVariable(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchDeleteTemplateVariable_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchDeleteTemplateVariable(ctx, req.(*BatchDeleteBizResourcesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_UpdateTemplateVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateTemplateVariableReq)
 	if err := dec(in); err != nil {
@@ -5046,6 +5112,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_DeleteHook_Handler,
 		},
 		{
+			MethodName: "BatchDeleteHook",
+			Handler:    _Config_BatchDeleteHook_Handler,
+		},
+		{
 			MethodName: "ListHooks",
 			Handler:    _Config_ListHooks_Handler,
 		},
@@ -5312,6 +5382,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteTemplateVariable",
 			Handler:    _Config_DeleteTemplateVariable_Handler,
+		},
+		{
+			MethodName: "BatchDeleteTemplateVariable",
+			Handler:    _Config_BatchDeleteTemplateVariable_Handler,
 		},
 		{
 			MethodName: "UpdateTemplateVariable",

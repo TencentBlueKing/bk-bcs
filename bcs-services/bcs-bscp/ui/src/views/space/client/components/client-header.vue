@@ -58,14 +58,16 @@
   import { IAppItem } from '../../../../../types/app';
   import useClientStore from '../../../../store/client';
   import SearchSelector from './search-selector.vue';
+  import { storeToRefs } from 'pinia';
 
+  const clientStore = useClientStore();
+  const { searchQuery } = storeToRefs(useClientStore());
   defineProps<{
     title: string;
   }>();
 
   const emits = defineEmits(['search']);
 
-  const clientStore = useClientStore();
   const route = useRoute();
   const router = useRouter();
 
@@ -75,7 +77,7 @@
     id: 0,
   });
   const serviceList = ref<IAppItem[]>([]);
-  const heartbeatTime = ref(60);
+  const heartbeatTime = ref(searchQuery.value.last_heartbeat_time);
   const heartbeatTimeList = ref(CLIENT_HEARTBEAT_LIST);
   const selectorRef = ref();
 
