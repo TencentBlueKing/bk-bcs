@@ -206,6 +206,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
     };
   }
+  rpc BatchDeleteHook(BatchDeleteHookReq) returns (BatchDeleteHookResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/hooks/batch_delete"
+      body: "*"
+    };
+  }
   rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/hooks"
@@ -588,6 +594,12 @@ service Config {
   rpc DeleteTemplateVariable(DeleteTemplateVariableReq) returns (DeleteTemplateVariableResp) {
     option (google.api.http) = {
       delete: "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
+    };
+  }
+  rpc BatchDeleteTemplateVariable(BatchDeleteTemplateVariableReq) returns (BatchDeleteTemplateVariableResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/template_variables/batch_delete"
+      body: "*"
     };
   }
   rpc UpdateTemplateVariable(UpdateTemplateVariableReq) returns (UpdateTemplateVariableResp) {
@@ -1302,6 +1314,17 @@ message DeleteHookReq {
 }
 
 message DeleteHookResp {}
+
+message BatchDeleteHookReq {
+  uint32 biz_id = 1;
+  repeated uint32 ids = 2;
+  bool force = 3;
+}
+
+message BatchDeleteHookResp {
+  repeated uint32 successful_ids = 1;
+  repeated uint32 failed_ids = 2;
+}
 
 message ListHooksReq {
   uint32 biz_id = 1;
@@ -2166,6 +2189,16 @@ message DeleteTemplateVariableReq {
 }
 
 message DeleteTemplateVariableResp {}
+
+message BatchDeleteTemplateVariableReq {
+  uint32 biz_id = 1;
+  repeated uint32 ids = 2;
+}
+
+message BatchDeleteTemplateVariableResp {
+  repeated uint32 successful_ids = 1;
+  repeated uint32 failed_ids = 2;
+}
 
 message ListTemplateVariablesReq {
   uint32 biz_id = 1;
