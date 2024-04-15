@@ -17,7 +17,7 @@ http.interceptors.response.use(
     // 2. data为object类型，{ code?, data?, message }
     const { data } = response;
 
-    if (Object.prototype.toString.call(data) === '[Object object]' && 'code' in data && data.code !== 0) {
+    if (Object.prototype.toString.call(data) === '[object Object]' && 'code' in data && data.code !== 0) {
       BkMessage({ theme: 'error', message: data.message, ellipsisLine: 3 });
       return Promise.reject(data.message);
     }
