@@ -94,7 +94,7 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbcs.DeleteHookReq) (*pbc
 }
 
 // BatchDeleteHook batch delete hook
-func (s *Service) BatchDeleteHook(ctx context.Context, req *pbcs.BatchDeleteHookReq) (*pbcs.BatchDeleteHookResp,
+func (s *Service) BatchDeleteHook(ctx context.Context, req *pbcs.BatchDeleteHookReq) (*pbcs.BatchDeleteResp,
 	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
@@ -155,7 +155,7 @@ func (s *Service) BatchDeleteHook(ctx context.Context, req *pbcs.BatchDeleteHook
 		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
 	}
 
-	return &pbcs.BatchDeleteHookResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
+	return &pbcs.BatchDeleteResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
 }
 
 // ListHooks list hooks with filter

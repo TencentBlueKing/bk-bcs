@@ -99,8 +99,8 @@ func (s *Service) DeleteTemplateVariable(ctx context.Context, req *pbcs.DeleteTe
 }
 
 // BatchDeleteTemplateVariable batch delete template variable
-func (s *Service) BatchDeleteTemplateVariable(ctx context.Context, req *pbcs.BatchDeleteTemplateVariableReq) (
-	*pbcs.BatchDeleteTemplateVariableResp, error) {
+func (s *Service) BatchDeleteTemplateVariable(ctx context.Context, req *pbcs.BatchDeleteBizResourcesReq) (
+	*pbcs.BatchDeleteResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
@@ -161,7 +161,7 @@ func (s *Service) BatchDeleteTemplateVariable(ctx context.Context, req *pbcs.Bat
 		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
 	}
 
-	return &pbcs.BatchDeleteTemplateVariableResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
+	return &pbcs.BatchDeleteResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
 }
 
 // UpdateTemplateVariable update a template variable
