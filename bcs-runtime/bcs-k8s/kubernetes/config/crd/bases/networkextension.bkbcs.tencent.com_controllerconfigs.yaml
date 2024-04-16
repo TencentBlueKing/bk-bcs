@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.0
   creationTimestamp: null
-  name: servicemonitors.monitor.bkbcs.tencent.com
+  name: controllerconfigs.networkextension.bkbcs.tencent.com
 spec:
-  group: monitor.bkbcs.tencent.com
+  group: networkextension.bkbcs.tencent.com
   names:
-    kind: ServiceMonitor
-    listKind: ServiceMonitorList
-    plural: servicemonitors
-    singular: servicemonitor
+    kind: ControllerConfig
+    listKind: ControllerConfigList
+    plural: controllerconfigs
+    singular: controllerconfig
   scope: Namespaced
   versions:
   - name: v1
     schema:
       openAPIV3Schema:
-        description: ServiceMonitor is the Schema for the servicemonitors API
+        description: ControllerConfig is the Schema for the controllerconfigs API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,41 +34,24 @@ spec:
           metadata:
             type: object
           spec:
-            description: ServiceMonitorSpec defines the desired state of ServiceMonitor
+            description: ControllerConfigSpec defines the desired state of ControllerConfig
             properties:
-              endpoints:
-                items:
-                  description: Endpoint xxx
-                  properties:
-                    interval:
-                      type: string
-                    params:
-                      additionalProperties:
-                        items:
-                          type: string
-                        type: array
-                      type: object
-                    path:
-                      type: string
-                    port:
-                      type: string
-                  type: object
-                type: array
-              selector:
-                description: LabelSelector xxx
-                properties:
-                  matchLabels:
-                    additionalProperties:
-                      type: string
-                    type: object
+              secret:
+                additionalProperties:
+                  format: byte
+                  type: string
+                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                  Important: Run "make" to regenerate code after modifying this file'
                 type: object
             type: object
           status:
-            description: ServiceMonitorStatus defines the observed state of ServiceMonitor
+            description: ControllerConfigStatus defines the observed state of ControllerConfig
             type: object
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""
