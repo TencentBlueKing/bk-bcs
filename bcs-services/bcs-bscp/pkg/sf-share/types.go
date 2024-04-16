@@ -151,13 +151,13 @@ type SideAppMeta struct {
 	// CursorID 事件ID
 	CursorID string `json:"cursorID"`
 	// ReleaseChangeStatus 变更状态
-	ReleaseChangeStatus  Status    `json:"releaseChangeStatus"`
-	FailedReason         string    `json:"failedReason"`
-	SpecificFailedReason string    `json:"specificFailedReason"`
-	FailedDetailReason   string    `json:"failedDetailReason"`
-	StartTime            time.Time `json:"startTime"`
-	EndTime              time.Time `json:"endTime"`
-	TotalSeconds         float64   `json:"totalSeconds"`
+	ReleaseChangeStatus  Status               `json:"releaseChangeStatus"`
+	FailedReason         FailedReason         `json:"failedReason"`
+	SpecificFailedReason SpecificFailedReason `json:"specificFailedReason"`
+	FailedDetailReason   string               `json:"failedDetailReason"`
+	StartTime            time.Time            `json:"startTime"`
+	EndTime              time.Time            `json:"endTime"`
+	TotalSeconds         float64              `json:"totalSeconds"`
 }
 
 // Validate the sidecar's app meta is valid or not.

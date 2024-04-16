@@ -59,9 +59,9 @@ func (v *VersionChangePayload) PbClientMetric() (*pbclient.Client, error) {
 			CurrentReleaseId:          currentReleaseId,
 			TargetReleaseId:           v.Application.TargetReleaseID,
 			ReleaseChangeStatus:       v.Application.ReleaseChangeStatus.String(),
-			ReleaseChangeFailedReason: v.Application.FailedReason,
+			ReleaseChangeFailedReason: v.Application.FailedReason.String(),
 			FailedDetailReason:        v.Application.FailedDetailReason,
-			SpecificFailedReason:      v.Application.SpecificFailedReason,
+			SpecificFailedReason:      v.Application.SpecificFailedReason.String(),
 		},
 		Attachment: &pbclient.ClientAttachment{
 			Uid:   v.Application.Uid,
@@ -90,9 +90,9 @@ func (v *VersionChangePayload) PbClientEventMetric() (*pbce.ClientEvent, error) 
 			DownloadFileSize:          float64(v.Application.DownloadFileSize),
 			DownloadFileNum:           uint32(v.Application.DownloadFileNum),
 			ReleaseChangeStatus:       v.Application.ReleaseChangeStatus.String(),
-			ReleaseChangeFailedReason: v.Application.FailedReason,
+			ReleaseChangeFailedReason: v.Application.FailedReason.String(),
 			FailedDetailReason:        v.Application.FailedDetailReason,
-			SpecificFailedReason:      v.Application.SpecificFailedReason,
+			SpecificFailedReason:      v.Application.SpecificFailedReason.String(),
 		},
 		Attachment: &pbce.ClientEventAttachment{
 			Uid:        v.Application.Uid,
