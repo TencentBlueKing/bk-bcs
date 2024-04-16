@@ -55,7 +55,6 @@ func TestNewAlertServer(t *testing.T) {
 	err := client.SendAlarmInfoToAlertServer(data, 10*time.Second)
 	if err != nil {
 		t.Fatal(err)
-		os.Exit(1)
 	}
 
 	t.Log("call SendAlarmInfoToAlertServer successful")
