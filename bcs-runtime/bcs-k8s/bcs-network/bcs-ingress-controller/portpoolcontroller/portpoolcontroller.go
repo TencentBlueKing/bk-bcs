@@ -170,7 +170,7 @@ func (ppr *PortPoolReconciler) initPortPoolCache() error {
 						itemStatus.Protocol = protocol
 					}
 				}
-				if err := ppr.poolCache.AddPortPoolItem(poolKey, itemStatus); err != nil {
+				if err := ppr.poolCache.AddPortPoolItem(poolKey, pool.GetAllocatePolicy(), itemStatus); err != nil {
 					blog.Warnf("failed to add port pool %s item %v to cache, err %s",
 						poolKey, itemStatus, err.Error())
 				} else {
