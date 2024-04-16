@@ -7,6 +7,7 @@
     <bcs-divider direction="vertical" class="absolute right-[30px]"></bcs-divider>
     <span
       class="absolute right-0 h-[32px] w-[40px] flex items-center justify-center"
+      v-bk-tooltips="$t('generic.button.refresh')"
       @click.stop="refresh">
       <i class="bcs-icon bcs-icon-reset !text-[12px] text-[#979BA5]"></i>
     </span>

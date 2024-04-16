@@ -12,10 +12,10 @@
             operator: user.username
           }
         }"
-        @click="handleShowCreateDialog">{{$t('azureCloud.button.create')}}</bk-button>
+        @click="handleShowCreateDialog">{{$t('huaweiCloud.button.create')}}</bk-button>
       <bk-input
         class="w-[400px]"
-        :placeholder="$t('azureCloud.placeholder.search')"
+        :placeholder="$t('huaweiCloud.placeholder.search')"
         right-icon="bk-icon icon-search"
         clearable
         v-model="searchValue">
@@ -43,27 +43,12 @@
           {{ row.account.desc || '--' }}
         </template>
       </bcs-table-column>
-      <bcs-table-column label="SubscriptionID" show-overflow-tooltip>
+      <bcs-table-column label="SecretID" show-overflow-tooltip>
         <template #default="{ row }">
-          {{ row.account.account.subscriptionID }}
+          {{ row.account.account.secretID }}
         </template>
       </bcs-table-column>
-      <bcs-table-column label="TenantID">
-        <template #default="{ row }">
-          {{ row.account.account.tenantID }}
-        </template>
-      </bcs-table-column>
-      <bcs-table-column label="ClientID" show-overflow-tooltip>
-        <template #default="{ row }">
-          {{ row.account.account.clientID }}
-        </template>
-      </bcs-table-column>
-      <bcs-table-column label="ClientSecret">
-        <template #default="{ row }">
-          {{ row.account.account.clientSecret }}
-        </template>
-      </bcs-table-column>
-      <bcs-table-column :label="$t('azureCloud.label.cluster')" show-overflow-tooltip>
+      <bcs-table-column :label="$t('huaweiCloud.label.cluster')" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.clusters.join(',') || '--' }}
         </template>
@@ -102,25 +87,19 @@
       :mask-close="false"
       header-position="left"
       width="600"
-      :title="$t('azureCloud.label.create')">
-      <bk-form :label-width="130" :model="account" :rules="formRules" ref="formRef">
+      :title="$t('huaweiCloud.label.create')">
+      <bk-form :label-width="100" :model="account" :rules="formRules" ref="formRef">
         <bk-form-item :label="$t('generic.label.name')" property="accountName" error-display-type="normal" required>
           <bk-input :maxlength="64" v-model="account.accountName"></bk-input>
         </bk-form-item>
         <bk-form-item :label="$t('cluster.create.label.desc')">
           <bk-input :maxlength="256" type="textarea" v-model="account.desc"></bk-input>
         </bk-form-item>
-        <bk-form-item label="SubscriptionID" property="account.subscriptionID" error-display-type="normal" required>
-          <bk-input :maxlength="64" v-model="account.account.subscriptionID"></bk-input>
+        <bk-form-item label="SecretID" property="account.secretID" error-display-type="normal" required>
+          <bk-input :maxlength="64" v-model="account.account.secretID"></bk-input>
         </bk-form-item>
-        <bk-form-item label="TenantID" property="account.tenantID" error-display-type="normal" required>
-          <bk-input :maxlength="64" v-model="account.account.tenantID"></bk-input>
-        </bk-form-item>
-        <bk-form-item label="ClientID" property="account.clientID" error-display-type="normal" required>
-          <bk-input :maxlength="64" v-model="account.account.clientID"></bk-input>
-        </bk-form-item>
-        <bk-form-item label="ClientSecret" property="account.clientSecret" error-display-type="normal" required>
-          <bk-input :maxlength="64" v-model="account.account.clientSecret"></bk-input>
+        <bk-form-item label="SecretKey" property="account.secretKey" error-display-type="normal" required>
+          <bk-input :maxlength="64" v-model="account.account.secretKey"></bk-input>
         </bk-form-item>
       </bk-form>
       <template #footer>
@@ -147,7 +126,8 @@
             theme="primary"
             :loading="createLoading"
             :disabled="!isValidate"
-            @click="handleCreateAccount">
+            @click="handleCreateAccount"
+            ext-cls="ml-[10px]">
             {{ $t('generic.button.confirm') }}
           </bk-button>
           <bk-button @click="showDialog = false">{{ $t('generic.button.cancel') }}</bk-button>
@@ -159,8 +139,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 
+import { cloudAccounts, createCloudAccounts, deleteCloudAccounts } from '@/api/base';
 import $bkMessage from '@/common/bkmagic';
-import { NAME_REGEX, SECRET_REGEX } from '@/common/constant';
+import { NAME_REGEX } from '@/common/constant';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import usePage from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';
@@ -168,7 +149,7 @@ import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
 import useCloud from '@/views/cluster-manage/use-cloud';
 
-const cloudID = 'azureCloud';
+const cloudID = 'huaweiCloud';
 const curProject = computed(() => $store.state.curProject);
 const user = computed(() => $store.state.user);
 
@@ -181,10 +162,8 @@ const account = ref({
   accountName: '',
   desc: '',
   account: {
-    subscriptionID: '',
-    tenantID: '',
-    clientID: '',
-    clientSecret: '',
+    secretID: '',
+    secretKey: '',
   },
   enable: true,
   creator: user.value.username,
@@ -197,10 +176,8 @@ watch(showDialog, () => {
       accountName: '',
       desc: '',
       account: {
-        subscriptionID: '',
-        tenantID: '',
-        clientID: '',
-        clientSecret: '',
+        secretID: '',
+        secretKey: '',
       },
       enable: true,
       creator: user.value.username,
@@ -216,84 +193,54 @@ const formRules = ref({
       trigger: 'blur',
     },
     {
-      message: $i18n.t('azureCloud.tips.nameRegex'),
+      message: $i18n.t('huaweiCloud.tips.nameRegex'),
       trigger: 'blur',
       validator(val) {
         return new RegExp(NAME_REGEX, 'g').test(val);
       },
     },
   ],
-  'account.subscriptionID': [
+  'account.secretID': [
     {
       required: true,
       message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
     {
-      message: $i18n.t('azureCloud.tips.nameRegex'),
+      message: $i18n.t('huaweiCloud.tips.nameRegex'),
       trigger: 'blur',
       validator(val) {
         return new RegExp(NAME_REGEX, 'g').test(val);
       },
     },
   ],
-  'account.tenantID': [
+  'account.secretKey': [
     {
       required: true,
       message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
     {
-      message: $i18n.t('azureCloud.tips.nameRegex'),
+      message: $i18n.t('huaweiCloud.tips.nameRegex'),
       trigger: 'blur',
       validator(val) {
         return new RegExp(NAME_REGEX, 'g').test(val);
-      },
-    },
-  ],
-  'account.clientID': [
-    {
-      required: true,
-      message: $i18n.t('generic.validate.required'),
-      trigger: 'blur',
-    },
-    {
-      message: $i18n.t('azureCloud.tips.nameRegex'),
-      trigger: 'blur',
-      validator(val) {
-        return new RegExp(NAME_REGEX, 'g').test(val);
-      },
-    },
-  ],
-
-  'account.clientSecret': [
-    {
-      required: true,
-      message: $i18n.t('generic.validate.required'),
-      trigger: 'blur',
-    },
-    {
-      message: $i18n.t('azureCloud.tips.secretRegex'),
-      trigger: 'blur',
-      validator(val) {
-        return new RegExp(SECRET_REGEX, 'g').test(val);
       },
     },
   ],
 });
 const webAnnotations = ref({ perms: {} });
-const keys = ref(['account.accountName', 'account.account.subscriptionID', 'account.account.tenantID',
-  'account.account.clientID', 'clusters']); // 模糊搜索字段
+const keys = ref(['account.accountName', 'account.account.secretKey', 'account.account.secretID', 'clusters']); // 模糊搜索字段
 const { tableDataMatchSearch, searchValue } = useTableSearch(data, keys);
 const { pageChange, pageSizeChange, curPageData, pagination } = usePage(tableDataMatchSearch);
 
 const handleGetCloud = async () => {
   loading.value = true;
-  const res = await $store.dispatch('clustermanager/cloudAccounts', {
+  const res = await cloudAccounts({
     $cloudId: cloudID,
     projectID: curProject.value.project_id,
     operator: user.value.username,
-  });
+  }, { needRes: true }).catch(() => []);
   data.value = res.data;
   webAnnotations.value = res.web_annotations || { perms: {} };
   loading.value = false;
@@ -303,14 +250,15 @@ const handleDeleteAccount = (row) => {
     type: 'warning',
     clsName: 'custom-info-confirm',
     subTitle: row.account.accountID,
-    title: $i18n.t('azureCloud.button.delete'),
+    title: $i18n.t('huaweiCloud.button.delete'),
     defaultInfo: true,
     confirmFn: async () => {
       loading.value = true;
-      const result = await $store.dispatch('clustermanager/deleteCloudAccounts', {
+      const result = await deleteCloudAccounts({
         $cloudId: cloudID,
         $accountID: row.account.accountID,
-      });
+      }).then(() => true)
+        .catch(() => false);
       if (result) {
         $bkMessage({
           theme: 'success',
@@ -349,10 +297,11 @@ const handleCreateAccount = async () => {
   if (!valid) return;
 
   createLoading.value = true;
-  const result = await $store.dispatch('clustermanager/createCloudAccounts', {
+  const result = await createCloudAccounts({
     $cloudId: cloudID,
     ...account.value,
-  });
+  }).then(() => true)
+    .catch(() => false);
   createLoading.value = false;
   if (!result) return;
 

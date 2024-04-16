@@ -78,6 +78,7 @@ import $i18n from '@/i18n/i18n-setup';
 import amazonLogo from '@/images/amazon.png';
 import azureLogo from '@/images/azure.png';
 import googleLogo from '@/images/google.png';
+import huaweiLogo from '@/images/huawei.png';
 import $router from '@/router';
 
 interface ICard {
@@ -140,6 +141,13 @@ export default defineComponent({
             type: 'azureCloud',
             disabled: true,
           },
+          {
+            icon: huaweiLogo,
+            title: $i18n.t('publicCloud.huawei.title'),
+            desc: $i18n.t('publicCloud.huawei.desc'),
+            type: 'azureCloud',
+            disabled: true,
+          },
         ],
       },
       {
@@ -194,6 +202,13 @@ export default defineComponent({
             title: $i18n.t('publicCloud.azure.title'),
             desc: $i18n.t('publicCloud.azure.desc'),
             type: 'azureCloud',
+            disabled: _INTERNAL_.value,
+          },
+          {
+            icon: huaweiLogo,
+            title: $i18n.t('publicCloud.huawei.title'),
+            desc: $i18n.t('publicCloud.huawei.desc'),
+            type: 'huaweiCloud',
             disabled: _INTERNAL_.value,
           },
         ],
@@ -275,6 +290,11 @@ export default defineComponent({
         case 'azureCloud':
           $router.push({
             name: 'importAzureCluster',
+          });
+          break;
+        case 'huaweiCloud':
+          $router.push({
+            name: 'importHuaweiCluster',
           });
           break;
       }

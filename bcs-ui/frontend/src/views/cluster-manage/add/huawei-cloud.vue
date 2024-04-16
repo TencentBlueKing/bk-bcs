@@ -1,17 +1,17 @@
 <template>
   <div class="flex items-center justify-center py-[24px]">
     <div class="shadow bg-[#fff] px-[24px] py-[16px] pb-[32px] min-w-[800px]">
-      <div class="text-[14px] font-bold mb-[24px]">{{ $t('importAzureCloud.title') }}</div>
+      <div class="text-[14px] font-bold mb-[24px]">{{ $t('importHuaweiCloud.title') }}</div>
       <bk-form class="max-w-[640px]" :model="formData" :rules="formRules" ref="formRef">
         <bk-form-item
-          :label="$t('importAzureCloud.label.clusterName')"
+          :label="$t('importHuaweiCloud.label.clusterName')"
           property="clusterName"
           error-display-type="normal"
           required>
           <bcs-input v-model="formData.clusterName"></bcs-input>
         </bk-form-item>
         <bk-form-item
-          :label="$t('importAzureCloud.label.token')"
+          :label="$t('importHuaweiCloud.label.token')"
           property="accountID" error-display-type="normal"
           required>
           <div class="flex">
@@ -27,6 +27,7 @@
                 :id="item.account.accountID"
                 :name="item.account.accountName">
               </bcs-option>
+              <!-- 换为SelectExtension组件 -->
               <template slot="extension">
                 <SelectExtension
                   :link-text="$t('cluster.create.button.createCloudToken')"
@@ -37,23 +38,7 @@
           </div>
         </bk-form-item>
         <bk-form-item
-          :label="$t('importAzureCloud.label.resourceGroups')" property="resourceGroupName"
-          error-display-type="normal"
-          required>
-          <bcs-select
-            :loading="resourceLoading"
-            v-model="formData.resourceGroupName"
-            searchable>
-            <bcs-option
-              v-for="data in resourceGroups"
-              :key="data.name"
-              :id="data.name"
-              :name="data.name">
-            </bcs-option>
-          </bcs-select>
-        </bk-form-item>
-        <bk-form-item
-          :label="$t('importAzureCloud.label.region')"
+          :label="$t('importHuaweiCloud.label.region')"
           property="region"
           error-display-type="normal"
           required>
@@ -61,18 +46,16 @@
             :loading="regionLoading"
             v-model="formData.region"
             searchable>
-            <bcs-option-group v-for="item in regionList" :key="item.id" :name="item.name">
-              <bcs-option
-                v-for="data in item.children"
-                :key="data.region"
-                :id="data.region"
-                :name="data.regionName">
-              </bcs-option>
-            </bcs-option-group>
+            <bcs-option
+              v-for="data in regionList"
+              :key="data.region"
+              :id="data.region"
+              :name="data.regionName">
+            </bcs-option>
           </bcs-select>
         </bk-form-item>
         <bk-form-item
-          :label="$t('importAzureCloud.label.clusterID')"
+          :label="$t('importHuaweiCloud.label.clusterID')"
           property="cloudID"
           error-display-type="normal"
           required>
@@ -81,14 +64,14 @@
               <bcs-option
                 v-for="data in item.children"
                 :key="data.clusterID"
-                :id="data.clusterName"
+                :id="data.clusterID"
                 :name="data.clusterName">
               </bcs-option>
             </bcs-option-group>
           </bcs-select>
         </bk-form-item>
         <bk-form-item
-          :label="$t('importAzureCloud.label.nodemanArea')"
+          :label="$t('importHuaweiCloud.label.nodemanArea')"
           property="bkCloudID"
           error-display-type="normal"
           required>
@@ -105,7 +88,7 @@
             </bk-option>
           </bk-select>
         </bk-form-item>
-        <bk-form-item :label="$t('importAzureCloud.label.desc')" property="description" error-display-type="normal">
+        <bk-form-item :label="$t('importHuaweiCloud.label.desc')" property="description" error-display-type="normal">
           <bcs-input :maxlength="100" type="textarea" v-model="formData.description"></bcs-input>
         </bk-form-item>
         <bk-form-item>
@@ -124,7 +107,7 @@
               :loading="testing"
               :outline="isValidate"
               @click="testClusterImport">
-              {{ $t('importAzureCloud.button.test') }}
+              {{ $t('importHuaweiCloud.button.test') }}
             </bk-button>
           </bcs-badge>
           <bk-button
@@ -133,7 +116,7 @@
             theme="primary"
             class="min-w-[88px] ml-[10px]"
             @click="handleImport">
-            {{ $t('importAzureCloud.button.import') }}
+            {{ $t('importHuaweiCloud.button.import') }}
           </bk-button>
           <bk-button class="ml-[10px]" @click="handleCancel">{{$t('generic.button.cancel')}}</bk-button>
         </bk-form-item>
@@ -144,8 +127,10 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, ref, watch } from 'vue';
 
+import { cloudClusterList, cloudRegionByAccount, importCluster } from '@/api/base';
 import { nodemanCloud } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
+import { useConfig } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
@@ -160,11 +145,11 @@ interface IGroup<T = any> {
   children: Array<T>
 }
 const { cloudAccounts, clusterConnect } = useCloud();
+
 const formRef = ref<any>();
 const formData = ref({
   clusterName: '',
   description: '',
-  resourceGroupName: '',
   region: '',
   cloudID: '',
   bkCloudID: '',
@@ -185,13 +170,6 @@ const formRules = ref({
       trigger: 'blur',
     },
   ],
-  resourceGroupName: [
-    {
-      required: true,
-      message: $i18n.t('generic.validate.required'),
-      trigger: 'blur',
-    },
-  ],
   cloudID: [
     {
       required: true,
@@ -199,6 +177,7 @@ const formRules = ref({
       trigger: 'blur',
     },
   ],
+  // 管控区域
   bkCloudID: [
     {
       required: true,
@@ -234,88 +213,42 @@ const accountLoading = ref(false);
 const accountList = ref<ICloudAccount[]>([]);
 const handleGetAccountsList = async () => {
   accountLoading.value  = true;
-  const { data } = await cloudAccounts('azureCloud');
+  const { data } = await cloudAccounts('huaweiCloud');
   accountList.value = data;
   accountLoading.value = false;
 };
 const CloudTokenLink = computed(() => {
-  const { href } = $router.resolve({ name: 'azureCloud' });
+  const { href } = $router.resolve({ name: 'huaweiCloud' });
   return href;
 });
-// 根据云凭证获取资源组
-watch(() => formData.value.accountID, () => {
-  getResourceGroups();
-});
-const resourceGroups = ref<Array<{
-  name: string
-  region: string
-  provisioningState: string
-}>>([]);
-const resourceLoading = ref(false);
-// 获取资源组
-const getResourceGroups = async () => {
-  if (!formData.value.accountID) return;
-  resourceLoading.value = true;
-  const data = await $store.dispatch('clustermanager/cloudResourceGroupByAccount', {
-    $cloudId: 'azureCloud',
-    accountID: formData.value.accountID,
-  });
-  resourceGroups.value = data;
-  resourceLoading.value = false;
-};
-// 区域列表
+// 根据云凭证获取区域列表
 watch(() => formData.value.accountID, () => {
   getRegionList();
 });
-const locationMap = {
-  asia: $i18n.t('regions.asia'),
-  australia: $i18n.t('regions.australia'),
-  europe: $i18n.t('regions.europe'),
-  northamerica: $i18n.t('regions.northamerica'),
-  southamerica: $i18n.t('regions.southamerica'),
-  us: $i18n.t('regions.us'),
-};
+// 区域列表
 const regionList = ref<Array<IGroup<{
   region: string
   regionName: string
 }>>>([]);
+// 区域下拉加载loading
 const regionLoading = ref(false);
+// 获取区域列表
 const getRegionList = async () => {
   if (!formData.value.accountID) return;
   regionLoading.value = true;
-  const data = await $store.dispatch('clustermanager/cloudRegionByAccount', {
-    $cloudId: 'azureCloud',
+  const params = {
+    $cloudId: 'huaweiCloud',
     accountID: formData.value.accountID,
-  });
-  regionList.value = data.reduce((pre, item) => {
-    const location = item.region.split('-')?.[0];
-    if (location && locationMap[location]) {
-      const group = pre.find(item => item.id === location);
-      if (group) {
-        group.children.push(item);
-      } else {
-        pre.push({
-          id: location,
-          name: locationMap[location],
-          children: [item],
-        });
-      }
-    } else {
-      const group = pre.find(item => item.id === 'other');
-      group.children.push(item);
-    }
-    return pre;
-  }, [{
-    id: 'other',
-    name: $i18n.t('regions.other'),
-    children: [],
-  }]);
+  };
+  // store将废弃，改为直接使用base的api
+  const data = await cloudRegionByAccount(params).catch(() => []);
+  // 根据区域地名拼音排序
+  regionList.value = data.sort((cur, next) => next.regionName.localeCompare(cur.regionName, 'zh'));
   regionLoading.value = false;
 };
 // 集群列表
 watch(() => [
   formData.value.accountID,
-  formData.value.resourceGroupName,
   formData.value.region,
 ], () => {
   handleGetClusterList();
@@ -330,19 +263,21 @@ const currentCluster = computed(() => {
   return list.find(item => item.clusterID === formData.value.cloudID);
 });
 const levelMap = {
-  zones: $i18n.t('importAzureCloud.clusterRegion.zones'),
-  regions: $i18n.t('importAzureCloud.clusterRegion.regions'),
-  other: $i18n.t('importAzureCloud.clusterRegion.other'),
+  zones: $i18n.t('importHuaweiCloud.clusterRegion.zones'),
+  regions: $i18n.t('importHuaweiCloud.clusterRegion.regions'),
+  other: $i18n.t('importHuaweiCloud.clusterRegion.other'),
 };
 const handleGetClusterList = async () => {
-  if (!formData.value.region || !formData.value.accountID || !formData.value.resourceGroupName) return;
+  if (!formData.value.region || !formData.value.accountID) return;
   clusterLoading.value = true;
-  const data = await $store.dispatch('clustermanager/cloudClusterList', {
+  const params = {
     region: formData.value.region,
-    $cloudId: 'azureCloud',
+    $cloudId: 'huaweiCloud',
     accountID: formData.value.accountID,
-    resourceGroupName: formData.value.resourceGroupName,
-  });
+  };
+  // store将废弃，改为直接使用base的api
+  const data = await cloudClusterList(params).catch(() => []);
+  // 设置云集群下拉列表
   clusterList.value = data.reduce((pre, item) => {
     const group = pre.find(data => data.id === item.clusterLevel);
     if (group) {
@@ -373,21 +308,19 @@ const isValidate = ref(false);
 const validateErrMsg = ref('');
 const testing = ref(false);
 const testClusterImport = async () => {
-  if (!formData.value.accountID || !currentCluster.value || !formData.value.resourceGroupName) return;
+  if (!formData.value.accountID || !currentCluster.value) return;
   testing.value = true;
   validateErrMsg.value = await clusterConnect({
-    $cloudId: 'azureCloud',
+    $cloudId: 'huaweiCloud',
     $clusterID: currentCluster.value.clusterID,
     isExtranet: true,
     accountID: formData.value.accountID,
-    resourceGroupName: formData.value.resourceGroupName,
-    // resourceGroups: currentCluster.value.resourceGroups,
     region: currentCluster.value.location,
   });
   isValidate.value = !validateErrMsg.value;
   testing.value = false;
 };
-
+const { _INTERNAL_ } = useConfig();
 // 集群导入
 const curProject = computed(() => $store.state.curProject);
 const user = computed(() => $store.state.user);
@@ -400,28 +333,30 @@ const handleImport = async () => {
   const params = {
     clusterName: formData.value.clusterName,
     description: formData.value.description,
-    provider: 'azureCloud',
-    resourceGroupID: currentCluster.value.resourceGroups,
-    resourceGroupName: formData.value.resourceGroupName,
-    region: currentCluster.value.location,
     projectID: curProject.value.projectID,
     businessID: String(curProject.value.businessID),
+    provider: 'huaweiCloud',
+    region: currentCluster.value.location,
     environment: 'prod',
     engineType: 'k8s',
     isExclusive: true,
+    clusterType: currentCluster.value.clusterType,
+    manageType: 'INDEPENDENT_CLUSTER',
     creator: user.value.username,
     cloudMode: {
       cloudID: currentCluster.value.clusterID,
-      resourceGroup: formData.value.resourceGroupName,
+      kubeConfig: '',
+      inter: _INTERNAL_.value,
     },
-    clusterCategory: 'importer',
     networkType: 'overlay',
     area: {
       bkCloudID: formData.value.bkCloudID,
     },
     accountID: formData.value.accountID,
   };
-  const result = await $store.dispatch('clustermanager/importCluster', params);
+  // store将废弃，改为直接使用base的api
+  const result = await importCluster(params).then(() => true)
+    .catch(() => false);
   importLoading.value = false;
   if (result) {
     $bkMessage({

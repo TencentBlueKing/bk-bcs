@@ -4,6 +4,7 @@
     <GcpMaster :cluster-id="clusterId" v-else-if="provider === 'gcpCloud'" />
     <BluekingMaster :cluster-id="clusterId" v-else-if="provider === 'bluekingCloud'" />
     <AzureMaster :cluster-id="clusterId" v-else-if="provider === 'azureCloud'" />
+    <HuaweiMaster :cluster-id="clusterId" v-else-if="provider === 'huaweiCloud'" />
   </div>
 </template>
 <script lang="ts">
@@ -12,6 +13,7 @@ import { computed, defineComponent } from 'vue';
 import AzureMaster from './master-azure.vue';
 import BluekingMaster from './master-blueking.vue';
 import GcpMaster from './master-gcp.vue';
+import HuaweiMaster from './master-huawei.vue';
 import TkeMaster from './master-tke.vue';
 
 import { useCluster } from '@/composables/use-app';;
@@ -23,6 +25,7 @@ export default defineComponent({
     GcpMaster,
     BluekingMaster,
     AzureMaster,
+    HuaweiMaster,
   },
   props: {
     clusterId: {
