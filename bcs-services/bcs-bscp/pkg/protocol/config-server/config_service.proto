@@ -881,6 +881,12 @@ service Config {
       body: "*"
     };
   };
+  rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/labels_and_annotations"
+      body: "*"
+    };
+  };
 }
 
 message UpdateCredentialScopeReq {
@@ -2598,3 +2604,8 @@ message DeleteClientQueryReq {
 }
 
 message DeleteClientQueryResp {}
+
+message ListClientLabelAndAnnotationReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+}
