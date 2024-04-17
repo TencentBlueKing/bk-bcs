@@ -1,7 +1,7 @@
 import axios from 'axios';
 import BkMessage from 'bkui-vue/lib/message';
+import { showLoginModal } from '@blueking/login-modal';
 import pinia from '../store/index';
-import useUserStore from '../store/user';
 import useGlobalStore from '../store/global';
 
 const http = axios.create({
@@ -26,17 +26,12 @@ http.interceptors.response.use(
   (error) => {
     const { response } = error;
     if (response) {
-      const userStore = useUserStore(pinia);
       const globalStore = useGlobalStore(pinia);
       let message = response.statusText;
 
       if (response.status === 401) {
-        userStore.$patch((state) => {
-          state.loginUrl = `${
-            response.data.error.data.login_plain_url + window.location.origin
-          }/web/login_success.html`;
-          state.showLoginModal = true;
-        });
+        const loginUrl = `${response.data.error.data.login_plain_url + window.location.origin}/web/login_success.html`;
+        showLoginModal({ loginUrl });
         return;
       }
       if (response.status === 403) {
