@@ -174,6 +174,7 @@ const (
 	Config_ClientLabelStatistics_FullMethodName             = "/pbcs.Config/ClientLabelStatistics"
 	Config_ClientAnnotationStatistics_FullMethodName        = "/pbcs.Config/ClientAnnotationStatistics"
 	Config_ClientVersionStatistics_FullMethodName           = "/pbcs.Config/ClientVersionStatistics"
+	Config_ListClientLabelAndAnnotation_FullMethodName      = "/pbcs.Config/ListClientLabelAndAnnotation"
 )
 
 // ConfigClient is the client API for Config service.
@@ -252,12 +253,12 @@ type ConfigClient interface {
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete :
-	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete :
+	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -342,6 +343,7 @@ type ConfigClient interface {
 	ClientLabelStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientAnnotationStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ListClientLabelAndAnnotation(ctx context.Context, in *ListClientLabelAndAnnotationReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 }
 
 type configClient struct {
@@ -1684,6 +1686,15 @@ func (c *configClient) ClientVersionStatistics(ctx context.Context, in *client.C
 	return out, nil
 }
 
+func (c *configClient) ListClientLabelAndAnnotation(ctx context.Context, in *ListClientLabelAndAnnotationReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Config_ListClientLabelAndAnnotation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConfigServer is the server API for Config service.
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
@@ -1760,12 +1771,12 @@ type ConfigServer interface {
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete :
-	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete :
+	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1850,6 +1861,7 @@ type ConfigServer interface {
 	ClientLabelStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ClientAnnotationStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ListClientLabelAndAnnotation(context.Context, *ListClientLabelAndAnnotationReq) (*structpb.Struct, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -2299,6 +2311,9 @@ func (UnimplementedConfigServer) ClientAnnotationStatistics(context.Context, *cl
 }
 func (UnimplementedConfigServer) ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientVersionStatistics not implemented")
+}
+func (UnimplementedConfigServer) ListClientLabelAndAnnotation(context.Context, *ListClientLabelAndAnnotationReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClientLabelAndAnnotation not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -4976,6 +4991,24 @@ func _Config_ClientVersionStatistics_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ListClientLabelAndAnnotation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClientLabelAndAnnotationReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListClientLabelAndAnnotation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListClientLabelAndAnnotation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListClientLabelAndAnnotation(ctx, req.(*ListClientLabelAndAnnotationReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -5574,6 +5607,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ClientVersionStatistics",
 			Handler:    _Config_ClientVersionStatistics_Handler,
+		},
+		{
+			MethodName: "ListClientLabelAndAnnotation",
+			Handler:    _Config_ListClientLabelAndAnnotation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

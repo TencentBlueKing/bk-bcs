@@ -243,6 +243,7 @@ service Data {
   rpc ClientLabelStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
   rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
   rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {}
 
   // used iam pull resource callback.
   rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {};
@@ -1760,4 +1761,9 @@ message DeleteClientQueryReq {
   uint32 id = 1;
   uint32 biz_id = 2;
   uint32 app_id = 3;
+}
+
+message ListClientLabelAndAnnotationReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
 }
