@@ -454,6 +454,15 @@ export const deleteKv = (bizId: string, appId: number, configId: number) =>
   http.delete(`/config/biz/${bizId}/apps/${appId}/kvs/${configId}`);
 
 /**
+ * 批量删除kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 配置项ID列表
+ */
+export const batchDeleteKv = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`config/biz/${bizId}/apps/${appId}/kvs/batch_delete`, { ids });
+
+/**
  * 获取已发布kv
  * @param bizId 业务ID
  * @param appId 应用ID
@@ -483,6 +492,16 @@ export const getReleaseKvList = (bizId: string, appId: number, releaseId: number
  */
 export const undeleteKv = (bizId: string, appId: number, key: string) =>
   http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undelete`);
+
+/**
+ * 恢复修改kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const unModifyKv = (bizId: string, appId: number, key: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undo`);
 
 /**
  * 批量导入kv配置文件

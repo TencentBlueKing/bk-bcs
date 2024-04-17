@@ -188,11 +188,11 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 			return nil, err
 		}
 		// 处理 心跳时间和在线状态
-		vc.BasicData.HeartbeatTime = time.Now()
+		vc.BasicData.HeartbeatTime = time.Now().Local().UTC()
 		vc.BasicData.OnlineStatus = sfs.Online
 		payload, errE := vc.Encode()
 		if errE != nil {
-			logs.Errorf("version change message encoding failed, %s", err.Error())
+			logs.Errorf("version change message encoding failed, %s", errE.Error())
 			return nil, err
 		}
 		s.handleResourceUsageMetrics(vc.BasicData.BizID, vc.Application.App, vc.ResourceUsage)
@@ -206,7 +206,7 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		if err != nil {
 			return nil, err
 		}
-		heartbeatTime := time.Now()
+		heartbeatTime := time.Now().UTC()
 		onlineStatus := sfs.Online
 		for _, item := range hb.Applications {
 			s.handleResourceUsageMetrics(hb.BasicData.BizID, item.App, hb.ResourceUsage)

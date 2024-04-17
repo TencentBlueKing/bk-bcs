@@ -140,7 +140,7 @@ const routes = [
         meta: {
           navModule: 'client-statistics',
         },
-        component: () => import('./views/space/client/manage/index.vue'),
+        component: () => import('./views/space/client/statistics/index.vue'),
       },
       {
         path: 'client_search/:appId?',
