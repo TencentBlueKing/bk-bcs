@@ -160,9 +160,5 @@ func TransferFileResult(ctx context.Context, taskID string) (pbfs.AsyncDownloadS
 			return pbfs.AsyncDownloadStatus_FAILED, fmt.Errorf(result.ErrorMsg)
 		}
 	}
-	for _, result := range data.Result {
-		duration := time.Duration(result.Content.EndTime*int64(time.Millisecond) - result.Content.StartTime*int64(time.Millisecond))
-		logs.Infof("gse %s file %s success, cost: %s", result.Content.Type, result.Content.SourceFileName, duration.String())
-	}
 	return pbfs.AsyncDownloadStatus_SUCCESS, nil
 }
