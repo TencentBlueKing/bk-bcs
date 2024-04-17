@@ -134,6 +134,6 @@ type AsyncDownloadTask struct {
 	BizID    uint32 `json:"biz_id"`
 	AppID    uint32 `json:"app_id"`
 	TaskID   string `json:"task_id"`
-	FilePath string `json:"file_name"`
-	FileName string `json:"file_path"`
+	FilePath string `json:"file_path"`
+	FileName string `json:"file_name"`
 }
