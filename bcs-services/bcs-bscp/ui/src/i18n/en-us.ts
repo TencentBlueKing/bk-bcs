@@ -380,9 +380,12 @@ export default {
   请选择需要调整的分组: 'Please select the group that needs to be adjusted',
   '确认删除所选的 {n} 项配置项？': 'Confirm the deletion of the selected {n} configuration items?',
   '确认删除所选的 {n} 项变量？': 'Confirm the deletion of the selected {n} variable items?',
+  '确认删除所选的 {n} 项脚本？': 'Confirm the deletion of the selected {n} script items?',
   '已生成版本中存在的配置项，可以通过恢复按钮撤销删除，新增且未生成版本的配置项，将无法撤销删除，请谨慎操作。': 'Configuration items that exist in the generated version can be undone by clicking the restore button. Newly added configuration items that have not generated a version cannot be undone. Please proceed with caution.',
+  '一旦删除，该操作将无法撤销，服务配置的未命名版本中引用该脚本也将清除，请谨慎操作。': 'Once deleted, this action cannot be undone, and any references to this script in unnamed versions of the service configuration will also be cleared. Please proceed with caution.',
   批量删除配置项成功: 'Batch deletion of configuration items was successful',
   批量删除变量成功: 'Batch deletion of variable items was successful',
+  批量删除脚本成功: 'Batch deletion of script items was successful',
   撤销修改配置项成功: 'Succeeded in unmodifying the configuration item',
 
   // 分组管理

@@ -23,10 +23,13 @@
     </div>
     <div class="script-list-wrapper">
       <div class="operate-area">
-        <bk-button theme="primary" @click="showCreateScript = true">
-          <Plus class="button-icon" />
-          {{ t('新建脚本') }}
-        </bk-button>
+        <div class="btns">
+          <bk-button theme="primary" @click="showCreateScript = true">
+            <Plus class="button-icon" />
+            {{ t('新建脚本') }}
+          </bk-button>
+          <BatchDeleteBtn :bk-biz-id="spaceId" :selected-ids="selectedIds" @deleted="refreshAfterBatchDelete" />
+        </div>
         <bk-input
           v-model="searchStr"
           class="search-script-input"
@@ -43,10 +46,14 @@
         <bk-table
           :border="['outer']"
           :data="scriptsData"
+          :checked="checkedScripts"
           :remote-pagination="true"
           :pagination="pagination"
+          @selection-change="handleSelectionChange"
+          @select-all="handleSelectAll"
           @page-limit-change="handlePageLimitChange"
           @page-value-change="handlePageCurrentChange">
+          <bk-table-column type="selection" width="60"></bk-table-column>
           <bk-table-column :label="t('脚本名称')">
             <template #default="{ row }">
               <div v-if="row.hook" class="hook-name" @click="handleViewVersionClick(row.hook.id)">
@@ -136,6 +143,7 @@
   import { getScriptList, getScriptTagList, deleteScript, getScriptCiteList } from '../../../../api/script';
   import { IScriptItem, IScriptTagItem, IScriptListQuery } from '../../../../../types/script';
   import { datetimeFormat } from '../../../../utils/index';
+  import BatchDeleteBtn from './batch-delete-btn.vue';
   import CreateScript from './create-script.vue';
   import ScriptCited from './script-cited.vue';
   import TableEmpty from '../../../../components/table/table-empty.vue';
@@ -166,11 +174,17 @@
   const deleteScriptItem = ref<IScriptItem>();
   const appsLoading = ref(false);
   const appList = ref<IAppItem[]>([]);
+  const selectedIds = ref<number[]>([]);
 
   const maxTableHeight = computed(() => {
     const windowHeight = window.innerHeight;
     return windowHeight * 0.6 - 200;
   });
+
+  const checkedScripts = computed(() => {
+    return scriptsData.value.filter((item) => selectedIds.value.includes(item.hook.id));
+  });
+
   const pagination = ref({
     current: 1,
     count: 0,
@@ -220,6 +234,27 @@
     const res = await getScriptTagList(spaceId.value);
     tagsData.value = res.details;
     tagsLoading.value = false;
+  };
+
+  // 表格行选择事件
+  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IScriptItem }) => {
+    const index = selectedIds.value.findIndex((id) => id === row.hook.id);
+    if (checked) {
+      if (index === -1) {
+        selectedIds.value.push(row.hook.id);
+      }
+    } else {
+      selectedIds.value.splice(index, 1);
+    }
+  };
+
+  // 全选
+  const handleSelectAll = ({ checked }: { checked: boolean }) => {
+    if (checked) {
+      selectedIds.value = scriptsData.value.map((item) => item.hook.id);
+    } else {
+      selectedIds.value = [];
+    }
   };
 
   const handleSelectTag = (tag: string, all = false) => {
@@ -309,9 +344,18 @@
     getTags();
   };
 
-  const refreshList = () => {
+  const refreshAfterBatchDelete = () => {
+    if (selectedIds.value.length === scriptsData.value.length && pagination.value.current > 1) {
+      pagination.value.current -= 1;
+    }
+
+    selectedIds.value = [];
+    refreshList(pagination.value.current);
+  };
+
+  const refreshList = (current = 1) => {
     isSearchEmpty.value = searchStr.value !== '';
-    pagination.value.current = 1;
+    pagination.value.current = current;
     getScripts();
   };
 
@@ -416,6 +460,13 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+    .btns {
+      display: flex;
+      align-items: center;
+      :deep(.bk-button:not(:first-child)) {
+        margin-left: 8px;
+      }
+    }
     .button-icon {
       font-size: 18px;
     }
