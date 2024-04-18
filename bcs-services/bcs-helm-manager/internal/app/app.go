@@ -372,9 +372,10 @@ func (hm *HelmManager) initMicro() error { // nolint
 
 	// init micro service
 	svc := microSvc.NewService(
+		microSvc.Server(grpcSvr),
+		microSvc.Cmd(util.NewDummyMicroCmd()),
 		microSvc.Name(common.ServiceDomain),
 		microSvc.Metadata(metadata),
-		microSvc.Server(grpcSvr),
 		microSvc.Address(net.JoinHostPort(ipv4, port)),
 		microSvc.Registry(hm.microRgt),
 		microSvc.Version(version.BcsVersion),
