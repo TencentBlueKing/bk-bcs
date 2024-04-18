@@ -16,7 +16,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/metrics"
 )
