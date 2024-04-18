@@ -19,9 +19,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	mconfig "github.com/micro/go-micro/v2/config"
-	mfile "github.com/micro/go-micro/v2/config/source/file"
-	mflag "github.com/micro/go-micro/v2/config/source/flag"
+	mconfig "go-micro.dev/v4/config"
+	mfile "go-micro.dev/v4/config/source/file"
+	mflag "go-micro.dev/v4/config/source/flag"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/app"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
