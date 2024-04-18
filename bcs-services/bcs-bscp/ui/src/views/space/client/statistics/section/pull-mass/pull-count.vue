@@ -1,7 +1,7 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
     <div :class="{ fullscreen: isOpenFullScreen }">
-      <Card title="拉取数量趋势" :height="360">
+      <Card :title="$t('拉取数量趋势')" :height="360">
         <template #operation>
           <OperationBtn
             :is-open-full-screen="isOpenFullScreen"
@@ -22,7 +22,7 @@
             class="exception-wrap-item exception-part"
             type="empty"
             scene="part"
-            description="暂无数据">
+            :description="$t('暂无数据')">
             <template #type>
               <span class="bk-bscp-icon icon-bar-chart exception-icon" />
             </template>
@@ -44,6 +44,9 @@
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
   import { useRouter } from 'vue-router';
+  import { useI18n } from 'vue-i18n';
+
+  const { t } = useI18n();
 
   const router = useRouter();
 
@@ -62,15 +65,15 @@
   const selectorTimeList = [
     {
       value: 7,
-      label: '近7天',
+      label: t('近 {n} 天', { n: 7 }),
     },
     {
       value: 15,
-      label: '近15天',
+      label: t('近 {n} 天', { n: 15 }),
     },
     {
       value: 30,
-      label: '近30天',
+      label: t('近 {n} 天', { n: 30 }),
     },
   ];
   const data = ref<IPullCount>({
@@ -155,7 +158,7 @@
         },
       ],
 
-      padding: [10, 10, 30, 20],
+      padding: [10, 20, 30, 20],
       geometryOptions: [
         {
           geometry: 'column',
@@ -188,19 +191,19 @@
           originalItems.forEach((item) => {
             switch (item.data.type) {
               case 'sidecar':
-                item.name = 'SideCar 客户端';
+                item.name = `SideCar ${t('客户端')}`;
                 break;
               case 'sdk':
-                item.name = 'SDK 客户端';
+                item.name = `SDK ${t('客户端')}`;
                 break;
               case 'agent':
-                item.name = '主机插件客户端';
+                item.name = t('主机插件客户端');
                 break;
               case 'command':
                 item.name = 'command';
                 break;
               default:
-                item.name = '总量';
+                item.name = t('总量');
             }
           });
           return originalItems;

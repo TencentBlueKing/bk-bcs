@@ -1,7 +1,7 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
     <div :class="{ fullscreen: isOpenFullScreen }">
-      <Card title="拉取成功率" :height="416" :width="318">
+      <Card :title="t('拉取成功率')" :height="416" :width="318">
         <template #operation>
           <OperationBtn
             :is-open-full-screen="isOpenFullScreen"
@@ -17,7 +17,7 @@
             class="exception-wrap-item exception-part"
             type="empty"
             scene="part"
-            description="暂无数据">
+            :description="t('暂无数据')">
             <template #type>
               <span class="bk-bscp-icon icon-pie-chart exception-icon" />
             </template>
@@ -39,6 +39,9 @@
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
   import { useRouter } from 'vue-router';
+  import { useI18n } from 'vue-i18n';
+
+  const { t } = useI18n();
 
   const router = useRouter();
 
@@ -110,7 +113,7 @@
       data.value = res.change_status.map((item: any) => ({
         count: item.count,
         percent: item.percent,
-        release_change_status: item.release_change_status,
+        release_change_status: item.release_change_status === 'Success' ? t('拉取成功') : t('拉取失败'),
       }));
     } catch (error) {
       console.error(error);
@@ -125,6 +128,9 @@
       data: data.value,
       angleField: 'count',
       colorField: 'release_change_status',
+      color: ({ release_change_status }) => {
+        return release_change_status === '拉取成功' ? '#85CCA8' : '#F5876C';
+      },
       radius: 0.9,
       label: {
         type: 'inner',
@@ -148,8 +154,8 @@
         enterable: true,
         customItems: (originalItems: any[]) => {
           jumpStatus.value = originalItems[0].data.release_change_status;
-          originalItems[0].name = '客户端数量';
-          originalItems[1].name = '占比';
+          originalItems[0].name = t('客户端数量');
+          originalItems[1].name = t('占比');
           originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
           return originalItems;
         },

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <SectionTitle :title="'客户端配置拉取质量'" />
+    <SectionTitle :title="$t('客户端配置拉取质量')" />
     <PullCount :bk-biz-id="bkBizId" :app-id="appId" />
     <section class="pull-wrap">
       <PullSuccess :bk-biz-id="bkBizId" :app-id="appId" />

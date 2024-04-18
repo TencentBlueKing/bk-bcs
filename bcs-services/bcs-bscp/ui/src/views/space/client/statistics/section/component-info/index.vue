@@ -1,10 +1,10 @@
 <template>
-  <SectionTitle :title="'客户端组件信息统计'" />
+  <SectionTitle :title="t('客户端组件信息统计')" />
   <div class="content-wrap">
     <div class="left">
       <Teleport :disabled="!isOpenFullScreen" to="body">
         <div ref="containerRef" :class="{ fullscreen: isOpenFullScreen }">
-          <Card title="组件版本分布" :height="416">
+          <Card :title="t('组件版本分布')" :height="416">
             <template #operation>
               <OperationBtn
                 :is-open-full-screen="isOpenFullScreen"
@@ -21,7 +21,7 @@
                 class="exception-wrap-item exception-part"
                 type="empty"
                 scene="part"
-                description="暂无数据">
+                :description="t('暂无数据')">
                 <template #type>
                   <span class="bk-bscp-icon icon-bar-chart exception-icon" />
                 </template>
@@ -36,9 +36,9 @@
         <div class="resource-info">
           <span v-if="item.value">
             <span class="time">{{ item.key.includes('cpu') ? item.value : Math.round(item.value) }}</span>
-            <span class="unit">{{ item.key.includes('cpu') ? '核' : 'MB' }}</span>
+            <span class="unit">{{ item.key.includes('cpu') ? t('核') : 'MB' }}</span>
           </span>
-          <span v-else class="empty">暂无数据</span>
+          <span v-else class="empty">{{ t('暂无数据') }}</span>
         </div>
       </Card>
     </div>
@@ -64,6 +64,9 @@
   } from '../../../../../../../types/client';
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
+  import { useI18n } from 'vue-i18n';
+
+  const {t} = useI18n();
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -76,32 +79,32 @@
   const resourceData = ref<IInfoCard[]>([
     {
       value: 0,
-      name: '平均 CPU 资源占用',
+      name: t('平均 CPU 资源占用'),
       key: 'cpu_avg_usage',
     },
     {
       value: 0,
-      name: '平均内存资源占用',
+      name: t('平均内存资源占用'),
       key: 'memory_avg_usage',
     },
     {
       value: 0,
-      name: '最大 CPU 资源占用',
+      name: t('最大 CPU 资源占用'),
       key: 'cpu_max_usage',
     },
     {
       value: 0,
-      name: '最大内存资源占用',
+      name: t('最大内存资源占用'),
       key: 'memory_max_usage',
     },
     {
       value: 0,
-      name: '最小 CPU 资源占用',
+      name: t('最小 CPU 资源占用'),
       key: 'cpu_min_usage',
     },
     {
       value: 0,
-      name: '最小内存资源占用',
+      name: t('最小内存资源占用'),
       key: 'memory_min_usage',
     },
   ]);
@@ -113,7 +116,7 @@
   };
   const data = ref<IVersionDistributionItem[]>([]);
   const sunburstData = ref<IVersionDistributionPie>({
-    name: '配置版本',
+    name: t('配置版本'),
     children: [],
   });
   const loading = ref(false);
