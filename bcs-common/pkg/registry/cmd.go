@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package registryv4 xxx
-package registryv4
+// Package registry xxx
+package registry
 
 import (
 	"crypto/tls"

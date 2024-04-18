@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package msgqueuev4 xxx
-package msgqueuev4
+// Package msgqueue xxx
+package msgqueue
 
 import (
 	"time"

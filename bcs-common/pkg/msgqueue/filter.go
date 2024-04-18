@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package msgqueuev4
+package msgqueue
 
 // EventKind event type
 type EventKind string
