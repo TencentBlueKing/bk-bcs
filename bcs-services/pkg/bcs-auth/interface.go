@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package bcsauthv4 xxx
-package bcsauthv4
+// Package bcsauth xxx
+package bcsauth
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
