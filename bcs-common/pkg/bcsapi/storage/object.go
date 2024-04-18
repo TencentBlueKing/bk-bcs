@@ -22,9 +22,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 
-	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/storage/tkex/gamedeployment/v1alpha1"
-	gsv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/storage/tkex/gamestatefulset/v1alpha1"
-	gpav1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/storage/tkex/generalpodautoscaler/v1alpha1"
+	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1"
+	gsv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamestatefulset/v1alpha1"
+	gpav1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/generalpodautoscaler/v1alpha1"
 )
 
 // Namespace is k8s namespace

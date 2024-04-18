@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	blog "k8s.io/klog/v2"
 
-	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 )
 
 // XRequestID insert X-Request-ID

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package bcsapiv4
+package bcsapi
 
 import (
 	"bytes"
@@ -32,7 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	blog "k8s.io/klog/v2"
 
-	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/netservice"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 )
 
 const (

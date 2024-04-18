@@ -25,4 +25,3 @@ go get github.com/Tencent/bk-bcs/bcs-common@{commitID}
 
 ## 独立 go.mod 模块
 - [common/encryptv2](./common/encryptv2/) 国密，需要开启cgo
-- [pkg/bcsapiv4](./pkg/bcsapiv4/) 依赖运行时

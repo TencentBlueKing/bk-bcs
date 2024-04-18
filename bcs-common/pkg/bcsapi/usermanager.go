@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package bcsapiv4
+package bcsapi
 
 import (
 	"encoding/json"

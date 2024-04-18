@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package bcsapiv4
+package bcsapi
 
 import (
 	"encoding/json"
@@ -21,10 +21,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
+	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	blog "k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/storage"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
 )
 
 const (

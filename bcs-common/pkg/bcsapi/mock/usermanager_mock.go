@@ -7,7 +7,7 @@ package mock
 import (
 	reflect "reflect"
 
-	bcsapiv4 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -35,10 +35,10 @@ func (m *MockUserManager) EXPECT() *MockUserManagerMockRecorder {
 }
 
 // ListAllClusters mocks base method.
-func (m *MockUserManager) ListAllClusters() ([]*bcsapiv4.ClusterCredential, error) {
+func (m *MockUserManager) ListAllClusters() ([]*bcsapi.ClusterCredential, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAllClusters")
-	ret0, _ := ret[0].([]*bcsapiv4.ClusterCredential)
+	ret0, _ := ret[0].([]*bcsapi.ClusterCredential)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

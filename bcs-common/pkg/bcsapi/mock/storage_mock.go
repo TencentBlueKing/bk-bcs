@@ -7,7 +7,7 @@ package mock
 import (
 	reflect "reflect"
 
-	storage "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/storage"
+	storage "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
 	drivers "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	gomock "github.com/golang/mock/gomock"
 )

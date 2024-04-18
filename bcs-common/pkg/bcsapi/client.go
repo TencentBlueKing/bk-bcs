@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package bcsapiv4 xxx
-package bcsapiv4
+// Package bcsapi xxx
+package bcsapi
 
 import (
 	"context"
@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
+	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
 
 // ! v4 version binding~
