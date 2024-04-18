@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/pkg
 go 1.20
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418080854-08f5e4997c22
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418095107-1d05d2d5c43c
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.6
 	github.com/TencentBlueKing/iam-go-sdk v0.1.6
 	github.com/google/uuid v1.6.0
@@ -30,7 +30,6 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -40,10 +39,10 @@ require (
 	github.com/parnurzeal/gorequest v0.2.16 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.14.0 // indirect
-	github.com/prometheus/client_model v0.3.0 // indirect
-	github.com/prometheus/common v0.41.0 // indirect
-	github.com/prometheus/procfs v0.9.0 // indirect
+	github.com/prometheus/client_golang v1.19.0 // indirect
+	github.com/prometheus/client_model v0.5.0 // indirect
+	github.com/prometheus/common v0.48.0 // indirect
+	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/sirupsen/logrus v1.9.2 // indirect
 	github.com/smartystreets/assertions v1.0.1 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
