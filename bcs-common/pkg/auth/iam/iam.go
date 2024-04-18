@@ -644,7 +644,7 @@ func (ic *iamClient) AuthResourceCreatorPerm(ctx context.Context, resource Resou
 
 	request := buildResourceCreatorActionRequest(resource, ancestors)
 
-	result, errs := restyclient.R().
+	result, err := restyclient.R().
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Accept", "application/json").
 		SetHeader("X-Bkapi-Authorization", auth).
@@ -654,7 +654,7 @@ func (ic *iamClient) AuthResourceCreatorPerm(ctx context.Context, resource Resou
 
 	if err != nil {
 		klog.Errorf("AuthResourceCreatorPerm gorequest errors=`%s`", err)
-		return errs
+		return err
 	}
 	if result.StatusCode() != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("AuthResourceCreatorPerm API error: code[%v], body[%v], err[%s]",
