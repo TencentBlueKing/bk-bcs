@@ -18,12 +18,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commonConf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	microCfg "github.com/micro/go-micro/v2/config"
-	microYaml "github.com/micro/go-micro/v2/config/encoder/yaml"
-	"github.com/micro/go-micro/v2/config/reader"
-	microJson "github.com/micro/go-micro/v2/config/reader/json"
-	"github.com/micro/go-micro/v2/config/source/env"
-	microFile "github.com/micro/go-micro/v2/config/source/file"
+	microYaml "github.com/go-micro/plugins/v4/config/encoder/yaml"
+	microCfg "go-micro.dev/v4/config"
+	"go-micro.dev/v4/config/reader"
+	microJson "go-micro.dev/v4/config/reader/json"
+	"go-micro.dev/v4/config/source/env"
+	microFile "go-micro.dev/v4/config/source/file"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/i18n"
