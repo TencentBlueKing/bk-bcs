@@ -17,12 +17,13 @@
   defineProps<{
     width?: number;
     height?: number;
-    title: string;
+    title?: string;
   }>();
 </script>
 
 <style scoped lang="scss">
   .card {
+    width: 100%;
     position: relative;
     padding: 12px 16px;
     margin-bottom: 16px;

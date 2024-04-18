@@ -2,7 +2,7 @@
   <div class="wrap">
     <Teleport :disabled="!isOpenFullScreen" to="body">
       <div class="pull-error-wrap" :class="{ fullscreen: isOpenFullScreen }">
-        <Card title="拉取失败原因" :height="416">
+        <Card :title="t('拉取失败原因')" :height="416">
           <template #operation>
             <OperationBtn
               :is-open-full-screen="isOpenFullScreen"
@@ -18,7 +18,7 @@
               class="exception-wrap-item exception-part"
               type="empty"
               scene="part"
-              description="暂无数据">
+              :description="t('暂无数据')">
               <template #type>
                 <span class="bk-bscp-icon icon-bar-chart exception-icon" />
               </template>
@@ -34,7 +34,7 @@
             <span class="time">{{ Math.round(item.value) }}</span>
             <span class="unit">s</span>
           </span>
-          <span v-else class="empty">暂无数据</span>
+          <span v-else class="empty">{{ t('暂无数据') }}</span>
         </div>
       </Card>
     </div>
@@ -52,6 +52,9 @@
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
   import { useRouter } from 'vue-router';
+  import { useI18n } from 'vue-i18n';
+
+  const { t } = useI18n();
 
   const router = useRouter();
 
@@ -69,17 +72,17 @@
   const pullTime = ref<IInfoCard[]>([
     {
       value: 0,
-      name: '平均拉取耗时',
+      name: t('平均拉取耗时'),
       key: 'avg',
     },
     {
       value: 0,
-      name: '最大拉取耗时',
+      name: t('最大拉取耗时'),
       key: 'max',
     },
     {
       value: 0,
-      name: '最小拉取耗时',
+      name: t('最小拉取耗时'),
       key: 'min',
     },
   ]);
@@ -171,7 +174,7 @@
         items: [
           {
             id: '1',
-            name: '拉取失败数量',
+            name: t('拉取失败数量'),
             value: 'count',
             marker: {
               symbol: 'square',
@@ -198,17 +201,17 @@
           fill: '#979BA5',
         },
       },
-      tooltip: {
-        fields: ['value', 'count'],
-        showTitle: true,
-        title: 'release_change_failed_reason',
-        container: tooltipRef.value?.getDom(),
-        enterable: true,
-        customItems: (originalItems: any[]) => {
-          originalItems[0].name = '客户端数量';
-          return originalItems;
-        },
-      },
+      // tooltip: {
+      //   fields: ['value', 'count'],
+      //   showTitle: true,
+      //   title: 'release_change_failed_reason',
+      //   container: tooltipRef.value?.getDom(),
+      //   enterable: true,
+      //   customItems: (originalItems: any[]) => {
+      //     originalItems[0].name = t('客户端数量');
+      //     return originalItems;
+      //   },
+      // },
     });
     columnPlot!.render();
   };
