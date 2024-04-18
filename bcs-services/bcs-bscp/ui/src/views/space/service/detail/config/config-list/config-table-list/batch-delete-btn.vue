@@ -21,7 +21,7 @@
   import { ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import Message from 'bkui-vue/lib/message';
-  import { batchDeleteKv } from '../../../../../../../api/config';
+  import { batchDeleteServiceConfigs, batchDeleteKv } from '../../../../../../../api/config';
   import DeleteConfirmDialog from '../../../../../../../components/delete-confirm-dialog.vue';
 
   const { t } = useI18n();
@@ -30,6 +30,7 @@
     bkBizId: string;
     appId: number;
     selectedIds: number[];
+    isFileType: boolean; // 是否为文件型配置
   }>();
 
   const emits = defineEmits(['deleted']);
@@ -39,7 +40,11 @@
 
   const handleBatchDeleteConfirm = async () => {
     batchDeletePending.value = true;
-    await batchDeleteKv(props.bkBizId, props.appId, props.selectedIds);
+    if (props.isFileType) {
+      await batchDeleteServiceConfigs(props.bkBizId, props.appId, props.selectedIds);
+    } else {
+      await batchDeleteKv(props.bkBizId, props.appId, props.selectedIds);
+    }
     Message({
       theme: 'success',
       message: t('批量删除配置项成功'),

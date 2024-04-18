@@ -234,7 +234,7 @@
   }
 </style>
 <style lang="scss">
-  .move-out-from-pkgs-dialog.bk-modal-wrapper.bk-modal-wrapper {
+  .move-out-from-pkgs-dialog.bk-modal-wrapper {
     .bk-modal-footer {
       background: #ffffff;
       border-top: none;

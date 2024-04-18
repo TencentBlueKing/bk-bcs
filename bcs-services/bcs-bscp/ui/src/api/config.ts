@@ -69,7 +69,7 @@ export const updateServiceConfigItem = (id: number, app_id: number, biz_id: stri
   http.put(`/config/update/config_item/config_item/config_item_id/${id}/app_id/${app_id}/biz_id/${biz_id}`, params);
 
 /**
- * 删除配置
+ * 删除非模板配置
  * @param id 配置ID
  * @param bizId 业务ID
  * @param appId 应用ID
@@ -77,6 +77,16 @@ export const updateServiceConfigItem = (id: number, app_id: number, biz_id: stri
  */
 export const deleteServiceConfigItem = (id: number, bizId: string, appId: number) =>
   http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
+
+/**
+ * 批量删除非模板配置
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 配置项ID列表
+ * @returns
+ */
+export const batchDeleteServiceConfigs = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/config_items/batch_delete`, { ids });
 
 /**
  * 获取未命名版本配置文件详情

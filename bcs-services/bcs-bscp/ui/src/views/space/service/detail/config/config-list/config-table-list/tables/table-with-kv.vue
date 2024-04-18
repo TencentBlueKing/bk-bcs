@@ -242,7 +242,7 @@
     () => {
       refresh();
       selectedConfigIds.value = [];
-      emits('updateSelectedIds', selectedConfigIds.value);
+      emits('updateSelectedIds', []);
     },
   );
 
