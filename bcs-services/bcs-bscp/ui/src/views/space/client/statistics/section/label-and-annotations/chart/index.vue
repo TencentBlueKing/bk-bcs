@@ -1,7 +1,7 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
     <div ref="containerRef" :class="{ fullscreen: isOpenFullScreen }">
-      <Card :title="`按 ${label} 统计`" :height="368">
+      <Card :title="$t(`按 {n} 统计`, { n: label })" :height="368">
         <template #operation>
           <OperationBtn
             :is-open-full-screen="isOpenFullScreen"
@@ -9,7 +9,7 @@
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
         </template>
         <template #head-suffix>
-          <bk-tag theme="info" type="stroke" style="margin-left: 8px"> 标签 </bk-tag>
+          <bk-tag theme="info" type="stroke" style="margin-left: 8px"> {{ $t('标签') }} </bk-tag>
           <TriggerBtn v-model:currentType="currentType" style="margin-left: 8px" />
         </template>
         <bk-loading class="loading-wrap" :loading="loading">

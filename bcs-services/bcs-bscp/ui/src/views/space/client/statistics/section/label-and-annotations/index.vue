@@ -1,6 +1,6 @@
 <template>
   <div>
-    <SectionTitle :title="'客户端标签/附加信息分布'">
+    <SectionTitle :title="$t('客户端标签/附加信息分布')">
       <template #suffix>
         <bk-select
           v-model="selectedLabel"
@@ -11,10 +11,10 @@
           <template #trigger>
             <div class="add-chart-wrap">
               <Plus class="add-icon" />
-              <span class="text">添加图表</span>
+              <span class="text">{{ $t('添加图表') }}</span>
             </div>
           </template>
-          <bk-option-group label="标签" collapsible>
+          <bk-option-group :label="$t('标签')" collapsible>
             <bk-option
               v-if="addChartData?.labels.length"
               v-for="item in addChartData?.labels"
@@ -22,16 +22,16 @@
               :id="item"
               :name="item">
             </bk-option>
-            <div v-else class="bk-select-option no-data">暂无标签</div>
+            <div v-else class="bk-select-option no-data">{{ $t('暂无标签') }}</div>
           </bk-option-group>
-          <bk-option-group label="附加信息" collapsible>
+          <bk-option-group :label="$t('附加信息')" collapsible>
             <bk-option
               v-if="addChartData?.annotations.length"
               v-for="item in addChartData?.annotations"
               :key="item"
               :id="item"
               :name="item" />
-            <div v-else class="bk-select-option no-data">暂无附加信息</div>
+            <div v-else class="bk-select-option no-data">{{ $t('暂无附加信息') }}</div>
           </bk-option-group>
         </bk-select>
       </template>
@@ -47,7 +47,11 @@
           @refresh="loadLabelsAndAnnotationsData" />
       </div>
       <Card v-else :height="368">
-        <bk-exception class="exception-wrap-item exception-part" type="empty" scene="part" description="暂无数据">
+        <bk-exception
+          class="exception-wrap-item exception-part"
+          type="empty"
+          scene="part"
+          :description="$t('暂无数据')">
           <template #type>
             <span class="bk-bscp-icon icon-bar-chart exception-icon" />
           </template>

@@ -44,7 +44,7 @@
       width: 800,
       colorField: 'name',
       label: {
-        content: ({ data }) => `${data.percent.toFixed(0)}%`,
+        content: ({ data }) => `${data.percent.toFixed(1)}%`,
         style: {
           fontSize: 14,
           textAlign: 'center',

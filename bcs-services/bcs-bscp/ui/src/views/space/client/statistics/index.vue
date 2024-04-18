@@ -1,7 +1,7 @@
 <template>
   <section class="client-statistics-page">
     <div class="header">
-      <ClientHeader title="客户端统计" />
+      <ClientHeader :title="$t('客户端统计')" />
     </div>
     <div class="management-data-container">
       <VersionRelease :bk-biz-id="bkBizId" :app-id="appId" />
