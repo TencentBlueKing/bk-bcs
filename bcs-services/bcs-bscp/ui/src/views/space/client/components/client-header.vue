@@ -193,7 +193,7 @@
       align-items: center;
       font-size: 12px;
       .selector-tips {
-        width: 88px;
+        min-width: 88px;
         height: 32px;
         background: #fafbfd;
         border: 1px solid #c4c6cc;

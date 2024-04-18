@@ -9,6 +9,8 @@
   import { Pie } from '@antv/g2plot';
   import Tooltip from '../../../components/tooltip.vue';
   import { IClientLabelItem } from '../../../../../../../../types/client';
+  import { useI18n } from 'vue-i18n';
+  const { t } = useI18n();
 
   const props = defineProps<{
     data: IClientLabelItem[];
@@ -59,9 +61,10 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          originalItems[0].name = '客户端数量';
-          originalItems[1].name = '占比';
-          originalItems[1].value = `${parseFloat(originalItems[1].value).toFixed(1)}%`;
+          console.log(originalItems);
+          originalItems[0].name = t('客户端数量');
+          originalItems[1].name = t('占比');
+          originalItems[1].value = `${(originalItems[1].value * 100).toFixed(0)}%`;
           return originalItems;
         },
       },
