@@ -8,13 +8,25 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-// Package tools xx
-package tools
+package utils
 
 import (
-	// nolint
-	_ "k8s.io/code-generator"
+	"strings"
 )
+
+// TrimLeadAndTrailQuotes trim the lead and trail quotes. Trim only execute when lead and trail all have quotes
+func TrimLeadAndTrailQuotes(str string) string {
+	if strings.HasPrefix(str, "\"") && strings.HasSuffix(str, "\"") {
+		str = strings.TrimPrefix(str, "\"")
+		str = strings.TrimSuffix(str, "\"")
+		return str
+	}
+	if strings.HasPrefix(str, "'") && strings.HasSuffix(str, "'") {
+		str = strings.TrimPrefix(str, "'")
+		str = strings.TrimSuffix(str, "'")
+		return str
+	}
+	return str
+}

@@ -194,6 +194,7 @@ func (h *Handler) Create(ctx context.Context, req *httpapi.TerraformCreateReques
 	fmt.Println(resp.Data)
 }
 
+// Delete delete the resource
 func (h *Handler) Delete(ctx context.Context, name *string) {
 	if name == nil || *name == "" {
 		utils.ExitError("'name' cannot be empty")
@@ -276,10 +277,10 @@ func (h *Handler) GetDiff(ctx context.Context, name *string) {
 	fmt.Printf(`##################################################################
 # Revision: %s             #
 # Time: %s                                      #
-#----------------------------------------------------------------#\n`,
+#----------------------------------------------------------------#`,
 		result.CommitID, result.CreationTime.Format("2006-01-02 15:04:05"))
 	fmt.Println()
-	fmt.Println(result.Result)
+	color.Green(result.Result)
 }
 
 // GetApply get the terraform apply by name
@@ -299,12 +300,12 @@ func (h *Handler) GetApply(ctx context.Context, name *string) {
 		utils.ExitError(fmt.Sprintf("terraform '%s' not have apply", *name))
 	}
 	fmt.Printf(`##################################################################
-# Revision: %s             #
-# Time: %s                                      #
-#----------------------------------------------------------------#\n`,
+### Revision: %s             
+### Time: %s                                      
+#----------------------------------------------------------------#`,
 		result.CommitID, result.CreationTime.Format("2006-01-02 15:04:05"))
 	fmt.Println()
-	fmt.Println(result.Result)
+	color.Green(result.Result)
 }
 
 // Sync terraform

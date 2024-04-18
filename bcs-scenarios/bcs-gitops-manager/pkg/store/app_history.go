@@ -64,7 +64,7 @@ func (s *appHistoryStore) handleApplication(item *v1alpha1.Application) error {
 		return nil
 	}
 	history := item.Status.History.LastRevisionHistory()
-	exist, err := s.db.CheckApplicationHistoryManifestExist(item.Name, string(item.UID), history.ID)
+	exist, err := s.db.CheckAppHistoryManifestExist(item.Name, string(item.UID), history.ID)
 	if err != nil {
 		return errors.Wrapf(err, "get application history '%s/%s/%d' manifest failed",
 			item.Name, item.UID, history.ID)

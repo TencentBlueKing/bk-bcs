@@ -291,8 +291,8 @@ func (d *driver) GetApplicationHistoryManifest(appName, appUID string,
 	return &result[0], nil
 }
 
-// CheckApplicationHistoryManifestExist check manifest whether exist
-func (d *driver) CheckApplicationHistoryManifestExist(appName, appUID string, historyID int64) (bool, error) {
+// CheckAppHistoryManifestExist check manifest whether exist
+func (d *driver) CheckAppHistoryManifestExist(appName, appUID string, historyID int64) (bool, error) {
 	rows, err := d.rateClient.Table(tableHistoryManifest).Select("id").
 		Where("name = ?", appName).
 		Where("applicationUID = ?", appUID).

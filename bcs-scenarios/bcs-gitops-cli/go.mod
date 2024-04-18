@@ -60,12 +60,14 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240408094223-befc154dddb1
+	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server v0.0.0-20240220073632-303c7a871f3b
 	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller v0.0.0-00010101000000-000000000000
 	github.com/argoproj/argo-cd/v2 v2.9.3
 	github.com/fatih/color v1.16.0
 	github.com/moul/http2curl v1.0.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.8.0
+	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.28.3
 )
 
@@ -89,7 +91,6 @@ require (
 	github.com/PagerDuty/go-pagerduty v1.7.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
 	github.com/RocketChat/Rocket.Chat.Go.SDK v0.0.0-20210112200207-10ab4d695d60 // indirect
-	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server v0.0.0-20240220073632-303c7a871f3b // indirect
 	github.com/TomOnTime/utfutil v0.0.0-20180511104225-09c41003ee1d // indirect
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
@@ -305,7 +306,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/api v0.28.3 // indirect
 	k8s.io/apiextensions-apiserver v0.28.3 // indirect
 	k8s.io/apiserver v0.28.3 // indirect

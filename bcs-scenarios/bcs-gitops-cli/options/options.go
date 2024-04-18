@@ -29,7 +29,9 @@ type GitOpsOptions struct {
 }
 
 var (
-	op          *GitOpsOptions
+	op = &GitOpsOptions{
+		ProxyPath: "gitopsmanager/proxy",
+	}
 	cfgFilePath string
 )
 
@@ -46,9 +48,6 @@ func GlobalOption() *GitOpsOptions {
 // Parse the config from file
 func Parse(cfgFile string) {
 	cfgFilePath = cfgFile
-	op = &GitOpsOptions{
-		ProxyPath: "gitopsmanager/proxy",
-	}
 	if fi, err := os.Stat(cfgFile); err == nil {
 		if fi.IsDir() {
 			blog.Fatalf("Config file '%s' cannot be directory", cfgFile)

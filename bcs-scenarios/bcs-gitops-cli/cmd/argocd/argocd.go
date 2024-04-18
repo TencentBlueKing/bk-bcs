@@ -14,31 +14,62 @@
 package argocd
 
 import (
-	"fmt"
-
 	"github.com/argoproj/argo-cd/v2/cmd/argocd/commands"
+	"github.com/argoproj/argo-cd/v2/cmd/argocd/commands/initialize"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/options"
 )
 
 // NewArgoCmd create the argo command
 func NewArgoCmd() *cobra.Command {
-	op := options.GlobalOption()
 	argo := commands.NewCommand()
 	argo.Short = "Controls a Argo CD server"
-	_ = argo.PersistentFlags().Set("grpc-web-root-path", op.ProxyPath)
-	_ = argo.PersistentFlags().Set("header", "X-BCS-Client: bcs-gitops-manager")
-	_ = argo.PersistentFlags().Set("header", "bkUserName: admin")
-
-	server := options.GlobalOption().Server
-	token := options.GlobalOption().Token
-	if server == "" || token == "" {
-		blog.Fatalf("Config file '%s' cannot miss param 'server' or 'token'", options.ConfigfilePath())
+	for _, item := range argo.Commands() {
+		if item.Use == "app" {
+			item.AddCommand(initialize.InitCommand(applicationDryRun()))
+			item.AddCommand(initialize.InitCommand(applicationDiff()))
+			item.AddCommand(initialize.InitCommand(applicationHistory()))
+		}
+		if item.Use == "appset" {
+			item.AddCommand(initialize.InitCommand(appsetGenerate()))
+		}
 	}
-	_ = argo.PersistentFlags().Set("server", server)
-	_ = argo.PersistentFlags().Set("header", fmt.Sprintf("Authorization: Bearer %s", token))
 	return argo
+}
+
+func applicationDryRun() *cobra.Command {
+	c := &cobra.Command{
+		Use: "dry-run",
+		Short: color.YellowString("Extender feature. Dry-run specify application with revisions, " +
+			"or dry-run with application-manifest which not create yet."),
+		Run: func(cmd *cobra.Command, args []string) {},
+	}
+	return c
+}
+
+func applicationDiff() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "diff-revision",
+		Short: color.YellowString("Extender feature. Diff the specified revision with current live state"),
+		Run:   func(cmd *cobra.Command, args []string) {},
+	}
+	return c
+}
+
+func applicationHistory() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "history-manifests",
+		Short: color.YellowString("Extender feature. Print the history manifests"),
+		Run:   func(cmd *cobra.Command, args []string) {},
+	}
+	return c
+}
+
+func appsetGenerate() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "geerate",
+		Short: color.YellowString("Extender feature. Generate the applcationset before create with dry-run"),
+		Run:   func(cmd *cobra.Command, args []string) {},
+	}
+	return c
 }

@@ -81,7 +81,9 @@ func SetContext(rw http.ResponseWriter, r *http.Request, jwtDecoder *jwt.JWTClie
 	} else {
 		requestID = uuid.New().String()
 	}
-	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID) // nolint staticcheck
+	// nolint
+	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID)
+	// nolint
 	ctx = tracing.ContextWithRequestID(ctx, requestID)
 	rw.Header().Set(traceconst.RequestIDHeaderKey, requestID)
 

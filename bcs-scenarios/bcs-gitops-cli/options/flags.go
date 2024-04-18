@@ -15,4 +15,6 @@ package options
 var (
 	// LogV log level
 	LogV int
+	// ConfigFile defines the file path
+	ConfigFile string
 )

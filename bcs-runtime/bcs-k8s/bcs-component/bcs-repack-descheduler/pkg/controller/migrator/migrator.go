@@ -11,6 +11,7 @@
  *
  */
 
+// Package migrator xx
 package migrator
 
 import (

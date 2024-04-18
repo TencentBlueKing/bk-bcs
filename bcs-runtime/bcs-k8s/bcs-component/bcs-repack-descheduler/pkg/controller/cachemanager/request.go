@@ -31,7 +31,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-repack-descheduler/pkg/controller/calculator"
 )
 
-// BuildCalculatorRequest will build the request of calculator
+// BuildCalculatorRequest will build the request of calculator. Request contains pods/nodes information with gzip,
+// and have nodes/pods config, such as affinity/nodeslsector.
 func (m *CacheManager) BuildCalculatorRequest(ctx context.Context) (*calculator.CalculateConvergeRequest, error) {
 	podsItems, err := m.filterPods(ctx)
 	if err != nil {
@@ -88,6 +89,7 @@ var (
 	defaultListAllPods = time.Duration(30) * time.Second
 )
 
+// gzipPods will gzip the pods request to decrease the request. Return the pods bytes after gzip
 func (m *CacheManager) gzipPods(requestPods []map[string]interface{}) ([]byte, error) {
 	podBS, err := json.Marshal(requestPods)
 	if err != nil {
@@ -104,6 +106,7 @@ func (m *CacheManager) gzipPods(requestPods []map[string]interface{}) ([]byte, e
 	return gzipPodBS, nil
 }
 
+// gzipNodes will gzip the nodes request to decrease the request. Return the nodes bytes after gzip
 func (m *CacheManager) gzipNodes(requestNodes []map[string]interface{}) ([]byte, error) {
 	nodeBS, err := json.Marshal(requestNodes)
 	if err != nil {
@@ -120,6 +123,7 @@ func (m *CacheManager) gzipNodes(requestNodes []map[string]interface{}) ([]byte,
 	return gzipNodeBS, nil
 }
 
+// filterPods filter the pods
 func (m *CacheManager) filterPods(ctx context.Context) ([]*calculator.PodItem, error) {
 	queryCtx, queryCancel := context.WithTimeout(ctx, defaultListAllPods)
 	defer queryCancel()
@@ -151,6 +155,7 @@ func (m *CacheManager) filterPods(ctx context.Context) ([]*calculator.PodItem, e
 	return items, nil
 }
 
+// buildPods build pods request
 func (m *CacheManager) buildPods(ctx context.Context, podItems []*calculator.PodItem) ([]map[string]interface{},
 	map[string][]*corev1.Pod, map[string][]*corev1.Pod, error) {
 	nodeDecreasePods := make(map[string][]*corev1.Pod)
@@ -195,6 +200,7 @@ func (m *CacheManager) buildPods(ctx context.Context, podItems []*calculator.Pod
 	return requestPods, workloadPods, nodeDecreasePods, nil
 }
 
+// getPodOwnerName return the pods owner name
 func (m *CacheManager) getPodOwnerName(ctx context.Context, pod *corev1.Pod) (string, error) {
 	podCtx, podCancel := context.WithTimeout(ctx, apis.DefaultQueryTimeout)
 	defer podCancel()
@@ -205,6 +211,7 @@ func (m *CacheManager) getPodOwnerName(ctx context.Context, pod *corev1.Pod) (st
 	return ownerName, err
 }
 
+// filterNodes filter nodes request
 func (m *CacheManager) filterNodes(ctx context.Context) ([]*calculator.NodeItem, error) {
 	queryCtx, queryCancel := context.WithTimeout(ctx, apis.DefaultQueryTimeout)
 	defer queryCancel()
@@ -230,6 +237,7 @@ func (m *CacheManager) filterNodes(ctx context.Context) ([]*calculator.NodeItem,
 	return items, nil
 }
 
+// build nodes in request
 func (m *CacheManager) buildNodes(ctx context.Context, nodeItems []*calculator.NodeItem,
 	nodeDecreasePods map[string][]*corev1.Pod) ([]map[string]interface{}, error) {
 	requestNodes := make([]map[string]interface{}, 0, len(nodeItems))
@@ -260,6 +268,7 @@ func (m *CacheManager) buildNodes(ctx context.Context, nodeItems []*calculator.N
 	return requestNodes, nil
 }
 
+// buildConfig build node and pod configs
 func (m *CacheManager) buildConfig(workloadPods map[string][]*corev1.Pod) *calculator.CalculateConfig {
 	scope := calculator.PredictScope{}
 	for workload, pods := range workloadPods {
@@ -317,6 +326,7 @@ func (m *CacheManager) buildConfig(workloadPods map[string][]*corev1.Pod) *calcu
 	}
 }
 
+// buildNodeSelector build node selector
 func buildNodeSelector(workload string, pod *corev1.Pod) calculator.Affinity {
 	itemConditions := []calculator.Condition{
 		{
@@ -342,6 +352,7 @@ func buildNodeSelector(workload string, pod *corev1.Pod) calculator.Affinity {
 	}
 }
 
+// buildNodeAffinity build node affinity
 func buildNodeAffinity(workload string, pod *corev1.Pod) []calculator.Affinity {
 	result := make([]calculator.Affinity, 0)
 	itemConditions := []calculator.Condition{
@@ -382,6 +393,7 @@ func buildNodeAffinity(workload string, pod *corev1.Pod) []calculator.Affinity {
 	return result
 }
 
+// buildContainerConditions build container condition
 func buildContainerConditions(terms []corev1.NodeSelectorTerm) []calculator.Condition {
 	containerConditions := make([]calculator.Condition, 0)
 	for _, term := range terms {
@@ -397,7 +409,7 @@ func buildContainerConditions(terms []corev1.NodeSelectorTerm) []calculator.Cond
 				Value:         label.Values,
 			})
 		}
-		// TODO https://github.com/kubernetes/kubernetes/blob/master/pkg/apis/core/v1/conversion.go#L33
+		// DOTO https://github.com/kubernetes/kubernetes/blob/master/pkg/apis/core/v1/conversion.go#L33
 		// for _, field := range term.MatchFields {}
 	}
 	return containerConditions
@@ -415,13 +427,14 @@ func getConditionTypeWithNodeSelector(operator corev1.NodeSelectorOperator) stri
 	case corev1.NodeSelectorOpDoesNotExist:
 		condition = "!="
 	case corev1.NodeSelectorOpGt:
-		// TODO
+		// DOTO
 	case corev1.NodeSelectorOpLt:
-		// TODO
+		// DOTO
 	}
 	return condition
 }
 
+// buildPodAffinity build pod affinity
 func buildPodAffinity(workload string, pod *corev1.Pod) []calculator.Affinity {
 	result := make([]calculator.Affinity, 0)
 	originalItemConditions := []calculator.Condition{
@@ -458,6 +471,7 @@ func buildPodAffinity(workload string, pod *corev1.Pod) []calculator.Affinity {
 	return result
 }
 
+// buildPodAntiAffinity build pod anti affinity
 func buildPodAntiAffinity(workload string, pod *corev1.Pod) []calculator.Affinity {
 	result := make([]calculator.Affinity, 0)
 	originalItemConditions := []calculator.Condition{
@@ -494,11 +508,12 @@ func buildPodAntiAffinity(workload string, pod *corev1.Pod) []calculator.Affinit
 	return result
 }
 
+// buildItemConditions build item conditions
 func buildItemConditions(terms []corev1.PodAffinityTerm) []calculator.Condition {
 	itemConditions := make([]calculator.Condition, 0)
 	for _, term := range terms {
-		// TODO ignore namespaces/namespaceSelector
-		// TODO ignore topologyKey
+		// DOTO ignore namespaces/namespaceSelector
+		// DOTO ignore topologyKey
 		if term.LabelSelector == nil {
 			continue
 		}
@@ -528,7 +543,7 @@ func buildItemConditions(terms []corev1.PodAffinityTerm) []calculator.Condition 
 
 func (m *CacheManager) checkPodAllowMigrate(pod *corev1.Pod, podsMap map[string]*corev1.Pod) int32 {
 	// check pod is managed by pdb
-	// TODO: 临时禁用
+	// DOTO: 临时禁用
 	//if _, ok := podsMap[apis.PodName(pod.Namespace, pod.Name)]; !ok {
 	//	return 0
 	//}
