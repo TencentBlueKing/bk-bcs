@@ -145,7 +145,7 @@ func (b *BkmApiClient) UploadConfig(bizID, bizToken, configPath, app string, ove
 	request, err := os.Open(configPath)
 	if err != nil {
 		mf(StatusErr)
-		return fmt.Errorf("open tar file'%s' failed, err: %w", configPath, err)
+		return fmt.Errorf("open tar file'%s' failed, err: %s", configPath, err.Error())
 	}
 	defer request.Close()
 
@@ -168,7 +168,7 @@ func (b *BkmApiClient) UploadConfig(bizID, bizToken, configPath, app string, ove
 	resp, err := b.httpCli.Do(req)
 	if err != nil {
 		mf(StatusErr)
-		return fmt.Errorf("do post request failed, req: %v, err: %w", req, err)
+		return fmt.Errorf("do post request failed, req: %v, err: %s", req, err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -178,12 +178,12 @@ func (b *BkmApiClient) UploadConfig(bizID, bizToken, configPath, app string, ove
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		mf(StatusErr)
-		return fmt.Errorf("read UploadConfig from resp failed, err: %w", err)
+		return fmt.Errorf("read UploadConfig from resp failed, err: %s", err.Error())
 	}
 	err = json.Unmarshal(respBody, uploadConfigResp)
 	if err != nil {
 		mf(StatusErr)
-		return fmt.Errorf("json marshal failed, raw value: %s, err: %w", string(respBody), err)
+		return fmt.Errorf("json marshal failed, raw value: %s, err: %s", string(respBody), err.Error())
 	}
 
 	return b.pollTaskStatus(bizToken, bizID, uploadConfigResp.Data.TaskID, b.doPollUploadTaskStatus, mf)
@@ -210,7 +210,7 @@ func (b *BkmApiClient) DownloadConfig(bizID, bizToken string) error {
 	req, err := http.NewRequest("POST", url, bytes.NewReader(bts))
 	if err != nil {
 		mf(StatusErr)
-		return fmt.Errorf("http new request failed: %w", err)
+		return fmt.Errorf("http new request failed: %s", err.Error())
 	}
 	defer req.Body.Close()
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", bizToken))
@@ -220,7 +220,7 @@ func (b *BkmApiClient) DownloadConfig(bizID, bizToken string) error {
 	resp, err := b.httpCli.Do(req)
 	if err != nil {
 		mf(StatusErr)
-		return fmt.Errorf("http post failed: %w", err)
+		return fmt.Errorf("http post failed: %s", err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -233,7 +233,7 @@ func (b *BkmApiClient) DownloadConfig(bizID, bizToken string) error {
 	err = json.Unmarshal(respBody, &downloadConfigResp)
 	if err != nil {
 		mf(StatusErr)
-		return fmt.Errorf("json marshal failed, raw value: %s, err: %w", string(respBody), err)
+		return fmt.Errorf("json marshal failed, raw value: %s, err: %s", string(respBody), err.Error())
 	}
 	if downloadConfigResp.Code != http.StatusOK || !downloadConfigResp.Result {
 		mf(StatusErr)
@@ -243,8 +243,8 @@ func (b *BkmApiClient) DownloadConfig(bizID, bizToken string) error {
 	err = b.pollTaskStatus(bizToken, bizID, downloadConfigResp.Data.TaskID, b.doPollDownloadTaskStatus, mf)
 	if err != nil {
 		mf(StatusErr)
-		return fmt.Errorf("epollTaskStatus failed, bizID[%s], taskID[%s], err: %w", bizID,
-			downloadConfigResp.Data.TaskID, err)
+		return fmt.Errorf("epollTaskStatus failed, bizID[%s], taskID[%s], err: %s", bizID,
+			downloadConfigResp.Data.TaskID, err.Error())
 	}
 
 	return nil
@@ -261,14 +261,14 @@ func (b *BkmApiClient) pollTaskStatus(token, bizID, taskID string,
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			return fmt.Errorf("failed to create GET request: %w", err)
+			return fmt.Errorf("failed to create GET request: %s", err.Error())
 		}
 
 		req.Header.Add("Authorization", "Bearer "+token)
 
 		resp, err := client.Do(req)
 		if err != nil {
-			return fmt.Errorf("failed to send GET request: %w", err)
+			return fmt.Errorf("failed to send GET request: %s", err.Error())
 		}
 
 		success, err := handleFunc(bizID, resp)
@@ -305,7 +305,7 @@ func (b *BkmApiClient) doPollUploadTaskStatus(bizID string, resp *http.Response)
 
 	var pollTaskStatusResp PollTaskStatusResp
 	if err := json.Unmarshal(bodyBytes, &pollTaskStatusResp); err != nil {
-		return false, fmt.Errorf("decode JSON response failed: %w", err)
+		return false, fmt.Errorf("decode JSON response failed: %s", err.Error())
 	}
 
 	blog.V(4).Infof("query task resp: %+v", pollTaskStatusResp)
@@ -345,7 +345,7 @@ func (b *BkmApiClient) doPollDownloadTaskStatus(bizID string, resp *http.Respons
 
 	var pollTaskStatusResp PollDownloadConfigTaskStatusResp
 	if err := json.Unmarshal(bodyBytes, &pollTaskStatusResp); err != nil {
-		return false, fmt.Errorf("decode JSON response failed: %w", err)
+		return false, fmt.Errorf("decode JSON response failed: %s", err.Error())
 	}
 
 	if !pollTaskStatusResp.Result {
@@ -367,24 +367,24 @@ func (b *BkmApiClient) doPollDownloadTaskStatus(bizID string, resp *http.Respons
 	downloadURL := strings.Replace(pollTaskStatusData.Data.DownloadUrl, "https", "http", 1)
 	downloadResp, err := b.httpCli.Get(downloadURL)
 	if err != nil {
-		return false, fmt.Errorf("http get download file failed, err: %w", err)
+		return false, fmt.Errorf("http get download file failed, err: %s", err.Error())
 	}
 	defer downloadResp.Body.Close()
 
 	if err = os.MkdirAll(filepath.Join(b.Opts.BKMDownloadConfigPath, b.SubPath), 0755); err != nil {
-		return false, fmt.Errorf("mkdir failed, err: %w", err)
+		return false, fmt.Errorf("mkdir failed, err: %s", err.Error())
 	}
 	// 创建一个文件用于保存
 	out, err := os.Create(utils.GenBkmConfigTarPath(b.Opts.BKMDownloadConfigPath, b.SubPath, bizID))
 	if err != nil {
-		return false, fmt.Errorf("create download file failed, err: %w", err)
+		return false, fmt.Errorf("create download file failed, err: %s", err.Error())
 	}
 	defer out.Close()
 
 	// 然后将响应流和文件流对接起来
 	_, err = io.Copy(out, downloadResp.Body)
 	if err != nil {
-		return false, fmt.Errorf("copy download file failed, err: %w", err)
+		return false, fmt.Errorf("copy download file failed, err: %s", err.Error())
 	}
 
 	return true, nil

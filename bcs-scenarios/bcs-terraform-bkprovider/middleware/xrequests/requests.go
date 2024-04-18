@@ -1,3 +1,16 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Package xrequests xxx
 package xrequests
 
 import (
@@ -126,7 +139,7 @@ func NativePut(ctx context.Context, url string, opts ...*RequestOptions) (*Trace
 func Get(ctx context.Context, url string, params any, responseStruct any, opts ...*RequestOptions) (*Trace, *Response, error) {
 	queryMap, err := buildQuery(params)
 	if err != nil {
-		return nil, nil, fmt.Errorf("build query failed, err: %w", err)
+		return nil, nil, fmt.Errorf("build query failed, err: %s", err.Error())
 	}
 	opt := buildRequestOptions(ctx, opts)
 	opt.Params = queryMap
@@ -196,7 +209,7 @@ func jsonUnmarshalResponse(response *Response, v any) error {
 		return errors.Errorf("non-pointer field")
 	}
 	if err := response.JSON(v); err != nil {
-		return fmt.Errorf("response'%s' json unmarshal failed, err: %w", response.String(), err)
+		return fmt.Errorf("response'%s' json unmarshal failed, err: %s", response.String(), err.Error())
 	}
 	return nil
 }

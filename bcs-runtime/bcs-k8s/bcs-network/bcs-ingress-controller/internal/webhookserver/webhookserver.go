@@ -30,6 +30,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/conflicthandler"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
@@ -371,6 +372,10 @@ func (s *Server) mutatingWebhook(ar v1.AdmissionReview) (response *v1.AdmissionR
 	}
 	if len(pod.Name) == 0 {
 		pod.Name = req.Name
+	}
+	// 创建时Pod可能没有名字
+	if len(pod.Name) == 0 {
+		pod.Name = pod.GenerateName
 	}
 	_, ok := pod.Annotations[constant.AnnotationForPortPool]
 	if !ok {
