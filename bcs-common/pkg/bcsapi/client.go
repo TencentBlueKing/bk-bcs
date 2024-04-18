@@ -19,9 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
-
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
 
 // ! v4 version binding~
@@ -33,7 +31,6 @@ const (
 
 // Config for bcsapi
 type Config struct {
-
 	// bcsapi host, available like 127.0.0.1:8080
 	Hosts []string
 	// tls configuratio
@@ -71,7 +68,7 @@ type Authentication struct {
 func (a *Authentication) GetRequestMetadata(context.Context, ...string) (
 	map[string]string, error,
 ) {
-	return map[string]string{middleware.InnerClientHeaderKey: a.InnerClientName}, nil
+	return map[string]string{"X-Bcs-Client": a.InnerClientName}, nil
 }
 
 // RequireTransportSecurity indicates whether the credentials requires
@@ -93,7 +90,7 @@ type GrpcTokenAuth struct {
 }
 
 // GetRequestMetadata convert http Authorization for grpc key
-func (t GrpcTokenAuth) GetRequestMetadata(_ context.Context, _ ...string) (map[string]string, error) {
+func (t GrpcTokenAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
 	return map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", t.Token),
 	}, nil

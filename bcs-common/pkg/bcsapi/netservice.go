@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -14,7 +14,6 @@ package bcsapi
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -28,10 +27,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
-	"github.com/pkg/errors"
+	blog "k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
@@ -44,7 +41,8 @@ const (
 	envVarNameNetservice    = "NETSVR_ADDR"
 )
 
-// Netservice define http client for bcs-netservice
+// Netservice define http client for bcs-netservice. The interface used to operate
+// netservice with the crud of pool.
 type Netservice interface {
 	RegisterPool(pool *types.NetPool) error
 	UpdatePool(pool *types.NetPool) error
@@ -61,7 +59,8 @@ type Netservice interface {
 	TransferIPAttr(input *types.TranIPAttrInput) error
 }
 
-// NetserviceCli netservice http client
+// NetserviceCli netservice http client, will handle all operations with netservice
+// It can be used as the cli to handle every operation of netservice
 type NetserviceCli struct {
 	httpClientTimeout int
 	tlsConfig         *tls.Config
@@ -70,7 +69,7 @@ type NetserviceCli struct {
 	random  *rand.Rand
 }
 
-// NewNetserviceCli create new client
+// NewNetserviceCli create new client for netservice cli
 func NewNetserviceCli() *NetserviceCli {
 	return &NetserviceCli{
 		httpClientTimeout: 3,
@@ -106,62 +105,15 @@ func (nc *NetserviceCli) SetHosts(svrs []string) {
 	nc.netSvrs = svrs
 }
 
-// GetNetServiceWithEtcd will get netservice server from etcd. It will get the netservice info by etcd
-func (nc *NetserviceCli) GetNetServiceWithEtcd(etcdHosts []string, tlsConfig *tls.Config) error {
+// GetNetService get netservice server addresses from zookeeper or from envs. It
+// will return error if netservice not exist.
+func (nc *NetserviceCli) GetNetService(zkHost []string) error {
 	// get netservice addresses from env
 	netSvrStr := os.Getenv(envVarNameNetservice)
 	if len(netSvrStr) != 0 {
 		netSvrs := strings.Split(
 			strings.ReplaceAll(
 				strings.TrimSpace(netSvrStr), ";", ","), ",")
-		nc.netSvrs = append(nc.netSvrs, netSvrs...)
-		return nil
-	}
-
-	cli, err := clientv3.New(clientv3.Config{
-		DialTimeout: 5 * time.Second,
-		Endpoints:   etcdHosts,
-		TLS:         tlsConfig,
-	})
-	if err != nil {
-		return errors.Wrapf(err, "create etcd client failed")
-	}
-	kv := clientv3.NewKV(cli)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	var getResp *clientv3.GetResponse
-	getResp, err = kv.Get(ctx, netserviceDiscoveryPath+"/", clientv3.WithPrefix())
-	if err != nil {
-		return errors.Wrapf(err, "etcd get with prefix '%s' failed", netserviceDiscoveryPath)
-	}
-	if getResp.Count == 0 {
-		return fmt.Errorf("no bcs-netservice server node detected")
-	}
-	for _, node := range getResp.Kvs {
-		info := new(bcstypes.NetServiceInfo)
-		if err := json.Unmarshal(node.Value, info); err != nil {
-			blog.Warnf("unmarshal zookeeper data failed, data %s, err %s", string(node.Value), err.Error())
-			continue
-		}
-		svrInfo := info.IP + ":" + strconv.Itoa(int(info.Port))
-		nc.netSvrs = append(nc.netSvrs, svrInfo)
-	}
-	if len(nc.netSvrs) == 0 {
-		return fmt.Errorf("get no netservice node")
-	}
-	return nil
-}
-
-// GetNetService get netservice server addresses from zookeeper or from envs. It will send http request
-// to netservice get the detail info
-func (nc *NetserviceCli) GetNetService(zkHost []string) error {
-	// get netservice addresses from env
-	netSvrStr := os.Getenv(envVarNameNetservice)
-	if len(netSvrStr) != 0 {
-		netSvrs := strings.Split(
-			strings.Replace(
-				strings.TrimSpace(netSvrStr), ";", ",", -1), ",")
 		nc.netSvrs = append(nc.netSvrs, netSvrs...)
 		return nil
 	}
@@ -184,12 +136,12 @@ func (nc *NetserviceCli) GetNetService(zkHost []string) error {
 		child := filepath.Join(netserviceDiscoveryPath, node)
 		data, _, err := zkCli.GetEx(child)
 		if err != nil {
-			blog.Warnf("get zookeeper data failed, path %s, err %s", child, err.Error())
+			blog.Warningf("get zookeeper data failed, path %s, err %s", child, err.Error())
 			continue
 		}
 		info := new(bcstypes.NetServiceInfo)
 		if err := json.Unmarshal(data, info); err != nil {
-			blog.Warnf("unmarshal zookeeper data failed, data %s, err %s", string(data), err.Error())
+			blog.Warningf("unmarshal zookeeper data failed, data %s, err %s", string(data), err.Error())
 			continue
 		}
 		svrInfo := info.IP + ":" + strconv.Itoa(int(info.Port))
@@ -201,7 +153,8 @@ func (nc *NetserviceCli) GetNetService(zkHost []string) error {
 	return nil
 }
 
-// RegisterPool register pool info to bcs-netservice
+// RegisterPool register pool info to bcs-netservice, will register pool info to netservice
+// The pool inf will be saved in store.
 func (nc *NetserviceCli) RegisterPool(pool *types.NetPool) error {
 	if len(pool.Cluster) == 0 {
 		return fmt.Errorf("lost cluster info")
@@ -233,9 +186,7 @@ func (nc *NetserviceCli) RegisterPool(pool *types.NetPool) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("register pool Got err response: %s", response.Status)
 	}
-	defer func(body io.ReadCloser) {
-		_ = body.Close()
-	}(response.Body)
+	defer response.Body.Close()
 	resDatas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("register pool read response body failed, %s", err)
@@ -250,7 +201,8 @@ func (nc *NetserviceCli) RegisterPool(pool *types.NetPool) error {
 	return nil
 }
 
-// UpdatePool update pool info. It will send http request to netservice to update pool
+// UpdatePool update pool info, will update pool information to netservice
+// will update poll info to store.
 func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	if len(pool.Cluster) == 0 {
 		return fmt.Errorf("lost cluster info")
@@ -270,7 +222,7 @@ func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	blog.Info("udpate pool string:%s", reqDatas)
 	seq := nc.random.Perm(len(nc.netSvrs))
 	httpClient, prefix := nc.getHTTPClient(nc.httpClientTimeout)
-	uri := prefix + nc.netSvrs[seq[0]] + "/v1/pool/" + pool.Cluster + "/" + pool.Net
+	uri := prefix + nc.netSvrs[seq[0]] + "/v1/pool/" + pool.Cluster + "/" + pool.Net // nolint
 	request, err := http.NewRequest("PUT", uri, bytes.NewBuffer(reqDatas))
 	if err != nil {
 		return fmt.Errorf("update pool create http request failed, %s", err.Error())
@@ -284,9 +236,7 @@ func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("udpate pool Got err response: %s", response.Status)
 	}
-	defer func(body io.ReadCloser) {
-		_ = body.Close()
-	}(response.Body)
+	defer response.Body.Close()
 	resDatas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("udpate pool read response body failed, %s", err)
@@ -301,7 +251,7 @@ func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	return nil
 }
 
-// GetPool get pool info from netservice. It will send all request to netservice to get pool
+// GetPool get pool info from netservice, will return pool information from netservice
 func (nc *NetserviceCli) GetPool(cluster, net string) ([]*types.NetPool, error) {
 	if len(cluster) == 0 || len(net) == 0 {
 		return nil, fmt.Errorf("Lost cluster or network segment in request")
@@ -325,9 +275,7 @@ func (nc *NetserviceCli) GetPool(cluster, net string) ([]*types.NetPool, error) 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("get pool http response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	defer func(body io.ReadCloser) {
-		_ = body.Close()
-	}(response.Body)
+	defer response.Body.Close()
 	datas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("get pool read netservice response failed, %s", err.Error())
@@ -349,7 +297,7 @@ func (nc *NetserviceCli) GetPool(cluster, net string) ([]*types.NetPool, error) 
 	return netRes.Pool, nil
 }
 
-// ListAllPool list all pools. It will send request to netservice to list all pools.
+// ListAllPool list all pools, it will return all pools from netservice
 func (nc *NetserviceCli) ListAllPool() ([]*types.NetPool, error) {
 	if len(nc.netSvrs) == 0 {
 		return nil, fmt.Errorf("no available bcs-netservice")
@@ -370,9 +318,7 @@ func (nc *NetserviceCli) ListAllPool() ([]*types.NetPool, error) {
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("list all pool http response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	defer func(body io.ReadCloser) {
-		_ = body.Close()
-	}(response.Body)
+	defer response.Body.Close()
 	datas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("list all pool read netservice response failed, %s", err.Error())
@@ -394,8 +340,7 @@ func (nc *NetserviceCli) ListAllPool() ([]*types.NetPool, error) {
 	return netRes.Pool, nil
 }
 
-// ListAllPoolWithCluster list all pool with cluster. It will send http request to netservice to list all
-// pools with clusterID
+// ListAllPoolWithCluster list all pool with cluster, it will list all pools by clusterid
 func (nc *NetserviceCli) ListAllPoolWithCluster(cluster string) ([]*types.NetPool, error) {
 	if len(nc.netSvrs) == 0 {
 		return nil, fmt.Errorf("no available bcs-netservice")
@@ -417,9 +362,7 @@ func (nc *NetserviceCli) ListAllPoolWithCluster(cluster string) ([]*types.NetPoo
 		return nil, fmt.Errorf("list all pool with cluster http response %s from %s",
 			response.Status, nc.netSvrs[seq[0]])
 	}
-	defer func(body io.ReadCloser) {
-		_ = body.Close()
-	}(response.Body)
+	defer response.Body.Close()
 	datas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("list all pool with cluster read netservice response failed, %s", err.Error())
@@ -441,7 +384,7 @@ func (nc *NetserviceCli) ListAllPoolWithCluster(cluster string) ([]*types.NetPoo
 	return netRes.Pool, nil
 }
 
-// DeletePool delete pool. It will send http request to netservice to delete pool by cluster and net .
+// DeletePool delete pool, it will delete pool by cluster and net info
 func (nc *NetserviceCli) DeletePool(cluster, net string) error {
 	if len(cluster) == 0 || len(net) == 0 {
 		return fmt.Errorf("neither cluster nor net can be empty")
@@ -462,9 +405,7 @@ func (nc *NetserviceCli) DeletePool(cluster, net string) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("delete pool http response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	defer func(body io.ReadCloser) {
-		_ = body.Close()
-	}(response.Body)
+	defer response.Body.Close()
 	datas, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("delete pool read netservice response failed, %s", err.Error())
@@ -479,8 +420,8 @@ func (nc *NetserviceCli) DeletePool(cluster, net string) error {
 	return nil
 }
 
-// RegisterHost register host info to bcs-netservice. It will register host to netservice by send http request
-// to it.
+// RegisterHost register host info to bcs-netservice
+// It will register host to netservice
 func (nc *NetserviceCli) RegisterHost(host *types.HostInfo) error {
 	if len(nc.netSvrs) == 0 {
 		return fmt.Errorf("no available bcs-netservice")
@@ -504,9 +445,7 @@ func (nc *NetserviceCli) RegisterHost(host *types.HostInfo) error {
 	if err != nil {
 		return fmt.Errorf("send request failed, %s", err)
 	}
-	defer func(body io.ReadCloser) {
-		_ = body.Close()
-	}(response.Body)
+	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("register host got response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
@@ -524,8 +463,8 @@ func (nc *NetserviceCli) RegisterHost(host *types.HostInfo) error {
 	return fmt.Errorf(hostRes.Message)
 }
 
-// DeleteHost when host has container or any ip belongs to the host is active, it can't be deleted. It will
-// delete host from netservice by send http request
+// DeleteHost when host has container or any ip belongs to the host is active, it can't be deleted
+// It will delete hosts from netservice
 func (nc *NetserviceCli) DeleteHost(host string, ips []string) error {
 	if len(nc.netSvrs) == 0 {
 		return fmt.Errorf("no available bcs-netservice")
@@ -557,9 +496,7 @@ func (nc *NetserviceCli) DeleteHost(host string, ips []string) error {
 	if err != nil {
 		return fmt.Errorf("delete host send request to net service failed, %s", err)
 	}
-	defer func(body io.ReadCloser) {
-		_ = body.Close()
-	}(response.Body)
+	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("delete host got response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
@@ -577,8 +514,7 @@ func (nc *NetserviceCli) DeleteHost(host string, ips []string) error {
 	return fmt.Errorf(hostRes.Message)
 }
 
-// GetHostInfo Get host info by host ip address. It will send http request to netservice to get the host
-// info from netservice store.
+// GetHostInfo Get host info by host ip address. It will get host info from netservice
 func (nc *NetserviceCli) GetHostInfo(host string, timeout int) (*types.HostInfo, error) {
 	if len(host) == 0 {
 		return nil, fmt.Errorf("host ip address lost")
@@ -632,8 +568,7 @@ func (nc *NetserviceCli) GetHostInfo(host string, timeout int) (*types.HostInfo,
 	return nil, fmt.Errorf("get host info all netservice failed, %s", lastErr)
 }
 
-// LeaseIPAddr lease one ip address from bcs-netservice. It will send http request to netservice
-// to lease an ip.
+// LeaseIPAddr lease one ip address from bcs-netservice. It will lease ip address from netservice
 func (nc *NetserviceCli) LeaseIPAddr(lease *types.IPLease, timeout int) (*types.IPInfo, error) {
 	// create net request
 	request := &types.NetRequest{
@@ -693,7 +628,6 @@ func (nc *NetserviceCli) LeaseIPAddr(lease *types.IPLease, timeout int) (*types.
 		ipInfo := response.Info[0]
 		// check if response ip addr is what we need
 		if lease.IPAddr != "" && lease.IPAddr != ipInfo.IPAddr {
-			// NOTE(DeveloperJim): Get unexpect ip address, need to release
 			return nil, fmt.Errorf("lease ip addr expect ipaddr %s, but got %s", lease.IPAddr, ipInfo.IPAddr)
 		}
 		if len(ipInfo.Gateway) == 0 || ipInfo.Mask == 0 {
@@ -704,9 +638,9 @@ func (nc *NetserviceCli) LeaseIPAddr(lease *types.IPLease, timeout int) (*types.
 	return nil, fmt.Errorf("lease ip addr all netservice failed, %s", lastErr)
 }
 
-// ReleaseIPAddr release ip address to bcs-netservice. It will send http request to netservice to
-// allocate the ip address.
-func (nc *NetserviceCli) ReleaseIPAddr(release *types.IPRelease, _ *types.IPInfo, timeout int) error {
+// ReleaseIPAddr release ip address to bcs-netservice. It will release the ip address
+// from netservice
+func (nc *NetserviceCli) ReleaseIPAddr(release *types.IPRelease, ipInfo *types.IPInfo, timeout int) error {
 	// create net request
 	request := &types.NetRequest{
 		Type:    types.RequestType_RELEASE,
@@ -764,8 +698,7 @@ func (nc *NetserviceCli) ReleaseIPAddr(release *types.IPRelease, _ *types.IPInfo
 	return fmt.Errorf("all netservice failed, %s", lastErr)
 }
 
-// UpdateIPInstance update ip instance info, especially MacAddress. It will update the ip instance
-// with the details
+// UpdateIPInstance update ip instance info, especially MacAddress
 func (nc *NetserviceCli) UpdateIPInstance(inst *types.IPInst) error {
 	if inst == nil {
 		return fmt.Errorf("Lost instance data")
@@ -789,9 +722,7 @@ func (nc *NetserviceCli) UpdateIPInstance(inst *types.IPInst) error {
 	if err != nil {
 		return fmt.Errorf("send request failed, %s", err)
 	}
-	defer func(body io.ReadCloser) {
-		_ = body.Close()
-	}(response.Body)
+	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("update instance got response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
@@ -809,8 +740,7 @@ func (nc *NetserviceCli) UpdateIPInstance(inst *types.IPInst) error {
 	return fmt.Errorf(res.Message)
 }
 
-// TransferIPAttr transfer ip attribution, it will send request to netservice. It will change the
-// status of ip instance
+// TransferIPAttr transfer ip attribution. It will transfer the ip status for source to target status
 func (nc *NetserviceCli) TransferIPAttr(input *types.TranIPAttrInput) error {
 	if input == nil {
 		return fmt.Errorf("input can not be nil")
@@ -835,9 +765,7 @@ func (nc *NetserviceCli) TransferIPAttr(input *types.TranIPAttrInput) error {
 	if err != nil {
 		return fmt.Errorf("tranfer ip attr send request failed, %s", err)
 	}
-	defer func(body io.ReadCloser) {
-		_ = body.Close()
-	}(response.Body)
+	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("tranfer ip attr got response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
@@ -864,7 +792,7 @@ func (nc *NetserviceCli) getHTTPClient(timeout int) (*http.Client, string) {
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
-			DualStack: true, // nolint
+			DualStack: true,
 		}).DialContext,
 		MaxIdleConns:          100,
 		IdleConnTimeout:       90 * time.Second,
