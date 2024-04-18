@@ -1,4 +1,4 @@
-module github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4
+module github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi
 
 go 1.20
 
