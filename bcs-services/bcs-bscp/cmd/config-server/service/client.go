@@ -265,3 +265,25 @@ func (s *Service) ClientVersionStatistics(ctx context.Context, req *pbclient.Cli
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
 }
+
+// ListClientLabelAndAnnotation 列出客户端标签和注释
+func (s *Service) ListClientLabelAndAnnotation(ctx context.Context, req *pbcs.ListClientLabelAndAnnotationReq) (
+	*structpb.Struct, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.DS.ListClientLabelAndAnnotation(kt.RpcCtx(), &pbds.ListClientLabelAndAnnotationReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+	})
+}

@@ -181,6 +181,7 @@ const (
 	Data_ClientLabelStatistics_FullMethodName             = "/pbds.Data/ClientLabelStatistics"
 	Data_ClientAnnotationStatistics_FullMethodName        = "/pbds.Data/ClientAnnotationStatistics"
 	Data_ClientVersionStatistics_FullMethodName           = "/pbds.Data/ClientVersionStatistics"
+	Data_ListClientLabelAndAnnotation_FullMethodName      = "/pbds.Data/ListClientLabelAndAnnotation"
 	Data_ListInstances_FullMethodName                     = "/pbds.Data/ListInstances"
 	Data_FetchInstanceInfo_FullMethodName                 = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
@@ -369,6 +370,7 @@ type DataClient interface {
 	ClientLabelStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientAnnotationStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ListClientLabelAndAnnotation(ctx context.Context, in *ListClientLabelAndAnnotationReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
 	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
@@ -1736,6 +1738,15 @@ func (c *dataClient) ClientVersionStatistics(ctx context.Context, in *client.Cli
 	return out, nil
 }
 
+func (c *dataClient) ListClientLabelAndAnnotation(ctx context.Context, in *ListClientLabelAndAnnotationReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Data_ListClientLabelAndAnnotation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error) {
 	out := new(ListInstancesResp)
 	err := c.cc.Invoke(ctx, Data_ListInstances_FullMethodName, in, out, opts...)
@@ -1954,6 +1965,7 @@ type DataServer interface {
 	ClientLabelStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ClientAnnotationStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ListClientLabelAndAnnotation(context.Context, *ListClientLabelAndAnnotationReq) (*structpb.Struct, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
 	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
@@ -2416,6 +2428,9 @@ func (UnimplementedDataServer) ClientAnnotationStatistics(context.Context, *clie
 }
 func (UnimplementedDataServer) ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientVersionStatistics not implemented")
+}
+func (UnimplementedDataServer) ListClientLabelAndAnnotation(context.Context, *ListClientLabelAndAnnotationReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClientLabelAndAnnotation not implemented")
 }
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
@@ -5141,6 +5156,24 @@ func _Data_ClientVersionStatistics_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListClientLabelAndAnnotation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClientLabelAndAnnotationReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListClientLabelAndAnnotation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListClientLabelAndAnnotation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListClientLabelAndAnnotation(ctx, req.(*ListClientLabelAndAnnotationReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListInstancesReq)
 	if err := dec(in); err != nil {
@@ -5819,6 +5852,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ClientVersionStatistics",
 			Handler:    _Data_ClientVersionStatistics_Handler,
+		},
+		{
+			MethodName: "ListClientLabelAndAnnotation",
+			Handler:    _Data_ListClientLabelAndAnnotation_Handler,
 		},
 		{
 			MethodName: "ListInstances",

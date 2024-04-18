@@ -21,27 +21,29 @@ type FailedReason uint32
 
 const (
 	// PreHookFailed represents failure in pre-hook execution
-	PreHookFailed FailedReason = 1 << iota
+	PreHookFailed FailedReason = 1
 	// PostHookFailed represents failure in post-hook execution
-	PostHookFailed
+	PostHookFailed FailedReason = 2
 	// DownloadFailed represents failure in downloading
-	DownloadFailed
+	DownloadFailed FailedReason = 3
+	// SkipFailed represents failure in skip
+	SkipFailed FailedReason = 4
 	// TokenFailed represents failure due to token issues
-	TokenFailed
+	TokenFailed FailedReason = 5
 	// SdkVersionIsTooLowFailed represents failure due to SDK version being too low
-	SdkVersionIsTooLowFailed
+	SdkVersionIsTooLowFailed FailedReason = 6
 	// AppMetaFailed represents failure in app metadata
-	AppMetaFailed
+	AppMetaFailed FailedReason = 7
 	// DeleteOldFilesFailed represents failure in deleting old files
-	DeleteOldFilesFailed
+	DeleteOldFilesFailed FailedReason = 8
 	// UpdateMetadataFailed represents failure in updating metadata
-	UpdateMetadataFailed
+	UpdateMetadataFailed FailedReason = 9
 )
 
 // Validate the failed reason is valid or not
 func (fr FailedReason) Validate() error {
 	switch fr {
-	case PreHookFailed, PostHookFailed, DownloadFailed, TokenFailed,
+	case PreHookFailed, PostHookFailed, DownloadFailed, SkipFailed, TokenFailed,
 		SdkVersionIsTooLowFailed, AppMetaFailed, DeleteOldFilesFailed,
 		UpdateMetadataFailed:
 		return nil
@@ -59,6 +61,8 @@ func (fr FailedReason) String() string {
 		return "PostHookFailed"
 	case DownloadFailed:
 		return "DownloadFailed"
+	case SkipFailed:
+		return "SkipFailed"
 	case TokenFailed:
 		return "TokenFailed"
 	case SdkVersionIsTooLowFailed:
@@ -70,7 +74,7 @@ func (fr FailedReason) String() string {
 	case UpdateMetadataFailed:
 		return "UpdateMetadataFailed"
 	default:
-		return "UnknownFailed"
+		return ""
 	}
 }
 
@@ -188,7 +192,7 @@ func (s SpecificFailedReason) String() string {
 	case ReadFileFailed:
 		return "ReadFileFailed"
 	default:
-		return "UnknownFailed"
+		return ""
 	}
 }
 

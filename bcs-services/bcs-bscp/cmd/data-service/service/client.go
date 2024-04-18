@@ -629,3 +629,51 @@ func getTimeFromElement(elem interface{}) string {
 		return ""
 	}
 }
+
+// ListClientLabelAndAnnotation 列出客户端标签和注释
+func (s *Service) ListClientLabelAndAnnotation(ctx context.Context, req *pbds.ListClientLabelAndAnnotationReq) (
+	*structpb.Struct, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), 0,
+		nil, &pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
+	if err != nil {
+		return nil, err
+	}
+
+	lableKeys := make(map[string]bool)
+	annotationKeys := make(map[string]bool)
+	for _, v := range items {
+		var label map[string]string
+		if err := json.Unmarshal([]byte(v.Spec.Labels), &label); err != nil {
+			logs.Errorf("json parsing failed, err: %v", err)
+			continue
+		}
+		for key := range label {
+			lableKeys[key] = true
+		}
+
+		var annotation map[string]interface{}
+		if err := json.Unmarshal([]byte(v.Spec.Annotations), &annotation); err != nil {
+			logs.Errorf("json parsing failed, err: %v", err)
+			continue
+		}
+		for key := range annotation {
+			annotationKeys[key] = true
+		}
+	}
+
+	var lables []interface{}
+	for key := range lableKeys {
+		lables = append(lables, key)
+	}
+	var annotations []interface{}
+	for key := range annotationKeys {
+		annotations = append(annotations, key)
+	}
+
+	resp := make(map[string]interface{})
+	resp["labels"] = lables
+	resp["annotations"] = annotations
+	return structpb.NewStruct(resp)
+}

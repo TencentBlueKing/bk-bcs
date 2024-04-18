@@ -92,18 +92,17 @@ func (dao *clientDao) GetResourceUsage(kit *kit.Kit, bizID uint32, appID uint32,
 		if err != nil {
 			return items, err
 		}
-		if len(search.GetReleaseChangeStatus()) > 0 {
-			status := field.NewString(m.TableName(), "release_change_status")
-			conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
-		} else {
-			conds = append(conds, m.ReleaseChangeStatus.Eq("Success"))
-		}
-		q = q.Where(conds...)
+	}
+	if len(search.GetReleaseChangeStatus()) > 0 {
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
+	} else {
+		conds = append(conds, m.ReleaseChangeStatus.Eq("Success"))
 	}
 
 	err = q.Select(m.CpuMaxUsage.Max().As("cpu_max_usage"), m.MemoryMaxUsage.Max().As("memory_max_usage"),
 		m.CpuMinUsage.Min().As("cpu_min_usage"), m.CpuAvgUsage.Avg().As("cpu_avg_usage"),
 		m.MemoryMinUsage.Min().As("memory_min_usage"), m.MemoryAvgUsage.Avg().As("memory_avg_usage")).
+		Where(conds...).
 		Scan(&items)
 	if err != nil {
 		return items, err
@@ -138,16 +137,16 @@ func (dao *clientDao) ListClientGroupByFailedReason(kit *kit.Kit, bizID uint32, 
 		if err != nil {
 			return nil, err
 		}
-		if len(search.GetReleaseChangeStatus()) > 0 {
-			status := field.NewString(m.TableName(), "release_change_status")
-			conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
-		} else {
-			conds = append(conds, m.ReleaseChangeStatus.Eq("Failed"))
-		}
-		q = q.Where(conds...)
+	}
+	if len(search.GetReleaseChangeStatus()) > 0 {
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
+	} else {
+		conds = append(conds, m.ReleaseChangeStatus.Eq("Failed"))
 	}
 	var items []types.FailedReasonChart
-	err = q.Select(m.ReleaseChangeFailedReason, m.ID.Count().As("count")).Group(m.ReleaseChangeFailedReason).Scan(&items)
+	err = q.Select(m.ReleaseChangeFailedReason, m.ID.Count().As("count")).Where(conds...).
+		Group(m.ReleaseChangeFailedReason).
+		Scan(&items)
 	if err != nil {
 		return nil, err
 	}
@@ -164,22 +163,21 @@ func (dao *clientDao) ListClientGroupByChangeStatus(kit *kit.Kit, bizID uint32, 
 
 	var err error
 	var conds []rawgen.Condition
+
 	if search.String() != "" {
 		conds, err = dao.handleSearch(kit, bizID, appID, search)
 		if err != nil {
 			return nil, err
 		}
-		if len(search.GetReleaseChangeStatus()) > 0 {
-			status := field.NewString(m.TableName(), "release_change_status")
-			conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
-		} else {
-			conds = append(conds, m.ReleaseChangeStatus.In("Failed", "Success"))
-		}
-		q = q.Where(conds...)
+	}
+	if len(search.GetReleaseChangeStatus()) > 0 {
+		conds = append(conds, q.Where(m.ReleaseChangeFailedReason.In(search.GetReleaseChangeStatus()...)))
+	} else {
+		conds = append(conds, m.ReleaseChangeStatus.In("Failed", "Success"))
 	}
 
 	var items []types.ChangeStatusChart
-	err = q.Select(m.ReleaseChangeStatus, m.ID.Count().As("count")).
+	err = q.Select(m.ReleaseChangeStatus, m.ID.Count().As("count")).Where(conds...).
 		Group(m.ReleaseChangeStatus).
 		Scan(&items)
 	if err != nil {
@@ -204,10 +202,9 @@ func (dao *clientDao) ListClientGroupByCurrentReleaseID(kit *kit.Kit, bizID uint
 		if err != nil {
 			return nil, err
 		}
-		if len(search.GetReleaseChangeStatus()) > 0 {
-			status := field.NewString(m.TableName(), "release_change_status")
-			conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
-		}
+	}
+	if len(search.GetReleaseChangeStatus()) > 0 {
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
 	}
 
 	var items []types.ClientConfigVersionChart
@@ -235,11 +232,9 @@ func (dao *clientDao) List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int6
 		if err != nil {
 			return nil, 0, err
 		}
-
-		if len(search.GetReleaseChangeStatus()) > 0 {
-			status := field.NewString(m.TableName(), "release_change_status")
-			conds = append(conds, q.Where(status.In(search.GetReleaseChangeStatus()...)))
-		}
+	}
+	if len(search.GetReleaseChangeStatus()) > 0 {
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
 	}
 
 	if heartbeatTime > 0 {
