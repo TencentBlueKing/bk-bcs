@@ -13,9 +13,9 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418100958-8c7cb59460f8
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418123107-72b120390195
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230911112816-85f490b1c029
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240418100958-8c7cb59460f8
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240418123107-72b120390195
 	github.com/chartmuseum/helm-push v0.10.4
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/go-micro/plugins/v4/config/encoder/yaml v1.2.0
