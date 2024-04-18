@@ -318,7 +318,7 @@
   }
 </style>
 <style lang="scss">
-  .import-template-config-dialog.bk-dialog-wrapper {
+  .import-template-config-dialog.bk-modal-wrapper {
     .bk-modal-header,
     .bk-modal-close {
       display: none;

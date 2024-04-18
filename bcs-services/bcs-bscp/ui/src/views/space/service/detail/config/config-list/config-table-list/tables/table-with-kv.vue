@@ -309,8 +309,8 @@
   };
 
   // 表格行是否可以选中
-  const isRowSelectEnable = ({ row }: { row: IConfigKvType }) => {
-    return row.kv_state !== 'DELETE';
+  const isRowSelectEnable = ({ row, isCheckAll }: { row: IConfigKvType; isCheckAll: boolean }) => {
+    return isCheckAll || row.kv_state !== 'DELETE';
   };
 
   // 表格行选择事件
