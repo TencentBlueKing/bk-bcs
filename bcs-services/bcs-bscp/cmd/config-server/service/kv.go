@@ -175,11 +175,13 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbcs.DeleteKvReq) (*pbcs.De
 }
 
 // BatchDeleteKv is used to batch delete key-value data.
-func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq) (*pbcs.BatchDeleteKvResp, error) {
+func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteAppResourcesReq) (
+	*pbcs.BatchDeleteResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
 	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
@@ -192,8 +194,7 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq)
 	eg, egCtx := errgroup.WithContext(grpcKit.RpcCtx())
 	eg.SetLimit(10)
 
-	successfulIDs := []uint32{}
-	failedIDs := []uint32{}
+	var successfulIDs, failedIDs []uint32
 	var mux sync.Mutex
 
 	// 使用 data-service 原子接口
@@ -235,7 +236,7 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteKvReq)
 		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
 	}
 
-	return &pbcs.BatchDeleteKvResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
+	return &pbcs.BatchDeleteResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
 }
 
 // BatchUpsertKvs is used to insert or update key-value data in bulk.

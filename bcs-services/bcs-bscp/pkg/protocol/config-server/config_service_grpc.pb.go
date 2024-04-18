@@ -37,6 +37,7 @@ const (
 	Config_BatchUpsertConfigItems_FullMethodName            = "/pbcs.Config/BatchUpsertConfigItems"
 	Config_UpdateConfigItem_FullMethodName                  = "/pbcs.Config/UpdateConfigItem"
 	Config_DeleteConfigItem_FullMethodName                  = "/pbcs.Config/DeleteConfigItem"
+	Config_BatchDeleteConfigItems_FullMethodName            = "/pbcs.Config/BatchDeleteConfigItems"
 	Config_UnDeleteConfigItem_FullMethodName                = "/pbcs.Config/UnDeleteConfigItem"
 	Config_UndoConfigItem_FullMethodName                    = "/pbcs.Config/UndoConfigItem"
 	Config_GetConfigItem_FullMethodName                     = "/pbcs.Config/GetConfigItem"
@@ -57,6 +58,7 @@ const (
 	Config_DeleteRelease_FullMethodName                     = "/pbcs.Config/DeleteRelease"
 	Config_CreateHook_FullMethodName                        = "/pbcs.Config/CreateHook"
 	Config_DeleteHook_FullMethodName                        = "/pbcs.Config/DeleteHook"
+	Config_BatchDeleteHook_FullMethodName                   = "/pbcs.Config/BatchDeleteHook"
 	Config_ListHooks_FullMethodName                         = "/pbcs.Config/ListHooks"
 	Config_ListHookTags_FullMethodName                      = "/pbcs.Config/ListHookTags"
 	Config_GetHook_FullMethodName                           = "/pbcs.Config/GetHook"
@@ -124,6 +126,7 @@ const (
 	Config_ListLatestTmplBoundUnnamedApps_FullMethodName    = "/pbcs.Config/ListLatestTmplBoundUnnamedApps"
 	Config_CreateTemplateVariable_FullMethodName            = "/pbcs.Config/CreateTemplateVariable"
 	Config_DeleteTemplateVariable_FullMethodName            = "/pbcs.Config/DeleteTemplateVariable"
+	Config_BatchDeleteTemplateVariable_FullMethodName       = "/pbcs.Config/BatchDeleteTemplateVariable"
 	Config_UpdateTemplateVariable_FullMethodName            = "/pbcs.Config/UpdateTemplateVariable"
 	Config_ListTemplateVariables_FullMethodName             = "/pbcs.Config/ListTemplateVariables"
 	Config_ImportTemplateVariables_FullMethodName           = "/pbcs.Config/ImportTemplateVariables"
@@ -135,6 +138,7 @@ const (
 	Config_ListReleasedAppTmplVariables_FullMethodName      = "/pbcs.Config/ListReleasedAppTmplVariables"
 	Config_CreateGroup_FullMethodName                       = "/pbcs.Config/CreateGroup"
 	Config_DeleteGroup_FullMethodName                       = "/pbcs.Config/DeleteGroup"
+	Config_BatchDeleteGroups_FullMethodName                 = "/pbcs.Config/BatchDeleteGroups"
 	Config_UpdateGroup_FullMethodName                       = "/pbcs.Config/UpdateGroup"
 	Config_ListAllGroups_FullMethodName                     = "/pbcs.Config/ListAllGroups"
 	Config_ListAppGroups_FullMethodName                     = "/pbcs.Config/ListAppGroups"
@@ -170,6 +174,7 @@ const (
 	Config_ClientLabelStatistics_FullMethodName             = "/pbcs.Config/ClientLabelStatistics"
 	Config_ClientAnnotationStatistics_FullMethodName        = "/pbcs.Config/ClientAnnotationStatistics"
 	Config_ClientVersionStatistics_FullMethodName           = "/pbcs.Config/ClientVersionStatistics"
+	Config_ListClientLabelAndAnnotation_FullMethodName      = "/pbcs.Config/ListClientLabelAndAnnotation"
 )
 
 // ConfigClient is the client API for Config service.
@@ -189,6 +194,7 @@ type ConfigClient interface {
 	BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(ctx context.Context, in *UpdateConfigItemReq, opts ...grpc.CallOption) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error)
+	BatchDeleteConfigItems(ctx context.Context, in *BatchDeleteAppResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	UnDeleteConfigItem(ctx context.Context, in *UnDeleteConfigItemReq, opts ...grpc.CallOption) (*UnDeleteConfigItemResp, error)
 	UndoConfigItem(ctx context.Context, in *UndoConfigItemReq, opts ...grpc.CallOption) (*UndoConfigItemResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*GetConfigItemResp, error)
@@ -210,6 +216,7 @@ type ConfigClient interface {
 	DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*DeleteReleaseResp, error)
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error)
+	BatchDeleteHook(ctx context.Context, in *BatchDeleteHookReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
 	ListHookTags(ctx context.Context, in *ListHookTagsReq, opts ...grpc.CallOption) (*ListHookTagsResp, error)
 	GetHook(ctx context.Context, in *GetHookReq, opts ...grpc.CallOption) (*GetHookResp, error)
@@ -286,6 +293,7 @@ type ConfigClient interface {
 	ListLatestTmplBoundUnnamedApps(ctx context.Context, in *ListLatestTmplBoundUnnamedAppsReq, opts ...grpc.CallOption) (*ListLatestTmplBoundUnnamedAppsResp, error)
 	CreateTemplateVariable(ctx context.Context, in *CreateTemplateVariableReq, opts ...grpc.CallOption) (*CreateTemplateVariableResp, error)
 	DeleteTemplateVariable(ctx context.Context, in *DeleteTemplateVariableReq, opts ...grpc.CallOption) (*DeleteTemplateVariableResp, error)
+	BatchDeleteTemplateVariable(ctx context.Context, in *BatchDeleteBizResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	UpdateTemplateVariable(ctx context.Context, in *UpdateTemplateVariableReq, opts ...grpc.CallOption) (*UpdateTemplateVariableResp, error)
 	ListTemplateVariables(ctx context.Context, in *ListTemplateVariablesReq, opts ...grpc.CallOption) (*ListTemplateVariablesResp, error)
 	ImportTemplateVariables(ctx context.Context, in *ImportTemplateVariablesReq, opts ...grpc.CallOption) (*ImportTemplateVariablesResp, error)
@@ -297,6 +305,7 @@ type ConfigClient interface {
 	ListReleasedAppTmplVariables(ctx context.Context, in *ListReleasedAppTmplVariablesReq, opts ...grpc.CallOption) (*ListReleasedAppTmplVariablesResp, error)
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
+	BatchDeleteGroups(ctx context.Context, in *BatchDeleteBizResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
 	ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error)
 	ListAppGroups(ctx context.Context, in *ListAppGroupsReq, opts ...grpc.CallOption) (*ListAppGroupsResp, error)
@@ -316,7 +325,7 @@ type ConfigClient interface {
 	UpdateKv(ctx context.Context, in *UpdateKvReq, opts ...grpc.CallOption) (*UpdateKvResp, error)
 	ListKvs(ctx context.Context, in *ListKvsReq, opts ...grpc.CallOption) (*ListKvsResp, error)
 	DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc.CallOption) (*DeleteKvResp, error)
-	BatchDeleteKv(ctx context.Context, in *BatchDeleteKvReq, opts ...grpc.CallOption) (*BatchDeleteKvResp, error)
+	BatchDeleteKv(ctx context.Context, in *BatchDeleteAppResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*UnDeleteKvResp, error)
 	UndoKv(ctx context.Context, in *UndoKvReq, opts ...grpc.CallOption) (*UndoKvResp, error)
@@ -334,6 +343,7 @@ type ConfigClient interface {
 	ClientLabelStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientAnnotationStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ListClientLabelAndAnnotation(ctx context.Context, in *ListClientLabelAndAnnotationReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 }
 
 type configClient struct {
@@ -437,6 +447,15 @@ func (c *configClient) UpdateConfigItem(ctx context.Context, in *UpdateConfigIte
 func (c *configClient) DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error) {
 	out := new(DeleteConfigItemResp)
 	err := c.cc.Invoke(ctx, Config_DeleteConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) BatchDeleteConfigItems(ctx context.Context, in *BatchDeleteAppResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error) {
+	out := new(BatchDeleteResp)
+	err := c.cc.Invoke(ctx, Config_BatchDeleteConfigItems_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -617,6 +636,15 @@ func (c *configClient) CreateHook(ctx context.Context, in *CreateHookReq, opts .
 func (c *configClient) DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error) {
 	out := new(DeleteHookResp)
 	err := c.cc.Invoke(ctx, Config_DeleteHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) BatchDeleteHook(ctx context.Context, in *BatchDeleteHookReq, opts ...grpc.CallOption) (*BatchDeleteResp, error) {
+	out := new(BatchDeleteResp)
+	err := c.cc.Invoke(ctx, Config_BatchDeleteHook_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1226,6 +1254,15 @@ func (c *configClient) DeleteTemplateVariable(ctx context.Context, in *DeleteTem
 	return out, nil
 }
 
+func (c *configClient) BatchDeleteTemplateVariable(ctx context.Context, in *BatchDeleteBizResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error) {
+	out := new(BatchDeleteResp)
+	err := c.cc.Invoke(ctx, Config_BatchDeleteTemplateVariable_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) UpdateTemplateVariable(ctx context.Context, in *UpdateTemplateVariableReq, opts ...grpc.CallOption) (*UpdateTemplateVariableResp, error) {
 	out := new(UpdateTemplateVariableResp)
 	err := c.cc.Invoke(ctx, Config_UpdateTemplateVariable_FullMethodName, in, out, opts...)
@@ -1319,6 +1356,15 @@ func (c *configClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts
 func (c *configClient) DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error) {
 	out := new(DeleteGroupResp)
 	err := c.cc.Invoke(ctx, Config_DeleteGroup_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) BatchDeleteGroups(ctx context.Context, in *BatchDeleteBizResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error) {
+	out := new(BatchDeleteResp)
+	err := c.cc.Invoke(ctx, Config_BatchDeleteGroups_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1496,8 +1542,8 @@ func (c *configClient) DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...gr
 	return out, nil
 }
 
-func (c *configClient) BatchDeleteKv(ctx context.Context, in *BatchDeleteKvReq, opts ...grpc.CallOption) (*BatchDeleteKvResp, error) {
-	out := new(BatchDeleteKvResp)
+func (c *configClient) BatchDeleteKv(ctx context.Context, in *BatchDeleteAppResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error) {
+	out := new(BatchDeleteResp)
 	err := c.cc.Invoke(ctx, Config_BatchDeleteKv_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1640,6 +1686,15 @@ func (c *configClient) ClientVersionStatistics(ctx context.Context, in *client.C
 	return out, nil
 }
 
+func (c *configClient) ListClientLabelAndAnnotation(ctx context.Context, in *ListClientLabelAndAnnotationReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Config_ListClientLabelAndAnnotation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConfigServer is the server API for Config service.
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
@@ -1657,6 +1712,7 @@ type ConfigServer interface {
 	BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error)
+	BatchDeleteConfigItems(context.Context, *BatchDeleteAppResourcesReq) (*BatchDeleteResp, error)
 	UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*UnDeleteConfigItemResp, error)
 	UndoConfigItem(context.Context, *UndoConfigItemReq) (*UndoConfigItemResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error)
@@ -1678,6 +1734,7 @@ type ConfigServer interface {
 	DeleteRelease(context.Context, *DeleteReleaseReq) (*DeleteReleaseResp, error)
 	CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error)
+	BatchDeleteHook(context.Context, *BatchDeleteHookReq) (*BatchDeleteResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
 	ListHookTags(context.Context, *ListHookTagsReq) (*ListHookTagsResp, error)
 	GetHook(context.Context, *GetHookReq) (*GetHookResp, error)
@@ -1754,6 +1811,7 @@ type ConfigServer interface {
 	ListLatestTmplBoundUnnamedApps(context.Context, *ListLatestTmplBoundUnnamedAppsReq) (*ListLatestTmplBoundUnnamedAppsResp, error)
 	CreateTemplateVariable(context.Context, *CreateTemplateVariableReq) (*CreateTemplateVariableResp, error)
 	DeleteTemplateVariable(context.Context, *DeleteTemplateVariableReq) (*DeleteTemplateVariableResp, error)
+	BatchDeleteTemplateVariable(context.Context, *BatchDeleteBizResourcesReq) (*BatchDeleteResp, error)
 	UpdateTemplateVariable(context.Context, *UpdateTemplateVariableReq) (*UpdateTemplateVariableResp, error)
 	ListTemplateVariables(context.Context, *ListTemplateVariablesReq) (*ListTemplateVariablesResp, error)
 	ImportTemplateVariables(context.Context, *ImportTemplateVariablesReq) (*ImportTemplateVariablesResp, error)
@@ -1765,6 +1823,7 @@ type ConfigServer interface {
 	ListReleasedAppTmplVariables(context.Context, *ListReleasedAppTmplVariablesReq) (*ListReleasedAppTmplVariablesResp, error)
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
+	BatchDeleteGroups(context.Context, *BatchDeleteBizResourcesReq) (*BatchDeleteResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
 	ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error)
 	ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error)
@@ -1784,7 +1843,7 @@ type ConfigServer interface {
 	UpdateKv(context.Context, *UpdateKvReq) (*UpdateKvResp, error)
 	ListKvs(context.Context, *ListKvsReq) (*ListKvsResp, error)
 	DeleteKv(context.Context, *DeleteKvReq) (*DeleteKvResp, error)
-	BatchDeleteKv(context.Context, *BatchDeleteKvReq) (*BatchDeleteKvResp, error)
+	BatchDeleteKv(context.Context, *BatchDeleteAppResourcesReq) (*BatchDeleteResp, error)
 	BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(context.Context, *UnDeleteKvReq) (*UnDeleteKvResp, error)
 	UndoKv(context.Context, *UndoKvReq) (*UndoKvResp, error)
@@ -1802,6 +1861,7 @@ type ConfigServer interface {
 	ClientLabelStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ClientAnnotationStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	ListClientLabelAndAnnotation(context.Context, *ListClientLabelAndAnnotationReq) (*structpb.Struct, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -1840,6 +1900,9 @@ func (UnimplementedConfigServer) UpdateConfigItem(context.Context, *UpdateConfig
 }
 func (UnimplementedConfigServer) DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteConfigItem not implemented")
+}
+func (UnimplementedConfigServer) BatchDeleteConfigItems(context.Context, *BatchDeleteAppResourcesReq) (*BatchDeleteResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteConfigItems not implemented")
 }
 func (UnimplementedConfigServer) UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*UnDeleteConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteConfigItem not implemented")
@@ -1900,6 +1963,9 @@ func (UnimplementedConfigServer) CreateHook(context.Context, *CreateHookReq) (*C
 }
 func (UnimplementedConfigServer) DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteHook not implemented")
+}
+func (UnimplementedConfigServer) BatchDeleteHook(context.Context, *BatchDeleteHookReq) (*BatchDeleteResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteHook not implemented")
 }
 func (UnimplementedConfigServer) ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListHooks not implemented")
@@ -2102,6 +2168,9 @@ func (UnimplementedConfigServer) CreateTemplateVariable(context.Context, *Create
 func (UnimplementedConfigServer) DeleteTemplateVariable(context.Context, *DeleteTemplateVariableReq) (*DeleteTemplateVariableResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplateVariable not implemented")
 }
+func (UnimplementedConfigServer) BatchDeleteTemplateVariable(context.Context, *BatchDeleteBizResourcesReq) (*BatchDeleteResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteTemplateVariable not implemented")
+}
 func (UnimplementedConfigServer) UpdateTemplateVariable(context.Context, *UpdateTemplateVariableReq) (*UpdateTemplateVariableResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTemplateVariable not implemented")
 }
@@ -2134,6 +2203,9 @@ func (UnimplementedConfigServer) CreateGroup(context.Context, *CreateGroupReq) (
 }
 func (UnimplementedConfigServer) DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroup not implemented")
+}
+func (UnimplementedConfigServer) BatchDeleteGroups(context.Context, *BatchDeleteBizResourcesReq) (*BatchDeleteResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteGroups not implemented")
 }
 func (UnimplementedConfigServer) UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroup not implemented")
@@ -2192,7 +2264,7 @@ func (UnimplementedConfigServer) ListKvs(context.Context, *ListKvsReq) (*ListKvs
 func (UnimplementedConfigServer) DeleteKv(context.Context, *DeleteKvReq) (*DeleteKvResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteKv not implemented")
 }
-func (UnimplementedConfigServer) BatchDeleteKv(context.Context, *BatchDeleteKvReq) (*BatchDeleteKvResp, error) {
+func (UnimplementedConfigServer) BatchDeleteKv(context.Context, *BatchDeleteAppResourcesReq) (*BatchDeleteResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteKv not implemented")
 }
 func (UnimplementedConfigServer) BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error) {
@@ -2239,6 +2311,9 @@ func (UnimplementedConfigServer) ClientAnnotationStatistics(context.Context, *cl
 }
 func (UnimplementedConfigServer) ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientVersionStatistics not implemented")
+}
+func (UnimplementedConfigServer) ListClientLabelAndAnnotation(context.Context, *ListClientLabelAndAnnotationReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClientLabelAndAnnotation not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -2446,6 +2521,24 @@ func _Config_DeleteConfigItem_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).DeleteConfigItem(ctx, req.(*DeleteConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_BatchDeleteConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteAppResourcesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchDeleteConfigItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchDeleteConfigItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchDeleteConfigItems(ctx, req.(*BatchDeleteAppResourcesReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2806,6 +2899,24 @@ func _Config_DeleteHook_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).DeleteHook(ctx, req.(*DeleteHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_BatchDeleteHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchDeleteHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchDeleteHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchDeleteHook(ctx, req.(*BatchDeleteHookReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4016,6 +4127,24 @@ func _Config_DeleteTemplateVariable_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_BatchDeleteTemplateVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteBizResourcesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchDeleteTemplateVariable(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchDeleteTemplateVariable_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchDeleteTemplateVariable(ctx, req.(*BatchDeleteBizResourcesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_UpdateTemplateVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateTemplateVariableReq)
 	if err := dec(in); err != nil {
@@ -4210,6 +4339,24 @@ func _Config_DeleteGroup_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).DeleteGroup(ctx, req.(*DeleteGroupReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_BatchDeleteGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteBizResourcesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchDeleteGroups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchDeleteGroups_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchDeleteGroups(ctx, req.(*BatchDeleteBizResourcesReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4557,7 +4704,7 @@ func _Config_DeleteKv_Handler(srv interface{}, ctx context.Context, dec func(int
 }
 
 func _Config_BatchDeleteKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BatchDeleteKvReq)
+	in := new(BatchDeleteAppResourcesReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -4569,7 +4716,7 @@ func _Config_BatchDeleteKv_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: Config_BatchDeleteKv_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).BatchDeleteKv(ctx, req.(*BatchDeleteKvReq))
+		return srv.(ConfigServer).BatchDeleteKv(ctx, req.(*BatchDeleteAppResourcesReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4844,6 +4991,24 @@ func _Config_ClientVersionStatistics_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ListClientLabelAndAnnotation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClientLabelAndAnnotationReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListClientLabelAndAnnotation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListClientLabelAndAnnotation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListClientLabelAndAnnotation(ctx, req.(*ListClientLabelAndAnnotationReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -4894,6 +5059,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteConfigItem",
 			Handler:    _Config_DeleteConfigItem_Handler,
+		},
+		{
+			MethodName: "BatchDeleteConfigItems",
+			Handler:    _Config_BatchDeleteConfigItems_Handler,
 		},
 		{
 			MethodName: "UnDeleteConfigItem",
@@ -4974,6 +5143,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteHook",
 			Handler:    _Config_DeleteHook_Handler,
+		},
+		{
+			MethodName: "BatchDeleteHook",
+			Handler:    _Config_BatchDeleteHook_Handler,
 		},
 		{
 			MethodName: "ListHooks",
@@ -5244,6 +5417,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_DeleteTemplateVariable_Handler,
 		},
 		{
+			MethodName: "BatchDeleteTemplateVariable",
+			Handler:    _Config_BatchDeleteTemplateVariable_Handler,
+		},
+		{
 			MethodName: "UpdateTemplateVariable",
 			Handler:    _Config_UpdateTemplateVariable_Handler,
 		},
@@ -5286,6 +5463,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteGroup",
 			Handler:    _Config_DeleteGroup_Handler,
+		},
+		{
+			MethodName: "BatchDeleteGroups",
+			Handler:    _Config_BatchDeleteGroups_Handler,
 		},
 		{
 			MethodName: "UpdateGroup",
@@ -5426,6 +5607,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ClientVersionStatistics",
 			Handler:    _Config_ClientVersionStatistics_Handler,
+		},
+		{
+			MethodName: "ListClientLabelAndAnnotation",
+			Handler:    _Config_ListClientLabelAndAnnotation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

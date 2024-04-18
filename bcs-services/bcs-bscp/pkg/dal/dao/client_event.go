@@ -93,8 +93,7 @@ func (dao *clientEventDao) GetMinMaxAvgTime(kit *kit.Kit, bizID uint32, appID ui
 	var items types.MinMaxAvgTimeChart
 	var conds []rawgen.Condition
 	if len(releaseChangeStatus) > 0 {
-		status := field.NewString(m.TableName(), "release_change_status")
-		conds = append(conds, q.Where(status.In(releaseChangeStatus...)))
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(releaseChangeStatus...)))
 	} else {
 		conds = append(conds, m.ReleaseChangeStatus.Eq("Success"))
 	}

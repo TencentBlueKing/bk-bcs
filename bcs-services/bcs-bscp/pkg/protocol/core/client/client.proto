@@ -2,7 +2,6 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/struct.proto";
-import "google/protobuf/any.proto";
 
 package pbclient;
 

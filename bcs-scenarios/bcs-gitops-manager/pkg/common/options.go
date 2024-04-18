@@ -172,6 +172,12 @@ type SecretStoreOptions struct {
 	Port    string `json:"port"`
 }
 
+// TerraformConfig terraform config option
+type TerraformConfig struct {
+	Address string `json:"address"`
+	Port    string `json:"port"`
+}
+
 // Complete unset item
 func (config *AuthConfig) Complete() error {
 	return nil

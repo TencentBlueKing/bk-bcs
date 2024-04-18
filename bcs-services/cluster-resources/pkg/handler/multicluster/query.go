@@ -90,7 +90,7 @@ func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (ma
 		q.QueryFilter.StatusFilter, q.QueryFilter.LabelSelectorFilter, q.QueryFilter.IPFilter)
 	total := len(resources)
 	resources = q.QueryFilter.Page(resources)
-	resp := buildList(resources)
+	resp := buildList(ctx, resources)
 	resp["total"] = total
 	return resp, nil
 }
@@ -129,7 +129,7 @@ func (q *APIServerQuery) Fetch(ctx context.Context, groupVersion, kind string) (
 		q.QueryFilter.StatusFilter, q.QueryFilter.LabelSelectorFilter, q.QueryFilter.IPFilter)
 	total := len(resources)
 	resources = q.QueryFilter.Page(resources)
-	resp := buildList(resources)
+	resp := buildList(ctx, resources)
 	resp["total"] = total
 	return resp, nil
 }
@@ -215,7 +215,7 @@ func listNamespaceResources(ctx context.Context, clusterID string, namespaces []
 }
 
 // BuildList build list response data
-func buildList(resources []*storage.Resource) map[string]interface{} {
+func buildList(ctx context.Context, resources []*storage.Resource) map[string]interface{} {
 	result := map[string]interface{}{}
 	if len(resources) == 0 {
 		return result
@@ -232,6 +232,14 @@ func buildList(resources []*storage.Resource) map[string]interface{} {
 	for _, item := range resources {
 		uid, _ := mapx.GetItems(item.Data, "metadata.uid")
 		ext := formatFunc(item.Data)
+		// 共享集群不展示集群域资源
+		clusterInfo, err := cluster.GetClusterInfo(ctx, item.ClusterID)
+		if err != nil {
+			continue
+		}
+		if ext["scope"] == "Cluster" && clusterInfo.IsShared {
+			continue
+		}
 		ext["clusterID"] = item.ClusterID
 		manifestExt[uid.(string)] = ext
 		manifestItems = append(manifestItems, pruneFunc(item.Data))
@@ -274,6 +282,7 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 			}
 			nss = append(nss, ns)
 		}
+		// 命名空间为空，则查询集群下用户所有命名空间
 		if len(nss) == 0 {
 			clusterNs, err := project.GetProjectNamespace(ctx, projInfo.Code, v.ClusterID)
 			if err != nil {
@@ -292,8 +301,8 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 		}
 
 		// SC 允许用户查看
-		if slice.StringInSlice(kind, cluster.SharedClusterBypassNativeKinds) {
-			newClusters = append(newClusters, &clusterRes.ClusterNamespaces{ClusterID: v.ClusterID, Namespaces: nss})
+		if slice.StringInSlice(kind, cluster.SharedClusterBypassClusterScopedKinds) {
+			newClusters = append(newClusters, &clusterRes.ClusterNamespaces{ClusterID: v.ClusterID})
 			continue
 		}
 		// 共享集群不允许访问的资源类型

@@ -73,6 +73,7 @@ type Options struct {
 	PublicProjects       []string                   `json:"-"`
 	AnalysisConfig       *common.AnalysisConfig     `json:"analysisConfig,omitempty"`
 	SecretServer         *common.SecretStoreOptions `json:"secretserver,omitempty"`
+	TerraformServer      *common.TerraformConfig    `json:"terraformServer,omitempty"`
 	Auth                 *common.AuthConfig         `json:"auth,omitempty"`
 	TraceConfig          *common.TraceConfig        `json:"traceConfig,omitempty"`
 	AuditConfig          *common.AuditConfig        `json:"auditConfig,omitempty"`

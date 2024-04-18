@@ -16,6 +16,7 @@ package httpsvr
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -27,6 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/common"
 )
 
 // HttpServerClient http server client
@@ -125,7 +127,8 @@ func (h *HttpServerClient) ListAppMonitors(request *restful.Request, response *r
 			for _, dashBoard := range panel.Status.DashBoards {
 				info.PanelInfo = append(info.PanelInfo, PanelInfo{
 					Name: dashBoard.Board,
-					URL:  fmt.Sprintf("https://bkmonitor.woa.com/?bizId=%s#/grafana/d/%s", bizID, dashBoard.ID),
+					URL: fmt.Sprintf("%s?bizId=%s#/grafana/d/%s", os.Getenv(common.EnvNameBKMAPIDomain), bizID,
+						dashBoard.ID),
 				})
 			}
 		}

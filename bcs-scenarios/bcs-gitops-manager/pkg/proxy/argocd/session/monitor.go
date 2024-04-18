@@ -25,18 +25,41 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // MonitorSession defines the instance that to proxy to monitor server
 type MonitorSession struct {
-	op *options.Options
+	op           *options.Options
+	reverseProxy *httputil.ReverseProxy
 }
 
 // NewMonitorSession create the session of monitor
 func NewMonitorSession() *MonitorSession {
-	return &MonitorSession{
+	s := &MonitorSession{
 		op: options.GlobalOptions(),
+	}
+	s.initReverseProxy()
+	return s
+}
+
+func (s *MonitorSession) initReverseProxy() {
+	s.reverseProxy = &httputil.ReverseProxy{
+		Director: func(request *http.Request) {},
+		ErrorHandler: func(res http.ResponseWriter, req *http.Request, e error) {
+			requestID := req.Context().Value(traceconst.RequestIDHeaderKey).(string)
+			realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
+			fullPath := fmt.Sprintf("https://%s%s", s.op.MonitorConfig.Address, realPath)
+			blog.Errorf("RequestID[%s] monitor session proxy '%s' with header '%s' failure: %s",
+				requestID, fullPath, req.Header, e.Error())
+			res.WriteHeader(http.StatusInternalServerError)
+			_, _ = res.Write([]byte("monitor session proxy failed")) // nolint
+		},
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
+		},
+		ModifyResponse: func(r *http.Response) error {
+			return nil
+		},
 	}
 }
 
@@ -56,28 +79,8 @@ func (s *MonitorSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		_, _ = rw.Write([]byte(err.Error())) // nolint
 		return
 	}
-	reverseProxy := httputil.ReverseProxy{
-		Director: func(request *http.Request) {
-			request.URL = newURL
-		},
-		ErrorHandler: func(res http.ResponseWriter, request *http.Request, e error) {
-			if !utils.IsContextCanceled(e) { // nolint  empty branch (staticcheck)
-				// metric.ManagerSecretProxyFailed.WithLabelValues().Inc()
-			}
-			blog.Errorf("RequestID[%s] monitor session proxy '%s' with header '%s' failure: %s",
-				requestID, fullPath, request.Header, e.Error())
-			res.WriteHeader(http.StatusInternalServerError)
-			_, _ = res.Write([]byte("monitor session proxy failed")) // nolint
-		},
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
-		},
-		ModifyResponse: func(r *http.Response) error {
-			return nil
-		},
-	}
-
+	req.URL = newURL
 	req.Header.Set(traceconst.RequestIDHeaderKey, requestID)
 	blog.Infof("RequestID[%s] monitor session serve: %s/%s", requestID, req.Method, fullPath)
-	reverseProxy.ServeHTTP(rw, req)
+	s.reverseProxy.ServeHTTP(rw, req)
 }

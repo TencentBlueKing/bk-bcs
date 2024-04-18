@@ -27,6 +27,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/utils"
 )
@@ -38,11 +39,6 @@ const (
 
 	taskStateSuccess = "SUCCESS"
 	taskStateFailure = "FAILURE"
-)
-
-const (
-	envNameBKMFullAuthToken = "BKM_FULL_AUTH_TOKEN" // nolint
-	envNameBKMAPIDomain     = "BKM_API_DOMAIN"
 )
 
 // IMonitorApiClient translate monitor crd to yaml file
@@ -127,8 +123,8 @@ type BkmApiClient struct {
 func NewBkmApiClient(subPath string, opts *option.ControllerOption) *BkmApiClient {
 	return &BkmApiClient{
 		httpCli:       http.Client{},
-		FullAuthToken: os.Getenv(envNameBKMFullAuthToken),
-		MonitorURL:    os.Getenv(envNameBKMAPIDomain),
+		FullAuthToken: os.Getenv(common.EnvNameBKMFullAuthToken),
+		MonitorURL:    os.Getenv(common.EnvNameBKMAPIDomain),
 		Opts:          opts,
 
 		SubPath: subPath,

@@ -434,6 +434,11 @@
     typescript "~3.9.3"
     vue-eslint-parser "~7.1.0"
 
+"@blueking/login-modal@^1.0.1":
+  version "1.0.1"
+  resolved "https://mirrors.tencent.com/npm/@blueking/login-modal/-/login-modal-1.0.1.tgz#978a617bb2869f26c51c01f206ea29c6276af232"
+  integrity sha512-Z8TvzJiMqE9T2GXZeht15RA/NlEm+OWH/crylcOEig0+B8NIj5DomRXepQNItX32faOEeUliUgKD+dpkGH9jWA==
+
 "@blueking/notice-component@^2.0.1":
   version "2.0.1"
   resolved "https://mirrors.tencent.com/npm/@blueking/notice-component/-/notice-component-2.0.1.tgz#3f9aabeab7d5997e205f2ead759933c8f9dd5180"

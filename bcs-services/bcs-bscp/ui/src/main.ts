@@ -20,3 +20,10 @@ auth().then(() => {
 
   app.use(pinia).use(i18n).use(router).use(bkui).mount('#app');
 });
+
+// 监听登录成功页通过postMessage发送的消息，刷新当前页面
+window.addEventListener('message', (event) => {
+  if (event.data === 'login') {
+    window.location.reload();
+  }
+});

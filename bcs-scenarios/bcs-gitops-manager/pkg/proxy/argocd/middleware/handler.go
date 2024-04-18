@@ -100,6 +100,7 @@ type handler struct {
 	monitorSession    *session.MonitorSession
 	argoSession       *session.ArgoSession
 	argoStreamSession *session.ArgoStreamSession
+	terraformSession  *session.TerraformSession
 
 	tracer func(context.Context) error
 }
@@ -113,6 +114,7 @@ func NewMiddlewareHandler() MiddlewareInterface {
 		argoSession:         session.NewArgoSession(),
 		argoStreamSession:   session.NewArgoStreamSession(),
 		secretSession:       session.NewSecretSession(),
+		terraformSession:    session.NewTerraformSession(),
 		monitorSession:      session.NewMonitorSession(),
 		projectPermission:   project.NewBCSProjectPermClient(op.IAMClient),
 		clusterPermission:   cluster.NewBCSClusterPermClient(op.IAMClient),
@@ -150,6 +152,7 @@ func (h *handler) HttpWrapper(handler HttpHandler) http.Handler {
 		argoSession:       h.argoSession,
 		argoStreamSession: h.argoStreamSession,
 		secretSession:     h.secretSession,
+		terraformSession:  h.terraformSession,
 		monitorSession:    h.monitorSession,
 	}
 	blog.Infof("[Trace] request handler '%s' add to otel", handlerName)
@@ -200,7 +203,7 @@ func (h *handler) CheckProjectPermission(ctx context.Context, projectName string
 	projectID := common.GetBCSProjectID(argoProject.Annotations)
 	if projectID == "" {
 		return nil, http.StatusForbidden,
-			errors.Errorf("project '%s' got ID failed, not under control", projectName)
+			errors.Errorf("project '%s' got id failed, not under control", projectName)
 	}
 	var statusCode int
 	// CheckProjectPermissionByID 检查登录态用户对于项目的权限
@@ -351,7 +354,7 @@ func (h *handler) CheckRepositoryPermission(ctx context.Context, repoName string
 	if repo == nil {
 		return nil, http.StatusNotFound, errors.Errorf("repository '%s' not found", repoName)
 	}
-	if slices.Contains[string](h.option.PublicProjects, repo.Project) {
+	if slices.Contains[[]string](h.option.PublicProjects, repo.Project) {
 		return repo, http.StatusOK, nil
 	}
 	projectName := repo.Project
@@ -368,7 +371,7 @@ func (h *handler) checkRepositoryBelongProject(ctx context.Context, repoUrl, pro
 		return false, fmt.Errorf("repo '%s' not found", repoUrl)
 	}
 	// passthrough if repository's project equal to public projects
-	if slices.Contains[string](h.option.PublicProjects, repo.Project) {
+	if slices.Contains[[]string](h.option.PublicProjects, repo.Project) {
 		return true, nil
 	}
 
@@ -556,7 +559,7 @@ func (h *handler) ListClusters(ctx context.Context, projectNames []string) (
 	projectClusters := make(map[string][]string)
 	controlledClusters := make(map[string]v1alpha1.Cluster)
 	for _, cls := range clusterList.Items {
-		if !slices.Contains[string](projectNames, cls.Project) {
+		if !slices.Contains[[]string](projectNames, cls.Project) {
 			continue
 		}
 		controlProjectID := common.GetBCSProjectID(cls.Annotations)
@@ -652,5 +655,5 @@ func (h *handler) ListApplications(ctx context.Context, query *appclient.Applica
 }
 
 func (h *handler) isAdminUser(user string) bool {
-	return slices.Contains[string](h.option.AdminUsers, user)
+	return slices.Contains[[]string](h.option.AdminUsers, user)
 }
