@@ -17,12 +17,13 @@ import (
 	"fmt"
 	"net/http"
 
+	blog "k8s.io/klog/v2"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	moduleDiscovery "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/networkdetection/types"
 	schedtypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/types"
-	blog "k8s.io/klog/v2"
 )
 
 // MesosDriver http API SDK definition

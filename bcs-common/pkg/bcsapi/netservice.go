@@ -27,11 +27,11 @@ import (
 	"strings"
 	"time"
 
+	blog "k8s.io/klog/v2"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
-	blog "k8s.io/klog/v2"
-
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 )
 

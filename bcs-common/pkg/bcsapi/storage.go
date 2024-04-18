@@ -17,14 +17,14 @@ import (
 	"fmt"
 	"strings"
 
+	blog "k8s.io/klog/v2"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
-	blog "k8s.io/klog/v2"
-
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
 )
 
 const (

@@ -16,8 +16,9 @@ import (
 	"fmt"
 	"net/http"
 
-	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/parnurzeal/gorequest"
+
+	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 )
 
 func configureRequest(r *gorequest.SuperAgent, config *Config) *gorequest.SuperAgent { // nolint
