@@ -59,52 +59,50 @@ func (g *GoMicroAuth) SetCheckUserPerm(checkUserPerm func(ctx context.Context,
 }
 
 // AuthenticationFunc is the authentication function for go-micro
-func (g *GoMicroAuth) AuthenticationFunc() server.HandlerWrapper {
-	return func(fn server.HandlerFunc) server.HandlerFunc {
-		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-			md, ok := metadata.FromContext(ctx)
-			if !ok {
-				return errors.New("failed to get micro's metadata")
-			}
-			authUser := AuthUser{}
-
-			// parse client token from header
-			clientName, ok := md.Get(InnerClientHeaderKey)
-			if ok {
-				authUser.InnerClient = clientName
-			}
-
-			// parse jwt token from header
-			jwtToken, ok := md.Get(AuthorizationHeaderKey)
-			if ok {
-				u, err := g.parseJwtToken(jwtToken)
-				if err != nil {
-					return err
-				}
-				// !NOTO: bk-apigw would set SubType to "user" even if use client's app code and secret
-				if u.SubType == jwt.User.String() {
-					authUser.Username = u.UserName
-				}
-				if u.SubType == jwt.Client.String() {
-					authUser.ClientName = u.ClientID
-				}
-				if len(u.BKAppCode) != 0 {
-					authUser.ClientName = u.BKAppCode
-				}
-			}
-
-			// If and only if client name from jwt token is not empty, we will check username in header
-			if authUser.ClientName != "" {
-				username, ok := md.Get(CustomUsernameHeaderKey)
-				if ok && username != "" {
-					authUser.Username = username
-				}
-			}
-
-			// set auth user to context
-			ctx = context.WithValue(ctx, AuthUserKey, authUser)
-			return fn(ctx, req, rsp)
+func (g *GoMicroAuth) AuthenticationFunc(fn server.HandlerFunc) server.HandlerFunc {
+	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
+		md, ok := metadata.FromContext(ctx)
+		if !ok {
+			return errors.New("failed to get micro's metadata")
 		}
+		authUser := AuthUser{}
+
+		// parse client token from header
+		clientName, ok := md.Get(InnerClientHeaderKey)
+		if ok {
+			authUser.InnerClient = clientName
+		}
+
+		// parse jwt token from header
+		jwtToken, ok := md.Get(AuthorizationHeaderKey)
+		if ok {
+			u, err := g.parseJwtToken(jwtToken)
+			if err != nil {
+				return err
+			}
+			// !NOTO: bk-apigw would set SubType to "user" even if use client's app code and secret
+			if u.SubType == jwt.User.String() {
+				authUser.Username = u.UserName
+			}
+			if u.SubType == jwt.Client.String() {
+				authUser.ClientName = u.ClientID
+			}
+			if len(u.BKAppCode) != 0 {
+				authUser.ClientName = u.BKAppCode
+			}
+		}
+
+		// If and only if client name from jwt token is not empty, we will check username in header
+		if authUser.ClientName != "" {
+			username, ok := md.Get(CustomUsernameHeaderKey)
+			if ok && username != "" {
+				authUser.Username = username
+			}
+		}
+
+		// set auth user to context
+		ctx = context.WithValue(ctx, AuthUserKey, authUser)
+		return fn(ctx, req, rsp)
 	}
 }
 
