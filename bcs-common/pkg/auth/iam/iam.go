@@ -27,10 +27,9 @@ import (
 	"github.com/TencentBlueKing/iam-go-sdk/logger"
 	"github.com/TencentBlueKing/iam-go-sdk/metric"
 	"github.com/golang-migrate/migrate/v4/source"
+	"github.com/parnurzeal/gorequest"
 	"github.com/sirupsen/logrus"
 	"k8s.io/klog/v2"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/restyclient"
 )
 
 // PermClient interface for IAM backend client
@@ -374,21 +373,23 @@ func (ic *iamClient) CreateGradeManagers(ctx context.Context, request GradeManag
 		return 0, err
 	}
 
-	result, err := restyclient.R().
-		SetHeader("Content-Type", "application/json").
-		SetHeader("Accept", "application/json").
-		SetHeader("X-Bkapi-Authorization", auth).
-		SetBody(&request).
-		SetResult(resp).
-		Post(url)
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		Send(&request).
+		EndStruct(resp)
 
-	if err != nil {
-		klog.Errorf("CreateGradeManagers gorequest errors=`%s`", err)
-		return 0, err
+	if len(errs) != 0 {
+		klog.Errorf("CreateGradeManagers gorequest errors=`%s`", errs)
+		return 0, errs[0]
 	}
-	if result.StatusCode() != http.StatusOK || resp.Code != 0 {
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("CreateGradeManagers API error: code[%v], body[%v], err[%s]",
-			result.StatusCode(), string(result.Body()), resp.Message)
+			result.StatusCode, string(body), resp.Message)
 		return 0, errMsg
 	}
 
@@ -422,21 +423,23 @@ func (ic *iamClient) CreateUserGroup(ctx context.Context, gradeManagerID uint64,
 		return nil, err
 	}
 
-	result, err := restyclient.R().
-		SetHeader("Content-Type", "application/json").
-		SetHeader("Accept", "application/json").
-		SetHeader("X-Bkapi-Authorization", auth).
-		SetBody(&request).
-		SetResult(resp).
-		Post(url)
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		Send(&request).
+		EndStruct(resp)
 
-	if err != nil {
-		klog.Errorf("CreateUserGroup gorequest errors=`%s`", err)
-		return nil, err
+	if len(errs) != 0 {
+		klog.Errorf("CreateUserGroup gorequest errors=`%s`", errs)
+		return nil, errs[0]
 	}
-	if result.StatusCode() != http.StatusOK || resp.Code != 0 {
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("CreateUserGroup API error: code[%v], body[%v], err[%s]",
-			result.StatusCode(), string(result.Body()), resp.Message)
+			result.StatusCode, string(body), resp.Message)
 		return nil, errMsg
 	}
 
@@ -466,20 +469,22 @@ func (ic *iamClient) DeleteUserGroup(ctx context.Context, groupID uint64) error 
 		return err
 	}
 
-	result, err := restyclient.R().
-		SetHeader("Content-Type", "application/json").
-		SetHeader("Accept", "application/json").
-		SetHeader("X-Bkapi-Authorization", auth).
-		SetResult(resp).
-		Delete(url)
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Delete(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		EndStruct(resp)
 
-	if err != nil {
-		klog.Errorf("DeleteUserGroup gorequest errors=`%s`", err)
-		return err
+	if len(errs) != 0 {
+		klog.Errorf("DeleteUserGroup gorequest errors=`%s`", errs)
+		return errs[0]
 	}
-	if result.StatusCode() != http.StatusOK || resp.Code != 0 {
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("DeleteUserGroup API error: code[%v], body[%v], err[%s]",
-			result.StatusCode(), string(result.Body()), resp.Message)
+			result.StatusCode, string(body), resp.Message)
 		return errMsg
 	}
 
@@ -509,21 +514,23 @@ func (ic *iamClient) AddUserGroupMembers(ctx context.Context, groupID uint64, re
 		return err
 	}
 
-	result, err := restyclient.R().
-		SetHeader("Content-Type", "application/json").
-		SetHeader("Accept", "application/json").
-		SetHeader("X-Bkapi-Authorization", auth).
-		SetBody(&request).
-		SetResult(resp).
-		Post(url)
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		Send(&request).
+		EndStruct(resp)
 
-	if err != nil {
-		klog.Errorf("AddUserGroupMembers gorequest errors=`%s`", err)
-		return err
+	if len(errs) != 0 {
+		klog.Errorf("AddUserGroupMembers gorequest errors=`%s`", errs)
+		return errs[0]
 	}
-	if result.StatusCode() != http.StatusOK || resp.Code != 0 {
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("AddUserGroupMembers API error: code[%v], body[%v], err[%s]",
-			result.StatusCode(), string(result.Body()), resp.Message)
+			result.StatusCode, string(body), resp.Message)
 		return errMsg
 	}
 
@@ -560,22 +567,24 @@ func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, groupID uint64,
 		return fmt.Errorf("DeleteUserGroupMembers paras IDs empty")
 	}
 
-	result, err := restyclient.R().
-		SetQueryParam("type", request.Type).
-		SetQueryParam("ids", strings.Join(request.IDs, ",")).
-		SetHeader("Content-Type", "application/json").
-		SetHeader("Accept", "application/json").
-		SetHeader("X-Bkapi-Authorization", auth).
-		SetResult(resp).
-		Delete(url)
+	result, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Delete(url).
+		Query(fmt.Sprintf("type=%s", request.Type)).
+		Query(fmt.Sprintf("ids=%s", strings.Join(request.IDs, ","))).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		EndStruct(resp)
 
-	if err != nil {
-		klog.Errorf("DeleteUserGroupMembers gorequest errors=`%s`", err)
-		return err
+	if len(errs) != 0 {
+		klog.Errorf("DeleteUserGroupMembers gorequest errors=`%s`", errs)
+		return errs[0]
 	}
-	if result.StatusCode() != http.StatusOK || resp.Code != 0 {
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("DeleteUserGroupMembers API error: code[%v], err[%s]",
-			result.StatusCode(), resp.Message)
+			result.StatusCode, resp.Message)
 		return errMsg
 	}
 
@@ -605,21 +614,23 @@ func (ic *iamClient) CreateUserGroupPolicies(ctx context.Context, groupID uint64
 		return err
 	}
 
-	result, err := restyclient.R().
-		SetHeader("Content-Type", "application/json").
-		SetHeader("Accept", "application/json").
-		SetHeader("X-Bkapi-Authorization", auth).
-		SetBody(&request).
-		SetResult(resp).
-		Post(url)
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		Send(&request).
+		EndStruct(resp)
 
-	if err != nil {
-		klog.Errorf("CreateUserGroupPolicies gorequest errors=`%s`", err)
-		return err
+	if len(errs) != 0 {
+		klog.Errorf("CreateUserGroupPolicies gorequest errors=`%s`", errs)
+		return errs[0]
 	}
-	if result.StatusCode() != http.StatusOK || resp.Code != 0 {
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("CreateUserGroupPolicies API error: code[%v], body[%v], err[%s]",
-			result.StatusCode(), string(result.Body()), resp.Message)
+			result.StatusCode, string(body), resp.Message)
 		return errMsg
 	}
 
@@ -648,21 +659,23 @@ func (ic *iamClient) AuthResourceCreatorPerm(ctx context.Context, resource Resou
 
 	request := buildResourceCreatorActionRequest(resource, ancestors)
 
-	result, errs := restyclient.R().
-		SetHeader("Content-Type", "application/json").
-		SetHeader("Accept", "application/json").
-		SetHeader("X-Bkapi-Authorization", auth).
-		SetBody(&request).
-		SetResult(resp).
-		Post(url)
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		Send(&request).
+		EndStruct(resp)
 
-	if err != nil {
-		klog.Errorf("AuthResourceCreatorPerm gorequest errors=`%s`", err)
-		return errs
+	if len(errs) != 0 {
+		klog.Errorf("AuthResourceCreatorPerm gorequest errors=`%s`", errs)
+		return errs[0]
 	}
-	if result.StatusCode() != http.StatusOK || resp.Code != 0 {
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("AuthResourceCreatorPerm API error: code[%v], body[%v], err[%s]",
-			result.StatusCode(), string(result.Body()), resp.Message)
+			result.StatusCode, string(body), resp.Message)
 		return errMsg
 	}
 
