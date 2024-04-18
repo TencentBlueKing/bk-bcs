@@ -114,9 +114,9 @@ type Client struct {
 }
 
 // UserManager client interface
-// func (c *Client) UserManager() UserManager {
-//	return NewUserManager(c.config)
-// }
+func (c *Client) UserManager() UserManager {
+	return NewUserManager(c.config)
+}
 
 // MesosDriver client interface
 // func (c *Client) MesosDriver() MesosDriver {
@@ -124,6 +124,6 @@ type Client struct {
 // }
 
 // Storage client interface
-// func (c *Client) Storage() Storage {
-//	return NewStorage(c.config)
-// }
+func (c *Client) Storage() Storage {
+	return NewStorage(c.config)
+}
