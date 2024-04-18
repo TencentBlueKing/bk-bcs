@@ -6,7 +6,7 @@
     <div class="management-data-container">
       <VersionRelease :bk-biz-id="bkBizId" :app-id="appId" />
       <PullMass :bk-biz-id="bkBizId" :app-id="appId" />
-      <ClientLabel :bk-biz-id="bkBizId" :app-id="appId" />
+      <LabelAndAnnotations :bk-biz-id="bkBizId" :app-id="appId" />
       <ComponentInfo :bk-biz-id="bkBizId" :app-id="appId" />
     </div>
   </section>
@@ -18,7 +18,7 @@
   import ClientHeader from '../components/client-header.vue';
   import VersionRelease from './section/version-release/index.vue';
   import PullMass from './section/pull-mass/index.vue';
-  import ClientLabel from './section/client-label/index.vue';
+  import LabelAndAnnotations from './section/label-and-annotations/index.vue';
   import ComponentInfo from './section/component-info/index.vue';
 
   const route = useRoute();

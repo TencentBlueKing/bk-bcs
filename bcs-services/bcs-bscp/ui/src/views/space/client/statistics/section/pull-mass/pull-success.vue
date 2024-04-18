@@ -110,7 +110,7 @@
       data.value = res.change_status.map((item: any) => ({
         count: item.count,
         percent: item.percent,
-        release_change_status: item.release_change_status,
+        release_change_status: item.release_change_status === 'Success' ? '拉取成功' : '拉取失败',
       }));
     } catch (error) {
       console.error(error);
@@ -125,6 +125,9 @@
       data: data.value,
       angleField: 'count',
       colorField: 'release_change_status',
+      color: ({ release_change_status }) => {
+        return release_change_status === '拉取成功' ? '#85CCA8' : '#F5876C';
+      },
       radius: 0.9,
       label: {
         type: 'inner',

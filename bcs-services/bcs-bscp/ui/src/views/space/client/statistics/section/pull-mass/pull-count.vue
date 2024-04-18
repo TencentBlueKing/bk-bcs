@@ -155,7 +155,7 @@
         },
       ],
 
-      padding: [10, 10, 30, 20],
+      padding: [10, 20, 30, 20],
       geometryOptions: [
         {
           geometry: 'column',
