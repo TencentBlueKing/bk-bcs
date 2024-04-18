@@ -15,10 +15,12 @@ package mock
 import (
 	"context"
 	"encoding/json"
+
 	pm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type MockPmClient struct {
@@ -31,7 +33,7 @@ func NewMockPmClient() bcsproject.BcsProjectManagerClient {
 
 func (m *MockPmClient) GetBcsProjectManagerConn() (*grpc.ClientConn, error) {
 	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithInsecure())
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	var conn *grpc.ClientConn
 	conn, _ = grpc.Dial("127.0.0.1", opts...)
 	return conn, nil
