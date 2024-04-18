@@ -55,6 +55,5 @@ type Registry interface {
 	// it means that registry is ready to exit
 	Deregister() error
 	// Get get specified service by name in local cache
-	// Get(name string) (*microRegistry.Service, error)
 	Get(name string) (*registry.Service, error)
 }
