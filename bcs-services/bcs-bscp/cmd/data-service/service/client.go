@@ -350,8 +350,8 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 	}
 
 	counts := make(map[string]map[string]int)
-	total := len(items)
 
+	total := make(map[string]int)
 	for _, item := range items {
 		lable := map[string]string{}
 		_ = json.Unmarshal([]byte(item.Spec.Labels), &lable)
@@ -360,6 +360,7 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 				counts[key] = make(map[string]int)
 			}
 			counts[key][value]++
+			total[key]++
 		}
 	}
 
@@ -371,7 +372,7 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 				"key":     key,
 				"value":   k,
 				"count":   v,
-				"percent": float64(v) / float64(total) * 100,
+				"percent": float64(v) / float64(total[key]),
 			})
 		}
 		resp[key] = items
@@ -476,7 +477,7 @@ func (s *Service) clientVersionDistribution(kit *kit.Kit, bizID, appID uint32, h
 	for _, item := range items {
 		key := string(item.Spec.ClientType) + "_" + item.Spec.ClientVersion
 		count := counts[key]
-		percent := float64(count) / float64(totalCount) * 100
+		percent := float64(count) / float64(totalCount)
 		data = append(data, map[string]interface{}{
 			"client_type":    string(item.Spec.ClientType),
 			"client_version": item.Spec.ClientVersion,
