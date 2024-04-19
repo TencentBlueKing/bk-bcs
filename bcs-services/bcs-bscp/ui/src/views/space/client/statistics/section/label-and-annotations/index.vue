@@ -103,7 +103,6 @@
     () => {
       getAddChartDate();
       loadLabelsAndAnnotationsData();
-      selectedChart.value = [];
     },
   );
 
@@ -155,9 +154,9 @@
     try {
       loading.value = true;
       const res = await getClientLabelData(props.bkBizId, props.appId, params);
+      allLabelData.value = res;
+      selectedChart.value = [];
       if (Object.keys(res).length) {
-        allLabelData.value = res;
-        selectedChart.value = [];
         selectedLabel.value.forEach((item) => {
           const data = allLabelData.value?.[item];
           if (data) {
