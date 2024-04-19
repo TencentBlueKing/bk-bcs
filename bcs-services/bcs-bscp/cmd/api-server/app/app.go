@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/api-server/options"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/api-server/service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
@@ -102,7 +104,19 @@ func (as *apiServer) listenAndServe() error {
 	as.service = svc
 
 	network := cc.ApiServer().Network
-	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.HttpPort)))
+	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
+	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.HttpPort))
+	dualStackListener := listener.NewDualStackListener()
+	if e := dualStackListener.AddListenerWithAddr(addr); e != nil {
+		return e
+	}
+
+	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
+		if e := dualStackListener.AddListenerWithAddr(ipv6Addr); e != nil {
+			return e
+		}
+		logs.Infof("api serve dualStackListener with ipv6: %s", ipv6Addr)
+	}
 
 	handler, err := as.service.Handler()
 	if err != nil {
@@ -132,14 +146,14 @@ func (as *apiServer) listenAndServe() error {
 		as.serve.TLSConfig = tlsC
 
 		go func() {
-			if err := as.serve.ListenAndServeTLS("", ""); err != nil {
+			if err := as.serve.ServeTLS(dualStackListener, "", ""); err != nil {
 				logs.Errorf("https server listen and serve failed, err: %v", err)
 				shutdown.SignalShutdownGracefully()
 			}
 		}()
 	} else {
 		go func() {
-			if err := as.serve.ListenAndServe(); err != nil {
+			if err := as.serve.Serve(dualStackListener); err != nil {
 				logs.Errorf("http server listen and serve failed, err: %v", err)
 				shutdown.SignalShutdownGracefully()
 			}
