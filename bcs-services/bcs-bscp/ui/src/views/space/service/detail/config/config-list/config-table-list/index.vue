@@ -22,10 +22,11 @@
           :version-id="versionData.id"
           :version-name="versionData.spec.name" />
         <BatchDeleteKv
-          v-if="!isFileType && versionData.status.publish_status === 'editing'"
+          v-if="versionData.status.publish_status === 'editing'"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :selected-ids="selectedIds"
+          :is-file-type="isFileType"
           @deleted="handleBatchDeleted" />
       </div>
       <SearchInput
@@ -35,22 +36,15 @@
         :placeholder="t('配置文件名/创建人/修改人')" />
     </div>
     <section class="config-list-table">
-      <template v-if="isFileType">
-        <TableWithTemplates
-          v-if="useTemplate"
-          ref="tableRef"
-          :bk-biz-id="props.bkBizId"
-          :app-id="props.appId"
-          :search-str="searchStr"
-          @clear-str="clearStr"
-          @delete-config="refreshVariable" />
-        <TableWithPagination
-          v-else
-          ref="tableRef"
-          :bk-biz-id="props.bkBizId"
-          :app-id="props.appId"
-          :search-str="searchStr" />
-      </template>
+      <TableWithTemplates
+        v-if="isFileType"
+        ref="tableRef"
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        :search-str="searchStr"
+        @clear-str="clearStr"
+        @delete-config="refreshVariable"
+        @update-selected-ids="selectedIds = $event" />
       <TableWithKv
         v-else
         ref="tableRef"
@@ -73,10 +67,9 @@
   import EditVariables from './variables/edit-variables.vue';
   import ViewVariables from './variables/view-variables.vue';
   import TableWithTemplates from './tables/table-with-templates.vue';
-  import TableWithPagination from './tables/table-with-pagination.vue';
   import TableWithKv from './tables/table-with-kv.vue';
   import ConfigExport from './config-export.vue';
-  import BatchDeleteKv from './batch-delete-kv.vue';
+  import BatchDeleteKv from './batch-delete-btn.vue';
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
@@ -91,7 +84,6 @@
 
   const tableRef = ref();
   const searchStr = ref('');
-  const useTemplate = ref(true);
   const editVariablesRef = ref();
   const selectedIds = ref<number[]>([]);
 
