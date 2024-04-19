@@ -655,7 +655,9 @@ func (n *Network) trySetDefault() {
 	if len(n.BindIP) == 0 {
 		n.BindIP = "127.0.0.1"
 	}
-	n.BindIPv6 = tools.GetIPv6AddrFromEnv()
+	if len(n.BindIPv6) == 0 {
+		n.BindIPv6 = tools.GetIPv6AddrFromEnv()
+	}
 }
 
 // validate network options
