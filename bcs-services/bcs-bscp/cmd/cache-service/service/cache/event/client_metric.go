@@ -201,21 +201,21 @@ func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) er
 		}
 	}
 
+	for _, v := range hbClient {
+		clientData = append(clientData, v)
+	}
 	for _, v := range vcClient {
 		clientData = append(clientData, v)
 	}
-	for _, v := range hbClient {
-		clientData = append(clientData, v)
+
+	for _, v := range hbClientEvent {
+		clientEventData = append(clientEventData, v)
 	}
 	for _, v := range vcClientEvent {
 		clientEventData = append(clientEventData, v)
 	}
-	for _, v := range hbClientEvent {
-		clientEventData = append(clientEventData, v)
-	}
 
-	err := cm.op.BatchUpsertClientMetrics(kt, clientData, clientEventData)
-	if err != nil {
+	if err := cm.op.BatchUpsertClientMetrics(kt, clientData, clientEventData); err != nil {
 		logs.Errorf("batch upsert client metrics failed, rid: %s, err: %s", kt.Rid, err.Error())
 		return err
 	}

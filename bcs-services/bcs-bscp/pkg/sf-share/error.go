@@ -30,8 +30,8 @@ const (
 	SkipFailed FailedReason = 4
 	// TokenFailed represents failure due to token issues
 	TokenFailed FailedReason = 5
-	// SdkVersionIsTooLowFailed represents failure due to SDK version being too low
-	SdkVersionIsTooLowFailed FailedReason = 6
+	// VersionIsTooLowFailed represents failure due to version being too low
+	VersionIsTooLowFailed FailedReason = 6
 	// AppMetaFailed represents failure in app metadata
 	AppMetaFailed FailedReason = 7
 	// DeleteOldFilesFailed represents failure in deleting old files
@@ -44,7 +44,7 @@ const (
 func (fr FailedReason) Validate() error {
 	switch fr {
 	case PreHookFailed, PostHookFailed, DownloadFailed, SkipFailed, TokenFailed,
-		SdkVersionIsTooLowFailed, AppMetaFailed, DeleteOldFilesFailed,
+		VersionIsTooLowFailed, AppMetaFailed, DeleteOldFilesFailed,
 		UpdateMetadataFailed:
 		return nil
 	default:
@@ -65,8 +65,8 @@ func (fr FailedReason) String() string {
 		return "SkipFailed"
 	case TokenFailed:
 		return "TokenFailed"
-	case SdkVersionIsTooLowFailed:
-		return "SdkVersionIsTooLowFailed"
+	case VersionIsTooLowFailed:
+		return "VersionIsTooLowFailed"
 	case AppMetaFailed:
 		return "AppMetaFailed"
 	case DeleteOldFilesFailed:
@@ -127,6 +127,9 @@ const (
 	FormattingFailed
 	// TokenPermissionFailed represents failure due to token permission issues
 	TokenPermissionFailed
+
+	// SDKVersionIsTooLowFailed represents failure due to sdk version being too low
+	SDKVersionIsTooLowFailed
 )
 
 // Validate the specific failed reason is valid or not
@@ -138,7 +141,7 @@ func (s SpecificFailedReason) Validate() error {
 		NoDownloadPermission, GenerateDownloadLinkFailed, ValidateDownloadFailed,
 		DownloadChunkFailed, RetryDownloadFailed,
 		DataEmpty, SerializationFailed,
-		FormattingFailed, TraverseFolderFailed, StatFileFailed,
+		FormattingFailed, TraverseFolderFailed, StatFileFailed, SDKVersionIsTooLowFailed,
 		DeleteFolderFailed:
 		return nil
 	default:
@@ -191,6 +194,8 @@ func (s SpecificFailedReason) String() string {
 		return "TokenPermissionFailed"
 	case ReadFileFailed:
 		return "ReadFileFailed"
+	case SDKVersionIsTooLowFailed:
+		return "SDKVersionIsTooLowFailed"
 	default:
 		return ""
 	}

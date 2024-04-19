@@ -31,6 +31,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	pbfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
@@ -352,7 +353,15 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	*pbfs.GetDownloadURLResp, error) {
 	// check if the sidecar's version can be accepted.
 	if !sfs.IsAPIVersionMatch(req.ApiVersion) {
-		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
+		st := status.New(codes.FailedPrecondition, "sdk's api version is too low, should be upgraded")
+		st, err := st.WithDetails(&pbbase.ErrDetails{
+			PrimaryError:   uint32(sfs.VersionIsTooLowFailed),
+			SecondaryError: uint32(sfs.SDKVersionIsTooLowFailed),
+		})
+		if err != nil {
+			return nil, status.Error(codes.Internal, "grpc status with details failed")
+		}
+		return nil, st.Err()
 	}
 
 	im, err := sfs.ParseFeedIncomingContext(ctx)
