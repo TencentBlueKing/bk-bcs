@@ -218,6 +218,12 @@ service Config {
       body: "*"
     };
   }
+  rpc UpdateHook(UpdateHookReq) returns (UpdateHookResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+      body: "*"
+    };
+  }
   rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/hooks"
@@ -1315,7 +1321,7 @@ message CreateHookReq {
   uint32 biz_id = 1;
   string name = 2;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   string content = 6;
   string revision_name = 7;
@@ -1338,6 +1344,15 @@ message BatchDeleteHookReq {
   repeated uint32 ids = 2;
   bool force = 3;
 }
+
+message UpdateHookReq {
+  uint32 biz_id = 1;
+  uint32 hook_id = 2;
+  repeated string tags = 3;
+  string memo = 4;
+}
+
+message UpdateHookResp {}
 
 message ListHooksReq {
   uint32 biz_id = 1;
@@ -1433,7 +1448,7 @@ message GetHookResp {
 message GetHookInfoSpec {
   string name = 1;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   message Releases {
     uint32 not_release_id = 1;

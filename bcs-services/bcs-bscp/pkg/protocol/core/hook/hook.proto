@@ -18,7 +18,7 @@ message Hook {
 message HookSpec {
   string name = 1;
   string type = 2;
-  string tag = 3;
+  repeated string tags = 3;
   string memo = 4;
   string content = 5;
   string revision_name = 6;
