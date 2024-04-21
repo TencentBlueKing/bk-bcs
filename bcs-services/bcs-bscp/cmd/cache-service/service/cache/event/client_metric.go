@@ -143,8 +143,8 @@ func (cm *ClientMetric) getClientMetricList(kt *kit.Kit, key string, listLen int
 }
 
 // 处理 client metric 数据
-// client 表是按照 业务+服务+客户端+事件类型 维度：数据做聚合
-// client event 表是按照 业务+服务+客户端+事件类型+事件ID 维度：数据做聚合
+// client 表是按照 业务+服务+客户端 维度：数据做聚合
+// client event 表是按照 业务+服务+客户端+客户端模式+事件ID 维度：数据做聚合
 func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) error {
 	vc := new(sfs.VersionChangePayload)
 	hb := new(sfs.HeartbeatItem)
@@ -152,11 +152,11 @@ func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) er
 	clientData := []*pbclient.Client{}
 	clientEventData := []*pbce.ClientEvent{}
 
-	vcClientEvent := map[string]*pbce.ClientEvent{}
+	hbClient := map[string]*pbclient.Client{}
 	hbClientEvent := map[string]*pbce.ClientEvent{}
 
-	hbClient := map[string]*pbclient.Client{}
 	vcClient := map[string]*pbclient.Client{}
+	vcClientEvent := map[string]*pbce.ClientEvent{}
 
 	clientMetricData := sfs.ClientMetricData{}
 	for _, v := range payload {
@@ -164,10 +164,10 @@ func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) er
 		if err != nil {
 			return err
 		}
+
 		switch sfs.MessagingType(clientMetricData.MessagingType) {
 		case sfs.Heartbeat:
-			err = jsoni.Unmarshal(clientMetricData.Payload, hb)
-			if err != nil {
+			if err := hb.Decode(clientMetricData.Payload); err != nil {
 				return err
 			}
 
@@ -176,28 +176,37 @@ func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) er
 			if errHb != nil {
 				return errHb
 			}
-			hbClient = getMaxResourceUsage(clientMetric, hbClient)
 			clientEventMetric, ceErr := hb.PbClientEventMetric()
 			if ceErr != nil {
 				return ceErr
 			}
-			hbClientEvent = lastClientEventData(clientEventMetric, hbClientEvent)
+
+			// 数据从上游过来是有顺序的，根据唯一键拿最后一条
+			hbClient = getMaxResourceUsage(clientMetric, hbClient, fmt.Sprintf("%d-%d-%s", hb.BasicData.BizID,
+				hb.Application.AppID, hb.Application.Uid))
+			hbClientEvent[fmt.Sprintf("%d-%d-%s-%s-%s", hb.BasicData.BizID,
+				hb.Application.AppID, hb.Application.Uid, hb.BasicData.ClientMode, hb.Application.CursorID)] = clientEventMetric
 		case sfs.VersionChangeMessage:
-			err = vc.Decode(clientMetricData.Payload)
-			if err != nil {
+			if err := vc.Decode(clientMetricData.Payload); err != nil {
 				return err
 			}
+
 			vc.Application.AppID = clientMetricData.AppID
 			clientMetric, errCeVc := vc.PbClientMetric()
 			if errCeVc != nil {
 				return errCeVc
 			}
-			vcClient = lastClientData(clientMetric, vcClient)
+
 			clientEventMetric, errVc := vc.PbClientEventMetric()
 			if errVc != nil {
 				return errVc
 			}
-			vcClientEvent = lastClientEventData(clientEventMetric, vcClientEvent)
+
+			// 数据从上游过来是有顺序的，根据唯一键拿最后一条
+			vcClient[fmt.Sprintf("%d-%d-%s", vc.BasicData.BizID,
+				vc.Application.AppID, vc.Application.Uid)] = clientMetric
+			vcClientEvent[fmt.Sprintf("%d-%d-%s-%s-%s", vc.BasicData.BizID,
+				vc.Application.AppID, vc.Application.Uid, vc.BasicData.ClientMode, vc.Application.CursorID)] = clientEventMetric
 		}
 	}
 
@@ -253,57 +262,14 @@ func filterKeysByRegex(keys []string, pattern string) ([]string, error) {
 	return matchingKeys, nil
 }
 
-// 过滤出最后一条数据
-func lastClientData(clientMetric *pbclient.Client, clientMap map[string]*pbclient.Client) map[string]*pbclient.Client {
-
-	if clientMetric == nil {
-		return clientMap
-	}
-
-	key := fmt.Sprintf("%d-%d-%s", clientMetric.Attachment.BizId,
-		clientMetric.Attachment.AppId, clientMetric.Attachment.Uid)
-
-	if p, ok := clientMap[key]; ok {
-		if p.Spec.LastHeartbeatTime.AsTime().After(clientMetric.Spec.LastHeartbeatTime.AsTime()) {
-			clientMap[key] = p
-		}
-	} else {
-		clientMap[key] = clientMetric
-	}
-	return clientMap
-}
-
-func lastClientEventData(clientEventMetric *pbce.ClientEvent,
-	clientEventMap map[string]*pbce.ClientEvent) map[string]*pbce.ClientEvent {
-
-	if clientEventMetric == nil {
-		return clientEventMap
-	}
-
-	key := fmt.Sprintf("%d-%d-%s-%s", clientEventMetric.Attachment.BizId,
-		clientEventMetric.Attachment.AppId, clientEventMetric.Attachment.Uid, clientEventMetric.Attachment.CursorId)
-
-	if p, ok := clientEventMap[key]; ok {
-		if p.HeartbeatTime.AsTime().After(clientEventMetric.HeartbeatTime.AsTime()) {
-			clientEventMap[key] = p
-		}
-	} else {
-		clientEventMap[key] = clientEventMetric
-	}
-	return clientEventMap
-}
-
 // 获取最大资源使用量
 // 只有cpu和内存资源拿最大，部分数据拿最后一条
-func getMaxResourceUsage(clientMetric *pbclient.Client,
-	clientMap map[string]*pbclient.Client) map[string]*pbclient.Client {
+func getMaxResourceUsage(clientMetric *pbclient.Client, clientMap map[string]*pbclient.Client,
+	key string) map[string]*pbclient.Client {
 
 	if clientMetric == nil {
 		return clientMap
 	}
-
-	key := fmt.Sprintf("%d-%d-%s", clientMetric.Attachment.BizId,
-		clientMetric.Attachment.AppId, clientMetric.Attachment.Uid)
 
 	// 如果 key 已存在，比较并更新最大值
 	if existing, ok := clientMap[key]; ok {
@@ -330,16 +296,6 @@ func getMaxResourceUsage(clientMetric *pbclient.Client,
 		}
 		if clientMetric.Spec.Resource.MemoryUsage > existing.Spec.Resource.MemoryUsage {
 			existing.Spec.Resource.MemoryUsage = clientMetric.Spec.Resource.MemoryUsage
-		}
-
-		// clientMetric大于existing 拿部分最新的数据更新原有的值
-		if clientMetric.Spec.LastHeartbeatTime.AsTime().After(existing.Spec.LastHeartbeatTime.AsTime()) {
-			existing.Spec = &pbclient.ClientSpec{
-				FirstConnectTime:    clientMetric.Spec.FirstConnectTime,
-				LastHeartbeatTime:   clientMetric.Spec.LastHeartbeatTime,
-				OnlineStatus:        clientMetric.Spec.OnlineStatus,
-				ReleaseChangeStatus: clientMetric.Spec.ReleaseChangeStatus,
-			}
 		}
 		clientMap[key] = existing
 	} else {

@@ -424,6 +424,19 @@ func (bs *bedis) LPush(ctx context.Context, key string, values ...interface{}) e
 	return nil
 }
 
+// RPush 在列表中添加一个或多个值到列表尾部
+func (bs *bedis) RPush(ctx context.Context, key string, values ...interface{}) error {
+	start := time.Now()
+	_, err := bs.client.RPush(ctx, key, values).Result()
+	if err != nil {
+		bs.mc.errCounter.With(prm.Labels{"cmd": "rpush"}).Inc()
+		return err
+	}
+	bs.logSlowCmd(ctx, key, time.Since(start))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "rpush"}).Observe(float64(time.Since(start).Milliseconds()))
+	return nil
+}
+
 // LRange 获取列表指定范围内的元素
 func (bs *bedis) LRange(ctx context.Context, key string, start, stop int64) ([]string, error) {
 	startTime := time.Now()

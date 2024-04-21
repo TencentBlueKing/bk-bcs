@@ -188,6 +188,7 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 			logs.Errorf("version change message decoding failed, %s", err.Error())
 			return nil, err
 		}
+
 		// 处理 心跳时间和在线状态
 		vc.BasicData.HeartbeatTime = time.Now().Local().UTC()
 		vc.BasicData.OnlineStatus = sfs.Online
@@ -207,26 +208,30 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		if err != nil {
 			return nil, err
 		}
+
 		heartbeatTime := time.Now().UTC()
 		onlineStatus := sfs.Online
 		for _, item := range hb.Applications {
-			s.handleResourceUsageMetrics(hb.BasicData.BizID, item.App, hb.ResourceUsage)
-			hb.BasicData.HeartbeatTime = heartbeatTime
-			hb.BasicData.OnlineStatus = onlineStatus
-			oneData := sfs.HeartbeatItem{
-				BasicData:     hb.BasicData,
-				Application:   item,
-				ResourceUsage: hb.ResourceUsage,
-			}
-			marshal, errHb := jsoni.Marshal(oneData)
-			if errHb != nil {
-				return nil, errHb
-			}
-			clientMetricData[item.App] = &sfs.ClientMetricData{
-				MessagingType: msg.Type,
-				Payload:       marshal,
+			if item.CursorID != "" {
+				s.handleResourceUsageMetrics(hb.BasicData.BizID, item.App, hb.ResourceUsage)
+				hb.BasicData.HeartbeatTime = heartbeatTime
+				hb.BasicData.OnlineStatus = onlineStatus
+				oneData := sfs.HeartbeatItem{
+					BasicData:     hb.BasicData,
+					Application:   item,
+					ResourceUsage: hb.ResourceUsage,
+				}
+				marshal, errHb := oneData.Encode()
+				if errHb != nil {
+					return nil, errHb
+				}
+				clientMetricData[item.App] = &sfs.ClientMetricData{
+					MessagingType: msg.Type,
+					Payload:       marshal,
+				}
 			}
 		}
+
 	}
 
 	for appName, v := range clientMetricData {
