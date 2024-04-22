@@ -763,4 +763,5 @@ export default {
   最小内存资源占用: 'Minimum memory usage',
   组件类型: 'Component type',
   组件版本: 'Component version',
+  查看数据详情: 'View data details',
 };
