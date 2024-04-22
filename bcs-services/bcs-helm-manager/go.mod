@@ -38,6 +38,7 @@ require (
 	github.com/spf13/viper v1.10.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/pretty v1.0.0
+	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/vmware-tanzu/carvel-ytt v0.40.1
 	go-micro.dev/v4 v4.9.0
 	go.mongodb.org/mongo-driver v1.7.5
@@ -211,7 +212,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
-	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect
