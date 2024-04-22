@@ -857,7 +857,7 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: delete
+          method: put
           path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}
           matchSubpath: false
           timeout: 0
