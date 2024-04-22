@@ -157,6 +157,6 @@ export const CLIENT_HEARTBEAT_LIST = [
   },
   {
     value: 43200,
-    label: localT('近 {n} 天', { n: 30}),
+    label: localT('近 {n} 天', { n: 30 }),
   },
 ];

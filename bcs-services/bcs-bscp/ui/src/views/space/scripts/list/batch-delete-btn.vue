@@ -7,13 +7,11 @@
   </bk-button>
   <DeleteConfirmDialog
     v-model:isShow="isBatchDeleteDialogShow"
-    :title="t('确认删除所选的 {n} 项配置项？', { n: props.selectedIds.length })"
+    :title="t('确认删除所选的 {n} 项脚本？', { n: props.selectedIds.length })"
     :pending="batchDeletePending"
     @confirm="handleBatchDeleteConfirm">
     <div>
-      {{
-        t('已生成版本中存在的配置项，可以通过恢复按钮撤销删除，新增且未生成版本的配置项，将无法撤销删除，请谨慎操作。')
-      }}
+      {{ t('一旦删除，该操作将无法撤销，服务配置的未命名版本中引用该脚本也将清除，请谨慎操作。') }}
     </div>
   </DeleteConfirmDialog>
 </template>
@@ -21,14 +19,13 @@
   import { ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import Message from 'bkui-vue/lib/message';
-  import { batchDeleteKv } from '../../../../../../../api/config';
-  import DeleteConfirmDialog from '../../../../../../../components/delete-confirm-dialog.vue';
+  import { batchDeleteScript } from '../../../../api/script';
+  import DeleteConfirmDialog from '../../../../components/delete-confirm-dialog.vue';
 
   const { t } = useI18n();
 
   const props = defineProps<{
     bkBizId: string;
-    appId: number;
     selectedIds: number[];
   }>();
 
@@ -39,10 +36,10 @@
 
   const handleBatchDeleteConfirm = async () => {
     batchDeletePending.value = true;
-    await batchDeleteKv(props.bkBizId, props.appId, props.selectedIds);
+    await batchDeleteScript(props.bkBizId, props.selectedIds);
     Message({
       theme: 'success',
-      message: t('批量删除配置项成功'),
+      message: t('批量删除脚本成功'),
     });
     batchDeletePending.value = false;
     isBatchDeleteDialogShow.value = false;

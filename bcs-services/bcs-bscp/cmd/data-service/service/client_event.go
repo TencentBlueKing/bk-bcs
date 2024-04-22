@@ -113,7 +113,7 @@ func (s *Service) handleCreateClientEvents(kt *kit.Kit, clientEvents []*pbce.Cli
 		keyWithoutCursor := fmt.Sprintf("%d-%d-%s-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid,
 			item.Attachment.CursorId)
 		v, ok := oldData[keyWithoutCursor]
-		if item.Spec.EndTime.GetSeconds() < 0 {
+		if item.Spec.EndTime.GetSeconds() <= 0 {
 			item.Spec.EndTime = nil
 		}
 		fullKey := fmt.Sprintf("%d-%d-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid)

@@ -309,7 +309,7 @@ monitor:pre
 bscp:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bscp
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bscp ${PACKAGEPATH}/bcs-services
-	cd bcs-services/bcs-bscp && cd ui && npm install && npm run build && cd ../ && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bscp-ui ./cmd/ui
+	cd bcs-services/bcs-bscp && cd ui && npm install --legacy-peer-deps && npm run build && cd ../ && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bscp-ui ./cmd/ui
 	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-apiserver ./cmd/api-server
 	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-authserver ./cmd/auth-server
 	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-configserver ./cmd/config-server

@@ -41,9 +41,7 @@
       angleField: 'count',
       colorField: 'value',
       radius: 1,
-      autoFit: false,
-      height: 184,
-      width: 800,
+      padding: [40, 300, 40, 20],
       label: {
         type: 'inner',
         offset: '-30%',

@@ -242,7 +242,7 @@
     () => {
       refresh();
       selectedConfigIds.value = [];
-      emits('updateSelectedIds', selectedConfigIds.value);
+      emits('updateSelectedIds', []);
     },
   );
 
@@ -309,8 +309,8 @@
   };
 
   // 表格行是否可以选中
-  const isRowSelectEnable = ({ row }: { row: IConfigKvType }) => {
-    return row.kv_state !== 'DELETE';
+  const isRowSelectEnable = ({ row, isCheckAll }: { row: IConfigKvType; isCheckAll: boolean }) => {
+    return isCheckAll || row.kv_state !== 'DELETE';
   };
 
   // 表格行选择事件
@@ -436,7 +436,8 @@
   };
 
   const handleFilter = ({ checked, index }: any) => {
-    if (index === 2) {
+    console.log(checked, index);
+    if (index === 4) {
       // 调整数据类型筛选条件
       typeFilterChecked.value = checked;
     } else {

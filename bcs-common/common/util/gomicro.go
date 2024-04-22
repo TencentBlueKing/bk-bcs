@@ -10,11 +10,32 @@
  * limitations under the License.
  */
 
-package project
+package util
 
-import "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-
-const (
-	// ProjectSelection project selection
-	ProjectSelection iam.InstanceSelectionID = "project_list"
+import (
+	"github.com/urfave/cli/v2"
+	"go-micro.dev/v4/util/cmd"
 )
+
+// dummyMicroCmd :
+type dummyMicroCmd struct{}
+
+// NewDummyMicroCmd : 去掉 go-micro 命令行使用
+func NewDummyMicroCmd() cmd.Cmd {
+	return &dummyMicroCmd{}
+}
+
+// App :
+func (c *dummyMicroCmd) App() *cli.App {
+	return &cli.App{}
+}
+
+// Init :
+func (c *dummyMicroCmd) Init(opts ...cmd.Option) error {
+	return nil
+}
+
+// Options :
+func (c *dummyMicroCmd) Options() cmd.Options {
+	return cmd.Options{}
+}

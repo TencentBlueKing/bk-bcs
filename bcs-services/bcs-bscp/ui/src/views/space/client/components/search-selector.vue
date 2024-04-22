@@ -401,7 +401,6 @@
         });
       } else if (key === 'online_status' || key === 'release_change_status') {
         query[key].forEach((value: string) => {
-          console.log(value);
           const content = `${selectorData.value.find((item) => item.value === key)?.name}:${
             CLIENT_STATUS_MAP[value as keyof typeof CLIENT_STATUS_MAP]
           }`;

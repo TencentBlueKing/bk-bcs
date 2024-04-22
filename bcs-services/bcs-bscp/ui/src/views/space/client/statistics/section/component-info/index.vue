@@ -66,7 +66,7 @@
   import { storeToRefs } from 'pinia';
   import { useI18n } from 'vue-i18n';
 
-  const {t} = useI18n();
+  const { t } = useI18n();
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -202,15 +202,14 @@
     width: 100vw;
     height: 100vh;
     z-index: 5000;
-    background-color: rgba(0, 0, 0, 0.6);
     .card {
-      position: absolute;
       width: 100%;
-      height: 80vh !important;
-      top: 50%;
-      transform: translateY(-50%);
+      height: 100vh !important;
       .loading-wrap {
         height: 100%;
+      }
+      :deep(.operation-btn) {
+        top: 0 !important;
       }
     }
   }
