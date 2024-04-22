@@ -3,7 +3,7 @@
     <table class="config-groups-table" :key="appId">
       <thead>
         <tr class="config-groups-table-tr">
-          <th class="selection">
+          <th v-if="isUnNamedVersion" class="selection">
             <bk-checkbox :model-value="isIndeterminate" :indeterminate="isIndeterminate" @change="handleSelectAll" />
           </th>
           <th class="name">{{ t('配置文件绝对路径') }}</th>
@@ -21,7 +21,7 @@
       <tbody>
         <template v-for="group in tableGroupsData" :key="group.id" v-if="allConfigCount !== 0">
           <tr class="config-groups-table-tr group-title-row" v-if="group.configs.length > 0">
-            <td colspan="9" class="config-groups-table-td">
+            <td :colspan="colsLen" class="config-groups-table-td">
               <div class="configs-group">
                 <div class="name-wrapper" @click="group.expand = !group.expand">
                   <DownShape :class="['fold-icon', { fold: !group.expand }]" />
@@ -40,12 +40,12 @@
           </tr>
           <template v-if="group.expand && group.configs.length > 0">
             <tr class="config-groups-table-tr">
-              <td colspan="9" class="config-groups-table-td">
+              <td :colspan="colsLen" class="config-groups-table-td">
                 <div class="configs-list-wrapper">
                   <table class="config-list-table">
                     <tbody>
                       <tr v-for="config in group.configs" :key="config.id" :class="getRowCls(config)">
-                        <td class="selection">
+                        <td v-if="isUnNamedVersion" class="selection">
                           <bk-checkbox
                             :disabled="group.id > 0 || config.file_state === 'DELETE'"
                             :model-value="selectedIds.includes(config.id)"
@@ -199,7 +199,7 @@
           </template>
         </template>
         <tr v-else>
-          <td colspan="9">
+          <td :colspan="colsLen">
             <TableEmpty :is-search-empty="isSearchEmpty" @clear="emits('clearStr')" style="width: 100%" />
           </td>
         </tr>
@@ -360,6 +360,9 @@
 
   // 是否为未命名版本
   const isUnNamedVersion = computed(() => versionData.value.id === 0);
+
+  // 表格列长度
+  const colsLen = computed(() => (isUnNamedVersion.value ? 9 : 8));
 
   // 全选checkbox选中状态
   const isIndeterminate = computed(() => {
