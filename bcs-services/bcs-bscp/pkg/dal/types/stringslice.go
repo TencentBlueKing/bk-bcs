@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package types is for dal types
 package types
 
 import (

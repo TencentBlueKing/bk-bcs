@@ -102,7 +102,7 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 	if opt.Tag != "" {
 		q = q.Where(rawgen.Cond(datatypes.JSONArrayQuery("tags").Contains(opt.Tag))...)
 	} else if opt.NotTag {
-		// when the length of tags is 2, which must be '[]'
+		// when the length of tags is 2, it must be '[]'
 		q = q.Where(h.Tags.Length().Eq(2))
 	}
 
@@ -181,8 +181,8 @@ func (dao *hookDao) CountHookTag(kit *kit.Kit, bizID uint32) ([]*types.HookTagCo
 
 	var allTags []dtypes.StringSlice
 	if err := q.Select(m.Tags).Where(m.BizID.Eq(bizID)).
-		// sql condition: where JSON_EXTRACT(`tags`,'$[0]')
-		Where(rawgen.Cond(datatypes.JSONQuery("tags").Extract("$[0]"))...).
+		// when the length of tags greater than 2, it must not be empty which means not be '[]'
+		Where(m.Tags.Length().Gt(2)).
 		Scan(&allTags); err != nil {
 		return nil, err
 	}
