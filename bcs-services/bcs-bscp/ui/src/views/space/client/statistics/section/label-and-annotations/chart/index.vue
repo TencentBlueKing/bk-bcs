@@ -88,15 +88,11 @@
     width: 100vw;
     height: 100vh;
     z-index: 5000;
-    background-color: rgba(0, 0, 0, 0.6);
     .card {
-      position: absolute;
       width: 100%;
-      height: 80vh !important;
-      top: 50%;
-      transform: translateY(-50%);
-      .loading-wrap {
-        height: 100%;
+      height: 100vh !important;
+      :deep(.operation-btn) {
+        top: 0 !important;
       }
     }
   }

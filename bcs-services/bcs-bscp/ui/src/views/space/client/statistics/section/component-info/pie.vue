@@ -40,8 +40,6 @@
   const initChart = () => {
     piePlot = new Sunburst(canvasRef.value!, {
       data: props.data,
-      height: 300,
-      width: 800,
       colorField: 'name',
       label: {
         content: ({ data }) => `${data.percent.toFixed(1)}%`,

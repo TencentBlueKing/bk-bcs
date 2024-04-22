@@ -6,12 +6,19 @@
           <template #operation>
             <OperationBtn
               :is-open-full-screen="isOpenFullScreen"
-              @refresh="loadChartData"
+              @refresh="refresh"
               @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
           </template>
           <bk-loading class="loading-wrap" :loading="loading">
-            <div v-if="data.length" ref="canvasRef" class="canvas-wrap">
+            <div v-if="data.length && !isShowSpecificReason" ref="canvasRef" class="canvas-wrap">
               <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+            </div>
+            <div v-else-if="specificReason.length && isShowSpecificReason" class="specific-reason">
+              <div class="nav">
+                <span class="main-reason" @click="refresh">{{ t('主要失败原因') }}</span> /
+                <span class="reason">{{ selectFailedReason }}</span>
+              </div>
+              <div ref="specificReasonRef" class="canvas-wrap"></div>
             </div>
             <bk-exception
               v-else
@@ -42,13 +49,13 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, onMounted } from 'vue';
-  import { Column } from '@antv/g2plot';
+  import { ref, watch, onMounted, nextTick } from 'vue';
+  import { Column, Pie } from '@antv/g2plot';
   import Card from '../../components/card.vue';
   import Tooltip from '../../components/tooltip.vue';
   import OperationBtn from '../../components/operation-btn.vue';
   import { IPullErrorReason, IInfoCard, IClinetCommonQuery } from '../../../../../../../types/client';
-  import { getClientPullStatusData } from '../../../../../../api/client';
+  import { getClientPullStatusData, getClientPullFailedReason } from '../../../../../../api/client';
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
   import { useRouter } from 'vue-router';
@@ -67,7 +74,9 @@
   }>();
 
   let columnPlot: Column | null;
+  let piePlot: Pie | null;
   const canvasRef = ref<HTMLElement>();
+  const specificReasonRef = ref<HTMLElement>();
   const tooltipRef = ref();
   const pullTime = ref<IInfoCard[]>([
     {
@@ -87,9 +96,12 @@
     },
   ]);
   const data = ref<IPullErrorReason[]>([]);
+  const specificReason = ref<IPullErrorReason[]>([]);
   const loading = ref(false);
   const isOpenFullScreen = ref(false);
   const initialWidth = ref(0);
+  const isShowSpecificReason = ref(false);
+  const selectFailedReason = ref('');
 
   watch(
     () => props.appId,
@@ -128,7 +140,11 @@
   watch(
     () => isOpenFullScreen.value,
     (val) => {
-      canvasRef.value!.style.width = val ? '100%' : `${initialWidth.value}px`;
+      if (isShowSpecificReason.value) {
+        specificReasonRef.value!.style.width = val ? '100%' : `${initialWidth.value}px`;
+      } else {
+        canvasRef.value!.style.width = val ? '100%' : `${initialWidth.value}px`;
+      }
     },
   );
 
@@ -159,25 +175,42 @@
     }
   };
 
+  const loadPullFailedReason = async () => {
+    try {
+      loading.value = true;
+      const res = await getClientPullFailedReason(props.bkBizId, props.appId, {
+        search: { failed_reason: selectFailedReason.value },
+      });
+      specificReason.value = res.data.failed_reason;
+    } catch (error) {
+      console.error(error);
+    } finally {
+      loading.value = false;
+    }
+  };
+
   const initChart = () => {
     columnPlot = new Column(canvasRef.value!, {
       data: data.value,
       xField: 'release_change_failed_reason',
       yField: 'count',
+      seriesField: 'count',
       color: '#FFA66B',
       maxColumnWidth: 60,
-      padding: [10, 10, 40, 40],
+      padding: [30, 10, 50, 30],
       legend: {
-        layout: 'horizontal',
         custom: true,
         position: 'bottom',
         items: [
           {
             id: '1',
             name: t('拉取失败数量'),
-            value: 'count',
+            value: 'release_change_failed_reason',
             marker: {
               symbol: 'square',
+              style: {
+                fill: '#FFA66B',
+              },
             },
           },
         ],
@@ -214,6 +247,37 @@
       // },
     });
     columnPlot!.render();
+    columnPlot.on('plot:click', async (event: any) => {
+      selectFailedReason.value = event.data?.data.release_change_failed_reason;
+      if (!selectFailedReason.value) return;
+      isShowSpecificReason.value = true;
+      await loadPullFailedReason();
+      nextTick(() => initSpecificReasonChart());
+    });
+  };
+
+  const initSpecificReasonChart = () => {
+    piePlot = new Pie(specificReasonRef.value!, {
+      data: specificReason.value,
+      angleField: 'count',
+      colorField: 'release_change_failed_reason',
+      padding: [20, 400, 60, 10],
+      label: {
+        type: 'inner',
+        offset: '-30%',
+        content: ({ percent }) => `${(percent * 100).toFixed(1)}%`,
+        style: {
+          fontSize: 14,
+          textAlign: 'center',
+        },
+        autoRotate: false,
+      },
+      legend: {
+        position: 'right',
+        offsetX: -200,
+      },
+    });
+    piePlot.render();
   };
 
   const jumpToSearch = () => {
@@ -221,6 +285,14 @@
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
     });
+  };
+
+  const refresh = async () => {
+    isShowSpecificReason.value = false;
+    await loadChartData();
+    if (data.value.length) {
+      initChart();
+    }
   };
 </script>
 
@@ -253,6 +325,9 @@
       }
     }
   }
+  .loading-wrap {
+    height: 100%;
+  }
   .fullscreen {
     position: fixed;
     top: 0;
@@ -260,15 +335,33 @@
     width: 100vw;
     height: 100vh;
     z-index: 5000;
-    background-color: rgba(0, 0, 0, 0.6);
     .card {
-      position: absolute;
       width: 100%;
-      height: 80vh !important;
-      top: 50%;
-      transform: translateY(-50%);
-      .loading-wrap {
-        height: 100%;
+      height: 100vh !important;
+      :deep(.operation-btn) {
+        top: 0 !important;
+      }
+    }
+  }
+  .specific-reason {
+    height: 100%;
+    z-index: 9999;
+    .nav {
+      position: absolute;
+      top: 0;
+      font-size: 12px;
+      color: #313238;
+      position: relative;
+      .main-reason {
+        margin-right: 8px;
+        cursor: pointer;
+        &:hover {
+          color: #3a84ff;
+        }
+      }
+      .reason {
+        color: #979ba5;
+        margin-left: 8px;
       }
     }
   }
