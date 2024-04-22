@@ -47,7 +47,7 @@
                       <tr v-for="config in group.configs" :key="config.id" :class="getRowCls(config)">
                         <td class="selection">
                           <bk-checkbox
-                            :disabled="group.id > 0"
+                            :disabled="group.id > 0 || config.file_state === 'DELETE'"
                             :model-value="selectedIds.includes(config.id)"
                             @change="handleRowSelectionChange($event, config.id)" />
                         </td>
@@ -584,7 +584,7 @@
   // 全选
   const handleSelectAll = (val: boolean) => {
     if (val) {
-      selectedIds.value = configList.value.map((item) => item.id);
+      selectedIds.value = configList.value.filter((item) => item.file_state !== 'DELETE').map((item) => item.id);
     } else {
       selectedIds.value = [];
     }
